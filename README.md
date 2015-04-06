@@ -1,4 +1,4 @@
-bbc-nms
+Motech implementation
 =======
 
-Scale up implementation of the National Motech System (NMS) in India.
+Custom motech implementation.
