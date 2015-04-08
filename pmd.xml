@@ -46,7 +46,7 @@
     <rule ref="rulesets/javabeans.xml/MissingSerialVersionUID"/>
 
     <rule name="DontImportInternal"
-          message="Avoid importing internal packages of any external libraries"
+          language="Avoid importing internal packages of any external libraries"
           class="net.sourceforge.pmd.rules.XPathRule">
     <description>
         Avoid importing any internal package of any external libraries.
@@ -65,7 +65,7 @@
     <priority>3</priority>
     </rule>
     <rule name="CommentedOutCode"
-          message="Avoid commeneted out code."
+          language="Avoid commeneted out code."
           class="CommentedOutCode">
         <properties>
             <property name="classificationThreshold" value="0.85"/>

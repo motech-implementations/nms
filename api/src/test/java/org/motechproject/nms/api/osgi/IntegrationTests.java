@@ -8,9 +8,7 @@ import org.junit.runners.Suite;
  */
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-        HelloWorldServiceBundleIT.class,
-        HelloWorldWebBundleIT.class,
-        HelloWorldRecordServiceBundleIT.class
+        KilkariControllerBundleIT.class
 })
-public class HelloWorldIntegrationTests {
+public class IntegrationTests {
 }
