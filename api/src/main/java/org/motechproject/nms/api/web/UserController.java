@@ -16,8 +16,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-
-@RequestMapping("/flw")
 @Controller
 public class UserController extends BaseController {
 
@@ -50,6 +48,10 @@ public class UserController extends BaseController {
 
         if (failureReasons.length() > 0) {
             throw new IllegalArgumentException(failureReasons.toString());
+        }
+
+        if (languages.size() > 0) {
+            user.setLanguageLocationCode(languages.iterator().next());
         }
 
         return user;
