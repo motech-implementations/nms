@@ -7,17 +7,24 @@
        http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.1.xsd">
 
     <context:annotation-config />
-    <context:component-scan base-package="org.motechproject.nms.api" />
+    <context:component-scan base-package="org.motechproject.nms.language" />
 
     <mvc:annotation-driven />
 
     <bean id="moduleRegistrationData" class="org.motechproject.osgi.web.ModuleRegistrationData">
-        <constructor-arg name="moduleName" value="api" />
+        <constructor-arg name="moduleName" value="language" />
+        <constructor-arg name="url" value="../language/resources/index.html" />
+        <constructor-arg name="angularModules">
+            <list>
+                <value>language</value>
+            </list>
+        </constructor-arg>
         <constructor-arg name="i18n">
             <map>
-                <entry key="messages" value="../api/resources/messages/" />
+                <entry key="messages" value="../language/resources/messages/" />
             </map>
         </constructor-arg>
+        <property name="defaultURL" value="/helloWorld"/>
     </bean>
 
 
