@@ -1,20 +1,22 @@
 package org.motechproject.nms.api.web.contract;
 
+import java.util.Set;
+
 /**
  *
  */
-public abstract class KilkariResponseUser {
-    private String circle;
+public class KilkariResponseUser extends ResponseUser {
+    private Set<String> subscriptionPackList;
 
-    public KilkariResponseUser(String circle) {
-        this.circle = circle;
+    public KilkariResponseUser() {
+        super();
     }
 
-    public String getCircle() {
-        return circle;
+    public Set<String> getSubscriptionPackList() {
+        return subscriptionPackList;
     }
 
-    public void setCircle(String circle) {
-        this.circle = circle;
+    public void setSubscriptionPackList(Set<String> subscriptionPackList) {
+        this.subscriptionPackList = subscriptionPackList;
     }
 }
