@@ -1,7 +1,7 @@
 package org.motechproject.nms.api.web;
 
 import org.motechproject.nms.api.web.contract.KilkariResponseUser;
-import org.motechproject.nms.api.web.contract.MobilAcademyUser;
+import org.motechproject.nms.api.web.contract.MobileAcademyUser;
 import org.motechproject.nms.api.web.contract.MobileKunjiUser;
 import org.motechproject.nms.api.web.contract.ResponseUser;
 import org.motechproject.nms.language.service.LanguageService;
@@ -36,7 +36,7 @@ public class UserController extends BaseController {
         ResponseUser user = null;
 
         if (MOBILE_ACADEMY.equals(serviceName)) {
-            user = new MobilAcademyUser();
+            user = new MobileAcademyUser();
         } else if (MOBILE_KUNJI.equals(serviceName)) {
             user = new MobileKunjiUser();
         } else if (KILKARI.equals(serviceName)) {
