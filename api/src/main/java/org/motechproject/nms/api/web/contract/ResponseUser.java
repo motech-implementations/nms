@@ -1,15 +1,13 @@
 package org.motechproject.nms.api.web.contract;
 
-import java.util.HashSet;
-
 /**
  *
  */
 public abstract class ResponseUser {
-    protected String languageLocationCode;
-    protected String defaultLanguageLocationCode;
+    private String languageLocationCode;
+    private String defaultLanguageLocationCode;
 
-    public ResponseUser() {}
+    public ResponseUser() { }
 
     public ResponseUser(String languageLocationCode) {
         this.languageLocationCode = languageLocationCode;

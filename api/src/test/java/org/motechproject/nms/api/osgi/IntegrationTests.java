@@ -8,7 +8,7 @@ import org.junit.runners.Suite;
  */
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-        KilkariControllerBundleIT.class
+        UserControllerBundleIT.class
 })
 public class IntegrationTests {
 }

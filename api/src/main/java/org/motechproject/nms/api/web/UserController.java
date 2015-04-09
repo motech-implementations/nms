@@ -41,7 +41,7 @@ public class UserController extends BaseController {
             user = new MobileKunjiUser();
         } else if (KILKARI.equals(serviceName)) {
             user = new KilkariResponseUser();
-            ((KilkariResponseUser)user).setSubscriptionPackList(new HashSet<>(Arrays.asList("pack123")));
+            ((KilkariResponseUser) user).setSubscriptionPackList(new HashSet<>(Arrays.asList("pack123")));
         } else {
             failureReasons.append(String.format(INVALID, "serviceName"));
         }
