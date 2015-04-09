@@ -11,4 +11,6 @@
 
     <osgi:reference id="languageService" interface="org.motechproject.nms.language.service.LanguageService"/>
 
+    <osgi:reference id="kilkariService" interface="org.motechproject.nms.kilkari.service.KilkariService"/>
+
 </beans>

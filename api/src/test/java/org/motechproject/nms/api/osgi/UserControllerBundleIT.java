@@ -17,6 +17,8 @@ import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import java.io.IOException;
 
+import static org.junit.Assert.assertTrue;
+
 
 /**
  * Verify that LanguageService HTTP service is present and functional.
@@ -35,7 +37,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         httpGet.addHeader("Authorization",
                 "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
 
-        SimpleHttpClient.execHttpRequest(httpGet, "{\"circle\":\"AA\",\"languageLocationCode\":\"??\"}");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, "{\"circle\":\"AA\",\"languageLocationCode\":\"??\"}"));
     }
 
     @Test

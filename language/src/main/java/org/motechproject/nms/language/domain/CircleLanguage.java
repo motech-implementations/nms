@@ -3,25 +3,26 @@ package org.motechproject.nms.language.domain;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 
+import javax.jdo.annotations.Unique;
 import java.util.Objects;
 
 /**
- * Models data for simple records in a portable manner.
+ * Represents all the languages that a circle (kind of a cell telephony geographic area in India) may contain
  */
 @Entity
+@Unique(name = "uniqueCircleLanguage", members = {"circle", "language" })
 public class CircleLanguage {
 
     @Field
     private String circle;
 
     @Field
-    private String language;
+    private Language language;
 
     public CircleLanguage() {
     }
 
-
-    public CircleLanguage(String name, String language) {
+    public CircleLanguage(String name, Language language) {
         this.circle = name;
         this.language = language;
     }
@@ -34,11 +35,11 @@ public class CircleLanguage {
         this.circle = circle;
     }
 
-    public String getLanguage() {
+    public Language getLanguage() {
         return language;
     }
 
-    public void setLanguage(String language) {
+    public void setLanguage(Language language) {
         this.language = language;
     }
 
