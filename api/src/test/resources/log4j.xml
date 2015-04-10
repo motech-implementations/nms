@@ -10,6 +10,10 @@
         </layout>
     </appender>
 
+    <logger name="org.motechproject.testing.osgi.http">
+        <level value="ALL"/>
+    </logger>
+
     <logger name="org.motechproject.nms.api">
         <level value="ALL"/>
     </logger>

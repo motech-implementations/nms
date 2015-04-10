@@ -13,8 +13,8 @@ import java.util.regex.Pattern;
  * BaseController
  */
 public class BaseController {
-    public static final String NOT_PRESENT = "<%s: Not Present>\n";
-    public static final String INVALID = "<%s: Invalid>\n";
+    public static final String NOT_PRESENT = "<%s: Not Present>";
+    public static final String INVALID = "<%s: Invalid>";
     public static final Pattern CALLING_NUMBER_PATTERN = Pattern.compile(
             "[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]");
 
