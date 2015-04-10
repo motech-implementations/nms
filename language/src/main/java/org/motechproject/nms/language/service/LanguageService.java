@@ -1,12 +1,13 @@
 package org.motechproject.nms.language.service;
 
-import java.util.Set;
+import org.motechproject.nms.language.domain.Language;
+import java.util.List;
 
 /**
- * Simple example of a service interface.
+ * Service interfaces exposed by the language module
  */
 public interface LanguageService {
 
-    Set<String> getCircleLanguages(String circle);
+    List<Language> getCircleLanguages(String circle);
 
 }
