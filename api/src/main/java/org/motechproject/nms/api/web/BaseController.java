@@ -18,7 +18,7 @@ public class BaseController {
     public static final Pattern CALLING_NUMBER_PATTERN = Pattern.compile(
             "[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]");
 
-    protected StringBuilder validate(String callingNumber, String operator, String circle, String callId) {
+    protected StringBuilder validate(String callingNumber, String callId) {
         StringBuilder failureReasons = new StringBuilder();
 
         if (callingNumber == null) {
@@ -27,16 +27,22 @@ public class BaseController {
             failureReasons.append(String.format(INVALID, "callingNumber"));
         }
 
+        if (callId == null) {
+            failureReasons.append(String.format(NOT_PRESENT, "callId"));
+        }
+
+        return failureReasons;
+    }
+
+    protected StringBuilder validate(String callingNumber, String operator, String circle, String callId) {
+        StringBuilder failureReasons = validate(callingNumber, callId);
+
         if (operator == null) {
             failureReasons.append(String.format(NOT_PRESENT, "operator"));
         }
 
         if (circle == null) {
             failureReasons.append(String.format(NOT_PRESENT, "circle"));
-        }
-
-        if (callId == null) {
-            failureReasons.append(String.format(NOT_PRESENT, "callId"));
         }
 
         return failureReasons;

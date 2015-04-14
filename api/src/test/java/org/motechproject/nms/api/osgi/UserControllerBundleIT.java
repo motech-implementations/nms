@@ -8,8 +8,10 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
+import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
+import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.service.KilkariService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
@@ -44,17 +46,25 @@ public class UserControllerBundleIT extends BasePaxIT {
     private SubscriberDataService subscriberDataService;
     @Inject
     private SubscriptionPackDataService subscriptionPackDataService;
+    @Inject
+    private SubscriptionDataService subscriptionDataService;
 
     private void setupData() {
+        subscriptionDataService.deleteAll();
         subscriptionPackDataService.deleteAll();
+        subscriberDataService.deleteAll();
+
         SubscriptionPack pack1 = subscriptionPackDataService.create(new SubscriptionPack("pack1"));
         SubscriptionPack pack2 = subscriptionPackDataService.create(new SubscriptionPack("pack2"));
         List<SubscriptionPack> onePack = Arrays.asList(pack1);
         List<SubscriptionPack> twoPacks = Arrays.asList(pack1, pack2);
 
-        subscriberDataService.deleteAll();
-        Subscriber subscriber1 = subscriberDataService.create(new Subscriber("0000000000", onePack));
-        Subscriber subscriber2 = subscriberDataService.create(new Subscriber("0000000001", twoPacks));
+        Subscriber subscriber1 = subscriberDataService.create(new Subscriber("0000000000"));
+        Subscriber subscriber2 = subscriberDataService.create(new Subscriber("0000000001"));
+
+        Subscription subscription1 = subscriptionDataService.create(new Subscription("001", subscriber1, pack1));
+        Subscription subscription2 = subscriptionDataService.create(new Subscription("002", subscriber2, pack1));
+        Subscription subscription3 = subscriptionDataService.create(new Subscription("003", subscriber2, pack2));
     }
 
     @Test
