@@ -5,13 +5,15 @@
 
     <import resource="classpath*:META-INF/motech/*.xml" />
 
-    <osgi:service ref="helloWorldService"
-        interface="org.motechproject.nms.flw.service.HelloWorldService" />
+    <osgi:service ref="frontLineWorkerService"
+        interface="org.motechproject.nms.flw.service.FrontLineWorkerService" />
 
-    <osgi:service ref="helloWorldRecordService"
-        interface="org.motechproject.nms.flw.service.HelloWorldRecordService" />
+    <osgi:service ref="serviceUsageService"
+        interface="org.motechproject.nms.flw.service.ServiceUsageService" />
 
-    <osgi:reference id="helloWorldRecordsDataService"
-                    interface="org.motechproject.nms.flw.repository.HelloWorldRecordsDataService" />
+    <osgi:reference id="frontLineWorkerDataService"
+                    interface="org.motechproject.nms.flw.repository.FrontLineWorkerDataService" />
 
+    <osgi:reference id="serviceUsageDataService"
+                    interface="org.motechproject.nms.flw.repository.ServiceUsageDataService" />
 </beans>

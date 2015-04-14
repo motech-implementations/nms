@@ -1,6 +1,6 @@
 package org.motechproject.nms.flw.repository;
 
-import org.motechproject.nms.flw.domain.HelloWorldRecord;
+import org.motechproject.nms.flw.domain.FrontLineWorker;
 
 import org.motechproject.mds.annotations.Lookup;
 import org.motechproject.mds.annotations.LookupField;
@@ -12,7 +12,7 @@ import org.motechproject.mds.service.MotechDataService;
  * as methods for adding, deleting, saving and finding all instances.  In this class we
  * define and custom lookups we may need.
  */
-public interface HelloWorldRecordsDataService extends MotechDataService<HelloWorldRecord> {
+public interface FrontLineWorkerDataService extends MotechDataService<FrontLineWorker> {
     @Lookup
-    HelloWorldRecord findRecordByName(@LookupField(name = "name") String recordName);
+    FrontLineWorker findRecordByContactNumber(@LookupField(name = "contactNumber") String contactNumber);
 }

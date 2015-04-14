@@ -4,6 +4,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.testing.osgi.BasePaxIT;
@@ -28,17 +29,6 @@ import static org.junit.Assert.assertNotNull;
 public class HelloWorldWebBundleIT extends BasePaxIT {
     private static final String ADMIN_USERNAME = "motech";
     private static final String ADMIN_PASSWORD = "motech";
-
-    @Test
-    public void testHelloWorldGetRequest() throws IOException, InterruptedException {
-        HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/flw/sayHello",
-                TestContext.getJettyPort()));
-        addAuthHeader(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
-
-        HttpResponse response = getHttpClient().execute(httpGet);
-        assertNotNull(response);
-        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
-    }
 
     @Test
     public void testStatusGetRequest() throws IOException, InterruptedException {

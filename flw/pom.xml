@@ -33,10 +33,22 @@
             <scope>test</scope>
         </dependency>
 
+        <dependency>
+            <groupId>org.motechproject.nms</groupId>
+            <artifactId>language</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- Repository -->
         <dependency>
             <groupId>org.motechproject</groupId>
             <artifactId>motech-platform-dataservices</artifactId>
+            <version>${motech.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.motechproject</groupId>
+            <artifactId>motech-platform-commons-api</artifactId>
             <version>${motech.version}</version>
         </dependency>
     </dependencies>
@@ -71,11 +83,15 @@
                         <Blueprint-Enabled>true</Blueprint-Enabled>
                         <Resource-Path>flw/resources</Resource-Path>
                         <Context-Path>flw</Context-Path>
-                        <Export-Package>org.motechproject.nms.flw.service;version=${project.version},
+                        <Export-Package>
+                            org.motechproject.nms.flw.service;version=${project.version},
                             org.motechproject.nms.flw.repository;version=${project.version},
-                            org.motechproject.nms.flw.domain;version=${project.version},</Export-Package>
-                        <Import-Package>org.motechproject.osgi.web,
-                            *</Import-Package>
+                            org.motechproject.nms.flw.domain;version=${project.version},
+                        </Export-Package>
+                        <Import-Package>
+                            org.motechproject.osgi.web,
+                            *
+                        </Import-Package>
                     </instructions>
                 </configuration>
             </plugin>
