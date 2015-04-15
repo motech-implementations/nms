@@ -18,9 +18,9 @@ public class Subscriber {
     @Unique
     private String callingNumber;
 
-    //making this a bi-directional relationship until MOTECH-1638 is fixed
+    //TODO: making this a bi-directional relationship until MOTECH-1638 is fixed. See #31.
     @Field
-    @Persistent(mappedBy = "subscriber")
+    @Persistent(mappedBy = "subscriber", defaultFetchGroup = "false")
     private Set<Subscription> subscriptions;
 
     public Subscriber() {

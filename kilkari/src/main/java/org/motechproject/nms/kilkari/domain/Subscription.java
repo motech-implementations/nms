@@ -10,7 +10,7 @@ public class Subscription {
 
     @Field
     @Unique
-    private String subscriptionId; //this is supposed to be a UUID, not enforcing that yet
+    private String subscriptionId; //TODO: this is supposed to be a UUID, not enforcing that yet. See #32.
 
     @Field
     private Subscriber subscriber;
@@ -65,6 +65,7 @@ public class Subscription {
 
     @Override
     public int hashCode() {
+        //TODO: this can be simplified to just use subscriptionId once it's a UUID. See #32.
         int result = subscriptionId != null ? subscriptionId.hashCode() : 0;
         result = 31 * result + (subscriber != null ? subscriber.hashCode() : 0);
         result = 31 * result + (subscriptionPack != null ? subscriptionPack.hashCode() : 0);

@@ -3,6 +3,7 @@ package org.motechproject.nms.api.web;
 import org.motechproject.nms.api.web.contract.InboxSubscriptionDetail;
 import org.motechproject.nms.api.web.contract.KilkariResponseInbox;
 import org.motechproject.nms.kilkari.domain.Subscription;
+import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.service.KilkariService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -28,12 +29,16 @@ public class KilkariController extends BaseController {
     public KilkariResponseInbox inbox(@RequestParam String callingNumber, @RequestParam String callId) {
 
         StringBuilder failureReasons = validate(callingNumber, callId);
-
         if (failureReasons.length() > 0) {
             throw new IllegalArgumentException(failureReasons.toString());
         }
 
-        Set<Subscription> subscriptions = kilkariService.getSubscriptions(callingNumber);
+        Subscriber subscriber = kilkariService.getSubscriber(callingNumber);
+        if (subscriber == null) {
+            //TODO: handle non-existent subscriber - it seems like this should be a 404, but the spec doesn't cover this case
+        }
+
+        Set<Subscription> subscriptions = subscriber.getSubscriptions();
         Set<InboxSubscriptionDetail> subscriptionDetails = new HashSet<>();
         for (Subscription subscription : subscriptions) {
             subscriptionDetails.add(new InboxSubscriptionDetail(subscription.getSubscriptionId(),

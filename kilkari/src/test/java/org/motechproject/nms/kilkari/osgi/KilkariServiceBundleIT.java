@@ -19,7 +19,8 @@ import org.ops4j.pax.exam.spi.reactors.PerSuite;
 import javax.inject.Inject;
 
 import java.util.Arrays;
-import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -54,16 +55,18 @@ public class KilkariServiceBundleIT extends BasePaxIT {
 
         SubscriptionPack pack1 = subscriptionPackDataService.create(new SubscriptionPack("pack1"));
         SubscriptionPack pack2 = subscriptionPackDataService.create(new SubscriptionPack("pack2"));
-        List<SubscriptionPack> onePack = Arrays.asList(pack1);
-        List<SubscriptionPack> twoPacks = Arrays.asList(pack1, pack2);
 
-        Subscriber subscriber1 = subscriberDataService.create(new Subscriber("0000000000"));
-        Subscriber subscriber2 = subscriberDataService.create(new Subscriber("0000000001"));
+        Subscriber subscriber = subscriberDataService.create(new Subscriber("0000000001"));
 
-        Subscription subscription1 = subscriptionDataService.create(new Subscription("001", subscriber1, pack1));
-        Subscription subscription2 = subscriptionDataService.create(new Subscription("002", subscriber2, pack1));
-        Subscription subscription3 = subscriptionDataService.create(new Subscription("003", subscriber2, pack2));
+        Subscription subscription1 = subscriptionDataService.create(new Subscription("001", subscriber, pack1));
+        Subscription subscription2 = subscriptionDataService.create(new Subscription("002", subscriber, pack2));
 
-        assertEquals(Arrays.asList(pack1, pack2), kilkariService.getSubscriberPacks("0000000001"));
+        Set<Subscription> subscriptions = kilkariService.getSubscriber("0000000001").getSubscriptions();
+        Set<SubscriptionPack> packs = new HashSet<>();
+        for (Subscription subscription : subscriptions) {
+            packs.add(subscription.getSubscriptionPack());
+        }
+
+        assertEquals(new HashSet<>(Arrays.asList(pack1, pack2)), packs);
     }
 }
