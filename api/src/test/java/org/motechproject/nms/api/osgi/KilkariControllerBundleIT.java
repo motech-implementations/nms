@@ -82,4 +82,30 @@ public class KilkariControllerBundleIT extends BasePaxIT {
             "{\"inboxSubscriptionDetailList\":[{\"subscriptionId\":\"001\",\"subscriptionPack\":\"pack1\",\"inboxWeekId\":\"10_1\",\"contentFileName\":\"xyz.wav\"}]}"));
     }
 
+    @Test
+    public void testInboxRequestBadSubscriber() throws IOException, InterruptedException {
+        setupData();
+        HttpGet httpGet = new HttpGet(String.format(
+                "http://localhost:%d/api/kilkari/inbox?callingNumber=0000000009&callId=0123456789abcde",
+                TestContext.getJettyPort()));
+
+        httpGet.addHeader("Authorization",
+                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_NOT_FOUND));
+    }
+
+    @Test
+    public void testInboxRequestNoSubscriber() throws IOException, InterruptedException {
+        setupData();
+        HttpGet httpGet = new HttpGet(String.format(
+                "http://localhost:%d/api/kilkari/inbox?callId=0123456789abcde",
+                TestContext.getJettyPort()));
+
+        httpGet.addHeader("Authorization",
+                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_BAD_REQUEST));
+    }
+
 }

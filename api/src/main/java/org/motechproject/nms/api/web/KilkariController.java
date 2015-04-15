@@ -1,5 +1,6 @@
 package org.motechproject.nms.api.web;
 
+import org.motechproject.nms.api.web.exception.NotFoundException;
 import org.motechproject.nms.api.web.contract.InboxSubscriptionDetail;
 import org.motechproject.nms.api.web.contract.KilkariResponseInbox;
 import org.motechproject.nms.kilkari.domain.Subscription;
@@ -26,7 +27,7 @@ public class KilkariController extends BaseController {
 
     @RequestMapping("/inbox")
     @ResponseBody
-    public KilkariResponseInbox inbox(@RequestParam String callingNumber, @RequestParam String callId) {
+    public KilkariResponseInbox inbox(@RequestParam String callingNumber, @RequestParam String callId) throws NotFoundException {
 
         StringBuilder failureReasons = validate(callingNumber, callId);
         if (failureReasons.length() > 0) {
@@ -35,7 +36,7 @@ public class KilkariController extends BaseController {
 
         Subscriber subscriber = kilkariService.getSubscriber(callingNumber);
         if (subscriber == null) {
-            //TODO: handle non-existent subscriber - it seems like this should be a 404, but the spec doesn't cover this case
+            throw new NotFoundException(String.format(NOT_FOUND, "callingNumber"));
         }
 
         Set<Subscription> subscriptions = subscriber.getSubscriptions();

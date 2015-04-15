@@ -87,7 +87,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         //todo: replace with execHttpRequest method that also tests response body (in addition to status code)
         //todo: when it's available in platform: org.motechproject.testing.osgi.http.SimpleHttpClient
-        SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_BAD_REQUEST);
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_BAD_REQUEST));
     }
 
     @Test

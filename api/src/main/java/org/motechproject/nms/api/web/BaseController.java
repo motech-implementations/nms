@@ -1,5 +1,6 @@
 package org.motechproject.nms.api.web;
 
+import org.motechproject.nms.api.web.exception.NotFoundException;
 import org.motechproject.nms.api.web.contract.BadRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -15,6 +16,7 @@ import java.util.regex.Pattern;
 public class BaseController {
     public static final String NOT_PRESENT = "<%s: Not Present>";
     public static final String INVALID = "<%s: Invalid>";
+    public static final String NOT_FOUND = "<%s: Not Found>";
     public static final Pattern CALLING_NUMBER_PATTERN = Pattern.compile(
             "[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]");
 
@@ -48,10 +50,17 @@ public class BaseController {
         return failureReasons;
     }
 
-    @ExceptionHandler(Exception.class)
+    @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ResponseBody
-    public BadRequest handleException(Exception e) throws IOException {
+    public BadRequest handleException(IllegalArgumentException e) throws IOException {
+        return new BadRequest(e.getMessage());
+    }
+
+    @ExceptionHandler(NotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ResponseBody
+    public BadRequest handleException(NotFoundException e) throws IOException {
         return new BadRequest(e.getMessage());
     }
 }
