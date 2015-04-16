@@ -4,6 +4,7 @@ import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 
 import org.motechproject.nms.language.domain.Language;
+import org.motechproject.nms.location.domain.District;
 
 import javax.jdo.annotations.Unique;
 
@@ -25,6 +26,9 @@ public class FrontLineWorker {
 
     @Field
     private Language language;
+
+    @Field
+    private District district;
 
     public FrontLineWorker(String name, String contactNumber) {
         this.name = name;
@@ -61,6 +65,14 @@ public class FrontLineWorker {
 
     public void setLanguage(Language language) {
         this.language = language;
+    }
+
+    public District getDistrict() {
+        return district;
+    }
+
+    public void setDistrict(District district) {
+        this.district = district;
     }
 
     @Override

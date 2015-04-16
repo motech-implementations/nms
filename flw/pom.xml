@@ -39,6 +39,12 @@
             <version>${project.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.motechproject.nms</groupId>
+            <artifactId>location</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- Repository -->
         <dependency>
             <groupId>org.motechproject</groupId>
@@ -119,7 +125,8 @@
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>        
+            </plugin>
+
         </plugins>
     </build>
 </project>
