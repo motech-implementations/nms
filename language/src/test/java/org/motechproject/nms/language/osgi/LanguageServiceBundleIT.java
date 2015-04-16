@@ -71,5 +71,6 @@ public class LanguageServiceBundleIT extends BasePaxIT {
         }
 
         assertEquals(languageCodes, new HashSet<String>(Arrays.asList("la", "ur", "hi")));
+        assertEquals("la", languageService.getLanguage("la").getCode());
     }
 }

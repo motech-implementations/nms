@@ -2,15 +2,17 @@ package org.motechproject.nms.kilkari.domain;
 
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
+import org.motechproject.nms.language.domain.Language;
 
 import javax.jdo.annotations.Unique;
+import java.util.UUID;
 
 @Entity
 public class Subscription {
 
     @Field
     @Unique
-    private String subscriptionId; //TODO: this is supposed to be a UUID, not enforcing that yet. See #32.
+    private UUID subscriptionId;
 
     @Field
     private Subscriber subscriber;
@@ -18,20 +20,18 @@ public class Subscription {
     @Field
     private SubscriptionPack subscriptionPack;
 
-    public Subscription(String subscriptionId, Subscriber subscriber, SubscriptionPack subscriptionPack) {
-        this.subscriptionId = subscriptionId;
+    @Field
+    private Language language;
+
+    public Subscription(Subscriber subscriber, SubscriptionPack subscriptionPack, Language language) {
+        this.subscriptionId = UUID.randomUUID();
         this.subscriber = subscriber;
         this.subscriptionPack = subscriptionPack;
+        this.language = language;
         this.subscriber.getSubscriptions().add(this);
     }
 
-    public String getSubscriptionId() {
-        return subscriptionId;
-    }
-
-    public void setSubscriptionId(String subscriptionId) {
-        this.subscriptionId = subscriptionId;
-    }
+    public UUID getSubscriptionId() { return subscriptionId; }
 
     public Subscriber getSubscriber() {
         return subscriber;
@@ -49,6 +49,12 @@ public class Subscription {
         this.subscriptionPack = subscriptionPack;
     }
 
+    public Language getLanguage() { return language; }
+
+    public void setLanguage(Language language) {
+        this.language = language;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -60,15 +66,12 @@ public class Subscription {
 
         Subscription that = (Subscription) o;
 
-        return subscriptionId.equals(that.subscriptionId) && subscriber.equals(this.subscriber) && subscriptionPack.equals(that.subscriptionPack);
+        return subscriptionId.equals(that.subscriptionId) && subscriber.equals(this.subscriber) &&
+                subscriptionPack.equals(that.subscriptionPack) && language.equals(that.getLanguage());
     }
 
     @Override
     public int hashCode() {
-        //TODO: this can be simplified to just use subscriptionId once it's a UUID. See #32.
-        int result = subscriptionId != null ? subscriptionId.hashCode() : 0;
-        result = 31 * result + (subscriber != null ? subscriber.hashCode() : 0);
-        result = 31 * result + (subscriptionPack != null ? subscriptionPack.hashCode() : 0);
-        return result;
+        return subscriptionId.hashCode();
     }
 }

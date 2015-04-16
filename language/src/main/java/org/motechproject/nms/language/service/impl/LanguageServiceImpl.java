@@ -3,6 +3,7 @@ package org.motechproject.nms.language.service.impl;
 import org.motechproject.nms.language.domain.CircleLanguage;
 import org.motechproject.nms.language.domain.Language;
 import org.motechproject.nms.language.repository.CircleLanguageDataService;
+import org.motechproject.nms.language.repository.LanguageDataService;
 import org.motechproject.nms.language.service.LanguageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,9 @@ public class LanguageServiceImpl implements LanguageService {
     @Autowired
     private CircleLanguageDataService circleLanguageDataService;
 
+    @Autowired
+    private LanguageDataService languageDataService;
+
     @Override
     public List<Language> getCircleLanguages(String circle) {
         List<CircleLanguage> circleLanguages =  circleLanguageDataService.findByCircle(circle);
@@ -29,6 +33,11 @@ public class LanguageServiceImpl implements LanguageService {
         }
 
         return languages;
+    }
+
+    @Override
+    public Language getLanguage(String code) {
+        return languageDataService.findByCode(code);
     }
 
 }

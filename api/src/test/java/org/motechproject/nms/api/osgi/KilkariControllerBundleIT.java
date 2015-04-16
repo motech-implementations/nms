@@ -13,6 +13,8 @@ import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.service.KilkariService;
+import org.motechproject.nms.language.domain.Language;
+import org.motechproject.nms.language.repository.LanguageDataService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.motechproject.testing.osgi.http.SimpleHttpClient;
@@ -48,11 +50,17 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     private SubscriptionPackDataService subscriptionPackDataService;
     @Inject
     private SubscriptionDataService subscriptionDataService;
+    @Inject
+    private LanguageDataService languageDataService;
+
 
     private void setupData() {
         subscriptionDataService.deleteAll();
         subscriptionPackDataService.deleteAll();
         subscriberDataService.deleteAll();
+        languageDataService.deleteAll();
+
+        Language ta = languageDataService.create(new Language("tamil", "ta"));
 
         SubscriptionPack pack1 = subscriptionPackDataService.create(new SubscriptionPack("pack1"));
         SubscriptionPack pack2 = subscriptionPackDataService.create(new SubscriptionPack("pack2"));
@@ -62,9 +70,9 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         Subscriber subscriber1 = subscriberDataService.create(new Subscriber("0000000000"));
         Subscriber subscriber2 = subscriberDataService.create(new Subscriber("0000000001"));
 
-        Subscription subscription1 = subscriptionDataService.create(new Subscription("001", subscriber1, pack1));
-        Subscription subscription2 = subscriptionDataService.create(new Subscription("002", subscriber2, pack1));
-        Subscription subscription3 = subscriptionDataService.create(new Subscription("003", subscriber2, pack2));
+        Subscription subscription1 = subscriptionDataService.create(new Subscription(subscriber1, pack1, ta));
+        Subscription subscription2 = subscriptionDataService.create(new Subscription(subscriber2, pack1, ta));
+        Subscription subscription3 = subscriptionDataService.create(new Subscription(subscriber2, pack2, ta));
     }
 
     @Test
@@ -77,9 +85,13 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         httpGet.addHeader("Authorization",
                 "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
 
+        Subscriber subscriber = subscriberDataService.findByCallingNumber("0000000000");
+        Subscription subscription = subscriber.getSubscriptions().iterator().next();
+
         assertTrue(SimpleHttpClient.execHttpRequest(
             httpGet,
-            "{\"inboxSubscriptionDetailList\":[{\"subscriptionId\":\"001\",\"subscriptionPack\":\"pack1\",\"inboxWeekId\":\"10_1\",\"contentFileName\":\"xyz.wav\"}]}"));
+            "{\"inboxSubscriptionDetailList\":[{\"subscriptionId\":\"" + subscription.getSubscriptionId().toString() +
+            "\",\"subscriptionPack\":\"pack1\",\"inboxWeekId\":\"10_1\",\"contentFileName\":\"xyz.wav\"}]}"));
     }
 
     @Test
