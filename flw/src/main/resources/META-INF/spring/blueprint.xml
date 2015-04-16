@@ -11,9 +11,15 @@
     <osgi:service ref="serviceUsageService"
         interface="org.motechproject.nms.flw.service.ServiceUsageService" />
 
+    <osgi:service ref="serviceUsageCapService"
+                  interface="org.motechproject.nms.flw.service.ServiceUsageCapService" />
+
     <osgi:reference id="frontLineWorkerDataService"
                     interface="org.motechproject.nms.flw.repository.FrontLineWorkerDataService" />
 
     <osgi:reference id="serviceUsageDataService"
                     interface="org.motechproject.nms.flw.repository.ServiceUsageDataService" />
+
+    <osgi:reference id="serviceUsageCapDataService"
+                    interface="org.motechproject.nms.flw.repository.ServiceUsageCapDataService" />
 </beans>

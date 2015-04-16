@@ -6,12 +6,17 @@ import org.motechproject.nms.api.web.contract.FrontLineWorkerUser;
 import org.motechproject.nms.api.web.contract.ResponseUser;
 import org.motechproject.nms.flw.domain.Service;
 import org.motechproject.nms.flw.domain.ServiceUsage;
+import org.motechproject.nms.flw.domain.ServiceUsageCap;
+import org.motechproject.nms.flw.service.ServiceUsageCapService;
+import org.motechproject.nms.flw.service.ServiceUsageService;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.service.KilkariService;
 import org.motechproject.nms.language.domain.Language;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.language.service.LanguageService;
+import org.motechproject.nms.location.domain.District;
+import org.motechproject.nms.location.domain.State;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -33,11 +38,18 @@ public class UserController extends BaseController {
 
     @Autowired
     private LanguageService languageService;
+
     @Autowired
     private KilkariService kilkariService;
 
     @Autowired
     private FrontLineWorkerService frontLineWorkerService;
+
+    @Autowired
+    private ServiceUsageService serviceUsageService;
+
+    @Autowired
+    private ServiceUsageCapService serviceUsageCapService;
 
     @RequestMapping("/{serviceName}/user")
     @ResponseBody
@@ -49,49 +61,7 @@ public class UserController extends BaseController {
         ResponseUser user = null;
 
         if (MOBILE_ACADEMY.equals(serviceName) || MOBILE_KUNJI.equals(serviceName)) {
-            /**
-             * Common
-             *   languageLocationCode - If user is located this is the language code they selected
-             *   defaultLanguageLocationCode - Default language location code set for circle
-             *
-             * MA
-             *   currentUsageInPulses - No. of pulses consumed for MA service
-             *   endOfUsagePromptCounter - Indicates no. of times end of usage message has been played to user.
-             *
-             * MK
-             *   currentUsageInPulses - No. of pulses consumed for MK service
-             *   endOfUsagePromptCounter - Indicates no. of times end of usage message has been played to user.
-             *   welcomePromptFlag - Indicates welcome prompt is already played or not
-             *
-             * Global Config
-             *   maxAllowedUsageInPulses - Indicates maximum allowed usage (in pulses) for a user. -1 if uncapped
-             *   maxAllowedEndOfUsagePrompt - Max number of times the End Of Usage prompt shall be played to the user in
-             *                                a month (currently 2 according to SRS)
-             */
-
-            Service service = null;
-
-            if (MOBILE_ACADEMY.equals(serviceName)) {
-                service = Service.MOBILE_ACADEMY;
-            }
-
-            if (MOBILE_KUNJI.equals(serviceName)) {
-                service = Service.MOBILE_KUNJI;
-            }
-
-            // Load the FLW
-            user = new FrontLineWorkerUser();
-            ServiceUsage serviceUsage = new ServiceUsage(null, service, 0, 0, 0, DateTime.now());
-            FrontLineWorker flw = frontLineWorkerService.getByContactNumber(callingNumber);
-
-            if (null != flw) {
-                user.setLanguageLocationCode(flw.getLanguage().getCode());
-                serviceUsage = frontLineWorkerService.getCurrentMonthlyUsageForService(flw, service);
-            }
-
-            ((FrontLineWorkerUser) user).setCurrentUsageInPulses(serviceUsage.getUsageInPulses());
-            ((FrontLineWorkerUser) user).setEndOfUsagePromptCounter(serviceUsage.getEndOfUsage());
-            ((FrontLineWorkerUser) user).setWelcomePromptFlag(serviceUsage.getWelcomePrompt() > 0 ? true : false);
+            user = getFrontLineWorkerResponseUser(serviceName, callingNumber);
 
         } else if (KILKARI.equals(serviceName)) {
             user = new KilkariResponseUser();
@@ -113,6 +83,65 @@ public class UserController extends BaseController {
             user.setDefaultLanguageLocationCode(language.getCode());
         }
 
+        return user;
+    }
+
+    private ResponseUser getFrontLineWorkerResponseUser(String serviceName, String callingNumber) {
+        ResponseUser user; /**
+         * Common
+         *   languageLocationCode - If user is located this is the language code they selected
+         *   defaultLanguageLocationCode - Default language location code set for circle
+         *
+         * MA
+         *   currentUsageInPulses - No. of pulses consumed for MA service
+         *   endOfUsagePromptCounter - Indicates no. of times end of usage message has been played to user.
+         *
+         * MK
+         *   currentUsageInPulses - No. of pulses consumed for MK service
+         *   endOfUsagePromptCounter - Indicates no. of times end of usage message has been played to user.
+         *   welcomePromptFlag - Indicates welcome prompt is already played or not
+         *
+         * Global Config
+         *   maxAllowedUsageInPulses - Indicates maximum allowed usage (in pulses) for a user. -1 if uncapped
+         *   maxAllowedEndOfUsagePrompt - Max number of times the End Of Usage prompt shall be played to the user in
+         *                                a month (currently 2 according to SRS)
+         */
+
+        Service service = null;
+
+        if (MOBILE_ACADEMY.equals(serviceName)) {
+            service = Service.MOBILE_ACADEMY;
+        }
+
+        if (MOBILE_KUNJI.equals(serviceName)) {
+            service = Service.MOBILE_KUNJI;
+        }
+
+        user = new FrontLineWorkerUser();
+        ServiceUsage serviceUsage = new ServiceUsage(null, service, 0, 0, 0, DateTime.now());
+        FrontLineWorker flw = frontLineWorkerService.getByContactNumber(callingNumber);
+
+        State state = null;
+        if (null != flw) {
+            user.setLanguageLocationCode(flw.getLanguage().getCode());
+            serviceUsage = serviceUsageService.getCurrentMonthlyUsageForFLWAndService(flw, service);
+
+            District district = flw.getDistrict();
+            if (null != district) {
+                state = district.getState();
+            }
+        }
+
+        ServiceUsageCap serviceUsageCap = serviceUsageCapService.getServiceUsageCap(state, service);
+
+        ((FrontLineWorkerUser) user).setCurrentUsageInPulses(serviceUsage.getUsageInPulses());
+        ((FrontLineWorkerUser) user).setEndOfUsagePromptCounter(serviceUsage.getEndOfUsage());
+        ((FrontLineWorkerUser) user).setWelcomePromptFlag(serviceUsage.getWelcomePrompt() > 0 ? true : false);
+
+        ((FrontLineWorkerUser) user).setMaxAllowedUsageInPulses(serviceUsageCap.getMaxUsageInPulses());
+
+        // TODO: During configuration sprint this value needs to be de-hardcoded
+        ((FrontLineWorkerUser) user).setMaxAllowedEndOfUsagePrompt(2);
         return user;
     }
 }

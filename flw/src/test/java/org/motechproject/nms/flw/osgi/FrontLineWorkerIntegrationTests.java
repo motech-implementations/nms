@@ -10,6 +10,7 @@ import org.junit.runners.Suite;
 @Suite.SuiteClasses({
         FrontLineWorkerServiceBundleIT.class,
         ServiceUsageServiceBundleIT.class,
+        ServiceUsageCapServiceBundleIT.class,
         HelloWorldWebBundleIT.class
 })
 public class FrontLineWorkerIntegrationTests {
