@@ -4,7 +4,9 @@ import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 
 import javax.jdo.annotations.Unique;
-import java.util.List;
+import javax.jdo.annotations.Persistent;
+import java.util.Set;
+import java.util.HashSet;
 
 /**
  * A Kilkari subscriber (recipient of the service, ie: a pregnant woman) essentially identified by their phone number
@@ -16,16 +18,17 @@ public class Subscriber {
     @Unique
     private String callingNumber;
 
-    //todo: should this be a Set<> instead of a List<>?
+    //TODO: making this a bi-directional relationship until MOTECH-1638 is fixed. See #31.
     @Field
-    private List<SubscriptionPack> subscriptionPacks;
+    @Persistent(mappedBy = "subscriber", defaultFetchGroup = "false")
+    private Set<Subscription> subscriptions;
 
     public Subscriber() {
     }
 
-    public Subscriber(String callingNumber, List<SubscriptionPack> subscriptionPacks) {
+    public Subscriber(String callingNumber) {
         this.callingNumber = callingNumber;
-        this.subscriptionPacks = subscriptionPacks;
+        this.subscriptions = new HashSet<>();
     }
 
     public String getCallingNumber() {
@@ -36,12 +39,12 @@ public class Subscriber {
         this.callingNumber = callingNumber;
     }
 
-    public List<SubscriptionPack> getSubscriptionPacks() {
-        return subscriptionPacks;
+    public Set<Subscription> getSubscriptions() {
+        return subscriptions;
     }
 
-    public void setSubscriptionPacks(List<SubscriptionPack> subscriptionPacks) {
-        this.subscriptionPacks = subscriptionPacks;
+    public void setSubscriptions(Set<Subscription> subscriptions) {
+        this.subscriptions = subscriptions;
     }
 
     @Override
@@ -58,22 +61,19 @@ public class Subscriber {
         if (!callingNumber.equals(that.callingNumber)) {
             return false;
         }
-        return subscriptionPacks.equals(that.subscriptionPacks);
-
+        return subscriptions.equals(that.subscriptions);
     }
 
     @Override
     public int hashCode() {
-        int result = callingNumber.hashCode();
-        result = 31 * result + subscriptionPacks.hashCode();
-        return result;
+        return callingNumber.hashCode();
     }
 
     @Override
     public String toString() {
         return "Subscriber{" +
                 "callingNumber='" + callingNumber + '\'' +
-                ", subscriptionPacks=" + subscriptionPacks +
+                ", subscriptions=" + subscriptions +
                 '}';
     }
 }

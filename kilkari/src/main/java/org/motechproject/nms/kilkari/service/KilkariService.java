@@ -1,14 +1,12 @@
 package org.motechproject.nms.kilkari.service;
 
-import org.motechproject.nms.kilkari.domain.SubscriptionPack;
-
-import java.util.List;
+import org.motechproject.nms.kilkari.domain.Subscriber;
 
 /**
  *
  */
 public interface KilkariService {
 
-    List<SubscriptionPack> getSubscriberPacks(String callingNumber);
+    Subscriber getSubscriber(String callingNumber);
 
 }

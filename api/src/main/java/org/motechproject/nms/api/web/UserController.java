@@ -1,10 +1,12 @@
 package org.motechproject.nms.api.web;
 
+import org.motechproject.nms.api.web.exception.NotFoundException;
 import org.motechproject.nms.api.web.contract.KilkariResponseUser;
 import org.motechproject.nms.api.web.contract.MobileAcademyUser;
 import org.motechproject.nms.api.web.contract.MobileKunjiUser;
 import org.motechproject.nms.api.web.contract.ResponseUser;
-import org.motechproject.nms.kilkari.domain.SubscriptionPack;
+import org.motechproject.nms.kilkari.domain.Subscriber;
+import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.service.KilkariService;
 import org.motechproject.nms.language.domain.Language;
 import org.motechproject.nms.language.service.LanguageService;
@@ -35,7 +37,8 @@ public class UserController extends BaseController {
     @RequestMapping("/{serviceName}/user")
     @ResponseBody
     public ResponseUser user(@PathVariable String serviceName, @RequestParam String callingNumber,
-                             @RequestParam String operator, @RequestParam String circle, @RequestParam String callId) {
+                             @RequestParam String operator, @RequestParam String circle, @RequestParam String callId)
+            throws NotFoundException {
         List<Language> languages = languageService.getCircleLanguages(circle);
         StringBuilder failureReasons = validate(callingNumber, operator, circle, callId);
 
@@ -47,10 +50,14 @@ public class UserController extends BaseController {
             user = new MobileKunjiUser();
         } else if (KILKARI.equals(serviceName)) {
             user = new KilkariResponseUser();
-            List<SubscriptionPack> subscriptionPacks = kilkariService.getSubscriberPacks(callingNumber);
+            Subscriber subscriber = kilkariService.getSubscriber(callingNumber);
+            if (subscriber == null) {
+                throw new NotFoundException(String.format(NOT_FOUND, "callingNumber"));
+            }
+            Set<Subscription> subscriptions = subscriber.getSubscriptions();
             Set<String> packs = new HashSet<>();
-            for (SubscriptionPack subscriptionPack : subscriptionPacks) {
-                packs.add(subscriptionPack.getName());
+            for (Subscription subscription : subscriptions) {
+                packs.add(subscription.getSubscriptionPack().getName());
             }
             ((KilkariResponseUser) user).setSubscriptionPackList(packs);
         } else {
