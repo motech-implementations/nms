@@ -21,10 +21,7 @@ import org.motechproject.nms.location.domain.District;
 import org.motechproject.nms.location.domain.State;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -51,6 +48,14 @@ public class UserController extends BaseController {
 
     @Autowired
     private ServiceUsageCapService serviceUsageCapService;
+
+    @RequestMapping(value = "/{serviceName}/languageLocationCode",
+                    method = RequestMethod.POST,
+                    headers = {"Content-type=application/json"})
+    @ResponseBody
+    public ResponseUser setUserLanguage(@PathVariable String serviceName, @RequestBody Person person) {
+
+    }
 
     @RequestMapping("/{serviceName}/user")
     @ResponseBody
