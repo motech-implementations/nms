@@ -123,7 +123,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", "0000000000");
         frontLineWorkerService.add(flw);
 
-        Language language = new Language("Papiamento", "99");
+        Language language = new Language("Papiamento", 99);
         languageDataService.create(language);
 
         CircleLanguage circleLanguage = new CircleLanguage("AA", language);
@@ -136,14 +136,14 @@ public class UserControllerBundleIT extends BasePaxIT {
     private void createFLWWithLanguageServiceUsageAndCappedService() {
         cleanAllData();
 
-        Language language = new Language("English", "10");
+        Language language = new Language("English", 10);
         languageDataService.create(language);
 
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", "0000000000");
         flw.setLanguage(language);
         frontLineWorkerService.add(flw);
 
-        language = new Language("Papiamento", "99");
+        language = new Language("Papiamento", 99);
         languageDataService.create(language);
 
         CircleLanguage circleLanguage = new CircleLanguage("AA", language);
@@ -160,14 +160,14 @@ public class UserControllerBundleIT extends BasePaxIT {
     private void createFLWWithLanguageFullServiceUsageAndCappedService() {
         cleanAllData();
 
-        Language language = new Language("English", "10");
+        Language language = new Language("English", 10);
         languageDataService.create(language);
 
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", "0000000000");
         flw.setLanguage(language);
         frontLineWorkerService.add(flw);
 
-        language = new Language("Papiamento", "99");
+        language = new Language("Papiamento", 99);
         languageDataService.create(language);
 
         CircleLanguage circleLanguage = new CircleLanguage("AA", language);
@@ -183,14 +183,14 @@ public class UserControllerBundleIT extends BasePaxIT {
     private void createFLWWithLanguageFullUsageOfBothServiceUncapped() {
         cleanAllData();
 
-        Language language = new Language("English", "10");
+        Language language = new Language("English", 10);
         languageDataService.create(language);
 
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", "0000000000");
         flw.setLanguage(language);
         frontLineWorkerService.add(flw);
 
-        language = new Language("Papiamento", "99");
+        language = new Language("Papiamento", 99);
         languageDataService.create(language);
 
         CircleLanguage circleLanguage = new CircleLanguage("AA", language);
@@ -209,7 +209,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
     private void createCircleWithLanguage() {
         cleanAllData();
-        Language language = new Language("Papiamento", "99");
+        Language language = new Language("Papiamento", 99);
         languageDataService.create(language);
 
         CircleLanguage circleLanguage = new CircleLanguage("AA", language);
@@ -237,7 +237,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         httpGet.addHeader("Authorization",
                 "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, "{\"languageLocationCode\":null,\"defaultLanguageLocationCode\":\"99\",\"currentUsageInPulses\":0,\"endOfUsagePromptCounter\":0,\"welcomePromptFlag\":false,\"maxAllowedUsageInPulses\":3600,\"maxAllowedEndOfUsagePrompt\":2}"));
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, "{\"languageLocationCode\":null,\"defaultLanguageLocationCode\":99,\"currentUsageInPulses\":0,\"endOfUsagePromptCounter\":0,\"welcomePromptFlag\":false,\"maxAllowedUsageInPulses\":3600,\"maxAllowedEndOfUsagePrompt\":2}"));
     }
 
     @Test
@@ -249,7 +249,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         httpGet.addHeader("Authorization",
                 "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, "{\"languageLocationCode\":\"10\",\"defaultLanguageLocationCode\":\"99\",\"currentUsageInPulses\":1,\"endOfUsagePromptCounter\":0,\"welcomePromptFlag\":false,\"maxAllowedUsageInPulses\":3600,\"maxAllowedEndOfUsagePrompt\":2}"));
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, "{\"languageLocationCode\":10,\"defaultLanguageLocationCode\":99,\"currentUsageInPulses\":1,\"endOfUsagePromptCounter\":0,\"welcomePromptFlag\":false,\"maxAllowedUsageInPulses\":3600,\"maxAllowedEndOfUsagePrompt\":2}"));
     }
 
     @Test
@@ -261,7 +261,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         httpGet.addHeader("Authorization",
                 "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, "{\"languageLocationCode\":\"10\",\"defaultLanguageLocationCode\":\"99\",\"currentUsageInPulses\":1,\"endOfUsagePromptCounter\":1,\"welcomePromptFlag\":true,\"maxAllowedUsageInPulses\":3600,\"maxAllowedEndOfUsagePrompt\":2}"));
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, "{\"languageLocationCode\":10,\"defaultLanguageLocationCode\":99,\"currentUsageInPulses\":1,\"endOfUsagePromptCounter\":1,\"welcomePromptFlag\":true,\"maxAllowedUsageInPulses\":3600,\"maxAllowedEndOfUsagePrompt\":2}"));
     }
 
     @Test
@@ -364,7 +364,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         httpGet.addHeader("Authorization",
                 "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, "{\"languageLocationCode\":null,\"defaultLanguageLocationCode\":\"99\",\"currentUsageInPulses\":0,\"endOfUsagePromptCounter\":0,\"welcomePromptFlag\":false,\"maxAllowedUsageInPulses\":-1,\"maxAllowedEndOfUsagePrompt\":2}"));
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, "{\"languageLocationCode\":null,\"defaultLanguageLocationCode\":99,\"currentUsageInPulses\":0,\"endOfUsagePromptCounter\":0,\"welcomePromptFlag\":false,\"maxAllowedUsageInPulses\":-1,\"maxAllowedEndOfUsagePrompt\":2}"));
     }
 
     // An FLW with usage for both MA and MK
@@ -377,7 +377,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         httpGet.addHeader("Authorization",
                 "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, "{\"languageLocationCode\":\"10\",\"defaultLanguageLocationCode\":\"99\",\"currentUsageInPulses\":1,\"endOfUsagePromptCounter\":1,\"welcomePromptFlag\":false,\"maxAllowedUsageInPulses\":-1,\"maxAllowedEndOfUsagePrompt\":2}"));
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, "{\"languageLocationCode\":10,\"defaultLanguageLocationCode\":99,\"currentUsageInPulses\":1,\"endOfUsagePromptCounter\":1,\"welcomePromptFlag\":false,\"maxAllowedUsageInPulses\":-1,\"maxAllowedEndOfUsagePrompt\":2}"));
     }
 
     // An FLW with usage and a service with a cap
@@ -390,6 +390,6 @@ public class UserControllerBundleIT extends BasePaxIT {
         httpGet.addHeader("Authorization",
                 "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, "{\"languageLocationCode\":\"10\",\"defaultLanguageLocationCode\":\"99\",\"currentUsageInPulses\":1,\"endOfUsagePromptCounter\":1,\"welcomePromptFlag\":true,\"maxAllowedUsageInPulses\":10,\"maxAllowedEndOfUsagePrompt\":2}"));
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, "{\"languageLocationCode\":10,\"defaultLanguageLocationCode\":99,\"currentUsageInPulses\":1,\"endOfUsagePromptCounter\":1,\"welcomePromptFlag\":true,\"maxAllowedUsageInPulses\":10,\"maxAllowedEndOfUsagePrompt\":2}"));
     }
 }

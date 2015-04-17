@@ -43,10 +43,10 @@ public class LanguageServiceBundleIT extends BasePaxIT {
 
     private void setupData() {
         languageDataService.deleteAll();
-        Language la = languageDataService.create(new Language("ladhaki", "la"));
-        Language ur = languageDataService.create(new Language("urdu", "ur"));
-        Language hi = languageDataService.create(new Language("hindi", "hi"));
-        Language ta = languageDataService.create(new Language("tamil", "ta"));
+        Language la = languageDataService.create(new Language("ladhaki", 10));
+        Language ur = languageDataService.create(new Language("urdu", 11));
+        Language hi = languageDataService.create(new Language("hindi", 12));
+        Language ta = languageDataService.create(new Language("tamil", 13));
 
         circleLanguageDataService.deleteAll();
         circleLanguageDataService.create(new CircleLanguage("foo", la));
@@ -65,11 +65,11 @@ public class LanguageServiceBundleIT extends BasePaxIT {
         setupData();
         List<Language> languages = languageService.getCircleLanguages("foo");
 
-        Set<String> languageCodes = new HashSet<String>();
+        Set<Integer> languageCodes = new HashSet<>();
         for (Language l : languages) {
             languageCodes.add(l.getCode());
         }
 
-        assertEquals(languageCodes, new HashSet<String>(Arrays.asList("la", "ur", "hi")));
+        assertEquals(languageCodes, new HashSet<Integer>(Arrays.asList(10, 11, 12)));
     }
 }
