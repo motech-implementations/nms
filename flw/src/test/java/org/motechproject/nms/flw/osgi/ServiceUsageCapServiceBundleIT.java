@@ -44,6 +44,7 @@ public class ServiceUsageCapServiceBundleIT extends BasePaxIT {
 
     private void setupData() {
         serviceUsageCapDataService.deleteAll();
+        stateDataService.deleteAll();
     }
 
     @Test
@@ -114,19 +115,20 @@ public class ServiceUsageCapServiceBundleIT extends BasePaxIT {
         State state = new State("New Jersey", 1l);
         stateDataService.create(state);
 
-        ServiceUsageCap serviceUsageCap = new ServiceUsageCap(state, Service.MOBILE_ACADEMY, 100);
-        serviceUsageCapDataService.create(serviceUsageCap);
+        ServiceUsageCap serviceUsageCapState = new ServiceUsageCap(state, Service.MOBILE_ACADEMY, 100);
+        serviceUsageCapDataService.create(serviceUsageCapState);
 
-        serviceUsageCap = new ServiceUsageCap(null, Service.MOBILE_ACADEMY, 200);
-        serviceUsageCapDataService.create(serviceUsageCap);
+        ServiceUsageCap serviceUsageCapNat = new ServiceUsageCap(null, Service.MOBILE_ACADEMY, 200);
+        serviceUsageCapDataService.create(serviceUsageCapNat);
 
-        serviceUsageCap = serviceUsageCapService.getServiceUsageCap(state, Service.MOBILE_ACADEMY);
+        ServiceUsageCap serviceUsageCap = serviceUsageCapService.getServiceUsageCap(state, Service.MOBILE_ACADEMY);
 
-        assertEquals(null, serviceUsageCap.getState());
+        assertEquals(state, serviceUsageCap.getState());
         assertEquals(Service.MOBILE_ACADEMY, serviceUsageCap.getService());
-        assertEquals(200, serviceUsageCap.getMaxUsageInPulses());
+        assertEquals(100, serviceUsageCap.getMaxUsageInPulses());
 
-        serviceUsageCapDataService.delete(serviceUsageCap);
+        serviceUsageCapDataService.delete(serviceUsageCapState);
+        serviceUsageCapDataService.delete(serviceUsageCapNat);
         stateDataService.delete(state);
     }
 
@@ -137,16 +139,16 @@ public class ServiceUsageCapServiceBundleIT extends BasePaxIT {
         State state = new State("New Jersey", 1l);
         stateDataService.create(state);
 
-        ServiceUsageCap serviceUsageCap = new ServiceUsageCap(state, Service.MOBILE_ACADEMY, 100);
-        serviceUsageCapDataService.create(serviceUsageCap);
+        ServiceUsageCap serviceUsageCap1 = new ServiceUsageCap(state, Service.MOBILE_ACADEMY, 100);
+        serviceUsageCapDataService.create(serviceUsageCap1);
 
-        serviceUsageCap = serviceUsageCapService.getServiceUsageCap(state, Service.MOBILE_KUNJI);
+        ServiceUsageCap serviceUsageCap = serviceUsageCapService.getServiceUsageCap(state, Service.MOBILE_KUNJI);
 
         assertEquals(null, serviceUsageCap.getState());
         assertEquals(null, serviceUsageCap.getService());
         assertEquals(-1, serviceUsageCap.getMaxUsageInPulses());
 
-        serviceUsageCapDataService.delete(serviceUsageCap);
+        serviceUsageCapDataService.delete(serviceUsageCap1);
         stateDataService.delete(state);
     }
 
@@ -157,16 +159,16 @@ public class ServiceUsageCapServiceBundleIT extends BasePaxIT {
         State state = new State("New Jersey", 1l);
         stateDataService.create(state);
 
-        ServiceUsageCap serviceUsageCap = new ServiceUsageCap(state, Service.MOBILE_ACADEMY, 100);
-        serviceUsageCapDataService.create(serviceUsageCap);
+        ServiceUsageCap serviceUsageCap1 = new ServiceUsageCap(state, Service.MOBILE_ACADEMY, 100);
+        serviceUsageCapDataService.create(serviceUsageCap1);
 
-        serviceUsageCap = serviceUsageCapService.getServiceUsageCap(null, Service.MOBILE_ACADEMY);
+        ServiceUsageCap serviceUsageCap = serviceUsageCapService.getServiceUsageCap(null, Service.MOBILE_ACADEMY);
 
         assertEquals(null, serviceUsageCap.getState());
         assertEquals(null, serviceUsageCap.getService());
         assertEquals(-1, serviceUsageCap.getMaxUsageInPulses());
 
-        serviceUsageCapDataService.delete(serviceUsageCap);
+        serviceUsageCapDataService.delete(serviceUsageCap1);
         stateDataService.delete(state);
     }
 

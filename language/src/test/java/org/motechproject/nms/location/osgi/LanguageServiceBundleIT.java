@@ -1,4 +1,4 @@
-package org.motechproject.nms.language.osgi;
+package org.motechproject.nms.location.osgi;
 
 import org.junit.Before;
 import org.motechproject.nms.language.domain.CircleLanguage;

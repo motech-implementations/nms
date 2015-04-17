@@ -6,10 +6,10 @@
     <import resource="classpath*:META-INF/motech/*.xml" />
 
     <osgi:service ref="frontLineWorkerService"
-        interface="org.motechproject.nms.flw.service.FrontLineWorkerService" />
+                  interface="org.motechproject.nms.flw.service.FrontLineWorkerService" />
 
     <osgi:service ref="serviceUsageService"
-        interface="org.motechproject.nms.flw.service.ServiceUsageService" />
+                  interface="org.motechproject.nms.flw.service.ServiceUsageService" />
 
     <osgi:service ref="serviceUsageCapService"
                   interface="org.motechproject.nms.flw.service.ServiceUsageCapService" />

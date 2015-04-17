@@ -6,6 +6,7 @@ import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.annotations.UIDisplayable;
 
 import javax.jdo.annotations.Persistent;
+import javax.jdo.annotations.Unique;
 import java.util.Set;
 
 /**
@@ -19,6 +20,7 @@ public class State {
     private String name;
 
     @Field
+    @Unique
     @UIDisplayable(position = 1)
     private Long stateCode;
 
@@ -57,6 +59,26 @@ public class State {
 
     public void setDistricts(Set<District> districts) {
         this.districts = districts;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) { return true; }
+        if (o == null || getClass() != o.getClass()) { return false; }
+
+        State state = (State) o;
+
+        if (!name.equals(state.name)) { return false; }
+        if (!stateCode.equals(state.stateCode)) { return false; }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = name.hashCode();
+        result = 31 * result + stateCode.hashCode();
+        return result;
     }
 
     /**

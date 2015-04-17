@@ -14,7 +14,7 @@ import javax.jdo.Query;
 /**
  * Created by rob on 4/15/15.
  */
-@Service("serviceUsageService")
+@Service("serviceUsageCapService")
 public class ServiceUsageCapServiceImpl implements ServiceUsageCapService {
     private ServiceUsageCapDataService serviceUsageCapDataService;
 
@@ -23,27 +23,17 @@ public class ServiceUsageCapServiceImpl implements ServiceUsageCapService {
         this.serviceUsageCapDataService = serviceUsageCapDataService;
     }
 
+    /*
+    The spec was a little unclear on which cap took precedence.
+    (Sara in mail 4/15/15: it should be possible to set both a national cap or a state cap. If you set a
+                           state cap for a service, then the national cap does not apply. If no state cap is set, then
+                           the national cap applies.
+     */
     @Override
     public ServiceUsageCap getServiceUsageCap(final State state, final org.motechproject.nms.flw.domain.Service service) {
 
-        // Find the national cap by looking for a record with null state
-        QueryExecution<ServiceUsageCap> nationalQueryExecution = new QueryExecution<ServiceUsageCap>() {
-            @Override
-            public ServiceUsageCap execute(Query query, InstanceSecurityRestriction restriction) {
-
-                query.setFilter("state == null && service == flw_service");
-                query.declareParameters("org.motechproject.nms.flw.domain.Service flw_service");
-
-                return (ServiceUsageCap) query.execute(service);
-            }
-        };
-
-        ServiceUsageCap nationalServiceUsageCap = serviceUsageCapDataService.executeQuery(nationalQueryExecution);
-
-        if (null != nationalServiceUsageCap) {
-            return nationalServiceUsageCap;
-        }
-
+        // Todo: Since the only difference between the state and national query is the value of state they should
+        //       be combined
         if (null != state) {
             // Find a state cap by providing a state
             QueryExecution<ServiceUsageCap> stateQueryExecution = new QueryExecution<ServiceUsageCap>() {
@@ -52,6 +42,7 @@ public class ServiceUsageCapServiceImpl implements ServiceUsageCapService {
 
                     query.setFilter("state == flw_state && service == flw_service");
                     query.declareParameters("org.motechproject.nms.location.domain.State flw_state, org.motechproject.nms.flw.domain.Service flw_service");
+                    query.setUnique(true);
 
                     return (ServiceUsageCap) query.execute(state, service);
                 }
@@ -62,6 +53,25 @@ public class ServiceUsageCapServiceImpl implements ServiceUsageCapService {
             if (null != stateServiceUsageCap) {
                 return stateServiceUsageCap;
             }
+        }
+
+        // Find the national cap by looking for a record with null state
+        QueryExecution<ServiceUsageCap> nationalQueryExecution = new QueryExecution<ServiceUsageCap>() {
+            @Override
+            public ServiceUsageCap execute(Query query, InstanceSecurityRestriction restriction) {
+
+                query.setFilter("state == flw_state && service == flw_service");
+                query.declareParameters("org.motechproject.nms.location.domain.State flw_state, org.motechproject.nms.flw.domain.Service flw_service");
+                query.setUnique(true);
+
+                return (ServiceUsageCap) query.execute(null, service);
+            }
+        };
+
+        ServiceUsageCap nationalServiceUsageCap = serviceUsageCapDataService.executeQuery(nationalQueryExecution);
+
+        if (null != nationalServiceUsageCap) {
+            return nationalServiceUsageCap;
         }
 
         // Usage is uncapped

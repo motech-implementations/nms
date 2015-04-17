@@ -2,8 +2,10 @@ package org.motechproject.nms.kilkari.osgi;
 
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
+import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
+import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.service.KilkariService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -17,7 +19,8 @@ import org.ops4j.pax.exam.spi.reactors.PerSuite;
 import javax.inject.Inject;
 
 import java.util.Arrays;
-import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -36,6 +39,8 @@ public class KilkariServiceBundleIT extends BasePaxIT {
     private SubscriberDataService subscriberDataService;
     @Inject
     private SubscriptionPackDataService subscriptionPackDataService;
+    @Inject
+    private SubscriptionDataService subscriptionDataService;
 
     @Test
     public void testServicePresent() throws Exception {
@@ -44,16 +49,24 @@ public class KilkariServiceBundleIT extends BasePaxIT {
 
     @Test
     public void testServiceFunctional() throws Exception {
+        subscriptionDataService.deleteAll();
         subscriptionPackDataService.deleteAll();
+        subscriberDataService.deleteAll();
+
         SubscriptionPack pack1 = subscriptionPackDataService.create(new SubscriptionPack("pack1"));
         SubscriptionPack pack2 = subscriptionPackDataService.create(new SubscriptionPack("pack2"));
-        List<SubscriptionPack> onePack = Arrays.asList(pack1);
-        List<SubscriptionPack> twoPacks = Arrays.asList(pack1, pack2);
 
-        subscriberDataService.deleteAll();
-        Subscriber subscriber1 = subscriberDataService.create(new Subscriber("0000000000", onePack));
-        Subscriber subscriber2 = subscriberDataService.create(new Subscriber("0000000001", twoPacks));
+        Subscriber subscriber = subscriberDataService.create(new Subscriber("0000000001"));
 
-        assertEquals(Arrays.asList(pack1, pack2), kilkariService.getSubscriberPacks("0000000001"));
+        Subscription subscription1 = subscriptionDataService.create(new Subscription("001", subscriber, pack1));
+        Subscription subscription2 = subscriptionDataService.create(new Subscription("002", subscriber, pack2));
+
+        Set<Subscription> subscriptions = subscriber.getSubscriptions();
+        Set<SubscriptionPack> packs = new HashSet<>();
+        for (Subscription subscription : subscriptions) {
+            packs.add(subscription.getSubscriptionPack());
+        }
+
+        assertEquals(new HashSet<>(Arrays.asList(pack1, pack2)), packs);
     }
 }
