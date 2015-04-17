@@ -4,28 +4,28 @@ package org.motechproject.nms.api.web.contract;
  *
  */
 public abstract class ResponseUser {
-    private String languageLocationCode;
-    private String defaultLanguageLocationCode;
+    private Integer languageLocationCode;
+    private Integer defaultLanguageLocationCode;
 
     public ResponseUser() { }
 
-    public ResponseUser(String languageLocationCode) {
+    public ResponseUser(Integer languageLocationCode) {
         this.languageLocationCode = languageLocationCode;
     }
 
-    public String getLanguageLocationCode() {
+    public Integer getLanguageLocationCode() {
         return languageLocationCode;
     }
 
-    public void setLanguageLocationCode(String languageLocationCode) {
+    public void setLanguageLocationCode(Integer languageLocationCode) {
         this.languageLocationCode = languageLocationCode;
     }
 
-    public String getDefaultLanguageLocationCode() {
+    public Integer getDefaultLanguageLocationCode() {
         return defaultLanguageLocationCode;
     }
 
-    public void setDefaultLanguageLocationCode(String defaultLanguageLocationCode) {
+    public void setDefaultLanguageLocationCode(Integer defaultLanguageLocationCode) {
         this.defaultLanguageLocationCode = defaultLanguageLocationCode;
     }
 }
