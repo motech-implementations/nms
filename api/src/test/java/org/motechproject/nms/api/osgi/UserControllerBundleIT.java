@@ -3,6 +3,8 @@ package org.motechproject.nms.api.osgi;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
 import org.joda.time.DateTime;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -329,7 +331,6 @@ public class UserControllerBundleIT extends BasePaxIT {
     }
 
     @Test
-    @Ignore
     public void testNoCallId() throws IOException, InterruptedException {
         HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/kilkari/user?callingNumber=XXXXXXX&operator=OP&circle=AA", TestContext.getJettyPort()));
 
@@ -392,4 +393,61 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, "{\"languageLocationCode\":10,\"defaultLanguageLocationCode\":99,\"currentUsageInPulses\":1,\"endOfUsagePromptCounter\":1,\"welcomePromptFlag\":true,\"maxAllowedUsageInPulses\":10,\"maxAllowedEndOfUsagePrompt\":2}"));
     }
+
+    @Test
+    public void testSetLanguageInvalidService() throws IOException, InterruptedException {
+        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/NO_SERVICE/languageLocationCode", TestContext.getJettyPort()));
+        StringEntity params = new StringEntity("{\"callingNumber\":\"0000000000\",\"callId\":\"123456789012345\",\"languageLocationCode\":10}");
+        httpPost.setEntity(params);
+
+        httpPost.addHeader("content-type", "application/json");
+        httpPost.addHeader("Authorization",
+                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
+                "{\"failureReason\":\"<serviceName: Invalid>\"}",
+                (String) null, (String) null));
+    }
+
+    @Test
+    public void testSetLanguageMissingCallingNumber() throws IOException, InterruptedException {
+        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/NO_SERVICE/languageLocationCode", TestContext.getJettyPort()));
+        StringEntity params = new StringEntity("{\"callId\":\"123456789012345\",\"languageLocationCode\":10}");
+        httpPost.setEntity(params);
+
+        httpPost.addHeader("content-type", "application/json");
+        httpPost.addHeader("Authorization",
+                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
+                "{\"failureReason\":\"<callingNumber: Not Present>\"}",
+                (String) null, (String) null));
+    }
+
+    @Test
+    public void testSetLanguageInvalidCallingNumber() throws IOException, InterruptedException {
+        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/NO_SERVICE/languageLocationCode", TestContext.getJettyPort()));
+        StringEntity params = new StringEntity("{\"callingNumber\":\"0000000000\",\"callId\":\"123456789012345\",\"languageLocationCode\":10}");
+        httpPost.setEntity(params);
+
+        httpPost.addHeader("content-type", "application/json");
+        httpPost.addHeader("Authorization",
+                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
+                "{\"failureReason\":\"<callingNumber: Invalid>\"}",
+                (String) null, (String) null));
+    }
+
+    @Test
+    public void testSetLanguageMissingCallId() throws IOException, InterruptedException {}
+
+    @Test
+    public void testSetLanguageInvalidCallId() throws IOException, InterruptedException {}
+
+    @Test
+    public void testSetLanguageMissingLanguageLocationCode() throws IOException, InterruptedException {}
+
+    @Test
+    public void testSetLanguageInvalidLanguageLocationCode() throws IOException, InterruptedException {}
 }

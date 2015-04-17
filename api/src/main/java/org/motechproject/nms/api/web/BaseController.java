@@ -19,6 +19,8 @@ public class BaseController {
     public static final String NOT_FOUND = "<%s: Not Found>";
     public static final Pattern CALLING_NUMBER_PATTERN = Pattern.compile(
             "[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]");
+    public static final Pattern CALL_ID_NUMBER_PATTERN = Pattern.compile(
+            "[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]");
 
     protected StringBuilder validate(String callingNumber, String callId) {
         StringBuilder failureReasons = new StringBuilder();
@@ -31,6 +33,8 @@ public class BaseController {
 
         if (callId == null) {
             failureReasons.append(String.format(NOT_PRESENT, "callId"));
+        } else if (!CALL_ID_NUMBER_PATTERN.matcher(callId).matches()) {
+            failureReasons.append(String.format(INVALID, "callId"));
         }
 
         return failureReasons;
