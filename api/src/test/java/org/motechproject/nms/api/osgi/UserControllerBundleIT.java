@@ -42,6 +42,8 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 
@@ -100,8 +102,8 @@ public class UserControllerBundleIT extends BasePaxIT {
     /*
     Creates two subscription packs ('pack1' and 'pack2')
     Create two subscribers:
-        Subscriber "0000000000" is subscribed to pack 'pack1'
-        Subscriber "0000000001" is subscribed to packs 'pack1' and 'pack2'
+        Subscriber "1000000000" is subscribed to pack 'pack1'
+        Subscriber "2000000000" is subscribed to packs 'pack1' and 'pack2'
      */
     private void createKilkariTestData() {
         cleanAllData();
@@ -111,8 +113,8 @@ public class UserControllerBundleIT extends BasePaxIT {
         List<SubscriptionPack> onePack = Arrays.asList(pack1);
         List<SubscriptionPack> twoPacks = Arrays.asList(pack1, pack2);
 
-        Subscriber subscriber1 = subscriberDataService.create(new Subscriber("0000000000"));
-        Subscriber subscriber2 = subscriberDataService.create(new Subscriber("0000000001"));
+        Subscriber subscriber1 = subscriberDataService.create(new Subscriber("1000000000"));
+        Subscriber subscriber2 = subscriberDataService.create(new Subscriber("2000000000"));
 
         Subscription subscription1 = subscriptionDataService.create(new Subscription("001", subscriber1, pack1));
         Subscription subscription2 = subscriptionDataService.create(new Subscription("002", subscriber2, pack1));
@@ -122,7 +124,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     private void createFLWCappedServiceNoUsageNoLocationNoLanguage() {
         cleanAllData();
 
-        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", "0000000000");
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", "1111111111");
         frontLineWorkerService.add(flw);
 
         Language language = new Language("Papiamento", 99);
@@ -141,7 +143,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         Language language = new Language("English", 10);
         languageDataService.create(language);
 
-        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", "0000000000");
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", "1111111111");
         flw.setLanguage(language);
         frontLineWorkerService.add(flw);
 
@@ -165,7 +167,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         Language language = new Language("English", 10);
         languageDataService.create(language);
 
-        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", "0000000000");
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", "1111111111");
         flw.setLanguage(language);
         frontLineWorkerService.add(flw);
 
@@ -188,7 +190,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         Language language = new Language("English", 10);
         languageDataService.create(language);
 
-        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", "0000000000");
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", "1111111111");
         flw.setLanguage(language);
         frontLineWorkerService.add(flw);
 
@@ -222,7 +224,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     public void testKilkariUserRequest() throws IOException, InterruptedException {
         createKilkariTestData();
 
-        HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/kilkari/user?callingNumber=0000000001&operator=OP&circle=AA&callId=0123456789abcde", TestContext.getJettyPort()));
+        HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/kilkari/user?callingNumber=2000000000&operator=OP&circle=AA&callId=123456789012345", TestContext.getJettyPort()));
 
         httpGet.addHeader("Authorization",
                 "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
@@ -234,7 +236,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     public void testFLWUserRequestWithoutServiceUsage() throws IOException, InterruptedException {
         createFLWCappedServiceNoUsageNoLocationNoLanguage();
 
-        HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/mobilekunji/user?callingNumber=0000000000&operator=OP&circle=AA&callId=0123456789abcde", TestContext.getJettyPort()));
+        HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/mobilekunji/user?callingNumber=1111111111&operator=OP&circle=AA&callId=123456789012345", TestContext.getJettyPort()));
 
         httpGet.addHeader("Authorization",
                 "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
@@ -246,7 +248,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     public void testFLWUserRequestWithServiceUsageOnly() throws IOException, InterruptedException {
         createFLWWithLanguageServiceUsageAndCappedService();
 
-        HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/mobilekunji/user?callingNumber=0000000000&operator=OP&circle=AA&callId=0123456789abcde", TestContext.getJettyPort()));
+        HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/mobilekunji/user?callingNumber=1111111111&operator=OP&circle=AA&callId=123456789012345", TestContext.getJettyPort()));
 
         httpGet.addHeader("Authorization",
                 "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
@@ -258,7 +260,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     public void testFLWUserRequestWithServiceUsageAndEndOfUsageAndWelcomeMsg() throws IOException, InterruptedException {
         createFLWWithLanguageFullServiceUsageAndCappedService();
 
-        HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/mobilekunji/user?callingNumber=0000000000&operator=OP&circle=AA&callId=0123456789abcde", TestContext.getJettyPort()));
+        HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/mobilekunji/user?callingNumber=1111111111&operator=OP&circle=AA&callId=123456789012345", TestContext.getJettyPort()));
 
         httpGet.addHeader("Authorization",
                 "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
@@ -268,7 +270,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testInvalidServiceName() throws IOException, InterruptedException {
-        HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/NO_SERVICE/user?callingNumber=0123456789&operator=OP&circle=AA&callId=0123456789abcde", TestContext.getJettyPort()));
+        HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/NO_SERVICE/user?callingNumber=1111111111&operator=OP&circle=AA&callId=123456789012345", TestContext.getJettyPort()));
 
         httpGet.addHeader("Authorization",
                 "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
@@ -281,7 +283,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     @Test
     @Ignore
     public void testNoCallingNumber() throws IOException, InterruptedException {
-        HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/kilkari/user?operator=OP&circle=AA&callId=0123456789abcde", TestContext.getJettyPort()));
+        HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/kilkari/user?operator=OP&circle=AA&callId=123456789012345", TestContext.getJettyPort()));
 
         httpGet.addHeader("Authorization",
                 "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
@@ -294,7 +296,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     @Test
     @Ignore
     public void testInvalidCallingNumber() throws IOException, InterruptedException {
-        HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/kilkari/user?callingNumber=XXXXXXX&operator=OP&circle=AA&callId=0123456789abcde", TestContext.getJettyPort()));
+        HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/kilkari/user?callingNumber=XXXXXXX&operator=OP&circle=AA&callId=123456789012345", TestContext.getJettyPort()));
 
         httpGet.addHeader("Authorization",
                 "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
@@ -307,7 +309,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     @Test
     @Ignore
     public void testNoOperator() throws IOException, InterruptedException {
-        HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/kilkari/user?callingNumber=XXXXXXX&circle=AA&callId=0123456789abcde", TestContext.getJettyPort()));
+        HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/kilkari/user?callingNumber=1111111111&circle=AA&callId=123456789012345", TestContext.getJettyPort()));
 
         httpGet.addHeader("Authorization",
                 "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
@@ -320,7 +322,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     @Test
     @Ignore
     public void testNoCircle() throws IOException, InterruptedException {
-        HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/kilkari/user?callingNumber=XXXXXXX&operator=OP&callId=0123456789abcde", TestContext.getJettyPort()));
+        HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/kilkari/user?callingNumber=1111111111&operator=OP&callId=123456789012345", TestContext.getJettyPort()));
 
         httpGet.addHeader("Authorization",
                 "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
@@ -331,8 +333,9 @@ public class UserControllerBundleIT extends BasePaxIT {
     }
 
     @Test
+    @Ignore
     public void testNoCallId() throws IOException, InterruptedException {
-        HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/kilkari/user?callingNumber=XXXXXXX&operator=OP&circle=AA", TestContext.getJettyPort()));
+        HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/kilkari/user?callingNumber=1111111111&operator=OP&circle=AA", TestContext.getJettyPort()));
 
         httpGet.addHeader("Authorization",
                 "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
@@ -345,7 +348,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     @Test
     @Ignore
     public void testInternalError() throws IOException, InterruptedException {
-        HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/kilkari/user?callingNumber=XXXXXXX&operator=OP&circle=AA", TestContext.getJettyPort()));
+        HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/kilkari/user?callingNumber=1111111111&operator=OP&circle=AA", TestContext.getJettyPort()));
 
         httpGet.addHeader("Authorization",
                 "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
@@ -360,7 +363,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     public void testGetUserDetailsUnknownUser() throws IOException, InterruptedException {
         createCircleWithLanguage();
 
-        HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/mobilekunji/user?callingNumber=9999999999&operator=OP&circle=AA&callId=0123456789abcde", TestContext.getJettyPort()));
+        HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/mobilekunji/user?callingNumber=1111111112&operator=OP&circle=AA&callId=123456789012345", TestContext.getJettyPort()));
 
         httpGet.addHeader("Authorization",
                 "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
@@ -373,7 +376,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     public void testGetUserDetailsUserOfBothServices() throws IOException, InterruptedException {
         createFLWWithLanguageFullUsageOfBothServiceUncapped();
 
-        HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/mobileacademy/user?callingNumber=0000000000&operator=OP&circle=AA&callId=0123456789abcde", TestContext.getJettyPort()));
+        HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/mobileacademy/user?callingNumber=1111111111&operator=OP&circle=AA&callId=123456789012345", TestContext.getJettyPort()));
 
         httpGet.addHeader("Authorization",
                 "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
@@ -386,7 +389,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     public void testGetUserDetailsServiceCapped() throws IOException, InterruptedException {
         createFLWWithLanguageFullUsageOfBothServiceUncapped();
 
-        HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/mobilekunji/user?callingNumber=0000000000&operator=OP&circle=AA&callId=0123456789abcde", TestContext.getJettyPort()));
+        HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/mobilekunji/user?callingNumber=1111111111&operator=OP&circle=AA&callId=123456789012345", TestContext.getJettyPort()));
 
         httpGet.addHeader("Authorization",
                 "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
@@ -395,9 +398,10 @@ public class UserControllerBundleIT extends BasePaxIT {
     }
 
     @Test
+    @Ignore
     public void testSetLanguageInvalidService() throws IOException, InterruptedException {
         HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/NO_SERVICE/languageLocationCode", TestContext.getJettyPort()));
-        StringEntity params = new StringEntity("{\"callingNumber\":\"0000000000\",\"callId\":\"123456789012345\",\"languageLocationCode\":10}");
+        StringEntity params = new StringEntity("{\"callingNumber\":1111111111,\"callId\":123456789012345,\"languageLocationCode\":10}");
         httpPost.setEntity(params);
 
         httpPost.addHeader("content-type", "application/json");
@@ -410,9 +414,10 @@ public class UserControllerBundleIT extends BasePaxIT {
     }
 
     @Test
+    @Ignore
     public void testSetLanguageMissingCallingNumber() throws IOException, InterruptedException {
-        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/NO_SERVICE/languageLocationCode", TestContext.getJettyPort()));
-        StringEntity params = new StringEntity("{\"callId\":\"123456789012345\",\"languageLocationCode\":10}");
+        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/languageLocationCode", TestContext.getJettyPort()));
+        StringEntity params = new StringEntity("{\"callId\":123456789012345,\"languageLocationCode\":10}");
         httpPost.setEntity(params);
 
         httpPost.addHeader("content-type", "application/json");
@@ -425,9 +430,10 @@ public class UserControllerBundleIT extends BasePaxIT {
     }
 
     @Test
+    @Ignore
     public void testSetLanguageInvalidCallingNumber() throws IOException, InterruptedException {
-        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/NO_SERVICE/languageLocationCode", TestContext.getJettyPort()));
-        StringEntity params = new StringEntity("{\"callingNumber\":\"0000000000\",\"callId\":\"123456789012345\",\"languageLocationCode\":10}");
+        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/languageLocationCode", TestContext.getJettyPort()));
+        StringEntity params = new StringEntity("{\"callingNumber\":abcdef,\"callId\":123456789012345,\"languageLocationCode\":10}");
         httpPost.setEntity(params);
 
         httpPost.addHeader("content-type", "application/json");
@@ -440,14 +446,122 @@ public class UserControllerBundleIT extends BasePaxIT {
     }
 
     @Test
-    public void testSetLanguageMissingCallId() throws IOException, InterruptedException {}
+    @Ignore
+    public void testSetLanguageMissingCallId() throws IOException, InterruptedException {
+        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/languageLocationCode", TestContext.getJettyPort()));
+        StringEntity params = new StringEntity("{\"callingNumber\":1111111111,\"languageLocationCode\":10}");
+        httpPost.setEntity(params);
+
+        httpPost.addHeader("content-type", "application/json");
+        httpPost.addHeader("Authorization",
+                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
+                "{\"failureReason\":\"<callingNumber: Invalid>\"}",
+                (String) null, (String) null));
+    }
 
     @Test
-    public void testSetLanguageInvalidCallId() throws IOException, InterruptedException {}
+    @Ignore
+    public void testSetLanguageInvalidCallId() throws IOException, InterruptedException {
+        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/languageLocationCode", TestContext.getJettyPort()));
+        StringEntity params = new StringEntity("{\"callingNumber\":abcdef,\"callId\":abcd,\"languageLocationCode\":10}");
+        httpPost.setEntity(params);
+
+        httpPost.addHeader("content-type", "application/json");
+        httpPost.addHeader("Authorization",
+                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
+                "{\"failureReason\":\"<callingNumber: Invalid>\"}",
+                (String) null, (String) null));
+    }
 
     @Test
-    public void testSetLanguageMissingLanguageLocationCode() throws IOException, InterruptedException {}
+    @Ignore
+    public void testSetLanguageMissingLanguageLocationCode() throws IOException, InterruptedException {
+        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/languageLocationCode", TestContext.getJettyPort()));
+        StringEntity params = new StringEntity("{\"callingNumber\":abcdef,\"callId\":123456789012345}");
+        httpPost.setEntity(params);
+
+        httpPost.addHeader("content-type", "application/json");
+        httpPost.addHeader("Authorization",
+                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
+                "{\"failureReason\":\"<callingNumber: Invalid>\"}",
+                (String) null, (String) null));
+    }
 
     @Test
-    public void testSetLanguageInvalidLanguageLocationCode() throws IOException, InterruptedException {}
+    @Ignore
+    public void testSetLanguageInvalidLanguageLocationCode() throws IOException, InterruptedException {
+        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/languageLocationCode", TestContext.getJettyPort()));
+        StringEntity params = new StringEntity("{\"callingNumber\":abcdef,\"callId\":123456789012345,\"languageLocationCode\":\"AA\"}");
+        httpPost.setEntity(params);
+
+        httpPost.addHeader("content-type", "application/json");
+        httpPost.addHeader("Authorization",
+                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
+                "{\"failureReason\":\"<callingNumber: Invalid>\"}",
+                (String) null, (String) null));
+    }
+
+    @Test
+    @Ignore
+    public void testSetLanguageNoFLW() throws IOException, InterruptedException {
+        createCircleWithLanguage();
+
+        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/languageLocationCode", TestContext.getJettyPort()));
+        StringEntity params = new StringEntity("{\"callingNumber\":1111111111,\"callId\":123456789012345,\"languageLocationCode\":99}");
+        httpPost.setEntity(params);
+
+        httpPost.addHeader("content-type", "application/json");
+        httpPost.addHeader("Authorization",
+                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
+                "{\"failureReason\":\"<callingNumber: Not Found>\"}",
+                (String) null, (String) null));
+    }
+
+    @Test
+    @Ignore
+    public void testSetLanguageLanguageNotFound() throws IOException, InterruptedException {
+        createFLWCappedServiceNoUsageNoLocationNoLanguage();
+
+        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/languageLocationCode", TestContext.getJettyPort()));
+        StringEntity params = new StringEntity("{\"callingNumber\":1111111111,\"callId\":123456789012345,\"languageLocationCode\":77}");
+        httpPost.setEntity(params);
+
+        httpPost.addHeader("content-type", "application/json");
+        httpPost.addHeader("Authorization",
+                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
+                "{\"failureReason\":\"<languageLocationCode: Not Found>\"}",
+                (String) null, (String) null));
+    }
+
+    @Test
+    public void testSetLanguageValid() throws IOException, InterruptedException {
+        createFLWCappedServiceNoUsageNoLocationNoLanguage();
+
+        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/languageLocationCode", TestContext.getJettyPort()));
+        StringEntity params = new StringEntity("{\"callingNumber\":1111111111,\"callId\":123456789012345,\"languageLocationCode\":99}");
+        httpPost.setEntity(params);
+
+        httpPost.addHeader("content-type", "application/json");
+        httpPost.addHeader("Authorization",
+                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK));
+
+        FrontLineWorker flw = frontLineWorkerService.getByContactNumber("1111111111");
+        Language language = flw.getLanguage();
+        assertNotNull(language);
+        assertEquals("FLW Language Code", (long)99, (long)language.getCode());
+    }
 }

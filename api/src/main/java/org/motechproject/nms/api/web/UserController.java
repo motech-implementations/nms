@@ -23,7 +23,13 @@ import org.motechproject.nms.location.domain.State;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -53,20 +59,20 @@ public class UserController extends BaseController {
 
     @RequestMapping(value = "/{serviceName}/languageLocationCode",
                     method = RequestMethod.POST,
-                    headers = {"Content-type=application/json"})
+                    headers = { "Content-type=application/json" })
     @ResponseStatus(HttpStatus.OK)
     public void setUserLanguage(@PathVariable String serviceName, @RequestBody LanguageRequest languageRequest) throws NotFoundException {
-        String callingNumber = languageRequest.getCallingNumber();
-        String callId = languageRequest.getCallId();
+        Long callingNumber = languageRequest.getCallingNumber();
+        Long callId = languageRequest.getCallId();
         Integer languageLocationCode = languageRequest.getLanguageLocationCode();
 
         StringBuilder failureReasons = validate(callingNumber, callId);
 
-        if ( null == languageLocationCode ) {
+        if (null == languageLocationCode) {
             failureReasons.append(String.format(NOT_PRESENT, "languageLocationCode"));
         }
 
-        if ( !(MOBILE_ACADEMY.equals(serviceName) || MOBILE_KUNJI.equals(serviceName)) ) {
+        if (!(MOBILE_ACADEMY.equals(serviceName) || MOBILE_KUNJI.equals(serviceName))) {
             failureReasons.append(String.format(INVALID, "serviceName"));
         }
 
@@ -74,7 +80,7 @@ public class UserController extends BaseController {
             throw new IllegalArgumentException(failureReasons.toString());
         }
 
-        FrontLineWorker flw = frontLineWorkerService.getByContactNumber(callingNumber);
+        FrontLineWorker flw = frontLineWorkerService.getByContactNumber(String.valueOf(callingNumber));
         if (null == flw) {
             throw new NotFoundException(String.format(NOT_FOUND, "callingNumber"));
         }
@@ -90,8 +96,8 @@ public class UserController extends BaseController {
 
     @RequestMapping("/{serviceName}/user")
     @ResponseBody
-    public ResponseUser user(@PathVariable String serviceName, @RequestParam String callingNumber,
-                             @RequestParam String operator, @RequestParam String circle, @RequestParam String callId)
+    public ResponseUser user(@PathVariable String serviceName, @RequestParam Long callingNumber,
+                             @RequestParam String operator, @RequestParam String circle, @RequestParam Long callId)
             throws NotFoundException {
         StringBuilder failureReasons = validate(callingNumber, operator, circle, callId);
         if (failureReasons.length() > 0) {
@@ -111,14 +117,14 @@ public class UserController extends BaseController {
         Handle the FLW services
          */
         if (MOBILE_ACADEMY.equals(serviceName) || MOBILE_KUNJI.equals(serviceName)) {
-            user = getFrontLineWorkerResponseUser(serviceName, callingNumber);
+            user = getFrontLineWorkerResponseUser(serviceName, String.valueOf(callingNumber));
         }
 
         /*
         Kilkari in the house!
          */
         if (KILKARI.equals(serviceName)) {
-            user = getKilkariResponseUser(callingNumber);
+            user = getKilkariResponseUser(String.valueOf(callingNumber));
         }
 
         if (failureReasons.length() > 0) {

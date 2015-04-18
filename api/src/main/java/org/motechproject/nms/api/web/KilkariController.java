@@ -27,14 +27,14 @@ public class KilkariController extends BaseController {
 
     @RequestMapping("/inbox")
     @ResponseBody
-    public KilkariResponseInbox inbox(@RequestParam String callingNumber, @RequestParam String callId) throws NotFoundException {
+    public KilkariResponseInbox inbox(@RequestParam Long callingNumber, @RequestParam Long callId) throws NotFoundException {
 
         StringBuilder failureReasons = validate(callingNumber, callId);
         if (failureReasons.length() > 0) {
             throw new IllegalArgumentException(failureReasons.toString());
         }
 
-        Subscriber subscriber = kilkariService.getSubscriber(callingNumber);
+        Subscriber subscriber = kilkariService.getSubscriber(String.valueOf(callingNumber));
         if (subscriber == null) {
             throw new NotFoundException(String.format(NOT_FOUND, "callingNumber"));
         }
