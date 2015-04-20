@@ -315,7 +315,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     }
 
     @Test
-    @Ignore //todo: figure out an elegant way to test that
+    @Ignore //todo: #60 figure out an elegant way to test that
     public void testInternalError() throws IOException, InterruptedException {
         HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/kilkari/user?callingNumber=0123456789&operator=OP&circle=AA", TestContext.getJettyPort()));
 
