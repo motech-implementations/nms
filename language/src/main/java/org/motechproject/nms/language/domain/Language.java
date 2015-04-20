@@ -17,12 +17,12 @@ public class Language {
 
     @Field
     @Unique
-    private String code;
+    private Integer code;
 
     public Language() {
     }
 
-    public Language(String name, String code) {
+    public Language(String name, Integer code) {
         this.name = name;
         this.code = code;
     }
@@ -35,11 +35,11 @@ public class Language {
         this.name = name;
     }
 
-    public String getCode() {
+    public Integer getCode() {
         return code;
     }
 
-    public void setCode(String code) {
+    public void setCode(Integer code) {
         this.code = code;
     }
 

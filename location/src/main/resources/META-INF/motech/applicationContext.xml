@@ -7,15 +7,15 @@
        http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.1.xsd">
 
     <context:annotation-config />
-    <context:component-scan base-package="org.motechproject.nms.flw" />
+    <context:component-scan base-package="org.motechproject.nms.location" />
 
     <mvc:annotation-driven />
 
     <bean id="moduleRegistrationData" class="org.motechproject.osgi.web.ModuleRegistrationData">
-        <constructor-arg name="moduleName" value="flw" />
+        <constructor-arg name="moduleName" value="location" />
         <constructor-arg name="i18n">
             <map>
-                <entry key="messages" value="../flw/resources/messages/" />
+                <entry key="messages" value="../location/resources/messages/" />
             </map>
         </constructor-arg>
     </bean>

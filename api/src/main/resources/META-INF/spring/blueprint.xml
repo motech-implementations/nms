@@ -13,4 +13,9 @@
 
     <osgi:reference id="kilkariService" interface="org.motechproject.nms.kilkari.service.KilkariService"/>
 
+    <osgi:reference id="frontLineWorkerService" interface="org.motechproject.nms.flw.service.FrontLineWorkerService"/>
+
+    <osgi:reference id="serviceUsageService" interface="org.motechproject.nms.flw.service.ServiceUsageService"/>
+
+    <osgi:reference id="serviceUsageCapService" interface="org.motechproject.nms.flw.service.ServiceUsageCapService"/>
 </beans>

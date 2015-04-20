@@ -61,7 +61,7 @@ public class KilkariServiceBundleIT extends BasePaxIT {
         Subscription subscription1 = subscriptionDataService.create(new Subscription("001", subscriber, pack1));
         Subscription subscription2 = subscriptionDataService.create(new Subscription("002", subscriber, pack2));
 
-        Set<Subscription> subscriptions = kilkariService.getSubscriber("0000000001").getSubscriptions();
+        Set<Subscription> subscriptions = subscriber.getSubscriptions();
         Set<SubscriptionPack> packs = new HashSet<>();
         for (Subscription subscription : subscriptions) {
             packs.add(subscription.getSubscriptionPack());
