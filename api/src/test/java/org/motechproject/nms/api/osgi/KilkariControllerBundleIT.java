@@ -74,12 +74,9 @@ public class KilkariControllerBundleIT extends BasePaxIT {
             "http://localhost:%d/api/kilkari/inbox?callingNumber=1000000000&callId=123456789012345",
             TestContext.getJettyPort()));
 
-        httpGet.addHeader("Authorization",
-                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
-
-        assertTrue(SimpleHttpClient.execHttpRequest(
-            httpGet,
-            "{\"inboxSubscriptionDetailList\":[{\"subscriptionId\":\"001\",\"subscriptionPack\":\"pack1\",\"inboxWeekId\":\"10_1\",\"contentFileName\":\"xyz.wav\"}]}"));
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
+            "{\"inboxSubscriptionDetailList\":[{\"subscriptionId\":\"001\",\"subscriptionPack\":\"pack1\",\"inboxWeekId\":\"10_1\",\"contentFileName\":\"xyz.wav\"}]}",
+            ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     @Test
@@ -89,10 +86,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 "http://localhost:%d/api/kilkari/inbox?callingNumber=3000000009&callId=123456789012345",
                 TestContext.getJettyPort()));
 
-        httpGet.addHeader("Authorization",
-                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
-
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_NOT_FOUND));
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_NOT_FOUND, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     @Test
@@ -102,10 +96,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 "http://localhost:%d/api/kilkari/inbox?callId=123456789012345",
                 TestContext.getJettyPort()));
 
-        httpGet.addHeader("Authorization",
-                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
-
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_BAD_REQUEST));
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_BAD_REQUEST, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
 }

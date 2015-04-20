@@ -34,6 +34,7 @@ public class ServiceUsageServiceImpl implements ServiceUsageService {
     public ServiceUsage getCurrentMonthlyUsageForFLWAndService(final FrontLineWorker frontLineWorker, final org.motechproject.nms.flw.domain.Service service) {
         ServiceUsage serviceUsage = new ServiceUsage(frontLineWorker, service, 0, 0, 0, DateTime.now());
 
+        @SuppressWarnings("unchecked")
         QueryExecution<List<ServiceUsage>> queryExecution = new QueryExecution<List<ServiceUsage>>() {
             @Override
             public List<ServiceUsage> execute(Query query, InstanceSecurityRestriction restriction) {

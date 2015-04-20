@@ -32,7 +32,7 @@ public class ServiceUsageCapServiceImpl implements ServiceUsageCapService {
     @Override
     public ServiceUsageCap getServiceUsageCap(final State state, final org.motechproject.nms.flw.domain.Service service) {
 
-        // Todo: Since the only difference between the state and national query is the value of state they should
+        // Todo: #59 Since the only difference between the state and national query is the value of state they should
         //       be combined
         if (null != state) {
             // Find a state cap by providing a state
@@ -75,8 +75,6 @@ public class ServiceUsageCapServiceImpl implements ServiceUsageCapService {
         }
 
         // Usage is uncapped
-        ServiceUsageCap serviceUsageCap = new ServiceUsageCap(null, null, -1);
-
-        return serviceUsageCap;
+        return new ServiceUsageCap(null, null, -1);
     }
 }

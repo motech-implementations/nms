@@ -1,9 +1,6 @@
 package org.motechproject.nms.flw.osgi;
 
-import org.joda.time.DateTime;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
-import org.motechproject.nms.flw.domain.Service;
-import org.motechproject.nms.flw.domain.ServiceUsage;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.flw.repository.ServiceUsageDataService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
@@ -56,17 +53,20 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
     @Test
     public void testFrontLineWorkerService() throws Exception {
         setupData();
-        FrontLineWorker testRecord = new FrontLineWorker("Test Worker", "1111111111");
-        frontLineWorkerService.add(testRecord);
+        FrontLineWorker flw = new FrontLineWorker("Test Worker", "1111111111");
+        frontLineWorkerService.add(flw);
 
-        FrontLineWorker record = frontLineWorkerService.getByContactNumber(testRecord.getContactNumber());
-        assertEquals(testRecord, record);
+        FrontLineWorker otherFlw = frontLineWorkerDataService.findByContactNumber("1111111111");
+        assertNotNull(otherFlw);
+
+        FrontLineWorker record = frontLineWorkerService.getByContactNumber(flw.getContactNumber());
+        assertEquals(flw, record);
 
         List<FrontLineWorker> records = frontLineWorkerService.getRecords();
-        assertTrue(records.contains(testRecord));
+        assertTrue(records.contains(flw));
 
-        frontLineWorkerService.delete(testRecord);
-        record = frontLineWorkerService.getByContactNumber(testRecord.getContactNumber());
+        frontLineWorkerService.delete(flw);
+        record = frontLineWorkerService.getByContactNumber(flw.getContactNumber());
         assertNull(record);
     }
 }

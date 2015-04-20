@@ -7,16 +7,6 @@ import org.motechproject.mds.annotations.Field;
 @Entity
 public class ServiceUsage {
 
-    public ServiceUsage(FrontLineWorker frontLineWorker, Service service,
-                        int usageInPulses, int endOfUsage, int welcomePrompt, DateTime timestamp) {
-        this.frontLineWorker = frontLineWorker;
-        this.service = service;
-        this.usageInPulses = usageInPulses;
-        this.endOfUsage = endOfUsage;
-        this.welcomePrompt = welcomePrompt;
-        this.timestamp = timestamp;
-    }
-
     @Field
     private FrontLineWorker frontLineWorker;
 
@@ -34,6 +24,17 @@ public class ServiceUsage {
 
     @Field
     private DateTime timestamp;
+
+
+    public ServiceUsage(FrontLineWorker frontLineWorker, Service service, int usageInPulses, int endOfUsage,
+                        int welcomePrompt, DateTime timestamp) {
+        this.frontLineWorker = frontLineWorker;
+        this.service = service;
+        this.usageInPulses = usageInPulses;
+        this.endOfUsage = endOfUsage;
+        this.welcomePrompt = welcomePrompt;
+        this.timestamp = timestamp;
+    }
 
     public FrontLineWorker getFrontLineWorker() {
         return frontLineWorker;

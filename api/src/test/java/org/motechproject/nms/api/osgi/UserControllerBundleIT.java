@@ -1,6 +1,5 @@
 package org.motechproject.nms.api.osgi;
 
-import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -121,10 +120,10 @@ public class UserControllerBundleIT extends BasePaxIT {
         Subscription subscription3 = subscriptionDataService.create(new Subscription("003", subscriber2, pack2));
     }
 
-    private void createFLWCappedServiceNoUsageNoLocationNoLanguage() {
+    private void createFlwCappedServiceNoUsageNoLocationNoLanguage() {
         cleanAllData();
 
-        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", "1111111111");
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", "1111111111");
         frontLineWorkerService.add(flw);
 
         Language language = new Language("Papiamento", 99);
@@ -137,7 +136,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         serviceUsageCapDataService.create(serviceUsageCap);
     }
 
-    private void createFLWWithLanguageServiceUsageAndCappedService() {
+    private void createFlwWithLanguageServiceUsageAndCappedService() {
         cleanAllData();
 
         Language language = new Language("English", 10);
@@ -161,7 +160,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         serviceUsageDataService.create(serviceUsage);
     }
 
-    private void createFLWWithLanguageFullServiceUsageAndCappedService() {
+    private void createFlwWithLanguageFullServiceUsageAndCappedService() {
         cleanAllData();
 
         Language language = new Language("English", 10);
@@ -184,7 +183,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         serviceUsageDataService.create(serviceUsage);
     }
 
-    private void createFLWWithLanguageFullUsageOfBothServiceUncapped() {
+    private void createFlwWithLanguageFullUsageOfBothServiceUncapped() {
         cleanAllData();
 
         Language language = new Language("English", 10);
@@ -226,136 +225,107 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/kilkari/user?callingNumber=2000000000&operator=OP&circle=AA&callId=123456789012345", TestContext.getJettyPort()));
 
-        httpGet.addHeader("Authorization",
-                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
-
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, "{\"languageLocationCode\":null,\"defaultLanguageLocationCode\":null,\"subscriptionPackList\":[\"pack2\",\"pack1\"]}"));
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
+            "{\"languageLocationCode\":null,\"defaultLanguageLocationCode\":null,\"subscriptionPackList\":[\"pack2\",\"pack1\"]}",
+            ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     @Test
     public void testFLWUserRequestWithoutServiceUsage() throws IOException, InterruptedException {
-        createFLWCappedServiceNoUsageNoLocationNoLanguage();
+        createFlwCappedServiceNoUsageNoLocationNoLanguage();
 
         HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/mobilekunji/user?callingNumber=1111111111&operator=OP&circle=AA&callId=123456789012345", TestContext.getJettyPort()));
 
-        httpGet.addHeader("Authorization",
-                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
-
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, "{\"languageLocationCode\":null,\"defaultLanguageLocationCode\":99,\"currentUsageInPulses\":0,\"endOfUsagePromptCounter\":0,\"welcomePromptFlag\":false,\"maxAllowedUsageInPulses\":3600,\"maxAllowedEndOfUsagePrompt\":2}"));
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
+            "{\"languageLocationCode\":null,\"defaultLanguageLocationCode\":99,\"currentUsageInPulses\":0,\"endOfUsagePromptCounter\":0,\"welcomePromptFlag\":false,\"maxAllowedUsageInPulses\":3600,\"maxAllowedEndOfUsagePrompt\":2}",
+            ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     @Test
     public void testFLWUserRequestWithServiceUsageOnly() throws IOException, InterruptedException {
-        createFLWWithLanguageServiceUsageAndCappedService();
+        createFlwWithLanguageServiceUsageAndCappedService();
 
         HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/mobilekunji/user?callingNumber=1111111111&operator=OP&circle=AA&callId=123456789012345", TestContext.getJettyPort()));
 
-        httpGet.addHeader("Authorization",
-                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
-
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, "{\"languageLocationCode\":10,\"defaultLanguageLocationCode\":99,\"currentUsageInPulses\":1,\"endOfUsagePromptCounter\":0,\"welcomePromptFlag\":false,\"maxAllowedUsageInPulses\":3600,\"maxAllowedEndOfUsagePrompt\":2}"));
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
+            "{\"languageLocationCode\":10,\"defaultLanguageLocationCode\":99,\"currentUsageInPulses\":1,\"endOfUsagePromptCounter\":0,\"welcomePromptFlag\":false,\"maxAllowedUsageInPulses\":3600,\"maxAllowedEndOfUsagePrompt\":2}",
+            ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     @Test
     public void testFLWUserRequestWithServiceUsageAndEndOfUsageAndWelcomeMsg() throws IOException, InterruptedException {
-        createFLWWithLanguageFullServiceUsageAndCappedService();
+        createFlwWithLanguageFullServiceUsageAndCappedService();
 
         HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/mobilekunji/user?callingNumber=1111111111&operator=OP&circle=AA&callId=123456789012345", TestContext.getJettyPort()));
 
-        httpGet.addHeader("Authorization",
-                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
-
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, "{\"languageLocationCode\":10,\"defaultLanguageLocationCode\":99,\"currentUsageInPulses\":1,\"endOfUsagePromptCounter\":1,\"welcomePromptFlag\":true,\"maxAllowedUsageInPulses\":3600,\"maxAllowedEndOfUsagePrompt\":2}"));
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
+                "{\"languageLocationCode\":10,\"defaultLanguageLocationCode\":99,\"currentUsageInPulses\":1,\"endOfUsagePromptCounter\":1,\"welcomePromptFlag\":true,\"maxAllowedUsageInPulses\":3600,\"maxAllowedEndOfUsagePrompt\":2}",
+                ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     @Test
     public void testInvalidServiceName() throws IOException, InterruptedException {
         HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/NO_SERVICE/user?callingNumber=1111111111&operator=OP&circle=AA&callId=123456789012345", TestContext.getJettyPort()));
 
-        httpGet.addHeader("Authorization",
-                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
-
         //todo: replace with execHttpRequest method that also tests response body (in addition to status code)
         //todo: when it's available in platform: org.motechproject.testing.osgi.http.SimpleHttpClient
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_BAD_REQUEST));
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_BAD_REQUEST,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     @Test
-    @Ignore
     public void testNoCallingNumber() throws IOException, InterruptedException {
         HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/kilkari/user?operator=OP&circle=AA&callId=123456789012345", TestContext.getJettyPort()));
 
-        httpGet.addHeader("Authorization",
-                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
-
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_BAD_REQUEST,
                 "{\"failureReason\":\"<callingNumber: Not Present>\"}",
-                (String) null, (String) null));
+                ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     @Test
-    @Ignore
     public void testInvalidCallingNumber() throws IOException, InterruptedException {
         HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/kilkari/user?callingNumber=XXXXXXX&operator=OP&circle=AA&callId=123456789012345", TestContext.getJettyPort()));
 
-        httpGet.addHeader("Authorization",
-                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
-
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_BAD_REQUEST,
                 "{\"failureReason\":\"<callingNumber: Invalid>\"}",
-                (String) null, (String) null));
+                ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     @Test
-    @Ignore
     public void testNoOperator() throws IOException, InterruptedException {
         HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/kilkari/user?callingNumber=1111111111&circle=AA&callId=123456789012345", TestContext.getJettyPort()));
 
-        httpGet.addHeader("Authorization",
-                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
-
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_BAD_REQUEST,
                 "{\"failureReason\":\"<operator: Not Present>\"}",
-                (String) null, (String) null));
+                ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     @Test
-    @Ignore
     public void testNoCircle() throws IOException, InterruptedException {
         HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/kilkari/user?callingNumber=1111111111&operator=OP&callId=123456789012345", TestContext.getJettyPort()));
 
-        httpGet.addHeader("Authorization",
-                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
-
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_BAD_REQUEST,
                 "{\"failureReason\":\"<circle: Not Present>\"}",
-                (String) null, (String) null));
+                ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     @Test
-    @Ignore
     public void testNoCallId() throws IOException, InterruptedException {
         HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/kilkari/user?callingNumber=1111111111&operator=OP&circle=AA", TestContext.getJettyPort()));
 
-        httpGet.addHeader("Authorization",
-                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
-
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_BAD_REQUEST,
                 "{\"failureReason\":\"<callId: Not Present>\"}",
-                (String) null, (String) null));
+                ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     @Test
-    @Ignore
+    @Ignore //todo: #60 figure out an elegant way to test that
     public void testInternalError() throws IOException, InterruptedException {
         HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/kilkari/user?callingNumber=1111111111&operator=OP&circle=AA", TestContext.getJettyPort()));
 
-        httpGet.addHeader("Authorization",
-                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
-
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_INTERNAL_SERVER_ERROR,
                 "{\"failureReason\":\"Internal Error\"}",
-                (String) null, (String) null));
+                ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     // An FLW that does not exist
@@ -365,36 +335,33 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/mobilekunji/user?callingNumber=1111111112&operator=OP&circle=AA&callId=123456789012345", TestContext.getJettyPort()));
 
-        httpGet.addHeader("Authorization",
-                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
-
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, "{\"languageLocationCode\":null,\"defaultLanguageLocationCode\":99,\"currentUsageInPulses\":0,\"endOfUsagePromptCounter\":0,\"welcomePromptFlag\":false,\"maxAllowedUsageInPulses\":-1,\"maxAllowedEndOfUsagePrompt\":2}"));
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
+                "{\"languageLocationCode\":null,\"defaultLanguageLocationCode\":99,\"currentUsageInPulses\":0,\"endOfUsagePromptCounter\":0,\"welcomePromptFlag\":false,\"maxAllowedUsageInPulses\":-1,\"maxAllowedEndOfUsagePrompt\":2}",
+                ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     // An FLW with usage for both MA and MK
     @Test
     public void testGetUserDetailsUserOfBothServices() throws IOException, InterruptedException {
-        createFLWWithLanguageFullUsageOfBothServiceUncapped();
+        createFlwWithLanguageFullUsageOfBothServiceUncapped();
 
         HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/mobileacademy/user?callingNumber=1111111111&operator=OP&circle=AA&callId=123456789012345", TestContext.getJettyPort()));
 
-        httpGet.addHeader("Authorization",
-                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
-
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, "{\"languageLocationCode\":10,\"defaultLanguageLocationCode\":99,\"currentUsageInPulses\":1,\"endOfUsagePromptCounter\":1,\"welcomePromptFlag\":false,\"maxAllowedUsageInPulses\":-1,\"maxAllowedEndOfUsagePrompt\":2}"));
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
+                "{\"languageLocationCode\":10,\"defaultLanguageLocationCode\":99,\"currentUsageInPulses\":1,\"endOfUsagePromptCounter\":1,\"welcomePromptFlag\":false,\"maxAllowedUsageInPulses\":-1,\"maxAllowedEndOfUsagePrompt\":2}",
+                ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     // An FLW with usage and a service with a cap
     @Test
     public void testGetUserDetailsServiceCapped() throws IOException, InterruptedException {
-        createFLWWithLanguageFullUsageOfBothServiceUncapped();
+        createFlwWithLanguageFullUsageOfBothServiceUncapped();
 
         HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/mobilekunji/user?callingNumber=1111111111&operator=OP&circle=AA&callId=123456789012345", TestContext.getJettyPort()));
 
-        httpGet.addHeader("Authorization",
-                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
-
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, "{\"languageLocationCode\":10,\"defaultLanguageLocationCode\":99,\"currentUsageInPulses\":1,\"endOfUsagePromptCounter\":1,\"welcomePromptFlag\":true,\"maxAllowedUsageInPulses\":10,\"maxAllowedEndOfUsagePrompt\":2}"));
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
+                "{\"languageLocationCode\":10,\"defaultLanguageLocationCode\":99,\"currentUsageInPulses\":1,\"endOfUsagePromptCounter\":1,\"welcomePromptFlag\":true,\"maxAllowedUsageInPulses\":10,\"maxAllowedEndOfUsagePrompt\":2}",
+                ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     @Test
@@ -405,12 +372,10 @@ public class UserControllerBundleIT extends BasePaxIT {
         httpPost.setEntity(params);
 
         httpPost.addHeader("content-type", "application/json");
-        httpPost.addHeader("Authorization",
-                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
-
+        
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
                 "{\"failureReason\":\"<serviceName: Invalid>\"}",
-                (String) null, (String) null));
+                ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     @Test
@@ -421,12 +386,10 @@ public class UserControllerBundleIT extends BasePaxIT {
         httpPost.setEntity(params);
 
         httpPost.addHeader("content-type", "application/json");
-        httpPost.addHeader("Authorization",
-                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
                 "{\"failureReason\":\"<callingNumber: Not Present>\"}",
-                (String) null, (String) null));
+                ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     @Test
@@ -437,12 +400,10 @@ public class UserControllerBundleIT extends BasePaxIT {
         httpPost.setEntity(params);
 
         httpPost.addHeader("content-type", "application/json");
-        httpPost.addHeader("Authorization",
-                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
                 "{\"failureReason\":\"<callingNumber: Invalid>\"}",
-                (String) null, (String) null));
+                ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     @Test
@@ -453,12 +414,10 @@ public class UserControllerBundleIT extends BasePaxIT {
         httpPost.setEntity(params);
 
         httpPost.addHeader("content-type", "application/json");
-        httpPost.addHeader("Authorization",
-                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
                 "{\"failureReason\":\"<callingNumber: Invalid>\"}",
-                (String) null, (String) null));
+                ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     @Test
@@ -469,12 +428,10 @@ public class UserControllerBundleIT extends BasePaxIT {
         httpPost.setEntity(params);
 
         httpPost.addHeader("content-type", "application/json");
-        httpPost.addHeader("Authorization",
-                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
                 "{\"failureReason\":\"<callingNumber: Invalid>\"}",
-                (String) null, (String) null));
+                ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     @Test
@@ -485,12 +442,10 @@ public class UserControllerBundleIT extends BasePaxIT {
         httpPost.setEntity(params);
 
         httpPost.addHeader("content-type", "application/json");
-        httpPost.addHeader("Authorization",
-                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
                 "{\"failureReason\":\"<callingNumber: Invalid>\"}",
-                (String) null, (String) null));
+                ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     @Test
@@ -501,12 +456,10 @@ public class UserControllerBundleIT extends BasePaxIT {
         httpPost.setEntity(params);
 
         httpPost.addHeader("content-type", "application/json");
-        httpPost.addHeader("Authorization",
-                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
                 "{\"failureReason\":\"<callingNumber: Invalid>\"}",
-                (String) null, (String) null));
+                ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     @Test
@@ -519,49 +472,43 @@ public class UserControllerBundleIT extends BasePaxIT {
         httpPost.setEntity(params);
 
         httpPost.addHeader("content-type", "application/json");
-        httpPost.addHeader("Authorization",
-                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
                 "{\"failureReason\":\"<callingNumber: Not Found>\"}",
-                (String) null, (String) null));
+                ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     @Test
     @Ignore
     public void testSetLanguageLanguageNotFound() throws IOException, InterruptedException {
-        createFLWCappedServiceNoUsageNoLocationNoLanguage();
+        createFlwCappedServiceNoUsageNoLocationNoLanguage();
 
         HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/languageLocationCode", TestContext.getJettyPort()));
         StringEntity params = new StringEntity("{\"callingNumber\":1111111111,\"callId\":123456789012345,\"languageLocationCode\":77}");
         httpPost.setEntity(params);
 
         httpPost.addHeader("content-type", "application/json");
-        httpPost.addHeader("Authorization",
-                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
                 "{\"failureReason\":\"<languageLocationCode: Not Found>\"}",
-                (String) null, (String) null));
+                ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     @Test
     public void testSetLanguageValid() throws IOException, InterruptedException {
-        createFLWCappedServiceNoUsageNoLocationNoLanguage();
+        createFlwCappedServiceNoUsageNoLocationNoLanguage();
 
         HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/languageLocationCode", TestContext.getJettyPort()));
         StringEntity params = new StringEntity("{\"callingNumber\":1111111111,\"callId\":123456789012345,\"languageLocationCode\":99}");
         httpPost.setEntity(params);
 
         httpPost.addHeader("content-type", "application/json");
-        httpPost.addHeader("Authorization",
-                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK));
 
         FrontLineWorker flw = frontLineWorkerService.getByContactNumber("1111111111");
         Language language = flw.getLanguage();
         assertNotNull(language);
-        assertEquals("FLW Language Code", (long)99, (long)language.getCode());
+        assertEquals("FLW Language Code", (long) 99, (long) language.getCode());
     }
 }
