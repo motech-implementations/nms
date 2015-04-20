@@ -54,8 +54,10 @@ public class UserController extends BaseController {
 
     @RequestMapping("/{serviceName}/user")
     @ResponseBody
-    public ResponseUser user(@PathVariable String serviceName, @RequestParam String callingNumber,
-                             @RequestParam String operator, @RequestParam String circle, @RequestParam String callId)
+    public ResponseUser user(@PathVariable String serviceName, @RequestParam(required = false) String callingNumber,
+                             @RequestParam(required = false) String operator,
+                             @RequestParam(required = false) String circle,
+                             @RequestParam(required = false) String callId)
             throws NotFoundException {
         StringBuilder failureReasons = validate(callingNumber, operator, circle, callId);
         if (failureReasons.length() > 0) {
@@ -98,8 +100,7 @@ public class UserController extends BaseController {
     }
 
     private ResponseUser getKilkariResponseUser(String callingNumber) throws NotFoundException {
-        ResponseUser user;
-        user = new KilkariResponseUser();
+        KilkariResponseUser user = new KilkariResponseUser();
         Subscriber subscriber = kilkariService.getSubscriber(callingNumber);
         if (subscriber == null) {
             throw new NotFoundException(String.format(NOT_FOUND, "callingNumber"));
@@ -109,12 +110,12 @@ public class UserController extends BaseController {
         for (Subscription subscription : subscriptions) {
             packs.add(subscription.getSubscriptionPack().getName());
         }
-        ((KilkariResponseUser) user).setSubscriptionPackList(packs);
+        user.setSubscriptionPackList(packs);
         return user;
     }
 
     private ResponseUser getFrontLineWorkerResponseUser(String serviceName, String callingNumber) {
-        ResponseUser user;
+        FrontLineWorkerUser user;
 
         Service service = null;
 
@@ -147,14 +148,14 @@ public class UserController extends BaseController {
 
         ServiceUsageCap serviceUsageCap = serviceUsageCapService.getServiceUsageCap(state, service);
 
-        ((FrontLineWorkerUser) user).setCurrentUsageInPulses(serviceUsage.getUsageInPulses());
-        ((FrontLineWorkerUser) user).setEndOfUsagePromptCounter(serviceUsage.getEndOfUsage());
-        ((FrontLineWorkerUser) user).setWelcomePromptFlag(serviceUsage.getWelcomePrompt() > 0 ? true : false);
+        user.setCurrentUsageInPulses(serviceUsage.getUsageInPulses());
+        user.setEndOfUsagePromptCounter(serviceUsage.getEndOfUsage());
+        user.setWelcomePromptFlag(serviceUsage.getWelcomePrompt() > 0);
 
-        ((FrontLineWorkerUser) user).setMaxAllowedUsageInPulses(serviceUsageCap.getMaxUsageInPulses());
+        user.setMaxAllowedUsageInPulses(serviceUsageCap.getMaxUsageInPulses());
 
         // TODO: During configuration sprint this value needs to be de-hardcoded
-        ((FrontLineWorkerUser) user).setMaxAllowedEndOfUsagePrompt(2);
+        user.setMaxAllowedEndOfUsagePrompt(2);
 
         return user;
     }
