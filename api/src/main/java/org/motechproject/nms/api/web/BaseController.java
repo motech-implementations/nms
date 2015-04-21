@@ -13,6 +13,10 @@ import java.io.IOException;
  * BaseController
  */
 public class BaseController {
+    public static final String MOBILE_ACADEMY = "mobileacademy";
+    public static final String MOBILE_KUNJI = "mobilekunji";
+    public static final String KILKARI = "kilkari";
+
     public static final String NOT_PRESENT = "<%s: Not Present>";
     public static final String INVALID = "<%s: Invalid>";
     public static final String NOT_FOUND = "<%s: Not Found>";

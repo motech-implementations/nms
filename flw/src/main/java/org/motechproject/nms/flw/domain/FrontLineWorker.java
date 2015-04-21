@@ -6,6 +6,7 @@ import org.motechproject.mds.annotations.Field;
 import org.motechproject.nms.language.domain.Language;
 import org.motechproject.nms.location.domain.District;
 
+import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Unique;
 
 /**
@@ -19,6 +20,7 @@ public class FrontLineWorker {
 
     @Field(required = true)
     @Unique
+    @Column(length = 10)
     private String contactNumber;
 
     @Field

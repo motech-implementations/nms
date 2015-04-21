@@ -23,12 +23,12 @@ import org.motechproject.nms.location.domain.State;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.HashSet;
@@ -37,10 +37,6 @@ import java.util.Set;
 
 @Controller
 public class UserController extends BaseController {
-
-    public static final String MOBILE_ACADEMY = "mobileacademy";
-    public static final String MOBILE_KUNJI = "mobilekunji";
-    public static final String KILKARI = "kilkari";
 
     @Autowired
     private LanguageService languageService;
@@ -80,6 +76,7 @@ public class UserController extends BaseController {
             throw new IllegalArgumentException(failureReasons.toString());
         }
 
+        // TODO: If no FLW user is found we need to create one here #62
         FrontLineWorker flw = frontLineWorkerService.getByContactNumber(String.valueOf(callingNumber));
         if (null == flw) {
             throw new NotFoundException(String.format(NOT_FOUND, "callingNumber"));
