@@ -1,14 +1,16 @@
-package org.motechproject.nms.api.web.contract;
+package org.motechproject.nms.api.web.contract.kilkari;
+
+import org.motechproject.nms.api.web.contract.InboxSubscriptionDetail;
 
 import java.util.Set;
 
 /**
- * KilkariResponseInbox
+ * InboxResponse
  */
-public class KilkariResponseInbox {
+public class InboxResponse {
     private Set<InboxSubscriptionDetail> inboxSubscriptionDetailList;
 
-    public KilkariResponseInbox(Set<InboxSubscriptionDetail> inboxSubscriptionDetailList) {
+    public InboxResponse(Set<InboxSubscriptionDetail> inboxSubscriptionDetailList) {
         this.inboxSubscriptionDetailList = inboxSubscriptionDetailList;
     }
 

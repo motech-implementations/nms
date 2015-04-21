@@ -1,14 +1,16 @@
-package org.motechproject.nms.api.web.contract;
+package org.motechproject.nms.api.web.contract.kilkari;
+
+import org.motechproject.nms.api.web.contract.ResponseUser;
 
 import java.util.Set;
 
 /**
  *
  */
-public class KilkariResponseUser extends ResponseUser {
+public class UserResponse extends ResponseUser {
     private Set<String> subscriptionPackList;
 
-    public KilkariResponseUser() {
+    public UserResponse() {
         super();
     }
 
