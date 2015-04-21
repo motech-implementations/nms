@@ -20,7 +20,7 @@ public class Subscriber {
 
     //TODO: making this a bi-directional relationship until MOTECH-1638 is fixed. See #31.
     @Field
-    @Persistent(mappedBy = "subscriber", defaultFetchGroup = "false")
+    @Persistent(mappedBy = "subscriber")
     private Set<Subscription> subscriptions;
 
     public Subscriber() {

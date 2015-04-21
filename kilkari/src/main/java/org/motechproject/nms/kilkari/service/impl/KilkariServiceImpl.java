@@ -36,7 +36,7 @@ public class KilkariServiceImpl implements KilkariService {
     }
 
     @Override
-    public void createSubscription(String callingNumber, String languageLocationCode, String subscriptionPack) {
+    public void createSubscription(String callingNumber, int languageLocationCode, String subscriptionPack) {
         Subscriber subscriber = subscriberDataService.findByCallingNumber(callingNumber);
         if (subscriber == null) {
             subscriberDataService.create(new Subscriber(callingNumber));

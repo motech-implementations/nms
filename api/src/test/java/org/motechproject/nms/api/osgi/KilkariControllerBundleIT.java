@@ -1,19 +1,22 @@
 package org.motechproject.nms.api.osgi;
 
-import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.client.methods.HttpGet;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
+import org.motechproject.nms.flw.repository.ServiceUsageCapDataService;
+import org.motechproject.nms.flw.repository.ServiceUsageDataService;
+import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.kilkari.domain.Subscriber;
-import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.Subscription;
+import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
-import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
+import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.KilkariService;
 import org.motechproject.nms.language.domain.Language;
+import org.motechproject.nms.language.repository.CircleLanguageDataService;
 import org.motechproject.nms.language.repository.LanguageDataService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
@@ -44,23 +47,49 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
     @Inject
     private KilkariService kilkariService;
+
     @Inject
     private SubscriberDataService subscriberDataService;
+
     @Inject
     private SubscriptionPackDataService subscriptionPackDataService;
+
     @Inject
     private SubscriptionDataService subscriptionDataService;
+
+    @Inject
+    private FrontLineWorkerService frontLineWorkerService;
+
+    @Inject
+    private FrontLineWorkerDataService frontLineWorkerDataService;
+
+    @Inject
+    private ServiceUsageDataService serviceUsageDataService;
+
+    @Inject
+    private ServiceUsageCapDataService serviceUsageCapDataService;
+
     @Inject
     private LanguageDataService languageDataService;
 
+    @Inject
+    private CircleLanguageDataService circleLanguageDataService;
 
-    private void setupData() {
+    private void cleanAllData() {
         subscriptionDataService.deleteAll();
         subscriptionPackDataService.deleteAll();
         subscriberDataService.deleteAll();
+        serviceUsageCapDataService.deleteAll();
+        serviceUsageDataService.deleteAll();
+        frontLineWorkerDataService.deleteAll();
+        circleLanguageDataService.deleteAll();
         languageDataService.deleteAll();
+    }
 
-        Language ta = languageDataService.create(new Language("tamil", "ta"));
+    private void setupData() {
+        cleanAllData();
+
+        Language ta = languageDataService.create(new Language("tamil", 10));
 
         SubscriptionPack pack1 = subscriptionPackDataService.create(new SubscriptionPack("pack1"));
         SubscriptionPack pack2 = subscriptionPackDataService.create(new SubscriptionPack("pack2"));
@@ -82,16 +111,13 @@ public class KilkariControllerBundleIT extends BasePaxIT {
             "http://localhost:%d/api/kilkari/inbox?callingNumber=0000000000&callId=0123456789abcde",
             TestContext.getJettyPort()));
 
-        httpGet.addHeader("Authorization",
-                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
-
         Subscriber subscriber = subscriberDataService.findByCallingNumber("0000000000");
         Subscription subscription = subscriber.getSubscriptions().iterator().next();
 
-        assertTrue(SimpleHttpClient.execHttpRequest(
-            httpGet,
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
             "{\"inboxSubscriptionDetailList\":[{\"subscriptionId\":\"" + subscription.getSubscriptionId().toString() +
-            "\",\"subscriptionPack\":\"pack1\",\"inboxWeekId\":\"10_1\",\"contentFileName\":\"xyz.wav\"}]}"));
+            "\",\"subscriptionPack\":\"pack1\",\"inboxWeekId\":\"10_1\",\"contentFileName\":\"xyz.wav\"}]}",
+                ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     @Test
@@ -101,10 +127,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 "http://localhost:%d/api/kilkari/inbox?callingNumber=0000000009&callId=0123456789abcde",
                 TestContext.getJettyPort()));
 
-        httpGet.addHeader("Authorization",
-                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
-
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_NOT_FOUND));
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_NOT_FOUND, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     @Test
@@ -114,10 +137,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 "http://localhost:%d/api/kilkari/inbox?callId=0123456789abcde",
                 TestContext.getJettyPort()));
 
-        httpGet.addHeader("Authorization",
-                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
-
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_BAD_REQUEST));
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_BAD_REQUEST, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
 }

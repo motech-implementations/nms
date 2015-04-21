@@ -8,7 +8,9 @@ import java.util.List;
  */
 public interface LanguageService {
 
+    Language getDefaultCircleLanguage(String circle);
+
     List<Language> getCircleLanguages(String circle);
 
-    Language getLanguage(String code);
+    Language getLanguage(int code);
 }

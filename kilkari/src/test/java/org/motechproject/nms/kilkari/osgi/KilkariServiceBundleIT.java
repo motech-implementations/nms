@@ -6,9 +6,11 @@ import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
+import org.motechproject.nms.language.repository.LanguageDataService;
 import org.motechproject.nms.kilkari.service.KilkariService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.motechproject.nms.language.domain.Language;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.ops4j.pax.exam.ExamFactory;
@@ -41,6 +43,8 @@ public class KilkariServiceBundleIT extends BasePaxIT {
     private SubscriptionPackDataService subscriptionPackDataService;
     @Inject
     private SubscriptionDataService subscriptionDataService;
+    @Inject
+    private LanguageDataService languageDataService;
 
     @Test
     public void testServicePresent() throws Exception {
@@ -52,16 +56,19 @@ public class KilkariServiceBundleIT extends BasePaxIT {
         subscriptionDataService.deleteAll();
         subscriptionPackDataService.deleteAll();
         subscriberDataService.deleteAll();
+        languageDataService.deleteAll();
+
+        Language ta = languageDataService.create(new Language("tamil", 10));
 
         SubscriptionPack pack1 = subscriptionPackDataService.create(new SubscriptionPack("pack1"));
         SubscriptionPack pack2 = subscriptionPackDataService.create(new SubscriptionPack("pack2"));
 
         Subscriber subscriber = subscriberDataService.create(new Subscriber("0000000001"));
 
-        Subscription subscription1 = subscriptionDataService.create(new Subscription("001", subscriber, pack1));
-        Subscription subscription2 = subscriptionDataService.create(new Subscription("002", subscriber, pack2));
+        Subscription subscription1 = subscriptionDataService.create(new Subscription(subscriber, pack1, ta));
+        Subscription subscription2 = subscriptionDataService.create(new Subscription(subscriber, pack2, ta));
 
-        Set<Subscription> subscriptions = kilkariService.getSubscriber("0000000001").getSubscriptions();
+        Set<Subscription> subscriptions = subscriber.getSubscriptions();
         Set<SubscriptionPack> packs = new HashSet<>();
         for (Subscription subscription : subscriptions) {
             packs.add(subscription.getSubscriptionPack());

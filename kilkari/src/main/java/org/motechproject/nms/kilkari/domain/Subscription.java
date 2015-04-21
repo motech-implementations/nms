@@ -12,7 +12,7 @@ public class Subscription {
 
     @Field
     @Unique
-    private UUID subscriptionId;
+    private String subscriptionId;
 
     @Field
     private Subscriber subscriber;
@@ -24,14 +24,14 @@ public class Subscription {
     private Language language;
 
     public Subscription(Subscriber subscriber, SubscriptionPack subscriptionPack, Language language) {
-        this.subscriptionId = UUID.randomUUID();
+        this.subscriptionId = UUID.randomUUID().toString();
         this.subscriber = subscriber;
         this.subscriptionPack = subscriptionPack;
         this.language = language;
         this.subscriber.getSubscriptions().add(this);
     }
 
-    public UUID getSubscriptionId() { return subscriptionId; }
+    public String getSubscriptionId() { return subscriptionId; }
 
     public Subscriber getSubscriber() {
         return subscriber;

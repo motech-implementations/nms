@@ -8,5 +8,5 @@ import org.motechproject.nms.language.domain.Language;
 
 public interface LanguageDataService extends MotechDataService<Language> {
     @Lookup
-    Language findByCode(@LookupField(name = "code") String code);
+    Language findByCode(@LookupField(name = "code") Integer code);
 }
