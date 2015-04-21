@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 import java.io.IOException;
+import java.util.regex.Pattern;
 
 /**
  * BaseController
@@ -17,28 +18,28 @@ public class BaseController {
     public static final String INVALID = "<%s: Invalid>";
     public static final String NOT_FOUND = "<%s: Not Found>";
 
-    public static final int CALLING_NUMBER_LENGTH = 10;
-    public static final int CALL_ID_LENGTH = 15;
+    public static final Pattern CALLING_NUMBER_PATTERN = Pattern.compile("[1-9][0-9]{9}");
+    public static final Pattern CALL_ID_PATTERN = Pattern.compile("[1-9][0-9]{14}");
 
-    protected StringBuilder validate(Long callingNumber, Long callId) {
+    protected StringBuilder validate(String callingNumber, String callId) {
         StringBuilder failureReasons = new StringBuilder();
 
         if (callingNumber == null) {
             failureReasons.append(String.format(NOT_PRESENT, "callingNumber"));
-        } else if (CALLING_NUMBER_LENGTH != String.valueOf(callingNumber).length()) {
+        } else if (!CALLING_NUMBER_PATTERN.matcher(callingNumber).matches()) {
             failureReasons.append(String.format(INVALID, "callingNumber"));
         }
 
         if (callId == null) {
             failureReasons.append(String.format(NOT_PRESENT, "callId"));
-        } else if (CALL_ID_LENGTH != String.valueOf(callId).length()) {
+        } else if (!CALL_ID_PATTERN.matcher(callId).matches()) {
             failureReasons.append(String.format(INVALID, "callId"));
         }
 
         return failureReasons;
     }
 
-    protected StringBuilder validate(Long callingNumber, String operator, String circle, Long callId) {
+    protected StringBuilder validate(String callingNumber, String operator, String circle, String callId) {
         StringBuilder failureReasons = validate(callingNumber, callId);
 
         if (operator == null) {

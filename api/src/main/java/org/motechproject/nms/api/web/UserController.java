@@ -24,12 +24,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -62,8 +62,8 @@ public class UserController extends BaseController {
                     headers = { "Content-type=application/json" })
     @ResponseStatus(HttpStatus.OK)
     public void setUserLanguage(@PathVariable String serviceName, @RequestBody LanguageRequest languageRequest) throws NotFoundException {
-        Long callingNumber = languageRequest.getCallingNumber();
-        Long callId = languageRequest.getCallId();
+        String callingNumber = languageRequest.getCallingNumber();
+        String callId = languageRequest.getCallId();
         Integer languageLocationCode = languageRequest.getLanguageLocationCode();
 
         StringBuilder failureReasons = validate(callingNumber, callId);
@@ -94,13 +94,15 @@ public class UserController extends BaseController {
         frontLineWorkerService.update(flw);
     }
 
-    @RequestMapping("/{serviceName}/user")
+
+    @RequestMapping("/{serviceName}/user") // NO CHECKSTYLE Cyclomatic Complexity
     @ResponseBody
-    public ResponseUser user(@PathVariable String serviceName, @RequestParam(required = false) Long callingNumber,
+    public ResponseUser user(@PathVariable String serviceName, @RequestParam(required = false) String callingNumber,
                              @RequestParam(required = false) String operator,
                              @RequestParam(required = false) String circle,
-                             @RequestParam(required = false) Long callId)
+                             @RequestParam(required = false) String callId)
             throws NotFoundException {
+
         StringBuilder failureReasons = validate(callingNumber, operator, circle, callId);
         if (failureReasons.length() > 0) {
             throw new IllegalArgumentException(failureReasons.toString());
