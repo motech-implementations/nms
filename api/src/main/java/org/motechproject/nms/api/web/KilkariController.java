@@ -37,7 +37,7 @@ public class KilkariController extends BaseController {
             throw new IllegalArgumentException(failureReasons.toString());
         }
 
-        Subscriber subscriber = kilkariService.getSubscriber(callingNumber);
+        Subscriber subscriber = kilkariService.getSubscriber(String.valueOf(callingNumber));
         if (subscriber == null) {
             throw new NotFoundException(String.format(NOT_FOUND, "callingNumber"));
         }

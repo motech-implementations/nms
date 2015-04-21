@@ -96,8 +96,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         List<SubscriptionPack> onePack = Arrays.asList(pack1);
         List<SubscriptionPack> twoPacks = Arrays.asList(pack1, pack2);
 
-        Subscriber subscriber1 = subscriberDataService.create(new Subscriber("0000000000"));
-        Subscriber subscriber2 = subscriberDataService.create(new Subscriber("0000000001"));
+        Subscriber subscriber1 = subscriberDataService.create(new Subscriber("1000000000"));
+        Subscriber subscriber2 = subscriberDataService.create(new Subscriber("2000000000"));
 
         Subscription subscription1 = subscriptionDataService.create(new Subscription(subscriber1, pack1, ta));
         Subscription subscription2 = subscriptionDataService.create(new Subscription(subscriber2, pack1, ta));
@@ -108,10 +108,10 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     public void testInboxRequest() throws IOException, InterruptedException {
         setupData();
         HttpGet httpGet = new HttpGet(String.format(
-            "http://localhost:%d/api/kilkari/inbox?callingNumber=0000000000&callId=0123456789abcde",
+            "http://localhost:%d/api/kilkari/inbox?callingNumber=1000000000&callId=123456789012345",
             TestContext.getJettyPort()));
 
-        Subscriber subscriber = subscriberDataService.findByCallingNumber("0000000000");
+        Subscriber subscriber = subscriberDataService.findByCallingNumber("1000000000");
         Subscription subscription = subscriber.getSubscriptions().iterator().next();
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
@@ -124,7 +124,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     public void testInboxRequestBadSubscriber() throws IOException, InterruptedException {
         setupData();
         HttpGet httpGet = new HttpGet(String.format(
-                "http://localhost:%d/api/kilkari/inbox?callingNumber=0000000009&callId=0123456789abcde",
+                "http://localhost:%d/api/kilkari/inbox?callingNumber=3000000009&callId=123456789012345",
                 TestContext.getJettyPort()));
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_NOT_FOUND, ADMIN_USERNAME, ADMIN_PASSWORD));
@@ -134,7 +134,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     public void testInboxRequestNoSubscriber() throws IOException, InterruptedException {
         setupData();
         HttpGet httpGet = new HttpGet(String.format(
-                "http://localhost:%d/api/kilkari/inbox?callId=0123456789abcde",
+                "http://localhost:%d/api/kilkari/inbox?callId=123456789012345",
                 TestContext.getJettyPort()));
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_BAD_REQUEST, ADMIN_USERNAME, ADMIN_PASSWORD));

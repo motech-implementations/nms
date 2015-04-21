@@ -18,10 +18,19 @@ import java.util.List;
 public class LanguageServiceImpl implements LanguageService {
 
     @Autowired
-    private CircleLanguageDataService circleLanguageDataService;
+    private LanguageDataService languageDataService;
 
     @Autowired
-    private LanguageDataService languageDataService;
+    private CircleLanguageDataService circleLanguageDataService;
+
+    /**
+     * Returns the language for a given code
+     * @param code the language code
+     * @return the language object if found
+     */
+    public Language getLanguageByCode(Integer code) {
+        return languageDataService.findByCode(code);
+    }
 
     /**
      * Returns the default language for the circle
