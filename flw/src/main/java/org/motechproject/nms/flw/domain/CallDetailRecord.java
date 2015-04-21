@@ -14,6 +14,10 @@ import java.util.List;
 @Entity
 public class CallDetailRecord {
 
+    public static final int FIELD_SIZE_10 = 10;
+    public static final int FIELD_SIZE_15 = 15;
+    public static final int FIELD_SIZE_255 = 255;
+
     public CallDetailRecord() {
     }
 
@@ -24,19 +28,19 @@ public class CallDetailRecord {
     private Service service;
 
     @Field
-    @Column(length = 10)
+    @Column(length = FIELD_SIZE_10)
     private long callingNumber;
 
     @Field
-    @Column(length = 15)
+    @Column(length = FIELD_SIZE_15)
     private long callId;
 
     @Field
-    @Column(length = 255)
+    @Column(length = FIELD_SIZE_255)
     private String operator;
 
     @Field
-    @Column(length = 255)
+    @Column(length = FIELD_SIZE_255)
     private String circle;
 
     @Field
@@ -55,14 +59,14 @@ public class CallDetailRecord {
     private Boolean welcomePrompt;
 
     @Field
-    private int callStatus;
+    private CallStatus callStatus;
 
     @Field
-    private int callDisconnectReason;
+    private CallDisconnectReason callDisconnectReason;
 
     @Field
     @Persistent(mappedBy = "callDetailRecord")
-    @Order(extensions=@Extension(vendorName="datanucleus", key="list-ordering", value="id ASC"))
+    @Order(extensions = @Extension(vendorName = "datanucleus", key = "list-ordering", value = "id ASC"))
     private List<CallContent> content;
 
     public FrontLineWorker getFrontLineWorker() {
@@ -153,20 +157,29 @@ public class CallDetailRecord {
         this.welcomePrompt = welcomePrompt;
     }
 
-    public int getCallStatus() {
+    public CallStatus getCallStatus() {
         return callStatus;
     }
 
-    public void setCallStatus(int callStatus) {
+    public void setCallStatus(CallStatus callStatus) {
         this.callStatus = callStatus;
     }
 
-    public int getCallDisconnectReason() {
+    public void setCallStatus(int i) {
+
+        this.callStatus = CallStatus.fromInt(i);
+    }
+
+    public CallDisconnectReason getCallDisconnectReason() {
         return callDisconnectReason;
     }
 
-    public void setCallDisconnectReason(int callDisconnectReason) {
+    public void setCallDisconnectReason(CallDisconnectReason callDisconnectReason) {
         this.callDisconnectReason = callDisconnectReason;
+    }
+
+    public void setCallDisconnectReason(int i) {
+        this.callDisconnectReason = CallDisconnectReason.fromInt(i);
     }
 
     public List<CallContent> getContent() {

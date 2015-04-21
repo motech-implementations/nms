@@ -7,5 +7,5 @@ import org.motechproject.nms.flw.domain.CallDetailRecord;
 
 public interface CallDetailRecordDataService extends MotechDataService<CallDetailRecord> {
     @Lookup
-    CallDetailRecord findRecordByCallingNumber(@LookupField(name = "callingNumber") Long callingNumber);
+    CallDetailRecord findByCallingNumber(@LookupField(name = "callingNumber") Long callingNumber);
 }

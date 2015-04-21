@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 @Controller
 public class CallDetailsController extends BaseController {
 
-    public static final int MILLI_SECONDS_PER_SECOND = 1000;
+    public static final int MILLISECONDS_PER_SECOND = 1000;
 
     @Autowired
     private CallDetailRecordService callDetailRecordService;
@@ -90,8 +90,8 @@ public class CallDetailsController extends BaseController {
         cdr.setCallId(Long.parseLong(callDetailRecordRequest.getCallId()));
         cdr.setOperator(callDetailRecordRequest.getOperator());
         cdr.setCircle(callDetailRecordRequest.getCircle());
-        cdr.setCallStartTime(new DateTime(callDetailRecordRequest.getCallStartTime() * MILLI_SECONDS_PER_SECOND));
-        cdr.setCallEndTime(new DateTime(callDetailRecordRequest.getCallEndTime() * MILLI_SECONDS_PER_SECOND));
+        cdr.setCallStartTime(new DateTime(callDetailRecordRequest.getCallStartTime() * MILLISECONDS_PER_SECOND));
+        cdr.setCallEndTime(new DateTime(callDetailRecordRequest.getCallEndTime() * MILLISECONDS_PER_SECOND));
         cdr.setCallDurationInPulses(callDetailRecordRequest.getCallDurationInPulses());
         cdr.setEndOfUsagePromptCounter(callDetailRecordRequest.getEndOfUsagePromptCounter());
         cdr.setCallStatus(callDetailRecordRequest.getCallStatus());
@@ -108,8 +108,8 @@ public class CallDetailsController extends BaseController {
 
             content.setContentName(callContentRequest.getContentName());
             content.setContentFile(callContentRequest.getContentFileName());
-            content.setStartTime(new DateTime(callContentRequest.getStartTime() * MILLI_SECONDS_PER_SECOND));
-            content.setEndTime(new DateTime(callContentRequest.getEndTime() * MILLI_SECONDS_PER_SECOND));
+            content.setStartTime(new DateTime(callContentRequest.getStartTime() * MILLISECONDS_PER_SECOND));
+            content.setEndTime(new DateTime(callContentRequest.getEndTime() * MILLISECONDS_PER_SECOND));
 
             if (service == Service.MOBILE_KUNJI) {
                 content.setMobileKunjiCardNumber(callContentRequest.getMkcardNumber());

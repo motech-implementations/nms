@@ -12,13 +12,14 @@ import javax.jdo.annotations.Unique;
 @Entity
 public class FrontLineWorker {
 
+    public static final int FIELD_SIZE_10 = 10;
     @Field
     private Long id;
 
     @Field(required = true)
     @Unique
-    @Column(length = 10)
-    private String contactNumber;
+    @Column(length = FIELD_SIZE_10)
+    private String contactNumber; //todo: so which is it: String or Long for phone numbers, eh?
 
     @Field
     private String name;

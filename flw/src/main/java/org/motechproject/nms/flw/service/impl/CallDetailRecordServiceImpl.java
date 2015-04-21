@@ -22,7 +22,7 @@ public class CallDetailRecordServiceImpl implements CallDetailRecordService {
 
     @Override
     public CallDetailRecord getByCallingNumber(long callingNumber) {
-        return callDetailRecordDataService.findRecordByCallingNumber(callingNumber);
+        return callDetailRecordDataService.findByCallingNumber(callingNumber);
     }
 
     @Override
