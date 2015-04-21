@@ -9,9 +9,6 @@ import org.motechproject.nms.location.domain.District;
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Unique;
 
-/**
- * Models data for simple records in a portable manner.
- */
 @Entity
 public class FrontLineWorker {
 
@@ -77,33 +74,51 @@ public class FrontLineWorker {
         this.district = district;
     }
 
-    @Override
+    @Override //NO CHECKSTYLE CyclomaticComplexity
     public boolean equals(Object o) {
-        if (this == o) { return true; }
-        if (o == null || getClass() != o.getClass()) { return false; }
-
-        FrontLineWorker that = (FrontLineWorker) o;
-
-        if (contactNumber != null ? !contactNumber.equals(that.contactNumber) : that.contactNumber != null) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
             return false;
         }
 
-        if (language != null ? !language.equals(that.language) : that.language != null) { return false; }
-        if (name != null ? !name.equals(that.name) : that.name != null) { return false; }
+        FrontLineWorker that = (FrontLineWorker) o;
 
-        return true;
+        if (!id.equals(that.id)) {
+            return false;
+        }
+        if (!contactNumber.equals(that.contactNumber)) {
+            return false;
+        }
+        if (name != null ? !name.equals(that.name) : that.name != null) {
+            return false;
+        }
+        if (language != null ? !language.equals(that.language) : that.language != null) {
+            return false;
+        }
+        return !(district != null ? !district.equals(that.district) : that.district != null);
+
     }
 
     @Override
     public int hashCode() {
-        int result = contactNumber != null ? contactNumber.hashCode() : 0;
+        int result = id.hashCode();
+        result = 31 * result + contactNumber.hashCode();
         result = 31 * result + (name != null ? name.hashCode() : 0);
         result = 31 * result + (language != null ? language.hashCode() : 0);
+        result = 31 * result + (district != null ? district.hashCode() : 0);
         return result;
     }
 
     @Override
     public String toString() {
-        return String.format("FrontLineWorker{name='%s', contactNumber='%s'}", name, contactNumber);
+        return "FrontLineWorker{" +
+                "id=" + id +
+                ", contactNumber='" + contactNumber + '\'' +
+                ", name='" + name + '\'' +
+                ", language=" + language +
+                ", district=" + district +
+                '}';
     }
 }

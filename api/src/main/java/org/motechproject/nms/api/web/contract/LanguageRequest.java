@@ -1,23 +1,23 @@
 package org.motechproject.nms.api.web.contract;
 
 public class LanguageRequest {
-    private Long callingNumber;
-    private Long callId;
+    private String callingNumber;
+    private String callId;
     private Integer languageLocationCode;
 
-    public Long getCallingNumber() {
+    public String getCallingNumber() {
         return callingNumber;
     }
 
-    public void setCallingNumber(Long callingNumber) {
+    public void setCallingNumber(String callingNumber) {
         this.callingNumber = callingNumber;
     }
 
-    public Long getCallId() {
+    public String getCallId() {
         return callId;
     }
 
-    public void setCallId(Long callId) {
+    public void setCallId(String callId) {
         this.callId = callId;
     }
 
