@@ -2,7 +2,7 @@ package org.motechproject.nms.api.web;
 
 import org.joda.time.DateTime;
 import org.motechproject.nms.api.web.contract.FrontLineWorkerUser;
-import org.motechproject.nms.api.web.contract.KilkariResponseUser;
+import org.motechproject.nms.api.web.contract.kilkari.UserResponse;
 import org.motechproject.nms.api.web.contract.LanguageRequest;
 import org.motechproject.nms.api.web.contract.ResponseUser;
 import org.motechproject.nms.api.web.exception.NotFoundException;
@@ -144,7 +144,7 @@ public class UserController extends BaseController {
     }
 
     private ResponseUser getKilkariResponseUser(String callingNumber) throws NotFoundException {
-        KilkariResponseUser user = new KilkariResponseUser();
+        UserResponse user = new UserResponse();
         Subscriber subscriber = kilkariService.getSubscriber(callingNumber);
         if (subscriber == null) {
             throw new NotFoundException(String.format(NOT_FOUND, "callingNumber"));
