@@ -3,6 +3,7 @@ package org.motechproject.nms.language.service.impl;
 import org.motechproject.nms.language.domain.CircleLanguage;
 import org.motechproject.nms.language.domain.Language;
 import org.motechproject.nms.language.repository.CircleLanguageDataService;
+import org.motechproject.nms.language.repository.LanguageDataService;
 import org.motechproject.nms.language.service.LanguageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,7 +18,19 @@ import java.util.List;
 public class LanguageServiceImpl implements LanguageService {
 
     @Autowired
+    private LanguageDataService languageDataService;
+
+    @Autowired
     private CircleLanguageDataService circleLanguageDataService;
+
+    /**
+     * Returns the language for a given code
+     * @param code the language code
+     * @return the language object if found
+     */
+    public Language getLanguageByCode(Integer code) {
+        return languageDataService.getLanguageByCode(code);
+    }
 
     /**
      * Returns the default language for the circle
