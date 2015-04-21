@@ -2,8 +2,12 @@ package org.motechproject.nms.api.osgi;
 
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.motechproject.nms.api.web.contract.SubscriptionRequest;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.flw.repository.ServiceUsageCapDataService;
 import org.motechproject.nms.flw.repository.ServiceUsageDataService;
@@ -138,6 +142,25 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 TestContext.getJettyPort()));
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_BAD_REQUEST, ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    @Test
+    public void testCreateSubscriptionRequest() throws IOException, InterruptedException {
+        setupData();
+        String subscriptionRequestJson = "{ \"callingNumber\": \"9999111122\", \"operator\": \"A\", \"circle\": \"AP\"," +
+                "\"callId\": \"123456789123456\", \"languageLocationCode\": 10, \"subscriptionPack\": \"pack1\"}";
+
+        //SubscriptionRequest subscriptionRequest = new SubscriptionRequest("999911122", "A", "AP",
+        //        "123456789012545", 10, "pack1");
+       // ObjectMapper mapper = new ObjectMapper();
+        //String subscriptionRequestJson = mapper.writeValueAsString(subscriptionRequest);
+
+        HttpPost httpPost = new HttpPost(String.format(
+                "http://localhost:%d/api/kilkari/subscription", TestContext.getJettyPort()));
+        httpPost.setHeader("Content-type", "application/json");
+        httpPost.setEntity(new StringEntity(subscriptionRequestJson));
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
 }

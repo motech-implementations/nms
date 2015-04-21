@@ -40,6 +40,7 @@ public class KilkariServiceImpl implements KilkariService {
         Subscriber subscriber = subscriberDataService.findByCallingNumber(callingNumber);
         if (subscriber == null) {
             subscriberDataService.create(new Subscriber(callingNumber));
+            subscriber = getSubscriber(callingNumber);
         }
 
         SubscriptionPack pack = subscriptionPackDataService.findByName(subscriptionPack);

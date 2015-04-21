@@ -8,12 +8,14 @@ import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.service.KilkariService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 import java.util.Set;
 import java.util.HashSet;
@@ -55,13 +57,14 @@ public class KilkariController extends BaseController {
     }
 
     @RequestMapping(value = "/subscription", method = RequestMethod.POST)
+    @ResponseStatus(HttpStatus.OK)
     @ResponseBody
     public void createSubscription(@RequestBody SubscriptionRequest subscriptionRequest) {
 
         StringBuilder failureReasons = validate(subscriptionRequest.getCallingNumber(),
                 subscriptionRequest.getOperator(), subscriptionRequest.getCircle(), subscriptionRequest.getCallId());
 
-        // TODO: validate that the language code and pack are valid
+        // TODO: validate the language code and pack
 
         if (failureReasons.length() > 0) {
             throw new IllegalArgumentException(failureReasons.toString());
