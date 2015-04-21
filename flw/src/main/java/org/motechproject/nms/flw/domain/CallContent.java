@@ -8,7 +8,7 @@ import org.motechproject.mds.annotations.Field;
 public class CallContent {
 
     @Field
-    private Long id;
+    private Long id; //NOPMD UnusedPrivateField
 
     // TODO: #64 This should be a cascading delete.
     @Field

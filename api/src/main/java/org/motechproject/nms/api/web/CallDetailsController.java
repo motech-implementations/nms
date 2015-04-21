@@ -86,8 +86,8 @@ public class CallDetailsController extends BaseController {
     private void createCallDetailRecord(FrontLineWorker flw, CallDetailRecordRequest callDetailRecordRequest, Service service) {
         CallDetailRecord cdr = new CallDetailRecord();
         cdr.setFrontLineWorker(flw);
-        cdr.setCallingNumber(callDetailRecordRequest.getCallingNumber());
-        cdr.setCallId(callDetailRecordRequest.getCallId());
+        cdr.setCallingNumber(Long.parseLong(callDetailRecordRequest.getCallingNumber()));
+        cdr.setCallId(Long.parseLong(callDetailRecordRequest.getCallId()));
         cdr.setOperator(callDetailRecordRequest.getOperator());
         cdr.setCircle(callDetailRecordRequest.getCircle());
         cdr.setCallStartTime(new DateTime(callDetailRecordRequest.getCallStartTime() * MILLI_SECONDS_PER_SECOND));

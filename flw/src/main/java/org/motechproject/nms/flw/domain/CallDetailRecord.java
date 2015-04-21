@@ -10,7 +10,6 @@ import javax.jdo.annotations.Order;
 import javax.jdo.annotations.Persistent;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 @Entity
 public class CallDetailRecord {
