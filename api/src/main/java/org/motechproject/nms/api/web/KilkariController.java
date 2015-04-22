@@ -35,7 +35,7 @@ public class KilkariController extends BaseController {
      */
     @RequestMapping("/inbox")
     @ResponseBody
-    public InboxResponse inbox(@RequestParam String callingNumber, @RequestParam String callId)
+    public InboxResponse getInboxDetails(@RequestParam String callingNumber, @RequestParam String callId)
             throws NotFoundException {
 
         StringBuilder failureReasons = validate(callingNumber, callId);
@@ -61,6 +61,18 @@ public class KilkariController extends BaseController {
     }
 
 
+    private StringBuilder validateSaveInboxCallDetails(InboxCallDetailsRequest request) {
+        StringBuilder failureReasons = validate(request.getCallingNumber(), request.getOperator(),
+                request.getCircle(), request.getCallId());
+
+        validateFieldNumeric(failureReasons, "callStartTime", request.getCallStartTime());
+        validateFieldNumeric(failureReasons, "callEndTime", request.getCallEndTime());
+        validateFieldNumeric(failureReasons, "callDurationInPulses", request.getCallDurationInPulses());
+
+        return failureReasons;
+    }
+
+
     /**
      * 4.2.5
      * Save Inbox Call Details
@@ -74,9 +86,7 @@ public class KilkariController extends BaseController {
                     headers = { "Content-type=application/json" })
     @ResponseStatus(HttpStatus.OK)
     public void saveInboxCallDetails(@RequestBody InboxCallDetailsRequest request) {
-        StringBuilder failureReasons = validate(request.getCallingNumber(), request.getOperator(),
-                request.getCircle(), request.getCallId());
-        //todo: more validations
+        StringBuilder failureReasons = validateSaveInboxCallDetails(request);
         if (failureReasons.length() > 0) {
             throw new IllegalArgumentException(failureReasons.toString());
         }
