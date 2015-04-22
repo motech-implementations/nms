@@ -61,9 +61,10 @@ public class UserController extends BaseController {
             throws NotFoundException {
         String callingNumber = languageRequest.getCallingNumber();
         String callId = languageRequest.getCallId();
-        Integer languageLocationCode = languageRequest.getLanguageLocationCode();
+        String languageLocationCode = languageRequest.getLanguageLocationCode();
 
         StringBuilder failureReasons = validate(callingNumber, callId);
+        validateFieldNumeric(failureReasons, "languageLocationCode", languageRequest.getLanguageLocationCode());
 
         if (null == languageLocationCode) {
             failureReasons.append(String.format(NOT_PRESENT, "languageLocationCode"));
@@ -83,7 +84,7 @@ public class UserController extends BaseController {
             throw new NotFoundException(String.format(NOT_FOUND, "callingNumber"));
         }
 
-        Language language = languageService.getLanguageByCode(languageLocationCode);
+        Language language = languageService.getLanguageByCode(Integer.parseInt(languageLocationCode));
         if (null == language) {
             throw new NotFoundException(String.format(NOT_FOUND, "languageLocationCode"));
         }

@@ -1,7 +1,9 @@
 package org.motechproject.nms.api.web;
 
+import org.motechproject.nms.api.web.contract.CallStatus;
 import org.motechproject.nms.api.web.exception.NotFoundException;
 import org.motechproject.nms.api.web.contract.BadRequest;
+import org.motechproject.nms.api.web.contract.CallDisconnectReason;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -36,10 +38,11 @@ public class BaseController {
 
     private static boolean validateFieldNumericPattern(Pattern pattern, StringBuilder errors, String fieldName,
                                                 String value) {
-        if (validateFieldPresent(errors, fieldName, value)) {
-            if (pattern.matcher(value).matches()) {
-                return true;
-            }
+        if (!validateFieldPresent(errors, fieldName, value)) {
+            return false;
+        }
+        if (pattern.matcher(value).matches()) {
+            return true;
         }
         errors.append(String.format(INVALID, fieldName));
         return false;
@@ -55,6 +58,28 @@ public class BaseController {
 
     protected static boolean validateFieldNumeric15(StringBuilder errors, String fieldName, String value) {
         return validateFieldNumericPattern(NUMERIC_PATTERN_15, errors, fieldName, value);
+    }
+
+    protected static boolean validateFieldCallStatus(StringBuilder errors, String fieldName, String value) {
+        if (!validateFieldNumericPattern(NUMERIC_PATTERN, errors, fieldName, value)) {
+            return false;
+        }
+        if (CallStatus.isValid(Integer.parseInt(value))) {
+            return true;
+        }
+        errors.append(String.format(INVALID, fieldName));
+        return false;
+    }
+
+    protected static boolean validateFieldCallDisconnectReason(StringBuilder errors, String fieldName, String value) {
+        if (!validateFieldNumericPattern(NUMERIC_PATTERN, errors, fieldName, value)) {
+            return false;
+        }
+        if (CallDisconnectReason.isValid(Integer.parseInt(value))) {
+            return true;
+        }
+        errors.append(String.format(INVALID, fieldName));
+        return false;
     }
 
     protected StringBuilder validate(String callingNumber, String callId) {
