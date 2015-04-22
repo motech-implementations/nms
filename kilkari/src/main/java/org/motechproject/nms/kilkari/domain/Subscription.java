@@ -23,11 +23,15 @@ public class Subscription {
     @Field
     private Language language;
 
+    @Field
+    private SubscriptionStatus status;
+
     public Subscription(Subscriber subscriber, SubscriptionPack subscriptionPack, Language language) {
         this.subscriptionId = UUID.randomUUID().toString();
         this.subscriber = subscriber;
         this.subscriptionPack = subscriptionPack;
         this.language = language;
+        this.status = SubscriptionStatus.PENDING_ACTIVATION;
         this.subscriber.getSubscriptions().add(this);
     }
 
@@ -54,6 +58,10 @@ public class Subscription {
     public void setLanguage(Language language) {
         this.language = language;
     }
+
+    public SubscriptionStatus getStatus() { return status; }
+
+    public void setStatus(SubscriptionStatus status) { this.status = status; }
 
     @Override
     public boolean equals(Object o) {

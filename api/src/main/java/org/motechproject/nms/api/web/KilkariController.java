@@ -77,4 +77,29 @@ public class KilkariController extends BaseController {
                 subscriptionRequest.getLanguageLocationCode(), subscriptionRequest.getSubscriptionPack());
     }
 
+    @RequestMapping(value = "/subscription",
+            method = RequestMethod.DELETE,
+            headers = { "Content-type=application/json" })
+    @ResponseStatus(HttpStatus.OK)
+    public void deactivateSubscription(@RequestBody SubscriptionRequest subscriptionRequest)
+        throws NotFoundException {
+
+        StringBuilder failureReasons = validate(subscriptionRequest.getCallingNumber(),
+                subscriptionRequest.getOperator(), subscriptionRequest.getCircle(),
+                subscriptionRequest.getCallId());
+
+        if (failureReasons.length() > 0) {
+            throw new IllegalArgumentException(failureReasons.toString());
+        }
+
+        Subscription subscription = kilkariService.getSubscription(subscriptionRequest.getSubscriptionId());
+
+        if (subscription == null) {
+            throw new NotFoundException(String.format(NOT_FOUND, "subscriptionId"));
+        }
+
+        kilkariService.deactivateSubscription(subscription);
+    }
+
+
 }

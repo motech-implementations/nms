@@ -3,6 +3,7 @@ package org.motechproject.nms.kilkari.service.impl;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
+import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
@@ -47,5 +48,22 @@ public class KilkariServiceImpl implements KilkariService {
         Language language = languageDataService.findByCode(languageLocationCode);
 
         subscriptionDataService.create(new Subscription(subscriber, pack, language));
+    }
+
+    @Override
+    public Subscription getSubscription(String subscriptionId) {
+        return subscriptionDataService.findBySubscriptionId(subscriptionId);
+    }
+
+    @Override
+    public void deactivateSubscription(Subscription subscription) {
+        if(subscription.getStatus() == SubscriptionStatus.ACTIVE ||
+                subscription.getStatus() == SubscriptionStatus.PENDING_ACTIVATION) {
+            subscription.setStatus(SubscriptionStatus.DEACTIVATED);
+            subscriptionDataService.update(subscription);
+
+            // Eventually more will happen here -- e.g. the user's Inbox will be decommissioned
+        }
+        // Else no-op
     }
 }
