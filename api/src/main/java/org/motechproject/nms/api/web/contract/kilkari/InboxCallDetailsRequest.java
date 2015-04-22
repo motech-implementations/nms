@@ -18,6 +18,27 @@ public class InboxCallDetailsRequest {
     private List<InboxCallDetailsRequestCallData> content;
     private String failureReason;
 
+    public InboxCallDetailsRequest() {
+    }
+
+    public InboxCallDetailsRequest(String callingNumber, // NO CHECKSTYLE More than 7 parameters
+                                   String operator, String circle, String callId, String callStartTime,
+                                   String callEndTime, String callDurationInPulses, String callStatus,
+                                   String callDisconnectReason, List<InboxCallDetailsRequestCallData> content,
+                                   String failureReason) {
+        this.callingNumber = callingNumber;
+        this.operator = operator;
+        this.circle = circle;
+        this.callId = callId;
+        this.callStartTime = callStartTime;
+        this.callEndTime = callEndTime;
+        this.callDurationInPulses = callDurationInPulses;
+        this.callStatus = callStatus;
+        this.callDisconnectReason = callDisconnectReason;
+        this.content = content;
+        this.failureReason = failureReason;
+    }
+
     public String getCallingNumber() {
         return callingNumber;
     }

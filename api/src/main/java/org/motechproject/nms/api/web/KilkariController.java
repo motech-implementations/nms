@@ -1,8 +1,8 @@
 package org.motechproject.nms.api.web;
 
 import org.motechproject.nms.api.web.contract.kilkari.InboxCallDetailsRequest;
+import org.motechproject.nms.api.web.contract.kilkari.InboxSubscriptionDetailResponse;
 import org.motechproject.nms.api.web.exception.NotFoundException;
-import org.motechproject.nms.api.web.contract.InboxSubscriptionDetail;
 import org.motechproject.nms.api.web.contract.kilkari.InboxResponse;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.Subscriber;
@@ -10,7 +10,12 @@ import org.motechproject.nms.kilkari.service.KilkariService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 import java.util.Set;
 import java.util.HashSet;
@@ -49,9 +54,9 @@ public class KilkariController extends BaseController {
         }
 
         Set<Subscription> subscriptions = subscriber.getSubscriptions();
-        Set<InboxSubscriptionDetail> subscriptionDetails = new HashSet<>();
+        Set<InboxSubscriptionDetailResponse> subscriptionDetails = new HashSet<>();
         for (Subscription subscription : subscriptions) {
-            subscriptionDetails.add(new InboxSubscriptionDetail(subscription.getSubscriptionId(),
+            subscriptionDetails.add(new InboxSubscriptionDetailResponse(subscription.getSubscriptionId(),
                     subscription.getSubscriptionPack().getName(),
                     "10_1",
                     "xyz.wav"));
@@ -68,6 +73,8 @@ public class KilkariController extends BaseController {
         validateFieldNumeric(failureReasons, "callStartTime", request.getCallStartTime());
         validateFieldNumeric(failureReasons, "callEndTime", request.getCallEndTime());
         validateFieldNumeric(failureReasons, "callDurationInPulses", request.getCallDurationInPulses());
+        validateFieldCallStatus(failureReasons, "callStatus", request.getCallStatus());
+        validateFieldCallStatus(failureReasons, "callDisconnectReason", request.getCallDisconnectReason());
 
         return failureReasons;
     }
