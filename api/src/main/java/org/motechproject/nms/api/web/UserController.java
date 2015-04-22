@@ -2,7 +2,7 @@ package org.motechproject.nms.api.web;
 
 import org.joda.time.DateTime;
 import org.motechproject.nms.api.web.contract.FrontLineWorkerUser;
-import org.motechproject.nms.api.web.contract.KilkariResponseUser;
+import org.motechproject.nms.api.web.contract.kilkari.UserResponse;
 import org.motechproject.nms.api.web.contract.LanguageRequest;
 import org.motechproject.nms.api.web.contract.ResponseUser;
 import org.motechproject.nms.api.web.exception.NotFoundException;
@@ -61,9 +61,10 @@ public class UserController extends BaseController {
             throws NotFoundException {
         String callingNumber = languageRequest.getCallingNumber();
         String callId = languageRequest.getCallId();
-        Integer languageLocationCode = languageRequest.getLanguageLocationCode();
+        String languageLocationCode = languageRequest.getLanguageLocationCode();
 
         StringBuilder failureReasons = validate(callingNumber, callId);
+        validateFieldNumeric(failureReasons, "languageLocationCode", languageRequest.getLanguageLocationCode());
 
         if (null == languageLocationCode) {
             failureReasons.append(String.format(NOT_PRESENT, "languageLocationCode"));
@@ -83,7 +84,7 @@ public class UserController extends BaseController {
             throw new NotFoundException(String.format(NOT_FOUND, "callingNumber"));
         }
 
-        Language language = languageService.getLanguageByCode(languageLocationCode);
+        Language language = languageService.getLanguageByCode(Integer.parseInt(languageLocationCode));
         if (null == language) {
             throw new NotFoundException(String.format(NOT_FOUND, "languageLocationCode"));
         }
@@ -144,7 +145,7 @@ public class UserController extends BaseController {
     }
 
     private ResponseUser getKilkariResponseUser(String callingNumber) throws NotFoundException {
-        KilkariResponseUser user = new KilkariResponseUser();
+        UserResponse user = new UserResponse();
         Subscriber subscriber = kilkariService.getSubscriber(callingNumber);
         if (subscriber == null) {
             throw new NotFoundException(String.format(NOT_FOUND, "callingNumber"));

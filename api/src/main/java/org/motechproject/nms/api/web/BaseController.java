@@ -1,7 +1,9 @@
 package org.motechproject.nms.api.web;
 
+import org.motechproject.nms.api.web.contract.CallStatus;
 import org.motechproject.nms.api.web.exception.NotFoundException;
 import org.motechproject.nms.api.web.contract.BadRequest;
+import org.motechproject.nms.api.web.contract.CallDisconnectReason;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -22,23 +24,69 @@ public class BaseController {
     public static final String INVALID = "<%s: Invalid>";
     public static final String NOT_FOUND = "<%s: Not Found>";
 
-    public static final Pattern CALLING_NUMBER_PATTERN = Pattern.compile("[1-9][0-9]{9}");
-    public static final Pattern CALL_ID_PATTERN = Pattern.compile("[1-9][0-9]{14}");
+    public static final Pattern NUMERIC_PATTERN = Pattern.compile("[1-9][0-9]*|0");
+    public static final Pattern NUMERIC_PATTERN_10 = Pattern.compile("[1-9][0-9]{9}");
+    public static final Pattern NUMERIC_PATTERN_15 = Pattern.compile("[1-9][0-9]{14}");
+
+    protected static boolean validateFieldPresent(StringBuilder errors, String fieldName, String value) {
+        if (value != null) {
+            return true;
+        }
+        errors.append(String.format(NOT_PRESENT, fieldName));
+        return false;
+    }
+
+    private static boolean validateFieldNumericPattern(Pattern pattern, StringBuilder errors, String fieldName,
+                                                String value) {
+        if (!validateFieldPresent(errors, fieldName, value)) {
+            return false;
+        }
+        if (pattern.matcher(value).matches()) {
+            return true;
+        }
+        errors.append(String.format(INVALID, fieldName));
+        return false;
+    }
+
+    protected static boolean validateFieldNumeric(StringBuilder errors, String fieldName, String value) {
+        return validateFieldNumericPattern(NUMERIC_PATTERN, errors, fieldName, value);
+    }
+
+    protected static boolean validateFieldNumeric10(StringBuilder errors, String fieldName, String value) {
+        return validateFieldNumericPattern(NUMERIC_PATTERN_10, errors, fieldName, value);
+    }
+
+    protected static boolean validateFieldNumeric15(StringBuilder errors, String fieldName, String value) {
+        return validateFieldNumericPattern(NUMERIC_PATTERN_15, errors, fieldName, value);
+    }
+
+    protected static boolean validateFieldCallStatus(StringBuilder errors, String fieldName, String value) {
+        if (!validateFieldNumericPattern(NUMERIC_PATTERN, errors, fieldName, value)) {
+            return false;
+        }
+        if (CallStatus.isValid(Integer.parseInt(value))) {
+            return true;
+        }
+        errors.append(String.format(INVALID, fieldName));
+        return false;
+    }
+
+    protected static boolean validateFieldCallDisconnectReason(StringBuilder errors, String fieldName, String value) {
+        if (!validateFieldNumericPattern(NUMERIC_PATTERN, errors, fieldName, value)) {
+            return false;
+        }
+        if (CallDisconnectReason.isValid(Integer.parseInt(value))) {
+            return true;
+        }
+        errors.append(String.format(INVALID, fieldName));
+        return false;
+    }
 
     protected StringBuilder validate(String callingNumber, String callId) {
         StringBuilder failureReasons = new StringBuilder();
 
-        if (callingNumber == null) {
-            failureReasons.append(String.format(NOT_PRESENT, "callingNumber"));
-        } else if (!CALLING_NUMBER_PATTERN.matcher(callingNumber).matches()) {
-            failureReasons.append(String.format(INVALID, "callingNumber"));
-        }
-
-        if (callId == null) {
-            failureReasons.append(String.format(NOT_PRESENT, "callId"));
-        } else if (!CALL_ID_PATTERN.matcher(callId).matches()) {
-            failureReasons.append(String.format(INVALID, "callId"));
-        }
+        validateFieldNumeric10(failureReasons, "callingNumber", callingNumber);
+        validateFieldNumeric15(failureReasons, "callId", callId);
 
         return failureReasons;
     }
@@ -46,13 +94,8 @@ public class BaseController {
     protected StringBuilder validate(String callingNumber, String operator, String circle, String callId) {
         StringBuilder failureReasons = validate(callingNumber, callId);
 
-        if (operator == null) {
-            failureReasons.append(String.format(NOT_PRESENT, "operator"));
-        }
-
-        if (circle == null) {
-            failureReasons.append(String.format(NOT_PRESENT, "circle"));
-        }
+        validateFieldPresent(failureReasons, "operator", operator);
+        validateFieldPresent(failureReasons, "circle", circle);
 
         return failureReasons;
     }
