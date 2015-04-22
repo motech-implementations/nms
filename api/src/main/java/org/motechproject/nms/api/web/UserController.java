@@ -38,10 +38,6 @@ import java.util.Set;
 @Controller
 public class UserController extends BaseController {
 
-    public static final String MOBILE_ACADEMY = "mobileacademy";
-    public static final String MOBILE_KUNJI = "mobilekunji";
-    public static final String KILKARI = "kilkari";
-
     @Autowired
     private LanguageService languageService;
 
@@ -61,7 +57,8 @@ public class UserController extends BaseController {
                     method = RequestMethod.POST,
                     headers = { "Content-type=application/json" })
     @ResponseStatus(HttpStatus.OK)
-    public void setUserLanguage(@PathVariable String serviceName, @RequestBody LanguageRequest languageRequest) throws NotFoundException {
+    public void setUserLanguage(@PathVariable String serviceName, @RequestBody LanguageRequest languageRequest)
+            throws NotFoundException {
         String callingNumber = languageRequest.getCallingNumber();
         String callId = languageRequest.getCallId();
         Integer languageLocationCode = languageRequest.getLanguageLocationCode();
@@ -80,7 +77,8 @@ public class UserController extends BaseController {
             throw new IllegalArgumentException(failureReasons.toString());
         }
 
-        FrontLineWorker flw = frontLineWorkerService.getByContactNumber(String.valueOf(callingNumber));
+        // TODO: If no FLW user is found we need to create one here #62
+        FrontLineWorker flw = frontLineWorkerService.getByContactNumber(callingNumber);
         if (null == flw) {
             throw new NotFoundException(String.format(NOT_FOUND, "callingNumber"));
         }
@@ -97,7 +95,8 @@ public class UserController extends BaseController {
 
     @RequestMapping("/{serviceName}/user") // NO CHECKSTYLE Cyclomatic Complexity
     @ResponseBody
-    public ResponseUser user(@PathVariable String serviceName, @RequestParam(required = false) String callingNumber,
+    public ResponseUser user(@PathVariable String serviceName,
+                             @RequestParam(required = false) String callingNumber,
                              @RequestParam(required = false) String operator,
                              @RequestParam(required = false) String circle,
                              @RequestParam(required = false) String callId)
@@ -113,7 +112,8 @@ public class UserController extends BaseController {
         /*
         Make sure the url the user hit corresponds to a service we are expecting
          */
-        if (!(MOBILE_ACADEMY.equals(serviceName) || MOBILE_KUNJI.equals(serviceName)) && !(KILKARI.equals(serviceName))) {
+        if (!(MOBILE_ACADEMY.equals(serviceName) || MOBILE_KUNJI.equals(serviceName) ||
+                KILKARI.equals(serviceName))) {
             failureReasons.append(String.format(INVALID, "serviceName"));
         }
 
@@ -121,14 +121,14 @@ public class UserController extends BaseController {
         Handle the FLW services
          */
         if (MOBILE_ACADEMY.equals(serviceName) || MOBILE_KUNJI.equals(serviceName)) {
-            user = getFrontLineWorkerResponseUser(serviceName, String.valueOf(callingNumber));
+            user = getFrontLineWorkerResponseUser(serviceName, callingNumber);
         }
 
         /*
         Kilkari in the house!
          */
         if (KILKARI.equals(serviceName)) {
-            user = getKilkariResponseUser(String.valueOf(callingNumber));
+            user = getKilkariResponseUser(callingNumber);
         }
 
         if (failureReasons.length() > 0) {
@@ -136,7 +136,7 @@ public class UserController extends BaseController {
         }
 
         Language language = languageService.getDefaultCircleLanguage(circle);
-        if (null != language) {
+        if (language != null && user != null) {
             user.setDefaultLanguageLocationCode(language.getCode());
         }
 

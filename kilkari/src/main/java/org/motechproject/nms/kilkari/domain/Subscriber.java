@@ -3,6 +3,7 @@ package org.motechproject.nms.kilkari.domain;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 
+import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Unique;
 import javax.jdo.annotations.Persistent;
 import java.util.Set;
@@ -16,6 +17,7 @@ public class Subscriber {
 
     @Field
     @Unique
+    @Column(length = 10)
     private String callingNumber;
 
     //TODO: making this a bi-directional relationship until MOTECH-1638 is fixed. See #31.
