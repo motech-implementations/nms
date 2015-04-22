@@ -10,14 +10,15 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.api.web.contract.LanguageRequest;
-import org.motechproject.nms.api.web.contract.kilkari.InboxCallDetailsRequest;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.Service;
 import org.motechproject.nms.flw.domain.ServiceUsage;
 import org.motechproject.nms.flw.domain.ServiceUsageCap;
+import org.motechproject.nms.flw.domain.WhitelistEntry;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.flw.repository.ServiceUsageCapDataService;
 import org.motechproject.nms.flw.repository.ServiceUsageDataService;
+import org.motechproject.nms.flw.repository.WhitelistEntryDataService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
@@ -30,6 +31,9 @@ import org.motechproject.nms.language.domain.CircleLanguage;
 import org.motechproject.nms.language.domain.Language;
 import org.motechproject.nms.language.repository.CircleLanguageDataService;
 import org.motechproject.nms.language.repository.LanguageDataService;
+import org.motechproject.nms.location.domain.District;
+import org.motechproject.nms.location.domain.State;
+import org.motechproject.nms.location.repository.StateDataService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.motechproject.testing.osgi.http.SimpleHttpClient;
@@ -87,8 +91,16 @@ public class UserControllerBundleIT extends BasePaxIT {
     @Inject
     private CircleLanguageDataService circleLanguageDataService;
 
+    @Inject
+    private StateDataService stateDataService;
+
+    @Inject
+    private WhitelistEntryDataService whitelistEntryDataService;
+
     // TODO: Clean up data creation and cleanup
     private void cleanAllData() {
+        whitelistEntryDataService.deleteAll();
+        stateDataService.deleteAll();
         subscriptionDataService.deleteAll();
         subscriptionPackDataService.deleteAll();
         subscriberDataService.deleteAll();
@@ -211,6 +223,47 @@ public class UserControllerBundleIT extends BasePaxIT {
         serviceUsageCapDataService.create(serviceUsageCap);
     }
 
+    private void createFlwWithStateNotInWhitelist() {
+        cleanAllData();
+
+        District district = new District();
+        district.setName("9");
+        district.setDistrictCode(9l);
+
+        // Currently the whitelist code has the config for state based whitelisting hardcoded.
+        // There is a todo and ticket tracking that work.  By default the state named 'Whitelist' has
+        // whitelisting turned on.
+        State whitelist = new State("Whitelist", 1l);
+        whitelist.getDistricts().add(district);
+        stateDataService.create(whitelist);
+
+        WhitelistEntry entry = new WhitelistEntry("0000000000", whitelist);
+        whitelistEntryDataService.create(entry);
+
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", "1111111111");
+        flw.setDistrict(district);
+        frontLineWorkerService.add(flw);
+    }
+
+    private void createFlwWithLanguageLocationCodeNotInWhitelist() {
+        cleanAllData();
+
+        // Currently the code to get a state from a languageLocationCode is stubbed out.
+        // llc 34 returns the state "Whitelist".  There is a todo tracking this.
+        Language language = new Language("Language From Whitelisted State", 34);
+        languageDataService.create(language);
+
+        State whitelist = new State("Whitelist", 1l);
+        stateDataService.create(whitelist);
+
+        WhitelistEntry entry = new WhitelistEntry("0000000000", whitelist);
+        whitelistEntryDataService.create(entry);
+
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", "1111111111");
+        flw.setLanguage(language);
+        frontLineWorkerService.add(flw);
+    }
+
     private void createCircleWithLanguage() {
         cleanAllData();
         Language language = new Language("Papiamento", 99);
@@ -227,8 +280,8 @@ public class UserControllerBundleIT extends BasePaxIT {
         HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/kilkari/user?callingNumber=2000000000&operator=OP&circle=AA&callId=123456789012345", TestContext.getJettyPort()));
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
-            "{\"languageLocationCode\":null,\"defaultLanguageLocationCode\":null,\"subscriptionPackList\":[\"pack2\",\"pack1\"]}",
-            ADMIN_USERNAME, ADMIN_PASSWORD));
+                "{\"languageLocationCode\":null,\"defaultLanguageLocationCode\":null,\"subscriptionPackList\":[\"pack2\",\"pack1\"]}",
+                ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     @Test
@@ -362,6 +415,28 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
                 "{\"languageLocationCode\":10,\"defaultLanguageLocationCode\":99,\"currentUsageInPulses\":1,\"endOfUsagePromptCounter\":1,\"welcomePromptFlag\":true,\"maxAllowedUsageInPulses\":10,\"maxAllowedEndOfUsagePrompt\":2}",
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    @Test
+    public void testGetUserNotInWhitelistedByState() throws IOException, InterruptedException {
+        createFlwWithStateNotInWhitelist();
+
+        HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/mobilekunji/user?callingNumber=1111111111&operator=OP&circle=AA&callId=123456789012345", TestContext.getJettyPort()));
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_FORBIDDEN,
+                "{\"failureReason\":\"<callingNumber: Not Authorized>\"}",
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    @Test
+    public void testGetUserNotInWhitelistedByLanguageLocationCode() throws IOException, InterruptedException {
+        createFlwWithLanguageLocationCodeNotInWhitelist();
+
+        HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/mobilekunji/user?callingNumber=1111111111&operator=OP&circle=AA&callId=123456789012345", TestContext.getJettyPort()));
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_FORBIDDEN,
+                "{\"failureReason\":\"<callingNumber: Not Authorized>\"}",
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 

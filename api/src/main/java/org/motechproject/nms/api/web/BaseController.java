@@ -1,6 +1,7 @@
 package org.motechproject.nms.api.web;
 
 import org.motechproject.nms.api.web.contract.CallStatus;
+import org.motechproject.nms.api.web.exception.NotAuthorizedException;
 import org.motechproject.nms.api.web.exception.NotFoundException;
 import org.motechproject.nms.api.web.contract.BadRequest;
 import org.motechproject.nms.api.web.contract.CallDisconnectReason;
@@ -23,6 +24,7 @@ public class BaseController {
     public static final String NOT_PRESENT = "<%s: Not Present>";
     public static final String INVALID = "<%s: Invalid>";
     public static final String NOT_FOUND = "<%s: Not Found>";
+    public static final String NOT_AUTHORIZED = "<%s: Not Authorized>";
 
     public static final Pattern NUMERIC_PATTERN = Pattern.compile("[1-9][0-9]*|0");
     public static final Pattern NUMERIC_PATTERN_10 = Pattern.compile("[1-9][0-9]{9}");
@@ -98,6 +100,13 @@ public class BaseController {
         validateFieldPresent(failureReasons, "circle", circle);
 
         return failureReasons;
+    }
+
+    @ExceptionHandler(NotAuthorizedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    @ResponseBody
+    public BadRequest handleException(NotAuthorizedException e) throws IOException {
+        return new BadRequest(e.getMessage());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
