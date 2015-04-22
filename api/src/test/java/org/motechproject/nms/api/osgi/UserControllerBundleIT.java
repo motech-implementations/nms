@@ -4,10 +4,13 @@ import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.joda.time.DateTime;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.motechproject.nms.api.web.contract.LanguageRequest;
+import org.motechproject.nms.api.web.contract.kilkari.InboxCallDetailsRequest;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.Service;
 import org.motechproject.nms.flw.domain.ServiceUsage;
@@ -230,7 +233,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     }
 
     @Test
-    public void testFLWUserRequestWithoutServiceUsage() throws IOException, InterruptedException {
+    public void testFlwUserRequestWithoutServiceUsage() throws IOException, InterruptedException {
         createFlwCappedServiceNoUsageNoLocationNoLanguage();
 
         HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/mobilekunji/user?callingNumber=1111111111&operator=OP&circle=AA&callId=123456789012345", TestContext.getJettyPort()));
@@ -241,7 +244,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     }
 
     @Test
-    public void testFLWUserRequestWithServiceUsageOnly() throws IOException, InterruptedException {
+    public void testFlwUserRequestWithServiceUsageOnly() throws IOException, InterruptedException {
         createFlwWithLanguageServiceUsageAndCappedService();
 
         HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/mobilekunji/user?callingNumber=1111111111&operator=OP&circle=AA&callId=123456789012345", TestContext.getJettyPort()));
@@ -252,7 +255,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     }
 
     @Test
-    public void testFLWUserRequestWithServiceUsageAndEndOfUsageAndWelcomeMsg() throws IOException, InterruptedException {
+    public void testFlwUserRequestWithServiceUsageAndEndOfUsageAndWelcomeMsg() throws IOException, InterruptedException {
         createFlwWithLanguageFullServiceUsageAndCappedService();
 
         HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/mobilekunji/user?callingNumber=1111111111&operator=OP&circle=AA&callId=123456789012345", TestContext.getJettyPort()));
@@ -364,7 +367,6 @@ public class UserControllerBundleIT extends BasePaxIT {
     }
 
     @Test
-    @Ignore
     public void testSetLanguageInvalidService() throws IOException, InterruptedException {
         HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/NO_SERVICE/languageLocationCode", TestContext.getJettyPort()));
         StringEntity params = new StringEntity("{\"callingNumber\":1111111111,\"callId\":123456789012345,\"languageLocationCode\":10}");
@@ -378,7 +380,6 @@ public class UserControllerBundleIT extends BasePaxIT {
     }
 
     @Test
-    @Ignore
     public void testSetLanguageMissingCallingNumber() throws IOException, InterruptedException {
         HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/languageLocationCode", TestContext.getJettyPort()));
         StringEntity params = new StringEntity("{\"callId\":123456789012345,\"languageLocationCode\":10}");
@@ -392,10 +393,15 @@ public class UserControllerBundleIT extends BasePaxIT {
     }
 
     @Test
-    @Ignore
     public void testSetLanguageInvalidCallingNumber() throws IOException, InterruptedException {
         HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/languageLocationCode", TestContext.getJettyPort()));
-        StringEntity params = new StringEntity("{\"callingNumber\":abcdef,\"callId\":123456789012345,\"languageLocationCode\":10}");
+
+        LanguageRequest request = new LanguageRequest(
+                "invalid", //callingNumber
+                "123456789012345", //callId
+                "123"); //languageLocationCode
+        String json = new ObjectMapper().writeValueAsString(request);
+        StringEntity params = new StringEntity(json);
         httpPost.setEntity(params);
 
         httpPost.addHeader("content-type", "application/json");
@@ -415,7 +421,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         httpPost.addHeader("content-type", "application/json");
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
-                "{\"failureReason\":\"<callingNumber: Invalid>\"}",
+                "{\"failureReason\":\"<callingId: Not Present>\"}",
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 

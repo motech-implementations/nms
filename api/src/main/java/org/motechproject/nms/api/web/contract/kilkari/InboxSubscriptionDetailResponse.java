@@ -1,16 +1,16 @@
-package org.motechproject.nms.api.web.contract;
+package org.motechproject.nms.api.web.contract.kilkari;
 
 /**
- * InboxSubscriptionDetail
+ * InboxSubscriptionDetailResponse
  */
-public class InboxSubscriptionDetail {
+public class InboxSubscriptionDetailResponse {
     private String subscriptionId;
     private String subscriptionPack;
     private String inboxWeekId;
     private String contentFileName;
 
-    public InboxSubscriptionDetail(String subscriptionId, String subscriptionPack, String inboxWeekId,
-                                   String contentFileName) {
+    public InboxSubscriptionDetailResponse(String subscriptionId, String subscriptionPack, String inboxWeekId,
+                                           String contentFileName) {
         this.subscriptionId = subscriptionId;
         this.subscriptionPack = subscriptionPack;
         this.inboxWeekId = inboxWeekId;

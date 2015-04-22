@@ -1,7 +1,6 @@
 package org.motechproject.nms.api.osgi;
 
 import org.apache.commons.httpclient.HttpStatus;
-import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
@@ -9,7 +8,8 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.api.utils.HttpDeleteWithBody;
-import org.motechproject.nms.api.web.contract.SubscriptionRequest;
+import org.motechproject.nms.api.web.contract.kilkari.InboxCallDetailsRequest;
+import org.motechproject.nms.api.web.contract.kilkari.SubscriptionRequest;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.flw.repository.ServiceUsageCapDataService;
 import org.motechproject.nms.flw.repository.ServiceUsageDataService;
@@ -165,6 +165,24 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     }
 
     @Test
+    public void testCreateSubscriptionRequestInvalidPack() throws IOException, InterruptedException {
+        setupData();
+
+        SubscriptionRequest subscriptionRequest = new SubscriptionRequest("9999911122", "A", "AP",
+                "123456789012545", 10, "pack99999");
+        ObjectMapper mapper = new ObjectMapper();
+        String subscriptionRequestJson = mapper.writeValueAsString(subscriptionRequest);
+
+        HttpPost httpPost = new HttpPost(String.format(
+                "http://localhost:%d/api/kilkari/subscription", TestContext.getJettyPort()));
+        httpPost.setHeader("Content-type", "application/json");
+        httpPost.setEntity(new StringEntity(subscriptionRequestJson));
+
+        // Should return HTTP 404 (Not Found) because the subscription pack won't be found
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_NOT_FOUND, ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    @Test
     public void testDeactivateSubscriptionRequest() throws IOException, InterruptedException {
         setupData();
 
@@ -235,4 +253,55 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 ADMIN_PASSWORD));
     }
 
+    @Test
+    public void testSaveInboxCallDetails() throws IOException, InterruptedException {
+        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/kilkari/inboxCallDetails",
+                TestContext.getJettyPort()));
+        InboxCallDetailsRequest request = new InboxCallDetailsRequest(
+                "1234567890", //callingNumber
+                "A", //operator
+                "AP", //circle
+                "123456789012345", //callId
+                "123", //callStartTime
+                "456", //callEndTime
+                "123", //callDurationInPulses
+                "1", //callStatus
+                "1", //callDisconnectReason
+                null, //content
+                null); //failureReason
+        String json = new ObjectMapper().writeValueAsString(request);
+        StringEntity params = new StringEntity(json);
+        httpPost.setEntity(params);
+
+        httpPost.addHeader("content-type", "application/json");
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    @Test
+    public void testSaveInboxCallDetailsInvalidParams() throws IOException, InterruptedException {
+        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/kilkari/inboxCallDetails",
+                TestContext.getJettyPort()));
+        InboxCallDetailsRequest request = new InboxCallDetailsRequest(
+                "1234567890", //callingNumber
+                "A", //operator
+                "AP", //circle
+                "123456789012345", //callId
+                "123", //callStartTime
+                "456", //callEndTime
+                "123", //callDurationInPulses
+                "X", //callStatus
+                "Y", //callDisconnectReason
+                null, //content
+                null); //failureReason
+        String json = new ObjectMapper().writeValueAsString(request);
+        StringEntity params = new StringEntity(json);
+        httpPost.setEntity(params);
+
+        httpPost.addHeader("content-type", "application/json");
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
+                "{\"failureReason\":\"<callStatus: Invalid><callDisconnectReason: Invalid>\"}",
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
 }

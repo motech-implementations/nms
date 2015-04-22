@@ -66,4 +66,9 @@ public class KilkariServiceImpl implements KilkariService {
         }
         // Else no-op
     }
+
+    @Override
+    public SubscriptionPack getSubscriptionPack(String name) {
+        return subscriptionPackDataService.findByName(name);
+    }
 }

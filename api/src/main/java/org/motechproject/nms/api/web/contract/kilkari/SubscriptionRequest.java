@@ -1,4 +1,4 @@
-package org.motechproject.nms.api.web.contract;
+package org.motechproject.nms.api.web.contract.kilkari;
 
 public class SubscriptionRequest {
     private String callingNumber;
