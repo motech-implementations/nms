@@ -147,13 +147,11 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     @Test
     public void testCreateSubscriptionRequest() throws IOException, InterruptedException {
         setupData();
-        String subscriptionRequestJson = "{ \"callingNumber\": \"9999111122\", \"operator\": \"A\", \"circle\": \"AP\"," +
-                "\"callId\": \"123456789123456\", \"languageLocationCode\": 10, \"subscriptionPack\": \"pack1\"}";
 
-        //SubscriptionRequest subscriptionRequest = new SubscriptionRequest("999911122", "A", "AP",
-        //        "123456789012545", 10, "pack1");
-       // ObjectMapper mapper = new ObjectMapper();
-        //String subscriptionRequestJson = mapper.writeValueAsString(subscriptionRequest);
+        SubscriptionRequest subscriptionRequest = new SubscriptionRequest("9999911122", "A", "AP",
+                "123456789012545", 10, "pack1");
+        ObjectMapper mapper = new ObjectMapper();
+        String subscriptionRequestJson = mapper.writeValueAsString(subscriptionRequest);
 
         HttpPost httpPost = new HttpPost(String.format(
                 "http://localhost:%d/api/kilkari/subscription", TestContext.getJettyPort()));

@@ -505,6 +505,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         httpPost.addHeader("content-type", "application/json");
 
+        //TODO: why don't we pass any creds here?
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK));
 
         FrontLineWorker flw = frontLineWorkerService.getByContactNumber("1111111111");

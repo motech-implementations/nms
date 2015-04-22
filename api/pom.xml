@@ -90,6 +90,7 @@
                         <Resource-Path>api/resources</Resource-Path>
                         <Context-Path>api</Context-Path>
                         <Export-Package>
+                            org.motechproject.nms.api.web.contract
                         </Export-Package>
                         <Import-Package>
                             org.motechproject.osgi.web,

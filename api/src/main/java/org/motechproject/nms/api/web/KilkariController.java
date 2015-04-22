@@ -32,7 +32,8 @@ public class KilkariController extends BaseController {
 
     @RequestMapping("/inbox")
     @ResponseBody
-    public KilkariResponseInbox inbox(@RequestParam String callingNumber, @RequestParam String callId) throws NotFoundException {
+    public KilkariResponseInbox inbox(@RequestParam String callingNumber, @RequestParam String callId)
+            throws NotFoundException {
 
         StringBuilder failureReasons = validate(callingNumber, callId);
         if (failureReasons.length() > 0) {
@@ -56,13 +57,15 @@ public class KilkariController extends BaseController {
         return new KilkariResponseInbox(subscriptionDetails);
     }
 
-    @RequestMapping(value = "/subscription", method = RequestMethod.POST)
+    @RequestMapping(value = "/subscription",
+            method = RequestMethod.POST,
+            headers = { "Content-type=application/json" })
     @ResponseStatus(HttpStatus.OK)
-    @ResponseBody
     public void createSubscription(@RequestBody SubscriptionRequest subscriptionRequest) {
 
         StringBuilder failureReasons = validate(subscriptionRequest.getCallingNumber(),
-                subscriptionRequest.getOperator(), subscriptionRequest.getCircle(), subscriptionRequest.getCallId());
+                subscriptionRequest.getOperator(), subscriptionRequest.getCircle(),
+                subscriptionRequest.getCallId());
 
         // TODO: validate the language code and pack
 
