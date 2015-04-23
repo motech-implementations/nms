@@ -283,8 +283,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                         "foo", //contentFileName
                         "123", //startTime
                         "456") //endTime
-                ), //content
-                null); //failureReason
+                )); //content
         String json = new ObjectMapper().writeValueAsString(request);
         StringEntity params = new StringEntity(json);
         httpPost.setEntity(params);
@@ -308,8 +307,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 "123", //callDurationInPulses
                 "X", //callStatus
                 "Y", //callDisconnectReason
-                null, //content
-                null); //failureReason
+                null); //content
         String json = new ObjectMapper().writeValueAsString(request);
         StringEntity params = new StringEntity(json);
         httpPost.setEntity(params);
