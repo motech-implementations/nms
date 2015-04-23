@@ -7,15 +7,25 @@ import org.apache.http.entity.StringEntity;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.motechproject.nms.api.utils.HttpDeleteWithBody;
 import org.motechproject.nms.api.web.contract.kilkari.InboxCallDetailsRequest;
 import org.motechproject.nms.api.web.contract.kilkari.InboxCallDetailsRequestCallData;
+import org.motechproject.nms.api.web.contract.kilkari.SubscriptionRequest;
+import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
+import org.motechproject.nms.flw.repository.ServiceUsageCapDataService;
+import org.motechproject.nms.flw.repository.ServiceUsageDataService;
+import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
+import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.KilkariService;
+import org.motechproject.nms.language.domain.Language;
+import org.motechproject.nms.language.repository.CircleLanguageDataService;
+import org.motechproject.nms.language.repository.LanguageDataService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.motechproject.testing.osgi.http.SimpleHttpClient;
@@ -45,17 +55,49 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
     @Inject
     private KilkariService kilkariService;
+
     @Inject
     private SubscriberDataService subscriberDataService;
+
     @Inject
     private SubscriptionPackDataService subscriptionPackDataService;
+
     @Inject
     private SubscriptionDataService subscriptionDataService;
 
-    private void setupData() {
+    @Inject
+    private FrontLineWorkerService frontLineWorkerService;
+
+    @Inject
+    private FrontLineWorkerDataService frontLineWorkerDataService;
+
+    @Inject
+    private ServiceUsageDataService serviceUsageDataService;
+
+    @Inject
+    private ServiceUsageCapDataService serviceUsageCapDataService;
+
+    @Inject
+    private LanguageDataService languageDataService;
+
+    @Inject
+    private CircleLanguageDataService circleLanguageDataService;
+
+    private void cleanAllData() {
         subscriptionDataService.deleteAll();
         subscriptionPackDataService.deleteAll();
         subscriberDataService.deleteAll();
+        serviceUsageCapDataService.deleteAll();
+        serviceUsageDataService.deleteAll();
+        frontLineWorkerDataService.deleteAll();
+        circleLanguageDataService.deleteAll();
+        languageDataService.deleteAll();
+    }
+
+    private void setupData() {
+        cleanAllData();
+
+        Language ta = languageDataService.create(new Language("tamil", 10));
 
         SubscriptionPack pack1 = subscriptionPackDataService.create(new SubscriptionPack("pack1"));
         SubscriptionPack pack2 = subscriptionPackDataService.create(new SubscriptionPack("pack2"));
@@ -65,9 +107,9 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         Subscriber subscriber1 = subscriberDataService.create(new Subscriber("1000000000"));
         Subscriber subscriber2 = subscriberDataService.create(new Subscriber("2000000000"));
 
-        Subscription subscription1 = subscriptionDataService.create(new Subscription("001", subscriber1, pack1));
-        Subscription subscription2 = subscriptionDataService.create(new Subscription("002", subscriber2, pack1));
-        Subscription subscription3 = subscriptionDataService.create(new Subscription("003", subscriber2, pack2));
+        Subscription subscription1 = subscriptionDataService.create(new Subscription(subscriber1, pack1, ta));
+        Subscription subscription2 = subscriptionDataService.create(new Subscription(subscriber2, pack1, ta));
+        Subscription subscription3 = subscriptionDataService.create(new Subscription(subscriber2, pack2, ta));
     }
 
     @Test
@@ -77,9 +119,13 @@ public class KilkariControllerBundleIT extends BasePaxIT {
             "http://localhost:%d/api/kilkari/inbox?callingNumber=1000000000&callId=123456789012345",
             TestContext.getJettyPort()));
 
+        Subscriber subscriber = subscriberDataService.findByCallingNumber("1000000000");
+        Subscription subscription = subscriber.getSubscriptions().iterator().next();
+
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
-            "{\"inboxSubscriptionDetailList\":[{\"subscriptionId\":\"001\",\"subscriptionPack\":\"pack1\",\"inboxWeekId\":\"10_1\",\"contentFileName\":\"xyz.wav\"}]}",
-            ADMIN_USERNAME, ADMIN_PASSWORD));
+            "{\"inboxSubscriptionDetailList\":[{\"subscriptionId\":\"" + subscription.getSubscriptionId().toString() +
+            "\",\"subscriptionPack\":\"pack1\",\"inboxWeekId\":\"10_1\",\"contentFileName\":\"xyz.wav\"}]}",
+                ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     @Test
@@ -100,6 +146,112 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 TestContext.getJettyPort()));
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_BAD_REQUEST, ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    @Test
+    public void testCreateSubscriptionRequest() throws IOException, InterruptedException {
+        setupData();
+
+        SubscriptionRequest subscriptionRequest = new SubscriptionRequest("9999911122", "A", "AP",
+                "123456789012545", 10, "pack1");
+        ObjectMapper mapper = new ObjectMapper();
+        String subscriptionRequestJson = mapper.writeValueAsString(subscriptionRequest);
+
+        HttpPost httpPost = new HttpPost(String.format(
+                "http://localhost:%d/api/kilkari/subscription", TestContext.getJettyPort()));
+        httpPost.setHeader("Content-type", "application/json");
+        httpPost.setEntity(new StringEntity(subscriptionRequestJson));
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK, ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    @Test
+    public void testCreateSubscriptionRequestInvalidPack() throws IOException, InterruptedException {
+        setupData();
+
+        SubscriptionRequest subscriptionRequest = new SubscriptionRequest("9999911122", "A", "AP",
+                "123456789012545", 10, "pack99999");
+        ObjectMapper mapper = new ObjectMapper();
+        String subscriptionRequestJson = mapper.writeValueAsString(subscriptionRequest);
+
+        HttpPost httpPost = new HttpPost(String.format(
+                "http://localhost:%d/api/kilkari/subscription", TestContext.getJettyPort()));
+        httpPost.setHeader("Content-type", "application/json");
+        httpPost.setEntity(new StringEntity(subscriptionRequestJson));
+
+        // Should return HTTP 404 (Not Found) because the subscription pack won't be found
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_NOT_FOUND, ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    @Test
+    public void testDeactivateSubscriptionRequest() throws IOException, InterruptedException {
+        setupData();
+
+        Subscriber subscriber = kilkariService.getSubscriber("1000000000");
+        Subscription subscription = subscriber.getSubscriptions().iterator().next();
+        String subscriptionId = subscription.getSubscriptionId();
+
+        SubscriptionRequest subscriptionRequest = new SubscriptionRequest("1000000000", "A", "AP",
+                "123456789012545", subscriptionId);
+        ObjectMapper mapper = new ObjectMapper();
+        String subscriptionRequestJson = mapper.writeValueAsString(subscriptionRequest);
+
+        HttpDeleteWithBody httpDelete = new HttpDeleteWithBody(String.format(
+                "http://localhost:%d/api/kilkari/subscription", TestContext.getJettyPort()));
+        httpDelete.setHeader("Content-type", "application/json");
+        httpDelete.setEntity(new StringEntity(subscriptionRequestJson));
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpDelete, HttpStatus.SC_OK, ADMIN_USERNAME,
+                ADMIN_PASSWORD));
+
+        subscription = kilkariService.getSubscription(subscriptionId);
+        assertTrue(subscription.getStatus().equals(SubscriptionStatus.DEACTIVATED));
+    }
+
+    @Test
+    public void testDeactivateSubscriptionRequestAlreadyInactive() throws IOException, InterruptedException {
+        setupData();
+
+        Subscriber subscriber = kilkariService.getSubscriber("1000000000");
+        Subscription subscription = subscriber.getSubscriptions().iterator().next();
+        String subscriptionId = subscription.getSubscriptionId();
+        kilkariService.deactivateSubscription(subscription);
+
+        SubscriptionRequest subscriptionRequest = new SubscriptionRequest("1000000000", "A", "AP",
+                "123456789012545", subscriptionId);
+        ObjectMapper mapper = new ObjectMapper();
+        String subscriptionRequestJson = mapper.writeValueAsString(subscriptionRequest);
+
+        HttpDeleteWithBody httpDelete = new HttpDeleteWithBody(String.format(
+                "http://localhost:%d/api/kilkari/subscription", TestContext.getJettyPort()));
+        httpDelete.setHeader("Content-type", "application/json");
+        httpDelete.setEntity(new StringEntity(subscriptionRequestJson));
+
+        // Should return HTTP 200 (OK) because DELETE on a Deactivated subscription is idempotent
+        assertTrue(SimpleHttpClient.execHttpRequest(httpDelete, HttpStatus.SC_OK, ADMIN_USERNAME,
+                ADMIN_PASSWORD));
+
+        subscription = kilkariService.getSubscription(subscriptionId);
+        assertTrue(subscription.getStatus().equals(SubscriptionStatus.DEACTIVATED));
+    }
+
+    @Test
+    public void testDeactivateSubscriptionRequestInvalidSubscription() throws IOException, InterruptedException {
+        setupData();
+
+        SubscriptionRequest subscriptionRequest = new SubscriptionRequest("1000000000", "A", "AP",
+                "123456789012545", "77f13128-037e-4f98-8651-285fa618d94a");
+        ObjectMapper mapper = new ObjectMapper();
+        String subscriptionRequestJson = mapper.writeValueAsString(subscriptionRequest);
+
+        HttpDeleteWithBody httpDelete = new HttpDeleteWithBody(String.format(
+                "http://localhost:%d/api/kilkari/subscription", TestContext.getJettyPort()));
+        httpDelete.setHeader("Content-type", "application/json");
+        httpDelete.setEntity(new StringEntity(subscriptionRequestJson));
+
+        // Should return HTTP 404 (Not Found) because the subscription ID won't be found
+        assertTrue(SimpleHttpClient.execHttpRequest(httpDelete, HttpStatus.SC_NOT_FOUND, ADMIN_USERNAME,
+                ADMIN_PASSWORD));
     }
 
     @Test
