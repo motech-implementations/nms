@@ -27,8 +27,8 @@ import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.KilkariService;
-import org.motechproject.nms.language.domain.CircleLanguage;
 import org.motechproject.nms.language.domain.Language;
+import org.motechproject.nms.language.domain.CircleLanguage;
 import org.motechproject.nms.language.repository.CircleLanguageDataService;
 import org.motechproject.nms.language.repository.LanguageDataService;
 import org.motechproject.nms.location.domain.District;
@@ -52,7 +52,7 @@ import static org.junit.Assert.*;
 
 
 /**
- * Verify that LanguageService HTTP service is present and functional.
+ * Verify that User API is present and functional.
  */
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerSuite.class)
@@ -120,6 +120,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     private void createKilkariTestData() {
         cleanAllData();
 
+        Language ta = languageDataService.create(new Language("tamil", 50));
         SubscriptionPack pack1 = subscriptionPackDataService.create(new SubscriptionPack("pack1"));
         SubscriptionPack pack2 = subscriptionPackDataService.create(new SubscriptionPack("pack2"));
         List<SubscriptionPack> onePack = Arrays.asList(pack1);
@@ -128,9 +129,9 @@ public class UserControllerBundleIT extends BasePaxIT {
         Subscriber subscriber1 = subscriberDataService.create(new Subscriber("1000000000"));
         Subscriber subscriber2 = subscriberDataService.create(new Subscriber("2000000000"));
 
-        Subscription subscription1 = subscriptionDataService.create(new Subscription("001", subscriber1, pack1));
-        Subscription subscription2 = subscriptionDataService.create(new Subscription("002", subscriber2, pack1));
-        Subscription subscription3 = subscriptionDataService.create(new Subscription("003", subscriber2, pack2));
+        Subscription subscription1 = subscriptionDataService.create(new Subscription(subscriber1, pack1, ta));
+        Subscription subscription2 = subscriptionDataService.create(new Subscription(subscriber2, pack1, ta));
+        Subscription subscription3 = subscriptionDataService.create(new Subscription(subscriber2, pack2, ta));
     }
 
     private void createFlwCappedServiceNoUsageNoLocationNoLanguage() {
@@ -583,6 +584,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         httpPost.addHeader("content-type", "application/json");
 
+        //TODO: why don't we pass any creds here?
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK));
 
         FrontLineWorker flw = frontLineWorkerService.getByContactNumber("1111111111");
