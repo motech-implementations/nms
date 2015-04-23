@@ -48,6 +48,12 @@
 
         <dependency>
             <groupId>org.motechproject.nms</groupId>
+            <artifactId>props</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.motechproject.nms</groupId>
             <artifactId>flw</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -90,8 +96,8 @@
                         <Resource-Path>api/resources</Resource-Path>
                         <Context-Path>api</Context-Path>
                         <Export-Package>
-                            org.motechproject.nms.api.web.contract.kilkari,
-                            org.motechproject.nms.api.web.contract
+                            org.motechproject.nms.api.web.contract,
+                            org.motechproject.nms.api.web.contract.kilkari
                         </Export-Package>
                         <Import-Package>
                             org.motechproject.osgi.web,

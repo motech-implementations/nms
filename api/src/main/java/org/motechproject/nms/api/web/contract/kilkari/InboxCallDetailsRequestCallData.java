@@ -11,6 +11,17 @@ public class InboxCallDetailsRequestCallData {
     private String startTime;
     private String endTime;
 
+    public InboxCallDetailsRequestCallData() { }
+
+    public InboxCallDetailsRequestCallData(String subscriptionId, String subscriptionPack, String inboxWeekId, String contentFileName, String startTime, String endTime) {
+        this.subscriptionId = subscriptionId;
+        this.subscriptionPack = subscriptionPack;
+        this.inboxWeekId = inboxWeekId;
+        this.contentFileName = contentFileName;
+        this.startTime = startTime;
+        this.endTime = endTime;
+    }
+
     public String getSubscriptionId() {
         return subscriptionId;
     }

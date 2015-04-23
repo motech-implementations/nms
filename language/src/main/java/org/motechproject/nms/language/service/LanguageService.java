@@ -13,4 +13,6 @@ public interface LanguageService {
     Language getDefaultCircleLanguage(String circle);
 
     List<Language> getCircleLanguages(String circle);
+
+    Language getLanguage(int code);
 }
