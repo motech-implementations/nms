@@ -63,7 +63,7 @@ public class KilkariServiceBundleIT extends BasePaxIT {
         SubscriptionPack pack1 = subscriptionPackDataService.create(new SubscriptionPack("pack1"));
         SubscriptionPack pack2 = subscriptionPackDataService.create(new SubscriptionPack("pack2"));
 
-        Subscriber subscriber = subscriberDataService.create(new Subscriber("0000000001"));
+        Subscriber subscriber = subscriberDataService.create(new Subscriber(1000000000L));
 
         Subscription subscription1 = subscriptionDataService.create(new Subscription(subscriber, pack1, ta));
         Subscription subscription2 = subscriptionDataService.create(new Subscription(subscriber, pack2, ta));

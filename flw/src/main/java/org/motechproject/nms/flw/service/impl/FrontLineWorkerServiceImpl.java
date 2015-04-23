@@ -26,7 +26,7 @@ public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
     }
 
     @Override
-    public FrontLineWorker getByContactNumber(String contactNumber) {
+    public FrontLineWorker getByContactNumber(Long contactNumber) {
         return frontLineWorkerDataService.findByContactNumber(contactNumber);
     }
 

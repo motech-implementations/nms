@@ -8,5 +8,5 @@ import org.motechproject.mds.service.MotechDataService;
 
 public interface FrontLineWorkerDataService extends MotechDataService<FrontLineWorker> {
     @Lookup
-    FrontLineWorker findByContactNumber(@LookupField(name = "contactNumber") String contactNumber);
+    FrontLineWorker findByContactNumber(@LookupField(name = "contactNumber") Long contactNumber);
 }

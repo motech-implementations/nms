@@ -49,11 +49,13 @@ public class CallDetailsController extends BaseController {
             throw new IllegalArgumentException(String.format(INVALID, "serviceName"));
         }
 
-        failureReasons = validate(callDetailRecordRequest.getCallingNumber(), callDetailRecordRequest.getOperator(),
-                                  callDetailRecordRequest.getCircle(), callDetailRecordRequest.getCallId());
+        failureReasons = validate(callDetailRecordRequest.getCallingNumber(),
+                callDetailRecordRequest.getCallId(), callDetailRecordRequest.getOperator(),
+                callDetailRecordRequest.getCircle());
 
         // Verify common elements
-        // (callStartTime, callEndTime, callDurationInPulses, endOfUsagePromptCount, callStatus, callDisconnectReason)
+        // (callStartTime, callEndTime, callDurationInPulses, endOfUsagePromptCount, callStatus,
+        // callDisconnectReason)
         failureReasons.append(validateCallDetailsCommonElements(callDetailRecordRequest));
 
         if (MOBILE_ACADEMY.equals(serviceName)) {
@@ -75,7 +77,8 @@ public class CallDetailsController extends BaseController {
             throw new IllegalArgumentException(failureReasons.toString());
         }
 
-        FrontLineWorker flw = frontLineWorkerService.getByContactNumber(String.valueOf(callDetailRecordRequest.getCallingNumber()));
+        FrontLineWorker flw = frontLineWorkerService.getByContactNumber(
+                callDetailRecordRequest.getCallingNumber());
         if (null == flw) {
             throw new NotFoundException(String.format(NOT_FOUND, "callingNumber"));
         }
@@ -83,11 +86,12 @@ public class CallDetailsController extends BaseController {
         createCallDetailRecord(flw, callDetailRecordRequest, service);
     }
 
-    private void createCallDetailRecord(FrontLineWorker flw, CallDetailRecordRequest callDetailRecordRequest, Service service) {
+    private void createCallDetailRecord(FrontLineWorker flw, CallDetailRecordRequest callDetailRecordRequest,
+                                        Service service) {
         CallDetailRecord cdr = new CallDetailRecord();
         cdr.setFrontLineWorker(flw);
-        cdr.setCallingNumber(Long.parseLong(callDetailRecordRequest.getCallingNumber()));
-        cdr.setCallId(Long.parseLong(callDetailRecordRequest.getCallId()));
+        cdr.setCallingNumber(callDetailRecordRequest.getCallingNumber());
+        cdr.setCallId(callDetailRecordRequest.getCallId());
         cdr.setOperator(callDetailRecordRequest.getOperator());
         cdr.setCircle(callDetailRecordRequest.getCircle());
         cdr.setCallStartTime(new DateTime(callDetailRecordRequest.getCallStartTime() * MILLISECONDS_PER_SECOND));

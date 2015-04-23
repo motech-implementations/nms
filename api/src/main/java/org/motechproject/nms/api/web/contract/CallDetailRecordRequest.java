@@ -4,8 +4,8 @@ import java.util.Collections;
 import java.util.List;
 
 public class CallDetailRecordRequest {
-    private String callingNumber;
-    private String callId;
+    private Long callingNumber;
+    private Long callId;
     private String operator;
     private String circle;
     private Long callStartTime;
@@ -17,19 +17,19 @@ public class CallDetailRecordRequest {
     private Integer callDisconnectReason;
     private List<CallContentRequest> content;
 
-    public String getCallingNumber() {
+    public Long getCallingNumber() {
         return callingNumber;
     }
 
-    public void setCallingNumber(String callingNumber) {
+    public void setCallingNumber(Long callingNumber) {
         this.callingNumber = callingNumber;
     }
 
-    public String getCallId() {
+    public Long getCallId() {
         return callId;
     }
 
-    public void setCallId(String callId) {
+    public void setCallId(Long callId) {
         this.callId = callId;
     }
 

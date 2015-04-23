@@ -3,11 +3,10 @@ package org.motechproject.nms.kilkari.domain;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 
-import javax.jdo.annotations.Column;
-import javax.jdo.annotations.Unique;
 import javax.jdo.annotations.Persistent;
-import java.util.Set;
+import javax.jdo.annotations.Unique;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * A Kilkari subscriber (recipient of the service, ie: a pregnant woman) essentially identified by their phone number
@@ -17,8 +16,7 @@ public class Subscriber {
 
     @Field
     @Unique
-    @Column(length = 10)
-    private String callingNumber;
+    private Long callingNumber;
 
     //TODO: making this a bi-directional relationship until MOTECH-1638 is fixed. See #31.
     @Field
@@ -28,16 +26,16 @@ public class Subscriber {
     public Subscriber() {
     }
 
-    public Subscriber(String callingNumber) {
+    public Subscriber(Long callingNumber) {
         this.callingNumber = callingNumber;
         this.subscriptions = new HashSet<>();
     }
 
-    public String getCallingNumber() {
+    public Long getCallingNumber() {
         return callingNumber;
     }
 
-    public void setCallingNumber(String callingNumber) {
+    public void setCallingNumber(Long callingNumber) {
         this.callingNumber = callingNumber;
     }
 

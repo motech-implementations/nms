@@ -70,16 +70,12 @@ public class UserController extends BaseController {
     @ResponseStatus(HttpStatus.OK)
     public void setUserLanguageLocationCode(@PathVariable String serviceName,
                                             @RequestBody LanguageRequest languageRequest) {
-        String callingNumber = languageRequest.getCallingNumber();
-        String callId = languageRequest.getCallId();
-        String languageLocationCode = languageRequest.getLanguageLocationCode();
+        Long callingNumber = languageRequest.getCallingNumber();
+        Long callId = languageRequest.getCallId();
+        Integer languageLocationCode = languageRequest.getLanguageLocationCode();
 
         StringBuilder failureReasons = validate(callingNumber, callId);
-        validateFieldNumeric(failureReasons, "languageLocationCode", languageRequest.getLanguageLocationCode());
-
-        if (null == languageLocationCode) {
-            failureReasons.append(String.format(NOT_PRESENT, "languageLocationCode"));
-        }
+        validateFieldPresent(failureReasons, "languageLocationCode", languageRequest.getLanguageLocationCode());
 
         if (!(MOBILE_ACADEMY.equals(serviceName) || MOBILE_KUNJI.equals(serviceName))) {
             failureReasons.append(String.format(INVALID, "serviceName"));
@@ -95,7 +91,7 @@ public class UserController extends BaseController {
             throw new NotFoundException(String.format(NOT_FOUND, "callingNumber"));
         }
 
-        Language language = languageService.getLanguageByCode(Integer.parseInt(languageLocationCode));
+        Language language = languageService.getLanguageByCode(languageLocationCode);
         if (null == language) {
             throw new NotFoundException(String.format(NOT_FOUND, "languageLocationCode"));
         }
@@ -123,12 +119,12 @@ public class UserController extends BaseController {
     @RequestMapping("/{serviceName}/user") // NO CHECKSTYLE Cyclomatic Complexity
     @ResponseBody
     public ResponseUser getUserDetails(@PathVariable String serviceName,
-                             @RequestParam(required = false) String callingNumber,
+                             @RequestParam(required = false) Long callingNumber,
                              @RequestParam(required = false) String operator,
                              @RequestParam(required = false) String circle,
-                             @RequestParam(required = false) String callId) {
+                             @RequestParam(required = false) Long callId) {
 
-        StringBuilder failureReasons = validate(callingNumber, operator, circle, callId);
+        StringBuilder failureReasons = validate(callingNumber, callId, operator, circle);
         if (failureReasons.length() > 0) {
             throw new IllegalArgumentException(failureReasons.toString());
         }
@@ -169,7 +165,7 @@ public class UserController extends BaseController {
         return user;
     }
 
-    private ResponseUser getKilkariResponseUser(String callingNumber) {
+    private ResponseUser getKilkariResponseUser(Long callingNumber) {
         UserResponse user = new UserResponse();
         Subscriber subscriber = kilkariService.getSubscriber(callingNumber);
         if (subscriber == null) {
@@ -184,7 +180,7 @@ public class UserController extends BaseController {
         return user;
     }
 
-    private ResponseUser getFrontLineWorkerResponseUser(String serviceName, String callingNumber) {
+    private ResponseUser getFrontLineWorkerResponseUser(String serviceName, Long callingNumber) {
         FrontLineWorkerUser user;
 
         Service service = null;

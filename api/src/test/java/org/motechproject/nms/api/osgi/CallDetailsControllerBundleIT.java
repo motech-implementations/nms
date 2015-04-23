@@ -5,10 +5,8 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.motechproject.nms.flw.domain.CallContent;
 import org.motechproject.nms.flw.domain.CallDetailRecord;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.repository.CallContentDataService;
@@ -25,13 +23,15 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.inject.Inject;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerSuite.class)
@@ -186,7 +186,7 @@ public class CallDetailsControllerBundleIT {
     public void testCallDetailsValidMobileKunji() throws IOException, InterruptedException {
         cleanAllData();
 
-        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", "9810320300");
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 9810320300L);
         frontLineWorkerService.add(flw);
 
         HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/callDetails", TestContext.getJettyPort()));
@@ -247,7 +247,7 @@ public class CallDetailsControllerBundleIT {
     public void testCallDetailsValidMobileAcademy() throws IOException, InterruptedException {
         cleanAllData();
 
-        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", "9810320300");
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 9810320300L);
         frontLineWorkerService.add(flw);
 
         HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobileacademy/callDetails", TestContext.getJettyPort()));
@@ -305,7 +305,7 @@ public class CallDetailsControllerBundleIT {
     public void testCallDetailsValidNoContent() throws IOException, InterruptedException {
         cleanAllData();
 
-        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", "9810320300");
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 9810320300L);
         frontLineWorkerService.add(flw);
 
         HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobileacademy/callDetails", TestContext.getJettyPort()));

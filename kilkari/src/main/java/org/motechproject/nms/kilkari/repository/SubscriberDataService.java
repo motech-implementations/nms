@@ -8,5 +8,5 @@ import org.motechproject.mds.service.MotechDataService;
 
 public interface SubscriberDataService extends MotechDataService<Subscriber> {
     @Lookup
-    Subscriber findByCallingNumber(@LookupField(name = "callingNumber") String callingNumber);
+    Subscriber findByCallingNumber(@LookupField(name = "callingNumber") Long callingNumber);
 }

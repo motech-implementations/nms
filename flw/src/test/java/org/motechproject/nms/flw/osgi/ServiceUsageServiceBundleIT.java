@@ -1,15 +1,14 @@
 package org.motechproject.nms.flw.osgi;
 
 import org.joda.time.DateTime;
-import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.Service;
 import org.motechproject.nms.flw.domain.ServiceUsage;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.flw.repository.ServiceUsageDataService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
-import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.motechproject.nms.flw.service.ServiceUsageService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
@@ -20,7 +19,8 @@ import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * Verify that HelloWorldService present, functional.
@@ -55,10 +55,10 @@ public class ServiceUsageServiceBundleIT extends BasePaxIT {
     @Test
     public void testGetCurrentMonthlyUsageForFLWAndService() throws Exception {
         setupData();
-        FrontLineWorker flw = new FrontLineWorker("Valid Worker", "1111111111");
+        FrontLineWorker flw = new FrontLineWorker("Valid Worker", 1111111111L);
         frontLineWorkerService.add(flw);
 
-        FrontLineWorker flwIgnored = new FrontLineWorker("Ignored Worker", "2222222222");
+        FrontLineWorker flwIgnored = new FrontLineWorker("Ignored Worker", 2222222222L);
         frontLineWorkerService.add(flwIgnored);
 
         // A usage record from last month that should be ignored
@@ -100,7 +100,7 @@ public class ServiceUsageServiceBundleIT extends BasePaxIT {
     @Test
     public void testGetCurrentMonthlyUsageForFLWAndServiceWithNoService() throws Exception {
         setupData();
-        FrontLineWorker flw = new FrontLineWorker("Valid Worker", "1111111111");
+        FrontLineWorker flw = new FrontLineWorker("Valid Worker", 1111111111L);
         frontLineWorkerService.add(flw);
 
         ServiceUsage serviceUsage = serviceUsageService.getCurrentMonthlyUsageForFLWAndService(flw, Service.MOBILE_ACADEMY);

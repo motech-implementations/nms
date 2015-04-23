@@ -1,10 +1,10 @@
 package org.motechproject.nms.api.web.contract.kilkari;
 
 public class SubscriptionRequest {
-    private String callingNumber;
+    private Long callingNumber;
     private String operator;
     private String circle;
-    private String callId;
+    private Long callId;
     private Integer languageLocationCode;
     private String subscriptionPack;
     private String subscriptionId;
@@ -12,7 +12,7 @@ public class SubscriptionRequest {
     public SubscriptionRequest() {
     }
 
-    public SubscriptionRequest(String callingNumber, String operator, String circle, String callId, 
+    public SubscriptionRequest(Long callingNumber, String operator, String circle, Long callId,
         Integer languageLocationCode, String subscriptionPack) {
         this.callingNumber = callingNumber;
         this.operator = operator;
@@ -22,7 +22,7 @@ public class SubscriptionRequest {
         this.subscriptionPack = subscriptionPack;
     }
 
-    public SubscriptionRequest(String calledNumber, String operator, String circle, String callId,
+    public SubscriptionRequest(Long calledNumber, String operator, String circle, Long callId,
                                String subscriptionId) {
         this.callingNumber = calledNumber;
         this.operator = operator;
@@ -31,11 +31,11 @@ public class SubscriptionRequest {
         this.subscriptionId = subscriptionId;
     }
 
-    public String getCallingNumber() {
+    public Long getCallingNumber() {
         return callingNumber;
     }
 
-    public void setCallingNumber(String callingNumber) {
+    public void setCallingNumber(Long callingNumber) {
         this.callingNumber = callingNumber;
     }
 
@@ -43,9 +43,9 @@ public class SubscriptionRequest {
      *  This extra getter/setter pair aliases calledNumber to callingNumber because the spec has different names
      *  for this field depending on the type of request.
      */
-    public String getCalledNumber() { return callingNumber; }
+    public Long getCalledNumber() { return callingNumber; }
 
-    public void setCalledNumber(String calledNumber) { this.callingNumber = calledNumber; }
+    public void setCalledNumber(Long calledNumber) { this.callingNumber = calledNumber; }
 
     public String getOperator() {
         return operator;
@@ -63,11 +63,11 @@ public class SubscriptionRequest {
         this.circle = circle;
     }
 
-    public String getCallId() {
+    public Long getCallId() {
         return callId;
     }
 
-    public void setCallId(String callId) {
+    public void setCallId(Long callId) {
         this.callId = callId;
     }
 

@@ -9,9 +9,9 @@ import org.motechproject.nms.kilkari.domain.SubscriptionPack;
  */
 public interface KilkariService {
 
-    Subscriber getSubscriber(String callingNumber);
+    Subscriber getSubscriber(long callingNumber);
 
-    void createSubscription(String callingNumber, int languageLocationCode, String subscriptionPack);
+    void createSubscription(long callingNumber, int languageLocationCode, String subscriptionPack);
 
     Subscription getSubscription(String subscriptionId);
 

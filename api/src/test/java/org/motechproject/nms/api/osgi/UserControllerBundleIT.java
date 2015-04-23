@@ -101,8 +101,8 @@ public class UserControllerBundleIT extends BasePaxIT {
     /*
     Creates two subscription packs ('pack1' and 'pack2')
     Create two subscribers:
-        Subscriber "1000000000" is subscribed to pack 'pack1'
-        Subscriber "2000000000" is subscribed to packs 'pack1' and 'pack2'
+        Subscriber 1000000000L is subscribed to pack 'pack1'
+        Subscriber 2000000000L is subscribed to packs 'pack1' and 'pack2'
      */
     private void createKilkariTestData() {
         cleanAllData();
@@ -113,8 +113,8 @@ public class UserControllerBundleIT extends BasePaxIT {
         List<SubscriptionPack> onePack = Arrays.asList(pack1);
         List<SubscriptionPack> twoPacks = Arrays.asList(pack1, pack2);
 
-        Subscriber subscriber1 = subscriberDataService.create(new Subscriber("1000000000"));
-        Subscriber subscriber2 = subscriberDataService.create(new Subscriber("2000000000"));
+        Subscriber subscriber1 = subscriberDataService.create(new Subscriber(1000000000L));
+        Subscriber subscriber2 = subscriberDataService.create(new Subscriber(2000000000L));
 
         Subscription subscription1 = subscriptionDataService.create(new Subscription(subscriber1, pack1, ta));
         Subscription subscription2 = subscriptionDataService.create(new Subscription(subscriber2, pack1, ta));
@@ -124,7 +124,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     private void createFlwCappedServiceNoUsageNoLocationNoLanguage() {
         cleanAllData();
 
-        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", "1111111111");
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 1111111111L);
         frontLineWorkerService.add(flw);
 
         Language language = new Language("Papiamento", 99);
@@ -143,7 +143,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         Language language = new Language("English", 10);
         languageDataService.create(language);
 
-        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", "1111111111");
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
         flw.setLanguage(language);
         frontLineWorkerService.add(flw);
 
@@ -167,7 +167,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         Language language = new Language("English", 10);
         languageDataService.create(language);
 
-        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", "1111111111");
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
         flw.setLanguage(language);
         frontLineWorkerService.add(flw);
 
@@ -190,7 +190,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         Language language = new Language("English", 10);
         languageDataService.create(language);
 
-        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", "1111111111");
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
         flw.setLanguage(language);
         frontLineWorkerService.add(flw);
 
@@ -285,7 +285,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testInvalidCallingNumber() throws IOException, InterruptedException {
-        HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/kilkari/user?callingNumber=XXXXXXX&operator=OP&circle=AA&callId=123456789012345", TestContext.getJettyPort()));
+        HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/kilkari/user?callingNumber=123&operator=OP&circle=AA&callId=123456789012345", TestContext.getJettyPort()));
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_BAD_REQUEST,
                 "{\"failureReason\":\"<callingNumber: Invalid>\"}",
@@ -396,9 +396,9 @@ public class UserControllerBundleIT extends BasePaxIT {
         HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/languageLocationCode", TestContext.getJettyPort()));
 
         LanguageRequest request = new LanguageRequest(
-                "invalid", //callingNumber
-                "123456789012345", //callId
-                "123"); //languageLocationCode
+                1L, //callingNumber
+                123456789012345L, //callId
+                123); //languageLocationCode
         String json = new ObjectMapper().writeValueAsString(request);
         StringEntity params = new StringEntity(json);
         httpPost.setEntity(params);
@@ -507,7 +507,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         //TODO: why don't we pass any creds here?
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK));
 
-        FrontLineWorker flw = frontLineWorkerService.getByContactNumber("1111111111");
+        FrontLineWorker flw = frontLineWorkerService.getByContactNumber(1111111111L);
         Language language = flw.getLanguage();
         assertNotNull(language);
         assertEquals("FLW Language Code", (long) 99, (long) language.getCode());

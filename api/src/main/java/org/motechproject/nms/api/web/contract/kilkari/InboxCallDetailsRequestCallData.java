@@ -8,12 +8,13 @@ public class InboxCallDetailsRequestCallData {
     private String subscriptionPack;
     private String inboxWeekId;
     private String contentFileName;
-    private String startTime;
-    private String endTime;
+    private Long startTime;
+    private Long endTime;
 
     public InboxCallDetailsRequestCallData() { }
 
-    public InboxCallDetailsRequestCallData(String subscriptionId, String subscriptionPack, String inboxWeekId, String contentFileName, String startTime, String endTime) {
+    public InboxCallDetailsRequestCallData(String subscriptionId, String subscriptionPack, String inboxWeekId,
+                                           String contentFileName, Long startTime, Long endTime) {
         this.subscriptionId = subscriptionId;
         this.subscriptionPack = subscriptionPack;
         this.inboxWeekId = inboxWeekId;
@@ -54,19 +55,19 @@ public class InboxCallDetailsRequestCallData {
         this.contentFileName = contentFileName;
     }
 
-    public String getStartTime() {
+    public Long getStartTime() {
         return startTime;
     }
 
-    public void setStartTime(String startTime) {
+    public void setStartTime(Long startTime) {
         this.startTime = startTime;
     }
 
-    public String getEndTime() {
+    public Long getEndTime() {
         return endTime;
     }
 
-    public void setEndTime(String endTime) {
+    public void setEndTime(Long endTime) {
         this.endTime = endTime;
     }
 }
