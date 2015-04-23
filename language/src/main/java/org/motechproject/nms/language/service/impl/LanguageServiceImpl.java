@@ -29,7 +29,7 @@ public class LanguageServiceImpl implements LanguageService {
      * @return the language object if found
      */
     public Language getLanguageByCode(Integer code) {
-        return languageDataService.getLanguageByCode(code);
+        return languageDataService.findByCode(code);
     }
 
     /**
@@ -67,6 +67,11 @@ public class LanguageServiceImpl implements LanguageService {
         }
 
         return languages;
+    }
+
+    @Override
+    public Language getLanguage(int code) {
+        return languageDataService.findByCode(code);
     }
 
 }

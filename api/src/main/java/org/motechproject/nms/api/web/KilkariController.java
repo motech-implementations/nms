@@ -4,6 +4,7 @@ import org.motechproject.nms.api.web.contract.kilkari.InboxCallDetailsRequest;
 import org.motechproject.nms.api.web.contract.kilkari.InboxSubscriptionDetailResponse;
 import org.motechproject.nms.api.web.exception.NotFoundException;
 import org.motechproject.nms.api.web.contract.kilkari.InboxResponse;
+import org.motechproject.nms.api.web.contract.kilkari.SubscriptionRequest;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.service.KilkariService;
@@ -14,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
@@ -99,6 +102,75 @@ public class KilkariController extends BaseController {
         }
 
         //todo: the work...
+    }
+
+    /**
+     * 4.2.3
+     * Create Subscription
+     *
+     * IVR shall invoke this API to create a new Kilkari subscription
+     *
+     */
+    @RequestMapping(value = "/subscription",
+            method = RequestMethod.POST,
+            headers = { "Content-type=application/json" })
+    @ResponseStatus(HttpStatus.OK)
+    public void createSubscription(@RequestBody SubscriptionRequest subscriptionRequest)
+        throws NotFoundException {
+
+        StringBuilder failureReasons = validate(subscriptionRequest.getCallingNumber(),
+                subscriptionRequest.getOperator(), subscriptionRequest.getCircle(),
+                subscriptionRequest.getCallId());
+        validateFieldPresent(failureReasons, "subscriptionPack", subscriptionRequest.getSubscriptionPack());
+        validateFieldPresent(failureReasons, "languageLocationCode",
+                subscriptionRequest.getLanguageLocationCode().toString());
+
+        if (failureReasons.length() > 0) {
+            throw new IllegalArgumentException(failureReasons.toString());
+        }
+        if (!validateSubscriptionPack(subscriptionRequest.getSubscriptionPack())) {
+            throw new NotFoundException(String.format(NOT_FOUND, "subscriptionPack"));
+        }
+
+        kilkariService.createSubscription(subscriptionRequest.getCallingNumber(),
+                subscriptionRequest.getLanguageLocationCode(), subscriptionRequest.getSubscriptionPack());
+    }
+
+    /**
+     * 4.2.4
+     * Deactivate Subscription
+     *
+     * IVR shall invoke this API to deactivate an existing Kilkari subscription
+     *
+     */
+    @RequestMapping(value = "/subscription",
+            method = RequestMethod.DELETE,
+            headers = { "Content-type=application/json" })
+    @ResponseStatus(HttpStatus.OK)
+    public void deactivateSubscription(@RequestBody SubscriptionRequest subscriptionRequest)
+        throws NotFoundException {
+
+        StringBuilder failureReasons = validate(subscriptionRequest.getCallingNumber(),
+                subscriptionRequest.getOperator(), subscriptionRequest.getCircle(),
+                subscriptionRequest.getCallId());
+
+        validateFieldPresent(failureReasons, "subscriptionId", subscriptionRequest.getSubscriptionId());
+
+        if (failureReasons.length() > 0) {
+            throw new IllegalArgumentException(failureReasons.toString());
+        }
+
+        Subscription subscription = kilkariService.getSubscription(subscriptionRequest.getSubscriptionId());
+
+        if (subscription == null) {
+            throw new NotFoundException(String.format(NOT_FOUND, "subscriptionId"));
+        }
+
+        kilkariService.deactivateSubscription(subscription);
+    }
+
+    private boolean validateSubscriptionPack(String name) {
+        return kilkariService.getCountSubscriptionPack(name) == 1;
     }
 
 }

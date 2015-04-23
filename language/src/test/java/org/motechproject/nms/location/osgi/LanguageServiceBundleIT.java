@@ -71,5 +71,6 @@ public class LanguageServiceBundleIT extends BasePaxIT {
         }
 
         assertEquals(languageCodes, new HashSet<Integer>(Arrays.asList(10, 11, 12)));
+
     }
 }
