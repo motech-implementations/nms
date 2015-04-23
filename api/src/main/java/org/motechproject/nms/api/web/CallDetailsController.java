@@ -1,8 +1,8 @@
 package org.motechproject.nms.api.web;
 
 import org.joda.time.DateTime;
-import org.motechproject.nms.api.web.contract.CallContentRequest;
 import org.motechproject.nms.api.web.contract.CallDetailRecordRequest;
+import org.motechproject.nms.api.web.contract.CallContentRequest;
 import org.motechproject.nms.api.web.exception.NotFoundException;
 import org.motechproject.nms.flw.domain.CallContent;
 import org.motechproject.nms.flw.domain.CallDetailRecord;
@@ -112,7 +112,7 @@ public class CallDetailsController extends BaseController {
             content.setEndTime(new DateTime(callContentRequest.getEndTime() * MILLISECONDS_PER_SECOND));
 
             if (service == Service.MOBILE_KUNJI) {
-                content.setMobileKunjiCardNumber(callContentRequest.getMkcardNumber());
+                content.setMobileKunjiCardNumber(callContentRequest.getMkCardNumber());
             }
 
             if (service == Service.MOBILE_ACADEMY) {
@@ -188,10 +188,10 @@ public class CallDetailsController extends BaseController {
             failureReasons.append(String.format(NOT_PRESENT, "endTime"));
         }
 
-        // MK elements (mkcardNumber)
+        // MK elements (mkCardNumber)
         if (service == Service.MOBILE_KUNJI) {
-            if (null == callContentRequest.getMkcardNumber()) {
-                failureReasons.append(String.format(NOT_PRESENT, "mkcardNumber"));
+            if (null == callContentRequest.getMkCardNumber()) {
+                failureReasons.append(String.format(NOT_PRESENT, "mkCardNumber"));
             }
         }
 

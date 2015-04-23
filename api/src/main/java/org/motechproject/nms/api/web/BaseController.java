@@ -3,8 +3,14 @@ package org.motechproject.nms.api.web;
 import org.motechproject.nms.api.web.contract.BadRequest;
 import org.motechproject.nms.api.web.exception.NotAuthorizedException;
 import org.motechproject.nms.api.web.exception.NotFoundException;
+import org.motechproject.nms.flw.domain.FrontLineWorker;
+import org.motechproject.nms.flw.service.WhitelistService;
+import org.motechproject.nms.location.domain.District;
+import org.motechproject.nms.location.domain.State;
+import org.motechproject.nms.location.service.LocationService;
 import org.motechproject.nms.props.domain.CallDisconnectReason;
 import org.motechproject.nms.props.domain.CallStatus;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -29,6 +35,13 @@ public class BaseController {
     public static final Pattern NUMERIC_PATTERN = Pattern.compile("[1-9][0-9]*|0");
     public static final Pattern NUMERIC_PATTERN_10 = Pattern.compile("[1-9][0-9]{9}");
     public static final Pattern NUMERIC_PATTERN_15 = Pattern.compile("[1-9][0-9]{14}");
+
+    public static final String CALLING_NUMBER = "callingNumber";
+
+    @Autowired
+    private LocationService locationService;
+    @Autowired
+    private WhitelistService whitelistService;
 
     protected static boolean validateFieldPresent(StringBuilder errors, String fieldName, String value) {
         if (value != null) {
@@ -136,4 +149,18 @@ public class BaseController {
     }
 
 
+    protected boolean frontLineWorkerAuthorizedForAccess(FrontLineWorker flw) {
+        District district = flw.getDistrict();
+        State state = null;
+
+        if (district != null) {
+            state = district.getState();
+        }
+
+        if (state == null) {
+            state = locationService.getStateForLanguage(flw.getLanguage());
+        }
+
+        return whitelistService.numberWhitelistedForState(state, flw.getContactNumber());
+    }
 }
