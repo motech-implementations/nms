@@ -1,16 +1,16 @@
 package org.motechproject.nms.api.web;
 
-import org.motechproject.nms.api.web.contract.CallStatus;
+import org.motechproject.nms.api.web.contract.BadRequest;
 import org.motechproject.nms.api.web.exception.NotAuthorizedException;
 import org.motechproject.nms.api.web.exception.NotFoundException;
-import org.motechproject.nms.api.web.contract.BadRequest;
-import org.motechproject.nms.api.web.contract.CallDisconnectReason;
+import org.motechproject.nms.props.domain.CallDisconnectReason;
+import org.motechproject.nms.props.domain.CallStatus;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
-import java.io.IOException;
 import java.util.regex.Pattern;
 
 /**
@@ -105,21 +105,35 @@ public class BaseController {
     @ExceptionHandler(NotAuthorizedException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
     @ResponseBody
-    public BadRequest handleException(NotAuthorizedException e) throws IOException {
+    public BadRequest handleException(NotAuthorizedException e) {
         return new BadRequest(e.getMessage());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ResponseBody
-    public BadRequest handleException(IllegalArgumentException e) throws IOException {
+    public BadRequest handleException(IllegalArgumentException e) {
         return new BadRequest(e.getMessage());
     }
+
 
     @ExceptionHandler(NotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ResponseBody
-    public BadRequest handleException(NotFoundException e) throws IOException {
+    public BadRequest handleException(NotFoundException e) {
         return new BadRequest(e.getMessage());
     }
+
+
+    /**
+     * Handles malformed JSON, returns a slightly more informative message than a generic HTTP-400 Bad Request
+     */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    @ResponseBody
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public BadRequest handleException(HttpMessageNotReadableException e) {
+        return new BadRequest(e.getMessage());
+    }
+
+
 }

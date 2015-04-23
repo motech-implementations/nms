@@ -9,6 +9,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.api.utils.HttpDeleteWithBody;
 import org.motechproject.nms.api.web.contract.kilkari.InboxCallDetailsRequest;
+import org.motechproject.nms.api.web.contract.kilkari.InboxCallDetailsRequestCallData;
 import org.motechproject.nms.api.web.contract.kilkari.SubscriptionRequest;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.flw.repository.ServiceUsageCapDataService;
@@ -267,7 +268,22 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 "123", //callDurationInPulses
                 "1", //callStatus
                 "1", //callDisconnectReason
-                null, //content
+                Arrays.asList(
+                    new InboxCallDetailsRequestCallData(
+                        "123", //subscriptionId
+                        "123", //subscriptionPack
+                        "123", //inboxWeekId
+                        "foo", //contentFileName
+                        "123", //startTime
+                        "456"), //endTime
+                    new InboxCallDetailsRequestCallData(
+                        "123", //subscriptionId
+                        "123", //subscriptionPack
+                        "123", //inboxWeekId
+                        "foo", //contentFileName
+                        "123", //startTime
+                        "456") //endTime
+                ), //content
                 null); //failureReason
         String json = new ObjectMapper().writeValueAsString(request);
         StringEntity params = new StringEntity(json);

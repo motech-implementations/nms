@@ -487,35 +487,36 @@ public class UserControllerBundleIT extends BasePaxIT {
     }
 
     @Test
-    @Ignore
     public void testSetLanguageMissingCallId() throws IOException, InterruptedException {
-        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/languageLocationCode", TestContext.getJettyPort()));
+        HttpPost httpPost = new HttpPost(
+                String.format("http://localhost:%d/api/mobilekunji/languageLocationCode",
+                        TestContext.getJettyPort()));
         StringEntity params = new StringEntity("{\"callingNumber\":1111111111,\"languageLocationCode\":10}");
         httpPost.setEntity(params);
 
         httpPost.addHeader("content-type", "application/json");
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
-                "{\"failureReason\":\"<callingId: Not Present>\"}",
+                "{\"failureReason\":\"<callId: Not Present>\"}",
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     @Test
-    @Ignore
     public void testSetLanguageInvalidCallId() throws IOException, InterruptedException {
-        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/languageLocationCode", TestContext.getJettyPort()));
-        StringEntity params = new StringEntity("{\"callingNumber\":abcdef,\"callId\":abcd,\"languageLocationCode\":10}");
+        HttpPost httpPost = new HttpPost(
+                String.format("http://localhost:%d/api/mobilekunji/languageLocationCode",
+                        TestContext.getJettyPort()));
+        StringEntity params = new StringEntity(
+                "{\"callingNumber\":abcdef,\"callId\":\"123456789012345\",\"languageLocationCode\":\"10\"}");
         httpPost.setEntity(params);
 
         httpPost.addHeader("content-type", "application/json");
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
-                "{\"failureReason\":\"<callingNumber: Invalid>\"}",
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, ADMIN_USERNAME,
+                ADMIN_PASSWORD));
     }
 
     @Test
-    @Ignore
     public void testSetLanguageMissingLanguageLocationCode() throws IOException, InterruptedException {
         HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/languageLocationCode", TestContext.getJettyPort()));
         StringEntity params = new StringEntity("{\"callingNumber\":abcdef,\"callId\":123456789012345}");
@@ -523,13 +524,11 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         httpPost.addHeader("content-type", "application/json");
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
-                "{\"failureReason\":\"<callingNumber: Invalid>\"}",
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, ADMIN_USERNAME,
+                ADMIN_PASSWORD));
     }
 
     @Test
-    @Ignore
     public void testSetLanguageInvalidLanguageLocationCode() throws IOException, InterruptedException {
         HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/languageLocationCode", TestContext.getJettyPort()));
         StringEntity params = new StringEntity("{\"callingNumber\":abcdef,\"callId\":123456789012345,\"languageLocationCode\":\"AA\"}");
@@ -537,9 +536,8 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         httpPost.addHeader("content-type", "application/json");
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
-                "{\"failureReason\":\"<callingNumber: Invalid>\"}",
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, ADMIN_USERNAME,
+                ADMIN_PASSWORD));
     }
 
     @Test

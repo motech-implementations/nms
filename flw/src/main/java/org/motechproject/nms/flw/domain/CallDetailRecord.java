@@ -3,6 +3,8 @@ package org.motechproject.nms.flw.domain;
 import org.joda.time.DateTime;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
+import org.motechproject.nms.props.domain.CallDisconnectReason;
+import org.motechproject.nms.props.domain.CallStatus;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Extension;

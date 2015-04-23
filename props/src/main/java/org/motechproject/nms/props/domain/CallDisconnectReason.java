@@ -1,4 +1,4 @@
-package org.motechproject.nms.flw.domain;
+package org.motechproject.nms.props.domain;
 
 /**
  * Reason the call was disconnected, returned by IMI (the IVR provider)
@@ -12,8 +12,12 @@ public enum CallDisconnectReason {
     ERROR_IN_THE_API, // 5
     SYSTEM_ERROR; // 6
 
+    public static boolean isValid(int i) {
+        return (i >= 1 && i < values().length);
+    }
+
     public static CallDisconnectReason fromInt(int i) {
-        if (i >= 1 && i < values().length) {
+        if (isValid(i)) {
             return values()[i - 1];
         } else {
             throw new IllegalArgumentException(String.format("%d is an invalid CallDisconnectReason", i));

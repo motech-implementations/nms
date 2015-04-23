@@ -66,12 +66,22 @@ public class UserController extends BaseController {
     @Autowired
     private WhitelistService whitelistService;
 
+    /**
+     * 2.2.7.1  Set User Language Location Code
+     *          http://<motech:port>/motech­platform­server/module/mobileacademy/languageLocationCode
+     *
+     * 3.2.3.1  Set User Language Location Code
+     *          http://<motech:port>/motech­platform­server/module/mobilekunji/languageLocationCode
+     *
+     *          IVR shall invoke this API to provide user languageLocation preference to MOTECH.
+     *
+     */
     @RequestMapping(value = "/{serviceName}/languageLocationCode",
                     method = RequestMethod.POST,
                     headers = { "Content-type=application/json" })
     @ResponseStatus(HttpStatus.OK)
-    public void setUserLanguage(@PathVariable String serviceName, @RequestBody LanguageRequest languageRequest)
-            throws NotFoundException {
+    public void setUserLanguageLocationCode(@PathVariable String serviceName,
+                                            @RequestBody LanguageRequest languageRequest) {
         String callingNumber = languageRequest.getCallingNumber();
         String callId = languageRequest.getCallId();
         String languageLocationCode = languageRequest.getLanguageLocationCode();
@@ -116,14 +126,28 @@ public class UserController extends BaseController {
     }
 
 
+    /**
+     * 2.2.1.1 Get User Details
+     *         http://<motech:port>/motech­patform­server/module/mobileacademy/user?callingNumber=9999999900
+     *             &operator=A&circle=AP&callId=123456789012345
+
+     * 3.2.1.1 Get User Details
+     *         http://<motech:port>/motech­patform­server/module/mobilekunji/user?callingNumber=9999999900
+     *             &operator=A&circle=AP&callId=234000011111111
+     *             
+     *             
+     * IVR shall invoke this API when to retrieve details specific to the user identified by
+     * callingNumber. In case user specific details are not available in the database, the API will
+     * attempt to load system defaults based on the operator and circle provided.
+     *
+     */
     @RequestMapping("/{serviceName}/user") // NO CHECKSTYLE Cyclomatic Complexity
     @ResponseBody
-    public ResponseUser user(@PathVariable String serviceName,
+    public ResponseUser getUserDetails(@PathVariable String serviceName,
                              @RequestParam(required = false) String callingNumber,
                              @RequestParam(required = false) String operator,
                              @RequestParam(required = false) String circle,
-                             @RequestParam(required = false) String callId)
-            throws NotFoundException {
+                             @RequestParam(required = false) String callId) {
 
         StringBuilder failureReasons = validate(callingNumber, operator, circle, callId);
         if (failureReasons.length() > 0) {
@@ -166,7 +190,7 @@ public class UserController extends BaseController {
         return user;
     }
 
-    private ResponseUser getKilkariResponseUser(String callingNumber) throws NotFoundException {
+    private ResponseUser getKilkariResponseUser(String callingNumber) {
         UserResponse user = new UserResponse();
         Subscriber subscriber = kilkariService.getSubscriber(callingNumber);
         if (subscriber == null) {
