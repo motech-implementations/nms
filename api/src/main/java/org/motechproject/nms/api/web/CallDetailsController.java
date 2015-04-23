@@ -40,8 +40,8 @@ public class CallDetailsController extends BaseController {
             headers = { "Content-type=application/json" })
     @ResponseStatus(HttpStatus.OK)
     @Transactional
-    public void saveCallDetails(@PathVariable String serviceName, @RequestBody CallDetailRecordRequest callDetailRecordRequest)
-            throws NotFoundException {
+    public void saveCallDetails(@PathVariable String serviceName,
+                                @RequestBody CallDetailRecordRequest callDetailRecordRequest) {
         Service service = null;
         StringBuilder failureReasons;
 

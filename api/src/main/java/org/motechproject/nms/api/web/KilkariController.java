@@ -1,12 +1,12 @@
 package org.motechproject.nms.api.web;
 
 import org.motechproject.nms.api.web.contract.kilkari.InboxCallDetailsRequest;
-import org.motechproject.nms.api.web.contract.kilkari.InboxSubscriptionDetailResponse;
-import org.motechproject.nms.api.web.exception.NotFoundException;
 import org.motechproject.nms.api.web.contract.kilkari.InboxResponse;
+import org.motechproject.nms.api.web.contract.kilkari.InboxSubscriptionDetailResponse;
 import org.motechproject.nms.api.web.contract.kilkari.SubscriptionRequest;
-import org.motechproject.nms.kilkari.domain.Subscription;
+import org.motechproject.nms.api.web.exception.NotFoundException;
 import org.motechproject.nms.kilkari.domain.Subscriber;
+import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.service.KilkariService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -15,13 +15,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
-import java.util.Set;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * KilkariController
@@ -43,8 +41,7 @@ public class KilkariController extends BaseController {
      */
     @RequestMapping("/inbox")
     @ResponseBody
-    public InboxResponse getInboxDetails(@RequestParam String callingNumber, @RequestParam String callId)
-            throws NotFoundException {
+    public InboxResponse getInboxDetails(@RequestParam String callingNumber, @RequestParam String callId) {
 
         StringBuilder failureReasons = validate(callingNumber, callId);
         if (failureReasons.length() > 0) {
