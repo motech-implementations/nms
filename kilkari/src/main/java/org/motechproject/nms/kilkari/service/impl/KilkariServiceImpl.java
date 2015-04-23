@@ -44,7 +44,7 @@ public class KilkariServiceImpl implements KilkariService {
             subscriber = getSubscriber(callingNumber);
         }
 
-        SubscriptionPack pack = subscriptionPackDataService.findByName(subscriptionPack);
+        SubscriptionPack pack = subscriptionPackDataService.byName(subscriptionPack);
         Language language = languageDataService.findByCode(languageLocationCode);
 
         subscriptionDataService.create(new Subscription(subscriber, pack, language));
@@ -69,6 +69,12 @@ public class KilkariServiceImpl implements KilkariService {
 
     @Override
     public SubscriptionPack getSubscriptionPack(String name) {
-        return subscriptionPackDataService.findByName(name);
+        return subscriptionPackDataService.byName(name);
     }
+
+    @Override
+    public long getCountSubscriptionPack(String name) {
+        return subscriptionPackDataService.countByName(name);
+    }
+
 }

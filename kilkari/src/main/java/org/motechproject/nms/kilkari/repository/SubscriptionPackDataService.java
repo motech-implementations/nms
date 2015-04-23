@@ -7,5 +7,7 @@ import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 
 public interface SubscriptionPackDataService extends MotechDataService<SubscriptionPack> {
     @Lookup
-    SubscriptionPack findByName(@LookupField(name = "name") String name);
+    SubscriptionPack byName(@LookupField(name = "name") String name);
+
+    long countByName(String name);
 }

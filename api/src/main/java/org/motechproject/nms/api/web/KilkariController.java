@@ -170,7 +170,7 @@ public class KilkariController extends BaseController {
     }
 
     private boolean validateSubscriptionPack(String name) {
-        return kilkariService.getSubscriptionPack(name) != null;
+        return kilkariService.getCountSubscriptionPack(name) == 1;
     }
 
 }

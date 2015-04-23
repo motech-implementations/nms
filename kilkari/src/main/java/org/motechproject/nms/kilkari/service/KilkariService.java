@@ -18,4 +18,6 @@ public interface KilkariService {
     void deactivateSubscription(Subscription subscription);
 
     SubscriptionPack getSubscriptionPack(String name);
+
+    long getCountSubscriptionPack(String name);
 }
