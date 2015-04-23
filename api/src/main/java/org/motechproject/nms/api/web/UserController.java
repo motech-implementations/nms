@@ -176,8 +176,7 @@ public class UserController extends BaseController {
         return user;
     }
 
-    private ResponseUser getFrontLineWorkerResponseUser(String serviceName, String callingNumber)
-            throws NotAuthorizedException {
+    private ResponseUser getFrontLineWorkerResponseUser(String serviceName, String callingNumber) {
         FrontLineWorkerUser user;
 
         Service service = null;
