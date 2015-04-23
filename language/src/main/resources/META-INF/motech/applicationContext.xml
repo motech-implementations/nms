@@ -13,18 +13,11 @@
 
     <bean id="moduleRegistrationData" class="org.motechproject.osgi.web.ModuleRegistrationData">
         <constructor-arg name="moduleName" value="language" />
-        <constructor-arg name="url" value="../language/resources/index.html" />
-        <constructor-arg name="angularModules">
-            <list>
-                <value>language</value>
-            </list>
-        </constructor-arg>
         <constructor-arg name="i18n">
             <map>
                 <entry key="messages" value="../language/resources/messages/" />
             </map>
         </constructor-arg>
-        <property name="defaultURL" value="/helloWorld"/>
     </bean>
 
 

@@ -13,18 +13,11 @@
 
     <bean id="moduleRegistrationData" class="org.motechproject.osgi.web.ModuleRegistrationData">
         <constructor-arg name="moduleName" value="kilkari" />
-        <constructor-arg name="url" value="../kilkari/resources/index.html" />
-        <constructor-arg name="angularModules">
-            <list>
-                <value>kilkari</value>
-            </list>
-        </constructor-arg>
         <constructor-arg name="i18n">
             <map>
                 <entry key="messages" value="../kilkari/resources/messages/" />
             </map>
         </constructor-arg>
-        <property name="defaultURL" value="/helloWorld"/>
     </bean>
 
 
