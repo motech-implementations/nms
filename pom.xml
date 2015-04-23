@@ -733,6 +733,7 @@
         <module>api</module>
         <module>language</module>
         <module>location</module>
+        <module>props</module>
     </modules>
 
     <build>

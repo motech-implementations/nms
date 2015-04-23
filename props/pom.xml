@@ -9,10 +9,10 @@
         <relativePath>../</relativePath>
     </parent>
 
-    <artifactId>api</artifactId>
+    <artifactId>props</artifactId>
     <version>0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
-    <name>API module</name>
+    <name>Properties module</name>
 
     <properties>
         <modules.root.dir>${basedir}/..</modules.root.dir>
@@ -38,30 +38,6 @@
             <groupId>org.motechproject</groupId>
             <artifactId>motech-platform-dataservices</artifactId>
             <version>${motech.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.motechproject.nms</groupId>
-            <artifactId>language</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.motechproject.nms</groupId>
-            <artifactId>props</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.motechproject.nms</groupId>
-            <artifactId>flw</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.motechproject.nms</groupId>
-            <artifactId>kilkari</artifactId>
-            <version>${project.version}</version>
         </dependency>
     </dependencies>
 
@@ -93,21 +69,13 @@
                 <configuration>
                     <instructions>
                         <Blueprint-Enabled>true</Blueprint-Enabled>
-                        <Resource-Path>api/resources</Resource-Path>
-                        <Context-Path>api</Context-Path>
+                        <Resource-Path>props/resources</Resource-Path>
+                        <Context-Path>props</Context-Path>
                         <Export-Package>
-                            org.motechproject.nms.api.web.contract.kilkari,
-                            org.motechproject.nms.api.web.contract
+                            org.motechproject.nms.props.domain;version=${project.version},
                         </Export-Package>
                         <Import-Package>
-                            org.motechproject.osgi.web,
-                            org.aopalliance.aop,
-                            org.springframework.aop,
-                            org.springframework.aop.framework,
-                            net.sf.cglib.core,
-                            net.sf.cglib.proxy,
-                            net.sf.cglib.reflect,
-                            org.springframework.transaction,
+                        	org.motechproject.osgi.web,
                             *
                         </Import-Package>
                     </instructions>

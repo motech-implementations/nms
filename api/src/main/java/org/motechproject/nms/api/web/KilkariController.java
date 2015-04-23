@@ -40,8 +40,7 @@ public class KilkariController extends BaseController {
      */
     @RequestMapping("/inbox")
     @ResponseBody
-    public InboxResponse getInboxDetails(@RequestParam String callingNumber, @RequestParam String callId)
-            throws NotFoundException {
+    public InboxResponse getInboxDetails(@RequestParam String callingNumber, @RequestParam String callId) {
 
         StringBuilder failureReasons = validate(callingNumber, callId);
         if (failureReasons.length() > 0) {

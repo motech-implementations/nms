@@ -1,22 +1,20 @@
 package org.motechproject.nms.api.osgi;
 
-import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.api.web.contract.kilkari.InboxCallDetailsRequest;
 import org.motechproject.nms.api.web.contract.kilkari.InboxCallDetailsRequestCallData;
 import org.motechproject.nms.kilkari.domain.Subscriber;
-import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.Subscription;
+import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
-import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
+import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.KilkariService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
@@ -29,7 +27,6 @@ import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -119,7 +116,22 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 "123", //callDurationInPulses
                 "1", //callStatus
                 "1", //callDisconnectReason
-                null, //content
+                Arrays.asList(
+                    new InboxCallDetailsRequestCallData(
+                        "123", //subscriptionId
+                        "123", //subscriptionPack
+                        "123", //inboxWeekId
+                        "foo", //contentFileName
+                        "123", //startTime
+                        "456"), //endTime
+                    new InboxCallDetailsRequestCallData(
+                        "123", //subscriptionId
+                        "123", //subscriptionPack
+                        "123", //inboxWeekId
+                        "foo", //contentFileName
+                        "123", //startTime
+                        "456") //endTime
+                ), //content
                 null); //failureReason
         String json = new ObjectMapper().writeValueAsString(request);
         StringEntity params = new StringEntity(json);

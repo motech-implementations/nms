@@ -1,4 +1,4 @@
-package org.motechproject.nms.api.web.contract;
+package org.motechproject.nms.props.domain;
 
 /**
  * Call Status, describes how a phone call ended
