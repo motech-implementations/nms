@@ -58,7 +58,7 @@ public class KilkariServiceBundleIT extends BasePaxIT {
         subscriberDataService.deleteAll();
         languageDataService.deleteAll();
 
-        Language ta = languageDataService.create(new Language("tamil", 10));
+        Language ta = languageDataService.create(new Language("tamil", "10"));
 
         SubscriptionPack pack1 = subscriptionPackDataService.create(new SubscriptionPack("pack1"));
         SubscriptionPack pack2 = subscriptionPackDataService.create(new SubscriptionPack("pack2"));

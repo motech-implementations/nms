@@ -3,13 +3,13 @@ package org.motechproject.nms.api.web.contract;
 public class LanguageRequest {
     private Long callingNumber;
     private Long callId;
-    private Integer languageLocationCode;
+    private String languageLocationCode;
 
     // Necessary for Jackson
     public LanguageRequest() { }
 
     // Used in ITs only
-    public LanguageRequest(Long callingNumber, Long callId, Integer languageLocationCode) {
+    public LanguageRequest(Long callingNumber, Long callId, String languageLocationCode) {
         this.callingNumber = callingNumber;
         this.callId = callId;
         this.languageLocationCode = languageLocationCode;
@@ -31,11 +31,11 @@ public class LanguageRequest {
         this.callId = callId;
     }
 
-    public Integer getLanguageLocationCode() {
+    public String getLanguageLocationCode() {
         return languageLocationCode;
     }
 
-    public void setLanguageLocationCode(Integer languageLocationCode) {
+    public void setLanguageLocationCode(String languageLocationCode) {
         this.languageLocationCode = languageLocationCode;
     }
 }

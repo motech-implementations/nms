@@ -97,7 +97,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     private void setupData() {
         cleanAllData();
 
-        Language ta = languageDataService.create(new Language("tamil", 10));
+        Language ta = languageDataService.create(new Language("tamil", "10"));
 
         SubscriptionPack pack1 = subscriptionPackDataService.create(new SubscriptionPack("pack1"));
         SubscriptionPack pack2 = subscriptionPackDataService.create(new SubscriptionPack("pack2"));
@@ -153,7 +153,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         setupData();
 
         SubscriptionRequest subscriptionRequest = new SubscriptionRequest(9999911122L, "A", "AP",
-                123456789012545L, 10, "pack1");
+                123456789012545L, "10", "pack1");
         ObjectMapper mapper = new ObjectMapper();
         String subscriptionRequestJson = mapper.writeValueAsString(subscriptionRequest);
 
@@ -170,7 +170,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         setupData();
 
         SubscriptionRequest subscriptionRequest = new SubscriptionRequest(9999911122L, "A", "AP",
-                123456789012545L, 10, "pack99999");
+                123456789012545L, "10", "pack99999");
         ObjectMapper mapper = new ObjectMapper();
         String subscriptionRequestJson = mapper.writeValueAsString(subscriptionRequest);
 

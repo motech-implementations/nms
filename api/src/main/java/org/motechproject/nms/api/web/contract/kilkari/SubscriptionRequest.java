@@ -5,7 +5,7 @@ public class SubscriptionRequest {
     private String operator;
     private String circle;
     private Long callId;
-    private Integer languageLocationCode;
+    private String languageLocationCode;
     private String subscriptionPack;
     private String subscriptionId;
 
@@ -13,7 +13,7 @@ public class SubscriptionRequest {
     }
 
     public SubscriptionRequest(Long callingNumber, String operator, String circle, Long callId,
-        Integer languageLocationCode, String subscriptionPack) {
+        String languageLocationCode, String subscriptionPack) {
         this.callingNumber = callingNumber;
         this.operator = operator;
         this.circle = circle;
@@ -71,11 +71,11 @@ public class SubscriptionRequest {
         this.callId = callId;
     }
 
-    public Integer getLanguageLocationCode() {
+    public String getLanguageLocationCode() {
         return languageLocationCode;
     }
 
-    public void setLanguageLocationCode(Integer languageLocationCode) {
+    public void setLanguageLocationCode(String languageLocationCode) {
         this.languageLocationCode = languageLocationCode;
     }
 

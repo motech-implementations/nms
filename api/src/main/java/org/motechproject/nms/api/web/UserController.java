@@ -72,7 +72,7 @@ public class UserController extends BaseController {
                                             @RequestBody LanguageRequest languageRequest) {
         Long callingNumber = languageRequest.getCallingNumber();
         Long callId = languageRequest.getCallId();
-        Integer languageLocationCode = languageRequest.getLanguageLocationCode();
+        String languageLocationCode = languageRequest.getLanguageLocationCode();
 
         StringBuilder failureReasons = validate(callingNumber, callId);
         validateFieldPresent(failureReasons, "languageLocationCode", languageRequest.getLanguageLocationCode());

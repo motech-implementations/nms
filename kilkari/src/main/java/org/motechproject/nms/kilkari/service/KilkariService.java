@@ -11,7 +11,7 @@ public interface KilkariService {
 
     Subscriber getSubscriber(long callingNumber);
 
-    void createSubscription(long callingNumber, int languageLocationCode, String subscriptionPack);
+    void createSubscription(long callingNumber, String languageLocationCode, String subscriptionPack);
 
     Subscription getSubscription(String subscriptionId);
 

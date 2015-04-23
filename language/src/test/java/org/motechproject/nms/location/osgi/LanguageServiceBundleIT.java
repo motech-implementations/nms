@@ -1,6 +1,5 @@
 package org.motechproject.nms.location.osgi;
 
-import org.junit.Before;
 import org.motechproject.nms.language.domain.CircleLanguage;
 import org.motechproject.nms.language.domain.Language;
 import org.motechproject.nms.language.repository.CircleLanguageDataService;
@@ -42,13 +41,14 @@ public class LanguageServiceBundleIT extends BasePaxIT {
     private CircleLanguageDataService circleLanguageDataService;
 
     private void setupData() {
-        languageDataService.deleteAll();
-        Language la = languageDataService.create(new Language("ladhaki", 10));
-        Language ur = languageDataService.create(new Language("urdu", 11));
-        Language hi = languageDataService.create(new Language("hindi", 12));
-        Language ta = languageDataService.create(new Language("tamil", 13));
-
         circleLanguageDataService.deleteAll();
+        languageDataService.deleteAll();
+
+        Language la = languageDataService.create(new Language("ladhaki", "10"));
+        Language ur = languageDataService.create(new Language("urdu", "11"));
+        Language hi = languageDataService.create(new Language("hindi", "12"));
+        Language ta = languageDataService.create(new Language("tamil", "13"));
+
         circleLanguageDataService.create(new CircleLanguage("foo", la));
         circleLanguageDataService.create(new CircleLanguage("foo", ur));
         circleLanguageDataService.create(new CircleLanguage("foo", hi));
@@ -65,12 +65,12 @@ public class LanguageServiceBundleIT extends BasePaxIT {
         setupData();
         List<Language> languages = languageService.getCircleLanguages("foo");
 
-        Set<Integer> languageCodes = new HashSet<>();
+        Set<String> languageCodes = new HashSet<>();
         for (Language l : languages) {
             languageCodes.add(l.getCode());
         }
 
-        assertEquals(languageCodes, new HashSet<Integer>(Arrays.asList(10, 11, 12)));
+        assertEquals(languageCodes, new HashSet<String>(Arrays.asList("10", "11", "12")));
 
     }
 }

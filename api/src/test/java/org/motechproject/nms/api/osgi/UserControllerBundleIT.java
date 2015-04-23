@@ -107,7 +107,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     private void createKilkariTestData() {
         cleanAllData();
 
-        Language ta = languageDataService.create(new Language("tamil", 50));
+        Language ta = languageDataService.create(new Language("tamil", "50"));
         SubscriptionPack pack1 = subscriptionPackDataService.create(new SubscriptionPack("pack1"));
         SubscriptionPack pack2 = subscriptionPackDataService.create(new SubscriptionPack("pack2"));
         List<SubscriptionPack> onePack = Arrays.asList(pack1);
@@ -127,7 +127,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 1111111111L);
         frontLineWorkerService.add(flw);
 
-        Language language = new Language("Papiamento", 99);
+        Language language = new Language("Papiamento", "99");
         languageDataService.create(language);
 
         CircleLanguage circleLanguage = new CircleLanguage("AA", language);
@@ -140,14 +140,14 @@ public class UserControllerBundleIT extends BasePaxIT {
     private void createFlwWithLanguageServiceUsageAndCappedService() {
         cleanAllData();
 
-        Language language = new Language("English", 10);
+        Language language = new Language("English", "10");
         languageDataService.create(language);
 
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
         flw.setLanguage(language);
         frontLineWorkerService.add(flw);
 
-        language = new Language("Papiamento", 99);
+        language = new Language("Papiamento", "99");
         languageDataService.create(language);
 
         CircleLanguage circleLanguage = new CircleLanguage("AA", language);
@@ -164,14 +164,14 @@ public class UserControllerBundleIT extends BasePaxIT {
     private void createFlwWithLanguageFullServiceUsageAndCappedService() {
         cleanAllData();
 
-        Language language = new Language("English", 10);
+        Language language = new Language("English", "10");
         languageDataService.create(language);
 
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
         flw.setLanguage(language);
         frontLineWorkerService.add(flw);
 
-        language = new Language("Papiamento", 99);
+        language = new Language("Papiamento", "99");
         languageDataService.create(language);
 
         CircleLanguage circleLanguage = new CircleLanguage("AA", language);
@@ -187,14 +187,14 @@ public class UserControllerBundleIT extends BasePaxIT {
     private void createFlwWithLanguageFullUsageOfBothServiceUncapped() {
         cleanAllData();
 
-        Language language = new Language("English", 10);
+        Language language = new Language("English", "10");
         languageDataService.create(language);
 
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
         flw.setLanguage(language);
         frontLineWorkerService.add(flw);
 
-        language = new Language("Papiamento", 99);
+        language = new Language("Papiamento", "99");
         languageDataService.create(language);
 
         CircleLanguage circleLanguage = new CircleLanguage("AA", language);
@@ -213,7 +213,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
     private void createCircleWithLanguage() {
         cleanAllData();
-        Language language = new Language("Papiamento", 99);
+        Language language = new Language("Papiamento", "99");
         languageDataService.create(language);
 
         CircleLanguage circleLanguage = new CircleLanguage("AA", language);
@@ -238,7 +238,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/mobilekunji/user?callingNumber=1111111111&operator=OP&circle=AA&callId=123456789012345", TestContext.getJettyPort()));
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
-            "{\"languageLocationCode\":null,\"defaultLanguageLocationCode\":99,\"currentUsageInPulses\":0,\"endOfUsagePromptCounter\":0,\"welcomePromptFlag\":false,\"maxAllowedUsageInPulses\":3600,\"maxAllowedEndOfUsagePrompt\":2}",
+            "{\"languageLocationCode\":null,\"defaultLanguageLocationCode\":\"99\",\"currentUsageInPulses\":0,\"endOfUsagePromptCounter\":0,\"welcomePromptFlag\":false,\"maxAllowedUsageInPulses\":3600,\"maxAllowedEndOfUsagePrompt\":2}",
             ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
@@ -249,7 +249,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/mobilekunji/user?callingNumber=1111111111&operator=OP&circle=AA&callId=123456789012345", TestContext.getJettyPort()));
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
-            "{\"languageLocationCode\":10,\"defaultLanguageLocationCode\":99,\"currentUsageInPulses\":1,\"endOfUsagePromptCounter\":0,\"welcomePromptFlag\":false,\"maxAllowedUsageInPulses\":3600,\"maxAllowedEndOfUsagePrompt\":2}",
+            "{\"languageLocationCode\":\"10\",\"defaultLanguageLocationCode\":\"99\",\"currentUsageInPulses\":1,\"endOfUsagePromptCounter\":0,\"welcomePromptFlag\":false,\"maxAllowedUsageInPulses\":3600,\"maxAllowedEndOfUsagePrompt\":2}",
             ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
@@ -260,7 +260,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/mobilekunji/user?callingNumber=1111111111&operator=OP&circle=AA&callId=123456789012345", TestContext.getJettyPort()));
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
-                "{\"languageLocationCode\":10,\"defaultLanguageLocationCode\":99,\"currentUsageInPulses\":1,\"endOfUsagePromptCounter\":1,\"welcomePromptFlag\":true,\"maxAllowedUsageInPulses\":3600,\"maxAllowedEndOfUsagePrompt\":2}",
+                "{\"languageLocationCode\":\"10\",\"defaultLanguageLocationCode\":\"99\",\"currentUsageInPulses\":1,\"endOfUsagePromptCounter\":1,\"welcomePromptFlag\":true,\"maxAllowedUsageInPulses\":3600,\"maxAllowedEndOfUsagePrompt\":2}",
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
@@ -337,7 +337,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/mobilekunji/user?callingNumber=1111111112&operator=OP&circle=AA&callId=123456789012345", TestContext.getJettyPort()));
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
-                "{\"languageLocationCode\":null,\"defaultLanguageLocationCode\":99,\"currentUsageInPulses\":0,\"endOfUsagePromptCounter\":0,\"welcomePromptFlag\":false,\"maxAllowedUsageInPulses\":-1,\"maxAllowedEndOfUsagePrompt\":2}",
+                "{\"languageLocationCode\":null,\"defaultLanguageLocationCode\":\"99\",\"currentUsageInPulses\":0,\"endOfUsagePromptCounter\":0,\"welcomePromptFlag\":false,\"maxAllowedUsageInPulses\":-1,\"maxAllowedEndOfUsagePrompt\":2}",
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
@@ -349,7 +349,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/mobileacademy/user?callingNumber=1111111111&operator=OP&circle=AA&callId=123456789012345", TestContext.getJettyPort()));
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
-                "{\"languageLocationCode\":10,\"defaultLanguageLocationCode\":99,\"currentUsageInPulses\":1,\"endOfUsagePromptCounter\":1,\"welcomePromptFlag\":false,\"maxAllowedUsageInPulses\":-1,\"maxAllowedEndOfUsagePrompt\":2}",
+                "{\"languageLocationCode\":\"10\",\"defaultLanguageLocationCode\":\"99\",\"currentUsageInPulses\":1,\"endOfUsagePromptCounter\":1,\"welcomePromptFlag\":false,\"maxAllowedUsageInPulses\":-1,\"maxAllowedEndOfUsagePrompt\":2}",
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
@@ -361,14 +361,14 @@ public class UserControllerBundleIT extends BasePaxIT {
         HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/mobilekunji/user?callingNumber=1111111111&operator=OP&circle=AA&callId=123456789012345", TestContext.getJettyPort()));
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
-                "{\"languageLocationCode\":10,\"defaultLanguageLocationCode\":99,\"currentUsageInPulses\":1,\"endOfUsagePromptCounter\":1,\"welcomePromptFlag\":true,\"maxAllowedUsageInPulses\":10,\"maxAllowedEndOfUsagePrompt\":2}",
+                "{\"languageLocationCode\":\"10\",\"defaultLanguageLocationCode\":\"99\",\"currentUsageInPulses\":1,\"endOfUsagePromptCounter\":1,\"welcomePromptFlag\":true,\"maxAllowedUsageInPulses\":10,\"maxAllowedEndOfUsagePrompt\":2}",
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     @Test
     public void testSetLanguageInvalidService() throws IOException, InterruptedException {
         HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/NO_SERVICE/languageLocationCode", TestContext.getJettyPort()));
-        StringEntity params = new StringEntity("{\"callingNumber\":1111111111,\"callId\":123456789012345,\"languageLocationCode\":10}");
+        StringEntity params = new StringEntity("{\"callingNumber\":1111111111,\"callId\":123456789012345,\"languageLocationCode\":\"10\"}");
         httpPost.setEntity(params);
 
         httpPost.addHeader("content-type", "application/json");
@@ -381,7 +381,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     @Test
     public void testSetLanguageMissingCallingNumber() throws IOException, InterruptedException {
         HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/languageLocationCode", TestContext.getJettyPort()));
-        StringEntity params = new StringEntity("{\"callId\":123456789012345,\"languageLocationCode\":10}");
+        StringEntity params = new StringEntity("{\"callId\":123456789012345,\"languageLocationCode\":\"10\"}");
         httpPost.setEntity(params);
 
         httpPost.addHeader("content-type", "application/json");
@@ -398,7 +398,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         LanguageRequest request = new LanguageRequest(
                 1L, //callingNumber
                 123456789012345L, //callId
-                123); //languageLocationCode
+                "123"); //languageLocationCode
         String json = new ObjectMapper().writeValueAsString(request);
         StringEntity params = new StringEntity(json);
         httpPost.setEntity(params);
@@ -415,7 +415,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         HttpPost httpPost = new HttpPost(
                 String.format("http://localhost:%d/api/mobilekunji/languageLocationCode",
                         TestContext.getJettyPort()));
-        StringEntity params = new StringEntity("{\"callingNumber\":1111111111,\"languageLocationCode\":10}");
+        StringEntity params = new StringEntity("{\"callingNumber\":1111111111,\"languageLocationCode\":\"10\"}");
         httpPost.setEntity(params);
 
         httpPost.addHeader("content-type", "application/json");
@@ -431,7 +431,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 String.format("http://localhost:%d/api/mobilekunji/languageLocationCode",
                         TestContext.getJettyPort()));
         StringEntity params = new StringEntity(
-                "{\"callingNumber\":abcdef,\"callId\":\"123456789012345\",\"languageLocationCode\":\"10\"}");
+                "{\"callingNumber\":1111111111,\"callId\":\"12345678901234a\",\"languageLocationCode\":\"10\"}");
         httpPost.setEntity(params);
 
         httpPost.addHeader("content-type", "application/json");
@@ -443,7 +443,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     @Test
     public void testSetLanguageMissingLanguageLocationCode() throws IOException, InterruptedException {
         HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/languageLocationCode", TestContext.getJettyPort()));
-        StringEntity params = new StringEntity("{\"callingNumber\":abcdef,\"callId\":123456789012345}");
+        StringEntity params = new StringEntity("{\"callingNumber\":1111111111,\"callId\":123456789012345}");
         httpPost.setEntity(params);
 
         httpPost.addHeader("content-type", "application/json");
@@ -455,7 +455,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     @Test
     public void testSetLanguageInvalidLanguageLocationCode() throws IOException, InterruptedException {
         HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/languageLocationCode", TestContext.getJettyPort()));
-        StringEntity params = new StringEntity("{\"callingNumber\":abcdef,\"callId\":123456789012345,\"languageLocationCode\":\"AA\"}");
+        StringEntity params = new StringEntity("{\"callingNumber\":1111111111,\"callId\":123456789012345,\"languageLocationCode\":null}");
         httpPost.setEntity(params);
 
         httpPost.addHeader("content-type", "application/json");
@@ -469,7 +469,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         createCircleWithLanguage();
 
         HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/languageLocationCode", TestContext.getJettyPort()));
-        StringEntity params = new StringEntity("{\"callingNumber\":1111111111,\"callId\":123456789012345,\"languageLocationCode\":99}");
+        StringEntity params = new StringEntity("{\"callingNumber\":1111111111,\"callId\":123456789012345,\"languageLocationCode\":\"99\"}");
         httpPost.setEntity(params);
 
         httpPost.addHeader("content-type", "application/json");
@@ -484,7 +484,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         createFlwCappedServiceNoUsageNoLocationNoLanguage();
 
         HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/languageLocationCode", TestContext.getJettyPort()));
-        StringEntity params = new StringEntity("{\"callingNumber\":1111111111,\"callId\":123456789012345,\"languageLocationCode\":77}");
+        StringEntity params = new StringEntity("{\"callingNumber\":1111111111,\"callId\":123456789012345,\"languageLocationCode\":\"77\"}");
         httpPost.setEntity(params);
 
         httpPost.addHeader("content-type", "application/json");
@@ -499,7 +499,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         createFlwCappedServiceNoUsageNoLocationNoLanguage();
 
         HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/languageLocationCode", TestContext.getJettyPort()));
-        StringEntity params = new StringEntity("{\"callingNumber\":1111111111,\"callId\":123456789012345,\"languageLocationCode\":99}");
+        StringEntity params = new StringEntity("{\"callingNumber\":1111111111,\"callId\":123456789012345,\"languageLocationCode\":\"99\"}");
         httpPost.setEntity(params);
 
         httpPost.addHeader("content-type", "application/json");
@@ -510,6 +510,6 @@ public class UserControllerBundleIT extends BasePaxIT {
         FrontLineWorker flw = frontLineWorkerService.getByContactNumber(1111111111L);
         Language language = flw.getLanguage();
         assertNotNull(language);
-        assertEquals("FLW Language Code", (long) 99, (long) language.getCode());
+        assertEquals("FLW Language Code", "99", language.getCode());
     }
 }
