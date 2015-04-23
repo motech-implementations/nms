@@ -32,6 +32,10 @@ public class FrontLineWorker {
     @Persistent(defaultFetchGroup = "true")
     private District district;
 
+    public FrontLineWorker(String contactNumber) {
+        this.contactNumber = contactNumber;
+    }
+
     public FrontLineWorker(String name, String contactNumber) {
         this.name = name;
         this.contactNumber = contactNumber;

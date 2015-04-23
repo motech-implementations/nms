@@ -543,7 +543,6 @@ public class UserControllerBundleIT extends BasePaxIT {
     }
 
     @Test
-    @Ignore
     public void testSetLanguageNoFLW() throws IOException, InterruptedException {
         createCircleWithLanguage();
 
@@ -553,13 +552,16 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         httpPost.addHeader("content-type", "application/json");
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
-                "{\"failureReason\":\"<callingNumber: Not Found>\"}",
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK));
+
+        FrontLineWorker flw = frontLineWorkerService.getByContactNumber("1111111111");
+        assertNotNull(flw);
+        Language language = flw.getLanguage();
+        assertNotNull(language);
+        assertEquals("FLW Language Code", (long) 99, (long) language.getCode());
     }
 
     @Test
-    @Ignore
     public void testSetLanguageLanguageNotFound() throws IOException, InterruptedException {
         createFlwCappedServiceNoUsageNoLocationNoLanguage();
 
@@ -569,7 +571,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         httpPost.addHeader("content-type", "application/json");
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_NOT_FOUND,
                 "{\"failureReason\":\"<languageLocationCode: Not Found>\"}",
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
@@ -584,7 +586,6 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         httpPost.addHeader("content-type", "application/json");
 
-        //TODO: why don't we pass any creds here?
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK));
 
         FrontLineWorker flw = frontLineWorkerService.getByContactNumber("1111111111");

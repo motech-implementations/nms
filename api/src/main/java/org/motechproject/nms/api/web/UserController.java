@@ -91,10 +91,9 @@ public class UserController extends BaseController {
             throw new IllegalArgumentException(failureReasons.toString());
         }
 
-        // TODO: If no FLW user is found we need to create one here #62
         FrontLineWorker flw = frontLineWorkerService.getByContactNumber(callingNumber);
         if (flw == null) {
-            throw new NotFoundException(String.format(NOT_FOUND, CALLING_NUMBER));
+            flw = new FrontLineWorker(callingNumber);
         }
 
         Language language = languageService.getLanguageByCode(Integer.parseInt(languageLocationCode));
@@ -103,10 +102,16 @@ public class UserController extends BaseController {
         }
 
         flw.setLanguage(language);
-        frontLineWorkerService.update(flw);
 
         if (!frontLineWorkerAuthorizedForAccess(flw)) {
             throw new NotAuthorizedException(String.format(NOT_AUTHORIZED, CALLING_NUMBER));
+        }
+
+        // MOTECH-1667 added to get an upsert method included
+        if (flw.getId() == null) {
+            frontLineWorkerService.add(flw);
+        } else {
+            frontLineWorkerService.update(flw);
         }
     }
 
