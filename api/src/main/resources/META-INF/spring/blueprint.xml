@@ -17,6 +17,8 @@
 
     <osgi:reference id="languageService" interface="org.motechproject.nms.language.service.LanguageService"/>
 
+    <osgi:reference id="locationService" interface="org.motechproject.nms.location.service.LocationService"/>
+
     <osgi:reference id="kilkariService" interface="org.motechproject.nms.kilkari.service.KilkariService"/>
 
     <osgi:reference id="frontLineWorkerService" interface="org.motechproject.nms.flw.service.FrontLineWorkerService"/>
@@ -28,4 +30,6 @@
     <osgi:reference id="callDetailRecordService" interface="org.motechproject.nms.flw.service.CallDetailRecordService"/>
 
     <osgi:reference id="callContentService" interface="org.motechproject.nms.flw.service.CallContentService"/>
+
+    <osgi:reference id="whitelistService" interface="org.motechproject.nms.flw.service.WhitelistService"/>
 </beans>

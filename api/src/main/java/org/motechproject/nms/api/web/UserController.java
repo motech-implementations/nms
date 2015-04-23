@@ -5,6 +5,7 @@ import org.motechproject.nms.api.web.contract.FrontLineWorkerUser;
 import org.motechproject.nms.api.web.contract.LanguageRequest;
 import org.motechproject.nms.api.web.contract.ResponseUser;
 import org.motechproject.nms.api.web.contract.kilkari.UserResponse;
+import org.motechproject.nms.api.web.exception.NotAuthorizedException;
 import org.motechproject.nms.api.web.exception.NotFoundException;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.Service;
@@ -13,6 +14,7 @@ import org.motechproject.nms.flw.domain.ServiceUsageCap;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.flw.service.ServiceUsageCapService;
 import org.motechproject.nms.flw.service.ServiceUsageService;
+import org.motechproject.nms.flw.service.WhitelistService;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.service.KilkariService;
@@ -20,6 +22,7 @@ import org.motechproject.nms.language.domain.Language;
 import org.motechproject.nms.language.service.LanguageService;
 import org.motechproject.nms.location.domain.District;
 import org.motechproject.nms.location.domain.State;
+import org.motechproject.nms.location.service.LocationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -38,8 +41,15 @@ import java.util.Set;
 @Controller
 public class UserController extends BaseController {
 
+    public static final String CALLING_NUMBER = "callingNumber";
+    public static final String LANGUAGE_LOCATION_CODE = "languageLocationCode";
+    public static final String SERVICE_NAME = "serviceName";
+
     @Autowired
     private LanguageService languageService;
+
+    @Autowired
+    private LocationService locationService;
 
     @Autowired
     private KilkariService kilkariService;
@@ -53,6 +63,8 @@ public class UserController extends BaseController {
     @Autowired
     private ServiceUsageCapService serviceUsageCapService;
 
+    @Autowired
+    private WhitelistService whitelistService;
 
     /**
      * 2.2.7.1  Set User Language Location Code
@@ -75,33 +87,42 @@ public class UserController extends BaseController {
         String languageLocationCode = languageRequest.getLanguageLocationCode();
 
         StringBuilder failureReasons = validate(callingNumber, callId);
-        validateFieldNumeric(failureReasons, "languageLocationCode", languageRequest.getLanguageLocationCode());
+        validateFieldNumeric(failureReasons, LANGUAGE_LOCATION_CODE, languageRequest.getLanguageLocationCode());
 
         if (null == languageLocationCode) {
-            failureReasons.append(String.format(NOT_PRESENT, "languageLocationCode"));
+            failureReasons.append(String.format(NOT_PRESENT, LANGUAGE_LOCATION_CODE));
         }
 
         if (!(MOBILE_ACADEMY.equals(serviceName) || MOBILE_KUNJI.equals(serviceName))) {
-            failureReasons.append(String.format(INVALID, "serviceName"));
+            failureReasons.append(String.format(INVALID, SERVICE_NAME));
         }
 
         if (failureReasons.length() > 0) {
             throw new IllegalArgumentException(failureReasons.toString());
         }
 
-        // TODO: If no FLW user is found we need to create one here #62
         FrontLineWorker flw = frontLineWorkerService.getByContactNumber(callingNumber);
-        if (null == flw) {
-            throw new NotFoundException(String.format(NOT_FOUND, "callingNumber"));
+        if (flw == null) {
+            flw = new FrontLineWorker(callingNumber);
         }
 
         Language language = languageService.getLanguageByCode(Integer.parseInt(languageLocationCode));
         if (null == language) {
-            throw new NotFoundException(String.format(NOT_FOUND, "languageLocationCode"));
+            throw new NotFoundException(String.format(NOT_FOUND, LANGUAGE_LOCATION_CODE));
         }
 
         flw.setLanguage(language);
-        frontLineWorkerService.update(flw);
+
+        if (!frontLineWorkerAuthorizedForAccess(flw)) {
+            throw new NotAuthorizedException(String.format(NOT_AUTHORIZED, CALLING_NUMBER));
+        }
+
+        // MOTECH-1667 added to get an upsert method included
+        if (flw.getId() == null) {
+            frontLineWorkerService.add(flw);
+        } else {
+            frontLineWorkerService.update(flw);
+        }
     }
 
 
@@ -140,7 +161,7 @@ public class UserController extends BaseController {
          */
         if (!(MOBILE_ACADEMY.equals(serviceName) || MOBILE_KUNJI.equals(serviceName) ||
                 KILKARI.equals(serviceName))) {
-            failureReasons.append(String.format(INVALID, "serviceName"));
+            failureReasons.append(String.format(INVALID, SERVICE_NAME));
         }
 
         /*
@@ -173,7 +194,7 @@ public class UserController extends BaseController {
         UserResponse user = new UserResponse();
         Subscriber subscriber = kilkariService.getSubscriber(callingNumber);
         if (subscriber == null) {
-            throw new NotFoundException(String.format(NOT_FOUND, "callingNumber"));
+            throw new NotFoundException(String.format(NOT_FOUND, CALLING_NUMBER));
         }
         Set<Subscription> subscriptions = subscriber.getSubscriptions();
         Set<String> packs = new HashSet<>();
@@ -214,6 +235,10 @@ public class UserController extends BaseController {
             if (null != district) {
                 state = district.getState();
             }
+
+            if (!frontLineWorkerAuthorizedForAccess(flw)) {
+                throw new NotAuthorizedException(String.format(NOT_AUTHORIZED, CALLING_NUMBER));
+            }
         }
 
         ServiceUsageCap serviceUsageCap = serviceUsageCapService.getServiceUsageCap(state, service);
@@ -224,9 +249,24 @@ public class UserController extends BaseController {
 
         user.setMaxAllowedUsageInPulses(serviceUsageCap.getMaxUsageInPulses());
 
-        // TODO: During configuration sprint this value needs to be de-hardcoded
+        // TODO: #38 During configuration sprint this value needs to be de-hardcoded
         user.setMaxAllowedEndOfUsagePrompt(2);
 
         return user;
+    }
+
+    private boolean frontLineWorkerAuthorizedForAccess(FrontLineWorker flw) {
+        District district = flw.getDistrict();
+        State state = null;
+
+        if (district != null) {
+            state = district.getState();
+        }
+
+        if (state == null) {
+            state = locationService.getStateForLanguage(flw.getLanguage());
+        }
+
+        return whitelistService.numberWhitelistedForState(state, flw.getContactNumber());
     }
 }

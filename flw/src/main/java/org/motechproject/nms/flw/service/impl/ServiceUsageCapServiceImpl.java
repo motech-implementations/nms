@@ -11,9 +11,6 @@ import org.springframework.stereotype.Service;
 
 import javax.jdo.Query;
 
-/**
- * Created by rob on 4/15/15.
- */
 @Service("serviceUsageCapService")
 public class ServiceUsageCapServiceImpl implements ServiceUsageCapService {
     private ServiceUsageCapDataService serviceUsageCapDataService;
