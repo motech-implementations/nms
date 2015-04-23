@@ -9,7 +9,7 @@ public class CourseResponse {
     private String name;
 
     // course version in epoch datetime format
-    private Long courseVersion;
+    private Integer courseVersion;
 
     // actual deep copy of course
     // TODO : This should probably be a course object that gets serialized than just string
@@ -23,11 +23,11 @@ public class CourseResponse {
         this.name = name;
     }
 
-    public Long getCourseVersion() {
+    public Integer getCourseVersion() {
         return courseVersion;
     }
 
-    public void setCourseVersion(Long courseVersion) {
+    public void setCourseVersion(Integer courseVersion) {
         this.courseVersion = courseVersion;
     }
 

@@ -5,25 +5,25 @@ package org.motechproject.nms.api.web.contract.mobileAcademy;
  */
 public class LanguageLocationCodeRequest {
 
-    private String callingNumber;
+    private Long callingNumber;
 
-    private String callId;
+    private Long callId;
 
-    private int languageLocationCode;
+    private Integer languageLocationCode;
 
-    public String getCallingNumber() {
+    public Long getCallingNumber() {
         return callingNumber;
     }
 
-    public void setCallingNumber(String callingNumber) {
+    public void setCallingNumber(Long callingNumber) {
         this.callingNumber = callingNumber;
     }
 
-    public String getCallId() {
+    public Long getCallId() {
         return callId;
     }
 
-    public void setCallId(String callId) {
+    public void setCallId(Long callId) {
         this.callId = callId;
     }
 
@@ -31,7 +31,7 @@ public class LanguageLocationCodeRequest {
         return languageLocationCode;
     }
 
-    public void setLanguageLocationCode(int languageLocationCode) {
+    public void setLanguageLocationCode(Integer languageLocationCode) {
         this.languageLocationCode = languageLocationCode;
     }
 }

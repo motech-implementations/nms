@@ -5,13 +5,16 @@
 
     <import resource="classpath*:META-INF/motech/*.xml" />
 
-    <osgi:service ref="helloWorldService"
-        interface="org.motechproject.nms.mobileacademy.service.HelloWorldService" />
+    <osgi:service ref="mobileAcademyService"
+        interface="org.motechproject.nms.mobileacademy.service.MobileAcademyService" />
 
-    <osgi:service ref="helloWorldRecordService"
-        interface="org.motechproject.nms.mobileacademy.service.HelloWorldRecordService" />
+    <osgi:reference id="courseDataService"
+                    interface="org.motechproject.nms.mobileacademy.repository.CourseDataService" />
 
-    <osgi:reference id="helloWorldRecordsDataService"
-                    interface="org.motechproject.nms.mobileacademy.repository.HelloWorldRecordsDataService" />
+    <osgi:reference id="bookmarkDataService"
+                    interface="org.motechproject.nms.mobileacademy.repository.BookmarkDataService" />
+
+    <osgi:reference id="callDetailDataService"
+                    interface="org.motechproject.nms.mobileacademy.repository.CallDetailDataService" />
 
 </beans>

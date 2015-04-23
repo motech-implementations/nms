@@ -1,17 +1,24 @@
 package org.motechproject.nms.api.web.contract.mobileAcademy;
 
 /**
- * Get the version of the MA course
+ * API response object for getting course version
  */
 public class CourseVersionResponse {
 
-    private int courseVersion;
+    private Integer courseVersion;
 
-    public int getCourseVersion() {
+    public CourseVersionResponse(){
+    }
+
+    public CourseVersionResponse(Integer courseVersion) {
+        this.courseVersion = courseVersion;
+    }
+
+    public Integer getCourseVersion() {
         return courseVersion;
     }
 
-    public void setCourseVersion(int courseVersion) {
+    public void setCourseVersion(Integer courseVersion) {
         this.courseVersion = courseVersion;
     }
 }

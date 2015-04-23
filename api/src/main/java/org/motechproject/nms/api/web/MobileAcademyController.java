@@ -8,6 +8,7 @@ import org.motechproject.nms.api.web.contract.mobileAcademy.CallDetails;
 import org.motechproject.nms.api.web.contract.mobileAcademy.CourseResponse;
 import org.motechproject.nms.api.web.contract.mobileAcademy.CourseVersionResponse;
 import org.motechproject.nms.api.web.contract.mobileAcademy.LanguageLocationCodeRequest;
+import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
 import org.springframework.stereotype.Controller;
 
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,6 +24,11 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @RequestMapping("mobileacademy")
 @Controller
 public class MobileAcademyController extends BaseController {
+
+    /**
+     * MA service to handle all business logic
+     */
+    private MobileAcademyService mobileAcademyService;
 
     /**
      * Get course
@@ -47,6 +53,7 @@ public class MobileAcademyController extends BaseController {
     @ResponseBody
     public CourseVersionResponse getCourseVersion() {
 
+        Integer courseVersion = mobileAcademyService.getCourseVersion();
         return new CourseVersionResponse();
     }
 
@@ -59,8 +66,8 @@ public class MobileAcademyController extends BaseController {
     @RequestMapping(
             value = "/bookmarkWithScore",
             method = RequestMethod.GET)
-    public BookmarkResponse getBookmarkWithScore(@RequestParam String callingNumber,
-                                                 @RequestParam String callId) {
+    public BookmarkResponse getBookmarkWithScore(@RequestParam Long callingNumber,
+                                                 @RequestParam Long callId) {
 
         return new BookmarkResponse();
     }
@@ -95,17 +102,4 @@ public class MobileAcademyController extends BaseController {
         throw new NotImplementedException();
     }
 
-    /**
-     * Save language location code for the user
-     * @param languageLocationCodeRequest code to save
-     */
-    @RequestMapping(
-            value = "/languageLocationCode",
-            method = RequestMethod.POST)
-    @ResponseBody
-    public void saveLanguageLocationCode(@RequestBody LanguageLocationCodeRequest languageLocationCodeRequest) {
-
-        // placeholder for void method
-        throw new NotImplementedException();
-    }
 }

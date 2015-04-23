@@ -1,6 +1,6 @@
 package org.motechproject.nms.mobileacademy.osgi;
 
-import org.motechproject.nms.mobileacademy.service.HelloWorldService;
+import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.testing.osgi.BasePaxIT;
@@ -15,19 +15,19 @@ import javax.inject.Inject;
 import static org.junit.Assert.assertNotNull;
 
 /**
- * Verify that HelloWorldService present, functional.
+ * Verify that MobileAcademyService present, functional.
  */
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerSuite.class)
 @ExamFactory(MotechNativeTestContainerFactory.class)
-public class HelloWorldServiceBundleIT extends BasePaxIT {
+public class MobileAcademyServiceBundleIT extends BasePaxIT {
 
     @Inject
-    private HelloWorldService helloService;
+    private MobileAcademyService maService;
 
     @Test
     public void testHelloWorldServicePresent() throws Exception {
-        assertNotNull(helloService);
-        assertNotNull(helloService.sayHello());
+        assertNotNull(maService);
+        assertNotNull(maService.sayHello());
     }
 }

@@ -7,9 +7,9 @@ import java.util.List;
  */
 public class CallDetails {
 
-    private String callingNumber;
+    private Long callingNumber;
 
-    private String callId;
+    private Long callId;
 
     private String operator;
 
@@ -29,19 +29,19 @@ public class CallDetails {
 
     private List<CallData> content;
 
-    public String getCallingNumber() {
+    public Long getCallingNumber() {
         return callingNumber;
     }
 
-    public void setCallingNumber(String callingNumber) {
+    public void setCallingNumber(Long callingNumber) {
         this.callingNumber = callingNumber;
     }
 
-    public String getCallId() {
+    public Long getCallId() {
         return callId;
     }
 
-    public void setCallId(String callId) {
+    public void setCallId(Long callId) {
         this.callId = callId;
     }
 
