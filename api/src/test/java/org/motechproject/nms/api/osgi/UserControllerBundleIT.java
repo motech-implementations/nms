@@ -24,7 +24,7 @@ import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
-import org.motechproject.nms.kilkari.service.KilkariService;
+import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.language.domain.Language;
 import org.motechproject.nms.language.domain.CircleLanguage;
 import org.motechproject.nms.language.repository.CircleLanguageDataService;
@@ -57,7 +57,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     private static final String ADMIN_PASSWORD = "motech";
 
     @Inject
-    private KilkariService kilkariService;
+    private SubscriptionService subscriptionService;
 
     @Inject
     private SubscriberDataService subscriberDataService;

@@ -7,7 +7,7 @@ import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 /**
  *
  */
-public interface KilkariService {
+public interface SubscriptionService {
 
     Subscriber getSubscriber(String callingNumber);
 

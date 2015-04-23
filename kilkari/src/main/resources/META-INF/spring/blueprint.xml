@@ -10,7 +10,7 @@
     <import resource="classpath*:META-INF/motech/*.xml" />
 
     <osgi:service ref="kilkariService"
-        interface="org.motechproject.nms.kilkari.service.KilkariService" />
+        interface="org.motechproject.nms.kilkari.service.SubscriptionService" />
 
     <osgi:reference id="subscriberDataService"
                     interface="org.motechproject.nms.kilkari.repository.SubscriberDataService" />

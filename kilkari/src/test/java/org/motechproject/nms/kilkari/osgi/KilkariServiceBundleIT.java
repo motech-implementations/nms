@@ -7,7 +7,7 @@ import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.language.repository.LanguageDataService;
-import org.motechproject.nms.kilkari.service.KilkariService;
+import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.language.domain.Language;
@@ -28,7 +28,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 /**
- * Verify that KilkariService is present & functional.
+ * Verify that SubscriptionService is present & functional.
  */
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerSuite.class)
@@ -36,7 +36,7 @@ import static org.junit.Assert.assertNotNull;
 public class KilkariServiceBundleIT extends BasePaxIT {
 
     @Inject
-    private KilkariService kilkariService;
+    private SubscriptionService subscriptionService;
     @Inject
     private SubscriberDataService subscriberDataService;
     @Inject
@@ -48,7 +48,7 @@ public class KilkariServiceBundleIT extends BasePaxIT {
 
     @Test
     public void testServicePresent() throws Exception {
-        assertNotNull(kilkariService);
+        assertNotNull(subscriptionService);
     }
 
     @Test
