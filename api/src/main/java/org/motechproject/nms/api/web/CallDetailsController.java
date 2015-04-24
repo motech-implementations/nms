@@ -77,8 +77,7 @@ public class CallDetailsController extends BaseController {
             throw new IllegalArgumentException(failureReasons.toString());
         }
 
-        FrontLineWorker flw = frontLineWorkerService.getByContactNumber(
-                callDetailRecordRequest.getCallingNumber());
+        FrontLineWorker flw = frontLineWorkerService.getByContactNumber(callDetailRecordRequest.getCallingNumber());
         if (null == flw) {
             throw new NotFoundException(String.format(NOT_FOUND, "callingNumber"));
         }

@@ -5,16 +5,20 @@ import org.motechproject.mds.annotations.Field;
 import org.motechproject.nms.language.domain.Language;
 import org.motechproject.nms.location.domain.District;
 
+import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.Unique;
 
 @Entity
 public class FrontLineWorker {
+    public static final int FIELD_SIZE_10 = 10;
+
     @Field
     private Long id;
 
     @Field(required = true)
     @Unique
+    @Column(length = FIELD_SIZE_10)
     private Long contactNumber;
 
     @Field

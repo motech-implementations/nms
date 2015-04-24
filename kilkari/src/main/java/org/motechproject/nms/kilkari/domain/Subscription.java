@@ -4,14 +4,17 @@ import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.nms.language.domain.Language;
 
+import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Unique;
 import java.util.UUID;
 
 @Entity
 public class Subscription {
+    public static final int FIELD_LENGTH_36 = 36;
 
     @Field
     @Unique
+    @Column(length = FIELD_LENGTH_36)
     private String subscriptionId;
 
     @Field

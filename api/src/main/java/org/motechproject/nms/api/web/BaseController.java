@@ -34,6 +34,7 @@ public class BaseController {
     public static final long LARGEST_10_DIGIT_NUMBER  = 9999999999L;
     public static final long SMALLEST_15_DIGIT_NUMBER = 100000000000000L;
     public static final long LARGEST_15_DIGIT_NUMBER  = 999999999999999L;
+    public static final int MAX_LENGTH_255 = 255;
 
     public static final String CALLING_NUMBER = "callingNumber";
 
@@ -95,6 +96,15 @@ public class BaseController {
         return false;
     }
 
+    protected boolean validateFieldMaxLength(StringBuilder errors, String fieldName, String value, int length) {
+        if (value != null && value.length() > length) {
+            errors.append(String.format(INVALID, fieldName));
+            return false;
+        }
+
+        return true;
+    }
+
     protected StringBuilder validate(Long callingNumber, Long callId) {
         StringBuilder failureReasons = new StringBuilder();
 
@@ -108,7 +118,10 @@ public class BaseController {
         StringBuilder failureReasons = validate(callingNumber, callId);
 
         validateFieldPresent(failureReasons, "operator", operator);
+        validateFieldMaxLength(failureReasons, "operator", operator, MAX_LENGTH_255);
+
         validateFieldPresent(failureReasons, "circle", circle);
+        validateFieldMaxLength(failureReasons, "circle", circle, MAX_LENGTH_255);
 
         return failureReasons;
     }
