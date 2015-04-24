@@ -4,10 +4,12 @@ import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.annotations.UIDisplayable;
 
+import javax.jdo.annotations.Persistent;
+
 /**
  * This class Models data for District location records
  */
-@Entity(recordHistory = true)
+@Entity(tableName = "districts")
 public class District {
 
     @Field
@@ -20,6 +22,7 @@ public class District {
 
     @Field
     @UIDisplayable(position = 2)
+    @Persistent(defaultFetchGroup = "true")
     private State state;
 
 
@@ -73,7 +76,6 @@ public class District {
     public int hashCode() {
         int result = name != null ? name.hashCode() : 0;
         result = 31 * result + (districtCode != null ? districtCode.hashCode() : 0);
-        result = 31 * result + (state != null ? state.hashCode() : 0);
         return result;
     }
 

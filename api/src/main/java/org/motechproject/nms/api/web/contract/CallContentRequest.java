@@ -2,12 +2,15 @@ package org.motechproject.nms.api.web.contract;
 
 public class CallContentRequest {
     private String type;
-    private Integer mkcardNumber;
+    private String mkCardNumber;
     private String contentName;
     private String contentFileName;
     private Long startTime;
     private Long endTime;
     private Boolean completionFlag;
+    private Boolean correctAnswerEntered;
+
+    public CallContentRequest() { }
 
     public String getType() {
         return type;
@@ -17,12 +20,12 @@ public class CallContentRequest {
         this.type = type;
     }
 
-    public Integer getMkcardNumber() {
-        return mkcardNumber;
+    public String getMkCardNumber() {
+        return mkCardNumber;
     }
 
-    public void setMkcardNumber(Integer mkcardNumber) {
-        this.mkcardNumber = mkcardNumber;
+    public void setMkCardNumber(String mkCardNumber) {
+        this.mkCardNumber = mkCardNumber;
     }
 
     public String getContentName() {
@@ -63,5 +66,17 @@ public class CallContentRequest {
 
     public void setCompletionFlag(Boolean completionFlag) {
         this.completionFlag = completionFlag;
+    }
+
+    public Boolean isCompletionFlag() {
+        return completionFlag;
+    }
+
+    public Boolean isCorrectAnswerEntered() {
+        return correctAnswerEntered;
+    }
+
+    public void setCorrectAnswerEntered(Boolean correctAnswerEntered) {
+        this.correctAnswerEntered = correctAnswerEntered;
     }
 }

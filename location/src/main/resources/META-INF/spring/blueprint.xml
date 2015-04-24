@@ -15,4 +15,6 @@
     <osgi:reference id="stateDataService"
                     interface="org.motechproject.nms.location.repository.StateDataService" />
 
+    <osgi:reference id="districtDataService"
+                    interface="org.motechproject.nms.location.repository.DistrictDataService" />
 </beans>

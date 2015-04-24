@@ -5,6 +5,7 @@ import org.motechproject.mds.annotations.Field;
 import org.motechproject.nms.language.domain.Language;
 import org.motechproject.nms.location.domain.District;
 
+import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.Unique;
 
 @Entity
@@ -23,7 +24,12 @@ public class FrontLineWorker {
     private Language language;
 
     @Field
+    @Persistent(defaultFetchGroup = "true")
     private District district;
+
+    public FrontLineWorker(Long contactNumber) {
+        this.contactNumber = contactNumber;
+    }
 
     public FrontLineWorker(String name, Long contactNumber) {
         this.name = name;

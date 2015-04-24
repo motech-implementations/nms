@@ -18,7 +18,7 @@ public class CallContent {
     private String type;
 
     @Field
-    private Integer mobileKunjiCardNumber;
+    private String mobileKunjiCardNumber;
 
     @Field
     private String contentName;
@@ -51,11 +51,11 @@ public class CallContent {
         this.type = type;
     }
 
-    public Integer getMobileKunjiCardNumber() {
+    public String getMobileKunjiCardNumber() {
         return mobileKunjiCardNumber;
     }
 
-    public void setMobileKunjiCardNumber(Integer mobileKunjiCardNumber) {
+    public void setMobileKunjiCardNumber(String mobileKunjiCardNumber) {
         this.mobileKunjiCardNumber = mobileKunjiCardNumber;
     }
 

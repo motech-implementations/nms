@@ -16,15 +16,13 @@ public class InboxCallDetailsRequest {
     private Integer callStatus;
     private Integer callDisconnectReason;
     private List<InboxCallDetailsRequestCallData> content;
-    private String failureReason;
 
     public InboxCallDetailsRequest() { }
 
     public InboxCallDetailsRequest(Long callingNumber, // NO CHECKSTYLE More than 7 parameters
                                    String operator, String circle, Long callId, Long callStartTime,
                                    Long callEndTime, Integer callDurationInPulses, Integer callStatus,
-                                   Integer callDisconnectReason, List<InboxCallDetailsRequestCallData> content,
-                                   String failureReason) {
+                                   Integer callDisconnectReason, List<InboxCallDetailsRequestCallData> content) {
         this.callingNumber = callingNumber;
         this.operator = operator;
         this.circle = circle;
@@ -35,7 +33,6 @@ public class InboxCallDetailsRequest {
         this.callStatus = callStatus;
         this.callDisconnectReason = callDisconnectReason;
         this.content = content;
-        this.failureReason = failureReason;
     }
 
     public Long getCallingNumber() {
@@ -116,13 +113,5 @@ public class InboxCallDetailsRequest {
 
     public void setContent(List<InboxCallDetailsRequestCallData> content) {
         this.content = content;
-    }
-
-    public String getFailureReason() {
-        return failureReason;
-    }
-
-    public void setFailureReason(String failureReason) {
-        this.failureReason = failureReason;
     }
 }

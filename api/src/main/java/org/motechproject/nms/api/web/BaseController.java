@@ -1,9 +1,16 @@
 package org.motechproject.nms.api.web;
 
 import org.motechproject.nms.api.web.contract.BadRequest;
+import org.motechproject.nms.api.web.exception.NotAuthorizedException;
 import org.motechproject.nms.api.web.exception.NotFoundException;
+import org.motechproject.nms.flw.domain.FrontLineWorker;
+import org.motechproject.nms.flw.service.WhitelistService;
+import org.motechproject.nms.location.domain.District;
+import org.motechproject.nms.location.domain.State;
+import org.motechproject.nms.location.service.LocationService;
 import org.motechproject.nms.props.domain.CallDisconnectReason;
 import org.motechproject.nms.props.domain.CallStatus;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -21,11 +28,19 @@ public class BaseController {
     public static final String NOT_PRESENT = "<%s: Not Present>";
     public static final String INVALID = "<%s: Invalid>";
     public static final String NOT_FOUND = "<%s: Not Found>";
+    public static final String NOT_AUTHORIZED = "<%s: Not Authorized>";
 
     public static final long SMALLEST_10_DIGIT_NUMBER = 1000000000L;
     public static final long LARGEST_10_DIGIT_NUMBER  = 9999999999L;
     public static final long SMALLEST_15_DIGIT_NUMBER = 100000000000000L;
     public static final long LARGEST_15_DIGIT_NUMBER  = 999999999999999L;
+
+    public static final String CALLING_NUMBER = "callingNumber";
+
+    @Autowired
+    private LocationService locationService;
+    @Autowired
+    private WhitelistService whitelistService;
 
     protected static boolean validateFieldPresent(StringBuilder errors, String fieldName, Object value) {
         if (value != null) {
@@ -98,6 +113,12 @@ public class BaseController {
         return failureReasons;
     }
 
+    @ExceptionHandler(NotAuthorizedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    @ResponseBody
+    public BadRequest handleException(NotAuthorizedException e) {
+        return new BadRequest(e.getMessage());
+    }
 
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -126,4 +147,18 @@ public class BaseController {
     }
 
 
+    protected boolean frontLineWorkerAuthorizedForAccess(FrontLineWorker flw) {
+        District district = flw.getDistrict();
+        State state = null;
+
+        if (district != null) {
+            state = district.getState();
+        }
+
+        if (state == null) {
+            state = locationService.getStateForLanguage(flw.getLanguage());
+        }
+
+        return whitelistService.numberWhitelistedForState(state, flw.getContactNumber());
+    }
 }
