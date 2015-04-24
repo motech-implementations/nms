@@ -39,14 +39,14 @@ public class KilkariController extends BaseController {
      */
     @RequestMapping("/inbox")
     @ResponseBody
-    public InboxResponse getInboxDetails(@RequestParam String callingNumber, @RequestParam String callId) {
+    public InboxResponse getInboxDetails(@RequestParam Long callingNumber, @RequestParam Long callId) {
 
         StringBuilder failureReasons = validate(callingNumber, callId);
         if (failureReasons.length() > 0) {
             throw new IllegalArgumentException(failureReasons.toString());
         }
 
-        Subscriber subscriber = subscriptionService.getSubscriber(String.valueOf(callingNumber));
+        Subscriber subscriber = subscriptionService.getSubscriber(callingNumber);
         if (subscriber == null) {
             throw new NotFoundException(String.format(NOT_FOUND, "callingNumber"));
         }
@@ -65,12 +65,12 @@ public class KilkariController extends BaseController {
 
 
     private StringBuilder validateSaveInboxCallDetails(InboxCallDetailsRequest request) {
-        StringBuilder failureReasons = validate(request.getCallingNumber(), request.getOperator(),
-                request.getCircle(), request.getCallId());
+        StringBuilder failureReasons = validate(request.getCallingNumber(), request.getCallId(),
+                request.getOperator(), request.getCircle());
 
-        validateFieldNumeric(failureReasons, "callStartTime", request.getCallStartTime());
-        validateFieldNumeric(failureReasons, "callEndTime", request.getCallEndTime());
-        validateFieldNumeric(failureReasons, "callDurationInPulses", request.getCallDurationInPulses());
+        validateFieldPresent(failureReasons, "callStartTime", request.getCallStartTime());
+        validateFieldPresent(failureReasons, "callEndTime", request.getCallEndTime());
+        validateFieldPresent(failureReasons, "callDurationInPulses", request.getCallDurationInPulses());
         validateFieldCallStatus(failureReasons, "callStatus", request.getCallStatus());
         validateFieldCallStatus(failureReasons, "callDisconnectReason", request.getCallDisconnectReason());
 
@@ -108,12 +108,10 @@ public class KilkariController extends BaseController {
             method = RequestMethod.POST,
             headers = {"Content-type=application/json"})
     @ResponseStatus(HttpStatus.OK)
-    public void createSubscription(@RequestBody SubscriptionRequest subscriptionRequest)
-            throws NotFoundException {
-
+    public void createSubscription(@RequestBody SubscriptionRequest subscriptionRequest) {
         StringBuilder failureReasons = validate(subscriptionRequest.getCallingNumber(),
-                subscriptionRequest.getOperator(), subscriptionRequest.getCircle(),
-                subscriptionRequest.getCallId());
+                subscriptionRequest.getCallId(), subscriptionRequest.getOperator(),
+                subscriptionRequest.getCircle());
         validateFieldPresent(failureReasons, "subscriptionPack", subscriptionRequest.getSubscriptionPack());
         validateFieldPresent(failureReasons, "languageLocationCode",
                 subscriptionRequest.getLanguageLocationCode().toString());
@@ -139,12 +137,10 @@ public class KilkariController extends BaseController {
             method = RequestMethod.DELETE,
             headers = {"Content-type=application/json"})
     @ResponseStatus(HttpStatus.OK)
-    public void deactivateSubscription(@RequestBody SubscriptionRequest subscriptionRequest)
-            throws NotFoundException {
-
+    public void deactivateSubscription(@RequestBody SubscriptionRequest subscriptionRequest) {
         StringBuilder failureReasons = validate(subscriptionRequest.getCallingNumber(),
-                subscriptionRequest.getOperator(), subscriptionRequest.getCircle(),
-                subscriptionRequest.getCallId());
+                subscriptionRequest.getCallId(), subscriptionRequest.getOperator(),
+                subscriptionRequest.getCircle());
 
         validateFieldPresent(failureReasons, "subscriptionId", subscriptionRequest.getSubscriptionId());
 

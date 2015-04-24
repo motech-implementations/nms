@@ -53,10 +53,10 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
     @Test
     public void testFrontLineWorkerService() throws Exception {
         setupData();
-        FrontLineWorker flw = new FrontLineWorker("Test Worker", "1111111111");
+        FrontLineWorker flw = new FrontLineWorker("Test Worker", 1111111111L);
         frontLineWorkerService.add(flw);
 
-        FrontLineWorker otherFlw = frontLineWorkerDataService.findByContactNumber("1111111111");
+        FrontLineWorker otherFlw = frontLineWorkerDataService.findByContactNumber(1111111111L);
         assertNotNull(otherFlw);
 
         FrontLineWorker record = frontLineWorkerService.getByContactNumber(flw.getContactNumber());

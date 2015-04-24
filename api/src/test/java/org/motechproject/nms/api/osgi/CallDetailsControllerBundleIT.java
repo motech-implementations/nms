@@ -5,10 +5,8 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.motechproject.nms.flw.domain.CallContent;
 import org.motechproject.nms.flw.domain.CallDetailRecord;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.repository.CallContentDataService;
@@ -18,6 +16,7 @@ import org.motechproject.nms.flw.repository.ServiceUsageCapDataService;
 import org.motechproject.nms.flw.repository.ServiceUsageDataService;
 import org.motechproject.nms.flw.service.CallDetailRecordService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
+import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.motechproject.testing.osgi.http.SimpleHttpClient;
 import org.motechproject.testing.utils.TestContext;
@@ -25,18 +24,20 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.inject.Inject;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerSuite.class)
 @ExamFactory(MotechNativeTestContainerFactory.class)
-public class CallDetailsControllerBundleIT {
+public class CallDetailsControllerBundleIT extends BasePaxIT {
     private static final String ADMIN_USERNAME = "motech";
     private static final String ADMIN_PASSWORD = "motech";
 
@@ -139,12 +140,13 @@ public class CallDetailsControllerBundleIT {
     }
 
     private String createContentJson(boolean includeType, String type,
-                                     boolean includeMKCardNumber, Integer mkCardNumber,
+                                     boolean includeMkCardNumber, String mkCardNumber,
                                      boolean includeContentName, String contentName,
                                      boolean includeContentFileName, String contentFileName,
                                      boolean includeStartTime, Long startTime,
                                      boolean includeEndTime, Long endTime,
-                                     boolean includeCompletionFlag, Boolean completionFlag) {
+                                     boolean includeCompletionFlag, Boolean completionFlag,
+                                     boolean includeCorrectAnswerEntered, Boolean correctAnswerEntered) {
         StringBuffer contentTemplate = new StringBuffer("{");
         ArrayList<String> array = new ArrayList<>();
 
@@ -152,8 +154,8 @@ public class CallDetailsControllerBundleIT {
             array.add(String.format("\"type\": \"%s\"", type));
         }
 
-        if (includeMKCardNumber) {
-            array.add(String.format("\"mkcardNumber\": %s", mkCardNumber));
+        if (includeMkCardNumber) {
+            array.add(String.format("\"mkCardNumber\": \"%s\"", mkCardNumber));
         }
 
         if (includeContentName) {
@@ -176,6 +178,10 @@ public class CallDetailsControllerBundleIT {
             array.add(String.format("\"completionFlag\": %s", completionFlag));
         }
 
+        if (includeCorrectAnswerEntered) {
+            array.add(String.format("\"correctAnswerEntered\": %s", correctAnswerEntered));
+        }
+
         contentTemplate.append(Joiner.on(",").join(array));
         contentTemplate.append("}");
 
@@ -186,26 +192,28 @@ public class CallDetailsControllerBundleIT {
     public void testCallDetailsValidMobileKunji() throws IOException, InterruptedException {
         cleanAllData();
 
-        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", "9810320300");
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 9810320300L);
         frontLineWorkerService.add(flw);
 
         HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/callDetails", TestContext.getJettyPort()));
 
         ArrayList<String> array = new ArrayList<>();
         array.add(createContentJson(false, null,                   // type
-                true, 1,                       // mkCardNumber
+                true, "a",                     // mkCardNumber
                 true, "YellowFever",           // contentName
                 true, "Yellowfever.wav",       // contentFile
                 true, 1200000000l,             // startTime
                 true, 1222222221l,             // endTime
-                false, null));                 // completionFlag
+                false, null,                   // completionFlag
+                false, null));                 // correctAnswerEntered
         array.add(createContentJson(false, null,                   // type
-                true, 2,                       // mkCardNumber
+                true, "b",                     // mkCardNumber
                 true, "Malaria",               // contentName
                 true, "Malaria.wav",           // contentFile
                 true, 1200000000l,             // startTime
                 true, 1222222221l,             // endTime
-                false, null));                 // completionFlag
+                false, null,                   // completionFlag
+                false, null));                 // correctAnswerEntered
         String callDetails = createCallDetailsJson(true, 9810320300l,       // callingNumber
                 true, 234000011111111l,  // callId
                 true, "A",               // operator
@@ -222,10 +230,8 @@ public class CallDetailsControllerBundleIT {
         httpPost.setEntity(params);
 
         httpPost.addHeader("content-type", "application/json");
-        httpPost.addHeader("Authorization",
-                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK));
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK, ADMIN_USERNAME, ADMIN_PASSWORD));
 
         CallDetailRecord cdr = callDetailRecordService.getByCallingNumber(9810320300l);
 
@@ -247,10 +253,11 @@ public class CallDetailsControllerBundleIT {
     public void testCallDetailsValidMobileAcademy() throws IOException, InterruptedException {
         cleanAllData();
 
-        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", "9810320300");
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 9810320300L);
         frontLineWorkerService.add(flw);
 
-        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobileacademy/callDetails", TestContext.getJettyPort()));
+        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobileacademy/callDetails",
+                TestContext.getJettyPort()));
 
         ArrayList<String> array = new ArrayList<>();
         array.add(createContentJson(/* type */ true, "lesson",
@@ -259,14 +266,16 @@ public class CallDetailsControllerBundleIT {
                 /* contentFile */ true, "ch1_l4.wav",
                 /* startTime */ true, 1200000000l,
                 /* endTime */ true, 1222222221l,
-                /* completionFlag */ true, true));
+                /* completionFlag */ true, true,
+                /* correctAnswerEntered */ true, true));
         array.add(createContentJson(/* type */ true, "question",
                 /* mkCardNumber */ false, null,
                 /* contentName */ true, "chapter-01question-01",
                 /* contentFile */ true, "ch1_q1.wav",
                 /* startTime */ true, 1200000000l,
                 /* endTime */ true, 1222222221l,
-                /* completionFlag */ true, true));
+                /* completionFlag */ true, true,
+                /* correctAnswerEntered */ true, true));
         String callDetails = createCallDetailsJson(/* callingNumber */ true, 9810320300l,
                 /* callId */ true, 234000011111111l,
                 /* operator */ true, "A",
@@ -283,10 +292,8 @@ public class CallDetailsControllerBundleIT {
         httpPost.setEntity(params);
 
         httpPost.addHeader("content-type", "application/json");
-        httpPost.addHeader("Authorization",
-                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK));
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK, ADMIN_USERNAME, ADMIN_PASSWORD));
 
         CallDetailRecord cdr = callDetailRecordService.getByCallingNumber(9810320300l);
 
@@ -305,7 +312,7 @@ public class CallDetailsControllerBundleIT {
     public void testCallDetailsValidNoContent() throws IOException, InterruptedException {
         cleanAllData();
 
-        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", "9810320300");
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 9810320300L);
         frontLineWorkerService.add(flw);
 
         HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobileacademy/callDetails", TestContext.getJettyPort()));
@@ -669,14 +676,16 @@ public class CallDetailsControllerBundleIT {
                 /* contentFile */ true, "ch1_l4.wav",
                 /* startTime */ true, 1200000000l,
                 /* endTime */ true, 1222222221l,
-                /* completionFlag */ true, true));
+                /* completionFlag */ true, true,
+                /* correctAnswerEntered */ true, true));
         array.add(createContentJson(/* type */ true, "question",
                 /* mkCardNumber */ false, null,
                 /* contentName */ true, "chapter-01question-01",
                 /* contentFile */ true, "ch1_q1.wav",
                 /* startTime */ true, 1200000000l,
                 /* endTime */ true, 1222222221l,
-                /* completionFlag */ true, true));
+                /* completionFlag */ true, true,
+                /* correctAnswerEntered */ true, true));
         String callDetails = createCallDetailsJson(/* callingNumber */ true, 9810320300l,
                 /* callId */ true, 234000011111111l,
                 /* operator */ true, "A",
@@ -712,14 +721,16 @@ public class CallDetailsControllerBundleIT {
                 /* contentFile */ true, "ch1_l4.wav",
                 /* startTime */ true, 1200000000l,
                 /* endTime */ true, 1222222221l,
-                /* completionFlag */ true, true));
+                /* completionFlag */ false, null,
+                /* correctAnswerEntered */ false, null));
         array.add(createContentJson(/* type */ true, "question",
                 /* mkCardNumber */ false, null,
                 /* contentName */ true, "chapter-01question-01",
                 /* contentFile */ true, "ch1_q1.wav",
                 /* startTime */ true, 1200000000l,
                 /* endTime */ true, 1222222221l,
-                /* completionFlag */ false, null));
+                /* completionFlag */ false, null,
+                /* correctAnswerEntered */ false, null));
         String callDetails = createCallDetailsJson(/* callingNumber */ true, 9810320300l,
                 /* callId */ true, 234000011111111l,
                 /* operator */ true, "A",
@@ -736,17 +747,15 @@ public class CallDetailsControllerBundleIT {
         httpPost.setEntity(params);
 
         httpPost.addHeader("content-type", "application/json");
-        httpPost.addHeader("Authorization",
-                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
-                "{\"failureReason\":\"<completionFlag: Not Present>\"}",
-                (String) null, (String) null));
+                "{\"failureReason\":\"<completionFlag: Not Present><completionFlag: Not Present>\"}",
+                ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     /*****************************************************************************************************************
      Test the existence and validity of elements specific to MK
-     welcomeMessagePromptFlag, content.mkcardNumber
+     welcomeMessagePromptFlag, content.mkCardNumber
      *****************************************************************************************************************/
     @Test
     public void testCallDetailsNullWelcomeMessagePromptFlag() throws IOException, InterruptedException {
@@ -787,7 +796,8 @@ public class CallDetailsControllerBundleIT {
                 /* contentFile */ true, "ch1_l4.wav",
                 /* startTime */ true, 1200000000l,
                 /* endTime */ true, 1222222221l,
-                /* completionFlag */ false, null));
+                /* completionFlag */ false, null,
+                /* correctAnswerEntered */ false, null));
         String callDetails = createCallDetailsJson(/* callingNumber */ true, 9810320300l,
                 /* callId */ true, 234000011111111l,
                 /* operator */ true, "A",
@@ -808,7 +818,7 @@ public class CallDetailsControllerBundleIT {
                 "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
-                "{\"failureReason\":\"<mkcardNumber: Not Present>\"}",
+                "{\"failureReason\":\"<mkCardNumber: Not Present>\"}",
                 (String) null, (String) null));
     }
 

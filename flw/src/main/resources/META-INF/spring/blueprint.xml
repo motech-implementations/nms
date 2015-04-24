@@ -20,6 +20,9 @@
     <osgi:service ref="callContentService"
                   interface="org.motechproject.nms.flw.service.CallContentService" />
 
+    <osgi:service ref="whitelistService"
+                  interface="org.motechproject.nms.flw.service.WhitelistService" />
+
     <osgi:reference id="frontLineWorkerDataService"
                     interface="org.motechproject.nms.flw.repository.FrontLineWorkerDataService" />
 
@@ -34,4 +37,7 @@
 
     <osgi:reference id="callContentDataService"
                     interface="org.motechproject.nms.flw.repository.CallContentDataService" />
+
+    <osgi:reference id="whitelistEntryDataService"
+                    interface="org.motechproject.nms.flw.repository.WhitelistEntryDataService" />
 </beans>

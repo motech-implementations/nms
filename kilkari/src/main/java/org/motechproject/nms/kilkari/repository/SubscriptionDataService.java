@@ -7,5 +7,5 @@ import org.motechproject.nms.kilkari.domain.Subscription;
 
 public interface SubscriptionDataService extends MotechDataService<Subscription> {
     @Lookup
-    Subscription findBySubscriptionId(@LookupField(name="subscriptionId") String subscriptionId);
+    Subscription findBySubscriptionId(@LookupField(name = "subscriptionId") String subscriptionId);
 }

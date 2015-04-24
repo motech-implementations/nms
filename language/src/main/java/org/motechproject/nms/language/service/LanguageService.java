@@ -8,11 +8,11 @@ import java.util.List;
  */
 public interface LanguageService {
 
-    Language getLanguageByCode(Integer code);
+    Language getLanguageByCode(String code);
 
     Language getDefaultCircleLanguage(String circle);
 
     List<Language> getCircleLanguages(String circle);
 
-    Language getLanguage(int code);
+    Language getLanguage(String code);
 }

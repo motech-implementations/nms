@@ -2,9 +2,9 @@ package org.motechproject.nms.api.web;
 
 import org.joda.time.DateTime;
 import org.motechproject.nms.api.web.contract.FrontLineWorkerUser;
-import org.motechproject.nms.api.web.contract.LanguageRequest;
 import org.motechproject.nms.api.web.contract.ResponseUser;
 import org.motechproject.nms.api.web.contract.kilkari.UserResponse;
+import org.motechproject.nms.api.web.exception.NotAuthorizedException;
 import org.motechproject.nms.api.web.exception.NotFoundException;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.Service;
@@ -21,15 +21,11 @@ import org.motechproject.nms.language.service.LanguageService;
 import org.motechproject.nms.location.domain.District;
 import org.motechproject.nms.location.domain.State;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.ResponseStatus;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -37,6 +33,8 @@ import java.util.Set;
 
 @Controller
 public class UserController extends BaseController {
+
+    public static final String SERVICE_NAME = "serviceName";
 
     @Autowired
     private LanguageService languageService;
@@ -52,58 +50,6 @@ public class UserController extends BaseController {
 
     @Autowired
     private ServiceUsageCapService serviceUsageCapService;
-
-
-    /**
-     * 2.2.7.1  Set User Language Location Code
-     *          http://<motech:port>/motech­platform­server/module/mobileacademy/languageLocationCode
-     *
-     * 3.2.3.1  Set User Language Location Code
-     *          http://<motech:port>/motech­platform­server/module/mobilekunji/languageLocationCode
-     *
-     *          IVR shall invoke this API to provide user languageLocation preference to MOTECH.
-     *
-     */
-    @RequestMapping(value = "/{serviceName}/languageLocationCode",
-                    method = RequestMethod.POST,
-                    headers = { "Content-type=application/json" })
-    @ResponseStatus(HttpStatus.OK)
-    public void setUserLanguageLocationCode(@PathVariable String serviceName,
-                                            @RequestBody LanguageRequest languageRequest) {
-        String callingNumber = languageRequest.getCallingNumber();
-        String callId = languageRequest.getCallId();
-        String languageLocationCode = languageRequest.getLanguageLocationCode();
-
-        StringBuilder failureReasons = validate(callingNumber, callId);
-        validateFieldNumeric(failureReasons, "languageLocationCode", languageRequest.getLanguageLocationCode());
-
-        if (null == languageLocationCode) {
-            failureReasons.append(String.format(NOT_PRESENT, "languageLocationCode"));
-        }
-
-        if (!(MOBILE_ACADEMY.equals(serviceName) || MOBILE_KUNJI.equals(serviceName))) {
-            failureReasons.append(String.format(INVALID, "serviceName"));
-        }
-
-        if (failureReasons.length() > 0) {
-            throw new IllegalArgumentException(failureReasons.toString());
-        }
-
-        // TODO: If no FLW user is found we need to create one here #62
-        FrontLineWorker flw = frontLineWorkerService.getByContactNumber(callingNumber);
-        if (null == flw) {
-            throw new NotFoundException(String.format(NOT_FOUND, "callingNumber"));
-        }
-
-        Language language = languageService.getLanguageByCode(Integer.parseInt(languageLocationCode));
-        if (null == language) {
-            throw new NotFoundException(String.format(NOT_FOUND, "languageLocationCode"));
-        }
-
-        flw.setLanguage(language);
-        frontLineWorkerService.update(flw);
-    }
-
 
     /**
      * 2.2.1.1 Get User Details
@@ -123,12 +69,12 @@ public class UserController extends BaseController {
     @RequestMapping("/{serviceName}/user") // NO CHECKSTYLE Cyclomatic Complexity
     @ResponseBody
     public ResponseUser getUserDetails(@PathVariable String serviceName,
-                             @RequestParam(required = false) String callingNumber,
+                             @RequestParam(required = false) Long callingNumber,
                              @RequestParam(required = false) String operator,
                              @RequestParam(required = false) String circle,
-                             @RequestParam(required = false) String callId) {
+                             @RequestParam(required = false) Long callId) {
 
-        StringBuilder failureReasons = validate(callingNumber, operator, circle, callId);
+        StringBuilder failureReasons = validate(callingNumber, callId, operator, circle);
         if (failureReasons.length() > 0) {
             throw new IllegalArgumentException(failureReasons.toString());
         }
@@ -140,7 +86,7 @@ public class UserController extends BaseController {
          */
         if (!(MOBILE_ACADEMY.equals(serviceName) || MOBILE_KUNJI.equals(serviceName) ||
                 KILKARI.equals(serviceName))) {
-            failureReasons.append(String.format(INVALID, "serviceName"));
+            failureReasons.append(String.format(INVALID, SERVICE_NAME));
         }
 
         /*
@@ -169,11 +115,11 @@ public class UserController extends BaseController {
         return user;
     }
 
-    private ResponseUser getKilkariResponseUser(String callingNumber) {
+    private ResponseUser getKilkariResponseUser(Long callingNumber) {
         UserResponse user = new UserResponse();
         Subscriber subscriber = subscriptionService.getSubscriber(callingNumber);
         if (subscriber == null) {
-            throw new NotFoundException(String.format(NOT_FOUND, "callingNumber"));
+            throw new NotFoundException(String.format(NOT_FOUND, CALLING_NUMBER));
         }
         Set<Subscription> subscriptions = subscriber.getSubscriptions();
         Set<String> packs = new HashSet<>();
@@ -184,7 +130,7 @@ public class UserController extends BaseController {
         return user;
     }
 
-    private ResponseUser getFrontLineWorkerResponseUser(String serviceName, String callingNumber) {
+    private ResponseUser getFrontLineWorkerResponseUser(String serviceName, Long callingNumber) {
         FrontLineWorkerUser user;
 
         Service service = null;
@@ -214,6 +160,10 @@ public class UserController extends BaseController {
             if (null != district) {
                 state = district.getState();
             }
+
+            if (!frontLineWorkerAuthorizedForAccess(flw)) {
+                throw new NotAuthorizedException(String.format(NOT_AUTHORIZED, CALLING_NUMBER));
+            }
         }
 
         ServiceUsageCap serviceUsageCap = serviceUsageCapService.getServiceUsageCap(state, service);
@@ -224,9 +174,10 @@ public class UserController extends BaseController {
 
         user.setMaxAllowedUsageInPulses(serviceUsageCap.getMaxUsageInPulses());
 
-        // TODO: During configuration sprint this value needs to be de-hardcoded
+        // TODO: #38 During configuration sprint this value needs to be de-hardcoded
         user.setMaxAllowedEndOfUsagePrompt(2);
 
         return user;
     }
+
 }
