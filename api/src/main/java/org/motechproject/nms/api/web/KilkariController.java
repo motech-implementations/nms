@@ -112,8 +112,7 @@ public class KilkariController extends BaseController {
             method = RequestMethod.POST,
             headers = { "Content-type=application/json" })
     @ResponseStatus(HttpStatus.OK)
-    public void createSubscription(@RequestBody SubscriptionRequest subscriptionRequest)
-        throws NotFoundException {
+    public void createSubscription(@RequestBody SubscriptionRequest subscriptionRequest) {
 
         StringBuilder failureReasons = validate(subscriptionRequest.getCallingNumber(),
                 subscriptionRequest.getOperator(), subscriptionRequest.getCircle(),
@@ -144,8 +143,7 @@ public class KilkariController extends BaseController {
             method = RequestMethod.DELETE,
             headers = { "Content-type=application/json" })
     @ResponseStatus(HttpStatus.OK)
-    public void deactivateSubscription(@RequestBody SubscriptionRequest subscriptionRequest)
-        throws NotFoundException {
+    public void deactivateSubscription(@RequestBody SubscriptionRequest subscriptionRequest) {
 
         StringBuilder failureReasons = validate(subscriptionRequest.getCallingNumber(),
                 subscriptionRequest.getOperator(), subscriptionRequest.getCircle(),

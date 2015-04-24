@@ -17,6 +17,8 @@ public class CallDetailRecordRequest {
     private Integer callDisconnectReason;
     private List<CallContentRequest> content;
 
+    public CallDetailRecordRequest() { }
+
     public String getCallingNumber() {
         return callingNumber;
     }
