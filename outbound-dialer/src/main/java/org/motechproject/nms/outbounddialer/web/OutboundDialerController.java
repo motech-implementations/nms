@@ -1,7 +1,8 @@
 package org.motechproject.nms.outbounddialer.web;
 
-import main.java.org.motechproject.nms.outbounddialer.web.contract.CdrFileNotificationRequest;
-import main.java.org.motechproject.nms.outbounddialer.web.contract.BadRequest;
+import org.motechproject.nms.outbounddialer.web.contract.FileProcessedStatusRequest;
+import org.motechproject.nms.outbounddialer.web.contract.CdrFileNotificationRequest;
+import org.motechproject.nms.outbounddialer.web.contract.BadRequest;
 import org.motechproject.nms.outbounddialer.service.OutboundDialerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -53,8 +54,27 @@ public class OutboundDialerController {
     public void notifyNewCdrFile(@RequestBody CdrFileNotificationRequest cdrFileNotificationRequest) {
         // TODO: validate params
 
-        // TODO: post a message that says new CDR file is ready
-        outboundDialerService.notifyNewCdrFile();
+        // TODO: call OBD service, which will post a message that says new CDR file is ready
+        outboundDialerService.handleNewCdrFile();
+    }
+
+
+    /**
+     * 4.2.7
+     * Notify File Processed Status
+     *
+     * IVR shall invoke this API to update about the status of file copy after initial checks on the file
+     * are completed.
+     */
+    @RequestMapping(value = "/obdFileProcessedStatusNotification",
+            method = RequestMethod.POST,
+            headers = {"Content-type=application/json"})
+    @ResponseStatus(HttpStatus.OK)
+    public void notifyFileProcessedStatus(@RequestBody FileProcessedStatusRequest fileProcessedStatusRequest) {
+        // TODO: validate params
+
+        // TODO: call OBD service, which will handle notification
+        outboundDialerService.handleFileProcessedStatusNotification();
     }
 
 

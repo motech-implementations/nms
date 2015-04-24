@@ -734,6 +734,7 @@
         <module>language</module>
         <module>location</module>
         <module>props</module>
+        <module>outbound-dialer</module>
     </modules>
 
     <build>

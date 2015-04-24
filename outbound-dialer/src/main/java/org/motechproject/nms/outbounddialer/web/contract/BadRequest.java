@@ -1,4 +1,4 @@
-package main.java.org.motechproject.nms.outbounddialer.web.contract;
+package org.motechproject.nms.outbounddialer.web.contract;
 
 public class BadRequest {
     private String failureReason;
