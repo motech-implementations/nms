@@ -24,8 +24,8 @@ import static org.junit.Assert.assertTrue;
 @ExamReactorStrategy(PerSuite.class)
 @ExamFactory(MotechNativeTestContainerFactory.class)
 public class WhiteListServiceBundleIT extends BasePaxIT {
-    public static final String WHITELIST_CONTACT_NUMBER = "1111111111";
-    public static final String NOT_WHITELIST_CONTACT_NUMBER = "0000000000";
+    public static final Long WHITELIST_CONTACT_NUMBER = 1111111111l;
+    public static final Long NOT_WHITELIST_CONTACT_NUMBER = 9000000000l;
 
     private State whitelist;
     private State noWhitelist;

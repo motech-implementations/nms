@@ -192,7 +192,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
     public void testCallDetailsValidMobileKunji() throws IOException, InterruptedException {
         cleanAllData();
 
-        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", "9810320300");
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 9810320300L);
         frontLineWorkerService.add(flw);
 
         HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/callDetails", TestContext.getJettyPort()));
@@ -253,7 +253,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
     public void testCallDetailsValidMobileAcademy() throws IOException, InterruptedException {
         cleanAllData();
 
-        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", "9810320300");
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 9810320300L);
         frontLineWorkerService.add(flw);
 
         HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobileacademy/callDetails",
@@ -312,7 +312,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
     public void testCallDetailsValidNoContent() throws IOException, InterruptedException {
         cleanAllData();
 
-        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", "9810320300");
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 9810320300L);
         frontLineWorkerService.add(flw);
 
         HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobileacademy/callDetails", TestContext.getJettyPort()));

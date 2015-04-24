@@ -69,12 +69,12 @@ public class UserController extends BaseController {
     @RequestMapping("/{serviceName}/user") // NO CHECKSTYLE Cyclomatic Complexity
     @ResponseBody
     public ResponseUser getUserDetails(@PathVariable String serviceName,
-                             @RequestParam(required = false) String callingNumber,
+                             @RequestParam(required = false) Long callingNumber,
                              @RequestParam(required = false) String operator,
                              @RequestParam(required = false) String circle,
-                             @RequestParam(required = false) String callId) {
+                             @RequestParam(required = false) Long callId) {
 
-        StringBuilder failureReasons = validate(callingNumber, operator, circle, callId);
+        StringBuilder failureReasons = validate(callingNumber, callId, operator, circle);
         if (failureReasons.length() > 0) {
             throw new IllegalArgumentException(failureReasons.toString());
         }
@@ -115,7 +115,7 @@ public class UserController extends BaseController {
         return user;
     }
 
-    private ResponseUser getKilkariResponseUser(String callingNumber) {
+    private ResponseUser getKilkariResponseUser(Long callingNumber) {
         UserResponse user = new UserResponse();
         Subscriber subscriber = kilkariService.getSubscriber(callingNumber);
         if (subscriber == null) {
@@ -130,7 +130,7 @@ public class UserController extends BaseController {
         return user;
     }
 
-    private ResponseUser getFrontLineWorkerResponseUser(String serviceName, String callingNumber) {
+    private ResponseUser getFrontLineWorkerResponseUser(String serviceName, Long callingNumber) {
         FrontLineWorkerUser user;
 
         Service service = null;

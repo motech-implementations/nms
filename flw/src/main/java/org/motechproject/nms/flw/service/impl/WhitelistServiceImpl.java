@@ -38,7 +38,7 @@ public class WhitelistServiceImpl implements WhitelistService {
      * @return true if the number is whitelisted false if the number is not allowed
      */
     @Override
-    public boolean numberWhitelistedForState(final State state, final String contactNumber) {
+    public boolean numberWhitelistedForState(final State state, final Long contactNumber) {
 
         if (state == null || contactNumber == null) {
             // By default I allow calls through if needed fields are missing
@@ -57,7 +57,7 @@ public class WhitelistServiceImpl implements WhitelistService {
             public Long execute(Query query, InstanceSecurityRestriction restriction) {
 
                 query.setFilter("state == flw_state && contactNumber == flw_number");
-                query.declareParameters("org.motechproject.nms.location.domain.State flw_state, String flw_number");
+                query.declareParameters("org.motechproject.nms.location.domain.State flw_state, Long flw_number");
                 query.setResult("count(contactNumber)");
                 query.setUnique(true);
 

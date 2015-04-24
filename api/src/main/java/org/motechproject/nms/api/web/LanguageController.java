@@ -44,12 +44,12 @@ public class LanguageController extends BaseController {
     @ResponseStatus(HttpStatus.OK)
     public void setUserLanguageLocationCode(@PathVariable String serviceName,
                                             @RequestBody LanguageRequest languageRequest) {
-        String callingNumber = languageRequest.getCallingNumber();
-        String callId = languageRequest.getCallId();
+        Long callingNumber = languageRequest.getCallingNumber();
+        Long callId = languageRequest.getCallId();
         String languageLocationCode = languageRequest.getLanguageLocationCode();
 
         StringBuilder failureReasons = validate(callingNumber, callId);
-        validateFieldNumeric(failureReasons, LANGUAGE_LOCATION_CODE, languageRequest.getLanguageLocationCode());
+        validateFieldPresent(failureReasons, LANGUAGE_LOCATION_CODE, languageRequest.getLanguageLocationCode());
 
         if (null == languageLocationCode) {
             failureReasons.append(String.format(NOT_PRESENT, LANGUAGE_LOCATION_CODE));
@@ -68,7 +68,7 @@ public class LanguageController extends BaseController {
             flw = new FrontLineWorker(callingNumber);
         }
 
-        Language language = languageService.getLanguageByCode(Integer.parseInt(languageLocationCode));
+        Language language = languageService.getLanguageByCode(languageLocationCode);
         if (null == language) {
             throw new NotFoundException(String.format(NOT_FOUND, LANGUAGE_LOCATION_CODE));
         }

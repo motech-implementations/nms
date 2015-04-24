@@ -28,7 +28,7 @@ public class LanguageServiceImpl implements LanguageService {
      * @param code the language code
      * @return the language object if found
      */
-    public Language getLanguageByCode(Integer code) {
+    public Language getLanguageByCode(String code) {
         return languageDataService.findByCode(code);
     }
 
@@ -70,7 +70,7 @@ public class LanguageServiceImpl implements LanguageService {
     }
 
     @Override
-    public Language getLanguage(int code) {
+    public Language getLanguage(String code) {
         return languageDataService.findByCode(code);
     }
 

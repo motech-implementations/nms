@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 @Service("locationService")
 public class LocationServiceImpl implements LocationService {
 
-    public static final int HACKY_LANGUAGE_CODE = 34;
+    public static final String HACKY_LANGUAGE_CODE = "34";
     public static final long HACKY_WHITELISTED_STATE_CODE = -1L;
     public static final long HACKY_NON_WHITELISTED_STATE_CODE = -10L;
 

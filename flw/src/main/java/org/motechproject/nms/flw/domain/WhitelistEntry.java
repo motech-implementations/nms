@@ -20,9 +20,9 @@ public class WhitelistEntry {
     @Field(required = true)
     @Column(length = FIELD_SIZE_10)
     @NotNull
-    private String contactNumber;
+    private Long contactNumber;
 
-    public WhitelistEntry(String contactNumber, State state) {
+    public WhitelistEntry(Long contactNumber, State state) {
         this.contactNumber = contactNumber;
         this.state = state;
     }
@@ -35,11 +35,11 @@ public class WhitelistEntry {
         this.state = state;
     }
 
-    public String getContactNumber() {
+    public Long getContactNumber() {
         return contactNumber;
     }
 
-    public void setContactNumber(String contactNumber) {
+    public void setContactNumber(Long contactNumber) {
         this.contactNumber = contactNumber;
     }
 

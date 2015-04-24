@@ -59,7 +59,7 @@ public class LanguageControllerBundleIT extends BasePaxIT {
 
     private void createCircleWithLanguage() {
         cleanAllData();
-        Language language = new Language("Papiamento", 99);
+        Language language = new Language("Papiamento", "99");
         languageDataService.create(language);
 
         CircleLanguage circleLanguage = new CircleLanguage("AA", language);
@@ -69,10 +69,10 @@ public class LanguageControllerBundleIT extends BasePaxIT {
     private void createFlwCappedServiceNoUsageNoLocationNoLanguage() {
         cleanAllData();
 
-        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", "1111111111");
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 1111111111l);
         frontLineWorkerService.add(flw);
 
-        Language language = new Language("Papiamento", 99);
+        Language language = new Language("Papiamento", "99");
         languageDataService.create(language);
 
         CircleLanguage circleLanguage = new CircleLanguage("AA", language);
@@ -113,8 +113,8 @@ public class LanguageControllerBundleIT extends BasePaxIT {
         HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/languageLocationCode", TestContext.getJettyPort()));
 
         LanguageRequest request = new LanguageRequest(
-                "invalid", //callingNumber
-                "123456789012345", //callId
+                null, //callingNumber
+                123456789012345l, //callId
                 "123"); //languageLocationCode
         String json = new ObjectMapper().writeValueAsString(request);
         StringEntity params = new StringEntity(json);
@@ -193,11 +193,11 @@ public class LanguageControllerBundleIT extends BasePaxIT {
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK));
 
-        FrontLineWorker flw = frontLineWorkerService.getByContactNumber("1111111111");
+        FrontLineWorker flw = frontLineWorkerService.getByContactNumber(1111111111l);
         assertNotNull(flw);
         Language language = flw.getLanguage();
         assertNotNull(language);
-        assertEquals("FLW Language Code", (long) 99, (long) language.getCode());
+        assertEquals("FLW Language Code", "99", language.getCode());
     }
 
     @Test
@@ -227,9 +227,9 @@ public class LanguageControllerBundleIT extends BasePaxIT {
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK));
 
-        FrontLineWorker flw = frontLineWorkerService.getByContactNumber("1111111111");
+        FrontLineWorker flw = frontLineWorkerService.getByContactNumber(1111111111l);
         Language language = flw.getLanguage();
         assertNotNull(language);
-        assertEquals("FLW Language Code", (long) 99, (long) language.getCode());
+        assertEquals("FLW Language Code", "99", language.getCode());
     }
 }
