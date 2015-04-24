@@ -1,7 +1,6 @@
 package org.motechproject.nms.api.osgi;
 
 import com.google.common.base.Joiner;
-import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
@@ -34,6 +33,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+
+
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerSuite.class)
 @ExamFactory(MotechNativeTestContainerFactory.class)
@@ -61,6 +62,11 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
 
     @Inject
     private ServiceUsageCapDataService serviceUsageCapDataService;
+
+    public CallDetailsControllerBundleIT() {
+        System.setProperty("org.motechproject.testing.osgi.http.numTries", "1");
+        System.setProperty("org.motechproject.testing.osgi.http.msWait", "1000");
+    }
 
     private void cleanAllData() {
         serviceUsageCapDataService.deleteAll();
@@ -333,10 +339,8 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         httpPost.setEntity(params);
 
         httpPost.addHeader("content-type", "application/json");
-        httpPost.addHeader("Authorization",
-                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK));
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK, ADMIN_USERNAME, ADMIN_PASSWORD));
 
         CallDetailRecord cdr = callDetailRecordService.getByCallingNumber(9810320300l);
 
@@ -373,12 +377,10 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         httpPost.setEntity(params);
 
         httpPost.addHeader("content-type", "application/json");
-        httpPost.addHeader("Authorization",
-                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_NOT_FOUND,
                 "{\"failureReason\":\"<callingNumber: Not Found>\"}",
-                (String) null, (String) null));
+                ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     @Test
@@ -401,12 +403,10 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         httpPost.setEntity(params);
 
         httpPost.addHeader("content-type", "application/json");
-        httpPost.addHeader("Authorization",
-                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
                 "{\"failureReason\":\"<callDisconnectReason: Not Present>\"}",
-                (String) null, (String) null));
+                ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     @Test
@@ -429,12 +429,10 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         httpPost.setEntity(params);
 
         httpPost.addHeader("content-type", "application/json");
-        httpPost.addHeader("Authorization",
-                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
                 "{\"failureReason\":\"<callStatus: Not Present>\"}",
-                (String) null, (String) null));
+                ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     @Test
@@ -457,12 +455,10 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         httpPost.setEntity(params);
 
         httpPost.addHeader("content-type", "application/json");
-        httpPost.addHeader("Authorization",
-                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
                 "{\"failureReason\":\"<endOfUsagePromptCount: Not Present>\"}",
-                (String) null, (String) null));
+                ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     @Test
@@ -485,12 +481,10 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         httpPost.setEntity(params);
 
         httpPost.addHeader("content-type", "application/json");
-        httpPost.addHeader("Authorization",
-                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
                 "{\"failureReason\":\"<callDurationInPulses: Not Present>\"}",
-                (String) null, (String) null));
+                ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     @Test
@@ -513,12 +507,10 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         httpPost.setEntity(params);
 
         httpPost.addHeader("content-type", "application/json");
-        httpPost.addHeader("Authorization",
-                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
                 "{\"failureReason\":\"<callEndTime: Not Present>\"}",
-                (String) null, (String) null));
+                ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     @Test
@@ -541,12 +533,10 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         httpPost.setEntity(params);
 
         httpPost.addHeader("content-type", "application/json");
-        httpPost.addHeader("Authorization",
-                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
                 "{\"failureReason\":\"<callStartTime: Not Present>\"}",
-                (String) null, (String) null));
+                ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     @Test
@@ -569,12 +559,10 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         httpPost.setEntity(params);
 
         httpPost.addHeader("content-type", "application/json");
-        httpPost.addHeader("Authorization",
-                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
                 "{\"failureReason\":\"<callingNumber: Not Present>\"}",
-                (String) null, (String) null));
+                ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     @Test
@@ -597,12 +585,10 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         httpPost.setEntity(params);
 
         httpPost.addHeader("content-type", "application/json");
-        httpPost.addHeader("Authorization",
-                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
                 "{\"failureReason\":\"<callingNumber: Invalid>\"}",
-                (String) null, (String) null));
+                ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     @Test
@@ -625,12 +611,10 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         httpPost.setEntity(params);
 
         httpPost.addHeader("content-type", "application/json");
-        httpPost.addHeader("Authorization",
-                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
                 "{\"failureReason\":\"<callId: Not Present>\"}",
-                (String) null, (String) null));
+                ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     @Test
@@ -653,12 +637,10 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         httpPost.setEntity(params);
 
         httpPost.addHeader("content-type", "application/json");
-        httpPost.addHeader("Authorization",
-                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
                 "{\"failureReason\":\"<callId: Invalid>\"}",
-                (String) null, (String) null));
+                ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     /*****************************************************************************************************************
@@ -702,12 +684,10 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         httpPost.setEntity(params);
 
         httpPost.addHeader("content-type", "application/json");
-        httpPost.addHeader("Authorization",
-                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
                 "{\"failureReason\":\"<type: Not Present>\"}",
-                (String) null, (String) null));
+                ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     @Test
@@ -777,12 +757,10 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         httpPost.setEntity(params);
 
         httpPost.addHeader("content-type", "application/json");
-        httpPost.addHeader("Authorization",
-                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
                 "{\"failureReason\":\"<welcomeMessagePromptFlag: Not Present>\"}",
-                (String) null, (String) null));
+                ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     @Test
@@ -814,12 +792,10 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         httpPost.setEntity(params);
 
         httpPost.addHeader("content-type", "application/json");
-        httpPost.addHeader("Authorization",
-                "Basic " + new String(Base64.encodeBase64((ADMIN_USERNAME + ":" + ADMIN_PASSWORD).getBytes())));
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
                 "{\"failureReason\":\"<mkCardNumber: Not Present>\"}",
-                (String) null, (String) null));
+                ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     // Test with no content
