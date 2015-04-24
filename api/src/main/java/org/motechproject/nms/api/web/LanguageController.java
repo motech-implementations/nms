@@ -51,10 +51,6 @@ public class LanguageController extends BaseController {
         StringBuilder failureReasons = validate(callingNumber, callId);
         validateFieldPresent(failureReasons, LANGUAGE_LOCATION_CODE, languageRequest.getLanguageLocationCode());
 
-        if (null == languageLocationCode) {
-            failureReasons.append(String.format(NOT_PRESENT, LANGUAGE_LOCATION_CODE));
-        }
-
         if (!(MOBILE_ACADEMY.equals(serviceName) || MOBILE_KUNJI.equals(serviceName))) {
             failureReasons.append(String.format(INVALID, SERVICE_NAME));
         }
