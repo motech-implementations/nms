@@ -65,7 +65,6 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
 
     public CallDetailsControllerBundleIT() {
         System.setProperty("org.motechproject.testing.osgi.http.numTries", "1");
-        System.setProperty("org.motechproject.testing.osgi.http.msWait", "1000");
     }
 
     private void cleanAllData() {
