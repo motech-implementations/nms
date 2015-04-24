@@ -1,7 +1,7 @@
-package main.java.org.motechproject.nms.outbounddialer.web.contract;
+package org.motechproject.nms.outbounddialer.web.contract;
 
 /**
- * POST request data for 4.2.6: http://<motech:port>/motech­platform­server/module/kilkari/cdrFileNotification
+ * POST request data for 4.2.6: http://<motech:port>/motech­platform­server/module/obd/cdrFileNotification
  */
 public class CdrFileNotificationRequest {
     private String fileName;
@@ -33,6 +33,9 @@ public class CdrFileNotificationRequest {
         private String cdrFile;
         private String checksum;
         private int recordsCount;
+
+        public CdrInformation() {
+        }
 
         public CdrInformation(String cdrFile, String checksum, int recordsCount) {
             this.cdrFile = cdrFile;
