@@ -1,10 +1,13 @@
 package org.motechproject.nms.api.web;
 
 import org.motechproject.nms.api.web.contract.kilkari.InboxCallDetailsRequest;
+import org.motechproject.nms.api.web.contract.kilkari.InboxCallDetailsRequestCallData;
 import org.motechproject.nms.api.web.contract.kilkari.InboxResponse;
 import org.motechproject.nms.api.web.contract.kilkari.InboxSubscriptionDetailResponse;
 import org.motechproject.nms.api.web.contract.kilkari.SubscriptionRequest;
 import org.motechproject.nms.api.web.exception.NotFoundException;
+import org.motechproject.nms.kilkari.domain.InboxCallData;
+import org.motechproject.nms.kilkari.domain.InboxCallDetails;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
@@ -18,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -27,6 +31,12 @@ import java.util.Set;
 @RequestMapping("/kilkari")
 @Controller
 public class KilkariController extends BaseController {
+
+    /*
+     4.2.5.1.5 Body Elements
+     */
+    public static final int SUBSCRIPTION_ID_LENGTH = 36;
+    public static final Set<String> SUBSCRIPTION_PACK_SET = new HashSet<>(Arrays.asList("48WeeksPack", "76WeeksPack"));
 
     @Autowired
     private SubscriptionService subscriptionService;
@@ -39,7 +49,8 @@ public class KilkariController extends BaseController {
      */
     @RequestMapping("/inbox")
     @ResponseBody
-    public InboxResponse getInboxDetails(@RequestParam Long callingNumber, @RequestParam Long callId) {
+    public InboxResponse getInboxDetails(@RequestParam(required = false) Long callingNumber,
+                                         @RequestParam(required = false) Long callId) {
 
         StringBuilder failureReasons = validate(callingNumber, callId);
         if (failureReasons.length() > 0) {
@@ -54,6 +65,7 @@ public class KilkariController extends BaseController {
         Set<Subscription> subscriptions = subscriber.getSubscriptions();
         Set<InboxSubscriptionDetailResponse> subscriptionDetails = new HashSet<>();
         for (Subscription subscription : subscriptions) {
+            //todo: something tells me this is not complete/real code
             subscriptionDetails.add(new InboxSubscriptionDetailResponse(subscription.getSubscriptionId(),
                     subscription.getSubscriptionPack().getName(),
                     "10_1",
@@ -63,6 +75,39 @@ public class KilkariController extends BaseController {
         return new InboxResponse(subscriptionDetails);
     }
 
+    private void validateSaveInboxCallDetailsContent(StringBuilder failureReasons,
+                                                     Set<InboxCallDetailsRequestCallData> content) {
+        if (content == null || content.size() == 0) {
+            // Empty content is acceptable (when the IVR vendor plays promotional content)
+            return;
+        }
+        if (content.size() != 2) {
+            // Valid content must contain two elements
+            failureReasons.append(String.format(INVALID, "content"));
+            return;
+        }
+        int failureReasonsLength = failureReasons.length();
+        Set<String> subscriptionPacks = new HashSet<>();
+        for (InboxCallDetailsRequestCallData data : content) {
+            validateFieldExactLength(failureReasons, "subscriptionId", data.getSubscriptionId(), SUBSCRIPTION_ID_LENGTH);
+            subscriptionPacks.add(data.getSubscriptionPack());
+            validateFieldString(failureReasons, "inboxWeekId", data.getInboxWeekId());
+            validateFieldString(failureReasons, "contentFileName", data.getContentFileName());
+            validateFieldPositiveLong(failureReasons, "startTime", data.getStartTime());
+            validateFieldPositiveLong(failureReasons, "endTime", data.getEndTime());
+        }
+
+        //check we have all required subscription packs
+        if (!SUBSCRIPTION_PACK_SET.equals(subscriptionPacks)) {
+            failureReasons.append(String.format(INVALID, "subscriptionPack"));
+        }
+
+        //some field error occurred, add an error on the "content" parent field
+        if (failureReasonsLength != failureReasons.length()) {
+            failureReasons.append(String.format(INVALID, "content"));
+        }
+
+    }
 
     private StringBuilder validateSaveInboxCallDetails(InboxCallDetailsRequest request) {
         StringBuilder failureReasons = validate(request.getCallingNumber(), request.getCallId(),
@@ -72,7 +117,8 @@ public class KilkariController extends BaseController {
         validateFieldPresent(failureReasons, "callEndTime", request.getCallEndTime());
         validateFieldPresent(failureReasons, "callDurationInPulses", request.getCallDurationInPulses());
         validateFieldCallStatus(failureReasons, "callStatus", request.getCallStatus());
-        validateFieldCallStatus(failureReasons, "callDisconnectReason", request.getCallDisconnectReason());
+        validateFieldCallDisconnectReason(failureReasons, "callDisconnectReason", request.getCallDisconnectReason());
+        validateSaveInboxCallDetailsContent(failureReasons, request.getContent());
 
         return failureReasons;
     }
@@ -95,7 +141,33 @@ public class KilkariController extends BaseController {
             throw new IllegalArgumentException(failureReasons.toString());
         }
 
-        //todo: the work...
+        Set<InboxCallData> content = new HashSet<>();
+        if (request.getContent() != null && request.getContent().size() > 0) {
+            for (InboxCallDetailsRequestCallData inboxCallDetailsRequestCallData : request.getContent()) {
+                content.add(new InboxCallData(
+                        inboxCallDetailsRequestCallData.getSubscriptionId(),
+                        inboxCallDetailsRequestCallData.getSubscriptionPack(),
+                        inboxCallDetailsRequestCallData.getInboxWeekId(),
+                        inboxCallDetailsRequestCallData.getContentFileName(),
+                        epochToDateTime(inboxCallDetailsRequestCallData.getStartTime()),
+                        epochToDateTime(inboxCallDetailsRequestCallData.getEndTime())
+                ));
+            }
+        }
+
+        InboxCallDetails inboxCallDetails = new InboxCallDetails(
+                request.getCallingNumber(),
+                request.getOperator(),
+                request.getCircle(),
+                request.getCallId(),
+                epochToDateTime(request.getCallStartTime()),
+                epochToDateTime(request.getCallEndTime()),
+                request.getCallDurationInPulses(),
+                request.getCallStatus(),
+                request.getCallDisconnectReason(),
+                content);
+
+        subscriptionService.addInboxCallDetails(inboxCallDetails);
     }
 
     /**
