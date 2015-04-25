@@ -5,7 +5,6 @@ import org.motechproject.nms.api.web.contract.FlwUserResponse;
 import org.motechproject.nms.api.web.contract.UserResponse;
 import org.motechproject.nms.api.web.contract.kilkari.KilkariUserResponse;
 import org.motechproject.nms.api.web.exception.NotAuthorizedException;
-import org.motechproject.nms.api.web.exception.NotFoundException;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.Service;
 import org.motechproject.nms.flw.domain.ServiceUsage;
@@ -99,7 +98,7 @@ public class UserController extends BaseController {
         Kilkari in the house!
          */
         if (KILKARI.equals(serviceName)) {
-            user = getKilkariResponseUser(callingNumber);
+            user = getKilkariResponseUser(callingNumber, circle);
         }
 
         if (failureReasons.length() > 0) {
@@ -114,16 +113,24 @@ public class UserController extends BaseController {
         return user;
     }
 
-    private UserResponse getKilkariResponseUser(Long callingNumber) {
+    private UserResponse getKilkariResponseUser(Long callingNumber, String circle) {
         KilkariUserResponse user = new KilkariUserResponse();
-        Subscriber subscriber = kilkariService.getSubscriber(callingNumber);
-        if (subscriber == null) {
-            throw new NotFoundException(String.format(NOT_FOUND, CALLING_NUMBER));
-        }
-        Set<Subscription> subscriptions = subscriber.getSubscriptions();
         Set<String> packs = new HashSet<>();
-        for (Subscription subscription : subscriptions) {
-            packs.add(subscription.getSubscriptionPack().getName());
+        Subscriber subscriber = kilkariService.getSubscriber(callingNumber);
+        if (subscriber != null) {
+            Set<Subscription> subscriptions = subscriber.getSubscriptions();
+            for (Subscription subscription : subscriptions) {
+                packs.add(subscription.getSubscriptionPack().getName());
+            }
+        } else {
+            /*
+            No subscriber found in the database, according to https://github.com/koshalt/mim/issues/9#event-288912397
+            we need to respond with an empty subscription list, the circle provider in the request and our guess as
+            to what the defaultLanguageLocationCode is, which is done after this method returns
+            */
+            user.setCircle(circle);
+            //todo: figure out the defaultLanguageLocationCode, should that be coming from the language module?
+            user.setDefaultLanguageLocationCode("??");
         }
         user.setSubscriptionPackList(packs);
         return user;
