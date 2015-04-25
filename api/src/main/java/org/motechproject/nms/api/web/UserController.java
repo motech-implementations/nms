@@ -130,7 +130,7 @@ public class UserController extends BaseController {
     }
 
     private UserResponse getFrontLineWorkerResponseUser(String serviceName, Long callingNumber) {
-        FlwUserResponse user;
+        FlwUserResponse user = new FlwUserResponse();
 
         Service service = null;
 
@@ -142,7 +142,6 @@ public class UserController extends BaseController {
             service = Service.MOBILE_KUNJI;
         }
 
-        user = new FlwUserResponse();
         ServiceUsage serviceUsage = new ServiceUsage(null, service, 0, 0, 0, DateTime.now());
         FrontLineWorker flw = frontLineWorkerService.getByContactNumber(callingNumber);
 
