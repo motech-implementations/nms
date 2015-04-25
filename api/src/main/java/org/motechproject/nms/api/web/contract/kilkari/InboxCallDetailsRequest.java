@@ -1,6 +1,6 @@
 package org.motechproject.nms.api.web.contract.kilkari;
 
-import java.util.List;
+import java.util.Set;
 
 /**
  * POST request data for 4.2.5 : http://<motech:port>/motech­platform­server/module/kilkari/inboxCallDetails
@@ -15,14 +15,14 @@ public class InboxCallDetailsRequest {
     private Integer callDurationInPulses;
     private Integer callStatus;
     private Integer callDisconnectReason;
-    private List<InboxCallDetailsRequestCallData> content;
+    private Set<InboxCallDetailsRequestCallData> content;
 
     public InboxCallDetailsRequest() { }
 
     public InboxCallDetailsRequest(Long callingNumber, // NO CHECKSTYLE More than 7 parameters
                                    String operator, String circle, Long callId, Long callStartTime,
                                    Long callEndTime, Integer callDurationInPulses, Integer callStatus,
-                                   Integer callDisconnectReason, List<InboxCallDetailsRequestCallData> content) {
+                                   Integer callDisconnectReason, Set<InboxCallDetailsRequestCallData> content) {
         this.callingNumber = callingNumber;
         this.operator = operator;
         this.circle = circle;
@@ -107,11 +107,11 @@ public class InboxCallDetailsRequest {
         this.callDisconnectReason = callDisconnectReason;
     }
 
-    public List<InboxCallDetailsRequestCallData> getContent() {
+    public Set<InboxCallDetailsRequestCallData> getContent() {
         return content;
     }
 
-    public void setContent(List<InboxCallDetailsRequestCallData> content) {
+    public void setContent(Set<InboxCallDetailsRequestCallData> content) {
         this.content = content;
     }
 }

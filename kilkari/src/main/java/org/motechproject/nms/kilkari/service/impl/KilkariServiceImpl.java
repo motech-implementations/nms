@@ -1,9 +1,11 @@
 package org.motechproject.nms.kilkari.service.impl;
 
+import org.motechproject.nms.kilkari.domain.InboxCallDetails;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
+import org.motechproject.nms.kilkari.repository.InboxCallDetailsDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
@@ -19,17 +21,24 @@ import org.springframework.stereotype.Service;
 @Service("kilkariService")
 public class KilkariServiceImpl implements KilkariService {
 
-    @Autowired
     private SubscriberDataService subscriberDataService;
-
-    @Autowired
     private SubscriptionPackDataService subscriptionPackDataService;
-
-    @Autowired
     private SubscriptionDataService subscriptionDataService;
+    private LanguageDataService languageDataService;
+    private InboxCallDetailsDataService inboxCallDetailsDataService;
 
     @Autowired
-    private LanguageDataService languageDataService;
+    public KilkariServiceImpl(SubscriberDataService subscriberDataService,
+                              SubscriptionPackDataService subscriptionPackDataService,
+                              SubscriptionDataService subscriptionDataService,
+                              LanguageDataService languageDataService,
+                              InboxCallDetailsDataService inboxCallDetailsDataService) {
+        this.subscriberDataService = subscriberDataService;
+        this.subscriptionPackDataService = subscriptionPackDataService;
+        this.subscriptionDataService = subscriptionDataService;
+        this.languageDataService = languageDataService;
+        this.inboxCallDetailsDataService = inboxCallDetailsDataService;
+    }
 
     @Override
     public Subscriber getSubscriber(long callingNumber) {
@@ -77,4 +86,9 @@ public class KilkariServiceImpl implements KilkariService {
         return subscriptionPackDataService.countByName(name);
     }
 
+    @Override
+    public long addInboxCallDetails(InboxCallDetails inboxCallDetails) {
+        InboxCallDetails newRecord = inboxCallDetailsDataService.create(inboxCallDetails);
+        return (long) inboxCallDetailsDataService.getDetachedField(newRecord, "id");
+    }
 }
