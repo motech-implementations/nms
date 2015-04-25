@@ -11,7 +11,7 @@ public interface FrontLineWorkerService {
 
     void add(FrontLineWorker frontLineWorker);
 
-    FrontLineWorker getByContactNumber(String contactNumber);
+    FrontLineWorker getByContactNumber(Long contactNumber);
 
     List<FrontLineWorker> getRecords();
 

@@ -1,18 +1,18 @@
 package org.motechproject.nms.location.domain;
 
-import org.motechproject.mds.annotations.Cascade;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.annotations.UIDisplayable;
 
 import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.Unique;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
  * This class Models data for State location records
  */
-@Entity(recordHistory = true)
+@Entity(tableName = "states")
 public class State {
 
     @Field
@@ -25,16 +25,17 @@ public class State {
     private Long stateCode;
 
     @Field
-    @Cascade(delete = true)
     @Persistent(mappedBy = "state", defaultFetchGroup = "true")
     private Set<District> districts;
 
     public State() {
+        this.districts = new HashSet<>();
     }
 
     public State(String name, Long stateCode) {
         this.name = name;
         this.stateCode = stateCode;
+        this.districts = new HashSet<>();
     }
 
     public String getName() {

@@ -2,24 +2,24 @@ package org.motechproject.nms.flw.domain;
 
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
-
 import org.motechproject.nms.language.domain.Language;
 import org.motechproject.nms.location.domain.District;
 
 import javax.jdo.annotations.Column;
+import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.Unique;
 
 @Entity
 public class FrontLineWorker {
-
     public static final int FIELD_SIZE_10 = 10;
+
     @Field
     private Long id;
 
     @Field(required = true)
     @Unique
     @Column(length = FIELD_SIZE_10)
-    private String contactNumber; //todo: so which is it: String or Long for phone numbers, eh?
+    private Long contactNumber;
 
     @Field
     private String name;
@@ -28,9 +28,14 @@ public class FrontLineWorker {
     private Language language;
 
     @Field
+    @Persistent(defaultFetchGroup = "true")
     private District district;
 
-    public FrontLineWorker(String name, String contactNumber) {
+    public FrontLineWorker(Long contactNumber) {
+        this.contactNumber = contactNumber;
+    }
+
+    public FrontLineWorker(String name, Long contactNumber) {
         this.name = name;
         this.contactNumber = contactNumber;
     }
@@ -43,11 +48,11 @@ public class FrontLineWorker {
         this.id = id;
     }
 
-    public String getContactNumber() {
+    public Long getContactNumber() {
         return contactNumber;
     }
 
-    public void setContactNumber(String contactNumber) {
+    public void setContactNumber(Long contactNumber) {
         this.contactNumber = contactNumber;
     }
 

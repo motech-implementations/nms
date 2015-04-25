@@ -83,6 +83,10 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     @Inject
     private CircleLanguageDataService circleLanguageDataService;
 
+    public KilkariControllerBundleIT() {
+        System.setProperty("org.motechproject.testing.osgi.http.numTries", "1");
+    }
+
     private void cleanAllData() {
         subscriptionDataService.deleteAll();
         subscriptionPackDataService.deleteAll();
@@ -97,15 +101,15 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     private void setupData() {
         cleanAllData();
 
-        Language ta = languageDataService.create(new Language("tamil", 10));
+        Language ta = languageDataService.create(new Language("tamil", "10"));
 
         SubscriptionPack pack1 = subscriptionPackDataService.create(new SubscriptionPack("pack1"));
         SubscriptionPack pack2 = subscriptionPackDataService.create(new SubscriptionPack("pack2"));
         List<SubscriptionPack> onePack = Arrays.asList(pack1);
         List<SubscriptionPack> twoPacks = Arrays.asList(pack1, pack2);
 
-        Subscriber subscriber1 = subscriberDataService.create(new Subscriber("1000000000"));
-        Subscriber subscriber2 = subscriberDataService.create(new Subscriber("2000000000"));
+        Subscriber subscriber1 = subscriberDataService.create(new Subscriber(1000000000L));
+        Subscriber subscriber2 = subscriberDataService.create(new Subscriber(2000000000L));
 
         Subscription subscription1 = subscriptionDataService.create(new Subscription(subscriber1, pack1, ta));
         Subscription subscription2 = subscriptionDataService.create(new Subscription(subscriber2, pack1, ta));
@@ -119,7 +123,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
             "http://localhost:%d/api/kilkari/inbox?callingNumber=1000000000&callId=123456789012345",
             TestContext.getJettyPort()));
 
-        Subscriber subscriber = subscriberDataService.findByCallingNumber("1000000000");
+        Subscriber subscriber = subscriberDataService.findByCallingNumber(1000000000L);
         Subscription subscription = subscriber.getSubscriptions().iterator().next();
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
@@ -152,8 +156,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     public void testCreateSubscriptionRequest() throws IOException, InterruptedException {
         setupData();
 
-        SubscriptionRequest subscriptionRequest = new SubscriptionRequest("9999911122", "A", "AP",
-                "123456789012545", 10, "pack1");
+        SubscriptionRequest subscriptionRequest = new SubscriptionRequest(9999911122L, "A", "AP",
+                123456789012545L, "10", "pack1");
         ObjectMapper mapper = new ObjectMapper();
         String subscriptionRequestJson = mapper.writeValueAsString(subscriptionRequest);
 
@@ -169,8 +173,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     public void testCreateSubscriptionRequestInvalidPack() throws IOException, InterruptedException {
         setupData();
 
-        SubscriptionRequest subscriptionRequest = new SubscriptionRequest("9999911122", "A", "AP",
-                "123456789012545", 10, "pack99999");
+        SubscriptionRequest subscriptionRequest = new SubscriptionRequest(9999911122L, "A", "AP",
+                123456789012545L, "10", "pack99999");
         ObjectMapper mapper = new ObjectMapper();
         String subscriptionRequestJson = mapper.writeValueAsString(subscriptionRequest);
 
@@ -187,12 +191,12 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     public void testDeactivateSubscriptionRequest() throws IOException, InterruptedException {
         setupData();
 
-        Subscriber subscriber = kilkariService.getSubscriber("1000000000");
+        Subscriber subscriber = kilkariService.getSubscriber(1000000000L);
         Subscription subscription = subscriber.getSubscriptions().iterator().next();
         String subscriptionId = subscription.getSubscriptionId();
 
-        SubscriptionRequest subscriptionRequest = new SubscriptionRequest("1000000000", "A", "AP",
-                "123456789012545", subscriptionId);
+        SubscriptionRequest subscriptionRequest = new SubscriptionRequest(1000000000L, "A", "AP",
+                123456789012545L, subscriptionId);
         ObjectMapper mapper = new ObjectMapper();
         String subscriptionRequestJson = mapper.writeValueAsString(subscriptionRequest);
 
@@ -212,13 +216,13 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     public void testDeactivateSubscriptionRequestAlreadyInactive() throws IOException, InterruptedException {
         setupData();
 
-        Subscriber subscriber = kilkariService.getSubscriber("1000000000");
+        Subscriber subscriber = kilkariService.getSubscriber(1000000000L);
         Subscription subscription = subscriber.getSubscriptions().iterator().next();
         String subscriptionId = subscription.getSubscriptionId();
         kilkariService.deactivateSubscription(subscription);
 
-        SubscriptionRequest subscriptionRequest = new SubscriptionRequest("1000000000", "A", "AP",
-                "123456789012545", subscriptionId);
+        SubscriptionRequest subscriptionRequest = new SubscriptionRequest(1000000000L, "A", "AP",
+                123456789012545L, subscriptionId);
         ObjectMapper mapper = new ObjectMapper();
         String subscriptionRequestJson = mapper.writeValueAsString(subscriptionRequest);
 
@@ -239,8 +243,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     public void testDeactivateSubscriptionRequestInvalidSubscription() throws IOException, InterruptedException {
         setupData();
 
-        SubscriptionRequest subscriptionRequest = new SubscriptionRequest("1000000000", "A", "AP",
-                "123456789012545", "77f13128-037e-4f98-8651-285fa618d94a");
+        SubscriptionRequest subscriptionRequest = new SubscriptionRequest(1000000000L, "A", "AP",
+                123456789012545L, "77f13128-037e-4f98-8651-285fa618d94a");
         ObjectMapper mapper = new ObjectMapper();
         String subscriptionRequestJson = mapper.writeValueAsString(subscriptionRequest);
 
@@ -259,32 +263,32 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/kilkari/inboxCallDetails",
                 TestContext.getJettyPort()));
         InboxCallDetailsRequest request = new InboxCallDetailsRequest(
-                "1234567890", //callingNumber
+                1234567890L, //callingNumber
                 "A", //operator
                 "AP", //circle
-                "123456789012345", //callId
-                "123", //callStartTime
-                "456", //callEndTime
-                "123", //callDurationInPulses
-                "1", //callStatus
-                "1", //callDisconnectReason
+                123456789012345L, //callId
+                123L, //callStartTime
+                456L, //callEndTime
+                123, //callDurationInPulses
+                1, //callStatus
+                1, //callDisconnectReason
                 Arrays.asList(
                     new InboxCallDetailsRequestCallData(
                         "123", //subscriptionId
                         "123", //subscriptionPack
                         "123", //inboxWeekId
                         "foo", //contentFileName
-                        "123", //startTime
-                        "456"), //endTime
+                        123L, //startTime
+                        456L), //endTime
                     new InboxCallDetailsRequestCallData(
                         "123", //subscriptionId
                         "123", //subscriptionPack
                         "123", //inboxWeekId
                         "foo", //contentFileName
-                        "123", //startTime
-                        "456") //endTime
-                ), //content
-                null); //failureReason
+                        123L, //startTime
+                        456L) //endTime
+                )); //content
+
         String json = new ObjectMapper().writeValueAsString(request);
         StringEntity params = new StringEntity(json);
         httpPost.setEntity(params);
@@ -299,17 +303,16 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/kilkari/inboxCallDetails",
                 TestContext.getJettyPort()));
         InboxCallDetailsRequest request = new InboxCallDetailsRequest(
-                "1234567890", //callingNumber
+                1234567890L, //callingNumber
                 "A", //operator
                 "AP", //circle
-                "123456789012345", //callId
-                "123", //callStartTime
-                "456", //callEndTime
-                "123", //callDurationInPulses
-                "X", //callStatus
-                "Y", //callDisconnectReason
-                null, //content
-                null); //failureReason
+                123456789012345L, //callId
+                123L, //callStartTime
+                456L, //callEndTime
+                123, //callDurationInPulses
+                9, //callStatus
+                9, //callDisconnectReason
+                null); //content
         String json = new ObjectMapper().writeValueAsString(request);
         StringEntity params = new StringEntity(json);
         httpPost.setEntity(params);

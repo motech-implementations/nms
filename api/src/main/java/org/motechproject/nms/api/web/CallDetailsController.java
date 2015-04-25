@@ -1,8 +1,8 @@
 package org.motechproject.nms.api.web;
 
 import org.joda.time.DateTime;
-import org.motechproject.nms.api.web.contract.CallContentRequest;
 import org.motechproject.nms.api.web.contract.CallDetailRecordRequest;
+import org.motechproject.nms.api.web.contract.CallContentRequest;
 import org.motechproject.nms.api.web.exception.NotFoundException;
 import org.motechproject.nms.flw.domain.CallContent;
 import org.motechproject.nms.flw.domain.CallDetailRecord;
@@ -49,11 +49,13 @@ public class CallDetailsController extends BaseController {
             throw new IllegalArgumentException(String.format(INVALID, "serviceName"));
         }
 
-        failureReasons = validate(callDetailRecordRequest.getCallingNumber(), callDetailRecordRequest.getOperator(),
-                                  callDetailRecordRequest.getCircle(), callDetailRecordRequest.getCallId());
+        failureReasons = validate(callDetailRecordRequest.getCallingNumber(),
+                callDetailRecordRequest.getCallId(), callDetailRecordRequest.getOperator(),
+                callDetailRecordRequest.getCircle());
 
         // Verify common elements
-        // (callStartTime, callEndTime, callDurationInPulses, endOfUsagePromptCount, callStatus, callDisconnectReason)
+        // (callStartTime, callEndTime, callDurationInPulses, endOfUsagePromptCount, callStatus,
+        // callDisconnectReason)
         failureReasons.append(validateCallDetailsCommonElements(callDetailRecordRequest));
 
         if (MOBILE_ACADEMY.equals(serviceName)) {
@@ -75,7 +77,7 @@ public class CallDetailsController extends BaseController {
             throw new IllegalArgumentException(failureReasons.toString());
         }
 
-        FrontLineWorker flw = frontLineWorkerService.getByContactNumber(String.valueOf(callDetailRecordRequest.getCallingNumber()));
+        FrontLineWorker flw = frontLineWorkerService.getByContactNumber(callDetailRecordRequest.getCallingNumber());
         if (null == flw) {
             throw new NotFoundException(String.format(NOT_FOUND, "callingNumber"));
         }
@@ -83,11 +85,12 @@ public class CallDetailsController extends BaseController {
         createCallDetailRecord(flw, callDetailRecordRequest, service);
     }
 
-    private void createCallDetailRecord(FrontLineWorker flw, CallDetailRecordRequest callDetailRecordRequest, Service service) {
+    private void createCallDetailRecord(FrontLineWorker flw, CallDetailRecordRequest callDetailRecordRequest,
+                                        Service service) {
         CallDetailRecord cdr = new CallDetailRecord();
         cdr.setFrontLineWorker(flw);
-        cdr.setCallingNumber(Long.parseLong(callDetailRecordRequest.getCallingNumber()));
-        cdr.setCallId(Long.parseLong(callDetailRecordRequest.getCallId()));
+        cdr.setCallingNumber(callDetailRecordRequest.getCallingNumber());
+        cdr.setCallId(callDetailRecordRequest.getCallId());
         cdr.setOperator(callDetailRecordRequest.getOperator());
         cdr.setCircle(callDetailRecordRequest.getCircle());
         cdr.setCallStartTime(new DateTime(callDetailRecordRequest.getCallStartTime() * MILLISECONDS_PER_SECOND));
@@ -112,7 +115,7 @@ public class CallDetailsController extends BaseController {
             content.setEndTime(new DateTime(callContentRequest.getEndTime() * MILLISECONDS_PER_SECOND));
 
             if (service == Service.MOBILE_KUNJI) {
-                content.setMobileKunjiCardNumber(callContentRequest.getMkcardNumber());
+                content.setMobileKunjiCardNumber(callContentRequest.getMkCardNumber());
             }
 
             if (service == Service.MOBILE_ACADEMY) {
@@ -188,10 +191,10 @@ public class CallDetailsController extends BaseController {
             failureReasons.append(String.format(NOT_PRESENT, "endTime"));
         }
 
-        // MK elements (mkcardNumber)
+        // MK elements (mkCardNumber)
         if (service == Service.MOBILE_KUNJI) {
-            if (null == callContentRequest.getMkcardNumber()) {
-                failureReasons.append(String.format(NOT_PRESENT, "mkcardNumber"));
+            if (null == callContentRequest.getMkCardNumber()) {
+                failureReasons.append(String.format(NOT_PRESENT, "mkCardNumber"));
             }
         }
 

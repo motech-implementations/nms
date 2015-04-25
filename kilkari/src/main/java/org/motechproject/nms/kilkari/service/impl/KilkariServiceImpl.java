@@ -32,12 +32,12 @@ public class KilkariServiceImpl implements KilkariService {
     private LanguageDataService languageDataService;
 
     @Override
-    public Subscriber getSubscriber(String callingNumber) {
+    public Subscriber getSubscriber(long callingNumber) {
         return subscriberDataService.findByCallingNumber(callingNumber);
     }
 
     @Override
-    public void createSubscription(String callingNumber, int languageLocationCode, String subscriptionPack) {
+    public void createSubscription(long callingNumber, String languageLocationCode, String subscriptionPack) {
         Subscriber subscriber = subscriberDataService.findByCallingNumber(callingNumber);
         if (subscriber == null) {
             subscriberDataService.create(new Subscriber(callingNumber));
@@ -57,7 +57,7 @@ public class KilkariServiceImpl implements KilkariService {
 
     @Override
     public void deactivateSubscription(Subscription subscription) {
-        if(subscription.getStatus() == SubscriptionStatus.ACTIVE ||
+        if (subscription.getStatus() == SubscriptionStatus.ACTIVE ||
                 subscription.getStatus() == SubscriptionStatus.PENDING_ACTIVATION) {
             subscription.setStatus(SubscriptionStatus.DEACTIVATED);
             subscriptionDataService.update(subscription);

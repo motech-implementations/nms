@@ -7,8 +7,8 @@ public class FrontLineWorkerUser extends ResponseUser {
     private long currentUsageInPulses;
     private long endOfUsagePromptCounter;
     private boolean welcomePromptFlag;
-    private long maxAllowedUsageInPulses;
-    private long maxAllowedEndOfUsagePrompt;
+    private int maxAllowedUsageInPulses;
+    private int maxAllowedEndOfUsagePrompt;
 
     public FrontLineWorkerUser() {
         super();
@@ -38,19 +38,19 @@ public class FrontLineWorkerUser extends ResponseUser {
         this.welcomePromptFlag = welcomePromptFlag;
     }
 
-    public long getMaxAllowedUsageInPulses() {
+    public int getMaxAllowedUsageInPulses() {
         return maxAllowedUsageInPulses;
     }
 
-    public void setMaxAllowedUsageInPulses(long maxAllowedUsageInPulses) {
+    public void setMaxAllowedUsageInPulses(int maxAllowedUsageInPulses) {
         this.maxAllowedUsageInPulses = maxAllowedUsageInPulses;
     }
 
-    public long getMaxAllowedEndOfUsagePrompt() {
+    public int getMaxAllowedEndOfUsagePrompt() {
         return maxAllowedEndOfUsagePrompt;
     }
 
-    public void setMaxAllowedEndOfUsagePrompt(long maxAllowedEndOfUsagePrompt) {
+    public void setMaxAllowedEndOfUsagePrompt(int maxAllowedEndOfUsagePrompt) {
         this.maxAllowedEndOfUsagePrompt = maxAllowedEndOfUsagePrompt;
     }
 }

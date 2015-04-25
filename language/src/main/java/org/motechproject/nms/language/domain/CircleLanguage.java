@@ -3,6 +3,7 @@ package org.motechproject.nms.language.domain;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 
+import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Unique;
 import java.util.Objects;
 
@@ -12,8 +13,10 @@ import java.util.Objects;
 @Entity
 @Unique(name = "uniqueCircleLanguage", members = {"circle", "language" })
 public class CircleLanguage {
+    public static final int FIELD_LENGTH_255 = 255;
 
     @Field
+    @Column(length = FIELD_LENGTH_255)
     private String circle;
 
     @Field

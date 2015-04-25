@@ -6,26 +6,23 @@ import java.util.List;
  * POST request data for 4.2.5 : http://<motech:port>/motech­platform­server/module/kilkari/inboxCallDetails
  */
 public class InboxCallDetailsRequest {
-    private String callingNumber;
+    private Long callingNumber;
     private String operator;
     private String circle;
-    private String callId;
-    private String callStartTime;
-    private String callEndTime;
-    private String callDurationInPulses;
-    private String callStatus;
-    private String callDisconnectReason;
+    private Long callId;
+    private Long callStartTime;
+    private Long callEndTime;
+    private Integer callDurationInPulses;
+    private Integer callStatus;
+    private Integer callDisconnectReason;
     private List<InboxCallDetailsRequestCallData> content;
-    private String failureReason;
 
-    public InboxCallDetailsRequest() {
-    }
+    public InboxCallDetailsRequest() { }
 
-    public InboxCallDetailsRequest(String callingNumber, // NO CHECKSTYLE More than 7 parameters
-                                   String operator, String circle, String callId, String callStartTime,
-                                   String callEndTime, String callDurationInPulses, String callStatus,
-                                   String callDisconnectReason, List<InboxCallDetailsRequestCallData> content,
-                                   String failureReason) {
+    public InboxCallDetailsRequest(Long callingNumber, // NO CHECKSTYLE More than 7 parameters
+                                   String operator, String circle, Long callId, Long callStartTime,
+                                   Long callEndTime, Integer callDurationInPulses, Integer callStatus,
+                                   Integer callDisconnectReason, List<InboxCallDetailsRequestCallData> content) {
         this.callingNumber = callingNumber;
         this.operator = operator;
         this.circle = circle;
@@ -36,14 +33,13 @@ public class InboxCallDetailsRequest {
         this.callStatus = callStatus;
         this.callDisconnectReason = callDisconnectReason;
         this.content = content;
-        this.failureReason = failureReason;
     }
 
-    public String getCallingNumber() {
+    public Long getCallingNumber() {
         return callingNumber;
     }
 
-    public void setCallingNumber(String callingNumber) {
+    public void setCallingNumber(Long callingNumber) {
         this.callingNumber = callingNumber;
     }
 
@@ -63,51 +59,51 @@ public class InboxCallDetailsRequest {
         this.circle = circle;
     }
 
-    public String getCallId() {
+    public Long getCallId() {
         return callId;
     }
 
-    public void setCallId(String callId) {
+    public void setCallId(Long callId) {
         this.callId = callId;
     }
 
-    public String getCallStartTime() {
+    public Long getCallStartTime() {
         return callStartTime;
     }
 
-    public void setCallStartTime(String callStartTime) {
+    public void setCallStartTime(Long callStartTime) {
         this.callStartTime = callStartTime;
     }
 
-    public String getCallEndTime() {
+    public Long getCallEndTime() {
         return callEndTime;
     }
 
-    public void setCallEndTime(String callEndTime) {
+    public void setCallEndTime(Long callEndTime) {
         this.callEndTime = callEndTime;
     }
 
-    public String getCallDurationInPulses() {
+    public Integer getCallDurationInPulses() {
         return callDurationInPulses;
     }
 
-    public void setCallDurationInPulses(String callDurationInPulses) {
+    public void setCallDurationInPulses(Integer callDurationInPulses) {
         this.callDurationInPulses = callDurationInPulses;
     }
 
-    public String getCallStatus() {
+    public Integer getCallStatus() {
         return callStatus;
     }
 
-    public void setCallStatus(String callStatus) {
+    public void setCallStatus(Integer callStatus) {
         this.callStatus = callStatus;
     }
 
-    public String getCallDisconnectReason() {
+    public Integer getCallDisconnectReason() {
         return callDisconnectReason;
     }
 
-    public void setCallDisconnectReason(String callDisconnectReason) {
+    public void setCallDisconnectReason(Integer callDisconnectReason) {
         this.callDisconnectReason = callDisconnectReason;
     }
 
@@ -117,13 +113,5 @@ public class InboxCallDetailsRequest {
 
     public void setContent(List<InboxCallDetailsRequestCallData> content) {
         this.content = content;
-    }
-
-    public String getFailureReason() {
-        return failureReason;
-    }
-
-    public void setFailureReason(String failureReason) {
-        this.failureReason = failureReason;
     }
 }
