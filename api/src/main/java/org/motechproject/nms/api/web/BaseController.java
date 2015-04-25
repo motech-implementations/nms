@@ -10,6 +10,8 @@ import org.motechproject.nms.location.domain.State;
 import org.motechproject.nms.location.service.LocationService;
 import org.motechproject.nms.props.domain.CallDisconnectReason;
 import org.motechproject.nms.props.domain.CallStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -37,6 +39,8 @@ public class BaseController {
     public static final int MAX_LENGTH_255 = 255;
 
     public static final String CALLING_NUMBER = "callingNumber";
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(BaseController.class);
 
     @Autowired
     private LocationService locationService;
@@ -140,11 +144,18 @@ public class BaseController {
         return new BadRequest(e.getMessage());
     }
 
-
     @ExceptionHandler(NotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ResponseBody
     public BadRequest handleException(NotFoundException e) {
+        return new BadRequest(e.getMessage());
+    }
+
+    @ExceptionHandler(NullPointerException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    @ResponseBody
+    public BadRequest handleException(NullPointerException e) {
+        LOGGER.error("Internal Server Error", e);
         return new BadRequest(e.getMessage());
     }
 
