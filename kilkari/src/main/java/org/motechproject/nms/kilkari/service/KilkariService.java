@@ -1,5 +1,6 @@
 package org.motechproject.nms.kilkari.service;
 
+import org.motechproject.nms.kilkari.domain.InboxCallDetails;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
@@ -20,4 +21,6 @@ public interface KilkariService {
     SubscriptionPack getSubscriptionPack(String name);
 
     long getCountSubscriptionPack(String name);
+
+    long addInboxCallDetails(InboxCallDetails inboxCallDetails);
 }

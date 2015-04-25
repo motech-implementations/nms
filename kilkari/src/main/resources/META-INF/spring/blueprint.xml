@@ -18,6 +18,12 @@
     <osgi:reference id="subscriptionPackDataService"
                     interface="org.motechproject.nms.kilkari.repository.SubscriptionPackDataService" />
 
+    <osgi:reference id="inboxCallDetailsDataService"
+                    interface="org.motechproject.nms.kilkari.repository.InboxCallDetailsDataService" />
+
+    <osgi:reference id="inboxCallDataDataService"
+                    interface="org.motechproject.nms.kilkari.repository.InboxCallDataDataService" />
+
     <osgi:reference id="subscriptionDataService"
                     interface="org.motechproject.nms.kilkari.repository.SubscriptionDataService" />
 

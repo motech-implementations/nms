@@ -8,8 +8,11 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.api.utils.HttpDeleteWithBody;
+import org.motechproject.nms.api.web.contract.BadRequest;
 import org.motechproject.nms.api.web.contract.kilkari.InboxCallDetailsRequest;
 import org.motechproject.nms.api.web.contract.kilkari.InboxCallDetailsRequestCallData;
+import org.motechproject.nms.api.web.contract.kilkari.InboxResponse;
+import org.motechproject.nms.api.web.contract.kilkari.InboxSubscriptionDetailResponse;
 import org.motechproject.nms.api.web.contract.kilkari.SubscriptionRequest;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.flw.repository.ServiceUsageCapDataService;
@@ -38,7 +41,9 @@ import org.ops4j.pax.exam.spi.reactors.PerSuite;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.Assert.assertTrue;
 
@@ -116,40 +121,75 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         Subscription subscription3 = subscriptionDataService.create(new Subscription(subscriber2, pack2, ta));
     }
 
+    private HttpGet createHttpGet(boolean includeCallingNumber, String callingNumber,
+                                  boolean includeCallId, String callId) {
+
+        StringBuilder sb = new StringBuilder(String.format("http://localhost:%d/api/kilkari/inbox?",
+                TestContext.getJettyPort()));
+        String sep = "";
+        if (includeCallingNumber) {
+            sb.append(String.format("callingNumber=%s", callingNumber));
+            sep = "&";
+        }
+        if (includeCallId) {
+            sb.append(String.format("%scallId=%s", sep, callId));
+        }
+
+        return new HttpGet(sb.toString());
+    }
+
+    private String createInboxResponseJson(Set<InboxSubscriptionDetailResponse> inboxSubscriptionDetailList)
+            throws IOException {
+        InboxResponse response = new InboxResponse(inboxSubscriptionDetailList);
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.writeValueAsString(response);
+    }
+
+    private String createFailureResponseJson(String failureReason)throws IOException {
+        BadRequest badRequest = new BadRequest(failureReason);
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.writeValueAsString(badRequest);
+    }
+
     @Test
     public void testInboxRequest() throws IOException, InterruptedException {
         setupData();
-        HttpGet httpGet = new HttpGet(String.format(
-            "http://localhost:%d/api/kilkari/inbox?callingNumber=1000000000&callId=123456789012345",
-            TestContext.getJettyPort()));
 
         Subscriber subscriber = subscriberDataService.findByCallingNumber(1000000000L);
         Subscription subscription = subscriber.getSubscriptions().iterator().next();
+        HttpGet httpGet = createHttpGet(true, "1000000000", true, "123456789012345");
+        String expectedJson = createInboxResponseJson(new HashSet<InboxSubscriptionDetailResponse>(Arrays.asList(
+                new InboxSubscriptionDetailResponse(
+                        subscription.getSubscriptionId().toString(),
+                        "pack1",
+                        "10_1",
+                        "xyz.wav"
+                )
+        )));
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
-            "{\"inboxSubscriptionDetailList\":[{\"subscriptionId\":\"" + subscription.getSubscriptionId().toString() +
-            "\",\"subscriptionPack\":\"pack1\",\"inboxWeekId\":\"10_1\",\"contentFileName\":\"xyz.wav\"}]}",
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, expectedJson, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     @Test
     public void testInboxRequestBadSubscriber() throws IOException, InterruptedException {
         setupData();
-        HttpGet httpGet = new HttpGet(String.format(
-                "http://localhost:%d/api/kilkari/inbox?callingNumber=3000000009&callId=123456789012345",
-                TestContext.getJettyPort()));
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_NOT_FOUND, ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpGet httpGet = createHttpGet(true, "3000000000", true, "123456789012345");
+        String expectedJsonResponse = createFailureResponseJson("<callingNumber: Not Found>");
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_NOT_FOUND, expectedJsonResponse,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     @Test
     public void testInboxRequestNoSubscriber() throws IOException, InterruptedException {
         setupData();
-        HttpGet httpGet = new HttpGet(String.format(
-                "http://localhost:%d/api/kilkari/inbox?callId=123456789012345",
-                TestContext.getJettyPort()));
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_BAD_REQUEST, ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpGet httpGet = createHttpGet(false, null, true, "123456789012345");
+        String expectedJsonResponse = createFailureResponseJson("<callingNumber: Not Present>");
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     @Test
@@ -258,11 +298,19 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 ADMIN_PASSWORD));
     }
 
-    @Test
-    public void testSaveInboxCallDetails() throws IOException, InterruptedException {
+    private HttpPost createInboxCallDetailsRequestHttpPost(InboxCallDetailsRequest request) throws IOException {
         HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/kilkari/inboxCallDetails",
                 TestContext.getJettyPort()));
-        InboxCallDetailsRequest request = new InboxCallDetailsRequest(
+        ObjectMapper mapper = new ObjectMapper();
+        StringEntity params = new StringEntity(mapper.writeValueAsString(request));
+        httpPost.setEntity(params);
+        httpPost.addHeader("content-type", "application/json");
+        return httpPost;
+    }
+
+    @Test
+    public void testSaveInboxCallDetails() throws IOException, InterruptedException {
+        HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
                 1234567890L, //callingNumber
                 "A", //operator
                 "AP", //circle
@@ -272,37 +320,29 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 123, //callDurationInPulses
                 1, //callStatus
                 1, //callDisconnectReason
-                Arrays.asList(
+                new HashSet<>(Arrays.asList(
                     new InboxCallDetailsRequestCallData(
-                        "123", //subscriptionId
-                        "123", //subscriptionPack
+                        "00000000-0000-0000-0000-000000000000", //subscriptionId
+                        "48WeeksPack", //subscriptionPack
                         "123", //inboxWeekId
                         "foo", //contentFileName
                         123L, //startTime
                         456L), //endTime
                     new InboxCallDetailsRequestCallData(
-                        "123", //subscriptionId
-                        "123", //subscriptionPack
+                        "00000000-0000-0000-0000-000000000001", //subscriptionId
+                        "76WeeksPack", //subscriptionPack
                         "123", //inboxWeekId
                         "foo", //contentFileName
                         123L, //startTime
                         456L) //endTime
-                )); //content
-
-        String json = new ObjectMapper().writeValueAsString(request);
-        StringEntity params = new StringEntity(json);
-        httpPost.setEntity(params);
-
-        httpPost.addHeader("content-type", "application/json");
+                )))); //content
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     @Test
     public void testSaveInboxCallDetailsInvalidParams() throws IOException, InterruptedException {
-        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/kilkari/inboxCallDetails",
-                TestContext.getJettyPort()));
-        InboxCallDetailsRequest request = new InboxCallDetailsRequest(
+        HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
                 1234567890L, //callingNumber
                 "A", //operator
                 "AP", //circle
@@ -312,15 +352,45 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 123, //callDurationInPulses
                 9, //callStatus
                 9, //callDisconnectReason
-                null); //content
-        String json = new ObjectMapper().writeValueAsString(request);
-        StringEntity params = new StringEntity(json);
-        httpPost.setEntity(params);
+                null)); //content
+        String expectedJsonResponse = createFailureResponseJson("<callStatus: Invalid><callDisconnectReason: Invalid>");
 
-        httpPost.addHeader("content-type", "application/json");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
-                "{\"failureReason\":\"<callStatus: Invalid><callDisconnectReason: Invalid>\"}",
+    @Test
+    public void testSaveInboxCallDetailsInvalidContent() throws IOException, InterruptedException {
+        HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
+                1234567890L, //callingNumber
+                "A", //operator
+                "AP", //circle
+                123456789012345L, //callId
+                123L, //callStartTime
+                456L, //callEndTime
+                123, //callDurationInPulses
+                1, //callStatus
+                1, //callDisconnectReason
+                new HashSet<>(Arrays.asList(
+                        new InboxCallDetailsRequestCallData(
+                                "00000000-0000-0000-0000-000000000000", //subscriptionId
+                                "48WeeksPack", //subscriptionPack
+                                "123", //inboxWeekId
+                                "foo", //contentFileName
+                                123L, //startTime
+                                456L), //endTime
+                        new InboxCallDetailsRequestCallData(
+                                "00000000-0000-0000-0000", //subscriptionId
+                                "foobar", //subscriptionPack
+                                "123", //inboxWeekId
+                                "foo", //contentFileName
+                                123L, //startTime
+                                456L) //endTime
+                )))); //content
+        String expectedJsonResponse = createFailureResponseJson(
+                "<subscriptionId: Invalid><subscriptionPack: Invalid><content: Invalid>");
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 }
