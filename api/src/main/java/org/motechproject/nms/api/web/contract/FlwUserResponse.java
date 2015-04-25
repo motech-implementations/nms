@@ -1,16 +1,29 @@
 package org.motechproject.nms.api.web.contract;
 
 /**
+ * Response body
+ *
+ * 2.2.1 Get User Details API
+ * IVR shall invoke this API when to retrieve details specific to the user identified by callingNumber.
+ * In case user specific details are not available in the database, the API will attempt to load system
+ * defaults based on the operator and circle provided.
+ * /api/mobileacademy/user?callingNumber=9999999900&operator=A&circle=AP&callId=123456789012345
+ *
+ * 3.2.1 Get User Details API
+ * IVR shall invoke this API when to retrieve details specific to the user identified by callingNumber.
+ * In case user specific details are not available in the database, the API will attempt to load system
+ * defaults based on the operator and circle provided.
+ * /api/mobilekunji/user?callingNumber=9999999900&operator=A&circle=AP&callId=234000011111111
  *
  */
-public class FrontLineWorkerUser extends ResponseUser {
+public class FlwUserResponse extends UserResponse {
     private long currentUsageInPulses;
     private long endOfUsagePromptCounter;
     private boolean welcomePromptFlag;
     private int maxAllowedUsageInPulses;
     private int maxAllowedEndOfUsagePrompt;
 
-    public FrontLineWorkerUser() {
+    public FlwUserResponse() {
         super();
     }
 

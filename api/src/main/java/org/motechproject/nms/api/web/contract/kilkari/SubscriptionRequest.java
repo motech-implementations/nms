@@ -1,16 +1,28 @@
 package org.motechproject.nms.api.web.contract.kilkari;
 
+/**
+ * Request body
+ *
+ * 4.2.3 Create Subscription Request API
+ * IVR shall invoke this API to request the creation of the subscription of the beneficiary.
+ * /api/kilkari/subscription
+ *
+ * 4.2.4 Deactivate Subscription Request API
+ * IVR shall invoke this API to request the deactivation of subscription of the user (MSISDN) to the specified Kilkari
+ * Subscription Pack.
+ * /api/kilkari/subscription
+ *
+ */
 public class SubscriptionRequest {
     private Long callingNumber;
     private String operator;
     private String circle;
     private Long callId;
-    private String languageLocationCode;
-    private String subscriptionPack;
-    private String subscriptionId;
+    private String languageLocationCode; // 4.2.3 Create Subscription
+    private String subscriptionPack;     // 4.2.3 Create Subscription
+    private String subscriptionId;       // 4.2.4 Deactivate Subscription
 
-    public SubscriptionRequest() {
-    }
+    public SubscriptionRequest() { }
 
     public SubscriptionRequest(Long callingNumber, String operator, String circle, Long callId,
         String languageLocationCode, String subscriptionPack) {
@@ -22,8 +34,7 @@ public class SubscriptionRequest {
         this.subscriptionPack = subscriptionPack;
     }
 
-    public SubscriptionRequest(Long calledNumber, String operator, String circle, Long callId,
-                               String subscriptionId) {
+    public SubscriptionRequest(Long calledNumber, String operator, String circle, Long callId, String subscriptionId) {
         this.callingNumber = calledNumber;
         this.operator = operator;
         this.circle = circle;
