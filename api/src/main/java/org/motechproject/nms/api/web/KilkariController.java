@@ -51,7 +51,8 @@ public class KilkariController extends BaseController {
      */
     @RequestMapping("/inbox")
     @ResponseBody
-    public InboxResponse getInboxDetails(@RequestParam Long callingNumber, @RequestParam Long callId) {
+    public InboxResponse getInboxDetails(@RequestParam(required = false) Long callingNumber,
+                                         @RequestParam(required = false) Long callId) {
 
         StringBuilder failureReasons = validate(callingNumber, callId);
         if (failureReasons.length() > 0) {
