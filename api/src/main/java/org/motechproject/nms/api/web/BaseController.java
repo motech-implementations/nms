@@ -1,5 +1,6 @@
 package org.motechproject.nms.api.web;
 
+import org.joda.time.DateTime;
 import org.motechproject.nms.api.web.contract.BadRequest;
 import org.motechproject.nms.api.web.exception.NotAuthorizedException;
 import org.motechproject.nms.api.web.exception.NotFoundException;
@@ -51,7 +52,29 @@ public class BaseController {
         return false;
     }
 
-    private static boolean validateField10Digits(StringBuilder errors, String fieldName, Long value) {
+    protected static boolean validateFieldString(StringBuilder errors, String fieldName, String value) {
+        if (!validateFieldPresent(errors, fieldName, value)) {
+            return false;
+        }
+        if (value.length() > 0) {
+            return true;
+        }
+        errors.append(String.format(INVALID, fieldName));
+        return false;
+    }
+
+    protected static boolean validateFieldPositiveLong(StringBuilder errors, String fieldName, Long value) {
+        if (!validateFieldPresent(errors, fieldName, value)) {
+            return false;
+        }
+        if (value >= 0) {
+            return true;
+        }
+        errors.append(String.format(INVALID, fieldName));
+        return false;
+    }
+
+    protected static boolean validateField10Digits(StringBuilder errors, String fieldName, Long value) {
         if (!validateFieldPresent(errors, fieldName, value)) {
             return false;
         }
@@ -62,7 +85,7 @@ public class BaseController {
         return false;
     }
 
-    private static boolean validateField15Digits(StringBuilder errors, String fieldName, Long value) {
+    protected static boolean validateField15Digits(StringBuilder errors, String fieldName, Long value) {
         if (!validateFieldPresent(errors, fieldName, value)) {
             return false;
         }
@@ -96,12 +119,25 @@ public class BaseController {
         return false;
     }
 
-    protected boolean validateFieldMaxLength(StringBuilder errors, String fieldName, String value, int length) {
-        if (value != null && value.length() > length) {
+    protected boolean validateFieldExactLength(StringBuilder errors, String fieldName, String value, int length) {
+        if (!validateFieldPresent(errors, fieldName, value)) {
+            return false;
+        }
+        if (value.length() != length) {
             errors.append(String.format(INVALID, fieldName));
             return false;
         }
+        return true;
+    }
 
+    protected boolean validateFieldMaxLength(StringBuilder errors, String fieldName, String value, int length) {
+        if (!validateFieldPresent(errors, fieldName, value)) {
+            return false;
+        }
+        if (value.length() > length) {
+            errors.append(String.format(INVALID, fieldName));
+            return false;
+        }
         return true;
     }
 
@@ -117,13 +153,15 @@ public class BaseController {
     protected StringBuilder validate(Long callingNumber, Long callId, String operator, String circle) {
         StringBuilder failureReasons = validate(callingNumber, callId);
 
-        validateFieldPresent(failureReasons, "operator", operator);
         validateFieldMaxLength(failureReasons, "operator", operator, MAX_LENGTH_255);
 
-        validateFieldPresent(failureReasons, "circle", circle);
         validateFieldMaxLength(failureReasons, "circle", circle, MAX_LENGTH_255);
 
         return failureReasons;
+    }
+
+    protected DateTime epochToDateTime(long epoch) {
+        return new DateTime(epoch);
     }
 
     @ExceptionHandler(NotAuthorizedException.class)

@@ -38,6 +38,7 @@ import org.ops4j.pax.exam.spi.reactors.PerSuite;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 
 import static org.junit.Assert.assertTrue;
@@ -268,22 +269,22 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 123, //callDurationInPulses
                 1, //callStatus
                 1, //callDisconnectReason
-                Arrays.asList(
+                new HashSet<>(Arrays.asList(
                     new InboxCallDetailsRequestCallData(
-                        "123", //subscriptionId
-                        "123", //subscriptionPack
+                        "00000000-0000-0000-0000-000000000000", //subscriptionId
+                        "48WeeksPack", //subscriptionPack
                         "123", //inboxWeekId
                         "foo", //contentFileName
                         123L, //startTime
                         456L), //endTime
                     new InboxCallDetailsRequestCallData(
-                        "123", //subscriptionId
-                        "123", //subscriptionPack
+                        "00000000-0000-0000-0000-000000000001", //subscriptionId
+                        "76WeeksPack", //subscriptionPack
                         "123", //inboxWeekId
                         "foo", //contentFileName
                         123L, //startTime
                         456L) //endTime
-                )); //content
+                ))); //content
 
         String json = new ObjectMapper().writeValueAsString(request);
         StringEntity params = new StringEntity(json);
@@ -318,5 +319,47 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
                 "{\"failureReason\":\"<callStatus: Invalid><callDisconnectReason: Invalid>\"}",
                 ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    @Test
+    public void testSaveInboxCallDetailsInvalidContent() throws IOException, InterruptedException {
+        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/kilkari/inboxCallDetails",
+                TestContext.getJettyPort()));
+        InboxCallDetailsRequest request = new InboxCallDetailsRequest(
+                1234567890L, //callingNumber
+                "A", //operator
+                "AP", //circle
+                123456789012345L, //callId
+                123L, //callStartTime
+                456L, //callEndTime
+                123, //callDurationInPulses
+                1, //callStatus
+                1, //callDisconnectReason
+                new HashSet<>(Arrays.asList(
+                        new InboxCallDetailsRequestCallData(
+                                "00000000-0000-0000-0000-000000000000", //subscriptionId
+                                "48WeeksPack", //subscriptionPack
+                                "123", //inboxWeekId
+                                "foo", //contentFileName
+                                123L, //startTime
+                                456L), //endTime
+                        new InboxCallDetailsRequestCallData(
+                                "00000000-0000-0000-0000", //subscriptionId
+                                "foobar", //subscriptionPack
+                                "123", //inboxWeekId
+                                "foo", //contentFileName
+                                123L, //startTime
+                                456L) //endTime
+                ))); //content
+
+        String json = new ObjectMapper().writeValueAsString(request);
+        StringEntity params = new StringEntity(json);
+        httpPost.setEntity(params);
+
+        httpPost.addHeader("content-type", "application/json");
+
+        //"<subscriptionId: Invalid><subscriptionPack: Invalid><content: Invalid>"
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 }
