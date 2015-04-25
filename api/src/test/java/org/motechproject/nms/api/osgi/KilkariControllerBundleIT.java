@@ -84,6 +84,10 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     @Inject
     private CircleLanguageDataService circleLanguageDataService;
 
+    public KilkariControllerBundleIT() {
+        System.setProperty("org.motechproject.testing.osgi.http.numTries", "1");
+    }
+
     private void cleanAllData() {
         subscriptionDataService.deleteAll();
         subscriptionPackDataService.deleteAll();
