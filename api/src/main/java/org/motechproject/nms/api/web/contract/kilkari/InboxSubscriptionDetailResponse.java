@@ -1,7 +1,12 @@
 package org.motechproject.nms.api.web.contract.kilkari;
 
 /**
- * InboxSubscriptionDetailResponse
+ * Response body - inner data structure
+ *
+ * 4.2.2 Get Inbox Details API
+ * IVR shall invoke this API to get the Inbox details of the beneficiary, identified by ‘callingNumber’.
+ * /api/kilkari/inbox?callingNumber=1111111111&callId=123456789123456&languageLocationCode=10
+ *
  */
 public class InboxSubscriptionDetailResponse {
     private String subscriptionId;

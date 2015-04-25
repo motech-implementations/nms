@@ -10,9 +10,9 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.api.web.contract.BadRequest;
-import org.motechproject.nms.api.web.contract.FrontLineWorkerUser;
-import org.motechproject.nms.api.web.contract.LanguageRequest;
-import org.motechproject.nms.api.web.contract.kilkari.UserResponse;
+import org.motechproject.nms.api.web.contract.FlwUserResponse;
+import org.motechproject.nms.api.web.contract.UserLanguageRequest;
+import org.motechproject.nms.api.web.contract.kilkari.KilkariUserResponse;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.Service;
 import org.motechproject.nms.flw.domain.ServiceUsage;
@@ -322,7 +322,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         return new HttpGet(sb.toString());
     }
 
-    private HttpPost createHttpPost(String service, LanguageRequest request) throws IOException {
+    private HttpPost createHttpPost(String service, UserLanguageRequest request) throws IOException {
         HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/%s/languageLocationCode",
                 TestContext.getJettyPort(), service));
         ObjectMapper mapper = new ObjectMapper();
@@ -334,25 +334,25 @@ public class UserControllerBundleIT extends BasePaxIT {
 
     private String createKilkariUserResponseJson(String defaultLanguageLocationCode, String locationCode,
                                                  Set<String> subscriptionPackList) throws IOException {
-        UserResponse userResponse = new UserResponse();
+        KilkariUserResponse kilkariUserResponse = new KilkariUserResponse();
         if (defaultLanguageLocationCode != null) {
-            userResponse.setDefaultLanguageLocationCode(defaultLanguageLocationCode);
+            kilkariUserResponse.setDefaultLanguageLocationCode(defaultLanguageLocationCode);
         }
         if (locationCode != null) {
-            userResponse.setLanguageLocationCode(locationCode);
+            kilkariUserResponse.setLanguageLocationCode(locationCode);
         }
         if (subscriptionPackList != null) {
-            userResponse.setSubscriptionPackList(subscriptionPackList);
+            kilkariUserResponse.setSubscriptionPackList(subscriptionPackList);
         }
         ObjectMapper mapper = new ObjectMapper();
-        return mapper.writeValueAsString(userResponse);
+        return mapper.writeValueAsString(kilkariUserResponse);
     }
 
     private String createFlwUserResponseJson(String defaultLanguageLocationCode, String locationCode,
                                              Long currentUsageInPulses, Long endOfUsagePromptCounter,
                                              Boolean welcomePromptFlag, Integer maxAllowedUsageInPulses,
                                              Integer maxAllowedEndOfUsagePrompt) throws IOException {
-        FrontLineWorkerUser userResponse = new FrontLineWorkerUser();
+        FlwUserResponse userResponse = new FlwUserResponse();
         if (defaultLanguageLocationCode != null) {
             userResponse.setDefaultLanguageLocationCode(defaultLanguageLocationCode);
         }
@@ -710,7 +710,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testSetLanguageInvalidService() throws IOException, InterruptedException {
-        HttpPost httpPost = createHttpPost("INVALID_SERVICE", new LanguageRequest(1111111111L, 123456789012345L,"10"));
+        HttpPost httpPost = createHttpPost("INVALID_SERVICE", new UserLanguageRequest(1111111111L, 123456789012345L,"10"));
 
         String expectedJsonResponse = createFailureResponseJson("<serviceName: Invalid>");
 
@@ -720,7 +720,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testSetLanguageMissingCallingNumber() throws IOException, InterruptedException {
-        HttpPost httpPost = createHttpPost("mobilekunji", new LanguageRequest(null, 123456789012345L,"10"));
+        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(null, 123456789012345L,"10"));
 
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Not Present>");
 
@@ -730,7 +730,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testSetLanguageInvalidCallingNumber() throws IOException, InterruptedException {
-        HttpPost httpPost = createHttpPost("mobilekunji", new LanguageRequest(123L, 123456789012345L,"10"));
+        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(123L, 123456789012345L,"10"));
 
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
 
@@ -740,7 +740,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testSetLanguageMissingCallId() throws IOException, InterruptedException {
-        HttpPost httpPost = createHttpPost("mobilekunji", new LanguageRequest(1111111111L, null,"10"));
+        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(1111111111L, null,"10"));
 
         String expectedJsonResponse = createFailureResponseJson("<callId: Not Present>");
 
@@ -750,7 +750,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testSetLanguageInvalidCallId() throws IOException, InterruptedException {
-        HttpPost httpPost = createHttpPost("mobilekunji", new LanguageRequest(1111111111L, 123L,"10"));
+        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(1111111111L, 123L,"10"));
 
         String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
 
@@ -760,7 +760,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testSetLanguageMissingLanguageLocationCode() throws IOException, InterruptedException {
-        HttpPost httpPost = createHttpPost("mobilekunji", new LanguageRequest(1111111111L, 123456789012345L, null));
+        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(1111111111L, 123456789012345L, null));
 
         String expectedJsonResponse = createFailureResponseJson("<languageLocationCode: Not Present>");
 
@@ -786,7 +786,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     public void testSetLanguageNoFLW() throws IOException, InterruptedException {
         createCircleWithLanguage();
 
-        HttpPost httpPost = createHttpPost("mobilekunji", new LanguageRequest(1111111111L, 123456789012345L, "99"));
+        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(1111111111L, 123456789012345L, "99"));
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost));
 
@@ -801,7 +801,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     public void testSetLanguageLanguageNotFound() throws IOException, InterruptedException {
         createFlwCappedServiceNoUsageNoLocationNoLanguage();
 
-        HttpPost httpPost = createHttpPost("mobilekunji", new LanguageRequest(1111111111L, 123456789012345L, "77"));
+        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(1111111111L, 123456789012345L, "77"));
 
         String expectedJsonResponse = createFailureResponseJson("<languageLocationCode: Not Found>");
 
@@ -813,7 +813,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     public void testSetLanguageValid() throws IOException, InterruptedException {
         createFlwCappedServiceNoUsageNoLocationNoLanguage();
 
-        HttpPost httpPost = createHttpPost("mobilekunji", new LanguageRequest(1111111111L, 123456789012345L, "99"));
+        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(1111111111L, 123456789012345L, "99"));
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK));
 

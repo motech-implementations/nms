@@ -1,7 +1,7 @@
 package org.motechproject.nms.api.web;
 
 import org.motechproject.nms.api.web.contract.kilkari.InboxCallDetailsRequest;
-import org.motechproject.nms.api.web.contract.kilkari.InboxCallDetailsRequestCallData;
+import org.motechproject.nms.api.web.contract.kilkari.CallDataRequest;
 import org.motechproject.nms.api.web.contract.kilkari.InboxResponse;
 import org.motechproject.nms.api.web.contract.kilkari.InboxSubscriptionDetailResponse;
 import org.motechproject.nms.api.web.contract.kilkari.SubscriptionRequest;
@@ -42,11 +42,9 @@ public class KilkariController extends BaseController {
     private KilkariService kilkariService;
 
     /**
-     *
-     * 4.2.2
-     * Get Inbox Details API
-     *
-     * IVR shall invoke this API to get the Inbox details of the beneficiary, identified by ‘callingNumber’.
+     * 4.2.2 Get Inbox Details API
+     * IVR shall invoke this API to get the Inbox details of the beneficiary identified by ‘callingNumber’.
+     * /api/kilkari/inbox?callingNumber=1111111111&callId=123456789123456&languageLocationCode=10
      *
      */
     @RequestMapping("/inbox")
@@ -78,7 +76,7 @@ public class KilkariController extends BaseController {
     }
 
     private void validateSaveInboxCallDetailsContent(StringBuilder failureReasons,
-                                                     Set<InboxCallDetailsRequestCallData> content) {
+                                                     Set<CallDataRequest> content) {
         if (content == null || content.size() == 0) {
             // Empty content is acceptable (when the IVR vendor plays promotional content)
             return;
@@ -90,7 +88,7 @@ public class KilkariController extends BaseController {
         }
         int failureReasonsLength = failureReasons.length();
         Set<String> subscriptionPacks = new HashSet<>();
-        for (InboxCallDetailsRequestCallData data : content) {
+        for (CallDataRequest data : content) {
             validateFieldExactLength(failureReasons, "subscriptionId", data.getSubscriptionId(), SUBSCRIPTION_ID_LENGTH);
             subscriptionPacks.add(data.getSubscriptionPack());
             validateFieldString(failureReasons, "inboxWeekId", data.getInboxWeekId());
@@ -127,11 +125,10 @@ public class KilkariController extends BaseController {
 
 
     /**
-     * 4.2.5
-     * Save Inbox Call Details
-     * 
-     * IVR shall invoke this API to send the call detail information corresponding to the Inbox access
-     * inbound call for which inbox message(s) is played.
+     * 4.2.5 Save Inbox Call Details
+     * IVR shall invoke this API to send the call detail information corresponding to the Inbox access inbound call for
+     *    which inbox message(s) is played.
+     * /api/kilkari/inboxCallDetails
      *
      */
     @RequestMapping(value = "/inboxCallDetails",
@@ -146,7 +143,7 @@ public class KilkariController extends BaseController {
 
         Set<InboxCallData> content = new HashSet<>();
         if (request.getContent() != null && request.getContent().size() > 0) {
-            for (InboxCallDetailsRequestCallData inboxCallDetailsRequestCallData : request.getContent()) {
+            for (CallDataRequest inboxCallDetailsRequestCallData : request.getContent()) {
                 content.add(new InboxCallData(
                         inboxCallDetailsRequestCallData.getSubscriptionId(),
                         inboxCallDetailsRequestCallData.getSubscriptionPack(),
@@ -174,10 +171,9 @@ public class KilkariController extends BaseController {
     }
 
     /**
-     * 4.2.3
-     * Create Subscription
-     *
-     * IVR shall invoke this API to create a new Kilkari subscription
+     * 4.2.3 Create Subscription Request API
+     * IVR shall invoke this API to request the creation of the subscription of the beneficiary.
+     * /api/kilkari/subscription
      *
      */
     @RequestMapping(value = "/subscription",
