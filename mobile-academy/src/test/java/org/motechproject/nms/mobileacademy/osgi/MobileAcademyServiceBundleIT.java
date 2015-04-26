@@ -1,5 +1,6 @@
 package org.motechproject.nms.mobileacademy.osgi;
 
+import org.motechproject.nms.mobileacademy.domain.Bookmark;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -13,6 +14,8 @@ import org.ops4j.pax.exam.spi.reactors.PerSuite;
 import javax.inject.Inject;
 
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Verify that MobileAcademyService present, functional.
@@ -26,8 +29,28 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     private MobileAcademyService maService;
 
     @Test
-    public void testHelloWorldServicePresent() throws Exception {
+    public void testMobileAcademyServicePresent() throws Exception {
         assertNotNull(maService);
-        assertNotNull(maService.sayHello());
+    }
+
+    @Test
+    public void testGetCourseVersion() throws Exception {
+
+        assertNotNull(maService.getCourseVersion());
+        assertTrue(maService.getCourseVersion() > 0);
+    }
+
+    @Test
+    public void testGetBookmark() throws Exception {
+        assertNotNull(maService.getBookmark(1L, 1L));
+    }
+
+    @Test
+    public void testGetBookmarkEmpty() throws Exception {
+        assertNull(maService.getBookmark(0L, 1L));
+    }
+
+    @Test void testSetBookmark() {
+        maService.setBookmark(new Bookmark());
     }
 }

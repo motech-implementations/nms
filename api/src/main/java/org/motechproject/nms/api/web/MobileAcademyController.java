@@ -7,7 +7,6 @@ import org.motechproject.nms.api.web.contract.mobileAcademy.BookmarkResponse;
 import org.motechproject.nms.api.web.contract.mobileAcademy.CallDetails;
 import org.motechproject.nms.api.web.contract.mobileAcademy.CourseResponse;
 import org.motechproject.nms.api.web.contract.mobileAcademy.CourseVersionResponse;
-import org.motechproject.nms.api.web.contract.mobileAcademy.LanguageLocationCodeRequest;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
 import org.springframework.stereotype.Controller;
 
@@ -44,17 +43,16 @@ public class MobileAcademyController extends BaseController {
     }
 
     /**
-     * Get the version of the course TODO//
-     * @return
+     * Get the version of the course
+     * @return Integer represting the timestamp since epoch
      */
     @RequestMapping(
             value = "/courseVersion",
             method = RequestMethod.GET)
     @ResponseBody
     public CourseVersionResponse getCourseVersion() {
-
-        Integer courseVersion = mobileAcademyService.getCourseVersion();
-        return new CourseVersionResponse();
+        
+        return new CourseVersionResponse(mobileAcademyService.getCourseVersion());
     }
 
     /**
