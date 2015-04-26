@@ -332,7 +332,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         return httpPost;
     }
 
-    private String createKilkariUserResponseJson(String defaultLanguageLocationCode, String locationCode,
+    private String createKilkariUserResponseJson(String defaultLanguageLocationCode, String locationCode, String circle,
                                                  Set<String> subscriptionPackList) throws IOException {
         KilkariUserResponse kilkariUserResponse = new KilkariUserResponse();
         if (defaultLanguageLocationCode != null) {
@@ -340,6 +340,9 @@ public class UserControllerBundleIT extends BasePaxIT {
         }
         if (locationCode != null) {
             kilkariUserResponse.setLanguageLocationCode(locationCode);
+        }
+        if (circle != null) {
+            kilkariUserResponse.setCircle(circle);
         }
         if (subscriptionPackList != null) {
             kilkariUserResponse.setSubscriptionPackList(subscriptionPackList);
@@ -395,12 +398,35 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "OP",             //operator
                 true, "AA",             //circle
                 true, "123456789012345" //callId
-                );
+        );
 
         String expectedJsonResponse = createKilkariUserResponseJson(
                 null, //defaultLanguageLocationCode
                 null, //locationCode
+                null, //circle
                 new HashSet<String>(Arrays.asList("pack1", "pack2")) //subscriptionPackList
+        );
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    @Test
+    public void testKilkariNonexistentUserRequest() throws IOException, InterruptedException {
+        createKilkariTestData();
+
+        HttpGet httpGet = createHttpGet(
+                true, "kilkari",        //service
+                true, "9999999999",     //callingNumber
+                true, "OP",             //operator
+                true, "AA",             //circle
+                true, "123456789012345" //callId
+        );
+
+        String expectedJsonResponse = createKilkariUserResponseJson(
+                "??", //defaultLanguageLocationCode
+                null, //locationCode
+                "AA", //circle
+                new HashSet<String>() //subscriptionPackList
         );
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
