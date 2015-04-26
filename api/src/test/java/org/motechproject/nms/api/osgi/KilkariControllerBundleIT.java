@@ -122,8 +122,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     }
 
     private HttpGet createHttpGet(boolean includeCallingNumber, String callingNumber,
-                                  boolean includeCallId, String callId,
-                                  boolean includeLanguageLocationCode, String languageLocationCode) {
+                                  boolean includeCallId, String callId) {
 
         StringBuilder sb = new StringBuilder(String.format("http://localhost:%d/api/kilkari/inbox?",
                 TestContext.getJettyPort()));
@@ -134,10 +133,6 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         }
         if (includeCallId) {
             sb.append(String.format("%scallId=%s", sep, callId));
-            sep = "&";
-        }
-        if (includeLanguageLocationCode) {
-            sb.append(String.format("%slanguageLocationCode=%s", sep, languageLocationCode));
         }
 
         return new HttpGet(sb.toString());
@@ -162,7 +157,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
         Subscriber subscriber = subscriberDataService.findByCallingNumber(1000000000L);
         Subscription subscription = subscriber.getSubscriptions().iterator().next();
-        HttpGet httpGet = createHttpGet(true, "1000000000", true, "123456789012345", true, "10");
+        HttpGet httpGet = createHttpGet(true, "1000000000", true, "123456789012345");
         String expectedJson = createInboxResponseJson(new HashSet<InboxSubscriptionDetailResponse>(Arrays.asList(
                 new InboxSubscriptionDetailResponse(
                         subscription.getSubscriptionId().toString(),
@@ -179,7 +174,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     public void testInboxRequestBadSubscriber() throws IOException, InterruptedException {
         setupData();
 
-        HttpGet httpGet = createHttpGet(true, "3000000000", true, "123456789012345", true, "10");
+        HttpGet httpGet = createHttpGet(true, "3000000000", true, "123456789012345");
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Not Found>");
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_NOT_FOUND, expectedJsonResponse,
@@ -190,19 +185,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     public void testInboxRequestNoSubscriber() throws IOException, InterruptedException {
         setupData();
 
-        HttpGet httpGet = createHttpGet(false, null, true, "123456789012345", true, "10");
+        HttpGet httpGet = createHttpGet(false, null, true, "123456789012345");
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Not Present>");
-
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
-    }
-
-    @Test
-    public void testInboxRequestNoLanguageLocationCode() throws IOException, InterruptedException {
-        setupData();
-
-        HttpGet httpGet = createHttpGet(true, "1111111111", true, "123456789012345", false, null);
-        String expectedJsonResponse = createFailureResponseJson("<languageLocationCode: Not Present>");
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
                 ADMIN_USERNAME, ADMIN_PASSWORD));
@@ -337,20 +321,20 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 1, //callStatus
                 1, //callDisconnectReason
                 new HashSet<>(Arrays.asList(
-                        new CallDataRequest(
-                                "00000000-0000-0000-0000-000000000000", //subscriptionId
-                                "48WeeksPack", //subscriptionPack
-                                "123", //inboxWeekId
-                                "foo", //contentFileName
-                                123L, //startTime
-                                456L), //endTime
-                        new CallDataRequest(
-                                "00000000-0000-0000-0000-000000000001", //subscriptionId
-                                "76WeeksPack", //subscriptionPack
-                                "123", //inboxWeekId
-                                "foo", //contentFileName
-                                123L, //startTime
-                                456L) //endTime
+                    new CallDataRequest(
+                        "00000000-0000-0000-0000-000000000000", //subscriptionId
+                        "48WeeksPack", //subscriptionPack
+                        "123", //inboxWeekId
+                        "foo", //contentFileName
+                        123L, //startTime
+                        456L), //endTime
+                    new CallDataRequest(
+                        "00000000-0000-0000-0000-000000000001", //subscriptionId
+                        "76WeeksPack", //subscriptionPack
+                        "123", //inboxWeekId
+                        "foo", //contentFileName
+                        123L, //startTime
+                        456L) //endTime
                 )))); //content
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD));

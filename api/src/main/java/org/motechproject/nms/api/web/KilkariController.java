@@ -50,12 +50,9 @@ public class KilkariController extends BaseController {
     @RequestMapping("/inbox")
     @ResponseBody
     public InboxResponse getInboxDetails(@RequestParam(required = false) Long callingNumber,
-                                         @RequestParam(required = false) Long callId,
-                                         @RequestParam(required = false) String languageLocationCode) {
+                                         @RequestParam(required = false) Long callId) {
 
         StringBuilder failureReasons = validate(callingNumber, callId);
-        //todo: what are we going to do with this field?
-        validateFieldString(failureReasons, "languageLocationCode", languageLocationCode);
         if (failureReasons.length() > 0) {
             throw new IllegalArgumentException(failureReasons.toString());
         }
