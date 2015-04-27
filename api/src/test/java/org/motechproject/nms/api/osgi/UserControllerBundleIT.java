@@ -138,6 +138,10 @@ public class UserControllerBundleIT extends BasePaxIT {
         cleanAllData();
 
         Language ta = languageDataService.create(new Language("tamil", "50"));
+
+        CircleLanguage circleLanguage = new CircleLanguage("AA", ta);
+        circleLanguageDataService.create(circleLanguage);
+
         SubscriptionPack pack1 = subscriptionPackDataService.create(new SubscriptionPack("pack1"));
         SubscriptionPack pack2 = subscriptionPackDataService.create(new SubscriptionPack("pack2"));
         List<SubscriptionPack> onePack = Arrays.asList(pack1);
@@ -386,7 +390,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
 
     @Test
-    public void testKilkariUserRequest() throws IOException, InterruptedException {
+    public void testKilkariUserRequestNoLanguage() throws IOException, InterruptedException {
         createKilkariTestData();
 
         HttpGet httpGet = createHttpGet(
@@ -398,7 +402,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         );
 
         String expectedJsonResponse = createKilkariUserResponseJson(
-                null, //defaultLanguageLocationCode
+                "50", //defaultLanguageLocationCode
                 null, //locationCode
                 new HashSet<String>(Arrays.asList("pack1", "pack2")) //subscriptionPackList
         );
@@ -419,7 +423,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         );
 
         String expectedJsonResponse = createKilkariUserResponseJson(
-                "??", //defaultLanguageLocationCode
+                "50", //defaultLanguageLocationCode
                 null, //locationCode
                 new HashSet<String>() //subscriptionPackList
         );

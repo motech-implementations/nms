@@ -116,25 +116,21 @@ public class UserController extends BaseController {
     private UserResponse getKilkariResponseUser(Long callingNumber, String circle) {
         KilkariUserResponse user = new KilkariUserResponse();
         Set<String> packs = new HashSet<>();
+
         Subscriber subscriber = kilkariService.getSubscriber(callingNumber);
         if (subscriber != null) {
             Set<Subscription> subscriptions = subscriber.getSubscriptions();
             for (Subscription subscription : subscriptions) {
                 packs.add(subscription.getSubscriptionPack().getName());
             }
-        } else {
-            /*
-            No subscriber found in the database, according to
-            https://github.com/koshalt/mim/issues/9#event-288912397
-            we need to respond with an empty subscription list, the circle provider in the request and our
-            guess as to what the defaultLanguageLocationCode is, which is done after this method returns
-            */
-            Language language = languageService.getDefaultCircleLanguage(circle);
-            if (language != null) {
-                user.setDefaultLanguageLocationCode(language.getCode());
-            }
         }
         user.setSubscriptionPackList(packs);
+
+        Language language = languageService.getDefaultCircleLanguage(circle);
+        if (language != null) {
+            user.setDefaultLanguageLocationCode(language.getCode());
+        }
+
         return user;
     }
 
