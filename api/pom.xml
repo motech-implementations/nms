@@ -70,10 +70,12 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.motechproject</groupId>
-            <artifactId>mtraining</artifactId>
-            <version>0.26-SNAPSHOT</version>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-test-mvc</artifactId>
+            <scope>test</scope>
         </dependency>
+
+>>>>>>> master
     </dependencies>
 
     <repositories>

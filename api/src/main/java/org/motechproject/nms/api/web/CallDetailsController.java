@@ -35,6 +35,17 @@ public class CallDetailsController extends BaseController {
     @Autowired
     private FrontLineWorkerService frontLineWorkerService;
 
+    /**
+     * 2.2.6 Save CallDetails API
+     * IVR shall invoke this API to send MA call details to MoTech.
+     * /api/mobileacademy/callDetails
+     *
+     * 3.2.2 Save Call Details API
+     * This API enables IVR to send call details to NMS_MoTech_MK. This data is further saved in NMS database and used
+     *    for reporting purpose.
+     * /api/mobilekunji/callDetails
+     *
+     */
     @RequestMapping(value = "/{serviceName}/callDetails",
             method = RequestMethod.POST,
             headers = { "Content-type=application/json" })

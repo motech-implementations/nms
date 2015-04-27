@@ -9,17 +9,17 @@ import org.motechproject.nms.kilkari.repository.InboxCallDetailsDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
-import org.motechproject.nms.kilkari.service.KilkariService;
+import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.language.domain.Language;
 import org.motechproject.nms.language.repository.LanguageDataService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 /**
- * Implementation of the {@link KilkariService} interface.
+ * Implementation of the {@link SubscriptionService} interface.
  */
-@Service("kilkariService")
-public class KilkariServiceImpl implements KilkariService {
+@Service("subscriptionService")
+public class SubscriptionServiceImpl implements SubscriptionService {
 
     private SubscriberDataService subscriberDataService;
     private SubscriptionPackDataService subscriptionPackDataService;
@@ -28,7 +28,7 @@ public class KilkariServiceImpl implements KilkariService {
     private InboxCallDetailsDataService inboxCallDetailsDataService;
 
     @Autowired
-    public KilkariServiceImpl(SubscriberDataService subscriberDataService,
+    public SubscriptionServiceImpl(SubscriberDataService subscriberDataService,
                               SubscriptionPackDataService subscriptionPackDataService,
                               SubscriptionDataService subscriptionDataService,
                               LanguageDataService languageDataService,

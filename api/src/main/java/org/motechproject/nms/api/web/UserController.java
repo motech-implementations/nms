@@ -1,11 +1,10 @@
 package org.motechproject.nms.api.web;
 
 import org.joda.time.DateTime;
-import org.motechproject.nms.api.web.contract.FrontLineWorkerUser;
-import org.motechproject.nms.api.web.contract.ResponseUser;
-import org.motechproject.nms.api.web.contract.kilkari.UserResponse;
+import org.motechproject.nms.api.web.contract.FlwUserResponse;
+import org.motechproject.nms.api.web.contract.UserResponse;
+import org.motechproject.nms.api.web.contract.kilkari.KilkariUserResponse;
 import org.motechproject.nms.api.web.exception.NotAuthorizedException;
-import org.motechproject.nms.api.web.exception.NotFoundException;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.Service;
 import org.motechproject.nms.flw.domain.ServiceUsage;
@@ -15,7 +14,7 @@ import org.motechproject.nms.flw.service.ServiceUsageCapService;
 import org.motechproject.nms.flw.service.ServiceUsageService;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
-import org.motechproject.nms.kilkari.service.KilkariService;
+import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.language.domain.Language;
 import org.motechproject.nms.language.service.LanguageService;
 import org.motechproject.nms.location.domain.District;
@@ -40,7 +39,7 @@ public class UserController extends BaseController {
     private LanguageService languageService;
 
     @Autowired
-    private KilkariService kilkariService;
+    private SubscriptionService subscriptionService;
 
     @Autowired
     private FrontLineWorkerService frontLineWorkerService;
@@ -52,23 +51,22 @@ public class UserController extends BaseController {
     private ServiceUsageCapService serviceUsageCapService;
 
     /**
-     * 2.2.1.1 Get User Details
-     *         http://<motech:port>/motech­patform­server/module/mobileacademy/user?callingNumber=9999999900
-     *             &operator=A&circle=AP&callId=123456789012345
+     * 2.2.1 Get User Details API
+     * IVR shall invoke this API when to retrieve details specific to the user identified by callingNumber.
+     * In case user specific details are not available in the database, the API will attempt to load system
+     * defaults based on the operator and circle provided.
+     * /api/mobileacademy/user?callingNumber=9999999900&operator=A&circle=AP&callId=123456789012345
 
-     * 3.2.1.1 Get User Details
-     *         http://<motech:port>/motech­patform­server/module/mobilekunji/user?callingNumber=9999999900
-     *             &operator=A&circle=AP&callId=234000011111111
-     *             
-     *             
-     * IVR shall invoke this API when to retrieve details specific to the user identified by
-     * callingNumber. In case user specific details are not available in the database, the API will
-     * attempt to load system defaults based on the operator and circle provided.
+     * 3.2.1 Get User Details API
+     * IVR shall invoke this API when to retrieve details specific to the user identified by callingNumber.
+     * In case user specific details are not available in the database, the API will attempt to load system
+     * defaults based on the operator and circle provided.
+     * /api/mobilekunji/user?callingNumber=9999999900&operator=A&circle=AP&callId=234000011111111
      *
      */
     @RequestMapping("/{serviceName}/user") // NO CHECKSTYLE Cyclomatic Complexity
     @ResponseBody
-    public ResponseUser getUserDetails(@PathVariable String serviceName,
+    public UserResponse getUserDetails(@PathVariable String serviceName,
                              @RequestParam(required = false) Long callingNumber,
                              @RequestParam(required = false) String operator,
                              @RequestParam(required = false) String circle,
@@ -79,7 +77,7 @@ public class UserController extends BaseController {
             throw new IllegalArgumentException(failureReasons.toString());
         }
 
-        ResponseUser user = null;
+        UserResponse user = null;
 
         /*
         Make sure the url the user hit corresponds to a service we are expecting
@@ -100,7 +98,7 @@ public class UserController extends BaseController {
         Kilkari in the house!
          */
         if (KILKARI.equals(serviceName)) {
-            user = getKilkariResponseUser(callingNumber);
+            user = getKilkariResponseUser(callingNumber, circle);
         }
 
         if (failureReasons.length() > 0) {
@@ -115,23 +113,29 @@ public class UserController extends BaseController {
         return user;
     }
 
-    private ResponseUser getKilkariResponseUser(Long callingNumber) {
-        UserResponse user = new UserResponse();
-        Subscriber subscriber = kilkariService.getSubscriber(callingNumber);
-        if (subscriber == null) {
-            throw new NotFoundException(String.format(NOT_FOUND, CALLING_NUMBER));
-        }
-        Set<Subscription> subscriptions = subscriber.getSubscriptions();
+    private UserResponse getKilkariResponseUser(Long callingNumber, String circle) {
+        KilkariUserResponse user = new KilkariUserResponse();
         Set<String> packs = new HashSet<>();
-        for (Subscription subscription : subscriptions) {
-            packs.add(subscription.getSubscriptionPack().getName());
+
+        Subscriber subscriber = subscriptionService.getSubscriber(callingNumber);
+        if (subscriber != null) {
+            Set<Subscription> subscriptions = subscriber.getSubscriptions();
+            for (Subscription subscription : subscriptions) {
+                packs.add(subscription.getSubscriptionPack().getName());
+            }
         }
         user.setSubscriptionPackList(packs);
+
+        Language language = languageService.getDefaultCircleLanguage(circle);
+        if (language != null) {
+            user.setDefaultLanguageLocationCode(language.getCode());
+        }
+
         return user;
     }
 
-    private ResponseUser getFrontLineWorkerResponseUser(String serviceName, Long callingNumber) {
-        FrontLineWorkerUser user;
+    private UserResponse getFrontLineWorkerResponseUser(String serviceName, Long callingNumber) {
+        FlwUserResponse user = new FlwUserResponse();
 
         Service service = null;
 
@@ -143,7 +147,6 @@ public class UserController extends BaseController {
             service = Service.MOBILE_KUNJI;
         }
 
-        user = new FrontLineWorkerUser();
         ServiceUsage serviceUsage = new ServiceUsage(null, service, 0, 0, 0, DateTime.now());
         FrontLineWorker flw = frontLineWorkerService.getByContactNumber(callingNumber);
 

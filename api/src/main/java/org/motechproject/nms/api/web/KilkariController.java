@@ -1,7 +1,7 @@
 package org.motechproject.nms.api.web;
 
 import org.motechproject.nms.api.web.contract.kilkari.InboxCallDetailsRequest;
-import org.motechproject.nms.api.web.contract.kilkari.InboxCallDetailsRequestCallData;
+import org.motechproject.nms.api.web.contract.kilkari.CallDataRequest;
 import org.motechproject.nms.api.web.contract.kilkari.InboxResponse;
 import org.motechproject.nms.api.web.contract.kilkari.InboxSubscriptionDetailResponse;
 import org.motechproject.nms.api.web.contract.kilkari.SubscriptionRequest;
@@ -10,7 +10,7 @@ import org.motechproject.nms.kilkari.domain.InboxCallData;
 import org.motechproject.nms.kilkari.domain.InboxCallDetails;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
-import org.motechproject.nms.kilkari.service.KilkariService;
+import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -39,14 +39,12 @@ public class KilkariController extends BaseController {
     public static final Set<String> SUBSCRIPTION_PACK_SET = new HashSet<>(Arrays.asList("48WeeksPack", "76WeeksPack"));
 
     @Autowired
-    private KilkariService kilkariService;
+    private SubscriptionService subscriptionService;
 
     /**
-     *
-     * 4.2.2
-     * Get Inbox Details API
-     *
-     * IVR shall invoke this API to get the Inbox details of the beneficiary, identified by ‘callingNumber’.
+     * 4.2.2 Get Inbox Details API
+     * IVR shall invoke this API to get the Inbox details of the beneficiary identified by ‘callingNumber’.
+     * /api/kilkari/inbox?callingNumber=1111111111&callId=123456789123456&languageLocationCode=10
      *
      */
     @RequestMapping("/inbox")
@@ -59,7 +57,7 @@ public class KilkariController extends BaseController {
             throw new IllegalArgumentException(failureReasons.toString());
         }
 
-        Subscriber subscriber = kilkariService.getSubscriber(callingNumber);
+        Subscriber subscriber = subscriptionService.getSubscriber(callingNumber);
         if (subscriber == null) {
             throw new NotFoundException(String.format(NOT_FOUND, "callingNumber"));
         }
@@ -78,7 +76,7 @@ public class KilkariController extends BaseController {
     }
 
     private void validateSaveInboxCallDetailsContent(StringBuilder failureReasons,
-                                                     Set<InboxCallDetailsRequestCallData> content) {
+                                                     Set<CallDataRequest> content) {
         if (content == null || content.size() == 0) {
             // Empty content is acceptable (when the IVR vendor plays promotional content)
             return;
@@ -90,7 +88,7 @@ public class KilkariController extends BaseController {
         }
         int failureReasonsLength = failureReasons.length();
         Set<String> subscriptionPacks = new HashSet<>();
-        for (InboxCallDetailsRequestCallData data : content) {
+        for (CallDataRequest data : content) {
             validateFieldExactLength(failureReasons, "subscriptionId", data.getSubscriptionId(), SUBSCRIPTION_ID_LENGTH);
             subscriptionPacks.add(data.getSubscriptionPack());
             validateFieldString(failureReasons, "inboxWeekId", data.getInboxWeekId());
@@ -127,16 +125,15 @@ public class KilkariController extends BaseController {
 
 
     /**
-     * 4.2.5
-     * Save Inbox Call Details
-     * 
-     * IVR shall invoke this API to send the call detail information corresponding to the Inbox access
-     * inbound call for which inbox message(s) is played.
+     * 4.2.5 Save Inbox Call Details
+     * IVR shall invoke this API to send the call detail information corresponding to the Inbox access inbound call for
+     *    which inbox message(s) is played.
+     * /api/kilkari/inboxCallDetails
      *
      */
     @RequestMapping(value = "/inboxCallDetails",
-                    method = RequestMethod.POST,
-                    headers = { "Content-type=application/json" })
+            method = RequestMethod.POST,
+            headers = {"Content-type=application/json"})
     @ResponseStatus(HttpStatus.OK)
     public void saveInboxCallDetails(@RequestBody InboxCallDetailsRequest request) {
         StringBuilder failureReasons = validateSaveInboxCallDetails(request);
@@ -146,7 +143,7 @@ public class KilkariController extends BaseController {
 
         Set<InboxCallData> content = new HashSet<>();
         if (request.getContent() != null && request.getContent().size() > 0) {
-            for (InboxCallDetailsRequestCallData inboxCallDetailsRequestCallData : request.getContent()) {
+            for (CallDataRequest inboxCallDetailsRequestCallData : request.getContent()) {
                 content.add(new InboxCallData(
                         inboxCallDetailsRequestCallData.getSubscriptionId(),
                         inboxCallDetailsRequestCallData.getSubscriptionPack(),
@@ -170,22 +167,19 @@ public class KilkariController extends BaseController {
                 request.getCallDisconnectReason(),
                 content);
 
-        kilkariService.addInboxCallDetails(inboxCallDetails);
+        subscriptionService.addInboxCallDetails(inboxCallDetails);
     }
 
     /**
-     * 4.2.3
-     * Create Subscription
-     *
-     * IVR shall invoke this API to create a new Kilkari subscription
-     *
+     * 4.2.3 Create Subscription Request API
+     * IVR shall invoke this API to request the creation of the subscription of the beneficiary.
+     * /api/kilkari/subscription
      */
     @RequestMapping(value = "/subscription",
             method = RequestMethod.POST,
-            headers = { "Content-type=application/json" })
+            headers = {"Content-type=application/json"})
     @ResponseStatus(HttpStatus.OK)
     public void createSubscription(@RequestBody SubscriptionRequest subscriptionRequest) {
-
         StringBuilder failureReasons = validate(subscriptionRequest.getCallingNumber(),
                 subscriptionRequest.getCallId(), subscriptionRequest.getOperator(),
                 subscriptionRequest.getCircle());
@@ -200,23 +194,21 @@ public class KilkariController extends BaseController {
             throw new NotFoundException(String.format(NOT_FOUND, "subscriptionPack"));
         }
 
-        kilkariService.createSubscription(subscriptionRequest.getCallingNumber(),
+        subscriptionService.createSubscription(subscriptionRequest.getCallingNumber(),
                 subscriptionRequest.getLanguageLocationCode(), subscriptionRequest.getSubscriptionPack());
     }
 
     /**
      * 4.2.4
      * Deactivate Subscription
-     *
+     * <p/>
      * IVR shall invoke this API to deactivate an existing Kilkari subscription
-     *
      */
     @RequestMapping(value = "/subscription",
             method = RequestMethod.DELETE,
-            headers = { "Content-type=application/json" })
+            headers = {"Content-type=application/json"})
     @ResponseStatus(HttpStatus.OK)
     public void deactivateSubscription(@RequestBody SubscriptionRequest subscriptionRequest) {
-
         StringBuilder failureReasons = validate(subscriptionRequest.getCallingNumber(),
                 subscriptionRequest.getCallId(), subscriptionRequest.getOperator(),
                 subscriptionRequest.getCircle());
@@ -227,17 +219,17 @@ public class KilkariController extends BaseController {
             throw new IllegalArgumentException(failureReasons.toString());
         }
 
-        Subscription subscription = kilkariService.getSubscription(subscriptionRequest.getSubscriptionId());
+        Subscription subscription = subscriptionService.getSubscription(subscriptionRequest.getSubscriptionId());
 
         if (subscription == null) {
             throw new NotFoundException(String.format(NOT_FOUND, "subscriptionId"));
         }
 
-        kilkariService.deactivateSubscription(subscription);
+        subscriptionService.deactivateSubscription(subscription);
     }
 
     private boolean validateSubscriptionPack(String name) {
-        return kilkariService.getCountSubscriptionPack(name) == 1;
+        return subscriptionService.getCountSubscriptionPack(name) == 1;
     }
 
 }

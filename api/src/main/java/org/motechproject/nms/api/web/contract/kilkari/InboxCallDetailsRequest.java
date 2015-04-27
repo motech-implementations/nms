@@ -3,7 +3,13 @@ package org.motechproject.nms.api.web.contract.kilkari;
 import java.util.Set;
 
 /**
- * POST request data for 4.2.5 : http://<motech:port>/motech­platform­server/module/kilkari/inboxCallDetails
+ * Request body
+ *
+ * 4.2.5 Save Inbox Call Details
+ * IVR shall invoke this API to send the call detail information corresponding to the Inbox access inbound call
+ *    for which inbox message(s) is played.
+ * /api/kilkari/inboxCallDetails
+ *
  */
 public class InboxCallDetailsRequest {
     private Long callingNumber;
@@ -15,14 +21,14 @@ public class InboxCallDetailsRequest {
     private Integer callDurationInPulses;
     private Integer callStatus;
     private Integer callDisconnectReason;
-    private Set<InboxCallDetailsRequestCallData> content;
+    private Set<CallDataRequest> content;
 
     public InboxCallDetailsRequest() { }
 
     public InboxCallDetailsRequest(Long callingNumber, // NO CHECKSTYLE More than 7 parameters
                                    String operator, String circle, Long callId, Long callStartTime,
                                    Long callEndTime, Integer callDurationInPulses, Integer callStatus,
-                                   Integer callDisconnectReason, Set<InboxCallDetailsRequestCallData> content) {
+                                   Integer callDisconnectReason, Set<CallDataRequest> content) {
         this.callingNumber = callingNumber;
         this.operator = operator;
         this.circle = circle;
@@ -107,11 +113,11 @@ public class InboxCallDetailsRequest {
         this.callDisconnectReason = callDisconnectReason;
     }
 
-    public Set<InboxCallDetailsRequestCallData> getContent() {
+    public Set<CallDataRequest> getContent() {
         return content;
     }
 
-    public void setContent(Set<InboxCallDetailsRequestCallData> content) {
+    public void setContent(Set<CallDataRequest> content) {
         this.content = content;
     }
 }
