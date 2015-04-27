@@ -1,7 +1,7 @@
 package org.motechproject.nms.api.web.contract.mobileAcademy.course;
 
 /**
- * Created by kosh on 4/26/15.
+ * Lesson data object
  */
 public class Lesson {
 
@@ -9,4 +9,22 @@ public class Lesson {
 
     private LessonContent content;
 
+    public Lesson() {
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public LessonContent getContent() {
+        return content;
+    }
+
+    public void setContent(LessonContent content) {
+        this.content = content;
+    }
 }

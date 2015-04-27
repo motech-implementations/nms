@@ -1,9 +1,11 @@
-package org.motechproject.nms.api.web.contract.mobileAcademy;
+package org.motechproject.nms.mobileacademy.dto;
+
+import java.util.Map;
 
 /**
- * Bookmark request object to save a bookmark 2.2.5
+ * Middle man dto to pass data from API to service layer
  */
-public class BookmarkRequest {
+public class MaBookmark {
 
     private Long callingNumber;
 
@@ -11,7 +13,18 @@ public class BookmarkRequest {
 
     private String bookmark;
 
-    private String scoresByChapter;
+    private Map<String, Integer> scoresByChapter;
+
+    public MaBookmark() {
+    }
+
+    public MaBookmark(Long callingNumber, Long callId, String bookmark, Map<String, Integer> scoresByChapter) {
+
+        this.callingNumber = callingNumber;
+        this.callId = callId;
+        this.bookmark = bookmark;
+        this.scoresByChapter = scoresByChapter;
+    }
 
     public Long getCallingNumber() {
         return callingNumber;
@@ -37,11 +50,11 @@ public class BookmarkRequest {
         this.bookmark = bookmark;
     }
 
-    public String getScoresByChapter() {
+    public Map<String, Integer> getScoresByChapter() {
         return scoresByChapter;
     }
 
-    public void setScoresByChapter(String scoresByChapter) {
+    public void setScoresByChapter(Map<String, Integer> scoresByChapter) {
         this.scoresByChapter = scoresByChapter;
     }
 }

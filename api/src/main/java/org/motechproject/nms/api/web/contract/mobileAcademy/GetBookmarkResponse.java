@@ -1,17 +1,17 @@
 package org.motechproject.nms.api.web.contract.mobileAcademy;
 
+import java.util.Map;
+
 /**
  * Bookmark response object for bookmarkWithScore API 2.2.3.2
  */
 
-public class BookmarkResponse {
+public class GetBookmarkResponse {
 
     // actual bookmark index in course
     private String bookmark;
 
-    // use score history by chapter
-    // TODO: Probably be an object instead of simple string here
-    private String scoresByChapter;
+    private Map<String, Integer> scoresByChapter;
 
     public String getBookmark() {
         return bookmark;
@@ -21,11 +21,11 @@ public class BookmarkResponse {
         this.bookmark = bookmark;
     }
 
-    public String getScoresByChapter() {
+    public Map<String, Integer> getScoresByChapter() {
         return scoresByChapter;
     }
 
-    public void setScoresByChapter(String scoresByChapter) {
+    public void setScoresByChapter(Map<String, Integer> scoresByChapter) {
         this.scoresByChapter = scoresByChapter;
     }
 }

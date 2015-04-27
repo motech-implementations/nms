@@ -2,12 +2,14 @@ package org.motechproject.nms.api.web;
 
 import org.apache.commons.lang.NotImplementedException;
 
-import org.motechproject.nms.api.web.contract.mobileAcademy.BookmarkRequest;
-import org.motechproject.nms.api.web.contract.mobileAcademy.BookmarkResponse;
-import org.motechproject.nms.api.web.contract.mobileAcademy.CallDetails;
+import org.motechproject.nms.api.web.contract.mobileAcademy.SaveBookmarkRequest;
+import org.motechproject.nms.api.web.contract.mobileAcademy.GetBookmarkResponse;
+import org.motechproject.nms.api.web.contract.mobileAcademy.CallDetailsRequest;
 import org.motechproject.nms.api.web.contract.mobileAcademy.CourseResponse;
 import org.motechproject.nms.api.web.contract.mobileAcademy.CourseVersionResponse;
+import org.motechproject.nms.mobileacademy.dto.MaBookmark;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 
 import org.springframework.web.bind.annotation.RequestBody;
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 
 /**
@@ -64,10 +67,10 @@ public class MobileAcademyController extends BaseController {
     @RequestMapping(
             value = "/bookmarkWithScore",
             method = RequestMethod.GET)
-    public BookmarkResponse getBookmarkWithScore(@RequestParam Long callingNumber,
+    public GetBookmarkResponse getBookmarkWithScore(@RequestParam Long callingNumber,
                                                  @RequestParam Long callId) {
 
-        return new BookmarkResponse();
+        return new GetBookmarkResponse();
     }
 
     /**
@@ -77,24 +80,26 @@ public class MobileAcademyController extends BaseController {
      */
     @RequestMapping(
             value = "/bookmarkWithScore",
-            method = RequestMethod.POST)
-    @ResponseBody
-    public void saveBookmarkWithScore(@RequestBody BookmarkRequest bookmarkRequest) {
+            method = RequestMethod.POST,
+            headers = { "Content-type=application/json" })
+    @ResponseStatus(HttpStatus.OK)
+    public void saveBookmarkWithScore(@RequestBody SaveBookmarkRequest bookmarkRequest) {
 
-        // placeholder for void returns
-        throw new NotImplementedException();
+        MaBookmark bookmark = new MaBookmark(bookmarkRequest.getCallingNumber(), bookmarkRequest.getCallId(),
+                bookmarkRequest.getBookmark(), bookmarkRequest.getScoresByChapter());
+        mobileAcademyService.setBookmark(bookmark);
     }
 
     /**
      * Save call related metadata after the completion of the call
-     * @param callDetails call details
+     * @param callDetailsRequest call details
      * @return OK or exception
      */
     @RequestMapping(
             value = "/callDetails",
             method = RequestMethod.POST)
     @ResponseBody
-    public void saveCallDetails(@RequestBody CallDetails callDetails) {
+    public void saveCallDetails(@RequestBody CallDetailsRequest callDetailsRequest) {
 
         // placeholder for void returns
         throw new NotImplementedException();

@@ -39,6 +39,11 @@
             <artifactId>motech-platform-dataservices</artifactId>
             <version>${motech.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.motechproject</groupId>
+            <artifactId>mtraining</artifactId>
+            <version>0.26-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 
     <repositories>

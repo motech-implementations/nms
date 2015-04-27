@@ -5,7 +5,7 @@ import java.util.List;
 /**
  * Call details object to track the completion of an MA call
  */
-public class CallDetails {
+public class CallDetailsRequest {
 
     private Long callingNumber;
 

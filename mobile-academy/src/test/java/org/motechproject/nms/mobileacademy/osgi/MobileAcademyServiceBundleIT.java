@@ -1,6 +1,5 @@
 package org.motechproject.nms.mobileacademy.osgi;
 
-import org.motechproject.nms.mobileacademy.domain.Bookmark;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -50,7 +49,4 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         assertNull(maService.getBookmark(0L, 1L));
     }
 
-    @Test void testSetBookmark() {
-        maService.setBookmark(new Bookmark());
-    }
 }

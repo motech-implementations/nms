@@ -9,4 +9,22 @@ public class ChapterContent {
 
     private ChapterContentScore score;
 
+    public ChapterContent() {
+    }
+
+    public ChapterContentMenu getMenu() {
+        return menu;
+    }
+
+    public void setMenu(ChapterContentMenu menu) {
+        this.menu = menu;
+    }
+
+    public ChapterContentScore getScore() {
+        return score;
+    }
+
+    public void setScore(ChapterContentScore score) {
+        this.score = score;
+    }
 }

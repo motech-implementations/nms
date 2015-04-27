@@ -1,8 +1,8 @@
 package org.motechproject.nms.mobileacademy.service;
 
-import org.motechproject.nms.mobileacademy.domain.Bookmark;
 import org.motechproject.nms.mobileacademy.domain.CallDetail;
 import org.motechproject.nms.mobileacademy.domain.Course;
+import org.motechproject.nms.mobileacademy.dto.MaBookmark;
 
 /**
  * Simple example of a service interface.
@@ -27,13 +27,13 @@ public interface MobileAcademyService {
      * @param callId unique call tracking id
      * @return bookmark for the user if it exists, null otherwise
      */
-    Bookmark getBookmark(Long callingNumber, Long callId);
+    MaBookmark getBookmark(Long callingNumber, Long callId);
 
     /**
      * Update the bookmark for a caller
      * @param bookmark updated bookmark to be stored
      */
-    void setBookmark(Bookmark bookmark);
+    void setBookmark(MaBookmark bookmark);
 
     /**
      * Save the details of a call instance

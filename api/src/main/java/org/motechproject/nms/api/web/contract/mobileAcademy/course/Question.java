@@ -1,7 +1,7 @@
 package org.motechproject.nms.api.web.contract.mobileAcademy.course;
 
 /**
- * Created by kosh on 4/26/15.
+ * Question metadata
  */
 public class Question {
 
@@ -11,4 +11,30 @@ public class Question {
 
     private QuestionContent content;
 
+    public Question() {
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getCorrectAnswerOption() {
+        return correctAnswerOption;
+    }
+
+    public void setCorrectAnswerOption(String correctAnswerOption) {
+        this.correctAnswerOption = correctAnswerOption;
+    }
+
+    public QuestionContent getContent() {
+        return content;
+    }
+
+    public void setContent(QuestionContent content) {
+        this.content = content;
+    }
 }

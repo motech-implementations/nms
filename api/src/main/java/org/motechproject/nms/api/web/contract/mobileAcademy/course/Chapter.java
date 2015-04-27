@@ -13,5 +13,30 @@ public class Chapter {
 
     private List<Lesson> lessons;
 
+    public Chapter() {
+    }
 
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public ChapterContent getContent() {
+        return content;
+    }
+
+    public void setContent(ChapterContent content) {
+        this.content = content;
+    }
+
+    public List<Lesson> getLessons() {
+        return lessons;
+    }
+
+    public void setLessons(List<Lesson> lessons) {
+        this.lessons = lessons;
+    }
 }
