@@ -1,22 +1,15 @@
 package org.motechproject.nms.location.domain;
 
-import org.motechproject.mds.annotations.Cascade;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.annotations.UIDisplayable;
 import org.motechproject.mds.domain.MdsEntity;
 
-import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.Unique;
 import javax.validation.constraints.NotNull;
-import java.util.ArrayList;
-import java.util.List;
 
-/**
- * This class Models data for District location records
- */
-@Entity(tableName = "nms_districts")
-public class District extends MdsEntity {
+@Entity(tableName = "nms_health_sub_facilities")
+public class HealthSubFacility extends MdsEntity {
 
     @Field
     @UIDisplayable(position = 0)
@@ -31,17 +24,10 @@ public class District extends MdsEntity {
 
     @Field
     @UIDisplayable(position = 2)
-    @Persistent(defaultFetchGroup = "true")
     @NotNull
-    private State state;
+    private HealthFacility healthFacility;
 
-    @Field
-    @Cascade(delete = true)
-    @Persistent(mappedBy = "district", defaultFetchGroup = "true")
-    private List<Taluka> talukas;
-
-    public District() {
-        this.talukas = new ArrayList();
+    public HealthSubFacility() {
     }
 
     public String getName() {
@@ -60,20 +46,12 @@ public class District extends MdsEntity {
         this.code = code;
     }
 
-    public State getState() {
-        return state;
+    public HealthFacility getHealthFacility() {
+        return healthFacility;
     }
 
-    public void setState(State state) {
-        this.state = state;
-    }
-
-    public List getTalukas() {
-        return talukas;
-    }
-
-    public void setTalukas(List talukas) {
-        this.talukas = talukas;
+    public void setHealthFacility(HealthFacility healthFacility) {
+        this.healthFacility = healthFacility;
     }
 
     @Override
@@ -85,12 +63,12 @@ public class District extends MdsEntity {
             return false;
         }
 
-        District district = (District) o;
+        HealthSubFacility that = (HealthSubFacility) o;
 
-        if (name != null ? !name.equals(district.name) : district.name != null) {
+        if (name != null ? !name.equals(that.name) : that.name != null) {
             return false;
         }
-        return !(code != null ? !code.equals(district.code) : district.code != null);
+        return !(code != null ? !code.equals(that.code) : that.code != null);
 
     }
 
@@ -103,10 +81,10 @@ public class District extends MdsEntity {
 
     @Override
     public String toString() {
-        return "District{" +
+        return "HealthSubFacility{" +
                 "name='" + name + '\'' +
                 ", code=" + code +
-                ", state=" + state +
+                ", healthFacility=" + healthFacility +
                 '}';
     }
 }
