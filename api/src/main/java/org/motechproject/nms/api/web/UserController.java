@@ -98,7 +98,7 @@ public class UserController extends BaseController {
         Kilkari in the house!
          */
         if (KILKARI.equals(serviceName)) {
-            user = getKilkariResponseUser(callingNumber);
+            user = getKilkariResponseUser(callingNumber, circle);
         }
 
         if (failureReasons.length() > 0) {
@@ -113,7 +113,7 @@ public class UserController extends BaseController {
         return user;
     }
 
-    private UserResponse getKilkariResponseUser(Long callingNumber) {
+    private UserResponse getKilkariResponseUser(Long callingNumber, String circle) {
         KilkariUserResponse user = new KilkariUserResponse();
         Set<String> packs = new HashSet<>();
         Subscriber subscriber = kilkariService.getSubscriber(callingNumber);
@@ -124,12 +124,15 @@ public class UserController extends BaseController {
             }
         } else {
             /*
-            No subscriber found in the database, according to https://github.com/koshalt/mim/issues/9#event-288912397
-            we need to respond with an empty subscription list, the circle provider in the request and our guess as
-            to what the defaultLanguageLocationCode is, which is done after this method returns
+            No subscriber found in the database, according to
+            https://github.com/koshalt/mim/issues/9#event-288912397
+            we need to respond with an empty subscription list, the circle provider in the request and our
+            guess as to what the defaultLanguageLocationCode is, which is done after this method returns
             */
-            //todo: figure out the defaultLanguageLocationCode, should that be coming from the language module?
-            user.setDefaultLanguageLocationCode("??");
+            Language language = languageService.getDefaultCircleLanguage(circle);
+            if (language != null) {
+                user.setDefaultLanguageLocationCode(language.getCode());
+            }
         }
         user.setSubscriptionPackList(packs);
         return user;
