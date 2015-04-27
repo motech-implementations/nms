@@ -1,7 +1,11 @@
 package org.motechproject.nms.api.web.contract.mobileAcademy;
 
+import org.motechproject.nms.api.web.contract.mobileAcademy.course.Chapter;
+
+import java.util.List;
+
 /**
- * Response object for get Course API 2.2.2
+ * Response object for get course API 2.2.2
  */
 public class CourseResponse {
 
@@ -9,11 +13,9 @@ public class CourseResponse {
     private String name;
 
     // course version in epoch datetime format
-    private Integer courseVersion;
+    private int courseVersion;
 
-    // actual deep copy of course
-    // TODO : This should probably be a course object that gets serialized than just string
-    private String course;
+    private List<Chapter> chapters;
 
     public String getName() {
         return name;
@@ -31,11 +33,11 @@ public class CourseResponse {
         this.courseVersion = courseVersion;
     }
 
-    public String getCourse() {
-        return course;
+    public List<Chapter> getChapters() {
+        return chapters;
     }
 
-    public void setCourse(String course) {
-        this.course = course;
+    public void setCourse(List<Chapter> chapters) {
+        this.chapters = chapters;
     }
 }

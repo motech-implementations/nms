@@ -31,7 +31,7 @@ public class MobileAcademyController extends BaseController {
 
     /**
      * Get course
-     * @return Course response object
+     * @return course response object
      */
     @RequestMapping(
             value = "/course",
