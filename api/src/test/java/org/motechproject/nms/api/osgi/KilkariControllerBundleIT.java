@@ -25,7 +25,7 @@ import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
-import org.motechproject.nms.kilkari.service.KilkariService;
+import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.language.domain.Language;
 import org.motechproject.nms.language.repository.CircleLanguageDataService;
 import org.motechproject.nms.language.repository.LanguageDataService;
@@ -59,7 +59,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     private static final String ADMIN_PASSWORD = "motech";
 
     @Inject
-    private KilkariService kilkariService;
+    private SubscriptionService subscriptionService;
 
     @Inject
     private SubscriberDataService subscriberDataService;
@@ -231,7 +231,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     public void testDeactivateSubscriptionRequest() throws IOException, InterruptedException {
         setupData();
 
-        Subscriber subscriber = kilkariService.getSubscriber(1000000000L);
+        Subscriber subscriber = subscriptionService.getSubscriber(1000000000L);
         Subscription subscription = subscriber.getSubscriptions().iterator().next();
         String subscriptionId = subscription.getSubscriptionId();
 
@@ -248,7 +248,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpDelete, HttpStatus.SC_OK, ADMIN_USERNAME,
                 ADMIN_PASSWORD));
 
-        subscription = kilkariService.getSubscription(subscriptionId);
+        subscription = subscriptionService.getSubscription(subscriptionId);
         assertTrue(subscription.getStatus().equals(SubscriptionStatus.DEACTIVATED));
     }
 
@@ -256,10 +256,10 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     public void testDeactivateSubscriptionRequestAlreadyInactive() throws IOException, InterruptedException {
         setupData();
 
-        Subscriber subscriber = kilkariService.getSubscriber(1000000000L);
+        Subscriber subscriber = subscriptionService.getSubscriber(1000000000L);
         Subscription subscription = subscriber.getSubscriptions().iterator().next();
         String subscriptionId = subscription.getSubscriptionId();
-        kilkariService.deactivateSubscription(subscription);
+        subscriptionService.deactivateSubscription(subscription);
 
         SubscriptionRequest subscriptionRequest = new SubscriptionRequest(1000000000L, "A", "AP",
                 123456789012545L, subscriptionId);
@@ -275,7 +275,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpDelete, HttpStatus.SC_OK, ADMIN_USERNAME,
                 ADMIN_PASSWORD));
 
-        subscription = kilkariService.getSubscription(subscriptionId);
+        subscription = subscriptionService.getSubscription(subscriptionId);
         assertTrue(subscription.getStatus().equals(SubscriptionStatus.DEACTIVATED));
     }
 

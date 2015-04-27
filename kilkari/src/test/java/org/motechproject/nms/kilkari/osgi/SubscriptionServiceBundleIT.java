@@ -12,10 +12,10 @@ import org.motechproject.nms.kilkari.repository.InboxCallDataDataService;
 import org.motechproject.nms.kilkari.repository.InboxCallDetailsDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
-import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
-import org.motechproject.nms.kilkari.service.KilkariService;
-import org.motechproject.nms.language.domain.Language;
 import org.motechproject.nms.language.repository.LanguageDataService;
+import org.motechproject.nms.kilkari.service.SubscriptionService;
+import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
+import org.motechproject.nms.language.domain.Language;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.ops4j.pax.exam.ExamFactory;
@@ -33,15 +33,15 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 /**
- * Verify that KilkariService is present & functional.
+ * Verify that SubscriptionService is present & functional.
  */
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerSuite.class)
 @ExamFactory(MotechNativeTestContainerFactory.class)
-public class KilkariServiceBundleIT extends BasePaxIT {
+public class SubscriptionServiceBundleIT extends BasePaxIT {
 
     @Inject
-    private KilkariService kilkariService;
+    private SubscriptionService subscriptionService;
     @Inject
     private SubscriberDataService subscriberDataService;
     @Inject
@@ -57,7 +57,7 @@ public class KilkariServiceBundleIT extends BasePaxIT {
 
     @Test
     public void testServicePresent() throws Exception {
-        assertNotNull(kilkariService);
+        assertNotNull(subscriptionService);
     }
 
     @Test
@@ -87,7 +87,7 @@ public class KilkariServiceBundleIT extends BasePaxIT {
 
         assertEquals(new HashSet<>(Arrays.asList(pack1, pack2)), packs);
 
-        long id = kilkariService.addInboxCallDetails(new InboxCallDetails(
+        long id = subscriptionService.addInboxCallDetails(new InboxCallDetails(
                 1111111111L,
                 "OP",
                 "AA",

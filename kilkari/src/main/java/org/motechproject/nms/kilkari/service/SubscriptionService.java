@@ -8,7 +8,7 @@ import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 /**
  *
  */
-public interface KilkariService {
+public interface SubscriptionService {
 
     Subscriber getSubscriber(long callingNumber);
 
@@ -22,5 +22,6 @@ public interface KilkariService {
 
     long getCountSubscriptionPack(String name);
 
+    //TODO: we'll probably want to move this to a new InboxService once we do more Inbox work in Sprint 2
     long addInboxCallDetails(InboxCallDetails inboxCallDetails);
 }

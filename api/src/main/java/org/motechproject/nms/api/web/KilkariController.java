@@ -10,7 +10,7 @@ import org.motechproject.nms.kilkari.domain.InboxCallData;
 import org.motechproject.nms.kilkari.domain.InboxCallDetails;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
-import org.motechproject.nms.kilkari.service.KilkariService;
+import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -39,7 +39,7 @@ public class KilkariController extends BaseController {
     public static final Set<String> SUBSCRIPTION_PACK_SET = new HashSet<>(Arrays.asList("48WeeksPack", "76WeeksPack"));
 
     @Autowired
-    private KilkariService kilkariService;
+    private SubscriptionService subscriptionService;
 
     /**
      * 4.2.2 Get Inbox Details API
@@ -57,7 +57,7 @@ public class KilkariController extends BaseController {
             throw new IllegalArgumentException(failureReasons.toString());
         }
 
-        Subscriber subscriber = kilkariService.getSubscriber(callingNumber);
+        Subscriber subscriber = subscriptionService.getSubscriber(callingNumber);
         if (subscriber == null) {
             throw new NotFoundException(String.format(NOT_FOUND, "callingNumber"));
         }
@@ -132,8 +132,8 @@ public class KilkariController extends BaseController {
      *
      */
     @RequestMapping(value = "/inboxCallDetails",
-                    method = RequestMethod.POST,
-                    headers = { "Content-type=application/json" })
+            method = RequestMethod.POST,
+            headers = {"Content-type=application/json"})
     @ResponseStatus(HttpStatus.OK)
     public void saveInboxCallDetails(@RequestBody InboxCallDetailsRequest request) {
         StringBuilder failureReasons = validateSaveInboxCallDetails(request);
@@ -167,21 +167,19 @@ public class KilkariController extends BaseController {
                 request.getCallDisconnectReason(),
                 content);
 
-        kilkariService.addInboxCallDetails(inboxCallDetails);
+        subscriptionService.addInboxCallDetails(inboxCallDetails);
     }
 
     /**
      * 4.2.3 Create Subscription Request API
      * IVR shall invoke this API to request the creation of the subscription of the beneficiary.
      * /api/kilkari/subscription
-     *
      */
     @RequestMapping(value = "/subscription",
             method = RequestMethod.POST,
-            headers = { "Content-type=application/json" })
+            headers = {"Content-type=application/json"})
     @ResponseStatus(HttpStatus.OK)
     public void createSubscription(@RequestBody SubscriptionRequest subscriptionRequest) {
-
         StringBuilder failureReasons = validate(subscriptionRequest.getCallingNumber(),
                 subscriptionRequest.getCallId(), subscriptionRequest.getOperator(),
                 subscriptionRequest.getCircle());
@@ -196,23 +194,21 @@ public class KilkariController extends BaseController {
             throw new NotFoundException(String.format(NOT_FOUND, "subscriptionPack"));
         }
 
-        kilkariService.createSubscription(subscriptionRequest.getCallingNumber(),
+        subscriptionService.createSubscription(subscriptionRequest.getCallingNumber(),
                 subscriptionRequest.getLanguageLocationCode(), subscriptionRequest.getSubscriptionPack());
     }
 
     /**
      * 4.2.4
      * Deactivate Subscription
-     *
+     * <p/>
      * IVR shall invoke this API to deactivate an existing Kilkari subscription
-     *
      */
     @RequestMapping(value = "/subscription",
             method = RequestMethod.DELETE,
-            headers = { "Content-type=application/json" })
+            headers = {"Content-type=application/json"})
     @ResponseStatus(HttpStatus.OK)
     public void deactivateSubscription(@RequestBody SubscriptionRequest subscriptionRequest) {
-
         StringBuilder failureReasons = validate(subscriptionRequest.getCallingNumber(),
                 subscriptionRequest.getCallId(), subscriptionRequest.getOperator(),
                 subscriptionRequest.getCircle());
@@ -223,17 +219,17 @@ public class KilkariController extends BaseController {
             throw new IllegalArgumentException(failureReasons.toString());
         }
 
-        Subscription subscription = kilkariService.getSubscription(subscriptionRequest.getSubscriptionId());
+        Subscription subscription = subscriptionService.getSubscription(subscriptionRequest.getSubscriptionId());
 
         if (subscription == null) {
             throw new NotFoundException(String.format(NOT_FOUND, "subscriptionId"));
         }
 
-        kilkariService.deactivateSubscription(subscription);
+        subscriptionService.deactivateSubscription(subscription);
     }
 
     private boolean validateSubscriptionPack(String name) {
-        return kilkariService.getCountSubscriptionPack(name) == 1;
+        return subscriptionService.getCountSubscriptionPack(name) == 1;
     }
 
 }

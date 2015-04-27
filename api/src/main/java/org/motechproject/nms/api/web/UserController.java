@@ -14,7 +14,7 @@ import org.motechproject.nms.flw.service.ServiceUsageCapService;
 import org.motechproject.nms.flw.service.ServiceUsageService;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
-import org.motechproject.nms.kilkari.service.KilkariService;
+import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.language.domain.Language;
 import org.motechproject.nms.language.service.LanguageService;
 import org.motechproject.nms.location.domain.District;
@@ -39,7 +39,7 @@ public class UserController extends BaseController {
     private LanguageService languageService;
 
     @Autowired
-    private KilkariService kilkariService;
+    private SubscriptionService subscriptionService;
 
     @Autowired
     private FrontLineWorkerService frontLineWorkerService;
@@ -117,7 +117,7 @@ public class UserController extends BaseController {
         KilkariUserResponse user = new KilkariUserResponse();
         Set<String> packs = new HashSet<>();
 
-        Subscriber subscriber = kilkariService.getSubscriber(callingNumber);
+        Subscriber subscriber = subscriptionService.getSubscriber(callingNumber);
         if (subscriber != null) {
             Set<Subscription> subscriptions = subscriber.getSubscriptions();
             for (Subscription subscription : subscriptions) {
