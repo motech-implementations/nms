@@ -332,7 +332,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         return httpPost;
     }
 
-    private String createKilkariUserResponseJson(String defaultLanguageLocationCode, String locationCode, String circle,
+    private String createKilkariUserResponseJson(String defaultLanguageLocationCode, String locationCode,
                                                  Set<String> subscriptionPackList) throws IOException {
         KilkariUserResponse kilkariUserResponse = new KilkariUserResponse();
         if (defaultLanguageLocationCode != null) {
@@ -340,9 +340,6 @@ public class UserControllerBundleIT extends BasePaxIT {
         }
         if (locationCode != null) {
             kilkariUserResponse.setLanguageLocationCode(locationCode);
-        }
-        if (circle != null) {
-            kilkariUserResponse.setCircle(circle);
         }
         if (subscriptionPackList != null) {
             kilkariUserResponse.setSubscriptionPackList(subscriptionPackList);
@@ -403,7 +400,6 @@ public class UserControllerBundleIT extends BasePaxIT {
         String expectedJsonResponse = createKilkariUserResponseJson(
                 null, //defaultLanguageLocationCode
                 null, //locationCode
-                null, //circle
                 new HashSet<String>(Arrays.asList("pack1", "pack2")) //subscriptionPackList
         );
 
@@ -425,7 +421,6 @@ public class UserControllerBundleIT extends BasePaxIT {
         String expectedJsonResponse = createKilkariUserResponseJson(
                 "??", //defaultLanguageLocationCode
                 null, //locationCode
-                "AA", //circle
                 new HashSet<String>() //subscriptionPackList
         );
 

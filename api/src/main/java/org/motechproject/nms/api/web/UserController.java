@@ -98,7 +98,7 @@ public class UserController extends BaseController {
         Kilkari in the house!
          */
         if (KILKARI.equals(serviceName)) {
-            user = getKilkariResponseUser(callingNumber, circle);
+            user = getKilkariResponseUser(callingNumber);
         }
 
         if (failureReasons.length() > 0) {
@@ -113,7 +113,7 @@ public class UserController extends BaseController {
         return user;
     }
 
-    private UserResponse getKilkariResponseUser(Long callingNumber, String circle) {
+    private UserResponse getKilkariResponseUser(Long callingNumber) {
         KilkariUserResponse user = new KilkariUserResponse();
         Set<String> packs = new HashSet<>();
         Subscriber subscriber = kilkariService.getSubscriber(callingNumber);
@@ -128,7 +128,6 @@ public class UserController extends BaseController {
             we need to respond with an empty subscription list, the circle provider in the request and our guess as
             to what the defaultLanguageLocationCode is, which is done after this method returns
             */
-            user.setCircle(circle);
             //todo: figure out the defaultLanguageLocationCode, should that be coming from the language module?
             user.setDefaultLanguageLocationCode("??");
         }

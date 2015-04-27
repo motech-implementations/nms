@@ -14,7 +14,6 @@ import java.util.Set;
  */
 public class KilkariUserResponse extends UserResponse {
     private Set<String> subscriptionPackList;
-    private String circle;
 
     public KilkariUserResponse() {
         super();
@@ -26,13 +25,5 @@ public class KilkariUserResponse extends UserResponse {
 
     public void setSubscriptionPackList(Set<String> subscriptionPackList) {
         this.subscriptionPackList = subscriptionPackList;
-    }
-
-    public String getCircle() {
-        return circle;
-    }
-
-    public void setCircle(String circle) {
-        this.circle = circle;
     }
 }
