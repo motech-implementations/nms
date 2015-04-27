@@ -43,7 +43,7 @@ public class LanguageServiceImpl implements LanguageService {
         Language defaultLanguage = null;
         List<CircleLanguage> circleLanguages = circleLanguageDataService.findByCircle(circle);
 
-        //todo #58 revisit when we know what to do with multiple default languages
+        //todo #120 revisit when we know what to do with multiple default languages
         if (circleLanguages.size() > 0) {
             defaultLanguage = circleLanguages.get(0).getLanguage();
         }
