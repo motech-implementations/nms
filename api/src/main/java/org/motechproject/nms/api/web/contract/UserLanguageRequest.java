@@ -1,15 +1,27 @@
 package org.motechproject.nms.api.web.contract;
 
-public class LanguageRequest {
+/**
+ * Request body
+ *
+ * 2.2.7 Set User Language Location Code API
+ * IVR shall invoke this API to provide user languageLocation preference to MoTech.
+ * /api/mobileacademy/languageLocationCode
+ *
+ * 3.2.3 Set User Language Location Code API
+ * IVR shall invoke this API to set the language location code of the user in NMS database.
+ * /api/mobilekunji/languageLocationCode
+ *
+ */
+public class UserLanguageRequest {
     private Long callingNumber;
     private Long callId;
     private String languageLocationCode;
 
     // Necessary for Jackson
-    public LanguageRequest() { }
+    public UserLanguageRequest() { }
 
     // Used in ITs only
-    public LanguageRequest(Long callingNumber, Long callId, String languageLocationCode) {
+    public UserLanguageRequest(Long callingNumber, Long callId, String languageLocationCode) {
         this.callingNumber = callingNumber;
         this.callId = callId;
         this.languageLocationCode = languageLocationCode;

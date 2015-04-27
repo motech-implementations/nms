@@ -6,7 +6,7 @@ import org.apache.http.entity.StringEntity;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.motechproject.nms.api.web.contract.LanguageRequest;
+import org.motechproject.nms.api.web.contract.UserLanguageRequest;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.Service;
 import org.motechproject.nms.flw.domain.ServiceUsageCap;
@@ -112,7 +112,7 @@ public class LanguageControllerBundleIT extends BasePaxIT {
     public void testSetLanguageInvalidCallingNumber() throws IOException, InterruptedException {
         HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/languageLocationCode", TestContext.getJettyPort()));
 
-        LanguageRequest request = new LanguageRequest(
+        UserLanguageRequest request = new UserLanguageRequest(
                 null, //callingNumber
                 123456789012345l, //callId
                 "123"); //languageLocationCode

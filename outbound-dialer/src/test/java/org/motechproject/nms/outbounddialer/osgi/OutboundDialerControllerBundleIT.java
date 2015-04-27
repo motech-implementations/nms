@@ -1,5 +1,6 @@
 package org.motechproject.nms.outbounddialer.osgi;
 
+import org.apache.http.client.methods.HttpGet;
 import org.motechproject.nms.outbounddialer.web.contract.CdrFileNotificationRequest;
 import org.motechproject.nms.outbounddialer.web.contract.CdrFileNotificationRequestFileInfo;
 import org.apache.commons.httpclient.HttpStatus;
@@ -34,26 +35,27 @@ public class OutboundDialerControllerBundleIT extends BasePaxIT {
     @Test
     public void testCreateCdrFileNotificationRequest() throws IOException, InterruptedException {
         String validTargetFileName = "OBD_NMS1_20150127090000.csv";
-        String validCdrSummaryFileName = "CdrSummary_OBD_NMS1_20150127090000.csv";
-        String validCdrDetailFileName = "CdrDetail_OBD_NMS1_20150127090000.csv";
+        String validCdrSummaryFileName = "cdrSummary_OBD_NMS1_20150127090000.csv";
+        String validCdrDetailFileName = "cdrDetail_OBD_NMS1_20150127090000.csv";
 
         CdrFileNotificationRequestFileInfo cdrSummary =
-            new CdrFileNotificationRequestFileInfo(validCdrSummaryFileName, "xxxx", 5000);
+                new CdrFileNotificationRequestFileInfo(validCdrSummaryFileName, "xxxx", 5000);
         CdrFileNotificationRequestFileInfo cdrDetail =
-            new CdrFileNotificationRequestFileInfo(validCdrDetailFileName, "xxxx", 9900);
+                new CdrFileNotificationRequestFileInfo(validCdrDetailFileName, "xxxx", 9900);
 
         CdrFileNotificationRequest cdrFileNotificationRequest =
-            new CdrFileNotificationRequest(validTargetFileName, cdrSummary, cdrDetail);
+                new CdrFileNotificationRequest(validTargetFileName, cdrSummary, cdrDetail);
 
         ObjectMapper mapper = new ObjectMapper();
         String cdrFileNotificationRequestJson = mapper.writeValueAsString(cdrFileNotificationRequest);
 
-        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/obd/cdrFileNotification",
-            TestContext.getJettyPort()));
+        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/outbounddialer/cdrFileNotification",
+                TestContext.getJettyPort()));
         httpPost.setHeader("Content-type", "application/json");
         httpPost.setEntity(new StringEntity(cdrFileNotificationRequestJson));
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK, ADMIN_USERNAME, ADMIN_PASSWORD));
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_ACCEPTED, ADMIN_USERNAME,
+                ADMIN_PASSWORD));
     }
 
 

@@ -10,7 +10,7 @@ import org.junit.runner.RunWith;
 import org.motechproject.nms.api.utils.HttpDeleteWithBody;
 import org.motechproject.nms.api.web.contract.BadRequest;
 import org.motechproject.nms.api.web.contract.kilkari.InboxCallDetailsRequest;
-import org.motechproject.nms.api.web.contract.kilkari.InboxCallDetailsRequestCallData;
+import org.motechproject.nms.api.web.contract.kilkari.CallDataRequest;
 import org.motechproject.nms.api.web.contract.kilkari.InboxResponse;
 import org.motechproject.nms.api.web.contract.kilkari.InboxSubscriptionDetailResponse;
 import org.motechproject.nms.api.web.contract.kilkari.SubscriptionRequest;
@@ -321,14 +321,14 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 1, //callStatus
                 1, //callDisconnectReason
                 new HashSet<>(Arrays.asList(
-                    new InboxCallDetailsRequestCallData(
+                    new CallDataRequest(
                         "00000000-0000-0000-0000-000000000000", //subscriptionId
                         "48WeeksPack", //subscriptionPack
                         "123", //inboxWeekId
                         "foo", //contentFileName
                         123L, //startTime
                         456L), //endTime
-                    new InboxCallDetailsRequestCallData(
+                    new CallDataRequest(
                         "00000000-0000-0000-0000-000000000001", //subscriptionId
                         "76WeeksPack", //subscriptionPack
                         "123", //inboxWeekId
@@ -372,14 +372,14 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 1, //callStatus
                 1, //callDisconnectReason
                 new HashSet<>(Arrays.asList(
-                        new InboxCallDetailsRequestCallData(
+                        new CallDataRequest(
                                 "00000000-0000-0000-0000-000000000000", //subscriptionId
                                 "48WeeksPack", //subscriptionPack
                                 "123", //inboxWeekId
                                 "foo", //contentFileName
                                 123L, //startTime
                                 456L), //endTime
-                        new InboxCallDetailsRequestCallData(
+                        new CallDataRequest(
                                 "00000000-0000-0000-0000", //subscriptionId
                                 "foobar", //subscriptionPack
                                 "123", //inboxWeekId

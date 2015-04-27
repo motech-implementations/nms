@@ -1,6 +1,6 @@
 package org.motechproject.nms.api.web;
 
-import org.motechproject.nms.api.web.contract.LanguageRequest;
+import org.motechproject.nms.api.web.contract.UserLanguageRequest;
 import org.motechproject.nms.api.web.exception.NotAuthorizedException;
 import org.motechproject.nms.api.web.exception.NotFoundException;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
@@ -29,13 +29,13 @@ public class LanguageController extends BaseController {
     private LanguageService languageService;
 
     /**
-     * 2.2.7.1  Set User Language Location Code
-     *          http://<motech:port>/motech­platform­server/module/mobileacademy/languageLocationCode
+     * 2.2.7 Set User Language Location Code API
+     * IVR shall invoke this API to provide user languageLocation preference to MoTech.
+     * /api/mobileacademy/languageLocationCode
      *
-     * 3.2.3.1  Set User Language Location Code
-     *          http://<motech:port>/motech­platform­server/module/mobilekunji/languageLocationCode
-     *
-     *          IVR shall invoke this API to provide user languageLocation preference to MOTECH.
+     * 3.2.3 Set User Language Location Code API
+     * IVR shall invoke this API to set the language location code of the user in NMS database.
+     * /api/mobilekunji/languageLocationCode
      *
      */
     @RequestMapping(value = "/{serviceName}/languageLocationCode",
@@ -43,13 +43,13 @@ public class LanguageController extends BaseController {
             headers = { "Content-type=application/json" })
     @ResponseStatus(HttpStatus.OK)
     public void setUserLanguageLocationCode(@PathVariable String serviceName,
-                                            @RequestBody LanguageRequest languageRequest) {
-        Long callingNumber = languageRequest.getCallingNumber();
-        Long callId = languageRequest.getCallId();
-        String languageLocationCode = languageRequest.getLanguageLocationCode();
+                                            @RequestBody UserLanguageRequest userLanguageRequest) {
+        Long callingNumber = userLanguageRequest.getCallingNumber();
+        Long callId = userLanguageRequest.getCallId();
+        String languageLocationCode = userLanguageRequest.getLanguageLocationCode();
 
         StringBuilder failureReasons = validate(callingNumber, callId);
-        validateFieldPresent(failureReasons, LANGUAGE_LOCATION_CODE, languageRequest.getLanguageLocationCode());
+        validateFieldPresent(failureReasons, LANGUAGE_LOCATION_CODE, userLanguageRequest.getLanguageLocationCode());
 
         if (!(MOBILE_ACADEMY.equals(serviceName) || MOBILE_KUNJI.equals(serviceName))) {
             failureReasons.append(String.format(INVALID, SERVICE_NAME));

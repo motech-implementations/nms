@@ -22,6 +22,10 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 /**
  * BaseController
+ *
+ * Common data & helper methods
+ * All error handlers
+ *
  */
 public class BaseController {
     public static final String MOBILE_ACADEMY = "mobileacademy";
@@ -168,12 +172,29 @@ public class BaseController {
         return new DateTime(epoch);
     }
 
+    protected boolean frontLineWorkerAuthorizedForAccess(FrontLineWorker flw) {
+        District district = flw.getDistrict();
+        State state = null;
+
+        if (district != null) {
+            state = district.getState();
+        }
+
+        if (state == null) {
+            state = locationService.getStateForLanguage(flw.getLanguage());
+        }
+
+        return whitelistService.numberWhitelistedForState(state, flw.getContactNumber());
+    }
+
+
     @ExceptionHandler(NotAuthorizedException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
     @ResponseBody
     public BadRequest handleException(NotAuthorizedException e) {
         return new BadRequest(e.getMessage());
     }
+
 
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -182,12 +203,14 @@ public class BaseController {
         return new BadRequest(e.getMessage());
     }
 
+
     @ExceptionHandler(NotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ResponseBody
     public BadRequest handleException(NotFoundException e) {
         return new BadRequest(e.getMessage());
     }
+
 
     @ExceptionHandler(NullPointerException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -206,21 +229,5 @@ public class BaseController {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public BadRequest handleException(HttpMessageNotReadableException e) {
         return new BadRequest(e.getMessage());
-    }
-
-
-    protected boolean frontLineWorkerAuthorizedForAccess(FrontLineWorker flw) {
-        District district = flw.getDistrict();
-        State state = null;
-
-        if (district != null) {
-            state = district.getState();
-        }
-
-        if (state == null) {
-            state = locationService.getStateForLanguage(flw.getLanguage());
-        }
-
-        return whitelistService.numberWhitelistedForState(state, flw.getContactNumber());
     }
 }

@@ -1,9 +1,15 @@
 package org.motechproject.nms.api.web.contract.kilkari;
 
 /**
- * 4.2.5.1.5 CallData object
+ * Request body - inner data structure
+ *
+ * 4.2.5 Save Inbox Call Details
+ * IVR shall invoke this API to send the call detail information corresponding to the Inbox access inbound call
+ *    for which inbox message(s) is played.
+ * /api/kilkari/inboxCallDetails
+ *
  */
-public class InboxCallDetailsRequestCallData {
+public class CallDataRequest {
     private String subscriptionId;
     private String subscriptionPack;
     private String inboxWeekId;
@@ -11,10 +17,10 @@ public class InboxCallDetailsRequestCallData {
     private Long startTime;
     private Long endTime;
 
-    public InboxCallDetailsRequestCallData() { }
+    public CallDataRequest() { }
 
-    public InboxCallDetailsRequestCallData(String subscriptionId, String subscriptionPack, String inboxWeekId,
-                                           String contentFileName, Long startTime, Long endTime) {
+    public CallDataRequest(String subscriptionId, String subscriptionPack, String inboxWeekId,
+                           String contentFileName, Long startTime, Long endTime) {
         this.subscriptionId = subscriptionId;
         this.subscriptionPack = subscriptionPack;
         this.inboxWeekId = inboxWeekId;

@@ -20,7 +20,6 @@ import java.util.regex.Pattern;
 /**
  * OutboundDialerController
  */
-@RequestMapping("/obd")
 @Controller
 public class OutboundDialerController {
 
@@ -62,14 +61,18 @@ public class OutboundDialerController {
         }
 
         if (validateFieldPresent(errors, "cdrFile", fileInfo.getCdrFile())) {
-            if (! fileInfo.getCdrFile().equals(fieldName + "_" + targetFileName)) {
+            if (!fileInfo.getCdrFile().equals(fieldName + "_" + targetFileName)) {
                 errors.append(String.format(INVALID, fieldName));
                 valid = false;
             }
         }
         
-        if (! (validateFieldPresent(errors, "checksum", fileInfo.getChecksum()) && 
-            validateFieldPresent(errors, "recordsCount", fileInfo.getRecordsCount()))) {
+        if (!validateFieldPresent(errors, "checksum", fileInfo.getChecksum())) {
+            valid = false;
+        }
+
+        if (fileInfo.getRecordsCount() < 0) {
+            errors.append(String.format(INVALID, "recordsCount"));
             valid = false;
         }
 
@@ -84,7 +87,7 @@ public class OutboundDialerController {
      */
     @RequestMapping(value = "/cdrFileNotification",
             method = RequestMethod.POST,
-            headers = {"Content-type=application/json"})
+            headers = { "Content-type=application/json" })
     @ResponseStatus(HttpStatus.ACCEPTED)
     public void notifyNewCdrFile(@RequestBody CdrFileNotificationRequest cdrFileNotificationRequest) {
         StringBuilder failureReasons = new StringBuilder();
@@ -109,9 +112,9 @@ public class OutboundDialerController {
      * IVR shall invoke this API to update about the status of file copy after initial checks on the file
      * are completed.
      */
-    @RequestMapping(value = "/obdFileProcessedStatusNotification",
+    @RequestMapping(value = "obdFileProcessedStatusNotification",
             method = RequestMethod.POST,
-            headers = {"Content-type=application/json"})
+            headers = { "Content-type=application/json" })
     @ResponseStatus(HttpStatus.OK)
     public void notifyFileProcessedStatus(@RequestBody FileProcessedStatusRequest fileProcessedStatusRequest) {
         // TODO: validate params
