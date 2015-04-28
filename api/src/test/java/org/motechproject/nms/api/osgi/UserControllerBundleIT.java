@@ -116,14 +116,14 @@ public class UserControllerBundleIT extends BasePaxIT {
     // TODO: Clean up data creation and cleanup
     private void cleanAllData() {
         whitelistEntryDataService.deleteAll();
-        stateDataService.deleteAll();
-        subscriptionDataService.deleteAll();
-        subscriptionPackDataService.deleteAll();
-        subscriberDataService.deleteAll();
         serviceUsageCapDataService.deleteAll();
         serviceUsageDataService.deleteAll();
         callDetailRecordDataService.deleteAll();
         frontLineWorkerDataService.deleteAll();
+        stateDataService.deleteAll();
+        subscriptionDataService.deleteAll();
+        subscriptionPackDataService.deleteAll();
+        subscriberDataService.deleteAll();
         circleLanguageDataService.deleteAll();
         languageDataService.deleteAll();
     }
