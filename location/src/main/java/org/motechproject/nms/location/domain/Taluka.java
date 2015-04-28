@@ -7,16 +7,12 @@ import org.motechproject.mds.annotations.UIDisplayable;
 import org.motechproject.mds.domain.MdsEntity;
 
 import javax.jdo.annotations.Persistent;
-import javax.jdo.annotations.Unique;
 import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * This class Models data for District location records
- */
-@Entity(tableName = "nms_districts")
-public class District extends MdsEntity {
+@Entity(tableName = "nms_talukas")
+public class Taluka extends MdsEntity {
 
     @Field
     @UIDisplayable(position = 0)
@@ -24,24 +20,28 @@ public class District extends MdsEntity {
     private String name;
 
     @Field
-    @Unique
     @UIDisplayable(position = 1)
     @NotNull
     private Long code;
 
     @Field
     @UIDisplayable(position = 2)
-    @Persistent(defaultFetchGroup = "true")
     @NotNull
-    private State state;
+    private District district;
 
     @Field
     @Cascade(delete = true)
-    @Persistent(mappedBy = "district", defaultFetchGroup = "true")
-    private List<Taluka> talukas;
+    @Persistent(mappedBy = "taluka", defaultFetchGroup = "true")
+    private List<HealthBlock> healthBlocks;
 
-    public District() {
-        this.talukas = new ArrayList();
+    @Field
+    @Cascade(delete = true)
+    @Persistent(mappedBy = "taluka", defaultFetchGroup = "true")
+    private List<Village> villages;
+
+    public Taluka() {
+        this.healthBlocks = new ArrayList<>();
+        this.villages = new ArrayList<>();
     }
 
     public String getName() {
@@ -60,20 +60,28 @@ public class District extends MdsEntity {
         this.code = code;
     }
 
-    public State getState() {
-        return state;
+    public District getDistrict() {
+        return district;
     }
 
-    public void setState(State state) {
-        this.state = state;
+    public void setDistrict(District district) {
+        this.district = district;
     }
 
-    public List getTalukas() {
-        return talukas;
+    public List<HealthBlock> getHealthBlocks() {
+        return healthBlocks;
     }
 
-    public void setTalukas(List talukas) {
-        this.talukas = talukas;
+    public void setHealthBlocks(List<HealthBlock> healthBlocks) {
+        this.healthBlocks = healthBlocks;
+    }
+
+    public List<Village> getVillages() {
+        return villages;
+    }
+
+    public void setVillages(List<Village> villages) {
+        this.villages = villages;
     }
 
     @Override
@@ -85,12 +93,12 @@ public class District extends MdsEntity {
             return false;
         }
 
-        District district = (District) o;
+        Taluka taluka = (Taluka) o;
 
-        if (name != null ? !name.equals(district.name) : district.name != null) {
+        if (name != null ? !name.equals(taluka.name) : taluka.name != null) {
             return false;
         }
-        return !(code != null ? !code.equals(district.code) : district.code != null);
+        return !(code != null ? !code.equals(taluka.code) : taluka.code != null);
 
     }
 
@@ -103,10 +111,10 @@ public class District extends MdsEntity {
 
     @Override
     public String toString() {
-        return "District{" +
+        return "Taluka{" +
                 "name='" + name + '\'' +
                 ", code=" + code +
-                ", state=" + state +
+                ", district=" + district +
                 '}';
     }
 }

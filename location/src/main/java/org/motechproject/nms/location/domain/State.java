@@ -1,41 +1,47 @@
 package org.motechproject.nms.location.domain;
 
+import org.motechproject.mds.annotations.Cascade;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.annotations.UIDisplayable;
+import org.motechproject.mds.domain.MdsEntity;
 
 import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.Unique;
-import java.util.HashSet;
-import java.util.Set;
+import javax.validation.constraints.NotNull;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * This class Models data for State location records
  */
-@Entity(tableName = "states")
-public class State {
+@Entity(tableName = "nms_states")
+public class State extends MdsEntity {
 
     @Field
     @UIDisplayable(position = 0)
+    @NotNull
     private String name;
 
     @Field
     @Unique
     @UIDisplayable(position = 1)
-    private Long stateCode;
+    @NotNull
+    private Long code;
 
     @Field
+    @Cascade(delete = true)
     @Persistent(mappedBy = "state", defaultFetchGroup = "true")
-    private Set<District> districts;
+    private List<District> districts;
 
     public State() {
-        this.districts = new HashSet<>();
+        this.districts = new ArrayList<>();
     }
 
-    public State(String name, Long stateCode) {
+    public State(String name, Long code) {
         this.name = name;
-        this.stateCode = stateCode;
-        this.districts = new HashSet<>();
+        this.code = code;
+        this.districts = new ArrayList<>();
     }
 
     public String getName() {
@@ -46,39 +52,44 @@ public class State {
         this.name = name;
     }
 
-    public Long getStateCode() {
-        return stateCode;
+    public Long getCode() {
+        return code;
     }
 
-    public void setStateCode(Long stateCode) {
-        this.stateCode = stateCode;
+    public void setCode(Long code) {
+        this.code = code;
     }
 
-    public Set<District> getDistricts() {
+    public List<District> getDistricts() {
         return districts;
     }
 
-    public void setDistricts(Set<District> districts) {
+    public void setDistricts(List<District> districts) {
         this.districts = districts;
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) { return true; }
-        if (o == null || getClass() != o.getClass()) { return false; }
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         State state = (State) o;
 
-        if (!name.equals(state.name)) { return false; }
-        if (!stateCode.equals(state.stateCode)) { return false; }
+        if (name != null ? !name.equals(state.name) : state.name != null) {
+            return false;
+        }
+        return !(code != null ? !code.equals(state.code) : state.code != null);
 
-        return true;
     }
 
     @Override
     public int hashCode() {
-        int result = name.hashCode();
-        result = 31 * result + stateCode.hashCode();
+        int result = name != null ? name.hashCode() : 0;
+        result = 31 * result + (code != null ? code.hashCode() : 0);
         return result;
     }
 
@@ -86,8 +97,7 @@ public class State {
     public String toString() {
         return "State{" +
                 "name='" + name + '\'' +
-                ", stateCode=" + stateCode +
-                ", districts=" + districts +
+                ", code=" + code +
                 '}';
     }
 }

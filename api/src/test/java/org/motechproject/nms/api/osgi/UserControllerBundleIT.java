@@ -117,14 +117,14 @@ public class UserControllerBundleIT extends BasePaxIT {
     // TODO: Clean up data creation and cleanup
     private void cleanAllData() {
         whitelistEntryDataService.deleteAll();
-        stateDataService.deleteAll();
-        subscriptionDataService.deleteAll();
-        subscriptionPackDataService.deleteAll();
-        subscriberDataService.deleteAll();
         serviceUsageCapDataService.deleteAll();
         serviceUsageDataService.deleteAll();
         callDetailRecordDataService.deleteAll();
         frontLineWorkerDataService.deleteAll();
+        stateDataService.deleteAll();
+        subscriptionDataService.deleteAll();
+        subscriptionPackDataService.deleteAll();
+        subscriberDataService.deleteAll();
         circleLanguageDataService.deleteAll();
         languageDataService.deleteAll();
     }
@@ -251,7 +251,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         District district = new District();
         district.setName("9");
-        district.setDistrictCode(9l);
+        district.setCode(9l);
 
         // Currently the whitelist code has the config for state based whitelisting hardcoded.
         // There is a todo and ticket tracking that work.  By default the state named 'Whitelist' has
