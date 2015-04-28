@@ -10,6 +10,7 @@ import org.motechproject.nms.kilkari.domain.InboxCallData;
 import org.motechproject.nms.kilkari.domain.InboxCallDetails;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
+import org.motechproject.nms.kilkari.domain.SubscriptionMode;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -195,7 +196,8 @@ public class KilkariController extends BaseController {
         }
 
         subscriptionService.createSubscription(subscriptionRequest.getCallingNumber(),
-                subscriptionRequest.getLanguageLocationCode(), subscriptionRequest.getSubscriptionPack());
+                subscriptionRequest.getLanguageLocationCode(), subscriptionRequest.getSubscriptionPack(),
+                SubscriptionMode.IVR);
     }
 
     /**

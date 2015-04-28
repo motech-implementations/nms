@@ -27,6 +27,7 @@ import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
+import org.motechproject.nms.kilkari.domain.SubscriptionMode;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
@@ -150,9 +151,9 @@ public class UserControllerBundleIT extends BasePaxIT {
         Subscriber subscriber1 = subscriberDataService.create(new Subscriber(1000000000L));
         Subscriber subscriber2 = subscriberDataService.create(new Subscriber(2000000000L));
 
-        Subscription subscription1 = subscriptionDataService.create(new Subscription(subscriber1, pack1, ta));
-        Subscription subscription2 = subscriptionDataService.create(new Subscription(subscriber2, pack1, ta));
-        Subscription subscription3 = subscriptionDataService.create(new Subscription(subscriber2, pack2, ta));
+        Subscription subscription1 = subscriptionDataService.create(new Subscription(subscriber1, pack1, ta, SubscriptionMode.IVR));
+        Subscription subscription2 = subscriptionDataService.create(new Subscription(subscriber2, pack1, ta, SubscriptionMode.IVR));
+        Subscription subscription3 = subscriptionDataService.create(new Subscription(subscriber2, pack2, ta, SubscriptionMode.IVR));
     }
 
     private void createFlwCappedServiceNoUsageNoLocationNoLanguage() {

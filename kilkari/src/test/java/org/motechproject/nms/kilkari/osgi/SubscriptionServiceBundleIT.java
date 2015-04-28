@@ -8,6 +8,7 @@ import org.motechproject.nms.kilkari.domain.InboxCallDetails;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
+import org.motechproject.nms.kilkari.domain.SubscriptionMode;
 import org.motechproject.nms.kilkari.repository.InboxCallDataDataService;
 import org.motechproject.nms.kilkari.repository.InboxCallDetailsDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
@@ -76,8 +77,13 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         Subscriber subscriber = subscriberDataService.create(new Subscriber(1000000000L));
 
-        Subscription subscription1 = subscriptionDataService.create(new Subscription(subscriber, pack1, ta));
-        Subscription subscription2 = subscriptionDataService.create(new Subscription(subscriber, pack2, ta));
+        /*
+        subscriptionService.createSubscription(subscriber.getCallingNumber(), ta.getCode(), pack1.getName(), SubscriptionMode.IVR);
+        subscriptionService.createSubscription(subscriber.getCallingNumber(), ta.getCode(), pack2.getName(), SubscriptionMode.IVR);
+        */
+
+        Subscription subscription1 = subscriptionDataService.create(new Subscription(subscriber, pack1, ta, SubscriptionMode.IVR));
+        Subscription subscription2 = subscriptionDataService.create(new Subscription(subscriber, pack2, ta, SubscriptionMode.IVR));
 
         Set<Subscription> subscriptions = subscriber.getSubscriptions();
         Set<SubscriptionPack> packs = new HashSet<>();

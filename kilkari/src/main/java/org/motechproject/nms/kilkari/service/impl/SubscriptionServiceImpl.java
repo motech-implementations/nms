@@ -5,6 +5,7 @@ import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
+import org.motechproject.nms.kilkari.domain.SubscriptionMode;
 import org.motechproject.nms.kilkari.repository.InboxCallDetailsDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
@@ -14,6 +15,7 @@ import org.motechproject.nms.language.domain.Language;
 import org.motechproject.nms.language.repository.LanguageDataService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.joda.time.LocalDate;
 
 /**
  * Implementation of the {@link SubscriptionService} interface.
@@ -46,7 +48,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @Override
-    public void createSubscription(long callingNumber, String languageLocationCode, String subscriptionPack) {
+    public void createSubscription(long callingNumber, String languageLocationCode, String subscriptionPack,
+        SubscriptionMode mode) {
         Subscriber subscriber = subscriberDataService.findByCallingNumber(callingNumber);
         if (subscriber == null) {
             subscriberDataService.create(new Subscriber(callingNumber));
@@ -55,8 +58,17 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
         SubscriptionPack pack = subscriptionPackDataService.byName(subscriptionPack);
         Language language = languageDataService.findByCode(languageLocationCode);
+        Subscription subscription = new Subscription(subscriber, pack, language, mode);
 
-        subscriptionDataService.create(new Subscription(subscriber, pack, language));
+        if (mode == SubscriptionMode.IVR) {
+            subscription.setStatus(SubscriptionStatus.ACTIVE);
+            subscription.setStartDate(LocalDate.now().plusDays(1));
+        } else { // MCTS_UPLOAD
+            subscription.setStatus(SubscriptionStatus.PENDING_ACTIVATION);
+            // TODO: set the start date based on LMP from MCTS
+        }
+
+        subscriptionDataService.create(subscription);
     }
 
     @Override
@@ -86,6 +98,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         return subscriptionPackDataService.countByName(name);
     }
 
+    // TODO: move to a new InboxService eventually
     @Override
     public long addInboxCallDetails(InboxCallDetails inboxCallDetails) {
         InboxCallDetails newRecord = inboxCallDetailsDataService.create(inboxCallDetails);
