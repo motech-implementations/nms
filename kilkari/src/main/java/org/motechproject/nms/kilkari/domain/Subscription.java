@@ -8,7 +8,7 @@ import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Unique;
 import java.util.UUID;
 
-@Entity
+@Entity(tableName = "nms_subscriptions")
 public class Subscription {
     public static final int FIELD_LENGTH_36 = 36;
 

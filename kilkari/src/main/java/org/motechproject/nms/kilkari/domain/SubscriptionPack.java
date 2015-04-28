@@ -8,7 +8,7 @@ import org.motechproject.mds.annotations.Field;
  *
  * for example antenatal or postnatal
  */
-@Entity
+@Entity(tableName = "nms_subscription_packs")
 public class SubscriptionPack {
 
     @Field

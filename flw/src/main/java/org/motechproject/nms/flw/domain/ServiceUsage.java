@@ -4,7 +4,7 @@ import org.joda.time.DateTime;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 
-@Entity
+@Entity(tableName = "nms_service_usage")
 public class ServiceUsage {
 
     @Field

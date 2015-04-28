@@ -13,10 +13,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * This class Models data for District location records
+ * This class Models data for HealthBlock location records
  */
-@Entity(tableName = "nms_districts")
-public class District extends MdsEntity {
+@Entity(tableName = "nms_health_blocks")
+public class HealthBlock extends MdsEntity {
 
     @Field
     @UIDisplayable(position = 0)
@@ -31,17 +31,16 @@ public class District extends MdsEntity {
 
     @Field
     @UIDisplayable(position = 2)
-    @Persistent(defaultFetchGroup = "true")
     @NotNull
-    private State state;
+    private Taluka taluka;
 
     @Field
     @Cascade(delete = true)
-    @Persistent(mappedBy = "district", defaultFetchGroup = "true")
-    private List<Taluka> talukas;
+    @Persistent(mappedBy = "healthBlock", defaultFetchGroup = "true")
+    private List<HealthFacility> healthFacilities;
 
-    public District() {
-        this.talukas = new ArrayList();
+    public HealthBlock() {
+        this.healthFacilities = new ArrayList<>();
     }
 
     public String getName() {
@@ -60,20 +59,20 @@ public class District extends MdsEntity {
         this.code = code;
     }
 
-    public State getState() {
-        return state;
+    public Taluka getTaluka() {
+        return taluka;
     }
 
-    public void setState(State state) {
-        this.state = state;
+    public void setTaluka(Taluka taluka) {
+        this.taluka = taluka;
     }
 
-    public List getTalukas() {
-        return talukas;
+    public List<HealthFacility> getHealthFacilities() {
+        return healthFacilities;
     }
 
-    public void setTalukas(List talukas) {
-        this.talukas = talukas;
+    public void setHealthFacilities(List<HealthFacility> healthFacilities) {
+        this.healthFacilities = healthFacilities;
     }
 
     @Override
@@ -85,12 +84,12 @@ public class District extends MdsEntity {
             return false;
         }
 
-        District district = (District) o;
+        HealthBlock other = (HealthBlock) o;
 
-        if (name != null ? !name.equals(district.name) : district.name != null) {
+        if (name != null ? !name.equals(other.name) : other.name != null) {
             return false;
         }
-        return !(code != null ? !code.equals(district.code) : district.code != null);
+        return !(code != null ? !code.equals(other.code) : other.code != null);
 
     }
 
@@ -103,10 +102,10 @@ public class District extends MdsEntity {
 
     @Override
     public String toString() {
-        return "District{" +
+        return "HealthBlock{" +
                 "name='" + name + '\'' +
                 ", code=" + code +
-                ", state=" + state +
+                ", taluka=" + taluka +
                 '}';
     }
 }
