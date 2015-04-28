@@ -1,6 +1,7 @@
 package org.motechproject.nms.flw.domain;
 
 import org.joda.time.DateTime;
+import org.motechproject.mds.annotations.Cascade;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.nms.props.domain.CallDisconnectReason;
@@ -13,7 +14,7 @@ import javax.jdo.annotations.Persistent;
 import java.util.Collections;
 import java.util.List;
 
-@Entity
+@Entity(tableName = "nms_call_detail_records")
 public class CallDetailRecord {
 
     public static final int FIELD_SIZE_10 = 10;
@@ -68,6 +69,7 @@ public class CallDetailRecord {
 
     @Field
     @Persistent(mappedBy = "callDetailRecord")
+    @Cascade(delete = true)
     @Order(extensions = @Extension(vendorName = "datanucleus", key = "list-ordering", value = "id ASC"))
     private List<CallContent> content;
 

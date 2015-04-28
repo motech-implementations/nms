@@ -9,7 +9,7 @@ import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.Unique;
 
-@Entity
+@Entity(tableName = "nms_front_line_workers")
 public class FrontLineWorker {
     public static final int FIELD_SIZE_10 = 10;
 

@@ -8,7 +8,7 @@ import javax.jdo.annotations.Unique;
 /**
  * Represents... yep that's right. The languages that are supported by the system.
  */
-@Entity
+@Entity(tableName = "nms_languages")
 public class Language {
 
     @Field
