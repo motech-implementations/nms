@@ -43,7 +43,7 @@ public class OutboundDialerController {
             if (TARGET_FILENAME_PATTERN.matcher(targetFileName).matches()) {
                 return true;
             } else {
-                errors.append(String.format(INVALID, targetFileName));
+                errors.append(String.format(INVALID, "fileName"));
                 return false;
             }
         }
@@ -117,9 +117,19 @@ public class OutboundDialerController {
             headers = { "Content-type=application/json" })
     @ResponseStatus(HttpStatus.OK)
     public void notifyFileProcessedStatus(@RequestBody FileProcessedStatusRequest fileProcessedStatusRequest) {
-        // TODO: validate params
+        StringBuilder failureReasons = new StringBuilder();
 
-        // TODO: call OBD service, which will handle notification
+        validateFieldPresent(failureReasons, "fileProcessedStatus",
+            fileProcessedStatusRequest.getFileProcessedStatus());
+        validateFieldPresent(failureReasons, "fileName", fileProcessedStatusRequest.getFileName());
+
+        // TODO: validate file name against internal data
+
+        if (failureReasons.length() > 0) {
+            throw new IllegalArgumentException(failureReasons.toString());
+        }
+
+        // call OBD service, which will handle notification
         outboundDialerService.handleFileProcessedStatusNotification();
     }
 

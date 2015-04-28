@@ -73,7 +73,8 @@
                         <Resource-Path>outbounddialer/resources</Resource-Path>
                         <Context-Path>outbounddialer</Context-Path>
                         <Export-Package>
-                            org.motechproject.nms.outbounddialer.web.contract
+                            org.motechproject.nms.outbounddialer.web.contract,
+                            org.motechproject.nms.outbounddialer.domain
                         </Export-Package>
                         <Import-Package>
                             org.motechproject.osgi.web,

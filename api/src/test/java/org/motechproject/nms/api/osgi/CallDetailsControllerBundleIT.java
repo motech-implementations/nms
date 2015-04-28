@@ -26,6 +26,7 @@ import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 
 import static org.junit.Assert.assertEquals;
@@ -144,6 +145,38 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         return contentTemplate.toString();
     }
 
+    private HttpPost createCallDetailsPost(String serviceName,
+                                   boolean includeCallingNumber, Long callingNumber,
+                                   boolean includeCallId, Long callId,
+                                   boolean includeOperator, String operator,
+                                   boolean includeCircle, String circle,
+                                   boolean includeCallStartTime, Long callStartTime,
+                                   boolean includeCallEndTime, Long callEndTime,
+                                   boolean includeCallDurationInPulses, Integer callDurationInPulses,
+                                   boolean includeEndOfUsagePromptCounter, Integer endOfUsagePromptCounter,
+                                   boolean includeWelcomeMessagePromptFlag, Boolean welcomeMessagePromptFlag,
+                                   boolean includeCallStatus, Integer callStatus,
+                                   boolean includeCallDisconnectReason, Integer callDisconnectReason,
+                                   boolean includeContet, String content) {
+        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/%s/callDetails",
+                TestContext.getJettyPort(), serviceName));
+        String callDetailsJson = createCallDetailsJson(includeCallingNumber, callingNumber, includeCallId,
+                callId, includeOperator, operator, includeCircle, circle, includeCallStartTime, callStartTime,
+                includeCallEndTime, callEndTime, includeCallDurationInPulses, callDurationInPulses,
+                includeEndOfUsagePromptCounter, endOfUsagePromptCounter, includeWelcomeMessagePromptFlag,
+                welcomeMessagePromptFlag, includeCallStatus, callStatus, includeCallDisconnectReason,
+                callDisconnectReason, includeContet, content);
+        StringEntity params;
+        try {
+            params = new StringEntity(callDetailsJson);
+        } catch (UnsupportedEncodingException e) {
+            throw new IllegalStateException("We're no expecting this kind of exception in ITs!", e);
+        }
+        httpPost.setEntity(params);
+        httpPost.addHeader("content-type", "application/json");
+        return httpPost;
+    }
+    
     private String createContentJson(boolean includeType, String type,
                                      boolean includeMkCardNumber, String mkCardNumber,
                                      boolean includeContentName, String contentName,
@@ -200,7 +233,6 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 9810320300L);
         frontLineWorkerService.add(flw);
 
-        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/callDetails", TestContext.getJettyPort()));
 
         ArrayList<String> array = new ArrayList<>();
         array.add(createContentJson(false, null,                   // type
@@ -219,7 +251,9 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
                 true, 1222222221l,             // endTime
                 false, null,                   // completionFlag
                 false, null));                 // correctAnswerEntered
-        String callDetails = createCallDetailsJson(true, 9810320300l,       // callingNumber
+
+        HttpPost httpPost = createCallDetailsPost("mobilekunji",
+                true, 9810320300l,       // callingNumber
                 true, 234000011111111l,  // callId
                 true, "A",               // operator
                 true, "AP",              // circle
@@ -231,10 +265,6 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
                 true, 1,                 // callStatus
                 true, 1,                 // callDisconnectReason
                 true, Joiner.on(",").join(array));          // content
-        StringEntity params = new StringEntity(callDetails);
-        httpPost.setEntity(params);
-
-        httpPost.addHeader("content-type", "application/json");
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK, ADMIN_USERNAME, ADMIN_PASSWORD));
 
@@ -261,9 +291,6 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 9810320300L);
         frontLineWorkerService.add(flw);
 
-        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobileacademy/callDetails",
-                TestContext.getJettyPort()));
-
         ArrayList<String> array = new ArrayList<>();
         array.add(createContentJson(/* type */ true, "lesson",
                 /* mkCardNumber */ false, null,
@@ -281,7 +308,8 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
                 /* endTime */ true, 1222222221l,
                 /* completionFlag */ true, true,
                 /* correctAnswerEntered */ true, true));
-        String callDetails = createCallDetailsJson(/* callingNumber */ true, 9810320300l,
+        HttpPost httpPost = createCallDetailsPost("mobileacademy",
+                /* callingNumber */ true, 9810320300l,
                 /* callId */ true, 234000011111111l,
                 /* operator */ true, "A",
                 /* circle */ true, "AP",
@@ -293,10 +321,6 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
                 /* callStatus */ true, 1,
                 /* callDisconnectReason */ true, 1,
                 /* content */ true, Joiner.on(",").join(array));
-        StringEntity params = new StringEntity(callDetails);
-        httpPost.setEntity(params);
-
-        httpPost.addHeader("content-type", "application/json");
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK, ADMIN_USERNAME, ADMIN_PASSWORD));
 
@@ -320,9 +344,8 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 9810320300L);
         frontLineWorkerService.add(flw);
 
-        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobileacademy/callDetails", TestContext.getJettyPort()));
-
-        String callDetails = createCallDetailsJson(/* callingNumber */ true, 9810320300l,
+        HttpPost httpPost = createCallDetailsPost("mobileacademy",
+                /* callingNumber */ true, 9810320300l,
                 /* callId */ true, 234000011111111l,
                 /* operator */ true, "A",
                 /* circle */ true, "AP",
@@ -334,10 +357,6 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
                 /* callStatus */ true, 1,
                 /* callDisconnectReason */ true, 1,
                 /* content */ false, null);
-        StringEntity params = new StringEntity(callDetails);
-        httpPost.setEntity(params);
-
-        httpPost.addHeader("content-type", "application/json");
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK, ADMIN_USERNAME, ADMIN_PASSWORD));
 
@@ -358,9 +377,8 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
     public void testCallDetailsFLWNotFound() throws IOException, InterruptedException {
         cleanAllData();
 
-        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobileacademy/callDetails", TestContext.getJettyPort()));
-
-        String callDetails = createCallDetailsJson(/* callingNumber */ true, 9810320300l,
+        HttpPost httpPost = createCallDetailsPost("mobileacademy",
+                /* callingNumber */ true, 9810320300l,
                 /* callId */ true, 234000011111111l,
                 /* operator */ true, "A",
                 /* circle */ true, "AP",
@@ -372,10 +390,6 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
                 /* callStatus */ true, 1,
                 /* callDisconnectReason */ true, 1,
                 /* content */ false, null);
-        StringEntity params = new StringEntity(callDetails);
-        httpPost.setEntity(params);
-
-        httpPost.addHeader("content-type", "application/json");
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_NOT_FOUND,
                 "{\"failureReason\":\"<callingNumber: Not Found>\"}",
@@ -384,9 +398,8 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testCallDetailsNullCallDisconnectReason() throws IOException, InterruptedException {
-        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobileacademy/callDetails", TestContext.getJettyPort()));
-
-        String callDetails = createCallDetailsJson(/* callingNumber */ true, 9810320300l,
+        HttpPost httpPost = createCallDetailsPost("mobileacademy",
+                /* callingNumber */ true, 9810320300l,
                 /* callId */ true, 234000011111111l,
                 /* operator */ true, "A",
                 /* circle */ true, "AP",
@@ -398,10 +411,6 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
                 /* callStatus */ true, 1,
                 /* callDisconnectReason */ false, null,
                 /* content */ false, null);
-        StringEntity params = new StringEntity(callDetails);
-        httpPost.setEntity(params);
-
-        httpPost.addHeader("content-type", "application/json");
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
                 "{\"failureReason\":\"<callDisconnectReason: Not Present>\"}",
@@ -410,9 +419,8 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testCallDetailsNullCallStatus() throws IOException, InterruptedException {
-        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobileacademy/callDetails", TestContext.getJettyPort()));
-
-        String callDetails = createCallDetailsJson(/* callingNumber */ true, 9810320300l,
+        HttpPost httpPost = createCallDetailsPost("mobileacademy",
+                /* callingNumber */ true, 9810320300l,
                 /* callId */ true, 234000011111111l,
                 /* operator */ true, "A",
                 /* circle */ true, "AP",
@@ -424,10 +432,6 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
                 /* callStatus */ false, null,
                 /* callDisconnectReason */ true, 1,
                 /* content */ false, null);
-        StringEntity params = new StringEntity(callDetails);
-        httpPost.setEntity(params);
-
-        httpPost.addHeader("content-type", "application/json");
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
                 "{\"failureReason\":\"<callStatus: Not Present>\"}",
@@ -436,9 +440,8 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testCallDetailsNullEndOfUsagePromptCount() throws IOException, InterruptedException {
-        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobileacademy/callDetails", TestContext.getJettyPort()));
-
-        String callDetails = createCallDetailsJson(/* callingNumber */ true, 9810320300l,
+        HttpPost httpPost = createCallDetailsPost("mobileacademy",
+                /* callingNumber */ true, 9810320300l,
                 /* callId */ true, 234000011111111l,
                 /* operator */ true, "A",
                 /* circle */ true, "AP",
@@ -450,10 +453,6 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
                 /* callStatus */ true, 1,
                 /* callDisconnectReason */ true, 1,
                 /* content */ false, null);
-        StringEntity params = new StringEntity(callDetails);
-        httpPost.setEntity(params);
-
-        httpPost.addHeader("content-type", "application/json");
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
                 "{\"failureReason\":\"<endOfUsagePromptCount: Not Present>\"}",
@@ -462,9 +461,8 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testCallDetailsNullCallDurationInPulses() throws IOException, InterruptedException {
-        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobileacademy/callDetails", TestContext.getJettyPort()));
-
-        String callDetails = createCallDetailsJson(/* callingNumber */ true, 9810320300l,
+        HttpPost httpPost = createCallDetailsPost("mobileacademy",
+                /* callingNumber */ true, 9810320300l,
                 /* callId */ true, 234000011111111l,
                 /* operator */ true, "A",
                 /* circle */ true, "AP",
@@ -476,10 +474,6 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
                 /* callStatus */ true, 1,
                 /* callDisconnectReason */ true, 1,
                 /* content */ false, null);
-        StringEntity params = new StringEntity(callDetails);
-        httpPost.setEntity(params);
-
-        httpPost.addHeader("content-type", "application/json");
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
                 "{\"failureReason\":\"<callDurationInPulses: Not Present>\"}",
@@ -488,9 +482,8 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testCallDetailsNullCallEndTime() throws IOException, InterruptedException {
-        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobileacademy/callDetails", TestContext.getJettyPort()));
-
-        String callDetails = createCallDetailsJson(/* callingNumber */ true, 9810320300l,
+        HttpPost httpPost = createCallDetailsPost("mobileacademy",
+                /* callingNumber */ true, 9810320300l,
                 /* callId */ true, 234000011111111l,
                 /* operator */ true, "A",
                 /* circle */ true, "AP",
@@ -502,10 +495,6 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
                 /* callStatus */ true, 1,
                 /* callDisconnectReason */ true, 1,
                 /* content */ false, null);
-        StringEntity params = new StringEntity(callDetails);
-        httpPost.setEntity(params);
-
-        httpPost.addHeader("content-type", "application/json");
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
                 "{\"failureReason\":\"<callEndTime: Not Present>\"}",
@@ -514,9 +503,8 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testCallDetailsNullCallStartTime() throws IOException, InterruptedException {
-        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobileacademy/callDetails", TestContext.getJettyPort()));
-
-        String callDetails = createCallDetailsJson(/* callingNumber */ true, 9810320300l,
+        HttpPost httpPost = createCallDetailsPost("mobileacademy",
+                /* callingNumber */ true, 9810320300l,
                 /* callId */ true, 234000011111111l,
                 /* operator */ true, "A",
                 /* circle */ true, "AP",
@@ -528,10 +516,6 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
                 /* callStatus */ true, 1,
                 /* callDisconnectReason */ true, 1,
                 /* content */ false, null);
-        StringEntity params = new StringEntity(callDetails);
-        httpPost.setEntity(params);
-
-        httpPost.addHeader("content-type", "application/json");
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
                 "{\"failureReason\":\"<callStartTime: Not Present>\"}",
@@ -540,9 +524,8 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testCallDetailsNullCallingNumber() throws IOException, InterruptedException {
-        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobileacademy/callDetails", TestContext.getJettyPort()));
-
-        String callDetails = createCallDetailsJson(/* callingNumber */ false, null,
+        HttpPost httpPost = createCallDetailsPost("mobileacademy",
+                /* callingNumber */ false, null,
                 /* callId */ true, 234000011111111l,
                 /* operator */ true, "A",
                 /* circle */ true, "AP",
@@ -554,10 +537,6 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
                 /* callStatus */ true, 1,
                 /* callDisconnectReason */ true, 1,
                 /* content */ false, null);
-        StringEntity params = new StringEntity(callDetails);
-        httpPost.setEntity(params);
-
-        httpPost.addHeader("content-type", "application/json");
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
                 "{\"failureReason\":\"<callingNumber: Not Present>\"}",
@@ -566,9 +545,8 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testCallDetailsInvalidCallingNumber() throws IOException, InterruptedException {
-        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobileacademy/callDetails", TestContext.getJettyPort()));
-
-        String callDetails = createCallDetailsJson(/* callingNumber */ true, 1l,
+        HttpPost httpPost = createCallDetailsPost("mobileacademy",
+                /* callingNumber */ true, 1l,
                 /* callId */ true, 234000011111111l,
                 /* operator */ true, "A",
                 /* circle */ true, "AP",
@@ -580,10 +558,6 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
                 /* callStatus */ true, 1,
                 /* callDisconnectReason */ true, 1,
                 /* content */ false, null);
-        StringEntity params = new StringEntity(callDetails);
-        httpPost.setEntity(params);
-
-        httpPost.addHeader("content-type", "application/json");
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
                 "{\"failureReason\":\"<callingNumber: Invalid>\"}",
@@ -592,9 +566,8 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testCallDetailsNullCallId() throws IOException, InterruptedException {
-        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobileacademy/callDetails", TestContext.getJettyPort()));
-
-        String callDetails = createCallDetailsJson(/* callingNumber */ true, 9810320300l,
+        HttpPost httpPost = createCallDetailsPost("mobileacademy",
+                /* callingNumber */ true, 9810320300l,
                 /* callId */ false, null,
                 /* operator */ true, "A",
                 /* circle */ true, "AP",
@@ -606,10 +579,6 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
                 /* callStatus */ true, 1,
                 /* callDisconnectReason */ true, 1,
                 /* content */ false, null);
-        StringEntity params = new StringEntity(callDetails);
-        httpPost.setEntity(params);
-
-        httpPost.addHeader("content-type", "application/json");
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
                 "{\"failureReason\":\"<callId: Not Present>\"}",
@@ -618,9 +587,8 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testCallDetailsInvalidCallId() throws IOException, InterruptedException {
-        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobileacademy/callDetails", TestContext.getJettyPort()));
-
-        String callDetails = createCallDetailsJson(/* callingNumber */ true, 9810320300l,
+        HttpPost httpPost = createCallDetailsPost("mobileacademy",
+                /* callingNumber */ true, 9810320300l,
                 /* callId */ true, 1l,
                 /* operator */ true, "A",
                 /* circle */ true, "AP",
@@ -632,10 +600,6 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
                 /* callStatus */ true, 1,
                 /* callDisconnectReason */ true, 1,
                 /* content */ false, null);
-        StringEntity params = new StringEntity(callDetails);
-        httpPost.setEntity(params);
-
-        httpPost.addHeader("content-type", "application/json");
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
                 "{\"failureReason\":\"<callId: Invalid>\"}",
@@ -648,8 +612,6 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
      *****************************************************************************************************************/
     @Test
     public void testCallDetailsNullContentType() throws IOException, InterruptedException {
-        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobileacademy/callDetails", TestContext.getJettyPort()));
-
         ArrayList<String> array = new ArrayList<>();
         array.add(createContentJson(/* type */ false, null,
                 /* mkCardNumber */ false, null,
@@ -667,7 +629,8 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
                 /* endTime */ true, 1222222221l,
                 /* completionFlag */ true, true,
                 /* correctAnswerEntered */ true, true));
-        String callDetails = createCallDetailsJson(/* callingNumber */ true, 9810320300l,
+        HttpPost httpPost = createCallDetailsPost("mobileacademy",
+                /* callingNumber */ true, 9810320300l,
                 /* callId */ true, 234000011111111l,
                 /* operator */ true, "A",
                 /* circle */ true, "AP",
@@ -679,10 +642,6 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
                 /* callStatus */ true, 1,
                 /* callDisconnectReason */ true, 1,
                 /* content */ true, Joiner.on(",").join(array));
-        StringEntity params = new StringEntity(callDetails);
-        httpPost.setEntity(params);
-
-        httpPost.addHeader("content-type", "application/json");
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
                 "{\"failureReason\":\"<type: Not Present>\"}",
@@ -691,8 +650,6 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testCallDetailsNullContentCompletionFlag() throws IOException, InterruptedException {
-        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobileacademy/callDetails", TestContext.getJettyPort()));
-
         ArrayList<String> array = new ArrayList<>();
         array.add(createContentJson(/* type */ true, "lesson",
                 /* mkCardNumber */ false, null,
@@ -710,7 +667,8 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
                 /* endTime */ true, 1222222221l,
                 /* completionFlag */ false, null,
                 /* correctAnswerEntered */ false, null));
-        String callDetails = createCallDetailsJson(/* callingNumber */ true, 9810320300l,
+        HttpPost httpPost = createCallDetailsPost("mobileacademy",
+                /* callingNumber */ true, 9810320300l,
                 /* callId */ true, 234000011111111l,
                 /* operator */ true, "A",
                 /* circle */ true, "AP",
@@ -722,10 +680,6 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
                 /* callStatus */ true, 1,
                 /* callDisconnectReason */ true, 1,
                 /* content */ true, Joiner.on(",").join(array));
-        StringEntity params = new StringEntity(callDetails);
-        httpPost.setEntity(params);
-
-        httpPost.addHeader("content-type", "application/json");
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
                 "{\"failureReason\":\"<completionFlag: Not Present><completionFlag: Not Present>\"}",
@@ -738,9 +692,8 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
      *****************************************************************************************************************/
     @Test
     public void testCallDetailsNullWelcomeMessagePromptFlag() throws IOException, InterruptedException {
-        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/callDetails", TestContext.getJettyPort()));
-
-        String callDetails = createCallDetailsJson(/* callingNumber */ true, 9810320300l,
+        HttpPost httpPost = createCallDetailsPost("mobilekunji",
+                /* callingNumber */ true, 9810320300l,
                 /* callId */ true, 234000011111111l,
                 /* operator */ true, "A",
                 /* circle */ true, "AP",
@@ -752,10 +705,6 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
                 /* callStatus */ true, 1,
                 /* callDisconnectReason */ true, 1,
                 /* content */ false, null);
-        StringEntity params = new StringEntity(callDetails);
-        httpPost.setEntity(params);
-
-        httpPost.addHeader("content-type", "application/json");
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
                 "{\"failureReason\":\"<welcomeMessagePromptFlag: Not Present>\"}",
@@ -764,8 +713,6 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testCallDetailsNullContentMkCardNumber() throws IOException, InterruptedException {
-        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/callDetails", TestContext.getJettyPort()));
-
         ArrayList<String> array = new ArrayList<>();
         array.add(createContentJson(/* type */ false, null,
                 /* mkCardNumber */ false, null,
@@ -775,7 +722,8 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
                 /* endTime */ true, 1222222221l,
                 /* completionFlag */ false, null,
                 /* correctAnswerEntered */ false, null));
-        String callDetails = createCallDetailsJson(/* callingNumber */ true, 9810320300l,
+        HttpPost httpPost = createCallDetailsPost("mobilekunji",
+                /* callingNumber */ true, 9810320300l,
                 /* callId */ true, 234000011111111l,
                 /* operator */ true, "A",
                 /* circle */ true, "AP",
@@ -787,10 +735,6 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
                 /* callStatus */ true, 1,
                 /* callDisconnectReason */ true, 1,
                 /* content */ true, Joiner.on(",").join(array));
-        StringEntity params = new StringEntity(callDetails);
-        httpPost.setEntity(params);
-
-        httpPost.addHeader("content-type", "application/json");
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
                 "{\"failureReason\":\"<mkCardNumber: Not Present>\"}",

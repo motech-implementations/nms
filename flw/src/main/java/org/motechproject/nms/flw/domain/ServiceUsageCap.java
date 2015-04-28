@@ -11,7 +11,7 @@ import javax.jdo.annotations.Unique;
  *
  * National capping value will be stored using a 'null' state.
  */
-@Entity
+@Entity(tableName = "nms_service_usage_caps")
 @Unique(name = "UNIQUE_STATE_SERVICE_COMPOSITE_IDX", members = { "state", "service" })
 public class ServiceUsageCap {
 

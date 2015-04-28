@@ -10,7 +10,7 @@ import java.util.Objects;
 /**
  * Represents all the languages that a circle (kind of a cell telephony geographic area in India) may contain
  */
-@Entity
+@Entity(tableName = "nms_circle_languages")
 @Unique(name = "uniqueCircleLanguage", members = {"circle", "language" })
 public class CircleLanguage {
     public static final int FIELD_LENGTH_255 = 255;

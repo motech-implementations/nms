@@ -133,7 +133,7 @@ public class KilkariController extends BaseController {
      */
     @RequestMapping(value = "/inboxCallDetails",
             method = RequestMethod.POST,
-            headers = {"Content-type=application/json"})
+            headers = { "Content-type=application/json" })
     @ResponseStatus(HttpStatus.OK)
     public void saveInboxCallDetails(@RequestBody InboxCallDetailsRequest request) {
         StringBuilder failureReasons = validateSaveInboxCallDetails(request);
@@ -177,7 +177,7 @@ public class KilkariController extends BaseController {
      */
     @RequestMapping(value = "/subscription",
             method = RequestMethod.POST,
-            headers = {"Content-type=application/json"})
+            headers = { "Content-type=application/json" })
     @ResponseStatus(HttpStatus.OK)
     public void createSubscription(@RequestBody SubscriptionRequest subscriptionRequest) {
         StringBuilder failureReasons = validate(subscriptionRequest.getCallingNumber(),
@@ -206,7 +206,7 @@ public class KilkariController extends BaseController {
      */
     @RequestMapping(value = "/subscription",
             method = RequestMethod.DELETE,
-            headers = {"Content-type=application/json"})
+            headers = { "Content-type=application/json" })
     @ResponseStatus(HttpStatus.OK)
     public void deactivateSubscription(@RequestBody SubscriptionRequest subscriptionRequest) {
         StringBuilder failureReasons = validate(subscriptionRequest.getCallingNumber(),

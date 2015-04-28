@@ -11,7 +11,7 @@ import java.util.Set;
 /**
  * A Kilkari subscriber (recipient of the service, ie: a pregnant woman) essentially identified by their phone number
  */
-@Entity
+@Entity(tableName = "nms_subscribers")
 public class Subscriber {
     public static final int FIELD_SIZE_10 = 10;
 

@@ -22,12 +22,12 @@ public enum FileProcessedStatus {
     }
 
     public static boolean isValid(int i) {
-        return (i >= 8000 && i <= 8005);
+        return (i >= FILE_PROCESSED_SUCCESSFULLY.getValue() && i <= FILE_ERROR_IN_FILE_FORMAT.getValue());
     }
 
     public static FileProcessedStatus fromInt(int i) {
         if (isValid(i)) {
-            return values()[i - 8000];
+            return values()[i - FILE_PROCESSED_SUCCESSFULLY.getValue()];
         } else {
             throw new IllegalArgumentException(String.format("%d is an invalid FileProcessedStatus", i));
         }
