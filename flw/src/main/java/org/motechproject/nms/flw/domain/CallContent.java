@@ -4,13 +4,12 @@ import org.joda.time.DateTime;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 
-@Entity
+@Entity(tableName = "nms_call_content")
 public class CallContent {
 
     @Field
     private Long id; //NOPMD UnusedPrivateField
 
-    // TODO: #64 This should be a cascading delete.
     @Field
     private CallDetailRecord callDetailRecord;
 

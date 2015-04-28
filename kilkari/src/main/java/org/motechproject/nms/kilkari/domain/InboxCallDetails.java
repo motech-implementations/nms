@@ -9,7 +9,7 @@ import java.util.Set;
 /**
  * Information sent to MOTECH by the IVR system when a Kilkari subscriber calls their inbox
  */
-@Entity
+@Entity(tableName = "nms_inbox_call_details")
 public class InboxCallDetails {
     @Field
     private Long callingNumber;

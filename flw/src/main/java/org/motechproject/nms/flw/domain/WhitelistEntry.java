@@ -8,7 +8,7 @@ import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Unique;
 import javax.validation.constraints.NotNull;
 
-@Entity(tableName = "whitelist_entries")
+@Entity(tableName = "nms_whitelist_entries")
 @Unique(name = "UNIQUE_STATE_CONTACT_NUMBER_COMPOSITE_IDX", members = { "state", "contactNumber" })
 public class WhitelistEntry {
     public static final int FIELD_SIZE_10 = 10;
