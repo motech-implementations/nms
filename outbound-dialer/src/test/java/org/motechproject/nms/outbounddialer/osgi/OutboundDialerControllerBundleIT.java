@@ -1,30 +1,26 @@
 package org.motechproject.nms.outbounddialer.osgi;
 
-import org.apache.http.client.methods.HttpGet;
-import org.motechproject.nms.outbounddialer.web.contract.CdrFileNotificationRequest;
-import org.motechproject.nms.outbounddialer.web.contract.CdrFileNotificationRequestFileInfo;
-import org.motechproject.nms.outbounddialer.web.contract.FileProcessedStatusRequest;
-import org.motechproject.nms.outbounddialer.web.contract.BadRequest;
-import org.motechproject.nms.outbounddialer.domain.FileProcessedStatus;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.ExamFactory;
-import org.ops4j.pax.exam.junit.PaxExam;
-import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
-import org.ops4j.pax.exam.spi.reactors.PerSuite;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.motechproject.nms.outbounddialer.domain.FileProcessedStatus;
+import org.motechproject.nms.outbounddialer.web.contract.BadRequest;
+import org.motechproject.nms.outbounddialer.web.contract.CdrFileNotificationRequest;
+import org.motechproject.nms.outbounddialer.web.contract.CdrFileNotificationRequestFileInfo;
+import org.motechproject.nms.outbounddialer.web.contract.FileProcessedStatusRequest;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.motechproject.testing.osgi.http.SimpleHttpClient;
 import org.motechproject.testing.utils.TestContext;
+import org.ops4j.pax.exam.ExamFactory;
+import org.ops4j.pax.exam.junit.PaxExam;
+import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
+import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
-import javax.inject.Inject;
 import java.io.IOException;
-import java.util.ArrayList;
 
 import static org.junit.Assert.assertTrue;
 
@@ -40,6 +36,9 @@ public class OutboundDialerControllerBundleIT extends BasePaxIT {
     private static final String INVALID_CDR_SUMMARY_FILE_NAME = "cdrSummary_OBD_NMS1_20150127091111.csv";
     private static final String VALID_CDR_DETAIL_FILE_NAME = "cdrDetail_OBD_NMS1_20150127090000.csv";
     private static final String INVALID_CDR_DETAIL_FILE_NAME = "cdrDetail_NMS1_20150127090000.csv";
+
+    private static final String GENERATE_TARGET_FILE_MS_INTERVAL =
+            "outbound-dialer.generate_target_file_ms_interval";
 
     private String createFailureResponseJson(String failureReason) throws IOException {
         BadRequest badRequest = new BadRequest(failureReason);

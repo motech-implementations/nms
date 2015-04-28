@@ -12,4 +12,7 @@
     <osgi:service ref="outboundDialerService"
                   interface="org.motechproject.nms.outbounddialer.service.OutboundDialerService" />
 
+    <osgi:reference id="schedulerService"
+                    interface="org.motechproject.scheduler.service.MotechSchedulerService" />
+
 </beans>
