@@ -10,10 +10,16 @@ import org.motechproject.nms.mobileacademy.dto.MaBookmark;
 public interface MobileAcademyService {
 
     /**
-     * Get the MA couse structure
+     * Get the MA course structure
      * @return
      */
     Course getCourse();
+
+    /**
+     * Set the MA course structure. This should only be called by the config handler on json update
+     * @param course course to update and save
+     */
+    void setCourse(Course course);
 
     /**
      * Gets the course modification date as an epoch representation

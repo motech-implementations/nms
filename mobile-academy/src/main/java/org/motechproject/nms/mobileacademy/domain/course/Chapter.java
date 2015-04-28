@@ -1,0 +1,66 @@
+package org.motechproject.nms.mobileacademy.domain.course;
+
+import java.util.List;
+
+/**
+ * This will contain details about a particular chapter.
+ */
+public class Chapter {
+
+    /**
+     * Specifies the name of the chapter in format of “Chapter<chapterId>”, where
+     * chapterId will be from 01 to 11.
+     */
+    private String name;
+
+    /**
+     * Contains details about end menu file and score files.
+     */
+    private ChapterContent content;
+
+    /**
+     * Specifies the list of lessons in a given chapter alongwith their details. The list will contain
+     * four elements, one for each lesson.
+     */
+    private List<Lesson> lessons;
+
+    /**
+     * This section contains information about various files to be played during the quiz.
+     */
+    private Quiz quiz;
+
+    public Chapter() {
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public ChapterContent getContent() {
+        return content;
+    }
+
+    public void setContent(ChapterContent content) {
+        this.content = content;
+    }
+
+    public List<Lesson> getLessons() {
+        return lessons;
+    }
+
+    public void setLessons(List<Lesson> lessons) {
+        this.lessons = lessons;
+    }
+
+    public Quiz getQuiz() {
+        return quiz;
+    }
+
+    public void setQuiz(Quiz quiz) {
+        this.quiz = quiz;
+    }
+}

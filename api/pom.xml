@@ -74,8 +74,6 @@
             <artifactId>spring-test-mvc</artifactId>
             <scope>test</scope>
         </dependency>
-
->>>>>>> master
     </dependencies>
 
     <repositories>

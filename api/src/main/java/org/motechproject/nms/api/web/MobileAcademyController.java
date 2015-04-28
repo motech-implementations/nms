@@ -33,6 +33,9 @@ public class MobileAcademyController extends BaseController {
     private MobileAcademyService mobileAcademyService;
 
     /**
+     *
+     * 2.2.2.1 Get MA Course – Request
+     *
      * Get course
      * @return course response object
      */
@@ -47,7 +50,7 @@ public class MobileAcademyController extends BaseController {
 
     /**
      * Get the version of the course
-     * @return Integer represting the timestamp since epoch
+     * @return Integer representing the timestamp since epoch
      */
     @RequestMapping(
             value = "/courseVersion",

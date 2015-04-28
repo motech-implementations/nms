@@ -8,6 +8,7 @@ import org.motechproject.nms.mobileacademy.domain.CallDetail;
 import org.motechproject.nms.mobileacademy.domain.Course;
 
 import org.motechproject.nms.mobileacademy.dto.MaBookmark;
+import org.motechproject.nms.mobileacademy.repository.CourseDataService;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
 import org.springframework.stereotype.Service;
 
@@ -20,11 +21,33 @@ import java.util.Map;
 @Service("mobileAcademyService")
 public class MobileAcademyServiceImpl implements MobileAcademyService {
 
+    /**
+     * Bookmark data service
+     */
     private BookmarkDataService bookmarkDataService;
+
+    /**
+     * Course data service
+     */
+    private CourseDataService courseDataService;
 
     @Override
     public Course getCourse() {
-        return new Course();
+
+        // TODO: Make this configurable
+        return courseDataService.findCourseByName("MobileAcademyCourse");
+    }
+
+    @Override
+    public void setCourse(Course course) {
+        Course existing = courseDataService.findCourseByName(course.getName());
+
+        if (existing == null) {
+            courseDataService.create(course);
+        } else {
+            course.setId(existing.getId());
+            courseDataService.update(course);
+        }
     }
 
     @Override
@@ -57,22 +80,22 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
 
         List<Bookmark> existing = bookmarkDataService.findBookmarksForUser(saveBookmark.getCallingNumber().toString());
 
-        Bookmark update;
-
-        // if no bookmarks exist for user
         if (CollectionUtils.isEmpty(existing)) {
-            update = new Bookmark();
-        } else { // we found a set (usually only 1) and update it
-            update = existing.get(0);
+            // if no bookmarks exist for user
+            bookmarkDataService.create(setProperties(saveBookmark, new Bookmark()));
+        } else {
+            // we found a list (usually only 1) and update it
+            bookmarkDataService.update(setProperties(saveBookmark, existing.get(0)));
         }
+    }
 
-        update.setExternalId(saveBookmark.getCallingNumber().toString());
-        update.getProgress().put("callId", saveBookmark.getCallId());
-        update.setChapterIdentifier(saveBookmark.getBookmark().split("_")[0]);
-        update.setLessonIdentifier(saveBookmark.getBookmark().split("_")[1]);
-        update.getProgress().put("scoresByChapter", saveBookmark.getScoresByChapter());
-
-        bookmarkDataService.update(update);
+    private Bookmark setProperties(MaBookmark fromBookmark, Bookmark toBookmark) {
+        toBookmark.setExternalId(fromBookmark.getCallingNumber().toString());
+        toBookmark.getProgress().put("callId", fromBookmark.getCallId());
+        toBookmark.setChapterIdentifier(fromBookmark.getBookmark().split("_")[0]);
+        toBookmark.setLessonIdentifier(fromBookmark.getBookmark().split("_")[1]);
+        toBookmark.getProgress().put("scoresByChapter", fromBookmark.getScoresByChapter());
+        return toBookmark;
     }
 
     @Override
