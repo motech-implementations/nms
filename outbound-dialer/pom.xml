@@ -42,6 +42,13 @@
             <version>${motech.version}</version>
         </dependency>
 
+        <!-- Alerts -->
+        <dependency>
+            <groupId>org.motechproject</groupId>
+            <artifactId>alerts</artifactId>
+            <version>${motech.version}</version>
+        </dependency>
+
         <!-- Scheduler -->
         <dependency>
             <groupId>org.motechproject</groupId>
@@ -83,7 +90,8 @@
                         <Export-Package>
                             org.motechproject.nms.outbounddialer.web.contract,
                             org.motechproject.nms.outbounddialer.repository,
-                            org.motechproject.nms.outbounddialer.domain
+                            org.motechproject.nms.outbounddialer.domain,
+                            org.motechproject.nms.outbounddialer.service
                         </Export-Package>
                         <Import-Package>
                             org.motechproject.osgi.web,

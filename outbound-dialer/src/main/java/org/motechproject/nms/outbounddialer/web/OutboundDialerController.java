@@ -89,19 +89,19 @@ public class OutboundDialerController {
             method = RequestMethod.POST,
             headers = { "Content-type=application/json" })
     @ResponseStatus(HttpStatus.ACCEPTED)
-    public void notifyNewCdrFile(@RequestBody CdrFileNotificationRequest cdrFileNotificationRequest) {
+    public void notifyNewCdrFile(@RequestBody CdrFileNotificationRequest request) {
         StringBuilder failureReasons = new StringBuilder();
-        validateTargetFileName(failureReasons, cdrFileNotificationRequest.getFileName());
-        validateCdrFileInfo(failureReasons, cdrFileNotificationRequest.getCdrSummary(), "cdrSummary",
-                cdrFileNotificationRequest.getFileName());
-        validateCdrFileInfo(failureReasons, cdrFileNotificationRequest.getCdrDetail(), "cdrDetail",
-                cdrFileNotificationRequest.getFileName());
+        validateTargetFileName(failureReasons, request.getFileName());
+        validateCdrFileInfo(failureReasons, request.getCdrSummary(), "cdrSummary",
+                request.getFileName());
+        validateCdrFileInfo(failureReasons, request.getCdrDetail(), "cdrDetail",
+                request.getFileName());
 
         if (failureReasons.length() > 0) {
             throw new IllegalArgumentException(failureReasons.toString());
         }
 
-        outboundDialerService.handleNewCdrFile();
+        outboundDialerService.processCdrFile(request);
     }
 
 
@@ -130,7 +130,7 @@ public class OutboundDialerController {
         }
 
         // call OBD service, which will handle notification
-        outboundDialerService.handleFileProcessedStatusNotification();
+        outboundDialerService.handleFileProcessedStatusNotification(fileProcessedStatusRequest);
     }
 
 

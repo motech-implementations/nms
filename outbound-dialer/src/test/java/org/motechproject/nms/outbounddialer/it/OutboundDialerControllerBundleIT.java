@@ -1,4 +1,4 @@
-package org.motechproject.nms.outbounddialer.osgi;
+package org.motechproject.nms.outbounddialer.it;
 
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.client.methods.HttpPost;
@@ -6,6 +6,10 @@ import org.apache.http.entity.StringEntity;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.motechproject.alerts.contract.AlertCriteria;
+import org.motechproject.alerts.contract.AlertService;
+import org.motechproject.alerts.domain.Alert;
+import org.motechproject.alerts.domain.AlertType;
 import org.motechproject.nms.outbounddialer.domain.FileProcessedStatus;
 import org.motechproject.nms.outbounddialer.web.contract.BadRequest;
 import org.motechproject.nms.outbounddialer.web.contract.CdrFileNotificationRequest;
@@ -20,8 +24,11 @@ import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
+import javax.inject.Inject;
 import java.io.IOException;
+import java.util.List;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(PaxExam.class)
@@ -37,8 +44,8 @@ public class OutboundDialerControllerBundleIT extends BasePaxIT {
     private static final String VALID_CDR_DETAIL_FILE_NAME = "cdrDetail_OBD_NMS1_20150127090000.csv";
     private static final String INVALID_CDR_DETAIL_FILE_NAME = "cdrDetail_NMS1_20150127090000.csv";
 
-    private static final String GENERATE_TARGET_FILE_MS_INTERVAL =
-            "outbound-dialer.generate_target_file_ms_interval";
+    @Inject
+    AlertService alertService;
 
     private String createFailureResponseJson(String failureReason) throws IOException {
         BadRequest badRequest = new BadRequest(failureReason);
@@ -102,16 +109,18 @@ public class OutboundDialerControllerBundleIT extends BasePaxIT {
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
-    private HttpPost createFileProcessedStatusHttpPost(boolean includeFile, boolean includeStatusCode)
+    private HttpPost createFileProcessedStatusHttpPost(String fileName, FileProcessedStatus fileProcessedStatus)
         throws IOException {
-        String fileName = includeFile ? "fileName" : null;
-        FileProcessedStatus statusCode = includeStatusCode ? FileProcessedStatus.FILE_PROCESSED_SUCCESSFULLY : null;
-
-        FileProcessedStatusRequest fileProcessedStatusRequest = new FileProcessedStatusRequest(statusCode,
-            fileName);
+        FileProcessedStatusRequest request = new FileProcessedStatusRequest();
+        if (fileName != null) {
+            request.setFileName(fileName);
+        }
+        if (fileProcessedStatus != null) {
+            request.setFileProcessedStatus(fileProcessedStatus);
+        }
 
         ObjectMapper mapper = new ObjectMapper();
-        String requestJson = mapper.writeValueAsString(fileProcessedStatusRequest);
+        String requestJson = mapper.writeValueAsString(request);
         HttpPost httpPost = new HttpPost(String.format(
             "http://localhost:%d/outbounddialer/obdFileProcessedStatusNotification",
             TestContext.getJettyPort()));
@@ -124,13 +133,14 @@ public class OutboundDialerControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testCreateFileProcessedStatusRequest() throws IOException, InterruptedException {
-        HttpPost httpPost = createFileProcessedStatusHttpPost(true, true);
+        HttpPost httpPost = createFileProcessedStatusHttpPost("file.csv",
+                FileProcessedStatus.FILE_PROCESSED_SUCCESSFULLY);
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     @Test
     public void testCreateFileProcessedStatusRequestNoStatusCode() throws IOException, InterruptedException {
-        HttpPost httpPost = createFileProcessedStatusHttpPost(true, false);
+        HttpPost httpPost = createFileProcessedStatusHttpPost("file.csv", null);
 
         String expectedJsonResponse = createFailureResponseJson("<fileProcessedStatus: Not Present>");
 
@@ -140,7 +150,8 @@ public class OutboundDialerControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testCreateFileProcessedStatusRequestNoFileName() throws IOException, InterruptedException {
-        HttpPost httpPost = createFileProcessedStatusHttpPost(false, true);
+        HttpPost httpPost = createFileProcessedStatusHttpPost(null,
+                FileProcessedStatus.FILE_PROCESSED_SUCCESSFULLY);
 
         String expectedJsonResponse = createFailureResponseJson("<fileName: Not Present>");
 
@@ -148,4 +159,17 @@ public class OutboundDialerControllerBundleIT extends BasePaxIT {
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
+    @Test
+    public void testCreateFileProcessedStatusRequestWithError() throws IOException, InterruptedException {
+        HttpPost httpPost = createFileProcessedStatusHttpPost("file.csv",
+                FileProcessedStatus.FILE_ERROR_IN_FILE_FORMAT);
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK, ADMIN_USERNAME, ADMIN_PASSWORD));
+
+        //check an alert was sent
+        AlertCriteria criteria = new AlertCriteria().byExternalId("file.csv");
+        List<Alert> alerts = alertService.search(criteria);
+        assertEquals(1, alerts.size());
+        assertEquals(AlertType.CRITICAL, alerts.get(0).getAlertType());
+    }
 }

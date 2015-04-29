@@ -3,9 +3,15 @@ package org.motechproject.nms.outbounddialer.service.impl;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
+import org.motechproject.alerts.contract.AlertService;
+import org.motechproject.alerts.domain.AlertStatus;
+import org.motechproject.alerts.domain.AlertType;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.annotations.MotechListener;
+import org.motechproject.nms.outbounddialer.domain.FileProcessedStatus;
 import org.motechproject.nms.outbounddialer.service.OutboundDialerService;
+import org.motechproject.nms.outbounddialer.web.contract.CdrFileNotificationRequest;
+import org.motechproject.nms.outbounddialer.web.contract.FileProcessedStatusRequest;
 import org.motechproject.scheduler.contract.RepeatingSchedulableJob;
 import org.motechproject.scheduler.service.MotechSchedulerService;
 import org.motechproject.server.config.SettingsFacade;
@@ -15,27 +21,29 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
+
 /**
  * Implementation of the {@link OutboundDialerService} interface.
  */
 @Service("outboundDialerService")
 public class OutboundDialerServiceImpl implements OutboundDialerService {
 
-    private static final String GENERATE_TARGET_FILE_TIME = "outbound-dialer.generate_target_file_time";
-    private static final String GENERATE_TARGET_FILE_MS_INTERVAL =
-            "outbound-dialer.generate_target_file_ms_interval";
+    private static final String TARGET_FILE_TIME = "outbound-dialer.target_file_time";
+    private static final String TARGET_FILE_MS_INTERVAL = "outbound-dialer.target_file_ms_interval";
+    private static final String TARGET_FILE_LOCATION = "outbound-dialer.target_file_location";
     private static final String GENERATE_TARGET_FILE_EVENT = "nms.obd.generate_target_file";
+    private static final String CDR_FILE_LOCATION = "outbound-dialer.cdr_file_location";
 
     private SettingsFacade settingsFacade;
     private MotechSchedulerService schedulerService;
+    private AlertService alertService;
     private static final Logger LOGGER = LoggerFactory.getLogger(OutboundDialerServiceImpl.class);
-
 
 
     private void scheduleTargetFileGeneration() {
         //Calculate today's fire time
         DateTimeFormatter fmt = DateTimeFormat.forPattern("H:m");
-        String timeProp = settingsFacade.getProperty(GENERATE_TARGET_FILE_TIME);
+        String timeProp = settingsFacade.getProperty(TARGET_FILE_TIME);
         DateTime time = fmt.parseDateTime(timeProp);
         DateTime today = DateTime.now()
                 .withHourOfDay(time.getHourOfDay())
@@ -44,7 +52,7 @@ public class OutboundDialerServiceImpl implements OutboundDialerService {
                 .withMillisOfSecond(0);
 
         //Millisecond interval between events
-        String intervalProp = settingsFacade.getProperty(GENERATE_TARGET_FILE_MS_INTERVAL);
+        String intervalProp = settingsFacade.getProperty(TARGET_FILE_MS_INTERVAL);
         Long msInterval = Long.parseLong(intervalProp);
 
         LOGGER.debug(String.format("The %s message will be sent every %sms starting %s",
@@ -64,28 +72,49 @@ public class OutboundDialerServiceImpl implements OutboundDialerService {
 
     @Autowired
     public OutboundDialerServiceImpl(@Qualifier("outboundDialerSettings") SettingsFacade settingsFacade,
-                                     MotechSchedulerService schedulerService) {
+                                     MotechSchedulerService schedulerService, AlertService alertService) {
         this.schedulerService = schedulerService;
         this.settingsFacade = settingsFacade;
+        this.alertService = alertService;
 
         scheduleTargetFileGeneration();
     }
 
+    public void generateTargetFile() {
+        final String targetFileLocation = settingsFacade.getProperty(TARGET_FILE_LOCATION);
+        LOGGER.debug("Generating target file in {}", targetFileLocation);
+        //todo:...
+    }
+
     @MotechListener(subjects = { GENERATE_TARGET_FILE_EVENT })
-    public void handleFileChanged(MotechEvent event) {
+    public void generateTargetFile(MotechEvent event) {
         LOGGER.debug(event.toString());
+        generateTargetFile();
     }
 
     @Override
-    public void handleNewCdrFile() {
-        //TODO: download the files from the specified locations and validate their checksums
+    public void processCdrFile(CdrFileNotificationRequest request) {
+        final String cdrFileLocation = settingsFacade.getProperty(CDR_FILE_LOCATION);
+        LOGGER.debug("Processing CDR file {} located in {}", "???", cdrFileLocation);
 
-        //TODO: post a message to begin processing the files
-
+        //todo:...
     }
 
     @Override
-    public void handleFileProcessedStatusNotification() {
-
+    public void handleFileProcessedStatusNotification(FileProcessedStatusRequest request) {
+        if (request.getFileProcessedStatus() == FileProcessedStatus.FILE_PROCESSED_SUCCESSFULLY) {
+            //We're happy.
+            //todo:...
+        } else {
+            LOGGER.error(request.toString());
+            alertService.create(
+                    request.getFileName(),
+                    "targetFileName",
+                    "Target File Processing Error",
+                    AlertType.CRITICAL,
+                    AlertStatus.NEW,
+                    0,
+                    null);
+        }
     }
 }

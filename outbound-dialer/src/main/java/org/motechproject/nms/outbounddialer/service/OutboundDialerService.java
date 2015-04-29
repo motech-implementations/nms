@@ -1,11 +1,16 @@
 package org.motechproject.nms.outbounddialer.service;
 
+import org.motechproject.nms.outbounddialer.web.contract.CdrFileNotificationRequest;
+import org.motechproject.nms.outbounddialer.web.contract.FileProcessedStatusRequest;
+
 /**
  *
  */
 public interface OutboundDialerService {
 
-    void handleNewCdrFile();
+    void generateTargetFile();
 
-    void handleFileProcessedStatusNotification();
+    void processCdrFile(CdrFileNotificationRequest request);
+
+    void handleFileProcessedStatusNotification(FileProcessedStatusRequest request);
 }
