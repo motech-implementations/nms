@@ -6,6 +6,7 @@ import org.motechproject.mds.annotations.Field;
 import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.Unique;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 import org.joda.time.LocalDate;
 
@@ -70,6 +71,21 @@ public class Subscriber {
 
     public void setSubscriptions(Set<Subscription> subscriptions) {
         this.subscriptions = subscriptions;
+    }
+
+    public Set<Subscription> getActiveSubscriptions() {
+        Set<Subscription> activeSubscriptions = new HashSet<>();
+
+        Iterator<Subscription> subscriptionIterator = subscriptions.iterator();
+        Subscription currentSubscription;
+        while (subscriptionIterator.hasNext()) {
+            currentSubscription = subscriptionIterator.next();
+
+            if (currentSubscription.getStatus() == SubscriptionStatus.ACTIVE) {
+                activeSubscriptions.add(currentSubscription);
+            }
+        }
+        return activeSubscriptions;
     }
 
     @Override

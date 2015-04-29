@@ -63,7 +63,7 @@ public class KilkariController extends BaseController {
             throw new NotFoundException(String.format(NOT_FOUND, "callingNumber"));
         }
 
-        Set<Subscription> subscriptions = subscriber.getSubscriptions();
+        Set<Subscription> subscriptions = subscriber.getActiveSubscriptions();
         Set<InboxSubscriptionDetailResponse> subscriptionDetails = new HashSet<>();
         for (Subscription subscription : subscriptions) {
             //todo: something tells me this is not complete/real code

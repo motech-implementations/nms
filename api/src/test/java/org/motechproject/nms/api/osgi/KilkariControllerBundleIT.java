@@ -236,12 +236,12 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK, ADMIN_USERNAME, ADMIN_PASSWORD);
 
         Subscriber subscriber = subscriptionService.getSubscriber(callingNumber);
-        int numberOfSubsBefore = subscriber.getSubscriptions().size();
+        int numberOfSubsBefore = subscriber.getActiveSubscriptions().size();
 
         SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK, ADMIN_USERNAME, ADMIN_PASSWORD);
 
         subscriber = subscriptionService.getSubscriber(callingNumber);
-        int numberOfSubsAfter = subscriber.getSubscriptions().size();
+        int numberOfSubsAfter = subscriber.getActiveSubscriptions().size();
 
         // No additional subscription should be created because subscriber already has an active subscription
         // to this pack
@@ -258,14 +258,14 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         SimpleHttpClient.execHttpRequest(httpPost1, HttpStatus.SC_OK, ADMIN_USERNAME, ADMIN_PASSWORD);
 
         Subscriber subscriber = subscriptionService.getSubscriber(callingNumber);
-        int numberOfSubsBefore = subscriber.getSubscriptions().size();
+        int numberOfSubsBefore = subscriber.getActiveSubscriptions().size();
 
         HttpPost httpPost2 = createSubscriptionHttpPost(callingNumber, "pack2");
 
         SimpleHttpClient.execHttpRequest(httpPost2, HttpStatus.SC_OK, ADMIN_USERNAME, ADMIN_PASSWORD);
 
         subscriber = subscriptionService.getSubscriber(callingNumber);
-        int numberOfSubsAfter = subscriber.getSubscriptions().size();
+        int numberOfSubsAfter = subscriber.getActiveSubscriptions().size();
 
         // Another subscription should be allowed because these are two different packs
         assertTrue((numberOfSubsBefore + 1) == numberOfSubsAfter);
@@ -282,7 +282,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscriptionService.createSubscription(9999911122L, "10", "pack1", SubscriptionMode.MCTS_IMPORT);
 
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
-        assertEquals(1, mctsSubscriber.getSubscriptions().size());
+        assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
     }
 
     @Test
@@ -294,12 +294,14 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscriberDataService.create(mctsSubscriber);
 
         subscriptionService.createSubscription(9999911122L, "10", "pack1", SubscriptionMode.MCTS_IMPORT);
+        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+        assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
 
         // attempt to create subscription to the same pack -- should fail
         subscriptionService.createSubscription(9999911122L, "10", "pack1", SubscriptionMode.MCTS_IMPORT);
 
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
-        assertEquals(1, mctsSubscriber.getSubscriptions().size());
+        assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
     }
 
     @Test
@@ -311,12 +313,14 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscriberDataService.create(mctsSubscriber);
 
         subscriptionService.createSubscription(9999911122L, "10", "pack2", SubscriptionMode.MCTS_IMPORT);
+        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+        assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
 
         // attempt to create subscription to the same pack -- should fail
         subscriptionService.createSubscription(9999911122L, "10", "pack2", SubscriptionMode.MCTS_IMPORT);
 
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
-        assertEquals(1, mctsSubscriber.getSubscriptions().size());
+        assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
     }
 
     @Test
@@ -329,7 +333,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
         subscriptionService.createSubscription(9999911122L, "10", "pack2", SubscriptionMode.MCTS_IMPORT);
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
-        Subscription pregnancySubscription = mctsSubscriber.getSubscriptions().iterator().next();
+        Subscription pregnancySubscription = mctsSubscriber.getActiveSubscriptions().iterator().next();
         pregnancySubscription.setStatus(SubscriptionStatus.DEACTIVATED);
         subscriptionDataService.update(pregnancySubscription);
 
@@ -337,7 +341,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscriptionService.createSubscription(9999911122L, "10", "pack2", SubscriptionMode.MCTS_IMPORT);
 
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
-        assertEquals(2, mctsSubscriber.getSubscriptions().size());
+        assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
     }
 
     @Test
@@ -354,7 +358,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscriptionService.createSubscription(9999911122L, "10", "pack2", SubscriptionMode.MCTS_IMPORT);
 
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
-        assertEquals(2, mctsSubscriber.getSubscriptions().size());
+        assertEquals(2, mctsSubscriber.getActiveSubscriptions().size());
     }
 
 
@@ -363,7 +367,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         setupData();
 
         Subscriber subscriber = subscriptionService.getSubscriber(1000000000L);
-        Subscription subscription = subscriber.getSubscriptions().iterator().next();
+        Subscription subscription = subscriber.getActiveSubscriptions().iterator().next();
         String subscriptionId = subscription.getSubscriptionId();
 
         SubscriptionRequest subscriptionRequest = new SubscriptionRequest(1000000000L, "A", "AP",
@@ -388,7 +392,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         setupData();
 
         Subscriber subscriber = subscriptionService.getSubscriber(1000000000L);
-        Subscription subscription = subscriber.getSubscriptions().iterator().next();
+        Subscription subscription = subscriber.getActiveSubscriptions().iterator().next();
         String subscriptionId = subscription.getSubscriptionId();
         subscriptionService.deactivateSubscription(subscription);
 

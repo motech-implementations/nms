@@ -19,10 +19,6 @@ public class SubscriptionPack {
     public SubscriptionPack() {
     }
 
-    public SubscriptionPack(String name) {
-        this.name = name;
-    }
-
     public SubscriptionPack(String name, SubscriptionPackType type) {
         this.name = name;
         this.type = type;

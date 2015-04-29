@@ -3,12 +3,7 @@ package org.motechproject.nms.kilkari.osgi;
 import org.joda.time.DateTime;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.motechproject.nms.kilkari.domain.InboxCallData;
-import org.motechproject.nms.kilkari.domain.InboxCallDetails;
-import org.motechproject.nms.kilkari.domain.Subscriber;
-import org.motechproject.nms.kilkari.domain.Subscription;
-import org.motechproject.nms.kilkari.domain.SubscriptionPack;
-import org.motechproject.nms.kilkari.domain.SubscriptionMode;
+import org.motechproject.nms.kilkari.domain.*;
 import org.motechproject.nms.kilkari.repository.InboxCallDataDataService;
 import org.motechproject.nms.kilkari.repository.InboxCallDetailsDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
@@ -75,8 +70,10 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         cleanupData();
         Language ta = languageDataService.create(new Language("tamil", "10"));
 
-        SubscriptionPack pack1 = subscriptionPackDataService.create(new SubscriptionPack("pack1"));
-        SubscriptionPack pack2 = subscriptionPackDataService.create(new SubscriptionPack("pack2"));
+        SubscriptionPack pack1 = subscriptionPackDataService.create(new SubscriptionPack("pack1",
+                SubscriptionPackType.CHILD));
+        SubscriptionPack pack2 = subscriptionPackDataService.create(new SubscriptionPack("pack2",
+                SubscriptionPackType.PREGNANCY));
         Subscriber subscriber = subscriberDataService.create(new Subscriber(1000000000L));
 
         subscriptionService.createSubscription(subscriber.getCallingNumber(), ta.getCode(), pack1.getName(),

@@ -24,10 +24,7 @@ import org.motechproject.nms.flw.repository.ServiceUsageCapDataService;
 import org.motechproject.nms.flw.repository.ServiceUsageDataService;
 import org.motechproject.nms.flw.repository.WhitelistEntryDataService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
-import org.motechproject.nms.kilkari.domain.Subscriber;
-import org.motechproject.nms.kilkari.domain.Subscription;
-import org.motechproject.nms.kilkari.domain.SubscriptionPack;
-import org.motechproject.nms.kilkari.domain.SubscriptionMode;
+import org.motechproject.nms.kilkari.domain.*;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
@@ -143,8 +140,10 @@ public class UserControllerBundleIT extends BasePaxIT {
         CircleLanguage circleLanguage = new CircleLanguage("AA", ta);
         circleLanguageDataService.create(circleLanguage);
 
-        SubscriptionPack pack1 = subscriptionPackDataService.create(new SubscriptionPack("pack1"));
-        SubscriptionPack pack2 = subscriptionPackDataService.create(new SubscriptionPack("pack2"));
+        SubscriptionPack pack1 = subscriptionPackDataService.create(new SubscriptionPack("pack1",
+                SubscriptionPackType.CHILD));
+        SubscriptionPack pack2 = subscriptionPackDataService.create(new SubscriptionPack("pack2",
+                SubscriptionPackType.PREGNANCY));
         List<SubscriptionPack> onePack = Arrays.asList(pack1);
         List<SubscriptionPack> twoPacks = Arrays.asList(pack1, pack2);
 
