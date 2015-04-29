@@ -1,4 +1,4 @@
-package org.motechproject.nms.mobileacademy.osgi;
+package org.motechproject.nms.mobileacademy.it;
 
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
 import org.junit.Test;

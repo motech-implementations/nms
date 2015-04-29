@@ -1,8 +1,12 @@
 package org.motechproject.nms.mobileacademy.domain.course;
 
+import org.motechproject.mds.annotations.Entity;
+import org.motechproject.mds.annotations.Field;
+
 /**
  * Contains the details about the menu file to be played at the end of the lesson.
  */
+@Entity
 public class LessonContentMenu {
 
     /**
@@ -10,23 +14,25 @@ public class LessonContentMenu {
      * ”Chapter<ChapterId>_LessonEndMenu<LessonId>”, where chapterId varies from 01 to 11 and
      * LessonId varies from 01 to 04.
      */
-    private String id;
+    @Field
+    private String identifier;
 
     /**
      * Name of audio file to be played at the end of lesson for prompting the user to either repeat
      * the lesson or go to next lesson.
      */
+    @Field
     private String file;
 
     public LessonContentMenu() {
     }
 
-    public String getId() {
-        return id;
+    public String getIdentifier() {
+        return identifier;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public void setIdentifier(String identifier) {
+        this.identifier = identifier;
     }
 
     public String getFile() {

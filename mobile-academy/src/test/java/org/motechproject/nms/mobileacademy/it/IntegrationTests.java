@@ -1,4 +1,4 @@
-package org.motechproject.nms.mobileacademy.osgi;
+package org.motechproject.nms.mobileacademy.it;
 
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;

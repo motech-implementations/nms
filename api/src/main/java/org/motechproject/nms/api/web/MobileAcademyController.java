@@ -8,6 +8,7 @@ import org.motechproject.nms.api.web.contract.mobileAcademy.CourseResponse;
 import org.motechproject.nms.api.web.contract.mobileAcademy.CourseVersionResponse;
 import org.motechproject.nms.mobileacademy.dto.MaBookmark;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 
@@ -30,6 +31,15 @@ public class MobileAcademyController extends BaseController {
      * MA service to handle all business logic
      */
     private MobileAcademyService mobileAcademyService;
+
+    /**
+     * Constructor for controller
+     * @param mobileAcademyService mobile academy service
+     */
+    @Autowired
+    public MobileAcademyController(MobileAcademyService mobileAcademyService) {
+        this.mobileAcademyService = mobileAcademyService;
+    }
 
     /**
      *

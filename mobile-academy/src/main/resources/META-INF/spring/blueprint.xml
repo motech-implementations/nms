@@ -12,9 +12,7 @@
                     interface="org.motechproject.nms.mobileacademy.repository.CourseDataService" />
 
     <osgi:reference id="bookmarkDataService"
-                    interface="org.motechproject.nms.mobileacademy.repository.BookmarkDataService" />
+                    interface="org.motechproject.mtraining.repository.BookmarkDataService" />
 
-    <osgi:reference id="callDetailDataService"
-                    interface="org.motechproject.nms.mobileacademy.repository.CallDetailDataService" />
 
 </beans>

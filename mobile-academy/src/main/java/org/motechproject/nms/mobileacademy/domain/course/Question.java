@@ -1,24 +1,31 @@
 package org.motechproject.nms.mobileacademy.domain.course;
 
+import org.motechproject.mds.annotations.Entity;
+import org.motechproject.mds.annotations.Field;
+
 /**
  * Contains details about a particular question of the quiz
  */
+@Entity
 public class Question {
 
     /**
      * Specifies the name of question associated to a particular chapter in the format
      ”Question<QuestionId>”, where QuestionId varies from 01 to 04.
      */
+    @Field
     private String name;
 
     /**
      * It specifies the DTMF input for correct answer to the given question.
      */
+    @Field
     private int correctAnswerOption;
 
     /**
      * This contains details about various files to be played during the question.
      */
+    @Field
     private QuestionContent content;
 
     public Question() {
