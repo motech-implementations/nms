@@ -6,5 +6,6 @@ package org.motechproject.nms.kilkari.domain;
 public enum SubscriptionStatus {
     ACTIVE,
     PENDING_ACTIVATION,
-    DEACTIVATED;
+    DEACTIVATED,
+    COMPLETED;
 }

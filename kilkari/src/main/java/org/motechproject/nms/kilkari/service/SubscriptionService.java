@@ -4,6 +4,7 @@ import org.motechproject.nms.kilkari.domain.InboxCallDetails;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
+import org.motechproject.nms.kilkari.domain.SubscriptionMode;
 
 /**
  *
@@ -12,7 +13,8 @@ public interface SubscriptionService {
 
     Subscriber getSubscriber(long callingNumber);
 
-    void createSubscription(long callingNumber, String languageLocationCode, String subscriptionPack);
+    void createSubscription(long callingNumber, String languageLocationCode, String subscriptionPack,
+        SubscriptionMode mode);
 
     Subscription getSubscription(String subscriptionId);
 

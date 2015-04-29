@@ -24,9 +24,7 @@ import org.motechproject.nms.flw.repository.ServiceUsageCapDataService;
 import org.motechproject.nms.flw.repository.ServiceUsageDataService;
 import org.motechproject.nms.flw.repository.WhitelistEntryDataService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
-import org.motechproject.nms.kilkari.domain.Subscriber;
-import org.motechproject.nms.kilkari.domain.Subscription;
-import org.motechproject.nms.kilkari.domain.SubscriptionPack;
+import org.motechproject.nms.kilkari.domain.*;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
@@ -142,17 +140,22 @@ public class UserControllerBundleIT extends BasePaxIT {
         CircleLanguage circleLanguage = new CircleLanguage("AA", ta);
         circleLanguageDataService.create(circleLanguage);
 
-        SubscriptionPack pack1 = subscriptionPackDataService.create(new SubscriptionPack("pack1"));
-        SubscriptionPack pack2 = subscriptionPackDataService.create(new SubscriptionPack("pack2"));
+        SubscriptionPack pack1 = subscriptionPackDataService.create(new SubscriptionPack("pack1",
+                SubscriptionPackType.CHILD));
+        SubscriptionPack pack2 = subscriptionPackDataService.create(new SubscriptionPack("pack2",
+                SubscriptionPackType.PREGNANCY));
         List<SubscriptionPack> onePack = Arrays.asList(pack1);
         List<SubscriptionPack> twoPacks = Arrays.asList(pack1, pack2);
 
         Subscriber subscriber1 = subscriberDataService.create(new Subscriber(1000000000L));
         Subscriber subscriber2 = subscriberDataService.create(new Subscriber(2000000000L));
 
-        Subscription subscription1 = subscriptionDataService.create(new Subscription(subscriber1, pack1, ta));
-        Subscription subscription2 = subscriptionDataService.create(new Subscription(subscriber2, pack1, ta));
-        Subscription subscription3 = subscriptionDataService.create(new Subscription(subscriber2, pack2, ta));
+        Subscription subscription1 = subscriptionDataService.create(new Subscription(subscriber1, pack1, ta,
+                SubscriptionMode.IVR));
+        Subscription subscription2 = subscriptionDataService.create(new Subscription(subscriber2, pack1, ta,
+                SubscriptionMode.IVR));
+        Subscription subscription3 = subscriptionDataService.create(new Subscription(subscriber2, pack2, ta,
+                SubscriptionMode.IVR));
     }
 
     private void createFlwCappedServiceNoUsageNoLocationNoLanguage() {

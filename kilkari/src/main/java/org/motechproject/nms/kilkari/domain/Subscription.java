@@ -3,6 +3,7 @@ package org.motechproject.nms.kilkari.domain;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.nms.language.domain.Language;
+import org.joda.time.LocalDate;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Unique;
@@ -29,12 +30,19 @@ public class Subscription {
     @Field
     private SubscriptionStatus status;
 
-    public Subscription(Subscriber subscriber, SubscriptionPack subscriptionPack, Language language) {
+    @Field
+    private SubscriptionMode mode;
+
+    @Field
+    private LocalDate startDate;
+
+    public Subscription(Subscriber subscriber, SubscriptionPack subscriptionPack, Language language,
+        SubscriptionMode mode) {
         this.subscriptionId = UUID.randomUUID().toString();
         this.subscriber = subscriber;
         this.subscriptionPack = subscriptionPack;
         this.language = language;
-        this.status = SubscriptionStatus.PENDING_ACTIVATION;
+        this.mode = mode;
         this.subscriber.getSubscriptions().add(this);
     }
 
@@ -65,6 +73,14 @@ public class Subscription {
     public SubscriptionStatus getStatus() { return status; }
 
     public void setStatus(SubscriptionStatus status) { this.status = status; }
+
+    public SubscriptionMode getMode() { return mode; }
+
+    public void setMode(SubscriptionMode mode) { this.mode = mode; }
+
+    public LocalDate getStartDate() { return startDate; }
+
+    public void setStartDate(LocalDate startDate) { this.startDate = startDate; }
 
     @Override
     public boolean equals(Object o) {
