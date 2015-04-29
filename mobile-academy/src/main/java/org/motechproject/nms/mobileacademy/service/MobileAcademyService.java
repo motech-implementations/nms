@@ -1,6 +1,5 @@
 package org.motechproject.nms.mobileacademy.service;
 
-import org.motechproject.nms.mobileacademy.domain.CallDetail;
 import org.motechproject.nms.mobileacademy.domain.Course;
 import org.motechproject.nms.mobileacademy.dto.MaBookmark;
 
@@ -25,7 +24,7 @@ public interface MobileAcademyService {
      * Gets the course modification date as an epoch representation
      * @return
      */
-    Integer getCourseVersion();
+    int getCourseVersion();
 
     /**
      * Get the bookmark for a caller
@@ -40,11 +39,5 @@ public interface MobileAcademyService {
      * @param bookmark updated bookmark to be stored
      */
     void setBookmark(MaBookmark bookmark);
-
-    /**
-     * Save the details of a call instance
-     * @param callDetail call detail data
-     */
-    void saveCallDetails(CallDetail callDetail);
 
 }

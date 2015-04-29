@@ -4,7 +4,6 @@ import org.apache.commons.lang.NotImplementedException;
 
 import org.motechproject.nms.api.web.contract.mobileAcademy.SaveBookmarkRequest;
 import org.motechproject.nms.api.web.contract.mobileAcademy.GetBookmarkResponse;
-import org.motechproject.nms.api.web.contract.mobileAcademy.CallDetailsRequest;
 import org.motechproject.nms.api.web.contract.mobileAcademy.CourseResponse;
 import org.motechproject.nms.api.web.contract.mobileAcademy.CourseVersionResponse;
 import org.motechproject.nms.mobileacademy.dto.MaBookmark;
@@ -94,17 +93,19 @@ public class MobileAcademyController extends BaseController {
     }
 
     /**
-     * Save call related metadata after the completion of the call
-     * @param callDetailsRequest call details
+     * Save sms
+     * @param smsDeliveryStatusRequest sms delivery details
      * @return OK or exception
      */
     @RequestMapping(
-            value = "/callDetails",
+            value = "/smsdelivery",
             method = RequestMethod.POST)
-    @ResponseBody
-    public void saveCallDetails(@RequestBody CallDetailsRequest callDetailsRequest) {
+    @ResponseStatus(HttpStatus.OK)
+    public void saveSmsStatus(@RequestBody String smsDeliveryStatusRequest) {
 
         // placeholder for void returns
+        // TBD in Sprint 2: https://github.com/motech-implementations/mim/issues/150 and will be implemented
+        // using the SMS module
         throw new NotImplementedException();
     }
 

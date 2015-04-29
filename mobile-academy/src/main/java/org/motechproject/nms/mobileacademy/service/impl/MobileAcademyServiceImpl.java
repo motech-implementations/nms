@@ -1,15 +1,15 @@
 package org.motechproject.nms.mobileacademy.service.impl;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.NotImplementedException;
+import org.joda.time.DateTime;
 import org.motechproject.mtraining.domain.Bookmark;
 import org.motechproject.mtraining.repository.BookmarkDataService;
-import org.motechproject.nms.mobileacademy.domain.CallDetail;
 import org.motechproject.nms.mobileacademy.domain.Course;
 
 import org.motechproject.nms.mobileacademy.dto.MaBookmark;
 import org.motechproject.nms.mobileacademy.repository.CourseDataService;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -31,10 +31,17 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
      */
     private CourseDataService courseDataService;
 
+    @Autowired
+    public MobileAcademyServiceImpl(BookmarkDataService bookmarkDataService,
+                                    CourseDataService courseDataService) {
+        this.bookmarkDataService = bookmarkDataService;
+        this.courseDataService = courseDataService;
+    }
+
     @Override
     public Course getCourse() {
 
-        // TODO: Make this configurable
+        // Make this course name configurable
         return courseDataService.findCourseByName("MobileAcademyCourse");
     }
 
@@ -51,9 +58,16 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
     }
 
     @Override
-    public Integer getCourseVersion() {
+    public int getCourseVersion() {
 
-        return 1;
+        Course course = getCourse();
+        if (course != null) {
+            DateTime version = course.getModificationDate();
+            return (int) version.getMillis();
+        } else {
+            // return -1 and let the caller handle the upstream response
+            return -1;
+        }
     }
 
     @Override
@@ -82,27 +96,20 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
 
         if (CollectionUtils.isEmpty(existing)) {
             // if no bookmarks exist for user
-            bookmarkDataService.create(setProperties(saveBookmark, new Bookmark()));
+            bookmarkDataService.create(setBookmarkProperties(saveBookmark, new Bookmark()));
         } else {
             // we found a list (usually only 1) and update it
-            bookmarkDataService.update(setProperties(saveBookmark, existing.get(0)));
+            bookmarkDataService.update(setBookmarkProperties(saveBookmark, existing.get(0)));
         }
     }
 
-    private Bookmark setProperties(MaBookmark fromBookmark, Bookmark toBookmark) {
+    private Bookmark setBookmarkProperties(MaBookmark fromBookmark, Bookmark toBookmark) {
         toBookmark.setExternalId(fromBookmark.getCallingNumber().toString());
         toBookmark.getProgress().put("callId", fromBookmark.getCallId());
         toBookmark.setChapterIdentifier(fromBookmark.getBookmark().split("_")[0]);
         toBookmark.setLessonIdentifier(fromBookmark.getBookmark().split("_")[1]);
         toBookmark.getProgress().put("scoresByChapter", fromBookmark.getScoresByChapter());
         return toBookmark;
-    }
-
-    @Override
-    public void saveCallDetails(CallDetail callDetail) {
-
-        // placeholder for void until this gets implemented
-        throw new NotImplementedException();
     }
 
 }
