@@ -7,9 +7,11 @@ import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.Unique;
 import java.util.HashSet;
 import java.util.Set;
+import org.joda.time.LocalDate;
 
 /**
- * A Kilkari subscriber (recipient of the service, ie: a pregnant woman) essentially identified by their phone number
+ * A Kilkari subscriber (recipient of the service, i.e. a pregnant woman) essentially identified by her
+ * phone number
  */
 @Entity(tableName = "nms_subscribers")
 public class Subscriber {
@@ -18,6 +20,12 @@ public class Subscriber {
     @Field
     @Unique
     private Long callingNumber;
+
+    @Field
+    private LocalDate dateOfBirth;
+
+    @Field
+    private LocalDate lastMenstrualPeriod;
 
     //TODO: making this a bi-directional relationship until MOTECH-1638 is fixed. See #31.
     @Field
@@ -38,6 +46,22 @@ public class Subscriber {
 
     public void setCallingNumber(Long callingNumber) {
         this.callingNumber = callingNumber;
+    }
+
+    public LocalDate getDateOfBirth() {
+        return dateOfBirth;
+    }
+
+    public void setDateOfBirth(LocalDate dateOfBirth) {
+        this.dateOfBirth = dateOfBirth;
+    }
+
+    public LocalDate getLastMenstrualPeriod() {
+        return lastMenstrualPeriod;
+    }
+
+    public void setLastMenstrualPeriod(LocalDate lastMenstrualPeriod) {
+        this.lastMenstrualPeriod = lastMenstrualPeriod;
     }
 
     public Set<Subscription> getSubscriptions() {

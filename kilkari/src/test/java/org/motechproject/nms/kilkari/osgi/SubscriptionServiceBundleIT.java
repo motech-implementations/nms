@@ -56,6 +56,15 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     @Inject
     private InboxCallDataDataService inboxCallDataDataService;
 
+    private void cleanupData() {
+        subscriptionDataService.deleteAll();
+        subscriptionPackDataService.deleteAll();
+        subscriberDataService.deleteAll();
+        languageDataService.deleteAll();
+        inboxCallDataDataService.deleteAll();
+        inboxCallDetailsDataService.deleteAll();
+    }
+
     @Test
     public void testServicePresent() throws Exception {
         assertNotNull(subscriptionService);
@@ -63,29 +72,21 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
     @Test
     public void testServiceFunctional() throws Exception {
-        subscriptionDataService.deleteAll();
-        subscriptionPackDataService.deleteAll();
-        subscriberDataService.deleteAll();
-        languageDataService.deleteAll();
-        inboxCallDataDataService.deleteAll();
-        inboxCallDetailsDataService.deleteAll();
-
+        cleanupData();
         Language ta = languageDataService.create(new Language("tamil", "10"));
 
         SubscriptionPack pack1 = subscriptionPackDataService.create(new SubscriptionPack("pack1"));
         SubscriptionPack pack2 = subscriptionPackDataService.create(new SubscriptionPack("pack2"));
-
         Subscriber subscriber = subscriberDataService.create(new Subscriber(1000000000L));
 
-        /*
-        subscriptionService.createSubscription(subscriber.getCallingNumber(), ta.getCode(), pack1.getName(), SubscriptionMode.IVR);
-        subscriptionService.createSubscription(subscriber.getCallingNumber(), ta.getCode(), pack2.getName(), SubscriptionMode.IVR);
-        */
+        subscriptionService.createSubscription(subscriber.getCallingNumber(), ta.getCode(), pack1.getName(),
+            SubscriptionMode.IVR);
+        subscriptionService.createSubscription(subscriber.getCallingNumber(), ta.getCode(), pack2.getName(),
+            SubscriptionMode.IVR);
 
-        Subscription subscription1 = subscriptionDataService.create(new Subscription(subscriber, pack1, ta, SubscriptionMode.IVR));
-        Subscription subscription2 = subscriptionDataService.create(new Subscription(subscriber, pack2, ta, SubscriptionMode.IVR));
-
+        subscriber = subscriberDataService.findByCallingNumber(1000000000L);
         Set<Subscription> subscriptions = subscriber.getSubscriptions();
+
         Set<SubscriptionPack> packs = new HashSet<>();
         for (Subscription subscription : subscriptions) {
             packs.add(subscription.getSubscriptionPack());

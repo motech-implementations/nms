@@ -4,9 +4,8 @@ import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 
 /**
- * Models the kinds of message campaign (ie: pack) a subscriber can subscribe to
- *
- * for example antenatal or postnatal
+ * Models the kinds of message campaign (i.e. pack) a subscriber can subscribe to, for example antenatal or
+ * postnatal
  */
 @Entity(tableName = "nms_subscription_packs")
 public class SubscriptionPack {
@@ -14,13 +13,19 @@ public class SubscriptionPack {
     @Field
     private String name;
 
-    public SubscriptionPack(String name) {
+    @Field
+    private SubscriptionPackType type;
 
+    public SubscriptionPack() {
+    }
+
+    public SubscriptionPack(String name) {
         this.name = name;
     }
 
-    public SubscriptionPack() {
-
+    public SubscriptionPack(String name, SubscriptionPackType type) {
+        this.name = name;
+        this.type = type;
     }
 
     public String getName() {
@@ -29,6 +34,14 @@ public class SubscriptionPack {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public SubscriptionPackType getType() {
+        return type;
+    }
+
+    public void setType(SubscriptionPackType type) {
+        this.type = type;
     }
 
     @Override
