@@ -125,10 +125,14 @@ public class UserController extends BaseController {
             }
         }
         user.setSubscriptionPackList(packs);
+        Language subscriberLanguage = subscriber.getLanguage();
+        if (subscriberLanguage != null) {
+            user.setLanguageLocationCode(subscriberLanguage.getCode());
+        }
 
-        Language language = languageService.getDefaultCircleLanguage(circle);
-        if (language != null) {
-            user.setDefaultLanguageLocationCode(language.getCode());
+        Language defaultCircleLanguage = languageService.getDefaultCircleLanguage(circle);
+        if (defaultCircleLanguage != null) {
+            user.setDefaultLanguageLocationCode(defaultCircleLanguage.getCode());
         }
 
         return user;

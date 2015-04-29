@@ -27,7 +27,4 @@
     <osgi:reference id="subscriptionDataService"
                     interface="org.motechproject.nms.kilkari.repository.SubscriptionDataService" />
 
-    <osgi:reference id="languageDataService"
-                    interface="org.motechproject.nms.language.repository.LanguageDataService" />
-
 </beans>

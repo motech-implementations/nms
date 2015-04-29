@@ -90,6 +90,10 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         System.setProperty("org.motechproject.testing.osgi.http.numTries", "1");
     }
 
+    private Language gLanguage;
+    private SubscriptionPack gPack1;
+    private SubscriptionPack gPack2;
+
     private void cleanAllData() {
         subscriptionDataService.deleteAll();
         subscriptionPackDataService.deleteAll();
@@ -99,6 +103,13 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         frontLineWorkerDataService.deleteAll();
         circleLanguageDataService.deleteAll();
         languageDataService.deleteAll();
+    }
+
+    private void createLanguageAndSubscriptionPacks() {
+        gLanguage = languageDataService.create(new Language("tamil", "10"));
+
+        gPack1 = subscriptionPackDataService.create(new SubscriptionPack("pack1"));
+        gPack2 = subscriptionPackDataService.create(new SubscriptionPack("pack2"));
     }
 
     private void setupData() {
@@ -116,11 +127,11 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         Subscriber subscriber1 = subscriberDataService.create(new Subscriber(1000000000L));
         Subscriber subscriber2 = subscriberDataService.create(new Subscriber(2000000000L));
 
-        subscriptionService.createSubscription(subscriber1.getCallingNumber(), ta.getCode(), pack1.getName(),
+        subscriptionService.createSubscription(subscriber1.getCallingNumber(), ta, pack1,
                 SubscriptionMode.IVR);
-        subscriptionService.createSubscription(subscriber2.getCallingNumber(), ta.getCode(), pack1.getName(),
+        subscriptionService.createSubscription(subscriber2.getCallingNumber(), ta, pack1,
                 SubscriptionMode.IVR);
-        subscriptionService.createSubscription(subscriber2.getCallingNumber(), ta.getCode(), pack2.getName(),
+        subscriptionService.createSubscription(subscriber2.getCallingNumber(), ta, pack2,
                 SubscriptionMode.IVR);
     }
 
@@ -223,7 +234,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         HttpPost httpPost = createSubscriptionHttpPost(9999911122L, "pack99999");
 
         // Should return HTTP 404 (Not Found) because the subscription pack won't be found
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_NOT_FOUND, ADMIN_USERNAME, ADMIN_PASSWORD));
+        assertTrue(SimpleHttpClient
+                .execHttpRequest(httpPost, HttpStatus.SC_NOT_FOUND, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     @Test
@@ -272,14 +284,34 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     }
 
     @Test
+    public void testCreateSubscriptionsNoLanguageInDB() throws IOException, InterruptedException {
+        setupData();
+        SubscriptionRequest subscriptionRequest = new SubscriptionRequest(9999911122L, "A", "AP",
+                123456789012545L, "99", "pack1");
+        ObjectMapper mapper = new ObjectMapper();
+        String subscriptionRequestJson = mapper.writeValueAsString(subscriptionRequest);
+
+        HttpPost httpPost = new HttpPost(String.format(
+                "http://localhost:%d/api/kilkari/subscription", TestContext.getJettyPort()));
+        httpPost.setHeader("Content-type", "application/json");
+        httpPost.setEntity(new StringEntity(subscriptionRequestJson));
+
+
+        // Should return HTTP 404 (Not Found) because the language won't be found
+        assertTrue(SimpleHttpClient
+                .execHttpRequest(httpPost, HttpStatus.SC_NOT_FOUND, ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    @Test
     public void testCreateSubscriptionViaMcts() {
         setupData();
+        createLanguageAndSubscriptionPacks();
 
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
         mctsSubscriber.setDateOfBirth(LocalDate.now().minusDays(14));
         subscriberDataService.create(mctsSubscriber);
 
-        subscriptionService.createSubscription(9999911122L, "10", "pack1", SubscriptionMode.MCTS_IMPORT);
+        subscriptionService.createSubscription(9999911122L, gLanguage, gPack1, SubscriptionMode.MCTS_IMPORT);
 
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         assertEquals(1, mctsSubscriber.getSubscriptions().size());
@@ -293,10 +325,10 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         mctsSubscriber.setDateOfBirth(LocalDate.now().minusDays(14));
         subscriberDataService.create(mctsSubscriber);
 
-        subscriptionService.createSubscription(9999911122L, "10", "pack1", SubscriptionMode.MCTS_IMPORT);
+        subscriptionService.createSubscription(9999911122L, gLanguage, gPack1, SubscriptionMode.MCTS_IMPORT);
 
         // attempt to create subscription to the same pack -- should fail
-        subscriptionService.createSubscription(9999911122L, "10", "pack1", SubscriptionMode.MCTS_IMPORT);
+        subscriptionService.createSubscription(9999911122L, gLanguage, gPack1, SubscriptionMode.MCTS_IMPORT);
 
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         assertEquals(1, mctsSubscriber.getSubscriptions().size());
@@ -310,10 +342,10 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         mctsSubscriber.setLastMenstrualPeriod(LocalDate.now().minusDays(28));
         subscriberDataService.create(mctsSubscriber);
 
-        subscriptionService.createSubscription(9999911122L, "10", "pack2", SubscriptionMode.MCTS_IMPORT);
+        subscriptionService.createSubscription(9999911122L, gLanguage, gPack2, SubscriptionMode.MCTS_IMPORT);
 
         // attempt to create subscription to the same pack -- should fail
-        subscriptionService.createSubscription(9999911122L, "10", "pack2", SubscriptionMode.MCTS_IMPORT);
+        subscriptionService.createSubscription(9999911122L, gLanguage, gPack2, SubscriptionMode.MCTS_IMPORT);
 
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         assertEquals(1, mctsSubscriber.getSubscriptions().size());
@@ -327,14 +359,14 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         mctsSubscriber.setLastMenstrualPeriod(LocalDate.now().minusDays(28));
         subscriberDataService.create(mctsSubscriber);
 
-        subscriptionService.createSubscription(9999911122L, "10", "pack2", SubscriptionMode.MCTS_IMPORT);
+        subscriptionService.createSubscription(9999911122L, gLanguage, gPack2, SubscriptionMode.MCTS_IMPORT);
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         Subscription pregnancySubscription = mctsSubscriber.getSubscriptions().iterator().next();
         pregnancySubscription.setStatus(SubscriptionStatus.DEACTIVATED);
         subscriptionDataService.update(pregnancySubscription);
 
         // attempt to create subscription to the same pack -- should succeed
-        subscriptionService.createSubscription(9999911122L, "10", "pack2", SubscriptionMode.MCTS_IMPORT);
+        subscriptionService.createSubscription(9999911122L, gLanguage, gPack2, SubscriptionMode.MCTS_IMPORT);
 
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         assertEquals(2, mctsSubscriber.getSubscriptions().size());
@@ -348,15 +380,14 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         mctsSubscriber.setDateOfBirth(LocalDate.now().minusDays(14));
         subscriberDataService.create(mctsSubscriber);
 
-        subscriptionService.createSubscription(9999911122L, "10", "pack1", SubscriptionMode.MCTS_IMPORT);
+        subscriptionService.createSubscription(9999911122L, gLanguage, gPack1, SubscriptionMode.MCTS_IMPORT);
 
         // attempt to create subscription to a different pack
-        subscriptionService.createSubscription(9999911122L, "10", "pack2", SubscriptionMode.MCTS_IMPORT);
+        subscriptionService.createSubscription(9999911122L, gLanguage, gPack2, SubscriptionMode.MCTS_IMPORT);
 
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         assertEquals(2, mctsSubscriber.getSubscriptions().size());
     }
-
 
     @Test
     public void testDeactivateSubscriptionRequest() throws IOException, InterruptedException {

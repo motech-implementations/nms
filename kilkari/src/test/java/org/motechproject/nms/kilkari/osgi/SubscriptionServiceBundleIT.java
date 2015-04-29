@@ -30,8 +30,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 /**
  * Verify that SubscriptionService is present & functional.
@@ -56,6 +55,19 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     @Inject
     private InboxCallDataDataService inboxCallDataDataService;
 
+    private Language ta;
+    private Language en;
+    private SubscriptionPack pack1;
+    private SubscriptionPack pack2;
+
+    private void createLanguageAndSubscriptionPacks() {
+        ta = languageDataService.create(new Language("tamil", "10"));
+        en = languageDataService.create(new Language("english", "99"));
+
+        pack1 = subscriptionPackDataService.create(new SubscriptionPack("pack1"));
+        pack2 = subscriptionPackDataService.create(new SubscriptionPack("pack2"));
+    }
+
     private void cleanupData() {
         subscriptionDataService.deleteAll();
         subscriptionPackDataService.deleteAll();
@@ -73,16 +85,14 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     @Test
     public void testServiceFunctional() throws Exception {
         cleanupData();
-        Language ta = languageDataService.create(new Language("tamil", "10"));
+        createLanguageAndSubscriptionPacks();
 
-        SubscriptionPack pack1 = subscriptionPackDataService.create(new SubscriptionPack("pack1"));
-        SubscriptionPack pack2 = subscriptionPackDataService.create(new SubscriptionPack("pack2"));
         Subscriber subscriber = subscriberDataService.create(new Subscriber(1000000000L));
 
-        subscriptionService.createSubscription(subscriber.getCallingNumber(), ta.getCode(), pack1.getName(),
-            SubscriptionMode.IVR);
-        subscriptionService.createSubscription(subscriber.getCallingNumber(), ta.getCode(), pack2.getName(),
-            SubscriptionMode.IVR);
+        subscriptionService.createSubscription(subscriber.getCallingNumber(), ta, pack1,
+                                               SubscriptionMode.IVR);
+        subscriptionService.createSubscription(subscriber.getCallingNumber(), ta, pack2,
+                                               SubscriptionMode.IVR);
 
         subscriber = subscriberDataService.findByCallingNumber(1000000000L);
         Set<Subscription> subscriptions = subscriber.getSubscriptions();
@@ -162,5 +172,48 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 //                (Long)inboxCallDetailsDataService.getDetachedField(inboxCallDetails, "id"));
 //
 //        assertEquals(1111111111L, (long)inboxCallDetailsFromDatabase.getCallingNumber());
+    }
+
+    @Test
+    public void testCreateSubscriptionNoSubscriber() throws Exception {
+        cleanupData();
+        createLanguageAndSubscriptionPacks();
+
+        // Just verify the db is clean
+        Subscriber s = subscriptionService.getSubscriber(1111111111L);
+        assertNull(s);
+
+        subscriptionService.createSubscription(1111111111L, ta, pack1, SubscriptionMode.IVR);
+
+        Subscriber subscriber = subscriptionService.getSubscriber(1111111111L);
+        assertNotNull(subscriber);
+        assertEquals(ta, subscriber.getLanguage());
+        assertEquals(1, subscriber.getSubscriptions().size());
+
+        Subscription subscription = subscriber.getSubscriptions().iterator().next();
+        assertEquals(pack1, subscription.getSubscriptionPack());
+    }
+
+    @Test
+    public void testCreateSubscriptionExistingSubscriberDifferentLanguage() throws Exception {
+        cleanupData();
+        createLanguageAndSubscriptionPacks();
+
+        // Just verify the db is clean
+        Subscriber s = subscriptionService.getSubscriber(1111111111L);
+        assertNull(s);
+
+        subscriptionService.createSubscription(1111111111L, ta, pack1, SubscriptionMode.IVR);
+
+        // Since the user exists we will not change their language
+        subscriptionService.createSubscription(1111111111L, en, pack1, SubscriptionMode.IVR);
+
+        Subscriber subscriber = subscriptionService.getSubscriber(1111111111L);
+        assertNotNull(subscriber);
+        assertEquals(ta, subscriber.getLanguage());
+        assertEquals(1, subscriber.getSubscriptions().size());
+
+        Subscription subscription = subscriber.getSubscriptions().iterator().next();
+        assertEquals(pack1, subscription.getSubscriptionPack());
     }
 }

@@ -1,9 +1,8 @@
 package org.motechproject.nms.kilkari.domain;
 
+import org.joda.time.LocalDate;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
-import org.motechproject.nms.language.domain.Language;
-import org.joda.time.LocalDate;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Unique;
@@ -25,9 +24,6 @@ public class Subscription {
     private SubscriptionPack subscriptionPack;
 
     @Field
-    private Language language;
-
-    @Field
     private SubscriptionStatus status;
 
     @Field
@@ -36,12 +32,10 @@ public class Subscription {
     @Field
     private LocalDate startDate;
 
-    public Subscription(Subscriber subscriber, SubscriptionPack subscriptionPack, Language language,
-        SubscriptionMode mode) {
+    public Subscription(Subscriber subscriber, SubscriptionPack subscriptionPack, SubscriptionMode mode) {
         this.subscriptionId = UUID.randomUUID().toString();
         this.subscriber = subscriber;
         this.subscriptionPack = subscriptionPack;
-        this.language = language;
         this.mode = mode;
         this.subscriber.getSubscriptions().add(this);
     }
@@ -62,12 +56,6 @@ public class Subscription {
 
     public void setSubscriptionPack(SubscriptionPack subscriptionPack) {
         this.subscriptionPack = subscriptionPack;
-    }
-
-    public Language getLanguage() { return language; }
-
-    public void setLanguage(Language language) {
-        this.language = language;
     }
 
     public SubscriptionStatus getStatus() { return status; }
@@ -94,7 +82,7 @@ public class Subscription {
         Subscription that = (Subscription) o;
 
         return subscriptionId.equals(that.subscriptionId) && subscriber.equals(this.subscriber) &&
-                subscriptionPack.equals(that.subscriptionPack) && language.equals(that.getLanguage());
+                subscriptionPack.equals(that.subscriptionPack);
     }
 
     @Override

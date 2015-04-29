@@ -2,6 +2,7 @@ package org.motechproject.nms.kilkari.domain;
 
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
+import org.motechproject.nms.language.domain.Language;
 
 import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.Unique;
@@ -26,6 +27,10 @@ public class Subscriber {
 
     @Field
     private LocalDate lastMenstrualPeriod;
+
+    @Field
+    @Persistent(defaultFetchGroup = "true")
+    private Language language;
 
     //TODO: making this a bi-directional relationship until MOTECH-1638 is fixed. See #31.
     @Field
@@ -62,6 +67,14 @@ public class Subscriber {
 
     public void setLastMenstrualPeriod(LocalDate lastMenstrualPeriod) {
         this.lastMenstrualPeriod = lastMenstrualPeriod;
+    }
+
+    public Language getLanguage() {
+        return language;
+    }
+
+    public void setLanguage(Language language) {
+        this.language = language;
     }
 
     public Set<Subscription> getSubscriptions() {
