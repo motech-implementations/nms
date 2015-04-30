@@ -55,6 +55,14 @@
             <artifactId>motech-scheduler</artifactId>
             <version>${motech.version}</version>
         </dependency>
+
+        <!-- Kilkari -->
+        <dependency>
+            <groupId>org.motechproject.nms</groupId>
+            <artifactId>kilkari</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
     </dependencies>
 
     <repositories>

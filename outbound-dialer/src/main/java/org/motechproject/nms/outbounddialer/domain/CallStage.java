@@ -1,4 +1,4 @@
-package org.motechproject.nms.outbounddialer.repository;
+package org.motechproject.nms.outbounddialer.domain;
 
 public enum CallStage {
     Fresh,

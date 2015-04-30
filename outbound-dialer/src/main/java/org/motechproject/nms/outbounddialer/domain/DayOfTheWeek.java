@@ -1,4 +1,4 @@
-package org.motechproject.nms.outbounddialer.repository;
+package org.motechproject.nms.outbounddialer.domain;
 
 import org.joda.time.DateTime;
 

@@ -9,11 +9,12 @@ import org.motechproject.alerts.domain.AlertType;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.annotations.MotechListener;
 import org.motechproject.mds.query.QueryParams;
+import org.motechproject.nms.kilkari.domain.Subscription;
+import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
+import org.motechproject.nms.outbounddialer.domain.CallRetry;
+import org.motechproject.nms.outbounddialer.domain.DayOfTheWeek;
 import org.motechproject.nms.outbounddialer.domain.FileProcessedStatus;
-import org.motechproject.nms.outbounddialer.repository.Beneficiary;
-import org.motechproject.nms.outbounddialer.repository.BeneficiaryDataService;
-import org.motechproject.nms.outbounddialer.repository.BeneficiaryStatus;
-import org.motechproject.nms.outbounddialer.repository.DayOfTheWeek;
+import org.motechproject.nms.outbounddialer.repository.CallRetryDataService;
 import org.motechproject.nms.outbounddialer.service.TargetFileService;
 import org.motechproject.nms.outbounddialer.web.contract.FileProcessedStatusRequest;
 import org.motechproject.scheduler.contract.RepeatingSchedulableJob;
@@ -33,7 +34,7 @@ import java.util.List;
 @Service("targetFileService")
 public class TargetFileServiceImpl implements TargetFileService {
     private static final String TARGET_FILE_TIME = "outbound-dialer.target_file_time";
-    private static final String MAX_BENEFICIARY_BLOCK = "outbound-dialer.max_beneficiary_block";
+    private static final String MAX_QUERY_BLOCK = "outbound-dialer.max_query_block";
     private static final String TARGET_FILE_MS_INTERVAL = "outbound-dialer.target_file_ms_interval";
     private static final String TARGET_FILE_DIRECTORY = "outbound-dialer.target_file_directory";
     private static final String GENERATE_TARGET_FILE_EVENT = "nms.obd.generate_target_file";
@@ -41,7 +42,8 @@ public class TargetFileServiceImpl implements TargetFileService {
     private SettingsFacade settingsFacade;
     private MotechSchedulerService schedulerService;
     private AlertService alertService;
-    private BeneficiaryDataService beneficiaryDataService;
+    private SubscriptionDataService subscriptionDataService;
+    private CallRetryDataService callRetryDataService;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TargetFileServiceImpl.class);
 
@@ -79,12 +81,14 @@ public class TargetFileServiceImpl implements TargetFileService {
 
     @Autowired
     public TargetFileServiceImpl(@Qualifier("outboundDialerSettings") SettingsFacade settingsFacade,
-                                     MotechSchedulerService schedulerService, AlertService alertService,
-                                 BeneficiaryDataService beneficiaryDataService) {
+                                 MotechSchedulerService schedulerService, AlertService alertService,
+                                 SubscriptionDataService subscriptionDataService,
+                                 CallRetryDataService callRetryDataService) {
         this.schedulerService = schedulerService;
         this.settingsFacade = settingsFacade;
         this.alertService = alertService;
-        this.beneficiaryDataService = beneficiaryDataService;
+        this.subscriptionDataService = subscriptionDataService;
+        this.callRetryDataService = callRetryDataService;
 
         scheduleTargetFileGeneration();
     }
@@ -143,30 +147,56 @@ public class TargetFileServiceImpl implements TargetFileService {
         //figure out which day to work with
         final DayOfTheWeek today = DayOfTheWeek.today();
 
-        long numBeneficiaries = 0;
-        int page = 1;
-        int numBlockBeneficiaries = 0;
-        int maxBeneficiaryBlock = Integer.parseInt(settingsFacade.getProperty(MAX_BENEFICIARY_BLOCK));
-        do {
-            List<Beneficiary> beneficiaries = beneficiaryDataService.findByNextCallDay(today,
-                    BeneficiaryStatus.Active, new QueryParams(page, maxBeneficiaryBlock));
-            numBlockBeneficiaries = beneficiaries.size();
 
-            for (Beneficiary beneficiary : beneficiaries) {
-                writer.print(beneficiaryDataService.getDetachedField(beneficiary, "id"));
+        long numRecord = 0;
+        int maxQueryBlock = Integer.parseInt(settingsFacade.getProperty(MAX_QUERY_BLOCK));
+
+        //Fresh calls
+        int page = 1;
+        int numBlockRecord = 0;
+        do {
+            //todo: replace retrieveAll with findByStatus when available
+            List<Subscription> subscriptions = subscriptionDataService.retrieveAll(
+                    new QueryParams(page, maxQueryBlock));
+            numBlockRecord = subscriptions.size();
+
+            for (Subscription subscription : subscriptions) {
+                writer.print(subscription.getSubscriptionId());
                 writer.print(",");
-                writer.print(beneficiary.getMsisdn());
+                writer.print(subscription.getSubscriber().getCallingNumber());
                 writer.print(",");
-                writer.println(beneficiary.getLanguageLocationCode());
+                writer.println(subscription.getLanguage().getCode());
                 //todo...
             }
 
             page++;
-            numBeneficiaries += numBlockBeneficiaries;
+            numRecord += numBlockRecord;
 
-        } while (numBlockBeneficiaries > 0);
+        } while (numBlockRecord > 0);
 
-        LOGGER.info("Created targetFile with {} beneficiar{}", numBeneficiaries, numBeneficiaries == 1 ? "y" : "ies");
+        //Retry calls
+        page = 1;
+        numBlockRecord = 0;
+        do {
+            List<CallRetry> callRetries = callRetryDataService.findByDayOfTheWeek(today,
+                    new QueryParams(page, maxQueryBlock));
+            numBlockRecord = callRetries.size();
+
+            for (CallRetry callRetry : callRetries) {
+                writer.print(callRetry.getSubscriptionId());
+                writer.print(",");
+                writer.print(callRetry.getMsisdn());
+                writer.print(",");
+                writer.println(callRetry.getLanguageLocationCode());
+                //todo...
+            }
+
+            page++;
+            numRecord += numBlockRecord;
+
+        } while (numBlockRecord > 0);
+
+        LOGGER.info("Created targetFile with {} beneficiar{}", numRecord, numRecord == 1 ? "y" : "ies");
 
         //todo...
         //notify the IVR system the file is ready
