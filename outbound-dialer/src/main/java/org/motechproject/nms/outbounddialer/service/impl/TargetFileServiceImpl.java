@@ -25,9 +25,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
-import java.io.FileNotFoundException;
+import java.io.File;
+import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
 import java.util.List;
 
 @Service("targetFileService")
@@ -35,7 +35,7 @@ public class TargetFileServiceImpl implements TargetFileService {
     private static final String TARGET_FILE_TIME = "outbound-dialer.target_file_time";
     private static final String MAX_BENEFICIARY_BLOCK = "outbound-dialer.max_beneficiary_block";
     private static final String TARGET_FILE_MS_INTERVAL = "outbound-dialer.target_file_ms_interval";
-    private static final String TARGET_FILE_LOCATION = "outbound-dialer.target_file_location";
+    private static final String TARGET_FILE_DIRECTORY = "outbound-dialer.target_file_directory";
     private static final String GENERATE_TARGET_FILE_EVENT = "nms.obd.generate_target_file";
 
     private SettingsFacade settingsFacade;
@@ -90,7 +90,7 @@ public class TargetFileServiceImpl implements TargetFileService {
     }
 
 
-    public String targetFileName() {
+    private String targetFileName() {
         DateTime today = DateTime.now();
         return String.format("OBD_%04d%02d%02d%02d%02d%02d.csv",
                 today.getYear(),
@@ -102,50 +102,71 @@ public class TargetFileServiceImpl implements TargetFileService {
     }
 
 
+    private File createTargetFileDirectory() {
+        File userHome = new File(System.getProperty("user.home"));
+        File targetFileDirectory = new File(userHome, settingsFacade.getProperty(TARGET_FILE_DIRECTORY));
+
+        if (targetFileDirectory.exists()) {
+            LOGGER.info("targetFile directory exists: {}", targetFileDirectory);
+        } else {
+            LOGGER.info("creating targetFile directory: {}", targetFileDirectory);
+            if (!targetFileDirectory.mkdirs()) {
+                String error = String.format("Unable to create targetFileDirectory %s: mkdirs() failed",
+                        targetFileDirectory);
+                LOGGER.error(error);
+                alertService.create(targetFileDirectory.toString(), "targetFileDirectory", error, AlertType.CRITICAL,
+                        AlertStatus.NEW, 0, null);
+                throw new IllegalStateException(error);
+            }
+        }
+        return targetFileDirectory;
+    }
+
+
+    private PrintWriter createTargetFile(File targetDirectory) {
+        String targetFileName = targetFileName();
+        try {
+            File targetFile = new File(targetDirectory, targetFileName);
+            LOGGER.info("Creating targetFile: {}", targetFile);
+            return new PrintWriter(targetFile, "UTF-8");
+        } catch (IOException e) {
+            throw new IllegalStateException(String.format("Unable to create targetFile %s in %s: %s",
+                    targetFileName, targetDirectory, e.getMessage()));
+        }
+    }
+
+
     public void generateTargetFile() {
-        final String targetFileLocation = settingsFacade.getProperty(TARGET_FILE_LOCATION);
-        final String targetFileName = targetFileName();
-        final String targetFilePath = String.format("%s%s%s",
-                targetFileLocation,
-                targetFileLocation.endsWith("/") ? "" : "/",
-                targetFileName);
-        LOGGER.debug("Generating target file {}", targetFilePath);
+        File targetFileDirectory = createTargetFileDirectory();
+        PrintWriter writer = createTargetFile(targetFileDirectory);
 
         //figure out which day to work with
         final DayOfTheWeek today = DayOfTheWeek.today();
 
         long numBeneficiaries = 0;
-        try (PrintWriter writer = new PrintWriter(targetFilePath, "UTF-8")) {
-            int page = 1;
-            int numBlockBeneficiaries = 0;
-            int maxBeneficiaryBlock = Integer.parseInt(settingsFacade.getProperty(MAX_BENEFICIARY_BLOCK));
-            do {
-                List<Beneficiary> beneficiaries = beneficiaryDataService.findByNextCallDay(today,
-                        BeneficiaryStatus.Active, new QueryParams(page, maxBeneficiaryBlock));
-                numBlockBeneficiaries = beneficiaries.size();
+        int page = 1;
+        int numBlockBeneficiaries = 0;
+        int maxBeneficiaryBlock = Integer.parseInt(settingsFacade.getProperty(MAX_BENEFICIARY_BLOCK));
+        do {
+            List<Beneficiary> beneficiaries = beneficiaryDataService.findByNextCallDay(today,
+                    BeneficiaryStatus.Active, new QueryParams(page, maxBeneficiaryBlock));
+            numBlockBeneficiaries = beneficiaries.size();
 
-                for (Beneficiary beneficiary : beneficiaries) {
-                    writer.print(beneficiaryDataService.getDetachedField(beneficiary, "id"));
-                    writer.print(",");
-                    writer.print(beneficiary.getMsisdn());
-                    writer.print(",");
-                    writer.println(beneficiary.getLanguageLocationCode());
-                    //todo...
-                }
+            for (Beneficiary beneficiary : beneficiaries) {
+                writer.print(beneficiaryDataService.getDetachedField(beneficiary, "id"));
+                writer.print(",");
+                writer.print(beneficiary.getMsisdn());
+                writer.print(",");
+                writer.println(beneficiary.getLanguageLocationCode());
+                //todo...
+            }
 
-                page++;
-                numBeneficiaries += numBlockBeneficiaries;
+            page++;
+            numBeneficiaries += numBlockBeneficiaries;
 
-            } while (numBlockBeneficiaries > 0);
-        } catch (FileNotFoundException | UnsupportedEncodingException e) {
-            String error = String.format("Unable to create targetFile %s: %s", targetFilePath, e.getMessage());
-            LOGGER.error(error);
-            alertService.create(targetFilePath, "targetFileName", error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
-            return;
-        }
+        } while (numBlockBeneficiaries > 0);
 
-        LOGGER.info(String.format("Successfully created %s with %s beneficiar%s", targetFilePath, numBeneficiaries,
-                numBeneficiaries == 1 ? "y" : "ies"));
+        LOGGER.info("Created targetFile with {} beneficiar{}", numBeneficiaries, numBeneficiaries == 1 ? "y" : "ies");
 
         //todo...
         //notify the IVR system the file is ready

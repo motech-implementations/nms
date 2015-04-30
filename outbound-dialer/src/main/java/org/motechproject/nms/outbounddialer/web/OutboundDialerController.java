@@ -154,7 +154,7 @@ public class OutboundDialerController {
 
 
 
-    @ExceptionHandler(IllegalArgumentException.class)
+    @ExceptionHandler({ IllegalArgumentException.class, IllegalStateException.class })
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ResponseBody
     public BadRequest handleException(IllegalArgumentException e) {

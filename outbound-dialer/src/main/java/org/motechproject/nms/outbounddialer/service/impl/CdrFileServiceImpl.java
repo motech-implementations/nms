@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service;
 @Service("cdrFileService")
 public class CdrFileServiceImpl implements CdrFileService {
 
-    private static final String CDR_FILE_LOCATION = "outbound-dialer.cdr_file_location";
+    private static final String CDR_FILE_DIRECTORY = "outbound-dialer.cdr_file_directory";
 
     private SettingsFacade settingsFacade;
     private static final Logger LOGGER = LoggerFactory.getLogger(CdrFileServiceImpl.class);
@@ -30,7 +30,7 @@ public class CdrFileServiceImpl implements CdrFileService {
 
     @Override
     public void processCdrFile(CdrFileNotificationRequest request) {
-        final String cdrFileLocation = settingsFacade.getProperty(CDR_FILE_LOCATION);
+        final String cdrFileLocation = settingsFacade.getProperty(CDR_FILE_DIRECTORY);
         LOGGER.debug("Processing CDR file {} located in {}", "???", cdrFileLocation);
 
         //todo:...
