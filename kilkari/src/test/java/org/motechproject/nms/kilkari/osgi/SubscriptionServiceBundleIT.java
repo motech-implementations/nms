@@ -1,19 +1,24 @@
 package org.motechproject.nms.kilkari.osgi;
 
 import org.joda.time.DateTime;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.motechproject.nms.kilkari.domain.*;
+import org.motechproject.nms.kilkari.domain.InboxCallData;
+import org.motechproject.nms.kilkari.domain.InboxCallDetails;
+import org.motechproject.nms.kilkari.domain.Subscriber;
+import org.motechproject.nms.kilkari.domain.Subscription;
+import org.motechproject.nms.kilkari.domain.SubscriptionMode;
+import org.motechproject.nms.kilkari.domain.SubscriptionPack;
+import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.repository.InboxCallDataDataService;
 import org.motechproject.nms.kilkari.repository.InboxCallDetailsDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
-import org.motechproject.nms.kilkari.service.SubscriberService;
-import org.motechproject.nms.language.repository.LanguageDataService;
-import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
+import org.motechproject.nms.kilkari.service.SubscriberService;
+import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.language.domain.Language;
+import org.motechproject.nms.language.repository.LanguageDataService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.ops4j.pax.exam.ExamFactory;
@@ -27,7 +32,10 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+
 
 /**
  * Verify that SubscriptionService is present & functional.
@@ -54,17 +62,12 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     @Inject
     private InboxCallDataDataService inboxCallDataDataService;
 
-    private Language ta;
-    private Language en;
-    private SubscriptionPack pack1;
-    private SubscriptionPack pack2;
-
     private void createLanguageAndSubscriptionPacks() {
-        ta = languageDataService.create(new Language("tamil", "10"));
-        en = languageDataService.create(new Language("english", "99"));
+        languageDataService.create(new Language("tamil", "10"));
+        languageDataService.create(new Language("english", "99"));
 
-        pack1 = subscriptionPackDataService.create(new SubscriptionPack("pack1", SubscriptionPackType.CHILD));
-        pack2 = subscriptionPackDataService.create(new SubscriptionPack("pack2", SubscriptionPackType.PREGNANCY));
+        subscriptionPackDataService.create(new SubscriptionPack("pack1", SubscriptionPackType.CHILD));
+        subscriptionPackDataService.create(new SubscriptionPack("pack2", SubscriptionPackType.PREGNANCY));
     }
 
     private void cleanupData() {
@@ -86,9 +89,12 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         cleanupData();
         createLanguageAndSubscriptionPacks();
 
+        Language ta = languageDataService.findByCode("10");
         Subscriber subscriber = new Subscriber(1000000000L, ta);
         subscriberService.add(subscriber);
 
+        SubscriptionPack pack1 = subscriptionPackDataService.byName("pack1");
+        SubscriptionPack pack2 = subscriptionPackDataService.byName("pack2");
         subscriptionService.createSubscription(subscriber.getCallingNumber(), ta, pack1,
                                                SubscriptionMode.IVR);
         subscriptionService.createSubscription(subscriber.getCallingNumber(), ta, pack2,
@@ -179,6 +185,11 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         cleanupData();
         createLanguageAndSubscriptionPacks();
 
+        Language ta = languageDataService.findByCode("10");
+
+        SubscriptionPack pack1 = subscriptionPackDataService.byName("pack1");
+        SubscriptionPack pack2 = subscriptionPackDataService.byName("pack2");
+
         // Just verify the db is clean
         Subscriber s = subscriptionService.getSubscriber(1111111111L);
         assertNull(s);
@@ -198,6 +209,12 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     public void testCreateSubscriptionExistingSubscriberDifferentLanguage() throws Exception {
         cleanupData();
         createLanguageAndSubscriptionPacks();
+
+        Language ta = languageDataService.findByCode("10");
+        Language en = languageDataService.findByCode("99");
+
+        SubscriptionPack pack1 = subscriptionPackDataService.byName("pack1");
+        SubscriptionPack pack2 = subscriptionPackDataService.byName("pack2");
 
         // Just verify the db is clean
         Subscriber s = subscriptionService.getSubscriber(1111111111L);
