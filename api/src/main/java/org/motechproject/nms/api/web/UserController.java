@@ -123,12 +123,13 @@ public class UserController extends BaseController {
             for (Subscription subscription : subscriptions) {
                 packs.add(subscription.getSubscriptionPack().getName());
             }
+
+            Language subscriberLanguage = subscriber.getLanguage();
+            if (subscriberLanguage != null) {
+                user.setLanguageLocationCode(subscriberLanguage.getCode());
+            }
         }
         user.setSubscriptionPackList(packs);
-        Language subscriberLanguage = subscriber.getLanguage();
-        if (subscriberLanguage != null) {
-            user.setLanguageLocationCode(subscriberLanguage.getCode());
-        }
 
         Language defaultCircleLanguage = languageService.getDefaultCircleLanguage(circle);
         if (defaultCircleLanguage != null) {
