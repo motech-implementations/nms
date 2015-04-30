@@ -7,6 +7,7 @@ import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.domain.SubscriptionMode;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
+import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.repository.InboxCallDetailsDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
@@ -141,10 +142,11 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @Override
-    public void deactivateSubscription(Subscription subscription) {
+    public void deactivateSubscription(Subscription subscription, DeactivationReason reason) {
         if (subscription.getStatus() == SubscriptionStatus.ACTIVE ||
                 subscription.getStatus() == SubscriptionStatus.PENDING_ACTIVATION) {
             subscription.setStatus(SubscriptionStatus.DEACTIVATED);
+            subscription.setDeactivationReason(reason);
             subscriptionDataService.update(subscription);
 
             // Eventually more will happen here -- e.g. the user's Inbox will be decommissioned

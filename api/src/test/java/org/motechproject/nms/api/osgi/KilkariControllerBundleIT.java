@@ -385,6 +385,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
         subscription = subscriptionService.getSubscription(subscriptionId);
         assertTrue(subscription.getStatus().equals(SubscriptionStatus.DEACTIVATED));
+        assertTrue(subscription.getDeactivationReason().equals(DeactivationReason.DEACTIVATED_BY_USER));
     }
 
     @Test
@@ -394,7 +395,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         Subscriber subscriber = subscriptionService.getSubscriber(1000000000L);
         Subscription subscription = subscriber.getActiveSubscriptions().iterator().next();
         String subscriptionId = subscription.getSubscriptionId();
-        subscriptionService.deactivateSubscription(subscription);
+        subscriptionService.deactivateSubscription(subscription, DeactivationReason.DEACTIVATED_BY_USER);
 
         SubscriptionRequest subscriptionRequest = new SubscriptionRequest(1000000000L, "A", "AP",
                 123456789012545L, subscriptionId);
