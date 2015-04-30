@@ -9,9 +9,9 @@ import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.repository.InboxCallDetailsDataService;
-import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
+import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.language.domain.Language;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,17 +25,17 @@ import java.util.Iterator;
 @Service("subscriptionService")
 public class SubscriptionServiceImpl implements SubscriptionService {
 
-    private SubscriberDataService subscriberDataService;
+    private SubscriberService subscriberService;
     private SubscriptionPackDataService subscriptionPackDataService;
     private SubscriptionDataService subscriptionDataService;
     private InboxCallDetailsDataService inboxCallDetailsDataService;
 
     @Autowired
-    public SubscriptionServiceImpl(SubscriberDataService subscriberDataService,
+    public SubscriptionServiceImpl(SubscriberService subscriberService,
                                    SubscriptionPackDataService subscriptionPackDataService,
                                    SubscriptionDataService subscriptionDataService,
                                    InboxCallDetailsDataService inboxCallDetailsDataService) {
-        this.subscriberDataService = subscriberDataService;
+        this.subscriberService = subscriberService;
         this.subscriptionPackDataService = subscriptionPackDataService;
         this.subscriptionDataService = subscriptionDataService;
         this.inboxCallDetailsDataService = inboxCallDetailsDataService;
@@ -43,17 +43,16 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     @Override
     public Subscriber getSubscriber(long callingNumber) {
-        return subscriberDataService.findByCallingNumber(callingNumber);
+        return subscriberService.getSubscriber(callingNumber);
     }
 
     @Override
     public void createSubscription(long callingNumber, Language language, SubscriptionPack subscriptionPack,
                                    SubscriptionMode mode) {
-        Subscriber subscriber = subscriberDataService.findByCallingNumber(callingNumber);
+        Subscriber subscriber = subscriberService.getSubscriber(callingNumber);
         if (subscriber == null) {
-            subscriber = new Subscriber(callingNumber);
-            subscriber.setLanguage(language);
-            subscriberDataService.create(subscriber);
+            subscriber = new Subscriber(callingNumber, language);
+            subscriberService.add(subscriber);
         }
 
         if (mode == SubscriptionMode.IVR) {

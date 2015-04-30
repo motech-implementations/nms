@@ -1,6 +1,7 @@
 package org.motechproject.nms.kilkari.osgi;
 
 import org.joda.time.DateTime;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.kilkari.domain.*;
@@ -8,6 +9,7 @@ import org.motechproject.nms.kilkari.repository.InboxCallDataDataService;
 import org.motechproject.nms.kilkari.repository.InboxCallDetailsDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
+import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.language.repository.LanguageDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
@@ -35,6 +37,8 @@ import static org.junit.Assert.*;
 @ExamFactory(MotechNativeTestContainerFactory.class)
 public class SubscriptionServiceBundleIT extends BasePaxIT {
 
+    @Inject
+    private SubscriberService subscriberService;
     @Inject
     private SubscriptionService subscriptionService;
     @Inject
@@ -82,14 +86,15 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         cleanupData();
         createLanguageAndSubscriptionPacks();
 
-        Subscriber subscriber = subscriberDataService.create(new Subscriber(1000000000L));
+        Subscriber subscriber = new Subscriber(1000000000L, ta);
+        subscriberService.add(subscriber);
 
         subscriptionService.createSubscription(subscriber.getCallingNumber(), ta, pack1,
                                                SubscriptionMode.IVR);
         subscriptionService.createSubscription(subscriber.getCallingNumber(), ta, pack2,
                                                SubscriptionMode.IVR);
 
-        subscriber = subscriberDataService.findByCallingNumber(1000000000L);
+        subscriber = subscriberService.getSubscriber(1000000000L);
         Set<Subscription> subscriptions = subscriber.getSubscriptions();
 
         Set<SubscriptionPack> packs = new HashSet<>();
