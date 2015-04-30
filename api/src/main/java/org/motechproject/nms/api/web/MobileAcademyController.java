@@ -54,6 +54,7 @@ public class MobileAcademyController extends BaseController {
     @ResponseBody
     public CourseResponse getCourse() {
 
+        // TODO: hook up to get course in MA service
         return new CourseResponse();
     }
 
@@ -96,6 +97,14 @@ public class MobileAcademyController extends BaseController {
             headers = { "Content-type=application/json" })
     @ResponseStatus(HttpStatus.OK)
     public void saveBookmarkWithScore(@RequestBody SaveBookmarkRequest bookmarkRequest) {
+
+        Long callingNumber = bookmarkRequest.getCallingNumber();
+        if (callingNumber == null || callingNumber < 1000000000) {
+            throw new IllegalArgumentException("Not a valid calling number: " + callingNumber);
+        }
+        if (bookmarkRequest.getCallId() == null) {
+            throw new IllegalArgumentException("Invalid callId " + bookmarkRequest.getCallId());
+        }
 
         MaBookmark bookmark = new MaBookmark(bookmarkRequest.getCallingNumber(), bookmarkRequest.getCallId(),
                 bookmarkRequest.getBookmark(), bookmarkRequest.getScoresByChapter());

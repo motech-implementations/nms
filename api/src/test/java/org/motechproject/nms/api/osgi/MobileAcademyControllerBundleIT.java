@@ -1,8 +1,8 @@
 package org.motechproject.nms.api.osgi;
 
 import org.apache.commons.httpclient.HttpStatus;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.api.utils.RequestBuilder;
@@ -19,6 +19,8 @@ import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
 
+import java.io.IOException;
+
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -32,19 +34,34 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
     @Inject
     private MobileAcademyService mobileAcademyService;
 
-    @Before
-    private void setupData() {
-
-
-    }
-
     @Test
-    public void testSetBookmark() throws Exception {
+    public void testSetInvalidBookmark() throws IOException, InterruptedException {
 
         String endpoint = String.format("http://localhost:%d/api/mobileacademy/bookmarkWithScore",
                 TestContext.getJettyPort());
 
         HttpPost request = RequestBuilder.createPostRequest(endpoint, new SaveBookmarkRequest());
+        assertTrue(SimpleHttpClient.execHttpRequest(request, HttpStatus.SC_BAD_REQUEST, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
+    }
+
+    @Test
+    public void testSetValidBookmark() throws IOException, InterruptedException {
+
+        String endpoint = String.format("http://localhost:%d/api/mobileacademy/bookmarkWithScore",
+                TestContext.getJettyPort());
+        SaveBookmarkRequest bookmark = new SaveBookmarkRequest();
+        bookmark.setCallingNumber(1L);
+        HttpPost request = RequestBuilder.createPostRequest(endpoint, bookmark);
+        assertTrue(SimpleHttpClient.execHttpRequest(request, HttpStatus.SC_BAD_REQUEST, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
+    }
+
+    @Test
+    public void testGetCourse() throws IOException, InterruptedException {
+
+        String endpoint = String.format("http://localhost:%d/api/mobileacademy/course",
+                TestContext.getJettyPort());
+
+        HttpGet request = RequestBuilder.createGetRequest(endpoint);
         assertTrue(SimpleHttpClient.execHttpRequest(request, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
     }
 }

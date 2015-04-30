@@ -1,5 +1,6 @@
 package org.motechproject.nms.api.utils;
 
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.codehaus.jackson.JsonGenerationException;
@@ -31,7 +32,13 @@ public class RequestBuilder {
 
     public static HttpPost createPostRequest(String endpoint, Object requestBody) throws IOException{
         HttpPost postRequest = new HttpPost(endpoint);
+        postRequest.setHeader("Content-type", "application/json");
         postRequest.setEntity(new StringEntity(ObjectToJson(requestBody)));
         return postRequest;
+    }
+
+    public static HttpGet createGetRequest(String endpoint) {
+        HttpGet getRequest = new HttpGet(endpoint);
+        return getRequest;
     }
 }

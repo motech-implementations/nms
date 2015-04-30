@@ -9,8 +9,8 @@ import org.motechproject.nms.mobileacademy.dto.MaBookmark;
 public interface MobileAcademyService {
 
     /**
-     * Get the MA course structure
-     * @return
+     * Get the MA course structure for the given course name. This defaults to "MobileAcademyCourse" name
+     * @return Course data object with the course name
      */
     Course getCourse();
 
@@ -21,8 +21,8 @@ public interface MobileAcademyService {
     void setCourse(Course course);
 
     /**
-     * Gets the course modification date as an epoch representation
-     * @return
+     * Gets the course modification date as an epoch representation. This defaults to MobileAcademyCourse name
+     * @return int representation (epoch) of modified course date
      */
     int getCourseVersion();
 

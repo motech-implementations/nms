@@ -10,7 +10,8 @@ import org.junit.runners.Suite;
 @Suite.SuiteClasses({
         UserControllerBundleIT.class,
         CallDetailsControllerBundleIT.class,
-        KilkariControllerBundleIT.class
+        KilkariControllerBundleIT.class,
+        MobileAcademyControllerBundleIT.class
 })
 public class IntegrationTests {
 }

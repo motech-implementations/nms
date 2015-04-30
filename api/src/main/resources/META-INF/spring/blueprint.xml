@@ -32,4 +32,7 @@
     <osgi:reference id="callContentService" interface="org.motechproject.nms.flw.service.CallContentService"/>
 
     <osgi:reference id="whitelistService" interface="org.motechproject.nms.flw.service.WhitelistService"/>
+
+    <osgi:reference id="mobileAcademyService" interface="org.motechproject.nms.mobileacademy.service.MobileAcademyService"/>
+
 </beans>

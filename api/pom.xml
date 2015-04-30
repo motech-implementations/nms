@@ -108,7 +108,8 @@
                         <Context-Path>api</Context-Path>
                         <Export-Package>
                             org.motechproject.nms.api.web.contract,
-                            org.motechproject.nms.api.web.contract.kilkari
+                            org.motechproject.nms.api.web.contract.kilkari,
+                            org.motechproject.nms.api.web.contract.mobileAcademy,
                         </Export-Package>
                         <Import-Package>
                             org.motechproject.osgi.web,

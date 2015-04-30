@@ -85,7 +85,7 @@
                         </Export-Package>
                         <Import-Package>
                             org.motechproject.osgi.web,
-                            org.motechproject.mtraining.domain.Bookmark,
+                            org.motechproject.mtraining.domain,
                             *
                         </Import-Package>
                     </instructions>

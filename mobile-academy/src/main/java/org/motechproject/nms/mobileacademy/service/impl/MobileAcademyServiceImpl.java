@@ -9,6 +9,8 @@ import org.motechproject.nms.mobileacademy.domain.Course;
 import org.motechproject.nms.mobileacademy.dto.MaBookmark;
 import org.motechproject.nms.mobileacademy.repository.CourseDataService;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -31,6 +33,8 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
      */
     private CourseDataService courseDataService;
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(MobileAcademyServiceImpl.class);
+
     @Autowired
     public MobileAcademyServiceImpl(BookmarkDataService bookmarkDataService,
                                     CourseDataService courseDataService) {
@@ -42,7 +46,8 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
     public Course getCourse() {
 
         // Make this course name configurable
-        return courseDataService.findCourseByName("MobileAcademyCourse");
+        String lookupName = "MobileAcademyCourse";
+        return courseDataService.findCourseByName(lookupName);
     }
 
     @Override
@@ -77,6 +82,10 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
         if (CollectionUtils.isEmpty(bookmarks)) {
             return null;
         } else {
+            if (bookmarks.size() > 1) {
+                LOGGER.debug("Found more than 1 instance of valid course, picking top");
+            }
+
             Bookmark existingBookmark = bookmarks.get(0);
             MaBookmark toReturn = new MaBookmark();
             toReturn.setCallingNumber(Long.parseLong(existingBookmark.getExternalId()));
@@ -104,11 +113,18 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
     }
 
     private Bookmark setBookmarkProperties(MaBookmark fromBookmark, Bookmark toBookmark) {
+
         toBookmark.setExternalId(fromBookmark.getCallingNumber().toString());
         toBookmark.getProgress().put("callId", fromBookmark.getCallId());
-        toBookmark.setChapterIdentifier(fromBookmark.getBookmark().split("_")[0]);
-        toBookmark.setLessonIdentifier(fromBookmark.getBookmark().split("_")[1]);
-        toBookmark.getProgress().put("scoresByChapter", fromBookmark.getScoresByChapter());
+
+        if (fromBookmark.getScoresByChapter() != null)
+            toBookmark.getProgress().put("scoresByChapter", fromBookmark.getScoresByChapter());
+
+        if (fromBookmark.getBookmark() != null) {
+            toBookmark.setChapterIdentifier(fromBookmark.getBookmark().split("_")[0]);
+            toBookmark.setLessonIdentifier(fromBookmark.getBookmark().split("_")[1]);
+        }
+
         return toBookmark;
     }
 
