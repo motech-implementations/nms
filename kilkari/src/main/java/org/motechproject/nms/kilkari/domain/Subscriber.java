@@ -2,13 +2,16 @@ package org.motechproject.nms.kilkari.domain;
 
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
+import org.motechproject.mds.annotations.Ignore;
 import org.motechproject.nms.language.domain.Language;
 
+import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.Unique;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+
 import org.joda.time.LocalDate;
 
 /**
@@ -21,6 +24,7 @@ public class Subscriber {
 
     @Field
     @Unique
+    @Column(allowsNull = "false")
     private Long callingNumber;
 
     @Field
@@ -35,14 +39,17 @@ public class Subscriber {
 
     //TODO: making this a bi-directional relationship until MOTECH-1638 is fixed. See #31.
     @Field
-    @Persistent(mappedBy = "subscriber")
+    @Persistent(mappedBy = "subscriber", defaultFetchGroup = "true")
     private Set<Subscription> subscriptions;
-
-    public Subscriber() {
-    }
 
     public Subscriber(Long callingNumber) {
         this.callingNumber = callingNumber;
+        this.subscriptions = new HashSet<>();
+    }
+
+    public Subscriber(Long callingNumber, Language language) {
+        this.callingNumber = callingNumber;
+        this.language = language;
         this.subscriptions = new HashSet<>();
     }
 
@@ -86,6 +93,7 @@ public class Subscriber {
         this.subscriptions = subscriptions;
     }
 
+    @Ignore
     public Set<Subscription> getActiveSubscriptions() {
         Set<Subscription> activeSubscriptions = new HashSet<>();
 
@@ -112,22 +120,21 @@ public class Subscriber {
 
         Subscriber that = (Subscriber) o;
 
-        if (!callingNumber.equals(that.callingNumber)) {
-            return false;
-        }
-        return subscriptions.equals(that.subscriptions);
+        return !(callingNumber != null ? !callingNumber.equals(that.callingNumber) : that.callingNumber != null);
+
     }
 
     @Override
     public int hashCode() {
-        return callingNumber.hashCode();
+        return callingNumber != null ? callingNumber.hashCode() : 0;
     }
 
     @Override
     public String toString() {
         return "Subscriber{" +
-                "callingNumber='" + callingNumber + '\'' +
-                ", subscriptions=" + subscriptions +
+                "callingNumber=" + callingNumber +
+                ", dateOfBirth=" + dateOfBirth +
+                ", lastMenstrualPeriod=" + lastMenstrualPeriod +
                 '}';
     }
 }

@@ -18,6 +18,7 @@ public class Subscription {
     private String subscriptionId;
 
     @Field
+    @Column(allowsNull = "false")
     private Subscriber subscriber;
 
     @Field
@@ -81,12 +82,24 @@ public class Subscription {
 
         Subscription that = (Subscription) o;
 
-        return subscriptionId.equals(that.subscriptionId) && subscriber.equals(this.subscriber) &&
-                subscriptionPack.equals(that.subscriptionPack);
+        return !(subscriptionId != null ? !subscriptionId
+                .equals(that.subscriptionId) : that.subscriptionId != null);
+
     }
 
     @Override
     public int hashCode() {
-        return subscriptionId.hashCode();
+        return subscriptionId != null ? subscriptionId.hashCode() : 0;
+    }
+
+    @Override
+    public String toString() {
+        return "Subscription{" +
+                "subscriptionId='" + subscriptionId + '\'' +
+                ", subscriptionPack=" + subscriptionPack +
+                ", status=" + status +
+                ", mode=" + mode +
+                ", startDate=" + startDate +
+                '}';
     }
 }
