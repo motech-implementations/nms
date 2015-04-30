@@ -114,6 +114,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
     private void setupData() {
         cleanAllData();
+        createLanguageAndSubscriptionPacks();
 
         List<SubscriptionPack> onePack = Arrays.asList(gPack1);
         List<SubscriptionPack> twoPacks = Arrays.asList(gPack1, gPack2);
@@ -299,7 +300,6 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     @Test
     public void testCreateSubscriptionViaMcts() {
         setupData();
-        createLanguageAndSubscriptionPacks();
 
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
         mctsSubscriber.setDateOfBirth(LocalDate.now().minusDays(14));
