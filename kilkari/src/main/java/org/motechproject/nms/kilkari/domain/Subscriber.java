@@ -1,5 +1,6 @@
 package org.motechproject.nms.kilkari.domain;
 
+import org.joda.time.LocalDate;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.annotations.Ignore;
@@ -12,14 +13,13 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.joda.time.LocalDate;
-
 /**
  * A Kilkari subscriber (recipient of the service, i.e. a pregnant woman) essentially identified by her
  * phone number
  */
-@Entity(tableName = "nms_subscribers")
+@Entity(maxFetchDepth = -1, tableName = "nms_subscribers")
 public class Subscriber {
+
     public static final int FIELD_SIZE_10 = 10;
 
     @Field
@@ -34,7 +34,6 @@ public class Subscriber {
     private LocalDate lastMenstrualPeriod;
 
     @Field
-    @Persistent(defaultFetchGroup = "true")
     private Language language;
 
     //TODO: making this a bi-directional relationship until MOTECH-1638 is fixed. See #31.
