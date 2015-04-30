@@ -1,17 +1,19 @@
 package org.motechproject.nms.api.web;
 
-import org.motechproject.nms.api.web.contract.kilkari.InboxCallDetailsRequest;
 import org.motechproject.nms.api.web.contract.kilkari.CallDataRequest;
+import org.motechproject.nms.api.web.contract.kilkari.InboxCallDetailsRequest;
 import org.motechproject.nms.api.web.contract.kilkari.InboxResponse;
 import org.motechproject.nms.api.web.contract.kilkari.InboxSubscriptionDetailResponse;
 import org.motechproject.nms.api.web.contract.kilkari.SubscriptionRequest;
 import org.motechproject.nms.api.web.exception.NotFoundException;
+import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.domain.InboxCallData;
 import org.motechproject.nms.kilkari.domain.InboxCallDetails;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionMode;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
+import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.language.domain.Language;
 import org.motechproject.nms.language.service.LanguageService;
@@ -43,6 +45,9 @@ public class KilkariController extends BaseController {
     public static final Set<String> SUBSCRIPTION_PACK_SET = new HashSet<>(Arrays.asList("48WeeksPack", "76WeeksPack"));
 
     @Autowired
+    private SubscriberService subscriberService;
+
+    @Autowired
     private SubscriptionService subscriptionService;
 
     @Autowired
@@ -64,7 +69,7 @@ public class KilkariController extends BaseController {
             throw new IllegalArgumentException(failureReasons.toString());
         }
 
-        Subscriber subscriber = subscriptionService.getSubscriber(callingNumber);
+        Subscriber subscriber = subscriberService.getSubscriber(callingNumber);
         if (subscriber == null) {
             throw new NotFoundException(String.format(NOT_FOUND, "callingNumber"));
         }
@@ -241,6 +246,6 @@ public class KilkariController extends BaseController {
             throw new NotFoundException(String.format(NOT_FOUND, "subscriptionId"));
         }
 
-        subscriptionService.deactivateSubscription(subscription);
+        subscriptionService.deactivateSubscription(subscription, DeactivationReason.DEACTIVATED_BY_USER);
     }
 }

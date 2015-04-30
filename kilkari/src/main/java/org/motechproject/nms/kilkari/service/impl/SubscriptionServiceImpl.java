@@ -1,6 +1,7 @@
 package org.motechproject.nms.kilkari.service.impl;
 
 import org.joda.time.LocalDate;
+import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.domain.InboxCallDetails;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
@@ -39,11 +40,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         this.subscriptionPackDataService = subscriptionPackDataService;
         this.subscriptionDataService = subscriptionDataService;
         this.inboxCallDetailsDataService = inboxCallDetailsDataService;
-    }
-
-    @Override
-    public Subscriber getSubscriber(long callingNumber) {
-        return subscriberService.getSubscriber(callingNumber);
     }
 
     @Override
@@ -134,10 +130,11 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @Override
-    public void deactivateSubscription(Subscription subscription) {
+    public void deactivateSubscription(Subscription subscription, DeactivationReason reason) {
         if (subscription.getStatus() == SubscriptionStatus.ACTIVE ||
                 subscription.getStatus() == SubscriptionStatus.PENDING_ACTIVATION) {
             subscription.setStatus(SubscriptionStatus.DEACTIVATED);
+            subscription.setDeactivationReason(reason);
             subscriptionDataService.update(subscription);
 
             // Eventually more will happen here -- e.g. the user's Inbox will be decommissioned

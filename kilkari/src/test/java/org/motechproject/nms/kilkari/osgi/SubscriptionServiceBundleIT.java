@@ -190,12 +190,12 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         SubscriptionPack pack2 = subscriptionPackDataService.byName("pack2");
 
         // Just verify the db is clean
-        Subscriber s = subscriptionService.getSubscriber(1111111111L);
+        Subscriber s = subscriberService.getSubscriber(1111111111L);
         assertNull(s);
 
         subscriptionService.createSubscription(1111111111L, ta, pack1, SubscriptionMode.IVR);
 
-        Subscriber subscriber = subscriptionService.getSubscriber(1111111111L);
+        Subscriber subscriber = subscriberService.getSubscriber(1111111111L);
         assertNotNull(subscriber);
         assertEquals(ta, subscriber.getLanguage());
         assertEquals(1, subscriber.getSubscriptions().size());
@@ -216,7 +216,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         SubscriptionPack pack2 = subscriptionPackDataService.byName("pack2");
 
         // Just verify the db is clean
-        Subscriber s = subscriptionService.getSubscriber(1111111111L);
+        Subscriber s = subscriberService.getSubscriber(1111111111L);
         assertNull(s);
 
         subscriptionService.createSubscription(1111111111L, ta, pack1, SubscriptionMode.IVR);
@@ -224,7 +224,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         // Since the user exists we will not change their language
         subscriptionService.createSubscription(1111111111L, en, pack1, SubscriptionMode.IVR);
 
-        Subscriber subscriber = subscriptionService.getSubscriber(1111111111L);
+        Subscriber subscriber = subscriberService.getSubscriber(1111111111L);
         assertNotNull(subscriber);
         assertEquals(ta, subscriber.getLanguage());
         assertEquals(1, subscriber.getSubscriptions().size());

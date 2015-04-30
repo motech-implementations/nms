@@ -18,11 +18,11 @@ import org.motechproject.nms.api.web.contract.kilkari.SubscriptionRequest;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.flw.repository.ServiceUsageCapDataService;
 import org.motechproject.nms.flw.repository.ServiceUsageDataService;
-import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.kilkari.domain.*;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
+import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.language.domain.Language;
 import org.motechproject.nms.language.repository.CircleLanguageDataService;
@@ -57,6 +57,9 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     private static final String ADMIN_PASSWORD = "motech";
 
     @Inject
+    private SubscriberService subscriberService;
+
+    @Inject
     private SubscriptionService subscriptionService;
 
     @Inject
@@ -67,9 +70,6 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
     @Inject
     private SubscriptionDataService subscriptionDataService;
-
-    @Inject
-    private FrontLineWorkerService frontLineWorkerService;
 
     @Inject
     private FrontLineWorkerDataService frontLineWorkerDataService;
@@ -242,12 +242,12 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
         SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK, ADMIN_USERNAME, ADMIN_PASSWORD);
 
-        Subscriber subscriber = subscriptionService.getSubscriber(callingNumber);
+        Subscriber subscriber = subscriberService.getSubscriber(callingNumber);
         int numberOfSubsBefore = subscriber.getActiveSubscriptions().size();
 
         SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK, ADMIN_USERNAME, ADMIN_PASSWORD);
 
-        subscriber = subscriptionService.getSubscriber(callingNumber);
+        subscriber = subscriberService.getSubscriber(callingNumber);
         int numberOfSubsAfter = subscriber.getActiveSubscriptions().size();
 
         // No additional subscription should be created because subscriber already has an active subscription
@@ -264,14 +264,14 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
         SimpleHttpClient.execHttpRequest(httpPost1, HttpStatus.SC_OK, ADMIN_USERNAME, ADMIN_PASSWORD);
 
-        Subscriber subscriber = subscriptionService.getSubscriber(callingNumber);
+        Subscriber subscriber = subscriberService.getSubscriber(callingNumber);
         int numberOfSubsBefore = subscriber.getActiveSubscriptions().size();
 
         HttpPost httpPost2 = createSubscriptionHttpPost(callingNumber, "pack2");
 
         SimpleHttpClient.execHttpRequest(httpPost2, HttpStatus.SC_OK, ADMIN_USERNAME, ADMIN_PASSWORD);
 
-        subscriber = subscriptionService.getSubscriber(callingNumber);
+        subscriber = subscriberService.getSubscriber(callingNumber);
         int numberOfSubsAfter = subscriber.getActiveSubscriptions().size();
 
         // Another subscription should be allowed because these are two different packs
@@ -391,7 +391,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     public void testDeactivateSubscriptionRequest() throws IOException, InterruptedException {
         setupData();
 
-        Subscriber subscriber = subscriptionService.getSubscriber(1000000000L);
+        Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
         Subscription subscription = subscriber.getActiveSubscriptions().iterator().next();
         String subscriptionId = subscription.getSubscriptionId();
 
@@ -410,16 +410,17 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
         subscription = subscriptionService.getSubscription(subscriptionId);
         assertTrue(subscription.getStatus().equals(SubscriptionStatus.DEACTIVATED));
+        assertTrue(subscription.getDeactivationReason().equals(DeactivationReason.DEACTIVATED_BY_USER));
     }
 
     @Test
     public void testDeactivateSubscriptionRequestAlreadyInactive() throws IOException, InterruptedException {
         setupData();
 
-        Subscriber subscriber = subscriptionService.getSubscriber(1000000000L);
+        Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
         Subscription subscription = subscriber.getActiveSubscriptions().iterator().next();
         String subscriptionId = subscription.getSubscriptionId();
-        subscriptionService.deactivateSubscription(subscription);
+        subscriptionService.deactivateSubscription(subscription, DeactivationReason.DEACTIVATED_BY_USER);
 
         SubscriptionRequest subscriptionRequest = new SubscriptionRequest(1000000000L, "A", "AP",
                 123456789012545L, subscriptionId);

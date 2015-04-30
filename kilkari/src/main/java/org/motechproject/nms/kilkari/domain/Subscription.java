@@ -33,6 +33,9 @@ public class Subscription {
     @Field
     private LocalDate startDate;
 
+    @Field
+    private DeactivationReason deactivationReason;
+
     public Subscription(Subscriber subscriber, SubscriptionPack subscriptionPack, SubscriptionMode mode) {
         this.subscriptionId = UUID.randomUUID().toString();
         this.subscriber = subscriber;
@@ -70,6 +73,12 @@ public class Subscription {
     public LocalDate getStartDate() { return startDate; }
 
     public void setStartDate(LocalDate startDate) { this.startDate = startDate; }
+
+    public DeactivationReason getDeactivationReason() { return deactivationReason; }
+
+    public void setDeactivationReason(DeactivationReason deactivationReason) {
+        this.deactivationReason = deactivationReason;
+    }
 
     @Override
     public boolean equals(Object o) {

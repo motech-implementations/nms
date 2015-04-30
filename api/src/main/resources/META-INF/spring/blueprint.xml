@@ -17,6 +17,8 @@
 
     <osgi:reference id="languageService" interface="org.motechproject.nms.language.service.LanguageService"/>
 
+    <osgi:reference id="subscriberService" interface="org.motechproject.nms.kilkari.service.SubscriberService"/>
+
     <osgi:reference id="subscriptionService" interface="org.motechproject.nms.kilkari.service.SubscriptionService"/>
 
     <osgi:reference id="locationService" interface="org.motechproject.nms.location.service.LocationService"/>
