@@ -3,9 +3,11 @@ package org.motechproject.nms.api.osgi;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.codehaus.jackson.map.deser.ValueInstantiators;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.api.utils.RequestBuilder;
+import org.motechproject.nms.api.web.BaseController;
 import org.motechproject.nms.api.web.contract.mobileAcademy.SaveBookmarkRequest;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
 import org.motechproject.testing.osgi.BasePaxIT;
@@ -35,7 +37,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
     private MobileAcademyService mobileAcademyService;
 
     @Test
-    public void testSetInvalidBookmark() throws IOException, InterruptedException {
+    public void testBookmarkBadCallingNumber() throws IOException, InterruptedException {
 
         String endpoint = String.format("http://localhost:%d/api/mobileacademy/bookmarkWithScore",
                 TestContext.getJettyPort());
@@ -45,12 +47,23 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
     }
 
     @Test
+    public void testBookmarkBadCallId() throws IOException, InterruptedException {
+
+        String endpoint = String.format("http://localhost:%d/api/mobileacademy/bookmarkWithScore",
+                TestContext.getJettyPort());
+        SaveBookmarkRequest bookmarkRequest = new SaveBookmarkRequest();
+        bookmarkRequest.setCallId(BaseController.SMALLEST_15_DIGIT_NUMBER - 1);
+        HttpPost request = RequestBuilder.createPostRequest(endpoint, bookmarkRequest);
+        assertTrue(SimpleHttpClient.execHttpRequest(request, HttpStatus.SC_BAD_REQUEST, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
+    }
+
+    @Test
     public void testSetValidBookmark() throws IOException, InterruptedException {
 
         String endpoint = String.format("http://localhost:%d/api/mobileacademy/bookmarkWithScore",
                 TestContext.getJettyPort());
         SaveBookmarkRequest bookmark = new SaveBookmarkRequest();
-        bookmark.setCallingNumber(1L);
+        bookmark.setCallingNumber(BaseController.SMALLEST_15_DIGIT_NUMBER);
         HttpPost request = RequestBuilder.createPostRequest(endpoint, bookmark);
         assertTrue(SimpleHttpClient.execHttpRequest(request, HttpStatus.SC_BAD_REQUEST, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
     }

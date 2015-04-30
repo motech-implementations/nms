@@ -99,11 +99,11 @@ public class MobileAcademyController extends BaseController {
     public void saveBookmarkWithScore(@RequestBody SaveBookmarkRequest bookmarkRequest) {
 
         Long callingNumber = bookmarkRequest.getCallingNumber();
-        if (callingNumber == null || callingNumber < 1000000000) {
-            throw new IllegalArgumentException("Not a valid calling number: " + callingNumber);
+        if (callingNumber == null || callingNumber < SMALLEST_10_DIGIT_NUMBER || callingNumber > LARGEST_10_DIGIT_NUMBER ) {
+            throw new IllegalArgumentException(String.format(INVALID, "callingNumber"));
         }
-        if (bookmarkRequest.getCallId() == null) {
-            throw new IllegalArgumentException("Invalid callId " + bookmarkRequest.getCallId());
+        if (bookmarkRequest.getCallId() == null || bookmarkRequest.getCallId() < SMALLEST_15_DIGIT_NUMBER) {
+            throw new IllegalArgumentException(String.format(INVALID, "callId"));
         }
 
         MaBookmark bookmark = new MaBookmark(bookmarkRequest.getCallingNumber(), bookmarkRequest.getCallId(),

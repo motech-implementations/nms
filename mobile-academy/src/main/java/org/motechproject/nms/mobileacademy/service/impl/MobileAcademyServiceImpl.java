@@ -82,6 +82,7 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
         if (CollectionUtils.isEmpty(bookmarks)) {
             return null;
         } else {
+
             if (bookmarks.size() > 1) {
                 LOGGER.debug("Found more than 1 instance of valid course, picking top");
             }
@@ -117,8 +118,9 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
         toBookmark.setExternalId(fromBookmark.getCallingNumber().toString());
         toBookmark.getProgress().put("callId", fromBookmark.getCallId());
 
-        if (fromBookmark.getScoresByChapter() != null)
+        if (fromBookmark.getScoresByChapter() != null) {
             toBookmark.getProgress().put("scoresByChapter", fromBookmark.getScoresByChapter());
+        }
 
         if (fromBookmark.getBookmark() != null) {
             toBookmark.setChapterIdentifier(fromBookmark.getBookmark().split("_")[0]);
