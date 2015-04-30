@@ -9,8 +9,7 @@ import org.motechproject.alerts.domain.AlertType;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.annotations.MotechListener;
 import org.motechproject.nms.outbounddialer.domain.FileProcessedStatus;
-import org.motechproject.nms.outbounddialer.service.OutboundDialerService;
-import org.motechproject.nms.outbounddialer.web.contract.CdrFileNotificationRequest;
+import org.motechproject.nms.outbounddialer.service.TargetFileService;
 import org.motechproject.nms.outbounddialer.web.contract.FileProcessedStatusRequest;
 import org.motechproject.scheduler.contract.RepeatingSchedulableJob;
 import org.motechproject.scheduler.service.MotechSchedulerService;
@@ -21,23 +20,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
-
-/**
- * Implementation of the {@link OutboundDialerService} interface.
- */
-@Service("outboundDialerService")
-public class OutboundDialerServiceImpl implements OutboundDialerService {
-
+@Service("targetFileService")
+public class TargetFileServiceImpl implements TargetFileService {
     private static final String TARGET_FILE_TIME = "outbound-dialer.target_file_time";
     private static final String TARGET_FILE_MS_INTERVAL = "outbound-dialer.target_file_ms_interval";
     private static final String TARGET_FILE_LOCATION = "outbound-dialer.target_file_location";
     private static final String GENERATE_TARGET_FILE_EVENT = "nms.obd.generate_target_file";
-    private static final String CDR_FILE_LOCATION = "outbound-dialer.cdr_file_location";
 
     private SettingsFacade settingsFacade;
     private MotechSchedulerService schedulerService;
     private AlertService alertService;
-    private static final Logger LOGGER = LoggerFactory.getLogger(OutboundDialerServiceImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(TargetFileServiceImpl.class);
 
 
     private void scheduleTargetFileGeneration() {
@@ -56,7 +49,7 @@ public class OutboundDialerServiceImpl implements OutboundDialerService {
         Long msInterval = Long.parseLong(intervalProp);
 
         LOGGER.debug(String.format("The %s message will be sent every %sms starting %s",
-                        GENERATE_TARGET_FILE_EVENT, msInterval.toString(), today.toString()));
+                GENERATE_TARGET_FILE_EVENT, msInterval.toString(), today.toString()));
 
         //Schedule repeating job
         MotechEvent event = new MotechEvent(GENERATE_TARGET_FILE_EVENT);
@@ -71,7 +64,7 @@ public class OutboundDialerServiceImpl implements OutboundDialerService {
     }
 
     @Autowired
-    public OutboundDialerServiceImpl(@Qualifier("outboundDialerSettings") SettingsFacade settingsFacade,
+    public TargetFileServiceImpl(@Qualifier("outboundDialerSettings") SettingsFacade settingsFacade,
                                      MotechSchedulerService schedulerService, AlertService alertService) {
         this.schedulerService = schedulerService;
         this.settingsFacade = settingsFacade;
@@ -83,7 +76,17 @@ public class OutboundDialerServiceImpl implements OutboundDialerService {
     public void generateTargetFile() {
         final String targetFileLocation = settingsFacade.getProperty(TARGET_FILE_LOCATION);
         LOGGER.debug("Generating target file in {}", targetFileLocation);
-        //todo:...
+
+        //figure out which day to work with
+
+        //find all beneficiaries for that day
+
+        //create the file
+
+        //write the file
+
+        //notify the IVR system the file is ready
+
     }
 
     @MotechListener(subjects = { GENERATE_TARGET_FILE_EVENT })
@@ -93,16 +96,9 @@ public class OutboundDialerServiceImpl implements OutboundDialerService {
     }
 
     @Override
-    public void processCdrFile(CdrFileNotificationRequest request) {
-        final String cdrFileLocation = settingsFacade.getProperty(CDR_FILE_LOCATION);
-        LOGGER.debug("Processing CDR file {} located in {}", "???", cdrFileLocation);
-
-        //todo:...
-    }
-
-    @Override
     public void handleFileProcessedStatusNotification(FileProcessedStatusRequest request) {
         if (request.getFileProcessedStatus() == FileProcessedStatus.FILE_PROCESSED_SUCCESSFULLY) {
+            LOGGER.info(request.toString());
             //We're happy.
             //todo:...
         } else {

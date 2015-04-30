@@ -9,13 +9,12 @@
 
     <import resource="classpath*:META-INF/motech/*.xml" />
 
-    <osgi:service ref="outboundDialerService"
-                  interface="org.motechproject.nms.outbounddialer.service.OutboundDialerService" />
+    <osgi:service ref="targetFileService" interface="org.motechproject.nms.outbounddialer.service.TargetFileService" />
 
-    <osgi:reference id="schedulerService"
-                    interface="org.motechproject.scheduler.service.MotechSchedulerService" />
+    <osgi:service ref="cdrFileService" interface="org.motechproject.nms.outbounddialer.service.CdrFileService" />
 
-    <osgi:reference id="alertsService"
-                    interface="org.motechproject.alerts.contract.AlertService" />
+    <osgi:reference id="schedulerService" interface="org.motechproject.scheduler.service.MotechSchedulerService" />
+
+    <osgi:reference id="alertsService" interface="org.motechproject.alerts.contract.AlertService" />
 
 </beans>

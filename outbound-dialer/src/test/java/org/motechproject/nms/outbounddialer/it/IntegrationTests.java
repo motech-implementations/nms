@@ -9,7 +9,8 @@ import org.junit.runners.Suite;
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
         OutboundDialerControllerBundleIT.class,
-        OutboundDialerServiceBundleIT.class,
+        TargetFileServiceBundleIT.class,
+        CdrFileServiceBundleIT.class,
 })
 public class IntegrationTests {
 }
