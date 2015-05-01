@@ -13,6 +13,9 @@ public class GetBookmarkResponse {
 
     private Map<String, Integer> scoresByChapter;
 
+    public GetBookmarkResponse() {
+    }
+
     public String getBookmark() {
         return bookmark;
     }

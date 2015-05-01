@@ -15,6 +15,9 @@ public class SaveBookmarkRequest {
 
     private Map<String, Integer> scoresByChapter;
 
+    public SaveBookmarkRequest() {
+    }
+
     public Long getCallingNumber() {
         return callingNumber;
     }

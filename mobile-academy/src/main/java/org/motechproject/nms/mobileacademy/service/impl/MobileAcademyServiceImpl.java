@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -84,7 +85,7 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
         } else {
 
             if (bookmarks.size() > 1) {
-                LOGGER.debug("Found more than 1 instance of valid course, picking top");
+                LOGGER.debug("Found more than 1 instance of valid bookmark, picking top");
             }
 
             Bookmark existingBookmark = bookmarks.get(0);
@@ -116,6 +117,10 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
     private Bookmark setBookmarkProperties(MaBookmark fromBookmark, Bookmark toBookmark) {
 
         toBookmark.setExternalId(fromBookmark.getCallingNumber().toString());
+
+        if (toBookmark.getProgress() == null) {
+            toBookmark.setProgress(new HashMap<String, Object>());
+        }
         toBookmark.getProgress().put("callId", fromBookmark.getCallId());
 
         if (fromBookmark.getScoresByChapter() != null) {

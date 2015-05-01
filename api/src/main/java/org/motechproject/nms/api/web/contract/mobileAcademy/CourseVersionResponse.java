@@ -11,10 +11,7 @@ public class CourseVersionResponse {
     }
 
     public CourseVersionResponse(int courseVersion) {
-        this.courseVersion = courseVersion;
-    }
 
-    public CourseVersionResponse(Integer courseVersion) {
         this.courseVersion = courseVersion;
     }
 

@@ -58,14 +58,26 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
     }
 
     @Test
+    public void testBookmarkNullCallId() throws IOException, InterruptedException {
+
+        String endpoint = String.format("http://localhost:%d/api/mobileacademy/bookmarkWithScore",
+                TestContext.getJettyPort());
+        SaveBookmarkRequest bookmark = new SaveBookmarkRequest();
+        bookmark.setCallingNumber(BaseController.SMALLEST_10_DIGIT_NUMBER);
+        HttpPost request = RequestBuilder.createPostRequest(endpoint, bookmark);
+        assertTrue(SimpleHttpClient.execHttpRequest(request, HttpStatus.SC_BAD_REQUEST, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
+    }
+
+    @Test
     public void testSetValidBookmark() throws IOException, InterruptedException {
 
         String endpoint = String.format("http://localhost:%d/api/mobileacademy/bookmarkWithScore",
                 TestContext.getJettyPort());
         SaveBookmarkRequest bookmark = new SaveBookmarkRequest();
-        bookmark.setCallingNumber(BaseController.SMALLEST_15_DIGIT_NUMBER);
+        bookmark.setCallingNumber(BaseController.SMALLEST_10_DIGIT_NUMBER);
+        bookmark.setCallId(BaseController.SMALLEST_15_DIGIT_NUMBER);
         HttpPost request = RequestBuilder.createPostRequest(endpoint, bookmark);
-        assertTrue(SimpleHttpClient.execHttpRequest(request, HttpStatus.SC_BAD_REQUEST, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
+        assertTrue(SimpleHttpClient.execHttpRequest(request, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
     }
 
     @Test
