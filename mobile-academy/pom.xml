@@ -39,6 +39,11 @@
             <artifactId>motech-platform-dataservices</artifactId>
             <version>${motech.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.motechproject</groupId>
+            <artifactId>mtraining</artifactId>
+            <version>0.26-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 
     <repositories>
@@ -71,12 +76,18 @@
                         <Blueprint-Enabled>true</Blueprint-Enabled>
                         <Resource-Path>mobileacademy/resources</Resource-Path>
                         <Context-Path>mobileacademy</Context-Path>
-                        <Export-Package>org.motechproject.nms.mobileacademy.service;version=${project.version},
+                        <Export-Package>org.motechproject.nms.mobileacademy.service; version=${project.version},
                             org.motechproject.nms.mobileacademy.repository;version=${project.version},
                             org.motechproject.nms.mobileacademy.domain;version=${project.version},
-                            org.motechproject.nms.mobileacademy.web;version=${project.version},</Export-Package>
-                        <Import-Package>org.motechproject.osgi.web,
-                            *</Import-Package>
+                            org.motechproject.nms.mobileacademy.domain.course;version=${project.version},
+                            org.motechproject.nms.mobileacademy.dto;version=${project.version},
+                            org.motechproject.nms.mobileacademy.web;version=${project.version},
+                        </Export-Package>
+                        <Import-Package>
+                            org.motechproject.osgi.web,
+                            org.motechproject.mtraining.domain,
+                            *
+                        </Import-Package>
                     </instructions>
                 </configuration>
             </plugin>
