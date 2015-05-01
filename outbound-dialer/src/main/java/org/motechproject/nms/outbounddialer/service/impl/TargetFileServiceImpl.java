@@ -19,8 +19,12 @@ import org.motechproject.alerts.domain.AlertType;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.annotations.MotechListener;
 import org.motechproject.mds.query.QueryParams;
+import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
+import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
+import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
+import org.motechproject.nms.language.domain.Language;
 import org.motechproject.nms.outbounddialer.domain.CallRetry;
 import org.motechproject.nms.outbounddialer.domain.DayOfTheWeek;
 import org.motechproject.nms.outbounddialer.domain.FileProcessedStatus;
@@ -62,6 +66,7 @@ public class TargetFileServiceImpl implements TargetFileService {
     private MotechSchedulerService schedulerService;
     private AlertService alertService;
     private SubscriptionDataService subscriptionDataService;
+    private SubscriberDataService subscriberDataService;
     private CallRetryDataService callRetryDataService;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TargetFileServiceImpl.class);
@@ -107,12 +112,14 @@ public class TargetFileServiceImpl implements TargetFileService {
     public TargetFileServiceImpl(@Qualifier("outboundDialerSettings") SettingsFacade settingsFacade,
                                  MotechSchedulerService schedulerService, AlertService alertService,
                                  SubscriptionDataService subscriptionDataService,
-                                 CallRetryDataService callRetryDataService) {
+                                 CallRetryDataService callRetryDataService,
+                                 SubscriberDataService subscriberDataService) {
         this.schedulerService = schedulerService;
         this.settingsFacade = settingsFacade;
         this.alertService = alertService;
         this.subscriptionDataService = subscriptionDataService;
         this.callRetryDataService = callRetryDataService;
+        this.subscriberDataService = subscriberDataService;
 
         scheduleTargetFileGeneration();
     }
@@ -141,6 +148,27 @@ public class TargetFileServiceImpl implements TargetFileService {
             }
         }
         return targetFileDirectory;
+    }
+
+
+    private void writeSubscriptionRow(Subscription subscription, OutputStreamWriter writer) throws IOException {
+        //subscription id
+        writer.write(subscription.getSubscriptionId());
+        writer.write(",");
+
+        //phone number
+        writer.write(subscription.getSubscriber().getCallingNumber().toString());
+        writer.write(",");
+
+        //language
+        Subscriber subscriber = subscription.getSubscriber();
+        //todo: don't understand why subscriber.getLanguage() doesn't work here...
+        Language language = (Language) subscriberDataService.getDetachedField(subscriber, "language");
+        writer.write(language.getCode());
+
+        //todo...
+
+        writer.write("\n");
     }
 
 
@@ -174,19 +202,12 @@ public class TargetFileServiceImpl implements TargetFileService {
             int page = 1;
             int numBlockRecord;
             do {
-                //todo: replace retrieveAll with findByStatus when available
-                List<Subscription> subscriptions = subscriptionDataService.retrieveAll(
-                        new QueryParams(page, maxQueryBlock));
+                List<Subscription> subscriptions = subscriptionDataService.findByStatus(SubscriptionStatus.ACTIVE,
+                    new QueryParams(page, maxQueryBlock));
                 numBlockRecord = subscriptions.size();
 
                 for (Subscription subscription : subscriptions) {
-                    writer.write(subscription.getSubscriptionId());
-                    writer.write(",");
-                    writer.write(subscription.getSubscriber().getCallingNumber().toString());
-                    writer.write(",");
-                    writer.write(subscription.getLanguage().getCode());
-                    //todo...
-                    writer.write("\n");
+                    writeSubscriptionRow(subscription, writer);
                 }
 
                 page++;
