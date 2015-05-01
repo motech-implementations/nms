@@ -3,7 +3,7 @@ package org.motechproject.nms.outbounddialer.domain;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 
-@Entity(tableName = "nms_call_retry")
+@Entity(tableName = "nms_call_retries")
 public class CallRetry {
     @Field
     private String subscriptionId;

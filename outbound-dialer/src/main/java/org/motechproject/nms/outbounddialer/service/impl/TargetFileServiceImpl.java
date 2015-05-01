@@ -53,7 +53,10 @@ public class TargetFileServiceImpl implements TargetFileService {
     private static final String TARGET_FILE_MS_INTERVAL = "outbound-dialer.target_file_ms_interval";
     private static final String TARGET_FILE_DIRECTORY = "outbound-dialer.target_file_directory";
     private static final String TARGET_FILE_NOTIFICATION_URL = "outbound-dialer.target_file_notification_url";
+
     private static final String GENERATE_TARGET_FILE_EVENT = "nms.obd.generate_target_file";
+
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormat.forPattern("yyyyMMddHHmmss");
 
     private SettingsFacade settingsFacade;
     private MotechSchedulerService schedulerService;
@@ -64,14 +67,19 @@ public class TargetFileServiceImpl implements TargetFileService {
     private static final Logger LOGGER = LoggerFactory.getLogger(TargetFileServiceImpl.class);
 
 
+    /**
+     * Use the MOTECH scheduler to setup a repeating job
+     * The job will start today at the time stored in outbound-dialer.target_file_time in outbound-dialer.properties
+     * It will repeat every outbound-dialer.target_file_ms_interval milliseconds (default value is a day)
+     */
     private void scheduleTargetFileGeneration() {
         //Calculate today's fire time
         DateTimeFormatter fmt = DateTimeFormat.forPattern("H:m");
         String timeProp = settingsFacade.getProperty(TARGET_FILE_TIME);
         DateTime time = fmt.parseDateTime(timeProp);
-        DateTime today = DateTime.now()
-                .withHourOfDay(time.getHourOfDay())
-                .withMinuteOfHour(time.getMinuteOfHour())
+        DateTime today = DateTime.now()                     // This means today's date...
+                .withHourOfDay(time.getHourOfDay())         // ...at the hour...
+                .withMinuteOfHour(time.getMinuteOfHour())   // ...and minute specified in outbound-dialer.properties
                 .withSecondOfMinute(0)
                 .withMillisOfSecond(0);
 
@@ -111,14 +119,7 @@ public class TargetFileServiceImpl implements TargetFileService {
 
 
     private String targetFileName() {
-        DateTime today = DateTime.now();
-        return String.format("OBD_%04d%02d%02d%02d%02d%02d.csv",
-                today.getYear(),
-                today.getMonthOfYear(),
-                today.getDayOfMonth(),
-                today.getHourOfDay(),
-                today.getMinuteOfHour(),
-                today.getSecondOfMinute());
+        return String.format("OBD_%s.csv", TIME_FORMATTER.print(DateTime.now()));
     }
 
 
