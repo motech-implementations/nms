@@ -1,4 +1,4 @@
-package org.motechproject.nms.outbounddialer.osgi;
+package org.motechproject.nms.outbounddialer.it;
 
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
@@ -9,6 +9,8 @@ import org.junit.runners.Suite;
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
         OutboundDialerControllerBundleIT.class,
+        TargetFileServiceBundleIT.class,
+        CdrFileServiceBundleIT.class,
 })
 public class IntegrationTests {
 }
