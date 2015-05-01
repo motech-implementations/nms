@@ -25,10 +25,13 @@ import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.language.domain.Language;
+import org.motechproject.nms.outbounddialer.domain.AuditRecord;
 import org.motechproject.nms.outbounddialer.domain.CallRetry;
 import org.motechproject.nms.outbounddialer.domain.DayOfTheWeek;
 import org.motechproject.nms.outbounddialer.domain.FileProcessedStatus;
+import org.motechproject.nms.outbounddialer.domain.FileType;
 import org.motechproject.nms.outbounddialer.repository.CallRetryDataService;
+import org.motechproject.nms.outbounddialer.repository.FileAuditDataService;
 import org.motechproject.nms.outbounddialer.service.TargetFileNotification;
 import org.motechproject.nms.outbounddialer.service.TargetFileService;
 import org.motechproject.nms.outbounddialer.web.contract.FileProcessedStatusRequest;
@@ -68,6 +71,7 @@ public class TargetFileServiceImpl implements TargetFileService {
     private SubscriptionDataService subscriptionDataService;
     private SubscriberDataService subscriberDataService;
     private CallRetryDataService callRetryDataService;
+    private FileAuditDataService fileAuditDataService;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TargetFileServiceImpl.class);
 
@@ -113,13 +117,15 @@ public class TargetFileServiceImpl implements TargetFileService {
                                  MotechSchedulerService schedulerService, AlertService alertService,
                                  SubscriptionDataService subscriptionDataService,
                                  CallRetryDataService callRetryDataService,
-                                 SubscriberDataService subscriberDataService) {
+                                 SubscriberDataService subscriberDataService,
+                                 FileAuditDataService fileAuditDataService) {
         this.schedulerService = schedulerService;
         this.settingsFacade = settingsFacade;
         this.alertService = alertService;
         this.subscriptionDataService = subscriptionDataService;
         this.callRetryDataService = callRetryDataService;
         this.subscriberDataService = subscriberDataService;
+        this.fileAuditDataService = fileAuditDataService;
 
         scheduleTargetFileGeneration();
     }
@@ -127,6 +133,16 @@ public class TargetFileServiceImpl implements TargetFileService {
 
     private String targetFileName() {
         return String.format("OBD_%s.csv", TIME_FORMATTER.print(DateTime.now()));
+    }
+
+
+    private void insertTargetFileAuditRecord(TargetFileNotification tfn, String status) {
+        if (tfn == null) {
+            fileAuditDataService.create(new AuditRecord(FileType.TargetFile, null, null, null, status));
+        } else {
+            fileAuditDataService.create(new AuditRecord(FileType.TargetFile, tfn.getFileName(), tfn.getRecordCount(),
+                    tfn.getChecksum(), status));
+        }
     }
 
 
@@ -144,6 +160,7 @@ public class TargetFileServiceImpl implements TargetFileService {
                 LOGGER.error(error);
                 alertService.create(targetFileDirectory.toString(), "targetFileDirectory", "mkdirs() failed",
                         AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+                insertTargetFileAuditRecord(null, error);
                 throw new IllegalStateException();
             }
         }
@@ -243,12 +260,17 @@ public class TargetFileServiceImpl implements TargetFileService {
             LOGGER.error(e.getMessage());
             alertService.create(targetFile.toString(), "targetFile", e.getMessage(), AlertType.CRITICAL,
                     AlertStatus.NEW, 0, null);
+            insertTargetFileAuditRecord(new TargetFileNotification(targetFile.toString(), null, null), e.getMessage());
             return null;
         }
 
         String md5Checksum = new String(Hex.encodeHex(md.digest()));
         TargetFileNotification tfn = new TargetFileNotification(targetFileName, md5Checksum, recordCount);
         LOGGER.info("TargetFileNotification = {}", tfn.toString());
+
+        //audit the success
+        insertTargetFileAuditRecord(tfn, "Success");
+
         return tfn;
     }
 
@@ -299,11 +321,12 @@ public class TargetFileServiceImpl implements TargetFileService {
         if (request.getFileProcessedStatus() == FileProcessedStatus.FILE_PROCESSED_SUCCESSFULLY) {
             LOGGER.info(request.toString());
             //We're happy.
-            //todo:...
+            //todo: audit that?
         } else {
             LOGGER.error(request.toString());
             alertService.create(request.getFileName(), "targetFileName", "Target File Processing Error",
                     AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            //todo: audit that?
         }
     }
 }

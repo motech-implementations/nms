@@ -1,5 +1,8 @@
 package org.motechproject.nms.outbounddialer.web;
 
+import org.motechproject.nms.outbounddialer.domain.AuditRecord;
+import org.motechproject.nms.outbounddialer.domain.FileType;
+import org.motechproject.nms.outbounddialer.repository.FileAuditDataService;
 import org.motechproject.nms.outbounddialer.service.CdrFileService;
 import org.motechproject.nms.outbounddialer.service.TargetFileService;
 import org.motechproject.nms.outbounddialer.web.contract.BadRequest;
@@ -31,13 +34,16 @@ public class OutboundDialerController {
 
     private CdrFileService cdrFileService;
     private TargetFileService targetFileService;
+    private FileAuditDataService fileAuditDataService;
 
 
 
     @Autowired
-    public OutboundDialerController(CdrFileService cdrFileService, TargetFileService targetFileService) {
+    public OutboundDialerController(CdrFileService cdrFileService, TargetFileService targetFileService,
+                                    FileAuditDataService fileAuditDataService) {
         this.cdrFileService = cdrFileService;
         this.targetFileService = targetFileService;
+        this.fileAuditDataService = fileAuditDataService;
     }
 
 
@@ -63,7 +69,6 @@ public class OutboundDialerController {
         }
         return false;
     }
-
 
 
     private static boolean validateCdrFileInfo(StringBuilder errors, CdrFileNotificationRequestFileInfo fileInfo,
@@ -116,6 +121,8 @@ public class OutboundDialerController {
                 request.getFileName());
 
         if (failureReasons.length() > 0) {
+            fileAuditDataService.create(new AuditRecord(FileType.CdrFile, request.getFileName(), null, null,
+                    failureReasons.toString()));
             throw new IllegalArgumentException(failureReasons.toString());
         }
 
@@ -135,12 +142,12 @@ public class OutboundDialerController {
             method = RequestMethod.POST,
             headers = { "Content-type=application/json" })
     @ResponseStatus(HttpStatus.OK)
-    public void notifyFileProcessedStatus(@RequestBody FileProcessedStatusRequest fileProcessedStatusRequest) {
+    public void notifyFileProcessedStatus(@RequestBody FileProcessedStatusRequest request) {
         StringBuilder failureReasons = new StringBuilder();
 
         validateFieldPresent(failureReasons, "fileProcessedStatus",
-            fileProcessedStatusRequest.getFileProcessedStatus());
-        validateFieldPresent(failureReasons, "fileName", fileProcessedStatusRequest.getFileName());
+                request.getFileProcessedStatus());
+        validateFieldPresent(failureReasons, "fileName", request.getFileName());
 
         // TODO: validate file name against internal data
 
@@ -149,7 +156,7 @@ public class OutboundDialerController {
         }
 
         // call OBD service, which will handle notification
-        targetFileService.handleFileProcessedStatusNotification(fileProcessedStatusRequest);
+        targetFileService.handleFileProcessedStatusNotification(request);
     }
 
 

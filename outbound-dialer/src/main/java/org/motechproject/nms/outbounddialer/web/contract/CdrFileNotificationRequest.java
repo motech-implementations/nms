@@ -8,8 +8,7 @@ public class CdrFileNotificationRequest {
     private CdrFileNotificationRequestFileInfo cdrSummary;
     private CdrFileNotificationRequestFileInfo cdrDetail;
 
-    public CdrFileNotificationRequest() {
-    }
+    public CdrFileNotificationRequest() { }
 
     public CdrFileNotificationRequest(String fileName, CdrFileNotificationRequestFileInfo cdrSummary,
         CdrFileNotificationRequestFileInfo cdrDetail) {
