@@ -17,6 +17,7 @@ import java.util.Set;
  * A Kilkari subscriber (recipient of the service, i.e. a pregnant woman) essentially identified by her
  * phone number
  */
+// TODO: Remove maxFetchDepth once https://applab.atlassian.net/browse/MOTECH-1678 is resolved
 @Entity(maxFetchDepth = -1, tableName = "nms_subscribers")
 public class Subscriber {
 
