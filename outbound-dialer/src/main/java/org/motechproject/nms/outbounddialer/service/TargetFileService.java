@@ -10,7 +10,7 @@ public interface TargetFileService {
      * Probably only to be called by an IT. This service's constructor sets the repeating nms.obd.generate_target_file
      * MOTECH event which triggers the daily generation of the targetFile.
      */
-    void generateTargetFile();
+    TargetFileNotification generateTargetFile();
 
 
     /**

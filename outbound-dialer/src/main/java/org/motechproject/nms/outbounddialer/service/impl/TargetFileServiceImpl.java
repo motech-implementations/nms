@@ -1,5 +1,15 @@
 package org.motechproject.nms.outbounddialer.service.impl;
 
+
+import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.httpclient.HttpStatus;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -15,6 +25,7 @@ import org.motechproject.nms.outbounddialer.domain.CallRetry;
 import org.motechproject.nms.outbounddialer.domain.DayOfTheWeek;
 import org.motechproject.nms.outbounddialer.domain.FileProcessedStatus;
 import org.motechproject.nms.outbounddialer.repository.CallRetryDataService;
+import org.motechproject.nms.outbounddialer.service.TargetFileNotification;
 import org.motechproject.nms.outbounddialer.service.TargetFileService;
 import org.motechproject.nms.outbounddialer.web.contract.FileProcessedStatusRequest;
 import org.motechproject.scheduler.contract.RepeatingSchedulableJob;
@@ -27,8 +38,12 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.OutputStreamWriter;
+import java.security.DigestOutputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 @Service("targetFileService")
@@ -37,6 +52,7 @@ public class TargetFileServiceImpl implements TargetFileService {
     private static final String MAX_QUERY_BLOCK = "outbound-dialer.max_query_block";
     private static final String TARGET_FILE_MS_INTERVAL = "outbound-dialer.target_file_ms_interval";
     private static final String TARGET_FILE_DIRECTORY = "outbound-dialer.target_file_directory";
+    private static final String TARGET_FILE_NOTIFICATION_URL = "outbound-dialer.target_file_notification_url";
     private static final String GENERATE_TARGET_FILE_EVENT = "nms.obd.generate_target_file";
 
     private SettingsFacade settingsFacade;
@@ -118,96 +134,141 @@ public class TargetFileServiceImpl implements TargetFileService {
                 String error = String.format("Unable to create targetFileDirectory %s: mkdirs() failed",
                         targetFileDirectory);
                 LOGGER.error(error);
-                alertService.create(targetFileDirectory.toString(), "targetFileDirectory", error, AlertType.CRITICAL,
-                        AlertStatus.NEW, 0, null);
-                throw new IllegalStateException(error);
+                alertService.create(targetFileDirectory.toString(), "targetFileDirectory", "mkdirs() failed",
+                        AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+                throw new IllegalStateException();
             }
         }
         return targetFileDirectory;
     }
 
 
-    private PrintWriter createTargetFile(File targetDirectory) {
+    public TargetFileNotification generateTargetFile() {
         String targetFileName = targetFileName();
+        File targetFileDirectory;
+        MessageDigest md;
+        int recordCount = 0;
+
         try {
-            File targetFile = new File(targetDirectory, targetFileName);
-            LOGGER.info("Creating targetFile: {}", targetFile);
-            return new PrintWriter(targetFile, "UTF-8");
-        } catch (IOException e) {
-            throw new IllegalStateException(String.format("Unable to create targetFile %s in %s: %s",
-                    targetFileName, targetDirectory, e.getMessage()));
+            targetFileDirectory = createTargetFileDirectory();
+        } catch (IllegalStateException e) {
+            return null;
         }
+
+        File targetFile = new File(targetFileDirectory, targetFileName);
+        try (FileOutputStream fos = new FileOutputStream(targetFile);
+             OutputStreamWriter writer = new OutputStreamWriter(fos)) {
+
+            md = MessageDigest.getInstance("MD5");
+            @SuppressWarnings("PMD.UnusedLocalVariable")
+            DigestOutputStream dos = new DigestOutputStream(fos, md);
+
+            //figure out which day to work with
+            final DayOfTheWeek today = DayOfTheWeek.today();
+
+
+            int maxQueryBlock = Integer.parseInt(settingsFacade.getProperty(MAX_QUERY_BLOCK));
+
+            //Fresh calls
+            int page = 1;
+            int numBlockRecord;
+            do {
+                //todo: replace retrieveAll with findByStatus when available
+                List<Subscription> subscriptions = subscriptionDataService.retrieveAll(
+                        new QueryParams(page, maxQueryBlock));
+                numBlockRecord = subscriptions.size();
+
+                for (Subscription subscription : subscriptions) {
+                    writer.write(subscription.getSubscriptionId());
+                    writer.write(",");
+                    writer.write(subscription.getSubscriber().getCallingNumber().toString());
+                    writer.write(",");
+                    writer.write(subscription.getLanguage().getCode());
+                    //todo...
+                    writer.write("\n");
+                }
+
+                page++;
+                recordCount += numBlockRecord;
+
+            } while (numBlockRecord > 0);
+
+            //Retry calls
+            page = 1;
+            do {
+                List<CallRetry> callRetries = callRetryDataService.findByDayOfTheWeek(today,
+                        new QueryParams(page, maxQueryBlock));
+                numBlockRecord = callRetries.size();
+
+                for (CallRetry callRetry : callRetries) {
+                    writer.write(callRetry.getSubscriptionId());
+                    writer.write(",");
+                    writer.write(callRetry.getMsisdn().toString());
+                    writer.write(",");
+                    writer.write(callRetry.getLanguageLocationCode());
+                    //todo...
+                    writer.write("\n");
+                }
+
+                page++;
+                recordCount += numBlockRecord;
+
+            } while (numBlockRecord > 0);
+
+            LOGGER.info("Created targetFile with {} record{}", recordCount, recordCount == 1 ? "" : "s");
+
+        } catch (NoSuchAlgorithmException | IOException e) {
+            LOGGER.error(e.getMessage());
+            alertService.create(targetFile.toString(), "targetFile", e.getMessage(), AlertType.CRITICAL,
+                    AlertStatus.NEW, 0, null);
+            return null;
+        }
+
+        String md5Checksum = new String(Hex.encodeHex(md.digest()));
+        TargetFileNotification tfn = new TargetFileNotification(targetFileName, md5Checksum, recordCount);
+        LOGGER.info("TargetFileNotification = {}", tfn.toString());
+        return tfn;
     }
 
 
-    public void generateTargetFile() {
-        File targetFileDirectory = createTargetFileDirectory();
-        PrintWriter writer = createTargetFile(targetFileDirectory);
+    private void sendNotificationRequest(TargetFileNotification tfn) {
+        String notificationUrl = settingsFacade.getProperty(TARGET_FILE_NOTIFICATION_URL);
+        LOGGER.info("Sending {} to {}", tfn, notificationUrl);
 
-        //figure out which day to work with
-        final DayOfTheWeek today = DayOfTheWeek.today();
-
-
-        long numRecord = 0;
-        int maxQueryBlock = Integer.parseInt(settingsFacade.getProperty(MAX_QUERY_BLOCK));
-
-        //Fresh calls
-        int page = 1;
-        int numBlockRecord = 0;
-        do {
-            //todo: replace retrieveAll with findByStatus when available
-            List<Subscription> subscriptions = subscriptionDataService.retrieveAll(
-                    new QueryParams(page, maxQueryBlock));
-            numBlockRecord = subscriptions.size();
-
-            for (Subscription subscription : subscriptions) {
-                writer.print(subscription.getSubscriptionId());
-                writer.print(",");
-                writer.print(subscription.getSubscriber().getCallingNumber());
-                writer.print(",");
-                writer.println(subscription.getLanguage().getCode());
-                //todo...
+        try {
+            HttpClient httpClient = HttpClients.createDefault();
+            HttpPost httpPost = new HttpPost(notificationUrl);
+            ObjectMapper mapper = new ObjectMapper();
+            String requestJson = mapper.writeValueAsString(tfn);
+            httpPost.setHeader("Content-type", "application/json");
+            httpPost.setEntity(new StringEntity(requestJson));
+            HttpResponse response = httpClient.execute(httpPost);
+            int responseCode = response.getStatusLine().getStatusCode();
+            if (responseCode != HttpStatus.SC_OK) {
+                String error = String.format("Expecting HTTP 200 response from %s but received HTTP %d : %s ",
+                        notificationUrl, responseCode, EntityUtils.toString(response.getEntity()));
+                LOGGER.error(error);
+                alertService.create("targetFile notification request", "targetFile", error, AlertType.CRITICAL,
+                        AlertStatus.NEW, 0, null);
             }
-
-            page++;
-            numRecord += numBlockRecord;
-
-        } while (numBlockRecord > 0);
-
-        //Retry calls
-        page = 1;
-        numBlockRecord = 0;
-        do {
-            List<CallRetry> callRetries = callRetryDataService.findByDayOfTheWeek(today,
-                    new QueryParams(page, maxQueryBlock));
-            numBlockRecord = callRetries.size();
-
-            for (CallRetry callRetry : callRetries) {
-                writer.print(callRetry.getSubscriptionId());
-                writer.print(",");
-                writer.print(callRetry.getMsisdn());
-                writer.print(",");
-                writer.println(callRetry.getLanguageLocationCode());
-                //todo...
-            }
-
-            page++;
-            numRecord += numBlockRecord;
-
-        } while (numBlockRecord > 0);
-
-        LOGGER.info("Created targetFile with {} beneficiar{}", numRecord, numRecord == 1 ? "y" : "ies");
-
-        //todo...
-        //notify the IVR system the file is ready
-
+        } catch (IOException e) {
+            LOGGER.error("Unable to send targetFile notification request: {}", e.getMessage());
+            alertService.create("targetFile notification request", "targetFile", e.getMessage(), AlertType.CRITICAL,
+                    AlertStatus.NEW, 0, null);
+        }
     }
 
 
     @MotechListener(subjects = { GENERATE_TARGET_FILE_EVENT })
     public void generateTargetFile(MotechEvent event) {
-        LOGGER.debug(event.toString());
-        generateTargetFile();
+        LOGGER.info(event.toString());
+
+        TargetFileNotification tfn = generateTargetFile();
+
+        if (tfn != null) {
+            //notify the IVR system the file is ready
+            sendNotificationRequest(tfn);
+        }
     }
 
 
@@ -219,14 +280,8 @@ public class TargetFileServiceImpl implements TargetFileService {
             //todo:...
         } else {
             LOGGER.error(request.toString());
-            alertService.create(
-                    request.getFileName(),
-                    "targetFileName",
-                    "Target File Processing Error",
-                    AlertType.CRITICAL,
-                    AlertStatus.NEW,
-                    0,
-                    null);
+            alertService.create(request.getFileName(), "targetFileName", "Target File Processing Error",
+                    AlertType.CRITICAL, AlertStatus.NEW, 0, null);
         }
     }
 }

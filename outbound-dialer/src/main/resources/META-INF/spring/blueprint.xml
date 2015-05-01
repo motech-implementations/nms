@@ -13,8 +13,19 @@
 
     <osgi:service ref="cdrFileService" interface="org.motechproject.nms.outbounddialer.service.CdrFileService" />
 
+    <osgi:service ref="settingsService" interface="org.motechproject.nms.outbounddialer.service.SettingsService" />
+
     <osgi:reference id="subscriptionDataService"
                     interface="org.motechproject.nms.kilkari.repository.SubscriptionDataService" />
+
+    <osgi:reference id="subscriptionPackDataService"
+                    interface="org.motechproject.nms.kilkari.repository.SubscriptionPackDataService" />
+
+    <osgi:reference id="subscriberDataService"
+                    interface="org.motechproject.nms.kilkari.repository.SubscriberDataService" />
+
+    <osgi:reference id="languageDataService"
+                    interface="org.motechproject.nms.language.repository.LanguageDataService" />
 
     <osgi:reference id="callRetryDataService"
                     interface="org.motechproject.nms.outbounddialer.repository.CallRetryDataService" />
