@@ -21,6 +21,7 @@ import org.motechproject.event.listener.annotations.MotechListener;
 import org.motechproject.mds.query.QueryParams;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
+import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.language.domain.Language;
@@ -201,9 +202,8 @@ public class TargetFileServiceImpl implements TargetFileService {
             int page = 1;
             int numBlockRecord;
             do {
-                //todo: replace retrieveAll with findByStatus when available
-                List<Subscription> subscriptions = subscriptionDataService.retrieveAll(
-                        new QueryParams(page, maxQueryBlock));
+                List<Subscription> subscriptions = subscriptionDataService.findByStatus(SubscriptionStatus.ACTIVE,
+                    new QueryParams(page, maxQueryBlock));
                 numBlockRecord = subscriptions.size();
 
                 for (Subscription subscription : subscriptions) {

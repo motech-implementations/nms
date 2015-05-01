@@ -7,6 +7,7 @@ import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionMode;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
+import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
@@ -29,6 +30,7 @@ import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -67,18 +69,31 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
 
         Language hindi = languageDataService.create(new Language("Hindi", "HI"));
         Language urdu = languageDataService.create(new Language("Urdu", "UR"));
+
         SubscriptionPack pack1 = subscriptionPackDataService.create(new SubscriptionPack("one",
                 SubscriptionPackType.CHILD));
         SubscriptionPack pack2 = subscriptionPackDataService.create(new SubscriptionPack("two",
                 SubscriptionPackType.PREGNANCY));
+
         Subscriber subscriber1 = subscriberDataService.create(new Subscriber(1111111111L, hindi));
         Subscriber subscriber2 = subscriberDataService.create(new Subscriber(2222222222L, urdu));
-        Subscription subscription11 = subscriptionDataService.create(new Subscription(subscriber1, pack1,
-                SubscriptionMode.IVR));
-        Subscription subscription12 = subscriptionDataService.create(new Subscription(subscriber1, pack2,
-                SubscriptionMode.IVR));
-        Subscription subscription21 = subscriptionDataService.create(new Subscription(subscriber2, pack1,
-                SubscriptionMode.MCTS_IMPORT));
+
+        Subscription s = new Subscription(subscriber1, pack1, SubscriptionMode.IVR);
+        s.setStatus(SubscriptionStatus.ACTIVE);
+        Subscription subscription11 = subscriptionDataService.create(s);
+
+        s = new Subscription(subscriber1, pack2, SubscriptionMode.IVR);
+        s.setStatus(SubscriptionStatus.ACTIVE);
+        Subscription subscription12 = subscriptionDataService.create(s);
+
+        s = new Subscription(subscriber2, pack1, SubscriptionMode.IVR);
+        s.setStatus(SubscriptionStatus.ACTIVE);
+        Subscription subscription21 = subscriptionDataService.create(s);
+
+        s = new Subscription(subscriber2, pack2, SubscriptionMode.IVR);
+        s.setStatus(SubscriptionStatus.COMPLETED);
+        Subscription subscription22 = subscriptionDataService.create(s);
+
         CallRetry callRetry1 = callRetryDataService.create(new CallRetry("123", 3333333333L, DayOfTheWeek.today(),
                 CallStage.Retry1, "HI"));
         CallRetry callRetry2 = callRetryDataService.create(new CallRetry("546", 4444444444L, DayOfTheWeek.today(),
@@ -96,6 +111,9 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         TargetFileNotification tfn = targetFileService.generateTargetFile();
         settingsFacade.setProperty("outbound-dialer.target_file_notification_url", oldNotificationUrl);
         assertNotNull(tfn);
+
+        // Should not pickup subscription22 because its status is COMPLETED
+        assertEquals(5, (int) tfn.getRecordCount());
 
         //todo: verify tfn data actually matches created file
     }
