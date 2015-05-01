@@ -184,7 +184,7 @@ public class TargetFileServiceImpl implements TargetFileService {
                     writer.write(",");
                     writer.write(subscription.getSubscriber().getCallingNumber().toString());
                     writer.write(",");
-                    writer.write(subscription.getLanguage().getCode());
+                    writer.write(subscription.getSubscriber().getLanguage().getCode());
                     //todo...
                     writer.write("\n");
                 }
