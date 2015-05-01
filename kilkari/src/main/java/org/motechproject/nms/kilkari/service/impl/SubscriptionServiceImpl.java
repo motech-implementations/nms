@@ -1,23 +1,23 @@
 package org.motechproject.nms.kilkari.service.impl;
 
+import org.joda.time.LocalDate;
+import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.domain.InboxCallDetails;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
-import org.motechproject.nms.kilkari.domain.SubscriptionPack;
-import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.domain.SubscriptionMode;
+import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
-import org.motechproject.nms.kilkari.domain.DeactivationReason;
+import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.repository.InboxCallDetailsDataService;
-import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
+import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.language.domain.Language;
-import org.motechproject.nms.language.repository.LanguageDataService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.joda.time.LocalDate;
+
 import java.util.Iterator;
 
 /**
@@ -26,51 +26,39 @@ import java.util.Iterator;
 @Service("subscriptionService")
 public class SubscriptionServiceImpl implements SubscriptionService {
 
-    private SubscriberDataService subscriberDataService;
+    private SubscriberService subscriberService;
     private SubscriptionPackDataService subscriptionPackDataService;
     private SubscriptionDataService subscriptionDataService;
-    private LanguageDataService languageDataService;
     private InboxCallDetailsDataService inboxCallDetailsDataService;
 
     @Autowired
-    public SubscriptionServiceImpl(SubscriberDataService subscriberDataService,
+    public SubscriptionServiceImpl(SubscriberService subscriberService,
                                    SubscriptionPackDataService subscriptionPackDataService,
                                    SubscriptionDataService subscriptionDataService,
-                                   LanguageDataService languageDataService,
                                    InboxCallDetailsDataService inboxCallDetailsDataService) {
-        this.subscriberDataService = subscriberDataService;
+        this.subscriberService = subscriberService;
         this.subscriptionPackDataService = subscriptionPackDataService;
         this.subscriptionDataService = subscriptionDataService;
-        this.languageDataService = languageDataService;
         this.inboxCallDetailsDataService = inboxCallDetailsDataService;
     }
 
     @Override
-    public Subscriber getSubscriber(long callingNumber) {
-        return subscriberDataService.findByCallingNumber(callingNumber);
-    }
-
-    @Override
-    public void createSubscription(long callingNumber, String languageLocationCode, String subscriptionPack,
+    public void createSubscription(long callingNumber, Language language, SubscriptionPack subscriptionPack,
                                    SubscriptionMode mode) {
-        Subscriber subscriber = subscriberDataService.findByCallingNumber(callingNumber);
+        Subscriber subscriber = subscriberService.getSubscriber(callingNumber);
         if (subscriber == null) {
-            subscriberDataService.create(new Subscriber(callingNumber));
-            subscriber = getSubscriber(callingNumber);
+            subscriber = new Subscriber(callingNumber, language);
+            subscriberService.add(subscriber);
         }
-
-        Language language = languageDataService.findByCode(languageLocationCode);
-
-        SubscriptionPack pack = subscriptionPackDataService.byName(subscriptionPack);
 
         if (mode == SubscriptionMode.IVR) {
-            createSubscriptionViaIvr(subscriber, language, pack);
+            createSubscriptionViaIvr(subscriber, subscriptionPack);
         } else { // MCTS_UPLOAD
-            createSubscriptionViaMcts(subscriber, language, pack);
+            createSubscriptionViaMcts(subscriber, subscriptionPack);
         }
     }
 
-    private void createSubscriptionViaIvr(Subscriber subscriber, Language language, SubscriptionPack pack) {
+    private void createSubscriptionViaIvr(Subscriber subscriber, SubscriptionPack pack) {
         Iterator<Subscription> subscriptionIterator = subscriber.getSubscriptions().iterator();
         Subscription existingSubscription;
 
@@ -87,14 +75,14 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             }
         }
 
-        Subscription subscription = new Subscription(subscriber, pack, language, SubscriptionMode.IVR);
+        Subscription subscription = new Subscription(subscriber, pack, SubscriptionMode.IVR);
         subscription.setStatus(SubscriptionStatus.ACTIVE);
         subscription.setStartDate(LocalDate.now().plusDays(1));
 
         subscriptionDataService.create(subscription);
     }
 
-    private void createSubscriptionViaMcts(Subscriber subscriber, Language language, SubscriptionPack pack) {
+    private void createSubscriptionViaMcts(Subscriber subscriber, SubscriptionPack pack) {
 
         if (subscriber.getDateOfBirth() != null && pack.getType() == SubscriptionPackType.CHILD) {
             if (subscriberHasActivePackType(subscriber, SubscriptionPackType.CHILD)) {
@@ -109,7 +97,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             }
         }
 
-        Subscription subscription = new Subscription(subscriber, pack, language, SubscriptionMode.MCTS_IMPORT);
+        Subscription subscription = new Subscription(subscriber, pack, SubscriptionMode.MCTS_IMPORT);
         subscription.setStatus(SubscriptionStatus.ACTIVE);
 
         // TODO: #157 set the start date based on LMP/DOB from MCTS
@@ -157,11 +145,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     @Override
     public SubscriptionPack getSubscriptionPack(String name) {
         return subscriptionPackDataService.byName(name);
-    }
-
-    @Override
-    public long getCountSubscriptionPack(String name) {
-        return subscriptionPackDataService.countByName(name);
     }
 
     // TODO: move to a new InboxService eventually
