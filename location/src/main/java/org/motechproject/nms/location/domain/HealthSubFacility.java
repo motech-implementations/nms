@@ -8,7 +8,7 @@ import org.motechproject.mds.domain.MdsEntity;
 import javax.jdo.annotations.Unique;
 import javax.validation.constraints.NotNull;
 
-@Entity(tableName = "nms_health_sub_facilities")
+@Entity(tableName = "nms_health_sub_facilities", recordHistory = true)
 public class HealthSubFacility extends MdsEntity {
 
     @Field

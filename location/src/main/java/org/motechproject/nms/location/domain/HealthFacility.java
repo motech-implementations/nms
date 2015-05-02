@@ -12,7 +12,7 @@ import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
-@Entity(tableName = "nms_health_facilities")
+@Entity(tableName = "nms_health_facilities", recordHistory = true)
 public class HealthFacility extends MdsEntity {
 
     @Field
