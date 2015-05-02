@@ -1,5 +1,6 @@
 package org.motechproject.nms.outbounddialer.it;
 
+import org.apache.commons.codec.binary.Hex;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.kilkari.domain.Subscriber;
@@ -20,7 +21,6 @@ import org.motechproject.nms.outbounddialer.repository.CallRetryDataService;
 import org.motechproject.nms.outbounddialer.service.SettingsService;
 import org.motechproject.nms.outbounddialer.service.TargetFileNotification;
 import org.motechproject.nms.outbounddialer.service.TargetFileService;
-import org.motechproject.server.config.SettingsFacade;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.ops4j.pax.exam.ExamFactory;
@@ -29,6 +29,15 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.security.DigestInputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -95,27 +104,40 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         Subscription subscription22 = subscriptionDataService.create(s);
 
         CallRetry callRetry1 = callRetryDataService.create(new CallRetry("123", 3333333333L, DayOfTheWeek.today(),
-                CallStage.Retry1, "HI"));
+                CallStage.RETRY_1, "HI"));
         CallRetry callRetry2 = callRetryDataService.create(new CallRetry("546", 4444444444L, DayOfTheWeek.today(),
-                CallStage.Retry1, "HI"));
+                CallStage.RETRY_1, "HI"));
     }
 
 
     @Test
-    public void testTargetFileGeneration() {
-        SettingsFacade settingsFacade = settingsService.getSettingsFacade();
-
-        String oldNotificationUrl = settingsFacade.getProperty("outbound-dialer.target_file_notification_url");
-        settingsFacade.setProperty("outbound-dialer.target_file_notification_url", "http://xxx.yyy/zzz");
+    public void testTargetFileGeneration() throws NoSuchAlgorithmException, IOException {
         setupDatabase();
         TargetFileNotification tfn = targetFileService.generateTargetFile();
-        settingsFacade.setProperty("outbound-dialer.target_file_notification_url", oldNotificationUrl);
         assertNotNull(tfn);
 
         // Should not pickup subscription22 because its status is COMPLETED
         assertEquals(5, (int) tfn.getRecordCount());
 
-        //todo: verify tfn data actually matches created file
+        //read the file to get checksum & record count
+        File homeDir = new File(System.getProperty("user.home"));
+        File targetDir = new File(homeDir,
+                settingsService.getSettingsFacade().getProperty("outbound-dialer.target_file_directory"));
+        File targetFile = new File(targetDir, tfn.getFileName());
+        MessageDigest md = MessageDigest.getInstance("MD5");
+        int recordCount = 0;
+        try (InputStream is = Files.newInputStream(targetFile.toPath());
+             BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
+            DigestInputStream dis = new DigestInputStream(is, md);
+            while ((reader.readLine()) != null) {
+                recordCount++;
+            }
+        }
+        String md5Checksum = new String(Hex.encodeHex(md.digest()));
+
+        assertEquals((int)tfn.getRecordCount(), recordCount);
+
+        assertEquals(tfn.getChecksum(), md5Checksum);
     }
 
 
@@ -123,4 +145,6 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
     public void testServicePresent() {
         assertTrue(targetFileService != null);
     }
+
+    //todo: test success notification is sent to the IVR system
 }
