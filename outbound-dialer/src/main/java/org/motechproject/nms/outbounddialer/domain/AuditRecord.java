@@ -4,6 +4,8 @@ import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.annotations.UIDisplayable;
 
+import javax.jdo.annotations.Column;
+
 @Entity(tableName = "nms_obd_audit_records")
 public class AuditRecord {
     @Field
@@ -24,6 +26,7 @@ public class AuditRecord {
 
     @Field
     @UIDisplayable(position = 2)
+    @Column(allowsNull = "false")
     private String status;
 
     public AuditRecord() { }

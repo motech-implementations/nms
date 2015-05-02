@@ -121,7 +121,7 @@ public class OutboundDialerController {
                 request.getFileName());
 
         if (failureReasons.length() > 0) {
-            fileAuditDataService.create(new AuditRecord(FileType.CdrFile, request.getFileName(), null, null,
+            fileAuditDataService.create(new AuditRecord(FileType.CDR_FILE, request.getFileName(), null, null,
                     failureReasons.toString()));
             throw new IllegalArgumentException(failureReasons.toString());
         }

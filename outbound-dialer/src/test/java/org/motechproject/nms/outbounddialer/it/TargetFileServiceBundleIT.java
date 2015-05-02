@@ -104,9 +104,9 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         Subscription subscription22 = subscriptionDataService.create(s);
 
         CallRetry callRetry1 = callRetryDataService.create(new CallRetry("123", 3333333333L, DayOfTheWeek.today(),
-                CallStage.Retry1, "HI"));
+                CallStage.RETRY_1, "HI"));
         CallRetry callRetry2 = callRetryDataService.create(new CallRetry("546", 4444444444L, DayOfTheWeek.today(),
-                CallStage.Retry1, "HI"));
+                CallStage.RETRY_1, "HI"));
     }
 
 

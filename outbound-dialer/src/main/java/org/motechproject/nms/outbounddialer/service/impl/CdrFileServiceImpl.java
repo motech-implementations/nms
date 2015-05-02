@@ -42,7 +42,7 @@ public class CdrFileServiceImpl implements CdrFileService {
         //todo:...
 
         //todo: add recordCount, think about checksum
-        fileAuditDataService.create(new AuditRecord(FileType.CdrFile, request.getFileName(), null, null, "Success"));
+        fileAuditDataService.create(new AuditRecord(FileType.CDR_FILE, request.getFileName(), null, null, "Success"));
 
     }
 }

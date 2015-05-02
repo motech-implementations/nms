@@ -137,15 +137,12 @@ public class TargetFileServiceImpl implements TargetFileService {
 
 
     private void insertTargetFileAuditRecord(TargetFileNotification tfn, String status) {
-        if (tfn == null) {
-            fileAuditDataService.create(new AuditRecord(FileType.TargetFile, null, null, null, status));
-        } else {
-            fileAuditDataService.create(new AuditRecord(FileType.TargetFile, tfn.getFileName(), tfn.getRecordCount(),
-                    tfn.getChecksum(), status));
-        }
+        fileAuditDataService.create(new AuditRecord(FileType.TARGET_FILE, tfn.getFileName(), tfn.getRecordCount(),
+                tfn.getChecksum(), status));
     }
 
 
+    //todo: verify we can do that - if the shared directory is an FTP share this might not work
     private File createTargetFileDirectory() {
         File userHome = new File(System.getProperty("user.home"));
         File targetFileDirectory = new File(userHome, settingsFacade.getProperty(TARGET_FILE_DIRECTORY));
@@ -160,7 +157,7 @@ public class TargetFileServiceImpl implements TargetFileService {
                 LOGGER.error(error);
                 alertService.create(targetFileDirectory.toString(), "targetFileDirectory", "mkdirs() failed",
                         AlertType.CRITICAL, AlertStatus.NEW, 0, null);
-                insertTargetFileAuditRecord(null, error);
+                insertTargetFileAuditRecord(new TargetFileNotification(), error);
                 throw new IllegalStateException();
             }
         }
@@ -215,7 +212,7 @@ public class TargetFileServiceImpl implements TargetFileService {
 
             int maxQueryBlock = Integer.parseInt(settingsFacade.getProperty(MAX_QUERY_BLOCK));
 
-            //Fresh calls
+            //FRESH calls
             int page = 1;
             int numBlockRecord;
             do {
