@@ -20,5 +20,12 @@
         </constructor-arg>
     </bean>
 
+    <bean id="outboundDialerSettings" class="org.motechproject.server.config.SettingsFacade" autowire="byType">
+        <property name="configFiles">
+            <list>
+                <value>classpath:outbound-dialer.properties</value>
+            </list>
+        </property>
+    </bean>
 
 </beans>

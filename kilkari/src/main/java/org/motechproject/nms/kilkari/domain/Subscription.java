@@ -1,8 +1,8 @@
 package org.motechproject.nms.kilkari.domain;
 
+import org.joda.time.LocalDate;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
-import org.motechproject.nms.language.domain.Language;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Unique;
@@ -18,23 +18,29 @@ public class Subscription {
     private String subscriptionId;
 
     @Field
+    @Column(allowsNull = "false")
     private Subscriber subscriber;
 
     @Field
     private SubscriptionPack subscriptionPack;
 
     @Field
-    private Language language;
-
-    @Field
     private SubscriptionStatus status;
 
-    public Subscription(Subscriber subscriber, SubscriptionPack subscriptionPack, Language language) {
+    @Field
+    private SubscriptionMode mode;
+
+    @Field
+    private LocalDate startDate;
+
+    @Field
+    private DeactivationReason deactivationReason;
+
+    public Subscription(Subscriber subscriber, SubscriptionPack subscriptionPack, SubscriptionMode mode) {
         this.subscriptionId = UUID.randomUUID().toString();
         this.subscriber = subscriber;
         this.subscriptionPack = subscriptionPack;
-        this.language = language;
-        this.status = SubscriptionStatus.PENDING_ACTIVATION;
+        this.mode = mode;
         this.subscriber.getSubscriptions().add(this);
     }
 
@@ -56,15 +62,23 @@ public class Subscription {
         this.subscriptionPack = subscriptionPack;
     }
 
-    public Language getLanguage() { return language; }
-
-    public void setLanguage(Language language) {
-        this.language = language;
-    }
-
     public SubscriptionStatus getStatus() { return status; }
 
     public void setStatus(SubscriptionStatus status) { this.status = status; }
+
+    public SubscriptionMode getMode() { return mode; }
+
+    public void setMode(SubscriptionMode mode) { this.mode = mode; }
+
+    public LocalDate getStartDate() { return startDate; }
+
+    public void setStartDate(LocalDate startDate) { this.startDate = startDate; }
+
+    public DeactivationReason getDeactivationReason() { return deactivationReason; }
+
+    public void setDeactivationReason(DeactivationReason deactivationReason) {
+        this.deactivationReason = deactivationReason;
+    }
 
     @Override
     public boolean equals(Object o) {
@@ -77,12 +91,24 @@ public class Subscription {
 
         Subscription that = (Subscription) o;
 
-        return subscriptionId.equals(that.subscriptionId) && subscriber.equals(this.subscriber) &&
-                subscriptionPack.equals(that.subscriptionPack) && language.equals(that.getLanguage());
+        return !(subscriptionId != null ? !subscriptionId
+                .equals(that.subscriptionId) : that.subscriptionId != null);
+
     }
 
     @Override
     public int hashCode() {
-        return subscriptionId.hashCode();
+        return subscriptionId != null ? subscriptionId.hashCode() : 0;
+    }
+
+    @Override
+    public String toString() {
+        return "Subscription{" +
+                "subscriptionId='" + subscriptionId + '\'' +
+                ", subscriptionPack=" + subscriptionPack +
+                ", status=" + status +
+                ", mode=" + mode +
+                ", startDate=" + startDate +
+                '}';
     }
 }

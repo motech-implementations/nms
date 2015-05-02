@@ -2,26 +2,29 @@ package org.motechproject.nms.location.domain;
 
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
-import org.motechproject.mds.annotations.UIDisplayable;
 import org.motechproject.mds.domain.MdsEntity;
 
+import javax.jdo.annotations.Column;
 import javax.validation.constraints.NotNull;
 
 @Entity(tableName = "nms_villages", recordHistory = true)
 public class Village extends MdsEntity {
 
     @Field
-    @UIDisplayable(position = 0)
+    @Column(allowsNull = "false")
     @NotNull
     private String name;
 
     @Field
-    @UIDisplayable(position = 1)
+    private String regionalName;
+
+    @Field
+    @Column(allowsNull = "false")
     @NotNull
     private Long code;
 
     @Field
-    @UIDisplayable(position = 2)
+    @Column(allowsNull = "false")
     @NotNull
     private Taluka taluka;
 
@@ -34,6 +37,14 @@ public class Village extends MdsEntity {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getRegionalName() {
+        return regionalName;
+    }
+
+    public void setRegionalName(String regionalName) {
+        this.regionalName = regionalName;
     }
 
     public Long getCode() {
@@ -66,6 +77,9 @@ public class Village extends MdsEntity {
         if (name != null ? !name.equals(village.name) : village.name != null) {
             return false;
         }
+        if (regionalName != null ? !regionalName.equals(village.regionalName) : village.regionalName != null) {
+            return false;
+        }
         return !(code != null ? !code.equals(village.code) : village.code != null);
 
     }
@@ -73,6 +87,7 @@ public class Village extends MdsEntity {
     @Override
     public int hashCode() {
         int result = name != null ? name.hashCode() : 0;
+        result = 31 * result + (regionalName != null ? regionalName.hashCode() : 0);
         result = 31 * result + (code != null ? code.hashCode() : 0);
         return result;
     }
@@ -81,8 +96,8 @@ public class Village extends MdsEntity {
     public String toString() {
         return "Village{" +
                 "name='" + name + '\'' +
+                ", regionalName='" + regionalName + '\'' +
                 ", code=" + code +
-                ", taluka=" + taluka +
                 '}';
     }
 }

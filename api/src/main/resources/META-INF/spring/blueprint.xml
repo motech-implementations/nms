@@ -17,6 +17,8 @@
 
     <osgi:reference id="languageService" interface="org.motechproject.nms.language.service.LanguageService"/>
 
+    <osgi:reference id="subscriberService" interface="org.motechproject.nms.kilkari.service.SubscriberService"/>
+
     <osgi:reference id="subscriptionService" interface="org.motechproject.nms.kilkari.service.SubscriptionService"/>
 
     <osgi:reference id="locationService" interface="org.motechproject.nms.location.service.LocationService"/>
@@ -32,4 +34,7 @@
     <osgi:reference id="callContentService" interface="org.motechproject.nms.flw.service.CallContentService"/>
 
     <osgi:reference id="whitelistService" interface="org.motechproject.nms.flw.service.WhitelistService"/>
+
+    <osgi:reference id="mobileAcademyService" interface="org.motechproject.nms.mobileacademy.service.MobileAcademyService"/>
+
 </beans>

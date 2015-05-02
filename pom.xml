@@ -727,7 +727,6 @@
 
     <modules>
         <module>mobile-academy</module>
-        <module>mobile-kunji</module>
         <module>kilkari</module>
         <module>flw</module>
         <module>api</module>
