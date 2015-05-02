@@ -7,7 +7,7 @@ import org.motechproject.mds.domain.MdsEntity;
 import javax.jdo.annotations.Column;
 import javax.validation.constraints.NotNull;
 
-@Entity(tableName = "nms_villages")
+@Entity(tableName = "nms_villages", recordHistory = true)
 public class Village extends MdsEntity {
 
     @Field

@@ -8,7 +8,7 @@ import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Unique;
 import javax.validation.constraints.NotNull;
 
-@Entity(tableName = "nms_health_facility_types")
+@Entity(tableName = "nms_health_facility_types", recordHistory = true)
 public class HealthFacilityType extends MdsEntity {
     @Field
     @Column(allowsNull = "false", length = 45)

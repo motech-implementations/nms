@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 // TODO: Remove maxFetchDepth once https://applab.atlassian.net/browse/MOTECH-1678 is resolved
-@Entity(maxFetchDepth = -1, tableName = "nms_health_facilities")
+@Entity(maxFetchDepth = -1, tableName = "nms_health_facilities", recordHistory = true)
 public class HealthFacility extends MdsEntity {
 
     // I Hate checkstype

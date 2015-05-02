@@ -15,7 +15,7 @@ import java.util.List;
 /**
  * This class Models data for HealthBlock location records
  */
-@Entity(tableName = "nms_health_blocks")
+@Entity(tableName = "nms_health_blocks", recordHistory = true)
 public class HealthBlock extends MdsEntity {
 
     @Field
