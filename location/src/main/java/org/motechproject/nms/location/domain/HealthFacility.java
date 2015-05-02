@@ -3,36 +3,40 @@ package org.motechproject.nms.location.domain;
 import org.motechproject.mds.annotations.Cascade;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
-import org.motechproject.mds.annotations.UIDisplayable;
 import org.motechproject.mds.domain.MdsEntity;
 
+import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.Unique;
 import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
-@Entity(tableName = "nms_health_facilities")
+// TODO: Remove maxFetchDepth once https://applab.atlassian.net/browse/MOTECH-1678 is resolved
+@Entity(maxFetchDepth = -1, tableName = "nms_health_facilities")
 public class HealthFacility extends MdsEntity {
 
+    // I Hate checkstype
+    public static final String FALSE_STRING = "false";
+
     @Field
-    @UIDisplayable(position = 0)
+    @Column(allowsNull = FALSE_STRING)
     @NotNull
     private String name;
 
     @Field
     @Unique
-    @UIDisplayable(position = 1)
+    @Column(allowsNull = FALSE_STRING)
     @NotNull
     private Long code;
 
     @Field
-    @UIDisplayable(position = 2)
+    @Column(allowsNull = FALSE_STRING)
     @NotNull
-    private Integer healthFacilityType;
+    private HealthFacilityType healthFacilityType;
 
     @Field
-    @UIDisplayable(position = 3)
+    @Column(allowsNull = FALSE_STRING)
     @NotNull
     private HealthBlock healthBlock;
 
@@ -61,11 +65,11 @@ public class HealthFacility extends MdsEntity {
         this.code = code;
     }
 
-    public Integer getHealthFacilityType() {
+    public HealthFacilityType getHealthFacilityType() {
         return healthFacilityType;
     }
 
-    public void setHealthFacilityType(Integer healthFacilityType) {
+    public void setHealthFacilityType(HealthFacilityType healthFacilityType) {
         this.healthFacilityType = healthFacilityType;
     }
 
@@ -94,16 +98,12 @@ public class HealthFacility extends MdsEntity {
             return false;
         }
 
-        HealthFacility that = (HealthFacility) o;
+        HealthFacility hf = (HealthFacility) o;
 
-        if (name != null ? !name.equals(that.name) : that.name != null) {
+        if (name != null ? !name.equals(hf.name) : hf.name != null) {
             return false;
         }
-        if (code != null ? !code.equals(that.code) : that.code != null) {
-            return false;
-        }
-        return !(healthFacilityType != null ? !healthFacilityType
-                .equals(that.healthFacilityType) : that.healthFacilityType != null);
+        return !(code != null ? !code.equals(hf.code) : hf.code != null);
 
     }
 
@@ -111,7 +111,6 @@ public class HealthFacility extends MdsEntity {
     public int hashCode() {
         int result = name != null ? name.hashCode() : 0;
         result = 31 * result + (code != null ? code.hashCode() : 0);
-        result = 31 * result + (healthFacilityType != null ? healthFacilityType.hashCode() : 0);
         return result;
     }
 
