@@ -1,7 +1,5 @@
 package org.motechproject.nms.api.web.contract.mobileAcademy.course;
 
-import java.util.List;
-
 /**
  * Chapter content menu
  */
@@ -9,7 +7,7 @@ public class ChapterContentMenu {
 
     private String id;
 
-    private List<String> files;
+    private String file;
 
     public ChapterContentMenu() {
     }
@@ -22,11 +20,11 @@ public class ChapterContentMenu {
         this.id = id;
     }
 
-    public List<String> getFiles() {
-        return files;
+    public String getFiles() {
+        return file;
     }
 
-    public void setFiles(List<String> files) {
-        this.files = files;
+    public void setFiles(String file) {
+        this.file = file;
     }
 }

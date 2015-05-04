@@ -13,6 +13,8 @@ public class Chapter {
 
     private List<Lesson> lessons;
 
+    private Quiz quiz;
+
     public Chapter() {
     }
 
@@ -38,5 +40,13 @@ public class Chapter {
 
     public void setLessons(List<Lesson> lessons) {
         this.lessons = lessons;
+    }
+
+    public Quiz getQuiz() {
+        return quiz;
+    }
+
+    public void setQuiz(Quiz quiz) {
+        this.quiz = quiz;
     }
 }

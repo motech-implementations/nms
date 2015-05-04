@@ -37,7 +37,7 @@ public class CourseResponse {
         return chapters;
     }
 
-    public void setCourse(List<Chapter> chapters) {
+    public void setChapters(List<Chapter> chapters) {
         this.chapters = chapters;
     }
 }

@@ -7,7 +7,7 @@ public class Question {
 
     private String name;
 
-    private String correctAnswerOption;
+    private int correctAnswerOption;
 
     private QuestionContent content;
 
@@ -22,11 +22,11 @@ public class Question {
         this.name = name;
     }
 
-    public String getCorrectAnswerOption() {
+    public int getCorrectAnswerOption() {
         return correctAnswerOption;
     }
 
-    public void setCorrectAnswerOption(String correctAnswerOption) {
+    public void setCorrectAnswerOption(int correctAnswerOption) {
         this.correctAnswerOption = correctAnswerOption;
     }
 

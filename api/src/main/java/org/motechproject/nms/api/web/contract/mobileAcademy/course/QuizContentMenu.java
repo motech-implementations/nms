@@ -1,15 +1,15 @@
 package org.motechproject.nms.api.web.contract.mobileAcademy.course;
 
 /**
- * Lesson metadata
+ * Quiz menu object to store quiz menu metadata
  */
-public class LessonMeta {
+public class QuizContentMenu {
 
     private String id;
 
     private String file;
 
-    public LessonMeta() {
+    public QuizContentMenu() {
     }
 
     public String getId() {

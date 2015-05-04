@@ -1,5 +1,7 @@
 package org.motechproject.nms.api.web.contract.mobileAcademy.course;
 
+import java.util.List;
+
 /**
  * Chapter content score
  */
@@ -7,7 +9,7 @@ public class ChapterContentScore {
 
     private String id;
 
-    private String file;
+    private List<String> files;
 
     public ChapterContentScore() {
     }
@@ -20,11 +22,11 @@ public class ChapterContentScore {
         this.id = id;
     }
 
-    public String getFile() {
-        return file;
+    public List<String> getFiles() {
+        return files;
     }
 
-    public void setFile(String file) {
-        this.file = file;
+    public void setFiles(List<String> files) {
+        this.files = files;
     }
 }

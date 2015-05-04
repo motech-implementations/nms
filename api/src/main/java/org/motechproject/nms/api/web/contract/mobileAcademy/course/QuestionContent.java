@@ -5,7 +5,7 @@ package org.motechproject.nms.api.web.contract.mobileAcademy.course;
  */
 public class QuestionContent {
 
-    private String name;
+    private String id;
 
     private String question;
 
@@ -16,12 +16,12 @@ public class QuestionContent {
     public QuestionContent() {
     }
 
-    public String getName() {
-        return name;
+    public String getId() {
+        return id;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getQuestion() {

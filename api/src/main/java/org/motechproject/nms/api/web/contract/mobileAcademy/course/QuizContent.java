@@ -7,18 +7,18 @@ import java.util.List;
  */
 public class QuizContent {
 
-    private QuizMenu menu;
+    private QuizContentMenu menu;
 
     private List<Question> questions;
 
     public QuizContent(){
     }
 
-    public QuizMenu getMenu() {
+    public QuizContentMenu getMenu() {
         return menu;
     }
 
-    public void setMenu(QuizMenu menu) {
+    public void setMenu(QuizContentMenu menu) {
         this.menu = menu;
     }
 

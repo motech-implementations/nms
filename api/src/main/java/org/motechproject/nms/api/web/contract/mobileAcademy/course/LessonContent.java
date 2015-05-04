@@ -5,18 +5,18 @@ package org.motechproject.nms.api.web.contract.mobileAcademy.course;
  */
 public class LessonContent {
 
-    private LessonMeta lesson;
+    private LessonContentLesson lesson;
 
     private LessonContentMenu menu;
 
     public LessonContent() {
     }
 
-    public LessonMeta getLesson() {
+    public LessonContentLesson getLesson() {
         return lesson;
     }
 
-    public void setLesson(LessonMeta lesson) {
+    public void setLesson(LessonContentLesson lesson) {
         this.lesson = lesson;
     }
 
