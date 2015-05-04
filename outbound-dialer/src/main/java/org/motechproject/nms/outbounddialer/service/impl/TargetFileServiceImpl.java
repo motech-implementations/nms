@@ -52,6 +52,7 @@ import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
+import java.util.UUID;
 
 @Service("targetFileService")
 public class TargetFileServiceImpl implements TargetFileService {
@@ -60,6 +61,8 @@ public class TargetFileServiceImpl implements TargetFileService {
     private static final String TARGET_FILE_MS_INTERVAL = "outbound-dialer.target_file_ms_interval";
     private static final String TARGET_FILE_DIRECTORY = "outbound-dialer.target_file_directory";
     private static final String TARGET_FILE_NOTIFICATION_URL = "outbound-dialer.target_file_notification_url";
+    private static final String TARGET_FILE_IMI_SERVICE_ID = "outbound-dialer.target_file_imi_service_id";
+    private static final String TARGET_FILE_CALL_FLOW_URL = "outbound-dialer.target_file_call_flow_url";
 
     private static final String GENERATE_TARGET_FILE_EVENT = "nms.obd.generate_target_file";
 
@@ -136,9 +139,9 @@ public class TargetFileServiceImpl implements TargetFileService {
     }
 
 
-    private void insertTargetFileAuditRecord(TargetFileNotification tfn, String status) {
-        fileAuditDataService.create(new AuditRecord(FileType.TARGET_FILE, tfn.getFileName(), tfn.getRecordCount(),
-                tfn.getChecksum(), status));
+    private void insertTargetFileAuditRecord(String fileIdentifier, TargetFileNotification tfn, String status) {
+        fileAuditDataService.create(new AuditRecord(fileIdentifier, FileType.TARGET_FILE, tfn.getFileName(), status,
+                tfn.getRecordCount(), tfn.getChecksum()));
     }
 
 
@@ -157,7 +160,7 @@ public class TargetFileServiceImpl implements TargetFileService {
                 LOGGER.error(error);
                 alertService.create(targetFileDirectory.toString(), "targetFileDirectory", "mkdirs() failed",
                         AlertType.CRITICAL, AlertStatus.NEW, 0, null);
-                insertTargetFileAuditRecord(new TargetFileNotification(), error);
+                insertTargetFileAuditRecord(null, new TargetFileNotification(), error);
                 throw new IllegalStateException();
             }
         }
@@ -165,27 +168,203 @@ public class TargetFileServiceImpl implements TargetFileService {
     }
 
 
-    private void writeSubscriptionRow(Subscription subscription, OutputStreamWriter writer) throws IOException {
-        //subscription id
-        writer.write(subscription.getSubscriptionId());
+    private void writeSubscriptionRow(String fileIdentifier, Subscription subscription, String imiServiceId,
+                                      String callFlowUrl, OutputStreamWriter writer) throws IOException {
+        /*
+         * #1 RequestId
+         *
+         * A unique Request id for each obd record
+         */
+        writer.write(requestId(fileIdentifier, subscription.getSubscriptionId()));
         writer.write(",");
 
-        //phone number
+        /*
+         * #2 ServiceId
+         *
+         * Unique Id provided by IMImobile for a particular service
+         */
+        writer.write(imiServiceId);
+        writer.write(",");
+
+        /*
+         * #3 Msisdn
+         *
+         * 10 digit number to be dialed out
+         */
         writer.write(subscription.getSubscriber().getCallingNumber().toString());
         writer.write(",");
 
-        //language
+        /*
+         * #4 Cli
+         *
+         * 10 Digit number to be displayed as CLI for the call. If left blank, the default CLI of the service shall be
+         * picked up.
+         */
+        writer.write(""); // No idea why/what that field is: let's write nothing
+        writer.write(",");
+
+        /*
+         * #5 Priority
+         *
+         * Specifies the priority with which the call is to be made. By default value is 0.
+         * Possible Values: 0-Default, 1-Medium Priority, 2-High Priority
+         */ //NOPMD
+        writer.write("0"); //todo: look into optimizing that especially with the retries
+        writer.write(",");
+
+        /*
+         * #6 CallFlowURL
+         *
+         * The URL of the VXML flow. If unspecified, default VXML URL specified for the service shall be picked up
+         */
+        writer.write(callFlowUrl);
+        writer.write(",");
+
+        /*
+         * #7 ContentFileName
+         *
+         * Content file to be played
+         */
+        //todo: call a function on subscription that returns the content file name to be played using today's date
+        writer.write("???ContentFileName???");
+        writer.write(",");
+
+        /*
+         * #8 WeekId
+         *
+         * Week id of the messaged delivered in OBD
+         */
+        //todo: call a function on subscription that returns the week id name to be played using today's date
+        writer.write("???WeekId???");
+        writer.write(",");
+
+        /*
+         * #9 LanguageLocationCode
+         *
+         * To identify the language
+         */
         Subscriber subscriber = subscription.getSubscriber();
         //todo: don't understand why subscriber.getLanguage() doesn't work here...
         Language language = (Language) subscriberDataService.getDetachedField(subscriber, "language");
         writer.write(language.getCode());
+        writer.write(",");
 
-        //todo...
+        /*
+         * #10 Circle
+         *
+         * Circle of the beneficiary.
+         */
+        //todo call a function on subscriber that returns the subscriber's circle
+        writer.write("???Circle???");
+        writer.write(",");
 
         writer.write("\n");
     }
 
 
+    private void writeSubscriptionRow(String fileIdentifier, CallRetry callRetry, String imiServiceId,
+                                      String callFlowUrl, OutputStreamWriter writer) throws IOException {
+        /*
+         * #1 RequestId
+         *
+         * A unique Request id for each obd record
+         */
+        writer.write(requestId(fileIdentifier, callRetry.getSubscriptionId()));
+        writer.write(",");
+
+        /*
+         * #2 ServiceId
+         *
+         * Unique Id provided by IMImobile for a particular service
+         */
+        writer.write(imiServiceId);
+        writer.write(",");
+
+        /*
+         * #3 Msisdn
+         *
+         * 10 digit number to be dialed out
+         */
+        writer.write(callRetry.getMsisdn().toString());
+        writer.write(",");
+
+        /*
+         * #4 Cli
+         *
+         * 10 Digit number to be displayed as CLI for the call. If left blank, the default CLI of the service shall be
+         * picked up.
+         */
+        writer.write(""); // No idea why/what that field is: let's write nothing
+        writer.write(",");
+
+        /*
+         * #5 Priority
+         *
+         * Specifies the priority with which the call is to be made. By default value is 0.
+         * Possible Values: 0-Default, 1-Medium Priority, 2-High Priority
+         */
+        writer.write("0"); //todo: look into optimizing that especially with the retries
+        writer.write(",");
+
+        /*
+         * #6 CallFlowURL
+         *
+         * The URL of the VXML flow. If unspecified, default VXML URL specified for the service shall be picked up
+         */
+        writer.write(callFlowUrl);
+        writer.write(",");
+
+        /*
+         * #7 ContentFileName
+         *
+         * Content file to be played
+         */
+        //todo: call a function on subscription that returns the content file name to be played using today's date
+        writer.write("???ContentFileName???");
+        writer.write(",");
+
+        /*
+         * #8 WeekId
+         *
+         * Week id of the messaged delivered in OBD
+         */
+        //todo: call a function on subscription that returns the week id name to be played using today's date
+        writer.write("???WeekId???");
+        writer.write(",");
+
+        /*
+         * #9 LanguageLocationCode
+         *
+         * To identify the language
+         */
+        writer.write(callRetry.getLanguageLocationCode());
+        writer.write(",");
+
+        /*
+         * #10 Circle
+         *
+         * Circle of the beneficiary.
+         */
+        //todo call a function on subscriber that returns the subscriber's circle
+        writer.write("???Circle???");
+        writer.write(",");
+
+        writer.write("\n");
+    }
+
+
+    /*
+     * The RequestId field that uniquely identifies an individual OBD record is a composite key made up of
+     * the subscriptionId and the targetFile identifier.
+     */
+    private String requestId(String fileIdentifier, String subscriptionId) {
+        return String.format("%s-%s", fileIdentifier, subscriptionId);
+    }
+
+
+    /**
+     * 4.4.1 Target File Format
+     */
     public TargetFileNotification generateTargetFile() {
         String targetFileName = targetFileName();
         File targetFileDirectory;
@@ -198,9 +377,13 @@ public class TargetFileServiceImpl implements TargetFileService {
             return null;
         }
 
+        //generate a unique identifier for the targetFile
+        String fileIdentifier = UUID.randomUUID().toString();
+
+
         File targetFile = new File(targetFileDirectory, targetFileName);
         try (FileOutputStream fos = new FileOutputStream(targetFile);
-             OutputStreamWriter writer = new OutputStreamWriter(fos)) {
+            OutputStreamWriter writer = new OutputStreamWriter(fos)) {
 
             md = MessageDigest.getInstance("MD5");
             @SuppressWarnings("PMD.UnusedLocalVariable")
@@ -209,8 +392,15 @@ public class TargetFileServiceImpl implements TargetFileService {
             //figure out which day to work with
             final DayOfTheWeek today = DayOfTheWeek.today();
 
-
             int maxQueryBlock = Integer.parseInt(settingsFacade.getProperty(MAX_QUERY_BLOCK));
+
+            String imiServiceId = settingsFacade.getProperty(TARGET_FILE_IMI_SERVICE_ID);
+            String callFlowUrl = settingsFacade.getProperty(TARGET_FILE_CALL_FLOW_URL);
+            if (callFlowUrl == null) {
+                //it's ok to have an empty call flow url - the spec says the default call flow will be used
+                //whatever that is...
+                callFlowUrl = "";
+            }
 
             //FRESH calls
             int page = 1;
@@ -221,7 +411,7 @@ public class TargetFileServiceImpl implements TargetFileService {
                 numBlockRecord = subscriptions.size();
 
                 for (Subscription subscription : subscriptions) {
-                    writeSubscriptionRow(subscription, writer);
+                    writeSubscriptionRow(fileIdentifier, subscription, imiServiceId, callFlowUrl, writer);
                 }
 
                 page++;
@@ -237,13 +427,7 @@ public class TargetFileServiceImpl implements TargetFileService {
                 numBlockRecord = callRetries.size();
 
                 for (CallRetry callRetry : callRetries) {
-                    writer.write(callRetry.getSubscriptionId());
-                    writer.write(",");
-                    writer.write(callRetry.getMsisdn().toString());
-                    writer.write(",");
-                    writer.write(callRetry.getLanguageLocationCode());
-                    //todo...
-                    writer.write("\n");
+                    writeSubscriptionRow(fileIdentifier, callRetry, imiServiceId, callFlowUrl, writer);
                 }
 
                 page++;
@@ -257,7 +441,8 @@ public class TargetFileServiceImpl implements TargetFileService {
             LOGGER.error(e.getMessage());
             alertService.create(targetFile.toString(), "targetFile", e.getMessage(), AlertType.CRITICAL,
                     AlertStatus.NEW, 0, null);
-            insertTargetFileAuditRecord(new TargetFileNotification(targetFile.toString(), null, null), e.getMessage());
+            insertTargetFileAuditRecord(null, new TargetFileNotification(targetFile.toString(), null, null),
+                    e.getMessage());
             return null;
         }
 
@@ -266,7 +451,7 @@ public class TargetFileServiceImpl implements TargetFileService {
         LOGGER.info("TargetFileNotification = {}", tfn.toString());
 
         //audit the success
-        insertTargetFileAuditRecord(tfn, "Success");
+        insertTargetFileAuditRecord(fileIdentifier, tfn, "Success");
 
         return tfn;
     }
