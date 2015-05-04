@@ -1,7 +1,3 @@
-National Motech implementation
+Custom Motech Implementation
 =======
-
-Custom motech implementation.
-
-Hey there!
 
