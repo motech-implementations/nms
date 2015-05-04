@@ -7,23 +7,34 @@ import org.motechproject.mds.domain.MdsEntity;
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Unique;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 @Entity(tableName = "nms_health_sub_facilities", recordHistory = true)
 public class HealthSubFacility extends MdsEntity {
 
+    // checkstyle made me do it
+    public static final String FALSE_STRING = "false";
+
     @Field
-    @Column(allowsNull = "false")
+    @Column(allowsNull = FALSE_STRING, length = 100)
     @NotNull
+    @Size(min = 1, max = 100)
     private String name;
 
     @Field
+    @Column(allowsNull = FALSE_STRING, length = 100)
+    @NotNull
+    @Size(min = 1, max = 100)
+    private String regionalName;
+
+    @Field
     @Unique
-    @Column(allowsNull = "false")
+    @Column(allowsNull = FALSE_STRING)
     @NotNull
     private Long code;
 
     @Field
-    @Column(allowsNull = "false")
+    @Column(allowsNull = FALSE_STRING)
     @NotNull
     private HealthFacility healthFacility;
 
@@ -36,6 +47,14 @@ public class HealthSubFacility extends MdsEntity {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getRegionalName() {
+        return regionalName;
+    }
+
+    public void setRegionalName(String regionalName) {
+        this.regionalName = regionalName;
     }
 
     public Long getCode() {

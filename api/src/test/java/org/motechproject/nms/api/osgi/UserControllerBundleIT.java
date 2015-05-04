@@ -254,6 +254,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         District district = new District();
         district.setName("9");
+        district.setRegionalName("9");
         district.setCode(9l);
 
         // Currently the whitelist code has the config for state based whitelisting hardcoded.

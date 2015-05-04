@@ -9,6 +9,7 @@ import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.Unique;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,19 +19,35 @@ import java.util.List;
 @Entity(tableName = "nms_health_blocks", recordHistory = true)
 public class HealthBlock extends MdsEntity {
 
+    // checkstyle made me do it
+    public static final String FALSE_STRING = "false";
+
     @Field
-    @Column(allowsNull = "false")
+    @Column(allowsNull = FALSE_STRING, length = 35)
     @NotNull
+    @Size(min = 1, max = 35)
     private String name;
 
     @Field
+    @Column(allowsNull = FALSE_STRING, length = 50)
+    @NotNull
+    @Size(min = 1, max = 50)
+    private String regionalName;
+
+    @Field
+    @Column(allowsNull = FALSE_STRING, length = 50)
+    @NotNull
+    @Size(min = 1, max = 50)
+    private String hq;
+
+    @Field
     @Unique
-    @Column(allowsNull = "false")
+    @Column(allowsNull = FALSE_STRING)
     @NotNull
     private Long code;
 
     @Field
-    @Column(allowsNull = "false")
+    @Column(allowsNull = FALSE_STRING)
     @NotNull
     private Taluka taluka;
 
@@ -49,6 +66,22 @@ public class HealthBlock extends MdsEntity {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getRegionalName() {
+        return regionalName;
+    }
+
+    public void setRegionalName(String regionalName) {
+        this.regionalName = regionalName;
+    }
+
+    public String getHq() {
+        return hq;
+    }
+
+    public void setHq(String hq) {
+        this.hq = hq;
     }
 
     public Long getCode() {
