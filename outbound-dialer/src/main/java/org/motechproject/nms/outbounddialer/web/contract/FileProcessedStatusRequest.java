@@ -27,4 +27,11 @@ public class FileProcessedStatusRequest {
 
     public void setFileName(String fileName) { this.fileName = fileName; }
 
+    @Override
+    public String toString() {
+        return "FileProcessedStatusRequest{" +
+                "fileProcessedStatus=" + fileProcessedStatus +
+                ", fileName='" + fileName + '\'' +
+                '}';
+    }
 }

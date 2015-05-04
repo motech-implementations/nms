@@ -14,7 +14,7 @@ import org.motechproject.nms.flw.service.ServiceUsageCapService;
 import org.motechproject.nms.flw.service.ServiceUsageService;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
-import org.motechproject.nms.kilkari.service.SubscriptionService;
+import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.language.domain.Language;
 import org.motechproject.nms.language.service.LanguageService;
 import org.motechproject.nms.location.domain.District;
@@ -39,7 +39,7 @@ public class UserController extends BaseController {
     private LanguageService languageService;
 
     @Autowired
-    private SubscriptionService subscriptionService;
+    private SubscriberService subscriberService;
 
     @Autowired
     private FrontLineWorkerService frontLineWorkerService;
@@ -117,18 +117,23 @@ public class UserController extends BaseController {
         KilkariUserResponse user = new KilkariUserResponse();
         Set<String> packs = new HashSet<>();
 
-        Subscriber subscriber = subscriptionService.getSubscriber(callingNumber);
+        Subscriber subscriber = subscriberService.getSubscriber(callingNumber);
         if (subscriber != null) {
             Set<Subscription> subscriptions = subscriber.getSubscriptions();
             for (Subscription subscription : subscriptions) {
                 packs.add(subscription.getSubscriptionPack().getName());
             }
+
+            Language subscriberLanguage = subscriber.getLanguage();
+            if (subscriberLanguage != null) {
+                user.setLanguageLocationCode(subscriberLanguage.getCode());
+            }
         }
         user.setSubscriptionPackList(packs);
 
-        Language language = languageService.getDefaultCircleLanguage(circle);
-        if (language != null) {
-            user.setDefaultLanguageLocationCode(language.getCode());
+        Language defaultCircleLanguage = languageService.getDefaultCircleLanguage(circle);
+        if (defaultCircleLanguage != null) {
+            user.setDefaultLanguageLocationCode(defaultCircleLanguage.getCode());
         }
 
         return user;

@@ -147,15 +147,16 @@ public class UserControllerBundleIT extends BasePaxIT {
         List<SubscriptionPack> onePack = Arrays.asList(pack1);
         List<SubscriptionPack> twoPacks = Arrays.asList(pack1, pack2);
 
-        Subscriber subscriber1 = subscriberDataService.create(new Subscriber(1000000000L));
-        Subscriber subscriber2 = subscriberDataService.create(new Subscriber(2000000000L));
+        Subscriber subscriber1 = subscriberDataService.create(new Subscriber(1000000000L, ta));
+        Subscriber subscriber2 = subscriberDataService.create(new Subscriber(2000000000L, ta));
+        Subscriber subscriber3 = subscriberDataService.create(new Subscriber(3000000000L));
 
-        Subscription subscription1 = subscriptionDataService.create(new Subscription(subscriber1, pack1, ta,
-                SubscriptionMode.IVR));
-        Subscription subscription2 = subscriptionDataService.create(new Subscription(subscriber2, pack1, ta,
-                SubscriptionMode.IVR));
-        Subscription subscription3 = subscriptionDataService.create(new Subscription(subscriber2, pack2, ta,
-                SubscriptionMode.IVR));
+        Subscription subscription1 = subscriptionDataService.create(new Subscription(subscriber1, pack1,
+                                                                    SubscriptionMode.IVR));
+        Subscription subscription2 = subscriptionDataService.create(new Subscription(subscriber2, pack1,
+                                                                    SubscriptionMode.IVR));
+        Subscription subscription3 = subscriptionDataService.create(new Subscription(subscriber2, pack2,
+                                                                    SubscriptionMode.IVR));
     }
 
     private void createFlwCappedServiceNoUsageNoLocationNoLanguage() {
@@ -398,7 +399,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         HttpGet httpGet = createHttpGet(
                 true, "kilkari",        //service
-                true, "2000000000",     //callingNumber
+                true, "3000000000",     //callingNumber
                 true, "OP",             //operator
                 true, "AA",             //circle
                 true, "123456789012345" //callId
@@ -407,7 +408,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         String expectedJsonResponse = createKilkariUserResponseJson(
                 "50", //defaultLanguageLocationCode
                 null, //locationCode
-                new HashSet<String>(Arrays.asList("pack1", "pack2")) //subscriptionPackList
+                new HashSet<String>() //subscriptionPackList
         );
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));

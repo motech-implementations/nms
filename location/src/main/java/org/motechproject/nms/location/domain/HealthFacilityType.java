@@ -1,25 +1,17 @@
 package org.motechproject.nms.location.domain;
 
-import org.motechproject.mds.annotations.Cascade;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.domain.MdsEntity;
 
 import javax.jdo.annotations.Column;
-import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.Unique;
 import javax.validation.constraints.NotNull;
-import java.util.ArrayList;
-import java.util.List;
 
-/**
- * This class Models data for State location records
- */
-@Entity(tableName = "nms_states", recordHistory = true)
-public class State extends MdsEntity {
-
+@Entity(tableName = "nms_health_facility_types", recordHistory = true)
+public class HealthFacilityType extends MdsEntity {
     @Field
-    @Column(allowsNull = "false")
+    @Column(allowsNull = "false", length = 45)
     @NotNull
     private String name;
 
@@ -28,21 +20,6 @@ public class State extends MdsEntity {
     @Column(allowsNull = "false")
     @NotNull
     private Long code;
-
-    @Field
-    @Cascade(delete = true)
-    @Persistent(mappedBy = "state", defaultFetchGroup = "true")
-    private List<District> districts;
-
-    public State() {
-        this.districts = new ArrayList<>();
-    }
-
-    public State(String name, Long code) {
-        this.name = name;
-        this.code = code;
-        this.districts = new ArrayList<>();
-    }
 
     public String getName() {
         return name;
@@ -60,14 +37,6 @@ public class State extends MdsEntity {
         this.code = code;
     }
 
-    public List<District> getDistricts() {
-        return districts;
-    }
-
-    public void setDistricts(List<District> districts) {
-        this.districts = districts;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -77,12 +46,12 @@ public class State extends MdsEntity {
             return false;
         }
 
-        State state = (State) o;
+        HealthFacilityType hft = (HealthFacilityType) o;
 
-        if (name != null ? !name.equals(state.name) : state.name != null) {
+        if (name != null ? !name.equals(hft.name) : hft.name != null) {
             return false;
         }
-        return !(code != null ? !code.equals(state.code) : state.code != null);
+        return !(code != null ? !code.equals(hft.code) : hft.code != null);
 
     }
 
@@ -95,7 +64,7 @@ public class State extends MdsEntity {
 
     @Override
     public String toString() {
-        return "State{" +
+        return "HealthFacilityType{" +
                 "name='" + name + '\'' +
                 ", code=" + code +
                 '}';

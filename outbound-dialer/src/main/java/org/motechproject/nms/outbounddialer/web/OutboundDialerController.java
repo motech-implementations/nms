@@ -1,20 +1,25 @@
 package org.motechproject.nms.outbounddialer.web;
 
-import org.motechproject.nms.outbounddialer.web.contract.FileProcessedStatusRequest;
+import org.motechproject.nms.outbounddialer.domain.AuditRecord;
+import org.motechproject.nms.outbounddialer.domain.FileType;
+import org.motechproject.nms.outbounddialer.repository.FileAuditDataService;
+import org.motechproject.nms.outbounddialer.service.CdrFileService;
+import org.motechproject.nms.outbounddialer.service.TargetFileService;
+import org.motechproject.nms.outbounddialer.web.contract.BadRequest;
 import org.motechproject.nms.outbounddialer.web.contract.CdrFileNotificationRequest;
 import org.motechproject.nms.outbounddialer.web.contract.CdrFileNotificationRequestFileInfo;
-import org.motechproject.nms.outbounddialer.web.contract.BadRequest;
-import org.motechproject.nms.outbounddialer.service.OutboundDialerService;
+import org.motechproject.nms.outbounddialer.web.contract.FileProcessedStatusRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
+
 import java.util.regex.Pattern;
 
 /**
@@ -27,8 +32,21 @@ public class OutboundDialerController {
     public static final String INVALID = "<%s: Invalid>";
     public static final Pattern TARGET_FILENAME_PATTERN = Pattern.compile("OBD_NMS[1-9]_20[0-9]{12}\\.csv");
 
+    private CdrFileService cdrFileService;
+    private TargetFileService targetFileService;
+    private FileAuditDataService fileAuditDataService;
+
+
+
     @Autowired
-    private OutboundDialerService outboundDialerService;
+    public OutboundDialerController(CdrFileService cdrFileService, TargetFileService targetFileService,
+                                    FileAuditDataService fileAuditDataService) {
+        this.cdrFileService = cdrFileService;
+        this.targetFileService = targetFileService;
+        this.fileAuditDataService = fileAuditDataService;
+    }
+
+
 
     private static boolean validateFieldPresent(StringBuilder errors, String fieldName, Object value) {
         if (value != null) {
@@ -37,6 +55,8 @@ public class OutboundDialerController {
         errors.append(String.format(NOT_PRESENT, fieldName));
         return false;
     }
+
+
 
     private static boolean validateTargetFileName(StringBuilder errors, String targetFileName) {
         if (validateFieldPresent(errors, "fileName", targetFileName)) {
@@ -49,6 +69,7 @@ public class OutboundDialerController {
         }
         return false;
     }
+
 
     private static boolean validateCdrFileInfo(StringBuilder errors, CdrFileNotificationRequestFileInfo fileInfo,
         String fieldName, String targetFileName) {
@@ -79,6 +100,8 @@ public class OutboundDialerController {
         return valid;
     }
 
+
+
     /**
      * 4.2.6
      * CDR File Notification
@@ -89,20 +112,23 @@ public class OutboundDialerController {
             method = RequestMethod.POST,
             headers = { "Content-type=application/json" })
     @ResponseStatus(HttpStatus.ACCEPTED)
-    public void notifyNewCdrFile(@RequestBody CdrFileNotificationRequest cdrFileNotificationRequest) {
+    public void notifyNewCdrFile(@RequestBody CdrFileNotificationRequest request) {
         StringBuilder failureReasons = new StringBuilder();
-        validateTargetFileName(failureReasons, cdrFileNotificationRequest.getFileName());
-        validateCdrFileInfo(failureReasons, cdrFileNotificationRequest.getCdrSummary(), "cdrSummary",
-                cdrFileNotificationRequest.getFileName());
-        validateCdrFileInfo(failureReasons, cdrFileNotificationRequest.getCdrDetail(), "cdrDetail",
-                cdrFileNotificationRequest.getFileName());
+        validateTargetFileName(failureReasons, request.getFileName());
+        validateCdrFileInfo(failureReasons, request.getCdrSummary(), "cdrSummary",
+                request.getFileName());
+        validateCdrFileInfo(failureReasons, request.getCdrDetail(), "cdrDetail",
+                request.getFileName());
 
         if (failureReasons.length() > 0) {
+            fileAuditDataService.create(new AuditRecord(FileType.CDR_FILE, request.getFileName(), null, null,
+                    failureReasons.toString()));
             throw new IllegalArgumentException(failureReasons.toString());
         }
 
-        outboundDialerService.handleNewCdrFile();
+        cdrFileService.processCdrFile(request);
     }
+
 
 
     /**
@@ -116,12 +142,12 @@ public class OutboundDialerController {
             method = RequestMethod.POST,
             headers = { "Content-type=application/json" })
     @ResponseStatus(HttpStatus.OK)
-    public void notifyFileProcessedStatus(@RequestBody FileProcessedStatusRequest fileProcessedStatusRequest) {
+    public void notifyFileProcessedStatus(@RequestBody FileProcessedStatusRequest request) {
         StringBuilder failureReasons = new StringBuilder();
 
         validateFieldPresent(failureReasons, "fileProcessedStatus",
-            fileProcessedStatusRequest.getFileProcessedStatus());
-        validateFieldPresent(failureReasons, "fileName", fileProcessedStatusRequest.getFileName());
+                request.getFileProcessedStatus());
+        validateFieldPresent(failureReasons, "fileName", request.getFileName());
 
         // TODO: validate file name against internal data
 
@@ -130,17 +156,18 @@ public class OutboundDialerController {
         }
 
         // call OBD service, which will handle notification
-        outboundDialerService.handleFileProcessedStatusNotification();
+        targetFileService.handleFileProcessedStatusNotification(request);
     }
 
 
 
-    @ExceptionHandler(IllegalArgumentException.class)
+    @ExceptionHandler({ IllegalArgumentException.class, IllegalStateException.class })
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ResponseBody
     public BadRequest handleException(IllegalArgumentException e) {
         return new BadRequest(e.getMessage());
     }
+
 
 
     /**

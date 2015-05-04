@@ -1,18 +1,22 @@
 package org.motechproject.nms.api.web;
 
-import org.motechproject.nms.api.web.contract.kilkari.InboxCallDetailsRequest;
 import org.motechproject.nms.api.web.contract.kilkari.CallDataRequest;
+import org.motechproject.nms.api.web.contract.kilkari.InboxCallDetailsRequest;
 import org.motechproject.nms.api.web.contract.kilkari.InboxResponse;
 import org.motechproject.nms.api.web.contract.kilkari.InboxSubscriptionDetailResponse;
 import org.motechproject.nms.api.web.contract.kilkari.SubscriptionRequest;
 import org.motechproject.nms.api.web.exception.NotFoundException;
+import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.domain.InboxCallData;
 import org.motechproject.nms.kilkari.domain.InboxCallDetails;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionMode;
-import org.motechproject.nms.kilkari.domain.DeactivationReason;
+import org.motechproject.nms.kilkari.domain.SubscriptionPack;
+import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
+import org.motechproject.nms.language.domain.Language;
+import org.motechproject.nms.language.service.LanguageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -41,7 +45,13 @@ public class KilkariController extends BaseController {
     public static final Set<String> SUBSCRIPTION_PACK_SET = new HashSet<>(Arrays.asList("48WeeksPack", "72WeeksPack"));
 
     @Autowired
+    private SubscriberService subscriberService;
+
+    @Autowired
     private SubscriptionService subscriptionService;
+
+    @Autowired
+    private LanguageService languageService;
 
     /**
      * 4.2.2 Get Inbox Details API
@@ -59,7 +69,7 @@ public class KilkariController extends BaseController {
             throw new IllegalArgumentException(failureReasons.toString());
         }
 
-        Subscriber subscriber = subscriptionService.getSubscriber(callingNumber);
+        Subscriber subscriber = subscriberService.getSubscriber(callingNumber);
         if (subscriber == null) {
             throw new NotFoundException(String.format(NOT_FOUND, "callingNumber"));
         }
@@ -183,22 +193,30 @@ public class KilkariController extends BaseController {
     @ResponseStatus(HttpStatus.OK)
     public void createSubscription(@RequestBody SubscriptionRequest subscriptionRequest) {
         StringBuilder failureReasons = validate(subscriptionRequest.getCallingNumber(),
-                subscriptionRequest.getCallId(), subscriptionRequest.getOperator(),
-                subscriptionRequest.getCircle());
+                                                subscriptionRequest.getCallId(),
+                                                subscriptionRequest.getOperator(),
+                                                subscriptionRequest.getCircle());
         validateFieldPresent(failureReasons, "subscriptionPack", subscriptionRequest.getSubscriptionPack());
         validateFieldPresent(failureReasons, "languageLocationCode",
-                subscriptionRequest.getLanguageLocationCode().toString());
+                             subscriptionRequest.getLanguageLocationCode());
 
         if (failureReasons.length() > 0) {
             throw new IllegalArgumentException(failureReasons.toString());
         }
-        if (!validateSubscriptionPack(subscriptionRequest.getSubscriptionPack())) {
+
+        Language language = languageService.getLanguage(subscriptionRequest.getLanguageLocationCode());
+        if (language == null) {
+            throw new NotFoundException(String.format(NOT_FOUND, "languageLocationCode"));
+        }
+
+        SubscriptionPack subscriptionPack;
+        subscriptionPack = subscriptionService.getSubscriptionPack(subscriptionRequest.getSubscriptionPack());
+        if (subscriptionPack == null) {
             throw new NotFoundException(String.format(NOT_FOUND, "subscriptionPack"));
         }
 
-        subscriptionService.createSubscription(subscriptionRequest.getCallingNumber(),
-            subscriptionRequest.getLanguageLocationCode(), subscriptionRequest.getSubscriptionPack(),
-            SubscriptionMode.IVR);
+        subscriptionService.createSubscription(subscriptionRequest.getCallingNumber(), language,
+                                               subscriptionPack, SubscriptionMode.IVR);
     }
 
     /**
@@ -230,9 +248,4 @@ public class KilkariController extends BaseController {
 
         subscriptionService.deactivateSubscription(subscription, DeactivationReason.DEACTIVATED_BY_USER);
     }
-
-    private boolean validateSubscriptionPack(String name) {
-        return subscriptionService.getCountSubscriptionPack(name) == 1;
-    }
-
 }

@@ -9,8 +9,12 @@
 
     <import resource="classpath*:META-INF/motech/*.xml" />
 
+
     <osgi:service ref="subscriptionService"
         interface="org.motechproject.nms.kilkari.service.SubscriptionService" />
+
+    <osgi:service ref="subscriberService"
+                  interface="org.motechproject.nms.kilkari.service.SubscriberService" />
 
     <osgi:reference id="subscriberDataService"
                     interface="org.motechproject.nms.kilkari.repository.SubscriberDataService" />
@@ -26,8 +30,5 @@
 
     <osgi:reference id="subscriptionDataService"
                     interface="org.motechproject.nms.kilkari.repository.SubscriptionDataService" />
-
-    <osgi:reference id="languageDataService"
-                    interface="org.motechproject.nms.language.repository.LanguageDataService" />
 
 </beans>

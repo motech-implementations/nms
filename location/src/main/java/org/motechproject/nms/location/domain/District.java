@@ -3,9 +3,9 @@ package org.motechproject.nms.location.domain;
 import org.motechproject.mds.annotations.Cascade;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
-import org.motechproject.mds.annotations.UIDisplayable;
 import org.motechproject.mds.domain.MdsEntity;
 
+import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.Unique;
 import javax.validation.constraints.NotNull;
@@ -15,23 +15,23 @@ import java.util.List;
 /**
  * This class Models data for District location records
  */
-@Entity(tableName = "nms_districts")
+@Entity(tableName = "nms_districts", recordHistory = true)
 public class District extends MdsEntity {
 
     @Field
-    @UIDisplayable(position = 0)
+    @Column(allowsNull = "false")
     @NotNull
     private String name;
 
     @Field
     @Unique
-    @UIDisplayable(position = 1)
+    @Column(allowsNull = "false")
     @NotNull
     private Long code;
 
     @Field
-    @UIDisplayable(position = 2)
     @Persistent(defaultFetchGroup = "true")
+    @Column(allowsNull = "false")
     @NotNull
     private State state;
 

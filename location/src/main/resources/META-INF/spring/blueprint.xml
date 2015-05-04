@@ -27,6 +27,9 @@
     <osgi:reference id="healthBlockDataService"
                     interface="org.motechproject.nms.location.repository.HealthBlockDataService" />
 
+    <osgi:reference id="healthFacilityTypeDataService"
+                    interface="org.motechproject.nms.location.repository.HealthFacilityTypeDataService" />
+
     <osgi:reference id="healthFacilityDataService"
                     interface="org.motechproject.nms.location.repository.HealthFacilityDataService" />
 

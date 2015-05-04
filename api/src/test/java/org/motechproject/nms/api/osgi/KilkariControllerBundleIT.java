@@ -18,11 +18,11 @@ import org.motechproject.nms.api.web.contract.kilkari.SubscriptionRequest;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.flw.repository.ServiceUsageCapDataService;
 import org.motechproject.nms.flw.repository.ServiceUsageDataService;
-import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.kilkari.domain.*;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
+import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.language.domain.Language;
 import org.motechproject.nms.language.repository.CircleLanguageDataService;
@@ -57,6 +57,9 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     private static final String ADMIN_PASSWORD = "motech";
 
     @Inject
+    private SubscriberService subscriberService;
+
+    @Inject
     private SubscriptionService subscriptionService;
 
     @Inject
@@ -67,9 +70,6 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
     @Inject
     private SubscriptionDataService subscriptionDataService;
-
-    @Inject
-    private FrontLineWorkerService frontLineWorkerService;
 
     @Inject
     private FrontLineWorkerDataService frontLineWorkerDataService;
@@ -90,6 +90,10 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         System.setProperty("org.motechproject.testing.osgi.http.numTries", "1");
     }
 
+    private Language gLanguage;
+    private SubscriptionPack gPack1;
+    private SubscriptionPack gPack2;
+
     private void cleanAllData() {
         subscriptionDataService.deleteAll();
         subscriptionPackDataService.deleteAll();
@@ -101,27 +105,30 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         languageDataService.deleteAll();
     }
 
+    private void createLanguageAndSubscriptionPacks() {
+        gLanguage = languageDataService.create(new Language("tamil", "10"));
+
+        gPack1 = subscriptionPackDataService.create(new SubscriptionPack("pack1", SubscriptionPackType.CHILD, 1, null));
+        gPack2 = subscriptionPackDataService.create(new SubscriptionPack("pack2", SubscriptionPackType.PREGNANCY, 1,
+                null));
+    }
+
     private void setupData() {
         cleanAllData();
+        createLanguageAndSubscriptionPacks();
 
-        Language ta = languageDataService.create(new Language("tamil", "10"));
-
-        SubscriptionPack pack1 = subscriptionPackDataService.create(new SubscriptionPack("pack1",
-                SubscriptionPackType.CHILD, 1, null));
-        SubscriptionPack pack2 = subscriptionPackDataService.create(new SubscriptionPack("pack2",
-                SubscriptionPackType.PREGNANCY, 2, null));
-        List<SubscriptionPack> onePack = Arrays.asList(pack1);
-        List<SubscriptionPack> twoPacks = Arrays.asList(pack1, pack2);
+        List<SubscriptionPack> onePack = Arrays.asList(gPack1);
+        List<SubscriptionPack> twoPacks = Arrays.asList(gPack1, gPack2);
 
         Subscriber subscriber1 = subscriberDataService.create(new Subscriber(1000000000L));
         Subscriber subscriber2 = subscriberDataService.create(new Subscriber(2000000000L));
 
-        subscriptionService.createSubscription(subscriber1.getCallingNumber(), ta.getCode(), pack1.getName(),
-                SubscriptionMode.IVR);
-        subscriptionService.createSubscription(subscriber2.getCallingNumber(), ta.getCode(), pack1.getName(),
-                SubscriptionMode.IVR);
-        subscriptionService.createSubscription(subscriber2.getCallingNumber(), ta.getCode(), pack2.getName(),
-                SubscriptionMode.IVR);
+        subscriptionService.createSubscription(subscriber1.getCallingNumber(), gLanguage, gPack1,
+                                               SubscriptionMode.IVR);
+        subscriptionService.createSubscription(subscriber2.getCallingNumber(), gLanguage, gPack1,
+                                               SubscriptionMode.IVR);
+        subscriptionService.createSubscription(subscriber2.getCallingNumber(), gLanguage, gPack2,
+                                               SubscriptionMode.IVR);
     }
 
     private HttpGet createHttpGet(boolean includeCallingNumber, String callingNumber,
@@ -223,7 +230,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         HttpPost httpPost = createSubscriptionHttpPost(9999911122L, "pack99999");
 
         // Should return HTTP 404 (Not Found) because the subscription pack won't be found
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_NOT_FOUND, ADMIN_USERNAME, ADMIN_PASSWORD));
+        assertTrue(SimpleHttpClient
+                .execHttpRequest(httpPost, HttpStatus.SC_NOT_FOUND, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     @Test
@@ -235,12 +243,12 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
         SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK, ADMIN_USERNAME, ADMIN_PASSWORD);
 
-        Subscriber subscriber = subscriptionService.getSubscriber(callingNumber);
+        Subscriber subscriber = subscriberService.getSubscriber(callingNumber);
         int numberOfSubsBefore = subscriber.getActiveSubscriptions().size();
 
         SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK, ADMIN_USERNAME, ADMIN_PASSWORD);
 
-        subscriber = subscriptionService.getSubscriber(callingNumber);
+        subscriber = subscriberService.getSubscriber(callingNumber);
         int numberOfSubsAfter = subscriber.getActiveSubscriptions().size();
 
         // No additional subscription should be created because subscriber already has an active subscription
@@ -257,18 +265,37 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
         SimpleHttpClient.execHttpRequest(httpPost1, HttpStatus.SC_OK, ADMIN_USERNAME, ADMIN_PASSWORD);
 
-        Subscriber subscriber = subscriptionService.getSubscriber(callingNumber);
+        Subscriber subscriber = subscriberService.getSubscriber(callingNumber);
         int numberOfSubsBefore = subscriber.getActiveSubscriptions().size();
 
         HttpPost httpPost2 = createSubscriptionHttpPost(callingNumber, "pack2");
 
         SimpleHttpClient.execHttpRequest(httpPost2, HttpStatus.SC_OK, ADMIN_USERNAME, ADMIN_PASSWORD);
 
-        subscriber = subscriptionService.getSubscriber(callingNumber);
+        subscriber = subscriberService.getSubscriber(callingNumber);
         int numberOfSubsAfter = subscriber.getActiveSubscriptions().size();
 
         // Another subscription should be allowed because these are two different packs
         assertTrue((numberOfSubsBefore + 1) == numberOfSubsAfter);
+    }
+
+    @Test
+    public void testCreateSubscriptionsNoLanguageInDB() throws IOException, InterruptedException {
+        setupData();
+        SubscriptionRequest subscriptionRequest = new SubscriptionRequest(9999911122L, "A", "AP",
+                123456789012545L, "99", "pack1");
+        ObjectMapper mapper = new ObjectMapper();
+        String subscriptionRequestJson = mapper.writeValueAsString(subscriptionRequest);
+
+        HttpPost httpPost = new HttpPost(String.format(
+                "http://localhost:%d/api/kilkari/subscription", TestContext.getJettyPort()));
+        httpPost.setHeader("Content-type", "application/json");
+        httpPost.setEntity(new StringEntity(subscriptionRequestJson));
+
+
+        // Should return HTTP 404 (Not Found) because the language won't be found
+        assertTrue(SimpleHttpClient
+                .execHttpRequest(httpPost, HttpStatus.SC_NOT_FOUND, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     @Test
@@ -279,7 +306,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         mctsSubscriber.setDateOfBirth(LocalDate.now().minusDays(14));
         subscriberDataService.create(mctsSubscriber);
 
-        subscriptionService.createSubscription(9999911122L, "10", "pack1", SubscriptionMode.MCTS_IMPORT);
+        subscriptionService.createSubscription(9999911122L, gLanguage, gPack1, SubscriptionMode.MCTS_IMPORT);
 
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
@@ -293,12 +320,12 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         mctsSubscriber.setDateOfBirth(LocalDate.now().minusDays(14));
         subscriberDataService.create(mctsSubscriber);
 
-        subscriptionService.createSubscription(9999911122L, "10", "pack1", SubscriptionMode.MCTS_IMPORT);
+        subscriptionService.createSubscription(9999911122L, gLanguage, gPack1, SubscriptionMode.MCTS_IMPORT);
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
 
         // attempt to create subscription to the same pack -- should fail
-        subscriptionService.createSubscription(9999911122L, "10", "pack1", SubscriptionMode.MCTS_IMPORT);
+        subscriptionService.createSubscription(9999911122L, gLanguage, gPack1, SubscriptionMode.MCTS_IMPORT);
 
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
@@ -312,12 +339,12 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         mctsSubscriber.setLastMenstrualPeriod(LocalDate.now().minusDays(28));
         subscriberDataService.create(mctsSubscriber);
 
-        subscriptionService.createSubscription(9999911122L, "10", "pack2", SubscriptionMode.MCTS_IMPORT);
+        subscriptionService.createSubscription(9999911122L, gLanguage, gPack2, SubscriptionMode.MCTS_IMPORT);
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
 
         // attempt to create subscription to the same pack -- should fail
-        subscriptionService.createSubscription(9999911122L, "10", "pack2", SubscriptionMode.MCTS_IMPORT);
+        subscriptionService.createSubscription(9999911122L, gLanguage, gPack2, SubscriptionMode.MCTS_IMPORT);
 
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
@@ -331,14 +358,14 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         mctsSubscriber.setLastMenstrualPeriod(LocalDate.now().minusDays(28));
         subscriberDataService.create(mctsSubscriber);
 
-        subscriptionService.createSubscription(9999911122L, "10", "pack2", SubscriptionMode.MCTS_IMPORT);
+        subscriptionService.createSubscription(9999911122L, gLanguage, gPack2, SubscriptionMode.MCTS_IMPORT);
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         Subscription pregnancySubscription = mctsSubscriber.getActiveSubscriptions().iterator().next();
         pregnancySubscription.setStatus(SubscriptionStatus.DEACTIVATED);
         subscriptionDataService.update(pregnancySubscription);
 
         // attempt to create subscription to the same pack -- should succeed
-        subscriptionService.createSubscription(9999911122L, "10", "pack2", SubscriptionMode.MCTS_IMPORT);
+        subscriptionService.createSubscription(9999911122L, gLanguage, gPack2, SubscriptionMode.MCTS_IMPORT);
 
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
@@ -352,21 +379,20 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         mctsSubscriber.setDateOfBirth(LocalDate.now().minusDays(14));
         subscriberDataService.create(mctsSubscriber);
 
-        subscriptionService.createSubscription(9999911122L, "10", "pack1", SubscriptionMode.MCTS_IMPORT);
+        subscriptionService.createSubscription(9999911122L, gLanguage, gPack1, SubscriptionMode.MCTS_IMPORT);
 
         // attempt to create subscription to a different pack
-        subscriptionService.createSubscription(9999911122L, "10", "pack2", SubscriptionMode.MCTS_IMPORT);
+        subscriptionService.createSubscription(9999911122L, gLanguage, gPack2, SubscriptionMode.MCTS_IMPORT);
 
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         assertEquals(2, mctsSubscriber.getActiveSubscriptions().size());
     }
 
-
     @Test
     public void testDeactivateSubscriptionRequest() throws IOException, InterruptedException {
         setupData();
 
-        Subscriber subscriber = subscriptionService.getSubscriber(1000000000L);
+        Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
         Subscription subscription = subscriber.getActiveSubscriptions().iterator().next();
         String subscriptionId = subscription.getSubscriptionId();
 
@@ -392,7 +418,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     public void testDeactivateSubscriptionRequestAlreadyInactive() throws IOException, InterruptedException {
         setupData();
 
-        Subscriber subscriber = subscriptionService.getSubscriber(1000000000L);
+        Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
         Subscription subscription = subscriber.getActiveSubscriptions().iterator().next();
         String subscriptionId = subscription.getSubscriptionId();
         subscriptionService.deactivateSubscription(subscription, DeactivationReason.DEACTIVATED_BY_USER);
@@ -466,7 +492,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                                 456L), //endTime
                         new CallDataRequest(
                                 "00000000-0000-0000-0000-000000000001", //subscriptionId
-                                "76WeeksPack", //subscriptionPack
+                                "72WeeksPack", //subscriptionPack
                                 "123", //inboxWeekId
                                 "foo", //contentFileName
                                 123L, //startTime
