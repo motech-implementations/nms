@@ -63,6 +63,7 @@ public class TargetFileServiceImpl implements TargetFileService {
     private static final String TARGET_FILE_NOTIFICATION_URL = "outbound-dialer.target_file_notification_url";
     private static final String TARGET_FILE_IMI_SERVICE_ID = "outbound-dialer.target_file_imi_service_id";
     private static final String TARGET_FILE_CALL_FLOW_URL = "outbound-dialer.target_file_call_flow_url";
+    private static final String NORMAL_PRIORITY = "0";
 
     private static final String GENERATE_TARGET_FILE_EVENT = "nms.obd.generate_target_file";
 
@@ -168,14 +169,16 @@ public class TargetFileServiceImpl implements TargetFileService {
     }
 
 
-    private void writeSubscriptionRow(String fileIdentifier, Subscription subscription, String imiServiceId,
-                                      String callFlowUrl, OutputStreamWriter writer) throws IOException {
+    private void writeSubscriptionRow(String requestId, String serviceId, String msisdn, String priority,
+                                      String callFlowUrl, String contentFileName, int weekId,
+                                      String languageLocationCode, String circle, String subscriptionMode,
+                                      OutputStreamWriter writer) throws IOException {
         /*
          * #1 RequestId
          *
          * A unique Request id for each obd record
          */
-        writer.write(requestId(fileIdentifier, subscription.getSubscriptionId()));
+        writer.write(requestId);
         writer.write(",");
 
         /*
@@ -183,7 +186,7 @@ public class TargetFileServiceImpl implements TargetFileService {
          *
          * Unique Id provided by IMImobile for a particular service
          */
-        writer.write(imiServiceId);
+        writer.write(serviceId);
         writer.write(",");
 
         /*
@@ -191,101 +194,7 @@ public class TargetFileServiceImpl implements TargetFileService {
          *
          * 10 digit number to be dialed out
          */
-        writer.write(subscription.getSubscriber().getCallingNumber().toString());
-        writer.write(",");
-
-        /*
-         * #4 Cli
-         *
-         * 10 Digit number to be displayed as CLI for the call. If left blank, the default CLI of the service shall be
-         * picked up.
-         */
-        writer.write(""); // No idea why/what that field is: let's write nothing
-        writer.write(",");
-
-        /*
-         * #5 Priority
-         *
-         * Specifies the priority with which the call is to be made. By default value is 0.
-         * Possible Values: 0-Default, 1-Medium Priority, 2-High Priority
-         */ //NOPMD
-        writer.write("0"); //todo: look into optimizing that especially with the retries
-        writer.write(",");
-
-        /*
-         * #6 CallFlowURL
-         *
-         * The URL of the VXML flow. If unspecified, default VXML URL specified for the service shall be picked up
-         */
-        writer.write(callFlowUrl);
-        writer.write(",");
-
-        /*
-         * #7 ContentFileName
-         *
-         * Content file to be played
-         */
-        //todo: call a function on subscription that returns the content file name to be played using today's date
-        writer.write("???ContentFileName???");
-        writer.write(",");
-
-        /*
-         * #8 WeekId
-         *
-         * Week id of the messaged delivered in OBD
-         */
-        //todo: call a function on subscription that returns the week id name to be played using today's date
-        writer.write("???WeekId???");
-        writer.write(",");
-
-        /*
-         * #9 LanguageLocationCode
-         *
-         * To identify the language
-         */
-        Subscriber subscriber = subscription.getSubscriber();
-        //todo: don't understand why subscriber.getLanguage() doesn't work here...
-        Language language = (Language) subscriberDataService.getDetachedField(subscriber, "language");
-        writer.write(language.getCode());
-        writer.write(",");
-
-        /*
-         * #10 Circle
-         *
-         * Circle of the beneficiary.
-         */
-        //todo call a function on subscriber that returns the subscriber's circle
-        writer.write("???Circle???");
-        writer.write(",");
-
-        writer.write("\n");
-    }
-
-
-    private void writeSubscriptionRow(String fileIdentifier, CallRetry callRetry, String imiServiceId,
-                                      String callFlowUrl, OutputStreamWriter writer) throws IOException {
-        /*
-         * #1 RequestId
-         *
-         * A unique Request id for each obd record
-         */
-        writer.write(requestId(fileIdentifier, callRetry.getSubscriptionId()));
-        writer.write(",");
-
-        /*
-         * #2 ServiceId
-         *
-         * Unique Id provided by IMImobile for a particular service
-         */
-        writer.write(imiServiceId);
-        writer.write(",");
-
-        /*
-         * #3 Msisdn
-         *
-         * 10 digit number to be dialed out
-         */
-        writer.write(callRetry.getMsisdn().toString());
+        writer.write(msisdn);
         writer.write(",");
 
         /*
@@ -303,7 +212,7 @@ public class TargetFileServiceImpl implements TargetFileService {
          * Specifies the priority with which the call is to be made. By default value is 0.
          * Possible Values: 0-Default, 1-Medium Priority, 2-High Priority
          */
-        writer.write("0"); //todo: look into optimizing that especially with the retries
+        writer.write(priority); //todo: look into optimizing that especially with the retries
         writer.write(",");
 
         /*
@@ -320,7 +229,7 @@ public class TargetFileServiceImpl implements TargetFileService {
          * Content file to be played
          */
         //todo: call a function on subscription that returns the content file name to be played using today's date
-        writer.write("???ContentFileName???");
+        writer.write(contentFileName);
         writer.write(",");
 
         /*
@@ -329,7 +238,7 @@ public class TargetFileServiceImpl implements TargetFileService {
          * Week id of the messaged delivered in OBD
          */
         //todo: call a function on subscription that returns the week id name to be played using today's date
-        writer.write("???WeekId???");
+        writer.write(Integer.toString(weekId));
         writer.write(",");
 
         /*
@@ -337,7 +246,7 @@ public class TargetFileServiceImpl implements TargetFileService {
          *
          * To identify the language
          */
-        writer.write(callRetry.getLanguageLocationCode());
+        writer.write(languageLocationCode);
         writer.write(",");
 
         /*
@@ -346,8 +255,15 @@ public class TargetFileServiceImpl implements TargetFileService {
          * Circle of the beneficiary.
          */
         //todo call a function on subscriber that returns the subscriber's circle
-        writer.write("???Circle???");
+        writer.write(circle);
         writer.write(",");
+
+        /*
+         * #11 subscription mode
+         *
+         * I for IVR origin, M for MCTS origin
+         */
+        writer.write(subscriptionMode);
 
         writer.write("\n");
     }
@@ -411,7 +327,19 @@ public class TargetFileServiceImpl implements TargetFileService {
                 numBlockRecord = subscriptions.size();
 
                 for (Subscription subscription : subscriptions) {
-                    writeSubscriptionRow(fileIdentifier, subscription, imiServiceId, callFlowUrl, writer);
+
+                    Subscriber subscriber = subscription.getSubscriber();
+
+                    //todo: don't understand why subscriber.getLanguage() doesn't work here...
+                    Language language = (Language) subscriberDataService.getDetachedField(subscriber, "language");
+                    writer.write(language.getCode());
+
+                    writeSubscriptionRow(requestId(fileIdentifier, subscription.getSubscriptionId()), imiServiceId,
+                            subscriber.getCallingNumber().toString(), NORMAL_PRIORITY, callFlowUrl,
+                            "???ContentFileName???", //todo: get that from lauren when it's ready
+                            1, //todo: and that too
+                            language.getCode(), subscriber.getCircle(),
+                            subscription.getMode().getCode(), writer);
                 }
 
                 page++;
@@ -427,7 +355,12 @@ public class TargetFileServiceImpl implements TargetFileService {
                 numBlockRecord = callRetries.size();
 
                 for (CallRetry callRetry : callRetries) {
-                    writeSubscriptionRow(fileIdentifier, callRetry, imiServiceId, callFlowUrl, writer);
+                    writeSubscriptionRow(requestId(fileIdentifier, callRetry.getSubscriptionId()), imiServiceId,
+                            callRetry.getMsisdn().toString(), NORMAL_PRIORITY, callFlowUrl,
+                            "???ContentFileName???", //todo: get that from lauren when it's ready
+                            1, //todo: and that too
+                            callRetry.getLanguageLocationCode(), callRetry.getCircle(),
+                            callRetry.getSubscriptionModeCode(), writer);
                 }
 
                 page++;

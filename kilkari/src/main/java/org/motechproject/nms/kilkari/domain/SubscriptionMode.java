@@ -6,4 +6,8 @@ package org.motechproject.nms.kilkari.domain;
 public enum SubscriptionMode {
     IVR,
     MCTS_IMPORT;
+
+    public final String getCode() {
+        return this == IVR ? "I" : "M";
+    }
 }
