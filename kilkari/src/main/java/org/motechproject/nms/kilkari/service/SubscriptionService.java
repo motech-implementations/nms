@@ -12,6 +12,8 @@ import org.motechproject.nms.language.domain.Language;
  */
 public interface SubscriptionService {
 
+    void createSubscriptionPacks();
+
     void createSubscription(long callingNumber, Language language, SubscriptionPack subscriptionPack,
                             SubscriptionMode mode);
 

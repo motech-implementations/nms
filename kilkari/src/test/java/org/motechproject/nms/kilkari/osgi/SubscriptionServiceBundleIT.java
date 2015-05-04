@@ -17,6 +17,7 @@ import org.motechproject.nms.kilkari.repository.InboxCallDetailsDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
+import org.motechproject.nms.kilkari.repository.SubscriptionPackMessageDataService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.language.domain.Language;
@@ -52,6 +53,8 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     @Inject
     private SubscriptionPackDataService subscriptionPackDataService;
     @Inject
+    private SubscriptionPackMessageDataService subscriptionPackMessageDataService;
+    @Inject
     private SubscriptionDataService subscriptionDataService;
     @Inject
     private LanguageDataService languageDataService;
@@ -71,6 +74,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     private void cleanupData() {
         subscriptionDataService.deleteAll();
         subscriptionPackDataService.deleteAll();
+        subscriptionPackMessageDataService.deleteAll();
         subscriberDataService.deleteAll();
         languageDataService.deleteAll();
         inboxCallDataDataService.deleteAll();
@@ -178,32 +182,18 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 //        assertEquals(1111111111L, (long)inboxCallDetailsFromDatabase.getCallingNumber());
     }
 
-    // TODO: change this to a unit test if it doesn't end up needing any DB support
     @Test
-    public void testSubscriptionPackNextMessageCalculation() throws Exception {
-        SubscriptionPack fortyEightWeekPack = createSubscriptionPack("childPack", SubscriptionPackType.CHILD, 48, 1);
+    public void testSubscriptionPackCreation() throws Exception {
+        cleanupData();
+        subscriptionService.createSubscriptionPacks();
 
+        SubscriptionPack fortyEightWeekPack = subscriptionPackDataService.byName("childPack");
         assertEquals(48, fortyEightWeekPack.getWeeklyMessages().size());
 
-        SubscriptionPack seventyTwoWeekPack = createSubscriptionPack("pregnancyPack", SubscriptionPackType.PREGNANCY,
-                72, 2);
-
+        SubscriptionPack seventyTwoWeekPack = subscriptionPackDataService.byName("pregnancyPack");
         assertEquals(144, seventyTwoWeekPack.getWeeklyMessages().size());
     }
 
-    private SubscriptionPack createSubscriptionPack(String name, SubscriptionPackType type, int weeks,
-                                                    int messagesPerWeek) {
-        List<SubscriptionPackMessage> messages = new ArrayList<>();
-        for (int week = 1; week <= weeks; week++) {
-            messages.add(new SubscriptionPackMessage(week, String.format("week%s-1.wav", week)));
-
-            if (messagesPerWeek == 2) {
-                messages.add(new SubscriptionPackMessage(week, String.format("week%s-2.wav", week)));
-            }
-        }
-
-        return new SubscriptionPack(name, type, messagesPerWeek, messages);
-    }
 
     @Test
     public void testCreateSubscriptionNoSubscriber() throws Exception {
