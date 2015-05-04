@@ -38,7 +38,7 @@ public class KilkariController extends BaseController {
      4.2.5.1.5 Body Elements
      */
     public static final int SUBSCRIPTION_ID_LENGTH = 36;
-    public static final Set<String> SUBSCRIPTION_PACK_SET = new HashSet<>(Arrays.asList("48WeeksPack", "76WeeksPack"));
+    public static final Set<String> SUBSCRIPTION_PACK_SET = new HashSet<>(Arrays.asList("48WeeksPack", "72WeeksPack"));
 
     @Autowired
     private SubscriptionService subscriptionService;

@@ -107,9 +107,9 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         Language ta = languageDataService.create(new Language("tamil", "10"));
 
         SubscriptionPack pack1 = subscriptionPackDataService.create(new SubscriptionPack("pack1",
-                SubscriptionPackType.CHILD));
+                SubscriptionPackType.CHILD, 1, null));
         SubscriptionPack pack2 = subscriptionPackDataService.create(new SubscriptionPack("pack2",
-                SubscriptionPackType.PREGNANCY));
+                SubscriptionPackType.PREGNANCY, 2, null));
         List<SubscriptionPack> onePack = Arrays.asList(pack1);
         List<SubscriptionPack> twoPacks = Arrays.asList(pack1, pack2);
 

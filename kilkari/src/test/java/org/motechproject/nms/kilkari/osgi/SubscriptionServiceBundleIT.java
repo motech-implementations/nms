@@ -1,6 +1,7 @@
 package org.motechproject.nms.kilkari.osgi;
 
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.kilkari.domain.*;
@@ -20,10 +21,7 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -71,9 +69,9 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         Language ta = languageDataService.create(new Language("tamil", "10"));
 
         SubscriptionPack pack1 = subscriptionPackDataService.create(new SubscriptionPack("pack1",
-                SubscriptionPackType.CHILD));
+                SubscriptionPackType.CHILD, 1, null));
         SubscriptionPack pack2 = subscriptionPackDataService.create(new SubscriptionPack("pack2",
-                SubscriptionPackType.PREGNANCY));
+                SubscriptionPackType.PREGNANCY, 2, null));
         Subscriber subscriber = subscriberDataService.create(new Subscriber(1000000000L));
 
         subscriptionService.createSubscription(subscriber.getCallingNumber(), ta.getCode(), pack1.getName(),
@@ -160,4 +158,33 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 //
 //        assertEquals(1111111111L, (long)inboxCallDetailsFromDatabase.getCallingNumber());
     }
+
+    // TODO: change this to a unit test if it doesn't end up needing any DB support
+    @Test
+    public void testSubscriptionPackNextMessageCalculation() throws Exception {
+        SubscriptionPack fortyEightWeekPack = createSubscriptionPack("childPack", SubscriptionPackType.CHILD, 48, 1);
+
+        assertEquals(48, fortyEightWeekPack.getWeeklyMessages().size());
+
+        SubscriptionPack seventyTwoWeekPack = createSubscriptionPack("pregnancyPack", SubscriptionPackType.PREGNANCY,
+                72, 2);
+
+        assertEquals(144, seventyTwoWeekPack.getWeeklyMessages().size());
+    }
+
+    private SubscriptionPack createSubscriptionPack(String name, SubscriptionPackType type, int weeks,
+                                                    int messagesPerWeek) {
+        List<SubscriptionPackMessage> messages = new ArrayList<>();
+        for (int week = 1; week <= weeks; week++) {
+            messages.add(new SubscriptionPackMessage(week, String.format("week%s-1.wav", week)));
+
+            if (messagesPerWeek == 2) {
+                messages.add(new SubscriptionPackMessage(week, String.format("week%s-2.wav", week)));
+            }
+        }
+
+        return new SubscriptionPack(name, type, messagesPerWeek, messages);
+    }
+
+
 }
