@@ -12,29 +12,26 @@ import javax.validation.constraints.Size;
 @Entity(tableName = "nms_health_sub_facilities", recordHistory = true)
 public class HealthSubFacility extends MdsEntity {
 
-    // checkstyle made me do it
-    public static final String FALSE_STRING = "false";
-
     @Field
-    @Column(allowsNull = FALSE_STRING, length = 100)
+    @Column(allowsNull = "false", length = 100)
     @NotNull
     @Size(min = 1, max = 100)
     private String name;
 
     @Field
-    @Column(allowsNull = FALSE_STRING, length = 100)
+    @Column(allowsNull = "false", length = 100)
     @NotNull
     @Size(min = 1, max = 100)
     private String regionalName;
 
     @Field
     @Unique
-    @Column(allowsNull = FALSE_STRING)
+    @Column(allowsNull = "false")
     @NotNull
     private Long code;
 
     @Field
-    @Column(allowsNull = FALSE_STRING)
+    @Column(allowsNull = "false")
     @NotNull
     private HealthFacility healthFacility;
 

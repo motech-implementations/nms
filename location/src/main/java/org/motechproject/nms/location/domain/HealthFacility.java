@@ -17,34 +17,31 @@ import java.util.List;
 @Entity(maxFetchDepth = -1, tableName = "nms_health_facilities", recordHistory = true)
 public class HealthFacility extends MdsEntity {
 
-    // I Hate checkstype
-    public static final String FALSE_STRING = "false";
-
     @Field
-    @Column(allowsNull = FALSE_STRING, length = 50)
+    @Column(allowsNull = "false", length = 50)
     @NotNull
     @Size(min = 1, max = 50)
     private String name;
 
     @Field
-    @Column(allowsNull = FALSE_STRING, length = 50)
+    @Column(allowsNull = "false", length = 50)
     @NotNull
     @Size(min = 1, max = 50)
     private String regionalName;
 
     @Field
     @Unique
-    @Column(allowsNull = FALSE_STRING)
+    @Column(allowsNull = "false")
     @NotNull
     private Long code;
 
     @Field
-    @Column(allowsNull = FALSE_STRING)
+    @Column(allowsNull = "false")
     @NotNull
     private HealthFacilityType healthFacilityType;
 
     @Field
-    @Column(allowsNull = FALSE_STRING)
+    @Column(allowsNull = "false")
     @NotNull
     private HealthBlock healthBlock;
 

@@ -19,35 +19,32 @@ import java.util.List;
 @Entity(tableName = "nms_health_blocks", recordHistory = true)
 public class HealthBlock extends MdsEntity {
 
-    // checkstyle made me do it
-    public static final String FALSE_STRING = "false";
-
     @Field
-    @Column(allowsNull = FALSE_STRING, length = 35)
+    @Column(allowsNull = "false", length = 35)
     @NotNull
     @Size(min = 1, max = 35)
     private String name;
 
     @Field
-    @Column(allowsNull = FALSE_STRING, length = 50)
+    @Column(allowsNull = "false", length = 50)
     @NotNull
     @Size(min = 1, max = 50)
     private String regionalName;
 
     @Field
-    @Column(allowsNull = FALSE_STRING, length = 50)
+    @Column(allowsNull = "false", length = 50)
     @NotNull
     @Size(min = 1, max = 50)
     private String hq;
 
     @Field
     @Unique
-    @Column(allowsNull = FALSE_STRING)
+    @Column(allowsNull = "false")
     @NotNull
     private Long code;
 
     @Field
-    @Column(allowsNull = FALSE_STRING)
+    @Column(allowsNull = "false")
     @NotNull
     private Taluka taluka;
 

@@ -15,23 +15,20 @@ import java.util.List;
 @Entity(tableName = "nms_talukas", recordHistory = true)
 public class Taluka extends MdsEntity {
 
-    // checkstyle made me do it
-    public static final String FALSE_STRING = "false";
-
     @Field
-    @Column(allowsNull = FALSE_STRING, length = 100)
+    @Column(allowsNull = "false", length = 100)
     @NotNull
     @Size(min = 1, max = 100)
     private String name;
 
     @Field
-    @Column(allowsNull = FALSE_STRING, length = 100)
+    @Column(allowsNull = "false", length = 100)
     @NotNull
     @Size(min = 1, max = 100)
     private String regionalName;
 
     @Field
-    @Column(allowsNull = FALSE_STRING, length = 7)
+    @Column(allowsNull = "false", length = 7)
     @NotNull
     @Size(min = 1, max = 7)
     // File from MoH shows a 50 char string in taluka file, but a 7 char string in village.
@@ -40,12 +37,12 @@ public class Taluka extends MdsEntity {
     private String code;
 
     @Field
-    @Column(allowsNull = FALSE_STRING)
+    @Column(allowsNull = "false")
     @NotNull
     private Integer identity;
 
     @Field
-    @Column(allowsNull = FALSE_STRING)
+    @Column(allowsNull = "false")
     @NotNull
     private District district;
 
