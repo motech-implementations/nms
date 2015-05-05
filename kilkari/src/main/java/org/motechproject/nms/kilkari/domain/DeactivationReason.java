@@ -8,5 +8,6 @@ public enum DeactivationReason {
     MISCARRIAGE_OR_ABORTION,
     STILL_BIRTH,
     CHILD_DEATH,
-    MATERNAL_DEATH;
+    MATERNAL_DEATH,
+    DO_NOT_DISTURB;
 }
