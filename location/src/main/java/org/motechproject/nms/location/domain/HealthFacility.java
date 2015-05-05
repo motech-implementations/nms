@@ -9,6 +9,7 @@ import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.Unique;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,27 +17,31 @@ import java.util.List;
 @Entity(maxFetchDepth = -1, tableName = "nms_health_facilities", recordHistory = true)
 public class HealthFacility extends MdsEntity {
 
-    // I Hate checkstype
-    public static final String FALSE_STRING = "false";
-
     @Field
-    @Column(allowsNull = FALSE_STRING)
+    @Column(allowsNull = "false", length = 50)
     @NotNull
+    @Size(min = 1, max = 50)
     private String name;
 
     @Field
+    @Column(allowsNull = "false", length = 50)
+    @NotNull
+    @Size(min = 1, max = 50)
+    private String regionalName;
+
+    @Field
     @Unique
-    @Column(allowsNull = FALSE_STRING)
+    @Column(allowsNull = "false")
     @NotNull
     private Long code;
 
     @Field
-    @Column(allowsNull = FALSE_STRING)
+    @Column(allowsNull = "false")
     @NotNull
     private HealthFacilityType healthFacilityType;
 
     @Field
-    @Column(allowsNull = FALSE_STRING)
+    @Column(allowsNull = "false")
     @NotNull
     private HealthBlock healthBlock;
 
@@ -55,6 +60,14 @@ public class HealthFacility extends MdsEntity {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getRegionalName() {
+        return regionalName;
+    }
+
+    public void setRegionalName(String regionalName) {
+        this.regionalName = regionalName;
     }
 
     public Long getCode() {

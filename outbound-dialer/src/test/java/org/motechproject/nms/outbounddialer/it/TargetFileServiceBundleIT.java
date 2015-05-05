@@ -84,8 +84,8 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         SubscriptionPack pack2 = subscriptionPackDataService.create(new SubscriptionPack("two",
                 SubscriptionPackType.PREGNANCY, 2, null));
 
-        Subscriber subscriber1 = subscriberDataService.create(new Subscriber(1111111111L, hindi));
-        Subscriber subscriber2 = subscriberDataService.create(new Subscriber(2222222222L, urdu));
+        Subscriber subscriber1 = subscriberDataService.create(new Subscriber(1111111111L, hindi, "AA"));
+        Subscriber subscriber2 = subscriberDataService.create(new Subscriber(2222222222L, urdu, "BB"));
 
         Subscription s = new Subscription(subscriber1, pack1, SubscriptionMode.IVR);
         s.setStatus(SubscriptionStatus.ACTIVE);
@@ -104,9 +104,9 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         Subscription subscription22 = subscriptionDataService.create(s);
 
         CallRetry callRetry1 = callRetryDataService.create(new CallRetry("123", 3333333333L, DayOfTheWeek.today(),
-                CallStage.RETRY_1, "HI"));
+                CallStage.RETRY_1, "HI", "AA", "I"));
         CallRetry callRetry2 = callRetryDataService.create(new CallRetry("546", 4444444444L, DayOfTheWeek.today(),
-                CallStage.RETRY_1, "HI"));
+                CallStage.RETRY_1, "HI", "BB", "M"));
     }
 
 

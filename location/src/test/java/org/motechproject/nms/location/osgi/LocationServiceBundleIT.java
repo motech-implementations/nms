@@ -28,6 +28,7 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
+import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 import java.util.List;
 import java.util.Set;
@@ -95,6 +96,7 @@ public class LocationServiceBundleIT extends BasePaxIT {
 
         healthSubFacility = new HealthSubFacility();
         healthSubFacility.setName("Health Sub Facility 1");
+        healthSubFacility.setRegionalName("Health Sub Facility 1");
         healthSubFacility.setCode(1L);
 
         healthFacilityType = new HealthFacilityType();
@@ -103,33 +105,40 @@ public class LocationServiceBundleIT extends BasePaxIT {
 
         healthFacility = new HealthFacility();
         healthFacility.setName("Health Facility 1");
+        healthFacility.setRegionalName("Health Facility 1");
         healthFacility.setCode(1L);
         healthFacility.setHealthFacilityType(healthFacilityType);
         healthFacility.getHealthSubFacilities().add(healthSubFacility);
 
         healthBlock = new HealthBlock();
         healthBlock.setName("Health Block 1");
+        healthBlock.setRegionalName("Health Block 1");
+        healthBlock.setHq("Health Block 1 HQ");
         healthBlock.setCode(1L);
         healthBlock.getHealthFacilities().add(healthFacility);
 
         village = new Village();
         village.setName("Village 1");
-        village.setCode(1L);
+        village.setRegionalName("Village 1");
+        village.setVcode(1L);
 
         taluka = new Taluka();
         taluka.setName("Taluka 1");
-        taluka.setCode(1L);
+        taluka.setRegionalName("Taluka 1");
+        taluka.setIdentity(1);
+        taluka.setCode("0004");
         taluka.getVillages().add(village);
         taluka.getHealthBlocks().add(healthBlock);
 
         district = new District();
-        district.setCode(1L);
         district.setName("District 1");
+        district.setRegionalName("District 1");
+        district.setCode(1L);
         district.getTalukas().add(taluka);
 
         state = new State();
-        state.setCode(1L);
         state.setName("State 1");
+        state.setCode(1L);
         state.getDistricts().add(district);
     }
 
@@ -162,7 +171,20 @@ public class LocationServiceBundleIT extends BasePaxIT {
         initAll();
         village.setName(null);
 
-        villageDataService.create(village);
+        // Village is the leaf, I have to create something connected to the object graph so I save the
+        // taluka (it's parent) instead
+        talukaDataService.create(taluka);
+    }
+
+    @Test(expected = ConstraintViolationException.class)
+    public void testCreateVillageNoCode() throws Exception {
+        initAll();
+        village.setVcode(null);
+        village.setSvid(null);
+
+        // Village is the leaf, I have to create something connected to the object graph so I save the
+        // taluka (it's parent) instead
+        talukaDataService.create(taluka);
     }
 
     @Test(expected = ConstraintViolationException.class)

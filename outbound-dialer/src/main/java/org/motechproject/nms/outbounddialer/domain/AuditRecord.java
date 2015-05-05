@@ -8,35 +8,62 @@ import javax.jdo.annotations.Column;
 
 @Entity(tableName = "nms_obd_audit_records")
 public class AuditRecord {
+    /**
+     * The identifier field is used in each targetFile csv row combined with the subscription id to form the
+     * RequestId field uniquely identifying each row of the targetFile
+     */
     @Field
     @UIDisplayable(position = 0)
-    private FileType type;
+    private String identifier;
+
 
     @Field
     @UIDisplayable(position = 1)
+    private FileType type;
+
+    @Field
+    @UIDisplayable(position = 2)
     private String file;
 
     @Field
     @UIDisplayable(position = 3)
-    private Integer recordCount;
-
-    @Field
-    @UIDisplayable(position = 4)
-    private String checksum;
-
-    @Field
-    @UIDisplayable(position = 2)
     @Column(allowsNull = "false")
     private String status;
 
+    @Field
+    @UIDisplayable(position = 4)
+    private Integer recordCount;
+
+    @Field
+    @UIDisplayable(position = 5)
+    private String checksum;
+
     public AuditRecord() { }
 
-    public AuditRecord(FileType type, String file, Integer recordCount, String checksum, String status) {
+    public AuditRecord(String identifier, FileType type, String file, String status, Integer recordCount,
+                       String checksum) {
+        this.identifier = identifier;
         this.type = type;
         this.file = file;
+        this.status = status;
         this.recordCount = recordCount;
         this.checksum = checksum;
-        this.status = status;
+    }
+
+    public String getIdentifier() {
+        return identifier;
+    }
+
+    public void setIdentifier(String identifier) {
+        this.identifier = identifier;
+    }
+
+    public FileType getType() {
+        return type;
+    }
+
+    public void setType(FileType type) {
+        this.type = type;
     }
 
     public String getFile() {
@@ -45,6 +72,14 @@ public class AuditRecord {
 
     public void setFile(String file) {
         this.file = file;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     public Integer getRecordCount() {
@@ -63,22 +98,15 @@ public class AuditRecord {
         this.checksum = checksum;
     }
 
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
     @Override
     public String toString() {
         return "AuditRecord{" +
-                "type=" + type +
+                "identifier='" + identifier + '\'' +
+                ", type=" + type +
                 ", file='" + file + '\'' +
+                ", status='" + status + '\'' +
                 ", recordCount=" + recordCount +
                 ", checksum='" + checksum + '\'' +
-                ", status='" + status + '\'' +
                 '}';
     }
 }
