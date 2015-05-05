@@ -25,7 +25,7 @@
                     interface="org.motechproject.nms.kilkari.repository.SubscriberDataService" />
 
     <osgi:reference id="languageDataService"
-                    interface="org.motechproject.nms.language.repository.LanguageDataService" />
+                    interface="org.motechproject.nms.region.language.repository.LanguageDataService" />
 
     <osgi:reference id="callRetryDataService"
                     interface="org.motechproject.nms.outbounddialer.repository.CallRetryDataService" />
