@@ -169,9 +169,9 @@ public class TargetFileServiceImpl implements TargetFileService {
     }
 
 
-    private void writeSubscriptionRow(String requestId, String serviceId, String msisdn, String priority,
-                                      String callFlowUrl, String contentFileName, int weekId,
-                                      String languageLocationCode, String circle, String subscriptionMode,
+    private void writeSubscriptionRow(String requestId, String serviceId, // NO CHECKSTYLE More than 7 parameters
+                                      String msisdn, String priority,  String callFlowUrl, String contentFileName,
+                                      int weekId, String languageLocationCode, String circle, String subscriptionMode,
                                       OutputStreamWriter writer) throws IOException {
         /*
          * #1 RequestId

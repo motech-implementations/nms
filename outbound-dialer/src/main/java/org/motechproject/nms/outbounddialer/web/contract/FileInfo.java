@@ -1,14 +1,14 @@
 package org.motechproject.nms.outbounddialer.web.contract;
 
-public class CdrFileNotificationRequestFileInfo {
+public class FileInfo {
     private String cdrFile;
     private String checksum;
     private int recordsCount;
 
-    public CdrFileNotificationRequestFileInfo() {
+    public FileInfo() {
     }
 
-    public CdrFileNotificationRequestFileInfo(String cdrFile, String checksum, int recordsCount) {
+    public FileInfo(String cdrFile, String checksum, int recordsCount) {
         this.cdrFile = cdrFile;
         this.checksum = checksum;
         this.recordsCount = recordsCount;
@@ -26,4 +26,12 @@ public class CdrFileNotificationRequestFileInfo {
 
     public void setRecordsCount(int recordsCount) { this.recordsCount = recordsCount; }
 
+    @Override
+    public String toString() {
+        return "FileInfo{" +
+                "cdrFile='" + cdrFile + '\'' +
+                ", checksum='" + checksum + '\'' +
+                ", recordsCount=" + recordsCount +
+                '}';
+    }
 }

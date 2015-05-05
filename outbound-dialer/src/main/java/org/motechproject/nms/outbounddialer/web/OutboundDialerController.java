@@ -7,7 +7,7 @@ import org.motechproject.nms.outbounddialer.service.CdrFileService;
 import org.motechproject.nms.outbounddialer.service.TargetFileService;
 import org.motechproject.nms.outbounddialer.web.contract.BadRequest;
 import org.motechproject.nms.outbounddialer.web.contract.CdrFileNotificationRequest;
-import org.motechproject.nms.outbounddialer.web.contract.CdrFileNotificationRequestFileInfo;
+import org.motechproject.nms.outbounddialer.web.contract.FileInfo;
 import org.motechproject.nms.outbounddialer.web.contract.FileProcessedStatusRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -71,7 +71,7 @@ public class OutboundDialerController {
     }
 
 
-    private static boolean validateCdrFileInfo(StringBuilder errors, CdrFileNotificationRequestFileInfo fileInfo,
+    private static boolean validateCdrFileInfo(StringBuilder errors, FileInfo fileInfo,
         String fieldName, String targetFileName) {
 
         boolean valid = true;

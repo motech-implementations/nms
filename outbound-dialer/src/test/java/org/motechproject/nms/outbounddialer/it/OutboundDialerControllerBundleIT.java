@@ -13,7 +13,7 @@ import org.motechproject.alerts.domain.AlertType;
 import org.motechproject.nms.outbounddialer.domain.FileProcessedStatus;
 import org.motechproject.nms.outbounddialer.web.contract.BadRequest;
 import org.motechproject.nms.outbounddialer.web.contract.CdrFileNotificationRequest;
-import org.motechproject.nms.outbounddialer.web.contract.CdrFileNotificationRequestFileInfo;
+import org.motechproject.nms.outbounddialer.web.contract.FileInfo;
 import org.motechproject.nms.outbounddialer.web.contract.FileProcessedStatusRequest;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
@@ -59,10 +59,10 @@ public class OutboundDialerControllerBundleIT extends BasePaxIT {
         String summaryFile = useValidSummaryFile ? VALID_CDR_SUMMARY_FILE_NAME : INVALID_CDR_SUMMARY_FILE_NAME;
         String detailFile = useValidDetailFile ? VALID_CDR_DETAIL_FILE_NAME : INVALID_CDR_DETAIL_FILE_NAME;
 
-        CdrFileNotificationRequestFileInfo cdrSummary =
-            new CdrFileNotificationRequestFileInfo(summaryFile, "xxxx", 5000);
-        CdrFileNotificationRequestFileInfo cdrDetail =
-            new CdrFileNotificationRequestFileInfo(detailFile, "xxxx", 9900);
+        FileInfo cdrSummary =
+            new FileInfo(summaryFile, "xxxx", 5000);
+        FileInfo cdrDetail =
+            new FileInfo(detailFile, "xxxx", 9900);
         CdrFileNotificationRequest cdrFileNotificationRequest =
             new CdrFileNotificationRequest(targetFile, cdrSummary, cdrDetail);
 

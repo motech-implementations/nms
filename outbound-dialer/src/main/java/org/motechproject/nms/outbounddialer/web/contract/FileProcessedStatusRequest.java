@@ -3,7 +3,11 @@ package org.motechproject.nms.outbounddialer.web.contract;
 import org.motechproject.nms.outbounddialer.domain.FileProcessedStatus;
 
 /**
- * POST request data for 4.2.7: http://<motech:port>/motech­platform­server/module/obd/obdFileProcessedStatusNotification
+ * POST request data for 4.2.7
+ * /outbound-dialer/obdFileProcessedStatusNotification
+ *
+ * IVR shall invoke the notification API of MOTECH to give update about the status of file copy after the initial
+ * checks on the file are completed.
  */
 public class FileProcessedStatusRequest {
     private FileProcessedStatus fileProcessedStatus;
