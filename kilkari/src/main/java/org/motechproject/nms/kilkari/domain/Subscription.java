@@ -81,9 +81,9 @@ public class Subscription {
 
     /**
      * Returns the weekId corresponding to today's date.
-     * @return
      */
-    @Ignore int todaysWeekId() {
+    @Ignore
+    int todaysWeekId() {
         //todo: the work
         return 0;
     }

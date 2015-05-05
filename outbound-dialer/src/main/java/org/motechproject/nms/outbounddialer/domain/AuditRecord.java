@@ -9,8 +9,8 @@ import javax.jdo.annotations.Column;
 @Entity(tableName = "nms_obd_audit_records")
 public class AuditRecord {
     /**
-     * The identifier field is used in each targetFile csv row combined with the subscription id to form a uniquely
-     * identifying id for a specific OBD record
+     * The identifier field is used in each targetFile csv row combined with the subscription id to form the
+     * RequestId field uniquely identifying each row of the targetFile
      */
     @Field
     @UIDisplayable(position = 0)
