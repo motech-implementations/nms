@@ -44,23 +44,16 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         this.subscriptionDataService = subscriptionDataService;
         this.inboxCallDetailsDataService = inboxCallDetailsDataService;
 
-        createSubscriptionPacksInternal();
+        createSubscriptionPacks();
     }
 
 
     /*
      * Create the subscription packs for Kilkari -- a 48-week child pack and a 72-week pregnancy pack. This service
      * method is effectively internal, but made publicly-accessible so that it can be tested in our ITs.
-     *
-     * The guts are factored out into an internal method to make PMD happy.
      */
     @Override
-    public void createSubscriptionPacks() {
-        createSubscriptionPacksInternal();
-    }
-
-
-    private void createSubscriptionPacksInternal() {
+    public final void createSubscriptionPacks() {
         // TODO: make this less hard-coded and hacky once we get spec clarification re: how to populate the pack data
         if (subscriptionPackDataService.byName("childPack") == null) {
             createSubscriptionPack("childPack", SubscriptionPackType.CHILD, 48, 1);
