@@ -12,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 
 /**
  * Implementation of the {@link CdrFileService} interface.
@@ -42,7 +44,9 @@ public class CdrFileServiceImpl implements CdrFileService {
         //todo:...
 
         //todo: add recordCount, think about checksum
-        fileAuditDataService.create(new AuditRecord(FileType.CDR_FILE, request.getFileName(), null, null, "Success"));
+        String fileIdentifier = UUID.randomUUID().toString();
+        fileAuditDataService.create(new AuditRecord(fileIdentifier, FileType.CDR_FILE, request.getFileName(), null,
+                null, "Success"));
 
     }
 }
