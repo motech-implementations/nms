@@ -3,6 +3,8 @@ package org.motechproject.nms.kilkari.domain;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 
+import java.util.List;
+
 /**
  * Models the kinds of message campaign (i.e. pack) a subscriber can subscribe to, for example antenatal or
  * postnatal
@@ -16,12 +18,18 @@ public class SubscriptionPack {
     @Field
     private SubscriptionPackType type;
 
-    public SubscriptionPack() {
-    }
+    @Field
+    private int messagesPerWeek;
 
-    public SubscriptionPack(String name, SubscriptionPackType type) {
+    @Field
+    private List<SubscriptionPackMessage> weeklyMessages;
+
+    public SubscriptionPack(String name, SubscriptionPackType type, int messagesPerWeek,
+                            List<SubscriptionPackMessage> weeklyMessages) {
         this.name = name;
         this.type = type;
+        this.messagesPerWeek = messagesPerWeek;
+        this.weeklyMessages = weeklyMessages;
     }
 
     public String getName() {
@@ -40,6 +48,27 @@ public class SubscriptionPack {
         this.type = type;
     }
 
+    public int getMessagesPerWeek() {
+        return messagesPerWeek;
+    }
+
+    public void setMessagesPerWeek(int messagesPerWeek) {
+        if (messagesPerWeek < 1 || messagesPerWeek > 2) {
+            throw new IllegalArgumentException(
+                    "Subscription packs may not have fewer than one or more than two messages per week.");
+        }
+        this.messagesPerWeek = messagesPerWeek;
+    }
+
+    public List<SubscriptionPackMessage> getWeeklyMessages() {
+        return weeklyMessages;
+    }
+
+    public void setWeeklyMessages(List<SubscriptionPackMessage> weeklyMessages) {
+        this.weeklyMessages = weeklyMessages;
+    }
+
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -57,13 +86,10 @@ public class SubscriptionPack {
 
     @Override
     public int hashCode() {
-        return name.hashCode();
-    }
-
-    @Override
-    public String toString() {
-        return "SubscriptionPack{" +
-                "name='" + name + '\'' +
-                '}';
+        int result = name.hashCode();
+        result = 31 * result + type.hashCode();
+        result = 31 * result + messagesPerWeek;
+        result = 31 * result + weeklyMessages.hashCode();
+        return result;
     }
 }

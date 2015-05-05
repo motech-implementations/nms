@@ -1,6 +1,7 @@
 package org.motechproject.nms.kilkari.osgi;
 
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.kilkari.domain.InboxCallData;
@@ -9,12 +10,14 @@ import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionMode;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
+import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.repository.InboxCallDataDataService;
 import org.motechproject.nms.kilkari.repository.InboxCallDetailsDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
+import org.motechproject.nms.kilkari.repository.SubscriptionPackMessageDataService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.region.language.domain.Language;
@@ -27,10 +30,7 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -53,6 +53,8 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     @Inject
     private SubscriptionPackDataService subscriptionPackDataService;
     @Inject
+    private SubscriptionPackMessageDataService subscriptionPackMessageDataService;
+    @Inject
     private SubscriptionDataService subscriptionDataService;
     @Inject
     private LanguageDataService languageDataService;
@@ -65,13 +67,14 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         languageDataService.create(new Language("tamil", "10"));
         languageDataService.create(new Language("english", "99"));
 
-        subscriptionPackDataService.create(new SubscriptionPack("pack1", SubscriptionPackType.CHILD));
-        subscriptionPackDataService.create(new SubscriptionPack("pack2", SubscriptionPackType.PREGNANCY));
+        subscriptionPackDataService.create(new SubscriptionPack("pack1", SubscriptionPackType.CHILD, 1, null));
+        subscriptionPackDataService.create(new SubscriptionPack("pack2", SubscriptionPackType.PREGNANCY, 2, null));
     }
 
     private void cleanupData() {
         subscriptionDataService.deleteAll();
         subscriptionPackDataService.deleteAll();
+        subscriptionPackMessageDataService.deleteAll();
         subscriberDataService.deleteAll();
         languageDataService.deleteAll();
         inboxCallDataDataService.deleteAll();
@@ -180,6 +183,19 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     }
 
     @Test
+    public void testSubscriptionPackCreation() throws Exception {
+        cleanupData();
+        subscriptionService.createSubscriptionPacks();
+
+        SubscriptionPack fortyEightWeekPack = subscriptionPackDataService.byName("childPack");
+        assertEquals(48, fortyEightWeekPack.getWeeklyMessages().size());
+
+        SubscriptionPack seventyTwoWeekPack = subscriptionPackDataService.byName("pregnancyPack");
+        assertEquals(144, seventyTwoWeekPack.getWeeklyMessages().size());
+    }
+
+
+    @Test
     public void testCreateSubscriptionNoSubscriber() throws Exception {
         cleanupData();
         createLanguageAndSubscriptionPacks();
@@ -232,4 +248,5 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         Subscription subscription = subscriber.getSubscriptions().iterator().next();
         assertEquals(pack1, subscription.getSubscriptionPack());
     }
+
 }

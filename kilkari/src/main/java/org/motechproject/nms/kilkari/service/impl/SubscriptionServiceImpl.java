@@ -8,6 +8,7 @@ import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionMode;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
+import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.repository.InboxCallDetailsDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
@@ -18,7 +19,9 @@ import org.motechproject.nms.region.language.domain.Language;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * Implementation of the {@link SubscriptionService} interface.
@@ -40,7 +43,41 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         this.subscriptionPackDataService = subscriptionPackDataService;
         this.subscriptionDataService = subscriptionDataService;
         this.inboxCallDetailsDataService = inboxCallDetailsDataService;
+
+        createSubscriptionPacks();
     }
+
+
+    /*
+     * Create the subscription packs for Kilkari -- a 48-week child pack and a 72-week pregnancy pack. This service
+     * method is effectively internal, but made publicly-accessible so that it can be tested in our ITs.
+     */
+    @Override
+    public final void createSubscriptionPacks() {
+        // TODO: make this less hard-coded and hacky once we get spec clarification re: how to populate the pack data
+        if (subscriptionPackDataService.byName("childPack") == null) {
+            createSubscriptionPack("childPack", SubscriptionPackType.CHILD, 48, 1);
+        }
+        if (subscriptionPackDataService.byName("pregnancyPack") == null) {
+            createSubscriptionPack("pregnancyPack", SubscriptionPackType.PREGNANCY, 72, 2);
+        }
+    }
+
+
+    private void createSubscriptionPack(String name, SubscriptionPackType type, int weeks,
+                                                    int messagesPerWeek) {
+        List<SubscriptionPackMessage> messages = new ArrayList<>();
+        for (int week = 1; week <= weeks; week++) {
+            messages.add(new SubscriptionPackMessage(week, String.format("week%s-1.wav", week)));
+
+            if (messagesPerWeek == 2) {
+                messages.add(new SubscriptionPackMessage(week, String.format("week%s-2.wav", week)));
+            }
+        }
+
+        subscriptionPackDataService.create(new SubscriptionPack(name, type, messagesPerWeek, messages));
+    }
+
 
     @Override
     public void createSubscription(long callingNumber, Language language, SubscriptionPack subscriptionPack,
