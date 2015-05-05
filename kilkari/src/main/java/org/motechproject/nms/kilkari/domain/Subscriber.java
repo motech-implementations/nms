@@ -20,9 +20,6 @@ import java.util.Set;
 // TODO: Remove maxFetchDepth once https://applab.atlassian.net/browse/MOTECH-1678 is resolved
 @Entity(maxFetchDepth = -1, tableName = "nms_subscribers")
 public class Subscriber {
-
-    public static final int FIELD_SIZE_10 = 10;
-
     @Field
     @Unique
     @Column(allowsNull = "false")
@@ -37,6 +34,9 @@ public class Subscriber {
     @Field
     private Language language;
 
+    @Field
+    private String circle;
+
     //TODO: making this a bi-directional relationship until MOTECH-1638 is fixed. See #31.
     @Field
     @Persistent(mappedBy = "subscriber", defaultFetchGroup = "true")
@@ -48,9 +48,13 @@ public class Subscriber {
     }
 
     public Subscriber(Long callingNumber, Language language) {
-        this.callingNumber = callingNumber;
+        this(callingNumber);
         this.language = language;
-        this.subscriptions = new HashSet<>();
+    }
+
+    public Subscriber(Long callingNumber, Language language, String circle) {
+        this(callingNumber, language);
+        this.circle = circle;
     }
 
     public Long getCallingNumber() {
@@ -91,6 +95,14 @@ public class Subscriber {
 
     public void setSubscriptions(Set<Subscription> subscriptions) {
         this.subscriptions = subscriptions;
+    }
+
+    public String getCircle() {
+        return circle;
+    }
+
+    public void setCircle(String circle) {
+        this.circle = circle;
     }
 
     @Ignore
@@ -135,6 +147,8 @@ public class Subscriber {
                 "callingNumber=" + callingNumber +
                 ", dateOfBirth=" + dateOfBirth +
                 ", lastMenstrualPeriod=" + lastMenstrualPeriod +
+                ", circle='" + circle +
+                ", subscriptions=" + subscriptions +
                 '}';
     }
 }
