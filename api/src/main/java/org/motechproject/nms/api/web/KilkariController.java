@@ -13,6 +13,8 @@ import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionMode;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
+import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
+import org.motechproject.nms.kilkari.service.InboxService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.language.domain.Language;
@@ -53,6 +55,9 @@ public class KilkariController extends BaseController {
     @Autowired
     private LanguageService languageService;
 
+    @Autowired
+    private InboxService inboxService;
+
     /**
      * 4.2.2 Get Inbox Details API
      * IVR shall invoke this API to get the Inbox details of the beneficiary identified by ‘callingNumber’.
@@ -76,12 +81,18 @@ public class KilkariController extends BaseController {
 
         Set<Subscription> subscriptions = subscriber.getActiveSubscriptions();
         Set<InboxSubscriptionDetailResponse> subscriptionDetails = new HashSet<>();
+        SubscriptionPackMessage inboxMessage;
+
         for (Subscription subscription : subscriptions) {
-            //todo: something tells me this is not complete/real code
-            subscriptionDetails.add(new InboxSubscriptionDetailResponse(subscription.getSubscriptionId(),
-                    subscription.getSubscriptionPack().getName(),
-                    "10_1",
-                    "xyz.wav"));
+
+            inboxMessage = inboxService.getInboxMessage(subscription);
+
+            if (inboxMessage != null) {
+                subscriptionDetails.add(new InboxSubscriptionDetailResponse(subscription.getSubscriptionId(),
+                        subscription.getSubscriptionPack().getName(),
+                        inboxMessage.getWeekId(),
+                        inboxMessage.getMessageFileName()));
+            }
         }
 
         return new InboxResponse(subscriptionDetails);
@@ -179,7 +190,7 @@ public class KilkariController extends BaseController {
                 request.getCallDisconnectReason(),
                 content);
 
-        subscriptionService.addInboxCallDetails(inboxCallDetails);
+        inboxService.addInboxCallDetails(inboxCallDetails);
     }
 
     /**
@@ -216,7 +227,7 @@ public class KilkariController extends BaseController {
         }
 
         subscriptionService.createSubscription(subscriptionRequest.getCallingNumber(), language,
-                                               subscriptionPack, SubscriptionMode.IVR);
+                subscriptionPack, SubscriptionMode.IVR);
     }
 
     /**
