@@ -20,16 +20,22 @@ public class CallRetry {
     @Field
     private String languageLocationCode;
 
-    //todo: more data...
+    @Field
+    private String circle;
+
+    @Field
+    private String subscriptionModeCode;
 
     public CallRetry() { }
 
-    public CallRetry(String subscriptionId, Long msisdn, DayOfTheWeek dayOfTheWeek, CallStage callStage, String languageLocationCode) {
+    public CallRetry(String subscriptionId, Long msisdn, DayOfTheWeek dayOfTheWeek, CallStage callStage, String languageLocationCode, String circle, String subscriptionModeCode) {
         this.subscriptionId = subscriptionId;
         this.msisdn = msisdn;
         this.dayOfTheWeek = dayOfTheWeek;
         this.callStage = callStage;
         this.languageLocationCode = languageLocationCode;
+        this.circle = circle;
+        this.subscriptionModeCode = subscriptionModeCode;
     }
 
     public String getSubscriptionId() {
@@ -70,5 +76,34 @@ public class CallRetry {
 
     public void setLanguageLocationCode(String languageLocationCode) {
         this.languageLocationCode = languageLocationCode;
+    }
+
+    public String getCircle() {
+        return circle;
+    }
+
+    public void setCircle(String circle) {
+        this.circle = circle;
+    }
+
+    public String getSubscriptionModeCode() {
+        return subscriptionModeCode;
+    }
+
+    public void setSubscriptionModeCode(String subscriptionModeCode) {
+        this.subscriptionModeCode = subscriptionModeCode;
+    }
+
+    @Override
+    public String toString() {
+        return "CallRetry{" +
+                "subscriptionId='" + subscriptionId + '\'' +
+                ", msisdn=" + msisdn +
+                ", dayOfTheWeek=" + dayOfTheWeek +
+                ", callStage=" + callStage +
+                ", languageLocationCode='" + languageLocationCode + '\'' +
+                ", circle='" + circle + '\'' +
+                ", subscriptionModeCode='" + subscriptionModeCode + '\'' +
+                '}';
     }
 }
