@@ -1,12 +1,19 @@
 package org.motechproject.nms.api.web.contract.mobileAcademy.course;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+
 /**
  * Lesson content
  */
 public class LessonContent {
 
+    @NotNull
+    @Valid
     private LessonContentLesson lesson;
 
+    @NotNull
+    @Valid
     private LessonContentMenu menu;
 
     public LessonContent() {

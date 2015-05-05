@@ -6,17 +6,16 @@ import org.motechproject.nms.api.web.contract.mobileAcademy.course.Lesson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.validation.ConstraintViolation;
+import javax.validation.Validation;
+import javax.validation.Validator;
+import java.util.Set;
+
 
 /**
  * Validator helper class for API request and response
  */
 public final class MobileAcademyValidator {
-
-    private static final int CHAPTER_COUNT = 11;
-
-    private static final int LESSON_COUNT = 4;
-
-    private static final int QUESTION_COUNT = 4;
 
     private static final String CHAPTER_NAME_FORMAT = "Chapter<%d>";
 
@@ -41,26 +40,21 @@ public final class MobileAcademyValidator {
 
     }
 
-    public static boolean validateCourseStructure(CourseResponse courseResponse) {
+    public static String ValidateCourseResponse(CourseResponse courseResponse) {
+        Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
+        Set<ConstraintViolation<CourseResponse>> violations = validator.validate(courseResponse);
+        StringBuilder sb = new StringBuilder();
 
-        if (courseResponse.getChapters().size() != CHAPTER_COUNT) {
-            LOGGER.error("Course does not meet chapter count size");
-            return false;
-        }
-
-        for (Chapter chapter : courseResponse.getChapters()) {
-            if (chapter.getLessons().size() != LESSON_COUNT) {
-                LOGGER.error(chapter.getName() + " does not meet lesson count size");
-                return false;
+        if (violations.size() > 0) {
+            for (ConstraintViolation<CourseResponse> violation : violations) {
+                sb.append(violation.getInvalidValue());
+                sb.append(violation.getMessage());
             }
 
-            if (chapter.getQuiz().getContent().getQuestions().size() != QUESTION_COUNT) {
-                LOGGER.error(chapter.getQuiz().getName() + " does not meet question count size, ");
-                return false;
-            }
+            return sb.toString();
+        } else {
+            return null;
         }
-
-        return true;
     }
 
     public static boolean validateCourseFormat(CourseResponse courseResponse) {

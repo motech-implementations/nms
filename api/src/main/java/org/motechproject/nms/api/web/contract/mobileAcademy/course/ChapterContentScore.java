@@ -1,5 +1,8 @@
 package org.motechproject.nms.api.web.contract.mobileAcademy.course;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.util.List;
 
 /**
@@ -7,8 +10,15 @@ import java.util.List;
  */
 public class ChapterContentScore {
 
+    @NotNull
     private String id;
 
+    /**
+     * This stores the file to play for scores ranging from 0-4
+     */
+    @NotNull
+    @Size(min = 5, max = 5)
+    @Valid
     private List<String> files;
 
     public ChapterContentScore() {

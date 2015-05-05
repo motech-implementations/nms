@@ -1,12 +1,16 @@
 package org.motechproject.nms.api.web.contract.mobileAcademy.course;
 
+import javax.validation.constraints.NotNull;
+
 /**
  * Chapter content menu
  */
 public class ChapterContentMenu {
 
+    @NotNull
     private String id;
 
+    @NotNull
     private String file;
 
     public ChapterContentMenu() {

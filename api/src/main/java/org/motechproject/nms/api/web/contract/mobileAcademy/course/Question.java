@@ -1,14 +1,21 @@
 package org.motechproject.nms.api.web.contract.mobileAcademy.course;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+
 /**
  * Question metadata
  */
 public class Question {
 
+    @NotNull
     private String name;
 
+    @NotNull
     private int correctAnswerOption;
 
+    @NotNull
+    @Valid
     private QuestionContent content;
 
     public Question() {
