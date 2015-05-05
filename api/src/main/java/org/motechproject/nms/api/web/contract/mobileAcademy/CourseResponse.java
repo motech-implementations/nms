@@ -25,11 +25,11 @@ public class CourseResponse {
         this.name = name;
     }
 
-    public Integer getCourseVersion() {
+    public int getCourseVersion() {
         return courseVersion;
     }
 
-    public void setCourseVersion(Integer courseVersion) {
+    public void setCourseVersion(int courseVersion) {
         this.courseVersion = courseVersion;
     }
 

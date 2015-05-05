@@ -11,7 +11,7 @@ public class QuizContent {
 
     private List<Question> questions;
 
-    public QuizContent(){
+    public QuizContent() {
     }
 
     public QuizContentMenu getMenu() {

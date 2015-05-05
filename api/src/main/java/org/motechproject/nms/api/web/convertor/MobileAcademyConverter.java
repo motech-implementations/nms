@@ -1,5 +1,7 @@
 package org.motechproject.nms.api.web.convertor;
 
+import org.modelmapper.ModelMapper;
+import org.modelmapper.convention.MatchingStrategies;
 import org.motechproject.nms.api.web.contract.mobileAcademy.CourseResponse;
 import org.motechproject.nms.mobileacademy.domain.Course;
 
@@ -7,12 +9,12 @@ import org.motechproject.nms.mobileacademy.domain.Course;
  * Translator helper module that converts from the service dto object to
  * API response object
  */
-public final class MobileAcademyConvertor {
+public final class MobileAcademyConverter {
 
     /**
-     * Private constructor for static MA course convertors
+     * Private constructor for static MA course converters
      */
-    private MobileAcademyConvertor() {
+    private MobileAcademyConverter() {
 
     }
 
@@ -23,6 +25,8 @@ public final class MobileAcademyConvertor {
      */
     public static CourseResponse convertCourse(Course course) {
 
-        return new CourseResponse();
+        ModelMapper mapper = new ModelMapper();
+        mapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+        return mapper.map(course, CourseResponse.class);
     }
 }
