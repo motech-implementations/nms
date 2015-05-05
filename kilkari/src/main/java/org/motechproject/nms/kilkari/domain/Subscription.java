@@ -3,6 +3,7 @@ package org.motechproject.nms.kilkari.domain;
 import org.joda.time.LocalDate;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
+import org.motechproject.mds.annotations.Ignore;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Unique;
@@ -10,11 +11,9 @@ import java.util.UUID;
 
 @Entity(tableName = "nms_subscriptions")
 public class Subscription {
-    public static final int FIELD_LENGTH_36 = 36;
-
     @Field
     @Unique
-    @Column(length = FIELD_LENGTH_36)
+    @Column(length = 36)
     private String subscriptionId;
 
     @Field
@@ -78,6 +77,15 @@ public class Subscription {
 
     public void setDeactivationReason(DeactivationReason deactivationReason) {
         this.deactivationReason = deactivationReason;
+    }
+
+    /**
+     * Returns the weekId corresponding to today's date.
+     */
+    @Ignore
+    int todaysWeekId() {
+        //todo: the work
+        return 0;
     }
 
     @Override

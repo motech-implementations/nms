@@ -8,6 +8,7 @@ import org.motechproject.mds.domain.MdsEntity;
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Persistent;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,14 +16,30 @@ import java.util.List;
 public class Taluka extends MdsEntity {
 
     @Field
-    @Column(allowsNull = "false")
+    @Column(allowsNull = "false", length = 100)
     @NotNull
+    @Size(min = 1, max = 100)
     private String name;
+
+    @Field
+    @Column(allowsNull = "false", length = 100)
+    @NotNull
+    @Size(min = 1, max = 100)
+    private String regionalName;
+
+    @Field
+    @Column(allowsNull = "false", length = 7)
+    @NotNull
+    @Size(min = 1, max = 7)
+    // File from MoH shows a 50 char string in taluka file, but a 7 char string in village.
+    // Sample data shows string (i.e. '0005')
+    // Email thread says number.   grrrr
+    private String code;
 
     @Field
     @Column(allowsNull = "false")
     @NotNull
-    private Long code;
+    private Integer identity;
 
     @Field
     @Column(allowsNull = "false")
@@ -52,12 +69,28 @@ public class Taluka extends MdsEntity {
         this.name = name;
     }
 
-    public Long getCode() {
+    public String getRegionalName() {
+        return regionalName;
+    }
+
+    public void setRegionalName(String regionalName) {
+        this.regionalName = regionalName;
+    }
+
+    public String getCode() {
         return code;
     }
 
-    public void setCode(Long code) {
+    public void setCode(String code) {
         this.code = code;
+    }
+
+    public Integer getIdentity() {
+        return identity;
+    }
+
+    public void setIdentity(Integer identity) {
+        this.identity = identity;
     }
 
     public District getDistrict() {

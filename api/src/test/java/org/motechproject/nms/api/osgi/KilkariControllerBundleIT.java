@@ -108,8 +108,9 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     private void createLanguageAndSubscriptionPacks() {
         gLanguage = languageDataService.create(new Language("tamil", "10"));
 
-        gPack1 = subscriptionPackDataService.create(new SubscriptionPack("pack1", SubscriptionPackType.CHILD));
-        gPack2 = subscriptionPackDataService.create(new SubscriptionPack("pack2", SubscriptionPackType.PREGNANCY));
+        gPack1 = subscriptionPackDataService.create(new SubscriptionPack("pack1", SubscriptionPackType.CHILD, 1, null));
+        gPack2 = subscriptionPackDataService.create(new SubscriptionPack("pack2", SubscriptionPackType.PREGNANCY, 1,
+                null));
     }
 
     private void setupData() {
@@ -491,7 +492,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                                 456L), //endTime
                         new CallDataRequest(
                                 "00000000-0000-0000-0000-000000000001", //subscriptionId
-                                "76WeeksPack", //subscriptionPack
+                                "72WeeksPack", //subscriptionPack
                                 "123", //inboxWeekId
                                 "foo", //contentFileName
                                 123L, //startTime

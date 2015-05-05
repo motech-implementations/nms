@@ -141,9 +141,9 @@ public class UserControllerBundleIT extends BasePaxIT {
         circleLanguageDataService.create(circleLanguage);
 
         SubscriptionPack pack1 = subscriptionPackDataService.create(new SubscriptionPack("pack1",
-                SubscriptionPackType.CHILD));
+                SubscriptionPackType.CHILD, 1, null));
         SubscriptionPack pack2 = subscriptionPackDataService.create(new SubscriptionPack("pack2",
-                SubscriptionPackType.PREGNANCY));
+                SubscriptionPackType.PREGNANCY, 2, null));
         List<SubscriptionPack> onePack = Arrays.asList(pack1);
         List<SubscriptionPack> twoPacks = Arrays.asList(pack1, pack2);
 
@@ -254,6 +254,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         District district = new District();
         district.setName("9");
+        district.setRegionalName("9");
         district.setCode(9l);
 
         // Currently the whitelist code has the config for state based whitelisting hardcoded.

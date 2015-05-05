@@ -9,6 +9,7 @@ import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.Unique;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,9 +20,22 @@ import java.util.List;
 public class HealthBlock extends MdsEntity {
 
     @Field
-    @Column(allowsNull = "false")
+    @Column(allowsNull = "false", length = 35)
     @NotNull
+    @Size(min = 1, max = 35)
     private String name;
+
+    @Field
+    @Column(allowsNull = "false", length = 50)
+    @NotNull
+    @Size(min = 1, max = 50)
+    private String regionalName;
+
+    @Field
+    @Column(allowsNull = "false", length = 50)
+    @NotNull
+    @Size(min = 1, max = 50)
+    private String hq;
 
     @Field
     @Unique
@@ -49,6 +63,22 @@ public class HealthBlock extends MdsEntity {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getRegionalName() {
+        return regionalName;
+    }
+
+    public void setRegionalName(String regionalName) {
+        this.regionalName = regionalName;
+    }
+
+    public String getHq() {
+        return hq;
+    }
+
+    public void setHq(String hq) {
+        this.hq = hq;
     }
 
     public Long getCode() {

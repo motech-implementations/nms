@@ -7,12 +7,14 @@ import org.motechproject.mds.domain.MdsEntity;
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Unique;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 @Entity(tableName = "nms_health_facility_types", recordHistory = true)
 public class HealthFacilityType extends MdsEntity {
     @Field
-    @Column(allowsNull = "false", length = 45)
+    @Column(allowsNull = "false", length = 100)
     @NotNull
+    @Size(min = 1, max = 100)
     private String name;
 
     @Field
