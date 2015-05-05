@@ -40,6 +40,7 @@ public class State extends MdsEntity {
 
     public State() {
         this.districts = new ArrayList<>();
+        this.circles = new ArrayList<>();
     }
 
     public State(String name, Long code) {

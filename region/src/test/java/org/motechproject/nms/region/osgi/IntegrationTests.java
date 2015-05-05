@@ -1,4 +1,4 @@
-package org.motechproject.nms.region.location.osgi;
+package org.motechproject.nms.region.osgi;
 
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
@@ -8,7 +8,9 @@ import org.junit.runners.Suite;
  */
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-    LocationServiceBundleIT.class
+    LanguageServiceBundleIT.class,
+    LocationServiceBundleIT.class,
+    CircleServiceBundleIT.class
 })
 public class IntegrationTests {
 }

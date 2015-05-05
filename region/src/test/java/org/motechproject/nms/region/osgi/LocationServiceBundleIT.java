@@ -1,4 +1,4 @@
-package org.motechproject.nms.region.location.osgi;
+package org.motechproject.nms.region.osgi;
 
 import org.junit.Assert;
 import org.junit.Ignore;

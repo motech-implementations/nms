@@ -1,12 +1,12 @@
-package org.motechproject.nms.region.language.osgi;
+package org.motechproject.nms.region.osgi;
 
+import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.motechproject.nms.region.language.domain.CircleLanguage;
 import org.motechproject.nms.region.language.domain.Language;
 import org.motechproject.nms.region.language.repository.CircleLanguageDataService;
 import org.motechproject.nms.region.language.repository.LanguageDataService;
 import org.motechproject.nms.region.language.service.LanguageService;
-import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.ops4j.pax.exam.ExamFactory;
@@ -15,7 +15,6 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
-
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -23,7 +22,6 @@ import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Verify that LanguageService is present & functional.
