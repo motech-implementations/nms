@@ -6,12 +6,6 @@ import org.motechproject.nms.api.web.contract.mobileAcademy.CourseResponse;
 import org.motechproject.nms.api.web.contract.mobileAcademy.course.Chapter;;
 import org.motechproject.nms.api.web.validator.MobileAcademyValidator;
 
-import javax.validation.ConstraintViolation;
-import javax.validation.Validation;
-import javax.validation.Validator;
-
-import java.util.Set;
-
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertNull;
@@ -26,7 +20,7 @@ public class MobileAcademyValidatorUnitTest {
     public void TestValidCourseStructure() {
 
         CourseResponse courseResponse = CourseBuilder.generateValidCourseResponse();
-        assertNull(MobileAcademyValidator.ValidateCourseResponse(courseResponse));
+        assertNull(MobileAcademyValidator.validateCourseResponse(courseResponse));
     }
 
     @Test
@@ -34,7 +28,7 @@ public class MobileAcademyValidatorUnitTest {
 
         CourseResponse courseResponse = CourseBuilder.generateValidCourseResponse();
         courseResponse.getChapters().add(new Chapter());
-        String errorString = MobileAcademyValidator.ValidateCourseResponse(courseResponse);
+        String errorString = MobileAcademyValidator.validateCourseResponse(courseResponse);
         assertNotNull(errorString);
     }
 
@@ -43,14 +37,14 @@ public class MobileAcademyValidatorUnitTest {
 
         CourseResponse courseResponse = CourseBuilder.generateValidCourseResponse();
         courseResponse.setChapters(null);
-        assertNotNull(MobileAcademyValidator.ValidateCourseResponse(courseResponse));
+        assertNotNull(MobileAcademyValidator.validateCourseResponse(courseResponse));
     }
 
     @Test
     public void TestValidateLessonNull() {
         CourseResponse courseResponse = CourseBuilder.generateValidCourseResponse();
         courseResponse.getChapters().get(0).setLessons(null);
-        assertNotNull(MobileAcademyValidator.ValidateCourseResponse(courseResponse));
+        assertNotNull(MobileAcademyValidator.validateCourseResponse(courseResponse));
     }
 
 }

@@ -10,11 +10,13 @@ import org.motechproject.nms.api.web.contract.mobileAcademy.course.LessonContent
 import org.motechproject.nms.api.web.contract.mobileAcademy.course.LessonContentLesson;
 import org.motechproject.nms.api.web.contract.mobileAcademy.course.LessonContentMenu;
 import org.motechproject.nms.api.web.contract.mobileAcademy.course.Question;
+import org.motechproject.nms.api.web.contract.mobileAcademy.course.QuestionContent;
 import org.motechproject.nms.api.web.contract.mobileAcademy.course.Quiz;
 import org.motechproject.nms.api.web.contract.mobileAcademy.course.QuizContent;
 import org.motechproject.nms.api.web.contract.mobileAcademy.course.QuizContentMenu;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -27,10 +29,10 @@ public final class CourseBuilder {
         response.setName("MobileAcademyCourse");
 
         List<Chapter> chapters = new ArrayList<>();
-        for(int i = 0; i < 11; i++) {
+        for(int i = 1; i < 12; i++) {
             Chapter currentChapter = new Chapter();
-            currentChapter.setName("Chapter" + (i + 1));
-            currentChapter.setQuiz(generateValidQuiz());
+            currentChapter.setName("Chapter" + i);
+            currentChapter.setQuiz(generateValidQuiz("Quiz_" + i));
             currentChapter.setContent(generateValidChapterContent());
             currentChapter.setLessons(generateValidLessons());
             chapters.add(currentChapter);
@@ -40,21 +42,40 @@ public final class CourseBuilder {
         return response;
     }
 
-    public static Quiz generateValidQuiz() {
+    public static Quiz generateValidQuiz(String quizName) {
         Quiz quiz = new Quiz();
+        quiz.setName(quizName);
         QuizContent qc = new QuizContent();
+
         QuizContentMenu qcm = new QuizContentMenu();
         qcm.setFile("foo.bar");
         qcm.setId("qcm.id");
+        qc.setMenu(qcm);
+
         List<Question> questions = new ArrayList<>();
+        for (int i = 1; i < 5; i++) {
 
-        for (int i = 0; i < 4; i++) {
-            questions.add(new Question());
+            questions.add(generateValidQuestion("Question_" + i));
         }
-
         qc.setQuestions(questions);
         quiz.setContent(qc);
+
         return quiz;
+    }
+
+    public static Question generateValidQuestion(String name) {
+        Question newQuestion = new Question();
+        newQuestion.setName(name);
+        newQuestion.setCorrectAnswerOption(1);
+
+        QuestionContent qc = new QuestionContent();
+        qc.setCorrectAnswer("correct.wav");
+        qc.setWrongAnswer("wrong.wav");
+        qc.setId("foobar_" + name);
+        qc.setQuestion("question.wav");
+
+        newQuestion.setContent(qc);
+        return newQuestion;
     }
 
     public static ChapterContent generateValidChapterContent() {
@@ -68,8 +89,10 @@ public final class CourseBuilder {
 
         ChapterContentScore ccs = new ChapterContentScore();
         ccs.setId("ccs.id");
-        ccs.setFiles(new ArrayList<String>());
-        cc.setScore(ccs);
+        ccs.setFiles(new ArrayList<String>(
+                Arrays.asList("file1", "file2", "file3", "file4", "file5")
+        ));
+                cc.setScore(ccs);
 
         return cc;
     }

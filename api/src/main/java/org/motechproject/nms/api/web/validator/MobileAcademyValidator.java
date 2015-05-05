@@ -40,15 +40,16 @@ public final class MobileAcademyValidator {
 
     }
 
-    public static String ValidateCourseResponse(CourseResponse courseResponse) {
+    public static String validateCourseResponse(CourseResponse courseResponse) {
         Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
         Set<ConstraintViolation<CourseResponse>> violations = validator.validate(courseResponse);
         StringBuilder sb = new StringBuilder();
 
         if (violations.size() > 0) {
             for (ConstraintViolation<CourseResponse> violation : violations) {
-                sb.append(violation.getInvalidValue());
-                sb.append(violation.getMessage());
+                sb.append(violation.getInvalidValue() + " : " +
+                        violation.getPropertyPath() + " - " + violation.getMessage());
+                sb.append("\n");
             }
 
             return sb.toString();
