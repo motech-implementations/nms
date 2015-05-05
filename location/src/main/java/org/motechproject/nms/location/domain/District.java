@@ -19,30 +19,27 @@ import java.util.List;
 @Entity(tableName = "nms_districts", recordHistory = true)
 public class District extends MdsEntity {
 
-    // checkstyle made me do it
-    public static final String FALSE_STRING = "false";
-
     @Field
-    @Column(allowsNull = FALSE_STRING, length = 100)
+    @Column(allowsNull = "false", length = 100)
     @NotNull
     @Size(min = 1, max = 100)
     private String name;
 
     @Field
-    @Column(allowsNull = FALSE_STRING, length = 100)
+    @Column(allowsNull = "false", length = 100)
     @NotNull
     @Size(min = 1, max = 100)
     private String regionalName;
 
     @Field
     @Unique
-    @Column(allowsNull = FALSE_STRING)
+    @Column(allowsNull = "false")
     @NotNull
     private Long code;
 
     @Field
     @Persistent(defaultFetchGroup = "true")
-    @Column(allowsNull = FALSE_STRING)
+    @Column(allowsNull = "false")
     @NotNull
     private State state;
 
