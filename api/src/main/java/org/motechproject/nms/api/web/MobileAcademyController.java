@@ -61,13 +61,21 @@ public class MobileAcademyController extends BaseController {
     public CourseResponse getCourse() {
 
         Course getCourse = mobileAcademyService.getCourse();
+
+        if (getCourse == null) {
+            LOGGER.error("No course found in database. Check course ingestion and name");
+            throw new InternalError(String.format(NOT_FOUND, "course"));
+        }
+
         CourseResponse response = MobileAcademyConverter.convertCourse(getCourse);
 
         if (response != null) {
+
+            // TODO: course response format validations on the way out?
             return response;
         } else {
-            LOGGER.error("No course found in database. Check course ingestion and name");
-            throw new InternalError(String.format(NOT_FOUND, "Course"));
+            LOGGER.error("Failed dto mapping, check object mapping");
+            throw new InternalError(String.format(INVALID, "CourseResponse"));
         }
 
     }

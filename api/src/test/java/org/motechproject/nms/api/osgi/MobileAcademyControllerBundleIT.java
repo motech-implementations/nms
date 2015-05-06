@@ -3,11 +3,13 @@ package org.motechproject.nms.api.osgi;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
-import org.codehaus.jackson.map.deser.ValueInstantiators;
+import org.codehaus.jackson.map.ObjectMapper;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.api.utils.RequestBuilder;
 import org.motechproject.nms.api.web.BaseController;
+import org.motechproject.nms.api.web.contract.BadRequest;
 import org.motechproject.nms.api.web.contract.mobileAcademy.SaveBookmarkRequest;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
 import org.motechproject.testing.osgi.BasePaxIT;
@@ -81,12 +83,13 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
     }
 
     @Test
-    public void testGetCourse() throws IOException, InterruptedException {
+    public void testGetCourseNotPresent() throws IOException, InterruptedException {
 
         String endpoint = String.format("http://localhost:%d/api/mobileacademy/course",
                 TestContext.getJettyPort());
-
         HttpGet request = RequestBuilder.createGetRequest(endpoint);
-        assertTrue(SimpleHttpClient.execHttpRequest(request, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
+
+        assertTrue(SimpleHttpClient.execHttpRequest(request, HttpStatus.SC_INTERNAL_SERVER_ERROR, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
     }
+    
 }

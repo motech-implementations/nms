@@ -115,6 +115,8 @@
                             org.motechproject.nms.api.web.contract,
                             org.motechproject.nms.api.web.contract.kilkari,
                             org.motechproject.nms.api.web.contract.mobileAcademy,
+                            org.motechproject.nms.api.web.contract.mobileAcademy.course,
+                            org.motechproject.nms.api.web.converter,
                         </Export-Package>
                         <Import-Package>
                             org.motechproject.osgi.web,
