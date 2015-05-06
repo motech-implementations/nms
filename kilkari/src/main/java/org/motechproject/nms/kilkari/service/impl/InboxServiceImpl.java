@@ -6,6 +6,7 @@ import org.motechproject.nms.kilkari.domain.InboxCallDetails;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
+import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.exception.NoInboxForSubscriptionException;
 import org.motechproject.nms.kilkari.repository.InboxCallDetailsDataService;
 import org.motechproject.nms.kilkari.service.InboxService;
@@ -48,14 +49,20 @@ public class InboxServiceImpl implements InboxService {
                     subscription.getSubscriptionId()));
         }
 
+        SubscriptionPack pack = subscription.getSubscriptionPack();
         int daysIntoPack = Days.daysBetween(subscription.getStartDate(), LocalDate.now()).getDays();
         int messageIndex;
         int currentWeek = daysIntoPack / DAYS_IN_WEEK + 1;
         int daysIntoWeek = daysIntoPack % DAYS_IN_WEEK;
 
         if (subscription.getStatus() == SubscriptionStatus.COMPLETED) {
-            // TODO: if <= 7 days since completion, return the final message; otherwise null
+            int totalWeeksInPack = pack.getWeeklyMessages().size() * pack.getMessagesPerWeek();
 
+            // if > 7 days since subscription completion, return no subscription; otherwise return final message
+            if (daysIntoPack > totalWeeksInPack * DAYS_IN_WEEK + DAYS_IN_WEEK) {
+                throw new NoInboxForSubscriptionException(String.format("No inbox exists for subscription %s",
+                        subscription.getSubscriptionId()));
+            }
             messageIndex = subscription.getSubscriptionPack().getWeeklyMessages().size() - 1;
         } else if (subscription.getSubscriptionPack().getMessagesPerWeek() == 1) {
             messageIndex = currentWeek - 1;

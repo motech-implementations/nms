@@ -80,7 +80,7 @@ public class KilkariController extends BaseController {
             throw new NotFoundException(String.format(NOT_FOUND, "callingNumber"));
         }
 
-        Set<Subscription> subscriptions = subscriber.getActiveSubscriptions();
+        Set<Subscription> subscriptions = subscriber.getAllSubscriptions();
         Set<InboxSubscriptionDetailResponse> subscriptionDetails = new HashSet<>();
         SubscriptionPackMessage inboxMessage;
         String weekId;
@@ -98,7 +98,7 @@ public class KilkariController extends BaseController {
                         weekId,
                         fileName));
 
-            } catch(NoInboxForSubscriptionException e) {
+            } catch (NoInboxForSubscriptionException e) {
                 // there's no inbox, don't add anything to the list
             }
         }
