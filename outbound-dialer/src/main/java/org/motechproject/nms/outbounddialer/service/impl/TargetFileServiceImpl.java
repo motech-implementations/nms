@@ -24,7 +24,7 @@ import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
-import org.motechproject.nms.language.domain.Language;
+import org.motechproject.nms.region.language.domain.Language;
 import org.motechproject.nms.outbounddialer.domain.AuditRecord;
 import org.motechproject.nms.outbounddialer.domain.CallRetry;
 import org.motechproject.nms.outbounddialer.domain.DayOfTheWeek;

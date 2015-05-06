@@ -5,7 +5,7 @@ import org.motechproject.nms.kilkari.domain.InboxCallDetails;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionMode;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
-import org.motechproject.nms.language.domain.Language;
+import org.motechproject.nms.region.language.domain.Language;
 
 /**
  *
