@@ -27,6 +27,10 @@ import java.util.List;
 @Service("subscriptionService")
 public class SubscriptionServiceImpl implements SubscriptionService {
 
+    private static final int PREGNANCY_PACK_WEEKS = 72;
+    private static final int CHILD_PACK_WEEKS = 48;
+    private static final int THREE_MONTHS = 90;
+
     private SubscriberService subscriberService;
     private SubscriptionPackDataService subscriptionPackDataService;
     private SubscriptionDataService subscriptionDataService;
@@ -51,10 +55,10 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     public final void createSubscriptionPacks() {
         // TODO: make this less hard-coded and hacky once we get spec clarification re: how to populate the pack data
         if (subscriptionPackDataService.byName("childPack") == null) {
-            createSubscriptionPack("childPack", SubscriptionPackType.CHILD, 48, 1);
+            createSubscriptionPack("childPack", SubscriptionPackType.CHILD, CHILD_PACK_WEEKS, 1);
         }
         if (subscriptionPackDataService.byName("pregnancyPack") == null) {
-            createSubscriptionPack("pregnancyPack", SubscriptionPackType.PREGNANCY, 72, 2);
+            createSubscriptionPack("pregnancyPack", SubscriptionPackType.PREGNANCY, PREGNANCY_PACK_WEEKS, 2);
         }
     }
 
@@ -68,7 +72,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
             if (messagesPerWeek == 2) {
                 messages.add(new SubscriptionPackMessage(week, String.format("w%s_2", week),
-                        String.format("week%s-2.wav", week)));
+                        String.format("w%s_2.wav", week)));
             }
         }
 
@@ -138,8 +142,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 // TODO: #157 subscriber should receive welcome message for the first week
                 // TODO: #160 deal with early subscription
                 subscription = new Subscription(subscriber, pack, SubscriptionMode.MCTS_IMPORT);
-                // TODO: #157 should this be LMP or LMP + an offset of ~3 months? Assuming the latter for now.
-                subscription.setStartDate(subscriber.getLastMenstrualPeriod().plusDays(90));
+
+                // the pregnancy pack starts 3 months after LMP
+                subscription.setStartDate(subscriber.getLastMenstrualPeriod().plusDays(THREE_MONTHS));
                 subscription.setStatus(SubscriptionStatus.ACTIVE);
             }
         } else {

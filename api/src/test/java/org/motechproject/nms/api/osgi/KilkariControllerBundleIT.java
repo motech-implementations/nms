@@ -40,6 +40,7 @@ import org.ops4j.pax.exam.spi.reactors.PerSuite;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.util.*;
+import java.util.regex.Pattern;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
@@ -190,42 +191,79 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
         mctsSubscriber.setDateOfBirth(LocalDate.now().minusDays(250));
-        mctsSubscriber.setLastMenstrualPeriod(LocalDate.now().minusDays(100));
         subscriberDataService.create(mctsSubscriber);
 
+        // create subscription to child pack
         subscriptionService.createSubscription(9999911122L, gLanguage, gPack1, SubscriptionMode.MCTS_IMPORT);
-        subscriptionService.createSubscription(9999911122L, gLanguage, gPack2, SubscriptionMode.MCTS_IMPORT);
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
 
-        HashSet<InboxSubscriptionDetailResponse> inboxSubscriptionDetails = new HashSet<>();
-        Subscription subscription;
-        Iterator<Subscription> subscriptionIterator = mctsSubscriber.getSubscriptions().iterator();
-        String packName;
-        String weekId;
-        String fileName;
+        // due to subscription rules detailed in #157, we need to clear out the DOB and set an LMP in order to
+        // create a second subscription for this MCTS subscriber
+        mctsSubscriber.setDateOfBirth(null);
+        mctsSubscriber.setLastMenstrualPeriod(LocalDate.now().minusDays(103));
+        subscriberDataService.update(mctsSubscriber);
 
-        while (subscriptionIterator.hasNext()) {
-            subscription = subscriptionIterator.next();
-            if (subscription.getSubscriptionPack().getType() == SubscriptionPackType.CHILD) {
-                packName = "childPack";
-                weekId = "";
-                fileName = "";
-            } else {
-                packName = "pregnancyPack";
-                weekId = "";
-                fileName = "";
-            }
+        // create subscription to pregnancy pack
+        subscriptionService.createSubscription(9999911122L, gLanguage, gPack2, SubscriptionMode.MCTS_IMPORT);
 
-            inboxSubscriptionDetails.add(new InboxSubscriptionDetailResponse(
-                    subscription.getSubscriptionId().toString(), packName, weekId, fileName));
-        }
-
-        String expectedJson = createInboxResponseJson(inboxSubscriptionDetails);
+        Pattern childPackJsonPattern = Pattern.compile(".*\"subscriptionPack\":\"childPack\",\"inboxWeekId\":\"w36_1\",\"contentFileName\":\"w36_1\\.wav.*");
+        Pattern pregnancyPackJsonPattern = Pattern.compile(".*\"subscriptionPack\":\"pregnancyPack\",\"inboxWeekId\":\"w2_2\",\"contentFileName\":\"w2_2\\.wav.*");
 
         HttpGet httpGet = createHttpGet(true, "9999911122", true, "123456789012345");
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, expectedJson, ADMIN_USERNAME, ADMIN_PASSWORD));
-
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, childPackJsonPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, pregnancyPackJsonPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
+
+    @Test
+    public void testInboxRequestEarlySubscription() throws IOException, InterruptedException {
+        setupData();
+
+        Subscriber mctsSubscriber = new Subscriber(9999911122L);
+        mctsSubscriber.setLastMenstrualPeriod(LocalDate.now().minusDays(30));
+        subscriberDataService.create(mctsSubscriber);
+        // create subscription to pregnancy pack, not due to start for 60 days
+        subscriptionService.createSubscription(9999911122L, gLanguage, gPack2, SubscriptionMode.MCTS_IMPORT);
+
+        Pattern expectedJsonPattern = Pattern.compile(".*\"subscriptionPack\":\"pregnancyPack\",\"inboxWeekId\":null,\"contentFileName\":null.*");
+
+        HttpGet httpGet = createHttpGet(true, "9999911122", true, "123456789012345");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, expectedJsonPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    @Test
+    public void testInboxRequestCompletedSubscription() throws IOException, InterruptedException {
+        setupData();
+
+        Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
+        Subscription subscription = subscriber.getSubscriptions().iterator().next();
+        // setting the subscription to have ended more than a week ago -- no message should be returned
+        subscription.setStartDate(LocalDate.now().minusDays(500));
+        subscription.setStatus(SubscriptionStatus.COMPLETED);
+        subscriptionDataService.update(subscription);
+
+        String expectedJson = "{\"inboxSubscriptionDetailList\":[]}";
+
+        HttpGet httpGet = createHttpGet(true, "1000000000", true, "123456789012345");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, expectedJson, ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    @Test
+    public void testInboxRequestRecentlyCompletedSubscription() throws IOException, InterruptedException {
+        setupData();
+
+        Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
+        Subscription subscription = subscriber.getSubscriptions().iterator().next();
+        // setting the subscription to have ended less than a week ago -- the final message should be returned
+        subscription.setStartDate(LocalDate.now().minusDays(340));
+        subscription.setStatus(SubscriptionStatus.COMPLETED);
+        subscriptionDataService.update(subscription);
+
+        String expectedJson = "{\"inboxSubscriptionDetailList\":[]}";
+
+        HttpGet httpGet = createHttpGet(true, "1000000000", true, "123456789012345");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, expectedJson, ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
 
     @Test
     public void testInboxRequestBadSubscriber() throws IOException, InterruptedException {
@@ -428,6 +466,10 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
         subscriptionService.createSubscription(9999911122L, gLanguage, gPack1, SubscriptionMode.MCTS_IMPORT);
 
+        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+
+        // due to subscription rules detailed in #157, we need to clear out the DOB and set an LMP in order to
+        // create a second subscription for this MCTS subscriber
         mctsSubscriber.setDateOfBirth(null);
         mctsSubscriber.setLastMenstrualPeriod(LocalDate.now().minusDays(100));
         subscriberDataService.update(mctsSubscriber);

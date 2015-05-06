@@ -14,6 +14,7 @@ import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionMode;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
+import org.motechproject.nms.kilkari.exception.NoInboxForSubscriptionException;
 import org.motechproject.nms.kilkari.service.InboxService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
@@ -82,16 +83,23 @@ public class KilkariController extends BaseController {
         Set<Subscription> subscriptions = subscriber.getActiveSubscriptions();
         Set<InboxSubscriptionDetailResponse> subscriptionDetails = new HashSet<>();
         SubscriptionPackMessage inboxMessage;
+        String weekId;
+        String fileName;
 
         for (Subscription subscription : subscriptions) {
 
-            inboxMessage = inboxService.getInboxMessage(subscription);
+            try {
+                inboxMessage = inboxService.getInboxMessage(subscription);
+                weekId = (inboxMessage == null) ? null : inboxMessage.getWeekId();
+                fileName = (inboxMessage == null) ? null : inboxMessage.getMessageFileName();
 
-            if (inboxMessage != null) {
                 subscriptionDetails.add(new InboxSubscriptionDetailResponse(subscription.getSubscriptionId(),
                         subscription.getSubscriptionPack().getName(),
-                        inboxMessage.getWeekId(),
-                        inboxMessage.getMessageFileName()));
+                        weekId,
+                        fileName));
+
+            } catch(NoInboxForSubscriptionException e) {
+                // there's no inbox, don't add anything to the list
             }
         }
 

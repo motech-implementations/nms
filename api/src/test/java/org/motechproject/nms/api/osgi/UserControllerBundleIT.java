@@ -614,16 +614,6 @@ public class UserControllerBundleIT extends BasePaxIT {
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
-    @Test
-    @Ignore //todo: #60 figure out an elegant way to test that
-    public void testInternalError() throws IOException, InterruptedException {
-        HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/kilkari/user?callingNumber=1111111111&operator=OP&circle=AA", TestContext.getJettyPort()));
-
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                "{\"failureReason\":\"Internal Error\"}",
-                ADMIN_USERNAME, ADMIN_PASSWORD));
-    }
-
     // An FLW that does not exist
     @Test
     public void testGetUserDetailsUnknownUser() throws IOException, InterruptedException {

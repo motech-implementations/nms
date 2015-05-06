@@ -6,6 +6,7 @@ import org.motechproject.nms.kilkari.domain.InboxCallDetails;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
+import org.motechproject.nms.kilkari.exception.NoInboxForSubscriptionException;
 import org.motechproject.nms.kilkari.repository.InboxCallDetailsDataService;
 import org.motechproject.nms.kilkari.service.InboxService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,17 +34,18 @@ public class InboxServiceImpl implements InboxService {
     }
 
     @Override
-    public SubscriptionPackMessage getInboxMessage(Subscription subscription) {
+    public SubscriptionPackMessage getInboxMessage(Subscription subscription) throws NoInboxForSubscriptionException {
 
-        if (subscription.getStartDate() == null || subscription.getStartDate().isAfter(LocalDate.now())) {
+        if (subscription.getStartDate().isAfter(LocalDate.now())) {
+            // early subscription, play welcome message
             return null;
         }
-        if (subscription.getStatus() == SubscriptionStatus.DEACTIVATED ||
+        if (subscription.getStartDate() == null ||
+                subscription.getStatus() == SubscriptionStatus.DEACTIVATED ||
                 subscription.getStatus() == SubscriptionStatus.PENDING_ACTIVATION) {
-            return null;
-        }
-        if (subscription.getStatus() == SubscriptionStatus.COMPLETED) {
-            // TODO: if <= 7 days since completion, return the final message; otherwise null
+            // there is no inbox for this subscription, throw
+            throw new NoInboxForSubscriptionException(String.format("No inbox exists for subscription %s",
+                    subscription.getSubscriptionId()));
         }
 
         int daysIntoPack = Days.daysBetween(subscription.getStartDate(), LocalDate.now()).getDays();
@@ -51,7 +53,11 @@ public class InboxServiceImpl implements InboxService {
         int currentWeek = daysIntoPack / DAYS_IN_WEEK + 1;
         int daysIntoWeek = daysIntoPack % DAYS_IN_WEEK;
 
-        if (subscription.getSubscriptionPack().getMessagesPerWeek() == 1) {
+        if (subscription.getStatus() == SubscriptionStatus.COMPLETED) {
+            // TODO: if <= 7 days since completion, return the final message; otherwise null
+
+            messageIndex = subscription.getSubscriptionPack().getWeeklyMessages().size() - 1;
+        } else if (subscription.getSubscriptionPack().getMessagesPerWeek() == 1) {
             messageIndex = currentWeek - 1;
         } else { // messagesPerWeek == 2
             if (daysIntoWeek > 0 && daysIntoWeek < 4) { // use this week's first message
