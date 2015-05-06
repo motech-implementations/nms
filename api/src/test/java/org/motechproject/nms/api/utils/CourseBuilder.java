@@ -84,7 +84,7 @@ public final class CourseBuilder {
 
         ChapterContentMenu ccm = new ChapterContentMenu();
         ccm.setId("ccm.id");
-        ccm.setFiles("ccm.file");
+        ccm.setFile("ccm.file");
         cc.setMenu(ccm);
 
         ChapterContentScore ccs = new ChapterContentScore();

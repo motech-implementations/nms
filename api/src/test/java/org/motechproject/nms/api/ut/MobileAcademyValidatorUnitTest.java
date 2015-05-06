@@ -1,5 +1,6 @@
 package org.motechproject.nms.api.ut;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.motechproject.nms.api.utils.CourseBuilder;
 import org.motechproject.nms.api.web.contract.mobileAcademy.CourseResponse;
@@ -16,17 +17,22 @@ import static junit.framework.Assert.assertTrue;
  */
 public class MobileAcademyValidatorUnitTest {
 
+    private CourseResponse courseResponse;
+
+    @Before
+    public void setCourseResponse() {
+        this.courseResponse = CourseBuilder.generateValidCourseResponse();
+    }
+
     @Test
     public void TestValidCourseStructure() {
 
-        CourseResponse courseResponse = CourseBuilder.generateValidCourseResponse();
         assertNull(MobileAcademyValidator.validateCourseResponse(courseResponse));
     }
 
     @Test
     public void TestValidateChapterCount() {
 
-        CourseResponse courseResponse = CourseBuilder.generateValidCourseResponse();
         courseResponse.getChapters().add(new Chapter());
         String errorString = MobileAcademyValidator.validateCourseResponse(courseResponse);
         assertNotNull(errorString);
@@ -35,16 +41,21 @@ public class MobileAcademyValidatorUnitTest {
     @Test
     public void TestValidateChapterNull() {
 
-        CourseResponse courseResponse = CourseBuilder.generateValidCourseResponse();
         courseResponse.setChapters(null);
         assertNotNull(MobileAcademyValidator.validateCourseResponse(courseResponse));
     }
 
     @Test
     public void TestValidateLessonNull() {
-        CourseResponse courseResponse = CourseBuilder.generateValidCourseResponse();
+
         courseResponse.getChapters().get(0).setLessons(null);
         assertNotNull(MobileAcademyValidator.validateCourseResponse(courseResponse));
+    }
+
+    @Test
+    public void TestValidateCourseName() {
+
+        assertFalse(MobileAcademyValidator.validateCourseFormat(courseResponse));
     }
 
 }

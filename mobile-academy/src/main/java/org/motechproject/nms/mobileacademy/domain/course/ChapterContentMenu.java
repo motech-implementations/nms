@@ -26,6 +26,11 @@ public class ChapterContentMenu {
     public ChapterContentMenu() {
     }
 
+    public ChapterContentMenu(String identifier, String file) {
+        this.identifier = identifier;
+        this.file = file;
+    }
+
     public String getIdentifier() {
         return identifier;
     }

@@ -40,6 +40,13 @@ public class Chapter {
     public Chapter() {
     }
 
+    public Chapter(String name, ChapterContent content, List<Lesson> lessons, Quiz quiz) {
+        this.name = name;
+        this.content = content;
+        this.lessons = lessons;
+        this.quiz = quiz;
+    }
+
     public String getName() {
         return name;
     }

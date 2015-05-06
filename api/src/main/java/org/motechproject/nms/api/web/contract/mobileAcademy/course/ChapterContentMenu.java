@@ -24,11 +24,11 @@ public class ChapterContentMenu {
         this.id = id;
     }
 
-    public String getFiles() {
+    public String getFile() {
         return file;
     }
 
-    public void setFiles(String file) {
+    public void setFile(String file) {
         this.file = file;
     }
 }

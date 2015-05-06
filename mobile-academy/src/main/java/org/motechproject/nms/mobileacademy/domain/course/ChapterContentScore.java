@@ -31,6 +31,11 @@ public class ChapterContentScore {
     public ChapterContentScore() {
     }
 
+    public ChapterContentScore(String identifier, List<String> files) {
+        this.identifier = identifier;
+        this.files = files;
+    }
+
     public String getIdentifier() {
         return identifier;
     }
