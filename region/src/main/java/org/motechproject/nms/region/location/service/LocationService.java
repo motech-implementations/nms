@@ -4,7 +4,7 @@ import org.motechproject.nms.region.language.domain.Language;
 import org.motechproject.nms.region.location.domain.State;
 
 /**
- * Service interfaces exposed by the language module
+ * Service interfaces exposed by the region module
  */
 public interface LocationService {
     State getStateForLanguage(Language language);
