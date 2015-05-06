@@ -12,10 +12,10 @@ import org.motechproject.nms.flw.domain.Service;
 import org.motechproject.nms.flw.domain.ServiceUsageCap;
 import org.motechproject.nms.flw.repository.ServiceUsageCapDataService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
-import org.motechproject.nms.region.language.domain.CircleLanguage;
 import org.motechproject.nms.region.language.domain.Language;
-import org.motechproject.nms.region.language.repository.CircleLanguageDataService;
+import org.motechproject.nms.region.language.domain.LanguageLocation;
 import org.motechproject.nms.region.language.repository.LanguageDataService;
+import org.motechproject.nms.region.language.repository.LanguageLocationDataService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.motechproject.testing.osgi.http.SimpleHttpClient;
@@ -28,9 +28,7 @@ import org.ops4j.pax.exam.spi.reactors.PerSuite;
 import javax.inject.Inject;
 import java.io.IOException;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerSuite.class)
@@ -46,14 +44,14 @@ public class LanguageControllerBundleIT extends BasePaxIT {
     private LanguageDataService languageDataService;
 
     @Inject
-    private CircleLanguageDataService circleLanguageDataService;
+    private LanguageLocationDataService languageLocationDataService;
 
     @Inject
     private ServiceUsageCapDataService serviceUsageCapDataService;
 
     private void cleanAllData() {
         serviceUsageCapDataService.deleteAll();
-        circleLanguageDataService.deleteAll();
+        languageLocationDataService.deleteAll();
         languageDataService.deleteAll();
     }
 
@@ -62,8 +60,8 @@ public class LanguageControllerBundleIT extends BasePaxIT {
         Language language = new Language("Papiamento", "99");
         languageDataService.create(language);
 
-        CircleLanguage circleLanguage = new CircleLanguage("AA", language);
-        circleLanguageDataService.create(circleLanguage);
+        LanguageLocation languageLocation = new LanguageLocation("AA", language);
+        languageLocationDataService.create(languageLocation);
     }
 
     private void createFlwCappedServiceNoUsageNoLocationNoLanguage() {
@@ -75,8 +73,8 @@ public class LanguageControllerBundleIT extends BasePaxIT {
         Language language = new Language("Papiamento", "99");
         languageDataService.create(language);
 
-        CircleLanguage circleLanguage = new CircleLanguage("AA", language);
-        circleLanguageDataService.create(circleLanguage);
+        LanguageLocation languageLocation = new LanguageLocation("AA", language);
+        languageLocationDataService.create(languageLocation);
 
         ServiceUsageCap serviceUsageCap = new ServiceUsageCap(null, Service.MOBILE_KUNJI, 3600);
         serviceUsageCapDataService.create(serviceUsageCap);

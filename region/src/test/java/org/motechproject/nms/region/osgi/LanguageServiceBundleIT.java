@@ -2,10 +2,10 @@ package org.motechproject.nms.region.osgi;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.motechproject.nms.region.language.domain.CircleLanguage;
 import org.motechproject.nms.region.language.domain.Language;
-import org.motechproject.nms.region.language.repository.CircleLanguageDataService;
+import org.motechproject.nms.region.language.domain.LanguageLocation;
 import org.motechproject.nms.region.language.repository.LanguageDataService;
+import org.motechproject.nms.region.language.repository.LanguageLocationDataService;
 import org.motechproject.nms.region.language.service.LanguageService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
@@ -36,10 +36,10 @@ public class LanguageServiceBundleIT extends BasePaxIT {
     @Inject
     private LanguageDataService languageDataService;
     @Inject
-    private CircleLanguageDataService circleLanguageDataService;
+    private LanguageLocationDataService languageLocationDataService;
 
     private void setupData() {
-        circleLanguageDataService.deleteAll();
+        languageLocationDataService.deleteAll();
         languageDataService.deleteAll();
 
         Language la = languageDataService.create(new Language("ladhaki", "10"));
@@ -47,10 +47,10 @@ public class LanguageServiceBundleIT extends BasePaxIT {
         Language hi = languageDataService.create(new Language("hindi", "12"));
         Language ta = languageDataService.create(new Language("tamil", "13"));
 
-        circleLanguageDataService.create(new CircleLanguage("foo", la));
-        circleLanguageDataService.create(new CircleLanguage("foo", ur));
-        circleLanguageDataService.create(new CircleLanguage("foo", hi));
-        circleLanguageDataService.create(new CircleLanguage("bar", ta));
+        languageLocationDataService.create(new LanguageLocation("foo", la));
+        languageLocationDataService.create(new LanguageLocation("foo", ur));
+        languageLocationDataService.create(new LanguageLocation("foo", hi));
+        languageLocationDataService.create(new LanguageLocation("bar", ta));
     }
 
     @Test

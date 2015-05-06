@@ -24,18 +24,22 @@ import org.motechproject.nms.flw.repository.ServiceUsageCapDataService;
 import org.motechproject.nms.flw.repository.ServiceUsageDataService;
 import org.motechproject.nms.flw.repository.WhitelistEntryDataService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
-import org.motechproject.nms.kilkari.domain.*;
+import org.motechproject.nms.kilkari.domain.Subscriber;
+import org.motechproject.nms.kilkari.domain.Subscription;
+import org.motechproject.nms.kilkari.domain.SubscriptionMode;
+import org.motechproject.nms.kilkari.domain.SubscriptionPack;
+import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
-import org.motechproject.nms.region.language.domain.Language;
-import org.motechproject.nms.region.language.domain.CircleLanguage;
-import org.motechproject.nms.region.language.repository.CircleLanguageDataService;
-import org.motechproject.nms.region.language.repository.LanguageDataService;
 import org.motechproject.nms.location.domain.District;
 import org.motechproject.nms.location.domain.State;
 import org.motechproject.nms.location.repository.StateDataService;
+import org.motechproject.nms.region.language.domain.Language;
+import org.motechproject.nms.region.language.domain.LanguageLocation;
+import org.motechproject.nms.region.language.repository.LanguageDataService;
+import org.motechproject.nms.region.language.repository.LanguageLocationDataService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.motechproject.testing.osgi.http.SimpleHttpClient;
@@ -53,9 +57,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 
 /**
@@ -96,7 +98,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     private LanguageDataService languageDataService;
 
     @Inject
-    private CircleLanguageDataService circleLanguageDataService;
+    private LanguageLocationDataService languageLocationDataService;
 
     @Inject
     private StateDataService stateDataService;
@@ -122,7 +124,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         subscriptionDataService.deleteAll();
         subscriptionPackDataService.deleteAll();
         subscriberDataService.deleteAll();
-        circleLanguageDataService.deleteAll();
+        languageLocationDataService.deleteAll();
         languageDataService.deleteAll();
     }
 
@@ -137,8 +139,8 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         Language ta = languageDataService.create(new Language("tamil", "50"));
 
-        CircleLanguage circleLanguage = new CircleLanguage("AA", ta);
-        circleLanguageDataService.create(circleLanguage);
+        LanguageLocation languageLocation = new LanguageLocation("AA", ta);
+        languageLocationDataService.create(languageLocation);
 
         SubscriptionPack pack1 = subscriptionPackDataService.create(new SubscriptionPack("pack1",
                 SubscriptionPackType.CHILD, 1, null));
@@ -168,8 +170,8 @@ public class UserControllerBundleIT extends BasePaxIT {
         Language language = new Language("Papiamento", "99");
         languageDataService.create(language);
 
-        CircleLanguage circleLanguage = new CircleLanguage("AA", language);
-        circleLanguageDataService.create(circleLanguage);
+        LanguageLocation languageLocation = new LanguageLocation("AA", language);
+        languageLocationDataService.create(languageLocation);
 
         ServiceUsageCap serviceUsageCap = new ServiceUsageCap(null, Service.MOBILE_KUNJI, 3600);
         serviceUsageCapDataService.create(serviceUsageCap);
@@ -188,8 +190,8 @@ public class UserControllerBundleIT extends BasePaxIT {
         language = new Language("Papiamento", "99");
         languageDataService.create(language);
 
-        CircleLanguage circleLanguage = new CircleLanguage("AA", language);
-        circleLanguageDataService.create(circleLanguage);
+        LanguageLocation languageLocation = new LanguageLocation("AA", language);
+        languageLocationDataService.create(languageLocation);
 
         ServiceUsageCap serviceUsageCap = new ServiceUsageCap(null, Service.MOBILE_KUNJI, 3600);
         serviceUsageCapDataService.create(serviceUsageCap);
@@ -212,8 +214,8 @@ public class UserControllerBundleIT extends BasePaxIT {
         language = new Language("Papiamento", "99");
         languageDataService.create(language);
 
-        CircleLanguage circleLanguage = new CircleLanguage("AA", language);
-        circleLanguageDataService.create(circleLanguage);
+        LanguageLocation languageLocation = new LanguageLocation("AA", language);
+        languageLocationDataService.create(languageLocation);
 
         ServiceUsageCap serviceUsageCap = new ServiceUsageCap(null, Service.MOBILE_KUNJI, 3600);
         serviceUsageCapDataService.create(serviceUsageCap);
@@ -235,8 +237,8 @@ public class UserControllerBundleIT extends BasePaxIT {
         language = new Language("Papiamento", "99");
         languageDataService.create(language);
 
-        CircleLanguage circleLanguage = new CircleLanguage("AA", language);
-        circleLanguageDataService.create(circleLanguage);
+        LanguageLocation languageLocation = new LanguageLocation("AA", language);
+        languageLocationDataService.create(languageLocation);
 
         ServiceUsage serviceUsage = new ServiceUsage(flw, Service.MOBILE_KUNJI, 1, 1, 1, DateTime.now());
         serviceUsageDataService.create(serviceUsage);
@@ -296,8 +298,8 @@ public class UserControllerBundleIT extends BasePaxIT {
         Language language = new Language("Papiamento", "99");
         languageDataService.create(language);
 
-        CircleLanguage circleLanguage = new CircleLanguage("AA", language);
-        circleLanguageDataService.create(circleLanguage);
+        LanguageLocation languageLocation = new LanguageLocation("AA", language);
+        languageLocationDataService.create(languageLocation);
     }
 
     private HttpGet createHttpGet(boolean includeService, String service,

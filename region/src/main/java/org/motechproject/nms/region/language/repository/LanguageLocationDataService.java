@@ -1,14 +1,13 @@
 package org.motechproject.nms.region.language.repository;
 
-import org.motechproject.nms.region.language.domain.CircleLanguage;
-
 import org.motechproject.mds.annotations.Lookup;
 import org.motechproject.mds.annotations.LookupField;
 import org.motechproject.mds.service.MotechDataService;
+import org.motechproject.nms.region.language.domain.LanguageLocation;
 
 import java.util.List;
 
-public interface CircleLanguageDataService extends MotechDataService<CircleLanguage> {
+public interface LanguageLocationDataService extends MotechDataService<LanguageLocation> {
     @Lookup
-    List<CircleLanguage> findByCircle(@LookupField(name = "circle") String circle);
+    List<LanguageLocation> findByCircle(@LookupField(name = "circle") String circle);
 }

@@ -14,15 +14,12 @@
                   interface="org.motechproject.nms.region.language.service.LanguageService" />
 
     <osgi:reference id="circleLanguageDataService"
-                    interface="org.motechproject.nms.region.language.repository.CircleLanguageDataService" />
+                    interface="org.motechproject.nms.region.language.repository.LanguageLocationDataService" />
 
     <osgi:reference id="languageDataService"
                     interface="org.motechproject.nms.region.language.repository.LanguageDataService" />
 
     <!-- Location Services -->
-    <osgi:service ref="locationService"
-                  interface="org.motechproject.nms.region.location.service.LocationService" />
-
     <osgi:reference id="stateDataService"
                     interface="org.motechproject.nms.region.location.repository.StateDataService" />
 
