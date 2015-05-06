@@ -1,5 +1,6 @@
 package org.motechproject.nms.api.web.contract.kilkari;
 
+
 /**
  * Response body - inner data structure
  *
@@ -8,6 +9,8 @@ package org.motechproject.nms.api.web.contract.kilkari;
  * /api/kilkari/inbox?callingNumber=1111111111&callId=123456789123456&languageLocationCode=10
  *
  */
+
+
 public class InboxSubscriptionDetailResponse {
     private String subscriptionId;
     private String subscriptionPack;

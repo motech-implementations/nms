@@ -15,10 +15,14 @@ public class SubscriptionPackMessage {
     private int week;
 
     @Field
+    private String weekId;
+
+    @Field
     private String messageFileName;
 
-    public SubscriptionPackMessage(int week, String messageFileName) {
+    public SubscriptionPackMessage(int week, String weekId, String messageFileName) {
         this.week = week;
+        this.weekId = weekId;
         this.messageFileName = messageFileName;
     }
 
@@ -29,6 +33,10 @@ public class SubscriptionPackMessage {
     public void setWeek(int week) {
         this.week = week;
     }
+
+    public String getWeekId() { return weekId; }
+
+    public void setWeekId(String weekId) { this.weekId = weekId; }
 
     public String getMessageFileName() {
         return messageFileName;

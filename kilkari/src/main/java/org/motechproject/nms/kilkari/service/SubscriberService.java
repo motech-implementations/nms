@@ -2,6 +2,7 @@ package org.motechproject.nms.kilkari.service;
 
 import org.motechproject.nms.kilkari.domain.Subscriber;
 
+
 public interface SubscriberService {
     Subscriber getSubscriber(long callingNumber);
 

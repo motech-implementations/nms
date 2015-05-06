@@ -99,7 +99,7 @@ public class MobileAcademyController extends BaseController {
     public void saveBookmarkWithScore(@RequestBody SaveBookmarkRequest bookmarkRequest) {
 
         Long callingNumber = bookmarkRequest.getCallingNumber();
-        if (callingNumber == null || callingNumber < SMALLEST_10_DIGIT_NUMBER || callingNumber > LARGEST_10_DIGIT_NUMBER ) {
+        if (callingNumber == null || callingNumber < SMALLEST_10_DIGIT_NUMBER || callingNumber > LARGEST_10_DIGIT_NUMBER) {
             throw new IllegalArgumentException(String.format(INVALID, "callingNumber"));
         }
         if (bookmarkRequest.getCallId() == null || bookmarkRequest.getCallId() < SMALLEST_15_DIGIT_NUMBER) {
