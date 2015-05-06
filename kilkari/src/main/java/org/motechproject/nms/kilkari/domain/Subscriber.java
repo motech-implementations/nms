@@ -4,7 +4,7 @@ import org.joda.time.LocalDate;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.annotations.Ignore;
-import org.motechproject.nms.language.domain.Language;
+import org.motechproject.nms.region.language.domain.Language;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Persistent;
