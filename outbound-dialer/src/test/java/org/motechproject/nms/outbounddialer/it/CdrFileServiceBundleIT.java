@@ -13,6 +13,9 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 
 import static org.junit.Assert.assertTrue;
 
@@ -30,7 +33,21 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
     }
 
     @Test
+    public void testFubar() throws IOException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(
+                        getClass().getClassLoader().getResourceAsStream(
+                                "obdfiles/CDR_SUMMARY_OBD_20150506070809.csv")));
+        String s;
+        while ((s = reader.readLine()) != null) {
+            getLogger().info(s);
+        }
+
+        reader.close();
+    }
+
+    @Test
     public void testInvalidRequest() {
+
         cdrFileService.processCdrFile(new CdrFileNotificationRequest(
                 null,
                 new FileInfo("bar", "000", 0),
