@@ -3,6 +3,7 @@ package org.motechproject.nms.outbounddialer.it;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.outbounddialer.service.CdrFileService;
+import org.motechproject.nms.outbounddialer.service.SettingsService;
 import org.motechproject.nms.outbounddialer.web.contract.CdrFileNotificationRequest;
 import org.motechproject.nms.outbounddialer.web.contract.FileInfo;
 import org.motechproject.testing.osgi.BasePaxIT;
@@ -14,6 +15,9 @@ import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
@@ -27,30 +31,48 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
     @Inject
     CdrFileService cdrFileService;
 
+    @Inject
+    SettingsService settingsService;
+
     @Test
     public void testServicePresent() {
         assertTrue(cdrFileService != null);
     }
 
-    @Test
-    public void testFubar() throws IOException {
+
+    private File cdrDirectory() {
+        File userDir = new File(System.getProperty("user.home"));
+        String cdrDirProp = settingsService.getSettingsFacade().getProperty("outbound-dialer.cdr_file_directory");
+        return new File(userDir, cdrDirProp);
+    }
+
+
+    private void copyTestFile(String fileName, File dstDirectory) throws IOException {
+        String inputFile = String.format("test-files/%s", fileName);
         BufferedReader reader = new BufferedReader(new InputStreamReader(
-                        getClass().getClassLoader().getResourceAsStream(
-                                "obdfiles/CDR_SUMMARY_OBD_20150506070809.csv")));
+                getClass().getClassLoader().getResourceAsStream(inputFile)));
+        File dstFile = new File(dstDirectory, fileName);
+        getLogger().info("Copying {} to {}", inputFile, dstFile);
+        BufferedWriter writer = new BufferedWriter(new FileWriter(dstFile));
         String s;
         while ((s = reader.readLine()) != null) {
-            getLogger().info(s);
+            writer.write(s);
+            writer.write("\n");
         }
 
+        writer.close();
         reader.close();
     }
 
+
     @Test
-    public void testInvalidRequest() {
+    public void testValidRequest() throws IOException {
+        copyTestFile("cdrDetail_OBD_20150506070809.csv", cdrDirectory());
+        copyTestFile("cdrSummary_OBD_20150506070809.csv", cdrDirectory());
 
         cdrFileService.processCdrFile(new CdrFileNotificationRequest(
-                null,
-                new FileInfo("bar", "000", 0),
-                new FileInfo("baz", "111", 1)));
+                "OBD_20150506070809.csv",
+                new FileInfo("cdrSummary_OBD_20150506070809.csv", "000", 0),
+                new FileInfo("cdrDetail_OBD_20150506070809.csv", "111", 1)));
     }
 }

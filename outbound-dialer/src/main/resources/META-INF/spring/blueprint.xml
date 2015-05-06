@@ -30,6 +30,9 @@
     <osgi:reference id="callRetryDataService"
                     interface="org.motechproject.nms.outbounddialer.repository.CallRetryDataService" />
 
+    <osgi:reference id="callDetailRecordDataService"
+                    interface="org.motechproject.nms.outbounddialer.repository.CallDetailRecordDataService" />
+
     <osgi:reference id="fileAuditDataService"
                     interface="org.motechproject.nms.outbounddialer.repository.FileAuditDataService" />
 
