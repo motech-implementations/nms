@@ -2,6 +2,7 @@ package org.motechproject.nms.mobileacademy.domain.course;
 
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
+import org.motechproject.mds.domain.MdsEntity;
 
 import java.util.List;
 
@@ -9,7 +10,7 @@ import java.util.List;
  * This will contain details about a particular chapter.
  */
 @Entity
-public class Chapter {
+public class Chapter extends MdsEntity {
 
     /**
      * Specifies the name of the chapter in format of “Chapter<chapterId>”, where

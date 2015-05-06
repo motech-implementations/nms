@@ -7,10 +7,14 @@ import org.codehaus.jackson.map.ObjectMapper;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.motechproject.nms.api.utils.CourseBuilder;
 import org.motechproject.nms.api.utils.RequestBuilder;
 import org.motechproject.nms.api.web.BaseController;
 import org.motechproject.nms.api.web.contract.BadRequest;
+import org.motechproject.nms.api.web.contract.mobileAcademy.CourseResponse;
 import org.motechproject.nms.api.web.contract.mobileAcademy.SaveBookmarkRequest;
+import org.motechproject.nms.api.web.converter.MobileAcademyConverter;
+import org.motechproject.nms.mobileacademy.domain.Course;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
@@ -26,6 +30,7 @@ import javax.inject.Inject;
 import java.io.IOException;
 
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.when;
 
 /**
  * Integration tests for mobile academy controller
@@ -91,5 +96,19 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
 
         assertTrue(SimpleHttpClient.execHttpRequest(request, HttpStatus.SC_INTERNAL_SERVER_ERROR, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
     }
-    
+
+    @Test
+    public void testGetCourseValid() throws IOException, InterruptedException {
+
+        String endpoint = String.format("http://localhost:%d/api/mobileacademy/course",
+                TestContext.getJettyPort());
+        HttpGet request = RequestBuilder.createGetRequest(endpoint);
+
+        CourseResponse response = CourseBuilder.generateValidCourseResponse();
+        Course currentCourse = MobileAcademyConverter.convertCourseResponse(response);
+        when(mobileAcademyService.getCourse()).thenReturn(currentCourse);
+
+        assertTrue(SimpleHttpClient.execHttpRequest(request, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
+    }
+
 }

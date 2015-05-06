@@ -134,6 +134,11 @@ public final class MobileAcademyConverter {
                     protected void configure() {
                         map().setIdentifier(source.getId());
                         map().setFile(source.getFile());
+                        skip().setCreationDate(null);
+                        skip().setModificationDate(null);
+                        skip().setCreator(null);
+                        skip().setModifiedBy(null);
+                        skip().setOwner(null);
                     }
         };
 
@@ -143,6 +148,11 @@ public final class MobileAcademyConverter {
                     protected void configure() {
                         map().setIdentifier(source.getId());
                         map().setFiles(source.getFiles());
+                        skip().setCreationDate(null);
+                        skip().setModificationDate(null);
+                        skip().setCreator(null);
+                        skip().setModifiedBy(null);
+                        skip().setOwner(null);
                     }
         };
 
@@ -152,6 +162,11 @@ public final class MobileAcademyConverter {
                     protected void configure() {
                         map().setIdentifier(source.getId());
                         map().setFile(source.getFile());
+                        skip().setCreationDate(null);
+                        skip().setModificationDate(null);
+                        skip().setCreator(null);
+                        skip().setModifiedBy(null);
+                        skip().setOwner(null);
                     }
         };
 
@@ -161,6 +176,11 @@ public final class MobileAcademyConverter {
                     protected void configure() {
                         map().setIdentifier(source.getId());
                         map().setFile(source.getFile());
+                        skip().setCreationDate(null);
+                        skip().setModificationDate(null);
+                        skip().setCreator(null);
+                        skip().setModifiedBy(null);
+                        skip().setOwner(null);
                     }
         };
 
@@ -170,6 +190,11 @@ public final class MobileAcademyConverter {
                     protected void configure() {
                         map().setIdentifier(source.getId());
                         map().setFile(source.getFile());
+                        skip().setCreationDate(null);
+                        skip().setModificationDate(null);
+                        skip().setCreator(null);
+                        skip().setModifiedBy(null);
+                        skip().setOwner(null);
                     }
         };
 
@@ -181,6 +206,11 @@ public final class MobileAcademyConverter {
                         map().setQuestion(source.getQuestion());
                         map().setCorrectAnswer(source.getCorrectAnswer());
                         map().setWrongAnswer(source.getWrongAnswer());
+                        skip().setCreationDate(null);
+                        skip().setModificationDate(null);
+                        skip().setCreator(null);
+                        skip().setModifiedBy(null);
+                        skip().setOwner(null);
                     }
         };
 

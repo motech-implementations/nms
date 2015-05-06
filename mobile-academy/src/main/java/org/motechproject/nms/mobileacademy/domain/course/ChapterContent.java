@@ -2,12 +2,13 @@ package org.motechproject.nms.mobileacademy.domain.course;
 
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
+import org.motechproject.mds.domain.MdsEntity;
 
 /**
  * Contains details about end menu file and score files.
  */
 @Entity
-public class ChapterContent {
+public class ChapterContent extends MdsEntity {
 
     /**
      * Contains the details about the menu file to be played at the end of the chapter

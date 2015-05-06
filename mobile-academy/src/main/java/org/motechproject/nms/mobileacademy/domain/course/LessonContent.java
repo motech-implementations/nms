@@ -2,12 +2,13 @@ package org.motechproject.nms.mobileacademy.domain.course;
 
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
+import org.motechproject.mds.domain.MdsEntity;
 
 /**
  * Lesson content class
  */
 @Entity
-public class LessonContent {
+public class LessonContent extends MdsEntity {
 
     /**
      * Contains details about actual content files to be played while playing a lesson.
