@@ -38,7 +38,7 @@ public class ServiceUsageCapServiceImpl implements ServiceUsageCapService {
                 public ServiceUsageCap execute(Query query, InstanceSecurityRestriction restriction) {
 
                     query.setFilter("state == flw_state && service == flw_service");
-                    query.declareParameters("org.motechproject.nms.location.domain.State flw_state, org.motechproject.nms.flw.domain.Service flw_service");
+                    query.declareParameters("org.motechproject.nms.region.location.domain.State flw_state, org.motechproject.nms.flw.domain.Service flw_service");
                     query.setUnique(true);
 
                     return (ServiceUsageCap) query.execute(state, service);
@@ -58,7 +58,7 @@ public class ServiceUsageCapServiceImpl implements ServiceUsageCapService {
             public ServiceUsageCap execute(Query query, InstanceSecurityRestriction restriction) {
 
                 query.setFilter("state == flw_state && service == flw_service");
-                query.declareParameters("org.motechproject.nms.location.domain.State flw_state, org.motechproject.nms.flw.domain.Service flw_service");
+                query.declareParameters("org.motechproject.nms.region.location.domain.State flw_state, org.motechproject.nms.flw.domain.Service flw_service");
                 query.setUnique(true);
 
                 return (ServiceUsageCap) query.execute(null, service);
