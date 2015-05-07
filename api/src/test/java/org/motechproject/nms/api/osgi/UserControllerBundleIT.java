@@ -24,18 +24,22 @@ import org.motechproject.nms.flw.repository.ServiceUsageCapDataService;
 import org.motechproject.nms.flw.repository.ServiceUsageDataService;
 import org.motechproject.nms.flw.repository.WhitelistEntryDataService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
-import org.motechproject.nms.kilkari.domain.*;
+import org.motechproject.nms.kilkari.domain.Subscriber;
+import org.motechproject.nms.kilkari.domain.Subscription;
+import org.motechproject.nms.kilkari.domain.SubscriptionMode;
+import org.motechproject.nms.kilkari.domain.SubscriptionPack;
+import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
-import org.motechproject.nms.language.domain.Language;
-import org.motechproject.nms.language.domain.CircleLanguage;
-import org.motechproject.nms.language.repository.CircleLanguageDataService;
-import org.motechproject.nms.language.repository.LanguageDataService;
-import org.motechproject.nms.location.domain.District;
-import org.motechproject.nms.location.domain.State;
-import org.motechproject.nms.location.repository.StateDataService;
+import org.motechproject.nms.region.language.domain.CircleLanguage;
+import org.motechproject.nms.region.language.domain.Language;
+import org.motechproject.nms.region.language.repository.CircleLanguageDataService;
+import org.motechproject.nms.region.language.repository.LanguageDataService;
+import org.motechproject.nms.region.location.domain.District;
+import org.motechproject.nms.region.location.domain.State;
+import org.motechproject.nms.region.location.repository.StateDataService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.motechproject.testing.osgi.http.SimpleHttpClient;
@@ -53,9 +57,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 
 /**
@@ -611,16 +613,6 @@ public class UserControllerBundleIT extends BasePaxIT {
         String expectedJsonResponse = createFailureResponseJson("<callId: Not Present>");
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
-    }
-
-    @Test
-    @Ignore //todo: #60 figure out an elegant way to test that
-    public void testInternalError() throws IOException, InterruptedException {
-        HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/kilkari/user?callingNumber=1111111111&operator=OP&circle=AA", TestContext.getJettyPort()));
-
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                "{\"failureReason\":\"Internal Error\"}",
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 

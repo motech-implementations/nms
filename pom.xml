@@ -730,8 +730,7 @@
         <module>kilkari</module>
         <module>flw</module>
         <module>api</module>
-        <module>language</module>
-        <module>location</module>
+        <module>region</module>
         <module>props</module>
         <module>outbound-dialer</module>
     </modules>

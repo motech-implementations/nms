@@ -3,14 +3,12 @@ package org.motechproject.nms.api.osgi;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
-import org.codehaus.jackson.map.ObjectMapper;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.api.utils.CourseBuilder;
 import org.motechproject.nms.api.utils.RequestBuilder;
 import org.motechproject.nms.api.web.BaseController;
-import org.motechproject.nms.api.web.contract.BadRequest;
 import org.motechproject.nms.api.web.contract.mobileAcademy.CourseResponse;
 import org.motechproject.nms.api.web.contract.mobileAcademy.SaveBookmarkRequest;
 import org.motechproject.nms.api.web.converter.MobileAcademyConverter;
@@ -26,7 +24,6 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
-
 import java.io.IOException;
 
 import static org.junit.Assert.assertTrue;

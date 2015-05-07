@@ -13,10 +13,13 @@ import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionMode;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
+import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
+import org.motechproject.nms.kilkari.exception.NoInboxForSubscriptionException;
+import org.motechproject.nms.kilkari.service.InboxService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
-import org.motechproject.nms.language.domain.Language;
-import org.motechproject.nms.language.service.LanguageService;
+import org.motechproject.nms.region.language.domain.Language;
+import org.motechproject.nms.region.language.service.LanguageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -53,6 +56,9 @@ public class KilkariController extends BaseController {
     @Autowired
     private LanguageService languageService;
 
+    @Autowired
+    private InboxService inboxService;
+
     /**
      * 4.2.2 Get Inbox Details API
      * IVR shall invoke this API to get the Inbox details of the beneficiary identified by ‘callingNumber’.
@@ -74,14 +80,27 @@ public class KilkariController extends BaseController {
             throw new NotFoundException(String.format(NOT_FOUND, "callingNumber"));
         }
 
-        Set<Subscription> subscriptions = subscriber.getActiveSubscriptions();
+        Set<Subscription> subscriptions = subscriber.getAllSubscriptions();
         Set<InboxSubscriptionDetailResponse> subscriptionDetails = new HashSet<>();
+        SubscriptionPackMessage inboxMessage;
+        String weekId;
+        String fileName;
+
         for (Subscription subscription : subscriptions) {
-            //todo: something tells me this is not complete/real code
-            subscriptionDetails.add(new InboxSubscriptionDetailResponse(subscription.getSubscriptionId(),
-                    subscription.getSubscriptionPack().getName(),
-                    "10_1",
-                    "xyz.wav"));
+
+            try {
+                inboxMessage = inboxService.getInboxMessage(subscription);
+                weekId = (inboxMessage == null) ? null : inboxMessage.getWeekId();
+                fileName = (inboxMessage == null) ? null : inboxMessage.getMessageFileName();
+
+                subscriptionDetails.add(new InboxSubscriptionDetailResponse(subscription.getSubscriptionId(),
+                        subscription.getSubscriptionPack().getName(),
+                        weekId,
+                        fileName));
+
+            } catch (NoInboxForSubscriptionException e) {
+                // there's no inbox, don't add anything to the list
+            }
         }
 
         return new InboxResponse(subscriptionDetails);
@@ -179,7 +198,7 @@ public class KilkariController extends BaseController {
                 request.getCallDisconnectReason(),
                 content);
 
-        subscriptionService.addInboxCallDetails(inboxCallDetails);
+        inboxService.addInboxCallDetails(inboxCallDetails);
     }
 
     /**
@@ -216,7 +235,7 @@ public class KilkariController extends BaseController {
         }
 
         subscriptionService.createSubscription(subscriptionRequest.getCallingNumber(), language,
-                                               subscriptionPack, SubscriptionMode.IVR);
+                subscriptionPack, SubscriptionMode.IVR);
     }
 
     /**

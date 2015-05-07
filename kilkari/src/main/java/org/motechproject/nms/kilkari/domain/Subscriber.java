@@ -4,7 +4,7 @@ import org.joda.time.LocalDate;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.annotations.Ignore;
-import org.motechproject.nms.language.domain.Language;
+import org.motechproject.nms.region.language.domain.Language;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Persistent;
@@ -87,6 +87,21 @@ public class Subscriber {
 
     public void setLanguage(Language language) {
         this.language = language;
+    }
+
+    @Ignore
+    public Set<Subscription> getAllSubscriptions() {
+        // TODO: I have no idea why I need to do this, but returning just this.subscriptions always results in
+        // an empty set. Bi-directional relationship bug?
+        Set<Subscription> allSubscriptions = new HashSet<>();
+
+        Iterator<Subscription> subscriptionIterator = subscriptions.iterator();
+        Subscription currentSubscription;
+        while (subscriptionIterator.hasNext()) {
+            currentSubscription = subscriptionIterator.next();
+            allSubscriptions.add(currentSubscription);
+        }
+        return allSubscriptions;
     }
 
     public Set<Subscription> getSubscriptions() {
