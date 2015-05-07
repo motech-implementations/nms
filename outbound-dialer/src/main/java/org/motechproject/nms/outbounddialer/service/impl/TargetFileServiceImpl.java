@@ -24,7 +24,6 @@ import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
-import org.motechproject.nms.region.language.domain.Language;
 import org.motechproject.nms.outbounddialer.domain.AuditRecord;
 import org.motechproject.nms.outbounddialer.domain.CallRetry;
 import org.motechproject.nms.outbounddialer.domain.DayOfTheWeek;
@@ -35,6 +34,7 @@ import org.motechproject.nms.outbounddialer.repository.FileAuditDataService;
 import org.motechproject.nms.outbounddialer.service.TargetFileNotification;
 import org.motechproject.nms.outbounddialer.service.TargetFileService;
 import org.motechproject.nms.outbounddialer.web.contract.FileProcessedStatusRequest;
+import org.motechproject.nms.region.domain.LanguageLocation;
 import org.motechproject.scheduler.contract.RepeatingSchedulableJob;
 import org.motechproject.scheduler.service.MotechSchedulerService;
 import org.motechproject.server.config.SettingsFacade;
@@ -330,15 +330,18 @@ public class TargetFileServiceImpl implements TargetFileService {
 
                     Subscriber subscriber = subscription.getSubscriber();
 
-                    //todo: don't understand why subscriber.getLanguage() doesn't work here...
-                    Language language = (Language) subscriberDataService.getDetachedField(subscriber, "language");
-                    writer.write(language.getCode());
+                    // todo: don't understand why subscriber.getLanguage() doesn't work here...
+                    // it's not working because of https://applab.atlassian.net/browse/MOTECH-1678
+                    LanguageLocation languageLocation;
+                    languageLocation = (LanguageLocation) subscriberDataService.getDetachedField(subscriber,
+                                                                                                 "languageLocation");
+                    writer.write(languageLocation.getCode());
 
                     writeSubscriptionRow(requestId(fileIdentifier, subscription.getSubscriptionId()), imiServiceId,
                             subscriber.getCallingNumber().toString(), NORMAL_PRIORITY, callFlowUrl,
                             "???ContentFileName???", //todo: get that from lauren when it's ready
                             1, //todo: and that too
-                            language.getCode(), subscriber.getCircle(),
+                            languageLocation.getCode(), subscriber.getCircle(),
                             subscription.getMode().getCode(), writer);
                 }
 

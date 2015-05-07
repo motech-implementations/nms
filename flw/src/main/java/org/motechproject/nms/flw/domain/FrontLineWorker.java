@@ -2,8 +2,8 @@ package org.motechproject.nms.flw.domain;
 
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
-import org.motechproject.nms.region.language.domain.Language;
-import org.motechproject.nms.region.location.domain.District;
+import org.motechproject.nms.region.domain.District;
+import org.motechproject.nms.region.domain.LanguageLocation;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Persistent;
@@ -25,7 +25,7 @@ public class FrontLineWorker {
     private String name;
 
     @Field
-    private Language language;
+    private LanguageLocation languageLocation;
 
     @Field
     @Persistent(defaultFetchGroup = "true")
@@ -64,12 +64,12 @@ public class FrontLineWorker {
         this.name = name;
     }
 
-    public Language getLanguage() {
-        return language;
+    public LanguageLocation getLanguageLocation() {
+        return languageLocation;
     }
 
-    public void setLanguage(Language language) {
-        this.language = language;
+    public void setLanguageLocation(LanguageLocation languageLocation) {
+        this.languageLocation = languageLocation;
     }
 
     public District getDistrict() {
@@ -100,7 +100,7 @@ public class FrontLineWorker {
         if (name != null ? !name.equals(that.name) : that.name != null) {
             return false;
         }
-        if (language != null ? !language.equals(that.language) : that.language != null) {
+        if (languageLocation != null ? !languageLocation.equals(that.languageLocation) : that.languageLocation != null) {
             return false;
         }
         return !(district != null ? !district.equals(that.district) : that.district != null);
@@ -112,7 +112,7 @@ public class FrontLineWorker {
         int result = id.hashCode();
         result = 31 * result + contactNumber.hashCode();
         result = 31 * result + (name != null ? name.hashCode() : 0);
-        result = 31 * result + (language != null ? language.hashCode() : 0);
+        result = 31 * result + (languageLocation != null ? languageLocation.hashCode() : 0);
         result = 31 * result + (district != null ? district.hashCode() : 0);
         return result;
     }
@@ -123,7 +123,7 @@ public class FrontLineWorker {
                 "id=" + id +
                 ", contactNumber='" + contactNumber + '\'' +
                 ", name='" + name + '\'' +
-                ", language=" + language +
+                ", languageLocation=" + languageLocation +
                 ", district=" + district +
                 '}';
     }

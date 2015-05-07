@@ -15,8 +15,9 @@ import org.motechproject.nms.kilkari.domain.SubscriptionMode;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
-import org.motechproject.nms.region.language.domain.Language;
-import org.motechproject.nms.region.language.service.LanguageService;
+import org.motechproject.nms.region.domain.LanguageLocation;
+import org.motechproject.nms.region.service.LanguageLocationService;
+import org.motechproject.nms.region.service.LanguageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -52,6 +53,9 @@ public class KilkariController extends BaseController {
 
     @Autowired
     private LanguageService languageService;
+
+    @Autowired
+    private LanguageLocationService languageLocationService;
 
     /**
      * 4.2.2 Get Inbox Details API
@@ -204,8 +208,9 @@ public class KilkariController extends BaseController {
             throw new IllegalArgumentException(failureReasons.toString());
         }
 
-        Language language = languageService.getLanguage(subscriptionRequest.getLanguageLocationCode());
-        if (language == null) {
+        LanguageLocation languageLocation;
+        languageLocation = languageLocationService.getForCode(subscriptionRequest.getLanguageLocationCode());
+        if (languageLocation == null) {
             throw new NotFoundException(String.format(NOT_FOUND, "languageLocationCode"));
         }
 
@@ -215,7 +220,7 @@ public class KilkariController extends BaseController {
             throw new NotFoundException(String.format(NOT_FOUND, "subscriptionPack"));
         }
 
-        subscriptionService.createSubscription(subscriptionRequest.getCallingNumber(), language,
+        subscriptionService.createSubscription(subscriptionRequest.getCallingNumber(), languageLocation,
                                                subscriptionPack, SubscriptionMode.IVR);
     }
 

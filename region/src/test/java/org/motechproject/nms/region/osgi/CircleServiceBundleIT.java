@@ -2,10 +2,10 @@ package org.motechproject.nms.region.osgi;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.motechproject.nms.region.circle.domain.Circle;
-import org.motechproject.nms.region.circle.repository.CircleDataService;
-import org.motechproject.nms.region.location.domain.State;
-import org.motechproject.nms.region.location.repository.StateDataService;
+import org.motechproject.nms.region.domain.Circle;
+import org.motechproject.nms.region.domain.State;
+import org.motechproject.nms.region.repository.CircleDataService;
+import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.ops4j.pax.exam.ExamFactory;

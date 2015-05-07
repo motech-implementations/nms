@@ -12,8 +12,6 @@ import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
-import org.motechproject.nms.region.language.domain.Language;
-import org.motechproject.nms.region.language.repository.LanguageDataService;
 import org.motechproject.nms.outbounddialer.domain.CallRetry;
 import org.motechproject.nms.outbounddialer.domain.CallStage;
 import org.motechproject.nms.outbounddialer.domain.DayOfTheWeek;
@@ -21,6 +19,11 @@ import org.motechproject.nms.outbounddialer.repository.CallRetryDataService;
 import org.motechproject.nms.outbounddialer.service.SettingsService;
 import org.motechproject.nms.outbounddialer.service.TargetFileNotification;
 import org.motechproject.nms.outbounddialer.service.TargetFileService;
+import org.motechproject.nms.region.domain.Circle;
+import org.motechproject.nms.region.domain.Language;
+import org.motechproject.nms.region.domain.LanguageLocation;
+import org.motechproject.nms.region.repository.LanguageDataService;
+import org.motechproject.nms.region.repository.LanguageLocationDataService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.ops4j.pax.exam.ExamFactory;
@@ -39,9 +42,7 @@ import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerSuite.class)
@@ -67,6 +68,9 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
     LanguageDataService languageDataService;
 
     @Inject
+    LanguageLocationDataService languageLocationDataService;
+
+    @Inject
     SettingsService settingsService;
 
     private void setupDatabase() {
@@ -76,8 +80,11 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         languageDataService.deleteAll();
         callRetryDataService.deleteAll();
 
-        Language hindi = languageDataService.create(new Language("Hindi", "HI"));
-        Language urdu = languageDataService.create(new Language("Urdu", "UR"));
+        LanguageLocation hindi = new LanguageLocation("HI", new Circle("AA"), new Language("Hindi"));
+        languageLocationDataService.create(hindi);
+
+        LanguageLocation urdu = new LanguageLocation("UR", new Circle("AA"), new Language("Urdu"));
+        languageLocationDataService.create(urdu);
 
         SubscriptionPack pack1 = subscriptionPackDataService.create(new SubscriptionPack("one",
                 SubscriptionPackType.CHILD, 1, null));

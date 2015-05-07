@@ -1,17 +1,15 @@
 package org.motechproject.nms.api.web;
 
 import org.apache.commons.lang.NotImplementedException;
-
-import org.motechproject.nms.api.web.contract.mobileAcademy.SaveBookmarkRequest;
-import org.motechproject.nms.api.web.contract.mobileAcademy.GetBookmarkResponse;
 import org.motechproject.nms.api.web.contract.mobileAcademy.CourseResponse;
 import org.motechproject.nms.api.web.contract.mobileAcademy.CourseVersionResponse;
+import org.motechproject.nms.api.web.contract.mobileAcademy.GetBookmarkResponse;
+import org.motechproject.nms.api.web.contract.mobileAcademy.SaveBookmarkRequest;
 import org.motechproject.nms.mobileacademy.dto.MaBookmark;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
-
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;

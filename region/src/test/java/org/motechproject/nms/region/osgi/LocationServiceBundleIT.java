@@ -4,23 +4,22 @@ import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.motechproject.nms.region.location.domain.District;
-import org.motechproject.nms.region.location.domain.HealthBlock;
-import org.motechproject.nms.region.location.domain.HealthFacility;
-import org.motechproject.nms.region.location.domain.HealthFacilityType;
-import org.motechproject.nms.region.location.domain.HealthSubFacility;
-import org.motechproject.nms.region.location.domain.State;
-import org.motechproject.nms.region.location.domain.Taluka;
-import org.motechproject.nms.region.location.domain.Village;
-import org.motechproject.nms.region.location.repository.DistrictDataService;
-import org.motechproject.nms.region.location.repository.HealthBlockDataService;
-import org.motechproject.nms.region.location.repository.HealthFacilityDataService;
-import org.motechproject.nms.region.location.repository.HealthFacilityTypeDataService;
-import org.motechproject.nms.region.location.repository.HealthSubFacilityDataService;
-import org.motechproject.nms.region.location.repository.StateDataService;
-import org.motechproject.nms.region.location.repository.TalukaDataService;
-import org.motechproject.nms.region.location.repository.VillageDataService;
-import org.motechproject.nms.region.location.service.LocationService;
+import org.motechproject.nms.region.domain.District;
+import org.motechproject.nms.region.domain.HealthBlock;
+import org.motechproject.nms.region.domain.HealthFacility;
+import org.motechproject.nms.region.domain.HealthFacilityType;
+import org.motechproject.nms.region.domain.HealthSubFacility;
+import org.motechproject.nms.region.domain.State;
+import org.motechproject.nms.region.domain.Taluka;
+import org.motechproject.nms.region.domain.Village;
+import org.motechproject.nms.region.repository.DistrictDataService;
+import org.motechproject.nms.region.repository.HealthBlockDataService;
+import org.motechproject.nms.region.repository.HealthFacilityDataService;
+import org.motechproject.nms.region.repository.HealthFacilityTypeDataService;
+import org.motechproject.nms.region.repository.HealthSubFacilityDataService;
+import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.repository.TalukaDataService;
+import org.motechproject.nms.region.repository.VillageDataService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.ops4j.pax.exam.ExamFactory;
@@ -38,9 +37,6 @@ import static org.junit.Assert.*;
 @ExamReactorStrategy(PerSuite.class)
 @ExamFactory(MotechNativeTestContainerFactory.class)
 public class LocationServiceBundleIT extends BasePaxIT {
-    @Inject
-    private LocationService locationService;
-
     @Inject
     private StateDataService stateDataService;
 
@@ -73,11 +69,6 @@ public class LocationServiceBundleIT extends BasePaxIT {
     HealthFacilityType healthFacilityType;
     HealthFacility healthFacility;
     HealthSubFacility healthSubFacility;
-
-    @Test
-    public void testServicePresent() throws Exception {
-        assertNotNull(locationService);
-    }
 
     private void cleanAll() {
         healthSubFacilityDataService.deleteAll();

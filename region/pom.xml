@@ -72,15 +72,9 @@
                         <Resource-Path>region/resources</Resource-Path>
                         <Context-Path>region</Context-Path>
                         <Export-Package>
-                            org.motechproject.nms.region.location.service;version=${project.version},
-                            org.motechproject.nms.region.location.repository;version=${project.version},
-                            org.motechproject.nms.region.location.domain;version=${project.version},
-                            org.motechproject.nms.region.language.service;version=${project.version},
-                            org.motechproject.nms.region.language.repository;version=${project.version},
-                            org.motechproject.nms.region.language.domain;version=${project.version},
-                            org.motechproject.nms.region.circle.service;version=${project.version},
-                            org.motechproject.nms.region.circle.repository;version=${project.version},
-                            org.motechproject.nms.region.circle.domain;version=${project.version},
+                            org.motechproject.nms.region.service;version=${project.version},
+                            org.motechproject.nms.region.repository;version=${project.version},
+                            org.motechproject.nms.region.domain;version=${project.version},
                         </Export-Package>
                         <Import-Package>
                             org.motechproject.osgi.web,

@@ -5,8 +5,8 @@ import org.motechproject.nms.api.web.exception.NotAuthorizedException;
 import org.motechproject.nms.api.web.exception.NotFoundException;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
-import org.motechproject.nms.region.language.domain.Language;
-import org.motechproject.nms.region.language.service.LanguageService;
+import org.motechproject.nms.region.domain.LanguageLocation;
+import org.motechproject.nms.region.service.LanguageLocationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -26,7 +26,7 @@ public class LanguageController extends BaseController {
     private FrontLineWorkerService frontLineWorkerService;
 
     @Autowired
-    private LanguageService languageService;
+    private LanguageLocationService languageLocationService;
 
     /**
      * 2.2.7 Set User Language Location Code API
@@ -64,12 +64,12 @@ public class LanguageController extends BaseController {
             flw = new FrontLineWorker(callingNumber);
         }
 
-        Language language = languageService.getLanguageByCode(languageLocationCode);
-        if (null == language) {
+        LanguageLocation languageLocation = languageLocationService.getForCode(languageLocationCode);
+        if (null == languageLocation) {
             throw new NotFoundException(String.format(NOT_FOUND, LANGUAGE_LOCATION_CODE));
         }
 
-        flw.setLanguage(language);
+        flw.setLanguageLocation(languageLocation);
 
         if (!frontLineWorkerAuthorizedForAccess(flw)) {
             throw new NotAuthorizedException(String.format(NOT_AUTHORIZED, CALLING_NUMBER));
