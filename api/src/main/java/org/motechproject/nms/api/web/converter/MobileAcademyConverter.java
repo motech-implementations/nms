@@ -60,7 +60,7 @@ public final class MobileAcademyConverter {
         }
     }
 
-    private static PropertyMap<?, ?> getCourseQuestionMap() {
+    private static PropertyMap<org.motechproject.nms.mobileacademy.domain.course.QuestionContent, QuestionContent> getCourseQuestionMap() {
         return new PropertyMap<org.motechproject.nms.mobileacademy.domain.course.QuestionContent, QuestionContent>() {
             @Override
             protected void configure() {
@@ -72,7 +72,7 @@ public final class MobileAcademyConverter {
 };
     }
 
-    private static PropertyMap<?, ?> getCourseQuizMap() {
+    private static PropertyMap<org.motechproject.nms.mobileacademy.domain.course.QuizContentMenu, QuizContentMenu> getCourseQuizMap() {
         return new PropertyMap<org.motechproject.nms.mobileacademy.domain.course.QuizContentMenu, QuizContentMenu>() {
             @Override
             protected void configure() {
@@ -82,8 +82,8 @@ public final class MobileAcademyConverter {
 };
     }
 
-    private static PropertyMap<?, ?> getCourseLessonContentMenuMap() {
-        return new PropertyMap< org.motechproject.nms.mobileacademy.domain.course.LessonContentMenu, LessonContentMenu>() {
+    private static PropertyMap<org.motechproject.nms.mobileacademy.domain.course.LessonContentMenu, LessonContentMenu> getCourseLessonContentMenuMap() {
+        return new PropertyMap<org.motechproject.nms.mobileacademy.domain.course.LessonContentMenu, LessonContentMenu>() {
             @Override
             protected void configure() {
                 map().setId(source.getIdentifier());
@@ -92,7 +92,7 @@ public final class MobileAcademyConverter {
 };
     }
 
-    private static PropertyMap<?, ?> getCourseLessonContentLessonMap() {
+    private static PropertyMap<org.motechproject.nms.mobileacademy.domain.course.LessonContentLesson, LessonContentLesson> getCourseLessonContentLessonMap() {
         return new PropertyMap<org.motechproject.nms.mobileacademy.domain.course.LessonContentLesson, LessonContentLesson>() {
             @Override
             protected void configure() {
@@ -102,7 +102,7 @@ public final class MobileAcademyConverter {
 };
     }
 
-    private static PropertyMap<?, ?> getCourseChapterScoreMap() {
+    private static PropertyMap<org.motechproject.nms.mobileacademy.domain.course.ChapterContentScore, ChapterContentScore> getCourseChapterScoreMap() {
         return new PropertyMap<org.motechproject.nms.mobileacademy.domain.course.ChapterContentScore, ChapterContentScore>() {
             @Override
             protected void configure() {
@@ -112,7 +112,7 @@ public final class MobileAcademyConverter {
 };
     }
 
-    private static PropertyMap<?, ?> getCourseChapterContentMap() {
+    private static PropertyMap<org.motechproject.nms.mobileacademy.domain.course.ChapterContentMenu, ChapterContentMenu> getCourseChapterContentMap() {
         return new PropertyMap<org.motechproject.nms.mobileacademy.domain.course.ChapterContentMenu, ChapterContentMenu>() {
             @Override
             protected void configure() {
@@ -135,12 +135,12 @@ public final class MobileAcademyConverter {
 
         // Add model mapping for each sub-class that cannot be merged automatically
         modelMapper.addMappings(getCourseMap());
-        modelMapper.addMappings(getChapterContentMap());
+        modelMapper.addMappings(getChapterContentMenuMap());
         modelMapper.addMappings(getChapterScoreMap());
         modelMapper.addMappings(getLessonContentLessonMap());
         modelMapper.addMappings(getLessonContentMenuMap());
-        modelMapper.addMappings(getQuizMap());
-        modelMapper.addMappings(getQuestionMap());
+        modelMapper.addMappings(getQuizContentMap());
+        modelMapper.addMappings(getQuestionContentMap());
 
         // the validate checks if any of the source and target properties are unmapped
         try {
@@ -152,7 +152,7 @@ public final class MobileAcademyConverter {
         }
     }
 
-    private static PropertyMap<?, ?> getQuestionMap() {
+    private static PropertyMap<QuestionContent, org.motechproject.nms.mobileacademy.domain.course.QuestionContent> getQuestionContentMap() {
         return new PropertyMap<QuestionContent, org.motechproject.nms.mobileacademy.domain.course.QuestionContent>() {
             @Override
             protected void configure() {
@@ -170,7 +170,7 @@ public final class MobileAcademyConverter {
 };
     }
 
-    private static PropertyMap<?, ?> getQuizMap() {
+    private static PropertyMap<QuizContentMenu, org.motechproject.nms.mobileacademy.domain.course.QuizContentMenu> getQuizContentMap() {
         return new PropertyMap<QuizContentMenu, org.motechproject.nms.mobileacademy.domain.course.QuizContentMenu>() {
             @Override
             protected void configure() {
@@ -186,7 +186,7 @@ public final class MobileAcademyConverter {
 };
     }
 
-    private static PropertyMap<?, ?> getLessonContentMenuMap() {
+    private static PropertyMap<LessonContentMenu, org.motechproject.nms.mobileacademy.domain.course.LessonContentMenu> getLessonContentMenuMap() {
         return new PropertyMap<LessonContentMenu, org.motechproject.nms.mobileacademy.domain.course.LessonContentMenu>() {
             @Override
             protected void configure() {
@@ -202,7 +202,7 @@ public final class MobileAcademyConverter {
 };
     }
 
-    private static PropertyMap<?, ?> getLessonContentLessonMap() {
+    private static PropertyMap<LessonContentLesson, org.motechproject.nms.mobileacademy.domain.course.LessonContentLesson> getLessonContentLessonMap() {
         return new PropertyMap<LessonContentLesson, org.motechproject.nms.mobileacademy.domain.course.LessonContentLesson>() {
             @Override
             protected void configure() {
@@ -218,7 +218,7 @@ public final class MobileAcademyConverter {
 };
     }
 
-    private static PropertyMap<?, ?> getChapterScoreMap() {
+    private static PropertyMap<ChapterContentScore, org.motechproject.nms.mobileacademy.domain.course.ChapterContentScore> getChapterScoreMap() {
         return new PropertyMap<ChapterContentScore, org.motechproject.nms.mobileacademy.domain.course.ChapterContentScore>() {
             @Override
             protected void configure() {
@@ -234,7 +234,7 @@ public final class MobileAcademyConverter {
 };
     }
 
-    private static PropertyMap<?, ?> getChapterContentMap() {
+    private static PropertyMap<ChapterContentMenu, org.motechproject.nms.mobileacademy.domain.course.ChapterContentMenu> getChapterContentMenuMap() {
         return new PropertyMap<ChapterContentMenu, org.motechproject.nms.mobileacademy.domain.course.ChapterContentMenu>() {
             @Override
             protected void configure() {
@@ -250,17 +250,18 @@ public final class MobileAcademyConverter {
         };
     }
 
-    private static PropertyMap<?, ?> getCourseMap() {
+    private static PropertyMap<CourseResponse, Course> getCourseMap() {
         return new PropertyMap<CourseResponse, Course>() {
-                @Override
-                protected void configure() {
-                    skip().setId(null);
-                    skip().setCreationDate(null);
-                    skip().setModificationDate(null);
-                    skip().setCreator(null);
-                    skip().setModifiedBy(null);
-                    skip().setOwner(null);
-                }
+            @Override
+            protected void configure() {
+                skip().setId(null);
+                skip().setCreationDate(null);
+                skip().setModificationDate(null);
+                skip().setCreator(null);
+                skip().setModifiedBy(null);
+                skip().setOwner(null);
+            }
         };
     }
+
 }
