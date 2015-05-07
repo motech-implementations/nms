@@ -89,6 +89,21 @@ public class Subscriber {
         this.languageLocation = languageLocation;
     }
 
+    @Ignore
+    public Set<Subscription> getAllSubscriptions() {
+        // TODO: I have no idea why I need to do this, but returning just this.subscriptions always results in
+        // an empty set. Bi-directional relationship bug?
+        Set<Subscription> allSubscriptions = new HashSet<>();
+
+        Iterator<Subscription> subscriptionIterator = subscriptions.iterator();
+        Subscription currentSubscription;
+        while (subscriptionIterator.hasNext()) {
+            currentSubscription = subscriptionIterator.next();
+            allSubscriptions.add(currentSubscription);
+        }
+        return allSubscriptions;
+    }
+
     public Set<Subscription> getSubscriptions() {
         return subscriptions;
     }

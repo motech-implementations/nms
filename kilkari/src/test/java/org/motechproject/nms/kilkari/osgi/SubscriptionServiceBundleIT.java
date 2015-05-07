@@ -16,6 +16,7 @@ import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackMessageDataService;
+import org.motechproject.nms.kilkari.service.InboxService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.region.domain.Circle;
@@ -50,6 +51,8 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     private SubscriberService subscriberService;
     @Inject
     private SubscriptionService subscriptionService;
+    @Inject
+    private InboxService inboxService;
     @Inject
     private SubscriberDataService subscriberDataService;
     @Inject
@@ -125,7 +128,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         assertEquals(new HashSet<>(Arrays.asList(pack1, pack2)), packs);
 
-        long id = subscriptionService.addInboxCallDetails(new InboxCallDetails(
+        long id = inboxService.addInboxCallDetails(new InboxCallDetails(
                 1111111111L,
                 "OP",
                 "AA",

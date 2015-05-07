@@ -2,6 +2,7 @@ package org.motechproject.nms.mobileacademy.domain.course;
 
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
+import org.motechproject.mds.domain.MdsEntity;
 
 import java.util.List;
 
@@ -10,7 +11,7 @@ import java.util.List;
  * upon the user’s score in the quiz.
  */
 @Entity
-public class ChapterContentScore {
+public class ChapterContentScore extends MdsEntity {
 
     /**
      * This is a id for the Score files of the chapter in the format ”Chapter<ChapterId>_Score”, where
@@ -29,6 +30,11 @@ public class ChapterContentScore {
     private List<String> files;
 
     public ChapterContentScore() {
+    }
+
+    public ChapterContentScore(String identifier, List<String> files) {
+        this.identifier = identifier;
+        this.files = files;
     }
 
     public String getIdentifier() {

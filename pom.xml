@@ -732,7 +732,7 @@
         <module>api</module>
         <module>region</module>
         <module>props</module>
-        <module>outbound-dialer</module>
+        <module>imi</module>
     </modules>
 
     <build>

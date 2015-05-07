@@ -1,14 +1,21 @@
 package org.motechproject.nms.api.web.contract.mobileAcademy.course;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+
 /**
  * Question metadata
  */
 public class Question {
 
+    @NotNull
     private String name;
 
-    private String correctAnswerOption;
+    @NotNull
+    private int correctAnswerOption;
 
+    @NotNull
+    @Valid
     private QuestionContent content;
 
     public Question() {
@@ -22,11 +29,11 @@ public class Question {
         this.name = name;
     }
 
-    public String getCorrectAnswerOption() {
+    public int getCorrectAnswerOption() {
         return correctAnswerOption;
     }
 
-    public void setCorrectAnswerOption(String correctAnswerOption) {
+    public void setCorrectAnswerOption(int correctAnswerOption) {
         this.correctAnswerOption = correctAnswerOption;
     }
 

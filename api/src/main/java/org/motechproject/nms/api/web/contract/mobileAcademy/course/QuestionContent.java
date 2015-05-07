@@ -1,27 +1,33 @@
 package org.motechproject.nms.api.web.contract.mobileAcademy.course;
 
+import javax.validation.constraints.NotNull;
+
 /**
  * Question content
  */
 public class QuestionContent {
 
-    private String name;
+    @NotNull
+    private String id;
 
+    @NotNull
     private String question;
 
+    @NotNull
     private String correctAnswer;
 
+    @NotNull
     private String wrongAnswer;
 
     public QuestionContent() {
     }
 
-    public String getName() {
-        return name;
+    public String getId() {
+        return id;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getQuestion() {
