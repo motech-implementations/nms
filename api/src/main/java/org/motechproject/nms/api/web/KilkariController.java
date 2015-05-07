@@ -17,7 +17,6 @@ import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.region.domain.LanguageLocation;
 import org.motechproject.nms.region.service.LanguageLocationService;
-import org.motechproject.nms.region.service.LanguageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -50,9 +49,6 @@ public class KilkariController extends BaseController {
 
     @Autowired
     private SubscriptionService subscriptionService;
-
-    @Autowired
-    private LanguageService languageService;
 
     @Autowired
     private LanguageLocationService languageLocationService;

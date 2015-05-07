@@ -11,7 +11,6 @@ import org.motechproject.nms.props.domain.CallStatus;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.LanguageLocation;
 import org.motechproject.nms.region.domain.State;
-import org.motechproject.nms.region.service.LocationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,8 +47,6 @@ public class BaseController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BaseController.class);
 
-    @Autowired
-    private LocationService locationService;
     @Autowired
     private WhitelistService whitelistService;
 
