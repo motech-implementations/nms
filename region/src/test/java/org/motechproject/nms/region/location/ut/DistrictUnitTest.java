@@ -1,4 +1,4 @@
-package org.motechproject.nms.location.osgi.ut;
+package org.motechproject.nms.region.location.osgi.ut;
 
 import org.junit.Before;
 import org.junit.Test;

@@ -3,7 +3,6 @@ package org.motechproject.nms.api.osgi;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
-import org.codehaus.jackson.map.deser.ValueInstantiators;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.api.utils.RequestBuilder;
@@ -20,7 +19,6 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
-
 import java.io.IOException;
 
 import static org.junit.Assert.assertTrue;

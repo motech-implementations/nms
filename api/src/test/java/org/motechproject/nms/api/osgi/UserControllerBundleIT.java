@@ -33,13 +33,14 @@ import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
-import org.motechproject.nms.location.domain.District;
-import org.motechproject.nms.location.domain.State;
-import org.motechproject.nms.location.repository.StateDataService;
+import org.motechproject.nms.region.circle.domain.Circle;
 import org.motechproject.nms.region.language.domain.Language;
 import org.motechproject.nms.region.language.domain.LanguageLocation;
 import org.motechproject.nms.region.language.repository.LanguageDataService;
 import org.motechproject.nms.region.language.repository.LanguageLocationDataService;
+import org.motechproject.nms.region.location.domain.District;
+import org.motechproject.nms.region.location.domain.State;
+import org.motechproject.nms.region.location.repository.StateDataService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.motechproject.testing.osgi.http.SimpleHttpClient;
@@ -137,9 +138,9 @@ public class UserControllerBundleIT extends BasePaxIT {
     private void createKilkariTestData() {
         cleanAllData();
 
-        Language ta = languageDataService.create(new Language("tamil", "50"));
+        Language ta = languageDataService.create(new Language("tamil"));
 
-        LanguageLocation languageLocation = new LanguageLocation("AA", ta);
+        LanguageLocation languageLocation = new LanguageLocation("50", new Circle("AA"), ta);
         languageLocationDataService.create(languageLocation);
 
         SubscriptionPack pack1 = subscriptionPackDataService.create(new SubscriptionPack("pack1",
@@ -149,8 +150,8 @@ public class UserControllerBundleIT extends BasePaxIT {
         List<SubscriptionPack> onePack = Arrays.asList(pack1);
         List<SubscriptionPack> twoPacks = Arrays.asList(pack1, pack2);
 
-        Subscriber subscriber1 = subscriberDataService.create(new Subscriber(1000000000L, ta));
-        Subscriber subscriber2 = subscriberDataService.create(new Subscriber(2000000000L, ta));
+        Subscriber subscriber1 = subscriberDataService.create(new Subscriber(1000000000L, languageLocation));
+        Subscriber subscriber2 = subscriberDataService.create(new Subscriber(2000000000L, languageLocation));
         Subscriber subscriber3 = subscriberDataService.create(new Subscriber(3000000000L));
 
         Subscription subscription1 = subscriptionDataService.create(new Subscription(subscriber1, pack1,
@@ -167,10 +168,10 @@ public class UserControllerBundleIT extends BasePaxIT {
         FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 1111111111L);
         frontLineWorkerService.add(flw);
 
-        Language language = new Language("Papiamento", "99");
+        Language language = new Language("Papiamento");
         languageDataService.create(language);
 
-        LanguageLocation languageLocation = new LanguageLocation("AA", language);
+        LanguageLocation languageLocation = new LanguageLocation("99", new Circle("AA"), language);
         languageLocationDataService.create(languageLocation);
 
         ServiceUsageCap serviceUsageCap = new ServiceUsageCap(null, Service.MOBILE_KUNJI, 3600);
@@ -180,17 +181,20 @@ public class UserControllerBundleIT extends BasePaxIT {
     private void createFlwWithLanguageServiceUsageAndCappedService() {
         cleanAllData();
 
-        Language language = new Language("English", "10");
+        Language language = new Language("English");
         languageDataService.create(language);
+
+        LanguageLocation languageLocation = new LanguageLocation("10", new Circle("AA"), language);
+        languageLocationDataService.create(languageLocation);
 
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
-        flw.setLanguage(language);
+        flw.setLanguageLocation(languageLocation);
         frontLineWorkerService.add(flw);
 
-        language = new Language("Papiamento", "99");
+        language = new Language("Papiamento");
         languageDataService.create(language);
 
-        LanguageLocation languageLocation = new LanguageLocation("AA", language);
+        languageLocation = new LanguageLocation("99", new Circle("AA"), language);
         languageLocationDataService.create(languageLocation);
 
         ServiceUsageCap serviceUsageCap = new ServiceUsageCap(null, Service.MOBILE_KUNJI, 3600);
@@ -204,17 +208,20 @@ public class UserControllerBundleIT extends BasePaxIT {
     private void createFlwWithLanguageFullServiceUsageAndCappedService() {
         cleanAllData();
 
-        Language language = new Language("English", "10");
+        Language language = new Language("English");
         languageDataService.create(language);
+
+        LanguageLocation languageLocation = new LanguageLocation("10", new Circle("AA"), language);
+        languageLocationDataService.create(languageLocation);
 
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
-        flw.setLanguage(language);
+        flw.setLanguageLocation(languageLocation);
         frontLineWorkerService.add(flw);
 
-        language = new Language("Papiamento", "99");
+        language = new Language("Papiamento");
         languageDataService.create(language);
 
-        LanguageLocation languageLocation = new LanguageLocation("AA", language);
+        languageLocation = new LanguageLocation("99", new Circle("AA"), language);
         languageLocationDataService.create(languageLocation);
 
         ServiceUsageCap serviceUsageCap = new ServiceUsageCap(null, Service.MOBILE_KUNJI, 3600);
@@ -227,17 +234,20 @@ public class UserControllerBundleIT extends BasePaxIT {
     private void createFlwWithLanguageFullUsageOfBothServiceUncapped() {
         cleanAllData();
 
-        Language language = new Language("English", "10");
+        Language language = new Language("English");
         languageDataService.create(language);
+
+        LanguageLocation languageLocation = new LanguageLocation("10", new Circle("AA"), language);
+        languageLocationDataService.create(languageLocation);
 
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
-        flw.setLanguage(language);
+        flw.setLanguageLocation(languageLocation);
         frontLineWorkerService.add(flw);
 
-        language = new Language("Papiamento", "99");
+        language = new Language("Papiamento");
         languageDataService.create(language);
 
-        LanguageLocation languageLocation = new LanguageLocation("AA", language);
+        languageLocation = new LanguageLocation("99", new Circle("AA"), language);
         languageLocationDataService.create(languageLocation);
 
         ServiceUsage serviceUsage = new ServiceUsage(flw, Service.MOBILE_KUNJI, 1, 1, 1, DateTime.now());
@@ -279,8 +289,11 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         // Currently the code to get a state from a languageLocationCode is stubbed out.
         // llc 34 returns the state "Whitelist".  There is a todo tracking this.
-        Language language = new Language("Language From Whitelisted State", "34");
+        Language language = new Language("Language From Whitelisted State");
         languageDataService.create(language);
+
+        LanguageLocation languageLocation = new LanguageLocation("34", new Circle("AA"), language);
+        languageLocationDataService.create(languageLocation);
 
         State whitelist = new State("Whitelist", 1l);
         stateDataService.create(whitelist);
@@ -289,16 +302,16 @@ public class UserControllerBundleIT extends BasePaxIT {
         whitelistEntryDataService.create(entry);
 
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111l);
-        flw.setLanguage(language);
+        flw.setLanguageLocation(languageLocation);
         frontLineWorkerService.add(flw);
     }
 
     private void createCircleWithLanguage() {
         cleanAllData();
-        Language language = new Language("Papiamento", "99");
+        Language language = new Language("Papiamento");
         languageDataService.create(language);
 
-        LanguageLocation languageLocation = new LanguageLocation("AA", language);
+        LanguageLocation languageLocation = new LanguageLocation("99", new Circle("AA"), language);
         languageLocationDataService.create(languageLocation);
     }
 
@@ -824,9 +837,9 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         FrontLineWorker flw = frontLineWorkerService.getByContactNumber(1111111111l);
         assertNotNull(flw);
-        Language language = flw.getLanguage();
-        assertNotNull(language);
-        assertEquals("FLW Language Code", "99", language.getCode());
+        LanguageLocation languageLocation = flw.getLanguageLocation();
+        assertNotNull(languageLocation);
+        assertEquals("FLW Language Code", "99", languageLocation.getCode());
     }
 
     @Test
@@ -850,8 +863,8 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK));
 
         FrontLineWorker flw = frontLineWorkerService.getByContactNumber(1111111111L);
-        Language language = flw.getLanguage();
-        assertNotNull(language);
-        assertEquals("FLW Language Code", "99", language.getCode());
+        LanguageLocation languageLocation = flw.getLanguageLocation();
+        assertNotNull(languageLocation);
+        assertEquals("FLW Language Code", "99", languageLocation.getCode());
     }
 }
