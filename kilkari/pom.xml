@@ -42,7 +42,7 @@
 
         <dependency>
             <groupId>org.motechproject.nms</groupId>
-            <artifactId>language</artifactId>
+            <artifactId>region</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>
@@ -81,6 +81,7 @@
                             org.motechproject.nms.kilkari.service;version=${project.version},
                             org.motechproject.nms.kilkari.repository;version=${project.version},
                             org.motechproject.nms.kilkari.domain;version=${project.version},
+                            org.motechproject.nms.kilkari.exception;version=${project.version},
                         </Export-Package>
                         <Import-Package>
                             org.motechproject.osgi.web,

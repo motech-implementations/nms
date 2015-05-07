@@ -7,9 +7,6 @@ import org.motechproject.nms.flw.domain.ServiceUsage;
 import java.util.List;
 
 
-/**
- * Created by rob on 4/13/15.
- */
 public interface ServiceUsageService {
     void add(ServiceUsage record);
 

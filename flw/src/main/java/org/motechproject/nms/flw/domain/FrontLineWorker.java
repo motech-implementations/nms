@@ -2,8 +2,8 @@ package org.motechproject.nms.flw.domain;
 
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
-import org.motechproject.nms.language.domain.Language;
-import org.motechproject.nms.location.domain.District;
+import org.motechproject.nms.region.language.domain.Language;
+import org.motechproject.nms.region.location.domain.District;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Persistent;

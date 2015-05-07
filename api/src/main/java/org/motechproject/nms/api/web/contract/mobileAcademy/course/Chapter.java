@@ -1,5 +1,8 @@
 package org.motechproject.nms.api.web.contract.mobileAcademy.course;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.util.List;
 
 /**
@@ -7,11 +10,21 @@ import java.util.List;
  */
 public class Chapter {
 
+    @NotNull
     private String name;
 
+    @NotNull
+    @Valid
     private ChapterContent content;
 
+    @NotNull
+    @Size(min = 4, max = 4)
+    @Valid
     private List<Lesson> lessons;
+
+    @NotNull
+    @Valid
+    private Quiz quiz;
 
     public Chapter() {
     }
@@ -38,5 +51,13 @@ public class Chapter {
 
     public void setLessons(List<Lesson> lessons) {
         this.lessons = lessons;
+    }
+
+    public Quiz getQuiz() {
+        return quiz;
+    }
+
+    public void setQuiz(Quiz quiz) {
+        this.quiz = quiz;
     }
 }

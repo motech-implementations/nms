@@ -7,6 +7,7 @@ import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+
 /**
  * Implementation of the {@link SubscriptionService} interface.
  */
@@ -39,4 +40,5 @@ public class SubscriberServiceImpl implements SubscriberService {
     public void delete(Subscriber subscriber) {
         subscriberDataService.delete(subscriber);
     }
+
 }
