@@ -5,6 +5,7 @@ import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.domain.MdsEntity;
 import org.motechproject.nms.mobileacademy.domain.course.Chapter;
 
+import javax.jdo.annotations.Unique;
 import java.util.List;
 
 /**
@@ -14,12 +15,18 @@ import java.util.List;
 public class Course extends MdsEntity {
 
     @Field
+    @Unique
     private String name;
 
     @Field
     private List<Chapter> chapters;
 
     public Course() {
+    }
+
+    public Course(String name, List<Chapter> chapters) {
+        this.name = name;
+        this.chapters = chapters;
     }
 
     public String getName() {

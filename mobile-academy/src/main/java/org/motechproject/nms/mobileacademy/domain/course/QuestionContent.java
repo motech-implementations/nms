@@ -2,13 +2,14 @@ package org.motechproject.nms.mobileacademy.domain.course;
 
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
+import org.motechproject.mds.domain.MdsEntity;
 
 /**
  * Internal question content class
  * * This contains details about various files to be played during the question.
  */
 @Entity
-public class QuestionContent {
+public class QuestionContent extends MdsEntity {
 
     /**
      * Specifies the name of audio file to be played for the question.

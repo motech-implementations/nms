@@ -1,15 +1,19 @@
 package org.motechproject.nms.api.web.contract.mobileAcademy.course;
 
-/**
- * Lesson metadata
- */
-public class LessonMeta {
+import javax.validation.constraints.NotNull;
 
+/**
+ * Lesson content lesson metadata
+ */
+public class LessonContentLesson {
+
+    @NotNull
     private String id;
 
+    @NotNull
     private String file;
 
-    public LessonMeta() {
+    public LessonContentLesson() {
     }
 
     public String getId() {

@@ -1,15 +1,19 @@
 package org.motechproject.nms.api.web.contract.mobileAcademy.course;
 
-/**
- * Created by kosh on 4/26/15.
- */
-public class QuizMenu {
+import javax.validation.constraints.NotNull;
 
+/**
+ * Quiz menu object to store quiz menu metadata
+ */
+public class QuizContentMenu {
+
+    @NotNull
     private String id;
 
+    @NotNull
     private String file;
 
-    public QuizMenu() {
+    public QuizContentMenu() {
     }
 
     public String getId() {

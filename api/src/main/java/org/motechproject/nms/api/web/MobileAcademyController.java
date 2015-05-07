@@ -6,8 +6,12 @@ import org.motechproject.nms.api.web.contract.mobileAcademy.SaveBookmarkRequest;
 import org.motechproject.nms.api.web.contract.mobileAcademy.GetBookmarkResponse;
 import org.motechproject.nms.api.web.contract.mobileAcademy.CourseResponse;
 import org.motechproject.nms.api.web.contract.mobileAcademy.CourseVersionResponse;
+import org.motechproject.nms.api.web.converter.MobileAcademyConverter;
+import org.motechproject.nms.mobileacademy.domain.Course;
 import org.motechproject.nms.mobileacademy.dto.MaBookmark;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -32,6 +36,8 @@ public class MobileAcademyController extends BaseController {
      */
     private MobileAcademyService mobileAcademyService;
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(MobileAcademyController.class);
+
     /**
      * Constructor for controller
      * @param mobileAcademyService mobile academy service
@@ -54,8 +60,24 @@ public class MobileAcademyController extends BaseController {
     @ResponseBody
     public CourseResponse getCourse() {
 
-        // TODO: hook up to get course in MA service
-        return new CourseResponse();
+        Course getCourse = mobileAcademyService.getCourse();
+
+        if (getCourse == null) {
+            LOGGER.error("No course found in database. Check course ingestion and name");
+            throw new InternalError(String.format(NOT_FOUND, "course"));
+        }
+
+        CourseResponse response = MobileAcademyConverter.convertCourse(getCourse);
+
+        if (response != null) {
+
+            // TODO: course response format validations on the way out?
+            return response;
+        } else {
+            LOGGER.error("Failed dto mapping, check object mapping");
+            throw new InternalError(String.format(INVALID, "CourseResponse"));
+        }
+
     }
 
     /**

@@ -86,6 +86,9 @@
                         <Import-Package>
                             org.motechproject.osgi.web,
                             org.motechproject.mtraining.domain,
+                            org.modelmapper.internal.cglib.proxy,
+                            org.modelmapper.internal.cglib.core,
+                            org.modelmapper.internal.cglib.transform,
                             *
                         </Import-Package>
                     </instructions>

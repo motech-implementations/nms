@@ -1,15 +1,17 @@
 package org.motechproject.nms.api.web.contract.mobileAcademy.course;
 
-import java.util.List;
+import javax.validation.constraints.NotNull;
 
 /**
  * Chapter content menu
  */
 public class ChapterContentMenu {
 
+    @NotNull
     private String id;
 
-    private List<String> files;
+    @NotNull
+    private String file;
 
     public ChapterContentMenu() {
     }
@@ -22,11 +24,11 @@ public class ChapterContentMenu {
         this.id = id;
     }
 
-    public List<String> getFiles() {
-        return files;
+    public String getFile() {
+        return file;
     }
 
-    public void setFiles(List<String> files) {
-        this.files = files;
+    public void setFile(String file) {
+        this.file = file;
     }
 }
