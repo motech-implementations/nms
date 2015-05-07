@@ -42,7 +42,12 @@
         <dependency>
             <groupId>org.motechproject</groupId>
             <artifactId>mtraining</artifactId>
-            <version>0.26-SNAPSHOT</version>
+            <version>${motech.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.modelmapper.extensions</groupId>
+            <artifactId>modelmapper-spring</artifactId>
+            <version>0.7.4</version>
         </dependency>
     </dependencies>
 

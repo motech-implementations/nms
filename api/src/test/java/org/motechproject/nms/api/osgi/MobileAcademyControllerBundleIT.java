@@ -4,6 +4,7 @@ import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.api.utils.CourseBuilder;
@@ -95,6 +96,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
     }
 
     @Test
+    @Ignore
     public void testGetCourseValid() throws IOException, InterruptedException {
 
         String endpoint = String.format("http://localhost:%d/api/mobileacademy/course",

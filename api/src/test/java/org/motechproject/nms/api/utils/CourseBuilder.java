@@ -48,8 +48,8 @@ public final class CourseBuilder {
         QuizContent qc = new QuizContent();
 
         QuizContentMenu qcm = new QuizContentMenu();
-        qcm.setFile("foo.bar");
-        qcm.setId("qcm.id");
+        qcm.setFile("foo-bar");
+        qcm.setId("qcm-id");
         qc.setMenu(qcm);
 
         List<Question> questions = new ArrayList<>();
@@ -83,12 +83,12 @@ public final class CourseBuilder {
         ChapterContent cc = new ChapterContent();
 
         ChapterContentMenu ccm = new ChapterContentMenu();
-        ccm.setId("ccm.id");
-        ccm.setFile("ccm.file");
+        ccm.setId("ccm-id");
+        ccm.setFile("ccm-file");
         cc.setMenu(ccm);
 
         ChapterContentScore ccs = new ChapterContentScore();
-        ccs.setId("ccs.id");
+        ccs.setId("ccs-id");
         ccs.setFiles(new ArrayList<String>(
                 Arrays.asList("file1", "file2", "file3", "file4", "file5")
         ));
@@ -115,13 +115,13 @@ public final class CourseBuilder {
         LessonContent lc = new LessonContent();
 
         LessonContentMenu lcm = new LessonContentMenu();
-        lcm.setId("lcm.id");
-        lcm.setFile("lcm.file");
+        lcm.setId("lcm-id");
+        lcm.setFile("lcm-file");
         lc.setMenu(lcm);
 
         LessonContentLesson lcl = new LessonContentLesson();
-        lcl.setFile("lcl.file");
-        lcl.setId("lcl.id");
+        lcl.setFile("lcl-file");
+        lcl.setId("lcl-id");
         lc.setLesson(lcl);
 
         return lc;
