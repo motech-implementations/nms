@@ -184,4 +184,13 @@ public class CallDetailRecord {
                 fields[6], fields[7], fields[8], fields[9], CallStatus.fromInt(Integer.parseInt(fields[10])),
                 Integer.parseInt(fields[11]), Integer.parseInt(fields[12]));
     }
+
+    @Override
+    public String toString() {
+        return "CallDetailRecord{" +
+                "requestId='" + requestId + '\'' +
+                ", serviceId='" + serviceId + '\'' +
+                ", msisdn='" + msisdn + '\'' +
+                '}';
+    }
 }

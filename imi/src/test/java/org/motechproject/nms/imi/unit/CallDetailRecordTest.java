@@ -31,7 +31,7 @@ public class CallDetailRecordTest {
     @Test
     public void testValidFields() {
         CallDetailRecord cdr =
-                CallDetailRecord.fromLine("a,b,c,d,5,f,g,h,i,j,11,12,13");
+                CallDetailRecord.fromLine("a,b,c,d,5,f,g,h,i,j,1,12,13");
         assertNotNull(cdr);
     }
 }
