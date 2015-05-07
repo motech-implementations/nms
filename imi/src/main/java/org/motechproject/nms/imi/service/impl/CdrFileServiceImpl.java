@@ -12,6 +12,7 @@ import org.motechproject.nms.imi.repository.AuditDataService;
 import org.motechproject.nms.imi.repository.CallDetailRecordDataService;
 import org.motechproject.nms.imi.service.CdrFileService;
 import org.motechproject.nms.imi.web.contract.CdrFileNotificationRequest;
+import org.motechproject.nms.props.domain.CallStatus;
 import org.motechproject.server.config.SettingsFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,6 +82,13 @@ public class CdrFileServiceImpl implements CdrFileService {
     }
 
 
+    private void rescheduleCall(CallDetailRecord cdr) {
+        LOGGER.info("Rescheduling {}", cdr);
+
+        //todo:...
+    }
+
+
     @Override
     public void processCdrFile(CdrFileNotificationRequest request) {
         final String cdrFileLocation = settingsFacade.getProperty(CDR_FILE_DIRECTORY);
@@ -91,9 +99,13 @@ public class CdrFileServiceImpl implements CdrFileService {
         //read the summary file and keep it in memory - so we can easily refer to it when we process the cdrDetail file
         List<CallDetailRecord> cdrs = readCdrs(cdrFileLocation, request.getCdrSummary().getCdrFile());
 
-        //for now, and hopefully for ever, only process the summary file
+        //for now, and hopefully for, like, ever, only process the summary file
         for (int lineNumber = 1; lineNumber < cdrs.size(); lineNumber++) {
-            cdrDataService.create(cdrs.get(lineNumber - 1));
+            CallDetailRecord cdr = cdrs.get(lineNumber - 1);
+            cdrDataService.create(cdr);
+            if (cdr.getFinalStatus() != CallStatus.SUCCESS) {
+                rescheduleCall(cdr);
+            }
         }
 
         //todo: add recordCount, think about checksum

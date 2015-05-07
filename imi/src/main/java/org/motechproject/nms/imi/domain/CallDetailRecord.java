@@ -2,33 +2,46 @@ package org.motechproject.nms.imi.domain;
 
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
+import org.motechproject.nms.props.domain.CallStatus;
 
 @Entity(tableName = "nms_obd_cdrs")
 public class CallDetailRecord {
     @Field
     private String requestId;
+
     @Field
     private String serviceId;
+
     @Field
     private String msisdn;
+
     @Field
     private String cli;
+
     @Field
     private Integer priority;
+
     @Field
     private String callFlowUrl;
+
     @Field
     private String contentFileName;
+
     @Field
     private String weekId;
+
     @Field
     private String languageLocationCode;
+
     @Field
     private String circle;
+
     @Field
-    private Integer finalStatus;
+    private CallStatus finalStatus;
+
     @Field
     private Integer statusCode;
+
     @Field
     private Integer attempts;
 
@@ -38,7 +51,7 @@ public class CallDetailRecord {
 
     public CallDetailRecord(String requestId, String serviceId, String msisdn, String cli, Integer priority,
                             String callFlowUrl, String contentFileName, String weekId, String languageLocationCode,
-                            String circle, Integer finalStatus, Integer statusCode, Integer attempts) {
+                            String circle, CallStatus finalStatus, Integer statusCode, Integer attempts) {
         this.requestId = requestId;
         this.serviceId = serviceId;
         this.msisdn = msisdn;
@@ -134,11 +147,11 @@ public class CallDetailRecord {
         this.circle = circle;
     }
 
-    public Integer getFinalStatus() {
+    public CallStatus getFinalStatus() {
         return finalStatus;
     }
 
-    public void setFinalStatus(Integer finalStatus) {
+    public void setFinalStatus(CallStatus finalStatus) {
         this.finalStatus = finalStatus;
     }
 
@@ -168,7 +181,7 @@ public class CallDetailRecord {
 
         //NOTE: the Integer.parseInt calls below may throw a NumberFormatException
         return new CallDetailRecord(fields[0], fields[1], fields[2], fields[3], Integer.parseInt(fields[4]), fields[5],
-                fields[6], fields[7], fields[8], fields[9], Integer.parseInt(fields[10]),
+                fields[6], fields[7], fields[8], fields[9], CallStatus.fromInt(Integer.parseInt(fields[10])),
                 Integer.parseInt(fields[11]), Integer.parseInt(fields[12]));
     }
 }
