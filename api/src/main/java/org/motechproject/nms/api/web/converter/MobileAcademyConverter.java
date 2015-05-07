@@ -43,69 +43,12 @@ public final class MobileAcademyConverter {
         modelMapper = new ModelMapper();
         modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.LOOSE);
 
-        PropertyMap<org.motechproject.nms.mobileacademy.domain.course.ChapterContentMenu, ChapterContentMenu> chapterContentMap =
-                new PropertyMap<org.motechproject.nms.mobileacademy.domain.course.ChapterContentMenu, ChapterContentMenu>() {
-                    @Override
-                    protected void configure() {
-                        map().setId(source.getIdentifier());
-                        map().setFile(source.getFile());
-                    }
-        };
-
-        PropertyMap<org.motechproject.nms.mobileacademy.domain.course.ChapterContentScore, ChapterContentScore> chapterScoreMap =
-                new PropertyMap<org.motechproject.nms.mobileacademy.domain.course.ChapterContentScore, ChapterContentScore>() {
-                    @Override
-                    protected void configure() {
-                        map().setId(source.getIdentifier());
-                        map().setFiles(source.getFiles());
-                    }
-        };
-
-        PropertyMap<org.motechproject.nms.mobileacademy.domain.course.LessonContentLesson, LessonContentLesson> lessonContentLessonMap =
-                new PropertyMap<org.motechproject.nms.mobileacademy.domain.course.LessonContentLesson, LessonContentLesson>() {
-                    @Override
-                    protected void configure() {
-                        map().setId(source.getIdentifier());
-                        map().setFile(source.getFile());
-                    }
-        };
-
-        PropertyMap<org.motechproject.nms.mobileacademy.domain.course.LessonContentMenu, LessonContentMenu> lessonContentMenuMap =
-                new PropertyMap< org.motechproject.nms.mobileacademy.domain.course.LessonContentMenu, LessonContentMenu>() {
-                    @Override
-                    protected void configure() {
-                        map().setId(source.getIdentifier());
-                        map().setFile(source.getFile());
-                    }
-        };
-
-        PropertyMap<org.motechproject.nms.mobileacademy.domain.course.QuizContentMenu, QuizContentMenu> quizMap =
-                new PropertyMap<org.motechproject.nms.mobileacademy.domain.course.QuizContentMenu, QuizContentMenu>() {
-                    @Override
-                    protected void configure() {
-                        map().setId(source.getIdentifier());
-                        map().setFile(source.getFile());
-                    }
-        };
-
-        PropertyMap<org.motechproject.nms.mobileacademy.domain.course.QuestionContent, QuestionContent> questionMap =
-                new PropertyMap<org.motechproject.nms.mobileacademy.domain.course.QuestionContent, QuestionContent>() {
-                    @Override
-                    protected void configure() {
-                        map().setId(source.getIdentifier());
-                        map().setQuestion(source.getQuestion());
-                        map().setCorrectAnswer(source.getCorrectAnswer());
-                        map().setWrongAnswer(source.getWrongAnswer());
-                    }
-        };
-
-
-        modelMapper.addMappings(chapterContentMap);
-        modelMapper.addMappings(chapterScoreMap);
-        modelMapper.addMappings(lessonContentLessonMap);
-        modelMapper.addMappings(lessonContentMenuMap);
-        modelMapper.addMappings(quizMap);
-        modelMapper.addMappings(questionMap);
+        modelMapper.addMappings(getCourseChapterContentMap());
+        modelMapper.addMappings(getCourseChapterScoreMap());
+        modelMapper.addMappings(getCourseLessonContentLessonMap());
+        modelMapper.addMappings(getCourseLessonContentMenuMap());
+        modelMapper.addMappings(getCourseQuizMap());
+        modelMapper.addMappings(getCourseQuestionMap());
 
         // the validate checks if any of the source and target properties are unmapped
         try {
@@ -115,6 +58,68 @@ public final class MobileAcademyConverter {
             LOGGER.error(ve.toString());
             return null;
         }
+    }
+
+    private static PropertyMap<?, ?> getCourseQuestionMap() {
+        return new PropertyMap<org.motechproject.nms.mobileacademy.domain.course.QuestionContent, QuestionContent>() {
+            @Override
+            protected void configure() {
+                map().setId(source.getIdentifier());
+                map().setQuestion(source.getQuestion());
+                map().setCorrectAnswer(source.getCorrectAnswer());
+                map().setWrongAnswer(source.getWrongAnswer());
+            }
+};
+    }
+
+    private static PropertyMap<?, ?> getCourseQuizMap() {
+        return new PropertyMap<org.motechproject.nms.mobileacademy.domain.course.QuizContentMenu, QuizContentMenu>() {
+            @Override
+            protected void configure() {
+                map().setId(source.getIdentifier());
+                map().setFile(source.getFile());
+            }
+};
+    }
+
+    private static PropertyMap<?, ?> getCourseLessonContentMenuMap() {
+        return new PropertyMap< org.motechproject.nms.mobileacademy.domain.course.LessonContentMenu, LessonContentMenu>() {
+            @Override
+            protected void configure() {
+                map().setId(source.getIdentifier());
+                map().setFile(source.getFile());
+            }
+};
+    }
+
+    private static PropertyMap<?, ?> getCourseLessonContentLessonMap() {
+        return new PropertyMap<org.motechproject.nms.mobileacademy.domain.course.LessonContentLesson, LessonContentLesson>() {
+            @Override
+            protected void configure() {
+                map().setId(source.getIdentifier());
+                map().setFile(source.getFile());
+            }
+};
+    }
+
+    private static PropertyMap<?, ?> getCourseChapterScoreMap() {
+        return new PropertyMap<org.motechproject.nms.mobileacademy.domain.course.ChapterContentScore, ChapterContentScore>() {
+            @Override
+            protected void configure() {
+                map().setId(source.getIdentifier());
+                map().setFiles(source.getFiles());
+            }
+};
+    }
+
+    private static PropertyMap<?, ?> getCourseChapterContentMap() {
+        return new PropertyMap<org.motechproject.nms.mobileacademy.domain.course.ChapterContentMenu, ChapterContentMenu>() {
+            @Override
+            protected void configure() {
+                map().setId(source.getIdentifier());
+                map().setFile(source.getFile());
+            }
+};
     }
 
     /**
@@ -128,98 +133,14 @@ public final class MobileAcademyConverter {
         modelMapper = new ModelMapper();
         modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.LOOSE);
 
-        PropertyMap<ChapterContentMenu, org.motechproject.nms.mobileacademy.domain.course.ChapterContentMenu> chapterContentMap =
-                new PropertyMap<ChapterContentMenu, org.motechproject.nms.mobileacademy.domain.course.ChapterContentMenu>() {
-                    @Override
-                    protected void configure() {
-                        map().setIdentifier(source.getId());
-                        map().setFile(source.getFile());
-                        skip().setCreationDate(null);
-                        skip().setModificationDate(null);
-                        skip().setCreator(null);
-                        skip().setModifiedBy(null);
-                        skip().setOwner(null);
-                    }
-        };
-
-        PropertyMap<ChapterContentScore, org.motechproject.nms.mobileacademy.domain.course.ChapterContentScore> chapterScoreMap =
-                new PropertyMap<ChapterContentScore, org.motechproject.nms.mobileacademy.domain.course.ChapterContentScore>() {
-                    @Override
-                    protected void configure() {
-                        map().setIdentifier(source.getId());
-                        map().setFiles(source.getFiles());
-                        skip().setCreationDate(null);
-                        skip().setModificationDate(null);
-                        skip().setCreator(null);
-                        skip().setModifiedBy(null);
-                        skip().setOwner(null);
-                    }
-        };
-
-        PropertyMap<LessonContentLesson, org.motechproject.nms.mobileacademy.domain.course.LessonContentLesson> lessonContentLessonMap =
-                new PropertyMap<LessonContentLesson, org.motechproject.nms.mobileacademy.domain.course.LessonContentLesson>() {
-                    @Override
-                    protected void configure() {
-                        map().setIdentifier(source.getId());
-                        map().setFile(source.getFile());
-                        skip().setCreationDate(null);
-                        skip().setModificationDate(null);
-                        skip().setCreator(null);
-                        skip().setModifiedBy(null);
-                        skip().setOwner(null);
-                    }
-        };
-
-        PropertyMap<LessonContentMenu, org.motechproject.nms.mobileacademy.domain.course.LessonContentMenu> lessonContentMenuMap =
-                new PropertyMap<LessonContentMenu, org.motechproject.nms.mobileacademy.domain.course.LessonContentMenu>() {
-                    @Override
-                    protected void configure() {
-                        map().setIdentifier(source.getId());
-                        map().setFile(source.getFile());
-                        skip().setCreationDate(null);
-                        skip().setModificationDate(null);
-                        skip().setCreator(null);
-                        skip().setModifiedBy(null);
-                        skip().setOwner(null);
-                    }
-        };
-
-        PropertyMap<QuizContentMenu, org.motechproject.nms.mobileacademy.domain.course.QuizContentMenu> quizMap =
-                new PropertyMap<QuizContentMenu, org.motechproject.nms.mobileacademy.domain.course.QuizContentMenu>() {
-                    @Override
-                    protected void configure() {
-                        map().setIdentifier(source.getId());
-                        map().setFile(source.getFile());
-                        skip().setCreationDate(null);
-                        skip().setModificationDate(null);
-                        skip().setCreator(null);
-                        skip().setModifiedBy(null);
-                        skip().setOwner(null);
-                    }
-        };
-
-        PropertyMap<QuestionContent, org.motechproject.nms.mobileacademy.domain.course.QuestionContent> questionMap =
-                new PropertyMap<QuestionContent, org.motechproject.nms.mobileacademy.domain.course.QuestionContent>() {
-                    @Override
-                    protected void configure() {
-                        map().setIdentifier(source.getId());
-                        map().setQuestion(source.getQuestion());
-                        map().setCorrectAnswer(source.getCorrectAnswer());
-                        map().setWrongAnswer(source.getWrongAnswer());
-                        skip().setCreationDate(null);
-                        skip().setModificationDate(null);
-                        skip().setCreator(null);
-                        skip().setModifiedBy(null);
-                        skip().setOwner(null);
-                    }
-        };
-
-        modelMapper.addMappings(chapterContentMap);
-        modelMapper.addMappings(chapterScoreMap);
-        modelMapper.addMappings(lessonContentLessonMap);
-        modelMapper.addMappings(lessonContentMenuMap);
-        modelMapper.addMappings(quizMap);
-        modelMapper.addMappings(questionMap);
+        // Add model mapping for each sub-class that cannot be merged automatically
+        modelMapper.addMappings(getCourseMap());
+        modelMapper.addMappings(getChapterContentMap());
+        modelMapper.addMappings(getChapterScoreMap());
+        modelMapper.addMappings(getLessonContentLessonMap());
+        modelMapper.addMappings(getLessonContentMenuMap());
+        modelMapper.addMappings(getQuizMap());
+        modelMapper.addMappings(getQuestionMap());
 
         // the validate checks if any of the source and target properties are unmapped
         try {
@@ -229,5 +150,117 @@ public final class MobileAcademyConverter {
             LOGGER.error(ve.toString());
             return null;
         }
+    }
+
+    private static PropertyMap<?, ?> getQuestionMap() {
+        return new PropertyMap<QuestionContent, org.motechproject.nms.mobileacademy.domain.course.QuestionContent>() {
+            @Override
+            protected void configure() {
+                map().setIdentifier(source.getId());
+                map().setQuestion(source.getQuestion());
+                map().setCorrectAnswer(source.getCorrectAnswer());
+                map().setWrongAnswer(source.getWrongAnswer());
+                skip().setId(null);
+                skip().setCreationDate(null);
+                skip().setModificationDate(null);
+                skip().setCreator(null);
+                skip().setModifiedBy(null);
+                skip().setOwner(null);
+            }
+};
+    }
+
+    private static PropertyMap<?, ?> getQuizMap() {
+        return new PropertyMap<QuizContentMenu, org.motechproject.nms.mobileacademy.domain.course.QuizContentMenu>() {
+            @Override
+            protected void configure() {
+                map().setIdentifier(source.getId());
+                map().setFile(source.getFile());
+                skip().setId(null);
+                skip().setCreationDate(null);
+                skip().setModificationDate(null);
+                skip().setCreator(null);
+                skip().setModifiedBy(null);
+                skip().setOwner(null);
+            }
+};
+    }
+
+    private static PropertyMap<?, ?> getLessonContentMenuMap() {
+        return new PropertyMap<LessonContentMenu, org.motechproject.nms.mobileacademy.domain.course.LessonContentMenu>() {
+            @Override
+            protected void configure() {
+                map().setIdentifier(source.getId());
+                map().setFile(source.getFile());
+                skip().setId(null);
+                skip().setCreationDate(null);
+                skip().setModificationDate(null);
+                skip().setCreator(null);
+                skip().setModifiedBy(null);
+                skip().setOwner(null);
+            }
+};
+    }
+
+    private static PropertyMap<?, ?> getLessonContentLessonMap() {
+        return new PropertyMap<LessonContentLesson, org.motechproject.nms.mobileacademy.domain.course.LessonContentLesson>() {
+            @Override
+            protected void configure() {
+                map().setIdentifier(source.getId());
+                map().setFile(source.getFile());
+                skip().setId(null);
+                skip().setCreationDate(null);
+                skip().setModificationDate(null);
+                skip().setCreator(null);
+                skip().setModifiedBy(null);
+                skip().setOwner(null);
+            }
+};
+    }
+
+    private static PropertyMap<?, ?> getChapterScoreMap() {
+        return new PropertyMap<ChapterContentScore, org.motechproject.nms.mobileacademy.domain.course.ChapterContentScore>() {
+            @Override
+            protected void configure() {
+                map().setIdentifier(source.getId());
+                map().setFiles(source.getFiles());
+                skip().setId(null);
+                skip().setCreationDate(null);
+                skip().setModificationDate(null);
+                skip().setCreator(null);
+                skip().setModifiedBy(null);
+                skip().setOwner(null);
+            }
+};
+    }
+
+    private static PropertyMap<?, ?> getChapterContentMap() {
+        return new PropertyMap<ChapterContentMenu, org.motechproject.nms.mobileacademy.domain.course.ChapterContentMenu>() {
+            @Override
+            protected void configure() {
+                map().setIdentifier(source.getId());
+                map().setFile(source.getFile());
+                skip().setId(null);
+                skip().setCreationDate(null);
+                skip().setModificationDate(null);
+                skip().setCreator(null);
+                skip().setModifiedBy(null);
+                skip().setOwner(null);
+            }
+        };
+    }
+
+    private static PropertyMap<?, ?> getCourseMap() {
+        return new PropertyMap<CourseResponse, Course>() {
+                @Override
+                protected void configure() {
+                    skip().setId(null);
+                    skip().setCreationDate(null);
+                    skip().setModificationDate(null);
+                    skip().setCreator(null);
+                    skip().setModifiedBy(null);
+                    skip().setOwner(null);
+                }
+        };
     }
 }

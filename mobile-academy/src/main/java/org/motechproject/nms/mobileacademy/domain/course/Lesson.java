@@ -2,13 +2,12 @@ package org.motechproject.nms.mobileacademy.domain.course;
 
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
-import org.motechproject.mds.domain.MdsEntity;
 
 /**
  * This will contain details about a particular lesson of a particular chapter.
  */
 @Entity
-public class Lesson extends MdsEntity {
+public class Lesson {
 
     /**
      * Specifies the name of the lesson in format of “Lesson<lessonId>”, where lessonId will be from 01 to 04.
