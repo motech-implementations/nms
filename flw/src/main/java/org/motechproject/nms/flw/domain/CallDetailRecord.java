@@ -17,10 +17,6 @@ import java.util.List;
 @Entity(tableName = "nms_call_detail_records")
 public class CallDetailRecord {
 
-    public static final int FIELD_SIZE_10 = 10;
-    public static final int FIELD_SIZE_15 = 15;
-    public static final int FIELD_SIZE_255 = 255;
-
     public CallDetailRecord() {
     }
 
@@ -31,19 +27,19 @@ public class CallDetailRecord {
     private Service service;
 
     @Field
-    @Column(length = FIELD_SIZE_10)
+    @Column(length = 10)
     private long callingNumber;
 
     @Field
-    @Column(length = FIELD_SIZE_15)
+    @Column(length = 15)
     private long callId;
 
     @Field
-    @Column(length = FIELD_SIZE_255)
+    @Column(length = 255)
     private String operator;
 
     @Field
-    @Column(length = FIELD_SIZE_255)
+    @Column(length = 255)
     private String circle;
 
     @Field

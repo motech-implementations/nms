@@ -13,10 +13,9 @@ import java.util.Objects;
 @Entity(tableName = "nms_circle_languages")
 @Unique(name = "uniqueCircleLanguage", members = {"circle", "language" })
 public class CircleLanguage {
-    public static final int FIELD_LENGTH_255 = 255;
 
     @Field
-    @Column(length = FIELD_LENGTH_255)
+    @Column(length = 255)
     private String circle;
 
     @Field

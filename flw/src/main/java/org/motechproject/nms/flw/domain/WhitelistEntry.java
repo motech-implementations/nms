@@ -11,14 +11,13 @@ import javax.validation.constraints.NotNull;
 @Entity(tableName = "nms_whitelist_entries")
 @Unique(name = "UNIQUE_STATE_CONTACT_NUMBER_COMPOSITE_IDX", members = { "state", "contactNumber" })
 public class WhitelistEntry {
-    public static final int FIELD_SIZE_10 = 10;
 
     @Field
     @NotNull
     private State state;
 
     @Field(required = true)
-    @Column(length = FIELD_SIZE_10)
+    @Column(length = 10)
     @NotNull
     private Long contactNumber;
 

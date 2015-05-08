@@ -82,7 +82,7 @@ public class CdrFileServiceImpl implements CdrFileService {
     }
 
 
-    private void rescheduleCall(CallDetailRecord cdr) {
+    private void reschedule(CallDetailRecord cdr) {
         LOGGER.info("Rescheduling {}", cdr);
 
         //todo:...
@@ -104,7 +104,7 @@ public class CdrFileServiceImpl implements CdrFileService {
             CallDetailRecord cdr = cdrs.get(lineNumber - 1);
             cdrDataService.create(cdr);
             if (cdr.getFinalStatus() != CallStatus.SUCCESS) {
-                rescheduleCall(cdr);
+                reschedule(cdr);
             }
         }
 
