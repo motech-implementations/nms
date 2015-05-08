@@ -2,6 +2,7 @@ package org.motechproject.nms.region.domain;
 
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
+import org.motechproject.mds.annotations.Ignore;
 import org.motechproject.mds.domain.MdsEntity;
 import org.motechproject.nms.region.domain.validation.ValidVillage;
 
@@ -82,6 +83,7 @@ public class Village extends MdsEntity {
      *
      * @return vcode for a census village.  vcode or svid for a non-census village
      */
+    @Ignore
     public Long getVillageCode() {
         if (vcode != null) {
             return vcode;

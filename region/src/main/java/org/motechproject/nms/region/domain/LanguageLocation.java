@@ -35,8 +35,8 @@ public class LanguageLocation extends MdsEntity {
     private Circle circle;
 
     @Field
-    @Persistent(mappedBy = "languageLocation", defaultFetchGroup = "true")
     @Size(min = 1)
+    @Persistent(mappedBy = "languageLocation", defaultFetchGroup = "true")
     private Set<District> districts;
 
     public LanguageLocation() {

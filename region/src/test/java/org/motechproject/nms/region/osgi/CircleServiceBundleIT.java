@@ -4,7 +4,14 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.region.domain.Circle;
+import org.motechproject.nms.region.domain.District;
+import org.motechproject.nms.region.domain.HealthBlock;
+import org.motechproject.nms.region.domain.HealthFacility;
+import org.motechproject.nms.region.domain.HealthFacilityType;
+import org.motechproject.nms.region.domain.HealthSubFacility;
 import org.motechproject.nms.region.domain.State;
+import org.motechproject.nms.region.domain.Taluka;
+import org.motechproject.nms.region.domain.Village;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.testing.osgi.BasePaxIT;
@@ -30,6 +37,14 @@ public class CircleServiceBundleIT extends BasePaxIT {
     @Inject
     private CircleDataService circleDataService;
 
+    District district;
+    Taluka taluka;
+    Village village;
+    HealthBlock healthBlock;
+    HealthFacilityType healthFacilityType;
+    HealthFacility healthFacility;
+    HealthSubFacility healthSubFacility;
+
     // Circle 1           -> State 1
     // Circle 2           -> State 2, State 3
     // Circle 3, Circle 4 -> State 4
@@ -37,9 +52,52 @@ public class CircleServiceBundleIT extends BasePaxIT {
         stateDataService.deleteAll();
         circleDataService.deleteAll();
 
+        healthSubFacility = new HealthSubFacility();
+        healthSubFacility.setName("Health Sub Facility 1");
+        healthSubFacility.setRegionalName("Health Sub Facility 1");
+        healthSubFacility.setCode(1L);
+
+        healthFacilityType = new HealthFacilityType();
+        healthFacilityType.setName("Health Facility Type 1");
+        healthFacilityType.setCode(1L);
+
+        healthFacility = new HealthFacility();
+        healthFacility.setName("Health Facility 1");
+        healthFacility.setRegionalName("Health Facility 1");
+        healthFacility.setCode(1L);
+        healthFacility.setHealthFacilityType(healthFacilityType);
+        healthFacility.getHealthSubFacilities().add(healthSubFacility);
+
+        healthBlock = new HealthBlock();
+        healthBlock.setName("Health Block 1");
+        healthBlock.setRegionalName("Health Block 1");
+        healthBlock.setHq("Health Block 1 HQ");
+        healthBlock.setCode(1L);
+        healthBlock.getHealthFacilities().add(healthFacility);
+
+        village = new Village();
+        village.setName("Village 1");
+        village.setRegionalName("Village 1");
+        village.setVcode(1L);
+
+        taluka = new Taluka();
+        taluka.setName("Taluka 1");
+        taluka.setRegionalName("Taluka 1");
+        taluka.setIdentity(1);
+        taluka.setCode("0004");
+        taluka.getVillages().add(village);
+        taluka.getHealthBlocks().add(healthBlock);
+
+        district = new District();
+        district.setName("District 1");
+        district.setRegionalName("District 1");
+        district.setCode(1L);
+        district.getTalukas().add(taluka);
+
         State state1 = new State();
         state1.setName("State 1");
         state1.setCode(1L);
+        state1.getDistricts().add(district);
 
         State state2 = new State();
         state2.setName("State 2");

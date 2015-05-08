@@ -3,7 +3,6 @@ package org.motechproject.nms.api.osgi;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
-
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;

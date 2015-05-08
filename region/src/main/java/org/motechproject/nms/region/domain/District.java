@@ -50,7 +50,7 @@ public class District extends MdsEntity {
 
     @Field
     @Cascade(delete = true)
-    @Persistent(mappedBy = "districts", defaultFetchGroup = "true")
+    @Persistent(defaultFetchGroup = "true")
     private LanguageLocation languageLocation;
 
     public District() {
