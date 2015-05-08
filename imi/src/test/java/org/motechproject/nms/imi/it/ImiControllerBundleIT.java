@@ -5,6 +5,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.alerts.contract.AlertCriteria;
@@ -86,6 +87,7 @@ public class ImiControllerBundleIT extends BasePaxIT {
         return httpPost;
     }
 
+    @Ignore
     @Test
     public void testCreateCdrFileNotificationRequest() throws IOException, InterruptedException,
             NoSuchAlgorithmException {
