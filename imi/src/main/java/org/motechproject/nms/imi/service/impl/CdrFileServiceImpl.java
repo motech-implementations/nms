@@ -10,6 +10,7 @@ import org.motechproject.nms.imi.domain.FileType;
 import org.motechproject.nms.imi.repository.AuditDataService;
 import org.motechproject.nms.imi.repository.CallDetailRecordDataService;
 import org.motechproject.nms.imi.service.CdrFileService;
+import org.motechproject.nms.imi.service.ReschedulerService;
 import org.motechproject.nms.imi.web.contract.CdrFileNotificationRequest;
 import org.motechproject.nms.props.domain.CallStatus;
 import org.motechproject.server.config.SettingsFacade;
@@ -46,17 +47,19 @@ public class CdrFileServiceImpl implements CdrFileService {
     private AuditDataService auditDataService;
     private AlertService alertService;
     private CallDetailRecordDataService cdrDataService;
+    private ReschedulerService reschedulerService;
 
 
 
     @Autowired
     public CdrFileServiceImpl(@Qualifier("imiSettings") SettingsFacade settingsFacade,
                               AuditDataService auditDataService, AlertService alertService,
-                              CallDetailRecordDataService cdrDataService) {
+                              CallDetailRecordDataService cdrDataService, ReschedulerService reschedulerService) {
         this.settingsFacade = settingsFacade;
         this.auditDataService = auditDataService;
         this.alertService = alertService;
         this.cdrDataService = cdrDataService;
+        this.reschedulerService = reschedulerService;
     }
 
 
@@ -108,13 +111,6 @@ public class CdrFileServiceImpl implements CdrFileService {
     }
 
 
-    private void reschedule(CallDetailRecord cdr) {
-        LOGGER.info("Rescheduling {}", cdr);
-
-        //todo:...
-    }
-
-
     @Override
     public void processCdrFile(CdrFileNotificationRequest request) {
         final String cdrFileLocation = settingsFacade.getProperty(CDR_FILE_DIRECTORY);
@@ -131,7 +127,10 @@ public class CdrFileServiceImpl implements CdrFileService {
             CallDetailRecord cdr = cdrs.get(lineNumber - 1);
             cdrDataService.create(cdr);
             if (cdr.getFinalStatus() != CallStatus.SUCCESS) {
-                reschedule(cdr);
+                //Sending a MOTECH message distributes the work to all nodes
+                LOGGER.debug("*****BEFORE MESSAGE*****");
+                reschedulerService.sendRescheduleMessage(cdr);
+                LOGGER.debug("*****AFTER MESSAGE******");
             }
         }
 

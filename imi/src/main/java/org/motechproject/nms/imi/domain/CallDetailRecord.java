@@ -4,8 +4,13 @@ import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.nms.props.domain.CallStatus;
 
+import java.io.Serializable;
+
 @Entity(tableName = "nms_obd_cdrs")
-public class CallDetailRecord {
+public class CallDetailRecord implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
     @Field
     private String requestId;
 
@@ -49,9 +54,10 @@ public class CallDetailRecord {
 
     public CallDetailRecord() { }
 
-    public CallDetailRecord(String requestId, String serviceId, String msisdn, // NO CHECKSTYLE More than 7 parameters
+    public CallDetailRecord(String requestId, String serviceId, String msisdn, // NO CHECKSTYLE > than 7 params
             String cli, Integer priority, String callFlowUrl, String contentFileName, String weekId,
-            String languageLocationCode, String circle, CallStatus finalStatus, Integer statusCode, Integer attempts) {
+            String languageLocationCode, String circle, CallStatus finalStatus, Integer statusCode,
+                            Integer attempts) {
         this.requestId = requestId;
         this.serviceId = serviceId;
         this.msisdn = msisdn;

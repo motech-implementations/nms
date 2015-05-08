@@ -49,8 +49,17 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         helper.copyCdrSummaryFile();
 
         cdrFileService.processCdrFile(new CdrFileNotificationRequest(
-            helper.obdFileName(),
-            new FileInfo(helper.cdrSummaryFileName(), helper.summaryFileChecksum(), 0),
-            new FileInfo(helper.cdrDetailFileName(), helper.detailFileChecksum(), 1)));
+                        helper.obdFileName(),
+                        new FileInfo(helper.cdrSummaryFileName(), helper.summaryFileChecksum(), 0),
+                        new FileInfo(helper.cdrDetailFileName(), helper.detailFileChecksum(), 1))
+        );
+
+        try {
+            getLogger().info("Sleeping 5 seconds to give a change to @MotechListeners to catch up...");
+            Thread.sleep(1000L * 5);
+            getLogger().info("...waking up from sleep, did they catch up?");
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 }
