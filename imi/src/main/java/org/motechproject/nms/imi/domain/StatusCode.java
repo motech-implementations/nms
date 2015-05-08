@@ -26,6 +26,6 @@ public enum StatusCode {
                 return statusCode;
             }
         }
-        throw new IllegalStateException(String.format("Unknown StatusCode: {}", i));
+        throw new IllegalArgumentException(String.format("%d is an invalid StatusCode", i));
     }
 }
