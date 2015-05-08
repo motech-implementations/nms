@@ -34,6 +34,7 @@ public class LanguageLocation extends MdsEntity {
     @Column(allowsNull = "false")
     private Circle circle;
 
+    // TODO: Rename to 'districts' once https://applab.atlassian.net/browse/MOTECH-1688 is resolved
     @Field
     @Size(min = 1)
     @Persistent(mappedBy = "languageLocation", defaultFetchGroup = "true")

@@ -167,7 +167,6 @@ public class LocationServiceBundleIT extends BasePaxIT {
     }
 
     @Test(expected = ConstraintViolationException.class)
-    @Ignore
     public void testCreateVillageNoCode() throws Exception {
         initAll();
         village.setVcode(null);

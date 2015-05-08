@@ -4,6 +4,7 @@ import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.annotations.Ignore;
 import org.motechproject.mds.domain.MdsEntity;
+import org.motechproject.nms.region.domain.validation.ValidVillage;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Unique;
@@ -25,9 +26,9 @@ import javax.validation.constraints.Size;
  * Name_G nvarchar 50 M Not null Regional language name
  *
  */
+@ValidVillage
 @Entity(tableName = "nms_villages", recordHistory = true)
 @Unique(name = "uniqueVillageCode", members = {"vcode", "svid" })
-//@ValidVillage
 public class Village extends MdsEntity {
 
     @Field

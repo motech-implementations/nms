@@ -15,7 +15,14 @@ public class VillageValidator implements ConstraintValidator<ValidVillage, Villa
 
     @Override
     public boolean isValid(Village village, ConstraintValidatorContext constraintValidatorContext) {
+        if (village == null) {
+            return true;
+        }
+
         if (village.getVcode() == null && village.getSvid() == null) {
+            constraintValidatorContext
+                    .buildConstraintViolationWithTemplate(constraintValidatorContext.getDefaultConstraintMessageTemplate())
+                    .addPropertyNode("vcode").addConstraintViolation();
             return false;
         }
 
