@@ -16,6 +16,7 @@ import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 
 import static org.junit.Assert.assertTrue;
 
@@ -44,12 +45,21 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
 
 
     @Test
-    public void testValidRequest() throws IOException {
+    public void testValidRequest() throws IOException, NoSuchAlgorithmException {
         helper.copyCdrSummaryFile();
 
         cdrFileService.processCdrFile(new CdrFileNotificationRequest(
-                helper.obdFileName(),
-                new FileInfo(helper.cdrSummaryFileName(), "000", 0),
-                new FileInfo(helper.cdrDetailFileName(), "111", 1)));
+                        helper.obdFileName(),
+                        new FileInfo(helper.cdrSummaryFileName(), helper.summaryFileChecksum(), 0),
+                        new FileInfo(helper.cdrDetailFileName(), helper.detailFileChecksum(), 1))
+        );
+
+        try {
+            getLogger().info("Sleeping 5 seconds to give a change to @MotechListeners to catch up...");
+            Thread.sleep(1000L * 5);
+            getLogger().info("...waking up from sleep, did they catch up?");
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 }
