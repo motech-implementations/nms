@@ -58,6 +58,8 @@ public class CdrTestFileHelper {
         File dstFile = new File(cdrDirectory(), cdrSummaryFileName());
         if (dstDirectory.mkdirs()) {
             LOGGER.info("Created required directories for {}", dstDirectory);
+        } else {
+            LOGGER.info("Required directories all exist for {}", dstDirectory);
         }
         LOGGER.info("Copying {} to {}", inputFile, dstFile);
         BufferedWriter writer = new BufferedWriter(new FileWriter(dstFile));

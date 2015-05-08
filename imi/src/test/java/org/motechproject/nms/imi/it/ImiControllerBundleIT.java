@@ -82,10 +82,10 @@ public class ImiControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testCreateCdrFileNotificationRequest() throws IOException, InterruptedException {
+        getLogger().info("testCreateCdrFileNotificationRequest()");
+        helper.copyCdrSummaryFile();
 
         HttpPost httpPost = createCdrFileNotificationHttpPost(true, true, true);
-
-        helper.copyCdrSummaryFile();
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_ACCEPTED, ADMIN_USERNAME,
                 ADMIN_PASSWORD));
@@ -94,6 +94,7 @@ public class ImiControllerBundleIT extends BasePaxIT {
     @Test
     public void testCreateCdrFileNotificationRequestBadCdrSummaryFileName() throws IOException,
         InterruptedException {
+        getLogger().info("testCreateCdrFileNotificationRequestBadCdrSummaryFileName()");
         HttpPost httpPost = createCdrFileNotificationHttpPost(true, false, true);
 
         String expectedJsonResponse = createFailureResponseJson("<cdrSummary: Invalid>");
@@ -105,6 +106,7 @@ public class ImiControllerBundleIT extends BasePaxIT {
     @Test
     public void testCreateCdrFileNotificationRequestBadFileNames() throws IOException,
         InterruptedException {
+        getLogger().info("testCreateCdrFileNotificationRequestBadFileNames()");
         HttpPost httpPost = createCdrFileNotificationHttpPost(false, true, true);
 
         // All 3 filenames will be considered invalid because the target file is of invalid format, and the CDR
@@ -140,6 +142,7 @@ public class ImiControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testCreateFileProcessedStatusRequest() throws IOException, InterruptedException {
+        getLogger().info("testCreateFileProcessedStatusRequest()");
         HttpPost httpPost = createFileProcessedStatusHttpPost("file.csv",
                 FileProcessedStatus.FILE_PROCESSED_SUCCESSFULLY);
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK, ADMIN_USERNAME, ADMIN_PASSWORD));
@@ -147,6 +150,7 @@ public class ImiControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testCreateFileProcessedStatusRequestNoStatusCode() throws IOException, InterruptedException {
+        getLogger().info("testCreateFileProcessedStatusRequestNoStatusCode()");
         HttpPost httpPost = createFileProcessedStatusHttpPost("file.csv", null);
 
         String expectedJsonResponse = createFailureResponseJson("<fileProcessedStatus: Not Present>");
@@ -157,6 +161,7 @@ public class ImiControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testCreateFileProcessedStatusRequestNoFileName() throws IOException, InterruptedException {
+        getLogger().info("testCreateFileProcessedStatusRequestNoFileName()");
         HttpPost httpPost = createFileProcessedStatusHttpPost(null,
                 FileProcessedStatus.FILE_PROCESSED_SUCCESSFULLY);
 
@@ -168,6 +173,7 @@ public class ImiControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testCreateFileProcessedStatusRequestWithError() throws IOException, InterruptedException {
+        getLogger().info("testCreateFileProcessedStatusRequestWithError()");
         HttpPost httpPost = createFileProcessedStatusHttpPost("file.csv",
                 FileProcessedStatus.FILE_ERROR_IN_FILE_FORMAT);
 
