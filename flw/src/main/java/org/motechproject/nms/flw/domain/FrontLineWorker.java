@@ -11,14 +11,13 @@ import javax.jdo.annotations.Unique;
 
 @Entity(tableName = "nms_front_line_workers")
 public class FrontLineWorker {
-    public static final int FIELD_SIZE_10 = 10;
 
     @Field
     private Long id;
 
     @Field(required = true)
     @Unique
-    @Column(length = FIELD_SIZE_10)
+    @Column(length = 10)
     private Long contactNumber;
 
     @Field
