@@ -4,8 +4,13 @@ import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.nms.props.domain.CallStatus;
 
+import java.io.Serializable;
+
 @Entity(tableName = "nms_obd_cdrs")
-public class CallDetailRecord {
+public class CallDetailRecord implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
     @Field
     private String requestId;
 
@@ -49,9 +54,10 @@ public class CallDetailRecord {
 
     public CallDetailRecord() { }
 
-    public CallDetailRecord(String requestId, String serviceId, String msisdn, String cli, Integer priority,
-                            String callFlowUrl, String contentFileName, String weekId, String languageLocationCode,
-                            String circle, CallStatus finalStatus, Integer statusCode, Integer attempts) {
+    public CallDetailRecord(String requestId, String serviceId, String msisdn, // NO CHECKSTYLE > than 7 params
+            String cli, Integer priority, String callFlowUrl, String contentFileName, String weekId,
+            String languageLocationCode, String circle, CallStatus finalStatus, Integer statusCode,
+                            Integer attempts) {
         this.requestId = requestId;
         this.serviceId = serviceId;
         this.msisdn = msisdn;
@@ -179,10 +185,23 @@ public class CallDetailRecord {
                     fields.length));
         }
 
-        //NOTE: the Integer.parseInt calls below may throw a NumberFormatException
-        return new CallDetailRecord(fields[0], fields[1], fields[2], fields[3], Integer.parseInt(fields[4]), fields[5],
-                fields[6], fields[7], fields[8], fields[9], CallStatus.fromInt(Integer.parseInt(fields[10])),
-                Integer.parseInt(fields[11]), Integer.parseInt(fields[12]));
+        int i = 0;
+        return new CallDetailRecord(
+                fields[i++], //requestId
+                fields[i++], //serviceId
+                fields[i++], //msisdn
+                fields[i++], //cli
+                Integer.parseInt(fields[i++]), //priority - NOTE: may throw a NumberFormatException
+                fields[i++], //callFlowUrl
+                fields[i++], //contentFileName
+                fields[i++], //weekId
+                fields[i++], //languageLocationCode
+                fields[i++], //circle
+                // NOTE: may throw a NumberFormatException or IllegalArgumentException
+                CallStatus.fromInt(Integer.parseInt(fields[i++])), //finalStatus
+                Integer.parseInt(fields[i++]), //statusCode - NOTE: may throw a NumberFormatException
+                Integer.parseInt(fields[i++]) //attempts - NOTE: may throw a NumberFormatException
+        );
     }
 
     @Override
@@ -191,6 +210,6 @@ public class CallDetailRecord {
                 "requestId='" + requestId + '\'' +
                 ", serviceId='" + serviceId + '\'' +
                 ", msisdn='" + msisdn + '\'' +
-                '}';
+                " ...}";
     }
 }
