@@ -62,9 +62,9 @@ public class CdrTestFileHelper {
                 getClass().getClassLoader().getResourceAsStream(inputFile)));
         File dstFile = new File(cdrDirectory(), fileName);
         if (dstDirectory.mkdirs()) {
-            LOGGER.info("Created required directories for {}", dstDirectory);
+            LOGGER.debug("Created required directories for {}", dstDirectory);
         } else {
-            LOGGER.info("Required directories all exist for {}", dstDirectory);
+            LOGGER.debug("Required directories all exist for {}", dstDirectory);
         }
         LOGGER.info("Copying {} to {}", inputFile, dstFile);
         BufferedWriter writer = new BufferedWriter(new FileWriter(dstFile));
@@ -81,6 +81,10 @@ public class CdrTestFileHelper {
 
     public void copyCdrSummaryFile() throws IOException {
         copyFile(cdrSummaryFileName());
+        File f = new File(cdrDirectory(), cdrSummaryFileName());
+        if(f.exists() && !f.isDirectory()) {
+            LOGGER.debug("Confirmed that summary file exists");
+        }
     }
 
 

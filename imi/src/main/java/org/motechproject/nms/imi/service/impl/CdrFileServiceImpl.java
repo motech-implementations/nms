@@ -67,6 +67,11 @@ public class CdrFileServiceImpl implements CdrFileService {
         File userDirectory = new File(System.getProperty("user.home"));
         File cdrDirectory = new File(userDirectory, cdrFileLocation);
         File cdrSummary = new File(cdrDirectory, summaryFileName);
+
+        if(cdrSummary.exists() && !cdrSummary.isDirectory()) {
+            LOGGER.debug("Found CDR summary file. Starting to read...");
+        }
+
         List<CallDetailRecord> lines = new ArrayList<>();
         MessageDigest md;
         try (FileInputStream fis = new FileInputStream(cdrSummary);
@@ -79,6 +84,9 @@ public class CdrFileServiceImpl implements CdrFileService {
 
             String line;
             while ((line = reader.readLine()) != null) {
+                // TODO: debugging. take this out.
+                LOGGER.debug("Read line: " + line);
+
                 lines.add(CallDetailRecord.fromLine(line));
             }
         } catch (NoSuchAlgorithmException | IOException e) {
