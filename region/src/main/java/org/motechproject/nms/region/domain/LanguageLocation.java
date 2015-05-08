@@ -13,7 +13,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Represents all the languages that a state or set of districts can have
+ * Represents all the languages that a state or set of districtSet can have
  */
 @Entity(tableName = "nms_language_locations", recordHistory = true)
 public class LanguageLocation extends MdsEntity {
@@ -37,17 +37,17 @@ public class LanguageLocation extends MdsEntity {
     @Field
     @Size(min = 1)
     @Persistent(mappedBy = "languageLocation", defaultFetchGroup = "true")
-    private Set<District> districts;
+    private Set<District> districtSet;
 
     public LanguageLocation() {
-        this.districts = new HashSet<>();
+        this.districtSet = new HashSet<>();
     }
 
     public LanguageLocation(String code, Circle name, Language language) {
         this.code = code;
         this.circle = name;
         this.language = language;
-        this.districts = new HashSet<>();
+        this.districtSet = new HashSet<>();
     }
 
     public String getCode() {
@@ -75,10 +75,10 @@ public class LanguageLocation extends MdsEntity {
     }
 
     public State getState() {
-        // If this language location code covers a set of districts and they are all in the same state
+        // If this language location code covers a set of districtSet and they are all in the same state
         // return that state
         State ret = null;
-        for (District district : districts) {
+        for (District district : districtSet) {
             if (ret == null) {
                 ret = district.getState();
             }
@@ -91,12 +91,12 @@ public class LanguageLocation extends MdsEntity {
         return ret;
     }
 
-    public Set<District> getDistricts() {
-        return districts;
+    public Set<District> getDistrictSet() {
+        return districtSet;
     }
 
-    public void setDistricts(Set<District> districts) {
-        this.districts = districts;
+    public void setDistrictSet(Set<District> districtSet) {
+        this.districtSet = districtSet;
     }
 
     @Override

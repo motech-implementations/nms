@@ -65,7 +65,7 @@ public class LanguageLocationUnitTest {
         LanguageLocation languageLocation = new LanguageLocation();
 
         Set<ConstraintViolation<LanguageLocation>> constraintViolations = validator
-                .validateProperty(languageLocation, "districts");
+                .validateProperty(languageLocation, "districtSet");
 
         assertEquals(1, constraintViolations.size());
         assertEquals("size must be between 1 and 2147483647", constraintViolations.iterator().next().getMessage());
@@ -83,13 +83,13 @@ public class LanguageLocationUnitTest {
         District d1 = new District();
         d1.setCode(1L);
         d1.setState(nj);
-        languageLocation.getDistricts().add(d1);
+        languageLocation.getDistrictSet().add(d1);
 
         Set<ConstraintViolation<LanguageLocation>> constraintViolations = validator.validate(languageLocation);
 
         assertEquals(0, constraintViolations.size());
 
-        languageLocation.getDistricts().add(new District());
+        languageLocation.getDistrictSet().add(new District());
 
         constraintViolations = validator.validate(languageLocation);
 
@@ -108,12 +108,12 @@ public class LanguageLocationUnitTest {
         District d1 = new District();
         d1.setCode(1L);
         d1.setState(nj);
-        languageLocation.getDistricts().add(d1);
+        languageLocation.getDistrictSet().add(d1);
 
         District d2 = new District();
         d2.setCode(2L);
         d2.setState(nj);
-        languageLocation.getDistricts().add(d2);
+        languageLocation.getDistrictSet().add(d2);
 
         assertEquals((Long)1L, languageLocation.getState().getCode());
     }
@@ -130,13 +130,13 @@ public class LanguageLocationUnitTest {
         District d1 = new District();
         d1.setCode(1L);
         d1.setState(nj);
-        languageLocation.getDistricts().add(d1);
+        languageLocation.getDistrictSet().add(d1);
 
         State wa = new State("Washington", 2L);
         District d2 = new District();
         d2.setCode(2L);
         d2.setState(wa);
-        languageLocation.getDistricts().add(d2);
+        languageLocation.getDistrictSet().add(d2);
 
         assertNull(languageLocation.getState());
     }
