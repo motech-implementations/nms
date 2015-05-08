@@ -1,5 +1,6 @@
 package org.motechproject.nms.imi.it;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.imi.service.CdrFileService;
@@ -14,12 +15,8 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.security.NoSuchAlgorithmException;
 
 import static org.junit.Assert.assertTrue;
 
@@ -28,11 +25,18 @@ import static org.junit.Assert.assertTrue;
 @ExamFactory(MotechNativeTestContainerFactory.class)
 public class CdrFileServiceBundleIT extends BasePaxIT {
 
+    private CdrTestFileHelper helper = new CdrTestFileHelper();
+
     @Inject
     CdrFileService cdrFileService;
 
     @Inject
     SettingsService settingsService;
+
+    @Before
+    public void initFileHelper() {
+        helper.init(settingsService);
+    }
 
     @Test
     public void testServicePresent() {
@@ -40,42 +44,22 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
     }
 
 
-    private File cdrDirectory() {
-        File userDir = new File(System.getProperty("user.home"));
-        String cdrDirProp = settingsService.getSettingsFacade().getProperty("imi.cdr_file_directory");
-        return new File(userDir, cdrDirProp);
-    }
-
-
-    private void copyTestFile(String fileName, File dstDirectory) throws IOException {
-        String inputFile = String.format("test-files/%s", fileName);
-        BufferedReader reader = new BufferedReader(new InputStreamReader(
-                getClass().getClassLoader().getResourceAsStream(inputFile)));
-        File dstFile = new File(dstDirectory, fileName);
-        if (dstDirectory.mkdirs()) {
-            getLogger().info("Created required directories for {}", dstDirectory);
-        }
-        getLogger().info("Copying {} to {}", inputFile, dstFile);
-        BufferedWriter writer = new BufferedWriter(new FileWriter(dstFile));
-        String s;
-        while ((s = reader.readLine()) != null) {
-            writer.write(s);
-            writer.write("\n");
-        }
-
-        writer.close();
-        reader.close();
-    }
-
-
     @Test
-    public void testValidRequest() throws IOException {
-        copyTestFile("cdrDetail_OBD_20150506070809.csv", cdrDirectory());
-        copyTestFile("cdrSummary_OBD_20150506070809.csv", cdrDirectory());
+    public void testValidRequest() throws IOException, NoSuchAlgorithmException {
+        helper.copyCdrSummaryFile();
 
         cdrFileService.processCdrFile(new CdrFileNotificationRequest(
-                "OBD_20150506070809.csv",
-                new FileInfo("cdrSummary_OBD_20150506070809.csv", "000", 0),
-                new FileInfo("cdrDetail_OBD_20150506070809.csv", "111", 1)));
+                        helper.obdFileName(),
+                        new FileInfo(helper.cdrSummaryFileName(), helper.summaryFileChecksum(), 0),
+                        new FileInfo(helper.cdrDetailFileName(), helper.detailFileChecksum(), 1))
+        );
+
+        try {
+            getLogger().info("Sleeping 5 seconds to give a change to @MotechListeners to catch up...");
+            Thread.sleep(1000L * 5);
+            getLogger().info("...waking up from sleep, did they catch up?");
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 }

@@ -30,7 +30,8 @@ public class ImiController {
 
     public static final String NOT_PRESENT = "<%s: Not Present>";
     public static final String INVALID = "<%s: Invalid>";
-    public static final Pattern TARGET_FILENAME_PATTERN = Pattern.compile("OBD_NMS[1-9]_20[0-9]{12}\\.csv");
+    //todo: should we verify this is a valid yyyymmddhhmmss?
+    public static final Pattern TARGET_FILENAME_PATTERN = Pattern.compile("OBD_[0-9]{14}\\.csv");
 
     private CdrFileService cdrFileService;
     private TargetFileService targetFileService;
