@@ -81,10 +81,6 @@ public class CdrTestFileHelper {
 
     public void copyCdrSummaryFile() throws IOException {
         copyFile(cdrSummaryFileName());
-        File f = new File(cdrDirectory(), cdrSummaryFileName());
-        if(f.exists() && !f.isDirectory()) {
-            LOGGER.debug("Confirmed that summary file exists");
-        }
     }
 
 

@@ -84,8 +84,6 @@ public class CdrFileServiceImpl implements CdrFileService {
 
             String line;
             while ((line = reader.readLine()) != null) {
-                // TODO: debugging. take this out.
-                LOGGER.debug("Read line: " + line);
 
                 lines.add(CallDetailRecord.fromLine(line));
             }
