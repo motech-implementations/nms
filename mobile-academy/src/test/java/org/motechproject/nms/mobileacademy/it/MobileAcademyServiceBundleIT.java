@@ -4,6 +4,7 @@ import org.junit.Before;
 import org.motechproject.mtraining.domain.Bookmark;
 import org.motechproject.mtraining.repository.BookmarkDataService;
 import org.motechproject.nms.mobileacademy.domain.Course;
+import org.motechproject.nms.mobileacademy.dto.MaBookmark;
 import org.motechproject.nms.mobileacademy.repository.CourseDataService;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
 import org.junit.Test;
@@ -78,14 +79,25 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     }
 
     @Test
-    public void testGetBookmark() throws Exception {
+    public void testGetBookmark() {
 
         bookmarkDataService.create(new Bookmark("1", "1", "1", "1", new HashMap<String, Object>()));
         assertNotNull(maService.getBookmark(1L, 1L));
     }
 
     @Test
-    public void testGetBookmarkEmpty() throws Exception {
+    public void testGetEmptyBookmark() {
+        assertNull(maService.getBookmark(123L, 456L));
+    }
+
+    @Test
+    public void testSetNewBookmark() {
+        MaBookmark bookmark = new MaBookmark(555L, 666)
+        maService.setBookmark(newBookmark);
+    }
+
+    @Test
+    public void testGetBookmarkEmpty() {
         assertNull(maService.getBookmark(0L, 1L));
     }
 

@@ -103,13 +103,22 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
     @Override
     public void setBookmark(MaBookmark saveBookmark) {
 
-        List<Bookmark> existing = bookmarkDataService.findBookmarksForUser(saveBookmark.getCallingNumber().toString());
+        String callinNumber = saveBookmark.getCallingNumber().toString();
+        List<Bookmark> existing = bookmarkDataService.findBookmarksForUser(callinNumber);
 
         if (CollectionUtils.isEmpty(existing)) {
             // if no bookmarks exist for user
+            LOGGER.info("No bookmarks found for user " + callinNumber);
             bookmarkDataService.create(setBookmarkProperties(saveBookmark, new Bookmark()));
         } else {
-            // we found a list (usually only 1) and update it
+            // error check
+            if (existing.size() > 1) {
+                LOGGER.error("Found more than 1 bookmark for calling number. This should never be possible.");
+                LOGGER.error("Contact dev team about calling number: " + callinNumber);
+            }
+
+            // update the first bookmark
+            LOGGER.info("Updating the first bookmark for user");
             bookmarkDataService.update(setBookmarkProperties(saveBookmark, existing.get(0)));
         }
     }
@@ -123,6 +132,7 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
         }
         toBookmark.getProgress().put("callId", fromBookmark.getCallId());
 
+        // This guarantees that we always update to the latest scores
         if (fromBookmark.getScoresByChapter() != null) {
             toBookmark.getProgress().put("scoresByChapter", fromBookmark.getScoresByChapter());
         }
