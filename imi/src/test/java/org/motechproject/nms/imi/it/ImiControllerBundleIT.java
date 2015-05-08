@@ -28,6 +28,7 @@ import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -48,10 +49,12 @@ public class ImiControllerBundleIT extends BasePaxIT {
     @Inject
     SettingsService settingsService;
 
+
     @Before
     public void initFileHelper() {
         helper.init(settingsService);
     }
+
 
     private String createFailureResponseJson(String failureReason) throws IOException {
         BadRequest badRequest = new BadRequest(failureReason);
@@ -59,14 +62,17 @@ public class ImiControllerBundleIT extends BasePaxIT {
         return mapper.writeValueAsString(badRequest);
     }
 
+
     private HttpPost createCdrFileNotificationHttpPost(boolean useValidTargetFile,
-            boolean useValidSummaryFile, boolean useValidDetailFile) throws IOException {
+            boolean useValidSummaryFile, boolean useValidDetailFile) throws IOException,
+            NoSuchAlgorithmException {
         String targetFile = useValidTargetFile ? helper.obdFileName() : helper.obdFileName() + "xxx";
-        String summaryFile = useValidSummaryFile ? helper.cdrSummaryFileName() : helper.cdrSummaryFileName() + "xxx";
+        String summaryFile = useValidSummaryFile ? helper.cdrSummaryFileName() : helper.cdrSummaryFileName() +
+                "xxx";
         String detailFile = useValidDetailFile ? helper.cdrDetailFileName() : helper.cdrDetailFileName() + "xxx";
 
-        FileInfo cdrSummary = new FileInfo(summaryFile, "xxxx", 5000);
-        FileInfo cdrDetail = new FileInfo(detailFile, "xxxx", 9900);
+        FileInfo cdrSummary = new FileInfo(summaryFile, helper.detailFileChecksum(), 5000);
+        FileInfo cdrDetail = new FileInfo(detailFile, helper.detailFileChecksum(), 9900);
         CdrFileNotificationRequest cdrFileNotificationRequest =
             new CdrFileNotificationRequest(targetFile, cdrSummary, cdrDetail);
 
@@ -81,9 +87,11 @@ public class ImiControllerBundleIT extends BasePaxIT {
     }
 
     @Test
-    public void testCreateCdrFileNotificationRequest() throws IOException, InterruptedException {
+    public void testCreateCdrFileNotificationRequest() throws IOException, InterruptedException,
+            NoSuchAlgorithmException {
         getLogger().info("testCreateCdrFileNotificationRequest()");
         helper.copyCdrSummaryFile();
+        helper.copyCdrDetailFile();
 
         HttpPost httpPost = createCdrFileNotificationHttpPost(true, true, true);
 
@@ -93,7 +101,7 @@ public class ImiControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testCreateCdrFileNotificationRequestBadCdrSummaryFileName() throws IOException,
-        InterruptedException {
+        InterruptedException, NoSuchAlgorithmException {
         getLogger().info("testCreateCdrFileNotificationRequestBadCdrSummaryFileName()");
         HttpPost httpPost = createCdrFileNotificationHttpPost(true, false, true);
 
@@ -105,7 +113,7 @@ public class ImiControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testCreateCdrFileNotificationRequestBadFileNames() throws IOException,
-        InterruptedException {
+        InterruptedException, NoSuchAlgorithmException {
         getLogger().info("testCreateCdrFileNotificationRequestBadFileNames()");
         HttpPost httpPost = createCdrFileNotificationHttpPost(false, true, true);
 
