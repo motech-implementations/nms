@@ -1,0 +1,16 @@
+package org.motechproject.nms.imi.repository;
+
+import org.motechproject.mds.annotations.Lookup;
+import org.motechproject.mds.annotations.LookupField;
+import org.motechproject.mds.query.QueryParams;
+import org.motechproject.mds.service.MotechDataService;
+import org.motechproject.nms.imi.domain.CallRetry;
+import org.motechproject.nms.imi.domain.DayOfTheWeek;
+
+import java.util.List;
+
+public interface CallRetryDataService extends MotechDataService<CallRetry> {
+    @Lookup
+    List<CallRetry> findByDayOfTheWeek(@LookupField(name = "dayOfTheWeek") DayOfTheWeek dayOfTheWeek,
+                                                  QueryParams queryParams);
+}

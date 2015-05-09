@@ -2,12 +2,13 @@ package org.motechproject.nms.mobileacademy.domain.course;
 
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
+import org.motechproject.mds.domain.MdsEntity;
 
 /**
  * Contains the details about the menu file to be played at the end of the chapter
  */
 @Entity
-public class ChapterContentMenu {
+public class ChapterContentMenu extends MdsEntity {
 
     /**
      * This is id for the End menu file of the chapter in the format”Chapter<ChapterId>_EndMenu”, where
@@ -24,6 +25,11 @@ public class ChapterContentMenu {
     private String file;
 
     public ChapterContentMenu() {
+    }
+
+    public ChapterContentMenu(String identifier, String file) {
+        this.identifier = identifier;
+        this.file = file;
     }
 
     public String getIdentifier() {

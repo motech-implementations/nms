@@ -25,6 +25,11 @@ public class ChapterContent {
     public ChapterContent() {
     }
 
+    public ChapterContent(ChapterContentMenu menu, ChapterContentScore score) {
+        this.menu = menu;
+        this.score = score;
+    }
+
     public ChapterContentMenu getMenu() {
         return menu;
     }
