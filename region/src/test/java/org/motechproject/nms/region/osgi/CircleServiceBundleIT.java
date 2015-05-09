@@ -84,6 +84,7 @@ public class CircleServiceBundleIT extends BasePaxIT {
         villageDataService.deleteAll();
         talukaDataService.deleteAll();
         districtDataService.deleteAll();
+        stateDataService.deleteAll();
         circleDataService.deleteAll();
 
         healthSubFacility = new HealthSubFacility();
