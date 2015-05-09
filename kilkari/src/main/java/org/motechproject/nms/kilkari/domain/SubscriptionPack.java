@@ -3,6 +3,7 @@ package org.motechproject.nms.kilkari.domain;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 
+import javax.jdo.annotations.Unique;
 import java.util.List;
 
 /**
@@ -13,6 +14,7 @@ import java.util.List;
 public class SubscriptionPack {
 
     @Field
+    @Unique
     private String name;
 
     @Field
