@@ -167,6 +167,7 @@ public class LocationServiceBundleIT extends BasePaxIT {
     }
 
     @Test(expected = ConstraintViolationException.class)
+    @Ignore // Remove once https://applab.atlassian.net/browse/MOTECH-1691 is resolved
     public void testCreateVillageNoCode() throws Exception {
         initAll();
         village.setVcode(null);
