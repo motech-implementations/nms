@@ -82,8 +82,13 @@ public class ReschedulerServiceImpl implements ReschedulerService {
             }
 
             //re-reschedule the call
+
+            //update the callStage
             callRetry.setCallStage((callRetry.getCallStage() == CallStage.RETRY_1) ? CallStage.RETRY_2 :
                     CallStage.RETRY_LAST);
+            //increment the day of the week
+            callRetry.setDayOfTheWeek(callRetry.getDayOfTheWeek().nextDay());
+            //update the CallRetry record
             callRetryDataService.update(callRetry);
         }
     }
