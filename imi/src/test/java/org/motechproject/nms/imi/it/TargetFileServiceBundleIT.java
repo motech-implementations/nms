@@ -3,24 +3,24 @@ package org.motechproject.nms.imi.it;
 import org.apache.commons.codec.binary.Hex;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.motechproject.nms.kilkari.domain.Subscriber;
-import org.motechproject.nms.kilkari.domain.Subscription;
-import org.motechproject.nms.kilkari.domain.SubscriptionMode;
-import org.motechproject.nms.kilkari.domain.SubscriptionPack;
-import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
-import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
-import org.motechproject.nms.kilkari.repository.SubscriberDataService;
-import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
-import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
-import org.motechproject.nms.region.language.domain.Language;
-import org.motechproject.nms.region.language.repository.LanguageDataService;
 import org.motechproject.nms.imi.domain.CallRetry;
 import org.motechproject.nms.imi.domain.CallStage;
-import org.motechproject.nms.imi.domain.DayOfTheWeek;
 import org.motechproject.nms.imi.repository.CallRetryDataService;
 import org.motechproject.nms.imi.service.SettingsService;
 import org.motechproject.nms.imi.service.TargetFileNotification;
 import org.motechproject.nms.imi.service.TargetFileService;
+import org.motechproject.nms.kilkari.domain.Subscriber;
+import org.motechproject.nms.kilkari.domain.Subscription;
+import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
+import org.motechproject.nms.kilkari.domain.SubscriptionPack;
+import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
+import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
+import org.motechproject.nms.kilkari.repository.SubscriberDataService;
+import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
+import org.motechproject.nms.kilkari.service.SubscriptionService;
+import org.motechproject.nms.props.domain.DayOfTheWeek;
+import org.motechproject.nms.region.language.domain.Language;
+import org.motechproject.nms.region.language.repository.LanguageDataService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.ops4j.pax.exam.ExamFactory;
@@ -52,7 +52,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
     TargetFileService targetFileService;
 
     @Inject
-    SubscriptionDataService subscriptionDataService;
+    SubscriptionService subscriptionService;
 
     @Inject
     SubscriberDataService subscriberDataService;
@@ -70,7 +70,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
     SettingsService settingsService;
 
     private void setupDatabase() {
-        subscriptionDataService.deleteAll();
+        subscriptionService.deleteAll();
         subscriptionPackDataService.deleteAll();
         subscriberDataService.deleteAll();
         languageDataService.deleteAll();
@@ -87,21 +87,21 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         Subscriber subscriber1 = subscriberDataService.create(new Subscriber(1111111111L, hindi, "AA"));
         Subscriber subscriber2 = subscriberDataService.create(new Subscriber(2222222222L, urdu, "BB"));
 
-        Subscription s = new Subscription(subscriber1, pack1, SubscriptionMode.IVR);
+        Subscription s = new Subscription(subscriber1, pack1, SubscriptionOrigin.IVR);
         s.setStatus(SubscriptionStatus.ACTIVE);
-        Subscription subscription11 = subscriptionDataService.create(s);
+        Subscription subscription11 = subscriptionService.create(s);
 
-        s = new Subscription(subscriber1, pack2, SubscriptionMode.IVR);
+        s = new Subscription(subscriber1, pack2, SubscriptionOrigin.IVR);
         s.setStatus(SubscriptionStatus.ACTIVE);
-        Subscription subscription12 = subscriptionDataService.create(s);
+        Subscription subscription12 = subscriptionService.create(s);
 
-        s = new Subscription(subscriber2, pack1, SubscriptionMode.IVR);
+        s = new Subscription(subscriber2, pack1, SubscriptionOrigin.IVR);
         s.setStatus(SubscriptionStatus.ACTIVE);
-        Subscription subscription21 = subscriptionDataService.create(s);
+        Subscription subscription21 = subscriptionService.create(s);
 
-        s = new Subscription(subscriber2, pack2, SubscriptionMode.IVR);
+        s = new Subscription(subscriber2, pack2, SubscriptionOrigin.IVR);
         s.setStatus(SubscriptionStatus.COMPLETED);
-        Subscription subscription22 = subscriptionDataService.create(s);
+        Subscription subscription22 = subscriptionService.create(s);
 
         CallRetry callRetry1 = callRetryDataService.create(new CallRetry("123", 3333333333L, DayOfTheWeek.today(),
                 CallStage.RETRY_1, "HI", "AA", "I"));

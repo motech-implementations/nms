@@ -11,7 +11,7 @@ import org.motechproject.nms.kilkari.domain.InboxCallData;
 import org.motechproject.nms.kilkari.domain.InboxCallDetails;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
-import org.motechproject.nms.kilkari.domain.SubscriptionMode;
+import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
 import org.motechproject.nms.kilkari.exception.NoInboxForSubscriptionException;
@@ -235,7 +235,7 @@ public class KilkariController extends BaseController {
         }
 
         subscriptionService.createSubscription(subscriptionRequest.getCallingNumber(), language,
-                subscriptionPack, SubscriptionMode.IVR);
+                subscriptionPack, SubscriptionOrigin.IVR);
     }
 
     /**

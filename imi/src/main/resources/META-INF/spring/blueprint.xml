@@ -19,8 +19,8 @@
 
 
 
-    <osgi:reference id="subscriptionDataService"
-                    interface="org.motechproject.nms.kilkari.repository.SubscriptionDataService" />
+    <osgi:reference id="subscriptionService"
+                    interface="org.motechproject.nms.kilkari.service.SubscriptionService" />
 
     <osgi:reference id="subscriptionPackDataService"
                     interface="org.motechproject.nms.kilkari.repository.SubscriptionPackDataService" />

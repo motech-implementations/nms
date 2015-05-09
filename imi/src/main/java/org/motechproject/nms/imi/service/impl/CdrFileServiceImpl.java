@@ -68,7 +68,7 @@ public class CdrFileServiceImpl implements CdrFileService {
         File cdrDirectory = new File(userDirectory, cdrFileLocation);
         File cdrSummary = new File(cdrDirectory, summaryFileName);
 
-        if(cdrSummary.exists() && !cdrSummary.isDirectory()) {
+        if (cdrSummary.exists() && !cdrSummary.isDirectory()) {
             LOGGER.debug("Found CDR summary file. Starting to read...");
         }
 
@@ -146,9 +146,7 @@ public class CdrFileServiceImpl implements CdrFileService {
             cdrDataService.create(cdr);
             if (cdr.getFinalStatus() != CallStatus.SUCCESS) {
                 //Sending a MOTECH message distributes the work to all nodes
-                LOGGER.debug("*****BEFORE MESSAGE*****");
                 reschedulerService.sendRescheduleMessage(cdr);
-                LOGGER.debug("*****AFTER MESSAGE******");
             }
         }
 

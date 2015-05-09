@@ -6,7 +6,7 @@ import org.motechproject.nms.props.domain.CallStatus;
 
 import java.io.Serializable;
 
-@Entity(tableName = "nms_obd_cdrs")
+@Entity(tableName = "nms_imi_cdrs")
 public class CallDetailRecord implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -54,10 +54,10 @@ public class CallDetailRecord implements Serializable {
 
     public CallDetailRecord() { }
 
-    public CallDetailRecord(String requestId, String serviceId, String msisdn, // NO CHECKSTYLE > than 7 params
-            String cli, Integer priority, String callFlowUrl, String contentFileName, String weekId,
-            String languageLocationCode, String circle, CallStatus finalStatus, Integer statusCode,
-                            Integer attempts) {
+    public CallDetailRecord(String requestId, String serviceId, // NO CHECKSTYLE More than 7 parameters
+            String msisdn, String cli, Integer priority, String callFlowUrl, String contentFileName,
+            String weekId, String languageLocationCode, String circle, CallStatus finalStatus,
+            Integer statusCode, Integer attempts) {
         this.requestId = requestId;
         this.serviceId = serviceId;
         this.msisdn = msisdn;
