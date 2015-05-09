@@ -13,7 +13,14 @@ import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.domain.Village;
 import org.motechproject.nms.region.repository.CircleDataService;
+import org.motechproject.nms.region.repository.DistrictDataService;
+import org.motechproject.nms.region.repository.HealthBlockDataService;
+import org.motechproject.nms.region.repository.HealthFacilityDataService;
+import org.motechproject.nms.region.repository.HealthFacilityTypeDataService;
+import org.motechproject.nms.region.repository.HealthSubFacilityDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.repository.TalukaDataService;
+import org.motechproject.nms.region.repository.VillageDataService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.ops4j.pax.exam.ExamFactory;
@@ -32,10 +39,31 @@ import static org.junit.Assert.assertNotNull;
 public class CircleServiceBundleIT extends BasePaxIT {
 
     @Inject
+    private CircleDataService circleDataService;
+
+    @Inject
     private StateDataService stateDataService;
 
     @Inject
-    private CircleDataService circleDataService;
+    private DistrictDataService districtDataService;
+
+    @Inject
+    private TalukaDataService talukaDataService;
+
+    @Inject
+    private VillageDataService villageDataService;
+
+    @Inject
+    private HealthBlockDataService healthBlockDataService;
+
+    @Inject
+    private HealthFacilityTypeDataService healthFacilityTypeDataService;
+
+    @Inject
+    private HealthFacilityDataService healthFacilityDataService;
+
+    @Inject
+    private HealthSubFacilityDataService healthSubFacilityDataService;
 
     District district;
     Taluka taluka;
@@ -49,7 +77,13 @@ public class CircleServiceBundleIT extends BasePaxIT {
     // Circle 2           -> State 2, State 3
     // Circle 3, Circle 4 -> State 4
     private void setupData() {
-        stateDataService.deleteAll();
+        healthSubFacilityDataService.deleteAll();
+        healthFacilityDataService.deleteAll();
+        healthFacilityTypeDataService.deleteAll();
+        healthBlockDataService.deleteAll();
+        villageDataService.deleteAll();
+        talukaDataService.deleteAll();
+        districtDataService.deleteAll();
         circleDataService.deleteAll();
 
         healthSubFacility = new HealthSubFacility();
