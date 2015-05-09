@@ -91,11 +91,19 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
             Bookmark existingBookmark = bookmarks.get(0);
             MaBookmark toReturn = new MaBookmark();
             toReturn.setCallingNumber(Long.parseLong(existingBookmark.getExternalId()));
-            toReturn.setCallId((Long) existingBookmark.getProgress().get("callId"));
-            toReturn.setScoresByChapter((Map<String, Integer>) existingBookmark.getProgress()
-                    .get("scoresByChapter"));
-            toReturn.setBookmark(existingBookmark.getChapterIdentifier() + "_" +
-                    existingBookmark.getLessonIdentifier());
+            toReturn.setCallId(callId);
+
+            if (existingBookmark.getProgress() != null) {
+                toReturn.setScoresByChapter((Map<String, Integer>) existingBookmark.getProgress()
+                        .get("scoresByChapter"));
+                toReturn.setBookmark(existingBookmark.getChapterIdentifier() + "_" +
+                        existingBookmark.getLessonIdentifier());
+            } else {
+                toReturn.setScoresByChapter(null);
+                toReturn.setBookmark(null);
+            }
+
+
             return toReturn;
         }
     }
