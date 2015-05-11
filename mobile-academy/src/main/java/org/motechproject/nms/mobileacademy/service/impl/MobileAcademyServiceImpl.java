@@ -4,9 +4,11 @@ import org.apache.commons.collections.CollectionUtils;
 import org.joda.time.DateTime;
 import org.motechproject.mtraining.domain.Bookmark;
 import org.motechproject.mtraining.repository.BookmarkDataService;
+import org.motechproject.nms.mobileacademy.domain.CompletionRecord;
 import org.motechproject.nms.mobileacademy.domain.Course;
 
 import org.motechproject.nms.mobileacademy.dto.MaBookmark;
+import org.motechproject.nms.mobileacademy.repository.CompletionRecordDataService;
 import org.motechproject.nms.mobileacademy.repository.CourseDataService;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
 import org.slf4j.Logger;
@@ -24,10 +26,21 @@ import java.util.Map;
 @Service("mobileAcademyService")
 public class MobileAcademyServiceImpl implements MobileAcademyService {
 
+    private static final String FINAL_BOOKMARK = "Chapter11_Quiz";
+
+    private static final int CHAPTER_COUNT = 11;
+
+    private static final int PASS_SCORE = 22;
+
     /**
      * Bookmark data service
      */
     private BookmarkDataService bookmarkDataService;
+
+    /**
+     * Completion record data service
+     */
+    private CompletionRecordDataService completionRecordDataService;
 
     /**
      * Course data service
@@ -38,9 +51,11 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
 
     @Autowired
     public MobileAcademyServiceImpl(BookmarkDataService bookmarkDataService,
-                                    CourseDataService courseDataService) {
+                                    CourseDataService courseDataService,
+                                    CompletionRecordDataService completionRecordDataService) {
         this.bookmarkDataService = bookmarkDataService;
         this.courseDataService = courseDataService;
+        this.completionRecordDataService = completionRecordDataService;
     }
 
     @Override
@@ -129,8 +144,15 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
             LOGGER.info("Updating the first bookmark for user");
             bookmarkDataService.update(setBookmarkProperties(saveBookmark, existing.get(0)));
         }
+
+        if (saveBookmark.getBookmark().equals(FINAL_BOOKMARK)
+                && saveBookmark.getScoresByChapter().size() == CHAPTER_COUNT) {
+
+            evaluateCourseCompletion(saveBookmark.getCallingNumber(), saveBookmark.getScoresByChapter());
+        }
     }
 
+    // Map the dto to the domain object
     private Bookmark setBookmarkProperties(MaBookmark fromBookmark, Bookmark toBookmark) {
 
         toBookmark.setExternalId(fromBookmark.getCallingNumber().toString());
@@ -151,6 +173,24 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
         }
 
         return toBookmark;
+    }
+
+    private void evaluateCourseCompletion(Long callingNumber, Map<String, Integer> scores) {
+
+        int totalScore = 0;
+        for (int chapterCount = 1; chapterCount <= CHAPTER_COUNT; chapterCount++) {
+
+            totalScore += scores.get(String.valueOf(chapterCount));
+        }
+
+        if (totalScore >= PASS_SCORE) {
+
+            CompletionRecord cr = new CompletionRecord(callingNumber, totalScore);
+
+            // TODO: check for existing records first
+            completionRecordDataService.create(cr);
+        }
+
     }
 
 }

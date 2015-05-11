@@ -11,6 +11,9 @@
     <osgi:reference id="courseDataService"
                     interface="org.motechproject.nms.mobileacademy.repository.CourseDataService" />
 
+    <osgi:reference id="completionRecordDataService"
+                    interface="org.motechproject.nms.mobileacademy.repository.CompletionRecordDataService" />
+
     <osgi:reference id="bookmarkDataService"
                     interface="org.motechproject.mtraining.repository.BookmarkDataService" />
 
