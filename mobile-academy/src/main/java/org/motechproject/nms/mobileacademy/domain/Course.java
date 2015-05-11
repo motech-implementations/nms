@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * Mobile Academy course entity
  */
-@Entity
+@Entity(tableName = "nms_ma_course")
 public class Course extends MdsEntity {
 
     @Field
