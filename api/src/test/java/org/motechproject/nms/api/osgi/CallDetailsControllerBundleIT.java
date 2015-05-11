@@ -328,9 +328,9 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         assertNull(cdr.getWelcomePrompt());
         assertEquals(2, cdr.getContent().size());
         assertEquals("Chapter-01lesson-04", cdr.getContent().get(0).getContentName());
-        assertNull(cdr.getContent().get(0).getMobileKunjiCardNumber());
+        assertNull(cdr.getContent().get(0).getMobileKunjiCardCode());
         assertEquals("chapter-01question-01", cdr.getContent().get(1).getContentName());
-        assertNull(cdr.getContent().get(1).getMobileKunjiCardNumber());
+        assertNull(cdr.getContent().get(1).getMobileKunjiCardCode());
         assertEquals(flw.getId(), cdr.getFrontLineWorker().getId());
     }
 

@@ -126,7 +126,7 @@ public class CallDetailsController extends BaseController {
             content.setEndTime(new DateTime(callContentRequest.getEndTime() * MILLISECONDS_PER_SECOND));
 
             if (service == Service.MOBILE_KUNJI) {
-                content.setMobileKunjiCardNumber(callContentRequest.getMkCardCode());
+                content.setMobileKunjiCardCode(callContentRequest.getMkCardCode());
             }
 
             if (service == Service.MOBILE_ACADEMY) {
