@@ -7,7 +7,7 @@ public class CourseVersionResponse {
 
     private int courseVersion;
 
-    public CourseVersionResponse(){
+    public CourseVersionResponse() {
     }
 
     public CourseVersionResponse(int courseVersion) {

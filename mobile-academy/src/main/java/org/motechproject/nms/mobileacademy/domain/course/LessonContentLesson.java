@@ -2,12 +2,13 @@ package org.motechproject.nms.mobileacademy.domain.course;
 
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
+import org.motechproject.mds.domain.MdsEntity;
 
 /**
  * Contains details about actual content files to be played while playing a lesson.
  */
 @Entity
-public class LessonContentLesson {
+public class LessonContentLesson extends MdsEntity {
 
     /**
      * This is a id for the Content file of the lesson in the format”Chapter<ChapterId>_Lesson<LessonId>”,

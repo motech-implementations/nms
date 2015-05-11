@@ -1,5 +1,6 @@
 package org.motechproject.nms.region.osgi;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.region.circle.domain.Circle;
@@ -117,6 +118,7 @@ public class CircleServiceBundleIT extends BasePaxIT {
     }
 
     @Test
+    @Ignore
     public void testCircleMultipleStates() throws Exception {
         setupData();
 

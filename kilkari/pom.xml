@@ -40,6 +40,13 @@
             <version>${motech.version}</version>
         </dependency>
 
+        <!-- common properties -->
+        <dependency>
+            <groupId>org.motechproject.nms</groupId>
+            <artifactId>props</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>org.motechproject.nms</groupId>
             <artifactId>region</artifactId>
@@ -81,6 +88,7 @@
                             org.motechproject.nms.kilkari.service;version=${project.version},
                             org.motechproject.nms.kilkari.repository;version=${project.version},
                             org.motechproject.nms.kilkari.domain;version=${project.version},
+                            org.motechproject.nms.kilkari.exception;version=${project.version},
                         </Export-Package>
                         <Import-Package>
                             org.motechproject.osgi.web,

@@ -2,12 +2,13 @@ package org.motechproject.nms.mobileacademy.domain.course;
 
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
+import org.motechproject.mds.domain.MdsEntity;
 
 /**
  *  This contains detail about the file to be played before the quiz
  */
 @Entity
-public class QuizContentMenu {
+public class QuizContentMenu extends MdsEntity {
 
     /**
      * This is a id for the quiz header to be played. The format is ”Chapter<ChapterId>_QuizHeader>”,

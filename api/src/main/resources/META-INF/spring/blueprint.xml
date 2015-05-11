@@ -21,7 +21,9 @@
 
     <osgi:reference id="subscriptionService" interface="org.motechproject.nms.kilkari.service.SubscriptionService"/>
 
-    <osgi:reference id="locationService" interface="org.motechproject.nms.location.service.LocationService"/>
+    <osgi:reference id="inboxService" interface="org.motechproject.nms.kilkari.service.InboxService"/>
+
+    <osgi:reference id="locationService" interface="org.motechproject.nms.region.location.service.LocationService"/>
 
     <osgi:reference id="frontLineWorkerService" interface="org.motechproject.nms.flw.service.FrontLineWorkerService"/>
 

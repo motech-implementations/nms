@@ -27,7 +27,7 @@ public class Subscription {
     private SubscriptionStatus status;
 
     @Field
-    private SubscriptionMode mode;
+    private SubscriptionOrigin origin;
 
     @Field
     private LocalDate startDate;
@@ -35,11 +35,11 @@ public class Subscription {
     @Field
     private DeactivationReason deactivationReason;
 
-    public Subscription(Subscriber subscriber, SubscriptionPack subscriptionPack, SubscriptionMode mode) {
+    public Subscription(Subscriber subscriber, SubscriptionPack subscriptionPack, SubscriptionOrigin origin) {
         this.subscriptionId = UUID.randomUUID().toString();
         this.subscriber = subscriber;
         this.subscriptionPack = subscriptionPack;
-        this.mode = mode;
+        this.origin = origin;
         this.subscriber.getSubscriptions().add(this);
     }
 
@@ -65,9 +65,9 @@ public class Subscription {
 
     public void setStatus(SubscriptionStatus status) { this.status = status; }
 
-    public SubscriptionMode getMode() { return mode; }
+    public SubscriptionOrigin getOrigin() { return origin; }
 
-    public void setMode(SubscriptionMode mode) { this.mode = mode; }
+    public void setOrigin(SubscriptionOrigin origin) { this.origin = origin; }
 
     public LocalDate getStartDate() { return startDate; }
 
@@ -115,7 +115,7 @@ public class Subscription {
                 "subscriptionId='" + subscriptionId + '\'' +
                 ", subscriptionPack=" + subscriptionPack +
                 ", status=" + status +
-                ", mode=" + mode +
+                ", origin=" + origin +
                 ", startDate=" + startDate +
                 '}';
     }

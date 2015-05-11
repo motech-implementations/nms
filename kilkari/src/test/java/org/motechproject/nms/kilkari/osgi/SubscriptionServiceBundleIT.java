@@ -1,16 +1,14 @@
 package org.motechproject.nms.kilkari.osgi;
 
 import org.joda.time.DateTime;
-import org.joda.time.LocalDate;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.kilkari.domain.InboxCallData;
 import org.motechproject.nms.kilkari.domain.InboxCallDetails;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
-import org.motechproject.nms.kilkari.domain.SubscriptionMode;
+import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
-import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.repository.InboxCallDataDataService;
 import org.motechproject.nms.kilkari.repository.InboxCallDetailsDataService;
@@ -18,6 +16,7 @@ import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackMessageDataService;
+import org.motechproject.nms.kilkari.service.InboxService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.region.language.domain.Language;
@@ -48,6 +47,8 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     private SubscriberService subscriberService;
     @Inject
     private SubscriptionService subscriptionService;
+    @Inject
+    private InboxService inboxService;
     @Inject
     private SubscriberDataService subscriberDataService;
     @Inject
@@ -98,9 +99,9 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         SubscriptionPack pack1 = subscriptionPackDataService.byName("pack1");
         SubscriptionPack pack2 = subscriptionPackDataService.byName("pack2");
         subscriptionService.createSubscription(subscriber.getCallingNumber(), ta, pack1,
-                                               SubscriptionMode.IVR);
+                                               SubscriptionOrigin.IVR);
         subscriptionService.createSubscription(subscriber.getCallingNumber(), ta, pack2,
-                                               SubscriptionMode.IVR);
+                                               SubscriptionOrigin.IVR);
 
         subscriber = subscriberService.getSubscriber(1000000000L);
         Set<Subscription> subscriptions = subscriber.getSubscriptions();
@@ -112,7 +113,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         assertEquals(new HashSet<>(Arrays.asList(pack1, pack2)), packs);
 
-        long id = subscriptionService.addInboxCallDetails(new InboxCallDetails(
+        long id = inboxService.addInboxCallDetails(new InboxCallDetails(
                 1111111111L,
                 "OP",
                 "AA",
@@ -209,7 +210,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         Subscriber s = subscriberService.getSubscriber(1111111111L);
         assertNull(s);
 
-        subscriptionService.createSubscription(1111111111L, ta, pack1, SubscriptionMode.IVR);
+        subscriptionService.createSubscription(1111111111L, ta, pack1, SubscriptionOrigin.IVR);
 
         Subscriber subscriber = subscriberService.getSubscriber(1111111111L);
         assertNotNull(subscriber);
@@ -235,10 +236,10 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         Subscriber s = subscriberService.getSubscriber(1111111111L);
         assertNull(s);
 
-        subscriptionService.createSubscription(1111111111L, ta, pack1, SubscriptionMode.IVR);
+        subscriptionService.createSubscription(1111111111L, ta, pack1, SubscriptionOrigin.IVR);
 
         // Since the user exists we will not change their language
-        subscriptionService.createSubscription(1111111111L, en, pack1, SubscriptionMode.IVR);
+        subscriptionService.createSubscription(1111111111L, en, pack1, SubscriptionOrigin.IVR);
 
         Subscriber subscriber = subscriberService.getSubscriber(1111111111L);
         assertNotNull(subscriber);

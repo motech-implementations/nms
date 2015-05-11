@@ -42,7 +42,12 @@
         <dependency>
             <groupId>org.motechproject</groupId>
             <artifactId>mtraining</artifactId>
-            <version>0.26-SNAPSHOT</version>
+            <version>${motech.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.modelmapper.extensions</groupId>
+            <artifactId>modelmapper-spring</artifactId>
+            <version>0.7.4</version>
         </dependency>
     </dependencies>
 
@@ -86,6 +91,9 @@
                         <Import-Package>
                             org.motechproject.osgi.web,
                             org.motechproject.mtraining.domain,
+                            org.modelmapper.internal.cglib.proxy,
+                            org.modelmapper.internal.cglib.core,
+                            org.modelmapper.internal.cglib.transform,
                             *
                         </Import-Package>
                     </instructions>

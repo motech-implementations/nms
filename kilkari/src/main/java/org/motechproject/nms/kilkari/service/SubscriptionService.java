@@ -1,11 +1,12 @@
 package org.motechproject.nms.kilkari.service;
 
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
-import org.motechproject.nms.kilkari.domain.InboxCallDetails;
 import org.motechproject.nms.kilkari.domain.Subscription;
-import org.motechproject.nms.kilkari.domain.SubscriptionMode;
+import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.region.language.domain.Language;
+
+import java.util.List;
 
 /**
  *
@@ -15,7 +16,7 @@ public interface SubscriptionService {
     void createSubscriptionPacks();
 
     void createSubscription(long callingNumber, Language language, SubscriptionPack subscriptionPack,
-                            SubscriptionMode mode);
+                            SubscriptionOrigin mode);
 
     Subscription getSubscription(String subscriptionId);
 
@@ -23,6 +24,9 @@ public interface SubscriptionService {
 
     SubscriptionPack getSubscriptionPack(String name);
 
-    //TODO: we'll probably want to move this to a new InboxService once we do more Inbox work in Sprint 2
-    long addInboxCallDetails(InboxCallDetails inboxCallDetails);
+    void deleteAll();
+
+    Subscription create(Subscription subscription);
+
+    List<Subscription> findActiveSubscriptions(int page, int pageSize);
 }
