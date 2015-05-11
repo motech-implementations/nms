@@ -49,6 +49,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
 
     @Before
     public void setupMobileAcademy() {
+
         courseDataService.deleteAll();
     }
 
@@ -113,12 +114,12 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         bookmark.setBookmark("Chapter3_Lesson2");
         Map<String, Integer> scores = new HashMap<>();
         scores.put("Quiz1", 4);
-        bookmark.setScoresByChapter(new HashMap<String, Integer>());
+        bookmark.setScoresByChapter(scores);
         maService.setBookmark(bookmark);
 
         MaBookmark retrieved = maService.getBookmark(556L, 666L);
         assertNotNull(retrieved.getBookmark());
-        assertTrue(retrieved.getBookmark() == "Chapter3_Lesson2");
+        assertTrue(retrieved.getBookmark().equals("Chapter3_Lesson2"));
         assertNotNull(retrieved.getScoresByChapter());
         assertTrue(retrieved.getScoresByChapter().get("Quiz1") == 4);
     }

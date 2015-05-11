@@ -111,18 +111,18 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
     @Override
     public void setBookmark(MaBookmark saveBookmark) {
 
-        String callinNumber = saveBookmark.getCallingNumber().toString();
-        List<Bookmark> existing = bookmarkDataService.findBookmarksForUser(callinNumber);
+        String callingNumber = saveBookmark.getCallingNumber().toString();
+        List<Bookmark> existing = bookmarkDataService.findBookmarksForUser(callingNumber);
 
         if (CollectionUtils.isEmpty(existing)) {
             // if no bookmarks exist for user
-            LOGGER.info("No bookmarks found for user " + callinNumber);
+            LOGGER.info("No bookmarks found for user " + callingNumber);
             bookmarkDataService.create(setBookmarkProperties(saveBookmark, new Bookmark()));
         } else {
             // error check
             if (existing.size() > 1) {
                 LOGGER.error("Found more than 1 bookmark for calling number. This should never be possible.");
-                LOGGER.error("Contact dev team about calling number: " + callinNumber);
+                LOGGER.error("Contact dev team about calling number: " + callingNumber);
             }
 
             // update the first bookmark
