@@ -1,11 +1,8 @@
 package org.motechproject.nms.kilkari.service.impl;
 
-import org.joda.time.LocalDate;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
-import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
-import org.motechproject.nms.kilkari.domain.SubscriptionMode;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
@@ -60,32 +57,14 @@ public class SubscriberServiceImpl implements SubscriberService {
             if ((subscription.getSubscriptionPack().getType() == SubscriptionPackType.PREGNANCY) &&
                     (retrievedSubscriber.getLastMenstrualPeriod() != subscriber.getLastMenstrualPeriod()))  {
 
-                updateOrSubscribe(subscriber, subscription, subscriber.getLastMenstrualPeriod(),
-                        subscriptionService.getSubscriptionPack("pregnancyPack"));
+                subscriptionService.updateStartDate(subscription, subscriber.getLastMenstrualPeriod());
 
             } else if ((subscription.getSubscriptionPack().getType() == SubscriptionPackType.CHILD) &&
-                    (retrievedSubscriber.getDateOfBirth() != subscriber.getDateOfBirth()))  {
+                    (retrievedSubscriber.getDateOfBirth() != subscriber.getDateOfBirth())) {
 
-                    updateOrSubscribe(subscriber, subscription, subscriber.getDateOfBirth(),
-                            subscriptionService.getSubscriptionPack("childPack"));
+                subscriptionService.updateStartDate(subscription, subscriber.getDateOfBirth());
 
             }
-        }
-    }
-
-    private void updateOrSubscribe(Subscriber subscriber, Subscription subscription, LocalDate referenceDate,
-                                   SubscriptionPack pack) {
-        if (referenceDate == null) {
-            return; // TODO: log?
-        }
-
-        if (subscription == null) {
-            // if not subscribed for pack, subscribe
-            subscriptionService.createSubscription(subscriber.getCallingNumber(), subscriber.getLanguage(),
-                    pack, SubscriptionMode.MCTS_IMPORT);
-        } else {
-            // update start date for pack if ACTIVE subscription exists
-            subscriptionService.updateStartDate(subscription, referenceDate);
         }
     }
 

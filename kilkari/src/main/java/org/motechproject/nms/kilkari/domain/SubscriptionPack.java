@@ -21,15 +21,19 @@ public class SubscriptionPack {
     private SubscriptionPackType type;
 
     @Field
+    private int weeks;
+
+    @Field
     private int messagesPerWeek;
 
     @Field
     private List<SubscriptionPackMessage> weeklyMessages;
 
-    public SubscriptionPack(String name, SubscriptionPackType type, int messagesPerWeek,
+    public SubscriptionPack(String name, SubscriptionPackType type, int weeks, int messagesPerWeek,
                             List<SubscriptionPackMessage> weeklyMessages) {
         this.name = name;
         this.type = type;
+        this.weeks = weeks;
         this.messagesPerWeek = messagesPerWeek;
         this.weeklyMessages = weeklyMessages;
     }
@@ -48,6 +52,14 @@ public class SubscriptionPack {
 
     public void setType(SubscriptionPackType type) {
         this.type = type;
+    }
+
+    public int getWeeks() {
+        return weeks;
+    }
+
+    public void setWeeks(int weeks) {
+        this.weeks = weeks;
     }
 
     public int getMessagesPerWeek() {
@@ -90,6 +102,7 @@ public class SubscriptionPack {
     public int hashCode() {
         int result = name.hashCode();
         result = 31 * result + type.hashCode();
+        result = 31 * result + weeks;
         result = 31 * result + messagesPerWeek;
         result = 31 * result + weeklyMessages.hashCode();
         return result;

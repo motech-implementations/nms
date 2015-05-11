@@ -143,9 +143,9 @@ public class UserControllerBundleIT extends BasePaxIT {
         circleLanguageDataService.create(circleLanguage);
 
         SubscriptionPack pack1 = subscriptionPackDataService.create(new SubscriptionPack("pack1",
-                SubscriptionPackType.CHILD, 1, null));
+                SubscriptionPackType.CHILD, 48, 1, null));
         SubscriptionPack pack2 = subscriptionPackDataService.create(new SubscriptionPack("pack2",
-                SubscriptionPackType.PREGNANCY, 2, null));
+                SubscriptionPackType.PREGNANCY, 72, 2, null));
         List<SubscriptionPack> onePack = Arrays.asList(pack1);
         List<SubscriptionPack> twoPacks = Arrays.asList(pack1, pack2);
 

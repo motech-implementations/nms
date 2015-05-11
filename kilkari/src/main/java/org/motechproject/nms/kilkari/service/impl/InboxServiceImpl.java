@@ -56,10 +56,8 @@ public class InboxServiceImpl implements InboxService {
         int daysIntoWeek = daysIntoPack % DAYS_IN_WEEK;
 
         if (subscription.getStatus() == SubscriptionStatus.COMPLETED) {
-            int totalWeeksInPack = pack.getWeeklyMessages().size() / pack.getMessagesPerWeek();
-
             // if > 7 days since subscription completion, return no subscription; otherwise return final message
-            if (daysIntoPack > totalWeeksInPack * DAYS_IN_WEEK + DAYS_IN_WEEK) {
+            if (daysIntoPack > pack.getWeeks() * DAYS_IN_WEEK + DAYS_IN_WEEK) {
                 throw new NoInboxForSubscriptionException(String.format("No inbox exists for subscription %s",
                         subscription.getSubscriptionId()));
             }

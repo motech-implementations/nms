@@ -78,7 +78,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             }
         }
 
-        subscriptionPackDataService.create(new SubscriptionPack(name, type, messagesPerWeek, messages));
+        subscriptionPackDataService.create(new SubscriptionPack(name, type, weeks, messagesPerWeek, messages));
     }
 
 
