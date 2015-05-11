@@ -40,6 +40,13 @@
             <version>${motech.version}</version>
         </dependency>
 
+        <!-- common properties -->
+        <dependency>
+            <groupId>org.motechproject.nms</groupId>
+            <artifactId>props</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>org.motechproject.nms</groupId>
             <artifactId>region</artifactId>

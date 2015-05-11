@@ -2,6 +2,7 @@ package org.motechproject.nms.kilkari.domain;
 
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
+import org.motechproject.mds.annotations.Ignore;
 
 import java.util.List;
 
@@ -11,6 +12,9 @@ import java.util.List;
  */
 @Entity(tableName = "nms_subscription_packs")
 public class SubscriptionPack {
+
+    private static final int NUM_RETRY_FOR_1_MSG_PER_WEEK = 3;
+    private static final int NUM_RETRY_FOR_2_MSG_PER_WEEK = 1;
 
     @Field
     private String name;
@@ -68,6 +72,15 @@ public class SubscriptionPack {
         this.weeklyMessages = weeklyMessages;
     }
 
+    @Ignore
+    public int retryCount() {
+        //See SRS 6.2.2 - Figure 7
+        if (messagesPerWeek == 1) {
+            return NUM_RETRY_FOR_1_MSG_PER_WEEK;
+        } else {
+            return NUM_RETRY_FOR_2_MSG_PER_WEEK;
+        }
+    }
 
     @Override
     public boolean equals(Object o) {

@@ -1,16 +1,14 @@
 package org.motechproject.nms.kilkari.osgi;
 
 import org.joda.time.DateTime;
-import org.joda.time.LocalDate;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.kilkari.domain.InboxCallData;
 import org.motechproject.nms.kilkari.domain.InboxCallDetails;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
-import org.motechproject.nms.kilkari.domain.SubscriptionMode;
+import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
-import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.repository.InboxCallDataDataService;
 import org.motechproject.nms.kilkari.repository.InboxCallDetailsDataService;
@@ -101,9 +99,9 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         SubscriptionPack pack1 = subscriptionPackDataService.byName("pack1");
         SubscriptionPack pack2 = subscriptionPackDataService.byName("pack2");
         subscriptionService.createSubscription(subscriber.getCallingNumber(), ta, pack1,
-                                               SubscriptionMode.IVR);
+                                               SubscriptionOrigin.IVR);
         subscriptionService.createSubscription(subscriber.getCallingNumber(), ta, pack2,
-                                               SubscriptionMode.IVR);
+                                               SubscriptionOrigin.IVR);
 
         subscriber = subscriberService.getSubscriber(1000000000L);
         Set<Subscription> subscriptions = subscriber.getSubscriptions();
@@ -212,7 +210,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         Subscriber s = subscriberService.getSubscriber(1111111111L);
         assertNull(s);
 
-        subscriptionService.createSubscription(1111111111L, ta, pack1, SubscriptionMode.IVR);
+        subscriptionService.createSubscription(1111111111L, ta, pack1, SubscriptionOrigin.IVR);
 
         Subscriber subscriber = subscriberService.getSubscriber(1111111111L);
         assertNotNull(subscriber);
@@ -238,10 +236,10 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         Subscriber s = subscriberService.getSubscriber(1111111111L);
         assertNull(s);
 
-        subscriptionService.createSubscription(1111111111L, ta, pack1, SubscriptionMode.IVR);
+        subscriptionService.createSubscription(1111111111L, ta, pack1, SubscriptionOrigin.IVR);
 
         // Since the user exists we will not change their language
-        subscriptionService.createSubscription(1111111111L, en, pack1, SubscriptionMode.IVR);
+        subscriptionService.createSubscription(1111111111L, en, pack1, SubscriptionOrigin.IVR);
 
         Subscriber subscriber = subscriberService.getSubscriber(1111111111L);
         assertNotNull(subscriber);

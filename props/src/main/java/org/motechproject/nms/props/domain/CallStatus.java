@@ -13,9 +13,13 @@ public enum CallStatus {
         return (i >= 1 && i < values().length);
     }
 
+    public int getValue() {
+        return ordinal();
+    }
+
     public static CallStatus fromInt(int i) {
         if (isValid(i)) {
-            return values()[i - 1];
+            return values()[i];
         } else {
             throw new IllegalArgumentException(String.format("%d is an invalid CallStatus", i));
         }
