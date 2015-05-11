@@ -4,13 +4,14 @@ import org.apache.commons.codec.binary.Hex;
 import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.alerts.domain.AlertStatus;
 import org.motechproject.alerts.domain.AlertType;
+import org.motechproject.event.MotechEvent;
+import org.motechproject.event.listener.EventRelay;
 import org.motechproject.nms.imi.domain.AuditRecord;
 import org.motechproject.nms.imi.domain.CallDetailRecord;
 import org.motechproject.nms.imi.domain.FileType;
 import org.motechproject.nms.imi.repository.AuditDataService;
 import org.motechproject.nms.imi.repository.CallDetailRecordDataService;
 import org.motechproject.nms.imi.service.CdrFileService;
-import org.motechproject.nms.imi.service.ReschedulerService;
 import org.motechproject.nms.imi.web.contract.CdrFileNotificationRequest;
 import org.motechproject.nms.props.domain.CallStatus;
 import org.motechproject.server.config.SettingsFacade;
@@ -29,7 +30,9 @@ import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 
@@ -40,26 +43,27 @@ import java.util.UUID;
 public class CdrFileServiceImpl implements CdrFileService {
 
     private static final String CDR_FILE_DIRECTORY = "imi.cdr_file_directory";
+    private static final String RESCHEDULE_CALL = "nms.imi.reschedule_call";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CdrFileServiceImpl.class);
 
     private SettingsFacade settingsFacade;
+    private EventRelay eventRelay;
     private AuditDataService auditDataService;
     private AlertService alertService;
     private CallDetailRecordDataService cdrDataService;
-    private ReschedulerService reschedulerService;
 
 
 
     @Autowired
-    public CdrFileServiceImpl(@Qualifier("imiSettings") SettingsFacade settingsFacade,
+    public CdrFileServiceImpl(@Qualifier("imiSettings") SettingsFacade settingsFacade, EventRelay eventRelay,
                               AuditDataService auditDataService, AlertService alertService,
-                              CallDetailRecordDataService cdrDataService, ReschedulerService reschedulerService) {
+                              CallDetailRecordDataService cdrDataService) {
         this.settingsFacade = settingsFacade;
+        this.eventRelay = eventRelay;
         this.auditDataService = auditDataService;
         this.alertService = alertService;
         this.cdrDataService = cdrDataService;
-        this.reschedulerService = reschedulerService;
     }
 
 
@@ -129,6 +133,15 @@ public class CdrFileServiceImpl implements CdrFileService {
     }
 
 
+    //Sending a MOTECH message distributes the work to all nodes
+    public void sendRescheduleMessage(CallDetailRecord cdr) {
+        Map<String, Object> eventParams = new HashMap<>();
+        eventParams.put("CDR", cdr);
+        MotechEvent motechEvent = new MotechEvent(RESCHEDULE_CALL, eventParams);
+        eventRelay.sendEventMessage(motechEvent);
+    }
+
+
     @Override
     public void processCdrFile(CdrFileNotificationRequest request) {
         final String cdrFileLocation = settingsFacade.getProperty(CDR_FILE_DIRECTORY);
@@ -147,8 +160,7 @@ public class CdrFileServiceImpl implements CdrFileService {
             CallDetailRecord cdr = cdrs.get(lineNumber - 1);
             cdrDataService.create(cdr);
             if (cdr.getFinalStatus() != CallStatus.SUCCESS) {
-                //Sending a MOTECH message distributes the work to all nodes
-                reschedulerService.sendRescheduleMessage(cdr);
+                sendRescheduleMessage(cdr);
             }
         }
 
