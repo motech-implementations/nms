@@ -31,10 +31,13 @@ import org.motechproject.nms.kilkari.repository.SubscriptionPackMessageDataServi
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.region.domain.Circle;
+import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Language;
 import org.motechproject.nms.region.domain.LanguageLocation;
+import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.LanguageLocationDataService;
+import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.motechproject.testing.osgi.http.SimpleHttpClient;
@@ -97,6 +100,9 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     @Inject
     private LanguageLocationDataService languageLocationDataService;
 
+    @Inject
+    private StateDataService stateDataService;
+
     public KilkariControllerBundleIT() {
         System.setProperty("org.motechproject.testing.osgi.http.numTries", "1");
     }
@@ -113,15 +119,28 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         serviceUsageCapDataService.deleteAll();
         serviceUsageDataService.deleteAll();
         frontLineWorkerDataService.deleteAll();
+        stateDataService.deleteAll();
         languageLocationDataService.deleteAll();
         languageDataService.deleteAll();
     }
 
     private void createLanguageAndSubscriptionPacks() {
+        District district = new District();
+        district.setName("District 1");
+        district.setRegionalName("District 1");
+        district.setCode(1L);
+
+        State state = new State();
+        state.setName("State 1");
+        state.setCode(1L);
+        state.getDistricts().add(district);
+
+        stateDataService.create(state);
         Language language = new Language("tamil");
         languageDataService.create(language);
 
         gLanguageLocation = new LanguageLocation("10", new Circle("AA"), language);
+        gLanguageLocation.getDistrictSet().add(district);
         languageLocationDataService.create(gLanguageLocation);
 
         subscriptionService.createSubscriptionPacks();

@@ -9,7 +9,7 @@ import javax.jdo.annotations.Unique;
 import java.util.ArrayList;
 import java.util.List;
 
-@Entity(tableName = "nms_circles", recordHistory = true)
+@Entity(tableName = "nms_circles")
 public class Circle extends MdsEntity {
     @Field
     @Unique

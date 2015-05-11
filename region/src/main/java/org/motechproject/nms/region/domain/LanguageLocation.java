@@ -15,7 +15,7 @@ import java.util.Set;
 /**
  * Represents all the languages that a state or set of districtSet can have
  */
-@Entity(tableName = "nms_language_locations", recordHistory = true)
+@Entity(tableName = "nms_language_locations")
 public class LanguageLocation extends MdsEntity {
 
     @Field

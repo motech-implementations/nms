@@ -9,7 +9,7 @@ import javax.jdo.annotations.Unique;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
-@Entity(tableName = "nms_health_sub_facilities", recordHistory = true)
+@Entity(tableName = "nms_health_sub_facilities")
 public class HealthSubFacility extends MdsEntity {
 
     @Field

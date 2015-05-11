@@ -15,7 +15,7 @@ import java.util.List;
 /**
  * This class Models data for State location records
  */
-@Entity(tableName = "nms_states", recordHistory = true)
+@Entity(tableName = "nms_states")
 public class State extends MdsEntity {
 
     @Field

@@ -11,7 +11,7 @@ import javax.validation.constraints.NotNull;
 /**
  * Represents... yep that's right. The languages that are supported by the system.
  */
-@Entity(tableName = "nms_languages", recordHistory = true)
+@Entity(tableName = "nms_languages")
 public class Language extends MdsEntity {
 
     @Field

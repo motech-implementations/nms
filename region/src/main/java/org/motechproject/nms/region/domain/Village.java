@@ -27,7 +27,7 @@ import javax.validation.constraints.Size;
  */
 // TODO: Reenable once https://applab.atlassian.net/browse/MOTECH-1691 is resolved
 //@ValidVillage
-@Entity(tableName = "nms_villages", recordHistory = true)
+@Entity(tableName = "nms_villages")
 @Unique(name = "uniqueVillageCode", members = {"vcode", "svid" })
 public class Village extends MdsEntity {
 

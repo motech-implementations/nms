@@ -12,7 +12,7 @@ import javax.validation.constraints.Size;
 import java.util.ArrayList;
 import java.util.List;
 
-@Entity(tableName = "nms_talukas", recordHistory = true)
+@Entity(tableName = "nms_talukas")
 public class Taluka extends MdsEntity {
 
     @Field

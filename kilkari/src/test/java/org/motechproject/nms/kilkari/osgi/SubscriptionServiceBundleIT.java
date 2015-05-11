@@ -20,10 +20,15 @@ import org.motechproject.nms.kilkari.service.InboxService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.region.domain.Circle;
+import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Language;
 import org.motechproject.nms.region.domain.LanguageLocation;
+import org.motechproject.nms.region.domain.State;
+import org.motechproject.nms.region.repository.CircleDataService;
+import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.LanguageLocationDataService;
+import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.ops4j.pax.exam.ExamFactory;
@@ -69,18 +74,44 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     private InboxCallDataDataService inboxCallDataDataService;
     @Inject
     private LanguageLocationDataService languageLocationDataService;
+    @Inject
+    private StateDataService stateDataService;
+    @Inject
+    private DistrictDataService districtDataService;
+    @Inject
+    private CircleDataService circleDataService;
 
     private void createLanguageAndSubscriptionPacks() {
+        District district = new District();
+        district.setName("District 1");
+        district.setRegionalName("District 1");
+        district.setCode(1L);
+
+        District district2 = new District();
+        district2.setName("District 2");
+        district2.setRegionalName("District 2");
+        district2.setCode(2L);
+
+        State state = new State();
+        state.setName("State 1");
+        state.setCode(1L);
+        state.getDistricts().add(district);
+        state.getDistricts().add(district2);
+
+        stateDataService.create(state);
+
         Language language = new Language("tamil");
         languageDataService.create(language);
 
         LanguageLocation languageLocation = new LanguageLocation("10", new Circle("AA"), language);
+        languageLocation.getDistrictSet().add(district);
         languageLocationDataService.create(languageLocation);
 
         language = new Language("english");
         languageDataService.create(language);
 
-        languageLocation = new LanguageLocation("99", new Circle("AA"), language);
+        languageLocation = new LanguageLocation("99", new Circle("BB"), language);
+        languageLocation.getDistrictSet().add(district2);
         languageLocationDataService.create(languageLocation);
 
         subscriptionPackDataService.create(new SubscriptionPack("pack1", SubscriptionPackType.CHILD, 1, null));
@@ -92,6 +123,10 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         subscriptionPackDataService.deleteAll();
         subscriptionPackMessageDataService.deleteAll();
         subscriberDataService.deleteAll();
+        circleDataService.deleteAll();
+        districtDataService.deleteAll();
+        stateDataService.deleteAll();
+        languageLocationDataService.deleteAll();
         languageDataService.deleteAll();
         inboxCallDataDataService.deleteAll();
         inboxCallDetailsDataService.deleteAll();
