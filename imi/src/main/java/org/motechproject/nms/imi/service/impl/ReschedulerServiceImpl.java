@@ -7,6 +7,7 @@ import org.motechproject.nms.imi.domain.CallDetailRecord;
 import org.motechproject.nms.imi.domain.CallRetry;
 import org.motechproject.nms.imi.domain.CallStage;
 import org.motechproject.nms.imi.repository.CallRetryDataService;
+import org.motechproject.nms.imi.service.RequestId;
 import org.motechproject.nms.imi.service.ReschedulerService;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.service.SubscriptionService;

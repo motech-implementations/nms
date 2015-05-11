@@ -1,7 +1,7 @@
 package org.motechproject.nms.imi.unit;
 
 import org.junit.Test;
-import org.motechproject.nms.imi.service.impl.RequestId;
+import org.motechproject.nms.imi.service.RequestId;
 
 import static junit.framework.Assert.assertEquals;
 

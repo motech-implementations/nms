@@ -2,6 +2,7 @@ package org.motechproject.nms.imi.domain;
 
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
+import org.motechproject.mds.annotations.Ignore;
 import org.motechproject.nms.props.domain.CallStatus;
 
 import java.io.Serializable;
@@ -177,6 +178,8 @@ public class CallDetailRecord implements Serializable {
         this.attempts = attempts;
     }
 
+
+    @Ignore
     public static CallDetailRecord fromLine(String line) {
         String[] fields = line.split(",");
         if (fields.length != NUMBER_OF_FIELDS) {
@@ -202,6 +205,106 @@ public class CallDetailRecord implements Serializable {
                 Integer.parseInt(fields[i++]), //statusCode - NOTE: may throw a NumberFormatException
                 Integer.parseInt(fields[i++]) //attempts - NOTE: may throw a NumberFormatException
         );
+    }
+
+
+    @Ignore
+    public String toLine() {
+        StringBuilder sb = new StringBuilder(requestId);
+        sb.append(",");
+        sb.append(serviceId);
+        sb.append(",");
+        sb.append(msisdn);
+        sb.append(",");
+        sb.append(cli);
+        sb.append(",");
+        sb.append(priority);
+        sb.append(",");
+        sb.append(callFlowUrl);
+        sb.append(",");
+        sb.append(contentFileName);
+        sb.append(",");
+        sb.append(weekId);
+        sb.append(",");
+        sb.append(languageLocationCode);
+        sb.append(",");
+        sb.append(circle);
+        sb.append(",");
+        sb.append(finalStatus.getValue());
+        sb.append(",");
+        sb.append(statusCode);
+        sb.append(",");
+        sb.append(attempts);
+        return sb.toString();
+    }
+
+    @Override //NO CHECKSTYLE Cyclomatic Complexity
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        CallDetailRecord that = (CallDetailRecord) o;
+
+        if (!requestId.equals(that.requestId)) {
+            return false;
+        }
+        if (!serviceId.equals(that.serviceId)) {
+            return false;
+        }
+        if (!msisdn.equals(that.msisdn)) {
+            return false;
+        }
+        if (cli != null ? !cli.equals(that.cli) : that.cli != null) {
+            return false;
+        }
+        if (!priority.equals(that.priority)) {
+            return false;
+        }
+        if (callFlowUrl != null ? !callFlowUrl.equals(that.callFlowUrl) : that.callFlowUrl != null) {
+            return false;
+        }
+        if (!contentFileName.equals(that.contentFileName)) {
+            return false;
+        }
+        if (!weekId.equals(that.weekId)) {
+            return false;
+        }
+        if (!languageLocationCode.equals(that.languageLocationCode)) {
+            return false;
+        }
+        if (!circle.equals(that.circle)) {
+            return false;
+        }
+        if (finalStatus != that.finalStatus) {
+            return false;
+        }
+        if (!statusCode.equals(that.statusCode)) {
+            return false;
+        }
+        return attempts.equals(that.attempts);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = requestId.hashCode();
+        result = 31 * result + serviceId.hashCode();
+        result = 31 * result + msisdn.hashCode();
+        result = 31 * result + (cli != null ? cli.hashCode() : 0);
+        result = 31 * result + priority.hashCode();
+        result = 31 * result + (callFlowUrl != null ? callFlowUrl.hashCode() : 0);
+        result = 31 * result + contentFileName.hashCode();
+        result = 31 * result + weekId.hashCode();
+        result = 31 * result + languageLocationCode.hashCode();
+        result = 31 * result + circle.hashCode();
+        result = 31 * result + finalStatus.hashCode();
+        result = 31 * result + statusCode.hashCode();
+        result = 31 * result + attempts.hashCode();
+        return result;
     }
 
     @Override

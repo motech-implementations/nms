@@ -1,4 +1,4 @@
-package org.motechproject.nms.imi.service.impl;
+package org.motechproject.nms.imi.service;
 
 /**
  * Simple helper class to serialize & deserialize requestIds.

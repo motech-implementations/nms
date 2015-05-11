@@ -7,7 +7,7 @@ import org.joda.time.format.DateTimeFormatter;
 import org.motechproject.nms.imi.domain.CallDetailRecord;
 import org.motechproject.nms.imi.domain.StatusCode;
 import org.motechproject.nms.imi.service.SettingsService;
-import org.motechproject.nms.imi.service.impl.RequestId;
+import org.motechproject.nms.imi.service.RequestId;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
@@ -114,11 +114,12 @@ public class CdrHelper {
     }
 
 
-    private List<CallDetailRecord> makeCdrs(int numCdr) {
+    public List<CallDetailRecord> makeCdrs(int numCdr) {
         String imiServiceId = settingsService.getSettingsFacade().getProperty("imi.target_file_imi_service_id");
         String fileIdentifier = UUID.randomUUID().toString();
         List<CallDetailRecord> cdrs = new ArrayList<>();
         for (int i=0; i<numCdr; i++) {
+            //todo: make that better
             Subscription subscription = makeSubscription();
             CallDetailRecord cdr = new CallDetailRecord(
                     new RequestId(fileIdentifier, subscription.getSubscriptionId()).toString(),
@@ -137,11 +138,6 @@ public class CdrHelper {
             cdrs.add(cdr);
         }
         return cdrs;
-    }
-
-
-    public void setCdrs(int numCdr) {
-        this.cdrs = makeCdrs(numCdr);
     }
 
 
@@ -167,61 +163,39 @@ public class CdrHelper {
     }
 
 
-    private void createFile(String fileName) throws IOException {
+    public File makeCdrDirectory() throws IOException {
         File dstDirectory = cdrDirectory();
-        String inputFile = String.format("test-files/%s", fileName);
-        BufferedReader reader = new BufferedReader(new InputStreamReader(
-                getClass().getClassLoader().getResourceAsStream(inputFile)));
-        File dstFile = new File(cdrDirectory(), fileName);
         if (dstDirectory.mkdirs()) {
             LOGGER.debug("Created required directories for {}", dstDirectory);
         } else {
             LOGGER.debug("Required directories all exist for {}", dstDirectory);
         }
-        LOGGER.info("Copying {} to {}", inputFile, dstFile);
+        return dstDirectory;
+    }
+
+
+    public void makeCdrSummaryFile() throws IOException {
+        File dstFile = new File(makeCdrDirectory(), cdrSummaryFileName());
+        LOGGER.info("Creating summary file {}...", dstFile);
         BufferedWriter writer = new BufferedWriter(new FileWriter(dstFile));
         String s;
-        while ((s = reader.readLine()) != null) {
-            writer.write(s);
+        for(CallDetailRecord cdr : cdrs) {
+            writer.write(cdr.toLine());
             writer.write("\n");
         }
 
         writer.close();
-        reader.close();
     }
 
 
-    private void copyFile(String fileName) throws IOException {
-        File dstDirectory = cdrDirectory();
-        String inputFile = String.format("test-files/%s", fileName);
-        BufferedReader reader = new BufferedReader(new InputStreamReader(
-                getClass().getClassLoader().getResourceAsStream(inputFile)));
-        File dstFile = new File(cdrDirectory(), fileName);
-        if (dstDirectory.mkdirs()) {
-            LOGGER.debug("Created required directories for {}", dstDirectory);
-        } else {
-            LOGGER.debug("Required directories all exist for {}", dstDirectory);
-        }
-        LOGGER.info("Copying {} to {}", inputFile, dstFile);
+    public void makeCdrDetailFile() throws IOException {
+        File dstFile = new File(makeCdrDirectory(), cdrDetailFileName());
+        LOGGER.info("Creating detail file {}...", dstFile);
         BufferedWriter writer = new BufferedWriter(new FileWriter(dstFile));
-        String s;
-        while ((s = reader.readLine()) != null) {
-            writer.write(s);
-            writer.write("\n");
-        }
+
+        //todo:...
 
         writer.close();
-        reader.close();
-    }
-
-
-    public void copyCdrSummaryFile() throws IOException {
-        copyFile(cdrSummaryFileName());
-    }
-
-
-    public void copyCdrDetailFile() throws IOException {
-        copyFile(cdrDetailFileName());
     }
 
 

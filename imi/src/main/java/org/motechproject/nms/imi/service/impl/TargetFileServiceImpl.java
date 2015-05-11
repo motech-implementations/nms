@@ -25,6 +25,7 @@ import org.motechproject.nms.imi.domain.FileProcessedStatus;
 import org.motechproject.nms.imi.domain.FileType;
 import org.motechproject.nms.imi.repository.AuditDataService;
 import org.motechproject.nms.imi.repository.CallRetryDataService;
+import org.motechproject.nms.imi.service.RequestId;
 import org.motechproject.nms.imi.service.TargetFileNotification;
 import org.motechproject.nms.imi.service.TargetFileService;
 import org.motechproject.nms.imi.web.contract.FileProcessedStatusRequest;

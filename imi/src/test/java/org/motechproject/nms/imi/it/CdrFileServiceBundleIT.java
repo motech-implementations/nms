@@ -2,6 +2,7 @@ package org.motechproject.nms.imi.it;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.motechproject.nms.imi.domain.CallDetailRecord;
 import org.motechproject.nms.imi.service.CdrFileService;
 import org.motechproject.nms.imi.service.SettingsService;
 import org.motechproject.nms.imi.web.contract.CdrFileNotificationRequest;
@@ -20,6 +21,7 @@ import org.ops4j.pax.exam.spi.reactors.PerSuite;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
+import java.util.List;
 
 import static org.junit.Assert.assertTrue;
 
@@ -60,7 +62,10 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
                 languageDataService, circleLanguageDataService);
 
-        helper.copyCdrSummaryFile();
+        List<CallDetailRecord> cdrs = helper.makeCdrs(5);
+        helper.setCrds(cdrs);
+        helper.makeCdrSummaryFile();
+        helper.makeCdrDetailFile();
 
         cdrFileService.processCdrFile(new CdrFileNotificationRequest(
                         helper.obdFileName(),
@@ -75,5 +80,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
+        //todo: check that the database looks like it should after the CDRs were processed...
     }
 }

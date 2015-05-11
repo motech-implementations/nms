@@ -20,6 +20,7 @@ import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
 import org.motechproject.nms.region.language.domain.Language;
+import org.motechproject.nms.region.language.repository.CircleLanguageDataService;
 import org.motechproject.nms.region.language.repository.LanguageDataService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
@@ -64,6 +65,9 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
     CallRetryDataService callRetryDataService;
 
     @Inject
+    CircleLanguageDataService circleLanguageDataService;
+
+    @Inject
     LanguageDataService languageDataService;
 
     @Inject
@@ -73,6 +77,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         subscriptionService.deleteAll();
         subscriptionPackDataService.deleteAll();
         subscriberDataService.deleteAll();
+        circleLanguageDataService.deleteAll();
         languageDataService.deleteAll();
         callRetryDataService.deleteAll();
 
