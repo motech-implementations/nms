@@ -434,7 +434,8 @@ public class UserControllerBundleIT extends BasePaxIT {
                 new HashSet<String>() //subscriptionPackList
         );
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
+        assertTrue(SimpleHttpClient
+                .execHttpRequest(httpGet, expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     @Test
