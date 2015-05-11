@@ -126,7 +126,7 @@ public class CallDetailsController extends BaseController {
             content.setEndTime(new DateTime(callContentRequest.getEndTime() * MILLISECONDS_PER_SECOND));
 
             if (service == Service.MOBILE_KUNJI) {
-                content.setMobileKunjiCardNumber(callContentRequest.getMkCardNumber());
+                content.setMobileKunjiCardCode(callContentRequest.getMkCardCode());
             }
 
             if (service == Service.MOBILE_ACADEMY) {
@@ -202,10 +202,10 @@ public class CallDetailsController extends BaseController {
             failureReasons.append(String.format(NOT_PRESENT, "endTime"));
         }
 
-        // MK elements (mkCardNumber)
+        // MK elements (mkCardCode)
         if (service == Service.MOBILE_KUNJI) {
-            if (null == callContentRequest.getMkCardNumber()) {
-                failureReasons.append(String.format(NOT_PRESENT, "mkCardNumber"));
+            if (null == callContentRequest.getMkCardCode()) {
+                failureReasons.append(String.format(NOT_PRESENT, "mkCardCode"));
             }
         }
 

@@ -1,10 +1,11 @@
 package org.motechproject.nms.kilkari.service.impl;
 
 import org.joda.time.LocalDate;
+import org.motechproject.mds.query.QueryParams;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
-import org.motechproject.nms.kilkari.domain.SubscriptionMode;
+import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
@@ -82,14 +83,14 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     @Override
     public void createSubscription(long callingNumber, LanguageLocation languagelocation, SubscriptionPack subscriptionPack,
-                                   SubscriptionMode mode) {
+                                   SubscriptionOrigin mode) {
         Subscriber subscriber = subscriberService.getSubscriber(callingNumber);
         if (subscriber == null) {
             subscriber = new Subscriber(callingNumber, languagelocation);
             subscriberService.add(subscriber);
         }
 
-        if (mode == SubscriptionMode.IVR) {
+        if (mode == SubscriptionOrigin.IVR) {
             createSubscriptionViaIvr(subscriber, subscriptionPack);
         } else { // MCTS_UPLOAD
             createSubscriptionViaMcts(subscriber, subscriptionPack);
@@ -113,7 +114,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             }
         }
 
-        Subscription subscription = new Subscription(subscriber, pack, SubscriptionMode.IVR);
+        Subscription subscription = new Subscription(subscriber, pack, SubscriptionOrigin.IVR);
         subscription.setStatus(SubscriptionStatus.ACTIVE);
         subscription.setStartDate(LocalDate.now().plusDays(1));
 
@@ -129,7 +130,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 return;
             } else {
                 // TODO: #157 subscriber should receive welcome message for the first week
-                subscription = new Subscription(subscriber, pack, SubscriptionMode.MCTS_IMPORT);
+                subscription = new Subscription(subscriber, pack, SubscriptionOrigin.MCTS_IMPORT);
                 subscription.setStartDate(subscriber.getDateOfBirth());
                 subscription.setStatus(SubscriptionStatus.ACTIVE);
             }
@@ -141,7 +142,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             } else {
                 // TODO: #157 subscriber should receive welcome message for the first week
                 // TODO: #160 deal with early subscription
-                subscription = new Subscription(subscriber, pack, SubscriptionMode.MCTS_IMPORT);
+                subscription = new Subscription(subscriber, pack, SubscriptionOrigin.MCTS_IMPORT);
 
                 // the pregnancy pack starts 3 months after LMP
                 subscription.setStartDate(subscriber.getLastMenstrualPeriod().plusDays(THREE_MONTHS));
@@ -198,4 +199,21 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         return subscriptionPackDataService.byName(name);
     }
 
+
+    /**
+     * To be used by ITs only!
+     */
+    public void deleteAll() {
+        subscriptionDataService.deleteAll();
+    }
+
+
+    public Subscription create(Subscription subscription) {
+        return subscriptionDataService.create(subscription);
+    }
+
+
+    public List<Subscription> findActiveSubscriptions(int page, int pageSize) {
+        return subscriptionDataService.findByStatus(SubscriptionStatus.ACTIVE, new QueryParams(page, pageSize));
+    }
 }

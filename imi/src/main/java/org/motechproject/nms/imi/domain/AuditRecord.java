@@ -6,7 +6,7 @@ import org.motechproject.mds.annotations.UIDisplayable;
 
 import javax.jdo.annotations.Column;
 
-@Entity(tableName = "nms_obd_audit_records")
+@Entity(tableName = "nms_imi_audit_records")
 public class AuditRecord {
     /**
      * The identifier field is used in each targetFile csv row combined with the subscription id to form the

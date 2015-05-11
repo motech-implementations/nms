@@ -21,7 +21,7 @@ import org.motechproject.nms.flw.repository.ServiceUsageDataService;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
-import org.motechproject.nms.kilkari.domain.SubscriptionMode;
+import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
@@ -156,11 +156,11 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         Subscriber subscriber2 = subscriberDataService.create(new Subscriber(2000000000L));
 
         subscriptionService.createSubscription(subscriber1.getCallingNumber(), gLanguageLocation, gPack1,
-                                               SubscriptionMode.IVR);
+                                               SubscriptionOrigin.IVR);
         subscriptionService.createSubscription(subscriber2.getCallingNumber(), gLanguageLocation, gPack1,
-                                               SubscriptionMode.IVR);
+                                               SubscriptionOrigin.IVR);
         subscriptionService.createSubscription(subscriber2.getCallingNumber(), gLanguageLocation, gPack2,
-                                               SubscriptionMode.IVR);
+                                               SubscriptionOrigin.IVR);
     }
 
     private HttpGet createHttpGet(boolean includeCallingNumber, String callingNumber,
@@ -226,7 +226,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscriberDataService.create(mctsSubscriber);
 
         // create subscription to child pack
-        subscriptionService.createSubscription(9999911122L, gLanguageLocation, gPack1, SubscriptionMode.MCTS_IMPORT);
+        subscriptionService.createSubscription(9999911122L, gLanguageLocation, gPack1, SubscriptionOrigin.MCTS_IMPORT);
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
 
         // due to subscription rules detailed in #157, we need to clear out the DOB and set an LMP in order to
@@ -236,7 +236,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscriberDataService.update(mctsSubscriber);
 
         // create subscription to pregnancy pack
-        subscriptionService.createSubscription(9999911122L, gLanguageLocation, gPack2, SubscriptionMode.MCTS_IMPORT);
+        subscriptionService.createSubscription(9999911122L, gLanguageLocation, gPack2, SubscriptionOrigin.MCTS_IMPORT);
 
         Pattern childPackJsonPattern = Pattern.compile(".*\"subscriptionPack\":\"childPack\",\"inboxWeekId\":\"w36_1\",\"contentFileName\":\"w36_1\\.wav.*");
         Pattern pregnancyPackJsonPattern = Pattern.compile(".*\"subscriptionPack\":\"pregnancyPack\",\"inboxWeekId\":\"w2_2\",\"contentFileName\":\"w2_2\\.wav.*");
@@ -256,7 +256,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         mctsSubscriber.setLastMenstrualPeriod(LocalDate.now().minusDays(30));
         subscriberDataService.create(mctsSubscriber);
         // create subscription to pregnancy pack, not due to start for 60 days
-        subscriptionService.createSubscription(9999911122L, gLanguageLocation, gPack2, SubscriptionMode.MCTS_IMPORT);
+        subscriptionService.createSubscription(9999911122L, gLanguageLocation, gPack2, SubscriptionOrigin.MCTS_IMPORT);
 
         Pattern expectedJsonPattern = Pattern.compile(".*\"subscriptionPack\":\"pregnancyPack\",\"inboxWeekId\":null,\"contentFileName\":null.*");
 
@@ -425,7 +425,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         mctsSubscriber.setDateOfBirth(LocalDate.now().minusDays(14));
         subscriberDataService.create(mctsSubscriber);
 
-        subscriptionService.createSubscription(9999911122L, gLanguageLocation, gPack1, SubscriptionMode.MCTS_IMPORT);
+        subscriptionService.createSubscription(9999911122L, gLanguageLocation, gPack1, SubscriptionOrigin.MCTS_IMPORT);
 
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
@@ -439,12 +439,12 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         mctsSubscriber.setDateOfBirth(LocalDate.now().minusDays(14));
         subscriberDataService.create(mctsSubscriber);
 
-        subscriptionService.createSubscription(9999911122L, gLanguageLocation, gPack1, SubscriptionMode.MCTS_IMPORT);
+        subscriptionService.createSubscription(9999911122L, gLanguageLocation, gPack1, SubscriptionOrigin.MCTS_IMPORT);
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
 
         // attempt to create subscription to the same pack -- should fail
-        subscriptionService.createSubscription(9999911122L, gLanguageLocation, gPack1, SubscriptionMode.MCTS_IMPORT);
+        subscriptionService.createSubscription(9999911122L, gLanguageLocation, gPack1, SubscriptionOrigin.MCTS_IMPORT);
 
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
@@ -458,12 +458,12 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         mctsSubscriber.setLastMenstrualPeriod(LocalDate.now().minusDays(28));
         subscriberDataService.create(mctsSubscriber);
 
-        subscriptionService.createSubscription(9999911122L, gLanguageLocation, gPack2, SubscriptionMode.MCTS_IMPORT);
+        subscriptionService.createSubscription(9999911122L, gLanguageLocation, gPack2, SubscriptionOrigin.MCTS_IMPORT);
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
 
         // attempt to create subscription to the same pack -- should fail
-        subscriptionService.createSubscription(9999911122L, gLanguageLocation, gPack2, SubscriptionMode.MCTS_IMPORT);
+        subscriptionService.createSubscription(9999911122L, gLanguageLocation, gPack2, SubscriptionOrigin.MCTS_IMPORT);
 
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
@@ -477,14 +477,14 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         mctsSubscriber.setLastMenstrualPeriod(LocalDate.now().minusDays(28));
         subscriberDataService.create(mctsSubscriber);
 
-        subscriptionService.createSubscription(9999911122L, gLanguageLocation, gPack2, SubscriptionMode.MCTS_IMPORT);
+        subscriptionService.createSubscription(9999911122L, gLanguageLocation, gPack2, SubscriptionOrigin.MCTS_IMPORT);
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         Subscription pregnancySubscription = mctsSubscriber.getActiveSubscriptions().iterator().next();
         pregnancySubscription.setStatus(SubscriptionStatus.DEACTIVATED);
         subscriptionDataService.update(pregnancySubscription);
 
         // attempt to create subscription to the same pack -- should succeed
-        subscriptionService.createSubscription(9999911122L, gLanguageLocation, gPack2, SubscriptionMode.MCTS_IMPORT);
+        subscriptionService.createSubscription(9999911122L, gLanguageLocation, gPack2, SubscriptionOrigin.MCTS_IMPORT);
 
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
@@ -498,7 +498,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         mctsSubscriber.setDateOfBirth(LocalDate.now().minusDays(14));
         subscriberDataService.create(mctsSubscriber);
 
-        subscriptionService.createSubscription(9999911122L, gLanguageLocation, gPack1, SubscriptionMode.MCTS_IMPORT);
+        subscriptionService.createSubscription(9999911122L, gLanguageLocation, gPack1, SubscriptionOrigin.MCTS_IMPORT);
 
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
 
@@ -509,7 +509,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscriberDataService.update(mctsSubscriber);
 
         // attempt to create subscription to a different pack
-        subscriptionService.createSubscription(9999911122L, gLanguageLocation, gPack2, SubscriptionMode.MCTS_IMPORT);
+        subscriptionService.createSubscription(9999911122L, gLanguageLocation, gPack2, SubscriptionOrigin.MCTS_IMPORT);
 
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         assertEquals(2, mctsSubscriber.getActiveSubscriptions().size());

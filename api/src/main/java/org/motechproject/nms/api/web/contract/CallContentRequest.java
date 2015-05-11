@@ -15,7 +15,7 @@ package org.motechproject.nms.api.web.contract;
  */
 public class CallContentRequest {
     private String type;
-    private String mkCardNumber;
+    private String mkCardCode;
     private String contentName;
     private String contentFileName;
     private Long startTime;
@@ -33,12 +33,12 @@ public class CallContentRequest {
         this.type = type;
     }
 
-    public String getMkCardNumber() {
-        return mkCardNumber;
+    public String getMkCardCode() {
+        return mkCardCode;
     }
 
-    public void setMkCardNumber(String mkCardNumber) {
-        this.mkCardNumber = mkCardNumber;
+    public void setMkCardCode(String mkCardCode) {
+        this.mkCardCode = mkCardCode;
     }
 
     public String getContentName() {

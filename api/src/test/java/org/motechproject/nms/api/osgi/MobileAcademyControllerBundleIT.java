@@ -85,6 +85,23 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
     }
 
     @Test
+    public void testSetValidExistingBookmark() throws IOException, InterruptedException {
+
+        String endpoint = String.format("http://localhost:%d/api/mobileacademy/bookmarkWithScore",
+                TestContext.getJettyPort());
+        SaveBookmarkRequest bookmark = new SaveBookmarkRequest();
+        bookmark.setCallingNumber(BaseController.SMALLEST_10_DIGIT_NUMBER);
+        bookmark.setCallId(BaseController.SMALLEST_15_DIGIT_NUMBER);
+        HttpPost request = RequestBuilder.createPostRequest(endpoint, bookmark);
+        assertTrue(SimpleHttpClient.execHttpRequest(request, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
+
+        // Now, update the previous bookmark successfully
+        bookmark.setBookmark("Chapter3_Lesson2");
+        request = RequestBuilder.createPostRequest(endpoint, bookmark);
+        assertTrue(SimpleHttpClient.execHttpRequest(request, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
+    }
+
+    @Test
     public void testGetCourseNotPresent() throws IOException, InterruptedException {
 
         String endpoint = String.format("http://localhost:%d/api/mobileacademy/course",
