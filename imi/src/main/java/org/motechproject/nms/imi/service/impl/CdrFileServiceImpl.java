@@ -136,10 +136,12 @@ public class CdrFileServiceImpl implements CdrFileService {
 
         //todo: audit this request
 
-        //read the summary file and keep it in memory - so we can easily refer to it when we process the cdrDetail file
+        //read the summary file and keep it in memory - so we can easily refer to it when we process the
+        //cdrDetail file
         List<CallDetailRecord> cdrs = readCdrs(cdrFileLocation, request.getCdrSummary().getCdrFile(),
                 request.getCdrSummary().getChecksum());
 
+        //todo: handle invalid data and continue processing the valid data
         //for now, and hopefully for, like, ever, only process the summary file
         for (int lineNumber = 1; lineNumber < cdrs.size(); lineNumber++) {
             CallDetailRecord cdr = cdrs.get(lineNumber - 1);

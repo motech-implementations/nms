@@ -32,7 +32,7 @@ public class RequestId {
 
     public static final RequestId fromString(String s) {
         String fileIdentifier = s.substring(0, UUID_LENGTH);
-        String subscriptionId = s.substring(UUID_LENGTH, UUID_LENGTH);
+        String subscriptionId = s.substring(UUID_LENGTH + 1, UUID_LENGTH + UUID_LENGTH + 1);
         return new RequestId(fileIdentifier, subscriptionId);
     }
 

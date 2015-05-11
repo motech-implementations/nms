@@ -5,7 +5,8 @@ import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-        ImiControllerBundleIT.class,
+        ImiController_CDR_BundleIT.class,
+        ImiController_OBD_BundleIT.class,
         TargetFileServiceBundleIT.class,
         CdrFileServiceBundleIT.class,
 })
