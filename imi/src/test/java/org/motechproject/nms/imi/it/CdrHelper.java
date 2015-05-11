@@ -6,8 +6,8 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.motechproject.nms.imi.domain.CallDetailRecord;
 import org.motechproject.nms.imi.domain.StatusCode;
-import org.motechproject.nms.imi.service.SettingsService;
 import org.motechproject.nms.imi.service.RequestId;
+import org.motechproject.nms.imi.service.SettingsService;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
@@ -114,13 +114,31 @@ public class CdrHelper {
     }
 
 
+    private CallStatus randomCallStatus() {
+        return CallStatus.fromInt((int) (Math.random() * 3) + 1);
+    }
+
+
+    private StatusCode randomStatusCode(CallStatus finalStatus) {
+        if (finalStatus == CallStatus.SUCCESS) {
+            return StatusCode.OBD_SUCCESS_CALL_CONNECTED;
+        } else if (finalStatus == CallStatus.REJECTED) {
+            return StatusCode.OBD_DNIS_IN_DND;
+        } else {
+            return StatusCode.fromInt((int) (Math.random() * 6) + StatusCode.OBD_FAILED_NOATTEMPT.getValue());
+        }
+    }
+
+
     public List<CallDetailRecord> makeCdrs(int numCdr) {
         String imiServiceId = settingsService.getSettingsFacade().getProperty("imi.target_file_imi_service_id");
         String fileIdentifier = UUID.randomUUID().toString();
         List<CallDetailRecord> cdrs = new ArrayList<>();
         for (int i=0; i<numCdr; i++) {
-            //todo: make that better
             Subscription subscription = makeSubscription();
+            CallStatus finalStatus = randomCallStatus();
+            StatusCode statusCode = randomStatusCode(finalStatus);
+
             CallDetailRecord cdr = new CallDetailRecord(
                     new RequestId(fileIdentifier, subscription.getSubscriptionId()).toString(),
                     imiServiceId,
@@ -132,8 +150,8 @@ public class CdrHelper {
                     "1",
                     makeLanguage().getCode(),
                     makeCircle(),
-                    CallStatus.SUCCESS,
-                    StatusCode.OBD_SUCCESS_CALL_CONNECTED.getValue(),
+                    finalStatus,
+                    statusCode.getValue(),
                     1);
             cdrs.add(cdr);
         }

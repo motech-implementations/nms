@@ -1,4 +1,4 @@
-package org.motechproject.nms.imi.web;
+package org.motechproject.nms.imi.component;
 
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.annotations.MotechListener;
@@ -13,21 +13,22 @@ import org.motechproject.nms.props.domain.DayOfTheWeek;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
+import org.springframework.stereotype.Component;
 
-@Controller
-public class RescheduleController {
+
+@Component
+public class Rescheduler {
 
     private static final String RESCHEDULE_CALL = "nms.imi.reschedule_call";
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(RescheduleController.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(Rescheduler.class);
 
     private SubscriptionService subscriptionService;
     private CallRetryDataService callRetryDataService;
 
 
     @Autowired
-    public RescheduleController(SubscriptionService subscriptionService, CallRetryDataService callRetryDataService) {
+    public Rescheduler(SubscriptionService subscriptionService, CallRetryDataService callRetryDataService) {
         this.subscriptionService = subscriptionService;
         this.callRetryDataService = callRetryDataService;
     }

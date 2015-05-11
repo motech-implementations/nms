@@ -74,8 +74,9 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         );
 
         try {
-            getLogger().info("Sleeping 5 seconds to give a change to @MotechListeners to catch up...");
-            Thread.sleep(1000L * 5);
+            long sleepyTime = 10 * 1000L;
+            getLogger().info("Sleeping {} seconds to give a chance to @MotechListeners to catch up...", sleepyTime/1000);
+            Thread.sleep(sleepyTime);
             getLogger().info("...waking up from sleep, did they catch up?");
         } catch (InterruptedException e) {
             e.printStackTrace();
