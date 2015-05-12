@@ -5,7 +5,7 @@ import org.motechproject.mds.annotations.Entity;
 
 /**
  * Data specific to the call contents (ie: what sound file was played) sent by the IVR system as part of
- * {@link org.motechproject.nms.kilkari.domain.InboxCallDetails}
+ * {@link InboxCallDetailRecord}
  */
 @Entity(tableName = "nms_inbox_call_data")
 public class InboxCallData {
