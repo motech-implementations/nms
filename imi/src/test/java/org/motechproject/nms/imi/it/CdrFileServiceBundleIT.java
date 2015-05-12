@@ -76,7 +76,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
     }
 
 
-    @Ignore
+    @Ignore // TODO: fhuster to renable once passing
     @Test
     public void testValidRequest() throws IOException, NoSuchAlgorithmException {
         getLogger().debug("testValidRequest()");

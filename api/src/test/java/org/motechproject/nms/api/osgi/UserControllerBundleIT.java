@@ -1,11 +1,14 @@
 package org.motechproject.nms.api.osgi;
 
 import org.apache.commons.httpclient.HttpStatus;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.joda.time.DateTime;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.api.web.contract.BadRequest;
@@ -17,11 +20,13 @@ import org.motechproject.nms.flw.domain.Service;
 import org.motechproject.nms.flw.domain.ServiceUsage;
 import org.motechproject.nms.flw.domain.ServiceUsageCap;
 import org.motechproject.nms.flw.domain.WhitelistEntry;
+import org.motechproject.nms.flw.domain.WhitelistState;
 import org.motechproject.nms.flw.repository.CallDetailRecordDataService;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.flw.repository.ServiceUsageCapDataService;
 import org.motechproject.nms.flw.repository.ServiceUsageDataService;
 import org.motechproject.nms.flw.repository.WhitelistEntryDataService;
+import org.motechproject.nms.flw.repository.WhitelistStateDataService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
@@ -106,6 +111,9 @@ public class UserControllerBundleIT extends BasePaxIT {
     private WhitelistEntryDataService whitelistEntryDataService;
 
     @Inject
+    private WhitelistStateDataService whitelistStateDataService;
+
+    @Inject
     private CallDetailRecordDataService callDetailRecordDataService;
 
     public UserControllerBundleIT() {
@@ -115,6 +123,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     // TODO: Clean up data creation and cleanup
     private void cleanAllData() {
         whitelistEntryDataService.deleteAll();
+        whitelistStateDataService.deleteAll();
         serviceUsageCapDataService.deleteAll();
         serviceUsageDataService.deleteAll();
         callDetailRecordDataService.deleteAll();
@@ -258,14 +267,13 @@ public class UserControllerBundleIT extends BasePaxIT {
         district.setRegionalName("9");
         district.setCode(9l);
 
-        // Currently the whitelist code has the config for state based whitelisting hardcoded.
-        // There is a todo and ticket tracking that work.  By default the state named 'Whitelist' has
-        // whitelisting turned on.
-        State whitelist = new State("Whitelist", 1l);
-        whitelist.getDistricts().add(district);
-        stateDataService.create(whitelist);
+        State whitelistState = new State("WhitelistState", 1l);
+        whitelistState.getDistricts().add(district);
+        stateDataService.create(whitelistState);
 
-        WhitelistEntry entry = new WhitelistEntry(0000000000l, whitelist);
+        whitelistStateDataService.create(new WhitelistState(whitelistState));
+
+        WhitelistEntry entry = new WhitelistEntry(0000000000l, whitelistState);
         whitelistEntryDataService.create(entry);
 
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111l);
@@ -277,14 +285,16 @@ public class UserControllerBundleIT extends BasePaxIT {
         cleanAllData();
 
         // Currently the code to get a state from a languageLocationCode is stubbed out.
-        // llc 34 returns the state "Whitelist".  There is a todo tracking this.
+        // llc 34 returns the state "WhitelistState".  There is a todo tracking this.
         Language language = new Language("Language From Whitelisted State", "34");
         languageDataService.create(language);
 
-        State whitelist = new State("Whitelist", 1l);
-        stateDataService.create(whitelist);
+        State whitelistState = new State("WhitelistState", 1l);
+        stateDataService.create(whitelistState);
 
-        WhitelistEntry entry = new WhitelistEntry(0000000000l, whitelist);
+        whitelistStateDataService.create(new WhitelistState(whitelistState));
+
+        WhitelistEntry entry = new WhitelistEntry(0000000000l, whitelistState);
         whitelistEntryDataService.create(entry);
 
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111l);
@@ -695,7 +705,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     }
 
     @Test
-    public void testGetUserNotInWhitelistedByState() throws IOException, InterruptedException {
+    public void testGetUserNotInWhitelistByState() throws IOException, InterruptedException {
         createFlwWithStateNotInWhitelist();
 
         HttpGet httpGet = createHttpGet(
@@ -712,8 +722,9 @@ public class UserControllerBundleIT extends BasePaxIT {
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
+    @Ignore // TODO: Renable once #119 is merged
     @Test
-    public void testGetUserNotInWhitelistedByLanguageLocationCode() throws IOException, InterruptedException {
+    public void testGetUserNotInWhitelistByLanguageLocationCode() throws IOException, InterruptedException {
         createFlwWithLanguageLocationCodeNotInWhitelist();
 
         HttpGet httpGet = createHttpGet(
@@ -726,8 +737,9 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Not Authorized>");
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_FORBIDDEN, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_FORBIDDEN, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
     @Test
