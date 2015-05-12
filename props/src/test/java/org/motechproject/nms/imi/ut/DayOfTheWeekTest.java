@@ -16,4 +16,19 @@ public class DayOfTheWeekTest {
         assertEquals(DayOfTheWeek.SUNDAY, DayOfTheWeek.SATURDAY.nextDay());
         assertEquals(DayOfTheWeek.MONDAY, DayOfTheWeek.SUNDAY.nextDay());
     }
+
+    @Test
+    public void testValue() {
+        assertEquals(DayOfTheWeek.MONDAY.getValue(), 1);
+    }
+
+    @Test
+    public void testFromInt() {
+        assertEquals(DayOfTheWeek.fromInt(2), DayOfTheWeek.TUESDAY);
+    }
+
+    @Test(expected=IllegalArgumentException.class)
+    public void testFromIntFailure() {
+        DayOfTheWeek.fromInt(0);
+    }
 }
