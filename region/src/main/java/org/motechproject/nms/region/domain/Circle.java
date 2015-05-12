@@ -1,5 +1,6 @@
 package org.motechproject.nms.region.domain;
 
+import org.motechproject.mds.annotations.Cascade;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.domain.MdsEntity;
@@ -20,10 +21,12 @@ public class Circle extends MdsEntity {
     private List<State> states;
 
     @Field
+    @Cascade(delete = true)
     @Persistent(mappedBy = "circle", defaultFetchGroup = "true")
     private List<LanguageLocation> languageLocations;
 
     @Field
+    @Cascade(delete = true)
     private LanguageLocation defaultLanguageLocation;
 
     public Circle() {
