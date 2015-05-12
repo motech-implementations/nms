@@ -1,5 +1,6 @@
 package org.motechproject.nms.kilkari.service.impl;
 
+import org.joda.time.LocalDate;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
@@ -8,6 +9,7 @@ import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Iterator;
 import java.util.Set;
@@ -39,10 +41,13 @@ public class SubscriberServiceImpl implements SubscriberService {
     }
 
     @Override
+    @Transactional
     public void update(Subscriber subscriber) {
 
         // cache the previous version of the subscriber in order to compare before/after
         Subscriber retrievedSubscriber = subscriberDataService.findByCallingNumber(subscriber.getCallingNumber());
+        LocalDate oldLMP = retrievedSubscriber.getLastMenstrualPeriod();
+        LocalDate oldDOB = retrievedSubscriber.getDateOfBirth();
 
         subscriberDataService.update(subscriber);
 
@@ -55,12 +60,12 @@ public class SubscriberServiceImpl implements SubscriberService {
             subscription = subscriptionIterator.next();
 
             if ((subscription.getSubscriptionPack().getType() == SubscriptionPackType.PREGNANCY) &&
-                    (retrievedSubscriber.getLastMenstrualPeriod() != subscriber.getLastMenstrualPeriod()))  {
+                    (oldLMP != subscriber.getLastMenstrualPeriod()))  {
 
                 subscriptionService.updateStartDate(subscription, subscriber.getLastMenstrualPeriod());
 
             } else if ((subscription.getSubscriptionPack().getType() == SubscriptionPackType.CHILD) &&
-                    (retrievedSubscriber.getDateOfBirth() != subscriber.getDateOfBirth())) {
+                    (oldDOB != subscriber.getDateOfBirth())) {
 
                 subscriptionService.updateStartDate(subscription, subscriber.getDateOfBirth());
 

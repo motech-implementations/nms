@@ -3,7 +3,10 @@ package org.motechproject.nms.kilkari.domain;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 
+import javax.jdo.annotations.Column;
+import javax.validation.constraints.NotNull;
 import javax.jdo.annotations.Unique;
+import javax.validation.constraints.Size;
 import java.util.List;
 
 /**
@@ -15,15 +18,24 @@ public class SubscriptionPack {
 
     @Field
     @Unique
+    @Column(allowsNull = "false", length = 100)
+    @NotNull
+    @Size(min = 1, max = 100)
     private String name;
 
     @Field
+    @Column(allowsNull = "false")
+    @NotNull
     private SubscriptionPackType type;
 
     @Field
+    @Column(allowsNull = "false")
+    @NotNull
     private int weeks;
 
     @Field
+    @Column(allowsNull = "false")
+    @NotNull
     private int messagesPerWeek;
 
     @Field

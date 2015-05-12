@@ -85,6 +85,10 @@
                         </Export-Package>
                         <Import-Package>
                             org.motechproject.osgi.web,
+                            org.aopalliance.aop,
+                            org.springframework.aop,
+                            org.springframework.aop.framework,
+                            org.springframework.transaction,
                             *
                         </Import-Package>
                     </instructions>
