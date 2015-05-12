@@ -41,9 +41,9 @@ public class InboxServiceImpl implements InboxService {
             // early subscription, play welcome message
             return null;
         }
-        if (subscription.getStartDate() == null ||
-                subscription.getStatus() == SubscriptionStatus.DEACTIVATED ||
-                subscription.getStatus() == SubscriptionStatus.PENDING_ACTIVATION) {
+        if ((subscription.getStartDate() == null) ||
+                (subscription.getStatus() == SubscriptionStatus.DEACTIVATED) ||
+                (subscription.getStatus() == SubscriptionStatus.PENDING_ACTIVATION)) {
             // there is no inbox for this subscription, throw
             throw new NoInboxForSubscriptionException(String.format("No inbox exists for subscription %s",
                     subscription.getSubscriptionId()));
@@ -56,10 +56,8 @@ public class InboxServiceImpl implements InboxService {
         int daysIntoWeek = daysIntoPack % DAYS_IN_WEEK;
 
         if (subscription.getStatus() == SubscriptionStatus.COMPLETED) {
-            int totalWeeksInPack = pack.getWeeklyMessages().size() * pack.getMessagesPerWeek();
-
             // if > 7 days since subscription completion, return no subscription; otherwise return final message
-            if (daysIntoPack > totalWeeksInPack * DAYS_IN_WEEK + DAYS_IN_WEEK) {
+            if (daysIntoPack > pack.getWeeks() * DAYS_IN_WEEK + DAYS_IN_WEEK) {
                 throw new NoInboxForSubscriptionException(String.format("No inbox exists for subscription %s",
                         subscription.getSubscriptionId()));
             }

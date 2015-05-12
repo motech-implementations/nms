@@ -295,7 +295,7 @@ public class CallDetailRecord implements Serializable {
 
     }
 
-    @Override
+    @Override //NO CHECKSTYLE Cyclomatic Complexity
     public int hashCode() {
         int result = (requestId != null ? requestId.hashCode() : 0);
         result = 31 * result + (serviceId != null ? serviceId.hashCode() : 0);

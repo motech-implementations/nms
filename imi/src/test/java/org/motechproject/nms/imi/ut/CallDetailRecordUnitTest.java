@@ -26,7 +26,7 @@ public class CallDetailRecordUnitTest {
     @Test
     public void testMsisdnTooShort() {
         CallDetailRecord cdr = new CallDetailRecord();
-        cdr.setMsisdn("000000000");
+        cdr.setMsisdn(111111111L);
 
         Set<ConstraintViolation<CallDetailRecord>> constraintViolations = validator
                 .validateProperty(cdr, "msisdn");
@@ -38,7 +38,7 @@ public class CallDetailRecordUnitTest {
     @Test
     public void testMsisdnTooLong() {
         CallDetailRecord cdr = new CallDetailRecord();
-        cdr.setMsisdn("00000000000");
+        cdr.setMsisdn(11111111111L);
 
         Set<ConstraintViolation<CallDetailRecord>> constraintViolations = validator
                 .validateProperty(cdr, "msisdn");
@@ -50,7 +50,7 @@ public class CallDetailRecordUnitTest {
     @Test
     public void testMsisdnValid() {
         CallDetailRecord cdr = new CallDetailRecord();
-        cdr.setMsisdn("0000000000");
+        cdr.setMsisdn(1111111111L);
 
         Set<ConstraintViolation<CallDetailRecord>> constraintViolations = validator
                 .validateProperty(cdr, "msisdn");
@@ -66,7 +66,7 @@ public class CallDetailRecordUnitTest {
 
     @Test(expected=IllegalStateException.class)
     public void testTooManyFields() {
-        CallDetailRecord cdr = CallDetailRecord.fromLine("a,b,c,d,e,f,g,h,i,j,k,l,m,o");
+        CallDetailRecord cdr = CallDetailRecord.fromLine("a,b,1,d,e,f,g,h,i,j,k,l,m,o");
         assertNotNull(cdr);
     }
 
@@ -78,22 +78,22 @@ public class CallDetailRecordUnitTest {
 
     @Test
     public void testValidFields() {
-        CallDetailRecord cdr = CallDetailRecord.fromLine("a,b,c,d,5,f,g,h,i,j,1,12,13");
+        CallDetailRecord cdr = CallDetailRecord.fromLine("a,b,1,d,5,f,g,h,i,j,1,12,13");
         assertNotNull(cdr);
     }
 
     @Test
     public void testFromString() {
-        CallDetailRecord expectedCdr = new CallDetailRecord("a", "b", "c", "d", 5, "f", "g", "h", "i", "j",
+        CallDetailRecord expectedCdr = new CallDetailRecord("a", "b", 1L, "d", 5, "f", "g", "h", "i", "j",
                 CallStatus.SUCCESS, 12, 13);
-        CallDetailRecord cdr = CallDetailRecord.fromLine("a,b,c,d,5,f,g,h,i,j,1,12,13");
+        CallDetailRecord cdr = CallDetailRecord.fromLine("a,b,1,d,5,f,g,h,i,j,1,12,13");
         assertEquals(expectedCdr, cdr);
     }
 
     @Test
     public void testToString() {
-        CallDetailRecord cdr = new CallDetailRecord("a", "b", "c", "d", 5, "f", "g", "h", "i", "j",
+        CallDetailRecord cdr = new CallDetailRecord("a", "b", 1L, "d", 5, "f", "g", "h", "i", "j",
                 CallStatus.SUCCESS, 12, 13);
-        assertEquals("a,b,c,d,5,f,g,h,i,j,1,12,13", cdr.toLine());
+        assertEquals("a,b,1,d,5,f,g,h,i,j,1,12,13", cdr.toLine());
     }
 }

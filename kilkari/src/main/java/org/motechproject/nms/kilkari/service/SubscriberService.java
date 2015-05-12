@@ -6,7 +6,7 @@ import org.motechproject.nms.kilkari.domain.Subscriber;
 public interface SubscriberService {
     Subscriber getSubscriber(long callingNumber);
 
-    void add(Subscriber subscriber);
+    void create(Subscriber subscriber);
 
     void update(Subscriber subscriber);
 
