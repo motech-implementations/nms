@@ -705,7 +705,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     }
 
     @Test
-    public void testGetUserNotInWhitelistedByState() throws IOException, InterruptedException {
+    public void testGetUserNotInWhitelistByState() throws IOException, InterruptedException {
         createFlwWithStateNotInWhitelist();
 
         HttpGet httpGet = createHttpGet(
@@ -724,7 +724,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
     @Ignore // TODO: Renable once #119 is merged
     @Test
-    public void testGetUserNotInWhitelistedByLanguageLocationCode() throws IOException, InterruptedException {
+    public void testGetUserNotInWhitelistByLanguageLocationCode() throws IOException, InterruptedException {
         createFlwWithLanguageLocationCodeNotInWhitelist();
 
         HttpGet httpGet = createHttpGet(
