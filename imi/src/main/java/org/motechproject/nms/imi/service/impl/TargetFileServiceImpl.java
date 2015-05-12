@@ -152,9 +152,9 @@ public class TargetFileServiceImpl implements TargetFileService {
         File targetFileDirectory = new File(userHome, settingsFacade.getProperty(TARGET_FILE_DIRECTORY));
 
         if (targetFileDirectory.exists()) {
-            LOGGER.info("targetFile directory exists: {}", targetFileDirectory);
+            LOGGER.debug("targetFile directory exists: {}", targetFileDirectory);
         } else {
-            LOGGER.info("creating targetFile directory: {}", targetFileDirectory);
+            LOGGER.debug("creating targetFile directory: {}", targetFileDirectory);
             if (!targetFileDirectory.mkdirs()) {
                 String error = String.format("Unable to create targetFileDirectory %s: mkdirs() failed",
                         targetFileDirectory);
@@ -381,7 +381,7 @@ public class TargetFileServiceImpl implements TargetFileService {
             //Retry calls
             recordCount += generateRetryCalls(maxQueryBlock, imiServiceId, callFlowUrl, fileIdentifier, writer);
 
-            LOGGER.info("Created targetFile with {} record{}", recordCount, recordCount == 1 ? "" : "s");
+            LOGGER.debug("Created targetFile with {} record{}", recordCount, recordCount == 1 ? "" : "s");
 
         } catch (NoSuchAlgorithmException | IOException e) {
             LOGGER.error(e.getMessage());
@@ -394,7 +394,7 @@ public class TargetFileServiceImpl implements TargetFileService {
 
         String md5Checksum = new String(Hex.encodeHex(md.digest()));
         TargetFileNotification tfn = new TargetFileNotification(targetFileName, md5Checksum, recordCount);
-        LOGGER.info("TargetFileNotification = {}", tfn.toString());
+        LOGGER.debug("TargetFileNotification = {}", tfn.toString());
 
         //audit the success
         insertTargetFileAuditRecord(fileIdentifier, tfn, "Success");
@@ -405,7 +405,7 @@ public class TargetFileServiceImpl implements TargetFileService {
 
     private void sendNotificationRequest(TargetFileNotification tfn) {
         String notificationUrl = settingsFacade.getProperty(TARGET_FILE_NOTIFICATION_URL);
-        LOGGER.info("Sending {} to {}", tfn, notificationUrl);
+        LOGGER.debug("Sending {} to {}", tfn, notificationUrl);
 
         try {
             HttpClient httpClient = HttpClients.createDefault();
@@ -433,7 +433,7 @@ public class TargetFileServiceImpl implements TargetFileService {
 
     @MotechListener(subjects = { GENERATE_TARGET_FILE_EVENT })
     public void generateTargetFile(MotechEvent event) {
-        LOGGER.info(event.toString());
+        LOGGER.debug(event.toString());
 
         TargetFileNotification tfn = generateTargetFile();
 
@@ -447,7 +447,7 @@ public class TargetFileServiceImpl implements TargetFileService {
     @Override
     public void handleFileProcessedStatusNotification(FileProcessedStatusRequest request) {
         if (request.getFileProcessedStatus() == FileProcessedStatus.FILE_PROCESSED_SUCCESSFULLY) {
-            LOGGER.info(request.toString());
+            LOGGER.debug(request.toString());
             //We're happy.
             //todo: audit that?
         } else {

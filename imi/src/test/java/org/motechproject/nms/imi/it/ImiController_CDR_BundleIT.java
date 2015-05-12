@@ -90,12 +90,12 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
     @Test
     public void testCreateCdrFileNotificationRequest() throws IOException, InterruptedException,
             NoSuchAlgorithmException {
-        getLogger().info("testCreateCdrFileNotificationRequest()");
+        getLogger().debug("testCreateCdrFileNotificationRequest()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
                 languageDataService, circleLanguageDataService);
 
-        List<CallDetailRecord> cdrs = helper.makeCdrs(5);
+        List<CallDetailRecord> cdrs = helper.makeCdrs();
         helper.setCrds(cdrs);
         helper.makeCdrSummaryFile();
         helper.makeCdrDetailFile();
@@ -110,7 +110,7 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
     @Test
     public void testCreateCdrFileNotificationRequestBadCdrSummaryFileName() throws IOException,
             InterruptedException, NoSuchAlgorithmException {
-        getLogger().info("testCreateCdrFileNotificationRequestBadCdrSummaryFileName()");
+        getLogger().debug("testCreateCdrFileNotificationRequestBadCdrSummaryFileName()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
                 languageDataService, circleLanguageDataService);
@@ -129,7 +129,7 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
     @Test
     public void testCreateCdrFileNotificationRequestBadFileNames() throws IOException,
             InterruptedException, NoSuchAlgorithmException {
-        getLogger().info("testCreateCdrFileNotificationRequestBadFileNames()");
+        getLogger().debug("testCreateCdrFileNotificationRequestBadFileNames()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
                 languageDataService, circleLanguageDataService);

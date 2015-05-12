@@ -85,9 +85,9 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         Language urdu = languageDataService.create(new Language("Urdu", "UR"));
 
         SubscriptionPack pack1 = subscriptionPackDataService.create(new SubscriptionPack("one",
-                SubscriptionPackType.CHILD, 1, null));
+                SubscriptionPackType.CHILD, 48, 1, null));
         SubscriptionPack pack2 = subscriptionPackDataService.create(new SubscriptionPack("two",
-                SubscriptionPackType.PREGNANCY, 2, null));
+                SubscriptionPackType.PREGNANCY, 72, 2, null));
 
         Subscriber subscriber1 = subscriberDataService.create(new Subscriber(1111111111L, hindi, "AA"));
         Subscriber subscriber2 = subscriberDataService.create(new Subscriber(2222222222L, urdu, "BB"));

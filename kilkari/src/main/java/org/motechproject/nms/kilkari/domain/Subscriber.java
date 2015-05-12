@@ -1,6 +1,6 @@
 package org.motechproject.nms.kilkari.domain;
 
-import org.joda.time.LocalDate;
+import org.joda.time.DateTime;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.annotations.Ignore;
@@ -26,10 +26,10 @@ public class Subscriber {
     private Long callingNumber;
 
     @Field
-    private LocalDate dateOfBirth;
+    private DateTime dateOfBirth;
 
     @Field
-    private LocalDate lastMenstrualPeriod;
+    private DateTime lastMenstrualPeriod;
 
     @Field
     private Language language;
@@ -65,19 +65,19 @@ public class Subscriber {
         this.callingNumber = callingNumber;
     }
 
-    public LocalDate getDateOfBirth() {
+    public DateTime getDateOfBirth() {
         return dateOfBirth;
     }
 
-    public void setDateOfBirth(LocalDate dateOfBirth) {
+    public void setDateOfBirth(DateTime dateOfBirth) {
         this.dateOfBirth = dateOfBirth;
     }
 
-    public LocalDate getLastMenstrualPeriod() {
+    public DateTime getLastMenstrualPeriod() {
         return lastMenstrualPeriod;
     }
 
-    public void setLastMenstrualPeriod(LocalDate lastMenstrualPeriod) {
+    public void setLastMenstrualPeriod(DateTime lastMenstrualPeriod) {
         this.lastMenstrualPeriod = lastMenstrualPeriod;
     }
 
@@ -87,21 +87,6 @@ public class Subscriber {
 
     public void setLanguage(Language language) {
         this.language = language;
-    }
-
-    @Ignore
-    public Set<Subscription> getAllSubscriptions() {
-        // TODO: I have no idea why I need to do this, but returning just this.subscriptions always results in
-        // an empty set. Bi-directional relationship bug?
-        Set<Subscription> allSubscriptions = new HashSet<>();
-
-        Iterator<Subscription> subscriptionIterator = subscriptions.iterator();
-        Subscription currentSubscription;
-        while (subscriptionIterator.hasNext()) {
-            currentSubscription = subscriptionIterator.next();
-            allSubscriptions.add(currentSubscription);
-        }
-        return allSubscriptions;
     }
 
     public Set<Subscription> getSubscriptions() {
@@ -134,6 +119,21 @@ public class Subscriber {
             }
         }
         return activeSubscriptions;
+    }
+
+    @Ignore
+    public Set<Subscription> getAllSubscriptions() {
+        // TODO: I have no idea why I need to do this, but returning just this.subscriptions always results in
+        // an empty set. Bi-directional relationship bug?
+        Set<Subscription> allSubscriptions = new HashSet<>();
+
+        Iterator<Subscription> subscriptionIterator = subscriptions.iterator();
+        Subscription currentSubscription;
+        while (subscriptionIterator.hasNext()) {
+            currentSubscription = subscriptionIterator.next();
+            allSubscriptions.add(currentSubscription);
+        }
+        return allSubscriptions;
     }
 
     @Override

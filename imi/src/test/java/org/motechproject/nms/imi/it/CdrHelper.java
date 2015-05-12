@@ -11,6 +11,7 @@ import org.motechproject.nms.imi.service.SettingsService;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
+import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.domain.CallStatus;
@@ -100,61 +101,90 @@ public class CdrHelper {
     }
 
 
-    private Subscription makeSubscription() {
+    private Subscription makeSubscription(SubscriptionOrigin origin) {
         Subscriber subscriber = subscriberDataService.create(new Subscriber(
                 makeNumber(),
                 makeLanguage(),
                 makeCircle()
         ));
-        return subscriptionService.create(new Subscription(
+        Subscription subscription = new Subscription(
                 subscriber,
                 subscriptionService.getSubscriptionPack("childPack"),
-                SubscriptionOrigin.IVR
-        ));
+                origin
+        );
+        //~ one to two month old start date
+        int daysOld = (int) (Math.random() * 30) + 30;
+        subscription.setStartDate(DateTime.now().minusDays(daysOld));
+        subscription.setStatus(SubscriptionStatus.ACTIVE);
+        return subscriptionService.create(subscription);
     }
 
 
-    private CallStatus randomCallStatus() {
-        return CallStatus.fromInt((int) (Math.random() * 3) + 1);
-    }
-
-
-    private StatusCode randomStatusCode(CallStatus finalStatus) {
-        if (finalStatus == CallStatus.SUCCESS) {
-            return StatusCode.OBD_SUCCESS_CALL_CONNECTED;
-        } else if (finalStatus == CallStatus.REJECTED) {
-            return StatusCode.OBD_DNIS_IN_DND;
-        } else {
-            return StatusCode.fromInt((int) (Math.random() * 6) + StatusCode.OBD_FAILED_NOATTEMPT.getValue());
-        }
-    }
-
-
-    public List<CallDetailRecord> makeCdrs(int numCdr) {
+    public List<CallDetailRecord> makeCdrs() {
         String imiServiceId = settingsService.getSettingsFacade().getProperty("imi.target_file_imi_service_id");
         String fileIdentifier = UUID.randomUUID().toString();
         List<CallDetailRecord> cdrs = new ArrayList<>();
-        for (int i=0; i<numCdr; i++) {
-            Subscription subscription = makeSubscription();
-            CallStatus finalStatus = randomCallStatus();
-            StatusCode statusCode = randomStatusCode(finalStatus);
 
-            CallDetailRecord cdr = new CallDetailRecord(
-                    new RequestId(fileIdentifier, subscription.getSubscriptionId()).toString(),
-                    imiServiceId,
-                    subscription.getSubscriber().getCallingNumber().toString(),
-                    null,
-                    0,
-                    null,
-                    "w1m1.wav",
-                    "1",
-                    makeLanguage().getCode(),
-                    makeCircle(),
-                    finalStatus,
-                    statusCode.getValue(),
-                    1);
-            cdrs.add(cdr);
-        }
+        /**
+         * successful call
+         */
+        Subscription subscription = makeSubscription(SubscriptionOrigin.IVR);
+        CallDetailRecord cdr = new CallDetailRecord(
+                new RequestId(fileIdentifier, subscription.getSubscriptionId()).toString(),
+                imiServiceId,
+                subscription.getSubscriber().getCallingNumber().toString(),
+                null,
+                0,
+                null,
+                "w1m1.wav", //todo: we still need to look into that
+                "1",
+                makeLanguage().getCode(),
+                makeCircle(),
+                CallStatus.SUCCESS,
+                StatusCode.OBD_SUCCESS_CALL_CONNECTED.getValue(),
+                1);
+        cdrs.add(cdr);
+
+        /**
+         * failed call - should be retried
+         */
+        subscription = makeSubscription(SubscriptionOrigin.IVR);
+        cdr = new CallDetailRecord(
+                new RequestId(fileIdentifier, subscription.getSubscriptionId()).toString(),
+                imiServiceId,
+                subscription.getSubscriber().getCallingNumber().toString(),
+                null,
+                0,
+                null,
+                "w1m1.wav", //todo: we still need to look into that
+                "1",
+                makeLanguage().getCode(),
+                makeCircle(),
+                CallStatus.FAILED,
+                StatusCode.OBD_FAILED_NOANSWER.getValue(),
+                1);
+        cdrs.add(cdr);
+
+        /**
+         * Rejected call - subscription should be deactivated
+         */
+        subscription = makeSubscription(SubscriptionOrigin.MCTS_IMPORT); //todo: test IVR origin: should be an error
+        cdr = new CallDetailRecord(
+                new RequestId(fileIdentifier, subscription.getSubscriptionId()).toString(),
+                imiServiceId,
+                subscription.getSubscriber().getCallingNumber().toString(),
+                null,
+                0,
+                null,
+                "w1m1.wav", //todo: we still need to look into that
+                "1",
+                makeLanguage().getCode(),
+                makeCircle(),
+                CallStatus.REJECTED,
+                StatusCode.OBD_DNIS_IN_DND.getValue(),
+                1);
+        cdrs.add(cdr);
+
         return cdrs;
     }
 
@@ -194,7 +224,7 @@ public class CdrHelper {
 
     public void makeCdrSummaryFile() throws IOException {
         File dstFile = new File(makeCdrDirectory(), cdrSummaryFileName());
-        LOGGER.info("Creating summary file {}...", dstFile);
+        LOGGER.debug("Creating summary file {}...", dstFile);
         BufferedWriter writer = new BufferedWriter(new FileWriter(dstFile));
         String s;
         for(CallDetailRecord cdr : cdrs) {
@@ -208,7 +238,7 @@ public class CdrHelper {
 
     public void makeCdrDetailFile() throws IOException {
         File dstFile = new File(makeCdrDirectory(), cdrDetailFileName());
-        LOGGER.info("Creating detail file {}...", dstFile);
+        LOGGER.debug("Creating detail file {}...", dstFile);
         BufferedWriter writer = new BufferedWriter(new FileWriter(dstFile));
 
         //todo:...
