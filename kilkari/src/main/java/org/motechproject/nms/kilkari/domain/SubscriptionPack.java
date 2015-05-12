@@ -5,8 +5,8 @@ import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.annotations.Ignore;
 
 import javax.jdo.annotations.Column;
-import javax.validation.constraints.NotNull;
 import javax.jdo.annotations.Unique;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.util.List;
 

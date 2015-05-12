@@ -4,14 +4,20 @@ import org.joda.time.DateTime;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 
+import javax.jdo.annotations.Column;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import java.util.Set;
 
 /**
  * Information sent to MOTECH by the IVR system when a Kilkari subscriber calls their inbox
  */
 @Entity(tableName = "nms_inbox_call_details")
-public class InboxCallDetails {
+public class InboxCallDetailRecord {
     @Field
+    @Min(value = 1000000000L, message = "callingNumber must be 10 digits")
+    @Max(value = 9999999999L, message = "callingNumber must be 10 digits")
+    @Column(length = 10)
     private Long callingNumber;
 
     @Field
@@ -41,11 +47,11 @@ public class InboxCallDetails {
     @Field
     private Set<InboxCallData> content;
 
-    public InboxCallDetails() { }
+    public InboxCallDetailRecord() { }
 
-    public InboxCallDetails(Long callingNumber, String operator, String circle, // NO CHECKSTYLE More than 7 parameters
-                            Long callId, DateTime callStartTime, DateTime callEndTime, Integer callDurationInPulses,
-                            Integer callStatus, Integer callDisconnectReason, Set<InboxCallData> content) {
+    public InboxCallDetailRecord(Long callingNumber, String operator, String circle, // NO CHECKSTYLE More than 7 parameters
+                                 Long callId, DateTime callStartTime, DateTime callEndTime, Integer callDurationInPulses,
+                                 Integer callStatus, Integer callDisconnectReason, Set<InboxCallData> content) {
         this.callingNumber = callingNumber;
         this.operator = operator;
         this.circle = circle;
@@ -147,7 +153,7 @@ public class InboxCallDetails {
             return false;
         }
 
-        InboxCallDetails that = (InboxCallDetails) o;
+        InboxCallDetailRecord that = (InboxCallDetailRecord) o;
 
         if (!callingNumber.equals(that.callingNumber)) {
             return false;
@@ -180,17 +186,17 @@ public class InboxCallDetails {
 
     }
 
-    @Override
+    @Override //NO CHECKSTYLE Cyclomatic Complexity
     public int hashCode() {
-        int result = callingNumber.hashCode();
-        result = 31 * result + operator.hashCode();
-        result = 31 * result + circle.hashCode();
-        result = 31 * result + callId.hashCode();
-        result = 31 * result + callStartTime.hashCode();
-        result = 31 * result + callEndTime.hashCode();
-        result = 31 * result + callDurationInPulses.hashCode();
-        result = 31 * result + callStatus.hashCode();
-        result = 31 * result + callDisconnectReason.hashCode();
+        int result = (callingNumber != null ? callingNumber.hashCode() : 0);
+        result = 31 * result + (operator != null ? operator.hashCode() : 0);
+        result = 31 * result + (circle != null ? circle.hashCode() : 0);
+        result = 31 * result + (callId != null ? callId.hashCode() : 0);
+        result = 31 * result + (callStartTime != null ? callStartTime.hashCode() : 0);
+        result = 31 * result + (callEndTime != null ? callEndTime.hashCode() : 0);
+        result = 31 * result + (callDurationInPulses != null ? callDurationInPulses.hashCode() : 0);
+        result = 31 * result + (callStatus != null ? callStatus.hashCode() : 0);
+        result = 31 * result + (callDisconnectReason != null ? callDisconnectReason.hashCode() : 0);
         result = 31 * result + (content != null ? content.hashCode() : 0);
         return result;
     }

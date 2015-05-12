@@ -1,6 +1,5 @@
 package org.motechproject.nms.api.ut;
 
-import org.codehaus.jackson.map.deser.ValueInstantiators;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;

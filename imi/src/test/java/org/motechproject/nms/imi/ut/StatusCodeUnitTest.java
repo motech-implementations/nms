@@ -1,11 +1,11 @@
-package org.motechproject.nms.imi.unit;
+package org.motechproject.nms.imi.ut;
 
 import org.junit.Test;
 import org.motechproject.nms.imi.domain.StatusCode;
 
 import static junit.framework.Assert.assertEquals;
 
-public class StatusCodeTest {
+public class StatusCodeUnitTest {
 
     @Test
     public void testValue() {

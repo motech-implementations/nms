@@ -18,7 +18,6 @@ import org.motechproject.nms.mobileacademy.service.impl.MobileAcademyServiceImpl
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;

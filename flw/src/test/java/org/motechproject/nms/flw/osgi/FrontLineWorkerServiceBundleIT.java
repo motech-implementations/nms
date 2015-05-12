@@ -1,11 +1,11 @@
 package org.motechproject.nms.flw.osgi;
 
+import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.flw.repository.ServiceUsageDataService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
-import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.motechproject.nms.flw.service.ServiceUsageService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
@@ -15,7 +15,6 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
-
 import java.util.List;
 
 import static org.junit.Assert.*;
