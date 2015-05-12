@@ -168,7 +168,27 @@ public class CdrHelper {
         /**
          * Rejected call - subscription should be deactivated
          */
-        subscription = makeSubscription(SubscriptionOrigin.MCTS_IMPORT); //todo: test IVR origin: should be an error
+        subscription = makeSubscription(SubscriptionOrigin.MCTS_IMPORT);
+        cdr = new CallDetailRecord(
+                new RequestId(fileIdentifier, subscription.getSubscriptionId()).toString(),
+                imiServiceId,
+                subscription.getSubscriber().getCallingNumber().toString(),
+                null,
+                0,
+                null,
+                "w1m1.wav", //todo: we still need to look into that
+                "1",
+                makeLanguage().getCode(),
+                makeCircle(),
+                CallStatus.REJECTED,
+                StatusCode.OBD_DNIS_IN_DND.getValue(),
+                1);
+        cdrs.add(cdr);
+
+        /**
+         * Rejected call - invalid state (only MCTS originated subscriptions should be rejected)
+         */
+        subscription = makeSubscription(SubscriptionOrigin.IVR);
         cdr = new CallDetailRecord(
                 new RequestId(fileIdentifier, subscription.getSubscriptionId()).toString(),
                 imiServiceId,

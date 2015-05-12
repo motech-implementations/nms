@@ -46,29 +46,34 @@ public class SubscriptionDeactivator {
     public void deactivateSubscription(MotechEvent event) {
         LOGGER.debug("deactivateSubscription() is handling {}", event.toString());
 
-        CallDetailRecord cdr = (CallDetailRecord) event.getParameters().get("CDR");
-        RequestId requestId = RequestId.fromString(cdr.getRequestId());
-        Subscription subscription = subscriptionService.getSubscription(requestId.getSubscriptionId());
-        if (subscription.getOrigin() == SubscriptionOrigin.IVR) {
-            String error = String.format("Subscription {} was rejected (DND) but its origin is IVR, not MCTS!",
-                    subscription.getSubscriptionId());
-            LOGGER.error(error);
-            alertService.create(subscription.getSubscriptionId(), "subscription", error, AlertType.CRITICAL,
-                    AlertStatus.NEW, 0, null);
-            return;
-        }
+        try {
+            CallDetailRecord cdr = (CallDetailRecord) event.getParameters().get("CDR");
+            RequestId requestId = RequestId.fromString(cdr.getRequestId());
+            Subscription subscription = subscriptionService.getSubscription(requestId.getSubscriptionId());
+            if (subscription.getOrigin() == SubscriptionOrigin.IVR) {
+                String error = String.format("Subscription {} was rejected (DND) but its origin is IVR, not MCTS!",
+                        subscription.getSubscriptionId());
+                LOGGER.error(error);
+                alertService.create(subscription.getSubscriptionId(), "subscription", error, AlertType.CRITICAL,
+                        AlertStatus.NEW, 0, null);
+                return;
+            }
 
-        //Delete the callRetry entry, if any
-        CallRetry callRetry = callRetryDataService.findBySubscriptionId(requestId.getSubscriptionId());
-        if (callRetry != null) {
-            LOGGER.debug("deleting CallRetry for {}", requestId.getSubscriptionId());
-            callRetryDataService.delete(callRetry);
-        } else {
-            LOGGER.debug("no need to delete CallRetry for {}, no record exists", requestId.getSubscriptionId());
-        }
+            //Delete the callRetry entry, if any
+            CallRetry callRetry = callRetryDataService.findBySubscriptionId(requestId.getSubscriptionId());
+            if (callRetry != null) {
+                LOGGER.debug("deleting CallRetry for {}", requestId.getSubscriptionId());
+                callRetryDataService.delete(callRetry);
+            } else {
+                LOGGER.debug("no need to delete CallRetry for {}, no record exists", requestId.getSubscriptionId());
+            }
 
-        //Deactivate the subscription
-        LOGGER.debug("deactivating subscription {}", requestId.getSubscriptionId());
-        subscriptionService.deactivateSubscription(subscription, DeactivationReason.DO_NOT_DISTURB);
+            //Deactivate the subscription
+            LOGGER.debug("deactivating subscription {}", requestId.getSubscriptionId());
+            subscriptionService.deactivateSubscription(subscription, DeactivationReason.DO_NOT_DISTURB);
+        } catch (Exception e) {
+            LOGGER.error("********** Unexpected Exception! **********", e);
+            throw e;
+        }
     }
 }
