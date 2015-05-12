@@ -36,7 +36,7 @@ public class SubscriberServiceImpl implements SubscriberService {
     }
 
     @Override
-    public void add(Subscriber subscriber) {
+    public void create(Subscriber subscriber) {
         subscriberDataService.create(subscriber);
     }
 

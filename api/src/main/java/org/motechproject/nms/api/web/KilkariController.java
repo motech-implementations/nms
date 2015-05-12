@@ -99,7 +99,7 @@ public class KilkariController extends BaseController {
                         fileName));
 
             } catch (NoInboxForSubscriptionException e) {
-                // there's no inbox, don't add anything to the list
+                // there's no inbox, don't create anything to the list
             }
         }
 
@@ -133,7 +133,7 @@ public class KilkariController extends BaseController {
             failureReasons.append(String.format(INVALID, "subscriptionPack"));
         }
 
-        //some field error occurred, add an error on the "content" parent field
+        //some field error occurred, create an error on the "content" parent field
         if (failureReasonsLength != failureReasons.length()) {
             failureReasons.append(String.format(INVALID, "content"));
         }

@@ -10,8 +10,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.api.utils.HttpDeleteWithBody;
 import org.motechproject.nms.api.web.contract.BadRequest;
-import org.motechproject.nms.api.web.contract.kilkari.InboxCallDetailsRequest;
 import org.motechproject.nms.api.web.contract.kilkari.CallDataRequest;
+import org.motechproject.nms.api.web.contract.kilkari.InboxCallDetailsRequest;
 import org.motechproject.nms.api.web.contract.kilkari.InboxResponse;
 import org.motechproject.nms.api.web.contract.kilkari.InboxSubscriptionDetailResponse;
 import org.motechproject.nms.api.web.contract.kilkari.SubscriptionRequest;
@@ -49,8 +49,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Verify that Kilkari API is functional.
@@ -405,7 +405,6 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
     }
-
 
     @Test
     public void testDeactivateSubscriptionRequest() throws IOException, InterruptedException {

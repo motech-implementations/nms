@@ -1,7 +1,6 @@
 package org.motechproject.nms.kilkari.osgi;
 
 import org.joda.time.DateTime;
-import org.joda.time.LocalDate;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.kilkari.domain.InboxCallData;
@@ -120,7 +119,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         Language ta = languageDataService.findByCode("10");
         Subscriber subscriber = new Subscriber(1000000000L, ta);
-        subscriberService.add(subscriber);
+        subscriberService.create(subscriber);
 
         subscriptionService.createSubscription(subscriber.getCallingNumber(), ta, gPack1,
                 SubscriptionOrigin.IVR);
