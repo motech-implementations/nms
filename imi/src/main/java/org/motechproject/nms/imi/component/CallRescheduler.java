@@ -41,57 +41,52 @@ public class CallRescheduler {
     public void rescheduleCall(MotechEvent event) {
         LOGGER.info("rescheduleCall() is handling {}", event.toString());
 
-        try {
-            CallDetailRecord cdr = (CallDetailRecord) event.getParameters().get("CDR");
-            RequestId requestId = RequestId.fromString(cdr.getRequestId());
-            Subscription subscription = subscriptionService.getSubscription(requestId.getSubscriptionId());
-            CallRetry callRetry = callRetryDataService.findBySubscriptionId(requestId.getSubscriptionId());
-            if (callRetry == null) {
-                //first retry day
-                LOGGER.info("rescheduling msisdn {} subscription {}", cdr.getMsisdn(), requestId.getSubscriptionId());
-                callRetryDataService.create(new CallRetry(
-                        requestId.getSubscriptionId(),
-                        Long.parseLong(cdr.getMsisdn()),
-                        DayOfTheWeek.fromInt(subscription.getStartDate().dayOfWeek().get()).nextDay(),
-                        CallStage.RETRY_1,
-                        subscription.getSubscriber().getLanguage().getCode(),
-                        subscription.getSubscriber().getCircle(),
-                        subscription.getOrigin().getCode()
-                ));
-            } else {
-                //we've already rescheduled this call, let's see if it needs to be re-rescheduled
+        CallDetailRecord cdr = (CallDetailRecord) event.getParameters().get("CDR");
+        RequestId requestId = RequestId.fromString(cdr.getRequestId());
+        Subscription subscription = subscriptionService.getSubscription(requestId.getSubscriptionId());
+        CallRetry callRetry = callRetryDataService.findBySubscriptionId(requestId.getSubscriptionId());
+        if (callRetry == null) {
+            //first retry day
+            LOGGER.info("rescheduling msisdn {} subscription {}", cdr.getMsisdn(), requestId.getSubscriptionId());
+            callRetryDataService.create(new CallRetry(
+                    requestId.getSubscriptionId(),
+                    Long.parseLong(cdr.getMsisdn()),
+                    DayOfTheWeek.fromInt(subscription.getStartDate().dayOfWeek().get()).nextDay(),
+                    CallStage.RETRY_1,
+                    subscription.getSubscriber().getLanguage().getCode(),
+                    subscription.getSubscriber().getCircle(),
+                    subscription.getOrigin().getCode()
+            ));
+        } else {
+            //we've already rescheduled this call, let's see if it needs to be re-rescheduled
 
-                if (subscription.getSubscriptionPack().retryCount() == 1) {
-                    //This message should only be retried once, so let's delete it from the CallRetry table
-                    LOGGER.info("Not re-rescheduling single-retry msisdn {} subscription {}: max retry exceeded",
-                            cdr.getMsisdn(), requestId.getSubscriptionId());
-                    callRetryDataService.delete(callRetry);
-                    return;
-                }
-
-                if (callRetry.getCallStage() == CallStage.RETRY_LAST) {
-                    //This message has been re-scheduled for the last (3rd) time, let's delete it from the CallRetry
-                    //table
-                    LOGGER.info("Not re-rescheduling multiple-retry msisdn {} subscription {}: max retry exceeded",
-                            cdr.getMsisdn(), requestId.getSubscriptionId());
-                    callRetryDataService.delete(callRetry);
-                    return;
-                }
-
-                //re-reschedule the call
-                LOGGER.info("re-rescheduling msisdn {} subscription {}", cdr.getMsisdn(), requestId.getSubscriptionId());
-
-                //update the callStage
-                callRetry.setCallStage((callRetry.getCallStage() == CallStage.RETRY_1) ? CallStage.RETRY_2 :
-                        CallStage.RETRY_LAST);
-                //increment the day of the week
-                callRetry.setDayOfTheWeek(callRetry.getDayOfTheWeek().nextDay());
-                //update the CallRetry record
-                callRetryDataService.update(callRetry);
+            if (subscription.getSubscriptionPack().retryCount() == 1) {
+                //This message should only be retried once, so let's delete it from the CallRetry table
+                LOGGER.info("Not re-rescheduling single-retry msisdn {} subscription {}: max retry exceeded",
+                        cdr.getMsisdn(), requestId.getSubscriptionId());
+                callRetryDataService.delete(callRetry);
+                return;
             }
-        } catch (Exception e) {
-            LOGGER.error("********** Unexpected Exception! **********", e);
-            return;
+
+            if (callRetry.getCallStage() == CallStage.RETRY_LAST) {
+                //This message has been re-scheduled for the last (3rd) time, let's delete it from the CallRetry
+                //table
+                LOGGER.info("Not re-rescheduling multiple-retry msisdn {} subscription {}: max retry exceeded",
+                        cdr.getMsisdn(), requestId.getSubscriptionId());
+                callRetryDataService.delete(callRetry);
+                return;
+            }
+
+            //re-reschedule the call
+            LOGGER.info("re-rescheduling msisdn {} subscription {}", cdr.getMsisdn(), requestId.getSubscriptionId());
+
+            //update the callStage
+            callRetry.setCallStage((callRetry.getCallStage() == CallStage.RETRY_1) ? CallStage.RETRY_2 :
+                    CallStage.RETRY_LAST);
+            //increment the day of the week
+            callRetry.setDayOfTheWeek(callRetry.getDayOfTheWeek().nextDay());
+            //update the CallRetry record
+            callRetryDataService.update(callRetry);
         }
     }
 }
