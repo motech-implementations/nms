@@ -18,12 +18,12 @@ import org.motechproject.nms.api.web.contract.kilkari.SubscriptionRequest;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.flw.repository.ServiceUsageCapDataService;
 import org.motechproject.nms.flw.repository.ServiceUsageDataService;
-import org.motechproject.nms.kilkari.domain.DeactivationReason;
-import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
+import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
-import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
+import org.motechproject.nms.kilkari.domain.SubscriptionPack;
+import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
@@ -404,90 +404,6 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
-    }
-
-    @Test
-    public void testCreateDuplicateChildSubscriptionViaMcts() {
-        setupData();
-
-        Subscriber mctsSubscriber = new Subscriber(9999911122L);
-        mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(14));
-        subscriberDataService.create(mctsSubscriber);
-
-        subscriptionService.createSubscription(9999911122L, gLanguage, gPack1, SubscriptionOrigin.MCTS_IMPORT);
-        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
-        assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
-
-        // attempt to create subscription to the same pack -- should fail
-        subscriptionService.createSubscription(9999911122L, gLanguage, gPack1, SubscriptionOrigin.MCTS_IMPORT);
-
-        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
-        assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
-    }
-
-    @Test
-    public void testCreateDuplicatePregnancySubscriptionViaMcts() {
-        setupData();
-
-        Subscriber mctsSubscriber = new Subscriber(9999911122L);
-        mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(28));
-        subscriberDataService.create(mctsSubscriber);
-
-        subscriptionService.createSubscription(9999911122L, gLanguage, gPack2, SubscriptionOrigin.MCTS_IMPORT);
-        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
-        assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
-
-        // attempt to create subscription to the same pack -- should fail
-        subscriptionService.createSubscription(9999911122L, gLanguage, gPack2, SubscriptionOrigin.MCTS_IMPORT);
-
-        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
-        assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
-    }
-
-    @Test
-    public void testCreateSecondPregnancySubscriptionAfterDeactivationViaMcts() {
-        setupData();
-
-        Subscriber mctsSubscriber = new Subscriber(9999911122L);
-        mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(28));
-        subscriberDataService.create(mctsSubscriber);
-
-        subscriptionService.createSubscription(9999911122L, gLanguage, gPack2, SubscriptionOrigin.MCTS_IMPORT);
-        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
-        Subscription pregnancySubscription = mctsSubscriber.getActiveSubscriptions().iterator().next();
-        pregnancySubscription.setStatus(SubscriptionStatus.DEACTIVATED);
-        subscriptionDataService.update(pregnancySubscription);
-
-        // attempt to create subscription to the same pack -- should succeed
-        subscriptionService.createSubscription(9999911122L, gLanguage, gPack2, SubscriptionOrigin.MCTS_IMPORT);
-
-        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
-        assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
-    }
-
-    @Test
-    public void testCreateSubscriptionsToDifferentPacksViaMcts() {
-        setupData();
-
-        Subscriber mctsSubscriber = new Subscriber(9999911122L);
-        mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(14));
-        subscriberDataService.create(mctsSubscriber);
-
-        subscriptionService.createSubscription(9999911122L, gLanguage, gPack1, SubscriptionOrigin.MCTS_IMPORT);
-
-        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
-
-        // due to subscription rules detailed in #157, we need to clear out the DOB and set an LMP in order to
-        // create a second subscription for this MCTS subscriber
-        mctsSubscriber.setDateOfBirth(null);
-        mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(100));
-        subscriberDataService.update(mctsSubscriber);
-
-        // attempt to create subscription to a different pack
-        subscriptionService.createSubscription(9999911122L, gLanguage, gPack2, SubscriptionOrigin.MCTS_IMPORT);
-
-        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
-        assertEquals(2, mctsSubscriber.getActiveSubscriptions().size());
     }
 
     @Test
