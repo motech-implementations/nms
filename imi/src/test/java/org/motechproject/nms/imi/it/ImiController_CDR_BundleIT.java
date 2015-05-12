@@ -71,14 +71,22 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
                                                        boolean useValidSummaryFile, boolean useValidDetailFile)
             throws IOException, NoSuchAlgorithmException {
         String targetFile = useValidTargetFile ? helper.obdFileName() : helper.obdFileName() + "xxx";
-        String summaryFile = useValidSummaryFile ? helper.cdrSummaryFileName() : helper.cdrSummaryFileName() +
-                "xxx";
+        String summaryFile = useValidSummaryFile ? helper.cdrSummaryFileName() : helper.cdrSummaryFileName() + "xxx";
         String detailFile = useValidDetailFile ? helper.cdrDetailFileName() : helper.cdrDetailFileName() + "xxx";
 
-        FileInfo cdrSummary = new FileInfo(summaryFile, helper.detailFileChecksum(), 6);
-        FileInfo cdrDetail = new FileInfo(detailFile, helper.detailFileChecksum(), 9900);
+        FileInfo cdrSummary;
+        FileInfo cdrDetail;
+        if (useValidTargetFile && useValidSummaryFile && useValidDetailFile) {
+            cdrSummary = new FileInfo(summaryFile, helper.summaryFileChecksum(), 6);
+            cdrDetail = new FileInfo(detailFile, helper.detailFileChecksum(), 0);
+        } else {
+            cdrSummary = new FileInfo(summaryFile, "", 0);
+            cdrDetail = new FileInfo(detailFile, "", 0);
+
+        }
         CdrFileNotificationRequest cdrFileNotificationRequest =
                 new CdrFileNotificationRequest(targetFile, cdrSummary, cdrDetail);
+
 
         ObjectMapper mapper = new ObjectMapper();
         String requestJson = mapper.writeValueAsString(cdrFileNotificationRequest);
