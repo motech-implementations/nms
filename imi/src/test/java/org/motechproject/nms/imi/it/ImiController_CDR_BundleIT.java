@@ -1,6 +1,7 @@
 package org.motechproject.nms.imi.it;
 
 import org.apache.commons.httpclient.HttpStatus;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -29,6 +30,7 @@ import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(PaxExam.class)
@@ -102,8 +104,8 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
 
         HttpPost httpPost = createCdrFileNotificationHttpPost(helper, true, true, true);
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_ACCEPTED, ADMIN_USERNAME,
-                ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_ACCEPTED, response.getStatusLine().getStatusCode());
     }
 
 

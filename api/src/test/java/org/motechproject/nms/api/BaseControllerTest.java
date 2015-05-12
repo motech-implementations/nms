@@ -10,7 +10,6 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.motechproject.nms.api.web.KilkariController;
 import org.motechproject.nms.api.web.contract.BadRequest;
 import org.motechproject.nms.kilkari.service.SubscriberService;
-import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.springframework.test.web.server.MockMvc;
 import org.springframework.test.web.server.setup.MockMvcBuilders;
 

@@ -4,14 +4,14 @@ import org.joda.time.DateTime;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.kilkari.domain.InboxCallData;
-import org.motechproject.nms.kilkari.domain.InboxCallDetails;
+import org.motechproject.nms.kilkari.domain.InboxCallDetailRecord;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.repository.InboxCallDataDataService;
-import org.motechproject.nms.kilkari.repository.InboxCallDetailsDataService;
+import org.motechproject.nms.kilkari.repository.InboxCallDetailRecordDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
@@ -29,14 +29,12 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
-import java.util.HashSet;
 import java.util.Arrays;
-import java.util.UUID;
+import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 /**
  * Verify that SubscriptionService is present & functional.
@@ -63,7 +61,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     @Inject
     private LanguageDataService languageDataService;
     @Inject
-    private InboxCallDetailsDataService inboxCallDetailsDataService;
+    private InboxCallDetailRecordDataService inboxCallDetailRecordDataService;
     @Inject
     private InboxCallDataDataService inboxCallDataDataService;
 
@@ -104,7 +102,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         subscriberDataService.deleteAll();
         languageDataService.deleteAll();
         inboxCallDataDataService.deleteAll();
-        inboxCallDetailsDataService.deleteAll();
+        inboxCallDetailRecordDataService.deleteAll();
     }
 
     @Test
@@ -136,7 +134,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         assertEquals(new HashSet<>(Arrays.asList("childPack", "pregnancyPack")), packs);
 
-        long id = inboxService.addInboxCallDetails(new InboxCallDetails(
+        long id = inboxService.addInboxCallDetails(new InboxCallDetailRecord(
                 1111111111L,
                 "OP",
                 "AA",
@@ -166,9 +164,10 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
                 ))
         ));
 
-        InboxCallDetails inboxCallDetailsFromDatabase = inboxCallDetailsDataService.findById(id);
+        InboxCallDetailRecord inboxCallDetailRecordFromDatabase = inboxCallDetailRecordDataService.findById(id);
 
-        assertEquals(1111111111L, (long) inboxCallDetailsFromDatabase.getCallingNumber());
+
+        assertEquals(1111111111L, (long) inboxCallDetailRecordFromDatabase.getCallingNumber());
     }
 
     @Test

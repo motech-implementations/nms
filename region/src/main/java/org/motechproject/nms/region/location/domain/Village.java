@@ -8,7 +8,6 @@ import org.motechproject.nms.region.location.domain.validation.ValidVillage;
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Unique;
 import javax.validation.constraints.NotNull;
-
 import javax.validation.constraints.Size;
 
 /**

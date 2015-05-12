@@ -8,7 +8,7 @@ import org.motechproject.nms.api.web.contract.kilkari.SubscriptionRequest;
 import org.motechproject.nms.api.web.exception.NotFoundException;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.domain.InboxCallData;
-import org.motechproject.nms.kilkari.domain.InboxCallDetails;
+import org.motechproject.nms.kilkari.domain.InboxCallDetailRecord;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
@@ -186,7 +186,7 @@ public class KilkariController extends BaseController {
             }
         }
 
-        InboxCallDetails inboxCallDetails = new InboxCallDetails(
+        InboxCallDetailRecord inboxCallDetailRecord = new InboxCallDetailRecord(
                 request.getCallingNumber(),
                 request.getOperator(),
                 request.getCircle(),
@@ -198,7 +198,7 @@ public class KilkariController extends BaseController {
                 request.getCallDisconnectReason(),
                 content);
 
-        inboxService.addInboxCallDetails(inboxCallDetails);
+        inboxService.addInboxCallDetails(inboxCallDetailRecord);
     }
 
     /**

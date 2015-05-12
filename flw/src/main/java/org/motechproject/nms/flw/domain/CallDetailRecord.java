@@ -11,15 +11,13 @@ import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Extension;
 import javax.jdo.annotations.Order;
 import javax.jdo.annotations.Persistent;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import java.util.Collections;
 import java.util.List;
 
 @Entity(tableName = "nms_call_detail_records")
 public class CallDetailRecord {
-
-    public static final int FIELD_SIZE_10 = 10;
-    public static final int FIELD_SIZE_15 = 15;
-    public static final int FIELD_SIZE_255 = 255;
 
     public CallDetailRecord() {
     }
@@ -31,19 +29,21 @@ public class CallDetailRecord {
     private Service service;
 
     @Field
-    @Column(length = FIELD_SIZE_10)
+    @Min(value = 1000000000L, message = "callingNumber must be 10 digits")
+    @Max(value = 9999999999L, message = "callingNumber must be 10 digits")
+    @Column(length = 10)
     private long callingNumber;
 
     @Field
-    @Column(length = FIELD_SIZE_15)
+    @Column(length = 15)
     private long callId;
 
     @Field
-    @Column(length = FIELD_SIZE_255)
+    @Column(length = 255)
     private String operator;
 
     @Field
-    @Column(length = FIELD_SIZE_255)
+    @Column(length = 255)
     private String circle;
 
     @Field
