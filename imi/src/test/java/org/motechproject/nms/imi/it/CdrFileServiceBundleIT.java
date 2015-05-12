@@ -1,6 +1,7 @@
 package org.motechproject.nms.imi.it;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.imi.domain.CallDetailRecord;
@@ -75,6 +76,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
     }
 
 
+    @Ignore
     @Test
     public void testValidRequest() throws IOException, NoSuchAlgorithmException {
         getLogger().debug("testValidRequest()");
