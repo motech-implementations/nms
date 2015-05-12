@@ -95,7 +95,7 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
                 languageDataService, circleLanguageDataService);
 
-        List<CallDetailRecord> cdrs = helper.makeCdrs(5);
+        List<CallDetailRecord> cdrs = helper.makeCdrs();
         helper.setCrds(cdrs);
         helper.makeCdrSummaryFile();
         helper.makeCdrDetailFile();

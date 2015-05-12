@@ -44,6 +44,7 @@ public class CdrFileServiceImpl implements CdrFileService {
 
     private static final String CDR_FILE_DIRECTORY = "imi.cdr_file_directory";
     private static final String RESCHEDULE_CALL = "nms.imi.reschedule_call";
+    private static final String DEACTIVATE_SUBSCRIPTION = "nms.imi.deactivate_subscription";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CdrFileServiceImpl.class);
 
@@ -133,11 +134,18 @@ public class CdrFileServiceImpl implements CdrFileService {
     }
 
 
-    //Sending a MOTECH message distributes the work to all nodes
     public void sendRescheduleMessage(CallDetailRecord cdr) {
         Map<String, Object> eventParams = new HashMap<>();
         eventParams.put("CDR", cdr);
         MotechEvent motechEvent = new MotechEvent(RESCHEDULE_CALL, eventParams);
+        eventRelay.sendEventMessage(motechEvent);
+    }
+
+
+    public void sendDeactivateMessage(CallDetailRecord cdr) {
+        Map<String, Object> eventParams = new HashMap<>();
+        eventParams.put("CDR", cdr);
+        MotechEvent motechEvent = new MotechEvent(DEACTIVATE_SUBSCRIPTION, eventParams);
         eventRelay.sendEventMessage(motechEvent);
     }
 
@@ -156,11 +164,13 @@ public class CdrFileServiceImpl implements CdrFileService {
 
         //todo: handle invalid data and continue processing the valid data
         //for now, and hopefully for, like, ever, only process the summary file
-        for (int lineNumber = 1; lineNumber < cdrs.size(); lineNumber++) {
+        for (int lineNumber = 1; lineNumber <= cdrs.size(); lineNumber++) {
             CallDetailRecord cdr = cdrs.get(lineNumber - 1);
             cdrDataService.create(cdr);
-            if (cdr.getFinalStatus() != CallStatus.SUCCESS) {
+            if (cdr.getFinalStatus() == CallStatus.FAILED) {
                 sendRescheduleMessage(cdr);
+            } else if (cdr.getFinalStatus() == CallStatus.REJECTED) {
+                sendDeactivateMessage(cdr);
             }
         }
 
