@@ -5,7 +5,7 @@ import org.motechproject.nms.imi.domain.StatusCode;
 
 import static junit.framework.Assert.assertEquals;
 
-public class StatusCodeTest {
+public class StatusCodeUnitTest {
 
     @Test
     public void testValue() {

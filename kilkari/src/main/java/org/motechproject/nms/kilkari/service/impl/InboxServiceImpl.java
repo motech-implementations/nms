@@ -2,13 +2,13 @@ package org.motechproject.nms.kilkari.service.impl;
 
 import org.joda.time.DateTime;
 import org.joda.time.Days;
-import org.motechproject.nms.kilkari.domain.InboxCallDetails;
+import org.motechproject.nms.kilkari.domain.InboxCallDetailRecord;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.exception.NoInboxForSubscriptionException;
-import org.motechproject.nms.kilkari.repository.InboxCallDetailsDataService;
+import org.motechproject.nms.kilkari.repository.InboxCallDetailRecordDataService;
 import org.motechproject.nms.kilkari.service.InboxService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,17 +21,17 @@ public class InboxServiceImpl implements InboxService {
 
     private static final int DAYS_IN_WEEK = 7;
 
-    private InboxCallDetailsDataService inboxCallDetailsDataService;
+    private InboxCallDetailRecordDataService inboxCallDetailRecordDataService;
 
     @Autowired
-    public InboxServiceImpl(InboxCallDetailsDataService inboxCallDetailsDataService) {
-        this.inboxCallDetailsDataService = inboxCallDetailsDataService;
+    public InboxServiceImpl(InboxCallDetailRecordDataService inboxCallDetailRecordDataService) {
+        this.inboxCallDetailRecordDataService = inboxCallDetailRecordDataService;
     }
 
     @Override
-    public long addInboxCallDetails(InboxCallDetails inboxCallDetails) {
-        InboxCallDetails newRecord = inboxCallDetailsDataService.create(inboxCallDetails);
-        return (long) inboxCallDetailsDataService.getDetachedField(newRecord, "id");
+    public long addInboxCallDetails(InboxCallDetailRecord inboxCallDetailRecord) {
+        InboxCallDetailRecord newRecord = inboxCallDetailRecordDataService.create(inboxCallDetailRecord);
+        return (long) inboxCallDetailRecordDataService.getDetachedField(newRecord, "id");
     }
 
     @Override

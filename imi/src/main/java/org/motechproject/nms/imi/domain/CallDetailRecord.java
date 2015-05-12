@@ -5,6 +5,9 @@ import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.annotations.Ignore;
 import org.motechproject.nms.props.domain.CallStatus;
 
+import javax.jdo.annotations.Column;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import java.io.Serializable;
 
 @Entity(tableName = "nms_imi_cdrs")
@@ -19,7 +22,10 @@ public class CallDetailRecord implements Serializable {
     private String serviceId;
 
     @Field
-    private String msisdn;
+    @Min(value = 1000000000L, message = "msisdn must be 10 digits")
+    @Max(value = 9999999999L, message = "msisdn must be 10 digits")
+    @Column(length = 10)
+    private Long msisdn;
 
     @Field
     private String cli;
@@ -56,7 +62,7 @@ public class CallDetailRecord implements Serializable {
     public CallDetailRecord() { }
 
     public CallDetailRecord(String requestId, String serviceId, // NO CHECKSTYLE More than 7 parameters
-            String msisdn, String cli, Integer priority, String callFlowUrl, String contentFileName,
+            Long msisdn, String cli, Integer priority, String callFlowUrl, String contentFileName,
             String weekId, String languageLocationCode, String circle, CallStatus finalStatus,
             Integer statusCode, Integer attempts) {
         this.requestId = requestId;
@@ -90,11 +96,11 @@ public class CallDetailRecord implements Serializable {
         this.serviceId = serviceId;
     }
 
-    public String getMsisdn() {
+    public Long getMsisdn() {
         return msisdn;
     }
 
-    public void setMsisdn(String msisdn) {
+    public void setMsisdn(Long msisdn) {
         this.msisdn = msisdn;
     }
 
@@ -192,7 +198,7 @@ public class CallDetailRecord implements Serializable {
         return new CallDetailRecord(
                 fields[i++], //requestId
                 fields[i++], //serviceId
-                fields[i++], //msisdn
+                Long.parseLong(fields[i++]), //msisdn
                 fields[i++], //cli
                 Integer.parseInt(fields[i++]), //priority - NOTE: may throw a NumberFormatException
                 fields[i++], //callFlowUrl
@@ -291,19 +297,19 @@ public class CallDetailRecord implements Serializable {
 
     @Override
     public int hashCode() {
-        int result = requestId.hashCode();
-        result = 31 * result + serviceId.hashCode();
-        result = 31 * result + msisdn.hashCode();
+        int result = (requestId != null ? requestId.hashCode() : 0);
+        result = 31 * result + (serviceId != null ? serviceId.hashCode() : 0);
+        result = 31 * result + (msisdn != null ? msisdn.hashCode() : 0);
         result = 31 * result + (cli != null ? cli.hashCode() : 0);
-        result = 31 * result + priority.hashCode();
+        result = 31 * result + (priority != null ? priority.hashCode() : 0);
         result = 31 * result + (callFlowUrl != null ? callFlowUrl.hashCode() : 0);
-        result = 31 * result + contentFileName.hashCode();
-        result = 31 * result + weekId.hashCode();
-        result = 31 * result + languageLocationCode.hashCode();
-        result = 31 * result + circle.hashCode();
-        result = 31 * result + finalStatus.hashCode();
-        result = 31 * result + statusCode.hashCode();
-        result = 31 * result + attempts.hashCode();
+        result = 31 * result + (contentFileName != null ? contentFileName.hashCode() : 0);
+        result = 31 * result + (weekId != null ? weekId.hashCode() : 0);
+        result = 31 * result + (languageLocationCode != null ? languageLocationCode.hashCode() : 0);
+        result = 31 * result + (circle != null ? circle.hashCode() : 0);
+        result = 31 * result + (finalStatus != null ? finalStatus.hashCode() : 0);
+        result = 31 * result + (statusCode != null ? statusCode.hashCode() : 0);
+        result = 31 * result + (attempts != null ? attempts.hashCode() : 0);
         return result;
     }
 

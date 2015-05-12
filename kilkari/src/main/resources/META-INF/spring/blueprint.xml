@@ -26,7 +26,7 @@
                     interface="org.motechproject.nms.kilkari.repository.SubscriptionPackDataService" />
 
     <osgi:reference id="inboxCallDetailsDataService"
-                    interface="org.motechproject.nms.kilkari.repository.InboxCallDetailsDataService" />
+                    interface="org.motechproject.nms.kilkari.repository.InboxCallDetailRecordDataService" />
 
     <osgi:reference id="inboxCallDataDataService"
                     interface="org.motechproject.nms.kilkari.repository.InboxCallDataDataService" />

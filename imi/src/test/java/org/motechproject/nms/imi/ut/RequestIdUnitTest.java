@@ -5,7 +5,7 @@ import org.motechproject.nms.imi.service.RequestId;
 
 import static junit.framework.Assert.assertEquals;
 
-public class RequestIdTest {
+public class RequestIdUnitTest {
 
     @Test
     public void testFromString() {

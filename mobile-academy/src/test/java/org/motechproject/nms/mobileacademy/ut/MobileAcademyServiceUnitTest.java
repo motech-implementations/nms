@@ -3,7 +3,6 @@ package org.motechproject.nms.mobileacademy.ut;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-
 import org.motechproject.mtraining.domain.Bookmark;
 import org.motechproject.mtraining.repository.BookmarkDataService;
 import org.motechproject.nms.mobileacademy.domain.Course;
@@ -14,12 +13,10 @@ import org.motechproject.nms.mobileacademy.service.impl.MobileAcademyServiceImpl
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
