@@ -1,6 +1,6 @@
 package org.motechproject.nms.kilkari.domain;
 
-import org.joda.time.LocalDate;
+import org.joda.time.DateTime;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.annotations.Ignore;
@@ -30,7 +30,7 @@ public class Subscription {
     private SubscriptionOrigin origin;
 
     @Field
-    private LocalDate startDate;
+    private DateTime startDate;
 
     @Field
     private DeactivationReason deactivationReason;
@@ -69,9 +69,9 @@ public class Subscription {
 
     public void setOrigin(SubscriptionOrigin origin) { this.origin = origin; }
 
-    public LocalDate getStartDate() { return startDate; }
+    public DateTime getStartDate() { return startDate; }
 
-    public void setStartDate(LocalDate startDate) { this.startDate = startDate; }
+    public void setStartDate(DateTime startDate) { this.startDate = startDate; }
 
     public DeactivationReason getDeactivationReason() { return deactivationReason; }
 
