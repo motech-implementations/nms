@@ -3,8 +3,10 @@ package org.motechproject.nms.flw.osgi;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.flw.domain.WhitelistEntry;
+import org.motechproject.nms.flw.domain.WhitelistState;
 import org.motechproject.nms.flw.repository.ServiceUsageCapDataService;
 import org.motechproject.nms.flw.repository.WhitelistEntryDataService;
+import org.motechproject.nms.flw.repository.WhitelistStateDataService;
 import org.motechproject.nms.flw.service.WhitelistService;
 import org.motechproject.nms.region.location.domain.State;
 import org.motechproject.nms.region.location.repository.StateDataService;
@@ -27,14 +29,17 @@ public class WhiteListServiceBundleIT extends BasePaxIT {
     public static final Long WHITELIST_CONTACT_NUMBER = 1111111111l;
     public static final Long NOT_WHITELIST_CONTACT_NUMBER = 9000000000l;
 
-    private State whitelist;
-    private State noWhitelist;
+    private State whitelistState;
+    private State nonWhitelistState;
 
     @Inject
     private ServiceUsageCapDataService serviceUsageCapDataService;
 
     @Inject
     private WhitelistEntryDataService whitelistEntryDataService;
+
+    @Inject
+    private WhitelistStateDataService whitelistStateDataService;
 
     @Inject
     private StateDataService stateDataService;
@@ -45,16 +50,32 @@ public class WhiteListServiceBundleIT extends BasePaxIT {
     private void setupData() {
         whitelistEntryDataService.deleteAll();
         serviceUsageCapDataService.deleteAll();
+        whitelistStateDataService.deleteAll();
         stateDataService.deleteAll();
 
-        whitelist = new State("Whitelist", 1l);
-        stateDataService.create(whitelist);
+        whitelistState = new State("New Jersey", 1l);
+        stateDataService.create(whitelistState);
 
-        noWhitelist = new State("No Whitelist", 2l);
-        stateDataService.create(noWhitelist);
+        whitelistStateDataService.create(new WhitelistState(whitelistState));
 
-        WhitelistEntry entry = new WhitelistEntry(WHITELIST_CONTACT_NUMBER, whitelist);
+        nonWhitelistState = new State("Washington", 2l);
+        stateDataService.create(nonWhitelistState);
+
+        WhitelistEntry entry = new WhitelistEntry(WHITELIST_CONTACT_NUMBER, whitelistState);
         whitelistEntryDataService.create(entry);
+    }
+
+    // Test with record in whitelist entry for a state that isn't in whitelist table
+    // In this test the whitelist isn't turned on for that state so the call should be allowed
+    @Test
+    public void testRecordInWhitelistEntryButStateNotWhitelisted() throws Exception {
+        setupData();
+
+        WhitelistEntry entry = new WhitelistEntry(NOT_WHITELIST_CONTACT_NUMBER, nonWhitelistState);
+        whitelistEntryDataService.create(entry);
+
+        boolean result = whitelistService.numberWhitelistedForState(nonWhitelistState, NOT_WHITELIST_CONTACT_NUMBER);
+        assertTrue(result);
     }
 
     // Test with null state
@@ -71,7 +92,7 @@ public class WhiteListServiceBundleIT extends BasePaxIT {
     public void testNullContactNumber() throws Exception {
         setupData();
 
-        boolean result = whitelistService.numberWhitelistedForState(whitelist, null);
+        boolean result = whitelistService.numberWhitelistedForState(whitelistState, null);
         assertTrue(result);
     }
 
@@ -89,7 +110,7 @@ public class WhiteListServiceBundleIT extends BasePaxIT {
     public void testStateWithoutWhitelist() throws Exception {
         setupData();
 
-        boolean result = whitelistService.numberWhitelistedForState(noWhitelist, WHITELIST_CONTACT_NUMBER);
+        boolean result = whitelistService.numberWhitelistedForState(nonWhitelistState, WHITELIST_CONTACT_NUMBER);
         assertTrue(result);
     }
 
@@ -98,7 +119,7 @@ public class WhiteListServiceBundleIT extends BasePaxIT {
     public void testStateWithWhitelistValidNumber() throws Exception {
         setupData();
 
-        boolean result = whitelistService.numberWhitelistedForState(whitelist, WHITELIST_CONTACT_NUMBER);
+        boolean result = whitelistService.numberWhitelistedForState(whitelistState, WHITELIST_CONTACT_NUMBER);
         assertTrue(result);
     }
 
@@ -107,7 +128,7 @@ public class WhiteListServiceBundleIT extends BasePaxIT {
     public void testStateWithWhitelistInvalidNumber() throws Exception {
         setupData();
 
-        boolean result = whitelistService.numberWhitelistedForState(whitelist, NOT_WHITELIST_CONTACT_NUMBER);
+        boolean result = whitelistService.numberWhitelistedForState(whitelistState, NOT_WHITELIST_CONTACT_NUMBER);
         assertFalse(result);
     }
 }
