@@ -3,6 +3,10 @@ package org.motechproject.nms.mobileacademy.domain;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 
+import javax.jdo.annotations.Column;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
+
 /**
  * Tracks the completion record for a given calling number
  */
@@ -10,6 +14,9 @@ import org.motechproject.mds.annotations.Field;
 public class CompletionRecord {
 
     @Field
+    @Min(value = 1000000000L, message = "callingNumber must be 10 digits")
+    @Max(value = 9999999999L, message = "callingNumber must be 10 digits")
+    @Column(length = 10)
     private long callingNumber;
 
     @Field

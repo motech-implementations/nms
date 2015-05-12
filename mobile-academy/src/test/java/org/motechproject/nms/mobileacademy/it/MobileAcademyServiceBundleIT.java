@@ -7,6 +7,7 @@ import org.motechproject.mtraining.domain.Bookmark;
 import org.motechproject.mtraining.repository.BookmarkDataService;
 import org.motechproject.nms.mobileacademy.domain.Course;
 import org.motechproject.nms.mobileacademy.dto.MaBookmark;
+import org.motechproject.nms.mobileacademy.repository.CompletionRecordDataService;
 import org.motechproject.nms.mobileacademy.repository.CourseDataService;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
 import org.motechproject.testing.osgi.BasePaxIT;
@@ -124,9 +125,9 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     @Test
     public void testSetLastBookmark() {
         bookmarkDataService.deleteAll();
-        MaBookmark bookmark = new MaBookmark(556L, 666L, null, null);
+        MaBookmark bookmark = new MaBookmark(9876543210L, 666L, null, null);
         maService.setBookmark(bookmark);
-        List<Bookmark> added = bookmarkDataService.findBookmarksForUser("556");
+        List<Bookmark> added = bookmarkDataService.findBookmarksForUser("9876543210");
         assertTrue(added.size() == 1);
 
         bookmark.setBookmark("Chapter11_Quiz");
@@ -141,20 +142,43 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     @Test
     public void testSetGetLastBookmark() {
         bookmarkDataService.deleteAll();
-        MaBookmark bookmark = new MaBookmark(556L, 666L, null, null);
+        MaBookmark bookmark = new MaBookmark(9987654321L, 666L, null, null);
         maService.setBookmark(bookmark);
-        List<Bookmark> added = bookmarkDataService.findBookmarksForUser("556");
+        List<Bookmark> added = bookmarkDataService.findBookmarksForUser("9987654321");
         assertTrue(added.size() == 1);
 
         bookmark.setBookmark("Chapter11_Quiz");
         Map<String, Integer> scores = new HashMap<>();
         for (int i = 1; i < 12; i++) {
-            scores.put(String.valueOf(i), ((int) (Math.random() * 100)) % 5);
+            scores.put(String.valueOf(i), 1);
         }
         bookmark.setScoresByChapter(scores);
         maService.setBookmark(bookmark);
 
-        MaBookmark retrieved = maService.getBookmark(556L, 666L);
+        MaBookmark retrieved = maService.getBookmark(9987654321L, 666L);
+        assertNotNull(retrieved.getCallingNumber());
+        assertNotNull(retrieved.getCallId());
+        assertNotNull(retrieved.getBookmark());
+        assertNotNull(retrieved.getScoresByChapter());
+    }
+
+    @Test
+    public void testSetGetResetBookmark() {
+        bookmarkDataService.deleteAll();
+        MaBookmark bookmark = new MaBookmark(9987654321L, 666L, null, null);
+        maService.setBookmark(bookmark);
+        List<Bookmark> added = bookmarkDataService.findBookmarksForUser("9987654321");
+        assertTrue(added.size() == 1);
+
+        bookmark.setBookmark("Chapter11_Quiz");
+        Map<String, Integer> scores = new HashMap<>();
+        for (int i = 1; i < 12; i++) {
+            scores.put(String.valueOf(i), 4);
+        }
+        bookmark.setScoresByChapter(scores);
+        maService.setBookmark(bookmark);
+
+        MaBookmark retrieved = maService.getBookmark(9987654321L, 666L);
         assertNotNull(retrieved.getCallingNumber());
         assertNotNull(retrieved.getCallId());
         assertNull(retrieved.getBookmark());
