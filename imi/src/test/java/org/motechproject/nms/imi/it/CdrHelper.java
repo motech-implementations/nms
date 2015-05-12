@@ -224,7 +224,7 @@ public class CdrHelper {
 
     public void makeCdrSummaryFile() throws IOException {
         File dstFile = new File(makeCdrDirectory(), cdrSummaryFileName());
-        LOGGER.info("Creating summary file {}...", dstFile);
+        LOGGER.debug("Creating summary file {}...", dstFile);
         BufferedWriter writer = new BufferedWriter(new FileWriter(dstFile));
         String s;
         for(CallDetailRecord cdr : cdrs) {
@@ -238,7 +238,7 @@ public class CdrHelper {
 
     public void makeCdrDetailFile() throws IOException {
         File dstFile = new File(makeCdrDirectory(), cdrDetailFileName());
-        LOGGER.info("Creating detail file {}...", dstFile);
+        LOGGER.debug("Creating detail file {}...", dstFile);
         BufferedWriter writer = new BufferedWriter(new FileWriter(dstFile));
 
         //todo:...

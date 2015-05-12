@@ -44,7 +44,7 @@ public class SubscriptionDeactivator {
 
     @MotechListener(subjects = { DEACTIVATE_SUBSCRIPTION })
     public void deactivateSubscription(MotechEvent event) {
-        LOGGER.info("deactivateSubscription() is handling {}", event.toString());
+        LOGGER.debug("deactivateSubscription() is handling {}", event.toString());
 
         CallDetailRecord cdr = (CallDetailRecord) event.getParameters().get("CDR");
         RequestId requestId = RequestId.fromString(cdr.getRequestId());
@@ -61,14 +61,14 @@ public class SubscriptionDeactivator {
         //Delete the callRetry entry, if any
         CallRetry callRetry = callRetryDataService.findBySubscriptionId(requestId.getSubscriptionId());
         if (callRetry != null) {
-            LOGGER.info("deleting CallRetry for {}", requestId.getSubscriptionId());
+            LOGGER.debug("deleting CallRetry for {}", requestId.getSubscriptionId());
             callRetryDataService.delete(callRetry);
         } else {
-            LOGGER.info("no need to delete CallRetry for {}, no record exists", requestId.getSubscriptionId());
+            LOGGER.debug("no need to delete CallRetry for {}, no record exists", requestId.getSubscriptionId());
         }
 
         //Deactivate the subscription
-        LOGGER.info("deactivating subscription {}", requestId.getSubscriptionId());
+        LOGGER.debug("deactivating subscription {}", requestId.getSubscriptionId());
         subscriptionService.deactivateSubscription(subscription, DeactivationReason.DO_NOT_DISTURB);
     }
 }

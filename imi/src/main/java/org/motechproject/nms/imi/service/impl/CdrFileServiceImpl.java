@@ -128,7 +128,7 @@ public class CdrFileServiceImpl implements CdrFileService {
             throw new IllegalStateException(error);
         }
 
-        LOGGER.info("Successfully read {} cdrSummary lines", lines.size());
+        LOGGER.debug("Successfully read {} cdrSummary lines", lines.size());
 
         return lines;
     }
