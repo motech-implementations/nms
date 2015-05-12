@@ -8,7 +8,7 @@ import org.motechproject.nms.kilkari.domain.InboxCallData;
 import org.motechproject.nms.kilkari.domain.InboxCallDetails;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
-import org.motechproject.nms.kilkari.domain.SubscriptionMode;
+import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.repository.InboxCallDataDataService;
@@ -81,11 +81,11 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         Subscriber subscriber2 = subscriberDataService.create(new Subscriber(2000000000L));
 
         subscriptionService.createSubscription(subscriber1.getCallingNumber(), gLanguage, gPack1,
-                SubscriptionMode.IVR);
+                SubscriptionOrigin.IVR);
         subscriptionService.createSubscription(subscriber2.getCallingNumber(), gLanguage, gPack1,
-                SubscriptionMode.IVR);
+                SubscriptionOrigin.IVR);
         subscriptionService.createSubscription(subscriber2.getCallingNumber(), gLanguage, gPack2,
-                SubscriptionMode.IVR);
+                SubscriptionOrigin.IVR);
     }
 
 
@@ -123,9 +123,9 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         subscriberService.add(subscriber);
 
         subscriptionService.createSubscription(subscriber.getCallingNumber(), ta, gPack1,
-                SubscriptionMode.IVR);
+                SubscriptionOrigin.IVR);
         subscriptionService.createSubscription(subscriber.getCallingNumber(), ta, gPack2,
-                SubscriptionMode.IVR);
+                SubscriptionOrigin.IVR);
 
         subscriber = subscriberService.getSubscriber(1000000000L);
         Set<Subscription> subscriptions = subscriber.getSubscriptions();
@@ -196,7 +196,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         Subscriber s = subscriberService.getSubscriber(1111111111L);
         assertNull(s);
 
-        subscriptionService.createSubscription(1111111111L, ta, gPack1, SubscriptionMode.IVR);
+        subscriptionService.createSubscription(1111111111L, ta, gPack1, SubscriptionOrigin.IVR);
 
         Subscriber subscriber = subscriberService.getSubscriber(1111111111L);
         assertNotNull(subscriber);
@@ -219,10 +219,10 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         Subscriber s = subscriberService.getSubscriber(1111111111L);
         assertNull(s);
 
-        subscriptionService.createSubscription(1111111111L, ta, gPack1, SubscriptionMode.IVR);
+        subscriptionService.createSubscription(1111111111L, ta, gPack1, SubscriptionOrigin.IVR);
 
         // Since the user exists we will not change their language
-        subscriptionService.createSubscription(1111111111L, en, gPack1, SubscriptionMode.IVR);
+        subscriptionService.createSubscription(1111111111L, en, gPack1, SubscriptionOrigin.IVR);
 
         Subscriber subscriber = subscriberService.getSubscriber(1111111111L);
         assertNotNull(subscriber);
@@ -238,15 +238,15 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         setupData();
 
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
-        mctsSubscriber.setDateOfBirth(LocalDate.now().minusDays(14));
+        mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(14));
         subscriberDataService.create(mctsSubscriber);
 
-        subscriptionService.createSubscription(9999911122L, gLanguage, gPack1, SubscriptionMode.MCTS_IMPORT);
+        subscriptionService.createSubscription(9999911122L, gLanguage, gPack1, SubscriptionOrigin.MCTS_IMPORT);
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
 
         // attempt to create subscription to the same pack -- should fail
-        subscriptionService.createSubscription(9999911122L, gLanguage, gPack1, SubscriptionMode.MCTS_IMPORT);
+        subscriptionService.createSubscription(9999911122L, gLanguage, gPack1, SubscriptionOrigin.MCTS_IMPORT);
 
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
@@ -257,15 +257,15 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         setupData();
 
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
-        mctsSubscriber.setLastMenstrualPeriod(LocalDate.now().minusDays(28));
+        mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(28));
         subscriberDataService.create(mctsSubscriber);
 
-        subscriptionService.createSubscription(9999911122L, gLanguage, gPack2, SubscriptionMode.MCTS_IMPORT);
+        subscriptionService.createSubscription(9999911122L, gLanguage, gPack2, SubscriptionOrigin.MCTS_IMPORT);
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
 
         // attempt to create subscription to the same pack -- should fail
-        subscriptionService.createSubscription(9999911122L, gLanguage, gPack2, SubscriptionMode.MCTS_IMPORT);
+        subscriptionService.createSubscription(9999911122L, gLanguage, gPack2, SubscriptionOrigin.MCTS_IMPORT);
 
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
@@ -276,17 +276,17 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         setupData();
 
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
-        mctsSubscriber.setLastMenstrualPeriod(LocalDate.now().minusDays(28));
+        mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(28));
         subscriberDataService.create(mctsSubscriber);
 
-        subscriptionService.createSubscription(9999911122L, gLanguage, gPack2, SubscriptionMode.MCTS_IMPORT);
+        subscriptionService.createSubscription(9999911122L, gLanguage, gPack2, SubscriptionOrigin.MCTS_IMPORT);
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         Subscription pregnancySubscription = mctsSubscriber.getActiveSubscriptions().iterator().next();
         pregnancySubscription.setStatus(SubscriptionStatus.DEACTIVATED);
         subscriptionDataService.update(pregnancySubscription);
 
         // attempt to create subscription to the same pack -- should succeed
-        subscriptionService.createSubscription(9999911122L, gLanguage, gPack2, SubscriptionMode.MCTS_IMPORT);
+        subscriptionService.createSubscription(9999911122L, gLanguage, gPack2, SubscriptionOrigin.MCTS_IMPORT);
 
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
@@ -297,21 +297,21 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         setupData();
 
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
-        mctsSubscriber.setDateOfBirth(LocalDate.now().minusDays(14));
+        mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(14));
         subscriberDataService.create(mctsSubscriber);
 
-        subscriptionService.createSubscription(9999911122L, gLanguage, gPack1, SubscriptionMode.MCTS_IMPORT);
+        subscriptionService.createSubscription(9999911122L, gLanguage, gPack1, SubscriptionOrigin.MCTS_IMPORT);
 
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
 
         // due to subscription rules detailed in #157, we need to clear out the DOB and set an LMP in order to
         // create a second subscription for this MCTS subscriber
         mctsSubscriber.setDateOfBirth(null);
-        mctsSubscriber.setLastMenstrualPeriod(LocalDate.now().minusDays(100));
+        mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(100));
         subscriberDataService.update(mctsSubscriber);
 
         // attempt to create subscription to a different pack
-        subscriptionService.createSubscription(9999911122L, gLanguage, gPack2, SubscriptionMode.MCTS_IMPORT);
+        subscriptionService.createSubscription(9999911122L, gLanguage, gPack2, SubscriptionOrigin.MCTS_IMPORT);
 
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         assertEquals(2, mctsSubscriber.getActiveSubscriptions().size());
@@ -320,65 +320,66 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     @Test
     public void testChangeDOB() {
         setupData();
+        DateTime now = DateTime.now();
 
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
-        mctsSubscriber.setDateOfBirth(LocalDate.now().minusDays(14));
+        mctsSubscriber.setDateOfBirth(now.minusDays(14));
         subscriberDataService.create(mctsSubscriber);
 
-        subscriptionService.createSubscription(9999911122L, gLanguage, gPack1, SubscriptionMode.MCTS_IMPORT);
+        subscriptionService.createSubscription(9999911122L, gLanguage, gPack1, SubscriptionOrigin.MCTS_IMPORT);
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
 
         Subscription subscription = mctsSubscriber.getSubscriptions().iterator().next();
 
-        assertEquals(LocalDate.now().minusDays(14), subscription.getStartDate());
+        assertEquals(now.minusDays(14), subscription.getStartDate());
         assert(subscription.getStatus() == SubscriptionStatus.ACTIVE);
 
-        mctsSubscriber.setDateOfBirth(LocalDate.now().minusDays(100));
+        mctsSubscriber.setDateOfBirth(now.minusDays(100));
         subscriberService.update(mctsSubscriber);
 
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         subscription = mctsSubscriber.getSubscriptions().iterator().next();
 
-        assertEquals(LocalDate.now().minusDays(100), subscription.getStartDate());
+        assertEquals(now.minusDays(100), subscription.getStartDate());
         assert(subscription.getStatus() == SubscriptionStatus.ACTIVE);
     }
 
     @Test
     public void testChangeLMP() {
         setupData();
+        DateTime now = DateTime.now();
 
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
-        mctsSubscriber.setLastMenstrualPeriod(LocalDate.now().minusDays(180));
+        mctsSubscriber.setLastMenstrualPeriod(now.minusDays(180));
 
         subscriberDataService.create(mctsSubscriber);
 
-        subscriptionService.createSubscription(9999911122L, gLanguage, gPack2, SubscriptionMode.MCTS_IMPORT);
+        subscriptionService.createSubscription(9999911122L, gLanguage, gPack2, SubscriptionOrigin.MCTS_IMPORT);
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
 
         Subscription subscription = mctsSubscriber.getSubscriptions().iterator().next();
 
-        assertEquals(LocalDate.now().minusDays(90), subscription.getStartDate());
+        assertEquals(now.minusDays(90), subscription.getStartDate());
         assert(subscription.getStatus() == SubscriptionStatus.ACTIVE);
 
-        mctsSubscriber.setLastMenstrualPeriod(LocalDate.now().minusDays(270));
+        mctsSubscriber.setLastMenstrualPeriod(now.minusDays(270));
         subscriberService.update(mctsSubscriber);
 
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         subscription = mctsSubscriber.getSubscriptions().iterator().next();
 
-        assertEquals(LocalDate.now().minusDays(180), subscription.getStartDate());
+        assertEquals(now.minusDays(180), subscription.getStartDate());
         assert(subscription.getStatus() == SubscriptionStatus.ACTIVE);
 
-        mctsSubscriber.setLastMenstrualPeriod(LocalDate.now().minusDays(1000));
+        mctsSubscriber.setLastMenstrualPeriod(now.minusDays(1000));
         subscriberService.update(mctsSubscriber);
 
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         subscription = mctsSubscriber.getSubscriptions().iterator().next();
 
-        assertEquals(LocalDate.now().minusDays(910), subscription.getStartDate());
+        assertEquals(now.minusDays(910), subscription.getStartDate());
         assert(subscription.getStatus() == SubscriptionStatus.COMPLETED);
 
     }
-
 
 }

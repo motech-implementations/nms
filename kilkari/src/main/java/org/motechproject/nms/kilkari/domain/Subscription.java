@@ -1,6 +1,6 @@
 package org.motechproject.nms.kilkari.domain;
 
-import org.joda.time.LocalDate;
+import org.joda.time.DateTime;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.annotations.Ignore;
@@ -27,19 +27,19 @@ public class Subscription {
     private SubscriptionStatus status;
 
     @Field
-    private SubscriptionMode mode;
+    private SubscriptionOrigin origin;
 
     @Field
-    private LocalDate startDate;
+    private DateTime startDate;
 
     @Field
     private DeactivationReason deactivationReason;
 
-    public Subscription(Subscriber subscriber, SubscriptionPack subscriptionPack, SubscriptionMode mode) {
+    public Subscription(Subscriber subscriber, SubscriptionPack subscriptionPack, SubscriptionOrigin origin) {
         this.subscriptionId = UUID.randomUUID().toString();
         this.subscriber = subscriber;
         this.subscriptionPack = subscriptionPack;
-        this.mode = mode;
+        this.origin = origin;
         this.subscriber.getSubscriptions().add(this);
     }
 
@@ -65,13 +65,13 @@ public class Subscription {
 
     public void setStatus(SubscriptionStatus status) { this.status = status; }
 
-    public SubscriptionMode getMode() { return mode; }
+    public SubscriptionOrigin getOrigin() { return origin; }
 
-    public void setMode(SubscriptionMode mode) { this.mode = mode; }
+    public void setOrigin(SubscriptionOrigin origin) { this.origin = origin; }
 
-    public LocalDate getStartDate() { return startDate; }
+    public DateTime getStartDate() { return startDate; }
 
-    public void setStartDate(LocalDate startDate) { this.startDate = startDate; }
+    public void setStartDate(DateTime startDate) { this.startDate = startDate; }
 
     public DeactivationReason getDeactivationReason() { return deactivationReason; }
 
@@ -115,7 +115,7 @@ public class Subscription {
                 "subscriptionId='" + subscriptionId + '\'' +
                 ", subscriptionPack=" + subscriptionPack +
                 ", status=" + status +
-                ", mode=" + mode +
+                ", origin=" + origin +
                 ", startDate=" + startDate +
                 '}';
     }

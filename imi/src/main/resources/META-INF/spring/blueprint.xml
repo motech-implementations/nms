@@ -15,12 +15,9 @@
 
     <osgi:service ref="settingsService" interface="org.motechproject.nms.imi.service.SettingsService" />
 
-    <osgi:service ref="reschedulerService" interface="org.motechproject.nms.imi.service.ReschedulerService" />
 
-
-
-    <osgi:reference id="subscriptionDataService"
-                    interface="org.motechproject.nms.kilkari.repository.SubscriptionDataService" />
+    <osgi:reference id="subscriptionService"
+                    interface="org.motechproject.nms.kilkari.service.SubscriptionService" />
 
     <osgi:reference id="subscriptionPackDataService"
                     interface="org.motechproject.nms.kilkari.repository.SubscriptionPackDataService" />

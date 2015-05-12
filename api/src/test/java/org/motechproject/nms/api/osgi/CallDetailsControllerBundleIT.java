@@ -29,10 +29,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 
 
@@ -178,7 +175,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
     }
     
     private String createContentJson(boolean includeType, String type,
-                                     boolean includeMkCardNumber, String mkCardNumber,
+                                     boolean includeMkCardCode, String mkCardCode,
                                      boolean includeContentName, String contentName,
                                      boolean includeContentFileName, String contentFileName,
                                      boolean includeStartTime, Long startTime,
@@ -192,8 +189,8 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
             array.add(String.format("\"type\": \"%s\"", type));
         }
 
-        if (includeMkCardNumber) {
-            array.add(String.format("\"mkCardNumber\": \"%s\"", mkCardNumber));
+        if (includeMkCardCode) {
+            array.add(String.format("\"mkCardCode\": \"%s\"", mkCardCode));
         }
 
         if (includeContentName) {
@@ -236,7 +233,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
 
         ArrayList<String> array = new ArrayList<>();
         array.add(createContentJson(false, null,                   // type
-                true, "a",                     // mkCardNumber
+                true, "a",                     // mkCardCode
                 true, "YellowFever",           // contentName
                 true, "Yellowfever.wav",       // contentFile
                 true, 1200000000l,             // startTime
@@ -244,7 +241,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
                 false, null,                   // completionFlag
                 false, null));                 // correctAnswerEntered
         array.add(createContentJson(false, null,                   // type
-                true, "b",                     // mkCardNumber
+                true, "b",                     // mkCardCode
                 true, "Malaria",               // contentName
                 true, "Malaria.wav",           // contentFile
                 true, 1200000000l,             // startTime
@@ -293,7 +290,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
 
         ArrayList<String> array = new ArrayList<>();
         array.add(createContentJson(/* type */ true, "lesson",
-                /* mkCardNumber */ false, null,
+                /* mkCardCode */ false, null,
                 /* contentName */ true, "Chapter-01lesson-04",
                 /* contentFile */ true, "ch1_l4.wav",
                 /* startTime */ true, 1200000000l,
@@ -301,7 +298,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
                 /* completionFlag */ true, true,
                 /* correctAnswerEntered */ true, true));
         array.add(createContentJson(/* type */ true, "question",
-                /* mkCardNumber */ false, null,
+                /* mkCardCode */ false, null,
                 /* contentName */ true, "chapter-01question-01",
                 /* contentFile */ true, "ch1_q1.wav",
                 /* startTime */ true, 1200000000l,
@@ -331,9 +328,9 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         assertNull(cdr.getWelcomePrompt());
         assertEquals(2, cdr.getContent().size());
         assertEquals("Chapter-01lesson-04", cdr.getContent().get(0).getContentName());
-        assertNull(cdr.getContent().get(0).getMobileKunjiCardNumber());
+        assertNull(cdr.getContent().get(0).getMobileKunjiCardCode());
         assertEquals("chapter-01question-01", cdr.getContent().get(1).getContentName());
-        assertNull(cdr.getContent().get(1).getMobileKunjiCardNumber());
+        assertNull(cdr.getContent().get(1).getMobileKunjiCardCode());
         assertEquals(flw.getId(), cdr.getFrontLineWorker().getId());
     }
 
@@ -614,7 +611,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
     public void testCallDetailsNullContentType() throws IOException, InterruptedException {
         ArrayList<String> array = new ArrayList<>();
         array.add(createContentJson(/* type */ false, null,
-                /* mkCardNumber */ false, null,
+                /* mkCardCode */ false, null,
                 /* contentName */ true, "Chapter-01lesson-04",
                 /* contentFile */ true, "ch1_l4.wav",
                 /* startTime */ true, 1200000000l,
@@ -622,7 +619,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
                 /* completionFlag */ true, true,
                 /* correctAnswerEntered */ true, true));
         array.add(createContentJson(/* type */ true, "question",
-                /* mkCardNumber */ false, null,
+                /* mkCardCode */ false, null,
                 /* contentName */ true, "chapter-01question-01",
                 /* contentFile */ true, "ch1_q1.wav",
                 /* startTime */ true, 1200000000l,
@@ -652,7 +649,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
     public void testCallDetailsNullContentCompletionFlag() throws IOException, InterruptedException {
         ArrayList<String> array = new ArrayList<>();
         array.add(createContentJson(/* type */ true, "lesson",
-                /* mkCardNumber */ false, null,
+                /* mkCardCode */ false, null,
                 /* contentName */ true, "Chapter-01lesson-04",
                 /* contentFile */ true, "ch1_l4.wav",
                 /* startTime */ true, 1200000000l,
@@ -660,7 +657,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
                 /* completionFlag */ false, null,
                 /* correctAnswerEntered */ false, null));
         array.add(createContentJson(/* type */ true, "question",
-                /* mkCardNumber */ false, null,
+                /* mkCardCode */ false, null,
                 /* contentName */ true, "chapter-01question-01",
                 /* contentFile */ true, "ch1_q1.wav",
                 /* startTime */ true, 1200000000l,
@@ -688,7 +685,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
 
     /*****************************************************************************************************************
      Test the existence and validity of elements specific to MK
-     welcomeMessagePromptFlag, content.mkCardNumber
+     welcomeMessagePromptFlag, content.mkCardCode
      *****************************************************************************************************************/
     @Test
     public void testCallDetailsNullWelcomeMessagePromptFlag() throws IOException, InterruptedException {
@@ -715,7 +712,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
     public void testCallDetailsNullContentMkCardNumber() throws IOException, InterruptedException {
         ArrayList<String> array = new ArrayList<>();
         array.add(createContentJson(/* type */ false, null,
-                /* mkCardNumber */ false, null,
+                /* mkCardCode */ false, null,
                 /* contentName */ true, "Chapter-01lesson-04",
                 /* contentFile */ true, "ch1_l4.wav",
                 /* startTime */ true, 1200000000l,
@@ -737,7 +734,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
                 /* content */ true, Joiner.on(",").join(array));
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
-                "{\"failureReason\":\"<mkCardNumber: Not Present>\"}",
+                "{\"failureReason\":\"<mkCardCode: Not Present>\"}",
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 

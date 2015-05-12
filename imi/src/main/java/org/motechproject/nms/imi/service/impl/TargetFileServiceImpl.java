@@ -19,22 +19,22 @@ import org.motechproject.alerts.domain.AlertType;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.annotations.MotechListener;
 import org.motechproject.mds.query.QueryParams;
-import org.motechproject.nms.imi.repository.AuditDataService;
-import org.motechproject.nms.kilkari.domain.Subscriber;
-import org.motechproject.nms.kilkari.domain.Subscription;
-import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
-import org.motechproject.nms.kilkari.repository.SubscriberDataService;
-import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
-import org.motechproject.nms.region.language.domain.Language;
 import org.motechproject.nms.imi.domain.AuditRecord;
 import org.motechproject.nms.imi.domain.CallRetry;
-import org.motechproject.nms.imi.domain.DayOfTheWeek;
 import org.motechproject.nms.imi.domain.FileProcessedStatus;
 import org.motechproject.nms.imi.domain.FileType;
+import org.motechproject.nms.imi.repository.AuditDataService;
 import org.motechproject.nms.imi.repository.CallRetryDataService;
+import org.motechproject.nms.imi.service.RequestId;
 import org.motechproject.nms.imi.service.TargetFileNotification;
 import org.motechproject.nms.imi.service.TargetFileService;
 import org.motechproject.nms.imi.web.contract.FileProcessedStatusRequest;
+import org.motechproject.nms.kilkari.domain.Subscriber;
+import org.motechproject.nms.kilkari.domain.Subscription;
+import org.motechproject.nms.kilkari.repository.SubscriberDataService;
+import org.motechproject.nms.kilkari.service.SubscriptionService;
+import org.motechproject.nms.props.domain.DayOfTheWeek;
+import org.motechproject.nms.region.language.domain.Language;
 import org.motechproject.scheduler.contract.RepeatingSchedulableJob;
 import org.motechproject.scheduler.service.MotechSchedulerService;
 import org.motechproject.server.config.SettingsFacade;
@@ -72,7 +72,7 @@ public class TargetFileServiceImpl implements TargetFileService {
     private SettingsFacade settingsFacade;
     private MotechSchedulerService schedulerService;
     private AlertService alertService;
-    private SubscriptionDataService subscriptionDataService;
+    private SubscriptionService subscriptionService;
     private SubscriberDataService subscriberDataService;
     private CallRetryDataService callRetryDataService;
     private AuditDataService auditDataService;
@@ -119,14 +119,14 @@ public class TargetFileServiceImpl implements TargetFileService {
     @Autowired
     public TargetFileServiceImpl(@Qualifier("imiSettings") SettingsFacade settingsFacade,
                                  MotechSchedulerService schedulerService, AlertService alertService,
-                                 SubscriptionDataService subscriptionDataService,
+                                 SubscriptionService subscriptionService,
                                  CallRetryDataService callRetryDataService,
                                  SubscriberDataService subscriberDataService,
                                  AuditDataService auditDataService) {
         this.schedulerService = schedulerService;
         this.settingsFacade = settingsFacade;
         this.alertService = alertService;
-        this.subscriptionDataService = subscriptionDataService;
+        this.subscriptionService = subscriptionService;
         this.callRetryDataService = callRetryDataService;
         this.subscriberDataService = subscriberDataService;
         this.auditDataService = auditDataService;
@@ -171,8 +171,8 @@ public class TargetFileServiceImpl implements TargetFileService {
 
     private void writeSubscriptionRow(String requestId, String serviceId, // NO CHECKSTYLE More than 7 parameters
                                       String msisdn, String priority,  String callFlowUrl, String contentFileName,
-                                      int weekId, String languageLocationCode, String circle, String subscriptionMode,
-                                      OutputStreamWriter writer) throws IOException {
+                                      int weekId, String languageLocationCode, String circle,
+                                      String subscriptionOrigin, OutputStreamWriter writer) throws IOException {
         /*
          * #1 RequestId
          *
@@ -200,8 +200,8 @@ public class TargetFileServiceImpl implements TargetFileService {
         /*
          * #4 Cli
          *
-         * 10 Digit number to be displayed as CLI for the call. If left blank, the default CLI of the service shall be
-         * picked up.
+         * 10 Digit number to be displayed as CLI for the call. If left blank, the default CLI of the service
+         * shall be picked up.
          */
         writer.write(""); // No idea why/what that field is: let's write nothing
         writer.write(",");
@@ -263,21 +263,82 @@ public class TargetFileServiceImpl implements TargetFileService {
          *
          * I for IVR origin, M for MCTS origin
          */
-        writer.write(subscriptionMode);
+        writer.write(subscriptionOrigin);
 
         writer.write("\n");
     }
 
 
-    /*
-     * The RequestId field that uniquely identifies an individual OBD record is a composite key made up of
-     * the subscriptionId and the targetFile identifier.
-     */
-    private String requestId(String fileIdentifier, String subscriptionId) {
-        return String.format("%s-%s", fileIdentifier, subscriptionId);
+    private int generateFreshCalls(int maxQueryBlock, String imiServiceId, String callFlowUrl,
+                                   String fileIdentifier, OutputStreamWriter writer) throws IOException {
+
+        int recordCount = 0;
+        int page = 1;
+        int numBlockRecord;
+        do {
+            List<Subscription> subscriptions = subscriptionService.findActiveSubscriptions(page, maxQueryBlock);
+            numBlockRecord = subscriptions.size();
+
+            for (Subscription subscription : subscriptions) {
+
+                Subscriber subscriber = subscription.getSubscriber();
+
+                //todo: don't understand why subscriber.getLanguage() doesn't work here...
+                Language language = (Language) subscriberDataService.getDetachedField(subscriber, "language");
+                writer.write(language.getCode());
+
+                RequestId requestId = new RequestId(fileIdentifier, subscription.getSubscriptionId());
+                writeSubscriptionRow(requestId.toString(), imiServiceId,
+                        subscriber.getCallingNumber().toString(), NORMAL_PRIORITY, callFlowUrl,
+                        "???ContentFileName???", //todo: get that from lauren when it's ready
+                        1, //todo: and that too
+                        language.getCode(), subscriber.getCircle(),
+                        subscription.getOrigin().getCode(), writer);
+            }
+
+            page++;
+            recordCount += numBlockRecord;
+
+        } while (numBlockRecord > 0);
+
+        return recordCount;
     }
 
 
+    private int generateRetryCalls(int maxQueryBlock, String imiServiceId, String callFlowUrl,
+                                   String fileIdentifier, OutputStreamWriter writer) throws IOException {
+
+        //figure out which day to work with
+        final DayOfTheWeek today = DayOfTheWeek.today();
+
+        int recordCount = 0;
+        int page = 1;
+        int numBlockRecord;
+        do {
+            List<CallRetry> callRetries = callRetryDataService.findByDayOfTheWeek(today,
+                    new QueryParams(page, maxQueryBlock));
+            numBlockRecord = callRetries.size();
+
+            for (CallRetry callRetry : callRetries) {
+                RequestId requestId = new RequestId(fileIdentifier, callRetry.getSubscriptionId());
+                writeSubscriptionRow(requestId.toString(), imiServiceId,
+                        callRetry.getMsisdn().toString(), NORMAL_PRIORITY, callFlowUrl,
+                        "???ContentFileName???", //todo: get that from lauren when it's ready
+                        1, //todo: and that too
+                        callRetry.getLanguageLocationCode(), callRetry.getCircle(),
+                        callRetry.getSubscriptionOrigin(), writer);
+            }
+
+            page++;
+            recordCount += numBlockRecord;
+
+        } while (numBlockRecord > 0);
+
+        return recordCount;
+    }
+
+
+    /*
     /**
      * 4.4.1 Target File Format
      */
@@ -305,11 +366,7 @@ public class TargetFileServiceImpl implements TargetFileService {
             @SuppressWarnings("PMD.UnusedLocalVariable")
             DigestOutputStream dos = new DigestOutputStream(fos, md);
 
-            //figure out which day to work with
-            final DayOfTheWeek today = DayOfTheWeek.today();
-
             int maxQueryBlock = Integer.parseInt(settingsFacade.getProperty(MAX_QUERY_BLOCK));
-
             String imiServiceId = settingsFacade.getProperty(TARGET_FILE_IMI_SERVICE_ID);
             String callFlowUrl = settingsFacade.getProperty(TARGET_FILE_CALL_FLOW_URL);
             if (callFlowUrl == null) {
@@ -319,54 +376,10 @@ public class TargetFileServiceImpl implements TargetFileService {
             }
 
             //FRESH calls
-            int page = 1;
-            int numBlockRecord;
-            do {
-                List<Subscription> subscriptions = subscriptionDataService.findByStatus(SubscriptionStatus.ACTIVE,
-                    new QueryParams(page, maxQueryBlock));
-                numBlockRecord = subscriptions.size();
-
-                for (Subscription subscription : subscriptions) {
-
-                    Subscriber subscriber = subscription.getSubscriber();
-
-                    //todo: don't understand why subscriber.getLanguage() doesn't work here...
-                    Language language = (Language) subscriberDataService.getDetachedField(subscriber, "language");
-                    writer.write(language.getCode());
-
-                    writeSubscriptionRow(requestId(fileIdentifier, subscription.getSubscriptionId()), imiServiceId,
-                            subscriber.getCallingNumber().toString(), NORMAL_PRIORITY, callFlowUrl,
-                            "???ContentFileName???", //todo: get that from lauren when it's ready
-                            1, //todo: and that too
-                            language.getCode(), subscriber.getCircle(),
-                            subscription.getMode().getCode(), writer);
-                }
-
-                page++;
-                recordCount += numBlockRecord;
-
-            } while (numBlockRecord > 0);
+            recordCount = generateFreshCalls(maxQueryBlock, imiServiceId, callFlowUrl, fileIdentifier, writer);
 
             //Retry calls
-            page = 1;
-            do {
-                List<CallRetry> callRetries = callRetryDataService.findByDayOfTheWeek(today,
-                        new QueryParams(page, maxQueryBlock));
-                numBlockRecord = callRetries.size();
-
-                for (CallRetry callRetry : callRetries) {
-                    writeSubscriptionRow(requestId(fileIdentifier, callRetry.getSubscriptionId()), imiServiceId,
-                            callRetry.getMsisdn().toString(), NORMAL_PRIORITY, callFlowUrl,
-                            "???ContentFileName???", //todo: get that from lauren when it's ready
-                            1, //todo: and that too
-                            callRetry.getLanguageLocationCode(), callRetry.getCircle(),
-                            callRetry.getSubscriptionModeCode(), writer);
-                }
-
-                page++;
-                recordCount += numBlockRecord;
-
-            } while (numBlockRecord > 0);
+            recordCount += generateRetryCalls(maxQueryBlock, imiServiceId, callFlowUrl, fileIdentifier, writer);
 
             LOGGER.info("Created targetFile with {} record{}", recordCount, recordCount == 1 ? "" : "s");
 

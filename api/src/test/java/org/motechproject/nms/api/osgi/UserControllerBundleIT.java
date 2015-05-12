@@ -6,7 +6,6 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.joda.time.DateTime;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.api.web.contract.BadRequest;
@@ -26,7 +25,7 @@ import org.motechproject.nms.flw.repository.WhitelistEntryDataService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
-import org.motechproject.nms.kilkari.domain.SubscriptionMode;
+import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
@@ -154,11 +153,11 @@ public class UserControllerBundleIT extends BasePaxIT {
         Subscriber subscriber3 = subscriberDataService.create(new Subscriber(3000000000L));
 
         Subscription subscription1 = subscriptionDataService.create(new Subscription(subscriber1, pack1,
-                                                                    SubscriptionMode.IVR));
+                                                                    SubscriptionOrigin.IVR));
         Subscription subscription2 = subscriptionDataService.create(new Subscription(subscriber2, pack1,
-                                                                    SubscriptionMode.IVR));
+                                                                    SubscriptionOrigin.IVR));
         Subscription subscription3 = subscriptionDataService.create(new Subscription(subscriber2, pack2,
-                                                                    SubscriptionMode.IVR));
+                                                                    SubscriptionOrigin.IVR));
     }
 
     private void createFlwCappedServiceNoUsageNoLocationNoLanguage() {
@@ -435,7 +434,8 @@ public class UserControllerBundleIT extends BasePaxIT {
                 new HashSet<String>() //subscriptionPackList
         );
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
+        assertTrue(SimpleHttpClient
+                .execHttpRequest(httpGet, expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     @Test

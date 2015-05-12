@@ -2,8 +2,9 @@ package org.motechproject.nms.imi.domain;
 
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
+import org.motechproject.nms.props.domain.DayOfTheWeek;
 
-@Entity(tableName = "nms_call_retries")
+@Entity(tableName = "nms_imi_retries")
 public class CallRetry {
     @Field
     private String subscriptionId;
@@ -24,18 +25,19 @@ public class CallRetry {
     private String circle;
 
     @Field
-    private String subscriptionModeCode;
+    private String subscriptionOrigin;
 
     public CallRetry() { }
 
-    public CallRetry(String subscriptionId, Long msisdn, DayOfTheWeek dayOfTheWeek, CallStage callStage, String languageLocationCode, String circle, String subscriptionModeCode) {
+    public CallRetry(String subscriptionId, Long msisdn, DayOfTheWeek dayOfTheWeek, CallStage callStage,
+                     String languageLocationCode, String circle, String subscriptionOrigin) {
         this.subscriptionId = subscriptionId;
         this.msisdn = msisdn;
         this.dayOfTheWeek = dayOfTheWeek;
         this.callStage = callStage;
         this.languageLocationCode = languageLocationCode;
         this.circle = circle;
-        this.subscriptionModeCode = subscriptionModeCode;
+        this.subscriptionOrigin = subscriptionOrigin;
     }
 
     public String getSubscriptionId() {
@@ -86,12 +88,12 @@ public class CallRetry {
         this.circle = circle;
     }
 
-    public String getSubscriptionModeCode() {
-        return subscriptionModeCode;
+    public String getSubscriptionOrigin() {
+        return subscriptionOrigin;
     }
 
-    public void setSubscriptionModeCode(String subscriptionModeCode) {
-        this.subscriptionModeCode = subscriptionModeCode;
+    public void setSubscriptionOrigin(String subscriptionOrigin) {
+        this.subscriptionOrigin = subscriptionOrigin;
     }
 
     @Override
@@ -103,7 +105,7 @@ public class CallRetry {
                 ", callStage=" + callStage +
                 ", languageLocationCode='" + languageLocationCode + '\'' +
                 ", circle='" + circle + '\'' +
-                ", subscriptionModeCode='" + subscriptionModeCode + '\'' +
+                ", subscriptionOrigin='" + subscriptionOrigin + '\'' +
                 '}';
     }
 }

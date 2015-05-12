@@ -1,6 +1,6 @@
 package org.motechproject.nms.kilkari.domain;
 
-import org.joda.time.LocalDate;
+import org.joda.time.DateTime;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.annotations.Ignore;
@@ -26,10 +26,10 @@ public class Subscriber {
     private Long callingNumber;
 
     @Field
-    private LocalDate dateOfBirth;
+    private DateTime dateOfBirth;
 
     @Field
-    private LocalDate lastMenstrualPeriod;
+    private DateTime lastMenstrualPeriod;
 
     @Field
     private Language language;
@@ -65,19 +65,19 @@ public class Subscriber {
         this.callingNumber = callingNumber;
     }
 
-    public LocalDate getDateOfBirth() {
+    public DateTime getDateOfBirth() {
         return dateOfBirth;
     }
 
-    public void setDateOfBirth(LocalDate dateOfBirth) {
+    public void setDateOfBirth(DateTime dateOfBirth) {
         this.dateOfBirth = dateOfBirth;
     }
 
-    public LocalDate getLastMenstrualPeriod() {
+    public DateTime getLastMenstrualPeriod() {
         return lastMenstrualPeriod;
     }
 
-    public void setLastMenstrualPeriod(LocalDate lastMenstrualPeriod) {
+    public void setLastMenstrualPeriod(DateTime lastMenstrualPeriod) {
         this.lastMenstrualPeriod = lastMenstrualPeriod;
     }
 

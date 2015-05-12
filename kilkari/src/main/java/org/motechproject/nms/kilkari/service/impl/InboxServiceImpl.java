@@ -1,7 +1,7 @@
 package org.motechproject.nms.kilkari.service.impl;
 
 import org.joda.time.Days;
-import org.joda.time.LocalDate;
+import org.joda.time.DateTime;
 import org.motechproject.nms.kilkari.domain.InboxCallDetails;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
@@ -37,7 +37,7 @@ public class InboxServiceImpl implements InboxService {
     @Override
     public SubscriptionPackMessage getInboxMessage(Subscription subscription) throws NoInboxForSubscriptionException {
 
-        if (subscription.getStartDate().isAfter(LocalDate.now())) {
+        if (subscription.getStartDate().isAfter(DateTime.now())) {
             // early subscription, play welcome message
             return null;
         }
@@ -50,7 +50,7 @@ public class InboxServiceImpl implements InboxService {
         }
 
         SubscriptionPack pack = subscription.getSubscriptionPack();
-        int daysIntoPack = Days.daysBetween(subscription.getStartDate(), LocalDate.now()).getDays();
+        int daysIntoPack = Days.daysBetween(subscription.getStartDate(), DateTime.now()).getDays();
         int messageIndex;
         int currentWeek = daysIntoPack / DAYS_IN_WEEK + 1;
         int daysIntoWeek = daysIntoPack % DAYS_IN_WEEK;

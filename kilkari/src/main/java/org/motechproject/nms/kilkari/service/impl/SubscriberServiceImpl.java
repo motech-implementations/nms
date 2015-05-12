@@ -1,6 +1,6 @@
 package org.motechproject.nms.kilkari.service.impl;
 
-import org.joda.time.LocalDate;
+import org.joda.time.DateTime;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
@@ -46,8 +46,8 @@ public class SubscriberServiceImpl implements SubscriberService {
 
         // cache the previous version of the subscriber in order to compare before/after
         Subscriber retrievedSubscriber = subscriberDataService.findByCallingNumber(subscriber.getCallingNumber());
-        LocalDate oldLMP = retrievedSubscriber.getLastMenstrualPeriod();
-        LocalDate oldDOB = retrievedSubscriber.getDateOfBirth();
+        DateTime oldLMP = retrievedSubscriber.getLastMenstrualPeriod();
+        DateTime oldDOB = retrievedSubscriber.getDateOfBirth();
 
         subscriberDataService.update(subscriber);
 

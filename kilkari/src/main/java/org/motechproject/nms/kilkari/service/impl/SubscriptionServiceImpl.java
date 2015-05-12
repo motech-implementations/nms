@@ -1,11 +1,12 @@
 package org.motechproject.nms.kilkari.service.impl;
 
 import org.joda.time.Days;
-import org.joda.time.LocalDate;
+import org.joda.time.DateTime;
+import org.motechproject.mds.query.QueryParams;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
-import org.motechproject.nms.kilkari.domain.SubscriptionMode;
+import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
@@ -84,14 +85,14 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     @Override
     public void createSubscription(long callingNumber, Language language, SubscriptionPack subscriptionPack,
-                                   SubscriptionMode mode) {
+                                   SubscriptionOrigin mode) {
         Subscriber subscriber = subscriberDataService.findByCallingNumber(callingNumber);
         if (subscriber == null) {
             subscriber = new Subscriber(callingNumber, language);
             subscriberDataService.create(subscriber);
         }
 
-        if (mode == SubscriptionMode.IVR) {
+        if (mode == SubscriptionOrigin.IVR) {
             createSubscriptionViaIvr(subscriber, subscriptionPack);
         } else { // MCTS_UPLOAD
             createSubscriptionViaMcts(subscriber, subscriptionPack);
@@ -115,9 +116,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             }
         }
 
-        Subscription subscription = new Subscription(subscriber, pack, SubscriptionMode.IVR);
+        Subscription subscription = new Subscription(subscriber, pack, SubscriptionOrigin.IVR);
         subscription.setStatus(SubscriptionStatus.ACTIVE);
-        subscription.setStartDate(LocalDate.now().plusDays(1));
+        subscription.setStartDate(DateTime.now().plusDays(1));
 
         subscriptionDataService.create(subscription);
     }
@@ -131,7 +132,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 // TODO: #138 log the rejected subscription
                 return;
             } else {
-                subscription = new Subscription(subscriber, pack, SubscriptionMode.MCTS_IMPORT);
+                subscription = new Subscription(subscriber, pack, SubscriptionOrigin.MCTS_IMPORT);
                 subscription.setStartDate(subscriber.getDateOfBirth());
                 subscription.setStatus(SubscriptionStatus.ACTIVE);
             }
@@ -143,7 +144,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 return;
             } else {
                 // TODO: #160 deal with early subscription
-                subscription = new Subscription(subscriber, pack, SubscriptionMode.MCTS_IMPORT);
+                subscription = new Subscription(subscriber, pack, SubscriptionOrigin.MCTS_IMPORT);
 
                 // the pregnancy pack starts 3 months after LMP
                 subscription.setStartDate(subscriber.getLastMenstrualPeriod().plusDays(THREE_MONTHS));
@@ -183,7 +184,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @Override
-    public void updateStartDate(Subscription subscription, LocalDate newReferenceDate) {
+    public void updateStartDate(Subscription subscription, DateTime newReferenceDate) {
         if (subscription.getSubscriptionPack().getType() == SubscriptionPackType.PREGNANCY) {
             subscription.setStartDate(newReferenceDate.plusDays(THREE_MONTHS));
         } else { // CHILD pack
@@ -196,9 +197,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         subscriptionDataService.update(subscription);
     }
 
-    private boolean subscriptionIsCompleted(LocalDate startDate, SubscriptionPack pack) {
+    private boolean subscriptionIsCompleted(DateTime startDate, SubscriptionPack pack) {
         int totalDaysInPack = DAYS_IN_WEEK * pack.getWeeklyMessages().size() / pack.getMessagesPerWeek();
-        int daysSinceStartDate = Days.daysBetween(startDate, LocalDate.now()).getDays();
+        int daysSinceStartDate = Days.daysBetween(startDate, DateTime.now()).getDays();
 
         return totalDaysInPack < daysSinceStartDate;
     }
@@ -221,4 +222,21 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         return subscriptionPackDataService.byName(name);
     }
 
+
+    /**
+     * To be used by ITs only!
+     */
+    public void deleteAll() {
+        subscriptionDataService.deleteAll();
+    }
+
+
+    public Subscription create(Subscription subscription) {
+        return subscriptionDataService.create(subscription);
+    }
+
+
+    public List<Subscription> findActiveSubscriptions(int page, int pageSize) {
+        return subscriptionDataService.findByStatus(SubscriptionStatus.ACTIVE, new QueryParams(page, pageSize));
+    }
 }
