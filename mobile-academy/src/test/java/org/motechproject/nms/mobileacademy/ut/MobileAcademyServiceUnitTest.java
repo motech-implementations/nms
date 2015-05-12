@@ -4,6 +4,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
+import org.motechproject.event.MotechEvent;
+import org.motechproject.event.listener.EventRelay;
 import org.motechproject.mtraining.domain.Bookmark;
 import org.motechproject.mtraining.repository.BookmarkDataService;
 import org.motechproject.nms.mobileacademy.domain.Course;
@@ -15,13 +17,16 @@ import org.motechproject.nms.mobileacademy.service.impl.MobileAcademyServiceImpl
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
+import java.util.HashMap;
+
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
@@ -42,11 +47,14 @@ public class MobileAcademyServiceUnitTest {
     @Mock
     private CompletionRecordDataService completionRecordDataService;
 
+    @Mock
+    private EventRelay eventRelay;
+
     @Before
     public void setup() {
         initMocks(this);
         mobileAcademyService = new MobileAcademyServiceImpl(
-                bookmarkDataService, courseDataService, completionRecordDataService);
+                bookmarkDataService, courseDataService, completionRecordDataService, eventRelay);
     }
 
     @Test
@@ -87,4 +95,33 @@ public class MobileAcademyServiceUnitTest {
         mobileAcademyService.setBookmark(mab);
     }
 
+    @Test
+    public void setLastBookmark() {
+        Map<String, Integer> scores = new HashMap<>();
+        for (int i = 1; i < 12; i++) {
+            scores.put(String.valueOf(i), ((int) (Math.random() * 100)) % 5);
+        }
+        MaBookmark mab = new MaBookmark(1234567890L, 123456789011121L, "Chapter11_Quiz", scores);
+        doNothing().when(eventRelay).sendEventMessage(any(MotechEvent.class));
+        mobileAcademyService.setBookmark(mab);
+    }
+
+    @Test
+    public void getLastBookmark() {
+
+        Map<String, Integer> scores = new HashMap<>();
+        for (int i = 1; i < 12; i++) {
+            scores.put(String.valueOf(i), ((int) (Math.random() * 100)) % 5);
+        }
+
+        Map<String, Object> progress = new HashMap<>();
+        progress.put("scoresByChapter", scores);
+        Bookmark newBookmark = new Bookmark("55", "getBookmarkTest", "Chapter11", "Quiz", progress);
+        when(bookmarkDataService.findBookmarksForUser(anyString()))
+                .thenReturn(new ArrayList<Bookmark>(Arrays.asList(newBookmark)));
+
+        MaBookmark getBookmark = mobileAcademyService.getBookmark(55L, 56L);
+        assertNull(getBookmark.getBookmark());
+        assertNull(getBookmark.getScoresByChapter());
+    }
 }

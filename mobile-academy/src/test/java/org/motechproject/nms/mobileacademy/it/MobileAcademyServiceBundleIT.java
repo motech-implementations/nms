@@ -125,6 +125,46 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     }
 
     @Test
+    public void testSetLastBookmark() {
+        bookmarkDataService.deleteAll();
+        MaBookmark bookmark = new MaBookmark(556L, 666L, null, null);
+        maService.setBookmark(bookmark);
+        List<Bookmark> added = bookmarkDataService.findBookmarksForUser("556");
+        assertTrue(added.size() == 1);
+
+        bookmark.setBookmark("Chapter11_Quiz");
+        Map<String, Integer> scores = new HashMap<>();
+        for (int i = 1; i < 12; i++) {
+            scores.put(String.valueOf(i), ((int) (Math.random() * 100)) % 5);
+        }
+        bookmark.setScoresByChapter(scores);
+        maService.setBookmark(bookmark);
+    }
+
+    @Test
+    public void testSetGetLastBookmark() {
+        bookmarkDataService.deleteAll();
+        MaBookmark bookmark = new MaBookmark(556L, 666L, null, null);
+        maService.setBookmark(bookmark);
+        List<Bookmark> added = bookmarkDataService.findBookmarksForUser("556");
+        assertTrue(added.size() == 1);
+
+        bookmark.setBookmark("Chapter11_Quiz");
+        Map<String, Integer> scores = new HashMap<>();
+        for (int i = 1; i < 12; i++) {
+            scores.put(String.valueOf(i), ((int) (Math.random() * 100)) % 5);
+        }
+        bookmark.setScoresByChapter(scores);
+        maService.setBookmark(bookmark);
+
+        MaBookmark retrieved = maService.getBookmark(556L, 666L);
+        assertNotNull(retrieved.getCallingNumber());
+        assertNotNull(retrieved.getCallId());
+        assertNull(retrieved.getBookmark());
+        assertNull(retrieved.getScoresByChapter());
+    }
+
+    @Test
     public void testGetBookmarkEmpty() {
 
         assertNull(maService.getBookmark(0L, 1L));

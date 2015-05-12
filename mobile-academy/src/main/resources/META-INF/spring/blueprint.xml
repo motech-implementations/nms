@@ -17,5 +17,7 @@
     <osgi:reference id="bookmarkDataService"
                     interface="org.motechproject.mtraining.repository.BookmarkDataService" />
 
+    <osgi:reference id="eventRelay"
+                    interface="org.motechproject.event.listener.EventRelay"/>
 
 </beans>

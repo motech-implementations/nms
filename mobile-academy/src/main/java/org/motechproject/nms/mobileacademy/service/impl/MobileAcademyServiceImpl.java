@@ -2,6 +2,8 @@ package org.motechproject.nms.mobileacademy.service.impl;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.joda.time.DateTime;
+import org.motechproject.event.MotechEvent;
+import org.motechproject.event.listener.EventRelay;
 import org.motechproject.mtraining.domain.Bookmark;
 import org.motechproject.mtraining.repository.BookmarkDataService;
 import org.motechproject.nms.mobileacademy.domain.CompletionRecord;
@@ -28,6 +30,8 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
 
     private static final String FINAL_BOOKMARK = "Chapter11_Quiz";
 
+    private static final String COURSE_COMPLETED = "nms.ma.course.completed";
+
     private static final int CHAPTER_COUNT = 11;
 
     private static final int PASS_SCORE = 22;
@@ -47,15 +51,22 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
      */
     private CourseDataService courseDataService;
 
+    /**
+     * Eventing system for course completion processing
+     */
+    private EventRelay eventRelay;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(MobileAcademyServiceImpl.class);
 
     @Autowired
     public MobileAcademyServiceImpl(BookmarkDataService bookmarkDataService,
                                     CourseDataService courseDataService,
-                                    CompletionRecordDataService completionRecordDataService) {
+                                    CompletionRecordDataService completionRecordDataService,
+                                    EventRelay eventRelay) {
         this.bookmarkDataService = bookmarkDataService;
         this.courseDataService = courseDataService;
         this.completionRecordDataService = completionRecordDataService;
+        this.eventRelay = eventRelay;
     }
 
     @Override
@@ -109,15 +120,24 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
             toReturn.setCallId(callId);
 
             if (existingBookmark.getProgress() != null) {
-                toReturn.setScoresByChapter((Map<String, Integer>) existingBookmark.getProgress()
-                        .get("scoresByChapter"));
-                toReturn.setBookmark(existingBookmark.getChapterIdentifier() + "_" +
-                        existingBookmark.getLessonIdentifier());
-            } else {
-                toReturn.setScoresByChapter(null);
-                toReturn.setBookmark(null);
+                String bookmark = existingBookmark.getChapterIdentifier() + "_" +
+                        existingBookmark.getLessonIdentifier();
+
+                // Make sure that the last bookmark set doesn't imply course completion
+                if (!bookmark.equals(FINAL_BOOKMARK)) {
+                    toReturn.setScoresByChapter((Map<String, Integer>) existingBookmark.getProgress()
+                            .get("scoresByChapter"));
+                    toReturn.setBookmark(bookmark);
+                    return toReturn;
+                }
+
+                LOGGER.debug("We need to reset bookmark to new state.");
             }
 
+            // we are either looking at a new bookmark
+            // or a completed bookmark that need to be reset. Do the needful either way.
+            toReturn.setScoresByChapter(null);
+            toReturn.setBookmark(null);
 
             return toReturn;
         }
@@ -145,9 +165,12 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
             bookmarkDataService.update(setBookmarkProperties(saveBookmark, existing.get(0)));
         }
 
-        if (saveBookmark.getBookmark().equals(FINAL_BOOKMARK)
+        if (saveBookmark.getBookmark() != null
+                && saveBookmark.getScoresByChapter() != null
+                && saveBookmark.getBookmark().equals(FINAL_BOOKMARK)
                 && saveBookmark.getScoresByChapter().size() == CHAPTER_COUNT) {
 
+            LOGGER.debug("Found last bookmark and 11 scores. Starting evaluation & notification");
             evaluateCourseCompletion(saveBookmark.getCallingNumber(), saveBookmark.getScoresByChapter());
         }
     }
@@ -175,6 +198,11 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
         return toBookmark;
     }
 
+    /**
+     * Helper method to check whether a course meets completion criteria
+     * @param callingNumber calling number of flw
+     * @param scores scores in quiz
+     */
     private void evaluateCourseCompletion(Long callingNumber, Map<String, Integer> scores) {
 
         int totalScore = 0;
@@ -183,14 +211,32 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
             totalScore += scores.get(String.valueOf(chapterCount));
         }
 
-        if (totalScore >= PASS_SCORE) {
-
-            CompletionRecord cr = new CompletionRecord(callingNumber, totalScore);
-
-            // TODO: check for existing records first
-            completionRecordDataService.create(cr);
+        if (totalScore < PASS_SCORE) {
+            // nothing to do
+            LOGGER.debug("User with calling number: " + callingNumber + " failed with score: " + totalScore);
+            return;
         }
 
+        // We know that they completed the course here. Start post-processing
+        CompletionRecord cr = completionRecordDataService.findRecordByCallingNumber(callingNumber);
+
+        if (cr == null) {
+            cr = new CompletionRecord(callingNumber, totalScore, false, 1);
+            completionRecordDataService.create(cr);
+        } else {
+            LOGGER.debug("Found existing completion record, updating it");
+            int completionCount = cr.getCompletionCount();
+            cr.setCompletionCount(completionCount + 1);
+            cr.setScore(totalScore);
+            completionRecordDataService.update(cr);
+        }
+
+        // we updated the completion record. Start event message to trigger notification workflow
+        Map<String, Object> eventParams = new HashMap<>();
+        eventParams.put("callingNumber", callingNumber);
+        MotechEvent motechEvent = new MotechEvent(COURSE_COMPLETED, eventParams);
+        eventRelay.sendEventMessage(motechEvent);
+        LOGGER.debug("Sent event message to process completion notification");
     }
 
 }

@@ -33,6 +33,13 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- Event relay -->
+        <dependency>
+            <groupId>org.motechproject</groupId>
+            <artifactId>motech-platform-event</artifactId>
+            <version>${motech.version}</version>
+        </dependency>
+
         <!-- Repository -->
         <dependency>
             <groupId>org.motechproject</groupId>
