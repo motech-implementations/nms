@@ -7,6 +7,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.imi.domain.CallDetailRecord;
+import org.motechproject.nms.imi.repository.CallRetryDataService;
 import org.motechproject.nms.imi.service.SettingsService;
 import org.motechproject.nms.imi.web.contract.BadRequest;
 import org.motechproject.nms.imi.web.contract.CdrFileNotificationRequest;
@@ -55,6 +56,9 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
     @Inject
     private CircleLanguageDataService circleLanguageDataService;
 
+    @Inject
+    private CallRetryDataService callRetryDataService;
+
 
     private String createFailureResponseJson(String failureReason) throws IOException {
         BadRequest badRequest = new BadRequest(failureReason);
@@ -71,7 +75,7 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
                 "xxx";
         String detailFile = useValidDetailFile ? helper.cdrDetailFileName() : helper.cdrDetailFileName() + "xxx";
 
-        FileInfo cdrSummary = new FileInfo(summaryFile, helper.detailFileChecksum(), 5000);
+        FileInfo cdrSummary = new FileInfo(summaryFile, helper.detailFileChecksum(), 6);
         FileInfo cdrDetail = new FileInfo(detailFile, helper.detailFileChecksum(), 9900);
         CdrFileNotificationRequest cdrFileNotificationRequest =
                 new CdrFileNotificationRequest(targetFile, cdrSummary, cdrDetail);
@@ -93,7 +97,7 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
         getLogger().debug("testCreateCdrFileNotificationRequest()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                languageDataService, circleLanguageDataService);
+                languageDataService, circleLanguageDataService, callRetryDataService);
 
         List<CallDetailRecord> cdrs = helper.makeCdrs();
         helper.setCrds(cdrs);
@@ -113,7 +117,7 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
         getLogger().debug("testCreateCdrFileNotificationRequestBadCdrSummaryFileName()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                languageDataService, circleLanguageDataService);
+                languageDataService, circleLanguageDataService, callRetryDataService);
 
         helper.makeCdrDetailFile();
 
@@ -132,7 +136,7 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
         getLogger().debug("testCreateCdrFileNotificationRequestBadFileNames()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                languageDataService, circleLanguageDataService);
+                languageDataService, circleLanguageDataService, callRetryDataService);
         HttpPost httpPost = createCdrFileNotificationHttpPost(helper, false, true, true);
 
         // All 3 filenames will be considered invalid because the target file is of invalid format, and the CDR

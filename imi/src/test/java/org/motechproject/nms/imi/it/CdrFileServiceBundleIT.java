@@ -90,7 +90,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         getLogger().debug("testValidRequest()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                languageDataService, circleLanguageDataService);
+                languageDataService, circleLanguageDataService, callRetryDataService);
 
         List<CallDetailRecord> cdrs = helper.makeCdrs();
         helper.setCrds(cdrs);
@@ -99,7 +99,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
 
         cdrFileService.processCdrFile(new CdrFileNotificationRequest(
                         helper.obdFileName(),
-                        new FileInfo(helper.cdrSummaryFileName(), helper.summaryFileChecksum(), 0),
+                        new FileInfo(helper.cdrSummaryFileName(), helper.summaryFileChecksum(), 6),
                         new FileInfo(helper.cdrDetailFileName(), helper.detailFileChecksum(), 1))
         );
 
@@ -137,10 +137,14 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
                             subscriptionService.getSubscription(requestId.getSubscriptionId()).getDeactivationReason());
                 }
             } else {
-                getLogger().debug("Call failed, CallRetry record should exist");
-                //The call failed, verify it's in the CallRetry table
-                //todo: make that more complex and include the possibility of having exhausted the max number of retries
-                assertNotNull(callRetryDataService.findBySubscriptionId(requestId.getSubscriptionId()));
+                getLogger().debug("Call failed, CallRetry record may exist");
+
+                //The call failed, verify it's in the CallRetry table or not if we exceeded the max retry
+                if (helper.shouldRetryCdr(cdr)) {
+                    assertNotNull(callRetryDataService.findBySubscriptionId(requestId.getSubscriptionId()));
+                } else {
+                    assertNull(callRetryDataService.findBySubscriptionId(requestId.getSubscriptionId()));
+                }
             }
         }
     }

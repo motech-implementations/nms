@@ -47,6 +47,7 @@ public class CdrFileServiceImpl implements CdrFileService {
     private static final String DEACTIVATE_SUBSCRIPTION = "nms.imi.deactivate_subscription";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CdrFileServiceImpl.class);
+    public static final String CDR_SUMMARY = "cdrSummary";
 
     private SettingsFacade settingsFacade;
     private EventRelay eventRelay;
@@ -95,7 +96,7 @@ public class CdrFileServiceImpl implements CdrFileService {
         } catch (NoSuchAlgorithmException | IOException e) {
             String error = String.format("Unable to read cdrSummary file %s: %s", cdrSummary, e.getMessage());
             LOGGER.error(error);
-            alertService.create(cdrSummary.toString(), "cdrSummary", error, AlertType.CRITICAL, AlertStatus.NEW,
+            alertService.create(cdrSummary.toString(), CDR_SUMMARY, error, AlertType.CRITICAL, AlertStatus.NEW,
                     0, null);
 
             //todo: what do I want to do with the identifier field here?
@@ -109,7 +110,7 @@ public class CdrFileServiceImpl implements CdrFileService {
         if (!thisChecksum.equals(checksum)) {
             String error = String.format("Checksums don't match %s - %s", checksum, thisChecksum);
             LOGGER.error(error);
-            alertService.create(cdrSummary.toString(), "cdrSummary", error, AlertType.CRITICAL, AlertStatus.NEW,
+            alertService.create(cdrSummary.toString(), CDR_SUMMARY, error, AlertType.CRITICAL, AlertStatus.NEW,
                     0, null);
             //todo: what do I want to do with the identifier field here?
             auditDataService.create(new AuditRecord(null, FileType.CDR_FILE, cdrSummary.toString(), error, null,
@@ -120,7 +121,7 @@ public class CdrFileServiceImpl implements CdrFileService {
         if (!thisChecksum.equals(checksum)) {
             String error = String.format("Checksums don't match %s - %s", checksum, thisChecksum);
             LOGGER.error(error);
-            alertService.create(cdrSummary.toString(), "cdrSummary", error, AlertType.CRITICAL, AlertStatus.NEW,
+            alertService.create(cdrSummary.toString(), CDR_SUMMARY, error, AlertType.CRITICAL, AlertStatus.NEW,
                     0, null);
             //todo: what do I want to do with the identifier field here?
             auditDataService.create(new AuditRecord(null, FileType.CDR_FILE, cdrSummary.toString(), error, null,
@@ -162,12 +163,25 @@ public class CdrFileServiceImpl implements CdrFileService {
         List<CallDetailRecord> cdrs = readCdrs(cdrFileLocation, request.getCdrSummary().getCdrFile(),
                 request.getCdrSummary().getChecksum());
 
+        if (cdrs.size() != request.getCdrSummary().getRecordsCount()) {
+            String error = String.format("Record counts don't match, expected %d but read %d",
+                    request.getCdrSummary().getRecordsCount(), cdrs.size());
+            LOGGER.error(error);
+            alertService.create(request.getCdrSummary().getCdrFile(), CDR_SUMMARY, error, AlertType.CRITICAL,
+                    AlertStatus.NEW, 0, null);
+            auditDataService.create(new AuditRecord(null, FileType.CDR_FILE, request.getCdrSummary().getCdrFile(),
+                    error, null, null));
+            throw new IllegalStateException(error);
+        }
+
         //todo: handle invalid data and continue processing the valid data
         //for now, and hopefully for, like, ever, only process the summary file
         for (int lineNumber = 1; lineNumber <= cdrs.size(); lineNumber++) {
             CallDetailRecord cdr = cdrs.get(lineNumber - 1);
             cdrDataService.create(cdr);
-            if (cdr.getFinalStatus() == CallStatus.FAILED) {
+            if (cdr.getFinalStatus() == CallStatus.SUCCESS) {
+                //todo: check if the subscription finished and if so, deactivate it
+            } else if (cdr.getFinalStatus() == CallStatus.FAILED) {
                 sendRescheduleMessage(cdr);
             } else if (cdr.getFinalStatus() == CallStatus.REJECTED) {
                 sendDeactivateMessage(cdr);

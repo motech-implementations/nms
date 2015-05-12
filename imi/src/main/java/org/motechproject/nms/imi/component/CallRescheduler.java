@@ -8,6 +8,7 @@ import org.motechproject.nms.imi.domain.CallStage;
 import org.motechproject.nms.imi.repository.CallRetryDataService;
 import org.motechproject.nms.imi.service.RequestId;
 import org.motechproject.nms.kilkari.domain.Subscription;
+import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
 import org.slf4j.Logger;
@@ -66,7 +67,8 @@ public class CallRescheduler {
 
             //we've already rescheduled this call, let's see if it needs to be re-rescheduled
 
-            if (subscription.getSubscriptionPack().retryCount() == 1) {
+            SubscriptionPack subscriptionPack = subscription.getSubscriptionPack();
+            if (subscriptionPack.retryCount() == 1) {
                 //This message should only be retried once, so let's delete it from the CallRetry table
                 LOGGER.debug("Not re-rescheduling single-retry msisdn {} subscription {}: max retry exceeded",
                         cdr.getMsisdn(), requestId.getSubscriptionId());
