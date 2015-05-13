@@ -211,8 +211,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             subscription.setStatus(SubscriptionStatus.DEACTIVATED);
             subscription.setDeactivationReason(reason);
             subscriptionDataService.update(subscription);
-
-            // Eventually more will happen here -- e.g. the user's Inbox will be decommissioned
         }
         // Else no-op
     }

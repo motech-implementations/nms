@@ -4,6 +4,9 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.motechproject.alerts.contract.AlertCriteria;
+import org.motechproject.alerts.contract.AlertService;
+import org.motechproject.alerts.domain.Alert;
 import org.motechproject.nms.imi.domain.CallDetailRecord;
 import org.motechproject.nms.imi.repository.CallRetryDataService;
 import org.motechproject.nms.imi.service.CdrFileService;
@@ -12,6 +15,8 @@ import org.motechproject.nms.imi.service.SettingsService;
 import org.motechproject.nms.imi.web.contract.CdrFileNotificationRequest;
 import org.motechproject.nms.imi.web.contract.FileInfo;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
+import org.motechproject.nms.kilkari.domain.Subscription;
+import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.domain.CallStatus;
@@ -56,6 +61,9 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
     private CallRetryDataService callRetryDataService;
 
     @Inject
+    private AlertService alertService;
+
+    @Inject
     CdrFileService cdrFileService;
 
     @Inject
@@ -97,7 +105,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
                 languageDataService, languageLocationDataService, circleDataService, stateDataService,
-                districtDataService);
+                districtDataService, callRetryDataService);
 
         List<CallDetailRecord> cdrs = helper.makeCdrs();
         helper.setCrds(cdrs);
@@ -106,13 +114,13 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
 
         cdrFileService.processCdrFile(new CdrFileNotificationRequest(
                         helper.obdFileName(),
-                        new FileInfo(helper.cdrSummaryFileName(), helper.summaryFileChecksum(), 0),
+                        new FileInfo(helper.cdrSummaryFileName(), helper.summaryFileChecksum(), 6),
                         new FileInfo(helper.cdrDetailFileName(), helper.detailFileChecksum(), 1))
         );
 
         try {
             long sleepyTime = 10 * 1000L;
-            getLogger().debug("Sleeping {} seconds to give a chance to @MotechListeners to catch up...", sleepyTime/1000);
+            getLogger().debug("Sleeping {} seconds to give a chance to @MotechListeners to catch up...", sleepyTime / 1000);
             Thread.sleep(sleepyTime);
             getLogger().debug("...waking up from sleep, did they catch up?");
         } catch (InterruptedException e) {
@@ -123,23 +131,35 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         for (CallDetailRecord cdr : cdrs) {
             RequestId requestId = RequestId.fromString(cdr.getRequestId());
             getLogger().debug("Validating CDR processing for {}", requestId.getSubscriptionId());
+            Subscription subscription = subscriptionService.getSubscription(requestId.getSubscriptionId());
             if (cdr.getFinalStatus() == CallStatus.SUCCESS) {
                 //The call was made, all is good, there should be no record in the CallRetry table
                 getLogger().debug("Call was made, no CallRetry record should exist");
                 assertNull(callRetryDataService.findBySubscriptionId(requestId.getSubscriptionId()));
             } else if (cdr.getFinalStatus() == CallStatus.REJECTED) {
-                // The call was rejected, verify the suvbscription is deactivated and there there is no record in the
+                // The call was rejected, verify the subscription is deactivated and there there is no record in the
                 // CallRetry table
                 getLogger().debug(
                         "Call was rejected, no CallRetry record should exist and subscription should be deactivated");
-                assertNull(callRetryDataService.findBySubscriptionId(requestId.getSubscriptionId()));
-                assertEquals(DeactivationReason.DO_NOT_DISTURB,
-                        subscriptionService.getSubscription(requestId.getSubscriptionId()).getDeactivationReason());
+                if (subscription.getOrigin() == SubscriptionOrigin.IVR) {
+                    // Such CDRs are system failures, check the alerts database contains something about it
+                    List<Alert> alerts = alertService.search(new AlertCriteria().byExternalId(
+                            subscription.getSubscriptionId()));
+                    assertTrue(alerts.size() > 0);
+                } else {
+                    assertNull(callRetryDataService.findBySubscriptionId(requestId.getSubscriptionId()));
+                    assertEquals(DeactivationReason.DO_NOT_DISTURB,
+                            subscriptionService.getSubscription(requestId.getSubscriptionId()).getDeactivationReason());
+                }
             } else {
-                getLogger().debug("Call failed, CallRetry record should exist");
-                //The call failed, verify it's in the CallRetry table
-                //todo: make that more complex and include the possibility of having exhausted the max number of retries
-                assertNotNull(callRetryDataService.findBySubscriptionId(requestId.getSubscriptionId()));
+                getLogger().debug("Call failed, CallRetry record may exist");
+
+                //The call failed, verify it's in the CallRetry table or not if we exceeded the max retry
+                if (helper.shouldRetryCdr(cdr)) {
+                    assertNotNull(callRetryDataService.findBySubscriptionId(requestId.getSubscriptionId()));
+                } else {
+                    assertNull(callRetryDataService.findBySubscriptionId(requestId.getSubscriptionId()));
+                }
             }
         }
     }
