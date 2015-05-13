@@ -1,6 +1,7 @@
 package org.motechproject.nms.imi.service.impl;
 
 import org.apache.commons.codec.binary.Hex;
+import org.joda.time.DateTime;
 import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.alerts.domain.AlertStatus;
 import org.motechproject.alerts.domain.AlertType;
@@ -12,7 +13,10 @@ import org.motechproject.nms.imi.domain.FileType;
 import org.motechproject.nms.imi.repository.AuditDataService;
 import org.motechproject.nms.imi.repository.CallDetailRecordDataService;
 import org.motechproject.nms.imi.service.CdrFileService;
+import org.motechproject.nms.imi.service.RequestId;
 import org.motechproject.nms.imi.web.contract.CdrFileNotificationRequest;
+import org.motechproject.nms.kilkari.domain.Subscription;
+import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.domain.CallStatus;
 import org.motechproject.server.config.SettingsFacade;
 import org.slf4j.Logger;
@@ -45,6 +49,7 @@ public class CdrFileServiceImpl implements CdrFileService {
     private static final String CDR_FILE_DIRECTORY = "imi.cdr_file_directory";
     private static final String RESCHEDULE_CALL = "nms.imi.reschedule_call";
     private static final String DEACTIVATE_SUBSCRIPTION = "nms.imi.deactivate_subscription";
+    private static final String COMPLETE_SUBSCRIPTION = "nms.imi.complete_subscription";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CdrFileServiceImpl.class);
     public static final String CDR_SUMMARY = "cdrSummary";
@@ -54,18 +59,21 @@ public class CdrFileServiceImpl implements CdrFileService {
     private AuditDataService auditDataService;
     private AlertService alertService;
     private CallDetailRecordDataService cdrDataService;
+    private SubscriptionService subscriptionService;
 
 
 
     @Autowired
     public CdrFileServiceImpl(@Qualifier("imiSettings") SettingsFacade settingsFacade, EventRelay eventRelay,
                               AuditDataService auditDataService, AlertService alertService,
-                              CallDetailRecordDataService cdrDataService) {
+                              CallDetailRecordDataService cdrDataService,
+                              SubscriptionService subscriptionService) {
         this.settingsFacade = settingsFacade;
         this.eventRelay = eventRelay;
         this.auditDataService = auditDataService;
         this.alertService = alertService;
         this.cdrDataService = cdrDataService;
+        this.subscriptionService = subscriptionService;
     }
 
 
@@ -135,18 +143,10 @@ public class CdrFileServiceImpl implements CdrFileService {
     }
 
 
-    public void sendRescheduleMessage(CallDetailRecord cdr) {
+    private void sendMotechEvent(String event, CallDetailRecord cdr) {
         Map<String, Object> eventParams = new HashMap<>();
         eventParams.put("CDR", cdr);
-        MotechEvent motechEvent = new MotechEvent(RESCHEDULE_CALL, eventParams);
-        eventRelay.sendEventMessage(motechEvent);
-    }
-
-
-    public void sendDeactivateMessage(CallDetailRecord cdr) {
-        Map<String, Object> eventParams = new HashMap<>();
-        eventParams.put("CDR", cdr);
-        MotechEvent motechEvent = new MotechEvent(DEACTIVATE_SUBSCRIPTION, eventParams);
+        MotechEvent motechEvent = new MotechEvent(event, eventParams);
         eventRelay.sendEventMessage(motechEvent);
     }
 
@@ -176,15 +176,24 @@ public class CdrFileServiceImpl implements CdrFileService {
 
         //todo: handle invalid data and continue processing the valid data
         //for now, and hopefully for, like, ever, only process the summary file
+        DateTime tomorrow = DateTime.now().plusDays(1);
         for (int lineNumber = 1; lineNumber <= cdrs.size(); lineNumber++) {
             CallDetailRecord cdr = cdrs.get(lineNumber - 1);
             cdrDataService.create(cdr);
             if (cdr.getFinalStatus() == CallStatus.SUCCESS) {
+                RequestId requestId = RequestId.fromString(cdr.getRequestId());
+                Subscription subscription = subscriptionService.getSubscription(requestId.getSubscriptionId());
+                // We're checking if we just successfully sent the last message for a subscription.
+                // Since we're potentially processing today's CDRs for next time let's see if the subscription
+                // would end tomorrow. If it does, then we can mark this subscription as completed.
+                if (subscription.hasCompleted(tomorrow)) {
+                    sendMotechEvent(COMPLETE_SUBSCRIPTION, cdr);
+                }
                 //todo: check if the subscription finished and if so, deactivate it
             } else if (cdr.getFinalStatus() == CallStatus.FAILED) {
-                sendRescheduleMessage(cdr);
+                sendMotechEvent(RESCHEDULE_CALL, cdr);
             } else if (cdr.getFinalStatus() == CallStatus.REJECTED) {
-                sendDeactivateMessage(cdr);
+                sendMotechEvent(DEACTIVATE_SUBSCRIPTION, cdr);
             }
         }
 

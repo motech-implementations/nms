@@ -216,6 +216,12 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @Override
+    public void markSubscriptionComplete(Subscription subscription) {
+        subscription.setStatus(SubscriptionStatus.COMPLETED);
+        subscriptionDataService.update(subscription);
+    }
+
+    @Override
     public SubscriptionPack getSubscriptionPack(String name) {
         return subscriptionPackDataService.byName(name);
     }
