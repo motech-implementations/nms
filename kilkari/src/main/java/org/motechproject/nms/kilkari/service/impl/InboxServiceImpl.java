@@ -61,7 +61,7 @@ public class InboxServiceImpl implements InboxService {
                 throw new NoInboxForSubscriptionException(String.format("No inbox exists for subscription %s",
                         subscription.getSubscriptionId()));
             }
-            messageIndex = subscription.getSubscriptionPack().getWeeklyMessages().size() - 1;
+            messageIndex = subscription.getSubscriptionPack().getMessages().size() - 1;
         } else if (subscription.getSubscriptionPack().getMessagesPerWeek() == 1) {
             messageIndex = currentWeek - 1;
         } else { // messagesPerWeek == 2
@@ -72,7 +72,7 @@ public class InboxServiceImpl implements InboxService {
             }
         }
 
-        return subscription.getSubscriptionPack().getWeeklyMessages().get(messageIndex);
+        return subscription.getSubscriptionPack().getMessages().get(messageIndex);
     }
 
 }
