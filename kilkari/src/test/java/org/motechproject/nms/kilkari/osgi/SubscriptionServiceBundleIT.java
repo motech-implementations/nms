@@ -9,6 +9,7 @@ import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
+import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.repository.InboxCallDataDataService;
 import org.motechproject.nms.kilkari.repository.InboxCallDetailRecordDataService;
@@ -35,6 +36,7 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
+import org.springframework.test.annotation.ExpectedException;
 
 import javax.inject.Inject;
 import java.util.Arrays;
@@ -227,10 +229,10 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         subscriptionService.createSubscriptionPacks();
 
         SubscriptionPack fortyEightWeekPack = subscriptionPackDataService.byName("childPack");
-        assertEquals(48, fortyEightWeekPack.getWeeklyMessages().size());
+        assertEquals(48, fortyEightWeekPack.getMessages().size());
 
         SubscriptionPack seventyTwoWeekPack = subscriptionPackDataService.byName("pregnancyPack");
-        assertEquals(144, seventyTwoWeekPack.getWeeklyMessages().size());
+        assertEquals(144, seventyTwoWeekPack.getMessages().size());
     }
 
 
@@ -428,7 +430,52 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         assertEquals(now.minusDays(910), subscription.getStartDate());
         assert(subscription.getStatus() == SubscriptionStatus.COMPLETED);
+    }
 
+    @Test
+    public void testGetNextMessageForSubscription() {
+        setupData();
+        DateTime now = DateTime.now();
+
+        Subscriber mctsSubscriber = new Subscriber(9999911122L);
+        mctsSubscriber.setLastMenstrualPeriod(now.minusDays(90));
+        subscriberDataService.create(mctsSubscriber);
+        subscriptionService.createSubscription(9999911122L, gLanguage, gPack2, SubscriptionOrigin.MCTS_IMPORT);
+        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+
+        Subscription subscription = mctsSubscriber.getSubscriptions().iterator().next();
+
+        // initially, the welcome message should be played
+        SubscriptionPackMessage message = subscription.nextScheduledMessage(now);
+        assertEquals("welcome", message.getWeekId());
+
+        subscription.setNeedsWelcomeMessage(false);
+        subscriptionDataService.update(subscription);
+
+        message = subscription.nextScheduledMessage(now.plusDays(10));
+        assertEquals("w2_1", message.getWeekId());
+
+        message = subscription.nextScheduledMessage(now.plusDays(75));
+        assertEquals("w11_2", message.getWeekId());
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testGetNextMessageForCompletedSubscription() {
+        setupData();
+        DateTime now = DateTime.now();
+
+        Subscriber mctsSubscriber = new Subscriber(9999911122L);
+        mctsSubscriber.setLastMenstrualPeriod(now.minusDays(90));
+        subscriberDataService.create(mctsSubscriber);
+        subscriptionService.createSubscription(9999911122L, gLanguage, gPack2, SubscriptionOrigin.MCTS_IMPORT);
+        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+
+        Subscription subscription = mctsSubscriber.getSubscriptions().iterator().next();
+        subscription.setNeedsWelcomeMessage(false);
+        subscriptionDataService.update(subscription);
+
+        // should throw IllegalStateException
+        SubscriptionPackMessage message = subscription.nextScheduledMessage(now.plusDays(1000));
     }
 
 }

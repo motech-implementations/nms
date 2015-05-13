@@ -2,6 +2,7 @@ package org.motechproject.nms.kilkari.domain;
 
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
+import org.motechproject.mds.annotations.Ignore;
 
 
 /**
@@ -44,5 +45,10 @@ public class SubscriptionPackMessage {
 
     public void setMessageFileName(String messageFileName) {
         this.messageFileName = messageFileName;
+    }
+
+    @Ignore
+    public static SubscriptionPackMessage getWelcomeMessage() {
+        return new SubscriptionPackMessage(0, "welcome", "welcome.wav");
     }
 }
