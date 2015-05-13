@@ -5,16 +5,21 @@ import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.motechproject.nms.imi.domain.CallDetailRecord;
+import org.motechproject.nms.imi.domain.CallRetry;
+import org.motechproject.nms.imi.domain.CallStage;
 import org.motechproject.nms.imi.domain.StatusCode;
+import org.motechproject.nms.imi.repository.CallRetryDataService;
 import org.motechproject.nms.imi.service.RequestId;
 import org.motechproject.nms.imi.service.SettingsService;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
+import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.domain.CallStatus;
+import org.motechproject.nms.props.domain.DayOfTheWeek;
 import org.motechproject.nms.region.language.domain.CircleLanguage;
 import org.motechproject.nms.region.language.domain.Language;
 import org.motechproject.nms.region.language.repository.CircleLanguageDataService;
@@ -50,19 +55,22 @@ public class CdrHelper {
     private SubscriberDataService subscriberDataService;
     private LanguageDataService languageDataService;
     private CircleLanguageDataService circleLanguageDataService;
-    
+    private CallRetryDataService callRetryDataService;
+
     private List<CallDetailRecord> cdrs;
+    private List<CallDetailRecord> retryCdrs = new ArrayList<>();
 
 
     public CdrHelper(SettingsService settingsService, SubscriptionService subscriptionService,
                      SubscriberDataService subscriberDataService, LanguageDataService languageDataService,
-                     CircleLanguageDataService circleLanguageDataService) {
+                     CircleLanguageDataService circleLanguageDataService, CallRetryDataService callRetryDataService) {
 
         this.settingsService = settingsService;
         this.subscriptionService = subscriptionService;
         this.subscriberDataService = subscriberDataService;
         this.languageDataService = languageDataService;
         this.circleLanguageDataService = circleLanguageDataService;
+        this.callRetryDataService = callRetryDataService;
 
         String date = DateTime.now().toString(TIME_FORMATTER);
         TEST_OBD_FILENAME = String.format("OBD_%s.csv", date);
@@ -73,6 +81,16 @@ public class CdrHelper {
 
     public void setCrds(List<CallDetailRecord> cdrs) {
         this.cdrs = cdrs;
+    }
+
+
+    public boolean shouldRetryCdr(CallDetailRecord cdr) {
+        return retryCdrs.contains(cdr);
+    }
+
+
+    public boolean shouldNotRetryCdr(CallDetailRecord cdr) {
+        return !retryCdrs.contains(cdr);
     }
 
 
@@ -102,21 +120,21 @@ public class CdrHelper {
 
 
     private Subscription makeSubscription(SubscriptionOrigin origin) {
+        subscriptionService.createSubscriptionPacks();
         Subscriber subscriber = subscriberDataService.create(new Subscriber(
                 makeNumber(),
                 makeLanguage(),
                 makeCircle()
         ));
-        Subscription subscription = new Subscription(
-                subscriber,
-                subscriptionService.getSubscriptionPack("childPack"),
-                origin
-        );
+        SubscriptionPack subscriptionPack = subscriptionService.getSubscriptionPack("childPack");
+        Subscription subscription = new Subscription(subscriber, subscriptionPack, origin);
         //~ one to two month old start date
         int daysOld = (int) (Math.random() * 30) + 30;
         subscription.setStartDate(DateTime.now().minusDays(daysOld));
         subscription.setStatus(SubscriptionStatus.ACTIVE);
-        return subscriptionService.create(subscription);
+        subscription = subscriptionService.create(subscription);
+        LOGGER.debug("Created subscription {}", subscription.toString());
+        return subscription;
     }
 
 
@@ -146,9 +164,57 @@ public class CdrHelper {
         cdrs.add(cdr);
 
         /**
-         * failed call - should be retried
+         * failed call - 1st try - should be retried
          */
         subscription = makeSubscription(SubscriptionOrigin.IVR);
+        cdr = new CallDetailRecord(
+                new RequestId(fileIdentifier, subscription.getSubscriptionId()).toString(),
+                imiServiceId,
+                subscription.getSubscriber().getCallingNumber(),
+                null,
+                0,
+                null,
+                "w1m1.wav", //todo: we still need to look into that
+                "1",
+                makeLanguage().getCode(),
+                makeCircle(),
+                CallStatus.FAILED,
+                StatusCode.OBD_FAILED_NOANSWER.getValue(),
+                1);
+        cdrs.add(cdr);
+        retryCdrs.add(cdr);
+
+        /**
+         * failed call - second try - should be retried
+         */
+        subscription = makeSubscription(SubscriptionOrigin.IVR);
+        callRetryDataService.create(new CallRetry(subscription.getSubscriptionId(),
+                subscription.getSubscriber().getCallingNumber(), DayOfTheWeek.today(), CallStage.RETRY_1,
+                subscription.getSubscriber().getLanguage().getCode(), makeCircle(), SubscriptionOrigin.IVR.toString()));
+        cdr = new CallDetailRecord(
+                new RequestId(fileIdentifier, subscription.getSubscriptionId()).toString(),
+                imiServiceId,
+                subscription.getSubscriber().getCallingNumber(),
+                null,
+                0,
+                null,
+                "w1m1.wav", //todo: we still need to look into that
+                "1",
+                makeLanguage().getCode(),
+                makeCircle(),
+                CallStatus.FAILED,
+                StatusCode.OBD_FAILED_NOANSWER.getValue(),
+                1);
+        cdrs.add(cdr);
+        retryCdrs.add(cdr);
+
+        /**
+         * failed call - last try - should be not retried
+         */
+        subscription = makeSubscription(SubscriptionOrigin.IVR);
+        callRetryDataService.create(new CallRetry(subscription.getSubscriptionId(),
+                subscription.getSubscriber().getCallingNumber(), DayOfTheWeek.today(), CallStage.RETRY_LAST,
+                subscription.getSubscriber().getLanguage().getCode(), makeCircle(), SubscriptionOrigin.IVR.toString()));
         cdr = new CallDetailRecord(
                 new RequestId(fileIdentifier, subscription.getSubscriptionId()).toString(),
                 imiServiceId,
@@ -168,7 +234,27 @@ public class CdrHelper {
         /**
          * Rejected call - subscription should be deactivated
          */
-        subscription = makeSubscription(SubscriptionOrigin.MCTS_IMPORT); //todo: test IVR origin: should be an error
+        subscription = makeSubscription(SubscriptionOrigin.MCTS_IMPORT);
+        cdr = new CallDetailRecord(
+                new RequestId(fileIdentifier, subscription.getSubscriptionId()).toString(),
+                imiServiceId,
+                subscription.getSubscriber().getCallingNumber(),
+                null,
+                0,
+                null,
+                "w1m1.wav", //todo: we still need to look into that
+                "1",
+                makeLanguage().getCode(),
+                makeCircle(),
+                CallStatus.REJECTED,
+                StatusCode.OBD_DNIS_IN_DND.getValue(),
+                1);
+        cdrs.add(cdr);
+
+        /**
+         * Rejected call - invalid state (only MCTS originated subscriptions should be rejected)
+         */
+        subscription = makeSubscription(SubscriptionOrigin.IVR);
         cdr = new CallDetailRecord(
                 new RequestId(fileIdentifier, subscription.getSubscriptionId()).toString(),
                 imiServiceId,

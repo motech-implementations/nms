@@ -16,7 +16,10 @@ public enum DayOfTheWeek {
     }
 
     public DayOfTheWeek nextDay() {
-        return fromInt((value + 1) % 7);
+        if (value == SUNDAY.getValue()) {
+            return MONDAY;
+        }
+        return values()[value];
     }
 
     private final int value;
