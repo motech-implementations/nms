@@ -1,5 +1,6 @@
 package org.motechproject.nms.imi.component;
 
+import org.joda.time.DateTime;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.annotations.MotechListener;
 import org.motechproject.nms.imi.domain.CallDetailRecord;
@@ -38,6 +39,16 @@ public class CallRescheduler {
     }
 
 
+    private void checkSubscriptionCompleted(Subscription subscription) {
+        DateTime tomorrow = DateTime.now().plusDays(1);
+        if (!subscription.hasCompleted(tomorrow)) {
+            // This subscription has not completed
+            return;
+        }
+        LOGGER.debug("Subscription completed: {}", subscription.getSubscriptionId());
+        subscriptionService.markSubscriptionComplete(subscription);
+    }
+
     @MotechListener(subjects = { RESCHEDULE_CALL })
     public void rescheduleCall(MotechEvent event) {
         LOGGER.debug("rescheduleCall() is handling {}", event.toString());
@@ -73,6 +84,11 @@ public class CallRescheduler {
                 LOGGER.debug("Not re-rescheduling single-retry msisdn {} subscription {}: max retry exceeded",
                         cdr.getMsisdn(), requestId.getSubscriptionId());
                 callRetryDataService.delete(callRetry);
+
+                // Check if this subscription needs to be marked complete (even if we failed to send the last
+                // message)
+                checkSubscriptionCompleted(subscription);
+
                 return;
             }
 
@@ -82,6 +98,11 @@ public class CallRescheduler {
                 LOGGER.debug("Not re-rescheduling multiple-retry msisdn {} subscription {}: max retry exceeded",
                         cdr.getMsisdn(), requestId.getSubscriptionId());
                 callRetryDataService.delete(callRetry);
+
+                // Check if this subscription needs to be marked complete (even if we failed to send the last
+                // message)
+                checkSubscriptionCompleted(subscription);
+
                 return;
             }
 

@@ -25,6 +25,8 @@ public interface SubscriptionService {
 
     void deactivateSubscription(Subscription subscription, DeactivationReason reason);
 
+    void markSubscriptionComplete(Subscription subscription);
+
     SubscriptionPack getSubscriptionPack(String name);
 
     void deleteAll();
