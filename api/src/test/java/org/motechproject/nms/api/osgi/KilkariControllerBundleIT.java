@@ -30,9 +30,15 @@ import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackMessageDataService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
-import org.motechproject.nms.region.language.domain.Language;
-import org.motechproject.nms.region.language.repository.CircleLanguageDataService;
-import org.motechproject.nms.region.language.repository.LanguageDataService;
+import org.motechproject.nms.region.domain.Circle;
+import org.motechproject.nms.region.domain.District;
+import org.motechproject.nms.region.domain.Language;
+import org.motechproject.nms.region.domain.LanguageLocation;
+import org.motechproject.nms.region.domain.State;
+import org.motechproject.nms.region.repository.CircleDataService;
+import org.motechproject.nms.region.repository.LanguageDataService;
+import org.motechproject.nms.region.repository.LanguageLocationDataService;
+import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.motechproject.testing.osgi.http.SimpleHttpClient;
@@ -93,13 +99,19 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     private LanguageDataService languageDataService;
 
     @Inject
-    private CircleLanguageDataService circleLanguageDataService;
+    private LanguageLocationDataService languageLocationDataService;
+
+    @Inject
+    private CircleDataService circleDataService;
+
+    @Inject
+    private StateDataService stateDataService;
 
     public KilkariControllerBundleIT() {
         System.setProperty("org.motechproject.testing.osgi.http.numTries", "1");
     }
 
-    private Language gLanguage;
+    private LanguageLocation gLanguageLocation;
     private SubscriptionPack gPack1;
     private SubscriptionPack gPack2;
 
@@ -111,12 +123,30 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         serviceUsageCapDataService.deleteAll();
         serviceUsageDataService.deleteAll();
         frontLineWorkerDataService.deleteAll();
-        circleLanguageDataService.deleteAll();
+        languageLocationDataService.deleteAll();
         languageDataService.deleteAll();
+        stateDataService.deleteAll();
+        circleDataService.deleteAll();
     }
 
     private void createLanguageAndSubscriptionPacks() {
-        gLanguage = languageDataService.create(new Language("tamil", "10"));
+        District district = new District();
+        district.setName("District 1");
+        district.setRegionalName("District 1");
+        district.setCode(1L);
+
+        State state = new State();
+        state.setName("State 1");
+        state.setCode(1L);
+        state.getDistricts().add(district);
+
+        stateDataService.create(state);
+        Language language = new Language("tamil");
+        languageDataService.create(language);
+
+        gLanguageLocation = new LanguageLocation("10", new Circle("AA"), language, true);
+        gLanguageLocation.getDistrictSet().add(district);
+        languageLocationDataService.create(gLanguageLocation);
 
         subscriptionService.createSubscriptionPacks();
         gPack1 = subscriptionPackDataService.byName("childPack"); // 48 weeks, 1 message per week
@@ -130,12 +160,12 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         Subscriber subscriber1 = subscriberDataService.create(new Subscriber(1000000000L));
         Subscriber subscriber2 = subscriberDataService.create(new Subscriber(2000000000L));
 
-        subscriptionService.createSubscription(subscriber1.getCallingNumber(), gLanguage, gPack1,
-                SubscriptionOrigin.IVR);
-        subscriptionService.createSubscription(subscriber2.getCallingNumber(), gLanguage, gPack1,
-                SubscriptionOrigin.IVR);
-        subscriptionService.createSubscription(subscriber2.getCallingNumber(), gLanguage, gPack2,
-                SubscriptionOrigin.IVR);
+        subscriptionService.createSubscription(subscriber1.getCallingNumber(), gLanguageLocation, gPack1,
+                                               SubscriptionOrigin.IVR);
+        subscriptionService.createSubscription(subscriber2.getCallingNumber(), gLanguageLocation, gPack1,
+                                               SubscriptionOrigin.IVR);
+        subscriptionService.createSubscription(subscriber2.getCallingNumber(), gLanguageLocation, gPack2,
+                                               SubscriptionOrigin.IVR);
     }
 
     private HttpGet createHttpGet(boolean includeCallingNumber, String callingNumber,
@@ -201,7 +231,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscriberDataService.create(mctsSubscriber);
 
         // create subscription to child pack
-        subscriptionService.createSubscription(9999911122L, gLanguage, gPack1, SubscriptionOrigin.MCTS_IMPORT);
+        subscriptionService.createSubscription(9999911122L, gLanguageLocation, gPack1, SubscriptionOrigin.MCTS_IMPORT);
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
 
         // due to subscription rules detailed in #157, we need to clear out the DOB and set an LMP in order to
@@ -211,7 +241,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscriberDataService.update(mctsSubscriber);
 
         // create subscription to pregnancy pack
-        subscriptionService.createSubscription(9999911122L, gLanguage, gPack2, SubscriptionOrigin.MCTS_IMPORT);
+        subscriptionService.createSubscription(9999911122L, gLanguageLocation, gPack2, SubscriptionOrigin.MCTS_IMPORT);
 
         Pattern childPackJsonPattern = Pattern.compile(".*\"subscriptionPack\":\"childPack\",\"inboxWeekId\":\"w36_1\",\"contentFileName\":\"w36_1\\.wav.*");
         Pattern pregnancyPackJsonPattern = Pattern.compile(".*\"subscriptionPack\":\"pregnancyPack\",\"inboxWeekId\":\"w2_2\",\"contentFileName\":\"w2_2\\.wav.*");
@@ -231,7 +261,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(30));
         subscriberDataService.create(mctsSubscriber);
         // create subscription to pregnancy pack, not due to start for 60 days
-        subscriptionService.createSubscription(9999911122L, gLanguage, gPack2, SubscriptionOrigin.MCTS_IMPORT);
+        subscriptionService.createSubscription(9999911122L, gLanguageLocation, gPack2, SubscriptionOrigin.MCTS_IMPORT);
 
         Pattern expectedJsonPattern = Pattern.compile(".*\"subscriptionPack\":\"pregnancyPack\",\"inboxWeekId\":null,\"contentFileName\":null.*");
 
@@ -400,7 +430,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(14));
         subscriberDataService.create(mctsSubscriber);
 
-        subscriptionService.createSubscription(9999911122L, gLanguage, gPack1, SubscriptionOrigin.MCTS_IMPORT);
+        subscriptionService.createSubscription(9999911122L, gLanguageLocation, gPack1, SubscriptionOrigin.MCTS_IMPORT);
 
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());

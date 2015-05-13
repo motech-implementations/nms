@@ -34,7 +34,8 @@ import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
-import org.motechproject.nms.region.language.domain.Language;
+import org.motechproject.nms.region.domain.Circle;
+import org.motechproject.nms.region.domain.LanguageLocation;
 import org.motechproject.scheduler.contract.RepeatingSchedulableJob;
 import org.motechproject.scheduler.service.MotechSchedulerService;
 import org.motechproject.server.config.SettingsFacade;
@@ -284,15 +285,21 @@ public class TargetFileServiceImpl implements TargetFileService {
                 Subscriber subscriber = subscription.getSubscriber();
 
                 //todo: don't understand why subscriber.getLanguage() doesn't work here...
-                Language language = (Language) subscriberDataService.getDetachedField(subscriber, "language");
-                writer.write(language.getCode());
+                // it's not working because of https://applab.atlassian.net/browse/MOTECH-1678
+                LanguageLocation languageLocation;
+                languageLocation = (LanguageLocation) subscriberDataService.getDetachedField(subscriber,
+                        "languageLocation");
+                writer.write(languageLocation.getCode());
+
+                Circle circle;
+                circle = (Circle) subscriberDataService.getDetachedField(subscriber, "circle");
 
                 RequestId requestId = new RequestId(fileIdentifier, subscription.getSubscriptionId());
                 writeSubscriptionRow(requestId.toString(), imiServiceId,
                         subscriber.getCallingNumber().toString(), NORMAL_PRIORITY, callFlowUrl,
                         "???ContentFileName???", //todo: get that from lauren when it's ready
                         1, //todo: and that too
-                        language.getCode(), subscriber.getCircle(),
+                        languageLocation.getCode(), circle.getName(),
                         subscription.getOrigin().getCode(), writer);
             }
 

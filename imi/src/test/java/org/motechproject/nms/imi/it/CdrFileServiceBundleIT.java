@@ -20,8 +20,11 @@ import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.domain.CallStatus;
-import org.motechproject.nms.region.language.repository.CircleLanguageDataService;
-import org.motechproject.nms.region.language.repository.LanguageDataService;
+import org.motechproject.nms.region.repository.CircleDataService;
+import org.motechproject.nms.region.repository.DistrictDataService;
+import org.motechproject.nms.region.repository.LanguageDataService;
+import org.motechproject.nms.region.repository.LanguageLocationDataService;
+import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.ops4j.pax.exam.ExamFactory;
@@ -55,9 +58,6 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
     private LanguageDataService languageDataService;
 
     @Inject
-    private CircleLanguageDataService circleLanguageDataService;
-
-    @Inject
     private CallRetryDataService callRetryDataService;
 
     @Inject
@@ -66,13 +66,27 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
     @Inject
     CdrFileService cdrFileService;
 
+    @Inject
+    private LanguageLocationDataService languageLocationDataService;
+
+    @Inject
+    private CircleDataService circleDataService;
+
+    @Inject
+    private StateDataService stateDataService;
+
+    @Inject
+    private DistrictDataService districtDataService;
 
     @Before
     public void cleanupDatabase() {
         subscriptionService.deleteAll();
         subscriberDataService.deleteAll();
-        circleLanguageDataService.deleteAll();
+        languageLocationDataService.deleteAll();
         languageDataService.deleteAll();
+        districtDataService.deleteAll();
+        stateDataService.deleteAll();
+        circleDataService.deleteAll();
         callRetryDataService.deleteAll();
     }
 
@@ -90,7 +104,8 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         getLogger().debug("testValidRequest()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                languageDataService, circleLanguageDataService, callRetryDataService);
+                languageDataService, languageLocationDataService, circleDataService, stateDataService,
+                districtDataService, callRetryDataService);
 
         List<CallDetailRecord> cdrs = helper.makeCdrs();
         helper.setCrds(cdrs);

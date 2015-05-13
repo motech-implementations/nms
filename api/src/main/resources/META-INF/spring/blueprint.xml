@@ -15,15 +15,11 @@
 
     <osgi:reference id="transactionManager" interface="org.springframework.transaction.PlatformTransactionManager"/>
 
-    <osgi:reference id="languageService" interface="org.motechproject.nms.region.language.service.LanguageService"/>
-
     <osgi:reference id="subscriberService" interface="org.motechproject.nms.kilkari.service.SubscriberService"/>
 
     <osgi:reference id="subscriptionService" interface="org.motechproject.nms.kilkari.service.SubscriptionService"/>
 
     <osgi:reference id="inboxService" interface="org.motechproject.nms.kilkari.service.InboxService"/>
-
-    <osgi:reference id="locationService" interface="org.motechproject.nms.region.location.service.LocationService"/>
 
     <osgi:reference id="frontLineWorkerService" interface="org.motechproject.nms.flw.service.FrontLineWorkerService"/>
 
@@ -38,5 +34,9 @@
     <osgi:reference id="whitelistService" interface="org.motechproject.nms.flw.service.WhitelistService"/>
 
     <osgi:reference id="mobileAcademyService" interface="org.motechproject.nms.mobileacademy.service.MobileAcademyService"/>
+
+    <osgi:reference id="languageLocationService" interface="org.motechproject.nms.region.service.LanguageLocationService"/>
+
+    <osgi:reference id="circleService" interface="org.motechproject.nms.region.service.CircleService"/>
 
 </beans>

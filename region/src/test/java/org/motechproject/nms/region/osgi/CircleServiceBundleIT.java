@@ -3,10 +3,24 @@ package org.motechproject.nms.region.osgi;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.motechproject.nms.region.circle.domain.Circle;
-import org.motechproject.nms.region.circle.repository.CircleDataService;
-import org.motechproject.nms.region.location.domain.State;
-import org.motechproject.nms.region.location.repository.StateDataService;
+import org.motechproject.nms.region.domain.Circle;
+import org.motechproject.nms.region.domain.District;
+import org.motechproject.nms.region.domain.HealthBlock;
+import org.motechproject.nms.region.domain.HealthFacility;
+import org.motechproject.nms.region.domain.HealthFacilityType;
+import org.motechproject.nms.region.domain.HealthSubFacility;
+import org.motechproject.nms.region.domain.State;
+import org.motechproject.nms.region.domain.Taluka;
+import org.motechproject.nms.region.domain.Village;
+import org.motechproject.nms.region.repository.CircleDataService;
+import org.motechproject.nms.region.repository.DistrictDataService;
+import org.motechproject.nms.region.repository.HealthBlockDataService;
+import org.motechproject.nms.region.repository.HealthFacilityDataService;
+import org.motechproject.nms.region.repository.HealthFacilityTypeDataService;
+import org.motechproject.nms.region.repository.HealthSubFacilityDataService;
+import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.repository.TalukaDataService;
+import org.motechproject.nms.region.repository.VillageDataService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.ops4j.pax.exam.ExamFactory;
@@ -25,21 +39,100 @@ import static org.junit.Assert.assertNotNull;
 public class CircleServiceBundleIT extends BasePaxIT {
 
     @Inject
+    private CircleDataService circleDataService;
+
+    @Inject
     private StateDataService stateDataService;
 
     @Inject
-    private CircleDataService circleDataService;
+    private DistrictDataService districtDataService;
+
+    @Inject
+    private TalukaDataService talukaDataService;
+
+    @Inject
+    private VillageDataService villageDataService;
+
+    @Inject
+    private HealthBlockDataService healthBlockDataService;
+
+    @Inject
+    private HealthFacilityTypeDataService healthFacilityTypeDataService;
+
+    @Inject
+    private HealthFacilityDataService healthFacilityDataService;
+
+    @Inject
+    private HealthSubFacilityDataService healthSubFacilityDataService;
+
+    District district;
+    Taluka taluka;
+    Village village;
+    HealthBlock healthBlock;
+    HealthFacilityType healthFacilityType;
+    HealthFacility healthFacility;
+    HealthSubFacility healthSubFacility;
 
     // Circle 1           -> State 1
     // Circle 2           -> State 2, State 3
     // Circle 3, Circle 4 -> State 4
     private void setupData() {
+        healthSubFacilityDataService.deleteAll();
+        healthFacilityDataService.deleteAll();
+        healthFacilityTypeDataService.deleteAll();
+        healthBlockDataService.deleteAll();
+        villageDataService.deleteAll();
+        talukaDataService.deleteAll();
+        districtDataService.deleteAll();
         stateDataService.deleteAll();
         circleDataService.deleteAll();
+
+        healthSubFacility = new HealthSubFacility();
+        healthSubFacility.setName("Health Sub Facility 1");
+        healthSubFacility.setRegionalName("Health Sub Facility 1");
+        healthSubFacility.setCode(1L);
+
+        healthFacilityType = new HealthFacilityType();
+        healthFacilityType.setName("Health Facility Type 1");
+        healthFacilityType.setCode(1L);
+
+        healthFacility = new HealthFacility();
+        healthFacility.setName("Health Facility 1");
+        healthFacility.setRegionalName("Health Facility 1");
+        healthFacility.setCode(1L);
+        healthFacility.setHealthFacilityType(healthFacilityType);
+        healthFacility.getHealthSubFacilities().add(healthSubFacility);
+
+        healthBlock = new HealthBlock();
+        healthBlock.setName("Health Block 1");
+        healthBlock.setRegionalName("Health Block 1");
+        healthBlock.setHq("Health Block 1 HQ");
+        healthBlock.setCode(1L);
+        healthBlock.getHealthFacilities().add(healthFacility);
+
+        village = new Village();
+        village.setName("Village 1");
+        village.setRegionalName("Village 1");
+        village.setVcode(1L);
+
+        taluka = new Taluka();
+        taluka.setName("Taluka 1");
+        taluka.setRegionalName("Taluka 1");
+        taluka.setIdentity(1);
+        taluka.setCode("0004");
+        taluka.getVillages().add(village);
+        taluka.getHealthBlocks().add(healthBlock);
+
+        district = new District();
+        district.setName("District 1");
+        district.setRegionalName("District 1");
+        district.setCode(1L);
+        district.getTalukas().add(taluka);
 
         State state1 = new State();
         state1.setName("State 1");
         state1.setCode(1L);
+        state1.getDistricts().add(district);
 
         State state2 = new State();
         state2.setName("State 2");

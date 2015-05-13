@@ -5,7 +5,7 @@ import org.motechproject.mds.util.InstanceSecurityRestriction;
 import org.motechproject.nms.flw.domain.ServiceUsageCap;
 import org.motechproject.nms.flw.repository.ServiceUsageCapDataService;
 import org.motechproject.nms.flw.service.ServiceUsageCapService;
-import org.motechproject.nms.region.location.domain.State;
+import org.motechproject.nms.region.domain.State;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -38,7 +38,7 @@ public class ServiceUsageCapServiceImpl implements ServiceUsageCapService {
                 public ServiceUsageCap execute(Query query, InstanceSecurityRestriction restriction) {
 
                     query.setFilter("state == flw_state && service == flw_service");
-                    query.declareParameters("org.motechproject.nms.region.location.domain.State flw_state, org.motechproject.nms.flw.domain.Service flw_service");
+                    query.declareParameters("org.motechproject.nms.region.domain.State flw_state, org.motechproject.nms.flw.domain.Service flw_service");
                     query.setUnique(true);
 
                     return (ServiceUsageCap) query.execute(state, service);
@@ -58,7 +58,7 @@ public class ServiceUsageCapServiceImpl implements ServiceUsageCapService {
             public ServiceUsageCap execute(Query query, InstanceSecurityRestriction restriction) {
 
                 query.setFilter("state == flw_state && service == flw_service");
-                query.declareParameters("org.motechproject.nms.region.location.domain.State flw_state, org.motechproject.nms.flw.domain.Service flw_service");
+                query.declareParameters("org.motechproject.nms.region.domain.State flw_state, org.motechproject.nms.flw.domain.Service flw_service");
                 query.setUnique(true);
 
                 return (ServiceUsageCap) query.execute(null, service);

@@ -4,7 +4,7 @@ import org.motechproject.mds.query.QueryExecution;
 import org.motechproject.mds.util.InstanceSecurityRestriction;
 import org.motechproject.nms.flw.repository.WhitelistEntryDataService;
 import org.motechproject.nms.flw.service.WhitelistService;
-import org.motechproject.nms.region.location.domain.State;
+import org.motechproject.nms.region.domain.State;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -26,7 +26,7 @@ public class WhitelistServiceImpl implements WhitelistService {
             public Long execute(Query query, InstanceSecurityRestriction restriction) {
 
                 query.setFilter("state == flw_state");
-                query.declareParameters("org.motechproject.nms.region.location.domain.State flw_state");
+                query.declareParameters("org.motechproject.nms.region.domain.State flw_state");
                 query.setResult("count(state)");
                 query.setUnique(true);
 
@@ -74,7 +74,7 @@ public class WhitelistServiceImpl implements WhitelistService {
             public Long execute(Query query, InstanceSecurityRestriction restriction) {
 
                 query.setFilter("state == flw_state && contactNumber == flw_number");
-                query.declareParameters("org.motechproject.nms.region.location.domain.State flw_state, Long flw_number");
+                query.declareParameters("org.motechproject.nms.region.domain.State flw_state, Long flw_number");
                 query.setResult("count(contactNumber)");
                 query.setUnique(true);
 

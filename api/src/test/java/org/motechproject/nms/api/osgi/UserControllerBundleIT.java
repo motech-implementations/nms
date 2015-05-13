@@ -29,7 +29,6 @@ import org.motechproject.nms.flw.repository.WhitelistEntryDataService;
 import org.motechproject.nms.flw.repository.WhitelistStateDataService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.kilkari.domain.Subscriber;
-import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
@@ -37,13 +36,16 @@ import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
-import org.motechproject.nms.region.language.domain.CircleLanguage;
-import org.motechproject.nms.region.language.domain.Language;
-import org.motechproject.nms.region.language.repository.CircleLanguageDataService;
-import org.motechproject.nms.region.language.repository.LanguageDataService;
-import org.motechproject.nms.region.location.domain.District;
-import org.motechproject.nms.region.location.domain.State;
-import org.motechproject.nms.region.location.repository.StateDataService;
+import org.motechproject.nms.region.domain.Circle;
+import org.motechproject.nms.region.domain.District;
+import org.motechproject.nms.region.domain.Language;
+import org.motechproject.nms.region.domain.LanguageLocation;
+import org.motechproject.nms.region.domain.State;
+import org.motechproject.nms.region.repository.CircleDataService;
+import org.motechproject.nms.region.repository.DistrictDataService;
+import org.motechproject.nms.region.repository.LanguageDataService;
+import org.motechproject.nms.region.repository.LanguageLocationDataService;
+import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.motechproject.testing.osgi.http.SimpleHttpClient;
@@ -102,7 +104,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     private LanguageDataService languageDataService;
 
     @Inject
-    private CircleLanguageDataService circleLanguageDataService;
+    private LanguageLocationDataService languageLocationDataService;
 
     @Inject
     private StateDataService stateDataService;
@@ -116,6 +118,12 @@ public class UserControllerBundleIT extends BasePaxIT {
     @Inject
     private CallDetailRecordDataService callDetailRecordDataService;
 
+    @Inject
+    private CircleDataService circleDataService;
+
+    @Inject
+    private DistrictDataService districtDataService;
+
     public UserControllerBundleIT() {
         System.setProperty("org.motechproject.testing.osgi.http.numTries", "1");
     }
@@ -128,12 +136,14 @@ public class UserControllerBundleIT extends BasePaxIT {
         serviceUsageDataService.deleteAll();
         callDetailRecordDataService.deleteAll();
         frontLineWorkerDataService.deleteAll();
-        stateDataService.deleteAll();
         subscriptionDataService.deleteAll();
         subscriptionPackDataService.deleteAll();
         subscriberDataService.deleteAll();
-        circleLanguageDataService.deleteAll();
+        languageLocationDataService.deleteAll();
         languageDataService.deleteAll();
+        districtDataService.deleteAll();
+        stateDataService.deleteAll();
+        circleDataService.deleteAll();
     }
 
     /*
@@ -145,10 +155,25 @@ public class UserControllerBundleIT extends BasePaxIT {
     private void createKilkariTestData() {
         cleanAllData();
 
-        Language ta = languageDataService.create(new Language("tamil", "50"));
+        District district = new District();
+        district.setName("District 1");
+        district.setRegionalName("District 1");
+        district.setCode(1L);
 
-        CircleLanguage circleLanguage = new CircleLanguage("AA", ta);
-        circleLanguageDataService.create(circleLanguage);
+        State state = new State();
+        state.setName("State 1");
+        state.setCode(1L);
+        state.getDistricts().add(district);
+
+        stateDataService.create(state);
+
+        Language ta = languageDataService.create(new Language("tamil"));
+
+        Circle circle = new Circle("AA");
+
+        LanguageLocation languageLocation = new LanguageLocation("50", circle, ta, true);
+        languageLocation.getDistrictSet().add(district);
+        languageLocationDataService.create(languageLocation);
 
         SubscriptionPack pack1 = subscriptionPackDataService.create(new SubscriptionPack("pack1",
                 SubscriptionPackType.CHILD, 48, 1, null));
@@ -157,15 +182,15 @@ public class UserControllerBundleIT extends BasePaxIT {
         List<SubscriptionPack> onePack = Arrays.asList(pack1);
         List<SubscriptionPack> twoPacks = Arrays.asList(pack1, pack2);
 
-        Subscriber subscriber1 = subscriberDataService.create(new Subscriber(1000000000L, ta));
-        Subscriber subscriber2 = subscriberDataService.create(new Subscriber(2000000000L, ta));
+        Subscriber subscriber1 = subscriberDataService.create(new Subscriber(1000000000L, languageLocation));
+        Subscriber subscriber2 = subscriberDataService.create(new Subscriber(2000000000L, languageLocation));
         Subscriber subscriber3 = subscriberDataService.create(new Subscriber(3000000000L));
 
-        subscriptionService.createSubscription(subscriber1.getCallingNumber(), ta, pack1,
+        subscriptionService.createSubscription(subscriber1.getCallingNumber(), languageLocation, pack1,
                 SubscriptionOrigin.IVR);
-        subscriptionService.createSubscription(subscriber2.getCallingNumber(), ta, pack1,
+        subscriptionService.createSubscription(subscriber2.getCallingNumber(), languageLocation, pack1,
                 SubscriptionOrigin.IVR);
-        subscriptionService.createSubscription(subscriber2.getCallingNumber(), ta, pack2,
+        subscriptionService.createSubscription(subscriber2.getCallingNumber(), languageLocation, pack2,
                 SubscriptionOrigin.IVR);
     }
 
@@ -175,11 +200,24 @@ public class UserControllerBundleIT extends BasePaxIT {
         FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 1111111111L);
         frontLineWorkerService.add(flw);
 
-        Language language = new Language("Papiamento", "99");
+        District district = new District();
+        district.setName("District 1");
+        district.setRegionalName("District 1");
+        district.setCode(1L);
+
+        State state = new State();
+        state.setName("State 1");
+        state.setCode(1L);
+        state.getDistricts().add(district);
+
+        stateDataService.create(state);
+
+        Language language = new Language("Papiamento");
         languageDataService.create(language);
 
-        CircleLanguage circleLanguage = new CircleLanguage("AA", language);
-        circleLanguageDataService.create(circleLanguage);
+        LanguageLocation languageLocation = new LanguageLocation("99", new Circle("AA"), language, true);
+        languageLocation.getDistrictSet().add(district);
+        languageLocationDataService.create(languageLocation);
 
         ServiceUsageCap serviceUsageCap = new ServiceUsageCap(null, Service.MOBILE_KUNJI, 3600);
         serviceUsageCapDataService.create(serviceUsageCap);
@@ -188,18 +226,43 @@ public class UserControllerBundleIT extends BasePaxIT {
     private void createFlwWithLanguageServiceUsageAndCappedService() {
         cleanAllData();
 
-        Language language = new Language("English", "10");
+        Language language = new Language("English");
         languageDataService.create(language);
+
+        Circle circle = new Circle("AA");
+
+        District district = new District();
+        district.setName("District 1");
+        district.setRegionalName("District 1");
+        district.setCode(1L);
+
+        District district2 = new District();
+        district2.setName("District 2");
+        district2.setRegionalName("District 2");
+        district2.setCode(2L);
+
+        State state = new State();
+        state.setName("State 1");
+        state.setCode(1L);
+        state.getDistricts().add(district);
+        state.getDistricts().add(district2);
+
+        stateDataService.create(state);
+
+        LanguageLocation languageLocation = new LanguageLocation("10", circle, language, false);
+        languageLocation.getDistrictSet().add(district);
+        languageLocationDataService.create(languageLocation);
 
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
-        flw.setLanguage(language);
+        flw.setLanguageLocation(languageLocation);
         frontLineWorkerService.add(flw);
 
-        language = new Language("Papiamento", "99");
+        language = new Language("Papiamento");
         languageDataService.create(language);
 
-        CircleLanguage circleLanguage = new CircleLanguage("AA", language);
-        circleLanguageDataService.create(circleLanguage);
+        languageLocation = new LanguageLocation("99", circle, language, true);
+        languageLocation.getDistrictSet().add(district2);
+        languageLocationDataService.create(languageLocation);
 
         ServiceUsageCap serviceUsageCap = new ServiceUsageCap(null, Service.MOBILE_KUNJI, 3600);
         serviceUsageCapDataService.create(serviceUsageCap);
@@ -212,18 +275,43 @@ public class UserControllerBundleIT extends BasePaxIT {
     private void createFlwWithLanguageFullServiceUsageAndCappedService() {
         cleanAllData();
 
-        Language language = new Language("English", "10");
+        Circle circle = new Circle("AA");
+
+        District district = new District();
+        district.setName("District 1");
+        district.setRegionalName("District 1");
+        district.setCode(1L);
+
+        District district2 = new District();
+        district2.setName("District 2");
+        district2.setRegionalName("District 2");
+        district2.setCode(2L);
+
+        State state = new State();
+        state.setName("State 1");
+        state.setCode(1L);
+        state.getDistricts().add(district);
+        state.getDistricts().add(district2);
+
+        stateDataService.create(state);
+
+        Language language = new Language("English");
         languageDataService.create(language);
+
+        LanguageLocation languageLocation = new LanguageLocation("10", circle, language, false);
+        languageLocation.getDistrictSet().add(district);
+        languageLocationDataService.create(languageLocation);
 
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
-        flw.setLanguage(language);
+        flw.setLanguageLocation(languageLocation);
         frontLineWorkerService.add(flw);
 
-        language = new Language("Papiamento", "99");
+        language = new Language("Papiamento");
         languageDataService.create(language);
 
-        CircleLanguage circleLanguage = new CircleLanguage("AA", language);
-        circleLanguageDataService.create(circleLanguage);
+        languageLocation = new LanguageLocation("99", circle, language, true);
+        languageLocation.getDistrictSet().add(district2);
+        languageLocationDataService.create(languageLocation);
 
         ServiceUsageCap serviceUsageCap = new ServiceUsageCap(null, Service.MOBILE_KUNJI, 3600);
         serviceUsageCapDataService.create(serviceUsageCap);
@@ -235,18 +323,43 @@ public class UserControllerBundleIT extends BasePaxIT {
     private void createFlwWithLanguageFullUsageOfBothServiceUncapped() {
         cleanAllData();
 
-        Language language = new Language("English", "10");
+        Circle circle = new Circle("AA");
+
+        District district = new District();
+        district.setName("District 1");
+        district.setRegionalName("District 1");
+        district.setCode(1L);
+
+        District district2 = new District();
+        district2.setName("District 2");
+        district2.setRegionalName("District 2");
+        district2.setCode(2L);
+
+        State state = new State();
+        state.setName("State 1");
+        state.setCode(1L);
+        state.getDistricts().add(district);
+        state.getDistricts().add(district2);
+
+        stateDataService.create(state);
+
+        Language language = new Language("English");
         languageDataService.create(language);
+
+        LanguageLocation languageLocation = new LanguageLocation("10", circle, language, false);
+        languageLocation.getDistrictSet().add(district);
+        languageLocationDataService.create(languageLocation);
 
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
-        flw.setLanguage(language);
+        flw.setLanguageLocation(languageLocation);
         frontLineWorkerService.add(flw);
 
-        language = new Language("Papiamento", "99");
+        language = new Language("Papiamento");
         languageDataService.create(language);
 
-        CircleLanguage circleLanguage = new CircleLanguage("AA", language);
-        circleLanguageDataService.create(circleLanguage);
+        languageLocation = new LanguageLocation("99", circle, language, true);
+        languageLocation.getDistrictSet().add(district2);
+        languageLocationDataService.create(languageLocation);
 
         ServiceUsage serviceUsage = new ServiceUsage(flw, Service.MOBILE_KUNJI, 1, 1, 1, DateTime.now());
         serviceUsageDataService.create(serviceUsage);
@@ -261,6 +374,8 @@ public class UserControllerBundleIT extends BasePaxIT {
 
     private void createFlwWithStateNotInWhitelist() {
         cleanAllData();
+
+        circleDataService.create(new Circle("AA"));
 
         District district = new District();
         district.setName("9");
@@ -284,10 +399,27 @@ public class UserControllerBundleIT extends BasePaxIT {
     private void createFlwWithLanguageLocationCodeNotInWhitelist() {
         cleanAllData();
 
+
+        District district = new District();
+        district.setName("District 1");
+        district.setRegionalName("District 1");
+        district.setCode(1L);
+
+        State whitelist = new State();
+        whitelist.setName("Whitelist");
+        whitelist.setCode(1L);
+        whitelist.getDistricts().add(district);
+
+        stateDataService.create(whitelist);
+
         // Currently the code to get a state from a languageLocationCode is stubbed out.
-        // llc 34 returns the state "WhitelistState".  There is a todo tracking this.
-        Language language = new Language("Language From Whitelisted State", "34");
+        // llc 34 returns the state "Whitelist".  There is a todo tracking this.
+        Language language = new Language("Language From Whitelisted State");
         languageDataService.create(language);
+
+        LanguageLocation languageLocation = new LanguageLocation("34", new Circle("AA"), language, false);
+        languageLocation.getDistrictSet().add(district);
+        languageLocationDataService.create(languageLocation);
 
         State whitelistState = new State("WhitelistState", 1l);
         stateDataService.create(whitelistState);
@@ -298,17 +430,30 @@ public class UserControllerBundleIT extends BasePaxIT {
         whitelistEntryDataService.create(entry);
 
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111l);
-        flw.setLanguage(language);
+        flw.setLanguageLocation(languageLocation);
         frontLineWorkerService.add(flw);
     }
 
     private void createCircleWithLanguage() {
         cleanAllData();
-        Language language = new Language("Papiamento", "99");
+        District district = new District();
+        district.setName("District 1");
+        district.setRegionalName("District 1");
+        district.setCode(1L);
+
+        State state = new State();
+        state.setName("State 1");
+        state.setCode(1L);
+        state.getDistricts().add(district);
+
+        stateDataService.create(state);
+
+        Language language = new Language("Papiamento");
         languageDataService.create(language);
 
-        CircleLanguage circleLanguage = new CircleLanguage("AA", language);
-        circleLanguageDataService.create(circleLanguage);
+        LanguageLocation languageLocation = new LanguageLocation("99", new Circle("AA"), language, true);
+        languageLocation.getDistrictSet().add(district);
+        languageLocationDataService.create(languageLocation);
     }
 
     private HttpGet createHttpGet(boolean includeService, String service,
@@ -423,7 +568,9 @@ public class UserControllerBundleIT extends BasePaxIT {
                 new HashSet<String>() //subscriptionPackList
         );
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
     @Test
@@ -444,8 +591,9 @@ public class UserControllerBundleIT extends BasePaxIT {
                 new HashSet<String>() //subscriptionPackList
         );
 
-        assertTrue(SimpleHttpClient
-                .execHttpRequest(httpGet, expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
     @Test
@@ -470,7 +618,9 @@ public class UserControllerBundleIT extends BasePaxIT {
                 2      //maxAllowedEndOfUsagePrompt
         );
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
     @Test
@@ -495,7 +645,9 @@ public class UserControllerBundleIT extends BasePaxIT {
                 2      //maxAllowedEndOfUsagePrompt
         );
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
     @Test
@@ -520,7 +672,9 @@ public class UserControllerBundleIT extends BasePaxIT {
                 2      //maxAllowedEndOfUsagePrompt
         );
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
     @Test
@@ -533,17 +687,11 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "123456789012345" //callId
         );
 
-        String expectedJsonResponse = createFlwUserResponseJson(
-                "99",  //defaultLanguageLocationCode
-                "10",  //locationCode
-                1L,    //currentUsageInPulses
-                1L,    //endOfUsagePromptCounter
-                true,  //welcomePromptFlag
-                3600,  //maxAllowedUsageInPulses
-                2      //maxAllowedEndOfUsagePrompt
-        );
+        String expectedJsonResponse = createFailureResponseJson("<serviceName: Invalid>");
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_BAD_REQUEST, ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
     @Test
@@ -558,8 +706,9 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Not Present>");
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
     @Test
@@ -574,8 +723,9 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
     @Test
@@ -590,8 +740,9 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         String expectedJsonResponse = createFailureResponseJson("<operator: Not Present>");
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
     @Test
@@ -606,8 +757,9 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         String expectedJsonResponse = createFailureResponseJson("<circle: Not Present>");
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
     @Test
@@ -622,8 +774,9 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         String expectedJsonResponse = createFailureResponseJson("<callId: Not Present>");
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
     // An FLW that does not exist
@@ -649,7 +802,9 @@ public class UserControllerBundleIT extends BasePaxIT {
                 2      //maxAllowedEndOfUsagePrompt
         );
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
     // An FLW with usage for both MA and MK
@@ -675,7 +830,9 @@ public class UserControllerBundleIT extends BasePaxIT {
                 2      //maxAllowedEndOfUsagePrompt
         );
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
     // An FLW with usage and a service with a cap
@@ -701,7 +858,9 @@ public class UserControllerBundleIT extends BasePaxIT {
                 2      //maxAllowedEndOfUsagePrompt
         );
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
     @Test
@@ -718,8 +877,9 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Not Authorized>");
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_FORBIDDEN, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_FORBIDDEN, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
     @Ignore // TODO: Renable once #119 is merged
@@ -748,8 +908,9 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         String expectedJsonResponse = createFailureResponseJson("<serviceName: Invalid>");
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
     @Test
@@ -758,8 +919,9 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Not Present>");
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
     @Test
@@ -768,8 +930,9 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
     @Test
@@ -778,8 +941,9 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         String expectedJsonResponse = createFailureResponseJson("<callId: Not Present>");
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
     @Test
@@ -788,8 +952,9 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
     @Test
@@ -798,8 +963,9 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         String expectedJsonResponse = createFailureResponseJson("<languageLocationCode: Not Present>");
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
     @Test
@@ -826,9 +992,9 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         FrontLineWorker flw = frontLineWorkerService.getByContactNumber(1111111111l);
         assertNotNull(flw);
-        Language language = flw.getLanguage();
-        assertNotNull(language);
-        assertEquals("FLW Language Code", "99", language.getCode());
+        LanguageLocation languageLocation = flw.getLanguageLocation();
+        assertNotNull(languageLocation);
+        assertEquals("FLW Language Code", "99", languageLocation.getCode());
     }
 
     @Test
@@ -839,8 +1005,9 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         String expectedJsonResponse = createFailureResponseJson("<languageLocationCode: Not Found>");
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_NOT_FOUND, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_NOT_FOUND, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
     @Test
@@ -852,8 +1019,8 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK));
 
         FrontLineWorker flw = frontLineWorkerService.getByContactNumber(1111111111L);
-        Language language = flw.getLanguage();
-        assertNotNull(language);
-        assertEquals("FLW Language Code", "99", language.getCode());
+        LanguageLocation languageLocation = flw.getLanguageLocation();
+        assertNotNull(languageLocation);
+        assertEquals("FLW Language Code", "99", languageLocation.getCode());
     }
 }

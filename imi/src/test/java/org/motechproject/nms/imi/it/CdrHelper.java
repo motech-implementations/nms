@@ -20,10 +20,16 @@ import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.domain.CallStatus;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
-import org.motechproject.nms.region.language.domain.CircleLanguage;
-import org.motechproject.nms.region.language.domain.Language;
-import org.motechproject.nms.region.language.repository.CircleLanguageDataService;
-import org.motechproject.nms.region.language.repository.LanguageDataService;
+import org.motechproject.nms.region.domain.Circle;
+import org.motechproject.nms.region.domain.District;
+import org.motechproject.nms.region.domain.Language;
+import org.motechproject.nms.region.domain.LanguageLocation;
+import org.motechproject.nms.region.domain.State;
+import org.motechproject.nms.region.repository.CircleDataService;
+import org.motechproject.nms.region.repository.DistrictDataService;
+import org.motechproject.nms.region.repository.LanguageDataService;
+import org.motechproject.nms.region.repository.LanguageLocationDataService;
+import org.motechproject.nms.region.repository.StateDataService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,7 +60,10 @@ public class CdrHelper {
     private SubscriptionService subscriptionService;
     private SubscriberDataService subscriberDataService;
     private LanguageDataService languageDataService;
-    private CircleLanguageDataService circleLanguageDataService;
+    private LanguageLocationDataService languageLocationDataService;
+    private CircleDataService circleDataService;
+    private StateDataService stateDataService;
+    private DistrictDataService districtDataService;
     private CallRetryDataService callRetryDataService;
 
     private List<CallDetailRecord> cdrs;
@@ -63,13 +72,18 @@ public class CdrHelper {
 
     public CdrHelper(SettingsService settingsService, SubscriptionService subscriptionService,
                      SubscriberDataService subscriberDataService, LanguageDataService languageDataService,
-                     CircleLanguageDataService circleLanguageDataService, CallRetryDataService callRetryDataService) {
+                     LanguageLocationDataService languageLocationDataService,
+                     CircleDataService circleDataService, StateDataService stateDataService,
+                     DistrictDataService districtDataService, CallRetryDataService callRetryDataService) {
 
         this.settingsService = settingsService;
         this.subscriptionService = subscriptionService;
         this.subscriberDataService = subscriberDataService;
         this.languageDataService = languageDataService;
-        this.circleLanguageDataService = circleLanguageDataService;
+        this.languageLocationDataService = languageLocationDataService;
+        this.circleDataService = circleDataService;
+        this.stateDataService = stateDataService;
+        this.districtDataService = districtDataService;
         this.callRetryDataService = callRetryDataService;
 
         String date = DateTime.now().toString(TIME_FORMATTER);
@@ -95,24 +109,63 @@ public class CdrHelper {
 
 
     private Language makeLanguage() {
-        Language language = languageDataService.findByCode("HI");
+        Language language = languageDataService.findByName("Hindi");
         if (language != null) {
             return language;
         }
-        return languageDataService.create(new Language("Hindi", "HI"));
+        return languageDataService.create(new Language("Hindi"));
     }
 
-
-    private String makeCircle() {
-        List<CircleLanguage> circleLanguages = circleLanguageDataService.findByCircle("XX");
-        if (circleLanguages.size() == 0) {
-            CircleLanguage circleLanguage = circleLanguageDataService.create(new CircleLanguage("XX",
-                    makeLanguage()));
-            return circleLanguage.getCircle();
+    private LanguageLocation makeLanguageLocation() {
+        LanguageLocation languageLocation = languageLocationDataService.findByCode("99");
+        if (languageLocation != null) {
+            return languageLocation;
         }
-        return circleLanguages.get(0).getCircle();
+
+        Language language = makeLanguage();
+        Circle circle = makeCircle();
+
+        languageLocation = new LanguageLocation("99", circle, language, false);
+        languageLocation.getDistrictSet().add(makeDistrict());
+        return languageLocationDataService.create(languageLocation);
     }
 
+    private Circle makeCircle() {
+        Circle circle = circleDataService.findByName("XX");
+        if (circle != null) {
+            return circle;
+        }
+
+        return circleDataService.create(new Circle("XX"));
+    }
+
+    private State makeState() {
+        State state = stateDataService.findByCode(1l);
+        if (state != null) {
+            return state;
+        }
+
+        state = new State();
+        state.setName("State 1");
+        state.setCode(1L);
+
+        return stateDataService.create(state);
+    }
+
+    private District makeDistrict() {
+        District district = districtDataService.findById(1L);
+        if (district != null) {
+            return district;
+        }
+
+        district = new District();
+        district.setName("District 1");
+        district.setRegionalName("District 1");
+        district.setCode(1L);
+        district.setState(makeState());
+
+        return districtDataService.create(district);
+    }
 
     private Long makeNumber() {
         return (long) (Math.random() * 9000000000L) + 1000000000L;
@@ -123,7 +176,7 @@ public class CdrHelper {
         subscriptionService.createSubscriptionPacks();
         Subscriber subscriber = subscriberDataService.create(new Subscriber(
                 makeNumber(),
-                makeLanguage(),
+                makeLanguageLocation(),
                 makeCircle()
         ));
         SubscriptionPack subscriptionPack = subscriptionService.getSubscriptionPack("childPack");
@@ -156,8 +209,8 @@ public class CdrHelper {
                 null,
                 "w1m1.wav", //todo: we still need to look into that
                 "1",
-                makeLanguage().getCode(),
-                makeCircle(),
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
                 CallStatus.SUCCESS,
                 StatusCode.OBD_SUCCESS_CALL_CONNECTED.getValue(),
                 1);
@@ -176,8 +229,8 @@ public class CdrHelper {
                 null,
                 "w1m1.wav", //todo: we still need to look into that
                 "1",
-                makeLanguage().getCode(),
-                makeCircle(),
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
                 CallStatus.FAILED,
                 StatusCode.OBD_FAILED_NOANSWER.getValue(),
                 1);
@@ -188,9 +241,19 @@ public class CdrHelper {
          * failed call - second try - should be retried
          */
         subscription = makeSubscription(SubscriptionOrigin.IVR);
+
+        Subscriber subscriber = subscription.getSubscriber();
+
+        //todo: don't understand why subscriber.getLanguage() doesn't work here...
+        // it's not working because of https://applab.atlassian.net/browse/MOTECH-1678
+        LanguageLocation languageLocation;
+        languageLocation = (LanguageLocation) subscriberDataService.getDetachedField(subscriber,
+                "languageLocation");
+
         callRetryDataService.create(new CallRetry(subscription.getSubscriptionId(),
                 subscription.getSubscriber().getCallingNumber(), DayOfTheWeek.today(), CallStage.RETRY_1,
-                subscription.getSubscriber().getLanguage().getCode(), makeCircle(), SubscriptionOrigin.IVR.toString()));
+                languageLocation.getCode(), makeCircle().getName(),
+                SubscriptionOrigin.IVR.toString()));
         cdr = new CallDetailRecord(
                 new RequestId(fileIdentifier, subscription.getSubscriptionId()).toString(),
                 imiServiceId,
@@ -200,8 +263,8 @@ public class CdrHelper {
                 null,
                 "w1m1.wav", //todo: we still need to look into that
                 "1",
-                makeLanguage().getCode(),
-                makeCircle(),
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
                 CallStatus.FAILED,
                 StatusCode.OBD_FAILED_NOANSWER.getValue(),
                 1);
@@ -212,9 +275,16 @@ public class CdrHelper {
          * failed call - last try - should be not retried
          */
         subscription = makeSubscription(SubscriptionOrigin.IVR);
+        subscriber = subscription.getSubscriber();
+
+        //todo: don't understand why subscriber.getLanguage() doesn't work here...
+        // it's not working because of https://applab.atlassian.net/browse/MOTECH-1678
+        languageLocation = (LanguageLocation) subscriberDataService.getDetachedField(subscriber,
+                "languageLocation");
         callRetryDataService.create(new CallRetry(subscription.getSubscriptionId(),
                 subscription.getSubscriber().getCallingNumber(), DayOfTheWeek.today(), CallStage.RETRY_LAST,
-                subscription.getSubscriber().getLanguage().getCode(), makeCircle(), SubscriptionOrigin.IVR.toString()));
+                languageLocation.getCode(), makeCircle().getName(),
+                SubscriptionOrigin.IVR.toString()));
         cdr = new CallDetailRecord(
                 new RequestId(fileIdentifier, subscription.getSubscriptionId()).toString(),
                 imiServiceId,
@@ -224,8 +294,8 @@ public class CdrHelper {
                 null,
                 "w1m1.wav", //todo: we still need to look into that
                 "1",
-                makeLanguage().getCode(),
-                makeCircle(),
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
                 CallStatus.FAILED,
                 StatusCode.OBD_FAILED_NOANSWER.getValue(),
                 1);
@@ -244,8 +314,8 @@ public class CdrHelper {
                 null,
                 "w1m1.wav", //todo: we still need to look into that
                 "1",
-                makeLanguage().getCode(),
-                makeCircle(),
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
                 CallStatus.REJECTED,
                 StatusCode.OBD_DNIS_IN_DND.getValue(),
                 1);
@@ -264,8 +334,8 @@ public class CdrHelper {
                 null,
                 "w1m1.wav", //todo: we still need to look into that
                 "1",
-                makeLanguage().getCode(),
-                makeCircle(),
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
                 CallStatus.REJECTED,
                 StatusCode.OBD_DNIS_IN_DND.getValue(),
                 1);

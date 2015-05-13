@@ -10,44 +10,44 @@
     <import resource="classpath*:META-INF/motech/*.xml" />
 
     <!-- Language Services -->
-    <osgi:service ref="languageService"
-                  interface="org.motechproject.nms.region.language.service.LanguageService" />
-
-    <osgi:reference id="circleLanguageDataService"
-                    interface="org.motechproject.nms.region.language.repository.CircleLanguageDataService" />
+    <osgi:service ref="languageLocationService"
+                  interface="org.motechproject.nms.region.service.LanguageLocationService" />
 
     <osgi:reference id="languageDataService"
-                    interface="org.motechproject.nms.region.language.repository.LanguageDataService" />
+                    interface="org.motechproject.nms.region.repository.LanguageDataService" />
+
+    <osgi:reference id="languageLocationDataService"
+                    interface="org.motechproject.nms.region.repository.LanguageLocationDataService" />
 
     <!-- Location Services -->
-    <osgi:service ref="locationService"
-                  interface="org.motechproject.nms.region.location.service.LocationService" />
-
     <osgi:reference id="stateDataService"
-                    interface="org.motechproject.nms.region.location.repository.StateDataService" />
+                    interface="org.motechproject.nms.region.repository.StateDataService" />
 
     <osgi:reference id="districtDataService"
-                    interface="org.motechproject.nms.region.location.repository.DistrictDataService" />
+                    interface="org.motechproject.nms.region.repository.DistrictDataService" />
 
     <osgi:reference id="talukaDataService"
-                    interface="org.motechproject.nms.region.location.repository.TalukaDataService" />
+                    interface="org.motechproject.nms.region.repository.TalukaDataService" />
 
     <osgi:reference id="villageDataService"
-                    interface="org.motechproject.nms.region.location.repository.VillageDataService" />
+                    interface="org.motechproject.nms.region.repository.VillageDataService" />
 
     <osgi:reference id="healthBlockDataService"
-                    interface="org.motechproject.nms.region.location.repository.HealthBlockDataService" />
+                    interface="org.motechproject.nms.region.repository.HealthBlockDataService" />
 
     <osgi:reference id="healthFacilityTypeDataService"
-                    interface="org.motechproject.nms.region.location.repository.HealthFacilityTypeDataService" />
+                    interface="org.motechproject.nms.region.repository.HealthFacilityTypeDataService" />
 
     <osgi:reference id="healthFacilityDataService"
-                    interface="org.motechproject.nms.region.location.repository.HealthFacilityDataService" />
+                    interface="org.motechproject.nms.region.repository.HealthFacilityDataService" />
 
     <osgi:reference id="healthSubFacilityDataService"
-                    interface="org.motechproject.nms.region.location.repository.HealthSubFacilityDataService" />
+                    interface="org.motechproject.nms.region.repository.HealthSubFacilityDataService" />
 
     <!--- Circle Services -->
+    <osgi:service ref="circleService"
+                  interface="org.motechproject.nms.region.service.CircleService" />
+
     <osgi:reference id="circleDataService"
-                    interface="org.motechproject.nms.region.circle.repository.CircleDataService" />
+                    interface="org.motechproject.nms.region.repository.CircleDataService" />
 </beans>

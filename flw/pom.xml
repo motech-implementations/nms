@@ -96,7 +96,6 @@
                         </Export-Package>
                         <Import-Package>
                             org.motechproject.osgi.web,
-                            org.motechproject.nms.region.circle.domain,
                             *
                         </Import-Package>
                     </instructions>

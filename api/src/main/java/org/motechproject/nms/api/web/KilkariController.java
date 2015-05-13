@@ -18,8 +18,8 @@ import org.motechproject.nms.kilkari.exception.NoInboxForSubscriptionException;
 import org.motechproject.nms.kilkari.service.InboxService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
-import org.motechproject.nms.region.language.domain.Language;
-import org.motechproject.nms.region.language.service.LanguageService;
+import org.motechproject.nms.region.domain.LanguageLocation;
+import org.motechproject.nms.region.service.LanguageLocationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -54,7 +54,7 @@ public class KilkariController extends BaseController {
     private SubscriptionService subscriptionService;
 
     @Autowired
-    private LanguageService languageService;
+    private LanguageLocationService languageLocationService;
 
     @Autowired
     private InboxService inboxService;
@@ -223,8 +223,9 @@ public class KilkariController extends BaseController {
             throw new IllegalArgumentException(failureReasons.toString());
         }
 
-        Language language = languageService.getLanguage(subscriptionRequest.getLanguageLocationCode());
-        if (language == null) {
+        LanguageLocation languageLocation;
+        languageLocation = languageLocationService.getForCode(subscriptionRequest.getLanguageLocationCode());
+        if (languageLocation == null) {
             throw new NotFoundException(String.format(NOT_FOUND, "languageLocationCode"));
         }
 
@@ -234,8 +235,8 @@ public class KilkariController extends BaseController {
             throw new NotFoundException(String.format(NOT_FOUND, "subscriptionPack"));
         }
 
-        subscriptionService.createSubscription(subscriptionRequest.getCallingNumber(), language,
-                subscriptionPack, SubscriptionOrigin.IVR);
+        subscriptionService.createSubscription(subscriptionRequest.getCallingNumber(), languageLocation,
+                                               subscriptionPack, SubscriptionOrigin.IVR);
     }
 
     /**

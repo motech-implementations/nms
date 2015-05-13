@@ -8,9 +8,9 @@ import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.service.WhitelistService;
 import org.motechproject.nms.props.domain.CallDisconnectReason;
 import org.motechproject.nms.props.domain.CallStatus;
-import org.motechproject.nms.region.location.domain.District;
-import org.motechproject.nms.region.location.domain.State;
-import org.motechproject.nms.region.location.service.LocationService;
+import org.motechproject.nms.region.domain.District;
+import org.motechproject.nms.region.domain.LanguageLocation;
+import org.motechproject.nms.region.domain.State;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,8 +47,6 @@ public class BaseController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BaseController.class);
 
-    @Autowired
-    private LocationService locationService;
     @Autowired
     private WhitelistService whitelistService;
 
@@ -181,7 +179,11 @@ public class BaseController {
         }
 
         if (state == null) {
-            state = locationService.getStateForLanguage(flw.getLanguage());
+            LanguageLocation languageLocation = flw.getLanguageLocation();
+
+            if (languageLocation != null) {
+                state = languageLocation.getState();
+            }
         }
 
         return whitelistService.numberWhitelistedForState(state, flw.getContactNumber());

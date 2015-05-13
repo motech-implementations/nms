@@ -12,10 +12,11 @@ import org.motechproject.nms.flw.domain.Service;
 import org.motechproject.nms.flw.domain.ServiceUsageCap;
 import org.motechproject.nms.flw.repository.ServiceUsageCapDataService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
-import org.motechproject.nms.region.language.domain.CircleLanguage;
-import org.motechproject.nms.region.language.domain.Language;
-import org.motechproject.nms.region.language.repository.CircleLanguageDataService;
-import org.motechproject.nms.region.language.repository.LanguageDataService;
+import org.motechproject.nms.region.domain.Circle;
+import org.motechproject.nms.region.domain.Language;
+import org.motechproject.nms.region.domain.LanguageLocation;
+import org.motechproject.nms.region.repository.LanguageDataService;
+import org.motechproject.nms.region.repository.LanguageLocationDataService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.motechproject.testing.osgi.http.SimpleHttpClient;
@@ -44,24 +45,24 @@ public class LanguageControllerBundleIT extends BasePaxIT {
     private LanguageDataService languageDataService;
 
     @Inject
-    private CircleLanguageDataService circleLanguageDataService;
+    private LanguageLocationDataService languageLocationDataService;
 
     @Inject
     private ServiceUsageCapDataService serviceUsageCapDataService;
 
     private void cleanAllData() {
         serviceUsageCapDataService.deleteAll();
-        circleLanguageDataService.deleteAll();
+        languageLocationDataService.deleteAll();
         languageDataService.deleteAll();
     }
 
     private void createCircleWithLanguage() {
         cleanAllData();
-        Language language = new Language("Papiamento", "99");
+        Language language = new Language("Papiamento");
         languageDataService.create(language);
 
-        CircleLanguage circleLanguage = new CircleLanguage("AA", language);
-        circleLanguageDataService.create(circleLanguage);
+        LanguageLocation languageLocation = new LanguageLocation("99", new Circle("AA"), language, false);
+        languageLocationDataService.create(languageLocation);
     }
 
     private void createFlwCappedServiceNoUsageNoLocationNoLanguage() {
@@ -70,11 +71,11 @@ public class LanguageControllerBundleIT extends BasePaxIT {
         FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 1111111111l);
         frontLineWorkerService.add(flw);
 
-        Language language = new Language("Papiamento", "99");
+        Language language = new Language("Papiamento");
         languageDataService.create(language);
 
-        CircleLanguage circleLanguage = new CircleLanguage("AA", language);
-        circleLanguageDataService.create(circleLanguage);
+        LanguageLocation languageLocation = new LanguageLocation("99", new Circle("AA"), language, false);
+        languageLocationDataService.create(languageLocation);
 
         ServiceUsageCap serviceUsageCap = new ServiceUsageCap(null, Service.MOBILE_KUNJI, 3600);
         serviceUsageCapDataService.create(serviceUsageCap);
@@ -193,9 +194,9 @@ public class LanguageControllerBundleIT extends BasePaxIT {
 
         FrontLineWorker flw = frontLineWorkerService.getByContactNumber(1111111111l);
         assertNotNull(flw);
-        Language language = flw.getLanguage();
-        assertNotNull(language);
-        assertEquals("FLW Language Code", "99", language.getCode());
+        LanguageLocation languageLocation = flw.getLanguageLocation();
+        assertNotNull(languageLocation);
+        assertEquals("FLW Language Code", "99", languageLocation.getCode());
     }
 
     @Test
@@ -226,8 +227,8 @@ public class LanguageControllerBundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK));
 
         FrontLineWorker flw = frontLineWorkerService.getByContactNumber(1111111111l);
-        Language language = flw.getLanguage();
-        assertNotNull(language);
-        assertEquals("FLW Language Code", "99", language.getCode());
+        LanguageLocation languageLocation = flw.getLanguageLocation();
+        assertNotNull(languageLocation);
+        assertEquals("FLW Language Code", "99", languageLocation.getCode());
     }
 }

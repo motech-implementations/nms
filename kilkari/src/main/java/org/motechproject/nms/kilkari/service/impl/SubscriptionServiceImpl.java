@@ -14,7 +14,7 @@ import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
-import org.motechproject.nms.region.language.domain.Language;
+import org.motechproject.nms.region.domain.LanguageLocation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -82,11 +82,11 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
 
     @Override
-    public void createSubscription(long callingNumber, Language language, SubscriptionPack subscriptionPack,
+    public void createSubscription(long callingNumber, LanguageLocation languagelocation, SubscriptionPack subscriptionPack,
                                    SubscriptionOrigin mode) {
         Subscriber subscriber = subscriberDataService.findByCallingNumber(callingNumber);
         if (subscriber == null) {
-            subscriber = new Subscriber(callingNumber, language);
+            subscriber = new Subscriber(callingNumber, languagelocation);
             subscriberDataService.create(subscriber);
         }
 

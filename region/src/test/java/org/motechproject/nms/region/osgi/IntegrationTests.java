@@ -8,7 +8,6 @@ import org.junit.runners.Suite;
  */
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-    LanguageServiceBundleIT.class,
     LocationServiceBundleIT.class,
     CircleServiceBundleIT.class
 })
