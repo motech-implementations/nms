@@ -183,22 +183,17 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
         toReturn.setCallingNumber(Long.parseLong(fromBookmark.getExternalId()));
 
         String bookmark = fromBookmark.getChapterIdentifier() + "_" + fromBookmark.getLessonIdentifier();
+        Map<String, Integer> scores = getScores(fromBookmark);
+
+        // default behavior to map the data
         toReturn.setBookmark(bookmark);
+        toReturn.setScoresByChapter(scores);
 
-        if (fromBookmark.getProgress() != null) {
-
-            Map<String, Integer> scores = getScores(fromBookmark);
-
-            // default behavior to map the data
-            toReturn.setBookmark(bookmark);
-            toReturn.setScoresByChapter(scores);
-
-            // if the bookmark is final and scores pass, reset it
-            if (bookmark.equals(FINAL_BOOKMARK) && getTotalScore(toReturn.getScoresByChapter()) >= PASS_SCORE) {
-                LOGGER.debug("We need to reset bookmark to new state.");
-                toReturn.setScoresByChapter(null);
-                toReturn.setBookmark(null);
-            }
+        // if the bookmark is final and scores pass, reset it
+        if (bookmark.equals(FINAL_BOOKMARK) && getTotalScore(scores) >= PASS_SCORE) {
+            LOGGER.debug("We need to reset bookmark to new state.");
+            toReturn.setScoresByChapter(null);
+            toReturn.setBookmark(null);
         }
 
         return toReturn;
