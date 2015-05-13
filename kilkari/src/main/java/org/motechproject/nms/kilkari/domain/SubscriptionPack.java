@@ -43,15 +43,15 @@ public class SubscriptionPack {
     private int messagesPerWeek;
 
     @Field
-    private List<SubscriptionPackMessage> weeklyMessages;
+    private List<SubscriptionPackMessage> messages;
 
     public SubscriptionPack(String name, SubscriptionPackType type, int weeks, int messagesPerWeek,
-                            List<SubscriptionPackMessage> weeklyMessages) {
+                            List<SubscriptionPackMessage> messages) {
         this.name = name;
         this.type = type;
         this.weeks = weeks;
         this.messagesPerWeek = messagesPerWeek;
-        this.weeklyMessages = weeklyMessages;
+        this.messages = messages;
     }
 
     public String getName() {
@@ -90,12 +90,12 @@ public class SubscriptionPack {
         this.messagesPerWeek = messagesPerWeek;
     }
 
-    public List<SubscriptionPackMessage> getWeeklyMessages() {
-        return weeklyMessages;
+    public List<SubscriptionPackMessage> getMessages() {
+        return messages;
     }
 
-    public void setWeeklyMessages(List<SubscriptionPackMessage> weeklyMessages) {
-        this.weeklyMessages = weeklyMessages;
+    public void setMessages(List<SubscriptionPackMessage> messages) {
+        this.messages = messages;
     }
 
     @Ignore
@@ -125,10 +125,6 @@ public class SubscriptionPack {
 
     @Override
     public int hashCode() {
-        int result = name.hashCode();
-        result = 31 * result + type.hashCode();
-        result = 31 * result + weeks;
-        result = 31 * result + messagesPerWeek;
-        return result;
+        return name.hashCode();
     }
 }

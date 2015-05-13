@@ -7,9 +7,9 @@ import org.motechproject.nms.api.web.contract.mobileAcademy.CourseResponse;
 import org.motechproject.nms.api.web.contract.mobileAcademy.course.Chapter;
 import org.motechproject.nms.api.web.validator.MobileAcademyValidator;
 
-import static junit.framework.Assert.*;
-
-;
+import static junit.framework.Assert.assertFalse;
+import static junit.framework.Assert.assertNotNull;
+import static junit.framework.Assert.assertNull;
 
 /**
  * Unit test for course structure validation

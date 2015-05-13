@@ -161,12 +161,12 @@ public class UserControllerBundleIT extends BasePaxIT {
         Subscriber subscriber2 = subscriberDataService.create(new Subscriber(2000000000L, ta));
         Subscriber subscriber3 = subscriberDataService.create(new Subscriber(3000000000L));
 
-        Subscription subscription1 = subscriptionDataService.create(new Subscription(subscriber1, pack1,
-                                                                    SubscriptionOrigin.IVR));
-        Subscription subscription2 = subscriptionDataService.create(new Subscription(subscriber2, pack1,
-                                                                    SubscriptionOrigin.IVR));
-        Subscription subscription3 = subscriptionDataService.create(new Subscription(subscriber2, pack2,
-                                                                    SubscriptionOrigin.IVR));
+        subscriptionService.createSubscription(subscriber1.getCallingNumber(), ta, pack1,
+                SubscriptionOrigin.IVR);
+        subscriptionService.createSubscription(subscriber2.getCallingNumber(), ta, pack1,
+                SubscriptionOrigin.IVR);
+        subscriptionService.createSubscription(subscriber2.getCallingNumber(), ta, pack2,
+                SubscriptionOrigin.IVR);
     }
 
     private void createFlwCappedServiceNoUsageNoLocationNoLanguage() {

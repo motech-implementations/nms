@@ -1,7 +1,6 @@
 package org.motechproject.nms.kilkari.service.impl;
 
 import org.joda.time.DateTime;
-import org.joda.time.Days;
 import org.motechproject.mds.query.QueryParams;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.domain.Subscriber;
@@ -32,7 +31,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private static final int PREGNANCY_PACK_WEEKS = 72;
     private static final int CHILD_PACK_WEEKS = 48;
     private static final int THREE_MONTHS = 90;
-    private static final int DAYS_IN_WEEK = 7;
 
     private SubscriberDataService subscriberDataService;
     private SubscriptionPackDataService subscriptionPackDataService;
@@ -128,7 +126,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
         if (subscriber.getDateOfBirth() != null && pack.getType() == SubscriptionPackType.CHILD) {
             if (subscriberHasActivePackType(subscriber, SubscriptionPackType.CHILD) ||
-                    subscriptionIsCompleted(subscriber.getDateOfBirth(), pack)) {
+                    (Subscription.hasCompletedForStartDate(subscriber.getDateOfBirth(), DateTime.now(), pack))) {
+
                 // TODO: #138 log the rejected subscription
                 return;
             } else {
@@ -139,7 +138,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         } else if (subscriber.getLastMenstrualPeriod() != null && subscriber.getDateOfBirth() == null &&
                 pack.getType() == SubscriptionPackType.PREGNANCY) {
             if (subscriberHasActivePackType(subscriber, SubscriptionPackType.PREGNANCY) ||
-                    subscriptionIsCompleted(subscriber.getLastMenstrualPeriod().plusDays(THREE_MONTHS), pack)) {
+                    Subscription.hasCompletedForStartDate(subscriber.getLastMenstrualPeriod().plusDays(THREE_MONTHS),
+                            DateTime.now(), pack)) {
                 // TODO: #138 log the rejected subscription
                 return;
             } else {
@@ -183,6 +183,12 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         return subscriptionDataService.findBySubscriptionId(subscriptionId);
     }
 
+    /**
+     * Called by Subscriber.update if the subscriber's LMP or DOB changes -- as a result, the subscription's start date
+     * and/or status may change
+     * @param subscription The subscription to update
+     * @param newReferenceDate The new LMP or DOB from which to base the new subscription start date
+     */
     @Override
     public void updateStartDate(Subscription subscription, DateTime newReferenceDate) {
         if (subscription.getSubscriptionPack().getType() == SubscriptionPackType.PREGNANCY) {
@@ -191,17 +197,11 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             subscription.setStartDate(newReferenceDate);
         }
 
-        if (subscriptionIsCompleted(subscription.getStartDate(), subscription.getSubscriptionPack())) {
+        if (Subscription.hasCompletedForStartDate(subscription.getStartDate(), DateTime.now(),
+                subscription.getSubscriptionPack())) {
             subscription.setStatus(SubscriptionStatus.COMPLETED);
         }
         subscriptionDataService.update(subscription);
-    }
-
-    private boolean subscriptionIsCompleted(DateTime startDate, SubscriptionPack pack) {
-        int totalDaysInPack = DAYS_IN_WEEK * pack.getWeeklyMessages().size() / pack.getMessagesPerWeek();
-        int daysSinceStartDate = Days.daysBetween(startDate, DateTime.now()).getDays();
-
-        return totalDaysInPack < daysSinceStartDate;
     }
 
     @Override
