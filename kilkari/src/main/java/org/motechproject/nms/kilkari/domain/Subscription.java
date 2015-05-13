@@ -130,7 +130,7 @@ public class Subscription {
                 messageIndex = currentWeek - 1;
             }
         } else { // messages per week == 2
-            if (daysIntoWeek > 0 && daysIntoWeek < 4) {
+            if (daysIntoWeek > 0 && daysIntoWeek < 3) {
                 // use this week's first message
                 messageIndex = 2 * (currentWeek - 1);
             } else if (daysIntoWeek >= 4 && daysIntoWeek < 6) {
