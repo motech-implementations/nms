@@ -194,7 +194,7 @@ public class CdrHelper {
         cdr = new CallDetailRecord(
                 new RequestId(fileIdentifier, subscription.getSubscriptionId()).toString(),
                 imiServiceId,
-                subscription.getSubscriber().getCallingNumber().toString(),
+                subscription.getSubscriber().getCallingNumber(),
                 null,
                 0,
                 null,
@@ -218,7 +218,7 @@ public class CdrHelper {
         cdr = new CallDetailRecord(
                 new RequestId(fileIdentifier, subscription.getSubscriptionId()).toString(),
                 imiServiceId,
-                subscription.getSubscriber().getCallingNumber().toString(),
+                subscription.getSubscriber().getCallingNumber(),
                 null,
                 0,
                 null,
@@ -238,7 +238,7 @@ public class CdrHelper {
         cdr = new CallDetailRecord(
                 new RequestId(fileIdentifier, subscription.getSubscriptionId()).toString(),
                 imiServiceId,
-                subscription.getSubscriber().getCallingNumber().toString(),
+                subscription.getSubscriber().getCallingNumber(),
                 null,
                 0,
                 null,
