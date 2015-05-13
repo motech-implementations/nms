@@ -21,6 +21,7 @@ import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.LanguageLocation;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.service.CircleService;
+import org.motechproject.nms.region.service.LanguageLocationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -52,6 +53,9 @@ public class UserController extends BaseController {
 
     @Autowired
     private CircleService circleService;
+
+    @Autowired
+    private LanguageLocationService languageLocationService;
 
     /**
      * 2.2.1 Get User Details API
@@ -106,14 +110,14 @@ public class UserController extends BaseController {
         Kilkari in the house!
          */
         if (KILKARI.equals(serviceName)) {
-            user = getKilkariResponseUser(callingNumber, circleObj);
+            user = getKilkariResponseUser(callingNumber);
         }
 
         if (failureReasons.length() > 0) {
             throw new IllegalArgumentException(failureReasons.toString());
         }
 
-        LanguageLocation defaultLanguageLocation = circleObj.getDefaultLanguageLocation();
+        LanguageLocation defaultLanguageLocation = languageLocationService.getDefaultForCircle(circleObj);
         if (defaultLanguageLocation != null && user != null) {
             user.setDefaultLanguageLocationCode(defaultLanguageLocation.getCode());
         }
@@ -121,7 +125,7 @@ public class UserController extends BaseController {
         return user;
     }
 
-    private UserResponse getKilkariResponseUser(Long callingNumber, Circle circle) {
+    private UserResponse getKilkariResponseUser(Long callingNumber) {
         KilkariUserResponse user = new KilkariUserResponse();
         Set<String> packs = new HashSet<>();
 
@@ -138,11 +142,6 @@ public class UserController extends BaseController {
             }
         }
         user.setSubscriptionPackList(packs);
-
-        LanguageLocation defaultLanguageLocation = circle.getDefaultLanguageLocation();
-        if (defaultLanguageLocation != null) {
-            user.setDefaultLanguageLocationCode(defaultLanguageLocation.getCode());
-        }
 
         return user;
     }

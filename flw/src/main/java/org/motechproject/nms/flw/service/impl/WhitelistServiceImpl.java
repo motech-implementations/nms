@@ -26,7 +26,7 @@ public class WhitelistServiceImpl implements WhitelistService {
             public Long execute(Query query, InstanceSecurityRestriction restriction) {
 
                 query.setFilter("state == flw_state");
-                query.declareParameters("org.motechproject.nms.region.location.domain.State flw_state");
+                query.declareParameters("org.motechproject.nms.region.domain.State flw_state");
                 query.setResult("count(state)");
                 query.setUnique(true);
 

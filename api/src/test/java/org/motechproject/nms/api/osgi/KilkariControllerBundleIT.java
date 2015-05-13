@@ -35,6 +35,7 @@ import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Language;
 import org.motechproject.nms.region.domain.LanguageLocation;
 import org.motechproject.nms.region.domain.State;
+import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.LanguageLocationDataService;
 import org.motechproject.nms.region.repository.StateDataService;
@@ -101,6 +102,9 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     private LanguageLocationDataService languageLocationDataService;
 
     @Inject
+    private CircleDataService circleDataService;
+
+    @Inject
     private StateDataService stateDataService;
 
     public KilkariControllerBundleIT() {
@@ -119,9 +123,10 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         serviceUsageCapDataService.deleteAll();
         serviceUsageDataService.deleteAll();
         frontLineWorkerDataService.deleteAll();
-        stateDataService.deleteAll();
         languageLocationDataService.deleteAll();
         languageDataService.deleteAll();
+        stateDataService.deleteAll();
+        circleDataService.deleteAll();
     }
 
     private void createLanguageAndSubscriptionPacks() {

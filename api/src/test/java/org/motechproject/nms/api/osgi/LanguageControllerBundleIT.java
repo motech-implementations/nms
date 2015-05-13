@@ -61,7 +61,7 @@ public class LanguageControllerBundleIT extends BasePaxIT {
         Language language = new Language("Papiamento");
         languageDataService.create(language);
 
-        LanguageLocation languageLocation = new LanguageLocation("99", new Circle("AA"), language);
+        LanguageLocation languageLocation = new LanguageLocation("99", new Circle("AA"), language, false);
         languageLocationDataService.create(languageLocation);
     }
 
@@ -74,7 +74,7 @@ public class LanguageControllerBundleIT extends BasePaxIT {
         Language language = new Language("Papiamento");
         languageDataService.create(language);
 
-        LanguageLocation languageLocation = new LanguageLocation("99", new Circle("AA"), language);
+        LanguageLocation languageLocation = new LanguageLocation("99", new Circle("AA"), language, false);
         languageLocationDataService.create(languageLocation);
 
         ServiceUsageCap serviceUsageCap = new ServiceUsageCap(null, Service.MOBILE_KUNJI, 3600);

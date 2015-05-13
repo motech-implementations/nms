@@ -36,7 +36,6 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
-import org.springframework.test.annotation.ExpectedException;
 
 import javax.inject.Inject;
 import java.util.Arrays;
@@ -173,9 +172,9 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         SubscriptionPack pack1 = subscriptionPackDataService.byName("pack1");
         SubscriptionPack pack2 = subscriptionPackDataService.byName("pack2");
         subscriptionService.createSubscription(subscriber.getCallingNumber(), languageLocation, gPack1,
-                                               SubscriptionOrigin.IVR);
+                SubscriptionOrigin.IVR);
         subscriptionService.createSubscription(subscriber.getCallingNumber(), languageLocation, gPack2,
-                                               SubscriptionOrigin.IVR);
+                SubscriptionOrigin.IVR);
 
         subscriber = subscriberService.getSubscriber(1000000000L);
         Set<Subscription> subscriptions = subscriber.getSubscriptions();
@@ -440,7 +439,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
         mctsSubscriber.setLastMenstrualPeriod(now.minusDays(90));
         subscriberDataService.create(mctsSubscriber);
-        subscriptionService.createSubscription(9999911122L, gLanguage, gPack2, SubscriptionOrigin.MCTS_IMPORT);
+        subscriptionService.createSubscription(9999911122L, gLanguageLocation, gPack2, SubscriptionOrigin.MCTS_IMPORT);
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
 
         Subscription subscription = mctsSubscriber.getSubscriptions().iterator().next();
@@ -467,7 +466,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
         mctsSubscriber.setLastMenstrualPeriod(now.minusDays(90));
         subscriberDataService.create(mctsSubscriber);
-        subscriptionService.createSubscription(9999911122L, gLanguage, gPack2, SubscriptionOrigin.MCTS_IMPORT);
+        subscriptionService.createSubscription(9999911122L, gLanguageLocation, gPack2, SubscriptionOrigin.MCTS_IMPORT);
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
 
         Subscription subscription = mctsSubscriber.getSubscriptions().iterator().next();

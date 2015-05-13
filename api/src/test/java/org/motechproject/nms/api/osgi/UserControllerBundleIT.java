@@ -29,7 +29,6 @@ import org.motechproject.nms.flw.repository.WhitelistEntryDataService;
 import org.motechproject.nms.flw.repository.WhitelistStateDataService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.kilkari.domain.Subscriber;
-import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
@@ -140,11 +139,11 @@ public class UserControllerBundleIT extends BasePaxIT {
         subscriptionDataService.deleteAll();
         subscriptionPackDataService.deleteAll();
         subscriberDataService.deleteAll();
-        circleDataService.deleteAll();
-        districtDataService.deleteAll();
-        stateDataService.deleteAll();
         languageLocationDataService.deleteAll();
         languageDataService.deleteAll();
+        districtDataService.deleteAll();
+        stateDataService.deleteAll();
+        circleDataService.deleteAll();
     }
 
     /*
@@ -187,11 +186,11 @@ public class UserControllerBundleIT extends BasePaxIT {
         Subscriber subscriber2 = subscriberDataService.create(new Subscriber(2000000000L, languageLocation));
         Subscriber subscriber3 = subscriberDataService.create(new Subscriber(3000000000L));
 
-        subscriptionService.createSubscription(subscriber1.getCallingNumber(), ta, pack1,
+        subscriptionService.createSubscription(subscriber1.getCallingNumber(), languageLocation, pack1,
                 SubscriptionOrigin.IVR);
-        subscriptionService.createSubscription(subscriber2.getCallingNumber(), ta, pack1,
+        subscriptionService.createSubscription(subscriber2.getCallingNumber(), languageLocation, pack1,
                 SubscriptionOrigin.IVR);
-        subscriptionService.createSubscription(subscriber2.getCallingNumber(), ta, pack2,
+        subscriptionService.createSubscription(subscriber2.getCallingNumber(), languageLocation, pack2,
                 SubscriptionOrigin.IVR);
     }
 
@@ -216,7 +215,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         Language language = new Language("Papiamento");
         languageDataService.create(language);
 
-        LanguageLocation languageLocation = new LanguageLocation("99", new Circle("AA"), language, false);
+        LanguageLocation languageLocation = new LanguageLocation("99", new Circle("AA"), language, true);
         languageLocation.getDistrictSet().add(district);
         languageLocationDataService.create(languageLocation);
 
@@ -261,7 +260,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         language = new Language("Papiamento");
         languageDataService.create(language);
 
-        languageLocation = new LanguageLocation("99", circle, language, false);
+        languageLocation = new LanguageLocation("99", circle, language, true);
         languageLocation.getDistrictSet().add(district2);
         languageLocationDataService.create(languageLocation);
 
@@ -310,7 +309,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         language = new Language("Papiamento");
         languageDataService.create(language);
 
-        languageLocation = new LanguageLocation("99", circle, language, false);
+        languageLocation = new LanguageLocation("99", circle, language, true);
         languageLocation.getDistrictSet().add(district2);
         languageLocationDataService.create(languageLocation);
 
@@ -452,7 +451,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         Language language = new Language("Papiamento");
         languageDataService.create(language);
 
-        LanguageLocation languageLocation = new LanguageLocation("99", new Circle("AA"), language, false);
+        LanguageLocation languageLocation = new LanguageLocation("99", new Circle("AA"), language, true);
         languageLocation.getDistrictSet().add(district);
         languageLocationDataService.create(languageLocation);
     }
@@ -592,8 +591,9 @@ public class UserControllerBundleIT extends BasePaxIT {
                 new HashSet<String>() //subscriptionPackList
         );
 
-        assertTrue(SimpleHttpClient
-                .execHttpRequest(httpGet, expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
     @Test
@@ -618,7 +618,9 @@ public class UserControllerBundleIT extends BasePaxIT {
                 2      //maxAllowedEndOfUsagePrompt
         );
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
     @Test
@@ -643,7 +645,9 @@ public class UserControllerBundleIT extends BasePaxIT {
                 2      //maxAllowedEndOfUsagePrompt
         );
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
     @Test
@@ -668,7 +672,9 @@ public class UserControllerBundleIT extends BasePaxIT {
                 2      //maxAllowedEndOfUsagePrompt
         );
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
     @Test
@@ -681,17 +687,11 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "123456789012345" //callId
         );
 
-        String expectedJsonResponse = createFlwUserResponseJson(
-                "99",  //defaultLanguageLocationCode
-                "10",  //locationCode
-                1L,    //currentUsageInPulses
-                1L,    //endOfUsagePromptCounter
-                true,  //welcomePromptFlag
-                3600,  //maxAllowedUsageInPulses
-                2      //maxAllowedEndOfUsagePrompt
-        );
+        String expectedJsonResponse = createFailureResponseJson("<serviceName: Invalid>");
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_BAD_REQUEST, ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
     @Test
@@ -706,8 +706,9 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Not Present>");
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
     @Test
@@ -722,8 +723,9 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
     @Test
@@ -738,8 +740,9 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         String expectedJsonResponse = createFailureResponseJson("<operator: Not Present>");
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
     @Test
@@ -754,8 +757,9 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         String expectedJsonResponse = createFailureResponseJson("<circle: Not Present>");
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
     @Test
@@ -770,8 +774,9 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         String expectedJsonResponse = createFailureResponseJson("<callId: Not Present>");
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
     // An FLW that does not exist
@@ -797,7 +802,9 @@ public class UserControllerBundleIT extends BasePaxIT {
                 2      //maxAllowedEndOfUsagePrompt
         );
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
     // An FLW with usage for both MA and MK
@@ -823,7 +830,9 @@ public class UserControllerBundleIT extends BasePaxIT {
                 2      //maxAllowedEndOfUsagePrompt
         );
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
     // An FLW with usage and a service with a cap
@@ -849,7 +858,9 @@ public class UserControllerBundleIT extends BasePaxIT {
                 2      //maxAllowedEndOfUsagePrompt
         );
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
     @Test
@@ -866,8 +877,9 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Not Authorized>");
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_FORBIDDEN, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_FORBIDDEN, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
     @Ignore // TODO: Renable once #119 is merged
@@ -896,8 +908,9 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         String expectedJsonResponse = createFailureResponseJson("<serviceName: Invalid>");
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
     @Test
@@ -906,8 +919,9 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Not Present>");
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
     @Test
@@ -916,8 +930,9 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
     @Test
@@ -926,8 +941,9 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         String expectedJsonResponse = createFailureResponseJson("<callId: Not Present>");
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
     @Test
@@ -936,8 +952,9 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
     @Test
@@ -946,8 +963,9 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         String expectedJsonResponse = createFailureResponseJson("<languageLocationCode: Not Present>");
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
     @Test
@@ -987,8 +1005,9 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         String expectedJsonResponse = createFailureResponseJson("<languageLocationCode: Not Found>");
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_NOT_FOUND, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_NOT_FOUND, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
     @Test

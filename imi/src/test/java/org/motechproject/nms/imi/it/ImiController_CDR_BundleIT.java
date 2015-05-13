@@ -14,8 +14,11 @@ import org.motechproject.nms.imi.web.contract.CdrFileNotificationRequest;
 import org.motechproject.nms.imi.web.contract.FileInfo;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
-import org.motechproject.nms.region.language.repository.CircleLanguageDataService;
-import org.motechproject.nms.region.language.repository.LanguageDataService;
+import org.motechproject.nms.region.repository.CircleDataService;
+import org.motechproject.nms.region.repository.DistrictDataService;
+import org.motechproject.nms.region.repository.LanguageDataService;
+import org.motechproject.nms.region.repository.LanguageLocationDataService;
+import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.motechproject.testing.osgi.http.SimpleHttpClient;
@@ -55,8 +58,16 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
     private LanguageDataService languageDataService;
 
     @Inject
-    private CircleLanguageDataService circleLanguageDataService;
+    private CircleDataService circleDataService;
 
+    @Inject
+    private LanguageLocationDataService languageLocationDataService;
+
+    @Inject
+    private StateDataService stateDataService;
+
+    @Inject
+    private DistrictDataService districtDataService;
 
     private String createFailureResponseJson(String failureReason) throws IOException {
         BadRequest badRequest = new BadRequest(failureReason);
@@ -95,7 +106,8 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
         getLogger().debug("testCreateCdrFileNotificationRequest()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                languageDataService, circleLanguageDataService);
+                languageDataService, languageLocationDataService, circleDataService, stateDataService,
+                districtDataService);
 
         List<CallDetailRecord> cdrs = helper.makeCdrs();
         helper.setCrds(cdrs);
@@ -115,7 +127,8 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
         getLogger().debug("testCreateCdrFileNotificationRequestBadCdrSummaryFileName()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                languageDataService, circleLanguageDataService);
+                languageDataService, languageLocationDataService, circleDataService, stateDataService,
+                districtDataService);
 
         helper.makeCdrDetailFile();
 
@@ -134,7 +147,8 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
         getLogger().debug("testCreateCdrFileNotificationRequestBadFileNames()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                languageDataService, circleLanguageDataService);
+                languageDataService, languageLocationDataService, circleDataService, stateDataService,
+                districtDataService);
         HttpPost httpPost = createCdrFileNotificationHttpPost(helper, false, true, true);
 
         // All 3 filenames will be considered invalid because the target file is of invalid format, and the CDR

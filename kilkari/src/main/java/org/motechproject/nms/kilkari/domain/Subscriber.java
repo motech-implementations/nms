@@ -4,6 +4,7 @@ import org.joda.time.DateTime;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.annotations.Ignore;
+import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.LanguageLocation;
 
 import javax.jdo.annotations.Column;
@@ -39,7 +40,7 @@ public class Subscriber {
     private LanguageLocation languageLocation;
 
     @Field
-    private String circle;
+    private Circle circle;
 
     //TODO: making this a bi-directional relationship until MOTECH-1638 is fixed. See #31.
     @Field
@@ -56,7 +57,7 @@ public class Subscriber {
         this.languageLocation = languageLocation;
     }
 
-    public Subscriber(Long callingNumber, LanguageLocation languageLocation, String circle) {
+    public Subscriber(Long callingNumber, LanguageLocation languageLocation, Circle circle) {
         this(callingNumber, languageLocation);
         this.circle = circle;
     }
@@ -101,11 +102,11 @@ public class Subscriber {
         this.subscriptions = subscriptions;
     }
 
-    public String getCircle() {
+    public Circle getCircle() {
         return circle;
     }
 
-    public void setCircle(String circle) {
+    public void setCircle(Circle circle) {
         this.circle = circle;
     }
 

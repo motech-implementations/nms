@@ -16,13 +16,15 @@ import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.domain.CallStatus;
 import org.motechproject.nms.region.domain.Circle;
+import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Language;
 import org.motechproject.nms.region.domain.LanguageLocation;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.CircleDataService;
+import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
-
 import org.motechproject.nms.region.repository.LanguageLocationDataService;
+import org.motechproject.nms.region.repository.StateDataService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,6 +57,8 @@ public class CdrHelper {
     private LanguageDataService languageDataService;
     private LanguageLocationDataService languageLocationDataService;
     private CircleDataService circleDataService;
+    private StateDataService stateDataService;
+    private DistrictDataService districtDataService;
 
     private List<CallDetailRecord> cdrs;
 
@@ -62,7 +66,8 @@ public class CdrHelper {
     public CdrHelper(SettingsService settingsService, SubscriptionService subscriptionService,
                      SubscriberDataService subscriberDataService, LanguageDataService languageDataService,
                      LanguageLocationDataService languageLocationDataService,
-                     CircleDataService circleDataService) {
+                     CircleDataService circleDataService, StateDataService stateDataService,
+                     DistrictDataService districtDataService) {
 
         this.settingsService = settingsService;
         this.subscriptionService = subscriptionService;
@@ -70,6 +75,8 @@ public class CdrHelper {
         this.languageDataService = languageDataService;
         this.languageLocationDataService = languageLocationDataService;
         this.circleDataService = circleDataService;
+        this.stateDataService = stateDataService;
+        this.districtDataService = districtDataService;
 
         String date = DateTime.now().toString(TIME_FORMATTER);
         TEST_OBD_FILENAME = String.format("OBD_%s.csv", date);
@@ -99,7 +106,9 @@ public class CdrHelper {
         Language language = makeLanguage();
         Circle circle = makeCircle();
 
-        return languageLocationDataService.create(new LanguageLocation("99", circle, language, false));
+        languageLocation = new LanguageLocation("99", circle, language, false);
+        languageLocation.getDistrictSet().add(makeDistrict());
+        return languageLocationDataService.create(languageLocation);
     }
 
     private Circle makeCircle() {
@@ -111,6 +120,33 @@ public class CdrHelper {
         return circleDataService.create(new Circle("XX"));
     }
 
+    private State makeState() {
+        State state = stateDataService.findByCode(1l);
+        if (state != null) {
+            return state;
+        }
+
+        state = new State();
+        state.setName("State 1");
+        state.setCode(1L);
+
+        return stateDataService.create(state);
+    }
+
+    private District makeDistrict() {
+        District district = districtDataService.findById(1L);
+        if (district != null) {
+            return district;
+        }
+
+        district = new District();
+        district.setName("District 1");
+        district.setRegionalName("District 1");
+        district.setCode(1L);
+        district.setState(makeState());
+
+        return districtDataService.create(district);
+    }
 
     private Long makeNumber() {
         return (long) (Math.random() * 9000000000L) + 1000000000L;
@@ -154,8 +190,8 @@ public class CdrHelper {
                 null,
                 "w1m1.wav", //todo: we still need to look into that
                 "1",
-                makeLanguage().getCode(),
-                makeCircle(),
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
                 CallStatus.SUCCESS,
                 StatusCode.OBD_SUCCESS_CALL_CONNECTED.getValue(),
                 1);
@@ -174,8 +210,8 @@ public class CdrHelper {
                 null,
                 "w1m1.wav", //todo: we still need to look into that
                 "1",
-                makeLanguage().getCode(),
-                makeCircle(),
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
                 CallStatus.FAILED,
                 StatusCode.OBD_FAILED_NOANSWER.getValue(),
                 1);
@@ -194,8 +230,8 @@ public class CdrHelper {
                 null,
                 "w1m1.wav", //todo: we still need to look into that
                 "1",
-                makeLanguage().getCode(),
-                makeCircle(),
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
                 CallStatus.REJECTED,
                 StatusCode.OBD_DNIS_IN_DND.getValue(),
                 1);

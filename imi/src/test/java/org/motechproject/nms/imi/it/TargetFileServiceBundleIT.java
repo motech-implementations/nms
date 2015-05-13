@@ -20,10 +20,15 @@ import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
 import org.motechproject.nms.region.domain.Circle;
+import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Language;
 import org.motechproject.nms.region.domain.LanguageLocation;
+import org.motechproject.nms.region.domain.State;
+import org.motechproject.nms.region.repository.CircleDataService;
+import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.LanguageLocationDataService;
+import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.ops4j.pax.exam.ExamFactory;
@@ -71,19 +76,49 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
     LanguageLocationDataService languageLocationDataService;
 
     @Inject
+    private CircleDataService circleDataService;
+
+    @Inject
+    private StateDataService stateDataService;
+
+    @Inject
+    private DistrictDataService districtDataService;
+
+    @Inject
     SettingsService settingsService;
 
     private void setupDatabase() {
         subscriptionService.deleteAll();
         subscriptionPackDataService.deleteAll();
         subscriberDataService.deleteAll();
+        languageLocationDataService.deleteAll();
         languageDataService.deleteAll();
+        districtDataService.deleteAll();
+        stateDataService.deleteAll();
+        circleDataService.deleteAll();
         callRetryDataService.deleteAll();
 
-        LanguageLocation hindi = new LanguageLocation("HI", new Circle("AA"), new Language("Hindi"));
+        District district = new District();
+        district.setName("District 1");
+        district.setRegionalName("District 1");
+        district.setCode(1L);
+
+        State state = new State();
+        state.setName("State 1");
+        state.setCode(1L);
+        state.getDistricts().add(district);
+
+        stateDataService.create(state);
+
+        Circle aa = new Circle("AA");
+        Circle bb = new Circle("BB");
+
+        LanguageLocation hindi = new LanguageLocation("HI", aa, new Language("Hindi"), false);
+        hindi.getDistrictSet().add(district);
         languageLocationDataService.create(hindi);
 
-        LanguageLocation urdu = new LanguageLocation("UR", new Circle("AA"), new Language("Urdu"));
+        LanguageLocation urdu = new LanguageLocation("UR", aa, new Language("Urdu"), false);
+        urdu.getDistrictSet().add(district);
         languageLocationDataService.create(urdu);
 
         SubscriptionPack pack1 = subscriptionPackDataService.create(new SubscriptionPack("one",
@@ -91,8 +126,8 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         SubscriptionPack pack2 = subscriptionPackDataService.create(new SubscriptionPack("two",
                 SubscriptionPackType.PREGNANCY, 72, 2, null));
 
-        Subscriber subscriber1 = subscriberDataService.create(new Subscriber(1111111111L, hindi, "AA"));
-        Subscriber subscriber2 = subscriberDataService.create(new Subscriber(2222222222L, urdu, "BB"));
+        Subscriber subscriber1 = subscriberDataService.create(new Subscriber(1111111111L, hindi, aa));
+        Subscriber subscriber2 = subscriberDataService.create(new Subscriber(2222222222L, urdu, bb));
 
         Subscription s = new Subscription(subscriber1, pack1, SubscriptionOrigin.IVR);
         s.setStatus(SubscriptionStatus.ACTIVE);
@@ -111,9 +146,9 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         Subscription subscription22 = subscriptionService.create(s);
 
         CallRetry callRetry1 = callRetryDataService.create(new CallRetry("123", 3333333333L, DayOfTheWeek.today(),
-                CallStage.RETRY_1, "HI", "AA", "I"));
+                CallStage.RETRY_1, hindi.getCode(), aa.getName(), "I"));
         CallRetry callRetry2 = callRetryDataService.create(new CallRetry("546", 4444444444L, DayOfTheWeek.today(),
-                CallStage.RETRY_1, "HI", "BB", "M"));
+                CallStage.RETRY_1, hindi.getCode(), bb.getName(), "M"));
     }
 
 

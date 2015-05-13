@@ -34,6 +34,7 @@ import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
+import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.LanguageLocation;
 import org.motechproject.scheduler.contract.RepeatingSchedulableJob;
 import org.motechproject.scheduler.service.MotechSchedulerService;
@@ -290,12 +291,15 @@ public class TargetFileServiceImpl implements TargetFileService {
                         "languageLocation");
                 writer.write(languageLocation.getCode());
 
+                Circle circle;
+                circle = (Circle) subscriberDataService.getDetachedField(subscriber, "circle");
+
                 RequestId requestId = new RequestId(fileIdentifier, subscription.getSubscriptionId());
                 writeSubscriptionRow(requestId.toString(), imiServiceId,
                         subscriber.getCallingNumber().toString(), NORMAL_PRIORITY, callFlowUrl,
                         "???ContentFileName???", //todo: get that from lauren when it's ready
                         1, //todo: and that too
-                        languageLocation.getCode(), subscriber.getCircle(),
+                        languageLocation.getCode(), circle.getName(),
                         subscription.getOrigin().getCode(), writer);
             }
 
