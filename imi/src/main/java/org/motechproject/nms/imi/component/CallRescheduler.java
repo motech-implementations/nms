@@ -53,7 +53,7 @@ public class CallRescheduler {
                 LOGGER.debug("rescheduling msisdn {} subscription {}", cdr.getMsisdn(), requestId.getSubscriptionId());
                 callRetry = new CallRetry(
                         requestId.getSubscriptionId(),
-                        Long.parseLong(cdr.getMsisdn()),
+                        cdr.getMsisdn(),
                         DayOfTheWeek.fromInt(subscription.getStartDate().dayOfWeek().get()).nextDay(),
                         CallStage.RETRY_1,
                         subscription.getSubscriber().getLanguage().getCode(),

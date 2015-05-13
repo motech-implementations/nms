@@ -9,6 +9,8 @@ import org.motechproject.nms.region.language.domain.Language;
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.Unique;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -22,7 +24,9 @@ import java.util.Set;
 public class Subscriber {
     @Field
     @Unique
-    @Column(allowsNull = "false")
+    @Min(value = 1000000000L, message = "callingNumber must be 10 digits")
+    @Max(value = 9999999999L, message = "callingNumber must be 10 digits")
+    @Column(length = 10, allowsNull = "false")
     private Long callingNumber;
 
     @Field
@@ -89,21 +93,6 @@ public class Subscriber {
         this.language = language;
     }
 
-    @Ignore
-    public Set<Subscription> getAllSubscriptions() {
-        // TODO: I have no idea why I need to do this, but returning just this.subscriptions always results in
-        // an empty set. Bi-directional relationship bug?
-        Set<Subscription> allSubscriptions = new HashSet<>();
-
-        Iterator<Subscription> subscriptionIterator = subscriptions.iterator();
-        Subscription currentSubscription;
-        while (subscriptionIterator.hasNext()) {
-            currentSubscription = subscriptionIterator.next();
-            allSubscriptions.add(currentSubscription);
-        }
-        return allSubscriptions;
-    }
-
     public Set<Subscription> getSubscriptions() {
         return subscriptions;
     }
@@ -134,6 +123,21 @@ public class Subscriber {
             }
         }
         return activeSubscriptions;
+    }
+
+    @Ignore
+    public Set<Subscription> getAllSubscriptions() {
+        // TODO: I have no idea why I need to do this, but returning just this.subscriptions always results in
+        // an empty set. Bi-directional relationship bug?
+        Set<Subscription> allSubscriptions = new HashSet<>();
+
+        Iterator<Subscription> subscriptionIterator = subscriptions.iterator();
+        Subscription currentSubscription;
+        while (subscriptionIterator.hasNext()) {
+            currentSubscription = subscriptionIterator.next();
+            allSubscriptions.add(currentSubscription);
+        }
+        return allSubscriptions;
     }
 
     @Override

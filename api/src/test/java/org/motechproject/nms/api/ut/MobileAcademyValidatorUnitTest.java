@@ -4,13 +4,12 @@ import org.junit.Before;
 import org.junit.Test;
 import org.motechproject.nms.api.utils.CourseBuilder;
 import org.motechproject.nms.api.web.contract.mobileAcademy.CourseResponse;
-import org.motechproject.nms.api.web.contract.mobileAcademy.course.Chapter;;
+import org.motechproject.nms.api.web.contract.mobileAcademy.course.Chapter;
 import org.motechproject.nms.api.web.validator.MobileAcademyValidator;
 
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertNull;
-import static junit.framework.Assert.assertTrue;
 
 /**
  * Unit test for course structure validation

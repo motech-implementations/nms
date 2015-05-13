@@ -188,7 +188,7 @@ public class CdrFileServiceImpl implements CdrFileService {
             }
         }
 
-        //todo: add recordCount, think about checksum
+        //todo: create recordCount, think about checksum
         String fileIdentifier = UUID.randomUUID().toString();
         auditDataService.create(new AuditRecord(fileIdentifier, FileType.CDR_FILE, request.getFileName(), null,
                 null, "Success"));

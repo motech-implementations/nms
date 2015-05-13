@@ -1,5 +1,6 @@
 package org.motechproject.nms.kilkari.service;
 
+import org.joda.time.DateTime;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
@@ -19,6 +20,8 @@ public interface SubscriptionService {
                             SubscriptionOrigin mode);
 
     Subscription getSubscription(String subscriptionId);
+
+    void updateStartDate(Subscription subscription, DateTime newReferenceDate);
 
     void deactivateSubscription(Subscription subscription, DeactivationReason reason);
 

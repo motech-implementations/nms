@@ -10,9 +10,9 @@ import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
+import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
-import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.region.language.domain.Language;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,15 +32,15 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private static final int CHILD_PACK_WEEKS = 48;
     private static final int THREE_MONTHS = 90;
 
-    private SubscriberService subscriberService;
+    private SubscriberDataService subscriberDataService;
     private SubscriptionPackDataService subscriptionPackDataService;
     private SubscriptionDataService subscriptionDataService;
 
     @Autowired
-    public SubscriptionServiceImpl(SubscriberService subscriberService,
+    public SubscriptionServiceImpl(SubscriberDataService subscriberDataService,
                                    SubscriptionPackDataService subscriptionPackDataService,
                                    SubscriptionDataService subscriptionDataService) {
-        this.subscriberService = subscriberService;
+        this.subscriberDataService = subscriberDataService;
         this.subscriptionPackDataService = subscriptionPackDataService;
         this.subscriptionDataService = subscriptionDataService;
 
@@ -77,17 +77,17 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             }
         }
 
-        subscriptionPackDataService.create(new SubscriptionPack(name, type, messagesPerWeek, messages));
+        subscriptionPackDataService.create(new SubscriptionPack(name, type, weeks, messagesPerWeek, messages));
     }
 
 
     @Override
     public void createSubscription(long callingNumber, Language language, SubscriptionPack subscriptionPack,
                                    SubscriptionOrigin mode) {
-        Subscriber subscriber = subscriberService.getSubscriber(callingNumber);
+        Subscriber subscriber = subscriberDataService.findByCallingNumber(callingNumber);
         if (subscriber == null) {
             subscriber = new Subscriber(callingNumber, language);
-            subscriberService.add(subscriber);
+            subscriberDataService.create(subscriber);
         }
 
         if (mode == SubscriptionOrigin.IVR) {
@@ -125,22 +125,24 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         Subscription subscription;
 
         if (subscriber.getDateOfBirth() != null && pack.getType() == SubscriptionPackType.CHILD) {
-            if (subscriberHasActivePackType(subscriber, SubscriptionPackType.CHILD)) {
+            if (subscriberHasActivePackType(subscriber, SubscriptionPackType.CHILD) ||
+                    (Subscription.hasCompletedForStartDate(subscriber.getDateOfBirth(), DateTime.now(), pack))) {
+
                 // TODO: #138 log the rejected subscription
                 return;
             } else {
-                // TODO: #157 subscriber should receive welcome message for the first week
                 subscription = new Subscription(subscriber, pack, SubscriptionOrigin.MCTS_IMPORT);
                 subscription.setStartDate(subscriber.getDateOfBirth());
                 subscription.setStatus(SubscriptionStatus.ACTIVE);
             }
         } else if (subscriber.getLastMenstrualPeriod() != null && subscriber.getDateOfBirth() == null &&
                 pack.getType() == SubscriptionPackType.PREGNANCY) {
-            if (subscriberHasActivePackType(subscriber, SubscriptionPackType.PREGNANCY)) {
+            if (subscriberHasActivePackType(subscriber, SubscriptionPackType.PREGNANCY) ||
+                    Subscription.hasCompletedForStartDate(subscriber.getLastMenstrualPeriod().plusDays(THREE_MONTHS),
+                            DateTime.now(), pack)) {
                 // TODO: #138 log the rejected subscription
                 return;
             } else {
-                // TODO: #157 subscriber should receive welcome message for the first week
                 // TODO: #160 deal with early subscription
                 subscription = new Subscription(subscriber, pack, SubscriptionOrigin.MCTS_IMPORT);
 
@@ -179,6 +181,27 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     @Override
     public Subscription getSubscription(String subscriptionId) {
         return subscriptionDataService.findBySubscriptionId(subscriptionId);
+    }
+
+    /**
+     * Called by Subscriber.update if the subscriber's LMP or DOB changes -- as a result, the subscription's start date
+     * and/or status may change
+     * @param subscription The subscription to update
+     * @param newReferenceDate The new LMP or DOB from which to base the new subscription start date
+     */
+    @Override
+    public void updateStartDate(Subscription subscription, DateTime newReferenceDate) {
+        if (subscription.getSubscriptionPack().getType() == SubscriptionPackType.PREGNANCY) {
+            subscription.setStartDate(newReferenceDate.plusDays(THREE_MONTHS));
+        } else { // CHILD pack
+            subscription.setStartDate(newReferenceDate);
+        }
+
+        if (Subscription.hasCompletedForStartDate(subscription.getStartDate(), DateTime.now(),
+                subscription.getSubscriptionPack())) {
+            subscription.setStatus(SubscriptionStatus.COMPLETED);
+        }
+        subscriptionDataService.update(subscription);
     }
 
     @Override
