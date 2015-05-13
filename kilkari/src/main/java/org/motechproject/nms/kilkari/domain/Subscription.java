@@ -42,8 +42,6 @@ public class Subscription {
     private SubscriptionOrigin origin;
 
     @Field
-    @Column(allowsNull = "false")
-    @NotNull
     private DateTime startDate;
 
     @Field

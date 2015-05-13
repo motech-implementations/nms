@@ -1,10 +1,9 @@
 package org.motechproject.nms.api.utils;
 
+import org.apache.http.annotation.NotThreadSafe;
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 
 import java.net.URI;
-
-import org.apache.http.annotation.NotThreadSafe;
 
 /**
  * An HttpDelete-lookalike that extends HttpEntityEnclosingRequestBase in order to support a request body in a
