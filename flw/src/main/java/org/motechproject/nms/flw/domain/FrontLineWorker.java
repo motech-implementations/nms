@@ -10,6 +10,7 @@ import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.Unique;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
 
 @Entity(tableName = "nms_front_line_workers")
 public class FrontLineWorker {
@@ -26,6 +27,9 @@ public class FrontLineWorker {
 
     @Field
     private String name;
+
+    @Field
+    private FrontLineWorkerStatus status;
 
     @Field
     private LanguageLocation languageLocation;
@@ -65,6 +69,14 @@ public class FrontLineWorker {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public FrontLineWorkerStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(FrontLineWorkerStatus status) {
+        this.status = status;
     }
 
     public LanguageLocation getLanguageLocation() {

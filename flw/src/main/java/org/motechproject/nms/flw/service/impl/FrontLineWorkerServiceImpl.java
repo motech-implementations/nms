@@ -1,10 +1,12 @@
 package org.motechproject.nms.flw.service.impl;
 
 import org.motechproject.nms.flw.domain.FrontLineWorker;
+import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -22,6 +24,16 @@ public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
 
     @Override
     public void add(FrontLineWorker record) {
+
+        // TODO: also check for FLWDesignation, once we add that field
+        // TODO: find out which language/location fields are mandatory
+        if ((record.getName() != null) && (record.getContactNumber() != null) &&
+                (record.getLanguageLocation() != null) && (record.getDistrict() != null)) {
+            record.setStatus(FrontLineWorkerStatus.INACTIVE);
+        } else if (record.getContactNumber() != null) {
+            record.setStatus(FrontLineWorkerStatus.ANONYMOUS);
+        }
+
         frontLineWorkerDataService.create(record);
     }
 
@@ -35,8 +47,36 @@ public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
         return frontLineWorkerDataService.retrieveAll();
     }
 
+    /**
+     * Update FrontLineWorker. If specific fields are added to the record (name, contactNumber, languageLocation,
+     * district, designation), the FrontLineWorker's status will also be updated.
+     * @param record The FrontLineWorker to update
+     */
     @Override
+    @Transactional
     public void update(FrontLineWorker record) {
+
+        FrontLineWorker retrievedFlw = frontLineWorkerDataService.findByContactNumber(record.getContactNumber());
+        FrontLineWorkerStatus oldStatus = retrievedFlw.getStatus();
+
+        if (record.getStatus() == FrontLineWorkerStatus.INVALID) {
+            // if the caller sets the status to INVALID, that takes precedence over any other status change
+            frontLineWorkerDataService.update(record);
+            return;
+        }
+        if (oldStatus == FrontLineWorkerStatus.ANONYMOUS) {
+            // if the FLW was ANONYMOUS and required fields get added, update her status to ACTIVE
+
+            // TODO: also check for FLWDesignation once we get spec clarity on what that is
+            if ((record.getName() != null) && (record.getContactNumber() != null) &&
+                    (record.getLanguageLocation() != null) && (record.getDistrict() != null)) {
+
+                record.setStatus(FrontLineWorkerStatus.ACTIVE);
+            }
+        }
+
+        // TODO: should we transition to ANONYMOUS if required fields are removed? weird edge case not in state digram...
+
         frontLineWorkerDataService.update(record);
     }
 
