@@ -4,12 +4,19 @@ import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
 
+import javax.jdo.annotations.Column;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
+
 @Entity(tableName = "nms_imi_retries")
 public class CallRetry {
     @Field
     private String subscriptionId;
 
     @Field
+    @Min(value = 1000000000L, message = "msisdn must be 10 digits")
+    @Max(value = 9999999999L, message = "msisdn must be 10 digits")
+    @Column(length = 10)
     private Long msisdn;
 
     @Field

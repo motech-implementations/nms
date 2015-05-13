@@ -36,6 +36,11 @@ public class LanguageLocation extends MdsEntity {
     @Column(allowsNull = "false")
     private Circle circle;
 
+    // TODO: Remove and move to circle once cascade delete is fixed
+    // https://applab.atlassian.net/browse/MOTECH-1714
+    @Field
+    private boolean isDefault;
+
     // TODO: Rename to 'districts' once https://applab.atlassian.net/browse/MOTECH-1688 is resolved
     @Field
     @Size(min = 1)
@@ -46,10 +51,11 @@ public class LanguageLocation extends MdsEntity {
         this.districtSet = new HashSet<>();
     }
 
-    public LanguageLocation(String code, Circle name, Language language) {
+    public LanguageLocation(String code, Circle name, Language language, boolean isDefault) {
         this.code = code;
         this.circle = name;
         this.language = language;
+        this.isDefault = isDefault;
         this.districtSet = new HashSet<>();
     }
 
@@ -75,6 +81,14 @@ public class LanguageLocation extends MdsEntity {
 
     public void setCircle(Circle circle) {
         this.circle = circle;
+    }
+
+    public boolean isDefault() {
+        return isDefault;
+    }
+
+    public void setIsDefault(boolean isDefault) {
+        this.isDefault = isDefault;
     }
 
     public State getState() {

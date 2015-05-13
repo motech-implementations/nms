@@ -1,6 +1,6 @@
 package org.motechproject.nms.kilkari.domain;
 
-import org.joda.time.LocalDate;
+import org.joda.time.DateTime;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.annotations.Ignore;
@@ -9,6 +9,8 @@ import org.motechproject.nms.region.domain.LanguageLocation;
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.Unique;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -22,14 +24,16 @@ import java.util.Set;
 public class Subscriber {
     @Field
     @Unique
-    @Column(allowsNull = "false")
+    @Min(value = 1000000000L, message = "callingNumber must be 10 digits")
+    @Max(value = 9999999999L, message = "callingNumber must be 10 digits")
+    @Column(length = 10, allowsNull = "false")
     private Long callingNumber;
 
     @Field
-    private LocalDate dateOfBirth;
+    private DateTime dateOfBirth;
 
     @Field
-    private LocalDate lastMenstrualPeriod;
+    private DateTime lastMenstrualPeriod;
 
     @Field
     private LanguageLocation languageLocation;
@@ -65,19 +69,19 @@ public class Subscriber {
         this.callingNumber = callingNumber;
     }
 
-    public LocalDate getDateOfBirth() {
+    public DateTime getDateOfBirth() {
         return dateOfBirth;
     }
 
-    public void setDateOfBirth(LocalDate dateOfBirth) {
+    public void setDateOfBirth(DateTime dateOfBirth) {
         this.dateOfBirth = dateOfBirth;
     }
 
-    public LocalDate getLastMenstrualPeriod() {
+    public DateTime getLastMenstrualPeriod() {
         return lastMenstrualPeriod;
     }
 
-    public void setLastMenstrualPeriod(LocalDate lastMenstrualPeriod) {
+    public void setLastMenstrualPeriod(DateTime lastMenstrualPeriod) {
         this.lastMenstrualPeriod = lastMenstrualPeriod;
     }
 
@@ -87,21 +91,6 @@ public class Subscriber {
 
     public void setLanguageLocation(LanguageLocation languageLocation) {
         this.languageLocation = languageLocation;
-    }
-
-    @Ignore
-    public Set<Subscription> getAllSubscriptions() {
-        // TODO: I have no idea why I need to do this, but returning just this.subscriptions always results in
-        // an empty set. Bi-directional relationship bug?
-        Set<Subscription> allSubscriptions = new HashSet<>();
-
-        Iterator<Subscription> subscriptionIterator = subscriptions.iterator();
-        Subscription currentSubscription;
-        while (subscriptionIterator.hasNext()) {
-            currentSubscription = subscriptionIterator.next();
-            allSubscriptions.add(currentSubscription);
-        }
-        return allSubscriptions;
     }
 
     public Set<Subscription> getSubscriptions() {
@@ -134,6 +123,21 @@ public class Subscriber {
             }
         }
         return activeSubscriptions;
+    }
+
+    @Ignore
+    public Set<Subscription> getAllSubscriptions() {
+        // TODO: I have no idea why I need to do this, but returning just this.subscriptions always results in
+        // an empty set. Bi-directional relationship bug?
+        Set<Subscription> allSubscriptions = new HashSet<>();
+
+        Iterator<Subscription> subscriptionIterator = subscriptions.iterator();
+        Subscription currentSubscription;
+        while (subscriptionIterator.hasNext()) {
+            currentSubscription = subscriptionIterator.next();
+            allSubscriptions.add(currentSubscription);
+        }
+        return allSubscriptions;
     }
 
     @Override

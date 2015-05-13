@@ -75,7 +75,7 @@ public class ImiController_OBD_BundleIT extends BasePaxIT {
 
     @Test
     public void testCreateFileProcessedStatusRequest() throws IOException, InterruptedException {
-        getLogger().info("testCreateFileProcessedStatusRequest()");
+        getLogger().debug("testCreateFileProcessedStatusRequest()");
         HttpPost httpPost = createFileProcessedStatusHttpPost("file.csv",
                 FileProcessedStatus.FILE_PROCESSED_SUCCESSFULLY);
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK, ADMIN_USERNAME, ADMIN_PASSWORD));
@@ -83,7 +83,7 @@ public class ImiController_OBD_BundleIT extends BasePaxIT {
 
     @Test
     public void testCreateFileProcessedStatusRequestNoStatusCode() throws IOException, InterruptedException {
-        getLogger().info("testCreateFileProcessedStatusRequestNoStatusCode()");
+        getLogger().debug("testCreateFileProcessedStatusRequestNoStatusCode()");
         HttpPost httpPost = createFileProcessedStatusHttpPost("file.csv", null);
 
         String expectedJsonResponse = createFailureResponseJson("<fileProcessedStatus: Not Present>");
@@ -94,7 +94,7 @@ public class ImiController_OBD_BundleIT extends BasePaxIT {
 
     @Test
     public void testCreateFileProcessedStatusRequestNoFileName() throws IOException, InterruptedException {
-        getLogger().info("testCreateFileProcessedStatusRequestNoFileName()");
+        getLogger().debug("testCreateFileProcessedStatusRequestNoFileName()");
         HttpPost httpPost = createFileProcessedStatusHttpPost(null,
                 FileProcessedStatus.FILE_PROCESSED_SUCCESSFULLY);
 
@@ -106,7 +106,7 @@ public class ImiController_OBD_BundleIT extends BasePaxIT {
 
     @Test
     public void testCreateFileProcessedStatusRequestWithError() throws IOException, InterruptedException {
-        getLogger().info("testCreateFileProcessedStatusRequestWithError()");
+        getLogger().debug("testCreateFileProcessedStatusRequestWithError()");
         HttpPost httpPost = createFileProcessedStatusHttpPost("file.csv",
                 FileProcessedStatus.FILE_ERROR_IN_FILE_FORMAT);
 

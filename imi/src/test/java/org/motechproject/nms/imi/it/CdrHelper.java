@@ -11,13 +11,18 @@ import org.motechproject.nms.imi.service.SettingsService;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
+import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.domain.CallStatus;
-import org.motechproject.nms.region.language.domain.CircleLanguage;
-import org.motechproject.nms.region.language.domain.Language;
-import org.motechproject.nms.region.language.repository.CircleLanguageDataService;
-import org.motechproject.nms.region.language.repository.LanguageDataService;
+import org.motechproject.nms.region.domain.Circle;
+import org.motechproject.nms.region.domain.Language;
+import org.motechproject.nms.region.domain.LanguageLocation;
+import org.motechproject.nms.region.domain.State;
+import org.motechproject.nms.region.repository.CircleDataService;
+import org.motechproject.nms.region.repository.LanguageDataService;
+
+import org.motechproject.nms.region.repository.LanguageLocationDataService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,20 +53,23 @@ public class CdrHelper {
     private SubscriptionService subscriptionService;
     private SubscriberDataService subscriberDataService;
     private LanguageDataService languageDataService;
-    private CircleLanguageDataService circleLanguageDataService;
-    
+    private LanguageLocationDataService languageLocationDataService;
+    private CircleDataService circleDataService;
+
     private List<CallDetailRecord> cdrs;
 
 
     public CdrHelper(SettingsService settingsService, SubscriptionService subscriptionService,
                      SubscriberDataService subscriberDataService, LanguageDataService languageDataService,
-                     CircleLanguageDataService circleLanguageDataService) {
+                     LanguageLocationDataService languageLocationDataService,
+                     CircleDataService circleDataService) {
 
         this.settingsService = settingsService;
         this.subscriptionService = subscriptionService;
         this.subscriberDataService = subscriberDataService;
         this.languageDataService = languageDataService;
-        this.circleLanguageDataService = circleLanguageDataService;
+        this.languageLocationDataService = languageLocationDataService;
+        this.circleDataService = circleDataService;
 
         String date = DateTime.now().toString(TIME_FORMATTER);
         TEST_OBD_FILENAME = String.format("OBD_%s.csv", date);
@@ -74,24 +82,33 @@ public class CdrHelper {
         this.cdrs = cdrs;
     }
 
-
     private Language makeLanguage() {
-        Language language = languageDataService.findByCode("HI");
+        Language language = languageDataService.findByName("Hindi");
         if (language != null) {
             return language;
         }
-        return languageDataService.create(new Language("Hindi", "HI"));
+        return languageDataService.create(new Language("Hindi"));
     }
 
-
-    private String makeCircle() {
-        List<CircleLanguage> circleLanguages = circleLanguageDataService.findByCircle("XX");
-        if (circleLanguages.size() == 0) {
-            CircleLanguage circleLanguage = circleLanguageDataService.create(new CircleLanguage("XX",
-                    makeLanguage()));
-            return circleLanguage.getCircle();
+    private LanguageLocation makeLanguageLocation() {
+        LanguageLocation languageLocation = languageLocationDataService.findByCode("99");
+        if (languageLocation != null) {
+            return languageLocation;
         }
-        return circleLanguages.get(0).getCircle();
+
+        Language language = makeLanguage();
+        Circle circle = makeCircle();
+
+        return languageLocationDataService.create(new LanguageLocation("99", circle, language, false));
+    }
+
+    private Circle makeCircle() {
+        Circle circle = circleDataService.findByName("XX");
+        if (circle != null) {
+            return circle;
+        }
+
+        return circleDataService.create(new Circle("XX"));
     }
 
 
@@ -100,61 +117,90 @@ public class CdrHelper {
     }
 
 
-    private Subscription makeSubscription() {
+    private Subscription makeSubscription(SubscriptionOrigin origin) {
         Subscriber subscriber = subscriberDataService.create(new Subscriber(
                 makeNumber(),
-                makeLanguage(),
+                makeLanguageLocation(),
                 makeCircle()
         ));
-        return subscriptionService.create(new Subscription(
+        Subscription subscription = new Subscription(
                 subscriber,
                 subscriptionService.getSubscriptionPack("childPack"),
-                SubscriptionOrigin.IVR
-        ));
+                origin
+        );
+        //~ one to two month old start date
+        int daysOld = (int) (Math.random() * 30) + 30;
+        subscription.setStartDate(DateTime.now().minusDays(daysOld));
+        subscription.setStatus(SubscriptionStatus.ACTIVE);
+        return subscriptionService.create(subscription);
     }
 
 
-    private CallStatus randomCallStatus() {
-        return CallStatus.fromInt((int) (Math.random() * 3) + 1);
-    }
-
-
-    private StatusCode randomStatusCode(CallStatus finalStatus) {
-        if (finalStatus == CallStatus.SUCCESS) {
-            return StatusCode.OBD_SUCCESS_CALL_CONNECTED;
-        } else if (finalStatus == CallStatus.REJECTED) {
-            return StatusCode.OBD_DNIS_IN_DND;
-        } else {
-            return StatusCode.fromInt((int) (Math.random() * 6) + StatusCode.OBD_FAILED_NOATTEMPT.getValue());
-        }
-    }
-
-
-    public List<CallDetailRecord> makeCdrs(int numCdr) {
+    public List<CallDetailRecord> makeCdrs() {
         String imiServiceId = settingsService.getSettingsFacade().getProperty("imi.target_file_imi_service_id");
         String fileIdentifier = UUID.randomUUID().toString();
         List<CallDetailRecord> cdrs = new ArrayList<>();
-        for (int i=0; i<numCdr; i++) {
-            Subscription subscription = makeSubscription();
-            CallStatus finalStatus = randomCallStatus();
-            StatusCode statusCode = randomStatusCode(finalStatus);
 
-            CallDetailRecord cdr = new CallDetailRecord(
-                    new RequestId(fileIdentifier, subscription.getSubscriptionId()).toString(),
-                    imiServiceId,
-                    subscription.getSubscriber().getCallingNumber().toString(),
-                    null,
-                    0,
-                    null,
-                    "w1m1.wav",
-                    "1",
-                    makeLanguage().getCode(),
-                    makeCircle(),
-                    finalStatus,
-                    statusCode.getValue(),
-                    1);
-            cdrs.add(cdr);
-        }
+        /**
+         * successful call
+         */
+        Subscription subscription = makeSubscription(SubscriptionOrigin.IVR);
+        CallDetailRecord cdr = new CallDetailRecord(
+                new RequestId(fileIdentifier, subscription.getSubscriptionId()).toString(),
+                imiServiceId,
+                subscription.getSubscriber().getCallingNumber(),
+                null,
+                0,
+                null,
+                "w1m1.wav", //todo: we still need to look into that
+                "1",
+                makeLanguage().getCode(),
+                makeCircle(),
+                CallStatus.SUCCESS,
+                StatusCode.OBD_SUCCESS_CALL_CONNECTED.getValue(),
+                1);
+        cdrs.add(cdr);
+
+        /**
+         * failed call - should be retried
+         */
+        subscription = makeSubscription(SubscriptionOrigin.IVR);
+        cdr = new CallDetailRecord(
+                new RequestId(fileIdentifier, subscription.getSubscriptionId()).toString(),
+                imiServiceId,
+                subscription.getSubscriber().getCallingNumber(),
+                null,
+                0,
+                null,
+                "w1m1.wav", //todo: we still need to look into that
+                "1",
+                makeLanguage().getCode(),
+                makeCircle(),
+                CallStatus.FAILED,
+                StatusCode.OBD_FAILED_NOANSWER.getValue(),
+                1);
+        cdrs.add(cdr);
+
+        /**
+         * Rejected call - subscription should be deactivated
+         */
+        subscription = makeSubscription(SubscriptionOrigin.MCTS_IMPORT); //todo: test IVR origin: should be an error
+        cdr = new CallDetailRecord(
+                new RequestId(fileIdentifier, subscription.getSubscriptionId()).toString(),
+                imiServiceId,
+                subscription.getSubscriber().getCallingNumber(),
+                null,
+                0,
+                null,
+                "w1m1.wav", //todo: we still need to look into that
+                "1",
+                makeLanguage().getCode(),
+                makeCircle(),
+                CallStatus.REJECTED,
+                StatusCode.OBD_DNIS_IN_DND.getValue(),
+                1);
+        cdrs.add(cdr);
+
         return cdrs;
     }
 
@@ -194,7 +240,7 @@ public class CdrHelper {
 
     public void makeCdrSummaryFile() throws IOException {
         File dstFile = new File(makeCdrDirectory(), cdrSummaryFileName());
-        LOGGER.info("Creating summary file {}...", dstFile);
+        LOGGER.debug("Creating summary file {}...", dstFile);
         BufferedWriter writer = new BufferedWriter(new FileWriter(dstFile));
         String s;
         for(CallDetailRecord cdr : cdrs) {
@@ -208,7 +254,7 @@ public class CdrHelper {
 
     public void makeCdrDetailFile() throws IOException {
         File dstFile = new File(makeCdrDirectory(), cdrDetailFileName());
-        LOGGER.info("Creating detail file {}...", dstFile);
+        LOGGER.debug("Creating detail file {}...", dstFile);
         BufferedWriter writer = new BufferedWriter(new FileWriter(dstFile));
 
         //todo:...

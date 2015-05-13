@@ -8,17 +8,20 @@ import org.motechproject.nms.region.domain.LanguageLocation;
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.Unique;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 
 @Entity(tableName = "nms_front_line_workers")
 public class FrontLineWorker {
-    public static final int FIELD_SIZE_10 = 10;
 
     @Field
     private Long id;
 
     @Field(required = true)
     @Unique
-    @Column(length = FIELD_SIZE_10)
+    @Min(value = 1000000000L, message = "contactNumber must be 10 digits")
+    @Max(value = 9999999999L, message = "contactNumber must be 10 digits")
+    @Column(length = 10)
     private Long contactNumber;
 
     @Field
@@ -109,7 +112,7 @@ public class FrontLineWorker {
 
     @Override
     public int hashCode() {
-        int result = id.hashCode();
+        int result = (id != null ? id.hashCode() : 0);
         result = 31 * result + contactNumber.hashCode();
         result = 31 * result + (name != null ? name.hashCode() : 0);
         result = 31 * result + (languageLocation != null ? languageLocation.hashCode() : 0);

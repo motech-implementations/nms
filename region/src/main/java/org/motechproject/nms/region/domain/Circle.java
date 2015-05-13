@@ -25,10 +25,6 @@ public class Circle extends MdsEntity {
     @Persistent(mappedBy = "circle", defaultFetchGroup = "true")
     private List<LanguageLocation> languageLocations;
 
-    @Field
-    @Cascade(delete = true)
-    private LanguageLocation defaultLanguageLocation;
-
     public Circle() {
         this.states = new ArrayList<>();
     }
@@ -59,14 +55,6 @@ public class Circle extends MdsEntity {
 
     public void setLanguageLocations(List<LanguageLocation> languageLocations) {
         this.languageLocations = languageLocations;
-    }
-
-    public LanguageLocation getDefaultLanguageLocation() {
-        return defaultLanguageLocation;
-    }
-
-    public void setDefaultLanguageLocation(LanguageLocation defaultLanguageLocation) {
-        this.defaultLanguageLocation = defaultLanguageLocation;
     }
 
     @Override

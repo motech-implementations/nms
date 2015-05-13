@@ -19,9 +19,28 @@ public class WhitelistServiceImpl implements WhitelistService {
         this.whitelistEntryDataService = whitelistEntryDataService;
     }
 
-    // TODO: #38 When configuration is complete de-hardcode this
-    private boolean whitelistEnabledForState(State state) {
-        return "Whitelist".equals(state.getName());
+    private boolean whitelistEnabledForState(final State state) {
+        // Find a state cap by providing a state
+        QueryExecution<Long> stateQueryExecution = new QueryExecution<Long>() {
+            @Override
+            public Long execute(Query query, InstanceSecurityRestriction restriction) {
+
+                query.setFilter("state == flw_state");
+                query.declareParameters("org.motechproject.nms.region.location.domain.State flw_state");
+                query.setResult("count(state)");
+                query.setUnique(true);
+
+                return (Long) query.execute(state);
+            }
+        };
+
+        Long isWhitelisted = whitelistEntryDataService.executeQuery(stateQueryExecution);
+
+        if (isWhitelisted != null && isWhitelisted > 0) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -45,13 +64,11 @@ public class WhitelistServiceImpl implements WhitelistService {
             return true;
         }
 
-        // TODO: #38 When configuration is complete de-hardcode this
         if (!whitelistEnabledForState(state)) {
             // If whitelisting is not enabled for a state then all calls are allowed through
             return true;
         }
 
-        // Find a state cap by providing a state
         QueryExecution<Long> stateQueryExecution = new QueryExecution<Long>() {
             @Override
             public Long execute(Query query, InstanceSecurityRestriction restriction) {

@@ -4,6 +4,10 @@ import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.annotations.Ignore;
 
+import javax.jdo.annotations.Column;
+import javax.jdo.annotations.Unique;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.util.List;
 
 /**
@@ -17,21 +21,35 @@ public class SubscriptionPack {
     private static final int NUM_RETRY_FOR_2_MSG_PER_WEEK = 1;
 
     @Field
+    @Unique
+    @Column(allowsNull = "false", length = 100)
+    @NotNull
+    @Size(min = 1, max = 100)
     private String name;
 
     @Field
+    @Column(allowsNull = "false")
+    @NotNull
     private SubscriptionPackType type;
 
     @Field
+    @Column(allowsNull = "false")
+    @NotNull
+    private int weeks;
+
+    @Field
+    @Column(allowsNull = "false")
+    @NotNull
     private int messagesPerWeek;
 
     @Field
     private List<SubscriptionPackMessage> weeklyMessages;
 
-    public SubscriptionPack(String name, SubscriptionPackType type, int messagesPerWeek,
+    public SubscriptionPack(String name, SubscriptionPackType type, int weeks, int messagesPerWeek,
                             List<SubscriptionPackMessage> weeklyMessages) {
         this.name = name;
         this.type = type;
+        this.weeks = weeks;
         this.messagesPerWeek = messagesPerWeek;
         this.weeklyMessages = weeklyMessages;
     }
@@ -50,6 +68,14 @@ public class SubscriptionPack {
 
     public void setType(SubscriptionPackType type) {
         this.type = type;
+    }
+
+    public int getWeeks() {
+        return weeks;
+    }
+
+    public void setWeeks(int weeks) {
+        this.weeks = weeks;
     }
 
     public int getMessagesPerWeek() {
@@ -101,8 +127,8 @@ public class SubscriptionPack {
     public int hashCode() {
         int result = name.hashCode();
         result = 31 * result + type.hashCode();
+        result = 31 * result + weeks;
         result = 31 * result + messagesPerWeek;
-        result = 31 * result + weeklyMessages.hashCode();
         return result;
     }
 }

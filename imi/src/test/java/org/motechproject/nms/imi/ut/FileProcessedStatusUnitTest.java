@@ -1,4 +1,4 @@
-package org.motechproject.nms.imi.unit;
+package org.motechproject.nms.imi.ut;
 
 import org.junit.Test;
 import org.motechproject.nms.imi.domain.FileProcessedStatus;
@@ -7,7 +7,7 @@ import static junit.framework.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-public class FileProcessedStatusTest {
+public class FileProcessedStatusUnitTest {
     @Test
     public void testValid() {
         assertFalse(FileProcessedStatus.isValid(0));
