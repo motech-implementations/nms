@@ -242,8 +242,8 @@ public class CdrHelper {
                 null,
                 "w1m1.wav", //todo: we still need to look into that
                 "1",
-                makeLanguage().getCode(),
-                makeCircle(),
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
                 CallStatus.SUCCESS,
                 StatusCode.OBD_SUCCESS_CALL_CONNECTED.getValue(),
                 1);

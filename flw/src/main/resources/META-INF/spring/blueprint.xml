@@ -63,4 +63,7 @@
     <osgi:reference id="languageLocationDataService"
                     interface="org.motechproject.nms.region.repository.LanguageLocationDataService" />
 
+    <osgi:reference id="circleDataService"
+                    interface="org.motechproject.nms.region.repository.CircleDataService" />
+
 </beans>
