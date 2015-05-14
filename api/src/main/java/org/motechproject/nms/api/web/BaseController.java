@@ -136,11 +136,16 @@ public class BaseController {
         return true;
     }
 
-    protected boolean validateFieldMaxLength(StringBuilder errors, String fieldName, String value, int length) {
+    protected boolean validateRequiredFieldMaxLength(StringBuilder errors, String fieldName, String value, int length) {
         if (!validateFieldPresent(errors, fieldName, value)) {
             return false;
         }
-        if (value.length() > length) {
+
+        return validateFieldMaxLength(errors, fieldName, value, length);
+    }
+
+    protected boolean validateFieldMaxLength(StringBuilder errors, String fieldName, String value, int length) {
+        if (value != null && value.length() > length) {
             errors.append(String.format(INVALID, fieldName));
             return false;
         }
@@ -159,7 +164,7 @@ public class BaseController {
     protected StringBuilder validate(Long callingNumber, Long callId, String operator, String circle) {
         StringBuilder failureReasons = validate(callingNumber, callId);
 
-        validateFieldMaxLength(failureReasons, "operator", operator, MAX_LENGTH_255);
+        validateRequiredFieldMaxLength(failureReasons, "operator", operator, MAX_LENGTH_255);
 
         validateFieldMaxLength(failureReasons, "circle", circle, MAX_LENGTH_255);
 

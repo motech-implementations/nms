@@ -7,4 +7,6 @@ public interface LanguageLocationService {
     LanguageLocation getForCode(String code);
 
     LanguageLocation getDefaultForCircle(Circle circle);
+
+    LanguageLocation getNationalDefaultLanguageLocation();
 }

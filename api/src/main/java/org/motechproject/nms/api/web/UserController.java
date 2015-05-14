@@ -5,7 +5,6 @@ import org.motechproject.nms.api.web.contract.FlwUserResponse;
 import org.motechproject.nms.api.web.contract.UserResponse;
 import org.motechproject.nms.api.web.contract.kilkari.KilkariUserResponse;
 import org.motechproject.nms.api.web.exception.NotAuthorizedException;
-import org.motechproject.nms.api.web.exception.NotFoundException;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.Service;
 import org.motechproject.nms.flw.domain.ServiceUsage;
@@ -85,9 +84,6 @@ public class UserController extends BaseController {
         }
 
         Circle circleObj = circleService.getByName(circle);
-        if (circleObj == null) {
-            throw new NotFoundException(String.format(NOT_FOUND, CIRCLE));
-        }
 
         UserResponse user = null;
 
@@ -97,6 +93,10 @@ public class UserController extends BaseController {
         if (!(MOBILE_ACADEMY.equals(serviceName) || MOBILE_KUNJI.equals(serviceName) ||
                 KILKARI.equals(serviceName))) {
             failureReasons.append(String.format(INVALID, SERVICE_NAME));
+        }
+
+        if (failureReasons.length() > 0) {
+            throw new IllegalArgumentException(failureReasons.toString());
         }
 
         /*
@@ -113,11 +113,16 @@ public class UserController extends BaseController {
             user = getKilkariResponseUser(callingNumber);
         }
 
-        if (failureReasons.length() > 0) {
-            throw new IllegalArgumentException(failureReasons.toString());
+        LanguageLocation defaultLanguageLocation = null;
+        if (circleObj != null) {
+            defaultLanguageLocation = languageLocationService.getDefaultForCircle(circleObj);
         }
 
-        LanguageLocation defaultLanguageLocation = languageLocationService.getDefaultForCircle(circleObj);
+        // If no circle was provided, or if the provided circle doesn't have a default language, use the national
+        if (defaultLanguageLocation == null) {
+            defaultLanguageLocation = languageLocationService.getNationalDefaultLanguageLocation();
+        }
+
         if (defaultLanguageLocation != null && user != null) {
             user.setDefaultLanguageLocationCode(defaultLanguageLocation.getCode());
         }

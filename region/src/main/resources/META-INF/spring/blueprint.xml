@@ -19,6 +19,9 @@
     <osgi:reference id="languageLocationDataService"
                     interface="org.motechproject.nms.region.repository.LanguageLocationDataService" />
 
+    <osgi:reference id="nationalLanguageLocationDataService"
+                    interface="org.motechproject.nms.region.repository.NationalDefaultLanguageLocationDataService" />
+
     <!-- Location Services -->
     <osgi:reference id="stateDataService"
                     interface="org.motechproject.nms.region.repository.StateDataService" />

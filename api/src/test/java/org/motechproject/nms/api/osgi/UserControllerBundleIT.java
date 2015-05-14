@@ -478,7 +478,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         languageLocation2.getDistrictSet().add(district2);
         languageLocationDataService.create(languageLocation2);
 
-        nationalDefaultLanguageLocationDataService.create(new NationalDefaultLanguageLocation(languageLocation));
+        nationalDefaultLanguageLocationDataService.create(new NationalDefaultLanguageLocation(languageLocation2));
     }
 
     private HttpGet createHttpGet(boolean includeService, String service,
@@ -772,18 +772,28 @@ public class UserControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testNoCircle() throws IOException, InterruptedException {
+        createCircleWithLanguage();
+
         HttpGet httpGet = createHttpGet(
-                true, "kilkari",        //service
+                true, "mobilekunji",        //service
                 true, "1111111111",     //callingNumber
                 true, "OP",             //operator
                 false, null,            //circle
                 true, "123456789012345" //callId
         );
 
-        String expectedJsonResponse = createFailureResponseJson("<circle: Not Present>");
+        String expectedJsonResponse = createFlwUserResponseJson(
+                "88",  //defaultLanguageLocationCode
+                null,  //locationCode
+                0L,    //currentUsageInPulses
+                0L,    //endOfUsagePromptCounter
+                false, //welcomePromptFlag
+                -1,  //maxAllowedUsageInPulses
+                2      //maxAllowedEndOfUsagePrompt
+        );
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
         assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 

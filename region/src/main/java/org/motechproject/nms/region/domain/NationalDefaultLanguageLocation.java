@@ -19,7 +19,7 @@ public class NationalDefaultLanguageLocation extends MdsEntity {
     @Unique
     @Column(allowsNull = "false", defaultValue = "0")
     @Max(0) @Min(0)
-    private int lock = 0;
+    private int code = 0;
 
     @Field
     @NotNull
@@ -28,6 +28,10 @@ public class NationalDefaultLanguageLocation extends MdsEntity {
 
     public NationalDefaultLanguageLocation(LanguageLocation languageLocation) {
         this.languageLocation = languageLocation;
+    }
+
+    public int getCode() {
+        return code;
     }
 
     public LanguageLocation getLanguageLocation() {
