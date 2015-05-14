@@ -8,7 +8,6 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.joda.time.DateTime;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.api.web.contract.BadRequest;
@@ -399,7 +398,6 @@ public class UserControllerBundleIT extends BasePaxIT {
     private void createFlwWithLanguageLocationCodeNotInWhitelist() {
         cleanAllData();
 
-
         District district = new District();
         district.setName("District 1");
         district.setRegionalName("District 1");
@@ -421,12 +419,9 @@ public class UserControllerBundleIT extends BasePaxIT {
         languageLocation.getDistrictSet().add(district);
         languageLocationDataService.create(languageLocation);
 
-        State whitelistState = new State("WhitelistState", 1l);
-        stateDataService.create(whitelistState);
+        whitelistStateDataService.create(new WhitelistState(whitelist));
 
-        whitelistStateDataService.create(new WhitelistState(whitelistState));
-
-        WhitelistEntry entry = new WhitelistEntry(0000000000l, whitelistState);
+        WhitelistEntry entry = new WhitelistEntry(0000000000l, whitelist);
         whitelistEntryDataService.create(entry);
 
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111l);
@@ -882,7 +877,6 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
-    @Ignore // TODO: Renable once #119 is merged
     @Test
     public void testGetUserNotInWhitelistByLanguageLocationCode() throws IOException, InterruptedException {
         createFlwWithLanguageLocationCodeNotInWhitelist();
