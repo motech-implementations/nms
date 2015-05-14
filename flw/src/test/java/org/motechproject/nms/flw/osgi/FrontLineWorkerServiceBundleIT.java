@@ -118,7 +118,6 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
     }
 
     @Test
-    @Ignore
     public void testFrontLineWorkerService() throws Exception {
         setupData();
         FrontLineWorker flw = new FrontLineWorker("Test Worker", 1111111111L);
