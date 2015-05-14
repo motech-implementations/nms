@@ -8,6 +8,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.api.web.contract.UserLanguageRequest;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
+import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.domain.Service;
 import org.motechproject.nms.flw.domain.ServiceUsageCap;
 import org.motechproject.nms.flw.repository.ServiceUsageCapDataService;
@@ -194,6 +195,7 @@ public class LanguageControllerBundleIT extends BasePaxIT {
 
         FrontLineWorker flw = frontLineWorkerService.getByContactNumber(1111111111l);
         assertNotNull(flw);
+        assertEquals(FrontLineWorkerStatus.ANONYMOUS, flw.getStatus());
         LanguageLocation languageLocation = flw.getLanguageLocation();
         assertNotNull(languageLocation);
         assertEquals("FLW Language Code", "99", languageLocation.getCode());
@@ -229,6 +231,7 @@ public class LanguageControllerBundleIT extends BasePaxIT {
         FrontLineWorker flw = frontLineWorkerService.getByContactNumber(1111111111l);
         LanguageLocation languageLocation = flw.getLanguageLocation();
         assertNotNull(languageLocation);
+        assertEquals(FrontLineWorkerStatus.ANONYMOUS, flw.getStatus());
         assertEquals("FLW Language Code", "99", languageLocation.getCode());
     }
 }

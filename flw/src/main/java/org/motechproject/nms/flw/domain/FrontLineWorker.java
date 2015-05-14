@@ -17,6 +17,12 @@ public class FrontLineWorker {
     @Field
     private Long id;
 
+    @Field
+    private String flwId;
+
+    @Field
+    private String mctsFlwId;
+
     @Field(required = true)
     @Unique
     @Min(value = 1000000000L, message = "contactNumber must be 10 digits")
@@ -26,6 +32,9 @@ public class FrontLineWorker {
 
     @Field
     private String name;
+
+    @Field
+    private FrontLineWorkerStatus status;
 
     @Field
     private LanguageLocation languageLocation;
@@ -51,6 +60,22 @@ public class FrontLineWorker {
         this.id = id;
     }
 
+    public String getFlwId() {
+        return flwId;
+    }
+
+    public void setFlwId(String flwId) {
+        this.flwId = flwId;
+    }
+
+    public String getMctsFlwId() {
+        return mctsFlwId;
+    }
+
+    public void setMctsFlwId(String mctsFlwId) {
+        this.mctsFlwId = mctsFlwId;
+    }
+
     public Long getContactNumber() {
         return contactNumber;
     }
@@ -65,6 +90,14 @@ public class FrontLineWorker {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public FrontLineWorkerStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(FrontLineWorkerStatus status) {
+        this.status = status;
     }
 
     public LanguageLocation getLanguageLocation() {
