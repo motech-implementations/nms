@@ -16,6 +16,11 @@ import java.util.UUID;
 public class Subscription {
 
     private static final int DAYS_IN_WEEK = 7;
+    private static final int WEEKDAY1 = 0;
+    private static final int WEEKDAY2 = 1;
+    private static final int WEEKDAY5 = 4;
+    private static final int WEEKDAY6 = 5;
+
 
     @Field
     @Unique
@@ -142,17 +147,17 @@ public class Subscription {
         int daysIntoWeek = daysIntoPack % DAYS_IN_WEEK; //zero-based, 0 is the first day, 6 is the last
 
         if (subscriptionPack.getMessagesPerWeek() == 1) {
-            //valid days for 1 msg/week are 0, 1, 2, 3 (fresh + 3 retries)
-            if (daysIntoWeek >= 0 && daysIntoWeek < 4) {
+            //valid days for 1 msg/week are WEEKDAY1 to WEEKDAY4 (fresh + 3 retries)
+            if (daysIntoWeek >= WEEKDAY1 && daysIntoWeek < WEEKDAY5) {
                 // return this week's only message
                 messageIndex = currentWeek - 1;
             }
         } else { // messages per week == 2
-            //valid days for 2 msg/week are 0, 1 & 4, 5 (fresh + 1 retry)
-            if (daysIntoWeek == 0 || daysIntoWeek == 1) {
+            //valid days for 2 msg/week are WEEKDAY1-WEEKDAY2 & WEEKDAY5, WEEKDAY6 (fresh + 1 retry)
+            if (daysIntoWeek == WEEKDAY1 || daysIntoWeek == WEEKDAY2) {
                 // use this week's first message
                 messageIndex = 2 * (currentWeek - 1);
-            } else if (daysIntoWeek == 4 || daysIntoWeek == 5) {
+            } else if (daysIntoWeek == WEEKDAY5 || daysIntoWeek == WEEKDAY6) {
                 // use this week's second message
                 messageIndex = 2 * (currentWeek - 1) + 1;
             }
