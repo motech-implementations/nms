@@ -68,6 +68,7 @@ public class CdrHelper {
 
     private List<CallDetailRecord> cdrs;
     private List<CallDetailRecord> retryCdrs = new ArrayList<>();
+    private List<String> completedSubscriptionIds = new ArrayList<>();
 
 
     public CdrHelper(SettingsService settingsService, SubscriptionService subscriptionService,
@@ -103,8 +104,8 @@ public class CdrHelper {
     }
 
 
-    public boolean shouldNotRetryCdr(CallDetailRecord cdr) {
-        return !retryCdrs.contains(cdr);
+    public boolean isSubscriptionCompleted(String subscriptionId) {
+        return completedSubscriptionIds.contains(subscriptionId);
     }
 
 
@@ -172,7 +173,7 @@ public class CdrHelper {
     }
 
 
-    private Subscription makeSubscription(SubscriptionOrigin origin) {
+    private Subscription makeSubscription(SubscriptionOrigin origin, DateTime startDate) {
         subscriptionService.createSubscriptionPacks();
         Subscriber subscriber = subscriberDataService.create(new Subscriber(
                 makeNumber(),
@@ -181,13 +182,22 @@ public class CdrHelper {
         ));
         SubscriptionPack subscriptionPack = subscriptionService.getSubscriptionPack("childPack");
         Subscription subscription = new Subscription(subscriber, subscriptionPack, origin);
-        //~ one to two month old start date
-        int daysOld = (int) (Math.random() * 30) + 30;
-        subscription.setStartDate(DateTime.now().minusDays(daysOld));
+        if (startDate == null) {
+            //~ one to two month old start date
+            int daysOld = (int) (Math.random() * 30) + 30;
+            subscription.setStartDate(DateTime.now().minusDays(daysOld));
+        } else {
+            subscription.setStartDate(startDate);
+        }
         subscription.setStatus(SubscriptionStatus.ACTIVE);
         subscription = subscriptionService.create(subscription);
         LOGGER.debug("Created subscription {}", subscription.toString());
         return subscription;
+    }
+
+
+    private Subscription makeSubscription(SubscriptionOrigin origin) {
+        return makeSubscription(origin, null);
     }
 
 
@@ -197,10 +207,33 @@ public class CdrHelper {
         List<CallDetailRecord> cdrs = new ArrayList<>();
 
         /**
-         * successful call
+         * successful call - but not the last one
          */
         Subscription subscription = makeSubscription(SubscriptionOrigin.IVR);
         CallDetailRecord cdr = new CallDetailRecord(
+                new RequestId(fileIdentifier, subscription.getSubscriptionId()).toString(),
+                imiServiceId,
+                subscription.getSubscriber().getCallingNumber(),
+                null,
+                0,
+                null,
+                "w1m1.wav", //todo: we still need to look into that
+                "1",
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
+                CallStatus.SUCCESS,
+                StatusCode.OBD_SUCCESS_CALL_CONNECTED.getValue(),
+                1);
+        cdrs.add(cdr);
+
+        /**
+         * successful call - last one of the subscription
+         */
+        SubscriptionPack subscriptionPack = subscriptionService.getSubscriptionPack("childPack");
+        DateTime startDate = DateTime.now().minusDays(subscriptionPack.getWeeks() * 7);
+        subscription = makeSubscription(SubscriptionOrigin.IVR, startDate);
+        completedSubscriptionIds.add(subscription.getSubscriptionId());
+        cdr = new CallDetailRecord(
                 new RequestId(fileIdentifier, subscription.getSubscriptionId()).toString(),
                 imiServiceId,
                 subscription.getSubscriber().getCallingNumber(),

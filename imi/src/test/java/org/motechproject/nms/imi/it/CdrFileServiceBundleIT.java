@@ -1,7 +1,6 @@
 package org.motechproject.nms.imi.it;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.alerts.contract.AlertCriteria;
@@ -17,6 +16,7 @@ import org.motechproject.nms.imi.web.contract.FileInfo;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
+import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.domain.CallStatus;
@@ -37,7 +37,9 @@ import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
-import static junit.framework.Assert.*;
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertNotNull;
+import static junit.framework.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(PaxExam.class)
@@ -98,7 +100,6 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
     }
 
 
-    @Ignore // TODO: fhuster to renable once passing
     @Test
     public void testValidRequest() throws IOException, NoSuchAlgorithmException {
         getLogger().debug("testValidRequest()");
@@ -114,10 +115,11 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
 
         cdrFileService.processCdrFile(new CdrFileNotificationRequest(
                         helper.obdFileName(),
-                        new FileInfo(helper.cdrSummaryFileName(), helper.summaryFileChecksum(), 6),
+                        new FileInfo(helper.cdrSummaryFileName(), helper.summaryFileChecksum(), 7),
                         new FileInfo(helper.cdrDetailFileName(), helper.detailFileChecksum(), 1))
         );
 
+        //todo: look for a more deterministic method than Thread.sleep
         try {
             long sleepyTime = 10 * 1000L;
             getLogger().debug("Sleeping {} seconds to give a chance to @MotechListeners to catch up...", sleepyTime / 1000);
@@ -136,6 +138,14 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
                 //The call was made, all is good, there should be no record in the CallRetry table
                 getLogger().debug("Call was made, no CallRetry record should exist");
                 assertNull(callRetryDataService.findBySubscriptionId(requestId.getSubscriptionId()));
+
+                // if this is supposed to be this subscription's last message, check that the subscription is
+                // marked as completed
+                if (helper.isSubscriptionCompleted(subscription.getSubscriptionId())) {
+                    assertEquals(SubscriptionStatus.COMPLETED, subscription.getStatus());
+                } else {
+                    assertEquals(SubscriptionStatus.ACTIVE, subscription.getStatus());
+                }
             } else if (cdr.getFinalStatus() == CallStatus.REJECTED) {
                 // The call was rejected, verify the subscription is deactivated and there there is no record in the
                 // CallRetry table
