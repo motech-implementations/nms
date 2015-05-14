@@ -1,8 +1,8 @@
-package org.motechproject.nms.imi.ut;
+package org.motechproject.nms.props.ut;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.motechproject.nms.imi.domain.CallRetry;
+import org.motechproject.nms.kilkari.domain.CallRetry;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;

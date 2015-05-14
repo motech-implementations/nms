@@ -14,6 +14,7 @@ import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
+import org.motechproject.nms.props.domain.DayOfTheWeek;
 import org.motechproject.nms.region.domain.LanguageLocation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -216,12 +217,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @Override
-    public void markSubscriptionComplete(Subscription subscription) {
-        subscription.setStatus(SubscriptionStatus.COMPLETED);
-        subscriptionDataService.update(subscription);
-    }
-
-    @Override
     public SubscriptionPack getSubscriptionPack(String name) {
         return subscriptionPackDataService.byName(name);
     }
@@ -242,5 +237,11 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     public List<Subscription> findActiveSubscriptions(int page, int pageSize) {
         return subscriptionDataService.findByStatus(SubscriptionStatus.ACTIVE, new QueryParams(page, pageSize));
+    }
+
+
+    public List<Subscription> findActiveSubscriptionsForDay(DayOfTheWeek dayOfTheWeek, int page, int pageSize) {
+        return subscriptionDataService.findByStatusAndDay(SubscriptionStatus.ACTIVE, dayOfTheWeek,
+                new QueryParams(page, pageSize));
     }
 }

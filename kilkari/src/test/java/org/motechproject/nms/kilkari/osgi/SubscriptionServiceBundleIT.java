@@ -20,6 +20,7 @@ import org.motechproject.nms.kilkari.repository.SubscriptionPackMessageDataServi
 import org.motechproject.nms.kilkari.service.InboxService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
+import org.motechproject.nms.props.domain.DayOfTheWeek;
 import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Language;
@@ -40,10 +41,14 @@ import org.ops4j.pax.exam.spi.reactors.PerSuite;
 import javax.inject.Inject;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Verify that SubscriptionService is present & functional.
@@ -475,6 +480,28 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         // should throw IllegalStateException
         SubscriptionPackMessage message = subscription.nextScheduledMessage(now.plusDays(1000));
+    }
+
+    @Test
+    public void testActiveSubscriptionsForDay() {
+        setupData();
+        DateTime startDate = DateTime.now().minusDays((int) (Math.random() * 100));
+        DayOfTheWeek startDay = DayOfTheWeek.fromInt(startDate.getDayOfWeek());
+
+        Subscriber subscriber = subscriberDataService.create(new Subscriber(1111111111L));
+        Subscription subscription = new Subscription(subscriber, gPack1, SubscriptionOrigin.IVR);
+        subscription.setStatus(SubscriptionStatus.ACTIVE);
+        subscription.setStartDate(startDate);
+        subscriptionDataService.create(subscription);
+
+        List<Subscription> subscriptions = subscriptionService.findActiveSubscriptionsForDay(startDay, 1, 10);
+        assertTrue(subscriptions.size() > 0);
+        for (Subscription s : subscriptions) {
+            if (s.getSubscriber().getCallingNumber() == 1111111111L) {
+                return;
+            }
+        }
+        throw new IllegalStateException("Couldn't find our subscription by its start day!");
     }
 
 }

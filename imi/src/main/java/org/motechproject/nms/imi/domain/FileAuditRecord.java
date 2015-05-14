@@ -2,60 +2,37 @@ package org.motechproject.nms.imi.domain;
 
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
-import org.motechproject.mds.annotations.UIDisplayable;
 
 import javax.jdo.annotations.Column;
 
-@Entity(tableName = "nms_imi_audit_records")
-public class AuditRecord {
-    /**
-     * The identifier field is used in each targetFile csv row combined with the subscription id to form the
-     * RequestId field uniquely identifying each row of the targetFile
-     */
+@Entity(tableName = "nms_imi_file_audit_records")
+public class FileAuditRecord {
     @Field
-    @UIDisplayable(position = 0)
-    private String identifier;
-
-
-    @Field
-    @UIDisplayable(position = 1)
+    @Column(allowsNull = "false")
     private FileType type;
 
     @Field
-    @UIDisplayable(position = 2)
-    private String file;
+    @Column(allowsNull = "false")
+    private String fileName;
 
     @Field
-    @UIDisplayable(position = 3)
     @Column(allowsNull = "false")
     private String status;
 
     @Field
-    @UIDisplayable(position = 4)
     private Integer recordCount;
 
     @Field
-    @UIDisplayable(position = 5)
     private String checksum;
 
-    public AuditRecord() { }
+    public FileAuditRecord() { }
 
-    public AuditRecord(String identifier, FileType type, String file, String status, Integer recordCount,
-                       String checksum) {
-        this.identifier = identifier;
+    public FileAuditRecord(FileType type, String fileName, String status, Integer recordCount, String checksum) {
         this.type = type;
-        this.file = file;
+        this.fileName = fileName;
         this.status = status;
         this.recordCount = recordCount;
         this.checksum = checksum;
-    }
-
-    public String getIdentifier() {
-        return identifier;
-    }
-
-    public void setIdentifier(String identifier) {
-        this.identifier = identifier;
     }
 
     public FileType getType() {
@@ -66,12 +43,12 @@ public class AuditRecord {
         this.type = type;
     }
 
-    public String getFile() {
-        return file;
+    public String getFileName() {
+        return fileName;
     }
 
-    public void setFile(String file) {
-        this.file = file;
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
     }
 
     public String getStatus() {
@@ -100,10 +77,9 @@ public class AuditRecord {
 
     @Override
     public String toString() {
-        return "AuditRecord{" +
-                "identifier='" + identifier + '\'' +
+        return "FileAuditRecord{" +
                 ", type=" + type +
-                ", file='" + file + '\'' +
+                ", fileName='" + fileName + '\'' +
                 ", status='" + status + '\'' +
                 ", recordCount=" + recordCount +
                 ", checksum='" + checksum + '\'' +

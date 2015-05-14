@@ -1,10 +1,10 @@
-package org.motechproject.nms.imi.repository;
+package org.motechproject.nms.kilkari.repository;
 
 import org.motechproject.mds.annotations.Lookup;
 import org.motechproject.mds.annotations.LookupField;
 import org.motechproject.mds.query.QueryParams;
 import org.motechproject.mds.service.MotechDataService;
-import org.motechproject.nms.imi.domain.CallRetry;
+import org.motechproject.nms.kilkari.domain.CallRetry;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
 
 import java.util.List;

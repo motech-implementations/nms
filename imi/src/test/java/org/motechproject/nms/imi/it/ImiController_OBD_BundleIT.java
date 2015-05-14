@@ -4,14 +4,17 @@ import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.alerts.contract.AlertCriteria;
 import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.alerts.domain.Alert;
 import org.motechproject.alerts.domain.AlertType;
+import org.motechproject.nms.imi.domain.FileAuditRecord;
 import org.motechproject.nms.imi.domain.FileProcessedStatus;
-import org.motechproject.nms.imi.service.SettingsService;
+import org.motechproject.nms.imi.domain.FileType;
+import org.motechproject.nms.imi.repository.FileAuditRecordDataService;
 import org.motechproject.nms.imi.web.contract.BadRequest;
 import org.motechproject.nms.imi.web.contract.FileProcessedStatusRequest;
 import org.motechproject.testing.osgi.BasePaxIT;
@@ -41,8 +44,12 @@ public class ImiController_OBD_BundleIT extends BasePaxIT {
     AlertService alertService;
 
     @Inject
-    SettingsService settingsService;
+    FileAuditRecordDataService fileAuditRecordDataService;
 
+    @Before
+    public void cleanupDatabase() {
+        fileAuditRecordDataService.deleteAll();
+    }
 
     private HttpPost createFileProcessedStatusHttpPost(String fileName, FileProcessedStatus fileProcessedStatus)
         throws IOException {
@@ -78,6 +85,7 @@ public class ImiController_OBD_BundleIT extends BasePaxIT {
         getLogger().debug("testCreateFileProcessedStatusRequest()");
         HttpPost httpPost = createFileProcessedStatusHttpPost("file.csv",
                 FileProcessedStatus.FILE_PROCESSED_SUCCESSFULLY);
+        fileAuditRecordDataService.create(new FileAuditRecord(FileType.TARGET_FILE, "file.csv", "OK", 0, ""));
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
@@ -109,6 +117,8 @@ public class ImiController_OBD_BundleIT extends BasePaxIT {
         getLogger().debug("testCreateFileProcessedStatusRequestWithError()");
         HttpPost httpPost = createFileProcessedStatusHttpPost("file.csv",
                 FileProcessedStatus.FILE_ERROR_IN_FILE_FORMAT);
+
+        fileAuditRecordDataService.create(new FileAuditRecord(FileType.TARGET_FILE, "file.csv", "ERROR", 0, ""));
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK, ADMIN_USERNAME, ADMIN_PASSWORD));
 

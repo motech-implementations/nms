@@ -19,21 +19,21 @@ import org.motechproject.alerts.domain.AlertType;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.annotations.MotechListener;
 import org.motechproject.mds.query.QueryParams;
-import org.motechproject.nms.imi.domain.AuditRecord;
-import org.motechproject.nms.imi.domain.CallRetry;
+import org.motechproject.nms.imi.domain.FileAuditRecord;
 import org.motechproject.nms.imi.domain.FileProcessedStatus;
 import org.motechproject.nms.imi.domain.FileType;
-import org.motechproject.nms.imi.repository.AuditDataService;
-import org.motechproject.nms.imi.repository.CallRetryDataService;
-import org.motechproject.nms.imi.service.RequestId;
-import org.motechproject.nms.imi.service.TargetFileNotification;
+import org.motechproject.nms.imi.repository.FileAuditRecordDataService;
+import org.motechproject.nms.imi.service.contract.TargetFileNotification;
 import org.motechproject.nms.imi.service.TargetFileService;
 import org.motechproject.nms.imi.web.contract.FileProcessedStatusRequest;
+import org.motechproject.nms.kilkari.domain.CallRetry;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
+import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
+import org.motechproject.nms.props.domain.RequestId;
 import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.LanguageLocation;
 import org.motechproject.scheduler.contract.RepeatingSchedulableJob;
@@ -53,7 +53,6 @@ import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
-import java.util.UUID;
 
 @Service("targetFileService")
 public class TargetFileServiceImpl implements TargetFileService {
@@ -76,7 +75,7 @@ public class TargetFileServiceImpl implements TargetFileService {
     private SubscriptionService subscriptionService;
     private SubscriberDataService subscriberDataService;
     private CallRetryDataService callRetryDataService;
-    private AuditDataService auditDataService;
+    private FileAuditRecordDataService fileAuditRecordDataService;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TargetFileServiceImpl.class);
 
@@ -123,14 +122,14 @@ public class TargetFileServiceImpl implements TargetFileService {
                                  SubscriptionService subscriptionService,
                                  CallRetryDataService callRetryDataService,
                                  SubscriberDataService subscriberDataService,
-                                 AuditDataService auditDataService) {
+                                 FileAuditRecordDataService fileAuditRecordDataService) {
         this.schedulerService = schedulerService;
         this.settingsFacade = settingsFacade;
         this.alertService = alertService;
         this.subscriptionService = subscriptionService;
         this.callRetryDataService = callRetryDataService;
         this.subscriberDataService = subscriberDataService;
-        this.auditDataService = auditDataService;
+        this.fileAuditRecordDataService = fileAuditRecordDataService;
 
         scheduleTargetFileGeneration();
     }
@@ -141,8 +140,8 @@ public class TargetFileServiceImpl implements TargetFileService {
     }
 
 
-    private void insertTargetFileAuditRecord(String fileIdentifier, TargetFileNotification tfn, String status) {
-        auditDataService.create(new AuditRecord(fileIdentifier, FileType.TARGET_FILE, tfn.getFileName(), status,
+    private void insertTargetFileAuditRecord(TargetFileNotification tfn, String status) {
+        fileAuditRecordDataService.create(new FileAuditRecord(FileType.TARGET_FILE, tfn.getFileName(), status,
                 tfn.getRecordCount(), tfn.getChecksum()));
     }
 
@@ -162,7 +161,7 @@ public class TargetFileServiceImpl implements TargetFileService {
                 LOGGER.error(error);
                 alertService.create(targetFileDirectory.toString(), "targetFileDirectory", "mkdirs() failed",
                         AlertType.CRITICAL, AlertStatus.NEW, 0, null);
-                insertTargetFileAuditRecord(null, new TargetFileNotification(), error);
+                insertTargetFileAuditRecord(new TargetFileNotification(), error);
                 throw new IllegalStateException();
             }
         }
@@ -271,7 +270,7 @@ public class TargetFileServiceImpl implements TargetFileService {
 
 
     private int generateFreshCalls(int maxQueryBlock, String imiServiceId, String callFlowUrl,
-                                   String fileIdentifier, OutputStreamWriter writer) throws IOException {
+                                   String targetFileName, OutputStreamWriter writer) throws IOException {
 
         int recordCount = 0;
         int page = 1;
@@ -294,7 +293,7 @@ public class TargetFileServiceImpl implements TargetFileService {
                 Circle circle;
                 circle = (Circle) subscriberDataService.getDetachedField(subscriber, "circle");
 
-                RequestId requestId = new RequestId(fileIdentifier, subscription.getSubscriptionId());
+                RequestId requestId = new RequestId(subscription.getSubscriptionId(), targetFileName);
                 writeSubscriptionRow(requestId.toString(), imiServiceId,
                         subscriber.getCallingNumber().toString(), NORMAL_PRIORITY, callFlowUrl,
                         "???ContentFileName???", //todo: get that from lauren when it's ready
@@ -313,7 +312,7 @@ public class TargetFileServiceImpl implements TargetFileService {
 
 
     private int generateRetryCalls(int maxQueryBlock, String imiServiceId, String callFlowUrl,
-                                   String fileIdentifier, OutputStreamWriter writer) throws IOException {
+                                   String targetFileName, OutputStreamWriter writer) throws IOException {
 
         //figure out which day to work with
         final DayOfTheWeek today = DayOfTheWeek.today();
@@ -327,7 +326,7 @@ public class TargetFileServiceImpl implements TargetFileService {
             numBlockRecord = callRetries.size();
 
             for (CallRetry callRetry : callRetries) {
-                RequestId requestId = new RequestId(fileIdentifier, callRetry.getSubscriptionId());
+                RequestId requestId = new RequestId(callRetry.getSubscriptionId(), targetFileName);
                 writeSubscriptionRow(requestId.toString(), imiServiceId,
                         callRetry.getMsisdn().toString(), NORMAL_PRIORITY, callFlowUrl,
                         "???ContentFileName???", //todo: get that from lauren when it's ready
@@ -361,10 +360,6 @@ public class TargetFileServiceImpl implements TargetFileService {
             return null;
         }
 
-        //generate a unique identifier for the targetFile
-        String fileIdentifier = UUID.randomUUID().toString();
-
-
         File targetFile = new File(targetFileDirectory, targetFileName);
         try (FileOutputStream fos = new FileOutputStream(targetFile);
             OutputStreamWriter writer = new OutputStreamWriter(fos)) {
@@ -383,10 +378,10 @@ public class TargetFileServiceImpl implements TargetFileService {
             }
 
             //FRESH calls
-            recordCount = generateFreshCalls(maxQueryBlock, imiServiceId, callFlowUrl, fileIdentifier, writer);
+            recordCount = generateFreshCalls(maxQueryBlock, imiServiceId, callFlowUrl, targetFileName, writer);
 
             //Retry calls
-            recordCount += generateRetryCalls(maxQueryBlock, imiServiceId, callFlowUrl, fileIdentifier, writer);
+            recordCount += generateRetryCalls(maxQueryBlock, imiServiceId, callFlowUrl, targetFileName, writer);
 
             LOGGER.debug("Created targetFile with {} record{}", recordCount, recordCount == 1 ? "" : "s");
 
@@ -394,7 +389,7 @@ public class TargetFileServiceImpl implements TargetFileService {
             LOGGER.error(e.getMessage());
             alertService.create(targetFile.toString(), "targetFile", e.getMessage(), AlertType.CRITICAL,
                     AlertStatus.NEW, 0, null);
-            insertTargetFileAuditRecord(null, new TargetFileNotification(targetFile.toString(), null, null),
+            insertTargetFileAuditRecord(new TargetFileNotification(targetFile.toString(), null, null),
                     e.getMessage());
             return null;
         }
@@ -404,7 +399,7 @@ public class TargetFileServiceImpl implements TargetFileService {
         LOGGER.debug("TargetFileNotification = {}", tfn.toString());
 
         //audit the success
-        insertTargetFileAuditRecord(fileIdentifier, tfn, "Success");
+        insertTargetFileAuditRecord(tfn, "Success");
 
         return tfn;
     }
@@ -459,6 +454,7 @@ public class TargetFileServiceImpl implements TargetFileService {
             //todo: audit that?
         } else {
             LOGGER.error(request.toString());
+            //todo: IT check if alert was created
             alertService.create(request.getFileName(), "targetFileName", "Target File Processing Error",
                     AlertType.CRITICAL, AlertStatus.NEW, 0, null);
             //todo: audit that?

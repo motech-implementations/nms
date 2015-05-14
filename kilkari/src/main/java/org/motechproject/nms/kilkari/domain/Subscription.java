@@ -4,10 +4,12 @@ import org.joda.time.DateTime;
 import org.joda.time.Days;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
+import org.motechproject.nms.props.domain.DayOfTheWeek;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Unique;
 import javax.validation.constraints.NotNull;
+import java.util.List;
 import java.util.UUID;
 
 @Entity(tableName = "nms_subscriptions")
@@ -43,6 +45,9 @@ public class Subscription {
 
     @Field
     private DateTime startDate;
+
+    @Field
+    private DayOfTheWeek startDayOfTheWeek;
 
     @Field
     private DeactivationReason deactivationReason;
@@ -89,7 +94,14 @@ public class Subscription {
 
     public DateTime getStartDate() { return startDate; }
 
-    public void setStartDate(DateTime startDate) { this.startDate = startDate; }
+    public void setStartDate(DateTime startDate) {
+        this.startDate = startDate;
+        this.startDayOfTheWeek = DayOfTheWeek.fromInt(startDate.getDayOfWeek());
+    }
+
+    public DayOfTheWeek getStartDayOfTheWeek() {
+        return startDayOfTheWeek;
+    }
 
     public DeactivationReason getDeactivationReason() { return deactivationReason; }
 
@@ -106,7 +118,7 @@ public class Subscription {
     }
 
     /**
-     * Helper method to be called by the OBD process when selecting a message to play for a subscription
+     * Helper method to be called by the OBD processCallDetailRecord when selecting a message to play for a subscription
      * @param date The date on which the message will be played
      * @return SubscriptionPackMessage with the details of the message to play
      */
@@ -162,6 +174,19 @@ public class Subscription {
         int daysSinceStartDate = Days.daysBetween(startDate, today).getDays();
 
         return totalDaysInPack < daysSinceStartDate;
+    }
+
+
+    /**
+     * Helper method which determines if the given contentFileName corresponds to the last message of this
+     * subscription's message pack
+     *
+     * @param contentFileName
+     * @return true if contentFileName is the last message for this subscription's message pack
+     */
+    public boolean isLastPackMessage(String contentFileName) {
+        List<SubscriptionPackMessage> messages = subscriptionPack.getMessages();
+        return messages.get(messages.size() - 1).getMessageFileName().equals(contentFileName);
     }
 
 

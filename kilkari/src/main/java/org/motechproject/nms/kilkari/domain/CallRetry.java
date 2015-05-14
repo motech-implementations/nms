@@ -1,4 +1,4 @@
-package org.motechproject.nms.imi.domain;
+package org.motechproject.nms.kilkari.domain;
 
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
