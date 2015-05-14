@@ -120,6 +120,7 @@
                             org.motechproject.nms.imi.web.contract,
                             org.motechproject.nms.imi.repository,
                             org.motechproject.nms.imi.domain,
+                            org.motechproject.nms.imi.service.contract,
                             org.motechproject.nms.imi.service
                         </Export-Package>
                         <Import-Package>

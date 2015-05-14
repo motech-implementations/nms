@@ -44,4 +44,8 @@ public enum DayOfTheWeek {
         }
     }
 
+    public static DayOfTheWeek fromDateTime(DateTime dt) {
+        return fromInt(dt.getDayOfWeek());
+    }
+
 }

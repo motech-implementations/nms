@@ -1,8 +1,8 @@
 package org.motechproject.nms.imi.web;
 
-import org.motechproject.nms.imi.domain.AuditRecord;
-import org.motechproject.nms.imi.domain.FileType;
-import org.motechproject.nms.imi.repository.AuditDataService;
+import org.motechproject.nms.imi.domain.FileAuditRecord;
+import org.motechproject.nms.imi.exception.NotFoundException;
+import org.motechproject.nms.imi.repository.FileAuditRecordDataService;
 import org.motechproject.nms.imi.service.CdrFileService;
 import org.motechproject.nms.imi.service.TargetFileService;
 import org.motechproject.nms.imi.web.contract.BadRequest;
@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import java.util.List;
 import java.util.regex.Pattern;
 
 /**
@@ -35,16 +36,16 @@ public class ImiController {
 
     private CdrFileService cdrFileService;
     private TargetFileService targetFileService;
-    private AuditDataService auditDataService;
+    private FileAuditRecordDataService fileAuditRecordDataService;
 
 
 
     @Autowired
     public ImiController(CdrFileService cdrFileService, TargetFileService targetFileService,
-                         AuditDataService auditDataService) {
+                         FileAuditRecordDataService fileAuditRecordDataService) {
         this.cdrFileService = cdrFileService;
         this.targetFileService = targetFileService;
-        this.auditDataService = auditDataService;
+        this.fileAuditRecordDataService = fileAuditRecordDataService;
     }
 
 
@@ -122,8 +123,6 @@ public class ImiController {
                 request.getFileName());
 
         if (failureReasons.length() > 0) {
-            auditDataService.create(new AuditRecord(null, FileType.CDR_FILE, request.getFileName(), null, null,
-                    failureReasons.toString()));
             throw new IllegalArgumentException(failureReasons.toString());
         }
 
@@ -150,14 +149,26 @@ public class ImiController {
                 request.getFileProcessedStatus());
         validateFieldPresent(failureReasons, "fileName", request.getFileName());
 
-        // TODO: validate file name against internal data
-
         if (failureReasons.length() > 0) {
             throw new IllegalArgumentException(failureReasons.toString());
         }
 
+        List<FileAuditRecord> records =  fileAuditRecordDataService.findByFileName(request.getFileName());
+        if (records.size() < 1) {
+            throw new NotFoundException("<fileName: Not Found>");
+        }
+
         // call OBD service, which will handle notification
         targetFileService.handleFileProcessedStatusNotification(request);
+    }
+
+
+
+    @ExceptionHandler({ NotFoundException.class })
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ResponseBody
+    public BadRequest handleException(NotFoundException e) {
+        return new BadRequest(e.getMessage());
     }
 
 

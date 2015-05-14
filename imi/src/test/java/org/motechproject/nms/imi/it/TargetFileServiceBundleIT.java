@@ -1,20 +1,20 @@
 package org.motechproject.nms.imi.it;
 
 import org.apache.commons.codec.binary.Hex;
+import org.joda.time.DateTime;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.motechproject.nms.imi.domain.CallRetry;
-import org.motechproject.nms.imi.domain.CallStage;
-import org.motechproject.nms.imi.repository.CallRetryDataService;
 import org.motechproject.nms.imi.service.SettingsService;
-import org.motechproject.nms.imi.service.TargetFileNotification;
 import org.motechproject.nms.imi.service.TargetFileService;
+import org.motechproject.nms.imi.service.contract.TargetFileNotification;
+import org.motechproject.nms.kilkari.domain.CallRetry;
+import org.motechproject.nms.kilkari.domain.CallStage;
+import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
-import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
-import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
+import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
@@ -47,7 +47,9 @@ import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerSuite.class)
@@ -89,7 +91,6 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
 
     private void setupDatabase() {
         subscriptionService.deleteAll();
-        subscriptionPackDataService.deleteAll();
         subscriberDataService.deleteAll();
         languageLocationDataService.deleteAll();
         languageDataService.deleteAll();
@@ -115,40 +116,33 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
 
         LanguageLocation hindi = new LanguageLocation("HI", aa, new Language("Hindi"), false);
         hindi.getDistrictSet().add(district);
-        languageLocationDataService.create(hindi);
+        hindi = languageLocationDataService.create(hindi);
 
         LanguageLocation urdu = new LanguageLocation("UR", aa, new Language("Urdu"), false);
         urdu.getDistrictSet().add(district);
-        languageLocationDataService.create(urdu);
+        urdu = languageLocationDataService.create(urdu);
 
-        SubscriptionPack pack1 = subscriptionPackDataService.create(new SubscriptionPack("one",
-                SubscriptionPackType.CHILD, 48, 1, null));
-        SubscriptionPack pack2 = subscriptionPackDataService.create(new SubscriptionPack("two",
-                SubscriptionPackType.PREGNANCY, 72, 2, null));
+        SubscriptionPack childPack = subscriptionPackDataService.byName("childPack");
+        SubscriptionPack pregnancyPack = subscriptionPackDataService.byName("pregnancyPack");
 
-        Subscriber subscriber1 = subscriberDataService.create(new Subscriber(1111111111L, hindi, aa));
-        Subscriber subscriber2 = subscriberDataService.create(new Subscriber(2222222222L, urdu, bb));
+        Subscriber subscriber1 = new Subscriber(1111111111L, hindi, aa);
+        subscriber1.setLastMenstrualPeriod(DateTime.now().minusDays(90)); // startDate will be today
+        subscriberDataService.create(subscriber1);
 
-        Subscription s = new Subscription(subscriber1, pack1, SubscriptionOrigin.IVR);
-        s.setStatus(SubscriptionStatus.ACTIVE);
-        Subscription subscription11 = subscriptionService.create(s);
+        subscriptionService.createSubscription(1111111111L, hindi, pregnancyPack, SubscriptionOrigin.MCTS_IMPORT);
 
-        s = new Subscription(subscriber1, pack2, SubscriptionOrigin.IVR);
-        s.setStatus(SubscriptionStatus.ACTIVE);
-        Subscription subscription12 = subscriptionService.create(s);
+        Subscriber subscriber2 = new Subscriber(2222222222L, urdu, bb);
+        subscriber2.setDateOfBirth(DateTime.now()); // startDate will be today
+        subscriberDataService.create(subscriber2);
 
-        s = new Subscription(subscriber2, pack1, SubscriptionOrigin.IVR);
-        s.setStatus(SubscriptionStatus.ACTIVE);
-        Subscription subscription21 = subscriptionService.create(s);
+        Subscription s = subscriptionService.createSubscription(2222222222L, urdu, childPack,
+                SubscriptionOrigin.MCTS_IMPORT);
+        subscriptionService.deactivateSubscription(s, DeactivationReason.CHILD_DEATH);
 
-        s = new Subscription(subscriber2, pack2, SubscriptionOrigin.IVR);
-        s.setStatus(SubscriptionStatus.COMPLETED);
-        Subscription subscription22 = subscriptionService.create(s);
-
-        CallRetry callRetry1 = callRetryDataService.create(new CallRetry("123", 3333333333L, DayOfTheWeek.today(),
-                CallStage.RETRY_1, hindi.getCode(), aa.getName(), "I"));
-        CallRetry callRetry2 = callRetryDataService.create(new CallRetry("546", 4444444444L, DayOfTheWeek.today(),
-                CallStage.RETRY_1, hindi.getCode(), bb.getName(), "M"));
+        callRetryDataService.create(new CallRetry("123", 3333333333L, DayOfTheWeek.today(), CallStage.RETRY_1,
+                "w1_m1", 1, hindi.getCode(), aa.getName(), "I"));
+        callRetryDataService.create(new CallRetry("546", 4444444444L, DayOfTheWeek.today().nextDay(),
+                CallStage.RETRY_1, "w1_m1", 1, hindi.getCode(), bb.getName(), "M"));
     }
 
 
@@ -158,8 +152,9 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         TargetFileNotification tfn = targetFileService.generateTargetFile();
         assertNotNull(tfn);
 
-        // Should not pickup subscription22 because its status is COMPLETED
-        assertEquals(5, (int) tfn.getRecordCount());
+        // Should not pickup subscription2 because its status is COMPLETED nor callRetry 546 because it's for
+        // tomorrow
+        assertEquals(2, (int) tfn.getRecordCount());
 
         //read the file to get checksum & record count
         File homeDir = new File(System.getProperty("user.home"));

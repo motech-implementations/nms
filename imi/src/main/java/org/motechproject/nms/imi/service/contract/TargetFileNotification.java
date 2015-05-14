@@ -1,4 +1,4 @@
-package org.motechproject.nms.imi.service;
+package org.motechproject.nms.imi.service.contract;
 
 /**
  * Request body
