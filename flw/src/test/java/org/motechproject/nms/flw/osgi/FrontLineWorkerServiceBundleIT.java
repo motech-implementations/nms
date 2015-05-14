@@ -149,7 +149,7 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
         frontLineWorkerService.add(flw);
         flw = frontLineWorkerService.getByContactNumber(2111111111L);
 
-        assertTrue(flw.getStatus() == FrontLineWorkerStatus.ANONYMOUS);
+        assertEquals(FrontLineWorkerStatus.ANONYMOUS, flw.getStatus());
 
         flw.setDistrict(district);
         flw.setName("Frank Huster");
@@ -157,11 +157,11 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
 
         frontLineWorkerService.update(flw);
         flw = frontLineWorkerService.getByContactNumber(2111111111L);
-        assertTrue(flw.getStatus() == FrontLineWorkerStatus.ACTIVE);
+        assertEquals(FrontLineWorkerStatus.ACTIVE, flw.getStatus());
 
         flw.setStatus(FrontLineWorkerStatus.INVALID);
         frontLineWorkerService.update(flw);
         flw = frontLineWorkerService.getByContactNumber(2111111111L);
-        assertTrue(flw.getStatus() == FrontLineWorkerStatus.INVALID);
+        assertEquals(FrontLineWorkerStatus.INVALID, flw.getStatus());
     }
 }
