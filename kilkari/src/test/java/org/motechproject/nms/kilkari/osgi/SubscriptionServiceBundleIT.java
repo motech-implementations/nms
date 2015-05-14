@@ -442,9 +442,10 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         DateTime now = DateTime.now();
 
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
-        mctsSubscriber.setLastMenstrualPeriod(now.minusDays(90));
+        mctsSubscriber.setLastMenstrualPeriod(now.minusDays(90)); //so the startDate should be today
         subscriberDataService.create(mctsSubscriber);
-        subscriptionService.createSubscription(9999911122L, gLanguageLocation, gPack2, SubscriptionOrigin.MCTS_IMPORT);
+        subscriptionService.createSubscription(9999911122L, gLanguageLocation, gPack2,
+                SubscriptionOrigin.MCTS_IMPORT);
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
 
         Subscription subscription = mctsSubscriber.getSubscriptions().iterator().next();
@@ -456,7 +457,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         subscription.setNeedsWelcomeMessage(false);
         subscriptionDataService.update(subscription);
 
-        message = subscription.nextScheduledMessage(now.plusDays(9));
+        message = subscription.nextScheduledMessage(now.plusDays(8)); //one week and a day
         assertEquals("w2_1", message.getWeekId());
 
         message = subscription.nextScheduledMessage(now.plusDays(75));

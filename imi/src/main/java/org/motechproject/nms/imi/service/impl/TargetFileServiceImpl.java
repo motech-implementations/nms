@@ -29,6 +29,7 @@ import org.motechproject.nms.imi.web.contract.FileProcessedStatusRequest;
 import org.motechproject.nms.kilkari.domain.CallRetry;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
+import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
 import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
@@ -269,14 +270,16 @@ public class TargetFileServiceImpl implements TargetFileService {
     }
 
 
-    private int generateFreshCalls(int maxQueryBlock, String imiServiceId, String callFlowUrl,
+    private int generateFreshCalls(DateTime today, int maxQueryBlock, String imiServiceId, String callFlowUrl,
                                    String targetFileName, OutputStreamWriter writer) throws IOException {
 
+        DayOfTheWeek dow = DayOfTheWeek.fromDateTime(today);
         int recordCount = 0;
         int page = 1;
         int numBlockRecord;
         do {
-            List<Subscription> subscriptions = subscriptionService.findActiveSubscriptions(page, maxQueryBlock);
+            List<Subscription> subscriptions = subscriptionService.findActiveSubscriptionsForDay(dow, page,
+                    maxQueryBlock);
             numBlockRecord = subscriptions.size();
 
             for (Subscription subscription : subscriptions) {
@@ -294,12 +297,11 @@ public class TargetFileServiceImpl implements TargetFileService {
                 circle = (Circle) subscriberDataService.getDetachedField(subscriber, "circle");
 
                 RequestId requestId = new RequestId(subscription.getSubscriptionId(), targetFileName);
-                writeSubscriptionRow(requestId.toString(), imiServiceId,
-                        subscriber.getCallingNumber().toString(), NORMAL_PRIORITY, callFlowUrl,
-                        "???ContentFileName???", //todo: get that from lauren when it's ready
-                        1, //todo: and that too
-                        languageLocation.getCode(), circle.getName(),
-                        subscription.getOrigin().getCode(), writer);
+                SubscriptionPackMessage msg = subscription.nextScheduledMessage(today);
+                //todo: how do we choose a priority?
+                writeSubscriptionRow(requestId.toString(), imiServiceId, subscriber.getCallingNumber().toString(),
+                        NORMAL_PRIORITY, callFlowUrl, msg.getMessageFileName(), msg.getWeek(),
+                        languageLocation.getCode(), circle.getName(), subscription.getOrigin().getCode(), writer);
             }
 
             page++;
@@ -311,26 +313,23 @@ public class TargetFileServiceImpl implements TargetFileService {
     }
 
 
-    private int generateRetryCalls(int maxQueryBlock, String imiServiceId, String callFlowUrl,
+    private int generateRetryCalls(DateTime today, int maxQueryBlock, String imiServiceId, String callFlowUrl,
                                    String targetFileName, OutputStreamWriter writer) throws IOException {
 
-        //figure out which day to work with
-        final DayOfTheWeek today = DayOfTheWeek.today();
-
+        DayOfTheWeek dow = DayOfTheWeek.fromDateTime(today);
         int recordCount = 0;
         int page = 1;
         int numBlockRecord;
         do {
-            List<CallRetry> callRetries = callRetryDataService.findByDayOfTheWeek(today,
+            List<CallRetry> callRetries = callRetryDataService.findByDayOfTheWeek(dow,
                     new QueryParams(page, maxQueryBlock));
             numBlockRecord = callRetries.size();
 
             for (CallRetry callRetry : callRetries) {
                 RequestId requestId = new RequestId(callRetry.getSubscriptionId(), targetFileName);
-                writeSubscriptionRow(requestId.toString(), imiServiceId,
-                        callRetry.getMsisdn().toString(), NORMAL_PRIORITY, callFlowUrl,
-                        "???ContentFileName???", //todo: get that from lauren when it's ready
-                        1, //todo: and that too
+                //todo: look into priorities...
+                writeSubscriptionRow(requestId.toString(), imiServiceId, callRetry.getMsisdn().toString(),
+                        NORMAL_PRIORITY, callFlowUrl, callRetry.getContentFileName(), callRetry.getWeek(),
                         callRetry.getLanguageLocationCode(), callRetry.getCircle(),
                         callRetry.getSubscriptionOrigin(), writer);
             }
@@ -377,11 +376,15 @@ public class TargetFileServiceImpl implements TargetFileService {
                 callFlowUrl = "";
             }
 
+            DateTime today = DateTime.now();
+
             //FRESH calls
-            recordCount = generateFreshCalls(maxQueryBlock, imiServiceId, callFlowUrl, targetFileName, writer);
+            recordCount = generateFreshCalls(today, maxQueryBlock, imiServiceId, callFlowUrl, targetFileName,
+                    writer);
 
             //Retry calls
-            recordCount += generateRetryCalls(maxQueryBlock, imiServiceId, callFlowUrl, targetFileName, writer);
+            recordCount += generateRetryCalls(today, maxQueryBlock, imiServiceId, callFlowUrl, targetFileName,
+                    writer);
 
             LOGGER.debug("Created targetFile with {} record{}", recordCount, recordCount == 1 ? "" : "s");
 

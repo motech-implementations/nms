@@ -74,7 +74,8 @@ public class CallDetailRecordServiceImpl implements CallDetailRecordService {
     }
 
 
-    private void rescheduleCall(String contentFileName, Subscription subscription, CallRetry callRetry) {
+    private void rescheduleCall(String contentFileName, int week, Subscription subscription,
+                                CallRetry callRetry) {
 
         Long msisdn = subscription.getSubscriber().getCallingNumber();
 
@@ -82,11 +83,14 @@ public class CallDetailRecordServiceImpl implements CallDetailRecordService {
 
             // This message was never retried before, so this is a first retry
 
+            DayOfTheWeek nextDay = DayOfTheWeek.fromInt(subscription.getStartDate().dayOfWeek().get()).nextDay();
             CallRetry newCallRetry = new CallRetry(
                     subscription.getSubscriptionId(),
                     msisdn,
-                    DayOfTheWeek.fromInt(subscription.getStartDate().dayOfWeek().get()).nextDay(),
+                    nextDay,
                     CallStage.RETRY_1,
+                    contentFileName,
+                    week,
                     getLanguageLocationCode(subscription),
                     getCircleName(subscription),
                     subscription.getOrigin().getCode()
@@ -174,7 +178,7 @@ public class CallDetailRecordServiceImpl implements CallDetailRecordService {
         if (cdr.getFinalStatus() == CallStatus.SUCCESS) {
             completeSubscriptionIfNeeded(cdr.getContentFileName(), subscription, callRetry);
         } else if (cdr.getFinalStatus() == CallStatus.FAILED) {
-            rescheduleCall(cdr.getContentFileName(), subscription, callRetry);
+            rescheduleCall(cdr.getContentFileName(), cdr.getWeek(), subscription, callRetry);
         } else  if (cdr.getFinalStatus() == CallStatus.REJECTED) {
             deactivateSubscription(subscription, callRetry);
         }

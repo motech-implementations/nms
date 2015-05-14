@@ -26,6 +26,12 @@ public class CallRetry {
     private CallStage callStage;
 
     @Field
+    private String contentFileName;
+
+    @Field
+    private Integer week;
+
+    @Field
     private String languageLocationCode;
 
     @Field
@@ -37,11 +43,14 @@ public class CallRetry {
     public CallRetry() { }
 
     public CallRetry(String subscriptionId, Long msisdn, DayOfTheWeek dayOfTheWeek, CallStage callStage,
-                     String languageLocationCode, String circle, String subscriptionOrigin) {
+                     String contentFileName, Integer week, String languageLocationCode, String circle,
+                     String subscriptionOrigin) {
         this.subscriptionId = subscriptionId;
         this.msisdn = msisdn;
         this.dayOfTheWeek = dayOfTheWeek;
         this.callStage = callStage;
+        this.contentFileName = contentFileName;
+        this.week = week;
         this.languageLocationCode = languageLocationCode;
         this.circle = circle;
         this.subscriptionOrigin = subscriptionOrigin;
@@ -79,6 +88,22 @@ public class CallRetry {
         this.callStage = callStage;
     }
 
+    public String getContentFileName() {
+        return contentFileName;
+    }
+
+    public void setContentFileName(String contentFileName) {
+        this.contentFileName = contentFileName;
+    }
+
+    public Integer getWeek() {
+        return week;
+    }
+
+    public void setWeek(Integer week) {
+        this.week = week;
+    }
+
     public String getLanguageLocationCode() {
         return languageLocationCode;
     }
@@ -110,6 +135,8 @@ public class CallRetry {
                 ", msisdn=" + msisdn +
                 ", dayOfTheWeek=" + dayOfTheWeek +
                 ", callStage=" + callStage +
+                ", contentFileName='" + contentFileName + '\'' +
+                ", week='" + week + '\'' +
                 ", languageLocationCode='" + languageLocationCode + '\'' +
                 ", circle='" + circle + '\'' +
                 ", subscriptionOrigin='" + subscriptionOrigin + '\'' +

@@ -96,4 +96,11 @@ public class CallDetailRecordUnitTest {
                 CallStatus.SUCCESS, 12, 13);
         assertEquals("a,b,1,d,5,f,g,h,i,j,1,12,13", cdr.toCsvLine());
     }
+
+    @Test
+    public void testGetWeek() {
+        CallDetailRecord cdr = new CallDetailRecord("a", "b", 1L, "d", 5, "f", "g", "123", "i", "j",
+                CallStatus.SUCCESS, 12, 13);
+        assertEquals(123, cdr.getWeek());
+    }
 }

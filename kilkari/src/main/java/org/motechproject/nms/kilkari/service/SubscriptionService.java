@@ -17,7 +17,7 @@ public interface SubscriptionService {
 
     void createSubscriptionPacks();
 
-    void createSubscription(long callingNumber, LanguageLocation languageLocation, SubscriptionPack subscriptionPack,
+    Subscription createSubscription(long callingNumber, LanguageLocation languageLocation, SubscriptionPack subscriptionPack,
                             SubscriptionOrigin mode);
 
     Subscription getSubscription(String subscriptionId);

@@ -83,7 +83,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
 
     @Override
-    public void createSubscription(long callingNumber, LanguageLocation languagelocation, SubscriptionPack subscriptionPack,
+    public Subscription createSubscription(long callingNumber, LanguageLocation languagelocation, SubscriptionPack subscriptionPack,
                                    SubscriptionOrigin mode) {
         Subscriber subscriber = subscriberDataService.findByCallingNumber(callingNumber);
         if (subscriber == null) {
@@ -92,13 +92,13 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         }
 
         if (mode == SubscriptionOrigin.IVR) {
-            createSubscriptionViaIvr(subscriber, subscriptionPack);
+            return createSubscriptionViaIvr(subscriber, subscriptionPack);
         } else { // MCTS_UPLOAD
-            createSubscriptionViaMcts(subscriber, subscriptionPack);
+            return createSubscriptionViaMcts(subscriber, subscriptionPack);
         }
     }
 
-    private void createSubscriptionViaIvr(Subscriber subscriber, SubscriptionPack pack) {
+    private Subscription createSubscriptionViaIvr(Subscriber subscriber, SubscriptionPack pack) {
         Iterator<Subscription> subscriptionIterator = subscriber.getSubscriptions().iterator();
         Subscription existingSubscription;
 
@@ -110,19 +110,19 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 if (existingSubscription.getStatus().equals(SubscriptionStatus.ACTIVE) ||
                         existingSubscription.getStatus().equals(SubscriptionStatus.PENDING_ACTIVATION)) {
                     // subscriber already has an active subscription to this pack, don't create a new one
-                    return;
+                    return null;
                 }
             }
         }
 
         Subscription subscription = new Subscription(subscriber, pack, SubscriptionOrigin.IVR);
         subscription.setStatus(SubscriptionStatus.ACTIVE);
-        subscription.setStartDate(DateTime.now().plusDays(1));
+        subscription.setStartDate(DateTime.now().plusDays(1)); //todo: why + 1?
 
-        subscriptionDataService.create(subscription);
+        return subscriptionDataService.create(subscription);
     }
 
-    private void createSubscriptionViaMcts(Subscriber subscriber, SubscriptionPack pack) {
+    private Subscription createSubscriptionViaMcts(Subscriber subscriber, SubscriptionPack pack) {
         Subscription subscription;
 
         if (subscriber.getDateOfBirth() != null && pack.getType() == SubscriptionPackType.CHILD) {
@@ -130,7 +130,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                     (Subscription.hasCompletedForStartDate(subscriber.getDateOfBirth(), DateTime.now(), pack))) {
 
                 // TODO: #138 log the rejected subscription
-                return;
+                return null;
             } else {
                 subscription = new Subscription(subscriber, pack, SubscriptionOrigin.MCTS_IMPORT);
                 subscription.setStartDate(subscriber.getDateOfBirth());
@@ -142,7 +142,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                     Subscription.hasCompletedForStartDate(subscriber.getLastMenstrualPeriod().plusDays(THREE_MONTHS),
                             DateTime.now(), pack)) {
                 // TODO: #138 log the rejected subscription
-                return;
+                return null;
             } else {
                 // TODO: #160 deal with early subscription
                 subscription = new Subscription(subscriber, pack, SubscriptionOrigin.MCTS_IMPORT);
@@ -153,10 +153,10 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             }
         } else {
             // TODO: #138 need to log other error cases?
-            return;
+            return null;
         }
 
-        subscriptionDataService.create(subscription);
+        return subscriptionDataService.create(subscription);
     }
 
     private boolean subscriberHasActivePackType(Subscriber subscriber, SubscriptionPackType type) {

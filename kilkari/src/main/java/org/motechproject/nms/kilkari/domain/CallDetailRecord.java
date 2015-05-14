@@ -244,6 +244,13 @@ public class CallDetailRecord implements Serializable {
         return sb.toString();
     }
 
+    // todo: verify: We assume weekId is just a string version of week, is that true?
+    @Ignore
+    public int getWeek() {
+        return Integer.valueOf(weekId);
+    }
+
+
     @Override //NO CHECKSTYLE Cyclomatic Complexity
     public boolean equals(Object o) {
         if (this == o) {
