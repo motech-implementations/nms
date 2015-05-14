@@ -42,9 +42,9 @@ public class CallRetry {
 
     public CallRetry() { }
 
-    public CallRetry(String subscriptionId, Long msisdn, DayOfTheWeek dayOfTheWeek, CallStage callStage,
-                     String contentFileName, Integer week, String languageLocationCode, String circle,
-                     String subscriptionOrigin) {
+    public CallRetry(String subscriptionId, Long msisdn, //NO CHECKSTYLE More than 7 parameters
+                     DayOfTheWeek dayOfTheWeek, CallStage callStage, String contentFileName, Integer week,
+                     String languageLocationCode, String circle, String subscriptionOrigin) {
         this.subscriptionId = subscriptionId;
         this.msisdn = msisdn;
         this.dayOfTheWeek = dayOfTheWeek;

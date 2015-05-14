@@ -3,6 +3,7 @@ package org.motechproject.nms.kilkari.osgi;
 import org.joda.time.DateTime;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.domain.InboxCallData;
 import org.motechproject.nms.kilkari.domain.InboxCallDetailRecord;
 import org.motechproject.nms.kilkari.domain.Subscriber;
@@ -505,4 +506,25 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         throw new IllegalStateException("Couldn't find our subscription by its start day!");
     }
 
+
+    // NMS shall allow a subscriber deactivated due to DND restrictions to activate the Kilkari service again via IVR.
+    @Test
+    public void verifyIssue182() {
+        setupData();
+
+        Subscriber subscriber = new Subscriber(4444444444L);
+        subscriber.setLastMenstrualPeriod(DateTime.now().minusDays(90));
+        subscriber = subscriberDataService.create(subscriber);
+
+        // Make a deactivated subscription
+        Subscription subscription = subscriptionService.createSubscription(4444444444L, gLanguageLocation, gPack2,
+                SubscriptionOrigin.MCTS_IMPORT);
+        subscriptionService.deactivateSubscription(subscription, DeactivationReason.DO_NOT_DISTURB);
+
+        // Now mimick a subscriber calling
+        subscription = subscriptionService.createSubscription(4444444444L, gLanguageLocation, gPack2, SubscriptionOrigin.IVR);
+
+        // And check the subscription is now active
+        assertEquals(SubscriptionStatus.ACTIVE, subscription.getStatus());
+    }
 }

@@ -117,7 +117,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
         Subscription subscription = new Subscription(subscriber, pack, SubscriptionOrigin.IVR);
         subscription.setStatus(SubscriptionStatus.ACTIVE);
-        subscription.setStartDate(DateTime.now().plusDays(1)); //todo: why + 1?
+        subscription.setStartDate(DateTime.now().plusDays(1));
 
         return subscriptionDataService.create(subscription);
     }
