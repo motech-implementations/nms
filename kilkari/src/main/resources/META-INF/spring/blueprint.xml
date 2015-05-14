@@ -13,16 +13,20 @@
 
     <tx:annotation-driven transaction-manager="transactionManager"/>
 
-    <osgi:reference id="transactionManager" interface="org.springframework.transaction.PlatformTransactionManager"/>
-
     <osgi:service ref="subscriptionService"
-        interface="org.motechproject.nms.kilkari.service.SubscriptionService" />
+                  interface="org.motechproject.nms.kilkari.service.SubscriptionService" />
 
     <osgi:service ref="inboxService"
                   interface="org.motechproject.nms.kilkari.service.InboxService" />
 
     <osgi:service ref="subscriberService"
                   interface="org.motechproject.nms.kilkari.service.SubscriberService" />
+
+    <osgi:service ref="cdrService"
+                  interface="org.motechproject.nms.kilkari.service.CallDetailRecordService" />
+
+    <osgi:reference id="transactionManager"
+                    interface="org.springframework.transaction.PlatformTransactionManager"/>
 
     <osgi:reference id="subscriberDataService"
                     interface="org.motechproject.nms.kilkari.repository.SubscriberDataService" />
@@ -33,10 +37,18 @@
     <osgi:reference id="inboxCallDetailsDataService"
                     interface="org.motechproject.nms.kilkari.repository.InboxCallDetailRecordDataService" />
 
+    <osgi:reference id="callDetailsRecordDataService"
+                    interface="org.motechproject.nms.kilkari.repository.CallDetailRecordDataService" />
+
     <osgi:reference id="inboxCallDataDataService"
                     interface="org.motechproject.nms.kilkari.repository.InboxCallDataDataService" />
 
     <osgi:reference id="subscriptionDataService"
                     interface="org.motechproject.nms.kilkari.repository.SubscriptionDataService" />
+
+    <osgi:reference id="callRetryDataService"
+                    interface="org.motechproject.nms.kilkari.repository.CallRetryDataService" />
+
+    <osgi:reference id="alertsService" interface="org.motechproject.alerts.contract.AlertService" />
 
 </beans>

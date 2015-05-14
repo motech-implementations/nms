@@ -1,4 +1,4 @@
-package org.motechproject.nms.imi.domain;
+package org.motechproject.nms.kilkari.domain;
 
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
@@ -10,7 +10,7 @@ import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import java.io.Serializable;
 
-@Entity(tableName = "nms_imi_cdrs")
+@Entity(tableName = "nms_kilkari_cdrs")
 public class CallDetailRecord implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -62,9 +62,9 @@ public class CallDetailRecord implements Serializable {
     public CallDetailRecord() { }
 
     public CallDetailRecord(String requestId, String serviceId, // NO CHECKSTYLE More than 7 parameters
-            Long msisdn, String cli, Integer priority, String callFlowUrl, String contentFileName,
-            String weekId, String languageLocationCode, String circle, CallStatus finalStatus,
-            Integer statusCode, Integer attempts) {
+                            Long msisdn, String cli, Integer priority, String callFlowUrl, String contentFileName,
+                            String weekId, String languageLocationCode, String circle, CallStatus finalStatus,
+                            Integer statusCode, Integer attempts) {
         this.requestId = requestId;
         this.serviceId = serviceId;
         this.msisdn = msisdn;
@@ -186,7 +186,7 @@ public class CallDetailRecord implements Serializable {
 
 
     @Ignore
-    public static CallDetailRecord fromLine(String line) {
+    public static CallDetailRecord fromCsvLine(String line) {
         String[] fields = line.split(",");
         if (fields.length != NUMBER_OF_FIELDS) {
             throw new IllegalStateException(String.format("Wrong number of fields, expecting %d but seeing %d",
@@ -215,7 +215,7 @@ public class CallDetailRecord implements Serializable {
 
 
     @Ignore
-    public String toLine() {
+    public String toCsvLine() {
         StringBuilder sb = new StringBuilder(requestId);
         sb.append(",");
         sb.append(serviceId);
@@ -243,6 +243,13 @@ public class CallDetailRecord implements Serializable {
         sb.append(attempts);
         return sb.toString();
     }
+
+    // todo: verify: We assume weekId is just a string version of week, is that true?
+    @Ignore
+    public int getWeek() {
+        return Integer.valueOf(weekId);
+    }
+
 
     @Override //NO CHECKSTYLE Cyclomatic Complexity
     public boolean equals(Object o) {

@@ -15,14 +15,17 @@
 
     <osgi:service ref="settingsService" interface="org.motechproject.nms.imi.service.SettingsService" />
 
+
+    <osgi:reference id="fileAuditRecordDataService"
+                    interface="org.motechproject.nms.imi.repository.FileAuditRecordDataService" />
+
+
+
     <osgi:reference id="callRetryDataService"
-                    interface="org.motechproject.nms.imi.repository.CallRetryDataService" />
+                    interface="org.motechproject.nms.kilkari.repository.CallRetryDataService" />
 
-    <osgi:reference id="callDetailRecordDataService"
-                    interface="org.motechproject.nms.imi.repository.CallDetailRecordDataService" />
-
-    <osgi:reference id="auditDataService"
-                    interface="org.motechproject.nms.imi.repository.AuditDataService" />
+    <osgi:reference id="cdrDataService"
+                    interface="org.motechproject.nms.kilkari.repository.CallDetailRecordDataService" />
 
     <osgi:reference id="subscriptionService"
                     interface="org.motechproject.nms.kilkari.service.SubscriptionService" />

@@ -8,7 +8,7 @@ import org.junit.runners.Suite;
  */
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-        SubscriptionServiceBundleIT.class
+        SubscriptionServiceBundleIT.class, CallDetailRecordServiceBundleIT.class
 })
 public class IntegrationTests {
 }
