@@ -10,13 +10,18 @@ import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.Unique;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
-import javax.validation.constraints.NotNull;
 
 @Entity(tableName = "nms_front_line_workers")
 public class FrontLineWorker {
 
     @Field
     private Long id;
+
+    @Field
+    private String flwId;
+
+    @Field
+    private String mctsFlwId;
 
     @Field(required = true)
     @Unique
@@ -53,6 +58,22 @@ public class FrontLineWorker {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getFlwId() {
+        return flwId;
+    }
+
+    public void setFlwId(String flwId) {
+        this.flwId = flwId;
+    }
+
+    public String getMctsFlwId() {
+        return mctsFlwId;
+    }
+
+    public void setMctsFlwId(String mctsFlwId) {
+        this.mctsFlwId = mctsFlwId;
     }
 
     public Long getContactNumber() {

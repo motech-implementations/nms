@@ -50,4 +50,17 @@
 
     <osgi:reference id="whitelistEntryDataService"
                     interface="org.motechproject.nms.flw.repository.WhitelistEntryDataService" />
+
+    <osgi:reference id="stateDataService"
+                    interface="org.motechproject.nms.region.repository.StateDataService" />
+
+    <osgi:reference id="districtDataService"
+                    interface="org.motechproject.nms.region.repository.DistrictDataService" />
+
+    <osgi:reference id="languageDataService"
+                    interface="org.motechproject.nms.region.repository.LanguageDataService" />
+
+    <osgi:reference id="languageLocationDataService"
+                    interface="org.motechproject.nms.region.repository.LanguageLocationDataService" />
+
 </beans>

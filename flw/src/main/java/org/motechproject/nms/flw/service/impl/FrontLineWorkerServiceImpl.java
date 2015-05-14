@@ -29,9 +29,15 @@ public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
         // TODO: find out which language/location fields are mandatory
         if ((record.getName() != null) && (record.getContactNumber() != null) &&
                 (record.getLanguageLocation() != null) && (record.getDistrict() != null)) {
+
+            // the record was added via CSV upload and the FLW hasn't called the service yet
             record.setStatus(FrontLineWorkerStatus.INACTIVE);
+
         } else if (record.getContactNumber() != null) {
+
+            // the record was added when the FLW called the IVR service for the first time
             record.setStatus(FrontLineWorkerStatus.ANONYMOUS);
+
         }
 
         frontLineWorkerDataService.create(record);
@@ -65,7 +71,7 @@ public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
             return;
         }
         if (oldStatus == FrontLineWorkerStatus.ANONYMOUS) {
-            // if the FLW was ANONYMOUS and required fields get added, update her status to ACTIVE
+            // if the FLW was ANONYMOUS and the required fields get added, update her status to ACTIVE
 
             // TODO: also check for FLWDesignation once we get spec clarity on what that is
             if ((record.getName() != null) && (record.getContactNumber() != null) &&
@@ -74,8 +80,6 @@ public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
                 record.setStatus(FrontLineWorkerStatus.ACTIVE);
             }
         }
-
-        // TODO: should we transition to ANONYMOUS if required fields are removed? weird edge case not in state digram...
 
         frontLineWorkerDataService.update(record);
     }
