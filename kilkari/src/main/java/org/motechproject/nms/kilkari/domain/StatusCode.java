@@ -1,4 +1,4 @@
-package org.motechproject.nms.imi.domain;
+package org.motechproject.nms.kilkari.domain;
 
 public enum StatusCode {
     OBD_SUCCESS_CALL_CONNECTED(1001),

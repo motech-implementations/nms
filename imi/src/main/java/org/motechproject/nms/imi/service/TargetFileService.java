@@ -1,5 +1,6 @@
 package org.motechproject.nms.imi.service;
 
+import org.motechproject.nms.imi.service.contract.TargetFileNotification;
 import org.motechproject.nms.imi.web.contract.FileProcessedStatusRequest;
 
 /**

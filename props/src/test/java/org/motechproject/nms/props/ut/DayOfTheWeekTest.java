@@ -1,5 +1,6 @@
-package org.motechproject.nms.imi.ut;
+package org.motechproject.nms.props.ut;
 
+import org.joda.time.DateTime;
 import org.junit.Test;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
 
@@ -30,5 +31,16 @@ public class DayOfTheWeekTest {
     @Test(expected=IllegalArgumentException.class)
     public void testFromIntFailure() {
         DayOfTheWeek.fromInt(0);
+    }
+
+    @Test
+    public void testFromDateTime() {
+        DateTime wednesday = new DateTime(2015, 5, 13, 0, 0);
+        assertEquals(DayOfTheWeek.fromDateTime(wednesday), DayOfTheWeek.WEDNESDAY);
+    }
+
+    @Test(expected=NullPointerException.class)
+    public void testFromDateTimeFailure() {
+        DayOfTheWeek.fromDateTime(null);
     }
 }

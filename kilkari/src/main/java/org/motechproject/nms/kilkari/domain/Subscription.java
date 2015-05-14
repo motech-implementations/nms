@@ -4,10 +4,12 @@ import org.joda.time.DateTime;
 import org.joda.time.Days;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
+import org.motechproject.nms.props.domain.DayOfTheWeek;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Unique;
 import javax.validation.constraints.NotNull;
+import java.util.List;
 import java.util.UUID;
 
 @Entity(tableName = "nms_subscriptions")
@@ -43,6 +45,9 @@ public class Subscription {
 
     @Field
     private DateTime startDate;
+
+    @Field
+    private DayOfTheWeek startDayOfTheWeek;
 
     @Field
     private DeactivationReason deactivationReason;
@@ -89,7 +94,14 @@ public class Subscription {
 
     public DateTime getStartDate() { return startDate; }
 
-    public void setStartDate(DateTime startDate) { this.startDate = startDate; }
+    public void setStartDate(DateTime startDate) {
+        this.startDate = startDate;
+        this.startDayOfTheWeek = DayOfTheWeek.fromInt(startDate.getDayOfWeek());
+    }
+
+    public DayOfTheWeek getStartDayOfTheWeek() {
+        return startDayOfTheWeek;
+    }
 
     public DeactivationReason getDeactivationReason() { return deactivationReason; }
 
@@ -106,7 +118,7 @@ public class Subscription {
     }
 
     /**
-     * Helper method to be called by the OBD process when selecting a message to play for a subscription
+     * Helper method to be called by the OBD processCallDetailRecord when selecting a message to play for a subscription
      * @param date The date on which the message will be played
      * @return SubscriptionPackMessage with the details of the message to play
      */
@@ -120,20 +132,27 @@ public class Subscription {
         }
 
         int daysIntoPack = Days.daysBetween(startDate, date).getDays();
+        if (daysIntoPack > 0 && date.isBefore(startDate)) {
+            // there is no message due
+            throw new IllegalStateException(
+                    String.format("Subscription with ID %s is not due for any scheduled message", subscriptionId));
+        }
         int messageIndex = -1;
         int currentWeek = daysIntoPack / DAYS_IN_WEEK + 1;
-        int daysIntoWeek = daysIntoPack % DAYS_IN_WEEK;
+        int daysIntoWeek = daysIntoPack % DAYS_IN_WEEK; //zero-based, 0 is the first day, 6 is the last
 
         if (subscriptionPack.getMessagesPerWeek() == 1) {
-            if (daysIntoWeek > 0 && daysIntoWeek < 4) {
+            //valid days for 1 msg/week are 0, 1, 2, 3 (fresh + 3 retries)
+            if (daysIntoWeek >= 0 && daysIntoWeek < 4) {
                 // return this week's only message
                 messageIndex = currentWeek - 1;
             }
         } else { // messages per week == 2
-            if (daysIntoWeek > 0 && daysIntoWeek < 3) {
+            //valid days for 2 msg/week are 0, 1 & 4, 5 (fresh + 1 retry)
+            if (daysIntoWeek == 0 || daysIntoWeek == 1) {
                 // use this week's first message
                 messageIndex = 2 * (currentWeek - 1);
-            } else if (daysIntoWeek >= 4 && daysIntoWeek < 6) {
+            } else if (daysIntoWeek == 4 || daysIntoWeek == 5) {
                 // use this week's second message
                 messageIndex = 2 * (currentWeek - 1) + 1;
             }
@@ -162,6 +181,19 @@ public class Subscription {
         int daysSinceStartDate = Days.daysBetween(startDate, today).getDays();
 
         return totalDaysInPack < daysSinceStartDate;
+    }
+
+
+    /**
+     * Helper method which determines if the given contentFileName corresponds to the last message of this
+     * subscription's message pack
+     *
+     * @param contentFileName
+     * @return true if contentFileName is the last message for this subscription's message pack
+     */
+    public boolean isLastPackMessage(String contentFileName) {
+        List<SubscriptionPackMessage> messages = subscriptionPack.getMessages();
+        return messages.get(messages.size() - 1).getMessageFileName().equals(contentFileName);
     }
 
 

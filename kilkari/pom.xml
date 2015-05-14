@@ -40,6 +40,13 @@
             <version>${motech.version}</version>
         </dependency>
 
+        <!-- Alerts -->
+        <dependency>
+            <groupId>org.motechproject</groupId>
+            <artifactId>alerts</artifactId>
+            <version>${motech.version}</version>
+        </dependency>
+
         <!-- common properties -->
         <dependency>
             <groupId>org.motechproject.nms</groupId>

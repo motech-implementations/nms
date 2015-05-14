@@ -1,8 +1,8 @@
-package org.motechproject.nms.imi.ut;
+package org.motechproject.nms.kilkari.ut;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.motechproject.nms.imi.domain.CallDetailRecord;
+import org.motechproject.nms.kilkari.domain.CallDetailRecord;
 import org.motechproject.nms.props.domain.CallStatus;
 
 import javax.validation.ConstraintViolation;
@@ -60,25 +60,25 @@ public class CallDetailRecordUnitTest {
 
     @Test(expected=IllegalStateException.class)
     public void testTooFewFields() {
-        CallDetailRecord cdr = CallDetailRecord.fromLine("a,b");
+        CallDetailRecord cdr = CallDetailRecord.fromCsvLine("a,b");
         assertNotNull(cdr);
     }
 
     @Test(expected=IllegalStateException.class)
     public void testTooManyFields() {
-        CallDetailRecord cdr = CallDetailRecord.fromLine("a,b,1,d,e,f,g,h,i,j,k,l,m,o");
+        CallDetailRecord cdr = CallDetailRecord.fromCsvLine("a,b,1,d,e,f,g,h,i,j,k,l,m,o");
         assertNotNull(cdr);
     }
 
     @Test(expected=NumberFormatException.class)
     public void testInvalidFields() {
-        CallDetailRecord cdr = CallDetailRecord.fromLine("a,b,c,d,e,f,g,h,i,j,k,l,m");
+        CallDetailRecord cdr = CallDetailRecord.fromCsvLine("a,b,c,d,e,f,g,h,i,j,k,l,m");
         assertNotNull(cdr);
     }
 
     @Test
     public void testValidFields() {
-        CallDetailRecord cdr = CallDetailRecord.fromLine("a,b,1,d,5,f,g,h,i,j,1,12,13");
+        CallDetailRecord cdr = CallDetailRecord.fromCsvLine("a,b,1,d,5,f,g,h,i,j,1,12,13");
         assertNotNull(cdr);
     }
 
@@ -86,7 +86,7 @@ public class CallDetailRecordUnitTest {
     public void testFromString() {
         CallDetailRecord expectedCdr = new CallDetailRecord("a", "b", 1L, "d", 5, "f", "g", "h", "i", "j",
                 CallStatus.SUCCESS, 12, 13);
-        CallDetailRecord cdr = CallDetailRecord.fromLine("a,b,1,d,5,f,g,h,i,j,1,12,13");
+        CallDetailRecord cdr = CallDetailRecord.fromCsvLine("a,b,1,d,5,f,g,h,i,j,1,12,13");
         assertEquals(expectedCdr, cdr);
     }
 
@@ -94,6 +94,13 @@ public class CallDetailRecordUnitTest {
     public void testToString() {
         CallDetailRecord cdr = new CallDetailRecord("a", "b", 1L, "d", 5, "f", "g", "h", "i", "j",
                 CallStatus.SUCCESS, 12, 13);
-        assertEquals("a,b,1,d,5,f,g,h,i,j,1,12,13", cdr.toLine());
+        assertEquals("a,b,1,d,5,f,g,h,i,j,1,12,13", cdr.toCsvLine());
+    }
+
+    @Test
+    public void testGetWeek() {
+        CallDetailRecord cdr = new CallDetailRecord("a", "b", 1L, "d", 5, "f", "g", "123", "i", "j",
+                CallStatus.SUCCESS, 12, 13);
+        assertEquals(123, cdr.getWeek());
     }
 }
