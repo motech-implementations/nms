@@ -8,10 +8,10 @@ import org.junit.runners.Suite;
  */
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-        FrontLineWorkerServiceBundleIT.class,
         ServiceUsageServiceBundleIT.class,
         ServiceUsageCapServiceBundleIT.class,
-        WhiteListServiceBundleIT.class
+        WhiteListServiceBundleIT.class,
+        FrontLineWorkerServiceBundleIT.class
 })
 public class FrontLineWorkerIntegrationTests {
 }

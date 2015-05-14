@@ -7,6 +7,8 @@ import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.flw.repository.ServiceUsageDataService;
+import org.motechproject.nms.flw.repository.WhitelistEntryDataService;
+import org.motechproject.nms.flw.repository.WhitelistStateDataService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.flw.service.ServiceUsageService;
 import org.motechproject.nms.region.domain.Circle;
@@ -70,29 +72,42 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
     @Inject
     private CircleDataService circleDataService;
 
+    @Inject
+    private WhitelistEntryDataService whitelistEntryDataService;
+
+    @Inject
+    private WhitelistStateDataService whitelistStateDataService;
+
     private void setupData() {
         serviceUsageDataService.deleteAll();
         frontLineWorkerDataService.deleteAll();
+        languageLocationDataService.deleteAll();
+        languageDataService.deleteAll();
+        districtDataService.deleteAll();
+        whitelistStateDataService.deleteAll();
+        whitelistEntryDataService.deleteAll();
+        stateDataService.deleteAll();
+        circleDataService.deleteAll();
     }
 
     private void createLanguageLocationData() {
         District district = new District();
-        district.setName("District 9");
-        district.setRegionalName("District 9");
-        district.setCode(9L);
-        districtDataService.create(district);
+        district.setName("District 1");
+        district.setRegionalName("District 1");
+        district.setCode(1L);
 
-  /*      State state = new State();
-        state.setName("State 9");
-        state.setCode(9L);
+        State state = new State();
+        state.setName("State 1");
+        state.setCode(1L);
         state.getDistricts().add(district);
 
         stateDataService.create(state);
-*/
-        Language language = new Language("Piglatin");
-        languageDataService.create(language);
 
-        LanguageLocation languageLocation = new LanguageLocation("90", new Circle("XX"), language, true);
+        Language ta = languageDataService.create(new Language("tamil"));
+
+        Circle circle = new Circle("AA");
+
+        LanguageLocation languageLocation = new LanguageLocation("50", circle, ta, true);
         languageLocation.getDistrictSet().add(district);
         languageLocationDataService.create(languageLocation);
     }
@@ -125,11 +140,11 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
 
     @Test
     public void testFrontLineWorkerUpdate() {
-        //setupData();
+        setupData();
         createLanguageLocationData();
 
-        District district = districtDataService.findByName("District 9");
-        LanguageLocation languageLocation = languageLocationDataService.findByCode("90");
+        District district = districtDataService.findByName("District 1");
+        LanguageLocation languageLocation = languageLocationDataService.findByCode("50");
 
         FrontLineWorker flw = new FrontLineWorker("Test Worker", 2111111111L);
         frontLineWorkerService.add(flw);
