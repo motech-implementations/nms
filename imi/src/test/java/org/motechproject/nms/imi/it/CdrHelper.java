@@ -205,7 +205,6 @@ public class CdrHelper {
                 1);
         cdrs.add(cdr);
 
-
         return cdrs;
     }
 
