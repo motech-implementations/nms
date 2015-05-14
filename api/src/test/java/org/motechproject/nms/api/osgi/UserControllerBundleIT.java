@@ -40,11 +40,13 @@ import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Language;
 import org.motechproject.nms.region.domain.LanguageLocation;
+import org.motechproject.nms.region.domain.NationalDefaultLanguageLocation;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.LanguageLocationDataService;
+import org.motechproject.nms.region.repository.NationalDefaultLanguageLocationDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
@@ -124,6 +126,10 @@ public class UserControllerBundleIT extends BasePaxIT {
     @Inject
     private DistrictDataService districtDataService;
 
+    @Inject
+    private NationalDefaultLanguageLocationDataService nationalDefaultLanguageLocationDataService;
+
+
     public UserControllerBundleIT() {
         System.setProperty("org.motechproject.testing.osgi.http.numTries", "1");
     }
@@ -139,6 +145,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         subscriptionDataService.deleteAll();
         subscriptionPackDataService.deleteAll();
         subscriberDataService.deleteAll();
+        nationalDefaultLanguageLocationDataService.deleteAll();
         languageLocationDataService.deleteAll();
         languageDataService.deleteAll();
         districtDataService.deleteAll();
@@ -436,6 +443,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
     private void createCircleWithLanguage() {
         cleanAllData();
+
         District district = new District();
         district.setName("District 1");
         district.setRegionalName("District 1");
@@ -451,9 +459,31 @@ public class UserControllerBundleIT extends BasePaxIT {
         Language language = new Language("Papiamento");
         languageDataService.create(language);
 
-        LanguageLocation languageLocation = new LanguageLocation("99", new Circle("AA"), language, true);
+        Circle circle = new Circle("AA");
+
+        LanguageLocation languageLocation = new LanguageLocation("99", circle, language, true);
         languageLocation.getDistrictSet().add(district);
         languageLocationDataService.create(languageLocation);
+
+        District district2 = new District();
+        district2.setName("District 2");
+        district2.setRegionalName("District 2");
+        district2.setCode(2L);
+
+        State state2 = new State();
+        state2.setName("State 2");
+        state2.setCode(2L);
+        state2.getDistricts().add(district2);
+
+        stateDataService.create(state2);
+
+        Language hi = languageDataService.create(new Language("hindi"));
+
+        LanguageLocation languageLocation2 = new LanguageLocation("88", circle, hi, false);
+        languageLocation2.getDistrictSet().add(district2);
+        languageLocationDataService.create(languageLocation2);
+
+        nationalDefaultLanguageLocationDataService.create(new NationalDefaultLanguageLocation(languageLocation));
     }
 
     private HttpGet createHttpGet(boolean includeService, String service,
@@ -794,6 +824,33 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         String expectedJsonResponse = createFlwUserResponseJson(
                 "99",  //defaultLanguageLocationCode
+                null,  //locationCode
+                0L,    //currentUsageInPulses
+                0L,    //endOfUsagePromptCounter
+                false, //welcomePromptFlag
+                -1,  //maxAllowedUsageInPulses
+                2      //maxAllowedEndOfUsagePrompt
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
+    }
+
+    @Test
+    public void testGetUserDetailsUnknownUserUnknownCircle() throws IOException, InterruptedException {
+        createCircleWithLanguage();
+
+        HttpGet httpGet = createHttpGet(
+                true, "mobilekunji",    //service
+                true, "1111111112",     //callingNumber
+                true, "OP",             //operator
+                false, "",             //circle
+                true, "123456789012345" //callId
+        );
+
+        String expectedJsonResponse = createFlwUserResponseJson(
+                "88",  //defaultLanguageLocationCode
                 null,  //locationCode
                 0L,    //currentUsageInPulses
                 0L,    //endOfUsagePromptCounter
