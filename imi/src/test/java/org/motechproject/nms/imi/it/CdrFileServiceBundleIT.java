@@ -1,8 +1,5 @@
 package org.motechproject.nms.imi.it;
 
-import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -40,12 +37,6 @@ import static org.junit.Assert.assertTrue;
 @ExamReactorStrategy(PerSuite.class)
 @ExamFactory(MotechNativeTestContainerFactory.class)
 public class CdrFileServiceBundleIT extends BasePaxIT {
-
-    private static final DateTimeFormatter FORMATTER = DateTimeFormat.forPattern("yyyyMMddHHmmss");
-    private static final String OBD_FILENAME = String.format("OBD_%s.csv", DateTime.now().toString(FORMATTER));
-    private static final String CDR_DETAIL_FILENAME = String.format("cdrDetail_%s", OBD_FILENAME);
-    private static final String CDR_SUMMARY_FILENAME = String.format("cdrSummary_%s", OBD_FILENAME);
-
 
     @Inject
     private SettingsService settingsService;
@@ -114,9 +105,9 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         helper.makeCdrSummaryFile();
         helper.makeCdrDetailFile();
 
-        CdrParseResult result = cdrFileService.processCdrFile(new CdrFileNotificationRequest(OBD_FILENAME,
-                        new FileInfo(CDR_SUMMARY_FILENAME, helper.summaryFileChecksum(), 1),
-                        new FileInfo(CDR_DETAIL_FILENAME, helper.detailFileChecksum(), 1)));
+        CdrParseResult result = cdrFileService.processCdrFile(new CdrFileNotificationRequest(helper.obdFileName(),
+                        new FileInfo(helper.cdrSummaryFileName(), helper.summaryFileChecksum(), 1),
+                        new FileInfo(helper.cdrDetailFileName(), helper.detailFileChecksum(), 1)));
 
         assertEquals(1, result.getCdrs().size());
 

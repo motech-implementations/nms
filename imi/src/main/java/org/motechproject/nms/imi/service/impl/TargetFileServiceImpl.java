@@ -172,7 +172,7 @@ public class TargetFileServiceImpl implements TargetFileService {
 
     private void writeSubscriptionRow(String requestId, String serviceId, // NO CHECKSTYLE More than 7 parameters
                                       String msisdn, String priority,  String callFlowUrl, String contentFileName,
-                                      int weekId, String languageLocationCode, String circle,
+                                      String weekId, String languageLocationCode, String circle,
                                       String subscriptionOrigin, OutputStreamWriter writer) throws IOException {
         /*
          * #1 RequestId
@@ -213,7 +213,7 @@ public class TargetFileServiceImpl implements TargetFileService {
          * Specifies the priority with which the call is to be made. By default value is 0.
          * Possible Values: 0-Default, 1-Medium Priority, 2-High Priority
          */
-        writer.write(priority); //todo: look into optimizing that especially with the retries
+        writer.write(priority); //todo: priorities, what do we want to do?
         writer.write(",");
 
         /*
@@ -229,7 +229,6 @@ public class TargetFileServiceImpl implements TargetFileService {
          *
          * Content file to be played
          */
-        //todo: call a function on subscription that returns the content file name to be played using today's date
         writer.write(contentFileName);
         writer.write(",");
 
@@ -238,8 +237,7 @@ public class TargetFileServiceImpl implements TargetFileService {
          *
          * Week id of the messaged delivered in OBD
          */
-        //todo: call a function on subscription that returns the week id name to be played using today's date
-        writer.write(Integer.toString(weekId));
+        writer.write(weekId);
         writer.write(",");
 
         /*
@@ -255,7 +253,6 @@ public class TargetFileServiceImpl implements TargetFileService {
          *
          * Circle of the beneficiary.
          */
-        //todo call a function on subscriber that returns the subscriber's circle
         writer.write(circle);
         writer.write(",");
 
@@ -300,7 +297,7 @@ public class TargetFileServiceImpl implements TargetFileService {
                 SubscriptionPackMessage msg = subscription.nextScheduledMessage(today);
                 //todo: how do we choose a priority?
                 writeSubscriptionRow(requestId.toString(), imiServiceId, subscriber.getCallingNumber().toString(),
-                        NORMAL_PRIORITY, callFlowUrl, msg.getMessageFileName(), msg.getWeek(),
+                        NORMAL_PRIORITY, callFlowUrl, msg.getMessageFileName(), msg.getWeekId(),
                         languageLocation.getCode(), circle.getName(), subscription.getOrigin().getCode(), writer);
             }
 
@@ -329,7 +326,7 @@ public class TargetFileServiceImpl implements TargetFileService {
                 RequestId requestId = new RequestId(callRetry.getSubscriptionId(), targetFileName);
                 //todo: look into priorities...
                 writeSubscriptionRow(requestId.toString(), imiServiceId, callRetry.getMsisdn().toString(),
-                        NORMAL_PRIORITY, callFlowUrl, callRetry.getContentFileName(), callRetry.getWeek(),
+                        NORMAL_PRIORITY, callFlowUrl, callRetry.getContentFileName(), callRetry.getWeekId(),
                         callRetry.getLanguageLocationCode(), callRetry.getCircle(),
                         callRetry.getSubscriptionOrigin(), writer);
             }
