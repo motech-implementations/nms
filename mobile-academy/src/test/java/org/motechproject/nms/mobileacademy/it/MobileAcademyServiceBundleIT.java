@@ -131,7 +131,8 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     @Test
     public void testSetLastBookmark() {
         bookmarkDataService.deleteAll();
-        MaBookmark bookmark = new MaBookmark(9876543210L, 666L, null, null);
+        long callingNumber = 9876543210L;
+        MaBookmark bookmark = new MaBookmark(callingNumber, 666L, null, null);
         maService.setBookmark(bookmark);
         List<Bookmark> added = bookmarkDataService.findBookmarksForUser("9876543210");
         assertTrue(added.size() == 1);
@@ -148,7 +149,8 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     @Test
     public void testSetGetLastBookmark() {
         bookmarkDataService.deleteAll();
-        MaBookmark bookmark = new MaBookmark(9987654321L, 666L, null, null);
+        long callingNumber = 9987654321L;
+        MaBookmark bookmark = new MaBookmark(callingNumber, 666L, null, null);
         maService.setBookmark(bookmark);
         List<Bookmark> added = bookmarkDataService.findBookmarksForUser("9987654321");
         assertTrue(added.size() == 1);
@@ -161,7 +163,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         bookmark.setScoresByChapter(scores);
         maService.setBookmark(bookmark);
 
-        MaBookmark retrieved = maService.getBookmark(9987654321L, 666L);
+        MaBookmark retrieved = maService.getBookmark(callingNumber, 666L);
         assertNotNull(retrieved.getCallingNumber());
         assertNotNull(retrieved.getCallId());
         assertNotNull(retrieved.getBookmark());
@@ -171,7 +173,8 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     @Test
     public void testSetGetResetBookmark() {
         bookmarkDataService.deleteAll();
-        MaBookmark bookmark = new MaBookmark(9987654321L, 666L, null, null);
+        long callingNumber = 9987654321L;
+        MaBookmark bookmark = new MaBookmark(callingNumber, 666L, null, null);
         maService.setBookmark(bookmark);
         List<Bookmark> added = bookmarkDataService.findBookmarksForUser("9987654321");
         assertTrue(added.size() == 1);
@@ -184,7 +187,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         bookmark.setScoresByChapter(scores);
         maService.setBookmark(bookmark);
 
-        MaBookmark retrieved = maService.getBookmark(9987654321L, 666L);
+        MaBookmark retrieved = maService.getBookmark(callingNumber, 666L);
         assertNotNull(retrieved.getCallingNumber());
         assertNotNull(retrieved.getCallId());
         assertNull(retrieved.getBookmark());

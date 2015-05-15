@@ -1,7 +1,7 @@
 package org.motechproject.nms.mobileacademy.exception;
 
 /**
- * Created by kosh on 5/14/15.
+ * This exception wrapper handles negative scenarios for course completion triggers
  */
 public class CourseNotCompletedException extends IllegalStateException {
 
