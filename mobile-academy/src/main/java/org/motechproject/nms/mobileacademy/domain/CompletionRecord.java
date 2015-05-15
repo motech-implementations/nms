@@ -4,6 +4,7 @@ import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 
 import javax.jdo.annotations.Column;
+import javax.jdo.annotations.Unique;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 
@@ -17,6 +18,7 @@ public class CompletionRecord {
     @Min(value = 1000000000L, message = "callingNumber must be 10 digits")
     @Max(value = 9999999999L, message = "callingNumber must be 10 digits")
     @Column(length = 10)
+    @Unique
     private long callingNumber;
 
     @Field

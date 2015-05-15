@@ -31,6 +31,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
@@ -112,6 +113,9 @@ public class MobileAcademyServiceUnitTest {
         }
         MaBookmark mab = new MaBookmark(1234567890L, 123456789011121L, "Chapter11_Quiz", scores);
         doNothing().when(eventRelay).sendEventMessage(any(MotechEvent.class));
+
+        CompletionRecord cr = new CompletionRecord(1234567890L, 22, false, 1);
+        when(completionRecordDataService.findRecordByCallingNumber(anyLong())).thenReturn(cr);
         mobileAcademyService.setBookmark(mab);
     }
 

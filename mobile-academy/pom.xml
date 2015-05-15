@@ -94,6 +94,7 @@
                             org.motechproject.nms.mobileacademy.domain.course;version=${project.version},
                             org.motechproject.nms.mobileacademy.dto;version=${project.version},
                             org.motechproject.nms.mobileacademy.web;version=${project.version},
+                            org.motechproject.nms.mobileacademy.exception;version=${project.version},
                         </Export-Package>
                         <Import-Package>
                             org.motechproject.osgi.web,
