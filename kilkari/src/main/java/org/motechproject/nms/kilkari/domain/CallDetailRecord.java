@@ -52,7 +52,7 @@ public class CallDetailRecord implements Serializable {
     private CallStatus finalStatus;
 
     @Field
-    private Integer statusCode;
+    private StatusCode statusCode;
 
     @Field
     private Integer attempts;
@@ -64,7 +64,7 @@ public class CallDetailRecord implements Serializable {
     public CallDetailRecord(String requestId, String serviceId, // NO CHECKSTYLE More than 7 parameters
                             Long msisdn, String cli, Integer priority, String callFlowUrl, String contentFileName,
                             String weekId, String languageLocationCode, String circle, CallStatus finalStatus,
-                            Integer statusCode, Integer attempts) {
+                            StatusCode statusCode, Integer attempts) {
         this.requestId = requestId;
         this.serviceId = serviceId;
         this.msisdn = msisdn;
@@ -168,11 +168,11 @@ public class CallDetailRecord implements Serializable {
         this.finalStatus = finalStatus;
     }
 
-    public Integer getStatusCode() {
+    public StatusCode getStatusCode() {
         return statusCode;
     }
 
-    public void setStatusCode(Integer statusCode) {
+    public void setStatusCode(StatusCode statusCode) {
         this.statusCode = statusCode;
     }
 
@@ -208,8 +208,10 @@ public class CallDetailRecord implements Serializable {
                 fields[i++], //circle
                 // NOTE: may throw a NumberFormatException or IllegalArgumentException
                 CallStatus.fromInt(Integer.parseInt(fields[i++])), //finalStatus
-                Integer.parseInt(fields[i++]), //statusCode - NOTE: may throw a NumberFormatException
-                Integer.parseInt(fields[i++]) //attempts - NOTE: may throw a NumberFormatException
+                // NOTE: may throw a NumberFormatException
+                StatusCode.fromInt(Integer.parseInt(fields[i++])), //statusCode
+                // NOTE: may throw a NumberFormatException
+                Integer.parseInt(fields[i++]) //attempts
         );
     }
 
@@ -238,16 +240,10 @@ public class CallDetailRecord implements Serializable {
         sb.append(",");
         sb.append(finalStatus.getValue());
         sb.append(",");
-        sb.append(statusCode);
+        sb.append(statusCode.getValue());
         sb.append(",");
         sb.append(attempts);
         return sb.toString();
-    }
-
-    // todo: verify: We assume weekId is just a string version of week, is that true?
-    @Ignore
-    public int getWeek() {
-        return Integer.valueOf(weekId);
     }
 
 

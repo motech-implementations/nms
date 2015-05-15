@@ -201,7 +201,7 @@ public class CdrHelper {
                 makeLanguageLocation().getCode(),
                 makeCircle().getName(),
                 CallStatus.SUCCESS,
-                StatusCode.OBD_SUCCESS_CALL_CONNECTED.getValue(),
+                StatusCode.OBD_SUCCESS_CALL_CONNECTED,
                 1);
         cdrs.add(cdr);
 

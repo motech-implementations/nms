@@ -1,4 +1,4 @@
-package org.motechproject.nms.props.ut;
+package org.motechproject.nms.imi.ut;
 
 import org.junit.Before;
 import org.junit.Test;
