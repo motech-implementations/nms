@@ -2,6 +2,7 @@ package org.motechproject.nms.api.ut;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.motechproject.nms.api.web.BaseController;
 import org.motechproject.nms.api.web.MobileAcademyController;
@@ -15,14 +16,14 @@ import static org.mockito.MockitoAnnotations.initMocks;
  */
 public class MobileAcademyControllerUnitTest {
 
-    private MobileAcademyController mobileAcademyController;
-
     @Mock
     private MobileAcademyService mobileAcademyService;
 
+    @InjectMocks
+    private MobileAcademyController mobileAcademyController = new MobileAcademyController();
+
     @Before
     public void setup() {
-        mobileAcademyController = new MobileAcademyController(mobileAcademyService);
         initMocks(this);
     }
 

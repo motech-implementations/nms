@@ -356,7 +356,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         setupData();
         HttpPost httpPost = createSubscriptionHttpPost(9999911122L, "childPack");
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK, ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
     }
 
     @Test

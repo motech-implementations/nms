@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -32,18 +33,10 @@ public class MobileAcademyController extends BaseController {
     /**
      * MA service to handle all business logic
      */
+    @Autowired
     private MobileAcademyService mobileAcademyService;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MobileAcademyController.class);
-
-    /**
-     * Constructor for controller
-     * @param mobileAcademyService mobile academy service
-     */
-    @Autowired
-    public MobileAcademyController(MobileAcademyService mobileAcademyService) {
-        this.mobileAcademyService = mobileAcademyService;
-    }
 
     /**
      *
@@ -116,6 +109,7 @@ public class MobileAcademyController extends BaseController {
             method = RequestMethod.POST,
             headers = { "Content-type=application/json" })
     @ResponseStatus(HttpStatus.OK)
+    @Transactional
     public void saveBookmarkWithScore(@RequestBody SaveBookmarkRequest bookmarkRequest) {
 
         Long callingNumber = bookmarkRequest.getCallingNumber();

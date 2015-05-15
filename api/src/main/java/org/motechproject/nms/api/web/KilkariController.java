@@ -26,6 +26,7 @@ import org.motechproject.nms.region.service.LanguageLocationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -172,6 +173,7 @@ public class KilkariController extends BaseController {
             method = RequestMethod.POST,
             headers = { "Content-type=application/json" })
     @ResponseStatus(HttpStatus.OK)
+    @Transactional
     public void saveInboxCallDetails(@RequestBody InboxCallDetailsRequest request) {
         StringBuilder failureReasons = validateSaveInboxCallDetails(request);
         if (failureReasons.length() > 0) {
@@ -216,6 +218,7 @@ public class KilkariController extends BaseController {
             method = RequestMethod.POST,
             headers = { "Content-type=application/json" })
     @ResponseStatus(HttpStatus.OK)
+    @Transactional
     public void createSubscription(@RequestBody SubscriptionRequest subscriptionRequest) {
         StringBuilder failureReasons = validate(subscriptionRequest.getCallingNumber(),
                                                 subscriptionRequest.getCallId(),
@@ -259,6 +262,7 @@ public class KilkariController extends BaseController {
             method = RequestMethod.DELETE,
             headers = { "Content-type=application/json" })
     @ResponseStatus(HttpStatus.OK)
+    @Transactional
     public void deactivateSubscription(@RequestBody SubscriptionRequest subscriptionRequest) {
         StringBuilder failureReasons = validate(subscriptionRequest.getCallingNumber(),
                 subscriptionRequest.getCallId(), subscriptionRequest.getOperator(),

@@ -37,7 +37,6 @@ import java.util.Set;
 @Controller
 public class UserController extends BaseController {
 
-    public static final String CIRCLE = "circle";
     public static final String SERVICE_NAME = "serviceName";
 
     @Autowired

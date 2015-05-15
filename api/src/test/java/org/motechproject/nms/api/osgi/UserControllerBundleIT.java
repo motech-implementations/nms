@@ -684,8 +684,8 @@ public class UserControllerBundleIT extends BasePaxIT {
         String expectedJsonResponse = createFailureResponseJson("<MOBILE_KUNJI: Not Deployed In State>");
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
-        assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, response.getStatusLine().getStatusCode());
         assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
+        assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, response.getStatusLine().getStatusCode());
     }
 
     private void createFlwWithLocationNoLanguageNoDeployedServices() {
@@ -724,8 +724,8 @@ public class UserControllerBundleIT extends BasePaxIT {
         String expectedJsonResponse = createFailureResponseJson("<MOBILE_KUNJI: Not Deployed In State>");
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
-        assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, response.getStatusLine().getStatusCode());
         assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
+        assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, response.getStatusLine().getStatusCode());
     }
 
     // Request undeployed service by cirlce
@@ -755,7 +755,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     // Request undeployed service by flw location
     @Test
     public void testUndeployedServiceByCircleLocation() throws IOException, InterruptedException {
-        createFlwWithLocationNoLanguageNoDeployedServices();
+        createFlwWithNoLocationNoLanguageNoDeployedServices();
 
         HttpGet httpGet = createHttpGet(
                 true, "mobilekunji",    //service
@@ -768,8 +768,8 @@ public class UserControllerBundleIT extends BasePaxIT {
         String expectedJsonResponse = createFailureResponseJson("<MOBILE_KUNJI: Not Deployed In State>");
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
-        assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, response.getStatusLine().getStatusCode());
         assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
+        assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, response.getStatusLine().getStatusCode());
     }
 
     @Test
