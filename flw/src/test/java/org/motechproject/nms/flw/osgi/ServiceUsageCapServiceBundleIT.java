@@ -2,10 +2,10 @@ package org.motechproject.nms.flw.osgi;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.motechproject.nms.flw.domain.Service;
 import org.motechproject.nms.flw.domain.ServiceUsageCap;
 import org.motechproject.nms.flw.repository.ServiceUsageCapDataService;
 import org.motechproject.nms.flw.service.ServiceUsageCapService;
+import org.motechproject.nms.props.domain.Service;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.testing.osgi.BasePaxIT;
