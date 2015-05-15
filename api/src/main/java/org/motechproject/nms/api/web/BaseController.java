@@ -3,11 +3,15 @@ package org.motechproject.nms.api.web;
 import org.joda.time.DateTime;
 import org.motechproject.nms.api.web.contract.BadRequest;
 import org.motechproject.nms.api.web.exception.NotAuthorizedException;
+import org.motechproject.nms.api.web.exception.NotDeployedException;
 import org.motechproject.nms.api.web.exception.NotFoundException;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.service.WhitelistService;
 import org.motechproject.nms.props.domain.CallDisconnectReason;
 import org.motechproject.nms.props.domain.CallStatus;
+import org.motechproject.nms.props.domain.Service;
+import org.motechproject.nms.props.service.PropertyService;
+import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.LanguageLocation;
 import org.motechproject.nms.region.domain.State;
@@ -19,6 +23,8 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
+
+import java.util.List;
 
 /**
  * BaseController
@@ -36,6 +42,7 @@ public class BaseController {
     public static final String INVALID = "<%s: Invalid>";
     public static final String NOT_FOUND = "<%s: Not Found>";
     public static final String NOT_AUTHORIZED = "<%s: Not Authorized>";
+    public static final String NOT_DEPLOYED = "<%s: Not Deployed In State>";
 
     public static final long SMALLEST_10_DIGIT_NUMBER = 1000000000L;
     public static final long LARGEST_10_DIGIT_NUMBER  = 9999999999L;
@@ -49,6 +56,9 @@ public class BaseController {
 
     @Autowired
     private WhitelistService whitelistService;
+
+    @Autowired
+    private PropertyService propertyService;
 
     protected static boolean validateFieldPresent(StringBuilder errors, String fieldName, Object value) {
         if (value != null) {
@@ -170,7 +180,21 @@ public class BaseController {
         return new DateTime(epoch);
     }
 
-    protected boolean frontLineWorkerAuthorizedForAccess(FrontLineWorker flw) {
+    protected State getStateForFrontLineWorker(FrontLineWorker flw, Circle circle) {
+        State state = getStateForFrontLineWorker(flw);
+
+        if (state == null && circle != null) {
+            List<State> states = circle.getStates();
+
+            if (states.size() == 1) {
+                state = states.get(0);
+            }
+        }
+
+        return state;
+    }
+
+    protected State getStateForFrontLineWorker(FrontLineWorker flw) {
         District district = flw.getDistrict();
         State state = null;
 
@@ -186,9 +210,23 @@ public class BaseController {
             }
         }
 
+        return state;
+    }
+
+    protected boolean frontLineWorkerAuthorizedForAccess(FrontLineWorker flw) {
+        State state = getStateForFrontLineWorker(flw);
+
         return whitelistService.numberWhitelistedForState(state, flw.getContactNumber());
     }
 
+    protected boolean serviceDeployedInFrontLineWorkersState(Service service, State state) {
+        // If I don't have a state for the FLW let them continue further
+        if (state == null) {
+            return true;
+        }
+
+        return propertyService.isServiceDeployedInState(service, state);
+    }
 
     @ExceptionHandler(NotAuthorizedException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
@@ -197,6 +235,12 @@ public class BaseController {
         return new BadRequest(e.getMessage());
     }
 
+    @ExceptionHandler(NotDeployedException.class)
+    @ResponseStatus(HttpStatus.NOT_IMPLEMENTED)
+    @ResponseBody
+    public BadRequest handleException(NotDeployedException e) {
+        return new BadRequest(e.getMessage());
+    }
 
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)

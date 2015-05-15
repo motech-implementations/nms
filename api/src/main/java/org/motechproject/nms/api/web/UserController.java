@@ -5,6 +5,7 @@ import org.motechproject.nms.api.web.contract.FlwUserResponse;
 import org.motechproject.nms.api.web.contract.UserResponse;
 import org.motechproject.nms.api.web.contract.kilkari.KilkariUserResponse;
 import org.motechproject.nms.api.web.exception.NotAuthorizedException;
+import org.motechproject.nms.api.web.exception.NotDeployedException;
 import org.motechproject.nms.api.web.exception.NotFoundException;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.ServiceUsage;
@@ -17,7 +18,6 @@ import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.props.domain.Service;
 import org.motechproject.nms.region.domain.Circle;
-import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.LanguageLocation;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.service.CircleService;
@@ -103,7 +103,7 @@ public class UserController extends BaseController {
         Handle the FLW services
          */
         if (MOBILE_ACADEMY.equals(serviceName) || MOBILE_KUNJI.equals(serviceName)) {
-            user = getFrontLineWorkerResponseUser(serviceName, callingNumber);
+            user = getFrontLineWorkerResponseUser(serviceName, callingNumber, circleObj);
         }
 
         /*
@@ -146,7 +146,7 @@ public class UserController extends BaseController {
         return user;
     }
 
-    private UserResponse getFrontLineWorkerResponseUser(String serviceName, Long callingNumber) {
+    private UserResponse getFrontLineWorkerResponseUser(String serviceName, Long callingNumber, Circle circle) {
         FlwUserResponse user = new FlwUserResponse();
 
         Service service = null;
@@ -171,13 +171,14 @@ public class UserController extends BaseController {
 
             serviceUsage = serviceUsageService.getCurrentMonthlyUsageForFLWAndService(flw, service);
 
-            District district = flw.getDistrict();
-            if (null != district) {
-                state = district.getState();
-            }
+            state = getStateForFrontLineWorker(flw, circle);
 
             if (!frontLineWorkerAuthorizedForAccess(flw)) {
                 throw new NotAuthorizedException(String.format(NOT_AUTHORIZED, CALLING_NUMBER));
+            }
+
+            if (!serviceDeployedInFrontLineWorkersState(service, state)) {
+                throw new NotDeployedException(String.format(NOT_DEPLOYED, service));
             }
         }
 

@@ -4,6 +4,7 @@ import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.nms.region.domain.State;
 
+import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Unique;
 import javax.validation.constraints.NotNull;
 
@@ -12,10 +13,12 @@ import javax.validation.constraints.NotNull;
 public class DeployedService {
     @Field
     @NotNull
+    @Column(allowsNull = "false")
     private State state;
 
     @Field
     @NotNull
+    @Column(allowsNull = "false")
     private Service service;
 
     public DeployedService(State state, Service service) {
