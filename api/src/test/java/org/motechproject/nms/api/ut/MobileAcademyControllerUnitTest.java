@@ -3,6 +3,7 @@ package org.motechproject.nms.api.ut;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.motechproject.event.listener.EventRelay;
 import org.motechproject.nms.api.web.BaseController;
 import org.motechproject.nms.api.web.MobileAcademyController;
 import org.motechproject.nms.api.web.contract.mobileAcademy.SaveBookmarkRequest;
@@ -20,9 +21,12 @@ public class MobileAcademyControllerUnitTest {
     @Mock
     private MobileAcademyService mobileAcademyService;
 
+    @Mock
+    private EventRelay eventRelay;
+
     @Before
     public void setup() {
-        mobileAcademyController = new MobileAcademyController(mobileAcademyService);
+        mobileAcademyController = new MobileAcademyController(mobileAcademyService, eventRelay);
         initMocks(this);
     }
 
