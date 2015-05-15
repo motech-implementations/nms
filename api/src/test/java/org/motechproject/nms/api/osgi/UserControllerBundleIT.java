@@ -8,6 +8,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.joda.time.DateTime;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.api.web.contract.BadRequest;
@@ -41,11 +42,13 @@ import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Language;
 import org.motechproject.nms.region.domain.LanguageLocation;
+import org.motechproject.nms.region.domain.NationalDefaultLanguageLocation;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.LanguageLocationDataService;
+import org.motechproject.nms.region.repository.NationalDefaultLanguageLocationDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
@@ -58,6 +61,7 @@ import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -128,6 +132,9 @@ public class UserControllerBundleIT extends BasePaxIT {
     @Inject
     private DeployedServiceDataService deployedServiceDataService;
 
+    @Inject
+    private NationalDefaultLanguageLocationDataService nationalDefaultLanguageLocationDataService;
+
     public UserControllerBundleIT() {
         System.setProperty("org.motechproject.testing.osgi.http.numTries", "1");
     }
@@ -143,6 +150,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         subscriptionDataService.deleteAll();
         subscriptionPackDataService.deleteAll();
         subscriberDataService.deleteAll();
+        nationalDefaultLanguageLocationDataService.deleteAll();
         languageLocationDataService.deleteAll();
         languageDataService.deleteAll();
         districtDataService.deleteAll();
@@ -457,6 +465,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
     private void createCircleWithLanguage() {
         cleanAllData();
+
         District district = new District();
         district.setName("District 1");
         district.setRegionalName("District 1");
@@ -475,9 +484,58 @@ public class UserControllerBundleIT extends BasePaxIT {
         Language language = new Language("Papiamento");
         languageDataService.create(language);
 
-        LanguageLocation languageLocation = new LanguageLocation("99", new Circle("AA"), language, true);
+        Circle circle = new Circle("AA");
+
+        LanguageLocation languageLocation = new LanguageLocation("99", circle, language, true);
         languageLocation.getDistrictSet().add(district);
         languageLocationDataService.create(languageLocation);
+
+        District district2 = new District();
+        district2.setName("District 2");
+        district2.setRegionalName("District 2");
+        district2.setCode(2L);
+
+        State state2 = new State();
+        state2.setName("State 2");
+        state2.setCode(2L);
+        state2.getDistricts().add(district2);
+
+        stateDataService.create(state2);
+
+        Language hi = languageDataService.create(new Language("hindi"));
+
+        LanguageLocation languageLocation2 = new LanguageLocation("88", circle, hi, false);
+        languageLocation2.getDistrictSet().add(district2);
+        languageLocationDataService.create(languageLocation2);
+
+        nationalDefaultLanguageLocationDataService.create(new NationalDefaultLanguageLocation(languageLocation2));
+    }
+
+    private void createCircleWithSingleLanguage() {
+        cleanAllData();
+
+        District district = new District();
+        district.setName("District 1");
+        district.setRegionalName("District 1");
+        district.setCode(1L);
+
+        State state = new State();
+        state.setName("State 1");
+        state.setCode(1L);
+        state.getDistricts().add(district);
+
+        stateDataService.create(state);
+
+        Language language = new Language("Papiamento");
+        languageDataService.create(language);
+
+        Circle circle = new Circle("AA");
+
+        LanguageLocation languageLocation = new LanguageLocation("99", circle, language, true);
+        languageLocation.getDistrictSet().add(district);
+        languageLocationDataService.create(languageLocation);
+
+        nationalDefaultLanguageLocationDataService.create(new NationalDefaultLanguageLocation(languageLocation));
     }
 
     private HttpGet createHttpGet(boolean includeService, String service,
@@ -522,6 +580,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     }
 
     private String createKilkariUserResponseJson(String defaultLanguageLocationCode, String locationCode,
+                                                 List<String> allowedLanguageLocations,
                                                  Set<String> subscriptionPackList) throws IOException {
         KilkariUserResponse kilkariUserResponse = new KilkariUserResponse();
         if (defaultLanguageLocationCode != null) {
@@ -529,6 +588,9 @@ public class UserControllerBundleIT extends BasePaxIT {
         }
         if (locationCode != null) {
             kilkariUserResponse.setLanguageLocationCode(locationCode);
+        }
+        if (allowedLanguageLocations != null) {
+            kilkariUserResponse.setAllowedLanguageLocationCodes(allowedLanguageLocations);
         }
         if (subscriptionPackList != null) {
             kilkariUserResponse.setSubscriptionPackList(subscriptionPackList);
@@ -538,6 +600,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     }
 
     private String createFlwUserResponseJson(String defaultLanguageLocationCode, String locationCode,
+                                             List<String> allowedLanguageLocations,
                                              Long currentUsageInPulses, Long endOfUsagePromptCounter,
                                              Boolean welcomePromptFlag, Integer maxAllowedUsageInPulses,
                                              Integer maxAllowedEndOfUsagePrompt) throws IOException {
@@ -547,6 +610,9 @@ public class UserControllerBundleIT extends BasePaxIT {
         }
         if (locationCode != null) {
             userResponse.setLanguageLocationCode(locationCode);
+        }
+        if (allowedLanguageLocations != null) {
+            userResponse.setAllowedLanguageLocationCodes(allowedLanguageLocations);
         }
         if (currentUsageInPulses != null) {
             userResponse.setCurrentUsageInPulses(currentUsageInPulses);
@@ -721,6 +787,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         String expectedJsonResponse = createKilkariUserResponseJson(
                 "50", //defaultLanguageLocationCode
                 null, //locationCode
+                Arrays.asList("50"), // allowedLanguageLocationCodes
                 new HashSet<String>() //subscriptionPackList
         );
 
@@ -744,6 +811,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         String expectedJsonResponse = createKilkariUserResponseJson(
                 "50", //defaultLanguageLocationCode
                 null, //locationCode
+                Arrays.asList("50"), // allowedLanguageLocationCodes
                 new HashSet<String>() //subscriptionPackList
         );
 
@@ -767,6 +835,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         String expectedJsonResponse = createFlwUserResponseJson(
                 "99",  //defaultLanguageLocationCode
                 null,  //locationCode
+                Arrays.asList("99"), // allowedLanguageLocationCodes
                 0L,    //currentUsageInPulses
                 0L,    //endOfUsagePromptCounter
                 false, //welcomePromptFlag
@@ -794,6 +863,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         String expectedJsonResponse = createFlwUserResponseJson(
                 "99",  //defaultLanguageLocationCode
                 "10",  //locationCode
+                new ArrayList<String>(), // allowedLanguageLocationCodes
                 1L,    //currentUsageInPulses
                 0L,    //endOfUsagePromptCounter
                 false, //welcomePromptFlag
@@ -821,6 +891,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         String expectedJsonResponse = createFlwUserResponseJson(
                 "99",  //defaultLanguageLocationCode
                 "10",  //locationCode
+                new ArrayList<String>(), // allowedLanguageLocationCodes
                 1L,    //currentUsageInPulses
                 1L,    //endOfUsagePromptCounter
                 true,  //welcomePromptFlag
@@ -903,18 +974,29 @@ public class UserControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testNoCircle() throws IOException, InterruptedException {
+        createCircleWithLanguage();
+
         HttpGet httpGet = createHttpGet(
-                true, "kilkari",        //service
+                true, "mobilekunji",        //service
                 true, "1111111111",     //callingNumber
                 true, "OP",             //operator
                 false, null,            //circle
                 true, "123456789012345" //callId
         );
 
-        String expectedJsonResponse = createFailureResponseJson("<circle: Not Present>");
+        String expectedJsonResponse = createFlwUserResponseJson(
+                "88",  //defaultLanguageLocationCode
+                null,  //locationCode
+                Arrays.asList("99", "88"), // allowedLanguageLocationCodes
+                0L,    //currentUsageInPulses
+                0L,    //endOfUsagePromptCounter
+                false, //welcomePromptFlag
+                -1,  //maxAllowedUsageInPulses
+                2      //maxAllowedEndOfUsagePrompt
+        );
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
         assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
@@ -951,6 +1033,71 @@ public class UserControllerBundleIT extends BasePaxIT {
         String expectedJsonResponse = createFlwUserResponseJson(
                 "99",  //defaultLanguageLocationCode
                 null,  //locationCode
+                Arrays.asList("99", "88"), // allowedLanguageLocationCodes
+                0L,    //currentUsageInPulses
+                0L,    //endOfUsagePromptCounter
+                false, //welcomePromptFlag
+                -1,  //maxAllowedUsageInPulses
+                2      //maxAllowedEndOfUsagePrompt
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
+    }
+
+
+    @Test
+    @Ignore  // Currenlty under discussion with IMI.  My preference would be for them to handle this case
+    public void testGetUserDetailsUnknownUserCircleSingleLanguage() throws IOException, InterruptedException {
+        createCircleWithSingleLanguage();
+
+        HttpGet httpGet = createHttpGet(
+                true, "mobilekunji",    //service
+                true, "1111111112",     //callingNumber
+                true, "OP",             //operator
+                true, "AA",             //circle
+                true, "123456789012345" //callId
+        );
+
+        String expectedJsonResponse = createFlwUserResponseJson(
+                "99",  //defaultLanguageLocationCode
+                "99",  //locationCode
+                null, // allowedLanguageLocationCodes
+                0L,    //currentUsageInPulses
+                0L,    //endOfUsagePromptCounter
+                false, //welcomePromptFlag
+                -1,  //maxAllowedUsageInPulses
+                2      //maxAllowedEndOfUsagePrompt
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
+
+        FrontLineWorker flw = frontLineWorkerService.getByContactNumber(1111111112l);
+        assertNotNull(flw);
+        LanguageLocation languageLocation = flw.getLanguageLocation();
+        assertNotNull(languageLocation);
+        assertEquals("FLW Language Code", "99", languageLocation.getCode());
+    }
+
+    @Test
+    public void testGetUserDetailsUnknownUserUnknownCircle() throws IOException, InterruptedException {
+        createCircleWithLanguage();
+
+        HttpGet httpGet = createHttpGet(
+                true, "mobilekunji",    //service
+                true, "1111111112",     //callingNumber
+                true, "OP",             //operator
+                false, "",             //circle
+                true, "123456789012345" //callId
+        );
+
+        String expectedJsonResponse = createFlwUserResponseJson(
+                "88",  //defaultLanguageLocationCode
+                null,  //locationCode
+                Arrays.asList("99", "88"), // allowedLanguageLocationCodes
                 0L,    //currentUsageInPulses
                 0L,    //endOfUsagePromptCounter
                 false, //welcomePromptFlag
@@ -979,6 +1126,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         String expectedJsonResponse = createFlwUserResponseJson(
                 "99",  //defaultLanguageLocationCode
                 "10",  //locationCode
+                new ArrayList<String>(),
                 1L,    //currentUsageInPulses
                 1L,    //endOfUsagePromptCounter
                 false, //welcomePromptFlag
@@ -1007,6 +1155,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         String expectedJsonResponse = createFlwUserResponseJson(
                 "99",  //defaultLanguageLocationCode
                 "10",  //locationCode
+                new ArrayList<String>(),
                 1L,    //currentUsageInPulses
                 1L,    //endOfUsagePromptCounter
                 true,  //welcomePromptFlag

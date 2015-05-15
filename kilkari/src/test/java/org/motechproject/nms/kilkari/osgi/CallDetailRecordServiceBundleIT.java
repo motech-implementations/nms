@@ -9,17 +9,23 @@ import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.EventRelay;
 import org.motechproject.mds.config.SettingsService;
 import org.motechproject.nms.kilkari.domain.CallDetailRecord;
+import org.motechproject.nms.kilkari.domain.CallRetry;
+import org.motechproject.nms.kilkari.domain.CallStage;
+import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.domain.StatusCode;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
+import org.motechproject.nms.kilkari.repository.CallDetailRecordDataService;
 import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
+import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.service.CallDetailRecordService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.domain.CallStatus;
+import org.motechproject.nms.props.domain.DayOfTheWeek;
 import org.motechproject.nms.props.domain.RequestId;
 import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.District;
@@ -42,6 +48,7 @@ import javax.inject.Inject;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(PaxExam.class)
@@ -65,6 +72,9 @@ public class CallDetailRecordServiceBundleIT extends BasePaxIT {
     private SubscriptionService subscriptionService;
 
     @Inject
+    private SubscriptionDataService subscriptionDataService;
+
+    @Inject
     private SubscriberDataService subscriberDataService;
 
     @Inject
@@ -72,6 +82,9 @@ public class CallDetailRecordServiceBundleIT extends BasePaxIT {
 
     @Inject
     private CallRetryDataService callRetryDataService;
+
+    @Inject
+    private CallDetailRecordDataService callDetailRecordDataService;
 
     @Inject
     private AlertService alertService;
@@ -203,7 +216,7 @@ public class CallDetailRecordServiceBundleIT extends BasePaxIT {
                 makeLanguageLocation().getCode(),
                 makeCircle().getName(),
                 CallStatus.SUCCESS,
-                StatusCode.OBD_SUCCESS_CALL_CONNECTED.getValue(),
+                StatusCode.OBD_SUCCESS_CALL_CONNECTED,
                 1);
 
         return cdr;
@@ -217,6 +230,68 @@ public class CallDetailRecordServiceBundleIT extends BasePaxIT {
         eventParams.put("CDR", cdr);
         MotechEvent motechEvent = new MotechEvent(PROCESS_CDR, eventParams);
         eventRelay.sendEventMessage(motechEvent);
+    }
+
+
+    // https://github.com/motech-implementations/mim/issues/169
+    @Test
+    public void verifyIssue169() {
+
+        Subscription subscription = makeSubscription(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
+
+        CallRetry callRetry = new CallRetry(
+                subscription.getSubscriptionId(),
+                subscription.getSubscriber().getCallingNumber(),
+                DayOfTheWeek.today(),
+                CallStage.RETRY_LAST,
+                "w1_m1.wav",
+                "w1_1",
+                subscription.getSubscriber().getLanguageLocation().getCode(),
+                subscription.getSubscriber().getCircle().getName(),
+                "I");
+        callRetryDataService.create(callRetry);
+
+        RequestId requestId = new RequestId(subscription.getSubscriptionId(), "file.csv");
+        for (int i=0 ; i<3 ; i++) {
+            callDetailRecordDataService.create(new CallDetailRecord(
+                    requestId.toString(),
+                    IMI_SERVICE_ID,
+                    subscription.getSubscriber().getCallingNumber(),
+                    null,
+                    0,
+                    null,
+                    "w1_m1.wav",
+                    "w1_1",
+                    subscription.getSubscriber().getLanguageLocation().getCode(),
+                    subscription.getSubscriber().getCircle().getName(),
+                    CallStatus.FAILED,
+                    StatusCode.OBD_FAILED_INVALIDNUMBER,
+                    1));
+        }
+
+        CallDetailRecord cdr = new CallDetailRecord(
+                requestId.toString(),
+                IMI_SERVICE_ID,
+                subscription.getSubscriber().getCallingNumber(),
+                null,
+                0,
+                null,
+                "w1_m1.wav",
+                "w1_1",
+                subscription.getSubscriber().getLanguageLocation().getCode(),
+                subscription.getSubscriber().getCircle().getName(),
+                CallStatus.FAILED,
+                StatusCode.OBD_FAILED_INVALIDNUMBER,
+                1);
+
+        Map<String, Object> eventParams = new HashMap<>();
+        eventParams.put("CDR", cdr);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_CDR, eventParams);
+        cdrService.processCallDetailRecord(motechEvent);
+
+        subscription = subscriptionDataService.findBySubscriptionId(subscription.getSubscriptionId());
+        assertEquals(SubscriptionStatus.DEACTIVATED, subscription.getStatus());
+        assertEquals(DeactivationReason.INVALID_NUMBER, subscription.getDeactivationReason());
     }
 
 

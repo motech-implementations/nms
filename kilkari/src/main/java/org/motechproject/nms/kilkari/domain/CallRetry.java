@@ -29,7 +29,7 @@ public class CallRetry {
     private String contentFileName;
 
     @Field
-    private Integer week;
+    private String weekId;
 
     @Field
     private String languageLocationCode;
@@ -43,14 +43,14 @@ public class CallRetry {
     public CallRetry() { }
 
     public CallRetry(String subscriptionId, Long msisdn, //NO CHECKSTYLE More than 7 parameters
-                     DayOfTheWeek dayOfTheWeek, CallStage callStage, String contentFileName, Integer week,
+                     DayOfTheWeek dayOfTheWeek, CallStage callStage, String contentFileName, String weekId,
                      String languageLocationCode, String circle, String subscriptionOrigin) {
         this.subscriptionId = subscriptionId;
         this.msisdn = msisdn;
         this.dayOfTheWeek = dayOfTheWeek;
         this.callStage = callStage;
         this.contentFileName = contentFileName;
-        this.week = week;
+        this.weekId = weekId;
         this.languageLocationCode = languageLocationCode;
         this.circle = circle;
         this.subscriptionOrigin = subscriptionOrigin;
@@ -96,12 +96,12 @@ public class CallRetry {
         this.contentFileName = contentFileName;
     }
 
-    public Integer getWeek() {
-        return week;
+    public String getWeekId() {
+        return weekId;
     }
 
-    public void setWeek(Integer week) {
-        this.week = week;
+    public void setWeekId(String weekId) {
+        this.weekId = weekId;
     }
 
     public String getLanguageLocationCode() {
@@ -136,7 +136,7 @@ public class CallRetry {
                 ", dayOfTheWeek=" + dayOfTheWeek +
                 ", callStage=" + callStage +
                 ", contentFileName='" + contentFileName + '\'' +
-                ", week='" + week + '\'' +
+                ", weekId='" + weekId + '\'' +
                 ", languageLocationCode='" + languageLocationCode + '\'' +
                 ", circle='" + circle + '\'' +
                 ", subscriptionOrigin='" + subscriptionOrigin + '\'' +

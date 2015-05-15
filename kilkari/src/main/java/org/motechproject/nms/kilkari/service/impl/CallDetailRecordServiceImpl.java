@@ -9,6 +9,7 @@ import org.motechproject.nms.kilkari.domain.CallDetailRecord;
 import org.motechproject.nms.kilkari.domain.CallRetry;
 import org.motechproject.nms.kilkari.domain.CallStage;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
+import org.motechproject.nms.kilkari.domain.StatusCode;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
@@ -74,8 +75,29 @@ public class CallDetailRecordServiceImpl implements CallDetailRecordService {
     }
 
 
-    private void rescheduleCall(String contentFileName, int week, Subscription subscription,
-                                CallRetry callRetry) {
+    /*
+     * #169 https://github.com/motech-implementations/mim/issues/169
+     */
+    private void unsubscribeIfConsistentlyInvalid(Subscription subscription) {
+        int count = 0;
+        for (CallDetailRecord cdr : cdrDataService.findByMsisdn(subscription.getSubscriber().getCallingNumber())) {
+            String subscriptionId = RequestId.fromString(cdr.getRequestId()).getSubscriptionId();
+            if (subscriptionId.equals(subscription.getSubscriptionId()) &&
+                    cdr.getStatusCode().equals(StatusCode.OBD_FAILED_INVALIDNUMBER)) {
+                count++;
+            }
+        }
+
+        if (count >= subscription.getSubscriptionPack().retryCount()) {
+            subscription.setStatus(SubscriptionStatus.DEACTIVATED);
+            subscription.setDeactivationReason(DeactivationReason.INVALID_NUMBER);
+            subscriptionDataService.update(subscription);
+        }
+    }
+
+
+    private void rescheduleCall(String contentFileName, String weekId, StatusCode statusCode,
+                                Subscription subscription, CallRetry callRetry) {
 
         Long msisdn = subscription.getSubscriber().getCallingNumber();
 
@@ -90,7 +112,7 @@ public class CallDetailRecordServiceImpl implements CallDetailRecordService {
                     nextDay,
                     CallStage.RETRY_1,
                     contentFileName,
-                    week,
+                    weekId,
                     getLanguageLocationCode(subscription),
                     getCircleName(subscription),
                     subscription.getOrigin().getCode()
@@ -105,6 +127,13 @@ public class CallDetailRecordServiceImpl implements CallDetailRecordService {
                 (callRetry.getCallStage() == CallStage.RETRY_LAST)) {
 
             // Nope, this call should not be retried
+
+            // Additionally, if this call has been failing with 'phone number does not exist' for all the retries
+            // for this message, unsubscribe. See issue #169.
+            if (statusCode == StatusCode.OBD_FAILED_INVALIDNUMBER) {
+                unsubscribeIfConsistentlyInvalid(subscription);
+            }
+
 
             callRetryDataService.delete(callRetry);
 
@@ -178,7 +207,8 @@ public class CallDetailRecordServiceImpl implements CallDetailRecordService {
         if (cdr.getFinalStatus() == CallStatus.SUCCESS) {
             completeSubscriptionIfNeeded(cdr.getContentFileName(), subscription, callRetry);
         } else if (cdr.getFinalStatus() == CallStatus.FAILED) {
-            rescheduleCall(cdr.getContentFileName(), cdr.getWeek(), subscription, callRetry);
+            rescheduleCall(cdr.getContentFileName(), cdr.getWeekId(), cdr.getStatusCode(), subscription,
+                    callRetry);
         } else  if (cdr.getFinalStatus() == CallStatus.REJECTED) {
             deactivateSubscription(subscription, callRetry);
         }

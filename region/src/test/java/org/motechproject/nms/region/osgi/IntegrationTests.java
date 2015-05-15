@@ -9,7 +9,8 @@ import org.junit.runners.Suite;
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
     LocationServiceBundleIT.class,
-    CircleServiceBundleIT.class
+    CircleServiceBundleIT.class,
+    NationalDefaultLanguageLocationBundleIT.class
 })
 public class IntegrationTests {
 }
