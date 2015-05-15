@@ -12,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.jdo.Query;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service("languageLocationService")
 public class LanguageLocationServiceImpl implements LanguageLocationService {
@@ -58,6 +60,40 @@ public class LanguageLocationServiceImpl implements LanguageLocationService {
         }
 
         return null;
+    }
+
+    @Override
+    public List<LanguageLocation> getAllForCircle(final Circle circle) {
+
+        QueryExecution<List<LanguageLocation>> stateQueryExecution = new QueryExecution<List<LanguageLocation>>() {
+            @Override
+            public List<LanguageLocation> execute(Query query, InstanceSecurityRestriction restriction) {
+
+                query.setFilter("circle == _circle");
+                query.declareParameters("org.motechproject.nms.region.domain.Circle _circle");
+
+                return (List<LanguageLocation>) query.execute(circle);
+            }
+        };
+
+        List<LanguageLocation> languageLocations = languageLocationDataService.executeQuery(stateQueryExecution);
+
+        if (languageLocations == null) {
+            languageLocations = new ArrayList<>();
+        }
+
+        return languageLocations;
+    }
+
+    @Override
+    public List<LanguageLocation> getAll() {
+        List<LanguageLocation> languageLocations = languageLocationDataService.retrieveAll();
+
+        if (languageLocations == null) {
+            languageLocations = new ArrayList<>();
+        }
+
+        return languageLocations;
     }
 
     @Override

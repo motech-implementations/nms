@@ -28,7 +28,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 
@@ -127,7 +129,56 @@ public class UserController extends BaseController {
             user.setDefaultLanguageLocationCode(defaultLanguageLocation.getCode());
         }
 
+        // If the user does not have a language location code we want to return the allowed language location
+        // codes for the provided circle, or all if no circle was provided
+        List<LanguageLocation> languageLocations = new ArrayList<>();
+        if (user.getLanguageLocationCode() == null && circleObj != null) {
+            languageLocations = languageLocationService.getAllForCircle(circleObj);
+
+            // If there is only one language set that as the users language.  I would prefer if we instead
+            // returned the 1 element allowedLanguages array and had the IVR just skip prompting the user
+            // but that would result in two API calls without a prompt being played and that could
+            // be too long of a delay.  So instead we create or update the FLW in the get user api call.  bleh.
+//  This is an open question in an email thread with IMI.  My preference is for the VXML to just call set language
+
+            if (false && languageLocations.size() == 1) {
+                if (MOBILE_ACADEMY.equals(serviceName) || MOBILE_KUNJI.equals(serviceName)) {
+                    updateFLWWithLanguage(callingNumber, languageLocations.get(0));
+                }
+
+                user.setLanguageLocationCode(languageLocations.get(0).getCode());
+            }
+        }
+
+        if (user.getLanguageLocationCode() == null && circleObj == null) {
+            languageLocations = languageLocationService.getAll();
+        }
+
+        if (languageLocations.size() > 0) {
+            List<String> allowedLanguageLocations = new ArrayList<>();
+            for (LanguageLocation languageLocation : languageLocations) {
+                allowedLanguageLocations.add(languageLocation.getCode());
+            }
+            user.setAllowedLanguageLocationCodes(allowedLanguageLocations);
+        }
+
         return user;
+    }
+
+    private void updateFLWWithLanguage(Long callingNumber, LanguageLocation languageLocation) {
+        FrontLineWorker flw = frontLineWorkerService.getByContactNumber(callingNumber);
+        if (flw == null) {
+            flw = new FrontLineWorker(callingNumber);
+        }
+
+        flw.setLanguageLocation(languageLocation);
+
+        // MOTECH-1667 added to get an upsert method included
+        if (flw.getId() == null) {
+            frontLineWorkerService.add(flw);
+        } else {
+            frontLineWorkerService.update(flw);
+        }
     }
 
     private UserResponse getKilkariResponseUser(Long callingNumber) {

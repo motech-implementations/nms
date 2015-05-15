@@ -1,5 +1,8 @@
 package org.motechproject.nms.api.web.contract;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  *  Response body - base class extended by KilkariUserResponse and FlwUserResponse
  *
@@ -23,8 +26,11 @@ package org.motechproject.nms.api.web.contract;
 public abstract class UserResponse {
     private String languageLocationCode;
     private String defaultLanguageLocationCode;
+    private List<String> allowedLanguageLocationCodes;
 
-    public UserResponse() { }
+    public UserResponse() {
+        this.allowedLanguageLocationCodes = new ArrayList<>();
+    }
 
     public UserResponse(String languageLocationCode) {
         this.languageLocationCode = languageLocationCode;
@@ -44,5 +50,13 @@ public abstract class UserResponse {
 
     public void setDefaultLanguageLocationCode(String defaultLanguageLocationCode) {
         this.defaultLanguageLocationCode = defaultLanguageLocationCode;
+    }
+
+    public List<String> getAllowedLanguageLocationCodes() {
+        return allowedLanguageLocationCodes;
+    }
+
+    public void setAllowedLanguageLocationCodes(List<String> allowedLanguageLocationCodes) {
+        this.allowedLanguageLocationCodes = allowedLanguageLocationCodes;
     }
 }
