@@ -153,7 +153,7 @@ public class MobileAcademyController extends BaseController {
             value = "/notify",
             method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
-    public void resendCompletionNotification(@RequestParam Long callingNumber) {
+    public void sendNotification(@RequestBody Long callingNumber) {
 
         StringBuilder errors = new StringBuilder();
         validateField10Digits(errors, "callingNumber", callingNumber);

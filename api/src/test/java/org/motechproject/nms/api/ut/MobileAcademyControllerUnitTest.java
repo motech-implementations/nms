@@ -66,4 +66,10 @@ public class MobileAcademyControllerUnitTest {
         mobileAcademyController.saveBookmarkWithScore(sb);
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void testTriggerBadCallingNumber() {
+        long callingNumber = 1234;
+        mobileAcademyController.sendNotification(callingNumber);
+    }
+
 }
