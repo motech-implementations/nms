@@ -23,10 +23,13 @@ public class CompletionRecord {
     private int score;
 
     @Field
+    private int completionCount;
+
+    @Field
     private boolean sentNotification;
 
     @Field
-    private int completionCount;
+    private String lastDeliveryStatus;
 
     public CompletionRecord(long callingNumber, int score) {
         this.callingNumber = callingNumber;
@@ -72,5 +75,13 @@ public class CompletionRecord {
 
     public void setCompletionCount(int completionCount) {
         this.completionCount = completionCount;
+    }
+
+    public String getLastDeliveryStatus() {
+        return lastDeliveryStatus;
+    }
+
+    public void setLastDeliveryStatus(String lastDeliveryStatus) {
+        this.lastDeliveryStatus = lastDeliveryStatus;
     }
 }

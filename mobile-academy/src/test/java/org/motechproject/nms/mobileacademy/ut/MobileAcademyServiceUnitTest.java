@@ -4,6 +4,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.EventRelay;
 import org.motechproject.mtraining.domain.Bookmark;
@@ -11,15 +13,16 @@ import org.motechproject.mtraining.repository.BookmarkDataService;
 import org.motechproject.nms.mobileacademy.domain.CompletionRecord;
 import org.motechproject.nms.mobileacademy.domain.Course;
 import org.motechproject.nms.mobileacademy.dto.MaBookmark;
+import org.motechproject.nms.mobileacademy.notification.SmsNotificationHandler;
 import org.motechproject.nms.mobileacademy.repository.CompletionRecordDataService;
 import org.motechproject.nms.mobileacademy.repository.CourseDataService;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
 import org.motechproject.nms.mobileacademy.service.impl.MobileAcademyServiceImpl;
+import org.motechproject.server.config.SettingsFacade;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -31,6 +34,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
@@ -56,6 +60,12 @@ public class MobileAcademyServiceUnitTest {
     @Mock
     private EventRelay eventRelay;
 
+    @Mock
+    private SmsNotificationHandler smsNotificationHandler;
+
+    @Mock
+    private SettingsFacade settingsFacade;
+
     private Validator validator;
 
     @Before
@@ -63,6 +73,7 @@ public class MobileAcademyServiceUnitTest {
         initMocks(this);
         mobileAcademyService = new MobileAcademyServiceImpl(
                 bookmarkDataService, courseDataService, completionRecordDataService, eventRelay);
+        smsNotificationHandler = new SmsNotificationHandler(completionRecordDataService, settingsFacade);
         validator = Validation.buildDefaultValidatorFactory().getValidator();
     }
 
@@ -178,4 +189,28 @@ public class MobileAcademyServiceUnitTest {
         assertEquals(1, cv.size());
         assertEquals("callingNumber must be 10 digits", cv.iterator().next().getMessage());
     }
+
+    @Test
+    public void testStatusUpdateNotification() {
+        MotechEvent event = new MotechEvent();
+        event.getParameters().put("address", "tel: 9876543210");
+        event.getParameters().put("deliveryStatus", "DeliveredToTerminal");
+        CompletionRecord cr = new CompletionRecord(9876543210L, 34, true, 1);
+        assertNull(cr.getLastDeliveryStatus());
+
+        when(completionRecordDataService.findRecordByCallingNumber(anyLong())).thenReturn(cr);
+        when(completionRecordDataService.update(any(CompletionRecord.class))).thenAnswer(
+                new Answer<CompletionRecord>() {
+                    @Override
+                    public CompletionRecord answer(InvocationOnMock invocation) throws Throwable {
+                        Object[] args = invocation.getArguments();
+                        return (CompletionRecord) args[0];
+                    }
+                }
+        );
+
+        smsNotificationHandler.updateSmsStatus(event);
+        assertTrue(cr.getLastDeliveryStatus().equals("DeliveredToTerminal"));
+    }
+
 }
