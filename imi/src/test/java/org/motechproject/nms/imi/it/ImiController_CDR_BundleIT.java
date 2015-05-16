@@ -11,7 +11,6 @@ import org.motechproject.nms.imi.service.SettingsService;
 import org.motechproject.nms.imi.web.contract.BadRequest;
 import org.motechproject.nms.imi.web.contract.CdrFileNotificationRequest;
 import org.motechproject.nms.imi.web.contract.FileInfo;
-import org.motechproject.nms.kilkari.domain.CallDetailRecord;
 import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
@@ -32,7 +31,6 @@ import org.ops4j.pax.exam.spi.reactors.PerSuite;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
-import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -121,8 +119,7 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
                 languageDataService, languageLocationDataService, circleDataService, stateDataService,
                 districtDataService);
 
-        List<CallDetailRecord> cdrs = helper.makeCdrs();
-        helper.setCrds(cdrs);
+        helper.makeCdrs(3);
         helper.makeCdrSummaryFile();
         helper.makeCdrDetailFile();
 

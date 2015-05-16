@@ -8,25 +8,26 @@ import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.EventRelay;
 import org.motechproject.mds.config.SettingsService;
-import org.motechproject.nms.kilkari.domain.CallDetailRecord;
 import org.motechproject.nms.kilkari.domain.CallRetry;
 import org.motechproject.nms.kilkari.domain.CallStage;
+import org.motechproject.nms.kilkari.domain.CallSummaryRecord;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
-import org.motechproject.nms.kilkari.domain.StatusCode;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
-import org.motechproject.nms.kilkari.repository.CallDetailRecordDataService;
+import org.motechproject.nms.kilkari.dto.CallSummaryRecordDto;
 import org.motechproject.nms.kilkari.repository.CallRetryDataService;
+import org.motechproject.nms.kilkari.repository.CallSummaryRecordDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
-import org.motechproject.nms.kilkari.service.CallDetailRecordService;
+import org.motechproject.nms.kilkari.service.CsrService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
-import org.motechproject.nms.props.domain.CallStatus;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
+import org.motechproject.nms.props.domain.FinalCallStatus;
 import org.motechproject.nms.props.domain.RequestId;
+import org.motechproject.nms.props.domain.StatusCode;
 import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Language;
@@ -54,16 +55,17 @@ import static org.junit.Assert.assertTrue;
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerSuite.class)
 @ExamFactory(MotechNativeTestContainerFactory.class)
-public class CallDetailRecordServiceBundleIT extends BasePaxIT {
+public class CsrServiceBundleIT extends BasePaxIT {
 
-    private static final String PROCESS_CDR = "nms.imi.kk.process_cdr";
+    private static final String PROCESS_SUMMARY_RECORD = "nms.imi.kk.process_summary_record";
+    private static final String CSR_PARAM_KEY = "csr";
     private static final String IMI_SERVICE_ID = "some_service_id"; //todo: look into that more closely
 
     @Inject
     EventRelay eventRelay;
 
     @Inject
-    CallDetailRecordService cdrService;
+    CsrService csrService;
 
     @Inject
     private SettingsService settingsService;
@@ -84,7 +86,7 @@ public class CallDetailRecordServiceBundleIT extends BasePaxIT {
     private CallRetryDataService callRetryDataService;
 
     @Inject
-    private CallDetailRecordDataService callDetailRecordDataService;
+    private CallSummaryRecordDataService csrDataService;
 
     @Inject
     private AlertService alertService;
@@ -112,12 +114,14 @@ public class CallDetailRecordServiceBundleIT extends BasePaxIT {
         stateDataService.deleteAll();
         circleDataService.deleteAll();
         callRetryDataService.deleteAll();
+        subscriptionService.createSubscriptionPacks();
+        csrService.buildMessageDurationCache();
     }
 
 
     @Test
     public void testServicePresent() {
-        assertTrue(cdrService != null);
+        assertTrue(csrService != null);
     }
 
 
@@ -202,92 +206,87 @@ public class CallDetailRecordServiceBundleIT extends BasePaxIT {
     }
 
 
-    CallDetailRecord makeCdr() {
-        Subscription subscription = makeSubscription(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
-        CallDetailRecord cdr = new CallDetailRecord(
-                new RequestId(subscription.getSubscriptionId(), "foo.csv").toString(),
-                IMI_SERVICE_ID,
-                subscription.getSubscriber().getCallingNumber(),
-                null,
-                0,
-                null,
-                subscription.getSubscriptionPack().getMessages().get(2).getMessageFileName(),
-                subscription.getSubscriptionPack().getMessages().get(2).getWeekId(),
-                makeLanguageLocation().getCode(),
-                makeCircle().getName(),
-                CallStatus.SUCCESS,
-                StatusCode.OBD_SUCCESS_CALL_CONNECTED,
-                1);
-
-        return cdr;
+    private Map<Integer, Integer> makeStatsMap(StatusCode statusCode, int count) {
+        Map<Integer, Integer> map = new HashMap<>();
+        map.put(statusCode.getValue(), count);
+        return map;
     }
 
 
     @Test
     public void verifyServiceFunctional() {
-        CallDetailRecord cdr = makeCdr();
+        Subscription subscription = makeSubscription(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
+
+        CallSummaryRecordDto csr = new CallSummaryRecordDto(
+                new RequestId(subscription.getSubscriptionId(), "11112233445566"),
+                subscription.getSubscriber().getCallingNumber(),
+                "w1_1.wav",
+                "w1_1",
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
+                FinalCallStatus.FAILED,
+                makeStatsMap(StatusCode.OBD_FAILED_INVALIDNUMBER, 3),
+                0,
+                3
+        );
+
         Map<String, Object> eventParams = new HashMap<>();
-        eventParams.put("CDR", cdr);
-        MotechEvent motechEvent = new MotechEvent(PROCESS_CDR, eventParams);
-        eventRelay.sendEventMessage(motechEvent);
+        eventParams.put(CSR_PARAM_KEY, csr);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD, eventParams);
+        csrService.processCallDetailRecord(motechEvent);
     }
 
 
+    // Deactivate if user phone number does not exist
     // https://github.com/motech-implementations/mim/issues/169
     @Test
     public void verifyIssue169() {
-
         Subscription subscription = makeSubscription(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
 
-        CallRetry callRetry = new CallRetry(
+
+        csrDataService.create(new CallSummaryRecord(
+                new RequestId(subscription.getSubscriptionId(), "11112233445566").toString(),
+                subscription.getSubscriber().getCallingNumber(),
+                "w1_1.wav",
+                "w1_1",
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
+                FinalCallStatus.FAILED,
+                makeStatsMap(StatusCode.OBD_FAILED_INVALIDNUMBER, 10),
+                0,
+                10,
+                3
+        ));
+
+        callRetryDataService.create(new CallRetry(
                 subscription.getSubscriptionId(),
                 subscription.getSubscriber().getCallingNumber(),
                 DayOfTheWeek.today(),
                 CallStage.RETRY_LAST,
-                "w1_m1.wav",
+                "w1_1.wav",
                 "w1_1",
-                subscription.getSubscriber().getLanguageLocation().getCode(),
-                subscription.getSubscriber().getCircle().getName(),
-                "I");
-        callRetryDataService.create(callRetry);
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
+                SubscriptionOrigin.MCTS_IMPORT
+        ));
 
-        RequestId requestId = new RequestId(subscription.getSubscriptionId(), "file.csv");
-        for (int i=0 ; i<3 ; i++) {
-            callDetailRecordDataService.create(new CallDetailRecord(
-                    requestId.toString(),
-                    IMI_SERVICE_ID,
-                    subscription.getSubscriber().getCallingNumber(),
-                    null,
-                    0,
-                    null,
-                    "w1_m1.wav",
-                    "w1_1",
-                    subscription.getSubscriber().getLanguageLocation().getCode(),
-                    subscription.getSubscriber().getCircle().getName(),
-                    CallStatus.FAILED,
-                    StatusCode.OBD_FAILED_INVALIDNUMBER,
-                    1));
-        }
-
-        CallDetailRecord cdr = new CallDetailRecord(
-                requestId.toString(),
-                IMI_SERVICE_ID,
+        CallSummaryRecordDto csr = new CallSummaryRecordDto(
+                new RequestId(subscription.getSubscriptionId(), "11112233445566"),
                 subscription.getSubscriber().getCallingNumber(),
-                null,
-                0,
-                null,
-                "w1_m1.wav",
+                "w1_1.wav",
                 "w1_1",
-                subscription.getSubscriber().getLanguageLocation().getCode(),
-                subscription.getSubscriber().getCircle().getName(),
-                CallStatus.FAILED,
-                StatusCode.OBD_FAILED_INVALIDNUMBER,
-                1);
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
+                FinalCallStatus.FAILED,
+                makeStatsMap(StatusCode.OBD_FAILED_INVALIDNUMBER, 3),
+                0,
+                3
+        );
 
         Map<String, Object> eventParams = new HashMap<>();
-        eventParams.put("CDR", cdr);
-        MotechEvent motechEvent = new MotechEvent(PROCESS_CDR, eventParams);
-        cdrService.processCallDetailRecord(motechEvent);
+        eventParams.put(CSR_PARAM_KEY, csr);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD, eventParams);
+        csrService.processCallDetailRecord(motechEvent);
 
         subscription = subscriptionDataService.findBySubscriptionId(subscription.getSubscriptionId());
         assertEquals(SubscriptionStatus.DEACTIVATED, subscription.getStatus());

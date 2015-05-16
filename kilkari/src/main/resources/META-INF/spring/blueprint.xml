@@ -22,8 +22,8 @@
     <osgi:service ref="subscriberService"
                   interface="org.motechproject.nms.kilkari.service.SubscriberService" />
 
-    <osgi:service ref="cdrService"
-                  interface="org.motechproject.nms.kilkari.service.CallDetailRecordService" />
+    <osgi:service ref="csrService"
+                  interface="org.motechproject.nms.kilkari.service.CsrService" />
 
     <osgi:reference id="transactionManager"
                     interface="org.springframework.transaction.PlatformTransactionManager"/>
@@ -34,11 +34,14 @@
     <osgi:reference id="subscriptionPackDataService"
                     interface="org.motechproject.nms.kilkari.repository.SubscriptionPackDataService" />
 
+    <osgi:reference id="subscriptionPackMessageDataService"
+                    interface="org.motechproject.nms.kilkari.repository.SubscriptionPackMessageDataService" />
+
     <osgi:reference id="inboxCallDetailsDataService"
                     interface="org.motechproject.nms.kilkari.repository.InboxCallDetailRecordDataService" />
 
-    <osgi:reference id="callDetailsRecordDataService"
-                    interface="org.motechproject.nms.kilkari.repository.CallDetailRecordDataService" />
+    <osgi:reference id="csrDataService"
+                    interface="org.motechproject.nms.kilkari.repository.CallSummaryRecordDataService" />
 
     <osgi:reference id="inboxCallDataDataService"
                     interface="org.motechproject.nms.kilkari.repository.InboxCallDataDataService" />

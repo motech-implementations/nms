@@ -16,6 +16,10 @@ public enum CallDisconnectReason {
         return (i >= 1 && i < values().length);
     }
 
+    public int getValue() {
+        return ordinal() + 1;
+    }
+
     public static CallDisconnectReason fromInt(int i) {
         if (isValid(i)) {
             return values()[i - 1];

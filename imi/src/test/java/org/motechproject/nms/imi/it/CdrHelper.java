@@ -5,17 +5,18 @@ import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.motechproject.nms.imi.service.SettingsService;
-import org.motechproject.nms.kilkari.domain.CallDetailRecord;
-import org.motechproject.nms.kilkari.domain.StatusCode;
+import org.motechproject.nms.imi.service.impl.CsvHelper;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
+import org.motechproject.nms.kilkari.dto.CallDetailRecordDto;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
-import org.motechproject.nms.props.domain.CallStatus;
+import org.motechproject.nms.props.domain.CallDisconnectReason;
 import org.motechproject.nms.props.domain.RequestId;
+import org.motechproject.nms.props.domain.StatusCode;
 import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Language;
@@ -60,8 +61,8 @@ public class CdrHelper {
     private StateDataService stateDataService;
     private DistrictDataService districtDataService;
 
-    private List<CallDetailRecord> cdrs;
-    private List<CallDetailRecord> retryCdrs = new ArrayList<>();
+    private List<CallDetailRecordDto> cdrs;
+    private List<CallDetailRecordDto> retryCdrs = new ArrayList<>();
     private List<String> completedSubscriptionIds = new ArrayList<>();
 
 
@@ -87,12 +88,12 @@ public class CdrHelper {
     }
 
 
-    public void setCrds(List<CallDetailRecord> cdrs) {
+    public void setCrds(List<CallDetailRecordDto> cdrs) {
         this.cdrs = cdrs;
     }
 
 
-    public boolean shouldRetryCdr(CallDetailRecord cdr) {
+    public boolean shouldRetryCdr(CallDetailRecordDto cdr) {
         return retryCdrs.contains(cdr);
     }
 
@@ -183,29 +184,26 @@ public class CdrHelper {
     }
 
 
-    public List<CallDetailRecord> makeCdrs() {
-        //todo: look into that property - does it need to go to kilkari?
-        String imiServiceId = settingsService.getSettingsFacade().getProperty("imi.target_file_imi_service_id");
-        List<CallDetailRecord> cdrs = new ArrayList<>();
+    public void makeCdrs(int count) {
+        cdrs = new ArrayList<>();
 
-        Subscription subscription = makeSubscription(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
-        CallDetailRecord cdr = new CallDetailRecord(
-                new RequestId(subscription.getSubscriptionId(), "somefile.csv").toString(),
-                imiServiceId,
-                subscription.getSubscriber().getCallingNumber(),
-                null,
-                0,
-                null,
-                subscription.getSubscriptionPack().getMessages().get(2).getMessageFileName(),
-                subscription.getSubscriptionPack().getMessages().get(2).getWeekId(),
-                makeLanguageLocation().getCode(),
-                makeCircle().getName(),
-                CallStatus.SUCCESS,
-                StatusCode.OBD_SUCCESS_CALL_CONNECTED,
-                1);
-        cdrs.add(cdr);
-
-        return cdrs;
+        for (int i=0 ; i<count ; i++) {
+            Subscription sub = makeSubscription(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(30));
+            CallDetailRecordDto cdr = new CallDetailRecordDto();
+            cdr.setRequestId(new RequestId(sub.getSubscriptionId(), cdrDetailFileName()));
+            cdr.setMsisdn(sub.getSubscriber().getCallingNumber());
+            cdr.setCallAnswerTime(DateTime.now().minusHours(5));
+            cdr.setMsgPlayDuration(110);
+            cdr.setStatusCode(StatusCode.OBD_SUCCESS_CALL_CONNECTED);
+            cdr.setLanguageLocationId(makeLanguageLocation().getCode());
+            cdr.setContentFile(subscriptionService.getSubscriptionPack("childPack").getMessages().get(5)
+                    .getMessageFileName());
+            cdr.setCircleId(makeCircle().getName());
+            cdr.setOperatorId("xx");
+            cdr.setCallDisconnectReason(CallDisconnectReason.NORMAL_DROP);
+            cdr.setWeekId("w5_1");
+            cdrs.add(cdr);
+        }
     }
 
 
@@ -247,8 +245,8 @@ public class CdrHelper {
         LOGGER.debug("Creating summary file {}...", dstFile);
         BufferedWriter writer = new BufferedWriter(new FileWriter(dstFile));
         String s;
-        for(CallDetailRecord cdr : cdrs) {
-            writer.write(cdr.toCsvLine());
+        for(CallDetailRecordDto cdr : cdrs) {
+            writer.write(CsvHelper.csvLineFromCdr(cdr));
             writer.write("\n");
         }
 

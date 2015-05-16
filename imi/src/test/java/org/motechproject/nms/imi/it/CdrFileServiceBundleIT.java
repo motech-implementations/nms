@@ -6,10 +6,8 @@ import org.junit.runner.RunWith;
 import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.nms.imi.service.CdrFileService;
 import org.motechproject.nms.imi.service.SettingsService;
-import org.motechproject.nms.imi.service.contract.CdrParseResult;
-import org.motechproject.nms.imi.web.contract.CdrFileNotificationRequest;
+import org.motechproject.nms.imi.service.contract.ProcessResult;
 import org.motechproject.nms.imi.web.contract.FileInfo;
-import org.motechproject.nms.kilkari.domain.CallDetailRecord;
 import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
@@ -28,7 +26,6 @@ import org.ops4j.pax.exam.spi.reactors.PerSuite;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
-import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -100,17 +97,13 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
                 languageDataService, languageLocationDataService, circleDataService, stateDataService,
                 districtDataService);
 
-        List<CallDetailRecord> cdrs = helper.makeCdrs();
-        helper.setCrds(cdrs);
+        helper.makeCdrs(3);
         helper.makeCdrSummaryFile();
         helper.makeCdrDetailFile();
 
-        CdrParseResult result = cdrFileService.processCdrFile(new CdrFileNotificationRequest(helper.obdFileName(),
-                        new FileInfo(helper.cdrSummaryFileName(), helper.summaryFileChecksum(), 1),
-                        new FileInfo(helper.cdrDetailFileName(), helper.detailFileChecksum(), 1)));
+        ProcessResult result = cdrFileService.processDetailFile(
+                new FileInfo(helper.cdrDetailFileName(), helper.detailFileChecksum(), 3));
 
-        assertEquals(1, result.getCdrs().size());
-
-        //todo: more checking?
+        assertEquals(1, result.getSuccessCount());
     }
 }

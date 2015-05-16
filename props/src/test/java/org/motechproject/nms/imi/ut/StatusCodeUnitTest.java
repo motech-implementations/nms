@@ -1,24 +1,24 @@
 package org.motechproject.nms.imi.ut;
 
+
 import org.junit.Test;
-import org.motechproject.nms.props.domain.CallStatus;
+import org.motechproject.nms.props.domain.StatusCode;
 
 import static junit.framework.Assert.assertEquals;
 
-public class CallStatusTest {
-
+public class StatusCodeUnitTest {
     @Test
     public void testValue() {
-        assertEquals(CallStatus.SUCCESS.getValue(), 1);
+        assertEquals(StatusCode.OBD_SUCCESS_CALL_CONNECTED.getValue(), 1001);
     }
 
     @Test
     public void testFromInt() {
-        assertEquals(CallStatus.fromInt(2), CallStatus.FAILED);
+        assertEquals(StatusCode.fromInt(2002), StatusCode.OBD_FAILED_NOANSWER);
     }
 
     @Test(expected=IllegalArgumentException.class)
     public void testFromIntFailure() {
-        CallStatus.fromInt(0);
+        StatusCode.fromInt(0);
     }
 }

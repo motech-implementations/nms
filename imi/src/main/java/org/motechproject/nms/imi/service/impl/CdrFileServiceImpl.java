@@ -10,9 +10,11 @@ import org.motechproject.nms.imi.domain.FileAuditRecord;
 import org.motechproject.nms.imi.domain.FileType;
 import org.motechproject.nms.imi.repository.FileAuditRecordDataService;
 import org.motechproject.nms.imi.service.CdrFileService;
-import org.motechproject.nms.imi.service.contract.CdrParseResult;
-import org.motechproject.nms.imi.web.contract.CdrFileNotificationRequest;
-import org.motechproject.nms.kilkari.domain.CallDetailRecord;
+import org.motechproject.nms.imi.service.contract.ProcessResult;
+import org.motechproject.nms.imi.web.contract.FileInfo;
+import org.motechproject.nms.kilkari.dto.CallDetailRecordDto;
+import org.motechproject.nms.kilkari.dto.CallSummaryRecordDto;
+import org.motechproject.nms.props.domain.FinalCallStatus;
 import org.motechproject.server.config.SettingsFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,10 +43,10 @@ import java.util.Map;
 public class CdrFileServiceImpl implements CdrFileService {
 
     private static final String CDR_FILE_DIRECTORY = "imi.cdr_file_directory";
-    private static final String PROCESS_CDR = "nms.imi.kk.process_cdr";
+    private static final String PROCESS_SUMMARY_RECORD = "nms.imi.kk.process_summary_record";
+    private static final String CSR_PARAM_KEY = "csr";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CdrFileServiceImpl.class);
-    public static final String CDR_SUMMARY = "cdrSummary";
 
     private SettingsFacade settingsFacade;
     private EventRelay eventRelay;
@@ -65,83 +67,140 @@ public class CdrFileServiceImpl implements CdrFileService {
 
     private void reportErrorAndThrow(String file, String error) {
         LOGGER.error(error);
-        alertService.create(file, CDR_SUMMARY, error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
-        fileAuditRecordDataService.create(new FileAuditRecord(FileType.CDR_SUMMARY_FILE, file, error, null, null));
+        alertService.create(file, "CDR Detail File", error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+        fileAuditRecordDataService.create(new FileAuditRecord(FileType.CDR_DETAIL_FILE, file, error, null, null));
         throw new IllegalStateException(error);
     }
 
 
+    // Aggregate all detail records for a requestId into a single summary record
+    private void parseDetailRecord(CallDetailRecordDto cdr, Map<String, CallSummaryRecordDto> records) {
+        if (records.containsKey(cdr.getRequestId().toString())) {
+            CallSummaryRecordDto record = records.get(cdr.getRequestId().toString());
 
-    private CdrParseResult parseSummaryCdrs(String dir, String fileName, String checksum) {
-        List<CallDetailRecord> cdrs = new ArrayList<>();
-        List<String> errors = new ArrayList<>();
-        File userDirectory = new File(System.getProperty("user.home"));
-        File cdrDirectory = new File(userDirectory, dir);
-        File cdrSummary = new File(cdrDirectory, fileName);
+            // Increment the statusCode stats
+            int statusCodeCount = 1;
+            if (record.getStatusStats().containsKey(cdr.getStatusCode())) {
+                statusCodeCount = record.getStatusStats().get(cdr.getStatusCode()) + 1;
+            }
+            record.getStatusStats().put(cdr.getStatusCode().getValue(), statusCodeCount);
 
-        if (cdrSummary.exists() && !cdrSummary.isDirectory()) {
-            LOGGER.debug("Found CDR summary file. Starting to read...");
+            // Increment the message play duration
+            if (cdr.getMsgPlayDuration() > record.getSecondsPlayed()) {
+                record.setSecondsPlayed(cdr.getMsgPlayDuration());
+            }
+
+            /*
+               Update the final status
+
+               Because we don't know that the detail records are ordered, we could be receiving a failed record
+               after a success record. We don't want to override a success record.
+             */
+            if (record.getFinalStatus() != FinalCallStatus.SUCCESS) {
+                record.setFinalStatus(FinalCallStatus.fromStatusCode(cdr.getStatusCode()));
+            }
+
+            record.setCallAttempts(record.getCallAttempts() + 1);
+
+        } else {
+            CallSummaryRecordDto record = new CallSummaryRecordDto();
+            record.setRequestId(cdr.getRequestId());
+            record.setMsisdn(cdr.getMsisdn());
+            record.setContentFileName(cdr.getContentFile());
+            record.setWeekId(cdr.getWeekId());
+            record.setLanguageLocationCode(cdr.getLanguageLocationId());
+            record.setCircle(cdr.getCircleId());
+            record.setFinalStatus(FinalCallStatus.fromStatusCode(cdr.getStatusCode()));
+            Map<Integer, Integer> statusStats = new HashMap<>();
+            statusStats.put(cdr.getStatusCode().getValue(), 1);
+            record.setStatusStats(statusStats);
+            record.setSecondsPlayed(cdr.getMsgPlayDuration());
+            record.setCallAttempts(1);
+            records.put(cdr.getRequestId().toString(), record);
         }
+    }
 
-        MessageDigest md;
+
+    // Create an in-memory set of summary records from all detail records
+    private ParseResults parseDetailRecords(File file, FileInfo fileInfo) {
         String thisChecksum = "";
-        try (FileInputStream fis = new FileInputStream(cdrSummary);
-                InputStreamReader isr = new InputStreamReader(fis);
-                BufferedReader reader = new BufferedReader(isr)) {
-            md = MessageDigest.getInstance("MD5");
+        Map<String, CallSummaryRecordDto> records = new HashMap<>();
+        List<String> errors = new ArrayList<>();
+        int lineNumber = 1;
 
+        try (
+                FileInputStream fis = new FileInputStream(file);
+                InputStreamReader isr = new InputStreamReader(fis);
+                BufferedReader reader = new BufferedReader(isr)
+            ) {
+
+
+            MessageDigest md = MessageDigest.getInstance("MD5");
             @SuppressWarnings("PMD.UnusedLocalVariable")
             DigestInputStream dis = new DigestInputStream(fis, md);
 
             String line;
             while ((line = reader.readLine()) != null) {
 
-                cdrs.add(CallDetailRecord.fromCsvLine(line));
+                try {
+                    CallDetailRecordDto cdr = CsvHelper.csvLineToCdr(line);
+
+                    parseDetailRecord(cdr, records);
+
+                } catch (IllegalArgumentException e) {
+                    errors.add(String.format("Line %d: %s", lineNumber, e.getMessage()));
+                }
+                lineNumber++;
             }
+
             thisChecksum = new String(Hex.encodeHex(md.digest()));
-        } catch (NoSuchAlgorithmException | IOException e) {
-            String error = String.format("Unable to read cdrSummary file %s: %s", cdrSummary, e.getMessage());
-            reportErrorAndThrow(cdrSummary.getName(), error);
+
+        } catch (IOException e) {
+            String error = String.format("Unable to read %s: %s", file, e.getMessage());
+            reportErrorAndThrow(file.getName(), error);
+        } catch (NoSuchAlgorithmException e) {
+            String error = String.format("Unable to compute checksum: %s", e.getMessage());
+            reportErrorAndThrow(file.getName(), error);
         }
 
-        if (!thisChecksum.equals(checksum)) {
+        if (!thisChecksum.equals(fileInfo.getChecksum())) {
             String error = String.format("Checksum mismatch, provided checksum: %s, calculated checksum: %s",
-                    checksum, thisChecksum);
-            reportErrorAndThrow(cdrSummary.getName(), error);
+                    fileInfo.getChecksum(), thisChecksum);
+            reportErrorAndThrow(file.getName(), error);
         }
 
-        fileAuditRecordDataService.create(new FileAuditRecord(FileType.CDR_SUMMARY_FILE, fileName, "SUCCESS", cdrs.size(),
-                thisChecksum));
+        if (lineNumber - 1 != fileInfo.getRecordsCount()) {
+            String error = String.format("Record count mismatch, provided count: %d, actual count: %d",
+                    fileInfo.getRecordsCount(), lineNumber - 1);
+            reportErrorAndThrow(file.getName(), error);
+        }
 
-        return new CdrParseResult(cdrs, errors);
+        return new ParseResults(records, errors);
+    }
+
+
+    private void sendProcessCdrEvent(CallSummaryRecordDto record) {
+        Map<String, Object> eventParams = new HashMap<>();
+        eventParams.put(CSR_PARAM_KEY, record);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD, eventParams);
+        eventRelay.sendEventMessage(motechEvent);
     }
 
 
     @Override
-    public CdrParseResult processCdrFile(CdrFileNotificationRequest request) {
-        final String cdrFileLocation = settingsFacade.getProperty(CDR_FILE_DIRECTORY);
-
-        CdrParseResult result = parseSummaryCdrs(cdrFileLocation, request.getCdrSummary().getCdrFile(),
-                request.getCdrSummary().getChecksum());
-
-        if (result.getCdrs().size() != request.getCdrSummary().getRecordsCount()) {
-            String error = String.format("Record counts don't match, expected %d but read %d",
-                    request.getCdrSummary().getRecordsCount(), result.getCdrs().size());
-            reportErrorAndThrow(request.getCdrSummary().getCdrFile(), error);
-        }
+    public ProcessResult processDetailFile(FileInfo fileInfo) {
+        File userDirectory = new File(System.getProperty("user.home"));
+        File cdrDirectory = new File(userDirectory, settingsFacade.getProperty(CDR_FILE_DIRECTORY));
+        File file = new File(cdrDirectory, fileInfo.getCdrFile());
 
 
-        //todo: see if we need to get the cdr detail file and aggregate the stats ourselves
+        ParseResults parseResults = parseDetailRecords(file, fileInfo);
 
-
-        for (CallDetailRecord cdr : result.getCdrs()) {
-            Map<String, Object> eventParams = new HashMap<>();
-            eventParams.put("CDR", cdr);
-            MotechEvent motechEvent = new MotechEvent(PROCESS_CDR, eventParams);
-            eventRelay.sendEventMessage(motechEvent);
+        for (CallSummaryRecordDto record : parseResults.getRecords().values()) {
+            sendProcessCdrEvent(record);
         }
 
         // This return value is really only used by ITs
-        return result;
+        return new ProcessResult(parseResults.getRecords().size(), parseResults.getErrors());
     }
 }

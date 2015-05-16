@@ -32,6 +32,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private static final int PREGNANCY_PACK_WEEKS = 72;
     private static final int CHILD_PACK_WEEKS = 48;
     private static final int THREE_MONTHS = 90;
+    private static final int TWO_MINUTES = 120;
+    private static final int TEN_SECS = 10;
 
     private SubscriberDataService subscriberDataService;
     private SubscriptionPackDataService subscriptionPackDataService;
@@ -70,11 +72,13 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         List<SubscriptionPackMessage> messages = new ArrayList<>();
         for (int week = 1; week <= weeks; week++) {
             messages.add(new SubscriptionPackMessage(week, String.format("w%s_1", week),
-                    String.format("w%s_1.wav", week)));
+                    String.format("w%s_1.wav", week),
+                    TWO_MINUTES - TEN_SECS + (int) (Math.random() * 2 * TEN_SECS)));
 
             if (messagesPerWeek == 2) {
                 messages.add(new SubscriptionPackMessage(week, String.format("w%s_2", week),
-                        String.format("w%s_2.wav", week)));
+                        String.format("w%s_2.wav", week),
+                        TWO_MINUTES - TEN_SECS + (int) (Math.random() * 2 * TEN_SECS)));
             }
         }
 
