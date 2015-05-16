@@ -11,7 +11,7 @@ import org.motechproject.nms.imi.service.SettingsService;
 import org.motechproject.nms.imi.web.contract.BadRequest;
 import org.motechproject.nms.imi.web.contract.CdrFileNotificationRequest;
 import org.motechproject.nms.imi.web.contract.FileInfo;
-import org.motechproject.nms.kilkari.domain.CallDetailRecord;
+import org.motechproject.nms.kilkari.domain.CallSummaryRecord;
 import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
@@ -121,7 +121,7 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
                 languageDataService, languageLocationDataService, circleDataService, stateDataService,
                 districtDataService);
 
-        List<CallDetailRecord> cdrs = helper.makeCdrs();
+        List<CallSummaryRecord> cdrs = helper.makeCdrs();
         helper.setCrds(cdrs);
         helper.makeCdrSummaryFile();
         helper.makeCdrDetailFile();

@@ -126,7 +126,7 @@ public class ImiController {
             throw new IllegalArgumentException(failureReasons.toString());
         }
 
-        cdrFileService.processCdrFile(request);
+        cdrFileService.processDetailFile(request.getCdrDetail());
     }
 
 

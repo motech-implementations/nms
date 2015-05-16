@@ -6,10 +6,10 @@ import org.junit.runner.RunWith;
 import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.nms.imi.service.CdrFileService;
 import org.motechproject.nms.imi.service.SettingsService;
-import org.motechproject.nms.imi.service.contract.CdrParseResult;
+import org.motechproject.nms.imi.service.contract.ProcessResult;
 import org.motechproject.nms.imi.web.contract.CdrFileNotificationRequest;
 import org.motechproject.nms.imi.web.contract.FileInfo;
-import org.motechproject.nms.kilkari.domain.CallDetailRecord;
+import org.motechproject.nms.kilkari.domain.CallSummaryRecord;
 import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
@@ -100,12 +100,12 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
                 languageDataService, languageLocationDataService, circleDataService, stateDataService,
                 districtDataService);
 
-        List<CallDetailRecord> cdrs = helper.makeCdrs();
+        List<CallSummaryRecord> cdrs = helper.makeCdrs();
         helper.setCrds(cdrs);
         helper.makeCdrSummaryFile();
         helper.makeCdrDetailFile();
 
-        CdrParseResult result = cdrFileService.processCdrFile(new CdrFileNotificationRequest(helper.obdFileName(),
+        ProcessResult result = cdrFileService.processCdrFile(new CdrFileNotificationRequest(helper.obdFileName(),
                         new FileInfo(helper.cdrSummaryFileName(), helper.summaryFileChecksum(), 1),
                         new FileInfo(helper.cdrDetailFileName(), helper.detailFileChecksum(), 1)));
 
