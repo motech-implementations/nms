@@ -206,15 +206,7 @@ public class UserController extends BaseController {
     private UserResponse getFrontLineWorkerResponseUser(String serviceName, Long callingNumber, Circle circle) {
         FlwUserResponse user = new FlwUserResponse();
 
-        Service service = null;
-
-        if (MOBILE_ACADEMY.equals(serviceName)) {
-            service = Service.MOBILE_ACADEMY;
-        }
-
-        if (MOBILE_KUNJI.equals(serviceName)) {
-            service = Service.MOBILE_KUNJI;
-        }
+        Service service = getServiceFromName(serviceName);
 
         ServiceUsage serviceUsage = new ServiceUsage(null, service, 0, 0, 0, DateTime.now());
         FrontLineWorker flw = frontLineWorkerService.getByContactNumber(callingNumber);

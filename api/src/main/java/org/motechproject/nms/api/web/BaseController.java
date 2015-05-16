@@ -281,4 +281,18 @@ public class BaseController {
     public BadRequest handleException(HttpMessageNotReadableException e) {
         return new BadRequest(e.getMessage());
     }
+
+    protected Service getServiceFromName(String serviceName) {
+        Service service = null;
+
+        if (MOBILE_ACADEMY.equals(serviceName)) {
+            service = Service.MOBILE_ACADEMY;
+        }
+
+        if (MOBILE_KUNJI.equals(serviceName)) {
+            service = Service.MOBILE_KUNJI;
+        }
+
+        return service;
+    }
 }

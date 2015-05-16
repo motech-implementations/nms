@@ -61,13 +61,7 @@ public class LanguageController extends BaseController {
 
         Service service = null;
 
-        if (MOBILE_ACADEMY.equals(serviceName)) {
-            service = Service.MOBILE_ACADEMY;
-        }
-
-        if (MOBILE_KUNJI.equals(serviceName)) {
-            service = Service.MOBILE_KUNJI;
-        }
+        service = getServiceFromName(serviceName);
 
         if (failureReasons.length() > 0) {
             throw new IllegalArgumentException(failureReasons.toString());
