@@ -290,6 +290,20 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     }
 
     @Test
+    public void testCreateSubscriptionViaMcts() {
+        setupData();
+
+        Subscriber mctsSubscriber = new Subscriber(9999911122L);
+        mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(14));
+        subscriberDataService.create(mctsSubscriber);
+
+        subscriptionService.createSubscription(9999911122L, gLanguageLocation, gPack1, SubscriptionOrigin.MCTS_IMPORT);
+
+        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+        assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
+    }
+
+    @Test
     public void testCreateDuplicateChildSubscriptionViaMcts() {
         setupData();
 

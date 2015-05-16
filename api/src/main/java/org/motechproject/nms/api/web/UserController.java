@@ -23,6 +23,7 @@ import org.motechproject.nms.region.service.CircleService;
 import org.motechproject.nms.region.service.LanguageLocationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -73,6 +74,7 @@ public class UserController extends BaseController {
      */
     @RequestMapping("/{serviceName}/user") // NO CHECKSTYLE Cyclomatic Complexity
     @ResponseBody
+    @Transactional
     public UserResponse getUserDetails(@PathVariable String serviceName,
                              @RequestParam(required = false) Long callingNumber,
                              @RequestParam(required = false) String operator,
@@ -138,7 +140,7 @@ public class UserController extends BaseController {
             // returned the 1 element allowedLanguages array and had the IVR just skip prompting the user
             // but that would result in two API calls without a prompt being played and that could
             // be too long of a delay.  So instead we create or update the FLW in the get user api call.  bleh.
-//  This is an open question in an email thread with IMI.  My preference is for the VXML to just call set language
+            // This is an open question in an email thread with IMI. My preference is for the VXML to just call set language
 
             if (false && languageLocations.size() == 1) {
                 if (MOBILE_ACADEMY.equals(serviceName) || MOBILE_KUNJI.equals(serviceName)) {

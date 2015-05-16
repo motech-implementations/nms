@@ -435,18 +435,43 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     }
 
     @Test
-    public void testCreateSubscriptionViaMcts() {
+    public void testCreateSubscriptionForUndeployedState() throws IOException, InterruptedException {
         setupData();
 
-        Subscriber mctsSubscriber = new Subscriber(9999911122L);
-        mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(14));
-        subscriberDataService.create(mctsSubscriber);
+        District district = new District();
+        district.setName("District 2");
+        district.setRegionalName("District 2");
+        district.setCode(2L);
 
-        subscriptionService.createSubscription(9999911122L, gLanguageLocation, gPack1, SubscriptionOrigin.MCTS_IMPORT);
+        State state = new State();
+        state.setName("State 2");
+        state.setCode(2L);
+        state.getDistricts().add(district);
 
-        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
-        assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
+        stateDataService.create(state);
+
+        Language language = new Language("malayalam");
+        languageDataService.create(language);
+
+        LanguageLocation undeployedLanguageLocation = new LanguageLocation("77", new Circle("BB"), language, true);
+        undeployedLanguageLocation.getDistrictSet().add(district);
+        languageLocationDataService.create(undeployedLanguageLocation);
+
+        SubscriptionRequest subscriptionRequest = new SubscriptionRequest(9999911122L, "A", "BB",
+                123456789012545L, "77", "childPack");
+        ObjectMapper mapper = new ObjectMapper();
+        String subscriptionRequestJson = mapper.writeValueAsString(subscriptionRequest);
+
+        HttpPost httpPost = new HttpPost(String.format(
+                "http://localhost:%d/api/kilkari/subscription", TestContext.getJettyPort()));
+        httpPost.setHeader("Content-type", "application/json");
+        httpPost.setEntity(new StringEntity(subscriptionRequestJson));
+
+        // Should return HTTP 501 (Not Implemented) because the service is not deployed for the specified state
+        assertTrue(SimpleHttpClient
+                .execHttpRequest(httpPost, HttpStatus.SC_NOT_IMPLEMENTED, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
+
 
     @Test
     public void testDeactivateSubscriptionRequest() throws IOException, InterruptedException {
