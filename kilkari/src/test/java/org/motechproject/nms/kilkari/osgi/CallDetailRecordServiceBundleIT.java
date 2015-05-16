@@ -238,6 +238,14 @@ public class CallDetailRecordServiceBundleIT extends BasePaxIT {
     public void verifyIssue169() {
 
         Subscription subscription = makeSubscription(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
+        Subscriber subscriber = subscription.getSubscriber();
+
+        LanguageLocation languageLocation;
+        languageLocation = (LanguageLocation) subscriberDataService.getDetachedField(subscriber,
+                "languageLocation");
+
+        Circle circle;
+        circle = (Circle) subscriberDataService.getDetachedField(subscriber, "circle");
 
         CallRetry callRetry = new CallRetry(
                 subscription.getSubscriptionId(),
@@ -246,8 +254,8 @@ public class CallDetailRecordServiceBundleIT extends BasePaxIT {
                 CallStage.RETRY_LAST,
                 "w1_m1.wav",
                 "w1_1",
-                subscription.getSubscriber().getLanguageLocation().getCode(),
-                subscription.getSubscriber().getCircle().getName(),
+                languageLocation.getCode(),
+                circle.getName(),
                 "I");
         callRetryDataService.create(callRetry);
 
@@ -262,8 +270,8 @@ public class CallDetailRecordServiceBundleIT extends BasePaxIT {
                     null,
                     "w1_m1.wav",
                     "w1_1",
-                    subscription.getSubscriber().getLanguageLocation().getCode(),
-                    subscription.getSubscriber().getCircle().getName(),
+                    languageLocation.getCode(),
+                    circle.getName(),
                     CallStatus.FAILED,
                     StatusCode.OBD_FAILED_INVALIDNUMBER,
                     1));
@@ -278,8 +286,8 @@ public class CallDetailRecordServiceBundleIT extends BasePaxIT {
                 null,
                 "w1_m1.wav",
                 "w1_1",
-                subscription.getSubscriber().getLanguageLocation().getCode(),
-                subscription.getSubscriber().getCircle().getName(),
+                languageLocation.getCode(),
+                circle.getName(),
                 CallStatus.FAILED,
                 StatusCode.OBD_FAILED_INVALIDNUMBER,
                 1);
