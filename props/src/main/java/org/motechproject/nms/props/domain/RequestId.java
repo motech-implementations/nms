@@ -1,5 +1,6 @@
 package org.motechproject.nms.props.domain;
 
+import java.io.Serializable;
 import java.util.regex.Pattern;
 
 /**
@@ -10,11 +11,12 @@ import java.util.regex.Pattern;
  *    20150513184533:58747ffc-6b7c-4abb-91d3-f099aa1bf5a3
  *
  */
-public class RequestId {
+public class RequestId implements Serializable {
     private static final int TIMESTAMP_LENGTH = 14; //YYYYMMDDHHMMSS
     public static final Pattern TIMESTAMP_PATTERN = Pattern.compile("[0-9]{14}");
     public static final Pattern UUID_PATTERN = Pattern.compile(
             "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}");
+    private static final long serialVersionUID = 8600346000225276856L;
 
     private String subscriptionId;
     private String timestamp;
@@ -48,6 +50,31 @@ public class RequestId {
         }
 
         return new RequestId(subscriptionId, timestamp);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        RequestId requestId = (RequestId) o;
+
+        if (!subscriptionId.equals(requestId.subscriptionId)) {
+            return false;
+        }
+        return timestamp.equals(requestId.timestamp);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = subscriptionId.hashCode();
+        result = 31 * result + timestamp.hashCode();
+        return result;
     }
 
     @Override

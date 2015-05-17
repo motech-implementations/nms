@@ -88,8 +88,8 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
         FileInfo cdrSummary;
         FileInfo cdrDetail;
         if (useValidTargetFile && useValidSummaryFile && useValidDetailFile) {
-            cdrSummary = new FileInfo(summaryFile, helper.summaryFileChecksum(), 1);
-            cdrDetail = new FileInfo(detailFile, helper.detailFileChecksum(), 0);
+            cdrSummary = new FileInfo(summaryFile, helper.summaryFileChecksum(), 0);
+            cdrDetail = new FileInfo(detailFile, helper.detailFileChecksum(), 3);
         } else {
             cdrSummary = new FileInfo(summaryFile, "", 0);
             cdrDetail = new FileInfo(detailFile, "", 0);
@@ -139,6 +139,7 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
                 languageDataService, languageLocationDataService, circleDataService, stateDataService,
                 districtDataService);
 
+        helper.makeCdrs(3);
         helper.makeCdrDetailFile();
 
         HttpPost httpPost = createCdrFileNotificationHttpPost(helper, true, false, true);

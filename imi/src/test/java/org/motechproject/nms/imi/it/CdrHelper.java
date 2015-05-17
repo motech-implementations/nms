@@ -5,7 +5,6 @@ import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.motechproject.nms.imi.service.SettingsService;
-import org.motechproject.nms.imi.service.impl.CsvHelper;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
@@ -47,7 +46,8 @@ public class CdrHelper {
 
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormat.forPattern("yyyyMMddHHmmss");
     private static final Logger LOGGER = LoggerFactory.getLogger(CdrHelper.class);
-    
+
+    private final String TEST_OBD_TIMESTAMP;
     private final String TEST_OBD_FILENAME;
     private final String TEST_CDR_DETAIL_FILENAME;
     private final String TEST_CDR_SUMMARY_FILENAME;
@@ -82,7 +82,8 @@ public class CdrHelper {
         this.districtDataService = districtDataService;
 
         String date = DateTime.now().toString(TIME_FORMATTER);
-        TEST_OBD_FILENAME = String.format("OBD_%s.csv", date);
+        TEST_OBD_TIMESTAMP = date;
+        TEST_OBD_FILENAME = String.format("OBD_%s.csv", TEST_OBD_TIMESTAMP);
         TEST_CDR_DETAIL_FILENAME = String.format("cdrDetail_%s", TEST_OBD_FILENAME);
         TEST_CDR_SUMMARY_FILENAME = String.format("cdrSummary_%s", TEST_OBD_FILENAME);
     }
@@ -190,7 +191,7 @@ public class CdrHelper {
         for (int i=0 ; i<count ; i++) {
             Subscription sub = makeSubscription(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(30));
             CallDetailRecordDto cdr = new CallDetailRecordDto();
-            cdr.setRequestId(new RequestId(sub.getSubscriptionId(), cdrDetailFileName()));
+            cdr.setRequestId(new RequestId(sub.getSubscriptionId(), obdTimestamp()));
             cdr.setMsisdn(sub.getSubscriber().getCallingNumber());
             cdr.setCallAnswerTime(DateTime.now().minusHours(5));
             cdr.setMsgPlayDuration(110);
@@ -204,6 +205,11 @@ public class CdrHelper {
             cdr.setWeekId("w5_1");
             cdrs.add(cdr);
         }
+    }
+
+
+    public String obdTimestamp() {
+        return TEST_OBD_TIMESTAMP;
     }
 
 
@@ -240,15 +246,92 @@ public class CdrHelper {
     }
 
 
+
+    public static String csvLineFromCdr(CallDetailRecordDto cdr) {
+        StringBuilder sb = new StringBuilder();
+
+        //REQUEST_ID,
+        sb.append(cdr.getRequestId().toString());
+        sb.append(',');
+
+        //MSISDN,
+        sb.append(cdr.getMsisdn());
+        sb.append(',');
+
+        //CALL_ID,
+        sb.append("xxx");
+        sb.append(',');
+
+        //ATTEMPT_NO,
+        sb.append(1);
+        sb.append(',');
+
+        //CALL_START_TIME,
+        sb.append(1);
+        sb.append(',');
+
+        //CALL_ANSWER_TIME,
+        sb.append(cdr.getCallAnswerTime().getMillis() / 1000);
+        sb.append(',');
+
+        //CALL_END_TIME,
+        sb.append(1);
+        sb.append(',');
+
+        //CALL_DURATION_IN_PULSE,
+        sb.append(1);
+        sb.append(',');
+
+        //CALL_STATUS,
+        sb.append(cdr.getStatusCode().getValue());
+        sb.append(',');
+
+        //LANGUAGE_LOCATION_ID,
+        sb.append(cdr.getLanguageLocationId());
+        sb.append(',');
+
+        //CONTENT_FILE,
+        sb.append(cdr.getContentFile());
+        sb.append(',');
+
+        //MSG_PLAY_START_TIME,
+        sb.append(1);
+        sb.append(',');
+
+        //MSG_PLAY_END_TIME,
+        sb.append(1 + cdr.getMsgPlayDuration());
+        sb.append(',');
+
+        //CIRCLE_ID,
+        sb.append(cdr.getCircleId());
+        sb.append(',');
+
+        //OPERATOR_ID,
+        sb.append(cdr.getOperatorId());
+        sb.append(',');
+
+        //PRIORITY,
+        sb.append(0);
+        sb.append(',');
+
+        //CALL_DISCONNECT_REASON,
+        sb.append(cdr.getCallDisconnectReason().getValue());
+        sb.append(',');
+
+        //WEEK_ID,
+        sb.append(cdr.getWeekId());
+
+
+        return sb.toString();
+    }
+
+
     public void makeCdrSummaryFile() throws IOException {
         File dstFile = new File(makeCdrDirectory(), cdrSummaryFileName());
         LOGGER.debug("Creating summary file {}...", dstFile);
         BufferedWriter writer = new BufferedWriter(new FileWriter(dstFile));
-        String s;
-        for(CallDetailRecordDto cdr : cdrs) {
-            writer.write(CsvHelper.csvLineFromCdr(cdr));
-            writer.write("\n");
-        }
+
+        //todo:...
 
         writer.close();
     }
@@ -259,7 +342,10 @@ public class CdrHelper {
         LOGGER.debug("Creating detail file {}...", dstFile);
         BufferedWriter writer = new BufferedWriter(new FileWriter(dstFile));
 
-        //todo:...
+        for(CallDetailRecordDto cdr : cdrs) {
+            writer.write(csvLineFromCdr(cdr));
+            writer.write("\n");
+        }
 
         writer.close();
     }

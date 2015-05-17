@@ -4,29 +4,33 @@ package org.motechproject.nms.props.domain;
  * Call Status, describes how a phone call ended
  */
 public enum FinalCallStatus {
-    INVALID, // 0
-    SUCCESS, // 1
-    FAILED, // 2
-    REJECTED; // 3
+    SUCCESS(1),
+    FAILED(2),
+    REJECTED(3);
 
-    public static boolean isValid(int i) {
-        return (i >= 1 && i < values().length);
+    private final int value;
+
+    FinalCallStatus(int value) {
+        this.value = value;
     }
 
     public int getValue() {
-        return ordinal();
+        return value;
+    }
+
+    public static boolean isValid(int i) {
+        return (i == 1 || i ==2 || i == 3);
     }
 
     public static FinalCallStatus fromInt(int i) {
-        if (isValid(i)) {
-            return values()[i];
-        } else {
-            throw new IllegalArgumentException(String.format("%d is an invalid FinalCallStatus", i));
-        }
+        if (i == 1) { return SUCCESS; }
+        if (i == 2) { return FAILED; }
+        if (i == 3) { return REJECTED; }
+        throw new IllegalArgumentException(String.format("%d is an invalid FinalCallStatus", i));
     }
 
-    public static FinalCallStatus fromStatusCode(StatusCode statusCode) {
-        switch (statusCode) {
+    public static FinalCallStatus fromStatusCode(StatusCode code) {
+        switch (code) {
             case OBD_SUCCESS_CALL_CONNECTED:
                 return SUCCESS;
             case OBD_DNIS_IN_DND:

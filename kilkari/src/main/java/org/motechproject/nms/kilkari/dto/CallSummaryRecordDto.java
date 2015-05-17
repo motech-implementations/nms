@@ -3,9 +3,11 @@ package org.motechproject.nms.kilkari.dto;
 import org.motechproject.nms.props.domain.FinalCallStatus;
 import org.motechproject.nms.props.domain.RequestId;
 
+import java.io.Serializable;
 import java.util.Map;
 
-public class CallSummaryRecordDto {
+public class CallSummaryRecordDto implements Serializable {
+    private static final long serialVersionUID = -8391255985224161089L;
     private Integer callAttempts;
     private Integer secondsPlayed;
     private Map<Integer, Integer> statusStats;

@@ -40,7 +40,7 @@ public class CsvHelperUnitTest {
     }
 
     @Test
-    public void testFromString() {
+    public void testCsvLineToCdr() {
         CallDetailRecordDto expectedCdr = new CallDetailRecordDto();
         expectedCdr.setRequestId(new RequestId("58747ffc-6b7c-4abb-91d3-f099aa1bf5a3", "20150513184533"));
         expectedCdr.setMsisdn(1111111111L);

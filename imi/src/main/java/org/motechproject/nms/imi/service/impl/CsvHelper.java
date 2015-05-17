@@ -13,7 +13,6 @@ public final class CsvHelper {
 
     private static final long MIN_MSISDN = 1000000000L;
     private static final long MAX_MSISDN = 9999999999L;
-    private static final int MILLIS_PER_SEC = 1000;
 
     private enum FieldName {
         REQUEST_ID,
@@ -141,83 +140,4 @@ public final class CsvHelper {
 
         return cdr;
     }
-
-    public static String csvLineFromCdr(CallDetailRecordDto cdr) {
-        StringBuilder sb = new StringBuilder();
-
-        //REQUEST_ID,
-        sb.append(cdr.getRequestId().toString());
-        sb.append(',');
-
-        //MSISDN,
-        sb.append(cdr.getMsisdn());
-        sb.append(',');
-
-        //CALL_ID,
-        sb.append("xxx");
-        sb.append(',');
-
-        //ATTEMPT_NO,
-        sb.append(1);
-        sb.append(',');
-
-        //CALL_START_TIME,
-        sb.append(1);
-        sb.append(',');
-
-        //CALL_ANSWER_TIME,
-        sb.append(cdr.getCallAnswerTime().getMillis() / MILLIS_PER_SEC);
-        sb.append(',');
-
-        //CALL_END_TIME,
-        sb.append(1);
-        sb.append(',');
-
-        //CALL_DURATION_IN_PULSE,
-        sb.append(1);
-        sb.append(',');
-
-        //CALL_STATUS,
-        sb.append(cdr.getStatusCode().getValue());
-        sb.append(',');
-
-        //LANGUAGE_LOCATION_ID,
-        sb.append(cdr.getLanguageLocationId());
-        sb.append(',');
-
-        //CONTENT_FILE,
-        sb.append(cdr.getContentFile());
-        sb.append(',');
-
-        //MSG_PLAY_START_TIME,
-        sb.append(1);
-        sb.append(',');
-
-        //MSG_PLAY_END_TIME,
-        sb.append(1 + cdr.getMsgPlayDuration());
-        sb.append(',');
-
-        //CIRCLE_ID,
-        sb.append(cdr.getCircleId());
-        sb.append(',');
-
-        //OPERATOR_ID,
-        sb.append(cdr.getOperatorId());
-        sb.append(',');
-
-        //PRIORITY,
-        sb.append(0);
-        sb.append(',');
-
-        //CALL_DISCONNECT_REASON,
-        sb.append(cdr.getCallDisconnectReason().getValue());
-        sb.append(',');
-
-        //WEEK_ID,
-        sb.append(cdr.getWeekId());
-
-
-        return sb.toString();
-    }
-
 }

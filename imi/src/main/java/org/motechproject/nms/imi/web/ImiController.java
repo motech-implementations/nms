@@ -193,4 +193,16 @@ public class ImiController {
     }
 
 
+
+    /**
+     * Handles any other exception
+     */
+    @ExceptionHandler(Exception.class)
+    @ResponseBody
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public BadRequest handleException(Exception e) {
+        return new BadRequest(e.getMessage());
+    }
+
+
 }

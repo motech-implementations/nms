@@ -5,8 +5,10 @@ import org.motechproject.nms.props.domain.CallDisconnectReason;
 import org.motechproject.nms.props.domain.RequestId;
 import org.motechproject.nms.props.domain.StatusCode;
 
-public class CallDetailRecordDto {
+import java.io.Serializable;
 
+public class CallDetailRecordDto implements Serializable {
+    private static final long serialVersionUID = 4499560266083597513L;
     private RequestId requestId;
     private Long msisdn;
     private DateTime callAnswerTime;
@@ -107,6 +109,67 @@ public class CallDetailRecordDto {
 
     public void setWeekId(String weekId) {
         this.weekId = weekId;
+    }
+
+    @Override //NO CHECKSTYLE Cyclomatic Complexity
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        CallDetailRecordDto that = (CallDetailRecordDto) o;
+
+        if (!requestId.equals(that.requestId)) {
+            return false;
+        }
+        if (!msisdn.equals(that.msisdn)) {
+            return false;
+        }
+        if (callAnswerTime != null ? !callAnswerTime.equals(that.callAnswerTime) : that.callAnswerTime != null) {
+            return false;
+        }
+        if (msgPlayDuration != null ? !msgPlayDuration.equals(that.msgPlayDuration) : that.msgPlayDuration != null) {
+            return false;
+        }
+        if (statusCode != that.statusCode) {
+            return false;
+        }
+        if (languageLocationId != null ? !languageLocationId.equals(that.languageLocationId) : that.languageLocationId != null) {
+            return false;
+        }
+        if (contentFile != null ? !contentFile.equals(that.contentFile) : that.contentFile != null) {
+            return false;
+        }
+        if (circleId != null ? !circleId.equals(that.circleId) : that.circleId != null) {
+            return false;
+        }
+        if (operatorId != null ? !operatorId.equals(that.operatorId) : that.operatorId != null) {
+            return false;
+        }
+        if (callDisconnectReason != that.callDisconnectReason) {
+            return false;
+        }
+        return !(weekId != null ? !weekId.equals(that.weekId) : that.weekId != null);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = requestId.hashCode();
+        result = 31 * result + msisdn.hashCode();
+        result = 31 * result + (callAnswerTime != null ? callAnswerTime.hashCode() : 0);
+        result = 31 * result + (msgPlayDuration != null ? msgPlayDuration.hashCode() : 0);
+        result = 31 * result + (statusCode != null ? statusCode.hashCode() : 0);
+        result = 31 * result + (languageLocationId != null ? languageLocationId.hashCode() : 0);
+        result = 31 * result + (contentFile != null ? contentFile.hashCode() : 0);
+        result = 31 * result + (circleId != null ? circleId.hashCode() : 0);
+        result = 31 * result + (operatorId != null ? operatorId.hashCode() : 0);
+        result = 31 * result + (callDisconnectReason != null ? callDisconnectReason.hashCode() : 0);
+        result = 31 * result + (weekId != null ? weekId.hashCode() : 0);
+        return result;
     }
 
     @Override

@@ -104,6 +104,6 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         ProcessResult result = cdrFileService.processDetailFile(
                 new FileInfo(helper.cdrDetailFileName(), helper.detailFileChecksum(), 3));
 
-        assertEquals(1, result.getSuccessCount());
+        assertEquals(3, result.getSuccessCount());
     }
 }
