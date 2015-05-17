@@ -6,7 +6,7 @@ import org.junit.runner.RunWith;
 import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.nms.imi.service.CdrFileService;
 import org.motechproject.nms.imi.service.SettingsService;
-import org.motechproject.nms.imi.service.contract.ProcessResult;
+import org.motechproject.nms.imi.service.contract.ParseResults;
 import org.motechproject.nms.imi.web.contract.FileInfo;
 import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
@@ -88,22 +88,36 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
     }
 
 
-
     @Test
-    public void testValidRequest() throws IOException, NoSuchAlgorithmException {
-        getLogger().debug("testValidRequest()");
+    public void testParse() throws IOException, NoSuchAlgorithmException {
+        getLogger().debug("testParse()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
                 languageDataService, languageLocationDataService, circleDataService, stateDataService,
                 districtDataService);
 
-        helper.makeCdrs(3);
-        helper.makeCdrSummaryFile();
-        helper.makeCdrDetailFile();
-
-        ProcessResult result = cdrFileService.processDetailFile(
-                new FileInfo(helper.cdrDetailFileName(), helper.detailFileChecksum(), 3));
-
-        assertEquals(3, result.getSuccessCount());
+        helper.makeCdrs(1,1,1,1);
+        helper.makeCdr();
+        FileInfo fileInfo = new FileInfo(helper.cdr(), helper.cdrChecksum(), helper.cdrCount());
+        ParseResults result = cdrFileService.parseDetailFile(fileInfo);
+        assertEquals(4, result.getRecords().size());
     }
+
+
+    @Test
+    public void testProcess() throws IOException, NoSuchAlgorithmException {
+        getLogger().debug("testProcess()");
+
+        CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
+                languageDataService, languageLocationDataService, circleDataService, stateDataService,
+                districtDataService);
+
+        helper.makeCdrs(1,1,1,1);
+        helper.makeCdr();
+        FileInfo fileInfo = new FileInfo(helper.cdr(), helper.cdrChecksum(), helper.cdrCount());
+        ParseResults result = cdrFileService.parseDetailFile(fileInfo);
+        assertEquals(4, result.getRecords().size());
+    }
+
+    //todo: test how successfully we aggregate detail records into a summary record
 }

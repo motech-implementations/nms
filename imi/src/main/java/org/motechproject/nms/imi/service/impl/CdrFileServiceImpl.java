@@ -10,7 +10,7 @@ import org.motechproject.nms.imi.domain.FileAuditRecord;
 import org.motechproject.nms.imi.domain.FileType;
 import org.motechproject.nms.imi.repository.FileAuditRecordDataService;
 import org.motechproject.nms.imi.service.CdrFileService;
-import org.motechproject.nms.imi.service.contract.ProcessResult;
+import org.motechproject.nms.imi.service.contract.ParseResults;
 import org.motechproject.nms.imi.web.contract.FileInfo;
 import org.motechproject.nms.kilkari.dto.CallDetailRecordDto;
 import org.motechproject.nms.kilkari.dto.CallSummaryRecordDto;
@@ -179,6 +179,16 @@ public class CdrFileServiceImpl implements CdrFileService {
     }
 
 
+    @Override
+    public ParseResults parseDetailFile(FileInfo fileInfo) {
+        File userDirectory = new File(System.getProperty("user.home"));
+        File cdrDirectory = new File(userDirectory, settingsFacade.getProperty(CDR_FILE_DIRECTORY));
+        File file = new File(cdrDirectory, fileInfo.getCdrFile());
+
+        return parseDetailRecords(file, fileInfo);
+    }
+
+
     private void sendProcessCdrEvent(CallSummaryRecordDto record) {
         Map<String, Object> eventParams = new HashMap<>();
         eventParams.put(CSR_PARAM_KEY, record);
@@ -188,19 +198,11 @@ public class CdrFileServiceImpl implements CdrFileService {
 
 
     @Override
-    public ProcessResult processDetailFile(FileInfo fileInfo) {
-        File userDirectory = new File(System.getProperty("user.home"));
-        File cdrDirectory = new File(userDirectory, settingsFacade.getProperty(CDR_FILE_DIRECTORY));
-        File file = new File(cdrDirectory, fileInfo.getCdrFile());
-
-
-        ParseResults parseResults = parseDetailRecords(file, fileInfo);
+    public void processDetailFile(FileInfo fileInfo) {
+        ParseResults parseResults = parseDetailFile(fileInfo);
 
         for (CallSummaryRecordDto record : parseResults.getRecords().values()) {
             sendProcessCdrEvent(record);
         }
-
-        // This return value is really only used by ITs
-        return new ProcessResult(parseResults.getRecords().size(), parseResults.getErrors());
     }
 }

@@ -262,7 +262,7 @@ public class CsrServiceImpl implements CsrService {
 
 
     @MotechListener(subjects = { PROCESS_SUMMARY_RECORD })
-    public void processCallDetailRecord(MotechEvent event) {
+    public void processCallSummaryRecord(MotechEvent event) {
 
         CallSummaryRecordDto csr = (CallSummaryRecordDto) event.getParameters().get(CSR_PARAM_KEY);
         String subscriptionId = csr.getRequestId().getSubscriptionId();

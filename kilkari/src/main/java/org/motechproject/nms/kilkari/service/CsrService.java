@@ -6,6 +6,6 @@ public interface CsrService {
 
     // IT only
 
-    void processCallDetailRecord(MotechEvent event);
+    void processCallSummaryRecord(MotechEvent event);
     void buildMessageDurationCache();
 }

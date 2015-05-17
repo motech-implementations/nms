@@ -81,15 +81,15 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
     private HttpPost createCdrFileNotificationHttpPost(CdrHelper helper, boolean useValidTargetFile,
                                                        boolean useValidSummaryFile, boolean useValidDetailFile)
             throws IOException, NoSuchAlgorithmException {
-        String targetFile = useValidTargetFile ? helper.obdFileName() : helper.obdFileName() + "xxx";
-        String summaryFile = useValidSummaryFile ? helper.cdrSummaryFileName() : helper.cdrSummaryFileName() + "xxx";
-        String detailFile = useValidDetailFile ? helper.cdrDetailFileName() : helper.cdrDetailFileName() + "xxx";
+        String targetFile = useValidTargetFile ? helper.obd() : helper.obd() + "xxx";
+        String summaryFile = useValidSummaryFile ? helper.csr() : helper.csr() + "xxx";
+        String detailFile = useValidDetailFile ? helper.cdr() : helper.cdr() + "xxx";
 
         FileInfo cdrSummary;
         FileInfo cdrDetail;
         if (useValidTargetFile && useValidSummaryFile && useValidDetailFile) {
-            cdrSummary = new FileInfo(summaryFile, helper.summaryFileChecksum(), 0);
-            cdrDetail = new FileInfo(detailFile, helper.detailFileChecksum(), 3);
+            cdrSummary = new FileInfo(summaryFile, helper.csrChecksum(), 0);
+            cdrDetail = new FileInfo(detailFile, helper.cdrChecksum(), 1);
         } else {
             cdrSummary = new FileInfo(summaryFile, "", 0);
             cdrDetail = new FileInfo(detailFile, "", 0);
@@ -119,9 +119,9 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
                 languageDataService, languageLocationDataService, circleDataService, stateDataService,
                 districtDataService);
 
-        helper.makeCdrs(3);
-        helper.makeCdrSummaryFile();
-        helper.makeCdrDetailFile();
+        helper.makeCdrs(1,0,0,0);
+        helper.makeCsr();
+        helper.makeCdr();
 
         HttpPost httpPost = createCdrFileNotificationHttpPost(helper, true, true, true);
 
@@ -139,8 +139,8 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
                 languageDataService, languageLocationDataService, circleDataService, stateDataService,
                 districtDataService);
 
-        helper.makeCdrs(3);
-        helper.makeCdrDetailFile();
+        helper.makeCdrs(1,0,0,0);
+        helper.makeCdr();
 
         HttpPost httpPost = createCdrFileNotificationHttpPost(helper, true, false, true);
 

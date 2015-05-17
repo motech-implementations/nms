@@ -1,4 +1,4 @@
-package org.motechproject.nms.imi.service.impl;
+package org.motechproject.nms.imi.service.contract;
 
 import org.motechproject.nms.kilkari.dto.CallSummaryRecordDto;
 

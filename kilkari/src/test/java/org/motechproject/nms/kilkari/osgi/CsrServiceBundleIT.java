@@ -233,7 +233,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
         Map<String, Object> eventParams = new HashMap<>();
         eventParams.put(CSR_PARAM_KEY, csr);
         MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD, eventParams);
-        csrService.processCallDetailRecord(motechEvent);
+        csrService.processCallSummaryRecord(motechEvent);
     }
 
 
@@ -286,7 +286,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
         Map<String, Object> eventParams = new HashMap<>();
         eventParams.put(CSR_PARAM_KEY, csr);
         MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD, eventParams);
-        csrService.processCallDetailRecord(motechEvent);
+        csrService.processCallSummaryRecord(motechEvent);
 
         subscription = subscriptionDataService.findBySubscriptionId(subscription.getSubscriptionId());
         assertEquals(SubscriptionStatus.DEACTIVATED, subscription.getStatus());
@@ -294,5 +294,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
     }
 
 
-    //todo: much more
+    //todo: verify successful subscription completion
+    //todo: verify multiple days' worth of summary record aggregation
+    //todo: verify more stuff I can't think of now
 }
