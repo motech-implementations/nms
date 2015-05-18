@@ -140,9 +140,10 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         subscriptionService.deactivateSubscription(s, DeactivationReason.CHILD_DEATH);
 
         callRetryDataService.create(new CallRetry("123", 3333333333L, DayOfTheWeek.today(), CallStage.RETRY_1,
-                "w1_m1.wav", "w1_1", hindi.getCode(), aa.getName(), "I"));
+                "w1_m1.wav", "w1_1", hindi.getCode(), aa.getName(), SubscriptionOrigin.IVR));
         callRetryDataService.create(new CallRetry("546", 4444444444L, DayOfTheWeek.today().nextDay(),
-                CallStage.RETRY_1, "w1_m1.wav", "w1_1", hindi.getCode(), bb.getName(), "M"));
+                CallStage.RETRY_1, "w1_m1.wav", "w1_1", hindi.getCode(), bb.getName(),
+                SubscriptionOrigin.MCTS_IMPORT));
     }
 
 

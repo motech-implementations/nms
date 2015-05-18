@@ -17,7 +17,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 public class MobileAcademyControllerUnitTest {
 
     private MobileAcademyController mobileAcademyController;
-
+    
     @Mock
     private MobileAcademyService mobileAcademyService;
 
@@ -68,6 +68,12 @@ public class MobileAcademyControllerUnitTest {
         sb.setCallingNumber(BaseController.SMALLEST_10_DIGIT_NUMBER);
         sb.setCallId(99999999999999L);
         mobileAcademyController.saveBookmarkWithScore(sb);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testTriggerBadCallingNumber() {
+        long callingNumber = 1234;
+        mobileAcademyController.sendNotification(callingNumber);
     }
 
 }

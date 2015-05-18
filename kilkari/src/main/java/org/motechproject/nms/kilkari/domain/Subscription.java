@@ -68,7 +68,6 @@ public class Subscription {
         if (origin == SubscriptionOrigin.MCTS_IMPORT) {
             needsWelcomeMessage = true;
         }
-        this.subscriber.getSubscriptions().add(this);
     }
 
     public String getSubscriptionId() { return subscriptionId; }
@@ -123,7 +122,7 @@ public class Subscription {
     }
 
     /**
-     * Helper method to be called by the OBD processCallDetailRecord when selecting a message to play for a subscription
+     * Helper method to be called by the OBD processCallSummaryRecord when selecting a message to play for a subscription
      * @param date The date on which the message will be played
      * @return SubscriptionPackMessage with the details of the message to play
      */

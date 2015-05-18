@@ -12,7 +12,7 @@ import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 
-public class InboxCallDetailRecordUnitTest {
+public class InboxCallSummaryRecordUnitTest {
     Validator validator;
 
     @Before

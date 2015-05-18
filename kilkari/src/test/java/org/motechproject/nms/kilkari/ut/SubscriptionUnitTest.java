@@ -51,11 +51,11 @@ public class SubscriptionUnitTest {
         List<SubscriptionPackMessage> messages = new ArrayList<>();
         for (int week = 1; week <= weeks; week++) {
             messages.add(new SubscriptionPackMessage(week, String.format("w%s_1", week),
-                    String.format("w%s_1.wav", week)));
+                    String.format("w%s_1.wav", week), 120));
 
             if (messagesPerWeek == 2) {
                 messages.add(new SubscriptionPackMessage(week, String.format("w%s_2", week),
-                        String.format("w%s_2.wav", week)));
+                        String.format("w%s_2.wav", week), 120));
             }
         }
 

@@ -15,8 +15,6 @@ import java.util.List;
  */
 public interface SubscriptionService {
 
-    void createSubscriptionPacks();
-
     Subscription createSubscription(long callingNumber, LanguageLocation languageLocation, SubscriptionPack subscriptionPack,
                             SubscriptionOrigin mode);
 
@@ -35,4 +33,7 @@ public interface SubscriptionService {
     List<Subscription> findActiveSubscriptions(int page, int pageSize);
 
     List<Subscription> findActiveSubscriptionsForDay(DayOfTheWeek dayOfTheWeek, int page, int pageSize);
+
+    void createSubscriptionPacks();
+
 }

@@ -5,8 +5,8 @@ import org.motechproject.nms.api.web.contract.FlwUserResponse;
 import org.motechproject.nms.api.web.contract.UserResponse;
 import org.motechproject.nms.api.web.contract.kilkari.KilkariUserResponse;
 import org.motechproject.nms.api.web.exception.NotAuthorizedException;
+import org.motechproject.nms.api.web.exception.NotDeployedException;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
-import org.motechproject.nms.flw.domain.Service;
 import org.motechproject.nms.flw.domain.ServiceUsage;
 import org.motechproject.nms.flw.domain.ServiceUsageCap;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
@@ -15,14 +15,15 @@ import org.motechproject.nms.flw.service.ServiceUsageService;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.service.SubscriberService;
+import org.motechproject.nms.props.domain.Service;
 import org.motechproject.nms.region.domain.Circle;
-import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.LanguageLocation;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.service.CircleService;
 import org.motechproject.nms.region.service.LanguageLocationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -37,7 +38,6 @@ import java.util.Set;
 @Controller
 public class UserController extends BaseController {
 
-    public static final String CIRCLE = "circle";
     public static final String SERVICE_NAME = "serviceName";
 
     @Autowired
@@ -74,6 +74,7 @@ public class UserController extends BaseController {
      */
     @RequestMapping("/{serviceName}/user") // NO CHECKSTYLE Cyclomatic Complexity
     @ResponseBody
+    @Transactional
     public UserResponse getUserDetails(@PathVariable String serviceName,
                              @RequestParam(required = false) Long callingNumber,
                              @RequestParam(required = false) String operator,
@@ -105,7 +106,7 @@ public class UserController extends BaseController {
         Handle the FLW services
          */
         if (MOBILE_ACADEMY.equals(serviceName) || MOBILE_KUNJI.equals(serviceName)) {
-            user = getFrontLineWorkerResponseUser(serviceName, callingNumber);
+            user = getFrontLineWorkerResponseUser(serviceName, callingNumber, circleObj);
         }
 
         /*
@@ -139,7 +140,7 @@ public class UserController extends BaseController {
             // returned the 1 element allowedLanguages array and had the IVR just skip prompting the user
             // but that would result in two API calls without a prompt being played and that could
             // be too long of a delay.  So instead we create or update the FLW in the get user api call.  bleh.
-//  This is an open question in an email thread with IMI.  My preference is for the VXML to just call set language
+            // This is an open question in an email thread with IMI. My preference is for the VXML to just call set language
 
             if (false && languageLocations.size() == 1) {
                 if (MOBILE_ACADEMY.equals(serviceName) || MOBILE_KUNJI.equals(serviceName)) {
@@ -202,18 +203,10 @@ public class UserController extends BaseController {
         return user;
     }
 
-    private UserResponse getFrontLineWorkerResponseUser(String serviceName, Long callingNumber) {
+    private UserResponse getFrontLineWorkerResponseUser(String serviceName, Long callingNumber, Circle circle) {
         FlwUserResponse user = new FlwUserResponse();
 
-        Service service = null;
-
-        if (MOBILE_ACADEMY.equals(serviceName)) {
-            service = Service.MOBILE_ACADEMY;
-        }
-
-        if (MOBILE_KUNJI.equals(serviceName)) {
-            service = Service.MOBILE_KUNJI;
-        }
+        Service service = getServiceFromName(serviceName);
 
         ServiceUsage serviceUsage = new ServiceUsage(null, service, 0, 0, 0, DateTime.now());
         FrontLineWorker flw = frontLineWorkerService.getByContactNumber(callingNumber);
@@ -227,13 +220,14 @@ public class UserController extends BaseController {
 
             serviceUsage = serviceUsageService.getCurrentMonthlyUsageForFLWAndService(flw, service);
 
-            District district = flw.getDistrict();
-            if (null != district) {
-                state = district.getState();
-            }
+            state = getStateForFrontLineWorker(flw, circle);
 
             if (!frontLineWorkerAuthorizedForAccess(flw)) {
                 throw new NotAuthorizedException(String.format(NOT_AUTHORIZED, CALLING_NUMBER));
+            }
+
+            if (!serviceDeployedInFrontLineWorkersState(service, state)) {
+                throw new NotDeployedException(String.format(NOT_DEPLOYED, service));
             }
         }
 

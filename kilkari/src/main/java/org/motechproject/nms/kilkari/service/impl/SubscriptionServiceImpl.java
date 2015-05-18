@@ -32,6 +32,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private static final int PREGNANCY_PACK_WEEKS = 72;
     private static final int CHILD_PACK_WEEKS = 48;
     private static final int THREE_MONTHS = 90;
+    private static final int TWO_MINUTES = 120;
+    private static final int TEN_SECS = 10;
 
     private SubscriberDataService subscriberDataService;
     private SubscriptionPackDataService subscriptionPackDataService;
@@ -70,11 +72,13 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         List<SubscriptionPackMessage> messages = new ArrayList<>();
         for (int week = 1; week <= weeks; week++) {
             messages.add(new SubscriptionPackMessage(week, String.format("w%s_1", week),
-                    String.format("w%s_1.wav", week)));
+                    String.format("w%s_1.wav", week),
+                    TWO_MINUTES - TEN_SECS + (int) (Math.random() * 2 * TEN_SECS)));
 
             if (messagesPerWeek == 2) {
                 messages.add(new SubscriptionPackMessage(week, String.format("w%s_2", week),
-                        String.format("w%s_2.wav", week)));
+                        String.format("w%s_2.wav", week),
+                        TWO_MINUTES - TEN_SECS + (int) (Math.random() * 2 * TEN_SECS)));
             }
         }
 
@@ -86,16 +90,24 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     public Subscription createSubscription(long callingNumber, LanguageLocation languagelocation, SubscriptionPack subscriptionPack,
                                    SubscriptionOrigin mode) {
         Subscriber subscriber = subscriberDataService.findByCallingNumber(callingNumber);
+        Subscription subscription;
+
         if (subscriber == null) {
             subscriber = new Subscriber(callingNumber, languagelocation);
             subscriberDataService.create(subscriber);
         }
 
         if (mode == SubscriptionOrigin.IVR) {
-            return createSubscriptionViaIvr(subscriber, subscriptionPack);
+            subscription = createSubscriptionViaIvr(subscriber, subscriptionPack);
         } else { // MCTS_UPLOAD
-            return createSubscriptionViaMcts(subscriber, subscriptionPack);
+            subscription = createSubscriptionViaMcts(subscriber, subscriptionPack);
         }
+
+        if (subscription != null) {
+            subscriber.getSubscriptions().add(subscription);
+            subscriberDataService.update(subscriber);
+        }
+        return subscription;
     }
 
     private Subscription createSubscriptionViaIvr(Subscriber subscriber, SubscriptionPack pack) {

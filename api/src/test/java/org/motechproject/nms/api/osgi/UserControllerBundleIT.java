@@ -16,7 +16,6 @@ import org.motechproject.nms.api.web.contract.FlwUserResponse;
 import org.motechproject.nms.api.web.contract.UserLanguageRequest;
 import org.motechproject.nms.api.web.contract.kilkari.KilkariUserResponse;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
-import org.motechproject.nms.flw.domain.Service;
 import org.motechproject.nms.flw.domain.ServiceUsage;
 import org.motechproject.nms.flw.domain.ServiceUsageCap;
 import org.motechproject.nms.flw.domain.WhitelistEntry;
@@ -36,6 +35,9 @@ import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
+import org.motechproject.nms.props.domain.DeployedService;
+import org.motechproject.nms.props.domain.Service;
+import org.motechproject.nms.props.repository.DeployedServiceDataService;
 import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Language;
@@ -128,8 +130,10 @@ public class UserControllerBundleIT extends BasePaxIT {
     private DistrictDataService districtDataService;
 
     @Inject
-    private NationalDefaultLanguageLocationDataService nationalDefaultLanguageLocationDataService;
+    private DeployedServiceDataService deployedServiceDataService;
 
+    @Inject
+    private NationalDefaultLanguageLocationDataService nationalDefaultLanguageLocationDataService;
 
     public UserControllerBundleIT() {
         System.setProperty("org.motechproject.testing.osgi.http.numTries", "1");
@@ -150,6 +154,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         languageLocationDataService.deleteAll();
         languageDataService.deleteAll();
         districtDataService.deleteAll();
+        deployedServiceDataService.deleteAll();
         stateDataService.deleteAll();
         circleDataService.deleteAll();
     }
@@ -174,6 +179,8 @@ public class UserControllerBundleIT extends BasePaxIT {
         state.getDistricts().add(district);
 
         stateDataService.create(state);
+
+        deployedServiceDataService.create(new DeployedService(state, Service.KILKARI));
 
         Language ta = languageDataService.create(new Language("tamil"));
 
@@ -220,6 +227,9 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         stateDataService.create(state);
 
+        deployedServiceDataService.create(new DeployedService(state, Service.MOBILE_ACADEMY));
+        deployedServiceDataService.create(new DeployedService(state, Service.MOBILE_KUNJI));
+
         Language language = new Language("Papiamento");
         languageDataService.create(language);
 
@@ -256,6 +266,9 @@ public class UserControllerBundleIT extends BasePaxIT {
         state.getDistricts().add(district2);
 
         stateDataService.create(state);
+
+        deployedServiceDataService.create(new DeployedService(state, Service.MOBILE_ACADEMY));
+        deployedServiceDataService.create(new DeployedService(state, Service.MOBILE_KUNJI));
 
         LanguageLocation languageLocation = new LanguageLocation("10", circle, language, false);
         languageLocation.getDistrictSet().add(district);
@@ -302,6 +315,9 @@ public class UserControllerBundleIT extends BasePaxIT {
         state.getDistricts().add(district2);
 
         stateDataService.create(state);
+
+        deployedServiceDataService.create(new DeployedService(state, Service.MOBILE_ACADEMY));
+        deployedServiceDataService.create(new DeployedService(state, Service.MOBILE_KUNJI));
 
         Language language = new Language("English");
         languageDataService.create(language);
@@ -351,6 +367,9 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         stateDataService.create(state);
 
+        deployedServiceDataService.create(new DeployedService(state, Service.MOBILE_ACADEMY));
+        deployedServiceDataService.create(new DeployedService(state, Service.MOBILE_KUNJI));
+
         Language language = new Language("English");
         languageDataService.create(language);
 
@@ -394,6 +413,9 @@ public class UserControllerBundleIT extends BasePaxIT {
         whitelistState.getDistricts().add(district);
         stateDataService.create(whitelistState);
 
+        deployedServiceDataService.create(new DeployedService(whitelistState, Service.MOBILE_ACADEMY));
+        deployedServiceDataService.create(new DeployedService(whitelistState, Service.MOBILE_KUNJI));
+
         whitelistStateDataService.create(new WhitelistState(whitelistState));
 
         WhitelistEntry entry = new WhitelistEntry(0000000000l, whitelistState);
@@ -418,6 +440,9 @@ public class UserControllerBundleIT extends BasePaxIT {
         whitelist.getDistricts().add(district);
 
         stateDataService.create(whitelist);
+
+        deployedServiceDataService.create(new DeployedService(whitelist, Service.MOBILE_ACADEMY));
+        deployedServiceDataService.create(new DeployedService(whitelist, Service.MOBILE_KUNJI));
 
         // Currently the code to get a state from a languageLocationCode is stubbed out.
         // llc 34 returns the state "Whitelist".  There is a todo tracking this.
@@ -452,6 +477,9 @@ public class UserControllerBundleIT extends BasePaxIT {
         state.getDistricts().add(district);
 
         stateDataService.create(state);
+
+        deployedServiceDataService.create(new DeployedService(state, Service.MOBILE_ACADEMY));
+        deployedServiceDataService.create(new DeployedService(state, Service.MOBILE_KUNJI));
 
         Language language = new Language("Papiamento");
         languageDataService.create(language);
@@ -611,6 +639,138 @@ public class UserControllerBundleIT extends BasePaxIT {
         return mapper.writeValueAsString(badRequest);
     }
 
+    private void createFlwWithLanguageNoDeployedServices() {
+        cleanAllData();
+
+        Circle circle = new Circle("AA");
+
+        District district = new District();
+        district.setName("District 1");
+        district.setRegionalName("District 1");
+        district.setCode(1L);
+
+        State state = new State();
+        state.setName("State 1");
+        state.setCode(1L);
+        state.getDistricts().add(district);
+
+        stateDataService.create(state);
+
+        Language language = new Language("English");
+        languageDataService.create(language);
+
+        LanguageLocation languageLocation = new LanguageLocation("10", circle, language, false);
+        languageLocation.getDistrictSet().add(district);
+        languageLocationDataService.create(languageLocation);
+
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
+        flw.setLanguageLocation(languageLocation);
+        frontLineWorkerService.add(flw);
+    }
+
+    // Request undeployed service by language location
+    @Test
+    public void testUndeployedServiceByLanguageLocation() throws IOException, InterruptedException {
+        createFlwWithLanguageNoDeployedServices();
+
+        HttpGet httpGet = createHttpGet(
+                true, "mobilekunji",    //service
+                true, "1111111111",     //callingNumber
+                true, "OP",             //operator
+                false, null,             //circle
+                true, "123456789012345" //callId
+        );
+
+        String expectedJsonResponse = createFailureResponseJson("<MOBILE_KUNJI: Not Deployed In State>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
+        assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, response.getStatusLine().getStatusCode());
+    }
+
+    private void createFlwWithLocationNoLanguageNoDeployedServices() {
+        cleanAllData();
+
+        District district = new District();
+        district.setName("District 1");
+        district.setRegionalName("District 1");
+        district.setCode(1L);
+
+        State state = new State();
+        state.setName("State 1");
+        state.setCode(1L);
+        state.getDistricts().add(district);
+
+        stateDataService.create(state);
+
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
+        flw.setDistrict(district);
+        frontLineWorkerService.add(flw);
+    }
+
+    // Request undeployed service by flw location
+    @Test
+    public void testUndeployedServiceByFLWLocation() throws IOException, InterruptedException {
+        createFlwWithLocationNoLanguageNoDeployedServices();
+
+        HttpGet httpGet = createHttpGet(
+                true, "mobilekunji",    //service
+                true, "1111111111",     //callingNumber
+                true, "OP",             //operator
+                false, null,             //circle
+                true, "123456789012345" //callId
+        );
+
+        String expectedJsonResponse = createFailureResponseJson("<MOBILE_KUNJI: Not Deployed In State>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
+        assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, response.getStatusLine().getStatusCode());
+    }
+
+    // Request undeployed service by cirlce
+    private void createFlwWithNoLocationNoLanguageNoDeployedServices() {
+        cleanAllData();
+
+        District district = new District();
+        district.setName("District 1");
+        district.setRegionalName("District 1");
+        district.setCode(1L);
+
+        State state = new State();
+        state.setName("State 1");
+        state.setCode(1L);
+        state.getDistricts().add(district);
+
+        stateDataService.create(state);
+
+        Circle circle = new Circle("AA");
+        circle.getStates().add(state);
+        circleDataService.create(circle);
+
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
+        frontLineWorkerService.add(flw);
+    }
+
+    // Request undeployed service by flw location
+    @Test
+    public void testUndeployedServiceByCircleLocation() throws IOException, InterruptedException {
+        createFlwWithNoLocationNoLanguageNoDeployedServices();
+
+        HttpGet httpGet = createHttpGet(
+                true, "mobilekunji",    //service
+                true, "1111111111",     //callingNumber
+                true, "OP",             //operator
+                true, "AA",             //circle
+                true, "123456789012345" //callId
+        );
+
+        String expectedJsonResponse = createFailureResponseJson("<MOBILE_KUNJI: Not Deployed In State>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
+        assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, response.getStatusLine().getStatusCode());
+    }
 
     @Test
     public void testKilkariUserRequestNoLanguage() throws IOException, InterruptedException {

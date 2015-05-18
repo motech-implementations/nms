@@ -46,10 +46,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * Verify that SubscriptionService is present & functional.
@@ -287,6 +284,20 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         Subscription subscription = subscriber.getSubscriptions().iterator().next();
         assertEquals(gPack1, subscription.getSubscriptionPack());
+    }
+
+    @Test
+    public void testCreateSubscriptionViaMcts() {
+        setupData();
+
+        Subscriber mctsSubscriber = new Subscriber(9999911122L);
+        mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(14));
+        subscriberDataService.create(mctsSubscriber);
+
+        subscriptionService.createSubscription(9999911122L, gLanguageLocation, gPack1, SubscriptionOrigin.MCTS_IMPORT);
+
+        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+        assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
     }
 
     @Test

@@ -39,6 +39,12 @@
             <artifactId>motech-platform-dataservices</artifactId>
             <version>${motech.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.motechproject.nms</groupId>
+            <artifactId>region</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 
     <repositories>
@@ -73,6 +79,8 @@
                         <Context-Path>props</Context-Path>
                         <Export-Package>
                             org.motechproject.nms.props.domain;version=${project.version},
+                            org.motechproject.nms.props.repository;version=${project.version},
+                            org.motechproject.nms.props.service;version=${project.version},
                         </Export-Package>
                         <Import-Package>
                         	org.motechproject.osgi.web,

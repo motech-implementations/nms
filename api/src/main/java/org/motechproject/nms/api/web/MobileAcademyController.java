@@ -11,12 +11,14 @@ import org.motechproject.nms.api.web.contract.mobileAcademy.sms.DeliveryInfo;
 import org.motechproject.nms.api.web.converter.MobileAcademyConverter;
 import org.motechproject.nms.mobileacademy.domain.Course;
 import org.motechproject.nms.mobileacademy.dto.MaBookmark;
+import org.motechproject.nms.mobileacademy.exception.CourseNotCompletedException;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -42,6 +44,7 @@ public class MobileAcademyController extends BaseController {
     /**
      * MA service to handle all business logic
      */
+    @Autowired
     private MobileAcademyService mobileAcademyService;
 
     /**
@@ -102,7 +105,7 @@ public class MobileAcademyController extends BaseController {
             method = RequestMethod.GET)
     @ResponseBody
     public CourseVersionResponse getCourseVersion() {
-        
+
         return new CourseVersionResponse(mobileAcademyService.getCourseVersion());
     }
 
@@ -131,6 +134,7 @@ public class MobileAcademyController extends BaseController {
             method = RequestMethod.POST,
             headers = { "Content-type=application/json" })
     @ResponseStatus(HttpStatus.OK)
+    @Transactional
     public void saveBookmarkWithScore(@RequestBody SaveBookmarkRequest bookmarkRequest) {
 
         Long callingNumber = bookmarkRequest.getCallingNumber();
@@ -167,6 +171,28 @@ public class MobileAcademyController extends BaseController {
         MotechEvent motechEvent = new MotechEvent(SMS_STATUS, eventParams);
         eventRelay.sendEventMessage(motechEvent);
         LOGGER.debug("Sent event message to process completion notification");
+    }
+
+    @RequestMapping(
+            value = "/notify",
+            method = RequestMethod.POST)
+    @ResponseStatus(HttpStatus.OK)
+    public void sendNotification(@RequestBody Long callingNumber) {
+
+        StringBuilder errors = new StringBuilder();
+        validateField10Digits(errors, "callingNumber", callingNumber);
+        if (errors.length() != 0) {
+            throw new IllegalArgumentException(errors.toString());
+        }
+
+        // done with validation
+
+        try {
+            mobileAcademyService.triggerCompletionNotification(callingNumber);
+        } catch (CourseNotCompletedException cnc) {
+            LOGGER.error("Could not send notification: " + cnc.toString());
+            throw cnc;
+        }
     }
 
 }

@@ -25,6 +25,8 @@ import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
@@ -82,6 +84,35 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
         bookmark.setCallId(BaseController.SMALLEST_15_DIGIT_NUMBER);
         HttpPost request = RequestBuilder.createPostRequest(endpoint, bookmark);
         assertTrue(SimpleHttpClient.execHttpRequest(request, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
+    }
+
+    @Test
+    public void testTriggerNotification() throws IOException, InterruptedException {
+
+        String endpoint = String.format("http://localhost:%d/api/mobileacademy/bookmarkWithScore",
+                TestContext.getJettyPort());
+        SaveBookmarkRequest bookmark = new SaveBookmarkRequest();
+        bookmark.setCallingNumber(BaseController.SMALLEST_10_DIGIT_NUMBER);
+        bookmark.setCallId(BaseController.SMALLEST_15_DIGIT_NUMBER);
+
+        Map<String, Integer> scores = new HashMap<>();
+        for (int i = 1; i < 12; i++) {
+            scores.put(String.valueOf(i), 4);
+        }
+        bookmark.setScoresByChapter(scores);
+        bookmark.setBookmark("Chapter11_Quiz");
+        HttpPost request = RequestBuilder.createPostRequest(endpoint, bookmark);
+        assertTrue(SimpleHttpClient.execHttpRequest(request, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
+
+        long callingNumber = BaseController.SMALLEST_10_DIGIT_NUMBER;
+        endpoint = String.format("http://localhost:%d/api/mobileacademy/notify",
+                TestContext.getJettyPort());
+        request = RequestBuilder.createPostRequest(endpoint, callingNumber);
+        assertTrue(SimpleHttpClient.execHttpRequest(request, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
+
+        // removed the negative testing since there's not reliable way to clean the data for it to fail
+        // after the first time. Debugged and verified that the negative works too and we have negative ITs
+        // at the service layer.
     }
 
     @Test

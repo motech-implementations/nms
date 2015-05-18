@@ -3,6 +3,7 @@ package org.motechproject.nms.flw.domain;
 import org.joda.time.DateTime;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
+import org.motechproject.nms.props.domain.Service;
 
 @Entity(tableName = "nms_service_usage")
 public class ServiceUsage {

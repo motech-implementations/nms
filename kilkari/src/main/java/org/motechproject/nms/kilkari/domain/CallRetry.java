@@ -38,13 +38,13 @@ public class CallRetry {
     private String circle;
 
     @Field
-    private String subscriptionOrigin;
+    private SubscriptionOrigin subscriptionOrigin;
 
     public CallRetry() { }
 
     public CallRetry(String subscriptionId, Long msisdn, //NO CHECKSTYLE More than 7 parameters
                      DayOfTheWeek dayOfTheWeek, CallStage callStage, String contentFileName, String weekId,
-                     String languageLocationCode, String circle, String subscriptionOrigin) {
+                     String languageLocationCode, String circle, SubscriptionOrigin subscriptionOrigin) {
         this.subscriptionId = subscriptionId;
         this.msisdn = msisdn;
         this.dayOfTheWeek = dayOfTheWeek;
@@ -120,11 +120,11 @@ public class CallRetry {
         this.circle = circle;
     }
 
-    public String getSubscriptionOrigin() {
+    public SubscriptionOrigin getSubscriptionOrigin() {
         return subscriptionOrigin;
     }
 
-    public void setSubscriptionOrigin(String subscriptionOrigin) {
+    public void setSubscriptionOrigin(SubscriptionOrigin subscriptionOrigin) {
         this.subscriptionOrigin = subscriptionOrigin;
     }
 

@@ -5,7 +5,8 @@ import org.motechproject.mds.annotations.Cascade;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.nms.props.domain.CallDisconnectReason;
-import org.motechproject.nms.props.domain.CallStatus;
+import org.motechproject.nms.props.domain.FinalCallStatus;
+import org.motechproject.nms.props.domain.Service;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Extension;
@@ -62,7 +63,7 @@ public class CallDetailRecord {
     private Boolean welcomePrompt;
 
     @Field
-    private CallStatus callStatus;
+    private FinalCallStatus finalCallStatus;
 
     @Field
     private CallDisconnectReason callDisconnectReason;
@@ -161,17 +162,17 @@ public class CallDetailRecord {
         this.welcomePrompt = welcomePrompt;
     }
 
-    public CallStatus getCallStatus() {
-        return callStatus;
+    public FinalCallStatus getFinalCallStatus() {
+        return finalCallStatus;
     }
 
-    public void setCallStatus(CallStatus callStatus) {
-        this.callStatus = callStatus;
+    public void setFinalCallStatus(FinalCallStatus finalCallStatus) {
+        this.finalCallStatus = finalCallStatus;
     }
 
     public void setCallStatus(int i) {
 
-        this.callStatus = CallStatus.fromInt(i);
+        this.finalCallStatus = FinalCallStatus.fromInt(i);
     }
 
     public CallDisconnectReason getCallDisconnectReason() {
