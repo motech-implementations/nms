@@ -32,6 +32,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private static final int PREGNANCY_PACK_WEEKS = 72;
     private static final int CHILD_PACK_WEEKS = 48;
     private static final int THREE_MONTHS = 90;
+    private static final int TWO_MINUTES = 120;
+    private static final int TEN_SECS = 10;
 
     private SubscriberDataService subscriberDataService;
     private SubscriptionPackDataService subscriptionPackDataService;
@@ -44,6 +46,43 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         this.subscriberDataService = subscriberDataService;
         this.subscriptionPackDataService = subscriptionPackDataService;
         this.subscriptionDataService = subscriptionDataService;
+
+        createSubscriptionPacks();
+    }
+
+
+    /*
+     * Create the subscription packs for Kilkari -- a 48-week child pack and a 72-week pregnancy pack. This service
+     * method is effectively internal, but made publicly-accessible so that it can be tested in our ITs.
+     */
+    @Override
+    public final void createSubscriptionPacks() {
+        // TODO: make this less hard-coded and hacky once we get spec clarification re: how to populate the pack data
+        if (subscriptionPackDataService.byName("childPack") == null) {
+            createSubscriptionPack("childPack", SubscriptionPackType.CHILD, CHILD_PACK_WEEKS, 1);
+        }
+        if (subscriptionPackDataService.byName("pregnancyPack") == null) {
+            createSubscriptionPack("pregnancyPack", SubscriptionPackType.PREGNANCY, PREGNANCY_PACK_WEEKS, 2);
+        }
+    }
+
+
+    private void createSubscriptionPack(String name, SubscriptionPackType type, int weeks,
+                                                    int messagesPerWeek) {
+        List<SubscriptionPackMessage> messages = new ArrayList<>();
+        for (int week = 1; week <= weeks; week++) {
+            messages.add(new SubscriptionPackMessage(week, String.format("w%s_1", week),
+                    String.format("w%s_1.wav", week),
+                    TWO_MINUTES - TEN_SECS + (int) (Math.random() * 2 * TEN_SECS)));
+
+            if (messagesPerWeek == 2) {
+                messages.add(new SubscriptionPackMessage(week, String.format("w%s_2", week),
+                        String.format("w%s_2.wav", week),
+                        TWO_MINUTES - TEN_SECS + (int) (Math.random() * 2 * TEN_SECS)));
+            }
+        }
+
+        subscriptionPackDataService.create(new SubscriptionPack(name, type, weeks, messagesPerWeek, messages));
     }
 
 
@@ -157,12 +196,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         return subscriptionDataService.findBySubscriptionId(subscriptionId);
     }
 
-    /**
-     * Called by Subscriber.update if the subscriber's LMP or DOB changes -- as a result, the subscription's start date
-     * and/or status may change
-     * @param subscription The subscription to update
-     * @param newReferenceDate The new LMP or DOB from which to base the new subscription start date
-     */
+
     @Override
     public void updateStartDate(Subscription subscription, DateTime newReferenceDate) {
         if (subscription.getSubscriptionPack().getType() == SubscriptionPackType.PREGNANCY) {
@@ -212,35 +246,4 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         return subscriptionDataService.findByStatusAndDay(SubscriptionStatus.ACTIVE, dayOfTheWeek,
                 new QueryParams(page, pageSize));
     }
-
-    /*
-     * Create the subscription packs for Kilkari -- a 48-week child pack and a 72-week pregnancy pack. This service
-     * method is effectively internal, but made publicly-accessible so that it can be used by our ITs.
-     */
-    @Override
-    public final void createSubscriptionPacks() {
-        if (subscriptionPackDataService.byName("childPack") == null) {
-            createSubscriptionPack("childPack", SubscriptionPackType.CHILD, CHILD_PACK_WEEKS, 1);
-        }
-        if (subscriptionPackDataService.byName("pregnancyPack") == null) {
-            createSubscriptionPack("pregnancyPack", SubscriptionPackType.PREGNANCY, PREGNANCY_PACK_WEEKS, 2);
-        }
-    }
-
-    private void createSubscriptionPack(String name, SubscriptionPackType type, int weeks,
-                                        int messagesPerWeek) {
-        List<SubscriptionPackMessage> messages = new ArrayList<>();
-        for (int week = 1; week <= weeks; week++) {
-            messages.add(new SubscriptionPackMessage(week, String.format("w%s_1", week),
-                    String.format("w%s_1.wav", week)));
-
-            if (messagesPerWeek == 2) {
-                messages.add(new SubscriptionPackMessage(week, String.format("w%s_2", week),
-                        String.format("w%s_2.wav", week)));
-            }
-        }
-
-        subscriptionPackDataService.create(new SubscriptionPack(name, type, weeks, messagesPerWeek, messages));
-    }
-
 }

@@ -42,7 +42,7 @@
     <osgi:reference id="serviceUsageCapDataService"
                     interface="org.motechproject.nms.flw.repository.ServiceUsageCapDataService" />
 
-    <osgi:reference id="cdrDataService"
+    <osgi:reference id="csrDataService"
                     interface="org.motechproject.nms.flw.repository.CallDetailRecordDataService" />
 
     <osgi:reference id="callContentDataService"

@@ -56,6 +56,7 @@ import javax.inject.Inject;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -314,6 +315,81 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, expectedJsonPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
+    @Test
+    public void testInboxRequestDeactivatedSubscription() throws IOException, InterruptedException {
+        setupData();
+
+        Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
+        Subscription subscription = subscriber.getSubscriptions().iterator().next();
+        subscription.setStatus(SubscriptionStatus.DEACTIVATED);
+        subscription.setDeactivationReason(DeactivationReason.DEACTIVATED_BY_USER);
+        subscriptionDataService.update(subscription);
+
+        String expectedJson = "{\"inboxSubscriptionDetailList\":[]}";
+
+        HttpGet httpGet = createHttpGet(true, "1000000000", true, "123456789012345");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, expectedJson, ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    @Test
+    public void testInboxRequestSeveralSubscriptionsInDifferentStates() throws IOException, InterruptedException {
+        setupData();
+
+        // subscriber has two active subscriptions
+        Subscriber subscriber = subscriberService.getSubscriber(2000000000L);
+
+        Iterator<Subscription> subscriptionIterator = subscriber.getSubscriptions().iterator();
+        Subscription subscription1 = subscriptionIterator.next();
+        Subscription subscription2 = subscriptionIterator.next();
+
+        // deactivate one of them
+        subscription1.setStatus(SubscriptionStatus.DEACTIVATED);
+        subscription1.setDeactivationReason(DeactivationReason.DEACTIVATED_BY_USER);
+        subscriptionDataService.update(subscription1);
+
+        // complete the other one
+        subscription2.setStartDate(subscription2.getStartDate().minusDays(1000));
+        subscription2.setStatus(SubscriptionStatus.COMPLETED);
+        subscriptionDataService.update(subscription2);
+
+        // inbox request should return empty inbox
+        String expectedJson = "{\"inboxSubscriptionDetailList\":[]}";
+        HttpGet httpGet = createHttpGet(true, "2000000000", true, "123456789012345");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, expectedJson, ADMIN_USERNAME, ADMIN_PASSWORD));
+
+        // create two more subscriptions -- this time using MCTS import as subscription origin
+
+        // create subscription to child pack
+        subscriber.setDateOfBirth(DateTime.now().minusDays(250));
+        subscriberDataService.update(subscriber);
+        subscriptionService.createSubscription(2000000000L, gLanguageLocation, gPack1, SubscriptionOrigin.MCTS_IMPORT);
+        subscriber = subscriberDataService.findByCallingNumber(2000000000L);
+
+        // due to subscription rules detailed in #157, we need to clear out the DOB and set an LMP in order to
+        // create a second subscription for this subscriber
+        subscriber.setDateOfBirth(null);
+        subscriber.setLastMenstrualPeriod(DateTime.now().minusDays(103));
+        subscriberDataService.update(subscriber);
+
+        // create subscription to pregnancy pack
+        subscriptionService.createSubscription(2000000000L, gLanguageLocation, gPack2, SubscriptionOrigin.MCTS_IMPORT);
+
+        subscriber = subscriberDataService.findByCallingNumber(2000000000L);
+        assertEquals(2, subscriber.getActiveSubscriptions().size());
+        assertEquals(4, subscriber.getAllSubscriptions().size());
+
+        Pattern childPackJsonPattern = Pattern.compile(".*\"subscriptionPack\":\"childPack\",\"inboxWeekId\":\"w36_1\",\"contentFileName\":\"w36_1\\.wav.*");
+        Pattern pregnancyPackJsonPattern = Pattern.compile(".*\"subscriptionPack\":\"pregnancyPack\",\"inboxWeekId\":\"w2_2\",\"contentFileName\":\"w2_2\\.wav.*");
+
+        httpGet = createHttpGet(true, "2000000000", true, "123456789012345");
+
+        // inbox request should return two subscriptions
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, childPackJsonPattern, ADMIN_USERNAME,
+                ADMIN_PASSWORD));
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, pregnancyPackJsonPattern, ADMIN_USERNAME,
+                ADMIN_PASSWORD));
+    }
 
     @Test
     public void testInboxRequestBadSubscriber() throws IOException, InterruptedException {

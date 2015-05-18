@@ -328,7 +328,7 @@ public class TargetFileServiceImpl implements TargetFileService {
                 writeSubscriptionRow(requestId.toString(), imiServiceId, callRetry.getMsisdn().toString(),
                         NORMAL_PRIORITY, callFlowUrl, callRetry.getContentFileName(), callRetry.getWeekId(),
                         callRetry.getLanguageLocationCode(), callRetry.getCircle(),
-                        callRetry.getSubscriptionOrigin(), writer);
+                        callRetry.getSubscriptionOrigin().getCode(), writer);
             }
 
             page++;

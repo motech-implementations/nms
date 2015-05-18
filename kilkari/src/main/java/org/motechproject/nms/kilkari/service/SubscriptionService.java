@@ -37,9 +37,11 @@ public interface SubscriptionService {
     Subscription getSubscription(String subscriptionId);
 
     /**
-     *
-     * @param subscription
-     * @param newReferenceDate
+     * Update the specified subscription, based on the new reference date (LMP or DOB) supplied. Called by
+     * SubscriberService.update if the subscriber's LMP or DOB changes -- as a result, the subscription's start date
+     * and/or status may change.
+     * @param subscription The subscription to update
+     * @param newReferenceDate The new reference date (LMP or DOB) from which to base the subscription start date
      */
     void updateStartDate(Subscription subscription, DateTime newReferenceDate);
 
@@ -70,11 +72,12 @@ public interface SubscriptionService {
     Subscription create(Subscription subscription);
 
     /**
-     *
-     * @param dayOfTheWeek
-     * @param page
-     * @param pageSize
-     * @return
+     * Get the list of subscriptions due for a message on the specified day. Used by the Kilkari outbound dialer to
+     * create the list of message recipients for a given day.
+     * @param dayOfTheWeek The day of the week for which to find subscriptions
+     * @param page The page for which to return results
+     * @param pageSize The number of results to return per page
+     * @return The list of subscriptions due for a message
      */
     List<Subscription> findActiveSubscriptionsForDay(DayOfTheWeek dayOfTheWeek, int page, int pageSize);
 

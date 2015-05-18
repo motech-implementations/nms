@@ -1,7 +1,7 @@
 package org.motechproject.nms.imi.ut;
 
 import org.junit.Test;
-import org.motechproject.nms.kilkari.domain.StatusCode;
+import org.motechproject.nms.props.domain.StatusCode;
 
 import static junit.framework.Assert.assertEquals;
 

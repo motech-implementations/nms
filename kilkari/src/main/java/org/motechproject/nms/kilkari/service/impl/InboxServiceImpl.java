@@ -37,16 +37,16 @@ public class InboxServiceImpl implements InboxService {
     @Override
     public SubscriptionPackMessage getInboxMessage(Subscription subscription) throws NoInboxForSubscriptionException {
 
-        if (subscription.getStartDate().isAfter(DateTime.now())) {
-            // early subscription, play welcome message
-            return null;
-        }
-        if ((subscription.getStartDate() == null) ||
-                (subscription.getStatus() == SubscriptionStatus.DEACTIVATED) ||
-                (subscription.getStatus() == SubscriptionStatus.PENDING_ACTIVATION)) {
+        if ((subscription.getStartDate() == null) || (subscription.getStatus() == SubscriptionStatus.DEACTIVATED)) {
             // there is no inbox for this subscription, throw
             throw new NoInboxForSubscriptionException(String.format("No inbox exists for subscription %s",
                     subscription.getSubscriptionId()));
+        }
+
+        if (subscription.getStartDate().isAfter(DateTime.now()) ||
+                (subscription.getStatus() == SubscriptionStatus.PENDING_ACTIVATION)) {
+            // early subscription, play welcome message
+            return null;
         }
 
         SubscriptionPack pack = subscription.getSubscriptionPack();
