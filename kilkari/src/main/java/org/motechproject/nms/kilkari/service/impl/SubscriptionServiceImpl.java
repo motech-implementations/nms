@@ -86,16 +86,24 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     public Subscription createSubscription(long callingNumber, LanguageLocation languagelocation, SubscriptionPack subscriptionPack,
                                    SubscriptionOrigin mode) {
         Subscriber subscriber = subscriberDataService.findByCallingNumber(callingNumber);
+        Subscription subscription;
+
         if (subscriber == null) {
             subscriber = new Subscriber(callingNumber, languagelocation);
             subscriberDataService.create(subscriber);
         }
 
         if (mode == SubscriptionOrigin.IVR) {
-            return createSubscriptionViaIvr(subscriber, subscriptionPack);
+            subscription = createSubscriptionViaIvr(subscriber, subscriptionPack);
         } else { // MCTS_UPLOAD
-            return createSubscriptionViaMcts(subscriber, subscriptionPack);
+            subscription = createSubscriptionViaMcts(subscriber, subscriptionPack);
         }
+
+        if (subscription != null) {
+            subscriber.getSubscriptions().add(subscription);
+            subscriberDataService.update(subscriber);
+        }
+        return subscription;
     }
 
     private Subscription createSubscriptionViaIvr(Subscriber subscriber, SubscriptionPack pack) {

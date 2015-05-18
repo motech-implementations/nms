@@ -1,6 +1,7 @@
 package org.motechproject.nms.api.osgi;
 
 import org.apache.commons.httpclient.HttpStatus;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
@@ -30,6 +31,9 @@ import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackMessageDataService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
+import org.motechproject.nms.props.domain.DeployedService;
+import org.motechproject.nms.props.domain.Service;
+import org.motechproject.nms.props.repository.DeployedServiceDataService;
 import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Language;
@@ -107,6 +111,9 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     @Inject
     private StateDataService stateDataService;
 
+    @Inject
+    private DeployedServiceDataService deployedServiceDataService;
+
     public KilkariControllerBundleIT() {
         System.setProperty("org.motechproject.testing.osgi.http.numTries", "1");
     }
@@ -125,6 +132,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         frontLineWorkerDataService.deleteAll();
         languageLocationDataService.deleteAll();
         languageDataService.deleteAll();
+        deployedServiceDataService.deleteAll();
         stateDataService.deleteAll();
         circleDataService.deleteAll();
     }
@@ -141,6 +149,9 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         state.getDistricts().add(district);
 
         stateDataService.create(state);
+
+        deployedServiceDataService.create(new DeployedService(state, Service.KILKARI));
+
         Language language = new Language("tamil");
         languageDataService.create(language);
 
@@ -345,7 +356,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         setupData();
         HttpPost httpPost = createSubscriptionHttpPost(9999911122L, "childPack");
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK, ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
     }
 
     @Test
@@ -354,8 +366,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         HttpPost httpPost = createSubscriptionHttpPost(9999911122L, "pack99999");
 
         // Should return HTTP 404 (Not Found) because the subscription pack won't be found
-        assertTrue(SimpleHttpClient
-                .execHttpRequest(httpPost, HttpStatus.SC_NOT_FOUND, ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_NOT_FOUND, response.getStatusLine().getStatusCode());
     }
 
     @Test
@@ -423,18 +435,43 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     }
 
     @Test
-    public void testCreateSubscriptionViaMcts() {
+    public void testCreateSubscriptionForUndeployedState() throws IOException, InterruptedException {
         setupData();
 
-        Subscriber mctsSubscriber = new Subscriber(9999911122L);
-        mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(14));
-        subscriberDataService.create(mctsSubscriber);
+        District district = new District();
+        district.setName("District 2");
+        district.setRegionalName("District 2");
+        district.setCode(2L);
 
-        subscriptionService.createSubscription(9999911122L, gLanguageLocation, gPack1, SubscriptionOrigin.MCTS_IMPORT);
+        State state = new State();
+        state.setName("State 2");
+        state.setCode(2L);
+        state.getDistricts().add(district);
 
-        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
-        assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
+        stateDataService.create(state);
+
+        Language language = new Language("malayalam");
+        languageDataService.create(language);
+
+        LanguageLocation undeployedLanguageLocation = new LanguageLocation("77", new Circle("BB"), language, true);
+        undeployedLanguageLocation.getDistrictSet().add(district);
+        languageLocationDataService.create(undeployedLanguageLocation);
+
+        SubscriptionRequest subscriptionRequest = new SubscriptionRequest(9999911122L, "A", "BB",
+                123456789012545L, "77", "childPack");
+        ObjectMapper mapper = new ObjectMapper();
+        String subscriptionRequestJson = mapper.writeValueAsString(subscriptionRequest);
+
+        HttpPost httpPost = new HttpPost(String.format(
+                "http://localhost:%d/api/kilkari/subscription", TestContext.getJettyPort()));
+        httpPost.setHeader("Content-type", "application/json");
+        httpPost.setEntity(new StringEntity(subscriptionRequestJson));
+
+        // Should return HTTP 501 (Not Implemented) because the service is not deployed for the specified state
+        assertTrue(SimpleHttpClient
+                .execHttpRequest(httpPost, HttpStatus.SC_NOT_IMPLEMENTED, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
+
 
     @Test
     public void testDeactivateSubscriptionRequest() throws IOException, InterruptedException {

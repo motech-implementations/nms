@@ -5,6 +5,7 @@ import org.motechproject.nms.api.web.contract.kilkari.InboxCallDetailsRequest;
 import org.motechproject.nms.api.web.contract.kilkari.InboxResponse;
 import org.motechproject.nms.api.web.contract.kilkari.InboxSubscriptionDetailResponse;
 import org.motechproject.nms.api.web.contract.kilkari.SubscriptionRequest;
+import org.motechproject.nms.api.web.exception.NotDeployedException;
 import org.motechproject.nms.api.web.exception.NotFoundException;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.domain.InboxCallData;
@@ -18,11 +19,14 @@ import org.motechproject.nms.kilkari.exception.NoInboxForSubscriptionException;
 import org.motechproject.nms.kilkari.service.InboxService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
+import org.motechproject.nms.props.domain.Service;
+import org.motechproject.nms.props.service.PropertyService;
 import org.motechproject.nms.region.domain.LanguageLocation;
 import org.motechproject.nms.region.service.LanguageLocationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -58,6 +62,9 @@ public class KilkariController extends BaseController {
 
     @Autowired
     private InboxService inboxService;
+
+    @Autowired
+    private PropertyService propertyService;
 
     /**
      * 4.2.2 Get Inbox Details API
@@ -166,6 +173,7 @@ public class KilkariController extends BaseController {
             method = RequestMethod.POST,
             headers = { "Content-type=application/json" })
     @ResponseStatus(HttpStatus.OK)
+    @Transactional
     public void saveInboxCallDetails(@RequestBody InboxCallDetailsRequest request) {
         StringBuilder failureReasons = validateSaveInboxCallDetails(request);
         if (failureReasons.length() > 0) {
@@ -210,6 +218,7 @@ public class KilkariController extends BaseController {
             method = RequestMethod.POST,
             headers = { "Content-type=application/json" })
     @ResponseStatus(HttpStatus.OK)
+    @Transactional
     public void createSubscription(@RequestBody SubscriptionRequest subscriptionRequest) {
         StringBuilder failureReasons = validate(subscriptionRequest.getCallingNumber(),
                                                 subscriptionRequest.getCallId(),
@@ -227,6 +236,10 @@ public class KilkariController extends BaseController {
         languageLocation = languageLocationService.getForCode(subscriptionRequest.getLanguageLocationCode());
         if (languageLocation == null) {
             throw new NotFoundException(String.format(NOT_FOUND, "languageLocationCode"));
+        }
+
+        if (!propertyService.isServiceDeployedInState(Service.KILKARI, languageLocation.getState())) {
+            throw new NotDeployedException(String.format(NOT_DEPLOYED, Service.KILKARI));
         }
 
         SubscriptionPack subscriptionPack;
@@ -249,6 +262,7 @@ public class KilkariController extends BaseController {
             method = RequestMethod.DELETE,
             headers = { "Content-type=application/json" })
     @ResponseStatus(HttpStatus.OK)
+    @Transactional
     public void deactivateSubscription(@RequestBody SubscriptionRequest subscriptionRequest) {
         StringBuilder failureReasons = validate(subscriptionRequest.getCallingNumber(),
                 subscriptionRequest.getCallId(), subscriptionRequest.getOperator(),
