@@ -4,6 +4,9 @@ import org.apache.commons.codec.binary.Hex;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
+import org.motechproject.nms.imi.domain.FileAuditRecord;
+import org.motechproject.nms.imi.domain.FileType;
+import org.motechproject.nms.imi.repository.FileAuditRecordDataService;
 import org.motechproject.nms.imi.service.SettingsService;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
@@ -61,6 +64,7 @@ public class CdrHelper {
     private CircleDataService circleDataService;
     private StateDataService stateDataService;
     private DistrictDataService districtDataService;
+    private FileAuditRecordDataService fileAuditRecordDataService;
 
     private List<CallDetailRecordDto> cdrs;
     private List<CallDetailRecordDto> retryCdrs = new ArrayList<>();
@@ -71,7 +75,8 @@ public class CdrHelper {
                      SubscriberDataService subscriberDataService, LanguageDataService languageDataService,
                      LanguageLocationDataService languageLocationDataService,
                      CircleDataService circleDataService, StateDataService stateDataService,
-                     DistrictDataService districtDataService) {
+                     DistrictDataService districtDataService,
+                     FileAuditRecordDataService fileAuditRecordDataService) {
 
         this.settingsService = settingsService;
         this.subscriptionService = subscriptionService;
@@ -81,6 +86,7 @@ public class CdrHelper {
         this.circleDataService = circleDataService;
         this.stateDataService = stateDataService;
         this.districtDataService = districtDataService;
+        this.fileAuditRecordDataService = fileAuditRecordDataService;
 
         TEST_OBD_TIMESTAMP = DateTime.now().toString(TIME_FORMATTER);
         TEST_OBD_FILENAME = String.format("OBD_%s.csv", TEST_OBD_TIMESTAMP);
@@ -383,6 +389,28 @@ public class CdrHelper {
         //todo:...
 
         writer.close();
+    }
+
+
+    public void createCdrFileAuditRecord(boolean valid, boolean success) throws IOException, NoSuchAlgorithmException {
+        fileAuditRecordDataService.create(new FileAuditRecord(
+                FileType.CDR_DETAIL_FILE,
+                valid ? cdr() : "xxx",
+                success ? "OK" : "ERROR",
+                cdrCount(),
+                csrChecksum()
+        ));
+    }
+
+
+    public void createObdFileAuditRecord(boolean valid, boolean success) throws IOException, NoSuchAlgorithmException {
+        fileAuditRecordDataService.create(new FileAuditRecord(
+                FileType.TARGET_FILE,
+                valid ? obd() : "xxx",
+                success ? "OK" : "ERROR",
+                123, //todo
+                "foobar" //todo
+        ));
     }
 
 

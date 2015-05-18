@@ -6,6 +6,8 @@ import org.motechproject.nms.region.service.CircleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service("circleService")
 public class CircleServiceImpl implements CircleService {
     @Autowired
@@ -21,4 +23,15 @@ public class CircleServiceImpl implements CircleService {
     public Circle getByName(String name) {
         return circleDataService.findByName(name);
     }
+
+    /**
+     * Returns all circles in the database
+     *
+     * @return all the circles in the database
+     */
+    @Override
+    public List<Circle> getAll() {
+        return circleDataService.retrieveAll();
+    }
+
 }

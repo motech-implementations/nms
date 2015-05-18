@@ -26,6 +26,8 @@ public interface SubscriptionService {
 
     SubscriptionPack getSubscriptionPack(String name);
 
+    List<SubscriptionPack> getSubscriptionPacks();
+
     void deleteAll();
 
     Subscription create(Subscription subscription);

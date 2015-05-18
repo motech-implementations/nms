@@ -4,6 +4,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.alerts.contract.AlertService;
+import org.motechproject.nms.imi.repository.FileAuditRecordDataService;
 import org.motechproject.nms.imi.service.CdrFileService;
 import org.motechproject.nms.imi.service.SettingsService;
 import org.motechproject.nms.imi.service.contract.ParseResults;
@@ -68,6 +69,9 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
     @Inject
     private DistrictDataService districtDataService;
 
+    @Inject
+    private FileAuditRecordDataService fileAuditRecordDataService;
+
     @Before
     public void cleanupDatabase() {
         subscriptionService.deleteAll();
@@ -94,12 +98,12 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
                 languageDataService, languageLocationDataService, circleDataService, stateDataService,
-                districtDataService);
+                districtDataService, fileAuditRecordDataService);
 
         helper.makeCdrs(1,1,1,1);
         helper.makeCdr();
         FileInfo fileInfo = new FileInfo(helper.cdr(), helper.cdrChecksum(), helper.cdrCount());
-        ParseResults result = cdrFileService.parseDetailFile(fileInfo);
+        ParseResults result = cdrFileService.processDetailFile(fileInfo);
         assertEquals(4, result.getRecords().size());
     }
 
@@ -110,12 +114,12 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
                 languageDataService, languageLocationDataService, circleDataService, stateDataService,
-                districtDataService);
+                districtDataService, fileAuditRecordDataService);
 
         helper.makeCdrs(1,1,1,1);
         helper.makeCdr();
         FileInfo fileInfo = new FileInfo(helper.cdr(), helper.cdrChecksum(), helper.cdrCount());
-        ParseResults result = cdrFileService.parseDetailFile(fileInfo);
+        ParseResults result = cdrFileService.processDetailFile(fileInfo);
         assertEquals(4, result.getRecords().size());
     }
 

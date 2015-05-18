@@ -8,8 +8,10 @@ import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.EventRelay;
 import org.motechproject.nms.imi.domain.FileAuditRecord;
 import org.motechproject.nms.imi.domain.FileType;
+import org.motechproject.nms.imi.exception.InvalidCdrFileException;
 import org.motechproject.nms.imi.repository.FileAuditRecordDataService;
 import org.motechproject.nms.imi.service.CdrFileService;
+import org.motechproject.nms.imi.service.CsrValidatorService;
 import org.motechproject.nms.imi.service.contract.ParseResults;
 import org.motechproject.nms.imi.web.contract.FileInfo;
 import org.motechproject.nms.kilkari.dto.CallDetailRecordDto;
@@ -52,24 +54,37 @@ public class CdrFileServiceImpl implements CdrFileService {
     private EventRelay eventRelay;
     private FileAuditRecordDataService fileAuditRecordDataService;
     private AlertService alertService;
+    private CsrValidatorService csrValidatorService;
 
 
 
     @Autowired
     public CdrFileServiceImpl(@Qualifier("imiSettings") SettingsFacade settingsFacade, EventRelay eventRelay,
-                              FileAuditRecordDataService fileAuditRecordDataService, AlertService alertService) {
+                              FileAuditRecordDataService fileAuditRecordDataService, AlertService alertService,
+                              CsrValidatorService csrValidatorService) {
         this.settingsFacade = settingsFacade;
         this.eventRelay = eventRelay;
         this.fileAuditRecordDataService = fileAuditRecordDataService;
         this.alertService = alertService;
+        this.csrValidatorService = csrValidatorService;
     }
 
 
-    private void reportErrorAndThrow(String file, String error) {
+    private void reportAuditAndThrow(String file, String error) {
         LOGGER.error(error);
         alertService.create(file, "CDR Detail File", error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
         fileAuditRecordDataService.create(new FileAuditRecord(FileType.CDR_DETAIL_FILE, file, error, null, null));
         throw new IllegalStateException(error);
+    }
+
+
+    private void reportAuditAndThrow(String file, List<String> errors) {
+        for (String error : errors) {
+            LOGGER.error(error);
+            alertService.create(file, "CDR Detail File", error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            fileAuditRecordDataService.create(new FileAuditRecord(FileType.CDR_DETAIL_FILE, file, error, null, null));
+        }
+        throw new InvalidCdrFileException(errors);
     }
 
 
@@ -157,22 +172,22 @@ public class CdrFileServiceImpl implements CdrFileService {
 
         } catch (IOException e) {
             String error = String.format("Unable to read %s: %s", file, e.getMessage());
-            reportErrorAndThrow(file.getName(), error);
+            reportAuditAndThrow(file.getName(), error);
         } catch (NoSuchAlgorithmException e) {
             String error = String.format("Unable to compute checksum: %s", e.getMessage());
-            reportErrorAndThrow(file.getName(), error);
+            reportAuditAndThrow(file.getName(), error);
         }
 
         if (!thisChecksum.equals(fileInfo.getChecksum())) {
             String error = String.format("Checksum mismatch, provided checksum: %s, calculated checksum: %s",
                     fileInfo.getChecksum(), thisChecksum);
-            reportErrorAndThrow(file.getName(), error);
+            reportAuditAndThrow(file.getName(), error);
         }
 
         if (lineNumber - 1 != fileInfo.getRecordsCount()) {
             String error = String.format("Record count mismatch, provided count: %d, actual count: %d",
                     fileInfo.getRecordsCount(), lineNumber - 1);
-            reportErrorAndThrow(file.getName(), error);
+            reportAuditAndThrow(file.getName(), error);
         }
 
         return new ParseResults(records, errors);
@@ -180,7 +195,7 @@ public class CdrFileServiceImpl implements CdrFileService {
 
 
     @Override
-    public ParseResults parseDetailFile(FileInfo fileInfo) {
+    public ParseResults processDetailFile(FileInfo fileInfo) {
         File userDirectory = new File(System.getProperty("user.home"));
         File cdrDirectory = new File(userDirectory, settingsFacade.getProperty(CDR_FILE_DIRECTORY));
         File file = new File(cdrDirectory, fileInfo.getCdrFile());
@@ -198,11 +213,20 @@ public class CdrFileServiceImpl implements CdrFileService {
 
 
     @Override
-    public void processDetailFile(FileInfo fileInfo) {
-        ParseResults parseResults = parseDetailFile(fileInfo);
+    public void dispatchSummaryRecords(FileInfo fileInfo) {
+        ParseResults parseResults = processDetailFile(fileInfo);
 
-        for (CallSummaryRecordDto record : parseResults.getRecords().values()) {
-            sendProcessCdrEvent(record);
+        //todo: implement max failure count threshold
+        if (parseResults.getErrors().size() > 0) {
+            reportAuditAndThrow(fileInfo.getCdrFile(), parseResults.getErrors());
+        }
+
+        if (csrValidatorService.validateCallSummaryRecords(parseResults)) {
+            for (CallSummaryRecordDto record : parseResults.getRecords().values()) {
+                sendProcessCdrEvent(record);
+            }
+        } else {
+            reportAuditAndThrow(fileInfo.getCdrFile(), parseResults.getErrors());
         }
     }
 }
