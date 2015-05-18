@@ -20,4 +20,6 @@
     <osgi:reference id="eventRelay"
                     interface="org.motechproject.event.listener.EventRelay"/>
 
+    <osgi:reference id="settingsFacade" interface="org.motechproject.server.config.SettingsFacade" />
+
 </beans>

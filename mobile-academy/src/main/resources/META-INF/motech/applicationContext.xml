@@ -20,5 +20,13 @@
         </constructor-arg>
     </bean>
 
+    <bean id="maSettings" class="org.motechproject.server.config.SettingsFacade" autowire="byType">
+        <property name="configFiles">
+            <list>
+                <value>classpath:ma-imi.properties</value>
+            </list>
+        </property>
+    </bean>
+
 
 </beans>

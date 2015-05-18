@@ -16,6 +16,7 @@ import org.motechproject.nms.mobileacademy.repository.CompletionRecordDataServic
 import org.motechproject.server.config.SettingsFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -46,6 +47,11 @@ public class SmsNotificationHandler {
 
     private SettingsFacade settingsFacade;
 
+    public SmsNotificationHandler() {
+        // default constructor for @Component
+    }
+
+    @Autowired
     public SmsNotificationHandler(CompletionRecordDataService completionRecordDataService,
                                   SettingsFacade settingsFacade) {
         this.completionRecordDataService = completionRecordDataService;
