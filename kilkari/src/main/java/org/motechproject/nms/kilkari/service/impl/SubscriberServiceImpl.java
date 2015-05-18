@@ -40,11 +40,6 @@ public class SubscriberServiceImpl implements SubscriberService {
         subscriberDataService.create(subscriber);
     }
 
-    /**
-     * Update subscriber. If subscriber has any subscriptions and the update changes her LMP or DOB, then subscription
-     * start date (and potentially status) will also be updated
-     * @param subscriber The subscriber to update
-     */
     @Override
     @Transactional
     public void update(Subscriber subscriber) {
@@ -76,11 +71,6 @@ public class SubscriberServiceImpl implements SubscriberService {
 
             }
         }
-    }
-
-    @Override
-    public void delete(Subscriber subscriber) {
-        subscriberDataService.delete(subscriber);
     }
 
 }
