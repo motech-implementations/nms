@@ -3,9 +3,9 @@ package org.motechproject.nms.mobileacademy.notification;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.joda.time.DateTime;
@@ -80,9 +80,8 @@ public class SmsNotificationHandler {
     }
 
     private boolean sendNotificationRequest(Long callingNumber) {
-        String notificationUrl = settingsFacade.getProperty(SMS_NOTIFICATION_URL);
 
-        HttpClient httpClient = HttpClients.createDefault();
+        CloseableHttpClient httpClient = HttpClients.createDefault();
         HttpPost httpPost = prepareSmsRequest(callingNumber);
 
         if (httpPost == null) {
@@ -95,7 +94,7 @@ public class SmsNotificationHandler {
             int responseCode = response.getStatusLine().getStatusCode();
             if (responseCode != HttpStatus.SC_OK) {
                 String error = String.format("Expecting HTTP 200 response from %s but received HTTP %d : %s ",
-                        notificationUrl, responseCode, EntityUtils.toString(response.getEntity()));
+                        httpPost.getURI().toString(), responseCode, EntityUtils.toString(response.getEntity()));
                 LOGGER.error(error);
                 return false;
             }

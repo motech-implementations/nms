@@ -52,6 +52,10 @@ public class MobileAcademyController extends BaseController {
      */
     private EventRelay eventRelay;
 
+    // Default constructor for CGLIB generation
+    public MobileAcademyController() {
+        super();
+    }
     /**
      * Constructor for controller
      * @param mobileAcademyService mobile academy service
