@@ -14,7 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 /**
- *
+ * Implementation of the {@link InboxService} interface.
  */
 @Service("inboxService")
 public class InboxServiceImpl implements InboxService {

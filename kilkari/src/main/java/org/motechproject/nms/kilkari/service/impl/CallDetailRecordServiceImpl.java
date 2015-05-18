@@ -30,6 +30,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 
+/**
+ * Implementation of the {@link CallDetailRecordService} interface.
+ */
 @Service("cdrService")
 public class CallDetailRecordServiceImpl implements CallDetailRecordService {
 

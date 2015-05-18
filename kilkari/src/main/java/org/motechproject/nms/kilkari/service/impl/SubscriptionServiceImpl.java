@@ -208,11 +208,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
 
-    public List<Subscription> findActiveSubscriptions(int page, int pageSize) {
-        return subscriptionDataService.findByStatus(SubscriptionStatus.ACTIVE, new QueryParams(page, pageSize));
-    }
-
-
     public List<Subscription> findActiveSubscriptionsForDay(DayOfTheWeek dayOfTheWeek, int page, int pageSize) {
         return subscriptionDataService.findByStatusAndDay(SubscriptionStatus.ACTIVE, dayOfTheWeek,
                 new QueryParams(page, pageSize));
