@@ -132,7 +132,7 @@ public class WhiteListServiceBundleIT extends BasePaxIT {
         assertFalse(result);
     }
 
-    // Test state with whitelist, number not in list
+    // Test with non-whitelist state, number not whitelisted
     @Test
     public void testStateWithoutWhitelistInvalidNumber() throws Exception {
         setupData();
@@ -141,6 +141,7 @@ public class WhiteListServiceBundleIT extends BasePaxIT {
         assertTrue(result);
     }
 
+    // Test with non-whitelist state + whitelist number and non-whitelist state + non-whitelist number
     @Test
     public void testNumberInWhitelistForStateButWhitelistNotOnForState() throws Exception {
         whitelistEntryDataService.deleteAll();
