@@ -33,6 +33,8 @@
 
     <osgi:reference id="whitelistService" interface="org.motechproject.nms.flw.service.WhitelistService"/>
 
+    <osgi:reference id="propertyService" interface="org.motechproject.nms.props.service.PropertyService"/>
+
     <osgi:reference id="mobileAcademyService" interface="org.motechproject.nms.mobileacademy.service.MobileAcademyService"/>
 
     <osgi:reference id="languageLocationService" interface="org.motechproject.nms.region.service.LanguageLocationService"/>

@@ -31,7 +31,7 @@ public class ServiceUsageServiceImpl implements ServiceUsageService {
     }
 
     @Override
-    public ServiceUsage getCurrentMonthlyUsageForFLWAndService(final FrontLineWorker frontLineWorker, final org.motechproject.nms.flw.domain.Service service) {
+    public ServiceUsage getCurrentMonthlyUsageForFLWAndService(final FrontLineWorker frontLineWorker, final org.motechproject.nms.props.domain.Service service) {
         ServiceUsage serviceUsage = new ServiceUsage(frontLineWorker, service, 0, 0, 0, DateTime.now());
 
         @SuppressWarnings("unchecked")
@@ -41,7 +41,7 @@ public class ServiceUsageServiceImpl implements ServiceUsageService {
                 DateTime monthStart = DateTime.now().withDayOfMonth(1).withTimeAtStartOfDay();
 
                 query.setFilter("frontLineWorker == flw && service == flw_service && timestamp >= monthStart");
-                query.declareParameters("org.motechproject.nms.flw.domain.FrontLineWorker flw, org.joda.time.DateTime monthStart, org.motechproject.nms.flw.domain.Service flw_service");
+                query.declareParameters("org.motechproject.nms.flw.domain.FrontLineWorker flw, org.joda.time.DateTime monthStart, org.motechproject.nms.props.domain.Service flw_service");
 
                 return (List<ServiceUsage>) query.execute(frontLineWorker, monthStart, service);
             }

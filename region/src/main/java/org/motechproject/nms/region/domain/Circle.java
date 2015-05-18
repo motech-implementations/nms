@@ -31,6 +31,7 @@ public class Circle extends MdsEntity {
 
     public Circle(String name) {
         this.name = name;
+        this.states = new ArrayList<>();
     }
 
     public String getName() {

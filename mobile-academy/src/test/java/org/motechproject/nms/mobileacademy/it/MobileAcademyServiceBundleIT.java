@@ -5,8 +5,11 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.mtraining.domain.Bookmark;
 import org.motechproject.mtraining.repository.BookmarkDataService;
+import org.motechproject.nms.mobileacademy.domain.CompletionRecord;
 import org.motechproject.nms.mobileacademy.domain.Course;
 import org.motechproject.nms.mobileacademy.dto.MaBookmark;
+import org.motechproject.nms.mobileacademy.exception.CourseNotCompletedException;
+import org.motechproject.nms.mobileacademy.repository.CompletionRecordDataService;
 import org.motechproject.nms.mobileacademy.repository.CourseDataService;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
 import org.motechproject.testing.osgi.BasePaxIT;
@@ -40,6 +43,9 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     @Inject
     private BookmarkDataService bookmarkDataService;
 
+    @Inject
+    private CompletionRecordDataService completionRecordDataService;
+
     private static String validCourseName = "MobileAcademyCourse";
 
     private static String invalidCourseName = "SampleCourse";
@@ -48,6 +54,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     public void setupMobileAcademy() {
 
         courseDataService.deleteAll();
+        completionRecordDataService.deleteAll();
     }
 
     @Test
@@ -124,7 +131,8 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     @Test
     public void testSetLastBookmark() {
         bookmarkDataService.deleteAll();
-        MaBookmark bookmark = new MaBookmark(9876543210L, 666L, null, null);
+        long callingNumber = 9876543210L;
+        MaBookmark bookmark = new MaBookmark(callingNumber, 666L, null, null);
         maService.setBookmark(bookmark);
         List<Bookmark> added = bookmarkDataService.findBookmarksForUser("9876543210");
         assertTrue(added.size() == 1);
@@ -141,7 +149,8 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     @Test
     public void testSetGetLastBookmark() {
         bookmarkDataService.deleteAll();
-        MaBookmark bookmark = new MaBookmark(9987654321L, 666L, null, null);
+        long callingNumber = 9987654321L;
+        MaBookmark bookmark = new MaBookmark(callingNumber, 666L, null, null);
         maService.setBookmark(bookmark);
         List<Bookmark> added = bookmarkDataService.findBookmarksForUser("9987654321");
         assertTrue(added.size() == 1);
@@ -154,7 +163,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         bookmark.setScoresByChapter(scores);
         maService.setBookmark(bookmark);
 
-        MaBookmark retrieved = maService.getBookmark(9987654321L, 666L);
+        MaBookmark retrieved = maService.getBookmark(callingNumber, 666L);
         assertNotNull(retrieved.getCallingNumber());
         assertNotNull(retrieved.getCallId());
         assertNotNull(retrieved.getBookmark());
@@ -164,7 +173,8 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     @Test
     public void testSetGetResetBookmark() {
         bookmarkDataService.deleteAll();
-        MaBookmark bookmark = new MaBookmark(9987654321L, 666L, null, null);
+        long callingNumber = 9987654321L;
+        MaBookmark bookmark = new MaBookmark(callingNumber, 666L, null, null);
         maService.setBookmark(bookmark);
         List<Bookmark> added = bookmarkDataService.findBookmarksForUser("9987654321");
         assertTrue(added.size() == 1);
@@ -177,7 +187,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         bookmark.setScoresByChapter(scores);
         maService.setBookmark(bookmark);
 
-        MaBookmark retrieved = maService.getBookmark(9987654321L, 666L);
+        MaBookmark retrieved = maService.getBookmark(callingNumber, 666L);
         assertNotNull(retrieved.getCallingNumber());
         assertNotNull(retrieved.getCallId());
         assertNull(retrieved.getBookmark());
@@ -188,6 +198,69 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     public void testGetBookmarkEmpty() {
 
         assertNull(maService.getBookmark(0L, 1L));
+    }
+
+    @Test
+    public void testTriggerNotificationSent() {
+        bookmarkDataService.deleteAll();
+        long callingNumber = 9876543210L;
+        MaBookmark bookmark = new MaBookmark(callingNumber, 666L, null, null);
+        maService.setBookmark(bookmark);
+        List<Bookmark> added = bookmarkDataService.findBookmarksForUser(String.valueOf(callingNumber));
+        assertTrue(added.size() == 1);
+
+        bookmark.setBookmark("Chapter11_Quiz");
+        Map<String, Integer> scores = new HashMap<>();
+        for (int i = 1; i < 12; i++) {
+            scores.put(String.valueOf(i), 3);
+        }
+        bookmark.setScoresByChapter(scores);
+        maService.setBookmark(bookmark);
+        CompletionRecord cr = completionRecordDataService.findRecordByCallingNumber(callingNumber);
+        assertNotNull(cr);
+        assertEquals(cr.getCallingNumber(), callingNumber);
+        assertEquals(cr.getScore(), 33);
+
+    }
+
+    @Test
+    public void testTriggerNotificationNotSent() {
+        bookmarkDataService.deleteAll();
+        long callingNumber = 9876543211L;
+        MaBookmark bookmark = new MaBookmark(callingNumber, 666L, null, null);
+        maService.setBookmark(bookmark);
+        List<Bookmark> added = bookmarkDataService.findBookmarksForUser(String.valueOf(callingNumber));
+        assertTrue(added.size() == 1);
+
+        bookmark.setBookmark("Chapter11_Quiz");
+        Map<String, Integer> scores = new HashMap<>();
+        for (int i = 1; i < 12; i++) {
+            scores.put(String.valueOf(i), 1);
+        }
+        bookmark.setScoresByChapter(scores);
+        maService.setBookmark(bookmark);
+        // null because we set a failing score
+        assertNull(completionRecordDataService.findRecordByCallingNumber(callingNumber));
+    }
+
+    @Test
+    public void testRetriggerNotification() {
+
+        long callingNumber = 9876543211L;
+
+        CompletionRecord cr = new CompletionRecord(callingNumber, 44, true, 1);
+        completionRecordDataService.create(cr);
+
+        maService.triggerCompletionNotification(callingNumber);
+        cr = completionRecordDataService.findRecordByCallingNumber(callingNumber);
+        assertFalse(cr.isSentNotification());
+    }
+
+    @Test(expected = CourseNotCompletedException.class)
+    public void testRetriggerNotificationException() {
+
+        long callingNumber = 9876543222L;
+        maService.triggerCompletionNotification(callingNumber);
     }
 
     private void addCourseHelper(String courseName) {

@@ -1,8 +1,8 @@
 package org.motechproject.nms.flw.service;
 
 import org.motechproject.nms.flw.domain.FrontLineWorker;
-import org.motechproject.nms.flw.domain.Service;
 import org.motechproject.nms.flw.domain.ServiceUsage;
+import org.motechproject.nms.props.domain.Service;
 
 import java.util.List;
 

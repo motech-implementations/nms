@@ -242,6 +242,14 @@ public class CsrServiceBundleIT extends BasePaxIT {
     @Test
     public void verifyIssue169() {
         Subscription subscription = makeSubscription(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
+        Subscriber subscriber = subscription.getSubscriber();
+
+        LanguageLocation languageLocation;
+        languageLocation = (LanguageLocation) subscriberDataService.getDetachedField(subscriber,
+                "languageLocation");
+
+        Circle circle;
+        circle = (Circle) subscriberDataService.getDetachedField(subscriber, "circle");
 
 
         csrDataService.create(new CallSummaryRecord(

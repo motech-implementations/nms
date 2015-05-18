@@ -6,6 +6,7 @@ import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.nms.props.domain.CallDisconnectReason;
 import org.motechproject.nms.props.domain.FinalCallStatus;
+import org.motechproject.nms.props.domain.Service;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Extension;

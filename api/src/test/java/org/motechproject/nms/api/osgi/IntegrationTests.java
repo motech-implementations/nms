@@ -8,6 +8,7 @@ import org.junit.runners.Suite;
  */
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
+        LanguageControllerBundleIT.class,
         UserControllerBundleIT.class,
         CallDetailsControllerBundleIT.class,
         KilkariControllerBundleIT.class,

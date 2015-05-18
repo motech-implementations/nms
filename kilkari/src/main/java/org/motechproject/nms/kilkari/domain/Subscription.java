@@ -68,7 +68,6 @@ public class Subscription {
         if (origin == SubscriptionOrigin.MCTS_IMPORT) {
             needsWelcomeMessage = true;
         }
-        this.subscriber.getSubscriptions().add(this);
     }
 
     public String getSubscriptionId() { return subscriptionId; }
