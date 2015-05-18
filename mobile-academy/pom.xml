@@ -64,7 +64,7 @@
         <dependency>
             <groupId>org.motechproject</groupId>
             <artifactId>motech-platform-server-config</artifactId>
-            <version>0.26-SNAPSHOT</version>
+            <version>${motech.version}</version>
         </dependency>
     </dependencies>
 
