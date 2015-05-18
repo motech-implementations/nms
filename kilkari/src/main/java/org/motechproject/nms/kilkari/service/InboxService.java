@@ -7,7 +7,7 @@ import org.motechproject.nms.kilkari.exception.NoInboxForSubscriptionException;
 
 
 /**
- * Service interface for handling the Kilkar inbox.
+ * Service interface for handling the Kilkari inbox.
  */
 public interface InboxService {
 
