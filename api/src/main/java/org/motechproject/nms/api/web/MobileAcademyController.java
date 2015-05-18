@@ -8,6 +8,7 @@ import org.motechproject.nms.api.web.contract.mobileAcademy.SaveBookmarkRequest;
 import org.motechproject.nms.api.web.converter.MobileAcademyConverter;
 import org.motechproject.nms.mobileacademy.domain.Course;
 import org.motechproject.nms.mobileacademy.dto.MaBookmark;
+import org.motechproject.nms.mobileacademy.exception.CourseNotCompletedException;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,7 +81,7 @@ public class MobileAcademyController extends BaseController {
             method = RequestMethod.GET)
     @ResponseBody
     public CourseVersionResponse getCourseVersion() {
-        
+
         return new CourseVersionResponse(mobileAcademyService.getCourseVersion());
     }
 
@@ -140,6 +141,28 @@ public class MobileAcademyController extends BaseController {
         // TBD in Sprint 2: https://github.com/motech-implementations/mim/issues/150 and will be implemented
         // using the SMS module
         throw new NotImplementedException();
+    }
+
+    @RequestMapping(
+            value = "/notify",
+            method = RequestMethod.POST)
+    @ResponseStatus(HttpStatus.OK)
+    public void sendNotification(@RequestBody Long callingNumber) {
+
+        StringBuilder errors = new StringBuilder();
+        validateField10Digits(errors, "callingNumber", callingNumber);
+        if (errors.length() != 0) {
+            throw new IllegalArgumentException(errors.toString());
+        }
+
+        // done with validation
+
+        try {
+            mobileAcademyService.triggerCompletionNotification(callingNumber);
+        } catch (CourseNotCompletedException cnc) {
+            LOGGER.error("Could not send notification: " + cnc.toString());
+            throw cnc;
+        }
     }
 
 }

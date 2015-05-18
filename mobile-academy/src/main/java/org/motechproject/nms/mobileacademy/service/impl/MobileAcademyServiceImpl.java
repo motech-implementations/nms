@@ -9,6 +9,7 @@ import org.motechproject.mtraining.repository.BookmarkDataService;
 import org.motechproject.nms.mobileacademy.domain.CompletionRecord;
 import org.motechproject.nms.mobileacademy.domain.Course;
 import org.motechproject.nms.mobileacademy.dto.MaBookmark;
+import org.motechproject.nms.mobileacademy.exception.CourseNotCompletedException;
 import org.motechproject.nms.mobileacademy.repository.CompletionRecordDataService;
 import org.motechproject.nms.mobileacademy.repository.CourseDataService;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
@@ -32,6 +33,8 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
     private static final String COURSE_COMPLETED = "nms.ma.course.completed";
 
     private static final String SCORES_KEY = "scoresByChapter";
+
+    private static final String NOT_COMPLETE = "<%s: Course not complete>";
 
     private static final int CHAPTER_COUNT = 11;
 
@@ -153,6 +156,31 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
         }
     }
 
+    @Override
+    public void triggerCompletionNotification(Long callingNumber) {
+
+        CompletionRecord cr = completionRecordDataService.findRecordByCallingNumber(callingNumber);
+
+        // No completion record found, fail notification
+        if (cr == null) {
+            throw new CourseNotCompletedException(String.format(NOT_COMPLETE, String.valueOf(callingNumber)));
+        }
+
+        // reset notification status on the completion record and try again
+
+        if (cr.isSentNotification()) {
+            LOGGER.debug("Found existing completion record, resetting and trying again");
+            cr.setSentNotification(false);
+            completionRecordDataService.update(cr);
+        }
+
+        Map<String, Object> eventParams = new HashMap<>();
+        eventParams.put("callingNumber", callingNumber);
+        MotechEvent motechEvent = new MotechEvent(COURSE_COMPLETED, eventParams);
+        eventRelay.sendEventMessage(motechEvent);
+        LOGGER.debug("Sent event message to process completion notification");
+    }
+
     // Map the dto to the domain object
     private Bookmark setBookmarkProperties(MaBookmark fromBookmark, Bookmark toBookmark) {
 
@@ -199,7 +227,12 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
         return toReturn;
     }
 
-    // Get scores by chapter from bookmark
+    /**
+     * Given a bookmark, get the scores map for it
+     * @param bookmark bookmark object
+     * @return map of course-score from the bookmark
+     * @throws ClassCastException
+     */
     private Map<String, Integer> getScores(Bookmark bookmark) throws ClassCastException {
 
         if (bookmark != null && bookmark.getProgress() != null) {
@@ -238,13 +271,8 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
         }
 
         // we updated the completion record. Start event message to trigger notification workflow
-        Map<String, Object> eventParams = new HashMap<>();
-        eventParams.put("callingNumber", callingNumber);
-        MotechEvent motechEvent = new MotechEvent(COURSE_COMPLETED, eventParams);
-        eventRelay.sendEventMessage(motechEvent);
-        LOGGER.debug("Sent event message to process completion notification");
+        triggerCompletionNotification(callingNumber);
     }
-
 
     /**
      * Get total scores from all chapters
