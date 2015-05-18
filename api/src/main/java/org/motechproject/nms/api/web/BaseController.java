@@ -8,7 +8,7 @@ import org.motechproject.nms.api.web.exception.NotFoundException;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.service.WhitelistService;
 import org.motechproject.nms.props.domain.CallDisconnectReason;
-import org.motechproject.nms.props.domain.CallStatus;
+import org.motechproject.nms.props.domain.FinalCallStatus;
 import org.motechproject.nms.props.domain.Service;
 import org.motechproject.nms.props.service.PropertyService;
 import org.motechproject.nms.region.domain.Circle;
@@ -116,7 +116,7 @@ public class BaseController {
         if (!validateFieldPresent(errors, fieldName, value)) {
             return false;
         }
-        if (CallStatus.isValid(value)) {
+        if (FinalCallStatus.isValid(value)) {
             return true;
         }
         errors.append(String.format(INVALID, fieldName));

@@ -11,7 +11,6 @@ import org.motechproject.nms.imi.service.SettingsService;
 import org.motechproject.nms.imi.web.contract.BadRequest;
 import org.motechproject.nms.imi.web.contract.CdrFileNotificationRequest;
 import org.motechproject.nms.imi.web.contract.FileInfo;
-import org.motechproject.nms.kilkari.domain.CallDetailRecord;
 import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
@@ -32,7 +31,6 @@ import org.ops4j.pax.exam.spi.reactors.PerSuite;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
-import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -83,15 +81,15 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
     private HttpPost createCdrFileNotificationHttpPost(CdrHelper helper, boolean useValidTargetFile,
                                                        boolean useValidSummaryFile, boolean useValidDetailFile)
             throws IOException, NoSuchAlgorithmException {
-        String targetFile = useValidTargetFile ? helper.obdFileName() : helper.obdFileName() + "xxx";
-        String summaryFile = useValidSummaryFile ? helper.cdrSummaryFileName() : helper.cdrSummaryFileName() + "xxx";
-        String detailFile = useValidDetailFile ? helper.cdrDetailFileName() : helper.cdrDetailFileName() + "xxx";
+        String targetFile = useValidTargetFile ? helper.obd() : helper.obd() + "xxx";
+        String summaryFile = useValidSummaryFile ? helper.csr() : helper.csr() + "xxx";
+        String detailFile = useValidDetailFile ? helper.cdr() : helper.cdr() + "xxx";
 
         FileInfo cdrSummary;
         FileInfo cdrDetail;
         if (useValidTargetFile && useValidSummaryFile && useValidDetailFile) {
-            cdrSummary = new FileInfo(summaryFile, helper.summaryFileChecksum(), 1);
-            cdrDetail = new FileInfo(detailFile, helper.detailFileChecksum(), 0);
+            cdrSummary = new FileInfo(summaryFile, helper.csrChecksum(), 0);
+            cdrDetail = new FileInfo(detailFile, helper.cdrChecksum(), 1);
         } else {
             cdrSummary = new FileInfo(summaryFile, "", 0);
             cdrDetail = new FileInfo(detailFile, "", 0);
@@ -121,10 +119,9 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
                 languageDataService, languageLocationDataService, circleDataService, stateDataService,
                 districtDataService);
 
-        List<CallDetailRecord> cdrs = helper.makeCdrs();
-        helper.setCrds(cdrs);
-        helper.makeCdrSummaryFile();
-        helper.makeCdrDetailFile();
+        helper.makeCdrs(1,0,0,0);
+        helper.makeCsr();
+        helper.makeCdr();
 
         HttpPost httpPost = createCdrFileNotificationHttpPost(helper, true, true, true);
 
@@ -142,7 +139,8 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
                 languageDataService, languageLocationDataService, circleDataService, stateDataService,
                 districtDataService);
 
-        helper.makeCdrDetailFile();
+        helper.makeCdrs(1,0,0,0);
+        helper.makeCdr();
 
         HttpPost httpPost = createCdrFileNotificationHttpPost(helper, true, false, true);
 

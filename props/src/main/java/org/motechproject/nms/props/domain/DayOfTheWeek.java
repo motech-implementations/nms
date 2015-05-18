@@ -11,17 +11,6 @@ public enum DayOfTheWeek {
     SATURDAY(6),
     SUNDAY(7);
 
-    public static DayOfTheWeek today() {
-        return fromInt(DateTime.now().getDayOfWeek());
-    }
-
-    public DayOfTheWeek nextDay() {
-        if (value == SUNDAY.getValue()) {
-            return MONDAY;
-        }
-        return values()[value];
-    }
-
     private final int value;
 
     DayOfTheWeek(int value) {
@@ -32,20 +21,27 @@ public enum DayOfTheWeek {
         return value;
     }
 
-    public static boolean isValid(int i) {
-        return (i >= MONDAY.getValue() && i <= SUNDAY.getValue());
-    }
-
+    //NOTE: this only works if the values are consecutive
     public static DayOfTheWeek fromInt(int i) {
-        if (isValid(i)) {
+        if (i >= MONDAY.getValue() && i <= SUNDAY.getValue()) {
             return values()[i - MONDAY.getValue()];
         } else {
             throw new IllegalArgumentException(String.format("%d is an invalid DayOfTheWeek", i));
         }
     }
 
+    public static DayOfTheWeek today() {
+        return fromInt(DateTime.now().getDayOfWeek());
+    }
+
     public static DayOfTheWeek fromDateTime(DateTime dt) {
         return fromInt(dt.getDayOfWeek());
     }
 
+    public DayOfTheWeek nextDay() {
+        if (value == SUNDAY.getValue()) {
+            return MONDAY;
+        }
+        return values()[value];
+    }
 }

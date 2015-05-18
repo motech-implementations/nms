@@ -126,7 +126,7 @@ public class ImiController {
             throw new IllegalArgumentException(failureReasons.toString());
         }
 
-        cdrFileService.processCdrFile(request);
+        cdrFileService.processDetailFile(request.getCdrDetail());
     }
 
 
@@ -189,6 +189,18 @@ public class ImiController {
     @ResponseBody
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public BadRequest handleException(HttpMessageNotReadableException e) {
+        return new BadRequest(e.getMessage());
+    }
+
+
+
+    /**
+     * Handles any other exception
+     */
+    @ExceptionHandler(Exception.class)
+    @ResponseBody
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public BadRequest handleException(Exception e) {
         return new BadRequest(e.getMessage());
     }
 
