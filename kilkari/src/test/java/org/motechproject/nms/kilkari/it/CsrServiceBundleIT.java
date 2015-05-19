@@ -1,6 +1,8 @@
 package org.motechproject.nms.kilkari.it;
 
 import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -59,7 +61,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
     private static final String PROCESS_SUMMARY_RECORD = "nms.imi.kk.process_summary_record";
     private static final String CSR_PARAM_KEY = "csr";
-    private static final String IMI_SERVICE_ID = "some_service_id"; //todo: look into that more closely
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormat.forPattern("yyyyMMddHHmmss");
 
     @Inject
     EventRelay eventRelay;
@@ -299,6 +301,24 @@ public class CsrServiceBundleIT extends BasePaxIT {
         subscription = subscriptionDataService.findBySubscriptionId(subscription.getSubscriptionId());
         assertEquals(SubscriptionStatus.DEACTIVATED, subscription.getStatus());
         assertEquals(DeactivationReason.INVALID_NUMBER, subscription.getDeactivationReason());
+    }
+
+
+    @Test
+    public void verifySubscriptionCompletion() {
+
+        String timestamp = DateTime.now().toString(TIME_FORMATTER);
+
+        CsrHelper helper = new CsrHelper(timestamp, subscriptionService, subscriberDataService,
+                languageDataService, languageLocationDataService, circleDataService, stateDataService,
+                districtDataService);
+
+        helper.makeRecords();
+
+        Map<String, Object> eventParams = new HashMap<>();
+        eventParams.put(CSR_PARAM_KEY, csr);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD, eventParams);
+        csrService.processCallSummaryRecord(motechEvent);
     }
 
 

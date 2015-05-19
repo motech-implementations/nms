@@ -1,4 +1,4 @@
-package org.motechproject.nms.imi.it;
+package org.motechproject.nms.kilkari.it;
 
 import org.joda.time.DateTime;
 import org.motechproject.nms.kilkari.domain.Subscription;
@@ -54,10 +54,28 @@ public class CsrHelper {
     }
 
 
-    public void makeRecords(int numSuccess, int numFailed, int numInvalid) {
+    public void makeRecords(int numSuccess, int numCompleted, int numFailed, int numInvalid) {
         records = new ArrayList<>();
 
         for (int i=0 ; i<numSuccess ; i++) {
+            Subscription sub = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(30));
+            int index = sh.getRandomMessageIndex(sub);
+            CallSummaryRecordDto r = new CallSummaryRecordDto(
+                    new RequestId(sub.getSubscriptionId(), TIMESTAMP),
+                    sub.getSubscriber().getCallingNumber(),
+                    sh.getContentMessageFile(sub, index),
+                    sh.getWeekId(sub, index),
+                    sh.getLanguageLocationCode(sub),
+                    sh.getCircle(sub),
+                    FinalCallStatus.SUCCESS,
+                    makeStatsMap(StatusCode.OBD_SUCCESS_CALL_CONNECTED, 1),
+                    120,
+                    1
+            );
+            records.add(r);
+        }
+
+        for (int i=0 ; i<numCompleted ; i++) {
             Subscription sub = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(30));
             int index = sh.getRandomMessageIndex(sub);
             CallSummaryRecordDto r = new CallSummaryRecordDto(
