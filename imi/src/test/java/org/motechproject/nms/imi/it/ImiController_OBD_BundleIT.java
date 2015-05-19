@@ -85,7 +85,8 @@ public class ImiController_OBD_BundleIT extends BasePaxIT {
         getLogger().debug("testCreateFileProcessedStatusRequest()");
         HttpPost httpPost = createFileProcessedStatusHttpPost("file.csv",
                 FileProcessedStatus.FILE_PROCESSED_SUCCESSFULLY);
-        fileAuditRecordDataService.create(new FileAuditRecord(FileType.TARGET_FILE, "file.csv", "OK", 0, ""));
+        fileAuditRecordDataService.create(new FileAuditRecord(FileType.TARGET_FILE, "file.csv", true, null, null,
+                null));
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
@@ -118,7 +119,8 @@ public class ImiController_OBD_BundleIT extends BasePaxIT {
         HttpPost httpPost = createFileProcessedStatusHttpPost("file.csv",
                 FileProcessedStatus.FILE_ERROR_IN_FILE_FORMAT);
 
-        fileAuditRecordDataService.create(new FileAuditRecord(FileType.TARGET_FILE, "file.csv", "ERROR", 0, ""));
+        fileAuditRecordDataService.create(new FileAuditRecord(FileType.TARGET_FILE, "file.csv", false, "ERROR",
+                null, null));
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK, ADMIN_USERNAME, ADMIN_PASSWORD));
 

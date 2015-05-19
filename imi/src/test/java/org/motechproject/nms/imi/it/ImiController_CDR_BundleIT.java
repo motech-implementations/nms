@@ -7,6 +7,7 @@ import org.apache.http.entity.StringEntity;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.motechproject.nms.imi.repository.FileAuditRecordDataService;
 import org.motechproject.nms.imi.service.SettingsService;
 import org.motechproject.nms.imi.web.contract.BadRequest;
 import org.motechproject.nms.imi.web.contract.CdrFileNotificationRequest;
@@ -71,6 +72,10 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
     @Inject
     private CallRetryDataService callRetryDataService;
 
+    @Inject
+    private FileAuditRecordDataService fileAuditRecordDataService;
+
+
     private String createFailureResponseJson(String failureReason) throws IOException {
         BadRequest badRequest = new BadRequest(failureReason);
         ObjectMapper mapper = new ObjectMapper();
@@ -117,11 +122,12 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
                 languageDataService, languageLocationDataService, circleDataService, stateDataService,
-                districtDataService);
+                districtDataService, fileAuditRecordDataService);
 
         helper.makeCdrs(1,0,0,0);
-        helper.makeCsr();
-        helper.makeCdr();
+        helper.makeCsrFile();
+        helper.makeCdrFile();
+        helper.createObdFileAuditRecord(true, true);
 
         HttpPost httpPost = createCdrFileNotificationHttpPost(helper, true, true, true);
 
@@ -137,10 +143,10 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
                 languageDataService, languageLocationDataService, circleDataService, stateDataService,
-                districtDataService);
+                districtDataService, fileAuditRecordDataService);
 
         helper.makeCdrs(1,0,0,0);
-        helper.makeCdr();
+        helper.makeCdrFile();
 
         HttpPost httpPost = createCdrFileNotificationHttpPost(helper, true, false, true);
 
@@ -158,7 +164,7 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
                 languageDataService, languageLocationDataService, circleDataService, stateDataService,
-                districtDataService);
+                districtDataService, fileAuditRecordDataService);
         HttpPost httpPost = createCdrFileNotificationHttpPost(helper, false, true, true);
 
         // All 3 filenames will be considered invalid because the target file is of invalid format, and the CDR

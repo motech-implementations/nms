@@ -59,6 +59,8 @@ public interface SubscriptionService {
      */
     SubscriptionPack getSubscriptionPack(String name);
 
+    List<SubscriptionPack> getSubscriptionPacks();
+
     /**
      * Delete all Kilkari subscriptions. To be used only by test code.
      */

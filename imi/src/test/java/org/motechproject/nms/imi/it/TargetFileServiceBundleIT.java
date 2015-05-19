@@ -139,11 +139,12 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
                 SubscriptionOrigin.MCTS_IMPORT);
         subscriptionService.deactivateSubscription(s, DeactivationReason.CHILD_DEATH);
 
-        callRetryDataService.create(new CallRetry("123", 3333333333L, DayOfTheWeek.today(), CallStage.RETRY_1,
-                "w1_m1.wav", "w1_1", hindi.getCode(), aa.getName(), SubscriptionOrigin.IVR));
-        callRetryDataService.create(new CallRetry("546", 4444444444L, DayOfTheWeek.today().nextDay(),
-                CallStage.RETRY_1, "w1_m1.wav", "w1_1", hindi.getCode(), bb.getName(),
-                SubscriptionOrigin.MCTS_IMPORT));
+        callRetryDataService.create(new CallRetry("11111111-1111-1111-1111-111111111111", 3333333333L, 
+                DayOfTheWeek.today(), CallStage.RETRY_1, "w1_m1.wav", "w1_1", hindi.getCode(), aa.getName(), 
+                SubscriptionOrigin.IVR));
+        callRetryDataService.create(new CallRetry("22222222-2222-2222-2222-222222222222", 4444444444L,
+                DayOfTheWeek.today().nextDay(), CallStage.RETRY_1, "w1_m1.wav", "w1_1", hindi.getCode(),
+                bb.getName(), SubscriptionOrigin.MCTS_IMPORT));
     }
 
 

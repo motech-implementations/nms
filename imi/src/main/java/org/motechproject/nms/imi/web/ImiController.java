@@ -1,10 +1,12 @@
 package org.motechproject.nms.imi.web;
 
 import org.motechproject.nms.imi.domain.FileAuditRecord;
+import org.motechproject.nms.imi.exception.InvalidCdrFileException;
 import org.motechproject.nms.imi.exception.NotFoundException;
 import org.motechproject.nms.imi.repository.FileAuditRecordDataService;
 import org.motechproject.nms.imi.service.CdrFileService;
 import org.motechproject.nms.imi.service.TargetFileService;
+import org.motechproject.nms.imi.web.contract.AggregateBadRequest;
 import org.motechproject.nms.imi.web.contract.BadRequest;
 import org.motechproject.nms.imi.web.contract.CdrFileNotificationRequest;
 import org.motechproject.nms.imi.web.contract.FileInfo;
@@ -31,13 +33,11 @@ public class ImiController {
 
     public static final String NOT_PRESENT = "<%s: Not Present>";
     public static final String INVALID = "<%s: Invalid>";
-    //todo: should we verify this is a valid yyyymmddhhmmss?
     public static final Pattern TARGET_FILENAME_PATTERN = Pattern.compile("OBD_[0-9]{14}\\.csv");
 
     private CdrFileService cdrFileService;
     private TargetFileService targetFileService;
     private FileAuditRecordDataService fileAuditRecordDataService;
-
 
 
     @Autowired
@@ -47,7 +47,6 @@ public class ImiController {
         this.targetFileService = targetFileService;
         this.fileAuditRecordDataService = fileAuditRecordDataService;
     }
-
 
 
     private static boolean validateFieldPresent(StringBuilder errors, String fieldName, Object value) {
@@ -103,6 +102,13 @@ public class ImiController {
     }
 
 
+    private void verifyFileAuditRecord(String fileName) {
+        List<FileAuditRecord> records =  fileAuditRecordDataService.findByFileName(fileName);
+        if (records.size() < 1) {
+            throw new NotFoundException("<fileName: Not Found>");
+        }
+    }
+
 
     /**
      * 4.2.6
@@ -126,9 +132,11 @@ public class ImiController {
             throw new IllegalArgumentException(failureReasons.toString());
         }
 
-        cdrFileService.processDetailFile(request.getCdrDetail());
-    }
+        // Check the provided OBD file (aka: targetFile) exists in the FileAuditRecord table
+        verifyFileAuditRecord(request.getFileName());
 
+        cdrFileService.dispatchSummaryRecords(request.getCdrDetail());
+    }
 
 
     /**
@@ -153,15 +161,11 @@ public class ImiController {
             throw new IllegalArgumentException(failureReasons.toString());
         }
 
-        List<FileAuditRecord> records =  fileAuditRecordDataService.findByFileName(request.getFileName());
-        if (records.size() < 1) {
-            throw new NotFoundException("<fileName: Not Found>");
-        }
+        verifyFileAuditRecord(request.getFileName());
 
         // call OBD service, which will handle notification
         targetFileService.handleFileProcessedStatusNotification(request);
     }
-
 
 
     @ExceptionHandler({ NotFoundException.class })
@@ -172,14 +176,12 @@ public class ImiController {
     }
 
 
-
     @ExceptionHandler({ IllegalArgumentException.class, IllegalStateException.class })
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ResponseBody
     public BadRequest handleException(IllegalArgumentException e) {
         return new BadRequest(e.getMessage());
     }
-
 
 
     /**
@@ -193,6 +195,17 @@ public class ImiController {
     }
 
 
+    /**
+     * Handles InvalidCdrFileException - potentially a large amount of errors all in one list of string
+     */
+    //todo: IT or UT
+    @ExceptionHandler(InvalidCdrFileException.class)
+    @ResponseBody
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public AggregateBadRequest handleException(InvalidCdrFileException e) {
+        return new AggregateBadRequest(e.getMessages());
+    }
+
 
     /**
      * Handles any other exception
@@ -203,6 +216,4 @@ public class ImiController {
     public BadRequest handleException(Exception e) {
         return new BadRequest(e.getMessage());
     }
-
-
 }

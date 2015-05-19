@@ -229,6 +229,12 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
 
+    @Override
+    public List<SubscriptionPack> getSubscriptionPacks() {
+        return subscriptionPackDataService.retrieveAll();
+    }
+
+
     /**
      * To be used by ITs only!
      */
