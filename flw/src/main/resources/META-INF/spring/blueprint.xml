@@ -51,6 +51,9 @@
     <osgi:reference id="whitelistEntryDataService"
                     interface="org.motechproject.nms.flw.repository.WhitelistEntryDataService" />
 
+    <osgi:reference id="whitelistStateDataService"
+                    interface="org.motechproject.nms.flw.repository.WhitelistStateDataService" />
+
     <osgi:reference id="stateDataService"
                     interface="org.motechproject.nms.region.repository.StateDataService" />
 

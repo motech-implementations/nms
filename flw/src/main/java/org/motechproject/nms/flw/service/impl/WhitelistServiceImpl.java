@@ -3,6 +3,7 @@ package org.motechproject.nms.flw.service.impl;
 import org.motechproject.mds.query.QueryExecution;
 import org.motechproject.mds.util.InstanceSecurityRestriction;
 import org.motechproject.nms.flw.repository.WhitelistEntryDataService;
+import org.motechproject.nms.flw.repository.WhitelistStateDataService;
 import org.motechproject.nms.flw.service.WhitelistService;
 import org.motechproject.nms.region.domain.State;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,11 +13,14 @@ import javax.jdo.Query;
 
 @Service("whitelistService")
 public class WhitelistServiceImpl implements WhitelistService {
+    private WhitelistStateDataService whitelistStateDataService;
     private WhitelistEntryDataService whitelistEntryDataService;
 
     @Autowired
-    public WhitelistServiceImpl(WhitelistEntryDataService whitelistEntryDataService) {
+    public WhitelistServiceImpl(WhitelistEntryDataService whitelistEntryDataService,
+                                WhitelistStateDataService whitelistStateDataService) {
         this.whitelistEntryDataService = whitelistEntryDataService;
+        this.whitelistStateDataService = whitelistStateDataService;
     }
 
     private boolean whitelistEnabledForState(final State state) {
@@ -34,7 +38,7 @@ public class WhitelistServiceImpl implements WhitelistService {
             }
         };
 
-        Long isWhitelisted = whitelistEntryDataService.executeQuery(stateQueryExecution);
+        Long isWhitelisted = whitelistStateDataService.executeQuery(stateQueryExecution);
 
         if (isWhitelisted != null && isWhitelisted > 0) {
             return true;
