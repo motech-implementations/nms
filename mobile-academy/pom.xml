@@ -107,13 +107,15 @@
                         <Blueprint-Enabled>true</Blueprint-Enabled>
                         <Resource-Path>mobileacademy/resources</Resource-Path>
                         <Context-Path>mobileacademy</Context-Path>
-                        <Export-Package>org.motechproject.nms.mobileacademy.service; version=${project.version},
-                            org.motechproject.nms.mobileacademy.repository;version=${project.version},
+                        <Export-Package>
                             org.motechproject.nms.mobileacademy.domain;version=${project.version},
                             org.motechproject.nms.mobileacademy.domain.course;version=${project.version},
                             org.motechproject.nms.mobileacademy.dto;version=${project.version},
-                            org.motechproject.nms.mobileacademy.web;version=${project.version},
+                            org.motechproject.nms.mobileacademy.repository;version=${project.version},
                             org.motechproject.nms.mobileacademy.exception;version=${project.version},
+                            org.motechproject.nms.mobileacademy.notification;version=${project.version},
+                            org.motechproject.nms.mobileacademy.service; version=${project.version},
+                            org.motechproject.nms.mobileacademy.web;version=${project.version},
                         </Export-Package>
                         <Import-Package>
                             org.motechproject.osgi.web,

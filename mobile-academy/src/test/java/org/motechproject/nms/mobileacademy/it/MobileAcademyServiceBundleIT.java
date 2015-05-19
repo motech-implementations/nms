@@ -3,12 +3,14 @@ package org.motechproject.nms.mobileacademy.it;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.motechproject.event.MotechEvent;
 import org.motechproject.mtraining.domain.Bookmark;
 import org.motechproject.mtraining.repository.BookmarkDataService;
 import org.motechproject.nms.mobileacademy.domain.CompletionRecord;
 import org.motechproject.nms.mobileacademy.domain.Course;
 import org.motechproject.nms.mobileacademy.dto.MaBookmark;
 import org.motechproject.nms.mobileacademy.exception.CourseNotCompletedException;
+import org.motechproject.nms.mobileacademy.notification.SmsNotificationHandler;
 import org.motechproject.nms.mobileacademy.repository.CompletionRecordDataService;
 import org.motechproject.nms.mobileacademy.repository.CourseDataService;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
@@ -19,6 +21,7 @@ import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
+import javax.annotation.Resource;
 import javax.inject.Inject;
 import java.util.HashMap;
 import java.util.List;
@@ -45,6 +48,9 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
 
     @Inject
     private CompletionRecordDataService completionRecordDataService;
+
+    @Resource(name = "smsNotificationHandler")
+    private SmsNotificationHandler smsNotificationHandler;
 
     private static String validCourseName = "MobileAcademyCourse";
 
@@ -261,6 +267,18 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
 
         long callingNumber = 9876543222L;
         maService.triggerCompletionNotification(callingNumber);
+    }
+
+    @Test
+    public void testNotification() {
+
+        completionRecordDataService.deleteAll();
+        long callingNumber = 9876543211L;
+        MotechEvent event = new MotechEvent();
+        event.getParameters().put("callingNumber", callingNumber);
+        CompletionRecord cr = new CompletionRecord(callingNumber, 35, false, 1);
+        completionRecordDataService.create(cr);
+        smsNotificationHandler.sendSmsNotification(event);
     }
 
     private void addCourseHelper(String courseName) {

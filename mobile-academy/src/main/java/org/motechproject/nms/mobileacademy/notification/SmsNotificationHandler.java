@@ -27,7 +27,7 @@ import java.io.IOException;
  * This handles all the integration pieces between MA and sms module to trigger and handle notifications
  * for course completion
  */
-@Component
+@Component("smsNotificationHandler")
 public class SmsNotificationHandler {
 
     private static final String COURSE_COMPLETED = "nms.ma.course.completed";
@@ -61,6 +61,12 @@ public class SmsNotificationHandler {
         LOGGER.debug("Handling course completion notification event");
         Long callingNumber = (Long) event.getParameters().get("callingNumber");
         CompletionRecord cr = completionRecordDataService.findRecordByCallingNumber(callingNumber);
+
+        if(cr == null) {
+            // this should never be possible since the event dispatcher upstream adds the record
+            LOGGER.error("No completion record found for callingNumber: " + callingNumber);
+        }
+
         cr.setSentNotification(sendNotificationRequest(callingNumber));
         completionRecordDataService.update(cr);
     }
@@ -115,7 +121,8 @@ public class SmsNotificationHandler {
         HttpPost request = new HttpPost(endpoint);
         request.setHeader("Content-type", "application/json");
         try {
-            String template = FileUtils.readFileToString(new File(getClass().getClassLoader().getResource("sms-template.json").getFile()));
+            File smsTemplate = new File(getClass().getClassLoader().getResource("sms-template.json").getFile());
+            String template = FileUtils.readFileToString(smsTemplate);
             template.replace("<phoneNumber>", String.valueOf(callingNumber));
             template.replace("<senderId>", senderId);
             template.replace("<messageContent>", messageContent);
