@@ -10,7 +10,7 @@ import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import java.util.Map;
 
-@Entity(tableName = "nms_kilkari_call_summary_records")
+@Entity(tableName = "nms_kk_summary_records")
 public class CallSummaryRecord {
 
     @Field

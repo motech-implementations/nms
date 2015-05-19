@@ -8,6 +8,7 @@ import org.motechproject.nms.imi.domain.FileAuditRecord;
 import org.motechproject.nms.imi.domain.FileType;
 import org.motechproject.nms.imi.repository.FileAuditRecordDataService;
 import org.motechproject.nms.imi.service.SettingsService;
+import org.motechproject.nms.imi.web.contract.FileInfo;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.dto.CallDetailRecordDto;
@@ -99,8 +100,46 @@ public class CdrHelper {
     }
 
 
+    private static final StatusCode[] failureReasons = {
+            StatusCode.OBD_FAILED_BUSY,
+            StatusCode.OBD_FAILED_NOANSWER,
+            StatusCode.OBD_FAILED_NOATTEMPT,
+            StatusCode.OBD_FAILED_OTHERS,
+            StatusCode.OBD_FAILED_SWITCHEDOFF
+    };
+
+
+    private StatusCode randomFailureStatusCode() {
+        return failureReasons[(int) (Math.random() * failureReasons.length)];
+    }
+
+
+    public void makeSingleCallCdrs(int numFailure, boolean eventuallySuccessful) {
+        if (cdrs == null) { cdrs = new ArrayList<>(); }
+
+        Subscription sub = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(30));
+        for (int i = 0; i < numFailure; i++) {
+            CallDetailRecordDto cdr = makeCdrFile(sub);
+            cdr.setStatusCode(randomFailureStatusCode());
+            cdr.setContentFile(sh.getChildPack().getMessages().get(5).getMessageFileName());
+            cdr.setCallDisconnectReason(CallDisconnectReason.NORMAL_DROP);
+            cdr.setWeekId("w5_1");
+            cdrs.add(cdr);
+        }
+
+        if (eventuallySuccessful) {
+            CallDetailRecordDto cdr = makeCdrFile(sub);
+            cdr.setStatusCode(StatusCode.OBD_SUCCESS_CALL_CONNECTED);
+            cdr.setContentFile(sh.getChildPack().getMessages().get(5).getMessageFileName());
+            cdr.setCallDisconnectReason(CallDisconnectReason.NORMAL_DROP);
+            cdr.setWeekId("w5_1");
+            cdrs.add(cdr);
+        }
+    }
+
+
     public void makeCdrs(int numSuccess, int numFailed, int numComplete, int numIvr) {
-        cdrs = new ArrayList<>();
+        if (cdrs == null) { cdrs = new ArrayList<>(); }
 
         for (int i=0 ; i<numSuccess ; i++) {
             Subscription sub = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(30));
@@ -302,7 +341,7 @@ public class CdrHelper {
     }
 
 
-    public void doMakeCdrFile(int numInvalidLines) throws IOException {
+    public File doMakeCdrFile(int numInvalidLines) throws IOException {
         File dstFile = new File(makeCdrDirectory(), cdr());
         LOGGER.debug("Creating detail file {}...", dstFile);
         BufferedWriter writer = new BufferedWriter(new FileWriter(dstFile));
@@ -318,16 +357,17 @@ public class CdrHelper {
         }
 
         writer.close();
+        return dstFile;
     }
 
 
-    public void makeCdrFile() throws IOException {
-        doMakeCdrFile(0);
+    public File makeCdrFile() throws IOException {
+        return doMakeCdrFile(0);
     }
 
 
-    public void makeCdrFile(int numInvalidLines) throws IOException {
-        doMakeCdrFile(numInvalidLines);
+    public File makeCdrFile(int numInvalidLines) throws IOException {
+        return doMakeCdrFile(numInvalidLines);
     }
 
 
@@ -352,5 +392,11 @@ public class CdrHelper {
 
     public String cdrChecksum() throws IOException, NoSuchAlgorithmException {
         return checksum(new File(cdrDirectory(), cdr()));
+    }
+
+
+    public FileInfo cdrFileInfo() throws IOException, NoSuchAlgorithmException {
+        return new FileInfo(cdr(), cdrChecksum(), cdrCount());
+
     }
 }

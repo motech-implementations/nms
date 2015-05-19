@@ -162,7 +162,7 @@ public class CsrValidatorServiceImpl implements CsrValidatorService {
 
         Iterator it = records.entrySet().iterator();
         while (it.hasNext()) {
-            Map.Entry entry = (Map.Entry)it.next();
+            Map.Entry entry = (Map.Entry) it.next();
             try {
                 validateSummaryRecord((CallSummaryRecordDto) entry.getValue());
             } catch (InvalidCsrException e) {

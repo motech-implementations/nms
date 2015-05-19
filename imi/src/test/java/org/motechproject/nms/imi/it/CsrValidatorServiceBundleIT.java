@@ -29,7 +29,6 @@ import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
 
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(PaxExam.class)
@@ -115,7 +114,7 @@ public class CsrValidatorServiceBundleIT extends BasePaxIT {
     }
 
 
-    @Test
+    @Test(expected = InvalidCsrException.class)
     public void testInvalid() {
         getLogger().debug("testInvalid()");
 
@@ -127,12 +126,6 @@ public class CsrValidatorServiceBundleIT extends BasePaxIT {
 
         helper.makeRecords(0, 0, 1);
 
-        // any error inside this would throw an exception
-        try {
-            csrValidatorService.validateSummaryRecord(helper.getRecords().get(0));
-        } catch (InvalidCsrException e) {
-            return;
-        }
-        assertFalse("Was expecting a InvalidCsrException but none was thrown.", false);
+        csrValidatorService.validateSummaryRecord(helper.getRecords().get(0));
     }
 }
