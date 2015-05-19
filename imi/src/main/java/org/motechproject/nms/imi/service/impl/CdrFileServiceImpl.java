@@ -73,7 +73,8 @@ public class CdrFileServiceImpl implements CdrFileService {
     private void reportAuditAndThrow(String file, String error) {
         LOGGER.error(error);
         alertService.create(file, "CDR Detail File", error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
-        fileAuditRecordDataService.create(new FileAuditRecord(FileType.CDR_DETAIL_FILE, file, error, null, null));
+        fileAuditRecordDataService.create(new FileAuditRecord(FileType.CDR_DETAIL_FILE, file, false, error, null,
+                null));
         throw new IllegalStateException(error);
     }
 
@@ -82,7 +83,8 @@ public class CdrFileServiceImpl implements CdrFileService {
         for (String error : errors) {
             LOGGER.error(error);
             alertService.create(file, "CDR Detail File", error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
-            fileAuditRecordDataService.create(new FileAuditRecord(FileType.CDR_DETAIL_FILE, file, error, null, null));
+            fileAuditRecordDataService.create(new FileAuditRecord(FileType.CDR_DETAIL_FILE, file, false, error,
+                    null, null));
         }
         throw new InvalidCdrFileException(errors);
     }
@@ -221,7 +223,7 @@ public class CdrFileServiceImpl implements CdrFileService {
             reportAuditAndThrow(fileInfo.getCdrFile(), parseResults.getErrors());
         }
 
-        if (csrValidatorService.validateCallSummaryRecords(parseResults)) {
+        if (csrValidatorService.validateSummaryRecords(parseResults)) {
             for (CallSummaryRecordDto record : parseResults.getRecords().values()) {
                 sendProcessCdrEvent(record);
             }

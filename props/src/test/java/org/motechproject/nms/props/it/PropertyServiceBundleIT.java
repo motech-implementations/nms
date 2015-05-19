@@ -1,4 +1,4 @@
-package org.motechproject.nms.props.osgi;
+package org.motechproject.nms.props.it;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;

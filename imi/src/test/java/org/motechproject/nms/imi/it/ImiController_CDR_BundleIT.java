@@ -125,8 +125,8 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
                 districtDataService, fileAuditRecordDataService);
 
         helper.makeCdrs(1,0,0,0);
-        helper.makeCsr();
-        helper.makeCdr();
+        helper.makeCsrFile();
+        helper.makeCdrFile();
         helper.createObdFileAuditRecord(true, true);
 
         HttpPost httpPost = createCdrFileNotificationHttpPost(helper, true, true, true);
@@ -146,7 +146,7 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
                 districtDataService, fileAuditRecordDataService);
 
         helper.makeCdrs(1,0,0,0);
-        helper.makeCdr();
+        helper.makeCdrFile();
 
         HttpPost httpPost = createCdrFileNotificationHttpPost(helper, true, false, true);
 

@@ -1,14 +1,17 @@
 package org.motechproject.nms.imi.it;
 
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.alerts.contract.AlertService;
+import org.motechproject.nms.imi.exception.InvalidCsrException;
 import org.motechproject.nms.imi.repository.FileAuditRecordDataService;
 import org.motechproject.nms.imi.service.CdrFileService;
+import org.motechproject.nms.imi.service.CsrValidatorService;
 import org.motechproject.nms.imi.service.SettingsService;
-import org.motechproject.nms.imi.service.contract.ParseResults;
-import org.motechproject.nms.imi.web.contract.FileInfo;
 import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
@@ -25,16 +28,19 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
-import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerSuite.class)
 @ExamFactory(MotechNativeTestContainerFactory.class)
-public class CdrFileServiceBundleIT extends BasePaxIT {
+public class CsrValidatorServiceBundleIT extends BasePaxIT {
+
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormat.forPattern("yyyyMMddHHmmss");
+
+    @Inject
+    CsrValidatorService csrValidatorService;
 
     @Inject
     private SettingsService settingsService;
@@ -88,40 +94,45 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
     @Test
     public void testServicePresent() {
         getLogger().debug("testServicePresent()");
-        assertTrue(cdrFileService != null);
+        assertTrue(csrValidatorService != null);
     }
 
 
     @Test
-    public void testParse() throws IOException, NoSuchAlgorithmException {
-        getLogger().debug("testParse()");
+    public void testValid() {
+        getLogger().debug("testValid()");
 
-        CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
+        String timestamp = DateTime.now().toString(TIME_FORMATTER);
+
+        CsrHelper helper = new CsrHelper(timestamp, subscriptionService, subscriberDataService,
                 languageDataService, languageLocationDataService, circleDataService, stateDataService,
-                districtDataService, fileAuditRecordDataService);
+                districtDataService);
 
-        helper.makeCdrs(1,1,1,1);
-        helper.makeCdrFile();
-        FileInfo fileInfo = new FileInfo(helper.cdr(), helper.cdrChecksum(), helper.cdrCount());
-        ParseResults result = cdrFileService.processDetailFile(fileInfo);
-        assertEquals(4, result.getRecords().size());
+        helper.makeRecords(1, 0, 0);
+
+        // any error inside this would throw an exception
+        csrValidatorService.validateSummaryRecord(helper.getRecords().get(0));
     }
 
 
     @Test
-    public void testProcess() throws IOException, NoSuchAlgorithmException {
-        getLogger().debug("testProcess()");
+    public void testInvalid() {
+        getLogger().debug("testInvalid()");
 
-        CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
+        String timestamp = DateTime.now().toString(TIME_FORMATTER);
+
+        CsrHelper helper = new CsrHelper(timestamp, subscriptionService, subscriberDataService,
                 languageDataService, languageLocationDataService, circleDataService, stateDataService,
-                districtDataService, fileAuditRecordDataService);
+                districtDataService);
 
-        helper.makeCdrs(1,1,1,1);
-        helper.makeCdrFile();
-        FileInfo fileInfo = new FileInfo(helper.cdr(), helper.cdrChecksum(), helper.cdrCount());
-        ParseResults result = cdrFileService.processDetailFile(fileInfo);
-        assertEquals(4, result.getRecords().size());
+        helper.makeRecords(0, 0, 1);
+
+        // any error inside this would throw an exception
+        try {
+            csrValidatorService.validateSummaryRecord(helper.getRecords().get(0));
+        } catch (InvalidCsrException e) {
+            return;
+        }
+        assertFalse("Was expecting a InvalidCsrException but none was thrown.", false);
     }
-
-    //todo: test how successfully we aggregate detail records into a summary record
 }

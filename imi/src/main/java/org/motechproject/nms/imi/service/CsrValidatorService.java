@@ -12,7 +12,7 @@ public interface CsrValidatorService {
      * @param results the provided list of CSRs (read) and errors (write)
      * @return true if no errors, false otherwise
      */
-    boolean validateCallSummaryRecords(ParseResults results);
+    boolean validateSummaryRecords(ParseResults results);
 
 
     /**

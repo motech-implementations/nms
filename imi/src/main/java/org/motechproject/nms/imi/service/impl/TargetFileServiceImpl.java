@@ -136,14 +136,8 @@ public class TargetFileServiceImpl implements TargetFileService {
     }
 
 
-    private String targetFileName() {
-        return String.format("OBD_%s.csv", TIME_FORMATTER.print(DateTime.now()));
-    }
-
-
-    private void insertTargetFileAuditRecord(TargetFileNotification tfn, String status) {
-        fileAuditRecordDataService.create(new FileAuditRecord(FileType.TARGET_FILE, tfn.getFileName(), status,
-                tfn.getRecordCount(), tfn.getChecksum()));
+    private String targetFileName(String timestamp) {
+        return String.format("OBD_%s.csv", timestamp);
     }
 
 
@@ -162,7 +156,8 @@ public class TargetFileServiceImpl implements TargetFileService {
                 LOGGER.error(error);
                 alertService.create(targetFileDirectory.toString(), "targetFileDirectory", "mkdirs() failed",
                         AlertType.CRITICAL, AlertStatus.NEW, 0, null);
-                insertTargetFileAuditRecord(new TargetFileNotification(), error);
+                fileAuditRecordDataService.create(new FileAuditRecord(FileType.TARGET_FILE,
+                        targetFileDirectory.getName(), false, error, null, null));
                 throw new IllegalStateException();
             }
         }
@@ -267,10 +262,10 @@ public class TargetFileServiceImpl implements TargetFileService {
     }
 
 
-    private int generateFreshCalls(DateTime today, int maxQueryBlock, String imiServiceId, String callFlowUrl,
-                                   String targetFileName, OutputStreamWriter writer) throws IOException {
+    private int generateFreshCalls(DateTime timestamp, int maxQueryBlock, String imiServiceId,
+                                   String callFlowUrl, OutputStreamWriter writer) throws IOException {
 
-        DayOfTheWeek dow = DayOfTheWeek.fromDateTime(today);
+        DayOfTheWeek dow = DayOfTheWeek.fromDateTime(timestamp);
         int recordCount = 0;
         int page = 1;
         int numBlockRecord;
@@ -293,12 +288,14 @@ public class TargetFileServiceImpl implements TargetFileService {
                 Circle circle;
                 circle = (Circle) subscriberDataService.getDetachedField(subscriber, "circle");
 
-                RequestId requestId = new RequestId(subscription.getSubscriptionId(), targetFileName);
-                SubscriptionPackMessage msg = subscription.nextScheduledMessage(today);
+                RequestId requestId = new RequestId(subscription.getSubscriptionId(),
+                        TIME_FORMATTER.print(timestamp));
+                SubscriptionPackMessage msg = subscription.nextScheduledMessage(timestamp);
                 //todo: how do we choose a priority?
-                writeSubscriptionRow(requestId.toString(), imiServiceId, subscriber.getCallingNumber().toString(),
-                        NORMAL_PRIORITY, callFlowUrl, msg.getMessageFileName(), msg.getWeekId(),
-                        languageLocation.getCode(), circle.getName(), subscription.getOrigin().getCode(), writer);
+                writeSubscriptionRow(requestId.toString(), imiServiceId,
+                        subscriber.getCallingNumber().toString(), NORMAL_PRIORITY, callFlowUrl,
+                        msg.getMessageFileName(), msg.getWeekId(), languageLocation.getCode(), circle.getName(),
+                        subscription.getOrigin().getCode(), writer);
             }
 
             page++;
@@ -310,10 +307,10 @@ public class TargetFileServiceImpl implements TargetFileService {
     }
 
 
-    private int generateRetryCalls(DateTime today, int maxQueryBlock, String imiServiceId, String callFlowUrl,
-                                   String targetFileName, OutputStreamWriter writer) throws IOException {
+    private int generateRetryCalls(DateTime timestamp, int maxQueryBlock, String imiServiceId,
+                                   String callFlowUrl, OutputStreamWriter writer) throws IOException {
 
-        DayOfTheWeek dow = DayOfTheWeek.fromDateTime(today);
+        DayOfTheWeek dow = DayOfTheWeek.fromDateTime(timestamp);
         int recordCount = 0;
         int page = 1;
         int numBlockRecord;
@@ -323,7 +320,8 @@ public class TargetFileServiceImpl implements TargetFileService {
             numBlockRecord = callRetries.size();
 
             for (CallRetry callRetry : callRetries) {
-                RequestId requestId = new RequestId(callRetry.getSubscriptionId(), targetFileName);
+                RequestId requestId = new RequestId(callRetry.getSubscriptionId(),
+                        TIME_FORMATTER.print(timestamp));
                 //todo: look into priorities...
                 writeSubscriptionRow(requestId.toString(), imiServiceId, callRetry.getMsisdn().toString(),
                         NORMAL_PRIORITY, callFlowUrl, callRetry.getContentFileName(), callRetry.getWeekId(),
@@ -345,7 +343,8 @@ public class TargetFileServiceImpl implements TargetFileService {
      * 4.4.1 Target File Format
      */
     public TargetFileNotification generateTargetFile() {
-        String targetFileName = targetFileName();
+        DateTime today = DateTime.now();
+        String targetFileName = targetFileName(TIME_FORMATTER.print(today));
         File targetFileDirectory;
         MessageDigest md;
         int recordCount = 0;
@@ -373,15 +372,11 @@ public class TargetFileServiceImpl implements TargetFileService {
                 callFlowUrl = "";
             }
 
-            DateTime today = DateTime.now();
-
             //FRESH calls
-            recordCount = generateFreshCalls(today, maxQueryBlock, imiServiceId, callFlowUrl, targetFileName,
-                    writer);
+            recordCount = generateFreshCalls(today, maxQueryBlock, imiServiceId, callFlowUrl, writer);
 
             //Retry calls
-            recordCount += generateRetryCalls(today, maxQueryBlock, imiServiceId, callFlowUrl, targetFileName,
-                    writer);
+            recordCount += generateRetryCalls(today, maxQueryBlock, imiServiceId, callFlowUrl, writer);
 
             LOGGER.debug("Created targetFile with {} record{}", recordCount, recordCount == 1 ? "" : "s");
 
@@ -389,8 +384,8 @@ public class TargetFileServiceImpl implements TargetFileService {
             LOGGER.error(e.getMessage());
             alertService.create(targetFile.toString(), "targetFile", e.getMessage(), AlertType.CRITICAL,
                     AlertStatus.NEW, 0, null);
-            insertTargetFileAuditRecord(new TargetFileNotification(targetFile.toString(), null, null),
-                    e.getMessage());
+            fileAuditRecordDataService.create(new FileAuditRecord(FileType.TARGET_FILE, targetFile.getName(),
+                    false, e.getMessage(), null, null));
             return null;
         }
 
@@ -399,7 +394,8 @@ public class TargetFileServiceImpl implements TargetFileService {
         LOGGER.debug("TargetFileNotification = {}", tfn.toString());
 
         //audit the success
-        insertTargetFileAuditRecord(tfn, "Success");
+        fileAuditRecordDataService.create(new FileAuditRecord(FileType.TARGET_FILE, tfn.getFileName(), true,
+                null, tfn.getRecordCount(), tfn.getChecksum()));
 
         return tfn;
     }
@@ -427,8 +423,8 @@ public class TargetFileServiceImpl implements TargetFileService {
             }
         } catch (IOException e) {
             LOGGER.error("Unable to send targetFile notification request: {}", e.getMessage());
-            alertService.create("targetFile notification request", "targetFile", e.getMessage(), AlertType.CRITICAL,
-                    AlertStatus.NEW, 0, null);
+            alertService.create("targetFile notification request", "targetFile", e.getMessage(),
+                    AlertType.CRITICAL, AlertStatus.NEW, 0, null);
         }
     }
 

@@ -121,13 +121,13 @@ public class CsrValidatorServiceImpl implements CsrValidatorService {
     //todo: IT
     @Override
     public void validateSummaryRecord(CallSummaryRecordDto record) {
-        Subscription subscription = subscriptionService.getSubscription(record.getRequestId().getSubscriptionId());
-        if (subscription == null) {
+        Subscription sub = subscriptionService.getSubscription(record.getRequestId().getSubscriptionId());
+        if (sub == null) {
             throw new InvalidCsrException(String.format("Subscription %s does not exist in the database",
                     record.getRequestId().getSubscriptionId()));
         }
 
-        String pack = subscription.getSubscriptionPack().getName();
+        String pack = sub.getSubscriptionPack().getName();
         validateWeekId(pack, record.getWeekId());
         validateContentFileName(pack, record.getContentFileName());
         validateCircle(record.getCircle());
@@ -137,7 +137,7 @@ public class CsrValidatorServiceImpl implements CsrValidatorService {
 
     //todo: IT
     @Override
-    public boolean validateCallSummaryRecords(ParseResults results) {
+    public boolean validateSummaryRecords(ParseResults results) {
         List<String> errors = results.getErrors();
 
         //todo: implement max failure count threshold
