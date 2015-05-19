@@ -4,6 +4,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.alerts.contract.AlertService;
+import org.motechproject.nms.imi.exception.InvalidCdrFileException;
 import org.motechproject.nms.imi.repository.FileAuditRecordDataService;
 import org.motechproject.nms.imi.service.CdrFileService;
 import org.motechproject.nms.imi.service.SettingsService;
@@ -27,6 +28,7 @@ import org.ops4j.pax.exam.spi.reactors.PerSuite;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -105,6 +107,61 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         FileInfo fileInfo = new FileInfo(helper.cdr(), helper.cdrChecksum(), helper.cdrCount());
         ParseResults result = cdrFileService.processDetailFile(fileInfo);
         assertEquals(4, result.getRecords().size());
+    }
+
+
+    @Test(expected = IllegalStateException.class)
+    public void testParseWithChecksumError() throws IOException, NoSuchAlgorithmException {
+        getLogger().debug("testParseWithChecksumError()");
+
+        CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
+                languageDataService, languageLocationDataService, circleDataService, stateDataService,
+                districtDataService, fileAuditRecordDataService);
+
+        helper.makeCdrs(1,1,1,1);
+        helper.makeCdrFile();
+        FileInfo fileInfo = new FileInfo(helper.cdr(), "invalid checksum", helper.cdrCount());
+        ParseResults result = cdrFileService.processDetailFile(fileInfo);
+        assertEquals(0, result.getRecords().size());
+        assertEquals(1, result.getErrors().size());
+    }
+
+
+    @Test
+    public void testParseWithCsvErrors() throws IOException, NoSuchAlgorithmException {
+        getLogger().debug("testParseWithCsvErrors()");
+
+        CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
+                languageDataService, languageLocationDataService, circleDataService, stateDataService,
+                districtDataService, fileAuditRecordDataService);
+
+        helper.makeCdrs(1,1,1,1);
+        helper.makeCdrFile(2);
+        FileInfo fileInfo = new FileInfo(helper.cdr(), helper.cdrChecksum(), helper.cdrCount());
+        ParseResults result = cdrFileService.processDetailFile(fileInfo);
+        assertEquals(2, result.getRecords().size());
+        assertEquals(2, result.getErrors().size());
+    }
+
+
+    @Test
+    public void testDispatchWithTooManyErrors() throws IOException, NoSuchAlgorithmException {
+        getLogger().debug("testDispatchWithTooManyErrors()");
+
+        CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
+                languageDataService, languageLocationDataService, circleDataService, stateDataService,
+                districtDataService, fileAuditRecordDataService);
+
+        helper.makeCdrs(200,0,0,0);
+        helper.makeCdrFile(200);
+        FileInfo fileInfo = new FileInfo(helper.cdr(), helper.cdrChecksum(), helper.cdrCount());
+        try {
+            cdrFileService.dispatchSummaryRecords(fileInfo);
+        } catch (InvalidCdrFileException e) {
+            List<String> errors = e.getMessages();
+            assertEquals(101, errors.size());
+            assertEquals("The maximum number of allowed errors", errors.get(errors.size() - 1).substring(0, 36));
+        }
     }
 
 

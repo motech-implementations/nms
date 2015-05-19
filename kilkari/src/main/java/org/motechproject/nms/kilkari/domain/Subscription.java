@@ -226,7 +226,7 @@ public class Subscription {
     public String toString() {
         return "Subscription{" +
                 "subscriptionId='" + subscriptionId + '\'' +
-                ", subscriptionPack=" + subscriptionPack +
+                //todo: put back subscriptionPack when the getDetachedField bug is fixed...
                 ", status=" + status +
                 ", origin=" + origin +
                 ", startDate=" + startDate +

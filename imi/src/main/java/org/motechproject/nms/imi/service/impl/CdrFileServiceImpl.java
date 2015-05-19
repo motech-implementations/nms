@@ -45,6 +45,8 @@ import java.util.Map;
 public class CdrFileServiceImpl implements CdrFileService {
 
     private static final String CDR_FILE_DIRECTORY = "imi.cdr_file_directory";
+    private static final String MAX_CDR_ERROR_COUNT = "imi.max_cdr_error_count";
+    private static final int MAX_CDR_ERROR_COUNT_DEFAULT = 100;
     private static final String PROCESS_SUMMARY_RECORD = "nms.imi.kk.process_summary_record";
     private static final String CSR_PARAM_KEY = "csr";
 
@@ -55,7 +57,6 @@ public class CdrFileServiceImpl implements CdrFileService {
     private FileAuditRecordDataService fileAuditRecordDataService;
     private AlertService alertService;
     private CsrValidatorService csrValidatorService;
-
 
 
     @Autowired
@@ -97,8 +98,8 @@ public class CdrFileServiceImpl implements CdrFileService {
 
             // Increment the statusCode stats
             int statusCodeCount = 1;
-            if (record.getStatusStats().containsKey(cdr.getStatusCode())) {
-                statusCodeCount = record.getStatusStats().get(cdr.getStatusCode()) + 1;
+            if (record.getStatusStats().containsKey(cdr.getStatusCode().getValue())) {
+                statusCodeCount = record.getStatusStats().get(cdr.getStatusCode().getValue()) + 1;
             }
             record.getStatusStats().put(cdr.getStatusCode().getValue(), statusCodeCount);
 
@@ -138,8 +139,19 @@ public class CdrFileServiceImpl implements CdrFileService {
     }
 
 
+    private int getMaxErrorCount() {
+        try {
+            return Integer.parseInt(settingsFacade.getProperty(MAX_CDR_ERROR_COUNT));
+        } catch (NumberFormatException e) {
+            return MAX_CDR_ERROR_COUNT_DEFAULT;
+        }
+    }
+
+
     // Create an in-memory set of summary records from all detail records
     private ParseResults parseDetailRecords(File file, FileInfo fileInfo) {
+        int maxErrorCount = getMaxErrorCount();
+        int errorCount = 0;
         String thisChecksum = "";
         Map<String, CallSummaryRecordDto> records = new HashMap<>();
         List<String> errors = new ArrayList<>();
@@ -166,6 +178,12 @@ public class CdrFileServiceImpl implements CdrFileService {
 
                 } catch (IllegalArgumentException e) {
                     errors.add(String.format("Line %d: %s", lineNumber, e.getMessage()));
+                    errorCount++;
+                }
+                if (errorCount >= maxErrorCount) {
+                    errors.add(String.format("The maximum number of allowed errors of %d has been reached, " +
+                            "discarding all remaining errors.", maxErrorCount));
+                    reportAuditAndThrow(file.getName(), errors);
                 }
                 lineNumber++;
             }

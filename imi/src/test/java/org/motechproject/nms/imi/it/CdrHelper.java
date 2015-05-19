@@ -302,17 +302,32 @@ public class CdrHelper {
     }
 
 
-    public void makeCdrFile() throws IOException {
+    public void doMakeCdrFile(int numInvalidLines) throws IOException {
         File dstFile = new File(makeCdrDirectory(), cdr());
         LOGGER.debug("Creating detail file {}...", dstFile);
         BufferedWriter writer = new BufferedWriter(new FileWriter(dstFile));
 
+        int remainingImvalidLines = numInvalidLines;
         for(CallDetailRecordDto cdr : cdrs) {
             writer.write(csvLineFromCdr(cdr));
+            if (remainingImvalidLines > 0) {
+                writer.write(",this,is,bogus,csv");
+                remainingImvalidLines--;
+            }
             writer.write("\n");
         }
 
         writer.close();
+    }
+
+
+    public void makeCdrFile() throws IOException {
+        doMakeCdrFile(0);
+    }
+
+
+    public void makeCdrFile(int numInvalidLines) throws IOException {
+        doMakeCdrFile(numInvalidLines);
     }
 
 
