@@ -1,18 +1,30 @@
 package org.motechproject.nms.imi.service.impl;
 
 import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.httpclient.HttpStatus;
+import org.apache.commons.lang.StringUtils;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.alerts.domain.AlertStatus;
 import org.motechproject.alerts.domain.AlertType;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.EventRelay;
+import org.motechproject.event.listener.annotations.MotechListener;
 import org.motechproject.nms.imi.domain.FileAuditRecord;
+import org.motechproject.nms.imi.domain.FileProcessedStatus;
 import org.motechproject.nms.imi.domain.FileType;
 import org.motechproject.nms.imi.exception.InvalidCdrFileException;
 import org.motechproject.nms.imi.repository.FileAuditRecordDataService;
 import org.motechproject.nms.imi.service.CdrFileService;
 import org.motechproject.nms.imi.service.CsrValidatorService;
-import org.motechproject.nms.imi.service.contract.ParseResults;
+import org.motechproject.nms.imi.service.contract.AggregateDetailsResults;
+import org.motechproject.nms.imi.service.contract.CdrFileProcessedNotification;
 import org.motechproject.nms.imi.web.contract.FileInfo;
 import org.motechproject.nms.kilkari.dto.CallDetailRecordDto;
 import org.motechproject.nms.kilkari.dto.CallSummaryRecordDto;
@@ -34,6 +46,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -44,10 +57,13 @@ import java.util.Map;
 @Service("cdrFileService")
 public class CdrFileServiceImpl implements CdrFileService {
 
+    private static final String CDR_FILE_NOTIFICATION_URL = "imi.cdr_file_notification_url";
     private static final String CDR_FILE_DIRECTORY = "imi.cdr_file_directory";
     private static final String MAX_CDR_ERROR_COUNT = "imi.max_cdr_error_count";
     private static final int MAX_CDR_ERROR_COUNT_DEFAULT = 100;
+    private static final String PROCESS_DETAIL_FILE = "nms.imi.kk.process_detail_file";
     private static final String PROCESS_SUMMARY_RECORD = "nms.imi.kk.process_summary_record";
+    private static final String FILE_INFO_PARAM_KEY = "fileInfo";
     private static final String CSR_PARAM_KEY = "csr";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CdrFileServiceImpl.class);
@@ -91,8 +107,51 @@ public class CdrFileServiceImpl implements CdrFileService {
     }
 
 
+    private void sendNotificationRequest(CdrFileProcessedNotification cfpn) {
+        String notificationUrl = settingsFacade.getProperty(CDR_FILE_NOTIFICATION_URL);
+        LOGGER.debug("Sending {} to {}", cfpn, notificationUrl);
+
+        try {
+            HttpClient httpClient = HttpClients.createDefault();
+            HttpPost httpPost = new HttpPost(notificationUrl);
+            ObjectMapper mapper = new ObjectMapper();
+            String requestJson = mapper.writeValueAsString(cfpn);
+            httpPost.setHeader("Content-type", "application/json");
+            httpPost.setEntity(new StringEntity(requestJson));
+            HttpResponse response = httpClient.execute(httpPost);
+            int responseCode = response.getStatusLine().getStatusCode();
+            if (responseCode != HttpStatus.SC_OK) {
+                String error = String.format("Expecting HTTP 200 response from %s but received HTTP %d : %s ",
+                        notificationUrl, responseCode, EntityUtils.toString(response.getEntity()));
+                LOGGER.error(error);
+                alertService.create("cdrFile notification request", cfpn.getFileName(), error,
+                        AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            }
+        } catch (IOException e) {
+            LOGGER.error("Unable to send cdrFile notification request: {}", e.getMessage());
+            alertService.create("cdrFile notification request", cfpn.getFileName(), e.getMessage(),
+                    AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+        }
+    }
+
+    private void reportAuditAndPost(String file, List<String> errors) {
+        for (String error : errors) {
+            LOGGER.error(error);
+            alertService.create(file, "CDR Detail File", error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            fileAuditRecordDataService.create(new FileAuditRecord(FileType.CDR_DETAIL_FILE, file, false, error,
+                    null, null));
+        }
+        sendNotificationRequest(new CdrFileProcessedNotification(
+                FileProcessedStatus.FILE_ERROR_IN_FILE_FORMAT.getValue(),
+                file,
+                StringUtils.join(errors, ",")
+        ));
+    }
+
+
     // Aggregate all detail records for a requestId into a single summary record
-    private void parseDetailRecord(CallDetailRecordDto cdr, Map<String, CallSummaryRecordDto> records) {
+    // The summary record is itself stored in a (huge) map indexed by requestId
+    private void aggregateDetailRecord(CallDetailRecordDto cdr, Map<String, CallSummaryRecordDto> records) {
         if (records.containsKey(cdr.getRequestId().toString())) {
             CallSummaryRecordDto record = records.get(cdr.getRequestId().toString());
 
@@ -149,7 +208,7 @@ public class CdrFileServiceImpl implements CdrFileService {
 
 
     // Create an in-memory set of summary records from all detail records
-    private ParseResults parseDetailRecords(File file, FileInfo fileInfo) {
+    private AggregateDetailsResults aggregateDetailRecords(File file, FileInfo fileInfo) {
         int maxErrorCount = getMaxErrorCount();
         int errorCount = 0;
         String thisChecksum = "";
@@ -161,7 +220,7 @@ public class CdrFileServiceImpl implements CdrFileService {
                 FileInputStream fis = new FileInputStream(file);
                 InputStreamReader isr = new InputStreamReader(fis);
                 BufferedReader reader = new BufferedReader(isr)
-            ) {
+        ) {
 
 
             MessageDigest md = MessageDigest.getInstance("MD5");
@@ -174,7 +233,7 @@ public class CdrFileServiceImpl implements CdrFileService {
                 try {
                     CallDetailRecordDto cdr = CsvHelper.csvLineToCdr(line);
 
-                    parseDetailRecord(cdr, records);
+                    aggregateDetailRecord(cdr, records);
 
                 } catch (IllegalArgumentException e) {
                     errors.add(String.format("Line %d: %s", lineNumber, e.getMessage()));
@@ -210,21 +269,83 @@ public class CdrFileServiceImpl implements CdrFileService {
             reportAuditAndThrow(file.getName(), error);
         }
 
-        return new ParseResults(records, errors);
+        return new AggregateDetailsResults(records, errors);
     }
 
 
-    @Override
-    public ParseResults processDetailFile(FileInfo fileInfo) {
-        File userDirectory = new File(System.getProperty("user.home"));
-        File cdrDirectory = new File(userDirectory, settingsFacade.getProperty(CDR_FILE_DIRECTORY));
-        File file = new File(cdrDirectory, fileInfo.getCdrFile());
+    // Verify the detail file record count and checksum and each csv line isn't malformed
+    private List<String> verifyDetailFile(File file, FileInfo fileInfo) {
+        int maxErrorCount = getMaxErrorCount();
+        int errorCount = 0;
+        String thisChecksum = "";
+        List<String> errors = new ArrayList<>();
+        int lineNumber = 1;
 
-        return parseDetailRecords(file, fileInfo);
+        try (
+                FileInputStream fis = new FileInputStream(file);
+                InputStreamReader isr = new InputStreamReader(fis);
+                BufferedReader reader = new BufferedReader(isr)
+        ) {
+
+
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            @SuppressWarnings("PMD.UnusedLocalVariable")
+            DigestInputStream dis = new DigestInputStream(fis, md);
+
+            String line;
+            while ((line = reader.readLine()) != null) {
+
+                try {
+                    CallDetailRecordDto cdr = CsvHelper.csvLineToCdr(line);
+
+
+                } catch (IllegalArgumentException e) {
+                    errors.add(String.format("Line %d: %s", lineNumber, e.getMessage()));
+                    errorCount++;
+                }
+                if (errorCount >= maxErrorCount) {
+                    errors.add(String.format("The maximum number of allowed errors of %d has been reached, " +
+                            "discarding all remaining errors.", maxErrorCount));
+                    reportAuditAndThrow(file.getName(), errors);
+                }
+                lineNumber++;
+            }
+
+            thisChecksum = new String(Hex.encodeHex(md.digest()));
+
+        } catch (IOException e) {
+            String error = String.format("Unable to read %s: %s", file, e.getMessage());
+            reportAuditAndThrow(file.getName(), error);
+        } catch (NoSuchAlgorithmException e) {
+            String error = String.format("Unable to compute checksum: %s", e.getMessage());
+            reportAuditAndThrow(file.getName(), error);
+        }
+
+        if (!thisChecksum.equals(fileInfo.getChecksum())) {
+            String error = String.format("Checksum mismatch, provided checksum: %s, calculated checksum: %s",
+                    fileInfo.getChecksum(), thisChecksum);
+            reportAuditAndThrow(file.getName(), error);
+        }
+
+        if (lineNumber - 1 != fileInfo.getRecordsCount()) {
+            String error = String.format("Record count mismatch, provided count: %d, actual count: %d",
+                    fileInfo.getRecordsCount(), lineNumber - 1);
+            reportAuditAndThrow(file.getName(), error);
+        }
+
+        return errors;
     }
 
 
-    private void sendProcessCdrEvent(CallSummaryRecordDto record) {
+    private void sendProcessDetailFileEvent(FileInfo fileInfo) {
+        Map<String, Object> eventParams = new HashMap<>();
+        eventParams.put(FILE_INFO_PARAM_KEY, fileInfo);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_DETAIL_FILE, eventParams);
+        eventRelay.sendEventMessage(motechEvent);
+    }
+
+
+    private void sendProcessSummaryRecordEvent(CallSummaryRecordDto record) {
         Map<String, Object> eventParams = new HashMap<>();
         eventParams.put(CSR_PARAM_KEY, record);
         MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD, eventParams);
@@ -232,21 +353,55 @@ public class CdrFileServiceImpl implements CdrFileService {
     }
 
 
+    // Phase 1: verify the file exists, the csv is valid its record count and checksum match the provided
+    //          info collecting a list of errors on the go.
+    //          Does not proceed to phase 2 if any error occurred and returns an error
     @Override
-    public void dispatchSummaryRecords(FileInfo fileInfo) {
-        ParseResults parseResults = processDetailFile(fileInfo);
+    public void verifyDetailFile(FileInfo fileInfo) {
+        File userDirectory = new File(System.getProperty("user.home"));
+        File cdrDirectory = new File(userDirectory, settingsFacade.getProperty(CDR_FILE_DIRECTORY));
+        File file = new File(cdrDirectory, fileInfo.getCdrFile());
 
-        //todo: implement max failure count threshold
-        if (parseResults.getErrors().size() > 0) {
-            reportAuditAndThrow(fileInfo.getCdrFile(), parseResults.getErrors());
+        List<String> errors = verifyDetailFile(file, fileInfo);
+        if (errors.size() > 0) {
+            // Ends up in a HttpStatus.BAD_REQUEST response to IMI and should generate an IMI-OPS alert
+            reportAuditAndThrow(fileInfo.getCdrFile(), errors);
         }
 
-        if (csrValidatorService.validateSummaryRecords(parseResults)) {
-            for (CallSummaryRecordDto record : parseResults.getRecords().values()) {
-                sendProcessCdrEvent(record);
+        // Send a MOTECH event to continue to phase 2 (without timing out the POST from IMI)
+        sendProcessDetailFileEvent(fileInfo);
+    }
+
+
+    // Phase 2: Aggregate detail records into summary records
+    //          Validate all CallSummaryRecord fields exist in the database
+    //          Stop processing if errors occurred
+    @Override
+    @MotechListener(subjects = { PROCESS_DETAIL_FILE })
+    public void processDetailFile(MotechEvent event) {
+        FileInfo fileInfo = (FileInfo) event.getParameters().get(FILE_INFO_PARAM_KEY);
+        File userDirectory = new File(System.getProperty("user.home"));
+        File cdrDirectory = new File(userDirectory, settingsFacade.getProperty(CDR_FILE_DIRECTORY));
+        File file = new File(cdrDirectory, fileInfo.getCdrFile());
+
+        AggregateDetailsResults results = aggregateDetailRecords(file, fileInfo);
+        if (results.getErrors().size() > 0) {
+            reportAuditAndPost(fileInfo.getCdrFile(), results.getErrors());
+            return;
+        }
+
+        List<String> errors = csrValidatorService.validateSummaryRecords(results.getRecords());
+        if (errors.size() > 0) {
+            reportAuditAndPost(fileInfo.getCdrFile(), errors);
+            return;
+        }
+
+        // Phase 3: distribute the processing of individual CSRs to all nodes.
+        //          each node may generate an individual error that NMS-OPS will have to respond to.
+            Iterator it = results.getRecords().entrySet().iterator();
+            while (it.hasNext()) {
+                Map.Entry entry = (Map.Entry)it.next();
+                sendProcessSummaryRecordEvent((CallSummaryRecordDto) entry.getValue());
             }
-        } else {
-            reportAuditAndThrow(fileInfo.getCdrFile(), parseResults.getErrors());
-        }
     }
 }

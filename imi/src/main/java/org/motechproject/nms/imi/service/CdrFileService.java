@@ -1,6 +1,6 @@
 package org.motechproject.nms.imi.service;
 
-import org.motechproject.nms.imi.service.contract.ParseResults;
+import org.motechproject.event.MotechEvent;
 import org.motechproject.nms.imi.web.contract.FileInfo;
 
 /**
@@ -9,30 +9,18 @@ import org.motechproject.nms.imi.web.contract.FileInfo;
 public interface CdrFileService {
 
     /**
-     * Reads the call detail records file provided by IMI and creates an in-memory CallSummaryRecord map of aggregated
-     * CDRs (there may be multiple tries to call a recipient in a single day) and a potential list of errors
-     *
-     * NOTE: this method is only directly called by ITs. It's called by dispatchSummaryRecords in production.
-     *
-     * @param fileInfo
-     * @return a list of summary records and a (hopefully empty) list of errors
+     * Verify file exists, verify checksum & record count match. Then sends event to proceed to CDR processing
+     * phase 2
      */
-
-
-    /**
-     *
-     * @param fileInfo
-     * @return
-     */
-    ParseResults processDetailFile(FileInfo fileInfo);
+    void verifyDetailFile(FileInfo fileInfo);
 
 
     /**
      * Aggregates multiple detail records provided my IMI into one summary record for each call in a given day.
-     * Then sends a MOTECH PROCESS_SUMMARY_RECORD event for each summary record such that the summary record process
-     * is distributed among all MOTECH nodes.
+     * Then sends a MOTECH PROCESS_SUMMARY_RECORD event for each summary record such that the summary record
+     * process is distributed among all MOTECH nodes.
      *
-     * @param fileInfo
+     * NOTE: only exposed here for ITs. Normally called by the MOTECH event system (it's a @MotechListener)
      */
-    void dispatchSummaryRecords(FileInfo fileInfo);
+    void processDetailFile(MotechEvent event);
 }

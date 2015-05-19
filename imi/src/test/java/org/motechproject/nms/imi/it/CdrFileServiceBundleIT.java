@@ -8,7 +8,7 @@ import org.motechproject.nms.imi.exception.InvalidCdrFileException;
 import org.motechproject.nms.imi.repository.FileAuditRecordDataService;
 import org.motechproject.nms.imi.service.CdrFileService;
 import org.motechproject.nms.imi.service.SettingsService;
-import org.motechproject.nms.imi.service.contract.ParseResults;
+import org.motechproject.nms.imi.service.contract.AggregateDetailsResults;
 import org.motechproject.nms.imi.web.contract.FileInfo;
 import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
@@ -105,7 +105,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         helper.makeCdrs(1,1,1,1);
         helper.makeCdrFile();
         FileInfo fileInfo = new FileInfo(helper.cdr(), helper.cdrChecksum(), helper.cdrCount());
-        ParseResults result = cdrFileService.processDetailFile(fileInfo);
+        AggregateDetailsResults result = cdrFileService.processDetailFile(fileInfo);
         assertEquals(4, result.getRecords().size());
     }
 
@@ -121,7 +121,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         helper.makeCdrs(1,1,1,1);
         helper.makeCdrFile();
         FileInfo fileInfo = new FileInfo(helper.cdr(), "invalid checksum", helper.cdrCount());
-        ParseResults result = cdrFileService.processDetailFile(fileInfo);
+        AggregateDetailsResults result = cdrFileService.processDetailFile(fileInfo);
         assertEquals(0, result.getRecords().size());
         assertEquals(1, result.getErrors().size());
     }
@@ -138,7 +138,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         helper.makeCdrs(1,1,1,1);
         helper.makeCdrFile(2);
         FileInfo fileInfo = new FileInfo(helper.cdr(), helper.cdrChecksum(), helper.cdrCount());
-        ParseResults result = cdrFileService.processDetailFile(fileInfo);
+        AggregateDetailsResults result = cdrFileService.processDetailFile(fileInfo);
         assertEquals(2, result.getRecords().size());
         assertEquals(2, result.getErrors().size());
     }
@@ -156,7 +156,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         helper.makeCdrFile(200);
         FileInfo fileInfo = new FileInfo(helper.cdr(), helper.cdrChecksum(), helper.cdrCount());
         try {
-            cdrFileService.dispatchSummaryRecords(fileInfo);
+            cdrFileService.verifyDetailFile(fileInfo);
         } catch (InvalidCdrFileException e) {
             List<String> errors = e.getMessages();
             assertEquals(101, errors.size());
@@ -176,7 +176,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         helper.makeCdrs(1,1,1,1);
         helper.makeCdrFile();
         FileInfo fileInfo = new FileInfo(helper.cdr(), helper.cdrChecksum(), helper.cdrCount());
-        ParseResults result = cdrFileService.processDetailFile(fileInfo);
+        AggregateDetailsResults result = cdrFileService.processDetailFile(fileInfo);
         assertEquals(4, result.getRecords().size());
     }
 

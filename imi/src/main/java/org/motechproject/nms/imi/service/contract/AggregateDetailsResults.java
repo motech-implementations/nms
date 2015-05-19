@@ -5,11 +5,11 @@ import org.motechproject.nms.kilkari.dto.CallSummaryRecordDto;
 import java.util.List;
 import java.util.Map;
 
-public class ParseResults {
+public class AggregateDetailsResults {
     private Map<String, CallSummaryRecordDto> records;
     private List<String> errors;
 
-    public ParseResults(Map<String, CallSummaryRecordDto> records, List<String> errors) {
+    public AggregateDetailsResults(Map<String, CallSummaryRecordDto> records, List<String> errors) {
         this.records = records;
         this.errors = errors;
     }

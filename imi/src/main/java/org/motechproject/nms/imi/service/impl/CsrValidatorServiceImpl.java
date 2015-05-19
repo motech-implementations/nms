@@ -2,7 +2,6 @@ package org.motechproject.nms.imi.service.impl;
 
 import org.motechproject.nms.imi.exception.InvalidCsrException;
 import org.motechproject.nms.imi.service.CsrValidatorService;
-import org.motechproject.nms.imi.service.contract.ParseResults;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
@@ -17,8 +16,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -154,14 +155,16 @@ public class CsrValidatorServiceImpl implements CsrValidatorService {
 
     //todo: IT
     @Override
-    public boolean validateSummaryRecords(ParseResults results) {
+    public List<String> validateSummaryRecords(Map<String, CallSummaryRecordDto> records) {
         int maxErrorCount = getMaxErrorCount();
         int errorCount = 0;
-        List<String> errors = results.getErrors();
+        List<String> errors = new ArrayList<>();
 
-        for (CallSummaryRecordDto record : results.getRecords().values()) {
+        Iterator it = records.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry entry = (Map.Entry)it.next();
             try {
-                validateSummaryRecord(record);
+                validateSummaryRecord((CallSummaryRecordDto) entry.getValue());
             } catch (InvalidCsrException e) {
                 errors.add(e.getMessage());
 
@@ -173,6 +176,6 @@ public class CsrValidatorServiceImpl implements CsrValidatorService {
             }
         }
 
-        return (errors.size() == 0);
+        return errors;
     }
 }

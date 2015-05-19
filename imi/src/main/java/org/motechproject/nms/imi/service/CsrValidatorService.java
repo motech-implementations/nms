@@ -1,7 +1,9 @@
 package org.motechproject.nms.imi.service;
 
-import org.motechproject.nms.imi.service.contract.ParseResults;
 import org.motechproject.nms.kilkari.dto.CallSummaryRecordDto;
+
+import java.util.List;
+import java.util.Map;
 
 public interface CsrValidatorService {
     /**
@@ -9,10 +11,10 @@ public interface CsrValidatorService {
      *
      * NOTE: directly used in IT only
      *
-     * @param results the provided list of CSRs (read) and errors (write)
-     * @return true if no errors, false otherwise
+     * @param records a list of CallSummaryRecords
+     * @return a list of errors or an empty list
      */
-    boolean validateSummaryRecords(ParseResults results);
+    List<String> validateSummaryRecords(Map<String, CallSummaryRecordDto> records);
 
 
     /**

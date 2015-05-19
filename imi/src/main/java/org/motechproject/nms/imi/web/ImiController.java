@@ -135,7 +135,7 @@ public class ImiController {
         // Check the provided OBD file (aka: targetFile) exists in the FileAuditRecord table
         verifyFileAuditRecord(request.getFileName());
 
-        cdrFileService.dispatchSummaryRecords(request.getCdrDetail());
+        cdrFileService.verifyDetailFile(request.getCdrDetail());
     }
 
 
