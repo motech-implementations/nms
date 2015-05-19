@@ -124,6 +124,13 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     private SubscriptionPack gPack2;
 
     private void cleanAllData() {
+        for (Subscription subscription: subscriptionDataService.retrieveAll()) {
+            subscription.setStatus(SubscriptionStatus.COMPLETED);
+            subscription.setEndDate(new DateTime().withDate(2011, 8, 1));
+
+            subscriptionDataService.update(subscription);
+        }
+
         subscriptionDataService.deleteAll();
         subscriptionPackDataService.deleteAll();
         subscriptionPackMessageDataService.deleteAll();

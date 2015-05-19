@@ -1,6 +1,7 @@
 package org.motechproject.nms.kilkari.service.impl;
 
 import org.joda.time.DateTime;
+import org.joda.time.Weeks;
 import org.motechproject.mds.query.QueryParams;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.domain.Subscriber;
@@ -63,6 +64,24 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         }
         if (subscriptionPackDataService.byName("pregnancyPack") == null) {
             createSubscriptionPack("pregnancyPack", SubscriptionPackType.PREGNANCY, PREGNANCY_PACK_WEEKS, 2);
+        }
+    }
+
+    @Override
+    public void deleteAllowed(Subscription subscription) {
+        DateTime now = new DateTime();
+
+        if (subscription.getStatus() != SubscriptionStatus.COMPLETED &&
+                subscription.getStatus() != SubscriptionStatus.DEACTIVATED) {
+            throw new IllegalStateException("Can not delete an open subscription");
+        }
+
+        if (subscription.getEndDate() == null) {
+            throw new IllegalStateException("Subscription in closed state with null end date");
+        }
+
+        if (Math.abs(Weeks.weeksBetween(now, subscription.getEndDate()).getWeeks()) < 6) {
+            throw new IllegalStateException("Subscription must be closed for 6 weeks before deleting");
         }
     }
 
@@ -246,4 +265,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         return subscriptionDataService.findByStatusAndDay(SubscriptionStatus.ACTIVE, dayOfTheWeek,
                 new QueryParams(page, pageSize));
     }
+
+
 }
