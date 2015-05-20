@@ -300,6 +300,29 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     }
 
     @Test
+    public void testCreateSubscriptionExistingSubscriberWithoutLanguage() throws Exception {
+        cleanupData();
+        createLanguageAndSubscriptionPacks();
+
+        LanguageLocation ta = languageLocationDataService.findByCode("10");
+
+        // Just verify the db is clean
+        Subscriber s = subscriberService.getSubscriber(1111111111L);
+        assertNull(s);
+
+        subscriberService.create(new Subscriber(1111111111L));
+        s = subscriberService.getSubscriber(1111111111L);
+        assertNotNull(s);
+        assertNull(s.getLanguageLocation());
+
+        subscriptionService.createSubscription(1111111111L, ta, gPack1, SubscriptionOrigin.IVR);
+
+        Subscriber subscriber = subscriberService.getSubscriber(1111111111L);
+        assertNotNull(subscriber);
+        assertEquals(ta, subscriber.getLanguageLocation());
+    }
+
+    @Test
     public void testCreateSubscriptionViaMcts() {
         setupData();
 

@@ -116,6 +116,11 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             subscriberDataService.create(subscriber);
         }
 
+        if (subscriber.getLanguageLocation() == null && languagelocation != null) {
+            subscriber.setLanguageLocation(languagelocation);
+            subscriberDataService.update(subscriber);
+        }
+
         if (mode == SubscriptionOrigin.IVR) {
             subscription = createSubscriptionViaIvr(subscriber, subscriptionPack);
         } else { // MCTS_UPLOAD
