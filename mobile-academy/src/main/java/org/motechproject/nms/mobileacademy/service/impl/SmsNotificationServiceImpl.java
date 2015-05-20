@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
 
 /**
  * This handles all the integration pieces between MA and sms module to trigger and handle notifications
@@ -103,10 +104,15 @@ public class SmsNotificationServiceImpl implements SmsNotificationService {
         try {
             HttpResponse response = httpClient.execute(httpPost);
             int responseCode = response.getStatusLine().getStatusCode();
-            if (responseCode != HttpStatus.SC_OK) {
-                String error = String.format("Expecting HTTP 200 response from %s but received HTTP %d : %s ",
+            if (responseCode != HttpStatus.SC_ACCEPTED) {
+                String error = String.format("Expecting HTTP 201 response from %s but received HTTP %d : %s ",
                         httpPost.getURI().toString(), responseCode, EntityUtils.toString(response.getEntity()));
                 LOGGER.error(error);
+                if (response.getEntity() != null && response.getEntity().getContentLength() > 0) {
+                    // TODO: raise an alert
+                    LOGGER.error(getStringFromStream(response.getEntity().getContent()));
+                }
+
                 return false;
             }
         } catch (IOException ie) {
@@ -126,31 +132,30 @@ public class SmsNotificationServiceImpl implements SmsNotificationService {
 
         HttpPost request = new HttpPost(endpoint);
         request.setHeader("Content-type", "application/json");
-        try {
 
-            String template = getTemplate();
-            template = template.replace("<phoneNumber>", String.valueOf(callingNumber));
-            template = template.replace("<senderId>", senderId);
-            template = template.replace("<messageContent>", messageContent);
-            template = template.replace("<notificationUrl>", callbackEndpoint);
-            template = template.replace("<correlationId>", DateTime.now().toString());
+        String template = getStringFromStream(settingsFacade.getRawConfig(SMS_TEMPLATE_FILE));
+        template = template.replace("<phoneNumber>", String.valueOf(callingNumber));
+        template = template.replace("<senderId>", senderId);
+        template = template.replace("<messageContent>", messageContent);
+        template = template.replace("<notificationUrl>", callbackEndpoint);
+        template = template.replace("<correlationId>", DateTime.now().toString());
+
+        try {
             request.setEntity(new StringEntity(template));
             return request;
-        } catch (IOException e) {
-            LOGGER.error(e.toString());
+        } catch (UnsupportedEncodingException ue) {
+            LOGGER.error("Unable to build sms request");
+            return null;
         }
-
-        return null;
     }
 
-    private String getTemplate() {
+    private String getStringFromStream(InputStream inputStream) {
         try {
-            InputStream templateStream = settingsFacade.getRawConfig(SMS_TEMPLATE_FILE);
             StringWriter writer = new StringWriter();
-            IOUtils.copy(templateStream, writer, "UTF-8");
+            IOUtils.copy(inputStream, writer, "UTF-8");
             return writer.toString();
         } catch (IOException io) {
-            LOGGER.error("Could not get template: " + io.toString());
+            LOGGER.error("Could not get string from stream: " + io.toString());
             return null;
         }
     }
