@@ -1,7 +1,8 @@
-package org.motechproject.nms.mobileacademy.notification;
+package org.motechproject.nms.mobileacademy.service.impl;
 
 import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.io.FileUtils;
+
+import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
@@ -13,23 +14,24 @@ import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.annotations.MotechListener;
 import org.motechproject.nms.mobileacademy.domain.CompletionRecord;
 import org.motechproject.nms.mobileacademy.repository.CompletionRecordDataService;
+import org.motechproject.nms.mobileacademy.service.SmsNotificationService;
 import org.motechproject.server.config.SettingsFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringWriter;
 
 /**
  * This handles all the integration pieces between MA and sms module to trigger and handle notifications
  * for course completion
  */
-@Component
-@Qualifier("smsNotificationHandler")
-public class SmsNotificationHandler {
+@Service("smsNotificationService")
+public class SmsNotificationServiceImpl implements SmsNotificationService {
 
     private static final String COURSE_COMPLETED = "nms.ma.course.completed";
 
@@ -43,15 +45,17 @@ public class SmsNotificationHandler {
 
     private static final String SMS_SENDER_ID = "imi.sms.sender.id";
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SmsNotificationHandler.class);
+    private static final String SMS_TEMPLATE_FILE = "smsTemplate.json";
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(SmsNotificationServiceImpl.class);
 
     private CompletionRecordDataService completionRecordDataService;
 
     private SettingsFacade settingsFacade;
 
     @Autowired
-    public SmsNotificationHandler(CompletionRecordDataService completionRecordDataService,
-                                  @Qualifier("maImiSettings") SettingsFacade settingsFacade) {
+    public SmsNotificationServiceImpl(CompletionRecordDataService completionRecordDataService,
+                                      @Qualifier("maImiSettings") SettingsFacade settingsFacade) {
         this.completionRecordDataService = completionRecordDataService;
         this.settingsFacade = settingsFacade;
     }
@@ -63,7 +67,7 @@ public class SmsNotificationHandler {
         Long callingNumber = (Long) event.getParameters().get("callingNumber");
         CompletionRecord cr = completionRecordDataService.findRecordByCallingNumber(callingNumber);
 
-        if(cr == null) {
+        if (cr == null) {
             // this should never be possible since the event dispatcher upstream adds the record
             LOGGER.error("No completion record found for callingNumber: " + callingNumber);
         }
@@ -107,6 +111,7 @@ public class SmsNotificationHandler {
             }
         } catch (IOException ie) {
             LOGGER.error(ie.toString());
+            return false;
         }
 
         return true;
@@ -122,13 +127,13 @@ public class SmsNotificationHandler {
         HttpPost request = new HttpPost(endpoint);
         request.setHeader("Content-type", "application/json");
         try {
-            File smsTemplate = new File(getClass().getClassLoader().getResource("sms-template.json").getFile());
-            String template = FileUtils.readFileToString(smsTemplate);
-            template.replace("<phoneNumber>", String.valueOf(callingNumber));
-            template.replace("<senderId>", senderId);
-            template.replace("<messageContent>", messageContent);
-            template.replace("<notificationUrl>", callbackEndpoint);
-            template.replace("<correlationId>", DateTime.now().toString());
+
+            String template = getTemplate();
+            template = template.replace("<phoneNumber>", String.valueOf(callingNumber));
+            template = template.replace("<senderId>", senderId);
+            template = template.replace("<messageContent>", messageContent);
+            template = template.replace("<notificationUrl>", callbackEndpoint);
+            template = template.replace("<correlationId>", DateTime.now().toString());
             request.setEntity(new StringEntity(template));
             return request;
         } catch (IOException e) {
@@ -136,5 +141,17 @@ public class SmsNotificationHandler {
         }
 
         return null;
+    }
+
+    private String getTemplate() {
+        try {
+            InputStream templateStream = settingsFacade.getRawConfig(SMS_TEMPLATE_FILE);
+            StringWriter writer = new StringWriter();
+            IOUtils.copy(templateStream, writer, "UTF-8");
+            return writer.toString();
+        } catch (IOException io) {
+            LOGGER.error("Could not get template: " + io.toString());
+            return null;
+        }
     }
 }

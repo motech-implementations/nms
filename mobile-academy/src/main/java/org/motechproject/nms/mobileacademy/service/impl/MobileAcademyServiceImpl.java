@@ -233,7 +233,7 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
      * @return map of course-score from the bookmark
      * @throws ClassCastException
      */
-    private Map<String, Integer> getScores(Bookmark bookmark) throws ClassCastException {
+    private Map<String, Integer> getScores(Bookmark bookmark) {
 
         if (bookmark != null && bookmark.getProgress() != null) {
             return (Map<String, Integer>) bookmark.getProgress().get(SCORES_KEY);

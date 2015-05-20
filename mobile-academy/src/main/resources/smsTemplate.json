@@ -1,0 +1,18 @@
+{
+  "outboundSMSMessageRequest": {
+    "address": [
+      "tel: <phoneNumber>"
+    ],
+    "senderAddress": "tel: <senderId>",
+    "outboundSMSTextMessage": {
+      "message": "<messageContent>"
+    },
+    "clientCorrelator": "<correlationId>",
+    "receiptRequest": {
+      "notifyURL": "<notificationUrl>",
+      "callbackData": "$(callbackData)"
+    },
+    "senderName": "",
+    "category": ""
+  }
+}

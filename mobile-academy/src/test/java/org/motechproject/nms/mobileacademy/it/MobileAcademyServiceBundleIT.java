@@ -10,19 +10,17 @@ import org.motechproject.nms.mobileacademy.domain.CompletionRecord;
 import org.motechproject.nms.mobileacademy.domain.Course;
 import org.motechproject.nms.mobileacademy.dto.MaBookmark;
 import org.motechproject.nms.mobileacademy.exception.CourseNotCompletedException;
-import org.motechproject.nms.mobileacademy.notification.SmsNotificationHandler;
+import org.motechproject.nms.mobileacademy.service.SmsNotificationService;
+import org.motechproject.nms.mobileacademy.service.impl.SmsNotificationServiceImpl;
 import org.motechproject.nms.mobileacademy.repository.CompletionRecordDataService;
 import org.motechproject.nms.mobileacademy.repository.CourseDataService;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
-import org.motechproject.server.config.SettingsFacade;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.test.context.ContextConfiguration;
 
 import javax.annotation.Resource;
@@ -39,7 +37,6 @@ import static org.junit.Assert.*;
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerSuite.class)
 @ExamFactory(MotechNativeTestContainerFactory.class)
-@ContextConfiguration(locations = "classpath:testMobileAcademyContext.xml")
 public class MobileAcademyServiceBundleIT extends BasePaxIT {
 
     @Inject
@@ -54,8 +51,8 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     @Inject
     private CompletionRecordDataService completionRecordDataService;
 
-    @Resource
-    private SmsNotificationHandler smsNotificationHandler;
+    @Inject
+    private SmsNotificationService smsNotificationService;
 
     private static String validCourseName = "MobileAcademyCourse";
 
@@ -282,7 +279,8 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         event.getParameters().put("callingNumber", callingNumber);
         CompletionRecord cr = new CompletionRecord(callingNumber, 35, false, 1);
         completionRecordDataService.create(cr);
-        smsNotificationHandler.sendSmsNotification(event);
+        smsNotificationService.sendSmsNotification(event);
+        // TODO: cannot check the notification status yet since we don't have a real IMI url to hit
     }
 
     private void addCourseHelper(String courseName) {

@@ -13,7 +13,7 @@ import org.motechproject.mtraining.repository.BookmarkDataService;
 import org.motechproject.nms.mobileacademy.domain.CompletionRecord;
 import org.motechproject.nms.mobileacademy.domain.Course;
 import org.motechproject.nms.mobileacademy.dto.MaBookmark;
-import org.motechproject.nms.mobileacademy.notification.SmsNotificationHandler;
+import org.motechproject.nms.mobileacademy.service.impl.SmsNotificationServiceImpl;
 import org.motechproject.nms.mobileacademy.exception.CourseNotCompletedException;
 import org.motechproject.nms.mobileacademy.repository.CompletionRecordDataService;
 import org.motechproject.nms.mobileacademy.repository.CourseDataService;
@@ -63,7 +63,7 @@ public class MobileAcademyServiceUnitTest {
     private EventRelay eventRelay;
 
     @Mock
-    private SmsNotificationHandler smsNotificationHandler;
+    private SmsNotificationServiceImpl smsNotificationServiceImpl;
 
     @Mock
     private SettingsFacade settingsFacade;
@@ -75,7 +75,7 @@ public class MobileAcademyServiceUnitTest {
         initMocks(this);
         mobileAcademyService = new MobileAcademyServiceImpl(
                 bookmarkDataService, courseDataService, completionRecordDataService, eventRelay);
-        smsNotificationHandler = new SmsNotificationHandler(completionRecordDataService, settingsFacade);
+        smsNotificationServiceImpl = new SmsNotificationServiceImpl(completionRecordDataService, settingsFacade);
         validator = Validation.buildDefaultValidatorFactory().getValidator();
     }
 
@@ -204,7 +204,7 @@ public class MobileAcademyServiceUnitTest {
         assertNull(cr.getLastDeliveryStatus());
 
         when(completionRecordDataService.findRecordByCallingNumber(anyLong())).thenReturn(cr);
-        smsNotificationHandler.updateSmsStatus(event);
+        smsNotificationServiceImpl.updateSmsStatus(event);
         assertTrue(cr.getLastDeliveryStatus().equals("DeliveredToTerminal"));
     }
 
