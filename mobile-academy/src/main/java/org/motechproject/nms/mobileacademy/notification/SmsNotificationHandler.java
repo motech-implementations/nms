@@ -27,7 +27,8 @@ import java.io.IOException;
  * This handles all the integration pieces between MA and sms module to trigger and handle notifications
  * for course completion
  */
-@Component("smsNotificationHandler")
+@Component
+@Qualifier("smsNotificationHandler")
 public class SmsNotificationHandler {
 
     private static final String COURSE_COMPLETED = "nms.ma.course.completed";
