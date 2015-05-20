@@ -2,17 +2,19 @@ package org.motechproject.nms.kilkari.service.impl;
 
 import org.joda.time.DateTime;
 import org.motechproject.mds.query.QueryParams;
-import org.motechproject.nms.kilkari.domain.DeactivationReason;
-import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
-import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
+import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
-import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
+import org.motechproject.nms.kilkari.domain.SubscriptionError;
+import org.motechproject.nms.kilkari.domain.SubscriptionRejectionReason;
+import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
+import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
+import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
 import org.motechproject.nms.region.domain.LanguageLocation;
@@ -38,51 +40,17 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private SubscriberDataService subscriberDataService;
     private SubscriptionPackDataService subscriptionPackDataService;
     private SubscriptionDataService subscriptionDataService;
+    private SubscriptionErrorDataService subscriptionErrorDataService;
 
     @Autowired
     public SubscriptionServiceImpl(SubscriberDataService subscriberDataService,
                                    SubscriptionPackDataService subscriptionPackDataService,
-                                   SubscriptionDataService subscriptionDataService) {
+                                   SubscriptionDataService subscriptionDataService,
+                                   SubscriptionErrorDataService subscriptionErrorDataService) {
         this.subscriberDataService = subscriberDataService;
         this.subscriptionPackDataService = subscriptionPackDataService;
         this.subscriptionDataService = subscriptionDataService;
-
-        createSubscriptionPacks();
-    }
-
-
-    /*
-     * Create the subscription packs for Kilkari -- a 48-week child pack and a 72-week pregnancy pack. This service
-     * method is effectively internal, but made publicly-accessible so that it can be tested in our ITs.
-     */
-    @Override
-    public final void createSubscriptionPacks() {
-        // TODO: make this less hard-coded and hacky once we get spec clarification re: how to populate the pack data
-        if (subscriptionPackDataService.byName("childPack") == null) {
-            createSubscriptionPack("childPack", SubscriptionPackType.CHILD, CHILD_PACK_WEEKS, 1);
-        }
-        if (subscriptionPackDataService.byName("pregnancyPack") == null) {
-            createSubscriptionPack("pregnancyPack", SubscriptionPackType.PREGNANCY, PREGNANCY_PACK_WEEKS, 2);
-        }
-    }
-
-
-    private void createSubscriptionPack(String name, SubscriptionPackType type, int weeks,
-                                                    int messagesPerWeek) {
-        List<SubscriptionPackMessage> messages = new ArrayList<>();
-        for (int week = 1; week <= weeks; week++) {
-            messages.add(new SubscriptionPackMessage(week, String.format("w%s_1", week),
-                    String.format("w%s_1.wav", week),
-                    TWO_MINUTES - TEN_SECS + (int) (Math.random() * 2 * TEN_SECS)));
-
-            if (messagesPerWeek == 2) {
-                messages.add(new SubscriptionPackMessage(week, String.format("w%s_2", week),
-                        String.format("w%s_2.wav", week),
-                        TWO_MINUTES - TEN_SECS + (int) (Math.random() * 2 * TEN_SECS)));
-            }
-        }
-
-        subscriptionPackDataService.create(new SubscriptionPack(name, type, weeks, messagesPerWeek, messages));
+        this.subscriptionErrorDataService = subscriptionErrorDataService;
     }
 
 
@@ -138,10 +106,12 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         Subscription subscription;
 
         if (subscriber.getDateOfBirth() != null && pack.getType() == SubscriptionPackType.CHILD) {
-            if (subscriberHasActivePackType(subscriber, SubscriptionPackType.CHILD) ||
-                    (Subscription.hasCompletedForStartDate(subscriber.getDateOfBirth(), DateTime.now(), pack))) {
-
-                // TODO: #138 log the rejected subscription
+            if (subscriberHasActivePackType(subscriber, SubscriptionPackType.CHILD))
+            {
+                logRejectedSubscription(subscriber.getCallingNumber(),
+                        SubscriptionRejectionReason.ALREADY_SUBSCRIBED, SubscriptionPackType.CHILD);
+                return null;
+            } else if (Subscription.hasCompletedForStartDate(subscriber.getDateOfBirth(), DateTime.now(), pack)) {
                 return null;
             } else {
                 subscription = new Subscription(subscriber, pack, SubscriptionOrigin.MCTS_IMPORT);
@@ -169,6 +139,12 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         }
 
         return subscriptionDataService.create(subscription);
+    }
+
+    private void logRejectedSubscription(long callingNumber, SubscriptionRejectionReason reason,
+                                         SubscriptionPackType packType) {
+        SubscriptionError error = new SubscriptionError(callingNumber, reason, packType);
+        subscriptionErrorDataService.create(error);
     }
 
     private boolean subscriberHasActivePackType(Subscriber subscriber, SubscriptionPackType type) {
@@ -245,5 +221,36 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     public List<Subscription> findActiveSubscriptionsForDay(DayOfTheWeek dayOfTheWeek, int page, int pageSize) {
         return subscriptionDataService.findByStatusAndDay(SubscriptionStatus.ACTIVE, dayOfTheWeek,
                 new QueryParams(page, pageSize));
+    }
+
+
+    @Override
+    public final void createSubscriptionPacks() {
+        // TODO: make this less hard-coded and hacky once we get spec clarification re: how to populate the pack data
+        if (subscriptionPackDataService.byName("childPack") == null) {
+            createSubscriptionPack("childPack", SubscriptionPackType.CHILD, CHILD_PACK_WEEKS, 1);
+        }
+        if (subscriptionPackDataService.byName("pregnancyPack") == null) {
+            createSubscriptionPack("pregnancyPack", SubscriptionPackType.PREGNANCY, PREGNANCY_PACK_WEEKS, 2);
+        }
+    }
+
+
+    private void createSubscriptionPack(String name, SubscriptionPackType type, int weeks,
+                                        int messagesPerWeek) {
+        List<SubscriptionPackMessage> messages = new ArrayList<>();
+        for (int week = 1; week <= weeks; week++) {
+            messages.add(new SubscriptionPackMessage(week, String.format("w%s_1", week),
+                    String.format("w%s_1.wav", week),
+                    TWO_MINUTES - TEN_SECS + (int) (Math.random() * 2 * TEN_SECS)));
+
+            if (messagesPerWeek == 2) {
+                messages.add(new SubscriptionPackMessage(week, String.format("w%s_2", week),
+                        String.format("w%s_2.wav", week),
+                        TWO_MINUTES - TEN_SECS + (int) (Math.random() * 2 * TEN_SECS)));
+            }
+        }
+
+        subscriptionPackDataService.create(new SubscriptionPack(name, type, weeks, messagesPerWeek, messages));
     }
 }
