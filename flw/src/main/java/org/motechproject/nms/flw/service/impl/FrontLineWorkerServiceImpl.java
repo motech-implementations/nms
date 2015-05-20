@@ -1,5 +1,7 @@
 package org.motechproject.nms.flw.service.impl;
 
+import org.joda.time.DateTime;
+import org.joda.time.Weeks;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
@@ -87,5 +89,22 @@ public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
     @Override
     public void delete(FrontLineWorker record) {
         frontLineWorkerDataService.delete(record);
+    }
+
+    @Override
+    public void deleteAllowed(FrontLineWorker frontLineWorker) {
+        DateTime now = new DateTime();
+
+        if (frontLineWorker.getStatus() != FrontLineWorkerStatus.INVALID) {
+            throw new IllegalStateException("Can not delete a valid FLW");
+        }
+
+        if (frontLineWorker.getInvalidationDate() == null) {
+            throw new IllegalStateException("FLW in invalid state with null invalidation date");
+        }
+
+        if (Math.abs(Weeks.weeksBetween(now, frontLineWorker.getInvalidationDate()).getWeeks()) < 6) {
+            throw new IllegalStateException("FLW must be in invalid state for 6 weeks before deleting");
+        }
     }
 }

@@ -1,8 +1,11 @@
 package org.motechproject.nms.kilkari.osgi;
 
 import org.joda.time.DateTime;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
+import org.motechproject.mds.ex.JdoListenerInvocationException;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.domain.InboxCallData;
 import org.motechproject.nms.kilkari.domain.InboxCallDetailRecord;
@@ -46,7 +49,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Verify that SubscriptionService is present & functional.
@@ -145,6 +151,13 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     }
 
     private void cleanupData() {
+        for (Subscription subscription: subscriptionDataService.retrieveAll()) {
+            subscription.setStatus(SubscriptionStatus.COMPLETED);
+            subscription.setEndDate(new DateTime().withDate(2011, 8, 1));
+
+            subscriptionDataService.update(subscription);
+        }
+
         subscriptionDataService.deleteAll();
         subscriptionPackDataService.deleteAll();
         subscriptionPackMessageDataService.deleteAll();
@@ -517,7 +530,6 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         throw new IllegalStateException("Couldn't find our subscription by its start day!");
     }
 
-
     // NMS shall allow a subscriber deactivated due to DND restrictions to activate the Kilkari service again via IVR.
     @Test
     public void verifyIssue182() {
@@ -537,5 +549,97 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         // And check the subscription is now active
         assertEquals(SubscriptionStatus.ACTIVE, subscription.getStatus());
+    }
+
+    @Rule
+    public ExpectedException exception = ExpectedException.none();
+
+    @Test
+    public void testDeleteOpenSubscription() {
+        setupData();
+
+        Subscriber mctsSubscriber = new Subscriber(9999911122L);
+        mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(14));
+        subscriberDataService.create(mctsSubscriber);
+
+        Subscription subscription = subscriptionService.createSubscription(9999911122L, gLanguageLocation,
+                                                                         gPack1, SubscriptionOrigin.MCTS_IMPORT);
+
+        exception.expect(JdoListenerInvocationException.class);
+        subscriptionDataService.delete(subscription);
+    }
+
+    @Test
+    public void testDeleteRecentDeactivateSubscription() {
+        setupData();
+
+        Subscriber mctsSubscriber = new Subscriber(9999911122L);
+        mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(14));
+        subscriberDataService.create(mctsSubscriber);
+
+        Subscription subscription = subscriptionService.createSubscription(9999911122L, gLanguageLocation,
+                gPack1, SubscriptionOrigin.MCTS_IMPORT);
+        subscription.setStatus(SubscriptionStatus.DEACTIVATED);
+        subscriptionDataService.update(subscription);
+
+        exception.expect(JdoListenerInvocationException.class);
+        subscriptionDataService.delete(subscription);
+    }
+
+    @Test
+    public void testDeleteRecentCompletedSubscription() {
+        setupData();
+
+        Subscriber mctsSubscriber = new Subscriber(9999911122L);
+        mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(14));
+        subscriberDataService.create(mctsSubscriber);
+
+        Subscription subscription = subscriptionService.createSubscription(9999911122L, gLanguageLocation,
+                gPack1, SubscriptionOrigin.MCTS_IMPORT);
+        subscription.setStatus(SubscriptionStatus.COMPLETED);
+        subscriptionDataService.update(subscription);
+
+        exception.expect(JdoListenerInvocationException.class);
+        subscriptionDataService.delete(subscription);
+    }
+
+    @Test
+    public void testDeleteOldDeactivatedSubscription() {
+        setupData();
+
+        Subscriber subscriber = subscriberService.getSubscriber(2000000000L);
+        assertNotNull(subscriber);
+
+        assertEquals(2, subscriber.getSubscriptions().size());
+
+        Subscription subscription = subscriber.getSubscriptions().iterator().next();
+        subscription.setStatus(SubscriptionStatus.DEACTIVATED);
+        subscription.setEndDate(new DateTime().withDate(2011, 8, 1));
+        subscriptionDataService.update(subscription);
+
+        subscriptionDataService.delete(subscription);
+
+        subscriber = subscriberDataService.findByCallingNumber(2000000000L);
+        assertEquals(1, subscriber.getSubscriptions().size());
+    }
+
+    @Test
+    public void testDeleteOldCompletedSubscription() {
+        setupData();
+
+        Subscriber subscriber = subscriberService.getSubscriber(2000000000L);
+        assertNotNull(subscriber);
+
+        assertEquals(2, subscriber.getSubscriptions().size());
+
+        Subscription subscription = subscriber.getSubscriptions().iterator().next();
+        subscription.setStatus(SubscriptionStatus.COMPLETED);
+        subscription.setEndDate(new DateTime().withDate(2011, 8, 1));
+        subscriptionDataService.update(subscription);
+
+        subscriptionDataService.delete(subscription);
+
+        subscriber = subscriberDataService.findByCallingNumber(2000000000L);
+        assertEquals(1, subscriber.getSubscriptions().size());
     }
 }

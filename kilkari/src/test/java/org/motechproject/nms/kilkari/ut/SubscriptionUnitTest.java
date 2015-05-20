@@ -14,9 +14,12 @@ import org.motechproject.nms.props.domain.DayOfTheWeek;
 import java.util.ArrayList;
 import java.util.List;
 
-import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 
 public class SubscriptionUnitTest {
     @Test
@@ -62,6 +65,25 @@ public class SubscriptionUnitTest {
         return new SubscriptionPack(name, type, weeks, messagesPerWeek, messages);
     }
 
+    @Test
+    public void verifySetStatusUpdatesEndDate() {
+        Subscription s = new Subscription(
+                new Subscriber(1111111111L),
+                createSubscriptionPack("pack", SubscriptionPackType.CHILD, 10, 1),
+                SubscriptionOrigin.IVR);
+        s.setStatus(SubscriptionStatus.ACTIVE);
+
+        assertNull(s.getEndDate());
+
+        s.setStatus(SubscriptionStatus.COMPLETED);
+        assertNotNull(s.getEndDate());
+
+        s.setStatus(SubscriptionStatus.ACTIVE);
+        assertNull(s.getEndDate());
+
+        s.setStatus(SubscriptionStatus.DEACTIVATED);
+        assertNotNull(s.getEndDate());
+    }
 
     @Test
     public void verifyNextScheduledMessage() {

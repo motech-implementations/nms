@@ -1,5 +1,6 @@
 package org.motechproject.nms.flw.domain;
 
+import org.joda.time.DateTime;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.nms.region.domain.District;
@@ -35,6 +36,9 @@ public class FrontLineWorker {
 
     @Field
     private FrontLineWorkerStatus status;
+
+    @Field
+    private DateTime invalidationDate;
 
     @Field
     private LanguageLocation languageLocation;
@@ -98,6 +102,20 @@ public class FrontLineWorker {
 
     public void setStatus(FrontLineWorkerStatus status) {
         this.status = status;
+
+        if (this.status == FrontLineWorkerStatus.INVALID) {
+            setInvalidationDate(new DateTime());
+        } else {
+            setInvalidationDate(null);
+        }
+    }
+
+    public DateTime getInvalidationDate() {
+        return invalidationDate;
+    }
+
+    public void setInvalidationDate(DateTime invalidationDate) {
+        this.invalidationDate = invalidationDate;
     }
 
     public LanguageLocation getLanguageLocation() {

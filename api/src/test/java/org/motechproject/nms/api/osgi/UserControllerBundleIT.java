@@ -16,6 +16,7 @@ import org.motechproject.nms.api.web.contract.FlwUserResponse;
 import org.motechproject.nms.api.web.contract.UserLanguageRequest;
 import org.motechproject.nms.api.web.contract.kilkari.KilkariUserResponse;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
+import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.domain.ServiceUsage;
 import org.motechproject.nms.flw.domain.ServiceUsageCap;
 import org.motechproject.nms.flw.domain.WhitelistEntry;
@@ -28,9 +29,11 @@ import org.motechproject.nms.flw.repository.WhitelistEntryDataService;
 import org.motechproject.nms.flw.repository.WhitelistStateDataService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.kilkari.domain.Subscriber;
+import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
+import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
@@ -68,7 +71,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 
 /**
@@ -141,6 +146,20 @@ public class UserControllerBundleIT extends BasePaxIT {
 
     // TODO: Clean up data creation and cleanup
     private void cleanAllData() {
+        for (FrontLineWorker flw: frontLineWorkerDataService.retrieveAll()) {
+            flw.setStatus(FrontLineWorkerStatus.INVALID);
+            flw.setInvalidationDate(new DateTime().withDate(2011, 8, 1));
+
+            frontLineWorkerDataService.update(flw);
+        }
+
+        for (Subscription subscription: subscriptionDataService.retrieveAll()) {
+            subscription.setStatus(SubscriptionStatus.COMPLETED);
+            subscription.setEndDate(new DateTime().withDate(2011, 8, 1));
+
+            subscriptionDataService.update(subscription);
+        }
+
         whitelistEntryDataService.deleteAll();
         whitelistStateDataService.deleteAll();
         serviceUsageCapDataService.deleteAll();
