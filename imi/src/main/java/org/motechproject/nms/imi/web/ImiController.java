@@ -102,7 +102,7 @@ public class ImiController {
     }
 
 
-    private void verifyFileAuditRecord(String fileName) {
+    private void verifyFileExistsInAuditRecord(String fileName) {
         List<FileAuditRecord> records =  fileAuditRecordDataService.findByFileName(fileName);
         if (records.size() < 1) {
             throw new NotFoundException(String.format("<%s: Not Found>", fileName));
@@ -133,7 +133,7 @@ public class ImiController {
         }
 
         // Check the provided OBD file (aka: targetFile) exists in the FileAuditRecord table
-        verifyFileAuditRecord(request.getFileName());
+        verifyFileExistsInAuditRecord(request.getFileName());
 
         // This checks the file, checksum, record count & csv lines, then sends an event to proceed to phase 2 of the
         // CDR processing task also handled by the IMI module: processDetailFile
@@ -163,9 +163,10 @@ public class ImiController {
             throw new IllegalArgumentException(failureReasons.toString());
         }
 
-        verifyFileAuditRecord(request.getFileName());
+        // Check the provided OBD file (aka: targetFile) exists in the FileAuditRecord table
+        verifyFileExistsInAuditRecord(request.getFileName());
 
-        // call OBD service, which will handle notification
+        //
         targetFileService.handleFileProcessedStatusNotification(request);
     }
 

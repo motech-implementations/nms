@@ -311,21 +311,9 @@ public class CdrHelper {
         LOGGER.debug("Creating summary file {}...", dstFile);
         BufferedWriter writer = new BufferedWriter(new FileWriter(dstFile));
 
-        //todo:...
+        //We ignore CDR Summary files, do nothing.
 
         writer.close();
-    }
-
-
-    public void createCdrFileAuditRecord(boolean valid, boolean success) throws IOException, NoSuchAlgorithmException {
-        fileAuditRecordDataService.create(new FileAuditRecord(
-                FileType.CDR_DETAIL_FILE,
-                valid ? cdr() : "xxx",
-                success,
-                success ? null : "ERROR",
-                cdrCount(),
-                csrChecksum()
-        ));
     }
 
 
@@ -335,8 +323,8 @@ public class CdrHelper {
                 valid ? obd() : "xxx",
                 success,
                 success ? null : "ERROR",
-                123, //todo
-                "foobar" //todo
+                123,
+                "123abc"
         ));
     }
 

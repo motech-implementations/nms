@@ -141,6 +141,12 @@ public class TargetFileServiceImpl implements TargetFileService {
     }
 
 
+    // Helper method that makes the code a bit cleaner
+    private void alert(String id, String name, String description) {
+        alertService.create(id, name, description, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+    }
+
+
     //todo: verify we can do that - if the shared directory is an FTP share this might not work
     private File createTargetFileDirectory() {
         File userHome = new File(System.getProperty("user.home"));
@@ -154,8 +160,7 @@ public class TargetFileServiceImpl implements TargetFileService {
                 String error = String.format("Unable to create targetFileDirectory %s: mkdirs() failed",
                         targetFileDirectory);
                 LOGGER.error(error);
-                alertService.create(targetFileDirectory.toString(), "targetFileDirectory", "mkdirs() failed",
-                        AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+                alert(targetFileDirectory.toString(), "targetFileDirectory", "mkdirs() failed");
                 fileAuditRecordDataService.create(new FileAuditRecord(FileType.TARGET_FILE,
                         targetFileDirectory.getName(), false, error, null, null));
                 throw new IllegalStateException();
@@ -382,8 +387,7 @@ public class TargetFileServiceImpl implements TargetFileService {
 
         } catch (NoSuchAlgorithmException | IOException e) {
             LOGGER.error(e.getMessage());
-            alertService.create(targetFile.toString(), "targetFile", e.getMessage(), AlertType.CRITICAL,
-                    AlertStatus.NEW, 0, null);
+            alert(targetFile.toString(), "targetFile", e.getMessage());
             fileAuditRecordDataService.create(new FileAuditRecord(FileType.TARGET_FILE, targetFile.getName(),
                     false, e.getMessage(), null, null));
             return null;
@@ -418,13 +422,11 @@ public class TargetFileServiceImpl implements TargetFileService {
                 String error = String.format("Expecting HTTP 200 response from %s but received HTTP %d : %s ",
                         notificationUrl, responseCode, EntityUtils.toString(response.getEntity()));
                 LOGGER.error(error);
-                alertService.create("targetFile notification request", "targetFile", error, AlertType.CRITICAL,
-                        AlertStatus.NEW, 0, null);
+                alert("targetFile notification request", "targetFile", error);
             }
         } catch (IOException e) {
             LOGGER.error("Unable to send targetFile notification request: {}", e.getMessage());
-            alertService.create("targetFile notification request", "targetFile", e.getMessage(),
-                    AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            alert("targetFile notification request", "targetFile", e.getMessage());
         }
     }
 
@@ -437,23 +439,30 @@ public class TargetFileServiceImpl implements TargetFileService {
 
         if (tfn != null) {
             //notify the IVR system the file is ready
-            sendNotificationRequest(tfn);
+            sendNotificationRequest(tfn); //todo: IT?
         }
     }
 
 
+    /**
+     * Log & audit the fact that IMI processed the OBD file (successfully or not)
+     *
+     * @param request file name & status
+     */
     @Override
     public void handleFileProcessedStatusNotification(FileProcessedStatusRequest request) {
-        if (request.getFileProcessedStatus() == FileProcessedStatus.FILE_PROCESSED_SUCCESSFULLY) {
-            LOGGER.debug(request.toString());
-            //We're happy.
-            //todo: audit that?
-        } else {
+        fileAuditRecordDataService.create(new FileAuditRecord(
+                FileType.TARGET_FILE,
+                request.getFileName(),
+                request.getFileProcessedStatus() == FileProcessedStatus.FILE_PROCESSED_SUCCESSFULLY,
+                request.getFileProcessedStatus().getName(),
+                null,
+                null
+        ));
+        if (request.getFileProcessedStatus() != FileProcessedStatus.FILE_PROCESSED_SUCCESSFULLY) {
             LOGGER.error(request.toString());
             //todo: IT check if alert was created
-            alertService.create(request.getFileName(), "targetFileName", "Target File Processing Error",
-                    AlertType.CRITICAL, AlertStatus.NEW, 0, null);
-            //todo: audit that?
+            alert(request.getFileName(), "targetFileName", "Target File Processing Error");
         }
     }
 }
