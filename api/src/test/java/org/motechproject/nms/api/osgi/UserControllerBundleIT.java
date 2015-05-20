@@ -16,6 +16,7 @@ import org.motechproject.nms.api.web.contract.FlwUserResponse;
 import org.motechproject.nms.api.web.contract.UserLanguageRequest;
 import org.motechproject.nms.api.web.contract.kilkari.KilkariUserResponse;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
+import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.domain.ServiceUsage;
 import org.motechproject.nms.flw.domain.ServiceUsageCap;
 import org.motechproject.nms.flw.domain.WhitelistEntry;
@@ -145,6 +146,13 @@ public class UserControllerBundleIT extends BasePaxIT {
 
     // TODO: Clean up data creation and cleanup
     private void cleanAllData() {
+        for (FrontLineWorker flw: frontLineWorkerDataService.retrieveAll()) {
+            flw.setStatus(FrontLineWorkerStatus.INVALID);
+            flw.setInvalidationDate(new DateTime().withDate(2011, 8, 1));
+
+            frontLineWorkerDataService.update(flw);
+        }
+
         for (Subscription subscription: subscriptionDataService.retrieveAll()) {
             subscription.setStatus(SubscriptionStatus.COMPLETED);
             subscription.setEndDate(new DateTime().withDate(2011, 8, 1));

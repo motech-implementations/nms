@@ -16,6 +16,8 @@ import org.motechproject.nms.api.web.contract.kilkari.InboxCallDetailsRequest;
 import org.motechproject.nms.api.web.contract.kilkari.InboxResponse;
 import org.motechproject.nms.api.web.contract.kilkari.InboxSubscriptionDetailResponse;
 import org.motechproject.nms.api.web.contract.kilkari.SubscriptionRequest;
+import org.motechproject.nms.flw.domain.FrontLineWorker;
+import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.flw.repository.ServiceUsageCapDataService;
 import org.motechproject.nms.flw.repository.ServiceUsageDataService;
@@ -124,6 +126,13 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     private SubscriptionPack gPack2;
 
     private void cleanAllData() {
+        for (FrontLineWorker flw: frontLineWorkerDataService.retrieveAll()) {
+            flw.setStatus(FrontLineWorkerStatus.INVALID);
+            flw.setInvalidationDate(new DateTime().withDate(2011, 8, 1));
+
+            frontLineWorkerDataService.update(flw);
+        }
+
         for (Subscription subscription: subscriptionDataService.retrieveAll()) {
             subscription.setStatus(SubscriptionStatus.COMPLETED);
             subscription.setEndDate(new DateTime().withDate(2011, 8, 1));
