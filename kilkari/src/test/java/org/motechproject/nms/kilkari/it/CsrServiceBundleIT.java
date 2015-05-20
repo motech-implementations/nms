@@ -49,6 +49,7 @@ import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
@@ -313,16 +314,19 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 languageDataService, languageLocationDataService, circleDataService, stateDataService,
                 districtDataService);
 
-        helper.makeRecords();
+        helper.makeRecords(1,3,0,0);
 
-        Map<String, Object> eventParams = new HashMap<>();
-        eventParams.put(CSR_PARAM_KEY, csr);
-        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD, eventParams);
-        csrService.processCallSummaryRecord(motechEvent);
+        for (CallSummaryRecordDto record : helper.getRecords()) {
+            Map<String, Object> eventParams = new HashMap<>();
+            eventParams.put(CSR_PARAM_KEY, record);
+            MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD, eventParams);
+            csrService.processCallSummaryRecord(motechEvent);
+        }
+
+        List<Subscription> subscriptions = subscriptionDataService.findByStatus(SubscriptionStatus.COMPLETED);
+        assertEquals(3, subscriptions.size());
     }
 
-
-    //todo: verify successful subscription completion
     //todo: verify multiple days' worth of summary record aggregation
     //todo: verify more stuff I can't think of now
 }

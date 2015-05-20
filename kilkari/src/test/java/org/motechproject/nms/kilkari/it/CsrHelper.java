@@ -76,8 +76,9 @@ public class CsrHelper {
         }
 
         for (int i=0 ; i<numCompleted ; i++) {
-            Subscription sub = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(30));
-            int index = sh.getRandomMessageIndex(sub);
+            int days = sh.getChildPack().getWeeks() * 7;
+            Subscription sub = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(days));
+            int index = sh.getLastMessageIndex(sub);
             CallSummaryRecordDto r = new CallSummaryRecordDto(
                     new RequestId(sub.getSubscriptionId(), TIMESTAMP),
                     sub.getSubscriber().getCallingNumber(),
