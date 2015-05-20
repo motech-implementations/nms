@@ -11,6 +11,9 @@
     <osgi:service ref="smsNotificationService"
                   interface="org.motechproject.nms.mobileacademy.service.SmsNotificationService" />
 
+    <osgi:service ref="settingsService"
+                  interface="org.motechproject.nms.mobileacademy.service.SettingsService" />
+
     <osgi:reference id="courseDataService"
                     interface="org.motechproject.nms.mobileacademy.repository.CourseDataService" />
 
