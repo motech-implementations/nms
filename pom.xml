@@ -733,6 +733,7 @@
         <module>region</module>
         <module>props</module>
         <module>imi</module>
+        <module>scp</module>
     </modules>
 
     <build>
