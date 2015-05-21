@@ -1,16 +1,22 @@
 package org.motechproject.nms.imi.web;
 
 import org.motechproject.nms.imi.domain.FileAuditRecord;
+import org.motechproject.nms.imi.domain.FileType;
+import org.motechproject.nms.imi.exception.ExecException;
 import org.motechproject.nms.imi.exception.InvalidCdrFileException;
 import org.motechproject.nms.imi.exception.NotFoundException;
 import org.motechproject.nms.imi.repository.FileAuditRecordDataService;
 import org.motechproject.nms.imi.service.CdrFileService;
 import org.motechproject.nms.imi.service.TargetFileService;
+import org.motechproject.nms.imi.service.impl.ScpHelper;
 import org.motechproject.nms.imi.web.contract.AggregateBadRequest;
 import org.motechproject.nms.imi.web.contract.BadRequest;
 import org.motechproject.nms.imi.web.contract.CdrFileNotificationRequest;
 import org.motechproject.nms.imi.web.contract.FileInfo;
 import org.motechproject.nms.imi.web.contract.FileProcessedStatusRequest;
+import org.motechproject.server.config.SettingsFacade;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -35,14 +41,18 @@ public class ImiController {
     public static final String INVALID = "<%s: Invalid>";
     public static final Pattern TARGET_FILENAME_PATTERN = Pattern.compile("OBD_[0-9]{14}\\.csv");
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(ImiController.class);
+
+    private SettingsFacade settingsFacade;
     private CdrFileService cdrFileService;
     private TargetFileService targetFileService;
     private FileAuditRecordDataService fileAuditRecordDataService;
 
 
     @Autowired
-    public ImiController(CdrFileService cdrFileService, TargetFileService targetFileService,
-                         FileAuditRecordDataService fileAuditRecordDataService) {
+    public ImiController(SettingsFacade settingsFacade, CdrFileService cdrFileService,
+                         TargetFileService targetFileService, FileAuditRecordDataService fileAuditRecordDataService) {
+        this.settingsFacade = settingsFacade;
         this.cdrFileService = cdrFileService;
         this.targetFileService = targetFileService;
         this.fileAuditRecordDataService = fileAuditRecordDataService;
@@ -132,8 +142,29 @@ public class ImiController {
             throw new IllegalArgumentException(failureReasons.toString());
         }
 
+
         // Check the provided OBD file (aka: targetFile) exists in the FileAuditRecord table
         verifyFileExistsInAuditRecord(request.getFileName());
+
+
+        // Copy the file from the IMI network share into the directory provided in imi.cdr_file_directory
+        ScpHelper scpHelper = new ScpHelper(settingsFacade);
+        try {
+            scpHelper.copyFrom(request.getFileName(), request.getFileName());
+        } catch (ExecException e) {
+            String error = String.format("Error copying CDR file %s: %s", request.getFileName(), e.getMessage());
+            LOGGER.error(error);
+            fileAuditRecordDataService.create(new FileAuditRecord(
+                    FileType.CDR_DETAIL_FILE,
+                    request.getFileName(),
+                    false,
+                    error,
+                    null,
+                    null
+            ));
+            //todo: send alert
+            throw new IllegalArgumentException(e.getMessage(), e);
+        }
 
         // This checks the file, checksum, record count & csv lines, then sends an event to proceed to phase 2 of the
         // CDR processing task also handled by the IMI module: processDetailFile
