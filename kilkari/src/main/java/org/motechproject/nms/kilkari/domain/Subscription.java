@@ -12,7 +12,7 @@ import javax.validation.constraints.NotNull;
 import java.util.List;
 import java.util.UUID;
 
-@Entity(tableName = "nms_subscriptions")
+@Entity(maxFetchDepth = -1, tableName = "nms_subscriptions")
 public class Subscription {
 
     private static final int DAYS_IN_WEEK = 7;

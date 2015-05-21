@@ -2,6 +2,7 @@ package org.motechproject.nms.imi.it;
 
 import org.apache.commons.codec.binary.Hex;
 import org.joda.time.DateTime;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.imi.service.SettingsService;
@@ -196,6 +197,53 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
     public void testServicePresent() {
         assertTrue(targetFileService != null);
     }
+
+
+    // un-ignore to create a large sample OBD file
+    @Ignore
+    public void createLargeFile() {
+        SubscriptionHelper sh = new SubscriptionHelper(subscriptionService, subscriberDataService,
+                languageDataService, languageLocationDataService, circleDataService, stateDataService,
+                districtDataService);
+
+        subscriptionService.deleteAll();
+        subscriberDataService.deleteAll();
+        languageLocationDataService.deleteAll();
+        languageDataService.deleteAll();
+        districtDataService.deleteAll();
+        stateDataService.deleteAll();
+        circleDataService.deleteAll();
+        callRetryDataService.deleteAll();
+
+        for (int i=0 ; i<1000 ; i++) {
+            sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now());
+        }
+
+        for (int i=0 ; i<1000 ; i++) {
+
+            int randomWeek = (int) (Math.random() * sh.getChildPack().getWeeks());
+            Subscription sub = sh.mksub(
+                    SubscriptionOrigin.MCTS_IMPORT,
+                    DateTime.now().minusDays(7 * randomWeek - 1)
+            );
+            callRetryDataService.create(new CallRetry(
+                    sub.getSubscriptionId(),
+                    sub.getSubscriber().getCallingNumber(),
+                    DayOfTheWeek.today(),
+                    CallStage.RETRY_1,
+                    sh.getContentMessageFile(sub, randomWeek),
+                    sh.getWeekId(sub, randomWeek),
+                    sh.getLanguageLocationCode(sub),
+                    sh.getCircle(sub),
+                    SubscriptionOrigin.MCTS_IMPORT
+            ));
+        }
+
+        TargetFileNotification tfn = targetFileService.generateTargetFile();
+        assertNotNull(tfn);
+        getLogger().debug("Generated {}", tfn.getFileName());
+    }
+
 
     //todo: test success notification is sent to the IVR system
 }
