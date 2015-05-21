@@ -2,7 +2,8 @@ package org.motechproject.nms.flw.domain;
 
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
-import org.motechproject.nms.region.location.domain.State;
+import org.motechproject.nms.props.domain.Service;
+import org.motechproject.nms.region.domain.State;
 
 import javax.jdo.annotations.Unique;
 

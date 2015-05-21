@@ -1,27 +1,36 @@
 package org.motechproject.nms.imi.it;
 
 import org.apache.commons.codec.binary.Hex;
+import org.joda.time.DateTime;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.motechproject.nms.imi.domain.CallRetry;
-import org.motechproject.nms.imi.domain.CallStage;
-import org.motechproject.nms.imi.repository.CallRetryDataService;
 import org.motechproject.nms.imi.service.SettingsService;
-import org.motechproject.nms.imi.service.TargetFileNotification;
 import org.motechproject.nms.imi.service.TargetFileService;
+import org.motechproject.nms.imi.service.contract.TargetFileNotification;
+import org.motechproject.nms.kilkari.domain.CallRetry;
+import org.motechproject.nms.kilkari.domain.CallStage;
+import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
-import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
+import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
+import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
-import org.motechproject.nms.region.language.domain.Language;
-import org.motechproject.nms.region.language.repository.CircleLanguageDataService;
-import org.motechproject.nms.region.language.repository.LanguageDataService;
+import org.motechproject.nms.region.domain.Circle;
+import org.motechproject.nms.region.domain.District;
+import org.motechproject.nms.region.domain.Language;
+import org.motechproject.nms.region.domain.LanguageLocation;
+import org.motechproject.nms.region.domain.State;
+import org.motechproject.nms.region.repository.CircleDataService;
+import org.motechproject.nms.region.repository.DistrictDataService;
+import org.motechproject.nms.region.repository.LanguageDataService;
+import org.motechproject.nms.region.repository.LanguageLocationDataService;
+import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.ops4j.pax.exam.ExamFactory;
@@ -56,6 +65,9 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
     SubscriptionService subscriptionService;
 
     @Inject
+    SubscriptionDataService subscriptionDataService;
+
+    @Inject
     SubscriberDataService subscriberDataService;
 
     @Inject
@@ -65,53 +77,85 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
     CallRetryDataService callRetryDataService;
 
     @Inject
-    CircleLanguageDataService circleLanguageDataService;
+    LanguageDataService languageDataService;
 
     @Inject
-    LanguageDataService languageDataService;
+    LanguageLocationDataService languageLocationDataService;
+
+    @Inject
+    private CircleDataService circleDataService;
+
+    @Inject
+    private StateDataService stateDataService;
+
+    @Inject
+    private DistrictDataService districtDataService;
 
     @Inject
     SettingsService settingsService;
 
     private void setupDatabase() {
+        for (Subscription subscription: subscriptionDataService.retrieveAll()) {
+            subscription.setStatus(SubscriptionStatus.COMPLETED);
+            subscription.setEndDate(new DateTime().withDate(2011, 8, 1));
+
+            subscriptionDataService.update(subscription);
+        }
+
         subscriptionService.deleteAll();
-        subscriptionPackDataService.deleteAll();
         subscriberDataService.deleteAll();
-        circleLanguageDataService.deleteAll();
+        languageLocationDataService.deleteAll();
         languageDataService.deleteAll();
+        districtDataService.deleteAll();
+        stateDataService.deleteAll();
+        circleDataService.deleteAll();
         callRetryDataService.deleteAll();
 
-        Language hindi = languageDataService.create(new Language("Hindi", "HI"));
-        Language urdu = languageDataService.create(new Language("Urdu", "UR"));
+        District district = new District();
+        district.setName("District 1");
+        district.setRegionalName("District 1");
+        district.setCode(1L);
 
-        SubscriptionPack pack1 = subscriptionPackDataService.create(new SubscriptionPack("one",
-                SubscriptionPackType.CHILD, 1, null));
-        SubscriptionPack pack2 = subscriptionPackDataService.create(new SubscriptionPack("two",
-                SubscriptionPackType.PREGNANCY, 2, null));
+        State state = new State();
+        state.setName("State 1");
+        state.setCode(1L);
+        state.getDistricts().add(district);
 
-        Subscriber subscriber1 = subscriberDataService.create(new Subscriber(1111111111L, hindi, "AA"));
-        Subscriber subscriber2 = subscriberDataService.create(new Subscriber(2222222222L, urdu, "BB"));
+        stateDataService.create(state);
 
-        Subscription s = new Subscription(subscriber1, pack1, SubscriptionOrigin.IVR);
-        s.setStatus(SubscriptionStatus.ACTIVE);
-        Subscription subscription11 = subscriptionService.create(s);
+        Circle aa = new Circle("AA");
+        Circle bb = new Circle("BB");
 
-        s = new Subscription(subscriber1, pack2, SubscriptionOrigin.IVR);
-        s.setStatus(SubscriptionStatus.ACTIVE);
-        Subscription subscription12 = subscriptionService.create(s);
+        LanguageLocation hindi = new LanguageLocation("HI", aa, new Language("Hindi"), false);
+        hindi.getDistrictSet().add(district);
+        hindi = languageLocationDataService.create(hindi);
 
-        s = new Subscription(subscriber2, pack1, SubscriptionOrigin.IVR);
-        s.setStatus(SubscriptionStatus.ACTIVE);
-        Subscription subscription21 = subscriptionService.create(s);
+        LanguageLocation urdu = new LanguageLocation("UR", aa, new Language("Urdu"), false);
+        urdu.getDistrictSet().add(district);
+        urdu = languageLocationDataService.create(urdu);
 
-        s = new Subscription(subscriber2, pack2, SubscriptionOrigin.IVR);
-        s.setStatus(SubscriptionStatus.COMPLETED);
-        Subscription subscription22 = subscriptionService.create(s);
+        SubscriptionPack childPack = subscriptionPackDataService.byName("childPack");
+        SubscriptionPack pregnancyPack = subscriptionPackDataService.byName("pregnancyPack");
 
-        CallRetry callRetry1 = callRetryDataService.create(new CallRetry("123", 3333333333L, DayOfTheWeek.today(),
-                CallStage.RETRY_1, "HI", "AA", "I"));
-        CallRetry callRetry2 = callRetryDataService.create(new CallRetry("546", 4444444444L, DayOfTheWeek.today(),
-                CallStage.RETRY_1, "HI", "BB", "M"));
+        Subscriber subscriber1 = new Subscriber(1111111111L, hindi, aa);
+        subscriber1.setLastMenstrualPeriod(DateTime.now().minusDays(90)); // startDate will be today
+        subscriberDataService.create(subscriber1);
+
+        subscriptionService.createSubscription(1111111111L, hindi, pregnancyPack, SubscriptionOrigin.MCTS_IMPORT);
+
+        Subscriber subscriber2 = new Subscriber(2222222222L, urdu, bb);
+        subscriber2.setDateOfBirth(DateTime.now()); // startDate will be today
+        subscriberDataService.create(subscriber2);
+
+        Subscription s = subscriptionService.createSubscription(2222222222L, urdu, childPack,
+                SubscriptionOrigin.MCTS_IMPORT);
+        subscriptionService.deactivateSubscription(s, DeactivationReason.CHILD_DEATH);
+
+        callRetryDataService.create(new CallRetry("123", 3333333333L, DayOfTheWeek.today(), CallStage.RETRY_1,
+                "w1_m1.wav", "w1_1", hindi.getCode(), aa.getName(), SubscriptionOrigin.IVR));
+        callRetryDataService.create(new CallRetry("546", 4444444444L, DayOfTheWeek.today().nextDay(),
+                CallStage.RETRY_1, "w1_m1.wav", "w1_1", hindi.getCode(), bb.getName(),
+                SubscriptionOrigin.MCTS_IMPORT));
     }
 
 
@@ -121,8 +165,9 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         TargetFileNotification tfn = targetFileService.generateTargetFile();
         assertNotNull(tfn);
 
-        // Should not pickup subscription22 because its status is COMPLETED
-        assertEquals(5, (int) tfn.getRecordCount());
+        // Should not pickup subscription2 because its status is COMPLETED nor callRetry 546 because it's for
+        // tomorrow
+        assertEquals(2, (int) tfn.getRecordCount());
 
         //read the file to get checksum & record count
         File homeDir = new File(System.getProperty("user.home"));

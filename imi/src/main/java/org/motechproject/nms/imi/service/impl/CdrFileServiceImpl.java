@@ -6,14 +6,15 @@ import org.motechproject.alerts.domain.AlertStatus;
 import org.motechproject.alerts.domain.AlertType;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.EventRelay;
-import org.motechproject.nms.imi.domain.AuditRecord;
-import org.motechproject.nms.imi.domain.CallDetailRecord;
+import org.motechproject.nms.imi.domain.FileAuditRecord;
 import org.motechproject.nms.imi.domain.FileType;
-import org.motechproject.nms.imi.repository.AuditDataService;
-import org.motechproject.nms.imi.repository.CallDetailRecordDataService;
+import org.motechproject.nms.imi.repository.FileAuditRecordDataService;
 import org.motechproject.nms.imi.service.CdrFileService;
-import org.motechproject.nms.imi.web.contract.CdrFileNotificationRequest;
-import org.motechproject.nms.props.domain.CallStatus;
+import org.motechproject.nms.imi.service.contract.ParseResults;
+import org.motechproject.nms.imi.web.contract.FileInfo;
+import org.motechproject.nms.kilkari.dto.CallDetailRecordDto;
+import org.motechproject.nms.kilkari.dto.CallSummaryRecordDto;
+import org.motechproject.nms.props.domain.FinalCallStatus;
 import org.motechproject.server.config.SettingsFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +34,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 
 /**
@@ -43,131 +43,166 @@ import java.util.UUID;
 public class CdrFileServiceImpl implements CdrFileService {
 
     private static final String CDR_FILE_DIRECTORY = "imi.cdr_file_directory";
-    private static final String RESCHEDULE_CALL = "nms.imi.reschedule_call";
+    private static final String PROCESS_SUMMARY_RECORD = "nms.imi.kk.process_summary_record";
+    private static final String CSR_PARAM_KEY = "csr";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CdrFileServiceImpl.class);
 
     private SettingsFacade settingsFacade;
     private EventRelay eventRelay;
-    private AuditDataService auditDataService;
+    private FileAuditRecordDataService fileAuditRecordDataService;
     private AlertService alertService;
-    private CallDetailRecordDataService cdrDataService;
 
 
 
     @Autowired
     public CdrFileServiceImpl(@Qualifier("imiSettings") SettingsFacade settingsFacade, EventRelay eventRelay,
-                              AuditDataService auditDataService, AlertService alertService,
-                              CallDetailRecordDataService cdrDataService) {
+                              FileAuditRecordDataService fileAuditRecordDataService, AlertService alertService) {
         this.settingsFacade = settingsFacade;
         this.eventRelay = eventRelay;
-        this.auditDataService = auditDataService;
+        this.fileAuditRecordDataService = fileAuditRecordDataService;
         this.alertService = alertService;
-        this.cdrDataService = cdrDataService;
     }
 
 
-    private List<CallDetailRecord> readCdrs(String cdrFileLocation, String summaryFileName, String checksum) {
-        File userDirectory = new File(System.getProperty("user.home"));
-        File cdrDirectory = new File(userDirectory, cdrFileLocation);
-        File cdrSummary = new File(cdrDirectory, summaryFileName);
+    private void reportErrorAndThrow(String file, String error) {
+        LOGGER.error(error);
+        alertService.create(file, "CDR Detail File", error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+        fileAuditRecordDataService.create(new FileAuditRecord(FileType.CDR_DETAIL_FILE, file, error, null, null));
+        throw new IllegalStateException(error);
+    }
 
-        if (cdrSummary.exists() && !cdrSummary.isDirectory()) {
-            LOGGER.debug("Found CDR summary file. Starting to read...");
+
+    // Aggregate all detail records for a requestId into a single summary record
+    private void parseDetailRecord(CallDetailRecordDto cdr, Map<String, CallSummaryRecordDto> records) {
+        if (records.containsKey(cdr.getRequestId().toString())) {
+            CallSummaryRecordDto record = records.get(cdr.getRequestId().toString());
+
+            // Increment the statusCode stats
+            int statusCodeCount = 1;
+            if (record.getStatusStats().containsKey(cdr.getStatusCode())) {
+                statusCodeCount = record.getStatusStats().get(cdr.getStatusCode()) + 1;
+            }
+            record.getStatusStats().put(cdr.getStatusCode().getValue(), statusCodeCount);
+
+            // Increment the message play duration
+            if (cdr.getMsgPlayDuration() > record.getSecondsPlayed()) {
+                record.setSecondsPlayed(cdr.getMsgPlayDuration());
+            }
+
+            /*
+               Update the final status
+
+               Because we don't know that the detail records are ordered, we could be receiving a failed record
+               after a success record. We don't want to override a success record.
+             */
+            if (record.getFinalStatus() != FinalCallStatus.SUCCESS) {
+                record.setFinalStatus(FinalCallStatus.fromStatusCode(cdr.getStatusCode()));
+            }
+
+            record.setCallAttempts(record.getCallAttempts() + 1);
+
+        } else {
+            CallSummaryRecordDto record = new CallSummaryRecordDto();
+            record.setRequestId(cdr.getRequestId());
+            record.setMsisdn(cdr.getMsisdn());
+            record.setContentFileName(cdr.getContentFile());
+            record.setWeekId(cdr.getWeekId());
+            record.setLanguageLocationCode(cdr.getLanguageLocationId());
+            record.setCircle(cdr.getCircleId());
+            record.setFinalStatus(FinalCallStatus.fromStatusCode(cdr.getStatusCode()));
+            Map<Integer, Integer> statusStats = new HashMap<>();
+            statusStats.put(cdr.getStatusCode().getValue(), 1);
+            record.setStatusStats(statusStats);
+            record.setSecondsPlayed(cdr.getMsgPlayDuration());
+            record.setCallAttempts(1);
+            records.put(cdr.getRequestId().toString(), record);
         }
+    }
 
-        List<CallDetailRecord> lines = new ArrayList<>();
-        MessageDigest md;
-        try (FileInputStream fis = new FileInputStream(cdrSummary);
+
+    // Create an in-memory set of summary records from all detail records
+    private ParseResults parseDetailRecords(File file, FileInfo fileInfo) {
+        String thisChecksum = "";
+        Map<String, CallSummaryRecordDto> records = new HashMap<>();
+        List<String> errors = new ArrayList<>();
+        int lineNumber = 1;
+
+        try (
+                FileInputStream fis = new FileInputStream(file);
                 InputStreamReader isr = new InputStreamReader(fis);
-                BufferedReader reader = new BufferedReader(isr)) {
-            md = MessageDigest.getInstance("MD5");
+                BufferedReader reader = new BufferedReader(isr)
+            ) {
 
+
+            MessageDigest md = MessageDigest.getInstance("MD5");
             @SuppressWarnings("PMD.UnusedLocalVariable")
             DigestInputStream dis = new DigestInputStream(fis, md);
 
             String line;
             while ((line = reader.readLine()) != null) {
 
-                lines.add(CallDetailRecord.fromLine(line));
+                try {
+                    CallDetailRecordDto cdr = CsvHelper.csvLineToCdr(line);
+
+                    parseDetailRecord(cdr, records);
+
+                } catch (IllegalArgumentException e) {
+                    errors.add(String.format("Line %d: %s", lineNumber, e.getMessage()));
+                }
+                lineNumber++;
             }
-        } catch (NoSuchAlgorithmException | IOException e) {
-            String error = String.format("Unable to read cdrSummary file %s: %s", cdrSummary, e.getMessage());
-            LOGGER.error(error);
-            alertService.create(cdrSummary.toString(), "cdrSummary", error, AlertType.CRITICAL, AlertStatus.NEW,
-                    0, null);
 
-            //todo: what do I want to do with the identifier field here?
-            auditDataService.create(new AuditRecord(null, FileType.CDR_FILE, cdrSummary.toString(), error, null,
-                    null));
-            throw new IllegalStateException(error);
+            thisChecksum = new String(Hex.encodeHex(md.digest()));
+
+        } catch (IOException e) {
+            String error = String.format("Unable to read %s: %s", file, e.getMessage());
+            reportErrorAndThrow(file.getName(), error);
+        } catch (NoSuchAlgorithmException e) {
+            String error = String.format("Unable to compute checksum: %s", e.getMessage());
+            reportErrorAndThrow(file.getName(), error);
         }
 
-        String thisChecksum = new String(Hex.encodeHex(md.digest()));
-
-        if (!thisChecksum.equals(checksum)) {
-            String error = String.format("Checksums don't match %s - %s", checksum, thisChecksum);
-            LOGGER.error(error);
-            alertService.create(cdrSummary.toString(), "cdrSummary", error, AlertType.CRITICAL, AlertStatus.NEW,
-                    0, null);
-            //todo: what do I want to do with the identifier field here?
-            auditDataService.create(new AuditRecord(null, FileType.CDR_FILE, cdrSummary.toString(), error, null,
-                    null));
-            throw new IllegalStateException(error);
+        if (!thisChecksum.equals(fileInfo.getChecksum())) {
+            String error = String.format("Checksum mismatch, provided checksum: %s, calculated checksum: %s",
+                    fileInfo.getChecksum(), thisChecksum);
+            reportErrorAndThrow(file.getName(), error);
         }
 
-        if (!thisChecksum.equals(checksum)) {
-            String error = String.format("Checksums don't match %s - %s", checksum, thisChecksum);
-            LOGGER.error(error);
-            alertService.create(cdrSummary.toString(), "cdrSummary", error, AlertType.CRITICAL, AlertStatus.NEW,
-                    0, null);
-            //todo: what do I want to do with the identifier field here?
-            auditDataService.create(new AuditRecord(null, FileType.CDR_FILE, cdrSummary.toString(), error, null,
-                    null));
-            throw new IllegalStateException(error);
+        if (lineNumber - 1 != fileInfo.getRecordsCount()) {
+            String error = String.format("Record count mismatch, provided count: %d, actual count: %d",
+                    fileInfo.getRecordsCount(), lineNumber - 1);
+            reportErrorAndThrow(file.getName(), error);
         }
 
-        LOGGER.info("Successfully read {} cdrSummary lines", lines.size());
-
-        return lines;
+        return new ParseResults(records, errors);
     }
 
 
-    //Sending a MOTECH message distributes the work to all nodes
-    public void sendRescheduleMessage(CallDetailRecord cdr) {
+    @Override
+    public ParseResults parseDetailFile(FileInfo fileInfo) {
+        File userDirectory = new File(System.getProperty("user.home"));
+        File cdrDirectory = new File(userDirectory, settingsFacade.getProperty(CDR_FILE_DIRECTORY));
+        File file = new File(cdrDirectory, fileInfo.getCdrFile());
+
+        return parseDetailRecords(file, fileInfo);
+    }
+
+
+    private void sendProcessCdrEvent(CallSummaryRecordDto record) {
         Map<String, Object> eventParams = new HashMap<>();
-        eventParams.put("CDR", cdr);
-        MotechEvent motechEvent = new MotechEvent(RESCHEDULE_CALL, eventParams);
+        eventParams.put(CSR_PARAM_KEY, record);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD, eventParams);
         eventRelay.sendEventMessage(motechEvent);
     }
 
 
     @Override
-    public void processCdrFile(CdrFileNotificationRequest request) {
-        final String cdrFileLocation = settingsFacade.getProperty(CDR_FILE_DIRECTORY);
-        LOGGER.debug("Processing {} located in {}", request, cdrFileLocation);
+    public void processDetailFile(FileInfo fileInfo) {
+        ParseResults parseResults = parseDetailFile(fileInfo);
 
-        //todo: audit this request
-
-        //read the summary file and keep it in memory - so we can easily refer to it when we process the
-        //cdrDetail file
-        List<CallDetailRecord> cdrs = readCdrs(cdrFileLocation, request.getCdrSummary().getCdrFile(),
-                request.getCdrSummary().getChecksum());
-
-        //todo: handle invalid data and continue processing the valid data
-        //for now, and hopefully for, like, ever, only process the summary file
-        for (int lineNumber = 1; lineNumber < cdrs.size(); lineNumber++) {
-            CallDetailRecord cdr = cdrs.get(lineNumber - 1);
-            cdrDataService.create(cdr);
-            if (cdr.getFinalStatus() != CallStatus.SUCCESS) {
-                sendRescheduleMessage(cdr);
-            }
+        for (CallSummaryRecordDto record : parseResults.getRecords().values()) {
+            sendProcessCdrEvent(record);
         }
-
-        //todo: add recordCount, think about checksum
-        String fileIdentifier = UUID.randomUUID().toString();
-        auditDataService.create(new AuditRecord(fileIdentifier, FileType.CDR_FILE, request.getFileName(), null,
-                null, "Success"));
-
     }
 }

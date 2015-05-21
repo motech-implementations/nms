@@ -1,16 +1,25 @@
 package org.motechproject.nms.imi.it;
 
+import org.joda.time.DateTime;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.motechproject.nms.imi.domain.CallDetailRecord;
+import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.nms.imi.service.CdrFileService;
 import org.motechproject.nms.imi.service.SettingsService;
-import org.motechproject.nms.imi.web.contract.CdrFileNotificationRequest;
+import org.motechproject.nms.imi.service.contract.ParseResults;
 import org.motechproject.nms.imi.web.contract.FileInfo;
+import org.motechproject.nms.kilkari.domain.Subscription;
+import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
+import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
+import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
-import org.motechproject.nms.region.language.repository.CircleLanguageDataService;
-import org.motechproject.nms.region.language.repository.LanguageDataService;
+import org.motechproject.nms.region.repository.CircleDataService;
+import org.motechproject.nms.region.repository.DistrictDataService;
+import org.motechproject.nms.region.repository.LanguageDataService;
+import org.motechproject.nms.region.repository.LanguageLocationDataService;
+import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.ops4j.pax.exam.ExamFactory;
@@ -21,8 +30,8 @@ import org.ops4j.pax.exam.spi.reactors.PerSuite;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
-import java.util.List;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(PaxExam.class)
@@ -37,51 +46,92 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
     private SubscriptionService subscriptionService;
 
     @Inject
+    private SubscriptionDataService subscriptionDataService;
+
+    @Inject
     private SubscriberDataService subscriberDataService;
 
     @Inject
     private LanguageDataService languageDataService;
 
     @Inject
-    private CircleLanguageDataService circleLanguageDataService;
+    private CallRetryDataService callRetryDataService;
+
+    @Inject
+    private AlertService alertService;
 
     @Inject
     CdrFileService cdrFileService;
 
+    @Inject
+    private LanguageLocationDataService languageLocationDataService;
 
+    @Inject
+    private CircleDataService circleDataService;
+
+    @Inject
+    private StateDataService stateDataService;
+
+    @Inject
+    private DistrictDataService districtDataService;
+
+    @Before
+    public void cleanupDatabase() {
+        for (Subscription subscription: subscriptionDataService.retrieveAll()) {
+            subscription.setStatus(SubscriptionStatus.COMPLETED);
+            subscription.setEndDate(new DateTime().withDate(2011, 8, 1));
+
+            subscriptionDataService.update(subscription);
+        }
+
+        subscriptionService.deleteAll();
+        subscriberDataService.deleteAll();
+        languageLocationDataService.deleteAll();
+        languageDataService.deleteAll();
+        districtDataService.deleteAll();
+        stateDataService.deleteAll();
+        circleDataService.deleteAll();
+        callRetryDataService.deleteAll();
+    }
 
 
     @Test
     public void testServicePresent() {
+        getLogger().debug("testServicePresent()");
         assertTrue(cdrFileService != null);
     }
 
 
     @Test
-    public void testValidRequest() throws IOException, NoSuchAlgorithmException {
+    public void testParse() throws IOException, NoSuchAlgorithmException {
+        getLogger().debug("testParse()");
+
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                languageDataService, circleLanguageDataService);
+                languageDataService, languageLocationDataService, circleDataService, stateDataService,
+                districtDataService);
 
-        List<CallDetailRecord> cdrs = helper.makeCdrs(5);
-        helper.setCrds(cdrs);
-        helper.makeCdrSummaryFile();
-        helper.makeCdrDetailFile();
-
-        cdrFileService.processCdrFile(new CdrFileNotificationRequest(
-                        helper.obdFileName(),
-                        new FileInfo(helper.cdrSummaryFileName(), helper.summaryFileChecksum(), 0),
-                        new FileInfo(helper.cdrDetailFileName(), helper.detailFileChecksum(), 1))
-        );
-
-        try {
-            long sleepyTime = 10 * 1000L;
-            getLogger().info("Sleeping {} seconds to give a chance to @MotechListeners to catch up...", sleepyTime/1000);
-            Thread.sleep(sleepyTime);
-            getLogger().info("...waking up from sleep, did they catch up?");
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        //todo: check that the database looks like it should after the CDRs were processed...
+        helper.makeCdrs(1,1,1,1);
+        helper.makeCdr();
+        FileInfo fileInfo = new FileInfo(helper.cdr(), helper.cdrChecksum(), helper.cdrCount());
+        ParseResults result = cdrFileService.parseDetailFile(fileInfo);
+        assertEquals(4, result.getRecords().size());
     }
+
+
+    @Test
+    public void testProcess() throws IOException, NoSuchAlgorithmException {
+        getLogger().debug("testProcess()");
+
+        CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
+                languageDataService, languageLocationDataService, circleDataService, stateDataService,
+                districtDataService);
+
+        helper.makeCdrs(1,1,1,1);
+        helper.makeCdr();
+        FileInfo fileInfo = new FileInfo(helper.cdr(), helper.cdrChecksum(), helper.cdrCount());
+        ParseResults result = cdrFileService.parseDetailFile(fileInfo);
+        assertEquals(4, result.getRecords().size());
+    }
+
+    //todo: test how successfully we aggregate detail records into a summary record
 }

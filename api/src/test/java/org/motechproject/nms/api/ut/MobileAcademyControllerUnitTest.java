@@ -1,8 +1,8 @@
 package org.motechproject.nms.api.ut;
 
-import org.codehaus.jackson.map.deser.ValueInstantiators;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.motechproject.nms.api.web.BaseController;
 import org.motechproject.nms.api.web.MobileAcademyController;
@@ -16,14 +16,14 @@ import static org.mockito.MockitoAnnotations.initMocks;
  */
 public class MobileAcademyControllerUnitTest {
 
-    private MobileAcademyController mobileAcademyController;
-
     @Mock
     private MobileAcademyService mobileAcademyService;
 
+    @InjectMocks
+    private MobileAcademyController mobileAcademyController = new MobileAcademyController();
+
     @Before
     public void setup() {
-        mobileAcademyController = new MobileAcademyController(mobileAcademyService);
         initMocks(this);
     }
 
@@ -65,6 +65,12 @@ public class MobileAcademyControllerUnitTest {
         sb.setCallingNumber(BaseController.SMALLEST_10_DIGIT_NUMBER);
         sb.setCallId(99999999999999L);
         mobileAcademyController.saveBookmarkWithScore(sb);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testTriggerBadCallingNumber() {
+        long callingNumber = 1234;
+        mobileAcademyController.sendNotification(callingNumber);
     }
 
 }

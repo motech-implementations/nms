@@ -16,26 +16,22 @@
     <osgi:service ref="settingsService" interface="org.motechproject.nms.imi.service.SettingsService" />
 
 
+    <osgi:reference id="fileAuditRecordDataService"
+                    interface="org.motechproject.nms.imi.repository.FileAuditRecordDataService" />
+
+
+
+    <osgi:reference id="callRetryDataService"
+                    interface="org.motechproject.nms.kilkari.repository.CallRetryDataService" />
+
+    <osgi:reference id="csrDataService"
+                    interface="org.motechproject.nms.kilkari.repository.CallSummaryRecordDataService" />
+
     <osgi:reference id="subscriptionService"
                     interface="org.motechproject.nms.kilkari.service.SubscriptionService" />
 
-    <osgi:reference id="subscriptionPackDataService"
-                    interface="org.motechproject.nms.kilkari.repository.SubscriptionPackDataService" />
-
     <osgi:reference id="subscriberDataService"
                     interface="org.motechproject.nms.kilkari.repository.SubscriberDataService" />
-
-    <osgi:reference id="languageDataService"
-                    interface="org.motechproject.nms.region.language.repository.LanguageDataService" />
-
-    <osgi:reference id="callRetryDataService"
-                    interface="org.motechproject.nms.imi.repository.CallRetryDataService" />
-
-    <osgi:reference id="callDetailRecordDataService"
-                    interface="org.motechproject.nms.imi.repository.CallDetailRecordDataService" />
-
-    <osgi:reference id="auditDataService"
-                    interface="org.motechproject.nms.imi.repository.AuditDataService" />
 
     <osgi:reference id="schedulerService"
                     interface="org.motechproject.scheduler.service.MotechSchedulerService" />
@@ -43,5 +39,6 @@
     <osgi:reference id="alertsService" interface="org.motechproject.alerts.contract.AlertService" />
 
     <osgi:reference id="eventRelay" interface="org.motechproject.event.listener.EventRelay"/>
+
 
 </beans>

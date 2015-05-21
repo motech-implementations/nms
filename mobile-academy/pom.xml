@@ -33,6 +33,13 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- Event relay -->
+        <dependency>
+            <groupId>org.motechproject</groupId>
+            <artifactId>motech-platform-event</artifactId>
+            <version>${motech.version}</version>
+        </dependency>
+
         <!-- Repository -->
         <dependency>
             <groupId>org.motechproject</groupId>
@@ -87,6 +94,7 @@
                             org.motechproject.nms.mobileacademy.domain.course;version=${project.version},
                             org.motechproject.nms.mobileacademy.dto;version=${project.version},
                             org.motechproject.nms.mobileacademy.web;version=${project.version},
+                            org.motechproject.nms.mobileacademy.exception;version=${project.version},
                         </Export-Package>
                         <Import-Package>
                             org.motechproject.osgi.web,

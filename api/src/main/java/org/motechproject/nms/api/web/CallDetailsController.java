@@ -7,10 +7,11 @@ import org.motechproject.nms.api.web.exception.NotFoundException;
 import org.motechproject.nms.flw.domain.CallContent;
 import org.motechproject.nms.flw.domain.CallDetailRecord;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
-import org.motechproject.nms.flw.domain.Service;
+import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.service.CallContentService;
 import org.motechproject.nms.flw.service.CallDetailRecordService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
+import org.motechproject.nms.props.domain.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -94,6 +95,12 @@ public class CallDetailsController extends BaseController {
         }
 
         createCallDetailRecord(flw, callDetailRecordRequest, service);
+
+        // if this is the FLW's first time calling the service, set her status to ACTIVE
+        if (flw.getStatus() == FrontLineWorkerStatus.INACTIVE) {
+            flw.setStatus(FrontLineWorkerStatus.ACTIVE);
+            frontLineWorkerService.update(flw);
+        }
     }
 
     private void createCallDetailRecord(FrontLineWorker flw, CallDetailRecordRequest callDetailRecordRequest,

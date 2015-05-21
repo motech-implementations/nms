@@ -3,8 +3,9 @@ package org.motechproject.nms.flw.service.impl;
 import org.motechproject.mds.query.QueryExecution;
 import org.motechproject.mds.util.InstanceSecurityRestriction;
 import org.motechproject.nms.flw.repository.WhitelistEntryDataService;
+import org.motechproject.nms.flw.repository.WhitelistStateDataService;
 import org.motechproject.nms.flw.service.WhitelistService;
-import org.motechproject.nms.region.location.domain.State;
+import org.motechproject.nms.region.domain.State;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -12,16 +13,38 @@ import javax.jdo.Query;
 
 @Service("whitelistService")
 public class WhitelistServiceImpl implements WhitelistService {
+    private WhitelistStateDataService whitelistStateDataService;
     private WhitelistEntryDataService whitelistEntryDataService;
 
     @Autowired
-    public WhitelistServiceImpl(WhitelistEntryDataService whitelistEntryDataService) {
+    public WhitelistServiceImpl(WhitelistEntryDataService whitelistEntryDataService,
+                                WhitelistStateDataService whitelistStateDataService) {
         this.whitelistEntryDataService = whitelistEntryDataService;
+        this.whitelistStateDataService = whitelistStateDataService;
     }
 
-    // TODO: #38 When configuration is complete de-hardcode this
-    private boolean whitelistEnabledForState(State state) {
-        return "Whitelist".equals(state.getName());
+    private boolean whitelistEnabledForState(final State state) {
+        // Find a state cap by providing a state
+        QueryExecution<Long> stateQueryExecution = new QueryExecution<Long>() {
+            @Override
+            public Long execute(Query query, InstanceSecurityRestriction restriction) {
+
+                query.setFilter("state == flw_state");
+                query.declareParameters("org.motechproject.nms.region.domain.State flw_state");
+                query.setResult("count(state)");
+                query.setUnique(true);
+
+                return (Long) query.execute(state);
+            }
+        };
+
+        Long isWhitelisted = whitelistStateDataService.executeQuery(stateQueryExecution);
+
+        if (isWhitelisted != null && isWhitelisted > 0) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -45,19 +68,17 @@ public class WhitelistServiceImpl implements WhitelistService {
             return true;
         }
 
-        // TODO: #38 When configuration is complete de-hardcode this
         if (!whitelistEnabledForState(state)) {
             // If whitelisting is not enabled for a state then all calls are allowed through
             return true;
         }
 
-        // Find a state cap by providing a state
         QueryExecution<Long> stateQueryExecution = new QueryExecution<Long>() {
             @Override
             public Long execute(Query query, InstanceSecurityRestriction restriction) {
 
                 query.setFilter("state == flw_state && contactNumber == flw_number");
-                query.declareParameters("org.motechproject.nms.region.location.domain.State flw_state, Long flw_number");
+                query.declareParameters("org.motechproject.nms.region.domain.State flw_state, Long flw_number");
                 query.setResult("count(contactNumber)");
                 query.setUnique(true);
 

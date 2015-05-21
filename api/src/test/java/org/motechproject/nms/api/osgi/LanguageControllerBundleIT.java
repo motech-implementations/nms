@@ -4,18 +4,29 @@ import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.joda.time.DateTime;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.api.web.contract.UserLanguageRequest;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
-import org.motechproject.nms.flw.domain.Service;
+import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.domain.ServiceUsageCap;
+import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.flw.repository.ServiceUsageCapDataService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
-import org.motechproject.nms.region.language.domain.CircleLanguage;
-import org.motechproject.nms.region.language.domain.Language;
-import org.motechproject.nms.region.language.repository.CircleLanguageDataService;
-import org.motechproject.nms.region.language.repository.LanguageDataService;
+import org.motechproject.nms.props.domain.DeployedService;
+import org.motechproject.nms.props.domain.Service;
+import org.motechproject.nms.props.repository.DeployedServiceDataService;
+import org.motechproject.nms.region.domain.Circle;
+import org.motechproject.nms.region.domain.District;
+import org.motechproject.nms.region.domain.Language;
+import org.motechproject.nms.region.domain.LanguageLocation;
+import org.motechproject.nms.region.domain.State;
+import org.motechproject.nms.region.repository.CircleDataService;
+import org.motechproject.nms.region.repository.DistrictDataService;
+import org.motechproject.nms.region.repository.LanguageDataService;
+import org.motechproject.nms.region.repository.LanguageLocationDataService;
+import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.motechproject.testing.osgi.http.SimpleHttpClient;
@@ -46,37 +57,99 @@ public class LanguageControllerBundleIT extends BasePaxIT {
     private LanguageDataService languageDataService;
 
     @Inject
-    private CircleLanguageDataService circleLanguageDataService;
+    private LanguageLocationDataService languageLocationDataService;
 
     @Inject
     private ServiceUsageCapDataService serviceUsageCapDataService;
 
+    @Inject
+    private StateDataService stateDataService;
+
+    @Inject
+    private DeployedServiceDataService deployedServiceDataService;
+
+    @Inject
+    private DistrictDataService districtDataService;
+
+    @Inject
+    private CircleDataService circleDataService;
+
+    @Inject
+    private FrontLineWorkerDataService frontLineWorkerDataService;
+
     private void cleanAllData() {
+        for (FrontLineWorker flw: frontLineWorkerDataService.retrieveAll()) {
+            flw.setStatus(FrontLineWorkerStatus.INVALID);
+            flw.setInvalidationDate(new DateTime().withDate(2011, 8, 1));
+
+            frontLineWorkerDataService.update(flw);
+        }
+
+        frontLineWorkerDataService.deleteAll();
         serviceUsageCapDataService.deleteAll();
-        circleLanguageDataService.deleteAll();
+        languageLocationDataService.deleteAll();
         languageDataService.deleteAll();
+        deployedServiceDataService.deleteAll();
+        stateDataService.deleteAll();
+        districtDataService.deleteAll();
+        circleDataService.deleteAll();
     }
 
     private void createCircleWithLanguage() {
         cleanAllData();
-        Language language = new Language("Papiamento", "99");
+
+        District district = new District();
+        district.setName("District 1");
+        district.setRegionalName("District 1");
+        district.setCode(1L);
+
+        State state = new State();
+        state.setName("State 1");
+        state.setCode(1L);
+        state.getDistricts().add(district);
+
+        stateDataService.create(state);
+
+        deployedServiceDataService.create(new DeployedService(state, Service.KILKARI));
+        deployedServiceDataService.create(new DeployedService(state, Service.MOBILE_KUNJI));
+
+        Language language = new Language("Papiamento");
         languageDataService.create(language);
 
-        CircleLanguage circleLanguage = new CircleLanguage("AA", language);
-        circleLanguageDataService.create(circleLanguage);
+        LanguageLocation languageLocation = new LanguageLocation("99", new Circle("AA"), language, false);
+        languageLocation.getDistrictSet().add(district);
+        languageLocationDataService.create(languageLocation);
     }
 
-    private void createFlwCappedServiceNoUsageNoLocationNoLanguage() {
+    private void createLanguageLocationForUndeployedState() {
         cleanAllData();
+
+        District district = new District();
+        district.setName("District 2");
+        district.setRegionalName("District 2");
+        district.setCode(2L);
+
+        State state = new State();
+        state.setName("State 2");
+        state.setCode(2L);
+        state.getDistricts().add(district);
+
+        stateDataService.create(state);
+
+        Language language = new Language("malayalam");
+        languageDataService.create(language);
+
+        LanguageLocation undeployedLanguageLocation = new LanguageLocation("88", new Circle("BB"), language, true);
+        undeployedLanguageLocation.getDistrictSet().add(district);
+        languageLocationDataService.create(undeployedLanguageLocation);
+    }
+
+
+    private void createFlwCappedServiceNoUsageNoLocationNoLanguage() {
+        createCircleWithLanguage();
 
         FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 1111111111l);
         frontLineWorkerService.add(flw);
-
-        Language language = new Language("Papiamento", "99");
-        languageDataService.create(language);
-
-        CircleLanguage circleLanguage = new CircleLanguage("AA", language);
-        circleLanguageDataService.create(circleLanguage);
 
         ServiceUsageCap serviceUsageCap = new ServiceUsageCap(null, Service.MOBILE_KUNJI, 3600);
         serviceUsageCapDataService.create(serviceUsageCap);
@@ -113,7 +186,7 @@ public class LanguageControllerBundleIT extends BasePaxIT {
         HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/languageLocationCode", TestContext.getJettyPort()));
 
         UserLanguageRequest request = new UserLanguageRequest(
-                null, //callingNumber
+                123L, //callingNumber
                 123456789012345l, //callId
                 "123"); //languageLocationCode
         String json = new ObjectMapper().writeValueAsString(request);
@@ -195,9 +268,10 @@ public class LanguageControllerBundleIT extends BasePaxIT {
 
         FrontLineWorker flw = frontLineWorkerService.getByContactNumber(1111111111l);
         assertNotNull(flw);
-        Language language = flw.getLanguage();
-        assertNotNull(language);
-        assertEquals("FLW Language Code", "99", language.getCode());
+        assertEquals(FrontLineWorkerStatus.ANONYMOUS, flw.getStatus());
+        LanguageLocation languageLocation = flw.getLanguageLocation();
+        assertNotNull(languageLocation);
+        assertEquals("FLW Language Code", "99", languageLocation.getCode());
     }
 
     @Test
@@ -216,6 +290,22 @@ public class LanguageControllerBundleIT extends BasePaxIT {
     }
 
     @Test
+    public void testSetLanguageUndeployedState() throws IOException, InterruptedException {
+        createFlwCappedServiceNoUsageNoLocationNoLanguage();
+
+        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobileacademy/languageLocationCode", TestContext.getJettyPort()));
+        StringEntity params = new StringEntity("{\"callingNumber\":1111111111,\"callId\":123456789012345,\"languageLocationCode\":99}");
+        httpPost.setEntity(params);
+
+        httpPost.addHeader("content-type", "application/json");
+
+        // the MOBILE_ACADEMY service hasn't been deployed for State 1, so this request should fail
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_NOT_IMPLEMENTED,
+                "{\"failureReason\":\"<MOBILE_ACADEMY: Not Deployed In State>\"}",
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    @Test
     public void testSetLanguageValid() throws IOException, InterruptedException {
         createFlwCappedServiceNoUsageNoLocationNoLanguage();
 
@@ -228,8 +318,9 @@ public class LanguageControllerBundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK));
 
         FrontLineWorker flw = frontLineWorkerService.getByContactNumber(1111111111l);
-        Language language = flw.getLanguage();
-        assertNotNull(language);
-        assertEquals("FLW Language Code", "99", language.getCode());
+        LanguageLocation languageLocation = flw.getLanguageLocation();
+        assertNotNull(languageLocation);
+        assertEquals(FrontLineWorkerStatus.ANONYMOUS, flw.getStatus());
+        assertEquals("FLW Language Code", "99", languageLocation.getCode());
     }
 }

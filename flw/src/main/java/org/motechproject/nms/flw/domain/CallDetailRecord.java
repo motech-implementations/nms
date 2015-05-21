@@ -5,21 +5,20 @@ import org.motechproject.mds.annotations.Cascade;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.nms.props.domain.CallDisconnectReason;
-import org.motechproject.nms.props.domain.CallStatus;
+import org.motechproject.nms.props.domain.FinalCallStatus;
+import org.motechproject.nms.props.domain.Service;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Extension;
 import javax.jdo.annotations.Order;
 import javax.jdo.annotations.Persistent;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import java.util.Collections;
 import java.util.List;
 
 @Entity(tableName = "nms_call_detail_records")
 public class CallDetailRecord {
-
-    public static final int FIELD_SIZE_10 = 10;
-    public static final int FIELD_SIZE_15 = 15;
-    public static final int FIELD_SIZE_255 = 255;
 
     public CallDetailRecord() {
     }
@@ -31,19 +30,21 @@ public class CallDetailRecord {
     private Service service;
 
     @Field
-    @Column(length = FIELD_SIZE_10)
+    @Min(value = 1000000000L, message = "callingNumber must be 10 digits")
+    @Max(value = 9999999999L, message = "callingNumber must be 10 digits")
+    @Column(length = 10)
     private long callingNumber;
 
     @Field
-    @Column(length = FIELD_SIZE_15)
+    @Column(length = 15)
     private long callId;
 
     @Field
-    @Column(length = FIELD_SIZE_255)
+    @Column(length = 255)
     private String operator;
 
     @Field
-    @Column(length = FIELD_SIZE_255)
+    @Column(length = 255)
     private String circle;
 
     @Field
@@ -62,7 +63,7 @@ public class CallDetailRecord {
     private Boolean welcomePrompt;
 
     @Field
-    private CallStatus callStatus;
+    private FinalCallStatus finalCallStatus;
 
     @Field
     private CallDisconnectReason callDisconnectReason;
@@ -161,17 +162,17 @@ public class CallDetailRecord {
         this.welcomePrompt = welcomePrompt;
     }
 
-    public CallStatus getCallStatus() {
-        return callStatus;
+    public FinalCallStatus getFinalCallStatus() {
+        return finalCallStatus;
     }
 
-    public void setCallStatus(CallStatus callStatus) {
-        this.callStatus = callStatus;
+    public void setFinalCallStatus(FinalCallStatus finalCallStatus) {
+        this.finalCallStatus = finalCallStatus;
     }
 
     public void setCallStatus(int i) {
 
-        this.callStatus = CallStatus.fromInt(i);
+        this.finalCallStatus = FinalCallStatus.fromInt(i);
     }
 
     public CallDisconnectReason getCallDisconnectReason() {

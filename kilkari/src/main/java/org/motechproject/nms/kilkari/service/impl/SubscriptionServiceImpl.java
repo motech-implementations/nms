@@ -1,20 +1,22 @@
 package org.motechproject.nms.kilkari.service.impl;
 
-import org.joda.time.LocalDate;
+import org.joda.time.DateTime;
+import org.joda.time.Weeks;
 import org.motechproject.mds.query.QueryParams;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
-import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
+import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
+import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
-import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
-import org.motechproject.nms.region.language.domain.Language;
+import org.motechproject.nms.props.domain.DayOfTheWeek;
+import org.motechproject.nms.region.domain.LanguageLocation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -31,16 +33,18 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private static final int PREGNANCY_PACK_WEEKS = 72;
     private static final int CHILD_PACK_WEEKS = 48;
     private static final int THREE_MONTHS = 90;
+    private static final int TWO_MINUTES = 120;
+    private static final int TEN_SECS = 10;
 
-    private SubscriberService subscriberService;
+    private SubscriberDataService subscriberDataService;
     private SubscriptionPackDataService subscriptionPackDataService;
     private SubscriptionDataService subscriptionDataService;
 
     @Autowired
-    public SubscriptionServiceImpl(SubscriberService subscriberService,
+    public SubscriptionServiceImpl(SubscriberDataService subscriberDataService,
                                    SubscriptionPackDataService subscriptionPackDataService,
                                    SubscriptionDataService subscriptionDataService) {
-        this.subscriberService = subscriberService;
+        this.subscriberDataService = subscriberDataService;
         this.subscriptionPackDataService = subscriptionPackDataService;
         this.subscriptionDataService = subscriptionDataService;
 
@@ -63,41 +67,74 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         }
     }
 
+    @Override
+    public void deleteAllowed(Subscription subscription) {
+        DateTime now = new DateTime();
+
+        if (subscription.getStatus() != SubscriptionStatus.COMPLETED &&
+                subscription.getStatus() != SubscriptionStatus.DEACTIVATED) {
+            throw new IllegalStateException("Can not delete an open subscription");
+        }
+
+        if (subscription.getEndDate() == null) {
+            throw new IllegalStateException("Subscription in closed state with null end date");
+        }
+
+        if (Math.abs(Weeks.weeksBetween(now, subscription.getEndDate()).getWeeks()) < 6) {
+            throw new IllegalStateException("Subscription must be closed for 6 weeks before deleting");
+        }
+    }
+
 
     private void createSubscriptionPack(String name, SubscriptionPackType type, int weeks,
                                                     int messagesPerWeek) {
         List<SubscriptionPackMessage> messages = new ArrayList<>();
         for (int week = 1; week <= weeks; week++) {
             messages.add(new SubscriptionPackMessage(week, String.format("w%s_1", week),
-                    String.format("w%s_1.wav", week)));
+                    String.format("w%s_1.wav", week),
+                    TWO_MINUTES - TEN_SECS + (int) (Math.random() * 2 * TEN_SECS)));
 
             if (messagesPerWeek == 2) {
                 messages.add(new SubscriptionPackMessage(week, String.format("w%s_2", week),
-                        String.format("w%s_2.wav", week)));
+                        String.format("w%s_2.wav", week),
+                        TWO_MINUTES - TEN_SECS + (int) (Math.random() * 2 * TEN_SECS)));
             }
         }
 
-        subscriptionPackDataService.create(new SubscriptionPack(name, type, messagesPerWeek, messages));
+        subscriptionPackDataService.create(new SubscriptionPack(name, type, weeks, messagesPerWeek, messages));
     }
 
 
     @Override
-    public void createSubscription(long callingNumber, Language language, SubscriptionPack subscriptionPack,
+    public Subscription createSubscription(long callingNumber, LanguageLocation languagelocation, SubscriptionPack subscriptionPack,
                                    SubscriptionOrigin mode) {
-        Subscriber subscriber = subscriberService.getSubscriber(callingNumber);
+        Subscriber subscriber = subscriberDataService.findByCallingNumber(callingNumber);
+        Subscription subscription;
+
         if (subscriber == null) {
-            subscriber = new Subscriber(callingNumber, language);
-            subscriberService.add(subscriber);
+            subscriber = new Subscriber(callingNumber, languagelocation);
+            subscriberDataService.create(subscriber);
+        }
+
+        if (subscriber.getLanguageLocation() == null && languagelocation != null) {
+            subscriber.setLanguageLocation(languagelocation);
+            subscriberDataService.update(subscriber);
         }
 
         if (mode == SubscriptionOrigin.IVR) {
-            createSubscriptionViaIvr(subscriber, subscriptionPack);
+            subscription = createSubscriptionViaIvr(subscriber, subscriptionPack);
         } else { // MCTS_UPLOAD
-            createSubscriptionViaMcts(subscriber, subscriptionPack);
+            subscription = createSubscriptionViaMcts(subscriber, subscriptionPack);
         }
+
+        if (subscription != null) {
+            subscriber.getSubscriptions().add(subscription);
+            subscriberDataService.update(subscriber);
+        }
+        return subscription;
     }
 
-    private void createSubscriptionViaIvr(Subscriber subscriber, SubscriptionPack pack) {
+    private Subscription createSubscriptionViaIvr(Subscriber subscriber, SubscriptionPack pack) {
         Iterator<Subscription> subscriptionIterator = subscriber.getSubscriptions().iterator();
         Subscription existingSubscription;
 
@@ -109,38 +146,40 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 if (existingSubscription.getStatus().equals(SubscriptionStatus.ACTIVE) ||
                         existingSubscription.getStatus().equals(SubscriptionStatus.PENDING_ACTIVATION)) {
                     // subscriber already has an active subscription to this pack, don't create a new one
-                    return;
+                    return null;
                 }
             }
         }
 
         Subscription subscription = new Subscription(subscriber, pack, SubscriptionOrigin.IVR);
         subscription.setStatus(SubscriptionStatus.ACTIVE);
-        subscription.setStartDate(LocalDate.now().plusDays(1));
+        subscription.setStartDate(DateTime.now().plusDays(1));
 
-        subscriptionDataService.create(subscription);
+        return subscriptionDataService.create(subscription);
     }
 
-    private void createSubscriptionViaMcts(Subscriber subscriber, SubscriptionPack pack) {
+    private Subscription createSubscriptionViaMcts(Subscriber subscriber, SubscriptionPack pack) {
         Subscription subscription;
 
         if (subscriber.getDateOfBirth() != null && pack.getType() == SubscriptionPackType.CHILD) {
-            if (subscriberHasActivePackType(subscriber, SubscriptionPackType.CHILD)) {
+            if (subscriberHasActivePackType(subscriber, SubscriptionPackType.CHILD) ||
+                    (Subscription.hasCompletedForStartDate(subscriber.getDateOfBirth(), DateTime.now(), pack))) {
+
                 // TODO: #138 log the rejected subscription
-                return;
+                return null;
             } else {
-                // TODO: #157 subscriber should receive welcome message for the first week
                 subscription = new Subscription(subscriber, pack, SubscriptionOrigin.MCTS_IMPORT);
                 subscription.setStartDate(subscriber.getDateOfBirth());
                 subscription.setStatus(SubscriptionStatus.ACTIVE);
             }
         } else if (subscriber.getLastMenstrualPeriod() != null && subscriber.getDateOfBirth() == null &&
                 pack.getType() == SubscriptionPackType.PREGNANCY) {
-            if (subscriberHasActivePackType(subscriber, SubscriptionPackType.PREGNANCY)) {
+            if (subscriberHasActivePackType(subscriber, SubscriptionPackType.PREGNANCY) ||
+                    Subscription.hasCompletedForStartDate(subscriber.getLastMenstrualPeriod().plusDays(THREE_MONTHS),
+                            DateTime.now(), pack)) {
                 // TODO: #138 log the rejected subscription
-                return;
+                return null;
             } else {
-                // TODO: #157 subscriber should receive welcome message for the first week
                 // TODO: #160 deal with early subscription
                 subscription = new Subscription(subscriber, pack, SubscriptionOrigin.MCTS_IMPORT);
 
@@ -150,10 +189,10 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             }
         } else {
             // TODO: #138 need to log other error cases?
-            return;
+            return null;
         }
 
-        subscriptionDataService.create(subscription);
+        return subscriptionDataService.create(subscription);
     }
 
     private boolean subscriberHasActivePackType(Subscriber subscriber, SubscriptionPackType type) {
@@ -181,6 +220,22 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         return subscriptionDataService.findBySubscriptionId(subscriptionId);
     }
 
+
+    @Override
+    public void updateStartDate(Subscription subscription, DateTime newReferenceDate) {
+        if (subscription.getSubscriptionPack().getType() == SubscriptionPackType.PREGNANCY) {
+            subscription.setStartDate(newReferenceDate.plusDays(THREE_MONTHS));
+        } else { // CHILD pack
+            subscription.setStartDate(newReferenceDate);
+        }
+
+        if (Subscription.hasCompletedForStartDate(subscription.getStartDate(), DateTime.now(),
+                subscription.getSubscriptionPack())) {
+            subscription.setStatus(SubscriptionStatus.COMPLETED);
+        }
+        subscriptionDataService.update(subscription);
+    }
+
     @Override
     public void deactivateSubscription(Subscription subscription, DeactivationReason reason) {
         if (subscription.getStatus() == SubscriptionStatus.ACTIVE ||
@@ -188,8 +243,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             subscription.setStatus(SubscriptionStatus.DEACTIVATED);
             subscription.setDeactivationReason(reason);
             subscriptionDataService.update(subscription);
-
-            // Eventually more will happen here -- e.g. the user's Inbox will be decommissioned
         }
         // Else no-op
     }
@@ -213,7 +266,10 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
 
-    public List<Subscription> findActiveSubscriptions(int page, int pageSize) {
-        return subscriptionDataService.findByStatus(SubscriptionStatus.ACTIVE, new QueryParams(page, pageSize));
+    public List<Subscription> findActiveSubscriptionsForDay(DayOfTheWeek dayOfTheWeek, int page, int pageSize) {
+        return subscriptionDataService.findByStatusAndDay(SubscriptionStatus.ACTIVE, dayOfTheWeek,
+                new QueryParams(page, pageSize));
     }
+
+
 }

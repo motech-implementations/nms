@@ -4,20 +4,28 @@ import org.apache.commons.codec.binary.Hex;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
-import org.motechproject.nms.imi.domain.CallDetailRecord;
-import org.motechproject.nms.imi.domain.StatusCode;
-import org.motechproject.nms.imi.service.RequestId;
 import org.motechproject.nms.imi.service.SettingsService;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
+import org.motechproject.nms.kilkari.domain.SubscriptionPack;
+import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
+import org.motechproject.nms.kilkari.dto.CallDetailRecordDto;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
-import org.motechproject.nms.props.domain.CallStatus;
-import org.motechproject.nms.region.language.domain.CircleLanguage;
-import org.motechproject.nms.region.language.domain.Language;
-import org.motechproject.nms.region.language.repository.CircleLanguageDataService;
-import org.motechproject.nms.region.language.repository.LanguageDataService;
+import org.motechproject.nms.props.domain.CallDisconnectReason;
+import org.motechproject.nms.props.domain.RequestId;
+import org.motechproject.nms.props.domain.StatusCode;
+import org.motechproject.nms.region.domain.Circle;
+import org.motechproject.nms.region.domain.District;
+import org.motechproject.nms.region.domain.Language;
+import org.motechproject.nms.region.domain.LanguageLocation;
+import org.motechproject.nms.region.domain.State;
+import org.motechproject.nms.region.repository.CircleDataService;
+import org.motechproject.nms.region.repository.DistrictDataService;
+import org.motechproject.nms.region.repository.LanguageDataService;
+import org.motechproject.nms.region.repository.LanguageLocationDataService;
+import org.motechproject.nms.region.repository.StateDataService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,13 +41,14 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 public class CdrHelper {
 
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormat.forPattern("yyyyMMddHHmmss");
     private static final Logger LOGGER = LoggerFactory.getLogger(CdrHelper.class);
-    
+
+    private static final int CHILD_PACK_WEEKS = 48;
+    private final String TEST_OBD_TIMESTAMP;
     private final String TEST_OBD_FILENAME;
     private final String TEST_CDR_DETAIL_FILENAME;
     private final String TEST_CDR_SUMMARY_FILENAME;
@@ -48,128 +57,218 @@ public class CdrHelper {
     private SubscriptionService subscriptionService;
     private SubscriberDataService subscriberDataService;
     private LanguageDataService languageDataService;
-    private CircleLanguageDataService circleLanguageDataService;
-    
-    private List<CallDetailRecord> cdrs;
+    private LanguageLocationDataService languageLocationDataService;
+    private CircleDataService circleDataService;
+    private StateDataService stateDataService;
+    private DistrictDataService districtDataService;
+
+    private List<CallDetailRecordDto> cdrs;
+    private List<CallDetailRecordDto> retryCdrs = new ArrayList<>();
+    private List<String> completedSubscriptionIds = new ArrayList<>();
 
 
     public CdrHelper(SettingsService settingsService, SubscriptionService subscriptionService,
                      SubscriberDataService subscriberDataService, LanguageDataService languageDataService,
-                     CircleLanguageDataService circleLanguageDataService) {
+                     LanguageLocationDataService languageLocationDataService,
+                     CircleDataService circleDataService, StateDataService stateDataService,
+                     DistrictDataService districtDataService) {
 
         this.settingsService = settingsService;
         this.subscriptionService = subscriptionService;
         this.subscriberDataService = subscriberDataService;
         this.languageDataService = languageDataService;
-        this.circleLanguageDataService = circleLanguageDataService;
+        this.languageLocationDataService = languageLocationDataService;
+        this.circleDataService = circleDataService;
+        this.stateDataService = stateDataService;
+        this.districtDataService = districtDataService;
 
-        String date = DateTime.now().toString(TIME_FORMATTER);
-        TEST_OBD_FILENAME = String.format("OBD_%s.csv", date);
+        TEST_OBD_TIMESTAMP = DateTime.now().toString(TIME_FORMATTER);
+        TEST_OBD_FILENAME = String.format("OBD_%s.csv", TEST_OBD_TIMESTAMP);
         TEST_CDR_DETAIL_FILENAME = String.format("cdrDetail_%s", TEST_OBD_FILENAME);
         TEST_CDR_SUMMARY_FILENAME = String.format("cdrSummary_%s", TEST_OBD_FILENAME);
     }
 
 
-    public void setCrds(List<CallDetailRecord> cdrs) {
+    public void setCrds(List<CallDetailRecordDto> cdrs) {
         this.cdrs = cdrs;
     }
 
 
-    private Language makeLanguage() {
-        Language language = languageDataService.findByCode("HI");
-        if (language != null) {
-            return language;
-        }
-        return languageDataService.create(new Language("Hindi", "HI"));
-    }
-
-
-    private String makeCircle() {
-        List<CircleLanguage> circleLanguages = circleLanguageDataService.findByCircle("XX");
-        if (circleLanguages.size() == 0) {
-            CircleLanguage circleLanguage = circleLanguageDataService.create(new CircleLanguage("XX",
-                    makeLanguage()));
-            return circleLanguage.getCircle();
-        }
-        return circleLanguages.get(0).getCircle();
-    }
-
-
-    private Long makeNumber() {
-        return (long) (Math.random() * 9000000000L) + 1000000000L;
-    }
-
-
-    private Subscription makeSubscription() {
-        Subscriber subscriber = subscriberDataService.create(new Subscriber(
-                makeNumber(),
-                makeLanguage(),
-                makeCircle()
-        ));
-        return subscriptionService.create(new Subscription(
-                subscriber,
-                subscriptionService.getSubscriptionPack("childPack"),
-                SubscriptionOrigin.IVR
-        ));
-    }
-
-
-    private CallStatus randomCallStatus() {
-        return CallStatus.fromInt((int) (Math.random() * 3) + 1);
-    }
-
-
-    private StatusCode randomStatusCode(CallStatus finalStatus) {
-        if (finalStatus == CallStatus.SUCCESS) {
-            return StatusCode.OBD_SUCCESS_CALL_CONNECTED;
-        } else if (finalStatus == CallStatus.REJECTED) {
-            return StatusCode.OBD_DNIS_IN_DND;
-        } else {
-            return StatusCode.fromInt((int) (Math.random() * 6) + StatusCode.OBD_FAILED_NOATTEMPT.getValue());
-        }
-    }
-
-
-    public List<CallDetailRecord> makeCdrs(int numCdr) {
-        String imiServiceId = settingsService.getSettingsFacade().getProperty("imi.target_file_imi_service_id");
-        String fileIdentifier = UUID.randomUUID().toString();
-        List<CallDetailRecord> cdrs = new ArrayList<>();
-        for (int i=0; i<numCdr; i++) {
-            Subscription subscription = makeSubscription();
-            CallStatus finalStatus = randomCallStatus();
-            StatusCode statusCode = randomStatusCode(finalStatus);
-
-            CallDetailRecord cdr = new CallDetailRecord(
-                    new RequestId(fileIdentifier, subscription.getSubscriptionId()).toString(),
-                    imiServiceId,
-                    subscription.getSubscriber().getCallingNumber().toString(),
-                    null,
-                    0,
-                    null,
-                    "w1m1.wav",
-                    "1",
-                    makeLanguage().getCode(),
-                    makeCircle(),
-                    finalStatus,
-                    statusCode.getValue(),
-                    1);
-            cdrs.add(cdr);
-        }
+    public List<CallDetailRecordDto> getCrds() {
         return cdrs;
     }
 
 
-    public String obdFileName() {
+    public boolean shouldRetryCdr(CallDetailRecordDto cdr) {
+        return retryCdrs.contains(cdr);
+    }
+
+
+    public boolean isSubscriptionCompleted(String subscriptionId) {
+        return completedSubscriptionIds.contains(subscriptionId);
+    }
+
+
+    private Language makeLanguage() {
+        Language language = languageDataService.findByName("Hindi");
+        if (language != null) {
+            return language;
+        }
+        return languageDataService.create(new Language("Hindi"));
+    }
+
+    public LanguageLocation makeLanguageLocation() {
+        LanguageLocation languageLocation = languageLocationDataService.findByCode("99");
+        if (languageLocation != null) {
+            return languageLocation;
+        }
+
+        Language language = makeLanguage();
+        Circle circle = makeCircle();
+
+        languageLocation = new LanguageLocation("99", circle, language, false);
+        languageLocation.getDistrictSet().add(makeDistrict());
+        return languageLocationDataService.create(languageLocation);
+    }
+
+    public SubscriptionPack getChildPack() {
+        subscriptionService.createSubscriptionPacks();
+        return subscriptionService.getSubscriptionPack("childPack");
+    }
+
+    public Circle makeCircle() {
+        Circle circle = circleDataService.findByName("XX");
+        if (circle != null) {
+            return circle;
+        }
+
+        return circleDataService.create(new Circle("XX"));
+    }
+
+    public State makeState() {
+        State state = stateDataService.findByCode(1l);
+        if (state != null) {
+            return state;
+        }
+
+        state = new State();
+        state.setName("State 1");
+        state.setCode(1L);
+
+        return stateDataService.create(state);
+    }
+
+    public District makeDistrict() {
+        District district = districtDataService.findById(1L);
+        if (district != null) {
+            return district;
+        }
+
+        district = new District();
+        district.setName("District 1");
+        district.setRegionalName("District 1");
+        district.setCode(1L);
+        district.setState(makeState());
+
+        return districtDataService.create(district);
+    }
+
+    public Long makeNumber() {
+        return (long) (Math.random() * 9000000000L) + 1000000000L;
+    }
+
+
+    public Subscription makeSubscription(SubscriptionOrigin origin, DateTime startDate) {
+        subscriptionService.createSubscriptionPacks();
+        Subscriber subscriber = subscriberDataService.create(new Subscriber(
+                makeNumber(),
+                makeLanguageLocation(),
+                makeCircle()
+        ));
+        Subscription subscription = new Subscription(subscriber, getChildPack(), origin);
+        subscription.setStartDate(startDate);
+        subscription.setStatus(SubscriptionStatus.ACTIVE);
+        subscription = subscriptionService.create(subscription);
+        LOGGER.debug("Created subscription {}", subscription.toString());
+        return subscription;
+    }
+
+
+    private CallDetailRecordDto makeCdr(Subscription sub) {
+        CallDetailRecordDto cdr = new CallDetailRecordDto();
+        cdr.setRequestId(new RequestId(sub.getSubscriptionId(), timestamp()));
+        cdr.setMsisdn(sub.getSubscriber().getCallingNumber());
+        cdr.setCallAnswerTime(DateTime.now().minusHours(5));
+        cdr.setMsgPlayDuration(110 + (int) (Math.random() * 20));
+        cdr.setLanguageLocationId(makeLanguageLocation().getCode());
+        cdr.setCircleId(makeCircle().getName());
+        cdr.setOperatorId("xx");
+        return cdr;
+    }
+
+
+    public void makeCdrs(int numSuccess, int numFailed, int numComplete, int numIvr) {
+        cdrs = new ArrayList<>();
+
+        for (int i=0 ; i<numSuccess ; i++) {
+            Subscription sub = makeSubscription(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(30));
+            CallDetailRecordDto cdr = makeCdr(sub);
+            cdr.setStatusCode(StatusCode.OBD_SUCCESS_CALL_CONNECTED);
+            cdr.setContentFile(getChildPack().getMessages().get(5).getMessageFileName());
+            cdr.setCallDisconnectReason(CallDisconnectReason.NORMAL_DROP);
+            cdr.setWeekId("w5_1");
+            cdrs.add(cdr);
+        }
+
+        for (int i=0 ; i<numFailed ; i++) {
+            Subscription sub = makeSubscription(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(30));
+            CallDetailRecordDto cdr = makeCdr(sub);
+            cdr.setStatusCode(StatusCode.OBD_SUCCESS_CALL_CONNECTED);
+            cdr.setContentFile(getChildPack().getMessages().get(5).getMessageFileName());
+            cdr.setCallDisconnectReason(CallDisconnectReason.NORMAL_DROP);
+            cdr.setWeekId("w5_1");
+            cdrs.add(cdr);
+        }
+
+        for (int i=0 ; i<numComplete ; i++) {
+            int days = CHILD_PACK_WEEKS * 7;
+            Subscription sub = makeSubscription(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(days));
+            CallDetailRecordDto cdr = makeCdr(sub);
+            cdr.setStatusCode(StatusCode.OBD_SUCCESS_CALL_CONNECTED);
+            cdr.setContentFile(getChildPack().getMessages().get(CHILD_PACK_WEEKS-1).getMessageFileName());
+            cdr.setCallDisconnectReason(CallDisconnectReason.NORMAL_DROP);
+            cdr.setWeekId(String.format("w%d_1", CHILD_PACK_WEEKS));
+            cdrs.add(cdr);
+        }
+
+        for (int i=0 ; i<numIvr ; i++) {
+            Subscription sub = makeSubscription(SubscriptionOrigin.IVR, DateTime.now().minusDays(30));
+            CallDetailRecordDto cdr = makeCdr(sub);
+            cdr.setStatusCode(StatusCode.OBD_SUCCESS_CALL_CONNECTED);
+            cdr.setContentFile(getChildPack().getMessages().get(5).getMessageFileName());
+            cdr.setCallDisconnectReason(CallDisconnectReason.NORMAL_DROP);
+            cdr.setWeekId("w5_1");
+            cdrs.add(cdr);
+        }
+    }
+
+
+    public String timestamp() {
+        return TEST_OBD_TIMESTAMP;
+    }
+
+
+    public String obd() {
         return TEST_OBD_FILENAME;
     }
 
 
-    public String cdrSummaryFileName() {
+    public String csr() {
         return TEST_CDR_SUMMARY_FILENAME;
     }
 
 
-    public String cdrDetailFileName() {
+    public String cdr() {
         return TEST_CDR_DETAIL_FILENAME;
     }
 
@@ -192,23 +291,93 @@ public class CdrHelper {
     }
 
 
-    public void makeCdrSummaryFile() throws IOException {
-        File dstFile = new File(makeCdrDirectory(), cdrSummaryFileName());
-        LOGGER.info("Creating summary file {}...", dstFile);
-        BufferedWriter writer = new BufferedWriter(new FileWriter(dstFile));
-        String s;
-        for(CallDetailRecord cdr : cdrs) {
-            writer.write(cdr.toLine());
-            writer.write("\n");
-        }
-
-        writer.close();
+    public int cdrCount() {
+        return cdrs.size();
     }
 
 
-    public void makeCdrDetailFile() throws IOException {
-        File dstFile = new File(makeCdrDirectory(), cdrDetailFileName());
-        LOGGER.info("Creating detail file {}...", dstFile);
+    public static String csvLineFromCdr(CallDetailRecordDto cdr) {
+        StringBuilder sb = new StringBuilder();
+
+        //REQUEST_ID,
+        sb.append(cdr.getRequestId().toString());
+        sb.append(',');
+
+        //MSISDN,
+        sb.append(cdr.getMsisdn());
+        sb.append(',');
+
+        //CALL_ID,
+        sb.append("xxx");
+        sb.append(',');
+
+        //ATTEMPT_NO,
+        sb.append(1);
+        sb.append(',');
+
+        //CALL_START_TIME,
+        sb.append(1);
+        sb.append(',');
+
+        //CALL_ANSWER_TIME,
+        sb.append(cdr.getCallAnswerTime().getMillis() / 1000);
+        sb.append(',');
+
+        //CALL_END_TIME,
+        sb.append(1);
+        sb.append(',');
+
+        //CALL_DURATION_IN_PULSE,
+        sb.append(1);
+        sb.append(',');
+
+        //CALL_STATUS,
+        sb.append(cdr.getStatusCode().getValue());
+        sb.append(',');
+
+        //LANGUAGE_LOCATION_ID,
+        sb.append(cdr.getLanguageLocationId());
+        sb.append(',');
+
+        //CONTENT_FILE,
+        sb.append(cdr.getContentFile());
+        sb.append(',');
+
+        //MSG_PLAY_START_TIME,
+        sb.append(1);
+        sb.append(',');
+
+        //MSG_PLAY_END_TIME,
+        sb.append(1 + cdr.getMsgPlayDuration());
+        sb.append(',');
+
+        //CIRCLE_ID,
+        sb.append(cdr.getCircleId());
+        sb.append(',');
+
+        //OPERATOR_ID,
+        sb.append(cdr.getOperatorId());
+        sb.append(',');
+
+        //PRIORITY,
+        sb.append(0);
+        sb.append(',');
+
+        //CALL_DISCONNECT_REASON,
+        sb.append(cdr.getCallDisconnectReason().getValue());
+        sb.append(',');
+
+        //WEEK_ID,
+        sb.append(cdr.getWeekId());
+
+
+        return sb.toString();
+    }
+
+
+    public void makeCsr() throws IOException {
+        File dstFile = new File(makeCdrDirectory(), csr());
+        LOGGER.debug("Creating summary file {}...", dstFile);
         BufferedWriter writer = new BufferedWriter(new FileWriter(dstFile));
 
         //todo:...
@@ -217,7 +386,21 @@ public class CdrHelper {
     }
 
 
-    private String getFileChecksum(File file) throws IOException, NoSuchAlgorithmException {
+    public void makeCdr() throws IOException {
+        File dstFile = new File(makeCdrDirectory(), cdr());
+        LOGGER.debug("Creating detail file {}...", dstFile);
+        BufferedWriter writer = new BufferedWriter(new FileWriter(dstFile));
+
+        for(CallDetailRecordDto cdr : cdrs) {
+            writer.write(csvLineFromCdr(cdr));
+            writer.write("\n");
+        }
+
+        writer.close();
+    }
+
+
+    private String checksum(File file) throws IOException, NoSuchAlgorithmException {
         FileInputStream fis = new FileInputStream(file);
         InputStreamReader isr = new InputStreamReader(fis);
         BufferedReader reader = new BufferedReader(isr);
@@ -231,12 +414,12 @@ public class CdrHelper {
     }
 
 
-    public String summaryFileChecksum() throws IOException, NoSuchAlgorithmException {
-        return getFileChecksum(new File(cdrDirectory(), cdrSummaryFileName()));
+    public String csrChecksum() throws IOException, NoSuchAlgorithmException {
+        return checksum(new File(cdrDirectory(), csr()));
     }
 
 
-    public String detailFileChecksum() throws IOException, NoSuchAlgorithmException {
-        return getFileChecksum(new File(cdrDirectory(), cdrDetailFileName()));
+    public String cdrChecksum() throws IOException, NoSuchAlgorithmException {
+        return checksum(new File(cdrDirectory(), cdr()));
     }
 }

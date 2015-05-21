@@ -1,20 +1,24 @@
 package org.motechproject.nms.imi.it;
 
 import org.apache.commons.httpclient.HttpStatus;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.motechproject.nms.imi.domain.CallDetailRecord;
 import org.motechproject.nms.imi.service.SettingsService;
 import org.motechproject.nms.imi.web.contract.BadRequest;
 import org.motechproject.nms.imi.web.contract.CdrFileNotificationRequest;
 import org.motechproject.nms.imi.web.contract.FileInfo;
+import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
-import org.motechproject.nms.region.language.repository.CircleLanguageDataService;
-import org.motechproject.nms.region.language.repository.LanguageDataService;
+import org.motechproject.nms.region.repository.CircleDataService;
+import org.motechproject.nms.region.repository.DistrictDataService;
+import org.motechproject.nms.region.repository.LanguageDataService;
+import org.motechproject.nms.region.repository.LanguageLocationDataService;
+import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.motechproject.testing.osgi.http.SimpleHttpClient;
@@ -27,8 +31,8 @@ import org.ops4j.pax.exam.spi.reactors.PerSuite;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
-import java.util.List;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(PaxExam.class)
@@ -53,8 +57,19 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
     private LanguageDataService languageDataService;
 
     @Inject
-    private CircleLanguageDataService circleLanguageDataService;
+    private CircleDataService circleDataService;
 
+    @Inject
+    private LanguageLocationDataService languageLocationDataService;
+
+    @Inject
+    private StateDataService stateDataService;
+
+    @Inject
+    private DistrictDataService districtDataService;
+
+    @Inject
+    private CallRetryDataService callRetryDataService;
 
     private String createFailureResponseJson(String failureReason) throws IOException {
         BadRequest badRequest = new BadRequest(failureReason);
@@ -66,15 +81,23 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
     private HttpPost createCdrFileNotificationHttpPost(CdrHelper helper, boolean useValidTargetFile,
                                                        boolean useValidSummaryFile, boolean useValidDetailFile)
             throws IOException, NoSuchAlgorithmException {
-        String targetFile = useValidTargetFile ? helper.obdFileName() : helper.obdFileName() + "xxx";
-        String summaryFile = useValidSummaryFile ? helper.cdrSummaryFileName() : helper.cdrSummaryFileName() +
-                "xxx";
-        String detailFile = useValidDetailFile ? helper.cdrDetailFileName() : helper.cdrDetailFileName() + "xxx";
+        String targetFile = useValidTargetFile ? helper.obd() : helper.obd() + "xxx";
+        String summaryFile = useValidSummaryFile ? helper.csr() : helper.csr() + "xxx";
+        String detailFile = useValidDetailFile ? helper.cdr() : helper.cdr() + "xxx";
 
-        FileInfo cdrSummary = new FileInfo(summaryFile, helper.detailFileChecksum(), 5000);
-        FileInfo cdrDetail = new FileInfo(detailFile, helper.detailFileChecksum(), 9900);
+        FileInfo cdrSummary;
+        FileInfo cdrDetail;
+        if (useValidTargetFile && useValidSummaryFile && useValidDetailFile) {
+            cdrSummary = new FileInfo(summaryFile, helper.csrChecksum(), 0);
+            cdrDetail = new FileInfo(detailFile, helper.cdrChecksum(), 1);
+        } else {
+            cdrSummary = new FileInfo(summaryFile, "", 0);
+            cdrDetail = new FileInfo(detailFile, "", 0);
+
+        }
         CdrFileNotificationRequest cdrFileNotificationRequest =
                 new CdrFileNotificationRequest(targetFile, cdrSummary, cdrDetail);
+
 
         ObjectMapper mapper = new ObjectMapper();
         String requestJson = mapper.writeValueAsString(cdrFileNotificationRequest);
@@ -90,32 +113,34 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
     @Test
     public void testCreateCdrFileNotificationRequest() throws IOException, InterruptedException,
             NoSuchAlgorithmException {
-        getLogger().info("testCreateCdrFileNotificationRequest()");
+        getLogger().debug("testCreateCdrFileNotificationRequest()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                languageDataService, circleLanguageDataService);
+                languageDataService, languageLocationDataService, circleDataService, stateDataService,
+                districtDataService);
 
-        List<CallDetailRecord> cdrs = helper.makeCdrs(5);
-        helper.setCrds(cdrs);
-        helper.makeCdrSummaryFile();
-        helper.makeCdrDetailFile();
+        helper.makeCdrs(1,0,0,0);
+        helper.makeCsr();
+        helper.makeCdr();
 
         HttpPost httpPost = createCdrFileNotificationHttpPost(helper, true, true, true);
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_ACCEPTED, ADMIN_USERNAME,
-                ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_ACCEPTED, response.getStatusLine().getStatusCode());
     }
 
 
     @Test
     public void testCreateCdrFileNotificationRequestBadCdrSummaryFileName() throws IOException,
             InterruptedException, NoSuchAlgorithmException {
-        getLogger().info("testCreateCdrFileNotificationRequestBadCdrSummaryFileName()");
+        getLogger().debug("testCreateCdrFileNotificationRequestBadCdrSummaryFileName()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                languageDataService, circleLanguageDataService);
+                languageDataService, languageLocationDataService, circleDataService, stateDataService,
+                districtDataService);
 
-        helper.makeCdrDetailFile();
+        helper.makeCdrs(1,0,0,0);
+        helper.makeCdr();
 
         HttpPost httpPost = createCdrFileNotificationHttpPost(helper, true, false, true);
 
@@ -129,10 +154,11 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
     @Test
     public void testCreateCdrFileNotificationRequestBadFileNames() throws IOException,
             InterruptedException, NoSuchAlgorithmException {
-        getLogger().info("testCreateCdrFileNotificationRequestBadFileNames()");
+        getLogger().debug("testCreateCdrFileNotificationRequestBadFileNames()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                languageDataService, circleLanguageDataService);
+                languageDataService, languageLocationDataService, circleDataService, stateDataService,
+                districtDataService);
         HttpPost httpPost = createCdrFileNotificationHttpPost(helper, false, true, true);
 
         // All 3 filenames will be considered invalid because the target file is of invalid format, and the CDR

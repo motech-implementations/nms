@@ -40,6 +40,13 @@
             <version>${motech.version}</version>
         </dependency>
 
+        <!-- Alerts -->
+        <dependency>
+            <groupId>org.motechproject</groupId>
+            <artifactId>alerts</artifactId>
+            <version>${motech.version}</version>
+        </dependency>
+
         <!-- common properties -->
         <dependency>
             <groupId>org.motechproject.nms</groupId>
@@ -89,9 +96,14 @@
                             org.motechproject.nms.kilkari.repository;version=${project.version},
                             org.motechproject.nms.kilkari.domain;version=${project.version},
                             org.motechproject.nms.kilkari.exception;version=${project.version},
+                            org.motechproject.nms.kilkari.dto;version=${project.version},
                         </Export-Package>
                         <Import-Package>
                             org.motechproject.osgi.web,
+                            org.aopalliance.aop,
+                            org.springframework.aop,
+                            org.springframework.aop.framework,
+                            org.springframework.transaction,
                             *
                         </Import-Package>
                     </instructions>

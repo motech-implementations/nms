@@ -1,31 +1,47 @@
 package org.motechproject.nms.flw.domain;
 
+import org.joda.time.DateTime;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
-import org.motechproject.nms.region.language.domain.Language;
-import org.motechproject.nms.region.location.domain.District;
+import org.motechproject.nms.region.domain.District;
+import org.motechproject.nms.region.domain.LanguageLocation;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.Unique;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 
 @Entity(tableName = "nms_front_line_workers")
 public class FrontLineWorker {
-    public static final int FIELD_SIZE_10 = 10;
 
     @Field
     private Long id;
 
+    @Field
+    private String flwId;
+
+    @Field
+    private String mctsFlwId;
+
     @Field(required = true)
     @Unique
-    @Column(length = FIELD_SIZE_10)
+    @Min(value = 1000000000L, message = "contactNumber must be 10 digits")
+    @Max(value = 9999999999L, message = "contactNumber must be 10 digits")
+    @Column(length = 10)
     private Long contactNumber;
 
     @Field
     private String name;
 
     @Field
-    private Language language;
+    private FrontLineWorkerStatus status;
+
+    @Field
+    private DateTime invalidationDate;
+
+    @Field
+    private LanguageLocation languageLocation;
 
     @Field
     @Persistent(defaultFetchGroup = "true")
@@ -48,6 +64,22 @@ public class FrontLineWorker {
         this.id = id;
     }
 
+    public String getFlwId() {
+        return flwId;
+    }
+
+    public void setFlwId(String flwId) {
+        this.flwId = flwId;
+    }
+
+    public String getMctsFlwId() {
+        return mctsFlwId;
+    }
+
+    public void setMctsFlwId(String mctsFlwId) {
+        this.mctsFlwId = mctsFlwId;
+    }
+
     public Long getContactNumber() {
         return contactNumber;
     }
@@ -64,12 +96,34 @@ public class FrontLineWorker {
         this.name = name;
     }
 
-    public Language getLanguage() {
-        return language;
+    public FrontLineWorkerStatus getStatus() {
+        return status;
     }
 
-    public void setLanguage(Language language) {
-        this.language = language;
+    public void setStatus(FrontLineWorkerStatus status) {
+        this.status = status;
+
+        if (this.status == FrontLineWorkerStatus.INVALID) {
+            setInvalidationDate(new DateTime());
+        } else {
+            setInvalidationDate(null);
+        }
+    }
+
+    public DateTime getInvalidationDate() {
+        return invalidationDate;
+    }
+
+    public void setInvalidationDate(DateTime invalidationDate) {
+        this.invalidationDate = invalidationDate;
+    }
+
+    public LanguageLocation getLanguageLocation() {
+        return languageLocation;
+    }
+
+    public void setLanguageLocation(LanguageLocation languageLocation) {
+        this.languageLocation = languageLocation;
     }
 
     public District getDistrict() {
@@ -100,7 +154,7 @@ public class FrontLineWorker {
         if (name != null ? !name.equals(that.name) : that.name != null) {
             return false;
         }
-        if (language != null ? !language.equals(that.language) : that.language != null) {
+        if (languageLocation != null ? !languageLocation.equals(that.languageLocation) : that.languageLocation != null) {
             return false;
         }
         return !(district != null ? !district.equals(that.district) : that.district != null);
@@ -109,10 +163,10 @@ public class FrontLineWorker {
 
     @Override
     public int hashCode() {
-        int result = id.hashCode();
+        int result = (id != null ? id.hashCode() : 0);
         result = 31 * result + contactNumber.hashCode();
         result = 31 * result + (name != null ? name.hashCode() : 0);
-        result = 31 * result + (language != null ? language.hashCode() : 0);
+        result = 31 * result + (languageLocation != null ? languageLocation.hashCode() : 0);
         result = 31 * result + (district != null ? district.hashCode() : 0);
         return result;
     }
@@ -123,7 +177,7 @@ public class FrontLineWorker {
                 "id=" + id +
                 ", contactNumber='" + contactNumber + '\'' +
                 ", name='" + name + '\'' +
-                ", language=" + language +
+                ", languageLocation=" + languageLocation +
                 ", district=" + district +
                 '}';
     }

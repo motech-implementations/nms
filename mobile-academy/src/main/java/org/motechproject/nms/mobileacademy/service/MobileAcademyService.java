@@ -40,4 +40,10 @@ public interface MobileAcademyService {
      */
     void setBookmark(MaBookmark bookmark);
 
+    /**
+     * Retrigger the sms notification for course completion for user
+     * @param callingNumber
+     */
+    void triggerCompletionNotification(Long callingNumber);
+
 }
