@@ -1,8 +1,7 @@
 package org.motechproject.nms.scp.service.impl;
 
-import org.motechproject.event.MotechEvent;
-import org.motechproject.event.listener.annotations.MotechListener;
 import org.motechproject.nms.scp.service.exception.SecureCopyException;
+import org.motechproject.nms.scp.service.exception.SortException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -14,15 +13,6 @@ import java.io.InputStreamReader;
 
 @Service("secureCopyService")
 public final class SecureCopyServiceImpl {
-    private static final String FROM_SUBJECT = "nms.imi.scp.from";
-    private static final String TO_SUBJECT = "nms.imi.scp.to";
-    private static final String EVENT_PARAM_KEY_HOST = "host";
-    private static final String EVENT_PARAM_KEY_USER = "user";
-    private static final String EVENT_PARAM_KEY_IDENTITY = "identity";
-    private static final String EVENT_PARAM_KEY_LOCAL_SOURCE = "localSource";
-    private static final String EVENT_PARAM_KEY_REMOTE_SOURCE = "remoteSource";
-    private static final String EVENT_PARAM_KEY_LOCAL_DESTINATION = "localDestination";
-    private static final String EVENT_PARAM_KEY_REMOTE_DESTINATION = "remoteDestination";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SecureCopyServiceImpl.class);
 
@@ -96,24 +86,24 @@ public final class SecureCopyServiceImpl {
     }
 
 
-    @MotechListener(subjects = { FROM_SUBJECT })
-    public void handleCopyFrom(MotechEvent event) throws SecureCopyException {
-        String user = (String) event.getParameters().get(EVENT_PARAM_KEY_USER);
-        String host = (String) event.getParameters().get(EVENT_PARAM_KEY_USER);
-        String identity = (String) event.getParameters().get(EVENT_PARAM_KEY_IDENTITY);
-        String remoteSource = (String) event.getParameters().get(EVENT_PARAM_KEY_REMOTE_SOURCE);
-        String localDestination = (String) event.getParameters().get(EVENT_PARAM_KEY_LOCAL_DESTINATION);
-        copyFrom(user, host, identity, remoteSource, localDestination);
-    }
+    /**
+     * Sorts the source file into the destination file using the first 51 characters of the file as the sort key.
+     * The first 51 characters correspond to the requestId field in a CDR file.
+     */
+    void sort(String source, String destination) throws SortException {
+        Runtime r = Runtime.getRuntime();
+        try {
+            String command = String.format("sort -o %s -k=1,52 %s", destination, source);
+            LOGGER.debug(command);
+            Process p = r.exec(command);
+            int retVal = p.waitFor();
+            if (retVal != 0) {
+                throw new SortException(String.format("Error sorting %s: sort returned %d - %s", source, retVal,
+                        getStderr(p)));
+            }
+        } catch (IOException | InterruptedException e) {
+            throw new SortException(String.format("Error sorting %s: %s", source, e.getMessage()), e);
+        }
 
-
-    @MotechListener(subjects = { TO_SUBJECT })
-    public void handleCopyTo(MotechEvent event) throws SecureCopyException {
-        String user = (String) event.getParameters().get(EVENT_PARAM_KEY_USER);
-        String host = (String) event.getParameters().get(EVENT_PARAM_KEY_USER);
-        String identity = (String) event.getParameters().get(EVENT_PARAM_KEY_IDENTITY);
-        String localSource = (String) event.getParameters().get(EVENT_PARAM_KEY_LOCAL_SOURCE);
-        String remoteDestination = (String) event.getParameters().get(EVENT_PARAM_KEY_REMOTE_DESTINATION);
-        copyTo(user, host, identity, localSource, remoteDestination);
     }
 }
