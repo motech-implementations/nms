@@ -1,6 +1,8 @@
 package org.motechproject.nms.kilkari.service;
 
 import org.joda.time.DateTime;
+import org.motechproject.mds.annotations.InstanceLifecycleListener;
+import org.motechproject.mds.domain.InstanceLifecycleListenerType;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
@@ -87,5 +89,14 @@ public interface SubscriptionService {
      * Generate Pregnancy and Child subscription packs and associated messages. To be used only by test code.
      */
     void createSubscriptionPacks();
+
+    /**
+     * Lifecycle listener that verifies a subscription can only be deleted if it is deactivated or completed
+     * and has been in that state for 6 weeks
+     *
+     * @param subscription
+     */
+    @InstanceLifecycleListener(InstanceLifecycleListenerType.PRE_DELETE)
+    void deleteAllowed(Subscription subscription);
 
 }

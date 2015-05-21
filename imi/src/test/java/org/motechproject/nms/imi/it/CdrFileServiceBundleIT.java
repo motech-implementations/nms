@@ -1,5 +1,6 @@
 package org.motechproject.nms.imi.it;
 
+import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -11,11 +12,14 @@ import org.motechproject.nms.imi.service.CdrFileService;
 import org.motechproject.nms.imi.service.SettingsService;
 import org.motechproject.nms.imi.service.contract.VerifyResults;
 import org.motechproject.nms.imi.web.contract.FileInfo;
+import org.motechproject.nms.kilkari.domain.Subscription;
+import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.dto.CallDetailRecordDto;
 import org.motechproject.nms.kilkari.dto.CallSummaryRecordDto;
 import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.CallSummaryRecordDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
+import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.domain.FinalCallStatus;
 import org.motechproject.nms.props.domain.RequestId;
@@ -58,6 +62,9 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
     private SubscriptionService subscriptionService;
 
     @Inject
+    private SubscriptionDataService subscriptionDataService;
+
+    @Inject
     private SubscriberDataService subscriberDataService;
 
     @Inject
@@ -92,6 +99,13 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
 
     @Before
     public void cleanupDatabase() {
+        for (Subscription subscription: subscriptionDataService.retrieveAll()) {
+            subscription.setStatus(SubscriptionStatus.COMPLETED);
+            subscription.setEndDate(new DateTime().withDate(2011, 8, 1));
+
+            subscriptionDataService.update(subscription);
+        }
+
         subscriptionService.deleteAll();
         subscriberDataService.deleteAll();
         languageLocationDataService.deleteAll();
@@ -152,7 +166,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
                 languageDataService, languageLocationDataService, circleDataService, stateDataService,
                 districtDataService, fileAuditRecordDataService);
 
-        helper.makeCdrs(1,1,1,1);
+        helper.makeCdrs(1, 1, 1, 1);
         helper.makeCdrFile(2);
         FileInfo fileInfo = new FileInfo(helper.cdr(), helper.cdrChecksum(), helper.cdrCount());
         try {

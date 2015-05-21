@@ -14,8 +14,10 @@ import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
+import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
+import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
@@ -63,6 +65,9 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
     SubscriptionService subscriptionService;
 
     @Inject
+    SubscriptionDataService subscriptionDataService;
+
+    @Inject
     SubscriberDataService subscriberDataService;
 
     @Inject
@@ -90,6 +95,13 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
     SettingsService settingsService;
 
     private void setupDatabase() {
+        for (Subscription subscription: subscriptionDataService.retrieveAll()) {
+            subscription.setStatus(SubscriptionStatus.COMPLETED);
+            subscription.setEndDate(new DateTime().withDate(2011, 8, 1));
+
+            subscriptionDataService.update(subscription);
+        }
+
         subscriptionService.deleteAll();
         subscriberDataService.deleteAll();
         languageLocationDataService.deleteAll();

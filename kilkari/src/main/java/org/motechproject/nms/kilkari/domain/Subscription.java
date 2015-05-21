@@ -52,6 +52,9 @@ public class Subscription {
     private DateTime startDate;
 
     @Field
+    private DateTime endDate;
+
+    @Field
     private DayOfTheWeek startDayOfTheWeek;
 
     @Field
@@ -90,7 +93,15 @@ public class Subscription {
 
     public SubscriptionStatus getStatus() { return status; }
 
-    public void setStatus(SubscriptionStatus status) { this.status = status; }
+    public void setStatus(SubscriptionStatus status) {
+        this.status = status;
+
+        if (this.status == SubscriptionStatus.DEACTIVATED || this.status == SubscriptionStatus.COMPLETED) {
+            setEndDate(new DateTime());
+        } else {
+            setEndDate(null);
+        }
+    }
 
     public SubscriptionOrigin getOrigin() { return origin; }
 
@@ -101,6 +112,14 @@ public class Subscription {
     public void setStartDate(DateTime startDate) {
         this.startDate = startDate;
         this.startDayOfTheWeek = DayOfTheWeek.fromInt(startDate.getDayOfWeek());
+    }
+
+    public DateTime getEndDate() {
+        return endDate;
+    }
+
+    public void setEndDate(DateTime endDate) {
+        this.endDate = endDate;
     }
 
     public DayOfTheWeek getStartDayOfTheWeek() {
@@ -230,6 +249,7 @@ public class Subscription {
                 ", status=" + status +
                 ", origin=" + origin +
                 ", startDate=" + startDate +
+                ", endDate=" + endDate +
                 '}';
     }
 }
