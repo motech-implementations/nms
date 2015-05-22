@@ -11,6 +11,8 @@ import org.motechproject.nms.api.utils.RequestBuilder;
 import org.motechproject.nms.api.web.BaseController;
 import org.motechproject.nms.api.web.contract.mobileAcademy.CourseResponse;
 import org.motechproject.nms.api.web.contract.mobileAcademy.SaveBookmarkRequest;
+import org.motechproject.nms.api.web.contract.mobileAcademy.SmsStatusRequest;
+import org.motechproject.nms.api.web.contract.mobileAcademy.sms.RequestData;
 import org.motechproject.nms.api.web.converter.MobileAcademyConverter;
 import org.motechproject.nms.mobileacademy.domain.Course;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
@@ -155,6 +157,17 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
         when(mobileAcademyService.getCourse()).thenReturn(currentCourse);
 
         assertTrue(SimpleHttpClient.execHttpRequest(request, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
+    }
+
+    @Test
+    @Ignore
+    public void testSmsStatusInvalidFormat() throws IOException, InterruptedException {
+        String endpoint = String.format("http://localhost:%d/api/mobileacademy/smsdeliverystatus",
+                TestContext.getJettyPort());
+        SmsStatusRequest smsStatusRequest = new SmsStatusRequest();
+        smsStatusRequest.setRequestData(new RequestData());
+        HttpPost request = RequestBuilder.createPostRequest(endpoint, smsStatusRequest);
+        assertTrue(SimpleHttpClient.execHttpRequest(request, HttpStatus.SC_BAD_REQUEST, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
     }
 
 }

@@ -75,6 +75,7 @@
             <artifactId>spring-test-mvc</artifactId>
             <scope>test</scope>
         </dependency>
+
         <dependency>
             <groupId>org.modelmapper.extensions</groupId>
             <artifactId>modelmapper-spring</artifactId>
@@ -117,6 +118,7 @@
                             org.motechproject.nms.api.web.contract.kilkari,
                             org.motechproject.nms.api.web.contract.mobileAcademy,
                             org.motechproject.nms.api.web.contract.mobileAcademy.course,
+                            org.motechproject.nms.api.web.contract.mobileAcademy.sms,
                             org.motechproject.nms.api.web.converter,
                         </Export-Package>
                         <Import-Package>

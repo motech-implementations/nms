@@ -6,9 +6,10 @@ import org.motechproject.nms.api.web.contract.mobileAcademy.CourseResponse;
 import org.motechproject.nms.api.web.contract.mobileAcademy.CourseVersionResponse;
 import org.motechproject.nms.api.web.contract.mobileAcademy.GetBookmarkResponse;
 import org.motechproject.nms.api.web.contract.mobileAcademy.SaveBookmarkRequest;
-import org.motechproject.nms.api.web.contract.mobileAcademy.SmsStatus;
+import org.motechproject.nms.api.web.contract.mobileAcademy.SmsStatusRequest;
 import org.motechproject.nms.api.web.contract.mobileAcademy.sms.DeliveryInfo;
 import org.motechproject.nms.api.web.converter.MobileAcademyConverter;
+import org.motechproject.nms.api.web.validator.MobileAcademyValidator;
 import org.motechproject.nms.mobileacademy.domain.Course;
 import org.motechproject.nms.mobileacademy.dto.MaBookmark;
 import org.motechproject.nms.mobileacademy.exception.CourseNotCompletedException;
@@ -39,7 +40,7 @@ public class MobileAcademyController extends BaseController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MobileAcademyController.class);
 
-    private static final String SMS_STATUS = "nms.ma.sms.deliveryStatus";
+    private static final String SMS_STATUS_SUBJECT = "nms.ma.sms.deliveryStatus";
 
     /**
      * MA service to handle all business logic
@@ -163,7 +164,13 @@ public class MobileAcademyController extends BaseController {
             value = "/smsdeliverystatus",
             method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
-    public void saveSmsStatus(@RequestBody SmsStatus smsDeliveryStatus) {
+    public void saveSmsStatus(@RequestBody SmsStatusRequest smsDeliveryStatus) {
+
+        String errors = MobileAcademyValidator.validateSmsStatus(smsDeliveryStatus);
+
+        if (errors != null) {
+            throw new IllegalArgumentException(errors);
+        }
 
         //TODO: should this be refactored into IMI module or sms module?
         // we updated the completion record. Start event message to trigger notification workflow
@@ -172,7 +179,7 @@ public class MobileAcademyController extends BaseController {
         Map<String, Object> eventParams = new HashMap<>();
         eventParams.put("address", deliveryInfo.getAddress());
         eventParams.put("deliveryStatus", deliveryInfo.getDeliveryStatus().toString());
-        MotechEvent motechEvent = new MotechEvent(SMS_STATUS, eventParams);
+        MotechEvent motechEvent = new MotechEvent(SMS_STATUS_SUBJECT, eventParams);
         eventRelay.sendEventMessage(motechEvent);
         LOGGER.debug("Sent event message to process completion notification");
     }

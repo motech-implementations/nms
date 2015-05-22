@@ -1,14 +1,20 @@
 package org.motechproject.nms.api.web.contract.mobileAcademy.sms;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+
 /**
  * Contains sms delivery information
  */
 public class DeliveryInfoNotification {
 
+    @NotNull
     private String clientCorrelator;
 
     private String callbackData;
 
+    @Valid
+    @NotNull
     private DeliveryInfo deliveryInfo;
 
     public DeliveryInfoNotification() {

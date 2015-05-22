@@ -2,14 +2,19 @@ package org.motechproject.nms.api.web.contract.mobileAcademy;
 
 import org.motechproject.nms.api.web.contract.mobileAcademy.sms.RequestData;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+
 /**
  * Sms status object sent to NMS from IMI
  */
-public class SmsStatus {
+public class SmsStatusRequest {
 
+    @Valid
+    @NotNull
     private RequestData requestData;
 
-    public SmsStatus() {
+    public SmsStatusRequest() {
     }
 
     public RequestData getRequestData() {

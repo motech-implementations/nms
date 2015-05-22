@@ -34,9 +34,9 @@ import java.io.UnsupportedEncodingException;
 @Service("smsNotificationService")
 public class SmsNotificationServiceImpl implements SmsNotificationService {
 
-    private static final String COURSE_COMPLETED = "nms.ma.course.completed";
+    private static final String COURSE_COMPLETED_SUBJECT = "nms.ma.course.completed";
 
-    private static final String SMS_STATUS = "nms.ma.sms.deliveryStatus";
+    private static final String SMS_STATUS_SUBJECT = "nms.ma.sms.deliveryStatus";
 
     private static final String SMS_NOTIFICATION_URL = "imi.sms.notification.url";
 
@@ -61,7 +61,7 @@ public class SmsNotificationServiceImpl implements SmsNotificationService {
         this.settingsFacade = settingsFacade;
     }
 
-    @MotechListener(subjects = { COURSE_COMPLETED })
+    @MotechListener(subjects = {COURSE_COMPLETED_SUBJECT})
     public void sendSmsNotification(MotechEvent event) {
 
         LOGGER.debug("Handling course completion notification event");
@@ -71,16 +71,17 @@ public class SmsNotificationServiceImpl implements SmsNotificationService {
         if (cr == null) {
             // this should never be possible since the event dispatcher upstream adds the record
             LOGGER.error("No completion record found for callingNumber: " + callingNumber);
+            return;
         }
 
         cr.setSentNotification(sendNotificationRequest(callingNumber));
         completionRecordDataService.update(cr);
     }
 
-    @MotechListener(subjects = { SMS_STATUS })
+    @MotechListener(subjects = {SMS_STATUS_SUBJECT})
     public void updateSmsStatus(MotechEvent event) {
-        LOGGER.debug("Handling update sms delivery status event");
 
+        LOGGER.debug("Handling update sms delivery status event");
         String callingNumber = (String) event.getParameters().get("address");
         int startIndex = callingNumber.indexOf(':') + 2;
         callingNumber = callingNumber.substring(startIndex);
