@@ -18,6 +18,11 @@ public class ScpHelper {
     private static final String SCP_HOST = "imi.scp.host";
     private static final String SCP_IDENTITY = "imi.scp.identity";
 
+    private static final String LOCAL_OBD_DIR = "imi.local_obd_dir";
+    private static final String REMOTE_OBD_DIR = "imi.remote_obd_dir";
+    private static final String LOCAL_CDR_DIR = "imi.local_cdr_dir";
+    private static final String REMOTE_CDR_DIR = "imi.remote_cdr_dir";
+
     private SettingsFacade settingsFacade;
 
 
@@ -72,18 +77,55 @@ public class ScpHelper {
     }
 
 
-    public void copyFrom(String remoteSource, String localDestination) throws ExecException {
+    public String remoteCdrFile(String file) {
+        String remoteFile = settingsFacade.getProperty(REMOTE_CDR_DIR);
+        remoteFile += remoteFile.endsWith("/") ? "" : "/";
+        remoteFile += file;
+        return remoteFile;
+    }
+
+
+    public String localCdrFile(String file) {
+        String localFile = settingsFacade.getProperty(LOCAL_CDR_DIR);
+        localFile += localFile.endsWith("/") ? "" : "/";
+        localFile += file;
+        return localFile;
+    }
+
+
+    public void scpCdrFromRemote(String file) throws ExecException {
+
+        String localDir = settingsFacade.getProperty(LOCAL_CDR_DIR);
 
         String command = String.format("%s %s%s@%s:%s %s", getScpBinary(), identityOption(getScpIdentity()),
-                getScpUser(), getScpHost(), remoteSource, localDestination);
+                getScpUser(), getScpHost(), remoteCdrFile(file), localDir);
         ExecHelper execHelper = new ExecHelper();
         execHelper.exec(command, getScpTimeout());
     }
 
 
-    public void copyTo(String localSource, String remoteDestination) throws ExecException {
+    public String localObdFile(String file) {
+        String localFile = settingsFacade.getProperty(LOCAL_OBD_DIR);
+        localFile += localFile.endsWith("/") ? "" : "/";
+        localFile += file;
+        return localFile;
+    }
+
+
+    public String remoteObdFile(String file) {
+        String remoteFile = settingsFacade.getProperty(REMOTE_OBD_DIR);
+        remoteFile += remoteFile.endsWith("/") ? "" : "/";
+        remoteFile += file;
+        return remoteFile;
+    }
+
+
+    public void scpObdToRemote(String file) throws ExecException {
+
+        String remoteDir = settingsFacade.getProperty(REMOTE_OBD_DIR);
+
         String command = String.format("%s %s%s %s@%s:%s", getScpBinary(), identityOption(getScpIdentity()),
-                localSource, getScpUser(), getScpHost(), remoteDestination);
+                localObdFile(file), getScpUser(), getScpHost(), remoteDir);
         ExecHelper execHelper = new ExecHelper();
         execHelper.exec(command, getScpTimeout());
     }

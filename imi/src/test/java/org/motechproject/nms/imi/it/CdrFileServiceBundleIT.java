@@ -1,6 +1,7 @@
 package org.motechproject.nms.imi.it;
 
 import org.joda.time.DateTime;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -54,6 +55,13 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
 
     private static final String PROCESS_DETAIL_FILE = "nms.imi.kk.process_detail_file";
     private static final String FILE_INFO_PARAM_KEY = "fileInfo";
+    private static final String SCP_USER = "imi.scp.user";
+    private static final String SCP_HOST = "imi.scp.host";
+    private static final String SCP_IDENTITY = "imi.scp.identity";
+    private static final String LOCAL_OBD_DIR = "imi.local_obd_dir";
+    private static final String REMOTE_OBD_DIR = "imi.remote_obd_dir";
+    private static final String LOCAL_CDR_DIR = "imi.local_cdr_dir";
+    private static final String REMOTE_CDR_DIR = "imi.remote_cdr_dir";
 
     @Inject
     private SettingsService settingsService;
@@ -117,6 +125,57 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
     }
 
 
+    private String userBackup;
+    private String hostBackup;
+    private String identityBackup;
+    private String localCdrDirBackup;
+    private String remoteCdrDirBackup;
+    private String localObdDirBackup;
+    private String remoteObdDirBackup;
+
+
+
+    private String setupTestDir(String property, String dir) {
+        String backup = settingsService.getSettingsFacade().getProperty(property);
+        File directory = new File(System.getProperty("user.home"), dir);
+        directory.mkdirs();
+        settingsService.getSettingsFacade().setProperty(property, directory.getAbsolutePath());
+        return backup;
+    }
+
+
+    @Before
+    public void setupSettings() {
+        userBackup = settingsService.getSettingsFacade().getProperty(SCP_USER);
+        settingsService.getSettingsFacade().setProperty(SCP_USER, System.getProperty("user.name"));
+
+        hostBackup = settingsService.getSettingsFacade().getProperty(SCP_HOST);
+        settingsService.getSettingsFacade().setProperty(SCP_HOST, "localhost");
+
+        identityBackup = settingsService.getSettingsFacade().getProperty(SCP_IDENTITY);
+        settingsService.getSettingsFacade().setProperty(SCP_IDENTITY, "");
+
+        localCdrDirBackup = setupTestDir(LOCAL_CDR_DIR, "cdr-local-dir-it");
+        remoteCdrDirBackup = setupTestDir(REMOTE_CDR_DIR, "cdr-remote-dir-it");
+        localObdDirBackup = setupTestDir(LOCAL_OBD_DIR, "obd-local-dir-it");
+        remoteObdDirBackup = setupTestDir(REMOTE_OBD_DIR, "obd-remote-dir-it");
+    }
+
+
+    @After
+    public void restoreSettings() {
+        settingsService.getSettingsFacade().setProperty(SCP_USER, userBackup);
+        settingsService.getSettingsFacade().setProperty(SCP_HOST, hostBackup);
+        settingsService.getSettingsFacade().setProperty(SCP_IDENTITY, identityBackup);
+        settingsService.getSettingsFacade().setProperty(REMOTE_OBD_DIR, remoteObdDirBackup);
+        settingsService.getSettingsFacade().setProperty(LOCAL_OBD_DIR, localObdDirBackup);
+        settingsService.getSettingsFacade().setProperty(REMOTE_CDR_DIR, remoteCdrDirBackup);
+        settingsService.getSettingsFacade().setProperty(LOCAL_CDR_DIR, localCdrDirBackup);
+
+    }
+
+
+
     @Test
     public void testServicePresent() {
         getLogger().debug("testServicePresent()");
@@ -133,8 +192,8 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
                 districtDataService, fileAuditRecordDataService);
 
         helper.makeCdrs(1,1,1,1);
-        helper.makeCdrFile();
-        FileInfo fileInfo = new FileInfo(helper.cdr(), helper.cdrChecksum(), helper.cdrCount());
+        helper.makeLocalCdrFile();
+        FileInfo fileInfo = new FileInfo(helper.cdr(), helper.cdrLocalChecksum(), helper.cdrCount());
         Map<String, Object> eventParams = new HashMap<>();
         VerifyResults result = cdrFileService.verifyDetailFile(fileInfo);
         assertEquals(0, result.getErrors().size());
@@ -150,7 +209,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
                 districtDataService, fileAuditRecordDataService);
 
         helper.makeCdrs(1, 1, 1, 1);
-        helper.makeCdrFile();
+        helper.makeLocalCdrFile();
         FileInfo fileInfo = new FileInfo(helper.cdr(), "invalid checksum", helper.cdrCount());
         VerifyResults result = cdrFileService.verifyDetailFile(fileInfo);
         assertEquals(0, result.getRecords().size()); //verifyDetailFile does not populate VerifyResults.records
@@ -167,8 +226,8 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
                 districtDataService, fileAuditRecordDataService);
 
         helper.makeCdrs(1, 1, 1, 1);
-        helper.makeCdrFile(2);
-        FileInfo fileInfo = new FileInfo(helper.cdr(), helper.cdrChecksum(), helper.cdrCount());
+        helper.makeLocalCdrFile(2);
+        FileInfo fileInfo = new FileInfo(helper.cdr(), helper.cdrLocalChecksum(), helper.cdrCount());
         try {
             cdrFileService.verifyDetailFile(fileInfo);
         } catch (InvalidCdrFileException e) {
@@ -186,8 +245,8 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
                 districtDataService, fileAuditRecordDataService);
 
         helper.makeCdrs(200,0,0,0);
-        helper.makeCdrFile(200);
-        FileInfo fileInfo = new FileInfo(helper.cdr(), helper.cdrChecksum(), helper.cdrCount());
+        helper.makeLocalCdrFile(200);
+        FileInfo fileInfo = new FileInfo(helper.cdr(), helper.cdrLocalChecksum(), helper.cdrCount());
         try {
             cdrFileService.verifyDetailFile(fileInfo);
         } catch (InvalidCdrFileException e) {
@@ -207,9 +266,9 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
                 districtDataService, fileAuditRecordDataService);
 
         helper.makeCdrs(1,1,1,1);
-        helper.makeCdrFile();
+        helper.makeLocalCdrFile();
         Map<String, Object> eventParams = new HashMap<>();
-        eventParams.put(FILE_INFO_PARAM_KEY, helper.cdrFileInfo());
+        eventParams.put(FILE_INFO_PARAM_KEY, helper.cdrLocalFileInfo());
         MotechEvent motechEvent = new MotechEvent(PROCESS_DETAIL_FILE, eventParams);
         List<String> errors = cdrFileService.processDetailFile(motechEvent);
         assertEquals(0, errors.size());
@@ -232,9 +291,9 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         String sid2 = cdrs.get(cdrs.size()-1).getRequestId().getSubscriptionId();
 
         Collections.shuffle(helper.getCrds());
-        File cdrFile = helper.makeCdrFile();
+        File cdrFile = helper.makeLocalCdrFile();
 
-        VerifyResults results = cdrFileService.aggregateDetailFile(cdrFile, helper.cdrFileInfo(), false);
+        VerifyResults results = cdrFileService.aggregateDetailFile(cdrFile, helper.cdrLocalFileInfo(), false);
 
         Map<String, CallSummaryRecordDto> records = results.getRecords();
         assertEquals(2, records.size());

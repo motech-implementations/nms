@@ -58,7 +58,7 @@ import java.util.Map;
 public class CdrFileServiceImpl implements CdrFileService {
 
     private static final String CDR_FILE_NOTIFICATION_URL = "imi.cdr_file_notification_url";
-    private static final String CDR_FILE_DIRECTORY = "imi.cdr_file_directory";
+    private static final String LOCAL_CDR_DIR = "imi.local_cdr_dir";
     private static final String MAX_CDR_ERROR_COUNT = "imi.max_cdr_error_count";
     private static final int MAX_CDR_ERROR_COUNT_DEFAULT = 100;
     private static final String PROCESS_SUMMARY_RECORD = "nms.imi.kk.process_summary_record";
@@ -290,14 +290,17 @@ public class CdrFileServiceImpl implements CdrFileService {
     }
 
 
+    private File localCdrDir() {
+        return new File(settingsFacade.getProperty(LOCAL_CDR_DIR));
+    }
+
+
     // Phase 1: verify the file exists, the csv is valid and its record count and checksum match the provided info
     //          while collecting a list of errors on the go.
     //          Does not proceed to phase 2 if any error occurred and returns an error
     @Override
     public VerifyResults verifyDetailFile(FileInfo fileInfo) {
-        File userDirectory = new File(System.getProperty("user.home"));
-        File cdrDirectory = new File(userDirectory, settingsFacade.getProperty(CDR_FILE_DIRECTORY));
-        File file = new File(cdrDirectory, fileInfo.getCdrFile());
+        File file = new File(localCdrDir(), fileInfo.getCdrFile());
 
         VerifyResults results = aggregateDetailFile(file, fileInfo, true);
         if (results.getErrors().size() > 0) {
@@ -319,9 +322,7 @@ public class CdrFileServiceImpl implements CdrFileService {
     @MotechListener(subjects = { PROCESS_DETAIL_FILE })
     public List<String> processDetailFile(MotechEvent event) {
         FileInfo fileInfo = (FileInfo) event.getParameters().get(FILE_INFO_PARAM_KEY);
-        File userDirectory = new File(System.getProperty("user.home"));
-        File cdrDirectory = new File(userDirectory, settingsFacade.getProperty(CDR_FILE_DIRECTORY));
-        File file = new File(cdrDirectory, fileInfo.getCdrFile());
+        File file = new File(localCdrDir(), fileInfo.getCdrFile());
 
         VerifyResults results = aggregateDetailFile(file, fileInfo, false);
         if (results.getErrors().size() > 0) {

@@ -147,16 +147,17 @@ public class ImiController {
         verifyFileExistsInAuditRecord(request.getFileName());
 
 
-        // Copy the file from the IMI network share into the directory provided in imi.cdr_file_directory
+        // Copy the file from the IMI network share (imi.remote_cdr_dir) into local cdr dir (imi.local_cdr_dir)
         ScpHelper scpHelper = new ScpHelper(settingsFacade);
+        String fileName = request.getCdrDetail().getCdrFile();
         try {
-            scpHelper.copyFrom(request.getFileName(), request.getFileName());
+            scpHelper.scpCdrFromRemote(fileName);
         } catch (ExecException e) {
-            String error = String.format("Error copying CDR file %s: %s", request.getFileName(), e.getMessage());
+            String error = String.format("Error copying CDR file %s: %s", fileName, e.getMessage());
             LOGGER.error(error);
             fileAuditRecordDataService.create(new FileAuditRecord(
                     FileType.CDR_DETAIL_FILE,
-                    request.getFileName(),
+                    fileName,
                     false,
                     error,
                     null,
@@ -210,10 +211,10 @@ public class ImiController {
     }
 
 
-    @ExceptionHandler({ IllegalArgumentException.class, IllegalStateException.class })
+    @ExceptionHandler({ RuntimeException.class })
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ResponseBody
-    public BadRequest handleException(IllegalArgumentException e) {
+    public BadRequest handleException(RuntimeException e) {
         return new BadRequest(e.getMessage());
     }
 

@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 
 public class ExecHelper {
@@ -57,38 +58,49 @@ public class ExecHelper {
     }
 
 
-    private static String stderr(Process p) {
-        StringBuilder sb = new StringBuilder();
-        BufferedReader b = new BufferedReader(new InputStreamReader(p.getErrorStream()));
-        String line;
-
-        try {
-            while ((line = b.readLine()) != null) {
-                sb.append(line);
-                sb.append('\n');
-            }
-
-            b.close();
-        } catch (IOException e) {
-            LOGGER.error("Error trying to retrieve scp error message: {}", e.getMessage(), e);
-        }
-        return sb.toString();
-    }
 
 
     private final class Worker extends Thread {
+
+        private final Logger logger = LoggerFactory.getLogger(Worker.class);
+
+        private String stream(InputStream is) {
+            StringBuilder sb = new StringBuilder();
+            BufferedReader b = new BufferedReader(new InputStreamReader(is));
+            String line;
+
+            try {
+                while ((line = b.readLine()) != null) {
+                    sb.append(line);
+                    sb.append('\n');
+                }
+
+                b.close();
+            } catch (IOException e) {
+                logger.error("Error trying to retrieve scp stream: {}", e.getMessage(), e);
+            }
+            return sb.toString();
+        }
+
         private final Process process;
         private Integer exit;
         private Worker(Process process) {
             this.process = process;
         }
         public void run() {
+            logger.debug("run()");
             try {
+                logger.debug("waitFor()");
                 exit = process.waitFor();
                 if (exit != 0) {
-                    error = stderr(process);
+                    error = stream(process.getErrorStream());
+                    logger.error(error);
+                } else {
+                    logger.debug("success: {}", stream(process.getInputStream()));
                 }
-            } catch (InterruptedException ignore) { }
+            } catch (InterruptedException ignore) {
+                logger.debug("InterruptedException: {}", ignore.getMessage());
+            }
         }
     }
 }

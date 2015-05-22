@@ -43,6 +43,9 @@ public class CdrHelper {
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormat.forPattern("yyyyMMddHHmmss");
     private static final Logger LOGGER = LoggerFactory.getLogger(CdrHelper.class);
 
+    public static final String LOCAL_CDR_DIR_PROP = "imi.local_cdr_dir";
+    public static final String REMOTE_CDR_DIR_PROP = "imi.remote_cdr_dir";
+
     private static final int CHILD_PACK_WEEKS = 48;
     private final String TEST_OBD_TIMESTAMP;
     private final String TEST_OBD_FILENAME;
@@ -61,7 +64,7 @@ public class CdrHelper {
                      LanguageLocationDataService languageLocationDataService,
                      CircleDataService circleDataService, StateDataService stateDataService,
                      DistrictDataService districtDataService,
-                     FileAuditRecordDataService fileAuditRecordDataService) {
+                     FileAuditRecordDataService fileAuditRecordDataService) throws IOException {
 
         sh = new SubscriptionHelper(subscriptionService, subscriberDataService,
                 languageDataService, languageLocationDataService, circleDataService, stateDataService,
@@ -74,11 +77,6 @@ public class CdrHelper {
         TEST_OBD_FILENAME = String.format("OBD_%s.csv", TEST_OBD_TIMESTAMP);
         TEST_CDR_DETAIL_FILENAME = String.format("cdrDetail_%s", TEST_OBD_FILENAME);
         TEST_CDR_SUMMARY_FILENAME = String.format("cdrSummary_%s", TEST_OBD_FILENAME);
-    }
-
-
-    public void setCrds(List<CallDetailRecordDto> cdrs) {
-        this.cdrs = cdrs;
     }
 
 
@@ -204,24 +202,6 @@ public class CdrHelper {
     }
 
 
-    public File cdrDirectory() {
-        File userDir = new File(System.getProperty("user.home"));
-        String cdrDirProp = settingsService.getSettingsFacade().getProperty("imi.cdr_file_directory");
-        return new File(userDir, cdrDirProp);
-    }
-
-
-    public File makeCdrDirectory() throws IOException {
-        File dstDirectory = cdrDirectory();
-        if (dstDirectory.mkdirs()) {
-            LOGGER.debug("Created required directories for {}", dstDirectory);
-        } else {
-            LOGGER.debug("Required directories all exist for {}", dstDirectory);
-        }
-        return dstDirectory;
-    }
-
-
     public int cdrCount() {
         return cdrs.size();
     }
@@ -306,16 +286,34 @@ public class CdrHelper {
     }
 
 
-    public void makeCsrFile() throws IOException {
-        File dstFile = new File(makeCdrDirectory(), csr());
-        LOGGER.debug("Creating summary file {}...", dstFile);
-        BufferedWriter writer = new BufferedWriter(new FileWriter(dstFile));
+    public String remoteDir() {
+        return settingsService.getSettingsFacade().getProperty(REMOTE_CDR_DIR_PROP);
+    }
+
+
+    public String localDir() {
+        return settingsService.getSettingsFacade().getProperty(LOCAL_CDR_DIR_PROP);
+    }
+
+
+    private void makeCsrFile(String dir) throws IOException {
+        File file = new File(dir, csr());
+        LOGGER.debug("Creating summary file {}...", file);
+        BufferedWriter writer = new BufferedWriter(new FileWriter(file));
 
         //We ignore CDR Summary files, do nothing.
 
         writer.close();
     }
 
+
+    public void makeLocalCsrFile() throws IOException {
+        makeCsrFile(localDir());
+    }
+
+    public void makeRemoteCsrFile() throws IOException {
+        makeCsrFile(remoteDir());
+    }
 
     public void createObdFileAuditRecord(boolean valid, boolean success) throws IOException, NoSuchAlgorithmException {
         fileAuditRecordDataService.create(new FileAuditRecord(
@@ -329,33 +327,43 @@ public class CdrHelper {
     }
 
 
-    public File doMakeCdrFile(int numInvalidLines) throws IOException {
-        File dstFile = new File(makeCdrDirectory(), cdr());
-        LOGGER.debug("Creating detail file {}...", dstFile);
-        BufferedWriter writer = new BufferedWriter(new FileWriter(dstFile));
+    private File doMakeCdrFile(String dir, int numInvalidLines) throws IOException {
+        File file = new File(dir, cdr());
+        LOGGER.debug("Creating detail file {}...", file);
+        BufferedWriter writer = new BufferedWriter(new FileWriter(file));
 
-        int remainingImvalidLines = numInvalidLines;
+        int remainingInvalidLines = numInvalidLines;
         for(CallDetailRecordDto cdr : cdrs) {
             writer.write(csvLineFromCdr(cdr));
-            if (remainingImvalidLines > 0) {
-                writer.write(",this,is,bogus,csv");
-                remainingImvalidLines--;
+            if (remainingInvalidLines > 0) {
+                writer.write(",invalid_field");
+                remainingInvalidLines--;
             }
             writer.write("\n");
         }
 
         writer.close();
-        return dstFile;
+        return file;
     }
 
 
-    public File makeCdrFile() throws IOException {
-        return doMakeCdrFile(0);
+    public File makeLocalCdrFile() throws IOException {
+        return doMakeCdrFile(localDir(), 0);
     }
 
 
-    public File makeCdrFile(int numInvalidLines) throws IOException {
-        return doMakeCdrFile(numInvalidLines);
+    public File makeLocalCdrFile(int numInvalidLines) throws IOException {
+        return doMakeCdrFile(localDir(), numInvalidLines);
+    }
+
+
+    public File makeRemoteCdrFile() throws IOException {
+        return doMakeCdrFile(remoteDir(), 0);
+    }
+
+
+    public File makeRemoteCdrFile(String dir, int numInvalidLines) throws IOException {
+        return doMakeCdrFile(remoteDir(), numInvalidLines);
     }
 
 
@@ -366,25 +374,34 @@ public class CdrHelper {
         MessageDigest md = MessageDigest.getInstance("MD5");
         DigestInputStream dis = new DigestInputStream(fis, md);
 
-        String line;
-        while ((line = reader.readLine()) != null) { }
+        while (reader.readLine() != null) { }
 
         return new String(Hex.encodeHex(md.digest()));
     }
 
 
-    public String csrChecksum() throws IOException, NoSuchAlgorithmException {
-        return checksum(new File(cdrDirectory(), csr()));
+    public String csrLocalChecksum() throws IOException, NoSuchAlgorithmException {
+        return checksum(new File(localDir(), csr()));
     }
 
 
-    public String cdrChecksum() throws IOException, NoSuchAlgorithmException {
-        return checksum(new File(cdrDirectory(), cdr()));
+    public String cdrLocalChecksum() throws IOException, NoSuchAlgorithmException {
+        return checksum(new File(localDir(), cdr()));
     }
 
 
-    public FileInfo cdrFileInfo() throws IOException, NoSuchAlgorithmException {
-        return new FileInfo(cdr(), cdrChecksum(), cdrCount());
+    public String csrRemoteChecksum() throws IOException, NoSuchAlgorithmException {
+        return checksum(new File(remoteDir(), csr()));
+    }
+
+
+    public String cdrRemoteChecksum() throws IOException, NoSuchAlgorithmException {
+        return checksum(new File(remoteDir(), cdr()));
+    }
+
+
+    public FileInfo cdrLocalFileInfo() throws IOException, NoSuchAlgorithmException {
+        return new FileInfo(cdr(), cdrLocalChecksum(), cdrCount());
 
     }
 }
