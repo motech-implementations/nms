@@ -40,6 +40,13 @@
             <version>${motech.version}</version>
         </dependency>
 
+        <!-- Alerts -->
+        <dependency>
+            <groupId>org.motechproject</groupId>
+            <artifactId>alerts</artifactId>
+            <version>${motech.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>commons-fileupload</groupId>
             <artifactId>commons-fileupload</artifactId>

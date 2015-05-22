@@ -1,5 +1,8 @@
 package org.motechproject.nms.region.controller;
 
+import org.motechproject.alerts.contract.AlertService;
+import org.motechproject.alerts.domain.AlertStatus;
+import org.motechproject.alerts.domain.AlertType;
 import org.motechproject.nms.region.exception.CsvImportException;
 import org.motechproject.nms.region.service.CensusVillageImportService;
 import org.motechproject.nms.region.service.DistrictImportService;
@@ -7,9 +10,10 @@ import org.motechproject.nms.region.service.HealthBlockImportService;
 import org.motechproject.nms.region.service.HealthFacilityImportService;
 import org.motechproject.nms.region.service.HealthSubFacilityImportService;
 import org.motechproject.nms.region.service.LocationDataImportService;
-import org.motechproject.nms.region.service.LoggingService;
 import org.motechproject.nms.region.service.NonCensusVillageImportService;
 import org.motechproject.nms.region.service.TalukaImportService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -29,7 +33,9 @@ import java.util.Map;
 @Controller
 public class LocationDataImportController {
 
-    private LoggingService loggingService;
+    private static final Logger LOGGER = LoggerFactory.getLogger(LocationDataImportController.class);
+
+    private AlertService alertService;
 
     private DistrictImportService districtImportService;
     private TalukaImportService talukaImportService;
@@ -54,12 +60,18 @@ public class LocationDataImportController {
                 }
             }
         } catch (CsvImportException e) {
-            loggingService.logError(e.getMessage());
+            logError(location, e);
             throw e;
         } catch (Exception e) {
-            loggingService.logError(e.getMessage());
+            logError(location, e);
             throw new CsvImportException("An error occurred during CSV import", e);
         }
+    }
+
+    private void logError(String location, Exception exception) {
+        LOGGER.error(exception.getMessage(), exception);
+        alertService.create("location_data_import_error", String.format("Location data import error: %s", location),
+                exception.getMessage(), AlertType.CRITICAL, AlertStatus.NEW, 0, null);
     }
 
     @ExceptionHandler(CsvImportException.class)
@@ -68,8 +80,8 @@ public class LocationDataImportController {
     }
 
     @Autowired
-    public void setLoggingService(LoggingService loggingService) {
-        this.loggingService = loggingService;
+    public void setAlertService(AlertService alertService) {
+        this.alertService = alertService;
     }
 
     @Autowired
