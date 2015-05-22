@@ -44,7 +44,7 @@ public class SmsNotificationServiceImpl implements SmsNotificationService {
 
     private static final String CALLBACK_URL = "imi.sms.status.callback.url";
 
-    private static final String SMS_SENDER_ID = "imi.sms.sender.id";
+    private static final String SMS_SENDER_ID = "imi.sms.sender.id2345";
 
     private static final String SMS_TEMPLATE_FILE = "smsTemplate.json";
 
@@ -88,6 +88,12 @@ public class SmsNotificationServiceImpl implements SmsNotificationService {
         CompletionRecord cr = completionRecordDataService.findRecordByCallingNumber(
                 Long.parseLong(callingNumber));
 
+        if (cr == null) {
+            // this should never be possible since the event dispatcher upstream adds the record
+            LOGGER.error("No completion record found for callingNumber: " + callingNumber);
+            return;
+        }
+
         cr.setLastDeliveryStatus((String) event.getParameters().get("deliveryStatus"));
         completionRecordDataService.update(cr);
     }
@@ -127,10 +133,16 @@ public class SmsNotificationServiceImpl implements SmsNotificationService {
     private HttpPost prepareSmsRequest(Long callingNumber) {
 
         String senderId = settingsFacade.getProperty(SMS_SENDER_ID);
-        String endpoint = settingsFacade.getProperty(SMS_NOTIFICATION_URL).replace("senderId", senderId);
+        String endpoint = settingsFacade.getProperty(SMS_NOTIFICATION_URL);
         String messageContent = settingsFacade.getProperty(SMS_MESSAGE_CONTENT);
         String callbackEndpoint = settingsFacade.getProperty(CALLBACK_URL);
 
+        if (senderId == null || endpoint == null || messageContent == null || callbackEndpoint == null) {
+            // TODO: raise alert as well.
+            LOGGER.error("Unable to find sms settings. Check IMI sms gateway settings");
+            return null;
+        }
+        endpoint = endpoint.replace("senderId", senderId);
         HttpPost request = new HttpPost(endpoint);
         request.setHeader("Content-type", "application/json");
 

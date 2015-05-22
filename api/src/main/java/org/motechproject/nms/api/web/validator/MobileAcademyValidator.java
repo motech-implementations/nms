@@ -7,6 +7,7 @@ import org.motechproject.nms.api.web.contract.mobileAcademy.course.Lesson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import javax.validation.Validator;
