@@ -7,6 +7,7 @@ import org.motechproject.mds.service.MotechDataService;
 import org.motechproject.nms.region.exception.CsvImportDataException;
 import org.motechproject.nms.region.utils.CsvImporter;
 import org.motechproject.nms.region.utils.GetInstanceByLong;
+import org.motechproject.nms.region.utils.GetInteger;
 import org.motechproject.nms.region.utils.GetLong;
 import org.motechproject.nms.region.utils.GetString;
 import org.supercsv.cellprocessor.ift.CellProcessor;
@@ -36,6 +37,8 @@ public class CsvImportTest {
 
     private CsvImporter<Sample> csvImporter;
 
+    private GetInteger getInteger;
+
     private GetLong getLong;
 
     private GetString getString;
@@ -46,6 +49,7 @@ public class CsvImportTest {
     public void setUp() throws Exception {
         initMocks(this);
         csvImporter = new CsvImporter<>(Sample.class);
+        getInteger = new GetInteger();
         getLong = new GetLong();
         getString = new GetString();
         getSampleById = new GetInstanceByLong<Sample>() {
@@ -89,6 +93,17 @@ public class CsvImportTest {
         Reader reader = new StringReader("n,s,o\n12,,1");
         csvImporter.open(reader, getFieldNameMapping(), getProcessorMapping());
         csvImporter.read();
+    }
+
+    @Test
+    public void testGetIntegerWhenInputIsValid() throws Exception {
+        assertEquals(12, getInteger.execute("12", csvContext));
+        assertEquals(12, getInteger.execute(12, csvContext));
+    }
+
+    @Test(expected = CsvImportDataException.class)
+    public void testGetIntegerWhenInputIsNull() throws Exception {
+        getInteger.execute(null, csvContext);
     }
 
     @Test

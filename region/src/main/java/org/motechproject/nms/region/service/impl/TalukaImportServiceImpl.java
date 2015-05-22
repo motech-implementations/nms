@@ -4,8 +4,9 @@ import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.TalukaDataService;
+import org.motechproject.nms.region.service.TalukaImportService;
 import org.motechproject.nms.region.utils.GetInstanceByLong;
-import org.motechproject.nms.region.utils.GetLong;
+import org.motechproject.nms.region.utils.GetInteger;
 import org.motechproject.nms.region.utils.GetString;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -15,7 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Service("talukaImportService")
-public class TalukaImportServiceImpl extends BaseLocationImportService<Taluka> {
+public class TalukaImportServiceImpl extends BaseLocationImportService<Taluka> implements TalukaImportService {
 
     public static final String TALUKA_CODE = "TCode";
     public static final String IDENTITY = "ID";
@@ -41,7 +42,7 @@ public class TalukaImportServiceImpl extends BaseLocationImportService<Taluka> {
     protected Map<String, CellProcessor> getProcessorMapping() {
         Map<String, CellProcessor> mapping = new HashMap<>();
         mapping.put(TALUKA_CODE, new GetString());
-        mapping.put(IDENTITY, new GetLong());
+        mapping.put(IDENTITY, new GetInteger());
         mapping.put(REGIONAL_NAME, new GetString());
         mapping.put(NAME, new GetString());
         mapping.put(DISTRICT_CODE, new GetInstanceByLong<District>() {

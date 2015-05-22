@@ -10,7 +10,8 @@ import org.junit.runners.Suite;
 @Suite.SuiteClasses({
     LocationServiceBundleIT.class,
     CircleServiceBundleIT.class,
-    NationalDefaultLanguageLocationBundleIT.class
+    NationalDefaultLanguageLocationBundleIT.class,
+    LocationDataImportServiceBundleIT.class
 })
 public class IntegrationTests {
 }

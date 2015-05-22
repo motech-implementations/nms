@@ -4,6 +4,7 @@ import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.domain.Village;
 import org.motechproject.nms.region.repository.TalukaDataService;
 import org.motechproject.nms.region.repository.VillageDataService;
+import org.motechproject.nms.region.service.NonCensusVillageImportService;
 import org.motechproject.nms.region.utils.GetInstanceByString;
 import org.motechproject.nms.region.utils.GetLong;
 import org.motechproject.nms.region.utils.GetString;
@@ -16,13 +17,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Service("nonCensusVillageImportService")
-public class NonCensusVillageImportServiceImpl extends BaseLocationImportService<Village> {
+public class NonCensusVillageImportServiceImpl extends BaseLocationImportService<Village> implements NonCensusVillageImportService {
 
     public static final String SVID = "SVID";
     public static final String REGIONAL_NAME = "Name_G";
     public static final String NAME = "Name_E";
     public static final String TALUKA_CODE = "TCode";
-//    public static final String DISTRICT_CODE = "DCode"; // TODO: present in the schema, missing in the data model
     public static final String VILLAGE_CODE = "VCode";
 
     public static final String SVID_FIELD = "svid";
