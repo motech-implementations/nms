@@ -18,7 +18,7 @@ public enum FinalCallStatus {
         return value;
     }
 
-    public static boolean isValid(int i) {
+    public static boolean isValidEnumValue(int i) {
         return (i == 1 || i ==2 || i == 3);
     }
 

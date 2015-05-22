@@ -61,10 +61,12 @@ public class CdrFileServiceImpl implements CdrFileService {
     private static final String LOCAL_CDR_DIR = "imi.local_cdr_dir";
     private static final String MAX_CDR_ERROR_COUNT = "imi.max_cdr_error_count";
     private static final int MAX_CDR_ERROR_COUNT_DEFAULT = 100;
-    private static final String PROCESS_SUMMARY_RECORD = "nms.imi.kk.process_summary_record";
+    private static final String PROCESS_SUMMARY_RECORD_SUBJECT = "nms.imi.kk.process_summary_record";
     private static final String CSR_PARAM_KEY = "csr";
-    private static final String PROCESS_DETAIL_FILE = "nms.imi.kk.process_detail_file";
+    private static final String PROCESS_DETAIL_FILE_SUBJECT = "nms.imi.kk.process_detail_file";
     private static final String FILE_INFO_PARAM_KEY = "fileInfo";
+    private static final String MAX_NOTIFICATION_RETRY_COUNT = "imi.notification_retry_count";
+    private static final int MAX_NOTIFICATION_RETRY_COUNT_DEFAULT = 3;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CdrFileServiceImpl.class);
 
@@ -111,27 +113,49 @@ public class CdrFileServiceImpl implements CdrFileService {
         String notificationUrl = settingsFacade.getProperty(CDR_FILE_NOTIFICATION_URL);
         LOGGER.debug("Sending {} to {}", cfpn, notificationUrl);
 
+        int maxRetryCount;
         try {
-            HttpClient httpClient = HttpClients.createDefault();
-            HttpPost httpPost = new HttpPost(notificationUrl);
-            ObjectMapper mapper = new ObjectMapper();
-            String requestJson = mapper.writeValueAsString(cfpn);
-            httpPost.setHeader("Content-type", "application/json");
-            httpPost.setEntity(new StringEntity(requestJson));
-            HttpResponse response = httpClient.execute(httpPost);
-            int responseCode = response.getStatusLine().getStatusCode();
-            if (responseCode != HttpStatus.SC_OK) {
-                String error = String.format("Expecting HTTP 200 response from %s but received HTTP %d : %s ",
-                        notificationUrl, responseCode, EntityUtils.toString(response.getEntity()));
-                LOGGER.error(error);
-                alertService.create("cdrFile notification request", cfpn.getFileName(), error,
-                        AlertType.CRITICAL, AlertStatus.NEW, 0, null);
-            }
-        } catch (IOException e) {
-            LOGGER.error("Unable to send cdrFile notification request: {}", e.getMessage());
-            alertService.create("cdrFile notification request", cfpn.getFileName(), e.getMessage(),
-                    AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            maxRetryCount = Integer.parseInt(settingsFacade.getProperty(MAX_NOTIFICATION_RETRY_COUNT));
+        } catch (NumberFormatException e) {
+            maxRetryCount = MAX_NOTIFICATION_RETRY_COUNT_DEFAULT;
         }
+        int count = 0;
+
+        String error = "";
+
+        while (count < maxRetryCount) {
+            try {
+                HttpClient httpClient = HttpClients.createDefault();
+                HttpPost httpPost = new HttpPost(notificationUrl);
+                ObjectMapper mapper = new ObjectMapper();
+                String requestJson = mapper.writeValueAsString(cfpn);
+                httpPost.setHeader("Content-type", "application/json");
+                httpPost.setEntity(new StringEntity(requestJson));
+                HttpResponse response = httpClient.execute(httpPost);
+                int responseCode = response.getStatusLine().getStatusCode();
+                if (responseCode == HttpStatus.SC_OK) {
+                    return;
+                } else {
+                    error = String.format("Expecting HTTP 200 response from %s but received HTTP %d : %s ",
+                            notificationUrl, responseCode, EntityUtils.toString(response.getEntity()));
+                    LOGGER.warn(error);
+                    alertService.create(cfpn.getFileName(), "cdrFile notification request", error,
+                            AlertType.MEDIUM, AlertStatus.NEW, 0, null);
+                }
+            } catch (IOException e) {
+                error = String.format("Unable to send cdrFile notification request: %s", e.getMessage());
+                LOGGER.warn(error);
+                alertService.create(cfpn.getFileName(), "cdrFile notification request", error,
+                        AlertType.MEDIUM, AlertStatus.NEW, 0, null);
+            }
+            count++;
+        }
+
+        // Retry count exceeded, consider this a critical error
+        LOGGER.error(error);
+        alertService.create(cfpn.getFileName(), "cdrFile notification request", error,
+                AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+
     }
 
 
@@ -277,7 +301,7 @@ public class CdrFileServiceImpl implements CdrFileService {
     private void sendProcessDetailFileEvent(FileInfo fileInfo) {
         Map<String, Object> eventParams = new HashMap<>();
         eventParams.put(FILE_INFO_PARAM_KEY, fileInfo);
-        MotechEvent motechEvent = new MotechEvent(PROCESS_DETAIL_FILE, eventParams);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_DETAIL_FILE_SUBJECT, eventParams);
         eventRelay.sendEventMessage(motechEvent);
     }
 
@@ -285,7 +309,7 @@ public class CdrFileServiceImpl implements CdrFileService {
     private void sendProcessSummaryRecordEvent(CallSummaryRecordDto record) {
         Map<String, Object> eventParams = new HashMap<>();
         eventParams.put(CSR_PARAM_KEY, record);
-        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD, eventParams);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
         eventRelay.sendEventMessage(motechEvent);
     }
 
@@ -319,7 +343,7 @@ public class CdrFileServiceImpl implements CdrFileService {
     //          Validate all CallSummaryRecord fields exist in the database
     //          Stop processing if errors occurred
     @Override
-    @MotechListener(subjects = { PROCESS_DETAIL_FILE })
+    @MotechListener(subjects = {PROCESS_DETAIL_FILE_SUBJECT})
     public List<String> processDetailFile(MotechEvent event) {
         FileInfo fileInfo = (FileInfo) event.getParameters().get(FILE_INFO_PARAM_KEY);
         File file = new File(localCdrDir(), fileInfo.getCdrFile());
@@ -337,6 +361,13 @@ public class CdrFileServiceImpl implements CdrFileService {
             reportAuditAndPost(fileInfo.getCdrFile(), errors);
             return results.getErrors();
         }
+
+        // We processed as much as we can, let IMI know before distributing the work to phase 3
+        sendNotificationRequest(new CdrFileProcessedNotification(
+                FileProcessedStatus.FILE_PROCESSED_SUCCESSFULLY.getValue(),
+                fileInfo.getCdrFile(),
+                null
+        ));
 
         // Phase 3: distribute the processing of individual CSRs to all nodes.
         //          each node may generate an individual error that NMS-OPS will have to respond to.

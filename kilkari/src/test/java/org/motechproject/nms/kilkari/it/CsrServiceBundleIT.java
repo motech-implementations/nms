@@ -60,7 +60,7 @@ import static org.junit.Assert.assertTrue;
 @ExamFactory(MotechNativeTestContainerFactory.class)
 public class CsrServiceBundleIT extends BasePaxIT {
 
-    private static final String PROCESS_SUMMARY_RECORD = "nms.imi.kk.process_summary_record";
+    private static final String PROCESS_SUMMARY_RECORD_SUBJECT = "nms.imi.kk.process_summary_record";
     private static final String CSR_PARAM_KEY = "csr";
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormat.forPattern("yyyyMMddHHmmss");
 
@@ -242,7 +242,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
         Map<String, Object> eventParams = new HashMap<>();
         eventParams.put(CSR_PARAM_KEY, csr);
-        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD, eventParams);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
         csrService.processCallSummaryRecord(motechEvent);
     }
 
@@ -303,7 +303,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
         Map<String, Object> eventParams = new HashMap<>();
         eventParams.put(CSR_PARAM_KEY, csr);
-        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD, eventParams);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
         csrService.processCallSummaryRecord(motechEvent);
 
         subscription = subscriptionDataService.findBySubscriptionId(subscription.getSubscriptionId());
@@ -326,7 +326,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
         for (CallSummaryRecordDto record : helper.getRecords()) {
             Map<String, Object> eventParams = new HashMap<>();
             eventParams.put(CSR_PARAM_KEY, record);
-            MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD, eventParams);
+            MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
             csrService.processCallSummaryRecord(motechEvent);
         }
 

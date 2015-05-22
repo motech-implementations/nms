@@ -4,6 +4,7 @@ import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 
 import javax.jdo.annotations.Column;
+import javax.validation.constraints.Min;
 
 @Entity(tableName = "nms_imi_file_audit_records")
 public class FileAuditRecord {
@@ -23,9 +24,11 @@ public class FileAuditRecord {
     private String error;
 
     @Field
+    @Min(0)
     private Integer recordCount;
 
     @Field
+    @Column(length = 32)
     private String checksum;
 
     public FileAuditRecord() { }

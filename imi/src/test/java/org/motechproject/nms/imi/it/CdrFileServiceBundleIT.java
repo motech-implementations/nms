@@ -5,7 +5,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.motechproject.alerts.contract.AlertCriteria;
 import org.motechproject.alerts.contract.AlertService;
+import org.motechproject.alerts.domain.Alert;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.nms.imi.exception.InvalidCdrFileException;
 import org.motechproject.nms.imi.repository.FileAuditRecordDataService;
@@ -53,7 +55,7 @@ import static org.junit.Assert.assertTrue;
 @ExamFactory(MotechNativeTestContainerFactory.class)
 public class CdrFileServiceBundleIT extends BasePaxIT {
 
-    private static final String PROCESS_DETAIL_FILE = "nms.imi.kk.process_detail_file";
+    private static final String PROCESS_DETAIL_FILE_SUBJECT = "nms.imi.kk.process_detail_file";
     private static final String FILE_INFO_PARAM_KEY = "fileInfo";
     private static final String SCP_USER = "imi.scp.user";
     private static final String SCP_HOST = "imi.scp.host";
@@ -269,9 +271,13 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         helper.makeLocalCdrFile();
         Map<String, Object> eventParams = new HashMap<>();
         eventParams.put(FILE_INFO_PARAM_KEY, helper.cdrLocalFileInfo());
-        MotechEvent motechEvent = new MotechEvent(PROCESS_DETAIL_FILE, eventParams);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_DETAIL_FILE_SUBJECT, eventParams);
         List<String> errors = cdrFileService.processDetailFile(motechEvent);
         assertEquals(0, errors.size());
+
+        AlertCriteria criteria = new AlertCriteria().byExternalId(helper.cdrLocalFileInfo().getCdrFile());
+        List<Alert> alerts = alertService.search(criteria);
+        assertEquals(4, alerts.size()); //three warnings plus one error
     }
 
 

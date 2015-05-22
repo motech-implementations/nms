@@ -27,12 +27,12 @@ public enum FileProcessedStatus {
         return name;
     }
 
-    public static boolean isValid(int i) {
+    public static boolean isValidEnumValue(int i) {
         return (i >= FILE_PROCESSED_SUCCESSFULLY.getValue() && i <= FILE_ERROR_IN_FILE_FORMAT.getValue());
     }
 
     public static FileProcessedStatus fromInt(int i) {
-        if (isValid(i)) {
+        if (isValidEnumValue(i)) {
             return values()[i - FILE_PROCESSED_SUCCESSFULLY.getValue()];
         } else {
             throw new IllegalArgumentException(String.format("%d is an invalid FileProcessedStatus", i));
