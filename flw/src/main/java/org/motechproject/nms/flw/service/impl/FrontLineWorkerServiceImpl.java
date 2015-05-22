@@ -183,9 +183,10 @@ public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
     @Override
     public void deleteAllowed(FrontLineWorker frontLineWorker) {
         int weeksToKeepInvalidFLWs = Integer.parseInt(settingsFacade.getProperty(WEEKS_TO_KEEP_INVALID_FLWS));
+        FrontLineWorkerStatus status = FrontLineWorkerStatus.INVALID;
         DateTime now = new DateTime();
 
-        if (frontLineWorker.getStatus() != FrontLineWorkerStatus.INVALID) {
+        if (frontLineWorker.getStatus() != status) {
             throw new IllegalStateException("Can not delete a valid FLW");
         }
 
@@ -194,8 +195,8 @@ public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
         }
 
         if (Math.abs(Weeks.weeksBetween(now, frontLineWorker.getInvalidationDate()).getWeeks()) < weeksToKeepInvalidFLWs) {
-            throw new IllegalStateException(String.format("FLW must be in invalid state for %s weeks before deleting",
-                                                          weeksToKeepInvalidFLWs));
+            throw new IllegalStateException(String.format("FLW must be in %s state for %s weeks before deleting",
+                                                          status, weeksToKeepInvalidFLWs));
         }
     }
 }
