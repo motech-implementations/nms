@@ -52,7 +52,6 @@
         <spring.osgi.core.version>1.2.1</spring.osgi.core.version>
 
         <javax.persistence.version>2.1.0</javax.persistence.version>
-        <exam.version>4.2.0</exam.version>
 
         <check.code.skip>${maven.test.skip}</check.code.skip>
         <pmd.skip>${check.code.skip}</pmd.skip>
@@ -136,10 +135,6 @@
         <dependency>
             <groupId>org.motechproject</groupId>
             <artifactId>motech-pax-it</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.ops4j.pax.exam</groupId>
-            <artifactId>pax-exam-inject</artifactId>
         </dependency>
     </dependencies>
 
@@ -688,23 +683,6 @@
                 <groupId>org.motechproject</groupId>
                 <artifactId>motech-pax-it</artifactId>
                 <version>${motech.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.ops4j.pax.exam</groupId>
-                <artifactId>pax-exam-container-native</artifactId>
-                <version>${exam.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.slf4j</groupId>
-                        <artifactId>slf4j-api</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>org.ops4j.pax.exam</groupId>
-                <artifactId>pax-exam-inject</artifactId>
-                <version>${exam.version}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>

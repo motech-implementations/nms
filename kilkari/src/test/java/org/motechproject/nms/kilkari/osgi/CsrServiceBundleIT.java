@@ -106,6 +106,13 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
     @Before
     public void cleanupDatabase() {
+        for (Subscription subscription: subscriptionDataService.retrieveAll()) {
+            subscription.setStatus(SubscriptionStatus.COMPLETED);
+            subscription.setEndDate(new DateTime().withDate(2011, 8, 1));
+
+            subscriptionDataService.update(subscription);
+        }
+
         subscriptionService.deleteAll();
         subscriberDataService.deleteAll();
         languageLocationDataService.deleteAll();

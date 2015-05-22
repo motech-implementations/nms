@@ -1,8 +1,11 @@
 package org.motechproject.nms.flw.osgi;
 
-import org.junit.Ignore;
+import org.joda.time.DateTime;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
+import org.motechproject.mds.ex.JdoListenerInvocationException;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
@@ -16,11 +19,11 @@ import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Language;
 import org.motechproject.nms.region.domain.LanguageLocation;
 import org.motechproject.nms.region.domain.State;
+import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.LanguageLocationDataService;
 import org.motechproject.nms.region.repository.StateDataService;
-import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.ops4j.pax.exam.ExamFactory;
@@ -31,10 +34,10 @@ import org.ops4j.pax.exam.spi.reactors.PerSuite;
 import javax.inject.Inject;
 import java.util.List;
 
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 
 /**
@@ -79,6 +82,13 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
     private WhitelistStateDataService whitelistStateDataService;
 
     private void setupData() {
+        for (FrontLineWorker flw: frontLineWorkerDataService.retrieveAll()) {
+            flw.setStatus(FrontLineWorkerStatus.INVALID);
+            flw.setInvalidationDate(new DateTime().withDate(2011, 8, 1));
+
+            frontLineWorkerDataService.update(flw);
+        }
+
         serviceUsageDataService.deleteAll();
         frontLineWorkerDataService.deleteAll();
         languageLocationDataService.deleteAll();
@@ -132,6 +142,9 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
         List<FrontLineWorker> records = frontLineWorkerService.getRecords();
         assertTrue(records.contains(flw));
 
+        flw.setStatus(FrontLineWorkerStatus.INVALID);
+        flw.setInvalidationDate(new DateTime().withDate(2011, 8, 1));
+        frontLineWorkerService.update(flw);
         frontLineWorkerService.delete(flw);
         record = frontLineWorkerService.getByContactNumber(flw.getContactNumber());
         assertNull(record);
@@ -163,5 +176,58 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
         frontLineWorkerService.update(flw);
         flw = frontLineWorkerService.getByContactNumber(2111111111L);
         assertEquals(FrontLineWorkerStatus.INVALID, flw.getStatus());
+    }
+
+    @Rule
+    public ExpectedException exception = ExpectedException.none();
+
+    @Test
+    public void testDeleteNonInvalidFrontLineWorker() {
+        setupData();
+
+        FrontLineWorker flw = new FrontLineWorker("Test Worker", 2111111111L);
+        frontLineWorkerService.add(flw);
+        flw = frontLineWorkerService.getByContactNumber(2111111111L);
+
+        assertEquals(FrontLineWorkerStatus.ANONYMOUS, flw.getStatus());
+
+        exception.expect(JdoListenerInvocationException.class);
+        frontLineWorkerService.delete(flw);
+    }
+
+    @Test
+    public void testDeleteRecentInvalidFrontLineWorker() {
+        setupData();
+
+        FrontLineWorker flw = new FrontLineWorker("Test Worker", 2111111111L);
+        frontLineWorkerService.add(flw);
+
+        flw = frontLineWorkerService.getByContactNumber(2111111111L);
+        flw.setStatus(FrontLineWorkerStatus.INVALID);
+        frontLineWorkerService.update(flw);
+
+        flw = frontLineWorkerService.getByContactNumber(2111111111L);
+        assertEquals(FrontLineWorkerStatus.INVALID, flw.getStatus());
+
+        exception.expect(JdoListenerInvocationException.class);
+        frontLineWorkerService.delete(flw);
+    }
+
+    @Test
+    public void testDeleteOldInvalidFrontLineWorker() {
+        setupData();
+
+        FrontLineWorker flw = new FrontLineWorker("Test Worker", 2111111111L);
+        frontLineWorkerService.add(flw);
+
+        flw = frontLineWorkerService.getByContactNumber(2111111111L);
+        flw.setStatus(FrontLineWorkerStatus.INVALID);
+        flw.setInvalidationDate(new DateTime().withDate(2011, 8, 1));
+        frontLineWorkerService.update(flw);
+
+        flw = frontLineWorkerService.getByContactNumber(2111111111L);
+        assertEquals(FrontLineWorkerStatus.INVALID, flw.getStatus());
+
+        frontLineWorkerService.delete(flw);
     }
 }

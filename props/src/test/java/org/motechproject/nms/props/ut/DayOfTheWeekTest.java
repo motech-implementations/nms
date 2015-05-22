@@ -1,4 +1,4 @@
-package org.motechproject.nms.imi.ut;
+package org.motechproject.nms.props.ut;
 
 import org.joda.time.DateTime;
 import org.junit.Test;

@@ -13,5 +13,5 @@ import org.junit.runners.Suite;
         WhiteListServiceBundleIT.class,
         FrontLineWorkerServiceBundleIT.class
 })
-public class FrontLineWorkerIntegrationTests {
+public class IntegrationTests {
 }
