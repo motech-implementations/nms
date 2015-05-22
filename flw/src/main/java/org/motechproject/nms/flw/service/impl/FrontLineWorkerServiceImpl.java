@@ -2,14 +2,27 @@ package org.motechproject.nms.flw.service.impl;
 
 import org.joda.time.DateTime;
 import org.joda.time.Weeks;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
+import org.motechproject.event.MotechEvent;
+import org.motechproject.event.listener.annotations.MotechListener;
+import org.motechproject.mds.query.QueryExecution;
+import org.motechproject.mds.util.InstanceSecurityRestriction;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
+import org.motechproject.scheduler.contract.RepeatingSchedulableJob;
+import org.motechproject.scheduler.service.MotechSchedulerService;
+import org.motechproject.server.config.SettingsFacade;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.jdo.Query;
 import java.util.List;
 
 /**
@@ -17,11 +30,87 @@ import java.util.List;
  */
 @Service("frontLineWorkerService")
 public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
+    private static final Logger LOGGER = LoggerFactory.getLogger(FrontLineWorkerServiceImpl.class);
+
+    private static final String FLW_PURGE_TIME = "flw.purge_invalid_flw_start_time";
+    private static final String FLW_PURGE_MS_INTERVAL = "flw.purge_invalid_flw_ms_interval";
+    private static final String WEEKS_TO_KEEP_INVALID_FLWS = "flw.weeks_to_keep_invalid_flws";
+
+    private static final String FLW_PURGE_EVENT_SUBJECT = "nms.flw.purge_invalid_flw";
+
     private FrontLineWorkerDataService frontLineWorkerDataService;
 
+    private SettingsFacade settingsFacade;
+    private MotechSchedulerService schedulerService;
+
     @Autowired
-    public FrontLineWorkerServiceImpl(FrontLineWorkerDataService frontLineWorkerDataService) {
+    public FrontLineWorkerServiceImpl(@Qualifier("flwSettings") SettingsFacade settingsFacade,
+                                      MotechSchedulerService schedulerService,
+                                      FrontLineWorkerDataService frontLineWorkerDataService) {
         this.frontLineWorkerDataService = frontLineWorkerDataService;
+        this.schedulerService = schedulerService;
+        this.settingsFacade = settingsFacade;
+
+        schedulePurgeOfOldFrontLineWorkers();
+    }
+
+    /**
+     * Use the MOTECH scheduler to setup a repeating job
+     * The job will start today at the time stored in flw.purge_invalid_flw_start_time in flw.properties
+     * It will repeat every flw.purge_invalid_flw_ms_interval milliseconds (default value is a day)
+     */
+    private void schedulePurgeOfOldFrontLineWorkers() {
+        //Calculate today's fire time
+        DateTimeFormatter fmt = DateTimeFormat.forPattern("H:m");
+        String timeProp = settingsFacade.getProperty(FLW_PURGE_TIME);
+        DateTime time = fmt.parseDateTime(timeProp);
+        DateTime today = DateTime.now()                     // This means today's date...
+                .withHourOfDay(time.getHourOfDay())         // ...at the hour...
+                .withMinuteOfHour(time.getMinuteOfHour())   // ...and minute specified in imi.properties
+                .withSecondOfMinute(0)
+                .withMillisOfSecond(0);
+
+        //Millisecond interval between events
+        String intervalProp = settingsFacade.getProperty(FLW_PURGE_MS_INTERVAL);
+        Long msInterval = Long.parseLong(intervalProp);
+
+        LOGGER.debug(String.format("The %s message will be sent every %sms starting at %s",
+                                    FLW_PURGE_EVENT_SUBJECT, msInterval.toString(), today.toString()));
+
+        //Schedule repeating job
+        MotechEvent event = new MotechEvent(FLW_PURGE_EVENT_SUBJECT);
+        RepeatingSchedulableJob job = new RepeatingSchedulableJob(
+                event,          //MOTECH event
+                today.toDate(), //startTime
+                null,           //endTime, null means no end time
+                null,           //repeatCount, null means infinity
+                msInterval,     //repeatIntervalInMilliseconds
+                true);          //ignorePastFiresAtStart
+
+        schedulerService.safeScheduleRepeatingJob(job);
+    }
+
+    @MotechListener(subjects = { FLW_PURGE_EVENT_SUBJECT })
+    public void purgeOldInvalidFLWs(MotechEvent event) {
+        int weeksToKeepInvalidFLWs = Integer.parseInt(settingsFacade.getProperty(WEEKS_TO_KEEP_INVALID_FLWS));
+        final FrontLineWorkerStatus status = FrontLineWorkerStatus.INVALID;
+        final DateTime cutoff = DateTime.now().minusWeeks(weeksToKeepInvalidFLWs).withTimeAtStartOfDay();
+
+        @SuppressWarnings("unchecked")
+        QueryExecution<Long> queryExecution = new QueryExecution<Long>() {
+            @Override
+            public Long execute(Query query, InstanceSecurityRestriction restriction) {
+
+                query.setFilter("status == invalid && invalidationDate < cutoff");
+                query.declareParameters("org.motechproject.nms.flw.domain.FrontLineWorkerStatus invalid, org.joda.time.DateTime cutoff");
+
+                return query.deletePersistentAll(status, cutoff);
+            }
+        };
+
+        Long purgedRecordCount = frontLineWorkerDataService.executeQuery(queryExecution);
+        LOGGER.info(String.format("Purged %s FLWs with statis %s and invalidation date before %s FLWs",
+                                  purgedRecordCount, status, cutoff.toString()));
     }
 
     @Override
@@ -93,6 +182,7 @@ public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
 
     @Override
     public void deleteAllowed(FrontLineWorker frontLineWorker) {
+        int weeksToKeepInvalidFLWs = Integer.parseInt(settingsFacade.getProperty(WEEKS_TO_KEEP_INVALID_FLWS));
         DateTime now = new DateTime();
 
         if (frontLineWorker.getStatus() != FrontLineWorkerStatus.INVALID) {
@@ -103,8 +193,9 @@ public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
             throw new IllegalStateException("FLW in invalid state with null invalidation date");
         }
 
-        if (Math.abs(Weeks.weeksBetween(now, frontLineWorker.getInvalidationDate()).getWeeks()) < 6) {
-            throw new IllegalStateException("FLW must be in invalid state for 6 weeks before deleting");
+        if (Math.abs(Weeks.weeksBetween(now, frontLineWorker.getInvalidationDate()).getWeeks()) < weeksToKeepInvalidFLWs) {
+            throw new IllegalStateException(String.format("FLW must be in invalid state for %s weeks before deleting",
+                                                          weeksToKeepInvalidFLWs));
         }
     }
 }
