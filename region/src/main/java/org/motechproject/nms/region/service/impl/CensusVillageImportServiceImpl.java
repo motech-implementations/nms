@@ -4,6 +4,7 @@ import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.domain.Village;
 import org.motechproject.nms.region.repository.TalukaDataService;
 import org.motechproject.nms.region.repository.VillageDataService;
+import org.motechproject.nms.region.service.CensusVillageImportService;
 import org.motechproject.nms.region.utils.GetInstanceByString;
 import org.motechproject.nms.region.utils.GetLong;
 import org.motechproject.nms.region.utils.GetString;
@@ -15,7 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Service("censusVillageImportService")
-public class CensusVillageImportServiceImpl extends BaseLocationImportService<Village> {
+public class CensusVillageImportServiceImpl extends BaseLocationImportService<Village> implements CensusVillageImportService {
 
     public static final String VILLAGE_CODE = "VCode";
     public static final String REGIONAL_NAME = "Name_G";

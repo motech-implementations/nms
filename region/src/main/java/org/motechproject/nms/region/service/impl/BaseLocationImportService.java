@@ -3,7 +3,6 @@ package org.motechproject.nms.region.service.impl;
 import org.apache.commons.collections.CollectionUtils;
 import org.motechproject.mds.service.MotechDataService;
 import org.motechproject.nms.region.exception.CsvImportDataException;
-import org.motechproject.nms.region.service.LocationDataImportService;
 import org.motechproject.nms.region.utils.CsvImporter;
 import org.springframework.transaction.annotation.Transactional;
 import org.supercsv.cellprocessor.ift.CellProcessor;
@@ -15,7 +14,7 @@ import java.io.Reader;
 import java.util.Map;
 import java.util.Set;
 
-public abstract class BaseLocationImportService<T> implements LocationDataImportService {
+public abstract class BaseLocationImportService<T> {
 
     private Class<T> type;
     private MotechDataService<T> dataService;
@@ -25,7 +24,6 @@ public abstract class BaseLocationImportService<T> implements LocationDataImport
         this.dataService = dataService;
     }
 
-    @Override
     @Transactional
     public void importData(Reader reader) throws IOException {
         CsvImporter<T> csvImporter = new CsvImporter<>(type);

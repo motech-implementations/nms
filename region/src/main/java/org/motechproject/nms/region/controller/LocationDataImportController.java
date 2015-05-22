@@ -1,10 +1,16 @@
 package org.motechproject.nms.region.controller;
 
 import org.motechproject.nms.region.exception.CsvImportException;
+import org.motechproject.nms.region.service.CensusVillageImportService;
+import org.motechproject.nms.region.service.DistrictImportService;
+import org.motechproject.nms.region.service.HealthBlockImportService;
+import org.motechproject.nms.region.service.HealthFacilityImportService;
+import org.motechproject.nms.region.service.HealthSubFacilityImportService;
 import org.motechproject.nms.region.service.LocationDataImportService;
 import org.motechproject.nms.region.service.LoggingService;
+import org.motechproject.nms.region.service.NonCensusVillageImportService;
+import org.motechproject.nms.region.service.TalukaImportService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -25,13 +31,13 @@ public class LocationDataImportController {
 
     private LoggingService loggingService;
 
-    private LocationDataImportService districtImportService;
-    private LocationDataImportService talukaImportService;
-    private LocationDataImportService nonCensusVillageImportService;
-    private LocationDataImportService censusVillageImportService;
-    private LocationDataImportService healthBlockImportService;
-    private LocationDataImportService healthFacilityImportService;
-    private LocationDataImportService healthSubFacilityImportService;
+    private DistrictImportService districtImportService;
+    private TalukaImportService talukaImportService;
+    private NonCensusVillageImportService nonCensusVillageImportService;
+    private CensusVillageImportService censusVillageImportService;
+    private HealthBlockImportService healthBlockImportService;
+    private HealthFacilityImportService healthFacilityImportService;
+    private HealthSubFacilityImportService healthSubFacilityImportService;
 
     private Map<String, LocationDataImportService> locationDataImportServiceMapping;
 
@@ -67,44 +73,37 @@ public class LocationDataImportController {
     }
 
     @Autowired
-    @Qualifier("districtImportService")
-    public void setDistrictImportService(LocationDataImportService districtImportService) {
+    public void setDistrictImportService(DistrictImportService districtImportService) {
         this.districtImportService = districtImportService;
     }
 
     @Autowired
-    @Qualifier("talukaImportService")
-    public void setTalukaImportService(LocationDataImportService talukaImportService) {
+    public void setTalukaImportService(TalukaImportService talukaImportService) {
         this.talukaImportService = talukaImportService;
     }
 
     @Autowired
-    @Qualifier("nonCensusVillageImportService")
-    public void setNonCensusVillageImportService(LocationDataImportService nonCensusVillageImportService) {
+    public void setNonCensusVillageImportService(NonCensusVillageImportService nonCensusVillageImportService) {
         this.nonCensusVillageImportService = nonCensusVillageImportService;
     }
 
     @Autowired
-    @Qualifier("censusVillageImportService")
-    public void setCensusVillageImportService(LocationDataImportService censusVillageImportService) {
+    public void setCensusVillageImportService(CensusVillageImportService censusVillageImportService) {
         this.censusVillageImportService = censusVillageImportService;
     }
 
     @Autowired
-    @Qualifier("healthBlockImportService")
-    public void setHealthBlockImportService(LocationDataImportService healthBlockImportService) {
+    public void setHealthBlockImportService(HealthBlockImportService healthBlockImportService) {
         this.healthBlockImportService = healthBlockImportService;
     }
 
     @Autowired
-    @Qualifier("healthFacilityImportService")
-    public void setHealthFacilityImportService(LocationDataImportService healthFacilityImportService) {
+    public void setHealthFacilityImportService(HealthFacilityImportService healthFacilityImportService) {
         this.healthFacilityImportService = healthFacilityImportService;
     }
 
     @Autowired
-    @Qualifier("healthSubFacilityImportService")
-    public void setHealthSubFacilityImportService(LocationDataImportService healthSubFacilityImportService) {
+    public void setHealthSubFacilityImportService(HealthSubFacilityImportService healthSubFacilityImportService) {
         this.healthSubFacilityImportService = healthSubFacilityImportService;
     }
 

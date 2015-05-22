@@ -6,6 +6,7 @@ import org.motechproject.nms.region.domain.HealthFacilityType;
 import org.motechproject.nms.region.repository.HealthBlockDataService;
 import org.motechproject.nms.region.repository.HealthFacilityDataService;
 import org.motechproject.nms.region.repository.HealthFacilityTypeDataService;
+import org.motechproject.nms.region.service.HealthFacilityImportService;
 import org.motechproject.nms.region.utils.GetInstanceByLong;
 import org.motechproject.nms.region.utils.GetLong;
 import org.motechproject.nms.region.utils.GetString;
@@ -17,7 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Service("healthFacilityImportService")
-public class HealthFacilityImportServiceImpl extends BaseLocationImportService<HealthFacility> {
+public class HealthFacilityImportServiceImpl extends BaseLocationImportService<HealthFacility> implements HealthFacilityImportService {
 
     public static final String PID = "PID";
     public static final String REGIONAL_NAME = "Name_G";

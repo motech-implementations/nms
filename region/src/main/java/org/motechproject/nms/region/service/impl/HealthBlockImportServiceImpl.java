@@ -4,6 +4,7 @@ import org.motechproject.nms.region.domain.HealthBlock;
 import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.repository.HealthBlockDataService;
 import org.motechproject.nms.region.repository.TalukaDataService;
+import org.motechproject.nms.region.service.HealthBlockImportService;
 import org.motechproject.nms.region.utils.GetInstanceByString;
 import org.motechproject.nms.region.utils.GetLong;
 import org.motechproject.nms.region.utils.GetString;
@@ -15,7 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Service("healthBlockImportService")
-public class HealthBlockImportServiceImpl extends BaseLocationImportService<HealthBlock> {
+public class HealthBlockImportServiceImpl extends BaseLocationImportService<HealthBlock> implements HealthBlockImportService {
 
     public static final String BID = "BID";
     public static final String REGIONAL_NAME = "Name_G";

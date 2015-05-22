@@ -4,6 +4,7 @@ import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.service.DistrictImportService;
 import org.motechproject.nms.region.utils.GetInstanceByLong;
 import org.motechproject.nms.region.utils.GetLong;
 import org.motechproject.nms.region.utils.GetString;
@@ -15,7 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Service("districtImportService")
-public class DistrictImportServiceImpl extends BaseLocationImportService<District> {
+public class DistrictImportServiceImpl extends BaseLocationImportService<District> implements DistrictImportService {
 
     public static final String DISTRICT_CODE = "DCode";
     public static final String REGIONAL_NAME = "Name_G";
