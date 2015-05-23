@@ -60,6 +60,10 @@ public class CsrHelper {
         for (int i=0 ; i<numSuccess ; i++) {
             Subscription sub = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(30));
             int index = sh.getRandomMessageIndex(sub);
+            if (index == sh.getLastMessageIndex(sub)) {
+                // We don't want this subscription to be completed
+                index--;
+            }
             CallSummaryRecordDto r = new CallSummaryRecordDto(
                     new RequestId(sub.getSubscriptionId(), TIMESTAMP),
                     sub.getSubscriber().getCallingNumber(),
