@@ -5,21 +5,21 @@ package org.motechproject.nms.api.web.contract.mobileAcademy;
  */
 public class CourseVersionResponse {
 
-    private int courseVersion;
+    private long courseVersion;
 
     public CourseVersionResponse() {
     }
 
-    public CourseVersionResponse(int courseVersion) {
+    public CourseVersionResponse(long courseVersion) {
 
         this.courseVersion = courseVersion;
     }
 
-    public Integer getCourseVersion() {
+    public Long getCourseVersion() {
         return courseVersion;
     }
 
-    public void setCourseVersion(Integer courseVersion) {
+    public void setCourseVersion(Long courseVersion) {
         this.courseVersion = courseVersion;
     }
 }
