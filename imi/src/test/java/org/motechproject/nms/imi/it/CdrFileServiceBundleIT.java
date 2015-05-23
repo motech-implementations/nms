@@ -54,9 +54,6 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
 
     private static final String PROCESS_DETAIL_FILE_SUBJECT = "nms.imi.kk.process_detail_file";
     private static final String FILE_INFO_PARAM_KEY = "fileInfo";
-    private static final String SCP_USER = "imi.scp.user";
-    private static final String SCP_HOST = "imi.scp.host";
-    private static final String SCP_IDENTITY = "imi.scp.identity";
     private static final String LOCAL_OBD_DIR = "imi.local_obd_dir";
     private static final String REMOTE_OBD_DIR = "imi.remote_obd_dir";
     private static final String LOCAL_CDR_DIR = "imi.local_cdr_dir";
@@ -145,15 +142,6 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
 
     @Before
     public void setupSettings() {
-        userBackup = settingsService.getSettingsFacade().getProperty(SCP_USER);
-        settingsService.getSettingsFacade().setProperty(SCP_USER, System.getProperty("user.name"));
-
-        hostBackup = settingsService.getSettingsFacade().getProperty(SCP_HOST);
-        settingsService.getSettingsFacade().setProperty(SCP_HOST, "localhost");
-
-        identityBackup = settingsService.getSettingsFacade().getProperty(SCP_IDENTITY);
-        settingsService.getSettingsFacade().setProperty(SCP_IDENTITY, "");
-
         localCdrDirBackup = setupTestDir(LOCAL_CDR_DIR, "cdr-local-dir-it");
         remoteCdrDirBackup = setupTestDir(REMOTE_CDR_DIR, "cdr-remote-dir-it");
         localObdDirBackup = setupTestDir(LOCAL_OBD_DIR, "obd-local-dir-it");
@@ -163,9 +151,6 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
 
     @After
     public void restoreSettings() {
-        settingsService.getSettingsFacade().setProperty(SCP_USER, userBackup);
-        settingsService.getSettingsFacade().setProperty(SCP_HOST, hostBackup);
-        settingsService.getSettingsFacade().setProperty(SCP_IDENTITY, identityBackup);
         settingsService.getSettingsFacade().setProperty(REMOTE_OBD_DIR, remoteObdDirBackup);
         settingsService.getSettingsFacade().setProperty(LOCAL_OBD_DIR, localObdDirBackup);
         settingsService.getSettingsFacade().setProperty(REMOTE_CDR_DIR, remoteCdrDirBackup);
