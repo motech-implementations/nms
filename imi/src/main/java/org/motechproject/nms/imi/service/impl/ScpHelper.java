@@ -10,13 +10,12 @@ import org.motechproject.server.config.SettingsFacade;
  */
 public class ScpHelper {
 
-    private static final String SCP_BINARY_SETTING = "imi.scp.binary";
-    private static final String SCP_BINARY_DEFAULT = "/usr/bin/scp";
+    private static final String SCP_FROM_COMMAND = "imi.scp.from_command";
+    private static final String SCP_FROM_COMMAND_DEFAULT = "/bin/cp {src} {dst}";
+    private static final String SCP_TO_COMMAND = "imi.scp.to_command";
+    private static final String SCP_TO_COMMAND_DEFAULT = "/bin/cp {src} {dst}";
     private static final String SCP_TIMEOUT_SETTING = "imi.scp.timeout";
     private static final Long SCP_TIMEOUT_DEFAULT = 60000L;
-    private static final String SCP_USER = "imi.scp.user";
-    private static final String SCP_HOST = "imi.scp.host";
-    private static final String SCP_IDENTITY = "imi.scp.identity";
 
     private static final String LOCAL_OBD_DIR = "imi.local_obd_dir";
     private static final String REMOTE_OBD_DIR = "imi.remote_obd_dir";
@@ -33,15 +32,24 @@ public class ScpHelper {
 
     private String getSettingWithDefault(String setting, String defaultValue) {
         String s = settingsFacade.getProperty(setting);
-        if (s == null) {
+        if (s == null || s.isEmpty()) {
             return  defaultValue;
         }
         return s;
     }
 
 
-    private String getScpBinary() {
-        return getSettingWithDefault(SCP_BINARY_SETTING, SCP_BINARY_DEFAULT);
+    private String scpFromCommand(String src, String dst) {
+        String command = getSettingWithDefault(SCP_FROM_COMMAND, SCP_FROM_COMMAND_DEFAULT);
+
+        return command.replace("{src}", src).replace("{dst}", dst);
+    }
+
+
+    private String scpToCommand(String src, String dst) {
+        String command = getSettingWithDefault(SCP_TO_COMMAND, SCP_TO_COMMAND_DEFAULT);
+
+        return command.replace("{src}", src).replace("{dst}", dst);
     }
 
 
@@ -51,29 +59,6 @@ public class ScpHelper {
         } catch (NumberFormatException e) {
             return SCP_TIMEOUT_DEFAULT;
         }
-    }
-
-
-    private String getScpHost() {
-        return settingsFacade.getProperty(SCP_HOST);
-    }
-
-
-    private String getScpUser() {
-        return settingsFacade.getProperty(SCP_USER);
-    }
-
-
-    private String getScpIdentity() {
-        return settingsFacade.getProperty(SCP_IDENTITY);
-    }
-
-
-    private String identityOption(String identityFile) {
-        if (identityFile == null || identityFile.isEmpty()) {
-            return "";
-        }
-        return String.format("-i %s ", identityFile);
     }
 
 
@@ -97,8 +82,7 @@ public class ScpHelper {
 
         String localDir = settingsFacade.getProperty(LOCAL_CDR_DIR);
 
-        String command = String.format("%s %s%s@%s:%s %s", getScpBinary(), identityOption(getScpIdentity()),
-                getScpUser(), getScpHost(), remoteCdrFile(file), localDir);
+        String command = scpFromCommand(remoteCdrFile(file), localDir);
         ExecHelper execHelper = new ExecHelper();
         execHelper.exec(command, getScpTimeout());
     }
@@ -124,8 +108,7 @@ public class ScpHelper {
 
         String remoteDir = settingsFacade.getProperty(REMOTE_OBD_DIR);
 
-        String command = String.format("%s %s%s %s@%s:%s", getScpBinary(), identityOption(getScpIdentity()),
-                localObdFile(file), getScpUser(), getScpHost(), remoteDir);
+        String command = scpToCommand(localObdFile(file), remoteDir);
         ExecHelper execHelper = new ExecHelper();
         execHelper.exec(command, getScpTimeout());
     }
