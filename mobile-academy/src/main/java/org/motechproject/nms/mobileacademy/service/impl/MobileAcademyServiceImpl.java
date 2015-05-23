@@ -94,12 +94,12 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
     }
 
     @Override
-    public int getCourseVersion() {
+    public long getCourseVersion() {
 
         Course course = getCourse();
         if (course != null) {
             DateTime version = course.getModificationDate();
-            return (int) version.getMillis();
+            return version.getMillis();
         } else {
             // return -1 and let the caller handle the upstream response
             return -1;
