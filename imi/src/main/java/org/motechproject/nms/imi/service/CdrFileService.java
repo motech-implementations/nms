@@ -1,7 +1,6 @@
 package org.motechproject.nms.imi.service;
 
 import org.motechproject.event.MotechEvent;
-import org.motechproject.nms.imi.service.contract.VerifyResults;
 import org.motechproject.nms.imi.web.contract.FileInfo;
 
 import java.io.File;
@@ -12,25 +11,31 @@ import java.util.List;
  */
 public interface CdrFileService {
 
+    enum Action {
+        PASS1, // checksum, record count, valid csv
+        PASS2, // PASS1 + sort order, entities (subscription, circle, etc...) exist
+        PASS3  // PASS1 + aggregate CDRS into CSR and send for distributed processing
+    }
+
+
     /**
-     * Internal method used to verify the given call detail record file (checksum, recordCount) and aggregate the
-     * detail records into a memory map of CallSummaryDetailDto objects collecting errors on the way
+     * Internal method used to verify the given call detail record file entities or send aggregated detail
+     * records for processing as CallSummaryRecordDto in MOTECH events
      *
      * NOTE: only exposed here for ITs
      *
      * @param file          the actual file to process
      * @param fileInfo      file information provided about the file (ie: expected checksum & recordCount)
-     * @param verifyOnly    if true, will not create summary memory map (ie: will only verify the file)
-     * @return              a VerifyResult object containing the map (or an empty one) and a list of errors (if any)
+     * @return              a list of errors (if any)
      */
-    VerifyResults aggregateDetailFile(File file, FileInfo fileInfo, boolean verifyOnly);
+    List<String> iterateDetailFile(File file, FileInfo fileInfo, Action action);
 
 
     /**
      * Verify file exists, verify checksum & record count match. Then sends event to proceed to CDR processing
      * phase 2
      */
-    VerifyResults verifyDetailFile(FileInfo fileInfo);
+    List<String> verifyDetailFileChecksumAndCount(FileInfo fileInfo);
 
 
     /**

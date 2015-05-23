@@ -9,6 +9,8 @@ public class SortHelper {
     private static final String SORT_BINARY_DEFAULT = "/usr/bin/sort";
     private static final String SORT_TIMEOUT_SETTING = "imi.sort.timeout";
     private static final Long SORT_TIMEOUT_DEFAULT = 60000L;
+    private static final String SORTED_SUFFIX = ".sorted";
+    private static final String LOCAL_CDR_DIR = "imi.local_cdr_dir";
 
     private SettingsFacade settingsFacade;
 
@@ -41,11 +43,30 @@ public class SortHelper {
     }
 
 
+    public String localCdrFile(String file) {
+        String localFile = settingsFacade.getProperty(LOCAL_CDR_DIR);
+        localFile += localFile.endsWith("/") ? "" : "/";
+        localFile += file;
+        return localFile;
+    }
+
+
+    public String localSortedCdrFile(String file) {
+        String localFile = settingsFacade.getProperty(LOCAL_CDR_DIR);
+        localFile += localFile.endsWith("/") ? "" : "/";
+        localFile += file;
+        localFile += SORTED_SUFFIX;
+        return localFile;
+    }
+
+
     /**
-     * Sorts the provided source CDR file on requestId (col1, text) and attempt (col4, int) into the destination file
+     * Sorts the provided source CDR file on requestId (col1, text) and attempt (col4, int) into the destination
+     * file
      */
-    void sort(String source, String destination) throws ExecException {
-        String command = String.format("%s -t , -k 1,1 -k 4,4n -o %s %s", getSortBinary(), destination, source);
+    void sort(String file) throws ExecException {
+        String command = String.format("%s -t , -k 1,1 -k 4,4n -o %s %s", getSortBinary(),
+                localSortedCdrFile(file), localCdrFile(file));
         ExecHelper execHelper = new ExecHelper();
         execHelper.exec(command, getSortTimeout());
     }

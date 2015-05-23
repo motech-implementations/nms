@@ -3,7 +3,9 @@ package org.motechproject.nms.imi.it;
 import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.motechproject.alerts.contract.AlertCriteria;
 import org.motechproject.alerts.contract.AlertService;
@@ -13,19 +15,15 @@ import org.motechproject.nms.imi.exception.InvalidCdrFileException;
 import org.motechproject.nms.imi.repository.FileAuditRecordDataService;
 import org.motechproject.nms.imi.service.CdrFileService;
 import org.motechproject.nms.imi.service.SettingsService;
-import org.motechproject.nms.imi.service.contract.VerifyResults;
 import org.motechproject.nms.imi.web.contract.FileInfo;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.dto.CallDetailRecordDto;
-import org.motechproject.nms.kilkari.dto.CallSummaryRecordDto;
 import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.CallSummaryRecordDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
-import org.motechproject.nms.props.domain.FinalCallStatus;
-import org.motechproject.nms.props.domain.RequestId;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
@@ -42,7 +40,6 @@ import javax.inject.Inject;
 import java.io.File;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -177,7 +174,6 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
     }
 
 
-
     @Test
     public void testServicePresent() {
         getLogger().debug("testServicePresent()");
@@ -196,13 +192,14 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         helper.makeCdrs(1,1,1,1);
         helper.makeLocalCdrFile();
         FileInfo fileInfo = new FileInfo(helper.cdr(), helper.cdrLocalChecksum(), helper.cdrCount());
-        Map<String, Object> eventParams = new HashMap<>();
-        VerifyResults result = cdrFileService.verifyDetailFile(fileInfo);
-        assertEquals(0, result.getErrors().size());
+        List<String> errors = cdrFileService.verifyDetailFileChecksumAndCount(fileInfo);
+        assertEquals(0, errors.size());
     }
 
+    @Rule
+    public ExpectedException exception = ExpectedException.none();
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testChecksumError() throws IOException, NoSuchAlgorithmException {
         getLogger().debug("testChecksumError()");
 
@@ -213,9 +210,9 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         helper.makeCdrs(1, 1, 1, 1);
         helper.makeLocalCdrFile();
         FileInfo fileInfo = new FileInfo(helper.cdr(), "invalid checksum", helper.cdrCount());
-        VerifyResults result = cdrFileService.verifyDetailFile(fileInfo);
-        assertEquals(0, result.getRecords().size()); //verifyDetailFile does not populate VerifyResults.records
-        assertEquals(1, result.getErrors().size());
+
+        exception.expect(IllegalStateException.class);
+        cdrFileService.verifyDetailFileChecksumAndCount(fileInfo);
     }
 
 
@@ -231,7 +228,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         helper.makeLocalCdrFile(2);
         FileInfo fileInfo = new FileInfo(helper.cdr(), helper.cdrLocalChecksum(), helper.cdrCount());
         try {
-            cdrFileService.verifyDetailFile(fileInfo);
+            cdrFileService.verifyDetailFileChecksumAndCount(fileInfo);
         } catch (InvalidCdrFileException e) {
             assertEquals(2, e.getMessages().size());
         }
@@ -250,7 +247,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         helper.makeLocalCdrFile(200);
         FileInfo fileInfo = new FileInfo(helper.cdr(), helper.cdrLocalChecksum(), helper.cdrCount());
         try {
-            cdrFileService.verifyDetailFile(fileInfo);
+            cdrFileService.verifyDetailFileChecksumAndCount(fileInfo);
         } catch (InvalidCdrFileException e) {
             List<String> errors = e.getMessages();
             assertEquals(101, errors.size());
@@ -268,6 +265,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
                 districtDataService, fileAuditRecordDataService);
 
         helper.makeCdrs(1,1,1,1);
+        helper.makeRemoteCdrFile();
         helper.makeLocalCdrFile();
         Map<String, Object> eventParams = new HashMap<>();
         eventParams.put(FILE_INFO_PARAM_KEY, helper.cdrLocalFileInfo());
@@ -296,18 +294,11 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         helper.makeSingleCallCdrs(4, false);
         String sid2 = cdrs.get(cdrs.size()-1).getRequestId().getSubscriptionId();
 
-        Collections.shuffle(helper.getCrds());
         File cdrFile = helper.makeLocalCdrFile();
 
-        VerifyResults results = cdrFileService.aggregateDetailFile(cdrFile, helper.cdrLocalFileInfo(), false);
+        List<String> errors = cdrFileService.iterateDetailFile(cdrFile, helper.cdrLocalFileInfo(),
+                CdrFileService.Action.PASS3);
 
-        Map<String, CallSummaryRecordDto> records = results.getRecords();
-        assertEquals(2, records.size());
-
-        CallSummaryRecordDto rec = records.get(new RequestId(sid1, helper.timestamp()).toString());
-        assertEquals(FinalCallStatus.SUCCESS, rec.getFinalStatus());
-
-        rec = records.get(new RequestId(sid2, helper.timestamp()).toString());
-        assertEquals(FinalCallStatus.FAILED, rec.getFinalStatus());
+        assertEquals(0, errors.size());
     }
 }

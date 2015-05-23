@@ -3,6 +3,7 @@ package org.motechproject.nms.imi.web;
 import org.motechproject.nms.imi.domain.FileAuditRecord;
 import org.motechproject.nms.imi.domain.FileType;
 import org.motechproject.nms.imi.exception.ExecException;
+import org.motechproject.nms.imi.exception.InternalException;
 import org.motechproject.nms.imi.exception.InvalidCdrFileException;
 import org.motechproject.nms.imi.exception.NotFoundException;
 import org.motechproject.nms.imi.repository.FileAuditRecordDataService;
@@ -28,7 +29,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
-import java.util.List;
 import java.util.regex.Pattern;
 
 /**
@@ -113,8 +113,7 @@ public class ImiController {
 
 
     private void verifyFileExistsInAuditRecord(String fileName) {
-        List<FileAuditRecord> records =  fileAuditRecordDataService.findByFileName(fileName);
-        if (records.size() < 1) {
+        if (fileAuditRecordDataService.countFindByFileName(fileName) < 1) {
             throw new NotFoundException(String.format("<%s: Not Found>", fileName));
         }
     }
@@ -169,7 +168,7 @@ public class ImiController {
 
         // This checks the file, checksum, record count & csv lines, then sends an event to proceed to phase 2 of the
         // CDR processing task also handled by the IMI module: processDetailFile
-        cdrFileService.verifyDetailFile(request.getCdrDetail());
+        cdrFileService.verifyDetailFileChecksumAndCount(request.getCdrDetail());
     }
 
 
@@ -239,6 +238,15 @@ public class ImiController {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public AggregateBadRequest handleException(InvalidCdrFileException e) {
         return new AggregateBadRequest(e.getMessages());
+    }
+
+
+    //todo: IT or UT
+    @ExceptionHandler(InternalException.class)
+    @ResponseBody
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public BadRequest handleException(InternalException e) {
+        return new BadRequest(e.getMessage());
     }
 
 
