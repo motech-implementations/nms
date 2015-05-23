@@ -192,7 +192,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         settingsService.getSettingsFacade().setProperty(LOCAL_OBD_DIR, localObdDirBackup);
     }
 
-    
+
     @Test
     public void testTargetFileGeneration() throws NoSuchAlgorithmException, IOException {
         setupDatabase();

@@ -258,8 +258,11 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         List<String> errors = cdrFileService.processDetailFile(motechEvent);
         assertEquals(0, errors.size());
 
+        // This is going to try to send the file processed notification back to IMI, but will fail since we
+        // didn't setup a server
         AlertCriteria criteria = new AlertCriteria().byExternalId(helper.cdrLocalFileInfo().getCdrFile());
         List<Alert> alerts = alertService.search(criteria);
+        getLogger().debug("alerts={}", alerts);
         assertEquals(4, alerts.size()); //three warnings plus one error
     }
 
