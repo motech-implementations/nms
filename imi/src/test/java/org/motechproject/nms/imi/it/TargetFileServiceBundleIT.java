@@ -2,6 +2,8 @@ package org.motechproject.nms.imi.it;
 
 import org.apache.commons.codec.binary.Hex;
 import org.joda.time.DateTime;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -58,6 +60,13 @@ import static org.junit.Assert.assertTrue;
 @ExamReactorStrategy(PerSuite.class)
 @ExamFactory(MotechNativeTestContainerFactory.class)
 public class TargetFileServiceBundleIT extends BasePaxIT {
+
+    private static final String LOCAL_OBD_DIR = "imi.local_obd_dir";
+    private static final String REMOTE_OBD_DIR = "imi.remote_obd_dir";
+
+
+    private String localObdDirBackup;
+    private String remoteObdDirBackup;
 
     @Inject
     TargetFileService targetFileService;
@@ -161,6 +170,29 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
     }
 
 
+    private String setupTestDir(String property, String dir) {
+        String backup = settingsService.getSettingsFacade().getProperty(property);
+        File directory = new File(System.getProperty("user.home"), dir);
+        directory.mkdirs();
+        settingsService.getSettingsFacade().setProperty(property, directory.getAbsolutePath());
+        return backup;
+    }
+
+
+    @Before
+    public void setupSettings() {
+        localObdDirBackup = setupTestDir(LOCAL_OBD_DIR, "obd-local-dir-it");
+        remoteObdDirBackup = setupTestDir(REMOTE_OBD_DIR, "obd-remote-dir-it");
+    }
+
+
+    @After
+    public void restoreSettings() {
+        settingsService.getSettingsFacade().setProperty(REMOTE_OBD_DIR, remoteObdDirBackup);
+        settingsService.getSettingsFacade().setProperty(LOCAL_OBD_DIR, localObdDirBackup);
+    }
+
+    
     @Test
     public void testTargetFileGeneration() throws NoSuchAlgorithmException, IOException {
         setupDatabase();
@@ -172,9 +204,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         assertEquals(2, (int) tfn.getRecordCount());
 
         //read the file to get checksum & record count
-        File homeDir = new File(System.getProperty("user.home"));
-        File targetDir = new File(homeDir,
-                settingsService.getSettingsFacade().getProperty("imi.target_file_directory"));
+        File targetDir = new File(settingsService.getSettingsFacade().getProperty("imi.local_obd_dir"));
         File targetFile = new File(targetDir, tfn.getFileName());
         MessageDigest md = MessageDigest.getInstance("MD5");
         int recordCount = 0;

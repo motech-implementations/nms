@@ -4,6 +4,7 @@ import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -15,6 +16,7 @@ import org.motechproject.nms.imi.domain.FileAuditRecord;
 import org.motechproject.nms.imi.domain.FileProcessedStatus;
 import org.motechproject.nms.imi.domain.FileType;
 import org.motechproject.nms.imi.repository.FileAuditRecordDataService;
+import org.motechproject.nms.imi.service.SettingsService;
 import org.motechproject.nms.imi.web.contract.BadRequest;
 import org.motechproject.nms.imi.web.contract.FileProcessedStatusRequest;
 import org.motechproject.testing.osgi.BasePaxIT;
@@ -27,6 +29,7 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
@@ -39,6 +42,13 @@ import static org.junit.Assert.assertTrue;
 public class ImiController_OBD_BundleIT extends BasePaxIT {
     private static final String ADMIN_USERNAME = "motech";
     private static final String ADMIN_PASSWORD = "motech";
+    private static final String LOCAL_OBD_DIR = "imi.local_obd_dir";
+    private static final String REMOTE_OBD_DIR = "imi.remote_obd_dir";
+
+
+    private String localObdDirBackup;
+    private String remoteObdDirBackup;
+
 
     @Inject
     AlertService alertService;
@@ -46,10 +56,39 @@ public class ImiController_OBD_BundleIT extends BasePaxIT {
     @Inject
     FileAuditRecordDataService fileAuditRecordDataService;
 
+    @Inject
+    private SettingsService settingsService;
+
+
     @Before
     public void cleanupDatabase() {
         fileAuditRecordDataService.deleteAll();
     }
+
+
+    private String setupTestDir(String property, String dir) {
+        String backup = settingsService.getSettingsFacade().getProperty(property);
+        File directory = new File(System.getProperty("user.home"), dir);
+        directory.mkdirs();
+        settingsService.getSettingsFacade().setProperty(property, directory.getAbsolutePath());
+        return backup;
+    }
+
+
+    @Before
+    public void setupSettings() {
+        localObdDirBackup = setupTestDir(LOCAL_OBD_DIR, "obd-local-dir-it");
+        remoteObdDirBackup = setupTestDir(REMOTE_OBD_DIR, "obd-remote-dir-it");
+    }
+
+
+    @After
+    public void restoreSettings() {
+        settingsService.getSettingsFacade().setProperty(REMOTE_OBD_DIR, remoteObdDirBackup);
+        settingsService.getSettingsFacade().setProperty(LOCAL_OBD_DIR, localObdDirBackup);
+    }
+
+
 
     private HttpPost createFileProcessedStatusHttpPost(String fileName, FileProcessedStatus fileProcessedStatus)
         throws IOException {

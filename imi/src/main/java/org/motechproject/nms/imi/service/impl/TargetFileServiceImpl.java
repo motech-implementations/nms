@@ -22,9 +22,10 @@ import org.motechproject.mds.query.QueryParams;
 import org.motechproject.nms.imi.domain.FileAuditRecord;
 import org.motechproject.nms.imi.domain.FileProcessedStatus;
 import org.motechproject.nms.imi.domain.FileType;
+import org.motechproject.nms.imi.exception.ExecException;
 import org.motechproject.nms.imi.repository.FileAuditRecordDataService;
-import org.motechproject.nms.imi.service.contract.TargetFileNotification;
 import org.motechproject.nms.imi.service.TargetFileService;
+import org.motechproject.nms.imi.service.contract.TargetFileNotification;
 import org.motechproject.nms.imi.web.contract.FileProcessedStatusRequest;
 import org.motechproject.nms.kilkari.domain.CallRetry;
 import org.motechproject.nms.kilkari.domain.Subscriber;
@@ -57,10 +58,10 @@ import java.util.List;
 
 @Service("targetFileService")
 public class TargetFileServiceImpl implements TargetFileService {
+    private static final String LOCAL_OBD_DIR = "imi.local_obd_dir";
     private static final String TARGET_FILE_TIME = "imi.target_file_time";
     private static final String MAX_QUERY_BLOCK = "imi.max_query_block";
     private static final String TARGET_FILE_MS_INTERVAL = "imi.target_file_ms_interval";
-    private static final String TARGET_FILE_DIRECTORY = "imi.target_file_directory";
     private static final String TARGET_FILE_NOTIFICATION_URL = "imi.target_file_notification_url";
     private static final String TARGET_FILE_IMI_SERVICE_ID = "imi.target_file_imi_service_id";
     private static final String TARGET_FILE_CALL_FLOW_URL = "imi.target_file_call_flow_url";
@@ -144,29 +145,6 @@ public class TargetFileServiceImpl implements TargetFileService {
     // Helper method that makes the code a bit cleaner
     private void alert(String id, String name, String description) {
         alertService.create(id, name, description, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
-    }
-
-
-    //todo: verify we can do that - if the shared directory is an FTP share this might not work
-    private File createTargetFileDirectory() {
-        File userHome = new File(System.getProperty("user.home"));
-        File targetFileDirectory = new File(userHome, settingsFacade.getProperty(TARGET_FILE_DIRECTORY));
-
-        if (targetFileDirectory.exists()) {
-            LOGGER.debug("targetFile directory exists: {}", targetFileDirectory);
-        } else {
-            LOGGER.debug("creating targetFile directory: {}", targetFileDirectory);
-            if (!targetFileDirectory.mkdirs()) {
-                String error = String.format("Unable to create targetFileDirectory %s: mkdirs() failed",
-                        targetFileDirectory);
-                LOGGER.error(error);
-                alert(targetFileDirectory.toString(), "targetFileDirectory", "mkdirs() failed");
-                fileAuditRecordDataService.create(new FileAuditRecord(FileType.TARGET_FILE,
-                        targetFileDirectory.getName(), false, error, null, null));
-                throw new IllegalStateException();
-            }
-        }
-        return targetFileDirectory;
     }
 
 
@@ -343,6 +321,11 @@ public class TargetFileServiceImpl implements TargetFileService {
     }
 
 
+    private File localObdDir() {
+        return new File(settingsFacade.getProperty(LOCAL_OBD_DIR));
+    }
+
+
     /*
     /**
      * 4.4.1 Target File Format
@@ -350,17 +333,11 @@ public class TargetFileServiceImpl implements TargetFileService {
     public TargetFileNotification generateTargetFile() {
         DateTime today = DateTime.now();
         String targetFileName = targetFileName(TIME_FORMATTER.print(today));
-        File targetFileDirectory;
+        File localTargetDir = localObdDir();
         MessageDigest md;
         int recordCount = 0;
 
-        try {
-            targetFileDirectory = createTargetFileDirectory();
-        } catch (IllegalStateException e) {
-            return null;
-        }
-
-        File targetFile = new File(targetFileDirectory, targetFileName);
+        File targetFile = new File(localTargetDir, targetFileName);
         try (FileOutputStream fos = new FileOutputStream(targetFile);
             OutputStreamWriter writer = new OutputStreamWriter(fos)) {
 
@@ -438,8 +415,27 @@ public class TargetFileServiceImpl implements TargetFileService {
         TargetFileNotification tfn = generateTargetFile();
 
         if (tfn != null) {
+            // Copy the OBD file from the local imi.local_obd_dir to the remote imi.local_obd_dir network share
+            ScpHelper scpHelper = new ScpHelper(settingsFacade);
+            try {
+                scpHelper.scpObdToRemote(tfn.getFileName());
+            } catch (ExecException e) {
+                String error = String.format("Error copying CDR file %s: %s", tfn.getFileName(), e.getMessage());
+                LOGGER.error(error);
+                fileAuditRecordDataService.create(new FileAuditRecord(
+                        FileType.TARGET_FILE,
+                        tfn.getFileName(),
+                        false,
+                        error,
+                        null,
+                        null
+                ));
+                //todo: send alert
+                return;
+            }
+
             //notify the IVR system the file is ready
-            sendNotificationRequest(tfn); //todo: IT?
+            sendNotificationRequest(tfn);
         }
     }
 
