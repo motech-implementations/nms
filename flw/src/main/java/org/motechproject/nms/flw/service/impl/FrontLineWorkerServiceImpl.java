@@ -109,7 +109,7 @@ public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
         };
 
         Long purgedRecordCount = frontLineWorkerDataService.executeQuery(queryExecution);
-        LOGGER.info(String.format("Purged %s FLWs with statis %s and invalidation date before %s FLWs",
+        LOGGER.info(String.format("Purged %s FLWs with status %s and invalidation date before %s",
                                   purgedRecordCount, status, cutoff.toString()));
     }
 
