@@ -57,6 +57,21 @@
             <artifactId>motech-platform-commons-api</artifactId>
             <version>${motech.version}</version>
         </dependency>
+
+        <!-- Scheduler -->
+        <dependency>
+            <groupId>org.motechproject</groupId>
+            <artifactId>motech-scheduler</artifactId>
+            <version>${motech.version}</version>
+        </dependency>
+
+        <!-- Event relay -->
+        <dependency>
+            <groupId>org.motechproject</groupId>
+            <artifactId>motech-platform-event</artifactId>
+            <version>${motech.version}</version>
+        </dependency>
+
     </dependencies>
 
     <repositories>
