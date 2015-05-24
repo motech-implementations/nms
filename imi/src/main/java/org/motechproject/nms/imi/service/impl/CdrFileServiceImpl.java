@@ -274,9 +274,13 @@ public class CdrFileServiceImpl implements CdrFileService {
              InputStreamReader isr = new InputStreamReader(fis);
              BufferedReader reader = new BufferedReader(isr)) {
 
-            MessageDigest md = MessageDigest.getInstance("MD5");
+            MessageDigest md = null;
             @SuppressWarnings("PMD.UnusedLocalVariable")
-            DigestInputStream dis = new DigestInputStream(fis, md);
+            DigestInputStream dis = null;
+            if (action == Action.PASS1) {
+                md = MessageDigest.getInstance("MD5");
+                dis = new DigestInputStream(fis, md);
+            }
 
             String line;
             String currentRequestId = "";
@@ -330,7 +334,9 @@ public class CdrFileServiceImpl implements CdrFileService {
                 lineNumber++;
             }
 
-            thisChecksum = new String(Hex.encodeHex(md.digest()));
+            if (action == Action.PASS1) {
+                thisChecksum = new String(Hex.encodeHex(md.digest()));
+            }
 
         } catch (IOException e) {
             String error = String.format("Unable to read %s: %s", fileName, e.getMessage());
@@ -340,7 +346,7 @@ public class CdrFileServiceImpl implements CdrFileService {
             reportAuditAndThrowInternalError(file.getName(), error);
         }
 
-        if (!thisChecksum.equals(fileInfo.getChecksum())) {
+        if (action == Action.PASS1 && !thisChecksum.equals(fileInfo.getChecksum())) {
             String error = String.format("Checksum mismatch, provided checksum: %s, calculated checksum: %s",
                     fileInfo.getChecksum(), thisChecksum);
             reportAuditAndThrow(fileName, error);
@@ -445,9 +451,10 @@ public class CdrFileServiceImpl implements CdrFileService {
             throw new IllegalArgumentException(e.getMessage(), e);
         }
 
-
         // We want to be dealing with the sorted file from now onwards
         file = new File(localCdrDir(), fileInfo.getCdrFile() + SORTED_SUFFIX);
+
+        // NOTE: once sorted the checksums won't match anymore.
 
         // Second verification pass (more in detail) verify all entities & sort order
         List<String> errors = iterateDetailFile(file, fileInfo, Action.PASS2);

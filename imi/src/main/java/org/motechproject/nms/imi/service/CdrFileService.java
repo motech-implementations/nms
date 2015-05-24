@@ -12,9 +12,9 @@ import java.util.List;
 public interface CdrFileService {
 
     enum Action {
-        PASS1, // checksum, record count, valid csv
-        PASS2, // PASS1 + sort order, entities (subscription, circle, etc...) exist
-        PASS3  // PASS1 + aggregate CDRS into CSR and send for distributed processing
+        PASS1, // record count, valid csv, checksum
+        PASS2, // record count, valid csv + sort order, entities (subscription, circle, etc...) exist
+        PASS3  // record count, valid csv + aggregate CDRS into CSR and send for distributed processing
     }
 
 
