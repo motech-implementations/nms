@@ -37,5 +37,5 @@ public interface FrontLineWorkerService {
      * @param frontLineWorker
      */
     @InstanceLifecycleListener(InstanceLifecycleListenerType.PRE_DELETE)
-    void deleteAllowed(FrontLineWorker frontLineWorker);
+    void deletePreconditionCheck(FrontLineWorker frontLineWorker);
 }

@@ -178,7 +178,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @Override
-    public void deleteAllowed(Subscription subscription) {
+    public void deletePreconditionCheck(Subscription subscription) {
         int weeksToKeepInvalidFLWs = Integer.parseInt(settingsFacade.getProperty(WEEKS_TO_KEEP_CLOSED_SUBSCRIPTIONS));
         DateTime now = new DateTime();
 

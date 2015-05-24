@@ -181,7 +181,7 @@ public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
     }
 
     @Override
-    public void deleteAllowed(FrontLineWorker frontLineWorker) {
+    public void deletePreconditionCheck(FrontLineWorker frontLineWorker) {
         int weeksToKeepInvalidFLWs = Integer.parseInt(settingsFacade.getProperty(WEEKS_TO_KEEP_INVALID_FLWS));
         FrontLineWorkerStatus status = FrontLineWorkerStatus.INVALID;
         DateTime now = new DateTime();
@@ -191,7 +191,7 @@ public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
         }
 
         if (frontLineWorker.getInvalidationDate() == null) {
-            throw new IllegalStateException("FLW in invalid state with null invalidation date");
+            throw new IllegalStateException(String.format("FLW in %s state with null invalidation date", status));
         }
 
         if (Math.abs(Weeks.weeksBetween(now, frontLineWorker.getInvalidationDate()).getWeeks()) < weeksToKeepInvalidFLWs) {

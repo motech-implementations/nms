@@ -104,6 +104,6 @@ public interface SubscriptionService {
      * @param subscription
      */
     @InstanceLifecycleListener(InstanceLifecycleListenerType.PRE_DELETE)
-    void deleteAllowed(Subscription subscription);
+    void deletePreconditionCheck(Subscription subscription);
 
 }
