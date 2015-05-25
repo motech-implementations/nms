@@ -45,10 +45,7 @@ public class HealthBlockImportServiceImpl extends BaseLocationImportService<Heal
         mapping.put(REGIONAL_NAME, new GetString());
         mapping.put(NAME, new GetString());
         mapping.put(HQ, new GetString());
-        final TalukaDataService talukaDataService1 = talukaDataService;
         mapping.put(TALUKA_CODE, new GetInstanceByString<Taluka>() {
-            private TalukaDataService talukaDataService = talukaDataService1;
-
             @Override
             public Taluka retrieve(String value) {
                 return talukaDataService.findByCode(value);
