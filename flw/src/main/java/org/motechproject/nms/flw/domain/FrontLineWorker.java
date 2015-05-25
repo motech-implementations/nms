@@ -7,12 +7,14 @@ import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.LanguageLocation;
 
 import javax.jdo.annotations.Column;
+import javax.jdo.annotations.Index;
 import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.Unique;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 
 @Entity(tableName = "nms_front_line_workers")
+@Index(name="status_invalidationDate_composit_idx", members={"status", "invalidationDate"})
 public class FrontLineWorker {
 
     @Field

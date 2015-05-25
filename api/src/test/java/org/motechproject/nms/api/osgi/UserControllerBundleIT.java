@@ -463,8 +463,6 @@ public class UserControllerBundleIT extends BasePaxIT {
         deployedServiceDataService.create(new DeployedService(whitelist, Service.MOBILE_ACADEMY));
         deployedServiceDataService.create(new DeployedService(whitelist, Service.MOBILE_KUNJI));
 
-        // Currently the code to get a state from a languageLocationCode is stubbed out.
-        // llc 34 returns the state "Whitelist".  There is a todo tracking this.
         Language language = new Language("Language From Whitelisted State");
         languageDataService.create(language);
 
