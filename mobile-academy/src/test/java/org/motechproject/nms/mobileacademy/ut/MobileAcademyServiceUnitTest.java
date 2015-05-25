@@ -78,7 +78,7 @@ public class MobileAcademyServiceUnitTest {
     public void setup() {
         initMocks(this);
         mobileAcademyService = new MobileAcademyServiceImpl(
-                bookmarkDataService, courseDataService, completionRecordDataService, eventRelay);
+                bookmarkDataService, courseDataService, completionRecordDataService, eventRelay, settingsFacade);
         smsNotificationServiceImpl = new SmsNotificationServiceImpl(completionRecordDataService, settingsFacade, alertService);
         validator = Validation.buildDefaultValidatorFactory().getValidator();
     }

@@ -63,7 +63,7 @@ public class SmsNotificationServiceImpl implements SmsNotificationService {
 
     @Autowired
     public SmsNotificationServiceImpl(CompletionRecordDataService completionRecordDataService,
-                                      @Qualifier("maImiSettings") SettingsFacade settingsFacade,
+                                      @Qualifier("maSettings") SettingsFacade settingsFacade,
                                       AlertService alertService) {
         this.completionRecordDataService = completionRecordDataService;
         this.settingsFacade = settingsFacade;

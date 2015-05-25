@@ -9,13 +9,16 @@ import org.motechproject.mtraining.repository.BookmarkDataService;
 import org.motechproject.nms.mobileacademy.domain.CompletionRecord;
 import org.motechproject.nms.mobileacademy.domain.Course;
 import org.motechproject.nms.mobileacademy.dto.MaBookmark;
+import org.motechproject.nms.mobileacademy.dto.MaCourse;
 import org.motechproject.nms.mobileacademy.exception.CourseNotCompletedException;
 import org.motechproject.nms.mobileacademy.repository.CompletionRecordDataService;
 import org.motechproject.nms.mobileacademy.repository.CourseDataService;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
+import org.motechproject.server.config.SettingsFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -27,6 +30,8 @@ import java.util.Map;
  */
 @Service("mobileAcademyService")
 public class MobileAcademyServiceImpl implements MobileAcademyService {
+
+    private static final String COURSE_CONTENT_FILE = "nmsCourse.json";
 
     private static final String FINAL_BOOKMARK = "Chapter11_Quiz";
 
@@ -60,17 +65,25 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
      */
     private EventRelay eventRelay;
 
+    /**
+     * Used to retrieve course data
+     */
+    private SettingsFacade settingsFacade;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(MobileAcademyServiceImpl.class);
 
     @Autowired
     public MobileAcademyServiceImpl(BookmarkDataService bookmarkDataService,
                                     CourseDataService courseDataService,
                                     CompletionRecordDataService completionRecordDataService,
-                                    EventRelay eventRelay) {
+                                    EventRelay eventRelay,
+                                    @Qualifier("maSettings") SettingsFacade settingsFacade) {
         this.bookmarkDataService = bookmarkDataService;
         this.courseDataService = courseDataService;
         this.completionRecordDataService = completionRecordDataService;
         this.eventRelay = eventRelay;
+        this.settingsFacade = settingsFacade;
+        bootstrapCourse();
     }
 
     @Override
@@ -294,4 +307,8 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
         return totalScore;
     }
 
+    private void bootstrapCourse() {
+
+        MaCourse course = settingsFacade.getRawConfig(COURSE_CONTENT_FILE);
+    }
 }
