@@ -58,6 +58,15 @@ public class Circle extends MdsEntity {
         this.languageLocations = languageLocations;
     }
 
+    public LanguageLocation getDefaultLanguageLocation() {
+        for (LanguageLocation languageLocation : getLanguageLocations()) {
+            if (languageLocation.isDefaultForCircle()) {
+                return languageLocation;
+            }
+        }
+        return null;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
