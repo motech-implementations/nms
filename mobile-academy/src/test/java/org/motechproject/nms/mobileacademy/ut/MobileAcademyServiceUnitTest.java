@@ -6,6 +6,7 @@ import org.mockito.Mock;
 
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.EventRelay;
 import org.motechproject.mtraining.domain.Bookmark;
@@ -68,6 +69,9 @@ public class MobileAcademyServiceUnitTest {
     @Mock
     private SettingsFacade settingsFacade;
 
+    @Mock
+    private AlertService alertService;
+
     private Validator validator;
 
     @Before
@@ -75,7 +79,7 @@ public class MobileAcademyServiceUnitTest {
         initMocks(this);
         mobileAcademyService = new MobileAcademyServiceImpl(
                 bookmarkDataService, courseDataService, completionRecordDataService, eventRelay);
-        smsNotificationServiceImpl = new SmsNotificationServiceImpl(completionRecordDataService, settingsFacade);
+        smsNotificationServiceImpl = new SmsNotificationServiceImpl(completionRecordDataService, settingsFacade, alertService);
         validator = Validation.buildDefaultValidatorFactory().getValidator();
     }
 

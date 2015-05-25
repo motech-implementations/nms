@@ -10,6 +10,9 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.joda.time.DateTime;
+import org.motechproject.alerts.contract.AlertService;
+import org.motechproject.alerts.domain.AlertStatus;
+import org.motechproject.alerts.domain.AlertType;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.annotations.MotechListener;
 import org.motechproject.nms.mobileacademy.domain.CompletionRecord;
@@ -26,6 +29,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * This handles all the integration pieces between MA and sms module to trigger and handle notifications
@@ -44,7 +49,7 @@ public class SmsNotificationServiceImpl implements SmsNotificationService {
 
     private static final String CALLBACK_URL = "imi.sms.status.callback.url";
 
-    private static final String SMS_SENDER_ID = "imi.sms.sender.id2345";
+    private static final String SMS_SENDER_ID = "imi.sms.sender.id";
 
     private static final String SMS_TEMPLATE_FILE = "smsTemplate.json";
 
@@ -54,11 +59,15 @@ public class SmsNotificationServiceImpl implements SmsNotificationService {
 
     private SettingsFacade settingsFacade;
 
+    private AlertService alertService;
+
     @Autowired
     public SmsNotificationServiceImpl(CompletionRecordDataService completionRecordDataService,
-                                      @Qualifier("maImiSettings") SettingsFacade settingsFacade) {
+                                      @Qualifier("maImiSettings") SettingsFacade settingsFacade,
+                                      AlertService alertService) {
         this.completionRecordDataService = completionRecordDataService;
         this.settingsFacade = settingsFacade;
+        this.alertService = alertService;
     }
 
     @MotechListener(subjects = {COURSE_COMPLETED_SUBJECT})
@@ -116,8 +125,10 @@ public class SmsNotificationServiceImpl implements SmsNotificationService {
                         httpPost.getURI().toString(), responseCode, EntityUtils.toString(response.getEntity()));
                 LOGGER.error(error);
                 if (response.getEntity() != null && response.getEntity().getContentLength() > 0) {
-                    // TODO: raise an alert
                     LOGGER.error(getStringFromStream(response.getEntity().getContent()));
+                    alertService.create("ResponseCode", "Sms notification",
+                            "Could not get expected notification response",
+                            AlertType.CRITICAL, AlertStatus.NEW, 0, null);
                 }
 
                 return false;
@@ -138,8 +149,19 @@ public class SmsNotificationServiceImpl implements SmsNotificationService {
         String callbackEndpoint = settingsFacade.getProperty(CALLBACK_URL);
 
         if (senderId == null || endpoint == null || messageContent == null || callbackEndpoint == null) {
-            // TODO: raise alert as well.
+
+            Map<String, String> alertData = new HashMap<>();
+            alertData.put(SMS_SENDER_ID, senderId);
+            alertData.put(SMS_NOTIFICATION_URL, endpoint);
+            alertData.put(SMS_MESSAGE_CONTENT, messageContent);
+            alertData.put(CALLBACK_URL, callbackEndpoint);
+
             LOGGER.error("Unable to find sms settings. Check IMI sms gateway settings");
+            alertService.create("settingsFacade", "properties", "Could not get sms settings",
+                    AlertType.CRITICAL,
+                    AlertStatus.NEW,
+                    0,
+                    alertData);
             return null;
         }
         endpoint = endpoint.replace("senderId", senderId);
@@ -147,6 +169,15 @@ public class SmsNotificationServiceImpl implements SmsNotificationService {
         request.setHeader("Content-type", "application/json");
 
         String template = getStringFromStream(settingsFacade.getRawConfig(SMS_TEMPLATE_FILE));
+        if (template == null) {
+            LOGGER.error("Unable to find sms template. Check IMI sms template file");
+            alertService.create("settingsFacade", "template", "Could not get sms template",
+                    AlertType.CRITICAL,
+                    AlertStatus.NEW,
+                    0,
+                    null);
+            return null;
+        }
         template = template.replace("<phoneNumber>", String.valueOf(callingNumber));
         template = template.replace("<senderId>", senderId);
         template = template.replace("<messageContent>", messageContent);
