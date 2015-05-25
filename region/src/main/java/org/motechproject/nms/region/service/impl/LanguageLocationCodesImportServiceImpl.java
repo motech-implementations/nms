@@ -11,7 +11,7 @@ import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.LanguageLocationDataService;
 import org.motechproject.nms.region.repository.StateDataService;
-import org.motechproject.nms.region.service.LanguageLocationCodeImportService;
+import org.motechproject.nms.region.service.LanguageLocationCodesImportService;
 import org.motechproject.nms.region.utils.CsvMapImporter;
 import org.motechproject.nms.region.utils.GetBoolean;
 import org.motechproject.nms.region.utils.GetInstanceByLong;
@@ -30,10 +30,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-@Service("languageLocationCodeImportService")
-public class LanguageLocationCodeImportServiceImpl implements LanguageLocationCodeImportService {
+@Service("languageLocationCodesImportService")
+public class LanguageLocationCodesImportServiceImpl implements LanguageLocationCodesImportService {
 
-    public static final Logger LOGGER = LoggerFactory.getLogger(LanguageLocationCodeImportServiceImpl.class);
+    public static final Logger LOGGER = LoggerFactory.getLogger(LanguageLocationCodesImportServiceImpl.class);
 
     public static final String LANGUAGE_LOCATION_CODE = "languageLocationCode";
     public static final String LANGUAGE = "language";

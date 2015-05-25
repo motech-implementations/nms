@@ -4,7 +4,7 @@ import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.alerts.domain.AlertStatus;
 import org.motechproject.alerts.domain.AlertType;
 import org.motechproject.nms.region.exception.CsvImportException;
-import org.motechproject.nms.region.service.LanguageLocationCodeImportService;
+import org.motechproject.nms.region.service.LanguageLocationCodesImportService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,14 +26,14 @@ public class LanguageLocationCodeImportController {
 
     private AlertService alertService;
 
-    private LanguageLocationCodeImportService languageLocationCodeImportService;
+    private LanguageLocationCodesImportService languageLocationCodesImportService;
 
     @RequestMapping(value = "/languageLocationCode/import", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
     public void importLanguageLocationCodes(@RequestParam MultipartFile csvFile) {
         try {
             try(InputStream in = csvFile.getInputStream()) {
-                languageLocationCodeImportService.importData(new InputStreamReader(in));
+                languageLocationCodesImportService.importData(new InputStreamReader(in));
             }
         } catch (CsvImportException e) {
             logError(e);
@@ -56,7 +56,7 @@ public class LanguageLocationCodeImportController {
     }
 
     @Autowired
-    public void setLanguageLocationCodeImportService(LanguageLocationCodeImportService languageLocationCodeImportService) {
-        this.languageLocationCodeImportService = languageLocationCodeImportService;
+    public void setLanguageLocationCodesImportService(LanguageLocationCodesImportService languageLocationCodesImportService) {
+        this.languageLocationCodesImportService = languageLocationCodesImportService;
     }
 }
