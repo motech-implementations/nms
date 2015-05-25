@@ -1,6 +1,7 @@
 package org.motechproject.nms.kilkari.service;
 
 import org.joda.time.DateTime;
+import org.motechproject.event.MotechEvent;
 import org.motechproject.mds.annotations.InstanceLifecycleListener;
 import org.motechproject.mds.domain.InstanceLifecycleListenerType;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
@@ -89,12 +90,20 @@ public interface SubscriptionService {
     void createSubscriptionPacks();
 
     /**
+     * MotechEvent handler that responds to scheduler events.  Purges subscription and subscriber records that
+     * are in a closed state and have been for more than kilkari.weeks_to_keep_closed_subscriptions weeks
+     *
+     * @param event
+     */
+    void purgeOldInvalidSubscriptions(MotechEvent event);
+
+    /**
      * Lifecycle listener that verifies a subscription can only be deleted if it is deactivated or completed
      * and has been in that state for 6 weeks
      *
      * @param subscription
      */
     @InstanceLifecycleListener(InstanceLifecycleListenerType.PRE_DELETE)
-    void deleteAllowed(Subscription subscription);
+    void deletePreconditionCheck(Subscription subscription);
 
 }

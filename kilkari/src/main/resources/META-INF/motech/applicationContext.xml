@@ -20,5 +20,11 @@
         </constructor-arg>
     </bean>
 
-
+    <bean id="kilkariSettings" class="org.motechproject.server.config.SettingsFacade" autowire="byType">
+        <property name="configFiles">
+            <list>
+                <value>classpath:kilkari.properties</value>
+            </list>
+        </property>
+    </bean>
 </beans>
