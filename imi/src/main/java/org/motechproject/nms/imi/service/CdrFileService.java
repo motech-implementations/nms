@@ -19,23 +19,42 @@ public interface CdrFileService {
 
 
     /**
-     * Internal method used to verify the given call detail record file entities or send aggregated detail
-     * records for processing as CallSummaryRecordDto in MOTECH events
+     * Verifies the checksum & record count provided in fileInfo match the checksum & record count of file
+     * also verifies all csv rows are valid.
+     *
+     * @param file          file to process
+     * @param fileInfo      file information provided about the file (ie: expected checksum & recordCount)
+     *
+     */
+    List<String> verifyChecksumAndCountAndCsv(File file, FileInfo fileInfo);
+
+
+    /**
+     * Verifies all entities referenced in the detail exist in the database and verify the file is sorted
+     *
+     * @param file      file to process
+
+     * @return          a list of errors (failure) or an empty list (success)
+     */
+    List<String> verifyDetailFileEntitiesAndSortOrder(File file);
+
+
+    /**
+     * Send aggregated detail records for processing as CallSummaryRecordDto in MOTECH events
      *
      * NOTE: only exposed here for ITs
      *
-     * @param file          the actual file to process
-     * @param fileInfo      file information provided about the file (ie: expected checksum & recordCount)
-     * @return              a list of errors (if any)
+     * @param file          file to process
+     * @return          a list of errors (failure) or an empty list (success)
      */
-    List<String> iterateDetailFile(File file, FileInfo fileInfo, Action action);
+    List<String> sendAggregatedRecords(File file);
 
 
     /**
      * Verify file exists, verify checksum & record count match. Then sends event to proceed to CDR processing
      * phase 2
      */
-    List<String> verifyDetailFileChecksumAndCount(FileInfo fileInfo);
+    void verifyDetailFileChecksumAndCount(FileInfo fileInfo);
 
 
     /**

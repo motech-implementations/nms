@@ -177,8 +177,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         helper.makeCdrs(1,1,1,1);
         helper.makeLocalCdrFile();
         FileInfo fileInfo = new FileInfo(helper.cdr(), helper.cdrLocalChecksum(), helper.cdrCount());
-        List<String> errors = cdrFileService.verifyDetailFileChecksumAndCount(fileInfo);
-        assertEquals(0, errors.size());
+        cdrFileService.verifyDetailFileChecksumAndCount(fileInfo);
     }
 
     @Rule
@@ -284,8 +283,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
 
         File cdrFile = helper.makeLocalCdrFile();
 
-        List<String> errors = cdrFileService.iterateDetailFile(cdrFile, helper.cdrLocalFileInfo(),
-                CdrFileService.Action.PASS3);
+        List<String> errors = cdrFileService.sendAggregatedRecords(cdrFile);
 
         assertEquals(0, errors.size());
     }

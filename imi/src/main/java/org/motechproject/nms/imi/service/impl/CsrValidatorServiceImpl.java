@@ -11,42 +11,31 @@ import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.LanguageLocation;
 import org.motechproject.nms.region.service.CircleService;
 import org.motechproject.nms.region.service.LanguageLocationService;
-import org.motechproject.server.config.SettingsFacade;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 @Service("csrValidatorService")
 public class CsrValidatorServiceImpl implements CsrValidatorService {
 
-    private static final String MAX_CDR_ERROR_COUNT = "imi.max_cdr_error_count";
-    private static final int MAX_CDR_ERROR_COUNT_DEFAULT = 100;
-
     private Map<String, Set<String>> weekIds;
     private Map<String, Set<String>> contentFileNames;
     private Set<String> languageLocationCodes;
     private Set<String> circles;
 
-    private SettingsFacade settingsFacade;
     private SubscriptionService subscriptionService;
     private LanguageLocationService languageLocationService;
     private CircleService circleService;
 
 
     @Autowired
-    public CsrValidatorServiceImpl(@Qualifier("imiSettings") SettingsFacade settingsFacade,
-                                   SubscriptionService subscriptionService,
+    public CsrValidatorServiceImpl(SubscriptionService subscriptionService,
                                    LanguageLocationService languageLocationService,
                                    CircleService circleService) {
-        this.settingsFacade = settingsFacade;
         this.subscriptionService = subscriptionService;
         this.languageLocationService = languageLocationService;
         this.circleService = circleService;
@@ -141,41 +130,5 @@ public class CsrValidatorServiceImpl implements CsrValidatorService {
         validateContentFileName(pack, record.getContentFileName());
         validateCircle(record.getCircle());
         validateLanguageLocationCode(record.getLanguageLocationCode());
-    }
-
-
-    private int getMaxErrorCount() {
-        try {
-            return Integer.parseInt(settingsFacade.getProperty(MAX_CDR_ERROR_COUNT));
-        } catch (NumberFormatException e) {
-            return MAX_CDR_ERROR_COUNT_DEFAULT;
-        }
-    }
-
-
-    //todo: IT
-    @Override
-    public List<String> validateSummaryRecords(Map<String, CallSummaryRecordDto> records) {
-        int maxErrorCount = getMaxErrorCount();
-        int errorCount = 0;
-        List<String> errors = new ArrayList<>();
-
-        Iterator it = records.entrySet().iterator();
-        while (it.hasNext()) {
-            Map.Entry entry = (Map.Entry) it.next();
-            try {
-                validateSummaryRecord((CallSummaryRecordDto) entry.getValue());
-            } catch (InvalidCsrException e) {
-                errors.add(e.getMessage());
-
-            }
-            if (errorCount >= maxErrorCount) {
-                errors.add(String.format("The maximum number of allowed errors of %d has been reached, " +
-                        "discarding all remaining errors.", maxErrorCount));
-                break;
-            }
-        }
-
-        return errors;
     }
 }

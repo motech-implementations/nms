@@ -2,13 +2,8 @@ package org.motechproject.nms.imi.service.impl;
 
 
 import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
@@ -23,6 +18,7 @@ import org.motechproject.nms.imi.domain.FileAuditRecord;
 import org.motechproject.nms.imi.domain.FileProcessedStatus;
 import org.motechproject.nms.imi.domain.FileType;
 import org.motechproject.nms.imi.exception.ExecException;
+import org.motechproject.nms.imi.exception.InternalException;
 import org.motechproject.nms.imi.repository.FileAuditRecordDataService;
 import org.motechproject.nms.imi.service.TargetFileService;
 import org.motechproject.nms.imi.service.contract.TargetFileNotification;
@@ -386,25 +382,22 @@ public class TargetFileServiceImpl implements TargetFileService {
         String notificationUrl = settingsFacade.getProperty(TARGET_FILE_NOTIFICATION_URL);
         LOGGER.debug("Sending {} to {}", tfn, notificationUrl);
 
+
+        ExponentialRetrySender sender = new ExponentialRetrySender(settingsFacade, alertService);
+
+        HttpPost httpPost = new HttpPost(notificationUrl);
+        ObjectMapper mapper = new ObjectMapper();
+
         try {
-            HttpClient httpClient = HttpClients.createDefault();
-            HttpPost httpPost = new HttpPost(notificationUrl);
-            ObjectMapper mapper = new ObjectMapper();
             String requestJson = mapper.writeValueAsString(tfn);
             httpPost.setHeader("Content-type", "application/json");
             httpPost.setEntity(new StringEntity(requestJson));
-            HttpResponse response = httpClient.execute(httpPost);
-            int responseCode = response.getStatusLine().getStatusCode();
-            if (responseCode != HttpStatus.SC_OK) {
-                String error = String.format("Expecting HTTP 200 response from %s but received HTTP %d : %s ",
-                        notificationUrl, responseCode, EntityUtils.toString(response.getEntity()));
-                LOGGER.error(error);
-                alert("targetFile notification request", "targetFile", error);
-            }
         } catch (IOException e) {
-            LOGGER.error("Unable to send targetFile notification request: {}", e.getMessage());
-            alert("targetFile notification request", "targetFile", e.getMessage());
+            throw new InternalException(String.format("Unable to create targetFile notification request: %s",
+                    e.getMessage()), e);
         }
+
+        sender.sendNotificationRequest(httpPost, tfn.getFileName(), "targetFile Notification Request");
     }
 
 

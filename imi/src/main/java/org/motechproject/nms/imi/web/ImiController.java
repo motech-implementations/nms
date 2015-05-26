@@ -3,7 +3,6 @@ package org.motechproject.nms.imi.web;
 import org.motechproject.nms.imi.domain.FileAuditRecord;
 import org.motechproject.nms.imi.domain.FileType;
 import org.motechproject.nms.imi.exception.ExecException;
-import org.motechproject.nms.imi.exception.InternalException;
 import org.motechproject.nms.imi.exception.InvalidCdrFileException;
 import org.motechproject.nms.imi.exception.NotFoundException;
 import org.motechproject.nms.imi.repository.FileAuditRecordDataService;
@@ -238,15 +237,6 @@ public class ImiController {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public AggregateBadRequest handleException(InvalidCdrFileException e) {
         return new AggregateBadRequest(e.getMessages());
-    }
-
-
-    //todo: IT or UT
-    @ExceptionHandler(InternalException.class)
-    @ResponseBody
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public BadRequest handleException(InternalException e) {
-        return new BadRequest(e.getMessage());
     }
 
 

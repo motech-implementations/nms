@@ -1,14 +1,9 @@
 package org.motechproject.nms.imi.service.impl;
 
 import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.lang.StringUtils;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.alerts.domain.AlertStatus;
@@ -60,8 +55,6 @@ import java.util.Set;
 public class CdrFileServiceImpl implements CdrFileService {
 
     private static final String CDR_FILE_NOTIFICATION_URL = "imi.cdr_file_notification_url";
-    private static final String INITIAL_RETRY_DELAY = "imi.initial_retry_delay";
-    private static final int INITIAL_RETRY_DELAY_DEFAULT = 2;
     private static final String LOCAL_CDR_DIR = "imi.local_cdr_dir";
     private static final String MAX_CDR_ERROR_COUNT = "imi.max_cdr_error_count";
     private static final int MAX_CDR_ERROR_COUNT_DEFAULT = 100;
@@ -69,13 +62,10 @@ public class CdrFileServiceImpl implements CdrFileService {
     private static final String CSR_PARAM_KEY = "csr";
     private static final String PROCESS_DETAIL_FILE_SUBJECT = "nms.imi.kk.process_detail_file";
     private static final String FILE_INFO_PARAM_KEY = "fileInfo";
-    private static final String MAX_NOTIFICATION_RETRY_COUNT = "imi.notification_retry_count";
-    private static final int MAX_NOTIFICATION_RETRY_COUNT_DEFAULT = 3;
     private static final String SORTED_SUFFIX = ".sorted";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CdrFileServiceImpl.class);
     public static final String CDR_DETAIL_FILE = "CDR Detail File";
-    public static final int MILLIS_PER_SEC = 1000;
 
     private SettingsFacade settingsFacade;
     private EventRelay eventRelay;
@@ -105,6 +95,9 @@ public class CdrFileServiceImpl implements CdrFileService {
     }
 
 
+    /**
+     * Ends up in a HttpStatus.BAD_REQUEST response to IMI which should generate an IMI-OPS alert
+     */
     private void reportAuditAndThrow(String file, List<String> errors) {
         for (String error : errors) {
             LOGGER.error(error);
@@ -116,77 +109,25 @@ public class CdrFileServiceImpl implements CdrFileService {
     }
 
 
-    private void reportAuditAndThrowInternalError(String file, String error) {
-        LOGGER.error(error);
-        alertService.create(file, CDR_DETAIL_FILE, error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
-        fileAuditRecordDataService.create(new FileAuditRecord(FileType.CDR_DETAIL_FILE, file, false, error,
-                null, null));
-        throw new InternalException(error);
-    }
-
-
     private void sendNotificationRequest(CdrFileProcessedNotification cfpn) {
         String notificationUrl = settingsFacade.getProperty(CDR_FILE_NOTIFICATION_URL);
         LOGGER.debug("Sending {} to {}", cfpn, notificationUrl);
 
-        int retryDelay;
+        ExponentialRetrySender sender = new ExponentialRetrySender(settingsFacade, alertService);
+
+        HttpPost httpPost = new HttpPost(notificationUrl);
+        ObjectMapper mapper = new ObjectMapper();
+
         try {
-            retryDelay = Integer.parseInt(settingsFacade.getProperty(INITIAL_RETRY_DELAY));
-        } catch (NumberFormatException e) {
-            retryDelay = INITIAL_RETRY_DELAY_DEFAULT;
+            String requestJson = mapper.writeValueAsString(cfpn);
+            httpPost.setHeader("Content-type", "application/json");
+            httpPost.setEntity(new StringEntity(requestJson));
+        } catch (IOException e) {
+            throw new InternalException(String.format("Unable to create cdrFile notification request: %s",
+                    e.getMessage()), e);
         }
 
-        int maxRetryCount;
-        try {
-            maxRetryCount = Integer.parseInt(settingsFacade.getProperty(MAX_NOTIFICATION_RETRY_COUNT));
-        } catch (NumberFormatException e) {
-            maxRetryCount = MAX_NOTIFICATION_RETRY_COUNT_DEFAULT;
-        }
-        int count = 0;
-
-        String error = "";
-
-        while (count < maxRetryCount) {
-            try {
-                HttpClient httpClient = HttpClients.createDefault();
-                HttpPost httpPost = new HttpPost(notificationUrl);
-                ObjectMapper mapper = new ObjectMapper();
-                String requestJson = mapper.writeValueAsString(cfpn);
-                httpPost.setHeader("Content-type", "application/json");
-                httpPost.setEntity(new StringEntity(requestJson));
-                HttpResponse response = httpClient.execute(httpPost);
-                int responseCode = response.getStatusLine().getStatusCode();
-                if (responseCode == HttpStatus.SC_OK) {
-                    return;
-                } else {
-                    error = String.format("Expecting HTTP 200 response from %s but received HTTP %d : %s ",
-                            notificationUrl, responseCode, EntityUtils.toString(response.getEntity()));
-                    LOGGER.warn(error);
-                    alertService.create(cfpn.getFileName(), "cdrFile notification request", error,
-                            AlertType.MEDIUM, AlertStatus.NEW, 0, null);
-                }
-            } catch (IOException e) {
-                error = String.format("Unable to send cdrFile notification request: %s", e.getMessage());
-                LOGGER.warn(error);
-                alertService.create(cfpn.getFileName(), "cdrFile notification request", error,
-                        AlertType.MEDIUM, AlertStatus.NEW, 0, null);
-            }
-            count++;
-
-            /**
-             * Exponential retry delay
-             */
-            try {
-                Thread.sleep(retryDelay * MILLIS_PER_SEC);
-            } catch (InterruptedException e) {  }
-            retryDelay = retryDelay * retryDelay;
-        }
-
-        // Retry count exceeded, consider this a critical error
-        LOGGER.error(error);
-        alertService.create(cfpn.getFileName(), "cdrFile notification request", error,
-                AlertType.CRITICAL, AlertStatus.NEW, 0, null);
-
+        sender.sendNotificationRequest(httpPost, cfpn.getFileName(), "cdrFile Notification Request");
     }
 
 
@@ -268,24 +209,21 @@ public class CdrFileServiceImpl implements CdrFileService {
 
 
     /**
+     * Verifies the checksum & record count provided in fileInfo match the checksum & record count of file
+     * also verifies all csv rows are valid.
      *
      * @param file          the actual file to process
      * @param fileInfo      file information provided about the file (ie: expected checksum & recordCount)
-     * @param action        PASS1: verify checksum, verify record count, verify CSV valid
-     *                      PASS2: PASS1 + verify individual records point to existing entities, check sort order
-     *                      PASS3: PASS1 + aggregate same call CDRS into CSR and send for distributed processing
-     * @return
+     *
+     * @return          a list of errors (failure) or an empty list (success)
      */
-    @Override // NO CHECKSTYLE Cyclomatic Complexity
-    @SuppressWarnings("PMD.NcssMethodCount")
-    public List<String> iterateDetailFile(File file, FileInfo fileInfo, Action action) {
+    @Override
+    public List<String> verifyChecksumAndCountAndCsv(File file, FileInfo fileInfo) {
         int maxErrorCount = getMaxErrorCount();
         int errorCount = 0;
         List<String> errors = new ArrayList<>();
-        Set<String> requestIds = new HashSet<>();
         int lineNumber = 1;
         String thisChecksum = "";
-        // Might end with .sorted (PASS2, PASS3) or not (PASS1)
         String fileName = file.getName();
 
         try (FileInputStream fis = new FileInputStream(file);
@@ -294,11 +232,140 @@ public class CdrFileServiceImpl implements CdrFileService {
 
             MessageDigest md = null;
             @SuppressWarnings("PMD.UnusedLocalVariable")
-            DigestInputStream dis = null;
-            if (action == Action.PASS1) {
-                md = MessageDigest.getInstance("MD5");
-                dis = new DigestInputStream(fis, md);
+            DigestInputStream dis = new DigestInputStream(fis, md);
+            md = MessageDigest.getInstance("MD5");
+
+            String line;
+            while ((line = reader.readLine()) != null) {
+                try {
+
+                    // Parse the CSV line into a CDR (which we actually discard in this phase)
+                    // This will trow IllegalArgumentException if the CSV is malformed
+                    CsvHelper.csvLineToCdr(line);
+                } catch (IllegalArgumentException e) {
+                    errors.add(String.format("Line %d: %s", lineNumber, e.getMessage()));
+                    errorCount++;
+                }
+                if (errorCount >= maxErrorCount) {
+                    errors.add(String.format("The maximum number of allowed errors of %d has been reached, " +
+                            "ending file verification.", maxErrorCount));
+                    return errors;
+                }
+                lineNumber++;
             }
+
+            thisChecksum = new String(Hex.encodeHex(md.digest()));
+
+        } catch (IOException e) {
+            String error = String.format("Unable to read %s: %s", fileName, e.getMessage());
+            errors.add(error);
+        } catch (NoSuchAlgorithmException e) {
+            String error = String.format("Unable to compute checksum: %s", e.getMessage());
+            errors.add(error);
+        }
+
+        if (!thisChecksum.equals(fileInfo.getChecksum())) {
+            String error = String.format("Checksum mismatch, provided checksum: %s, calculated checksum: %s",
+                    fileInfo.getChecksum(), thisChecksum);
+            errors.add(error);
+        }
+
+        if (lineNumber - 1 != fileInfo.getRecordsCount()) {
+            String error = String.format("Record count mismatch, provided count: %d, actual count: %d",
+                    fileInfo.getRecordsCount(), lineNumber - 1);
+            errors.add(error);
+        }
+
+        return errors;
+    }
+
+
+    /**
+     * Verifies all entities referenced in the detail exist in the database and verify the file is sorted
+     *
+     * @param file      file to process
+
+     * @return          a list of errors (failure) or an empty list (success)
+     */
+    @Override
+    public List<String> verifyDetailFileEntitiesAndSortOrder(File file) {
+        int maxErrorCount = getMaxErrorCount();
+        int errorCount = 0;
+        List<String> errors = new ArrayList<>();
+        Set<String> requestIds = new HashSet<>();
+        int lineNumber = 1;
+        String fileName = file.getName();
+
+        try (FileInputStream fis = new FileInputStream(file);
+             InputStreamReader isr = new InputStreamReader(fis);
+             BufferedReader reader = new BufferedReader(isr)) {
+
+            String line;
+            String currentRequestId = "";
+            while ((line = reader.readLine()) != null) {
+                try {
+
+                    // Parse the CSV line into a CDR
+                    // This should not trow an IllegalArgumentException since we verified this in phase 1
+                    CallDetailRecordDto cdr = CsvHelper.csvLineToCdr(line);
+
+                    if (!currentRequestId.equals(cdr.getRequestId().toString())) {
+                        currentRequestId = cdr.getRequestId().toString();
+
+                        // Check for sort order, in reality we don't care about the ascending or descending
+                        // thing, what's important is that all the CDRs for one call are grouped.
+                        if (requestIds.contains(currentRequestId)) {
+                            // An identical requestId was found, that means this file isn't sorted
+                            errors.add(String.format("%s is not sorted properly!", fileName));
+                            reportAuditAndThrow(fileName, errors);
+                        }
+                        requestIds.add(currentRequestId);
+
+                        // Start aggregating a new CSR
+                    }
+                    CallSummaryRecordDto csr = new CallSummaryRecordDto();
+                    aggregateDetailRecord(cdr, csr);
+                    csrValidatorService.validateSummaryRecord(csr);
+                } catch (IllegalArgumentException e) {
+                    errors.add(String.format("Line %d: %s", lineNumber, e.getMessage()));
+                    errorCount++;
+                }
+                if (errorCount >= maxErrorCount) {
+                    errors.add(String.format("The maximum number of allowed errors of %d has been reached, " +
+                            "ending file verification.", maxErrorCount));
+                    return errors;
+                }
+                lineNumber++;
+            }
+
+        } catch (IOException e) {
+            String error = String.format("Unable to read %s: %s", fileName, e.getMessage());
+            errors.add(error);
+        }
+
+        return errors;
+    }
+
+
+    /**
+     * Send aggregated detail records for processing as CallSummaryRecordDto in MOTECH events
+     *
+     * NOTE: only exposed here for ITs
+     *
+     * @param file      file to process
+     * @return          a list of errors (failure) or an empty list (success)
+     */
+    @Override
+    public List<String> sendAggregatedRecords(File file) {
+        int maxErrorCount = getMaxErrorCount();
+        int errorCount = 0;
+        List<String> errors = new ArrayList<>();
+        int lineNumber = 1;
+        String fileName = file.getName();
+
+        try (FileInputStream fis = new FileInputStream(file);
+             InputStreamReader isr = new InputStreamReader(fis);
+             BufferedReader reader = new BufferedReader(isr)) {
 
             String line;
             String currentRequestId = "";
@@ -310,36 +377,21 @@ public class CdrFileServiceImpl implements CdrFileService {
                     // This will trow IllegalArgumentException if the CSV is malformed
                     CallDetailRecordDto cdr = CsvHelper.csvLineToCdr(line);
 
-                    if (currentRequestId.equals(cdr.getRequestId().toString())) {
-                        // Aggregate CDRs for the same call into a single CSR
-                        if (action == Action.PASS3) {
-                            aggregateDetailRecord(cdr, csr);
-                        }
-                    } else {
+                    if (!currentRequestId.equals(cdr.getRequestId().toString())) {
                         // Send last CSR, if any, for processing
-                        if (action == Action.PASS3 && csr != null) {
+                        if (csr != null) {
                             sendProcessSummaryRecordEvent(csr);
                             csr = null; //todo: does that help the GC?
                         }
 
                         currentRequestId = cdr.getRequestId().toString();
 
-                        // Check for sort order, we don't care about the ascending or descending thing, what's
-                        // important is that all the CDRs for one call are grouped.
-                        if (action != Action.PASS1) {
-                            if (requestIds.contains(currentRequestId)) {
-                                // An identical requestId was found, that means this file isn't sorted
-                                errors.add(String.format("%s is not sorted properly!", fileName));
-                                reportAuditAndThrow(fileName, errors);
-                            }
-                            requestIds.add(currentRequestId);
-                        }
-
                         // Start aggregating a new CSR
                         csr = new CallSummaryRecordDto();
-                        aggregateDetailRecord(cdr, csr);
-                        csrValidatorService.validateSummaryRecord(csr);
                     }
+
+                    aggregateDetailRecord(cdr, csr);
+
                 } catch (IllegalArgumentException e) {
                     errors.add(String.format("Line %d: %s", lineNumber, e.getMessage()));
                     errorCount++;
@@ -347,33 +399,14 @@ public class CdrFileServiceImpl implements CdrFileService {
                 if (errorCount >= maxErrorCount) {
                     errors.add(String.format("The maximum number of allowed errors of %d has been reached, " +
                             "ending file verification.", maxErrorCount));
-                    reportAuditAndThrow(fileName, errors);
+                    return errors;
                 }
                 lineNumber++;
             }
 
-            if (action == Action.PASS1) {
-                thisChecksum = new String(Hex.encodeHex(md.digest()));
-            }
-
         } catch (IOException e) {
             String error = String.format("Unable to read %s: %s", fileName, e.getMessage());
-            reportAuditAndThrowInternalError(file.getName(), error);
-        } catch (NoSuchAlgorithmException e) {
-            String error = String.format("Unable to compute checksum: %s", e.getMessage());
-            reportAuditAndThrowInternalError(file.getName(), error);
-        }
-
-        if (action == Action.PASS1 && !thisChecksum.equals(fileInfo.getChecksum())) {
-            String error = String.format("Checksum mismatch, provided checksum: %s, calculated checksum: %s",
-                    fileInfo.getChecksum(), thisChecksum);
-            reportAuditAndThrow(fileName, error);
-        }
-
-        if (lineNumber - 1 != fileInfo.getRecordsCount()) {
-            String error = String.format("Record count mismatch, provided count: %d, actual count: %d",
-                    fileInfo.getRecordsCount(), lineNumber - 1);
-            reportAuditAndThrow(fileName, error);
+            errors.add(error);
         }
 
         return errors;
@@ -397,10 +430,10 @@ public class CdrFileServiceImpl implements CdrFileService {
     //          while collecting a list of errors on the go.
     //          Does not proceed to phase 2 if any error occurred and returns an error
     @Override
-    public List<String> verifyDetailFileChecksumAndCount(FileInfo fileInfo) {
+    public void verifyDetailFileChecksumAndCount(FileInfo fileInfo) {
         File file = new File(localCdrDir(), fileInfo.getCdrFile());
 
-        List<String> errors = iterateDetailFile(file, fileInfo, Action.PASS1);
+        List<String> errors = verifyChecksumAndCountAndCsv(file, fileInfo);
         if (errors.size() > 0) {
             // Ends up in a HttpStatus.BAD_REQUEST response to IMI which should generate an IMI-OPS alert
             reportAuditAndThrow(fileInfo.getCdrFile(), errors);
@@ -408,8 +441,6 @@ public class CdrFileServiceImpl implements CdrFileService {
 
         // Send a MOTECH event to continue to phase 2 (without timing out the POST from IMI)
         sendProcessDetailFileEvent(fileInfo);
-
-        return errors;
     }
 
 
@@ -475,7 +506,7 @@ public class CdrFileServiceImpl implements CdrFileService {
         // NOTE: once sorted the checksums won't match anymore.
 
         // Second verification pass (more in detail) verify all entities & sort order
-        List<String> errors = iterateDetailFile(file, fileInfo, Action.PASS2);
+        List<String> errors = verifyDetailFileEntitiesAndSortOrder(file);
         if (errors.size() > 0) {
             reportAuditAndPost(fileInfo.getCdrFile(), errors);
             return errors;
@@ -492,7 +523,7 @@ public class CdrFileServiceImpl implements CdrFileService {
 
         // Phase 3: distribute the processing of individual CSRs to all nodes.
         //          each node may generate an individual error that NMS-OPS will have to respond to.
-        errors = iterateDetailFile(file, fileInfo, Action.PASS3);
+        errors = sendAggregatedRecords(file);
         if (errors.size() > 0) {
             reportAuditAndPost(fileInfo.getCdrFile(), errors);
         }
