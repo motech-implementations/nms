@@ -136,6 +136,29 @@
             <groupId>org.motechproject</groupId>
             <artifactId>motech-pax-it</artifactId>
         </dependency>
+
+        <!-- MOTECH modules -->
+        <!-- Repository -->
+        <dependency>
+            <groupId>org.motechproject</groupId>
+            <artifactId>motech-platform-dataservices</artifactId>
+            <version>${motech.version}</version>
+        </dependency>
+
+        <!-- Alerts -->
+        <dependency>
+            <groupId>org.motechproject</groupId>
+            <artifactId>alerts</artifactId>
+            <version>${motech.version}</version>
+        </dependency>
+
+        <!-- Settings -->
+        <dependency>
+            <groupId>org.motechproject</groupId>
+            <artifactId>motech-platform-server-config</artifactId>
+            <version>${motech.version}</version>
+        </dependency>
+
     </dependencies>
 
     <dependencyManagement>
@@ -376,12 +399,12 @@
             <dependency>
                 <groupId>org.apache.httpcomponents</groupId>
                 <artifactId>httpclient-osgi</artifactId>
-                <version>4.4</version>
+                <version>4.4.1</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.httpcomponents</groupId>
                 <artifactId>httpcore-osgi</artifactId>
-                <version>4.4</version>
+                <version>4.4.1</version>
             </dependency>
             <dependency>
                 <groupId>org.hibernate</groupId>
