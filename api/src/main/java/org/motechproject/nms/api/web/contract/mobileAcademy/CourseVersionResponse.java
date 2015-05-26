@@ -15,11 +15,11 @@ public class CourseVersionResponse {
         this.courseVersion = courseVersion;
     }
 
-    public long getCourseVersion() {
+    public Long getCourseVersion() {
         return courseVersion;
     }
 
-    public void setCourseVersion(long courseVersion) {
+    public void setCourseVersion(Long courseVersion) {
         this.courseVersion = courseVersion;
     }
 }
