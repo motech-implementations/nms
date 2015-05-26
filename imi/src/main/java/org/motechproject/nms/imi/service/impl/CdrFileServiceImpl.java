@@ -60,6 +60,8 @@ import java.util.Set;
 public class CdrFileServiceImpl implements CdrFileService {
 
     private static final String CDR_FILE_NOTIFICATION_URL = "imi.cdr_file_notification_url";
+    private static final String INITIAL_RETRY_DELAY = "imi.initial_retry_delay";
+    private static final int INITIAL_RETRY_DELAY_DEFAULT = 2;
     private static final String LOCAL_CDR_DIR = "imi.local_cdr_dir";
     private static final String MAX_CDR_ERROR_COUNT = "imi.max_cdr_error_count";
     private static final int MAX_CDR_ERROR_COUNT_DEFAULT = 100;
@@ -73,6 +75,7 @@ public class CdrFileServiceImpl implements CdrFileService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CdrFileServiceImpl.class);
     public static final String CDR_DETAIL_FILE = "CDR Detail File";
+    public static final int MILLIS_PER_SEC = 1000;
 
     private SettingsFacade settingsFacade;
     private EventRelay eventRelay;
@@ -126,6 +129,13 @@ public class CdrFileServiceImpl implements CdrFileService {
         String notificationUrl = settingsFacade.getProperty(CDR_FILE_NOTIFICATION_URL);
         LOGGER.debug("Sending {} to {}", cfpn, notificationUrl);
 
+        int retryDelay;
+        try {
+            retryDelay = Integer.parseInt(settingsFacade.getProperty(INITIAL_RETRY_DELAY));
+        } catch (NumberFormatException e) {
+            retryDelay = INITIAL_RETRY_DELAY_DEFAULT;
+        }
+
         int maxRetryCount;
         try {
             maxRetryCount = Integer.parseInt(settingsFacade.getProperty(MAX_NOTIFICATION_RETRY_COUNT));
@@ -162,6 +172,14 @@ public class CdrFileServiceImpl implements CdrFileService {
                         AlertType.MEDIUM, AlertStatus.NEW, 0, null);
             }
             count++;
+
+            /**
+             * Exponential retry delay
+             */
+            try {
+                Thread.sleep(retryDelay * MILLIS_PER_SEC);
+            } catch (InterruptedException e) {  }
+            retryDelay = retryDelay * retryDelay;
         }
 
         // Retry count exceeded, consider this a critical error
