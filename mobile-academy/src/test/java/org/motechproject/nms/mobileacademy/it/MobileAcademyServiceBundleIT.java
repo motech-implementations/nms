@@ -5,15 +5,15 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.mtraining.domain.Bookmark;
+import org.motechproject.mtraining.domain.Course;
+import org.motechproject.mtraining.domain.CourseUnitState;
 import org.motechproject.mtraining.repository.BookmarkDataService;
+import org.motechproject.mtraining.service.MTrainingService;
 import org.motechproject.nms.mobileacademy.domain.CompletionRecord;
-import org.motechproject.nms.mobileacademy.domain.Course;
 import org.motechproject.nms.mobileacademy.dto.MaBookmark;
 import org.motechproject.nms.mobileacademy.exception.CourseNotCompletedException;
 import org.motechproject.nms.mobileacademy.service.SmsNotificationService;
-import org.motechproject.nms.mobileacademy.service.impl.SmsNotificationServiceImpl;
 import org.motechproject.nms.mobileacademy.repository.CompletionRecordDataService;
-import org.motechproject.nms.mobileacademy.repository.CourseDataService;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
@@ -21,9 +21,7 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
-import org.springframework.test.context.ContextConfiguration;
 
-import javax.annotation.Resource;
 import javax.inject.Inject;
 import java.util.HashMap;
 import java.util.List;
@@ -43,7 +41,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     private MobileAcademyService maService;
 
     @Inject
-    private CourseDataService courseDataService;
+    private MTrainingService mTrainingService;
 
     @Inject
     private BookmarkDataService bookmarkDataService;
@@ -61,7 +59,12 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     @Before
     public void setupMobileAcademy() {
 
-        courseDataService.deleteAll();
+        List<Course> courses = mTrainingService.getCourseByName(validCourseName);
+        if (courses != null) {
+            for (Course currentCourse : courses) {
+                mTrainingService.deleteCourse(currentCourse.getId());
+            }
+        }
         completionRecordDataService.deleteAll();
     }
 
@@ -69,8 +72,9 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     public void testSetCourse() {
 
         addCourseHelper(invalidCourseName);
-        Course retrieved = courseDataService.findCourseByName(invalidCourseName);
+        List<Course> retrieved = mTrainingService.getCourseByName(invalidCourseName);
         assertNotNull(retrieved);
+        assertTrue(retrieved.size() > 0);
     }
 
     @Test
@@ -284,9 +288,8 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     }
 
     private void addCourseHelper(String courseName) {
-        Course newCourse = new Course();
-        newCourse.setName(courseName);
-        courseDataService.create(newCourse);
+
+        mTrainingService.createCourse(new Course(courseName, CourseUnitState.Active, "[]"));
     }
 
 }

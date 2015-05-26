@@ -1,18 +1,24 @@
 package org.motechproject.nms.mobileacademy.service.impl;
 
-import org.apache.commons.collections.CollectionUtils;
-import org.joda.time.DateTime;
+import com.google.gson.Gson;
+import org.apache.commons.io.IOUtils;
+import org.motechproject.alerts.contract.AlertService;
+import org.motechproject.alerts.domain.AlertStatus;
+import org.motechproject.alerts.domain.AlertType;
+import org.motechproject.config.core.constants.ConfigurationConstants;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.EventRelay;
+import org.motechproject.event.listener.annotations.MotechListener;
 import org.motechproject.mtraining.domain.Bookmark;
-import org.motechproject.mtraining.repository.BookmarkDataService;
+import org.motechproject.mtraining.domain.Course;
+import org.motechproject.mtraining.domain.CourseUnitState;
+import org.motechproject.mtraining.service.BookmarkService;
+import org.motechproject.mtraining.service.MTrainingService;
 import org.motechproject.nms.mobileacademy.domain.CompletionRecord;
-import org.motechproject.nms.mobileacademy.domain.Course;
 import org.motechproject.nms.mobileacademy.dto.MaBookmark;
 import org.motechproject.nms.mobileacademy.dto.MaCourse;
 import org.motechproject.nms.mobileacademy.exception.CourseNotCompletedException;
 import org.motechproject.nms.mobileacademy.repository.CompletionRecordDataService;
-import org.motechproject.nms.mobileacademy.repository.CourseDataService;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
 import org.motechproject.server.config.SettingsFacade;
 import org.slf4j.Logger;
@@ -21,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +39,8 @@ import java.util.Map;
 public class MobileAcademyServiceImpl implements MobileAcademyService {
 
     private static final String COURSE_CONTENT_FILE = "nmsCourse.json";
+
+    private static final String COURSE_NAME = "MobileAcademyCourse";
 
     private static final String FINAL_BOOKMARK = "Chapter11_Quiz";
 
@@ -46,19 +55,19 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
     private static final int PASS_SCORE = 22;
 
     /**
-     * Bookmark data service
+     * mTraining service to get and set course content
      */
-    private BookmarkDataService bookmarkDataService;
+    private MTrainingService mTrainingService;
+
+    /**
+     * Bookmark service to get and set bookmarks
+     */
+    private BookmarkService bookmarkService;
 
     /**
      * Completion record data service
      */
     private CompletionRecordDataService completionRecordDataService;
-
-    /**
-     * Course data service
-     */
-    private CourseDataService courseDataService;
 
     /**
      * Eventing system for course completion processing
@@ -70,68 +79,74 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
      */
     private SettingsFacade settingsFacade;
 
+    /**
+     * Used for alerting
+     */
+    private AlertService alertService;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(MobileAcademyServiceImpl.class);
 
     @Autowired
-    public MobileAcademyServiceImpl(BookmarkDataService bookmarkDataService,
-                                    CourseDataService courseDataService,
+    public MobileAcademyServiceImpl(MTrainingService mTrainingService,
+                                    BookmarkService bookmarkService,
                                     CompletionRecordDataService completionRecordDataService,
                                     EventRelay eventRelay,
-                                    @Qualifier("maSettings") SettingsFacade settingsFacade) {
-        this.bookmarkDataService = bookmarkDataService;
-        this.courseDataService = courseDataService;
+                                    @Qualifier("maSettings") SettingsFacade settingsFacade,
+                                    AlertService alertService) {
+        this.mTrainingService = mTrainingService;
+        this.bookmarkService = bookmarkService;
         this.completionRecordDataService = completionRecordDataService;
         this.eventRelay = eventRelay;
         this.settingsFacade = settingsFacade;
+        this.alertService = alertService;
         bootstrapCourse();
     }
 
     @Override
-    public Course getCourse() {
+    public MaCourse getCourse() {
 
-        // Make this course name configurable
-        String lookupName = "MobileAcademyCourse";
-        return courseDataService.findCourseByName(lookupName);
+        List<Course> courses = mTrainingService.getCourseByName(COURSE_NAME);
+        if (courses == null || courses.size() < 1) {
+            alertService.create("mTraining.Course", COURSE_NAME, "Could not find course", AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            throw new IllegalStateException("No course bootstrapped. Check deployment");
+        }
+
+        if (courses.size() > 1) {
+            LOGGER.error("Found more than 1 course but this shouldn't be possible");
+        }
+
+        return mapCourseDomainToDto(courses.get(0));
     }
 
     @Override
-    public void setCourse(Course course) {
-        Course existing = courseDataService.findCourseByName(course.getName());
+    public void setCourse(MaCourse courseDto) {
 
-        if (existing == null) {
-            courseDataService.create(course);
-        } else {
-            course.setId(existing.getId());
-            courseDataService.update(course);
+        if (courseDto == null) {
+            LOGGER.error("Attempted to set null course, exiting operation");
+            alertService.create("MA.Course", "MaCourse", "Trying to set null MaCourse", AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            return;
         }
+
+        setOrUpdateCourse(courseDto);
     }
 
     @Override
     public long getCourseVersion() {
 
-        Course course = getCourse();
-        if (course != null) {
-            DateTime version = course.getModificationDate();
-            return version.getMillis();
+        List<Course> course = mTrainingService.getCourseByName(COURSE_NAME);
+        if (course != null && course.size() > 0) {
+            return course.get(0).getModificationDate().getMillis();
         } else {
-            // return -1 and let the caller handle the upstream response
-            return -1;
+
+            alertService.create("MTraining.Course", COURSE_NAME, "No course found", AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            throw new IllegalStateException("No course found. Check deployment");
         }
     }
 
     @Override
     public MaBookmark getBookmark(Long callingNumber, Long callId) {
 
-        List<Bookmark> bookmarks = bookmarkDataService.findBookmarksForUser(callingNumber.toString());
-        if (CollectionUtils.isEmpty(bookmarks)) {
-            return null;
-        }
-
-        if (bookmarks.size() > 1) {
-            LOGGER.debug("Found more than 1 instance of valid bookmark, picking top");
-        }
-
-        Bookmark existingBookmark = bookmarks.get(0);
+        Bookmark existingBookmark = bookmarkService.getLatestBookmarkByUserId(callingNumber.toString());
         MaBookmark toReturn = setMaBookmarkProperties(existingBookmark);
         toReturn.setCallId(callId);
         return  toReturn;
@@ -141,22 +156,17 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
     public void setBookmark(MaBookmark saveBookmark) {
 
         String callingNumber = saveBookmark.getCallingNumber().toString();
-        List<Bookmark> existing = bookmarkDataService.findBookmarksForUser(callingNumber);
+        Bookmark existingBookmark = bookmarkService.getLatestBookmarkByUserId(callingNumber);
 
-        if (CollectionUtils.isEmpty(existing)) {
+        if (existingBookmark == null) {
             // if no bookmarks exist for user
             LOGGER.info("No bookmarks found for user " + callingNumber);
-            bookmarkDataService.create(setBookmarkProperties(saveBookmark, new Bookmark()));
+            bookmarkService.createBookmark(setBookmarkProperties(saveBookmark, new Bookmark()));
         } else {
-            // error check
-            if (existing.size() > 1) {
-                LOGGER.error("Found more than 1 bookmark for calling number. This should never be possible.");
-                LOGGER.error("Contact dev team about calling number: " + callingNumber);
-            }
 
             // update the first bookmark
-            LOGGER.info("Updating the first bookmark for user");
-            bookmarkDataService.update(setBookmarkProperties(saveBookmark, existing.get(0)));
+            LOGGER.info("Updating bookmark for user");
+            bookmarkService.updateBookmark(setBookmarkProperties(saveBookmark, existingBookmark));
         }
 
         if (saveBookmark.getBookmark() != null
@@ -307,8 +317,66 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
         return totalScore;
     }
 
-    private void bootstrapCourse() {
+    @SuppressWarnings("PMD.UnusedPrivateMethod")
+    @MotechListener(subjects = {
+            ConfigurationConstants.FILE_CHANGED_EVENT_SUBJECT,
+            ConfigurationConstants.FILE_CREATED_EVENT_SUBJECT })
+    private void handleCourseChanges(MotechEvent event) {
 
-        MaCourse course = settingsFacade.getRawConfig(COURSE_CONTENT_FILE);
+        String filePath = (String) event.getParameters().get(ConfigurationConstants.FILE_PATH);
+
+        if (filePath.contains(COURSE_CONTENT_FILE)) {
+            LOGGER.debug("Got notification for course data change, reloading course");
+            bootstrapCourse();
+        } else {
+            LOGGER.debug("Course file not in path, back to sleep: " + filePath);
+        }
+
+    }
+
+    private void bootstrapCourse() {
+        MaCourse course;
+        try (InputStream is = settingsFacade.getRawConfig(COURSE_CONTENT_FILE)) {
+            String jsonText = IOUtils.toString(is);
+            Gson gson = new Gson();
+            course = gson.fromJson(jsonText, MaCourse.class);
+            setOrUpdateCourse(course);
+        }
+        catch (Exception e) {
+            LOGGER.error("Error while reading course json. Check file. Exception: " + e.toString());
+            alertService.create("MA.Course", "MaCourse", "Error reading course json", AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+        }
+    }
+
+    private void setOrUpdateCourse(MaCourse courseDto) {
+        List<Course> existing = mTrainingService.getCourseByName(courseDto.getName());
+
+        if (existing == null) {
+            mTrainingService.createCourse(new Course(courseDto.getName(), CourseUnitState.Active, courseDto.getContent()));
+            LOGGER.debug("Successfully created new course");
+            return;
+        }
+
+        if (existing.size() > 1) {
+            LOGGER.error("Found more than 1 course but this shouldn't be possible. Picking first course");
+        }
+
+        Course existingDomainCourse = existing.get(0);
+        if (existingDomainCourse.getContent().equals(courseDto.getContent())) {
+            LOGGER.debug("Found no changes in course data, dropping update");
+        } else {
+            existingDomainCourse.setContent(courseDto.getContent());
+            mTrainingService.updateCourse(existingDomainCourse);
+            LOGGER.debug("Found updated to course data and did the needful");
+        }
+    }
+
+    private MaCourse mapCourseDomainToDto(Course course) {
+
+        MaCourse courseDto = new MaCourse();
+        courseDto.setName(course.getName());
+        courseDto.setVersion(course.getModificationDate().getMillis());
+        courseDto.setContent(course.getContent());
+        return courseDto;
     }
 }
