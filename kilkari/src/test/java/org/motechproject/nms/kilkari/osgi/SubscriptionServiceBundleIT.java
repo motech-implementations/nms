@@ -8,14 +8,17 @@ import org.motechproject.nms.kilkari.domain.InboxCallData;
 import org.motechproject.nms.kilkari.domain.InboxCallDetailRecord;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
+import org.motechproject.nms.kilkari.domain.SubscriptionError;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
+import org.motechproject.nms.kilkari.domain.SubscriptionRejectionReason;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.repository.InboxCallDataDataService;
 import org.motechproject.nms.kilkari.repository.InboxCallDetailRecordDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
+import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackMessageDataService;
 import org.motechproject.nms.kilkari.service.InboxService;
@@ -84,6 +87,8 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     private DistrictDataService districtDataService;
     @Inject
     private CircleDataService circleDataService;
+    @Inject
+    private SubscriptionErrorDataService subscriptionErrorDataService;
 
     private LanguageLocation gLanguageLocation;
     private SubscriptionPack gPack1;
@@ -156,6 +161,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         languageDataService.deleteAll();
         inboxCallDataDataService.deleteAll();
         inboxCallDetailRecordDataService.deleteAll();
+        subscriptionErrorDataService.deleteAll();
     }
 
     @Test
@@ -317,6 +323,10 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
+
+        SubscriptionError error = subscriptionErrorDataService.findByCallingNumber(9999911122L);
+        assertNotNull(error);
+        assertEquals(SubscriptionRejectionReason.ALREADY_SUBSCRIBED, error.getRejectionReason());
     }
 
     @Test
@@ -336,6 +346,10 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
+
+        SubscriptionError error = subscriptionErrorDataService.findByCallingNumber(9999911122L);
+        assertNotNull(error);
+        assertEquals(SubscriptionRejectionReason.ALREADY_SUBSCRIBED, error.getRejectionReason());
     }
 
     @Test
@@ -357,6 +371,9 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
+
+        SubscriptionError error = subscriptionErrorDataService.findByCallingNumber(9999911122L);
+        assertNull(error);
     }
 
     @Test
@@ -382,6 +399,9 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         assertEquals(2, mctsSubscriber.getActiveSubscriptions().size());
+
+        SubscriptionError error = subscriptionErrorDataService.findByCallingNumber(9999911122L);
+        assertNull(error);
     }
 
     @Test

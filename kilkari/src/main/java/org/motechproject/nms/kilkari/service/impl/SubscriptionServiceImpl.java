@@ -5,6 +5,7 @@ import org.motechproject.mds.query.QueryParams;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
+import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.domain.SubscriptionError;
 import org.motechproject.nms.kilkari.domain.SubscriptionRejectionReason;
@@ -120,10 +121,12 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             }
         } else if (subscriber.getLastMenstrualPeriod() != null && subscriber.getDateOfBirth() == null &&
                 pack.getType() == SubscriptionPackType.PREGNANCY) {
-            if (subscriberHasActivePackType(subscriber, SubscriptionPackType.PREGNANCY) ||
-                    Subscription.hasCompletedForStartDate(subscriber.getLastMenstrualPeriod().plusDays(THREE_MONTHS),
+            if (subscriberHasActivePackType(subscriber, SubscriptionPackType.PREGNANCY)) {
+                logRejectedSubscription(subscriber.getCallingNumber(),
+                        SubscriptionRejectionReason.ALREADY_SUBSCRIBED, SubscriptionPackType.PREGNANCY);
+                return null;
+            } else if (Subscription.hasCompletedForStartDate(subscriber.getLastMenstrualPeriod().plusDays(THREE_MONTHS),
                             DateTime.now(), pack)) {
-                // TODO: #138 log the rejected subscription
                 return null;
             } else {
                 // TODO: #160 deal with early subscription
