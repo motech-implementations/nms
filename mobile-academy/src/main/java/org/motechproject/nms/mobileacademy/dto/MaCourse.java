@@ -1,6 +1,5 @@
 package org.motechproject.nms.mobileacademy.dto;
 
-import com.google.gson.annotations.SerializedName;
 import org.codehaus.jackson.annotate.JsonProperty;
 
 /**
@@ -15,7 +14,6 @@ public class MaCourse {
     private Long version;
 
     @JsonProperty("chapters")
-    @SerializedName("chapters")
     private String content;
 
     public MaCourse() {

@@ -1,7 +1,7 @@
 package org.motechproject.nms.mobileacademy.service.impl;
 
-import com.google.gson.Gson;
 import org.apache.commons.io.IOUtils;
+import org.json.JSONObject;
 import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.alerts.domain.AlertStatus;
 import org.motechproject.alerts.domain.AlertType;
@@ -335,11 +335,12 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
     }
 
     private void bootstrapCourse() {
-        MaCourse course;
+        MaCourse course = new MaCourse();
         try (InputStream is = settingsFacade.getRawConfig(COURSE_CONTENT_FILE)) {
             String jsonText = IOUtils.toString(is);
-            Gson gson = new Gson();
-            course = gson.fromJson(jsonText, MaCourse.class);
+            JSONObject jo = new JSONObject(jsonText);
+            course.setName(jo.get("name").toString());
+            course.setContent(jo.get("chapters").toString());
             setOrUpdateCourse(course);
         }
         catch (Exception e) {

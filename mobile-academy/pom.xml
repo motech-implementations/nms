@@ -67,6 +67,11 @@
             <version>0.1-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.everit.osgi.bundles</groupId>
+            <artifactId>org.everit.osgi.bundles.org.json</artifactId>
+            <version>1.0.0-v20140107</version>
+        </dependency>
 
     </dependencies>
 
@@ -116,6 +121,7 @@
                             org.modelmapper.internal.cglib.transform,
                             org.apache.commons.io,
                             org.apache.http.ssl,
+                            org.json,
                             *
                         </Import-Package>
                     </instructions>
