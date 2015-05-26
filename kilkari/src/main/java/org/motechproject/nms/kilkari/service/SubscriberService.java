@@ -1,5 +1,7 @@
 package org.motechproject.nms.kilkari.service;
 
+import org.motechproject.mds.annotations.InstanceLifecycleListener;
+import org.motechproject.mds.domain.InstanceLifecycleListenerType;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 
 /**
@@ -27,4 +29,12 @@ public interface SubscriberService {
      */
     void update(Subscriber subscriber);
 
+    /**
+     * Lifecycle listener that verifies a subscriber can only be deleted if all of their subscriptions have
+     * been closed at least 6 weeks
+     *
+     * @param subscriber
+     */
+    @InstanceLifecycleListener(InstanceLifecycleListenerType.PRE_DELETE)
+    void deleteAllowed(Subscriber subscriber);
 }

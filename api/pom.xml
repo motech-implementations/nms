@@ -75,11 +75,19 @@
             <artifactId>spring-test-mvc</artifactId>
             <scope>test</scope>
         </dependency>
+
         <dependency>
             <groupId>org.modelmapper.extensions</groupId>
             <artifactId>modelmapper-spring</artifactId>
             <version>0.7.4</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>org.motechproject.org.hibernate.validator</artifactId>
+            <version>4.1.0.Final-${external.dependency.release.tag}</version>
+        </dependency>
+
     </dependencies>
 
     <repositories>
@@ -117,6 +125,7 @@
                             org.motechproject.nms.api.web.contract.kilkari,
                             org.motechproject.nms.api.web.contract.mobileAcademy,
                             org.motechproject.nms.api.web.contract.mobileAcademy.course,
+                            org.motechproject.nms.api.web.contract.mobileAcademy.sms,
                             org.motechproject.nms.api.web.converter,
                         </Export-Package>
                         <Import-Package>
@@ -131,6 +140,7 @@
                             org.modelmapper.internal.cglib.proxy,
                             org.modelmapper.internal.cglib.core,
                             org.modelmapper.internal.cglib.transform,
+                            org.hibernate.validator,
                             *
                         </Import-Package>
                     </instructions>

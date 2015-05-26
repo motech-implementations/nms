@@ -39,6 +39,18 @@
             <artifactId>motech-platform-dataservices</artifactId>
             <version>${motech.version}</version>
         </dependency>
+
+        <!-- Alerts -->
+        <dependency>
+            <groupId>org.motechproject</groupId>
+            <artifactId>alerts</artifactId>
+            <version>${motech.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-fileupload</groupId>
+            <artifactId>commons-fileupload</artifactId>
+        </dependency>
     </dependencies>
 
     <repositories>
@@ -75,9 +87,19 @@
                             org.motechproject.nms.region.service;version=${project.version},
                             org.motechproject.nms.region.repository;version=${project.version},
                             org.motechproject.nms.region.domain;version=${project.version},
+                            org.motechproject.nms.region.exception;version=${project.version}
                         </Export-Package>
                         <Import-Package>
+                            net.sf.cglib.core,
+                            net.sf.cglib.proxy,
+                            net.sf.cglib.reflect,
+                            org.aopalliance.aop,
+                            org.apache.commons.fileupload,
+                            org.springframework.aop,
+                            org.springframework.aop.framework,
+                            org.springframework.transaction,
                             org.motechproject.osgi.web,
+                            org.springframework.web.multipart.commons,
                             *
                         </Import-Package>
                     </instructions>

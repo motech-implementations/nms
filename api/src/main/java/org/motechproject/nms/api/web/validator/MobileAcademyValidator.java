@@ -1,10 +1,12 @@
 package org.motechproject.nms.api.web.validator;
 
 import org.motechproject.nms.api.web.contract.mobileAcademy.CourseResponse;
+import org.motechproject.nms.api.web.contract.mobileAcademy.SmsStatusRequest;
 import org.motechproject.nms.api.web.contract.mobileAcademy.course.Chapter;
 import org.motechproject.nms.api.web.contract.mobileAcademy.course.Lesson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
@@ -33,6 +35,8 @@ public final class MobileAcademyValidator {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MobileAcademyValidator.class);
 
+    private static final Validator VALIDATOR = Validation.buildDefaultValidatorFactory().getValidator();
+
     /**
      * Private constructor for static validation helpers
      */
@@ -41,8 +45,8 @@ public final class MobileAcademyValidator {
     }
 
     public static String validateCourseResponse(CourseResponse courseResponse) {
-        Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
-        Set<ConstraintViolation<CourseResponse>> violations = validator.validate(courseResponse);
+
+        Set<ConstraintViolation<CourseResponse>> violations = VALIDATOR.validate(courseResponse);
         StringBuilder sb = new StringBuilder();
 
         if (violations.size() > 0) {
@@ -110,5 +114,24 @@ public final class MobileAcademyValidator {
         }
 
         return true;
+    }
+
+    public static String validateSmsStatus(SmsStatusRequest smsStatusRequest) {
+
+        Set<ConstraintViolation<SmsStatusRequest>> violations = VALIDATOR.validate(smsStatusRequest);
+
+        if (violations.size() == 0) {
+            return null;
+        }
+
+        StringBuilder errors = new StringBuilder();
+        for (ConstraintViolation<SmsStatusRequest> violation : violations) {
+
+            errors.append(violation.getPropertyPath() + " : " + violation.getMessage());
+            errors.append(", ");
+        }
+
+        return errors.toString().substring(0, errors.length() - 2);
+
     }
 }

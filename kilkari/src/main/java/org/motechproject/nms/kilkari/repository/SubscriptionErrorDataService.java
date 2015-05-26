@@ -8,5 +8,5 @@ import org.motechproject.nms.kilkari.domain.SubscriptionError;
 
 public interface SubscriptionErrorDataService extends MotechDataService<SubscriptionError> {
     @Lookup
-    SubscriptionError findByCallingNumber(@LookupField(name = "callingNumber") Long callingNumber);
+    SubscriptionError findByContactNumber(@LookupField(name = "contactNumber") Long contactNumber);
 }

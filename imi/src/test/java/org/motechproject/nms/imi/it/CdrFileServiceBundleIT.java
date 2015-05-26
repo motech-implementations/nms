@@ -1,5 +1,6 @@
 package org.motechproject.nms.imi.it;
 
+import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -8,8 +9,11 @@ import org.motechproject.nms.imi.service.CdrFileService;
 import org.motechproject.nms.imi.service.SettingsService;
 import org.motechproject.nms.imi.service.contract.ParseResults;
 import org.motechproject.nms.imi.web.contract.FileInfo;
+import org.motechproject.nms.kilkari.domain.Subscription;
+import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
+import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
@@ -42,6 +46,9 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
     private SubscriptionService subscriptionService;
 
     @Inject
+    private SubscriptionDataService subscriptionDataService;
+
+    @Inject
     private SubscriberDataService subscriberDataService;
 
     @Inject
@@ -70,6 +77,13 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
 
     @Before
     public void cleanupDatabase() {
+        for (Subscription subscription: subscriptionDataService.retrieveAll()) {
+            subscription.setStatus(SubscriptionStatus.COMPLETED);
+            subscription.setEndDate(new DateTime().withDate(2011, 8, 1));
+
+            subscriptionDataService.update(subscription);
+        }
+
         subscriptionService.deleteAll();
         subscriberDataService.deleteAll();
         languageLocationDataService.deleteAll();

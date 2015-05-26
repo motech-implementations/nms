@@ -1,8 +1,12 @@
 package org.motechproject.nms.kilkari.osgi;
 
 import org.joda.time.DateTime;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
+import org.motechproject.event.MotechEvent;
+import org.motechproject.mds.ex.JdoListenerInvocationException;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.domain.InboxCallData;
 import org.motechproject.nms.kilkari.domain.InboxCallDetailRecord;
@@ -45,11 +49,15 @@ import org.ops4j.pax.exam.spi.reactors.PerSuite;
 import javax.inject.Inject;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Verify that SubscriptionService is present & functional.
@@ -150,6 +158,13 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     }
 
     private void cleanupData() {
+        for (Subscription subscription: subscriptionDataService.retrieveAll()) {
+            subscription.setStatus(SubscriptionStatus.COMPLETED);
+            subscription.setEndDate(new DateTime().withDate(2011, 8, 1));
+
+            subscriptionDataService.update(subscription);
+        }
+
         subscriptionDataService.deleteAll();
         subscriptionPackDataService.deleteAll();
         subscriptionPackMessageDataService.deleteAll();
@@ -167,6 +182,172 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     @Test
     public void testServicePresent() throws Exception {
         assertNotNull(subscriptionService);
+    }
+
+    @Test
+    public void testPurgeOldClosedSubscriptionsNothingToPurge() {
+        cleanupData();
+        createLanguageAndSubscriptionPacks();
+
+        // s1 & s2 should remain untouched
+        Subscriber s1 = new Subscriber(1000000000L, gLanguageLocation);
+        subscriberService.create(s1);
+        subscriptionService.createSubscription(s1.getCallingNumber(), gLanguageLocation, gPack1,
+                SubscriptionOrigin.IVR);
+
+        Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
+        assertNotNull(subscriber);
+        Set<Subscription> subscriptions = subscriber.getSubscriptions();
+        assertEquals(1, subscriptions.size());
+
+
+        Subscriber s2 = new Subscriber(1000000001L, gLanguageLocation);
+        subscriberService.create(s2);
+
+        subscriptionService.createSubscription(s2.getCallingNumber(), gLanguageLocation, gPack1,
+                SubscriptionOrigin.IVR);
+        subscriptionService.createSubscription(s2.getCallingNumber(), gLanguageLocation, gPack2,
+                SubscriptionOrigin.IVR);
+
+        subscriber = subscriberService.getSubscriber(1000000001L);
+        assertNotNull(subscriber);
+        subscriptions = subscriber.getSubscriptions();
+        assertEquals(2, subscriptions.size());
+
+        subscriptionService.purgeOldInvalidSubscriptions(new MotechEvent());
+
+        subscriber = subscriberService.getSubscriber(1000000000L);
+        assertNotNull(subscriber);
+        subscriptions = subscriber.getSubscriptions();
+        assertEquals(1, subscriptions.size());
+
+        subscriber = subscriberService.getSubscriber(1000000001L);
+        assertNotNull(subscriber);
+        subscriptions = subscriber.getSubscriptions();
+        assertEquals(2, subscriptions.size());
+    }
+
+
+    @Test
+    public void testPurgeOldClosedSubscriptionsSubscribersDeleted() {
+        cleanupData();
+        createLanguageAndSubscriptionPacks();
+
+        Subscriber subscriber;
+        Set<Subscription> subscriptions;
+
+        // s3 & s4 should be deleted
+        Subscriber s3 = new Subscriber(1000000002L, gLanguageLocation);
+        subscriberService.create(s3);
+
+        subscriptionService.createSubscription(s3.getCallingNumber(), gLanguageLocation, gPack1,
+                SubscriptionOrigin.IVR);
+
+        s3 = subscriberService.getSubscriber(1000000002L);
+        Subscription subscription = s3.getSubscriptions().iterator().next();
+        subscription.setStatus(SubscriptionStatus.COMPLETED);
+        subscription.setEndDate(new DateTime().withDate(2011, 8, 1));
+        subscriptionDataService.update(subscription);
+
+        subscriber = subscriberService.getSubscriber(1000000002L);
+        assertNotNull(subscriber);
+        subscriptions = subscriber.getSubscriptions();
+        assertEquals(1, subscriptions.size());
+
+
+        Subscriber s4 = new Subscriber(1000000003L, gLanguageLocation);
+        subscriberService.create(s4);
+
+        subscriptionService.createSubscription(s4.getCallingNumber(), gLanguageLocation, gPack1,
+                SubscriptionOrigin.IVR);
+        subscriptionService.createSubscription(s4.getCallingNumber(), gLanguageLocation, gPack2,
+                SubscriptionOrigin.IVR);
+
+        s4 = subscriberService.getSubscriber(1000000003L);
+        Iterator<Subscription> subscriptionIterator = s4.getSubscriptions().iterator();
+        subscription = subscriptionIterator.next();
+        subscription.setStatus(SubscriptionStatus.COMPLETED);
+        subscription.setEndDate(new DateTime().withDate(2011, 8, 1));
+        subscriptionDataService.update(subscription);
+        subscription = subscriptionIterator.next();
+        subscription.setStatus(SubscriptionStatus.DEACTIVATED);
+        subscription.setEndDate(new DateTime().withDate(2011, 8, 1));
+        subscriptionDataService.update(subscription);
+
+        subscriber = subscriberService.getSubscriber(1000000003L);
+        assertNotNull(subscriber);
+        subscriptions = subscriber.getSubscriptions();
+        assertEquals(2, subscriptions.size());
+
+        subscriptionService.purgeOldInvalidSubscriptions(new MotechEvent());
+
+        subscriber = subscriberService.getSubscriber(1000000002L);
+        assertNull(subscriber);
+
+        subscriber = subscriberService.getSubscriber(1000000003L);
+        assertNull(subscriber);
+    }
+
+    @Test
+    public void testPurgeOldClosedSubscriptionsRemoveSubscriptionLeaveSubscriber() {
+        cleanupData();
+        createLanguageAndSubscriptionPacks();
+
+        Subscriber subscriber;
+        Set<Subscription> subscriptions;
+        Iterator<Subscription> subscriptionIterator;
+        Subscription subscription;
+
+        // s5 & s6 should remain but with one less subscription
+        Subscriber s5 = new Subscriber(1000000004L, gLanguageLocation);
+        subscriberService.create(s5);
+
+        subscriptionService.createSubscription(s5.getCallingNumber(), gLanguageLocation, gPack1,
+                SubscriptionOrigin.IVR);
+        subscriptionService.createSubscription(s5.getCallingNumber(), gLanguageLocation, gPack2,
+                SubscriptionOrigin.IVR);
+        s5 = subscriberService.getSubscriber(1000000004L);
+        subscriptionIterator = s5.getSubscriptions().iterator();
+        subscription = subscriptionIterator.next();
+        subscription.setStatus(SubscriptionStatus.COMPLETED);
+        subscription.setEndDate(new DateTime().withDate(2011, 8, 1));
+        subscriptionDataService.update(subscription);
+
+        subscriber = subscriberService.getSubscriber(1000000004L);
+        assertNotNull(subscriber);
+        subscriptions = subscriber.getSubscriptions();
+        assertEquals(2, subscriptions.size());
+
+        Subscriber s6 = new Subscriber(1000000005L, gLanguageLocation);
+        subscriberService.create(s6);
+
+        subscriptionService.createSubscription(s6.getCallingNumber(), gLanguageLocation, gPack1,
+                SubscriptionOrigin.IVR);
+        subscriptionService.createSubscription(s6.getCallingNumber(), gLanguageLocation, gPack2,
+                SubscriptionOrigin.IVR);
+        s6 = subscriberService.getSubscriber(1000000005L);
+        subscriptionIterator = s6.getSubscriptions().iterator();
+        subscription = subscriptionIterator.next();
+        subscription.setStatus(SubscriptionStatus.DEACTIVATED);
+        subscription.setEndDate(new DateTime().withDate(2011, 8, 1));
+        subscriptionDataService.update(subscription);
+
+        subscriber = subscriberService.getSubscriber(1000000005L);
+        assertNotNull(subscriber);
+        subscriptions = subscriber.getSubscriptions();
+        assertEquals(2, subscriptions.size());
+
+        subscriptionService.purgeOldInvalidSubscriptions(new MotechEvent());
+
+        subscriber = subscriberService.getSubscriber(1000000004L);
+        assertNotNull(subscriber);
+        subscriptions = subscriber.getSubscriptions();
+        assertEquals(1, subscriptions.size());
+
+        subscriber = subscriberService.getSubscriber(1000000005L);
+        assertNotNull(subscriber);
+        subscriptions = subscriber.getSubscriptions();
+        assertEquals(1, subscriptions.size());
     }
 
     @Test
@@ -293,6 +474,29 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     }
 
     @Test
+    public void testCreateSubscriptionExistingSubscriberWithoutLanguage() throws Exception {
+        cleanupData();
+        createLanguageAndSubscriptionPacks();
+
+        LanguageLocation ta = languageLocationDataService.findByCode("10");
+
+        // Just verify the db is clean
+        Subscriber s = subscriberService.getSubscriber(1111111111L);
+        assertNull(s);
+
+        subscriberService.create(new Subscriber(1111111111L));
+        s = subscriberService.getSubscriber(1111111111L);
+        assertNotNull(s);
+        assertNull(s.getLanguageLocation());
+
+        subscriptionService.createSubscription(1111111111L, ta, gPack1, SubscriptionOrigin.IVR);
+
+        Subscriber subscriber = subscriberService.getSubscriber(1111111111L);
+        assertNotNull(subscriber);
+        assertEquals(ta, subscriber.getLanguageLocation());
+    }
+
+    @Test
     public void testCreateSubscriptionViaMcts() {
         setupData();
 
@@ -324,7 +528,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
 
-        SubscriptionError error = subscriptionErrorDataService.findByCallingNumber(9999911122L);
+        SubscriptionError error = subscriptionErrorDataService.findByContactNumber(9999911122L);
         assertNotNull(error);
         assertEquals(SubscriptionRejectionReason.ALREADY_SUBSCRIBED, error.getRejectionReason());
     }
@@ -347,7 +551,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
 
-        SubscriptionError error = subscriptionErrorDataService.findByCallingNumber(9999911122L);
+        SubscriptionError error = subscriptionErrorDataService.findByContactNumber(9999911122L);
         assertNotNull(error);
         assertEquals(SubscriptionRejectionReason.ALREADY_SUBSCRIBED, error.getRejectionReason());
     }
@@ -372,7 +576,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
 
-        SubscriptionError error = subscriptionErrorDataService.findByCallingNumber(9999911122L);
+        SubscriptionError error = subscriptionErrorDataService.findByContactNumber(9999911122L);
         assertNull(error);
     }
 
@@ -400,7 +604,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         assertEquals(2, mctsSubscriber.getActiveSubscriptions().size());
 
-        SubscriptionError error = subscriptionErrorDataService.findByCallingNumber(9999911122L);
+        SubscriptionError error = subscriptionErrorDataService.findByContactNumber(9999911122L);
         assertNull(error);
     }
 
@@ -537,7 +741,6 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         throw new IllegalStateException("Couldn't find our subscription by its start day!");
     }
 
-
     // NMS shall allow a subscriber deactivated due to DND restrictions to activate the Kilkari service again via IVR.
     @Test
     public void verifyIssue182() {
@@ -557,5 +760,97 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         // And check the subscription is now active
         assertEquals(SubscriptionStatus.ACTIVE, subscription.getStatus());
+    }
+
+    @Rule
+    public ExpectedException exception = ExpectedException.none();
+
+    @Test
+    public void testDeleteOpenSubscription() {
+        setupData();
+
+        Subscriber mctsSubscriber = new Subscriber(9999911122L);
+        mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(14));
+        subscriberDataService.create(mctsSubscriber);
+
+        Subscription subscription = subscriptionService.createSubscription(9999911122L, gLanguageLocation,
+                                                                         gPack1, SubscriptionOrigin.MCTS_IMPORT);
+
+        exception.expect(JdoListenerInvocationException.class);
+        subscriptionDataService.delete(subscription);
+    }
+
+    @Test
+    public void testDeleteRecentDeactivateSubscription() {
+        setupData();
+
+        Subscriber mctsSubscriber = new Subscriber(9999911122L);
+        mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(14));
+        subscriberDataService.create(mctsSubscriber);
+
+        Subscription subscription = subscriptionService.createSubscription(9999911122L, gLanguageLocation,
+                gPack1, SubscriptionOrigin.MCTS_IMPORT);
+        subscription.setStatus(SubscriptionStatus.DEACTIVATED);
+        subscriptionDataService.update(subscription);
+
+        exception.expect(JdoListenerInvocationException.class);
+        subscriptionDataService.delete(subscription);
+    }
+
+    @Test
+    public void testDeleteRecentCompletedSubscription() {
+        setupData();
+
+        Subscriber mctsSubscriber = new Subscriber(9999911122L);
+        mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(14));
+        subscriberDataService.create(mctsSubscriber);
+
+        Subscription subscription = subscriptionService.createSubscription(9999911122L, gLanguageLocation,
+                gPack1, SubscriptionOrigin.MCTS_IMPORT);
+        subscription.setStatus(SubscriptionStatus.COMPLETED);
+        subscriptionDataService.update(subscription);
+
+        exception.expect(JdoListenerInvocationException.class);
+        subscriptionDataService.delete(subscription);
+    }
+
+    @Test
+    public void testDeleteOldDeactivatedSubscription() {
+        setupData();
+
+        Subscriber subscriber = subscriberService.getSubscriber(2000000000L);
+        assertNotNull(subscriber);
+
+        assertEquals(2, subscriber.getSubscriptions().size());
+
+        Subscription subscription = subscriber.getSubscriptions().iterator().next();
+        subscription.setStatus(SubscriptionStatus.DEACTIVATED);
+        subscription.setEndDate(new DateTime().withDate(2011, 8, 1));
+        subscriptionDataService.update(subscription);
+
+        subscriptionDataService.delete(subscription);
+
+        subscriber = subscriberDataService.findByCallingNumber(2000000000L);
+        assertEquals(1, subscriber.getSubscriptions().size());
+    }
+
+    @Test
+    public void testDeleteOldCompletedSubscription() {
+        setupData();
+
+        Subscriber subscriber = subscriberService.getSubscriber(2000000000L);
+        assertNotNull(subscriber);
+
+        assertEquals(2, subscriber.getSubscriptions().size());
+
+        Subscription subscription = subscriber.getSubscriptions().iterator().next();
+        subscription.setStatus(SubscriptionStatus.COMPLETED);
+        subscription.setEndDate(new DateTime().withDate(2011, 8, 1));
+        subscriptionDataService.update(subscription);
+
+        subscriptionDataService.delete(subscription);
+
+        subscriber = subscriberDataService.findByCallingNumber(2000000000L);
+        assertEquals(1, subscriber.getSubscriptions().size());
     }
 }

@@ -1,9 +1,17 @@
 package org.motechproject.nms.kilkari.service.impl;
 
 import org.joda.time.DateTime;
+import org.joda.time.Weeks;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
+import org.motechproject.event.MotechEvent;
+import org.motechproject.event.listener.annotations.MotechListener;
+import org.motechproject.mds.query.QueryExecution;
 import org.motechproject.mds.query.QueryParams;
-import org.motechproject.nms.kilkari.domain.Subscription;
+import org.motechproject.mds.util.InstanceSecurityRestriction;
+import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.domain.Subscriber;
+import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
@@ -11,7 +19,6 @@ import org.motechproject.nms.kilkari.domain.SubscriptionError;
 import org.motechproject.nms.kilkari.domain.SubscriptionRejectionReason;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
-import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
@@ -19,9 +26,16 @@ import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
 import org.motechproject.nms.region.domain.LanguageLocation;
+import org.motechproject.scheduler.contract.RepeatingSchedulableJob;
+import org.motechproject.scheduler.service.MotechSchedulerService;
+import org.motechproject.server.config.SettingsFacade;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
+import javax.jdo.Query;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -31,6 +45,16 @@ import java.util.List;
  */
 @Service("subscriptionService")
 public class SubscriptionServiceImpl implements SubscriptionService {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SubscriptionServiceImpl.class);
+
+    private static final String SUBSCRIPTION_PURGE_TIME = "kilkari.purge_closed_subscriptions_start_time";
+    private static final String SUBSCRIPTION_PURGE_MS_INTERVAL = "kilkari.purge_closed_subscriptions_ms_interval";
+    private static final String WEEKS_TO_KEEP_CLOSED_SUBSCRIPTIONS = "kilkari.weeks_to_keep_closed_subscriptions";
+
+    private static final String SUBSCRIPTION_PURGE_EVENT_SUBJECT = "nms.kilkari.purge_closed_subscriptions";
+
+    private SettingsFacade settingsFacade;
+    private MotechSchedulerService schedulerService;
 
     private static final int PREGNANCY_PACK_WEEKS = 72;
     private static final int CHILD_PACK_WEEKS = 48;
@@ -44,7 +68,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private SubscriptionErrorDataService subscriptionErrorDataService;
 
     @Autowired
-    public SubscriptionServiceImpl(SubscriberDataService subscriberDataService,
+    public SubscriptionServiceImpl(@Qualifier("kilkariSettings") SettingsFacade settingsFacade,
+                                   MotechSchedulerService schedulerService,
+                                   SubscriberDataService subscriberDataService,
                                    SubscriptionPackDataService subscriptionPackDataService,
                                    SubscriptionDataService subscriptionDataService,
                                    SubscriptionErrorDataService subscriptionErrorDataService) {
@@ -52,6 +78,113 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         this.subscriptionPackDataService = subscriptionPackDataService;
         this.subscriptionDataService = subscriptionDataService;
         this.subscriptionErrorDataService = subscriptionErrorDataService;
+        this.schedulerService = schedulerService;
+        this.settingsFacade = settingsFacade;
+
+        schedulePurgeOfOldSubscriptions();
+    }
+
+
+    /**
+     * Use the MOTECH scheduler to setup a repeating job
+     * The job will start today at the time stored in flw.purge_invalid_flw_start_time in flw.properties
+     * It will repeat every flw.purge_invalid_flw_ms_interval milliseconds (default value is a day)
+     */
+    private void schedulePurgeOfOldSubscriptions() {
+        //Calculate today's fire time
+        DateTimeFormatter fmt = DateTimeFormat.forPattern("H:m");
+        String timeProp = settingsFacade.getProperty(SUBSCRIPTION_PURGE_TIME);
+        DateTime time = fmt.parseDateTime(timeProp);
+        DateTime today = DateTime.now()                     // This means today's date...
+                .withHourOfDay(time.getHourOfDay())         // ...at the hour...
+                .withMinuteOfHour(time.getMinuteOfHour())   // ...and minute specified in imi.properties
+                .withSecondOfMinute(0)
+                .withMillisOfSecond(0);
+
+        //Millisecond interval between events
+        String intervalProp = settingsFacade.getProperty(SUBSCRIPTION_PURGE_MS_INTERVAL);
+        Long msInterval = Long.parseLong(intervalProp);
+
+        LOGGER.debug(String.format("The %s message will be sent every %sms starting at %s",
+                SUBSCRIPTION_PURGE_EVENT_SUBJECT, msInterval.toString(), today.toString()));
+
+        //Schedule repeating job
+        MotechEvent event = new MotechEvent(SUBSCRIPTION_PURGE_EVENT_SUBJECT);
+        RepeatingSchedulableJob job = new RepeatingSchedulableJob(
+                event,          //MOTECH event
+                today.toDate(), //startTime
+                null,           //endTime, null means no end time
+                null,           //repeatCount, null means infinity
+                msInterval,     //repeatIntervalInMilliseconds
+                true);          //ignorePastFiresAtStart
+
+        schedulerService.safeScheduleRepeatingJob(job);
+    }
+
+    @MotechListener(subjects = { SUBSCRIPTION_PURGE_EVENT_SUBJECT })
+    public void purgeOldInvalidSubscriptions(MotechEvent event) {
+        int weeksToKeepInvalidFLWs = Integer.parseInt(settingsFacade.getProperty(WEEKS_TO_KEEP_CLOSED_SUBSCRIPTIONS));
+        final SubscriptionStatus completed = SubscriptionStatus.COMPLETED;
+        final SubscriptionStatus deactivated = SubscriptionStatus.DEACTIVATED;
+        final DateTime cutoff = DateTime.now().minusWeeks(weeksToKeepInvalidFLWs).withTimeAtStartOfDay();
+
+        @SuppressWarnings("unchecked")
+        QueryExecution<List<Subscription>> queryExecution = new QueryExecution<List<Subscription>>() {
+            @Override
+            public List<Subscription> execute(Query query, InstanceSecurityRestriction restriction) {
+
+                query.setFilter("(status == completed || status == deactivated) && endDate < cutoff");
+                query.declareParameters("org.motechproject.nms.kilkari.domain.SubscriptionStatus completed, " +
+                                        "org.motechproject.nms.kilkari.domain.SubscriptionStatus deactivated, " +
+                                        "org.joda.time.DateTime cutoff");
+
+
+                return (List<Subscription>) query.execute(completed, deactivated, cutoff);
+            }
+        };
+
+        List<Subscription> purgeList = subscriptionDataService.executeQuery(queryExecution);
+
+        int purgedSubscribers = 0;
+        int purgedSubscriptions = 0;
+        for (Subscription subscription : purgeList) {
+            Long callingNumber = subscription.getSubscriber().getCallingNumber();
+
+            subscriptionDataService.delete(subscription);
+
+            // I need to load the subscriber since I deleted one of their subscription prior
+            Subscriber subscriber = subscriberDataService.findByCallingNumber(callingNumber);
+            purgedSubscriptions++;
+            if (subscriber.getSubscriptions().size() == 0) {
+                subscriberDataService.delete(subscriber);
+                purgedSubscribers++;
+            }
+        }
+
+        LOGGER.info(String.format("Purged %s subscribers and %s subscriptions with status (%s or %s) and " +
+                                  "endDate date before %s",
+                purgedSubscribers, purgedSubscriptions, SubscriptionStatus.COMPLETED,
+                SubscriptionStatus.DEACTIVATED, cutoff.toString()));
+    }
+
+    @Override
+    public void deletePreconditionCheck(Subscription subscription) {
+        int weeksToKeepInvalidFLWs = Integer.parseInt(settingsFacade.getProperty(WEEKS_TO_KEEP_CLOSED_SUBSCRIPTIONS));
+        DateTime now = new DateTime();
+
+        if (subscription.getStatus() != SubscriptionStatus.COMPLETED &&
+                subscription.getStatus() != SubscriptionStatus.DEACTIVATED) {
+            throw new IllegalStateException("Can not delete an open subscription");
+        }
+
+        if (subscription.getEndDate() == null) {
+            throw new IllegalStateException("Subscription in closed state with null end date");
+        }
+
+        if (Math.abs(Weeks.weeksBetween(now, subscription.getEndDate()).getWeeks()) < weeksToKeepInvalidFLWs) {
+            throw new IllegalStateException(String.format("Subscription must be closed for %s weeks before deleting",
+                                            weeksToKeepInvalidFLWs));
+        }
     }
 
 
@@ -64,6 +197,11 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         if (subscriber == null) {
             subscriber = new Subscriber(callingNumber, languagelocation);
             subscriberDataService.create(subscriber);
+        }
+
+        if (subscriber.getLanguageLocation() == null && languagelocation != null) {
+            subscriber.setLanguageLocation(languagelocation);
+            subscriberDataService.update(subscriber);
         }
 
         if (mode == SubscriptionOrigin.IVR) {
@@ -229,7 +367,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     @Override
     public final void createSubscriptionPacks() {
-        // TODO: make this less hard-coded and hacky once we get spec clarification re: how to populate the pack data
         if (subscriptionPackDataService.byName("childPack") == null) {
             createSubscriptionPack("childPack", SubscriptionPackType.CHILD, CHILD_PACK_WEEKS, 1);
         }

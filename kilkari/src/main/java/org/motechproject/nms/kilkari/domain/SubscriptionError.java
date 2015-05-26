@@ -10,7 +10,7 @@ import org.motechproject.mds.annotations.Field;
 public class SubscriptionError {
 
     @Field
-    private long msisdn;
+    private long contactNumber;
 
     @Field
     private SubscriptionRejectionReason rejectionReason;
@@ -18,18 +18,18 @@ public class SubscriptionError {
     @Field
     private SubscriptionPackType packType;
 
-    public SubscriptionError(long msisdn, SubscriptionRejectionReason rejectionReason, SubscriptionPackType packType) {
-        this.msisdn = msisdn;
+    public SubscriptionError(long contactNumber, SubscriptionRejectionReason rejectionReason, SubscriptionPackType packType) {
+        this.contactNumber = contactNumber;
         this.rejectionReason = rejectionReason;
         this.packType = packType;
     }
 
-    public long getMsisdn() {
-        return msisdn;
+    public long getContactNumber() {
+        return contactNumber;
     }
 
-    public void setMsisdn(long msisdn) {
-        this.msisdn = msisdn;
+    public void setContactNumber(long contactNumber) {
+        this.contactNumber = contactNumber;
     }
 
     public SubscriptionRejectionReason getRejectionReason() {

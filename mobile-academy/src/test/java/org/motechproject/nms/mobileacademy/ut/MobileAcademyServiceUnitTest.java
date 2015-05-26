@@ -3,8 +3,10 @@ package org.motechproject.nms.mobileacademy.ut;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.EventRelay;
 import org.motechproject.mtraining.domain.Bookmark;
@@ -12,11 +14,13 @@ import org.motechproject.mtraining.repository.BookmarkDataService;
 import org.motechproject.nms.mobileacademy.domain.CompletionRecord;
 import org.motechproject.nms.mobileacademy.domain.Course;
 import org.motechproject.nms.mobileacademy.dto.MaBookmark;
+import org.motechproject.nms.mobileacademy.service.impl.SmsNotificationServiceImpl;
 import org.motechproject.nms.mobileacademy.exception.CourseNotCompletedException;
 import org.motechproject.nms.mobileacademy.repository.CompletionRecordDataService;
 import org.motechproject.nms.mobileacademy.repository.CourseDataService;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
 import org.motechproject.nms.mobileacademy.service.impl.MobileAcademyServiceImpl;
+import org.motechproject.server.config.SettingsFacade;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
@@ -27,8 +31,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyLong;
+import static org.mockito.Matchers.anyString;
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -53,6 +63,15 @@ public class MobileAcademyServiceUnitTest {
     @Mock
     private EventRelay eventRelay;
 
+    @Mock
+    private SmsNotificationServiceImpl smsNotificationServiceImpl;
+
+    @Mock
+    private SettingsFacade settingsFacade;
+
+    @Mock
+    private AlertService alertService;
+
     private Validator validator;
 
     @Before
@@ -60,6 +79,7 @@ public class MobileAcademyServiceUnitTest {
         initMocks(this);
         mobileAcademyService = new MobileAcademyServiceImpl(
                 bookmarkDataService, courseDataService, completionRecordDataService, eventRelay);
+        smsNotificationServiceImpl = new SmsNotificationServiceImpl(completionRecordDataService, settingsFacade, alertService);
         validator = Validation.buildDefaultValidatorFactory().getValidator();
     }
 
@@ -179,6 +199,19 @@ public class MobileAcademyServiceUnitTest {
         assertEquals("callingNumber must be 10 digits", cv.iterator().next().getMessage());
     }
 
+    @Test
+    public void testStatusUpdateNotification() {
+        MotechEvent event = new MotechEvent();
+        event.getParameters().put("address", "tel: 9876543210");
+        event.getParameters().put("deliveryStatus", "DeliveredToTerminal");
+        CompletionRecord cr = new CompletionRecord(9876543210L, 34, true, 1);
+        assertNull(cr.getLastDeliveryStatus());
+
+        when(completionRecordDataService.findRecordByCallingNumber(anyLong())).thenReturn(cr);
+        smsNotificationServiceImpl.updateSmsStatus(event);
+        assertTrue(cr.getLastDeliveryStatus().equals("DeliveredToTerminal"));
+    }
+
     @Test(expected = CourseNotCompletedException.class)
     public void testNotificationTriggerException() {
         when(completionRecordDataService.findRecordByCallingNumber(anyLong())).thenReturn(null);
@@ -190,6 +223,8 @@ public class MobileAcademyServiceUnitTest {
         CompletionRecord cr = new CompletionRecord(1234567890L, 22);
         when(completionRecordDataService.findRecordByCallingNumber(anyLong())).thenReturn(cr);
         mobileAcademyService.triggerCompletionNotification(1234567890L);
+        mobileAcademyService.triggerCompletionNotification(1234567890L);
+        assertFalse(cr.isSentNotification());
     }
 
     @Test
@@ -207,7 +242,5 @@ public class MobileAcademyServiceUnitTest {
                 }
         );
 
-        mobileAcademyService.triggerCompletionNotification(1234567890L);
-        assertFalse(cr.isSentNotification());
     }
 }
