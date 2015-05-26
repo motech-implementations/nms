@@ -11,7 +11,8 @@ import org.junit.runners.Suite;
     LocationServiceBundleIT.class,
     CircleServiceBundleIT.class,
     NationalDefaultLanguageLocationBundleIT.class,
-    LocationDataImportServiceBundleIT.class
+    LocationDataImportServiceBundleIT.class,
+    LanguageLocationCodesImportServiceBundleIT.class
 })
 public class IntegrationTests {
 }
