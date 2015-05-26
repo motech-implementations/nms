@@ -59,7 +59,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     @Before
     public void setupMobileAcademy() {
 
-        List<Course> courses = mTrainingService.getCourseByName(validCourseName);
+        List<Course> courses = mTrainingService.getCourseByName(invalidCourseName);
         if (courses != null) {
             for (Course currentCourse : courses) {
                 mTrainingService.deleteCourse(currentCourse.getId());
@@ -85,7 +85,6 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     @Test
     public void testGetCourse() {
 
-        addCourseHelper(validCourseName);
         assertNotNull(maService.getCourse());
     }
 
