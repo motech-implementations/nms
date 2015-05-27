@@ -69,25 +69,25 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     @Test
     public void testSetCourseNoUpdate() {
 
-        NmsCourse originalCourse = nmsCourseDataService.getCourseByName("MobileAcademyCourse");
+        NmsCourse originalCourse = nmsCourseDataService.getCourseByName(validCourseName);
         MaCourse copyCourse = new MaCourse(originalCourse.getName(), originalCourse.getModificationDate().getMillis(), originalCourse.getContent());
         maService.setCourse(copyCourse);
 
         // verify that modified time (version) didn't change
-        assertEquals(nmsCourseDataService.getCourseByName("MobileAcademyCourse").getModificationDate(),
+        assertEquals(nmsCourseDataService.getCourseByName(validCourseName).getModificationDate(),
                 originalCourse.getModificationDate());
     }
 
     @Test
     public void testSetCourseUpdate() {
 
-        NmsCourse originalCourse = nmsCourseDataService.getCourseByName("MobileAcademyCourse");
+        NmsCourse originalCourse = nmsCourseDataService.getCourseByName(validCourseName);
         String courseContent = originalCourse.getContent();
         MaCourse copyCourse = new MaCourse(originalCourse.getName(), originalCourse.getModificationDate().getMillis(), originalCourse.getContent() + "foo");
         maService.setCourse(copyCourse);
 
         // verify that modified time (version) didn't change
-        assertNotEquals(nmsCourseDataService.getCourseByName("MobileAcademyCourse").getModificationDate(),
+        assertNotEquals(nmsCourseDataService.getCourseByName(validCourseName).getModificationDate(),
                 originalCourse.getModificationDate());
         originalCourse.setContent(courseContent);
         nmsCourseDataService.update(originalCourse);
@@ -95,9 +95,9 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
 
     @Test
     public void testNoCoursePresent() {
-        NmsCourse originalCourse = nmsCourseDataService.getCourseByName("MobileAcademyCourse");
+        NmsCourse originalCourse = nmsCourseDataService.getCourseByName(validCourseName);
         nmsCourseDataService.delete(originalCourse);
-        assertNull(nmsCourseDataService.getCourseByName("MobileAcademyCourse"));
+        assertNull(nmsCourseDataService.getCourseByName(validCourseName));
 
         try {
             maService.getCourse();

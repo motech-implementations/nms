@@ -4,7 +4,8 @@ import org.motechproject.nms.mobileacademy.dto.MaBookmark;
 import org.motechproject.nms.mobileacademy.dto.MaCourse;
 
 /**
- * Simple example of a service interface.
+ * Mobile academy service interface to perform crud operations on course and bookmarks
+ * This also lets you manually (re)trigger notifications for course completion
  */
 public interface MobileAcademyService {
 

@@ -107,7 +107,7 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
         NmsCourse course = nmsCourseDataService.getCourseByName(COURSE_NAME);
 
         if (course == null) {
-            alertService.create("mTraining.Course", COURSE_NAME, "Could not find course", AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            alertService.create("MA.Course", COURSE_NAME, "Could not find course", AlertType.CRITICAL, AlertStatus.NEW, 0, null);
             throw new IllegalStateException("No course bootstrapped. Check deployment");
         }
 
@@ -132,7 +132,7 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
         NmsCourse course = nmsCourseDataService.getCourseByName(COURSE_NAME);
 
         if (course == null) {
-            alertService.create("mTraining.Course", COURSE_NAME, "Could not find course", AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            alertService.create("MA.Course", COURSE_NAME, "Could not find course", AlertType.CRITICAL, AlertStatus.NEW, 0, null);
             throw new IllegalStateException("No course bootstrapped. Check deployment");
         }
 
