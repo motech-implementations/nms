@@ -14,7 +14,7 @@ import org.motechproject.nms.api.web.contract.mobileAcademy.SaveBookmarkRequest;
 import org.motechproject.nms.api.web.contract.mobileAcademy.SmsStatusRequest;
 import org.motechproject.nms.api.web.contract.mobileAcademy.sms.RequestData;
 import org.motechproject.nms.api.web.converter.MobileAcademyConverter;
-import org.motechproject.nms.mobileacademy.domain.Course;
+import org.motechproject.nms.mobileacademy.dto.MaCourse;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
@@ -153,7 +153,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
         HttpGet request = RequestBuilder.createGetRequest(endpoint);
 
         CourseResponse response = CourseBuilder.generateValidCourseResponse();
-        Course currentCourse = MobileAcademyConverter.convertCourseResponse(response);
+        MaCourse currentCourse = MobileAcademyConverter.convertCourseResponse(response);
         when(mobileAcademyService.getCourse()).thenReturn(currentCourse);
 
         assertTrue(SimpleHttpClient.execHttpRequest(request, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));

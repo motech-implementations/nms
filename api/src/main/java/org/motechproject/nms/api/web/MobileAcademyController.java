@@ -10,8 +10,8 @@ import org.motechproject.nms.api.web.contract.mobileAcademy.SmsStatusRequest;
 import org.motechproject.nms.api.web.contract.mobileAcademy.sms.DeliveryInfo;
 import org.motechproject.nms.api.web.converter.MobileAcademyConverter;
 import org.motechproject.nms.api.web.validator.MobileAcademyValidator;
-import org.motechproject.nms.mobileacademy.domain.Course;
 import org.motechproject.nms.mobileacademy.dto.MaBookmark;
+import org.motechproject.nms.mobileacademy.dto.MaCourse;
 import org.motechproject.nms.mobileacademy.exception.CourseNotCompletedException;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
 import org.slf4j.Logger;
@@ -81,7 +81,7 @@ public class MobileAcademyController extends BaseController {
     @ResponseBody
     public CourseResponse getCourse() {
 
-        Course getCourse = mobileAcademyService.getCourse();
+        MaCourse getCourse = mobileAcademyService.getCourse();
 
         if (getCourse == null) {
             LOGGER.error("No course found in database. Check course ingestion and name");
