@@ -1,5 +1,6 @@
 package org.motechproject.nms.mobileacademy.it;
 
+import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -10,8 +11,11 @@ import org.motechproject.mtraining.domain.CourseUnitState;
 import org.motechproject.mtraining.repository.BookmarkDataService;
 import org.motechproject.mtraining.service.MTrainingService;
 import org.motechproject.nms.mobileacademy.domain.CompletionRecord;
+import org.motechproject.nms.mobileacademy.domain.NmsCourse;
 import org.motechproject.nms.mobileacademy.dto.MaBookmark;
+import org.motechproject.nms.mobileacademy.dto.MaCourse;
 import org.motechproject.nms.mobileacademy.exception.CourseNotCompletedException;
+import org.motechproject.nms.mobileacademy.repository.NmsCourseDataService;
 import org.motechproject.nms.mobileacademy.service.SmsNotificationService;
 import org.motechproject.nms.mobileacademy.repository.CompletionRecordDataService;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
@@ -50,6 +54,9 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     private CompletionRecordDataService completionRecordDataService;
 
     @Inject
+    private NmsCourseDataService nmsCourseDataService;
+
+    @Inject
     private SmsNotificationService smsNotificationService;
 
     private static String validCourseName = "MobileAcademyCourse";
@@ -69,12 +76,45 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     }
 
     @Test
-    public void testSetCourse() {
+    public void testSetCourseNoUpdate() {
 
-        addCourseHelper(invalidCourseName);
-        List<Course> retrieved = mTrainingService.getCourseByName(invalidCourseName);
-        assertNotNull(retrieved);
-        assertTrue(retrieved.size() > 0);
+        NmsCourse originalCourse = nmsCourseDataService.getCourseByName("MobileAcademyCourse");
+        MaCourse copyCourse = new MaCourse(originalCourse.getName(), originalCourse.getModificationDate().getMillis(), originalCourse.getContent());
+        maService.setCourse(copyCourse);
+
+        // verify that modified time (version) didn't change
+        assertEquals(nmsCourseDataService.getCourseByName("MobileAcademyCourse").getModificationDate(),
+                originalCourse.getModificationDate());
+    }
+
+    @Test
+    public void testSetCourseUpdate() {
+
+        NmsCourse originalCourse = nmsCourseDataService.getCourseByName("MobileAcademyCourse");
+        String courseContent = originalCourse.getContent();
+        MaCourse copyCourse = new MaCourse(originalCourse.getName(), originalCourse.getModificationDate().getMillis(), originalCourse.getContent() + "foo");
+        maService.setCourse(copyCourse);
+
+        // verify that modified time (version) didn't change
+        assertNotEquals(nmsCourseDataService.getCourseByName("MobileAcademyCourse").getModificationDate(),
+                originalCourse.getModificationDate());
+        originalCourse.setContent(courseContent);
+        nmsCourseDataService.update(originalCourse);
+    }
+
+    @Test
+    public void testNoCoursePresent() {
+        NmsCourse originalCourse = nmsCourseDataService.getCourseByName("MobileAcademyCourse");
+        nmsCourseDataService.delete(originalCourse);
+        assertNull(nmsCourseDataService.getCourseByName("MobileAcademyCourse"));
+
+        try {
+            maService.getCourse();
+        } catch (IllegalStateException is) {
+            assertTrue(is.toString().contains("No course bootstrapped. Check deployment"));
+        }
+
+        nmsCourseDataService.create(new NmsCourse(originalCourse.getName(), originalCourse.getContent()));
     }
 
     @Test

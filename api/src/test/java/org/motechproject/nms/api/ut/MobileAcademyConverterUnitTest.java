@@ -18,7 +18,7 @@ public class MobileAcademyConverterUnitTest {
 
         // ideally this course would be generated like the call above, but not enough time now
         MaCourse course = MobileAcademyConverter.convertCourseResponse(CourseBuilder.generateValidCourseResponse());
-        CourseResponse response = MobileAcademyConverter.convertCourse(course);
+        CourseResponse response = MobileAcademyConverter.convertCourseDto(course);
         assertNotNull(course);
     }
 

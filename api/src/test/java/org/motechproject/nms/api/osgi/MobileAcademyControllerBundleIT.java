@@ -1,6 +1,7 @@
 package org.motechproject.nms.api.osgi;
 
 import org.apache.commons.httpclient.HttpStatus;
+import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -33,6 +34,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
@@ -138,16 +140,6 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
     }
 
     @Test
-    @Ignore
-    public void testGetCourseNotPresent() throws IOException, InterruptedException {
-
-        String endpoint = String.format("http://localhost:%d/api/mobileacademy/course",
-                TestContext.getJettyPort());
-        HttpGet request = RequestBuilder.createGetRequest(endpoint);
-        assertTrue(SimpleHttpClient.execHttpRequest(request, HttpStatus.SC_INTERNAL_SERVER_ERROR, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
-    }
-
-    @Test
     public void testGetCourseValid() throws IOException, InterruptedException {
 
         String endpoint = String.format("http://localhost:%d/api/mobileacademy/course",
@@ -156,6 +148,9 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
 
         HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(request, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
         assertTrue(httpResponse.getStatusLine().getStatusCode() == 200);
+        String body = IOUtils.toString(httpResponse.getEntity().getContent());
+        assertNotNull(body);
+        //TODO: figure out a way to automate the body comparison from the course json resource file
     }
 
     @Test

@@ -1,5 +1,7 @@
 package org.motechproject.nms.api.web.contract.mobileAcademy;
 
+import org.codehaus.jackson.annotate.JsonRawValue;
+
 import javax.validation.constraints.NotNull;
 
 /**
@@ -16,6 +18,7 @@ public class CourseResponse {
     private long courseVersion;
 
     @NotNull
+    @JsonRawValue
     private Object chapters;
 
     public CourseResponse() {

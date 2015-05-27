@@ -340,6 +340,7 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
         try (InputStream is = settingsFacade.getRawConfig(COURSE_CONTENT_FILE)) {
             String jsonText = IOUtils.toString(is);
             JSONObject jo = new JSONObject(jsonText);
+            // TODO: validate the json format here
             course.setName(jo.get("name").toString());
             course.setContent(jo.get("chapters").toString());
             setOrUpdateCourse(course);

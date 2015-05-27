@@ -1,6 +1,9 @@
 package org.motechproject.nms.api.web.converter;
 
 import org.motechproject.nms.api.web.contract.mobileAcademy.CourseResponse;
+import org.motechproject.nms.api.web.contract.mobileAcademy.GetBookmarkResponse;
+import org.motechproject.nms.api.web.contract.mobileAcademy.SaveBookmarkRequest;
+import org.motechproject.nms.mobileacademy.dto.MaBookmark;
 import org.motechproject.nms.mobileacademy.dto.MaCourse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +28,7 @@ public final class MobileAcademyConverter {
      * @param course course dto
      * @return CourseResponse API object
      */
-    public static CourseResponse convertCourse(MaCourse course) {
+    public static CourseResponse convertCourseDto(MaCourse course) {
 
         LOGGER.debug("Converting course dto to response contract");
         CourseResponse response = new CourseResponse();
@@ -35,6 +38,11 @@ public final class MobileAcademyConverter {
         return response;
     }
 
+    /**
+     * Convert course response api object back to course service dto (used by tests)
+     * @param courseResponse course response object
+     * @return course dto
+     */
     public static MaCourse convertCourseResponse(CourseResponse courseResponse) {
         MaCourse course = new MaCourse();
         course.setName(courseResponse.getName());
@@ -43,4 +51,29 @@ public final class MobileAcademyConverter {
         return course;
     }
 
+    /**
+     * Convert bookmark dto to api response object
+     * @param bookmark bookmark dto
+     * @return api response object
+     */
+    public static GetBookmarkResponse convertBookmarkDto(MaBookmark bookmark) {
+        GetBookmarkResponse response = new GetBookmarkResponse();
+        response.setBookmark(bookmark.getBookmark());
+        response.setScoresByChapter(bookmark.getScoresByChapter());
+        return response;
+    }
+
+    /**
+     * Convert api request object to bookmark dto
+     * @param saveBookmarkRequest api request object
+     * @return bookmark dto
+     */
+    public static MaBookmark convertSaveBookmarkRequest(SaveBookmarkRequest saveBookmarkRequest) {
+        MaBookmark bookmark = new MaBookmark();
+        bookmark.setCallingNumber(saveBookmarkRequest.getCallingNumber());
+        bookmark.setCallId(saveBookmarkRequest.getCallId());
+        bookmark.setBookmark(saveBookmarkRequest.getBookmark());
+        bookmark.setScoresByChapter(saveBookmarkRequest.getScoresByChapter());
+        return bookmark;
+    }
 }

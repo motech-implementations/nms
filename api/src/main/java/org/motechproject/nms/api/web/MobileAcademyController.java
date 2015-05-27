@@ -88,7 +88,7 @@ public class MobileAcademyController extends BaseController {
             throw new InternalError(String.format(NOT_FOUND, "course"));
         }
 
-        CourseResponse response = MobileAcademyConverter.convertCourse(getCourse);
+        CourseResponse response = MobileAcademyConverter.convertCourseDto(getCourse);
 
         if (response != null) {
 
@@ -126,7 +126,8 @@ public class MobileAcademyController extends BaseController {
     public GetBookmarkResponse getBookmarkWithScore(@RequestParam Long callingNumber,
                                                  @RequestParam Long callId) {
 
-        return new GetBookmarkResponse();
+        MaBookmark bookmark = mobileAcademyService.getBookmark(callingNumber, callId);
+        return MobileAcademyConverter.convertBookmarkDto(bookmark);
     }
 
     /**
@@ -150,8 +151,7 @@ public class MobileAcademyController extends BaseController {
             throw new IllegalArgumentException(String.format(INVALID, "callId"));
         }
 
-        MaBookmark bookmark = new MaBookmark(bookmarkRequest.getCallingNumber(), bookmarkRequest.getCallId(),
-                bookmarkRequest.getBookmark(), bookmarkRequest.getScoresByChapter());
+        MaBookmark bookmark = MobileAcademyConverter.convertSaveBookmarkRequest(bookmarkRequest);
         mobileAcademyService.setBookmark(bookmark);
     }
 
