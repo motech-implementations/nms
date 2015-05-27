@@ -18,7 +18,7 @@ public class NmsCourse extends MdsEntity {
     private String name;
 
     @Field
-    @Column(length = 38912) // 38kb to be sure that we can fit the content
+    @Column(length = 21845) // max length
     private String content;
 
     public NmsCourse() {
