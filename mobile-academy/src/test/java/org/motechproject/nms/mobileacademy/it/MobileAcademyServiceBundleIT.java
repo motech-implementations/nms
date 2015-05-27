@@ -206,12 +206,6 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     }
 
     @Test
-    public void testGetBookmarkEmpty() {
-
-        assertNull(maService.getBookmark(0L, 1L));
-    }
-
-    @Test
     public void testTriggerNotificationSent() {
         bookmarkDataService.deleteAll();
         long callingNumber = 9876543210L;

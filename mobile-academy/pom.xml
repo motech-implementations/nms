@@ -107,7 +107,6 @@
                         <Context-Path>mobileacademy</Context-Path>
                         <Export-Package>
                             org.motechproject.nms.mobileacademy.domain;version=${project.version},
-                            org.motechproject.nms.mobileacademy.domain.course;version=${project.version},
                             org.motechproject.nms.mobileacademy.dto;version=${project.version},
                             org.motechproject.nms.mobileacademy.repository;version=${project.version},
                             org.motechproject.nms.mobileacademy.exception;version=${project.version},

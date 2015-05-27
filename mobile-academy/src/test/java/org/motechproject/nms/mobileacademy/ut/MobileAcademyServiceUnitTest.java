@@ -16,7 +16,9 @@ import org.motechproject.mtraining.domain.CourseUnitState;
 import org.motechproject.mtraining.service.BookmarkService;
 import org.motechproject.mtraining.service.MTrainingService;
 import org.motechproject.nms.mobileacademy.domain.CompletionRecord;
+import org.motechproject.nms.mobileacademy.domain.NmsCourse;
 import org.motechproject.nms.mobileacademy.dto.MaBookmark;
+import org.motechproject.nms.mobileacademy.repository.NmsCourseDataService;
 import org.motechproject.nms.mobileacademy.service.impl.SmsNotificationServiceImpl;
 import org.motechproject.nms.mobileacademy.exception.CourseNotCompletedException;
 import org.motechproject.nms.mobileacademy.repository.CompletionRecordDataService;
@@ -27,6 +29,10 @@ import org.motechproject.server.config.SettingsFacade;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import javax.validation.Validator;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 
 import static org.junit.Assert.assertEquals;
@@ -56,6 +62,9 @@ public class MobileAcademyServiceUnitTest {
     private BookmarkService bookmarkService;
 
     @Mock
+    private NmsCourseDataService nmsCourseDataService;
+
+    @Mock
     private CompletionRecordDataService completionRecordDataService;
 
     @Mock
@@ -75,19 +84,21 @@ public class MobileAcademyServiceUnitTest {
     @Before
     public void setup() {
         initMocks(this);
+        nmsCourseDataService.deleteAll();
+        when(settingsFacade.getRawConfig("nmsCourse.json")).thenReturn(getFileInputStream("nmsCourseTest.json"));
         mobileAcademyService = new MobileAcademyServiceImpl(
-                mTrainingService, bookmarkService, completionRecordDataService, eventRelay, settingsFacade, alertService);
+                bookmarkService, nmsCourseDataService, completionRecordDataService, eventRelay, settingsFacade, alertService);
         smsNotificationServiceImpl = new SmsNotificationServiceImpl(completionRecordDataService, settingsFacade, alertService);
         validator = Validation.buildDefaultValidatorFactory().getValidator();
     }
 
     @Test
     public void getCourseTest() {
-        List<Course> courses = new ArrayList<>();
-        Course newCourse = new Course("MobileAcademyCourse", CourseUnitState.Active, "[]");
+
+        NmsCourse newCourse = new NmsCourse("MobileAcademyCourse", "[]");
         newCourse.setModificationDate(DateTime.now());
-        courses.add(newCourse);
-        when(mTrainingService.getCourseByName("MobileAcademyCourse")).thenReturn(courses);
+        nmsCourseDataService.create(newCourse);
+        when(nmsCourseDataService.getCourseByName("MobileAcademyCourse")).thenReturn(newCourse);
         assertTrue(mobileAcademyService.getCourse().getContent().equals(newCourse.getContent()));
     }
 
@@ -243,5 +254,19 @@ public class MobileAcademyServiceUnitTest {
                 }
         );
 
+    }
+
+    private InputStream getFileInputStream(String fileName) {
+
+        try {
+            return new FileInputStream(
+                    new File(
+                            Thread.currentThread()
+                                    .getContextClassLoader()
+                                    .getResource("nmsCourseTest.json")
+                                    .getPath()));
+        } catch (IOException io) {
+            return null;
+        }
     }
 }
