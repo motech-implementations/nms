@@ -14,8 +14,14 @@
     <osgi:service ref="settingsService"
                   interface="org.motechproject.nms.mobileacademy.service.SettingsService" />
 
+    <osgi:service ref="itService"
+                  interface="org.motechproject.nms.mobileacademy.service.IntegrationTestService" />
+
     <osgi:reference id="courseDataService"
                     interface="org.motechproject.nms.mobileacademy.repository.CourseDataService" />
+
+    <osgi:reference id="lessonDataService"
+                    interface="org.motechproject.nms.mobileacademy.repository.LessonDataService" />
 
     <osgi:reference id="completionRecordDataService"
                     interface="org.motechproject.nms.mobileacademy.repository.CompletionRecordDataService" />

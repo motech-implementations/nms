@@ -1,6 +1,6 @@
 package org.motechproject.nms.testing.service.impl;
 
-import org.motechproject.nms.kilkari.service.SubscriptionService;
+import org.motechproject.nms.imi.service.IntegrationTestService;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.server.config.SettingsFacade;
 import org.slf4j.Logger;
@@ -14,22 +14,82 @@ public class TestingServiceImpl implements TestingService {
 
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TestingServiceImpl.class);
-    private SettingsFacade settingsFacade;
-    private SubscriptionService subscriptionService;
-
 
     @Autowired
-    public TestingServiceImpl(@Qualifier("testingSettings") SettingsFacade settingsFacade,
-                              SubscriptionService subscriptionService) {
-        this.settingsFacade = settingsFacade;
-        this.subscriptionService = subscriptionService;
-    }
+    @Qualifier("testingSettings")
+    private SettingsFacade settingsFacade;
+
+    /**
+     * FLW
+     */
+    @Autowired
+    private org.motechproject.nms.flw.service.IntegrationTestService flw;
+
+    /**
+     * IMI
+     */
+    @Autowired
+    private IntegrationTestService imi;
+
+    /**
+     * Kilkari
+     */
+    @Autowired
+    private org.motechproject.nms.kilkari.service.IntegrationTestService kilkari;
+
+    /**
+     * Mobile Academy
+     */
+    @Autowired
+    private org.motechproject.nms.mobileacademy.service.IntegrationTestService ma;
+
+    /**
+     * Props
+     */
+    @Autowired
+    private org.motechproject.nms.props.service.IntegrationTestService props;
+
+    /**
+     * Region
+     */
+    @Autowired
+    private org.motechproject.nms.region.service.IntegrationTestService region;
+
 
 
     @Override
     public void setupDatabase() {
         LOGGER.debug("testing.foo={}", settingsFacade.getProperty("testing.foo"));
-        subscriptionService.deleteAll();
+
+        /**
+         * FLW
+         */
+        flw.deleteAll();
+
+        /**
+         * IMI
+         */
+        imi.deleteAll();
+
+        /**
+         * Kilkari
+         */
+        kilkari.deleteAll();
+
+        /**
+         * Mobile Academy
+         */
+        ma.deleteAll();
+
+        /**
+         * Props
+         */
+        props.deleteAll();
+
+        /**
+         * Region
+         */
+        region.deleteAll();
     }
 
 }

@@ -84,6 +84,9 @@
     <osgi:service ref="healthSubFacilityImportService"
                     interface="org.motechproject.nms.region.service.HealthSubFacilityImportService" />
 
+    <osgi:service ref="itService"
+                  interface="org.motechproject.nms.region.service.IntegrationTestService" />
+
     <!-- Alert Service -->
     <osgi:reference id="alertsService" interface="org.motechproject.alerts.contract.AlertService" />
 

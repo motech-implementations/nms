@@ -33,6 +33,9 @@
     <osgi:service ref="whitelistService"
                   interface="org.motechproject.nms.flw.service.WhitelistService" />
 
+    <osgi:service ref="itService"
+                  interface="org.motechproject.nms.flw.service.IntegrationTestService" />
+
     <osgi:reference id="frontLineWorkerDataService"
                     interface="org.motechproject.nms.flw.repository.FrontLineWorkerDataService" />
 
