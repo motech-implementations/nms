@@ -16,6 +16,7 @@ import org.motechproject.nms.kilkari.domain.SubscriptionError;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
+import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.domain.SubscriptionRejectionReason;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.repository.InboxCallDataDataService;
@@ -28,6 +29,7 @@ import org.motechproject.nms.kilkari.repository.SubscriptionPackMessageDataServi
 import org.motechproject.nms.kilkari.service.InboxService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
+import org.motechproject.nms.kilkari.utils.SubscriptionPackBuilder;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
 import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.District;
@@ -152,7 +154,19 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         languageLocation.getDistrictSet().add(district2);
         languageLocationDataService.create(languageLocation);
 
-        subscriptionService.createSubscriptionPacks();
+        subscriptionPackDataService.create(
+                SubscriptionPackBuilder.createSubscriptionPack(
+                        "childPack",
+                        SubscriptionPackType.CHILD,
+                        SubscriptionPackBuilder.CHILD_PACK_WEEKS,
+                        1));
+        subscriptionPackDataService.create(
+                SubscriptionPackBuilder.createSubscriptionPack(
+                        "pregnancyPack",
+                        SubscriptionPackType.PREGNANCY,
+                        SubscriptionPackBuilder.PREGNANCY_PACK_WEEKS,
+                        2));
+
         gPack1 = subscriptionPackDataService.byName("childPack"); // 48 weeks, 1 message per week
         gPack2 = subscriptionPackDataService.byName("pregnancyPack"); // 72 weeks, 2 messages per week
     }
@@ -413,19 +427,6 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     }
 
     @Test
-    public void testSubscriptionPackCreation() throws Exception {
-        cleanupData();
-        subscriptionService.createSubscriptionPacks();
-
-        SubscriptionPack fortyEightWeekPack = subscriptionPackDataService.byName("childPack");
-        assertEquals(48, fortyEightWeekPack.getMessages().size());
-
-        SubscriptionPack seventyTwoWeekPack = subscriptionPackDataService.byName("pregnancyPack");
-        assertEquals(144, seventyTwoWeekPack.getMessages().size());
-    }
-
-
-    @Test
     public void testCreateSubscriptionNoSubscriber() throws Exception {
         cleanupData();
         createLanguageAndSubscriptionPacks();
@@ -528,7 +529,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
 
-        SubscriptionError error = subscriptionErrorDataService.findByContactNumber(9999911122L);
+        SubscriptionError error = subscriptionErrorDataService.findByContactNumber(9999911122L).get(0);
         assertNotNull(error);
         assertEquals(SubscriptionRejectionReason.ALREADY_SUBSCRIBED, error.getRejectionReason());
     }
@@ -551,7 +552,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
 
-        SubscriptionError error = subscriptionErrorDataService.findByContactNumber(9999911122L);
+        SubscriptionError error = subscriptionErrorDataService.findByContactNumber(9999911122L).get(0);
         assertNotNull(error);
         assertEquals(SubscriptionRejectionReason.ALREADY_SUBSCRIBED, error.getRejectionReason());
     }
@@ -576,8 +577,8 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
 
-        SubscriptionError error = subscriptionErrorDataService.findByContactNumber(9999911122L);
-        assertNull(error);
+        List<SubscriptionError> errors = subscriptionErrorDataService.findByContactNumber(9999911122L);
+        assertEquals(0, errors.size());
     }
 
     @Test
@@ -604,8 +605,8 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         assertEquals(2, mctsSubscriber.getActiveSubscriptions().size());
 
-        SubscriptionError error = subscriptionErrorDataService.findByContactNumber(9999911122L);
-        assertNull(error);
+        List<SubscriptionError> errors = subscriptionErrorDataService.findByContactNumber(9999911122L);
+        assertEquals(0, errors.size());
     }
 
     @Test

@@ -13,7 +13,6 @@ import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
-import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.domain.SubscriptionError;
 import org.motechproject.nms.kilkari.domain.SubscriptionRejectionReason;
@@ -36,7 +35,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import javax.jdo.Query;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -56,11 +54,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private SettingsFacade settingsFacade;
     private MotechSchedulerService schedulerService;
 
-    private static final int PREGNANCY_PACK_WEEKS = 72;
-    private static final int CHILD_PACK_WEEKS = 48;
     private static final int THREE_MONTHS = 90;
-    private static final int TWO_MINUTES = 120;
-    private static final int TEN_SECS = 10;
 
     private SubscriberDataService subscriberDataService;
     private SubscriptionPackDataService subscriptionPackDataService;
@@ -187,7 +181,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         }
     }
 
-
     @Override
     public Subscription createSubscription(long callingNumber, LanguageLocation languagelocation, SubscriptionPack subscriptionPack,
                                    SubscriptionOrigin mode) {
@@ -241,16 +234,36 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         return subscriptionDataService.create(subscription);
     }
 
+    /**
+     * There's some rather complex logic for how MCTS subscribers get created and when more than one subscription is
+     * allowed for an MSISDN.
+     *
+     * From #158:
+     * MCTS data records with same MSISDN with one having DOB and other having only LMP shall be allowed to subscribe to
+     * different packs.
+     *
+     * From #159:
+     * Kilkari Service shall not allow multiple “Active” or “Pending Activation” subscriptions for the same pack on the
+     * same MSISDN via bulk upload of MCTS Data or via IVR. In particular, subscription request with a particular
+     * MSISDN, shall be rejected IF:
+     *  - DOB (with or without LMP) is present in the MCTS record and there is an already “Active” subscription to Child
+     *    Pack on this MSISDN
+     *  - LMP (without DOB) is present in the MCTS record and there is an already “Active” or “Pending Activation”
+     *    subscription to Pregnancy Pack on this MSISDN.
+     */
     private Subscription createSubscriptionViaMcts(Subscriber subscriber, SubscriptionPack pack) {
         Subscription subscription;
 
         if (subscriber.getDateOfBirth() != null && pack.getType() == SubscriptionPackType.CHILD) {
+            // DOB (with or without LMP) is present
             if (subscriberHasActivePackType(subscriber, SubscriptionPackType.CHILD))
             {
+                // reject the subscription if it already exists
                 logRejectedSubscription(subscriber.getCallingNumber(),
                         SubscriptionRejectionReason.ALREADY_SUBSCRIBED, SubscriptionPackType.CHILD);
                 return null;
             } else if (Subscription.hasCompletedForStartDate(subscriber.getDateOfBirth(), DateTime.now(), pack)) {
+                // TODO: #117 decide whether this case also warrants logging
                 return null;
             } else {
                 subscription = new Subscription(subscriber, pack, SubscriptionOrigin.MCTS_IMPORT);
@@ -259,12 +272,15 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             }
         } else if (subscriber.getLastMenstrualPeriod() != null && subscriber.getDateOfBirth() == null &&
                 pack.getType() == SubscriptionPackType.PREGNANCY) {
+            // LMP is present and DOB is not
             if (subscriberHasActivePackType(subscriber, SubscriptionPackType.PREGNANCY)) {
+                // reject the subscription if it already exists
                 logRejectedSubscription(subscriber.getCallingNumber(),
                         SubscriptionRejectionReason.ALREADY_SUBSCRIBED, SubscriptionPackType.PREGNANCY);
                 return null;
             } else if (Subscription.hasCompletedForStartDate(subscriber.getLastMenstrualPeriod().plusDays(THREE_MONTHS),
                             DateTime.now(), pack)) {
+                // TODO: #117 decide whether this case also warrants logging
                 return null;
             } else {
                 // TODO: #160 deal with early subscription
@@ -275,7 +291,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 subscription.setStatus(SubscriptionStatus.ACTIVE);
             }
         } else {
-            // TODO: #138 need to log other error cases?
+            // TODO: #117 need to log any other error cases? In theory we shouldn't land here.
             return null;
         }
 
@@ -364,33 +380,4 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 new QueryParams(page, pageSize));
     }
 
-
-    @Override
-    public final void createSubscriptionPacks() {
-        if (subscriptionPackDataService.byName("childPack") == null) {
-            createSubscriptionPack("childPack", SubscriptionPackType.CHILD, CHILD_PACK_WEEKS, 1);
-        }
-        if (subscriptionPackDataService.byName("pregnancyPack") == null) {
-            createSubscriptionPack("pregnancyPack", SubscriptionPackType.PREGNANCY, PREGNANCY_PACK_WEEKS, 2);
-        }
-    }
-
-
-    private void createSubscriptionPack(String name, SubscriptionPackType type, int weeks,
-                                        int messagesPerWeek) {
-        List<SubscriptionPackMessage> messages = new ArrayList<>();
-        for (int week = 1; week <= weeks; week++) {
-            messages.add(new SubscriptionPackMessage(week, String.format("w%s_1", week),
-                    String.format("w%s_1.wav", week),
-                    TWO_MINUTES - TEN_SECS + (int) (Math.random() * 2 * TEN_SECS)));
-
-            if (messagesPerWeek == 2) {
-                messages.add(new SubscriptionPackMessage(week, String.format("w%s_2", week),
-                        String.format("w%s_2.wav", week),
-                        TWO_MINUTES - TEN_SECS + (int) (Math.random() * 2 * TEN_SECS)));
-            }
-        }
-
-        subscriptionPackDataService.create(new SubscriptionPack(name, type, weeks, messagesPerWeek, messages));
-    }
 }

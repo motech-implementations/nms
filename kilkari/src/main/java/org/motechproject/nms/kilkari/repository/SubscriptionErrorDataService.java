@@ -6,7 +6,9 @@ import org.motechproject.mds.annotations.LookupField;
 import org.motechproject.mds.service.MotechDataService;
 import org.motechproject.nms.kilkari.domain.SubscriptionError;
 
+import java.util.List;
+
 public interface SubscriptionErrorDataService extends MotechDataService<SubscriptionError> {
     @Lookup
-    SubscriptionError findByContactNumber(@LookupField(name = "contactNumber") Long contactNumber);
+    List<SubscriptionError> findByContactNumber(@LookupField(name = "contactNumber") Long contactNumber);
 }

@@ -14,6 +14,7 @@ import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
+import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
@@ -47,6 +48,9 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
 
     @Inject
     private SubscriptionDataService subscriptionDataService;
+
+    @Inject
+    private SubscriptionPackDataService subscriptionPackDataService;
 
     @Inject
     private SubscriberDataService subscriberDataService;
@@ -107,8 +111,8 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         getLogger().debug("testParse()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                languageDataService, languageLocationDataService, circleDataService, stateDataService,
-                districtDataService);
+                subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
+                stateDataService, districtDataService);
 
         helper.makeCdrs(1,1,1,1);
         helper.makeCdr();
@@ -123,8 +127,8 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         getLogger().debug("testProcess()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                languageDataService, languageLocationDataService, circleDataService, stateDataService,
-                districtDataService);
+                subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
+                stateDataService, districtDataService);
 
         helper.makeCdrs(1,1,1,1);
         helper.makeCdr();

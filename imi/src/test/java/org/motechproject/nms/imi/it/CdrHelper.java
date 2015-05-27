@@ -9,9 +9,12 @@ import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
+import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
+import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.dto.CallDetailRecordDto;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
+import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.domain.CallDisconnectReason;
 import org.motechproject.nms.props.domain.RequestId;
@@ -47,15 +50,19 @@ public class CdrHelper {
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormat.forPattern("yyyyMMddHHmmss");
     private static final Logger LOGGER = LoggerFactory.getLogger(CdrHelper.class);
 
-    private static final int CHILD_PACK_WEEKS = 48;
     private final String TEST_OBD_TIMESTAMP;
     private final String TEST_OBD_FILENAME;
     private final String TEST_CDR_DETAIL_FILENAME;
     private final String TEST_CDR_SUMMARY_FILENAME;
+    private static final int PREGNANCY_PACK_WEEKS = 72;
+    private static final int CHILD_PACK_WEEKS = 48;
+    private static final int TWO_MINUTES = 120;
+    private static final int TEN_SECS = 10;
 
     private SettingsService settingsService;
     private SubscriptionService subscriptionService;
     private SubscriberDataService subscriberDataService;
+    private SubscriptionPackDataService subscriptionPackDataService;
     private LanguageDataService languageDataService;
     private LanguageLocationDataService languageLocationDataService;
     private CircleDataService circleDataService;
@@ -68,14 +75,15 @@ public class CdrHelper {
 
 
     public CdrHelper(SettingsService settingsService, SubscriptionService subscriptionService,
-                     SubscriberDataService subscriberDataService, LanguageDataService languageDataService,
-                     LanguageLocationDataService languageLocationDataService,
+                     SubscriberDataService subscriberDataService, SubscriptionPackDataService subscriptionPackDataService,
+                     LanguageDataService languageDataService, LanguageLocationDataService languageLocationDataService,
                      CircleDataService circleDataService, StateDataService stateDataService,
                      DistrictDataService districtDataService) {
 
         this.settingsService = settingsService;
         this.subscriptionService = subscriptionService;
         this.subscriberDataService = subscriberDataService;
+        this.subscriptionPackDataService = subscriptionPackDataService;
         this.languageDataService = languageDataService;
         this.languageLocationDataService = languageLocationDataService;
         this.circleDataService = circleDataService;
@@ -89,12 +97,12 @@ public class CdrHelper {
     }
 
 
-    public void setCrds(List<CallDetailRecordDto> cdrs) {
+    public void setCdrs(List<CallDetailRecordDto> cdrs) {
         this.cdrs = cdrs;
     }
 
 
-    public List<CallDetailRecordDto> getCrds() {
+    public List<CallDetailRecordDto> getCdrs() {
         return cdrs;
     }
 
@@ -132,9 +140,37 @@ public class CdrHelper {
     }
 
     public SubscriptionPack getChildPack() {
-        subscriptionService.createSubscriptionPacks();
+        createSubscriptionPacks();
         return subscriptionService.getSubscriptionPack("childPack");
     }
+
+    private void createSubscriptionPacks() {
+        if (subscriptionPackDataService.byName("childPack") == null) {
+            createSubscriptionPack("childPack", SubscriptionPackType.CHILD, CHILD_PACK_WEEKS, 1);
+        }
+        if (subscriptionPackDataService.byName("pregnancyPack") == null) {
+            createSubscriptionPack("pregnancyPack", SubscriptionPackType.PREGNANCY, PREGNANCY_PACK_WEEKS, 2);
+        }
+    }
+
+    private void createSubscriptionPack(String name, SubscriptionPackType type, int weeks,
+                                                          int messagesPerWeek) {
+        List<SubscriptionPackMessage> messages = new ArrayList<>();
+        for (int week = 1; week <= weeks; week++) {
+            messages.add(new SubscriptionPackMessage(week, String.format("w%s_1", week),
+                    String.format("w%s_1.wav", week),
+                    TWO_MINUTES - TEN_SECS + (int) (Math.random() * 2 * TEN_SECS)));
+
+            if (messagesPerWeek == 2) {
+                messages.add(new SubscriptionPackMessage(week, String.format("w%s_2", week),
+                        String.format("w%s_2.wav", week),
+                        TWO_MINUTES - TEN_SECS + (int) (Math.random() * 2 * TEN_SECS)));
+            }
+        }
+
+        subscriptionPackDataService.create(new SubscriptionPack(name, type, weeks, messagesPerWeek, messages));
+    }
+
 
     public Circle makeCircle() {
         Circle circle = circleDataService.findByName("XX");
@@ -179,7 +215,7 @@ public class CdrHelper {
 
 
     public Subscription makeSubscription(SubscriptionOrigin origin, DateTime startDate) {
-        subscriptionService.createSubscriptionPacks();
+        createSubscriptionPacks();
         Subscriber subscriber = subscriberDataService.create(new Subscriber(
                 makeNumber(),
                 makeLanguageLocation(),
