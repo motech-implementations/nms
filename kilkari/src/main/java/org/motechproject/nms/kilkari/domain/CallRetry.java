@@ -8,7 +8,7 @@ import javax.jdo.annotations.Column;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 
-@Entity(tableName = "nms_imi_retries")
+@Entity(tableName = "nms_kk_retry_records")
 public class CallRetry {
     @Field
     private String subscriptionId;

@@ -13,6 +13,8 @@
 
     <osgi:service ref="cdrFileService" interface="org.motechproject.nms.imi.service.CdrFileService" />
 
+    <osgi:service ref="csrValidatorService" interface="org.motechproject.nms.imi.service.CsrValidatorService" />
+
     <osgi:service ref="settingsService" interface="org.motechproject.nms.imi.service.SettingsService" />
 
 
@@ -20,6 +22,11 @@
                     interface="org.motechproject.nms.imi.repository.FileAuditRecordDataService" />
 
 
+    <osgi:reference id="languageLocationService"
+                    interface="org.motechproject.nms.region.service.LanguageLocationService" />
+
+    <osgi:reference id="circleService"
+                    interface="org.motechproject.nms.region.service.CircleService" />
 
     <osgi:reference id="callRetryDataService"
                     interface="org.motechproject.nms.kilkari.repository.CallRetryDataService" />
