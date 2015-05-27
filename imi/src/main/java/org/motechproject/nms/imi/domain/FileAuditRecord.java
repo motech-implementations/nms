@@ -4,6 +4,7 @@ import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 
 import javax.jdo.annotations.Column;
+import javax.validation.constraints.Min;
 
 @Entity(tableName = "nms_imi_file_audit_records")
 public class FileAuditRecord {
@@ -17,20 +18,27 @@ public class FileAuditRecord {
 
     @Field
     @Column(allowsNull = "false")
-    private String status;
+    private Boolean success;
 
     @Field
+    private String error;
+
+    @Field
+    @Min(0)
     private Integer recordCount;
 
     @Field
+    @Column(length = 32)
     private String checksum;
 
     public FileAuditRecord() { }
 
-    public FileAuditRecord(FileType type, String fileName, String status, Integer recordCount, String checksum) {
+    public FileAuditRecord(FileType type, String fileName, Boolean success, String error, Integer recordCount,
+                           String checksum) {
         this.type = type;
         this.fileName = fileName;
-        this.status = status;
+        this.success = success;
+        this.error = error;
         this.recordCount = recordCount;
         this.checksum = checksum;
     }
@@ -51,12 +59,20 @@ public class FileAuditRecord {
         this.fileName = fileName;
     }
 
-    public String getStatus() {
-        return status;
+    public Boolean getSuccess() {
+        return success;
     }
 
-    public void setStatus(String status) {
-        this.status = status;
+    public void setSuccess(Boolean success) {
+        this.success = success;
+    }
+
+    public String getError() {
+        return error;
+    }
+
+    public void setError(String error) {
+        this.error = error;
     }
 
     public Integer getRecordCount() {
@@ -78,9 +94,10 @@ public class FileAuditRecord {
     @Override
     public String toString() {
         return "FileAuditRecord{" +
-                ", type=" + type +
+                "type=" + type +
                 ", fileName='" + fileName + '\'' +
-                ", status='" + status + '\'' +
+                ", success=" + success +
+                ", error='" + error + '\'' +
                 ", recordCount=" + recordCount +
                 ", checksum='" + checksum + '\'' +
                 '}';

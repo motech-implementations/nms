@@ -21,13 +21,13 @@ public enum CallDisconnectReason {
         return value;
     }
 
-    public static boolean isValid(int i) {
+    public static boolean isValidEnumValue(int i) {
         return (i >= NORMAL_DROP.getValue() && i <= SYSTEM_ERROR.getValue());
     }
 
     //NOTE: this only works if the values are consecutive
     public static CallDisconnectReason fromInt(int i) {
-        if (isValid(i)) {
+        if (isValidEnumValue(i)) {
             return values()[i - NORMAL_DROP.getValue()];
         } else {
             throw new IllegalArgumentException(String.format("%d is an invalid CallDisconnectReason", i));

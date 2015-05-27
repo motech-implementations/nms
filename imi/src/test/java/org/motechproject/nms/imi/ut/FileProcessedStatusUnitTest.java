@@ -10,8 +10,8 @@ import static org.junit.Assert.assertTrue;
 public class FileProcessedStatusUnitTest {
     @Test
     public void testValid() {
-        assertFalse(FileProcessedStatus.isValid(0));
-        assertTrue(FileProcessedStatus.isValid(8000));
+        assertFalse(FileProcessedStatus.isValidEnumValue(0));
+        assertTrue(FileProcessedStatus.isValidEnumValue(8000));
     }
 
     @Test

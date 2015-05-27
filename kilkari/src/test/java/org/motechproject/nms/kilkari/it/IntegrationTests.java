@@ -1,4 +1,4 @@
-package org.motechproject.nms.kilkari.osgi;
+package org.motechproject.nms.kilkari.it;
 
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;

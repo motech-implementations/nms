@@ -38,7 +38,7 @@ import java.util.Map;
 @Service("csrService")
 public class CsrServiceImpl implements CsrService {
 
-    private static final String PROCESS_SUMMARY_RECORD = "nms.imi.kk.process_summary_record";
+    private static final String PROCESS_SUMMARY_RECORD_SUBJECT = "nms.imi.kk.process_summary_record";
     private static final String CSR_PARAM_KEY = "csr";
 
     private static final int ONE_HUNDRED = 100;
@@ -261,7 +261,7 @@ public class CsrServiceImpl implements CsrService {
     }
 
 
-    @MotechListener(subjects = { PROCESS_SUMMARY_RECORD })
+    @MotechListener(subjects = {PROCESS_SUMMARY_RECORD_SUBJECT})
     public void processCallSummaryRecord(MotechEvent event) {
 
         CallSummaryRecordDto csr = (CallSummaryRecordDto) event.getParameters().get(CSR_PARAM_KEY);

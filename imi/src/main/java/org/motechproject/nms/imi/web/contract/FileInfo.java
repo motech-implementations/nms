@@ -1,6 +1,9 @@
 package org.motechproject.nms.imi.web.contract;
 
-public class FileInfo {
+import java.io.Serializable;
+
+public class FileInfo implements Serializable {
+    private static final long serialVersionUID = 8968495333199113244L;
     private String cdrFile;
     private String checksum;
     private int recordsCount;

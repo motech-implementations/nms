@@ -1,6 +1,8 @@
-package org.motechproject.nms.kilkari.osgi;
+package org.motechproject.nms.kilkari.it;
 
 import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -50,6 +52,7 @@ import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
@@ -60,9 +63,9 @@ import static org.junit.Assert.assertTrue;
 @ExamFactory(MotechNativeTestContainerFactory.class)
 public class CsrServiceBundleIT extends BasePaxIT {
 
-    private static final String PROCESS_SUMMARY_RECORD = "nms.imi.kk.process_summary_record";
+    private static final String PROCESS_SUMMARY_RECORD_SUBJECT = "nms.imi.kk.process_summary_record";
     private static final String CSR_PARAM_KEY = "csr";
-    private static final String IMI_SERVICE_ID = "some_service_id"; //todo: look into that more closely
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormat.forPattern("yyyyMMddHHmmss");
 
     @Inject
     EventRelay eventRelay;
@@ -262,7 +265,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
         Map<String, Object> eventParams = new HashMap<>();
         eventParams.put(CSR_PARAM_KEY, csr);
-        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD, eventParams);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
         csrService.processCallSummaryRecord(motechEvent);
     }
 
@@ -323,7 +326,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
         Map<String, Object> eventParams = new HashMap<>();
         eventParams.put(CSR_PARAM_KEY, csr);
-        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD, eventParams);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
         csrService.processCallSummaryRecord(motechEvent);
 
         subscription = subscriptionDataService.findBySubscriptionId(subscription.getSubscriptionId());
@@ -332,7 +335,28 @@ public class CsrServiceBundleIT extends BasePaxIT {
     }
 
 
-    //todo: verify successful subscription completion
+    @Test
+    public void verifySubscriptionCompletion() {
+
+        String timestamp = DateTime.now().toString(TIME_FORMATTER);
+
+        CsrHelper helper = new CsrHelper(timestamp, subscriptionService, subscriberDataService,
+                subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
+                stateDataService, districtDataService);
+
+        helper.makeRecords(1,3,0,0);
+
+        for (CallSummaryRecordDto record : helper.getRecords()) {
+            Map<String, Object> eventParams = new HashMap<>();
+            eventParams.put(CSR_PARAM_KEY, record);
+            MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
+            csrService.processCallSummaryRecord(motechEvent);
+        }
+
+        List<Subscription> subscriptions = subscriptionDataService.findByStatus(SubscriptionStatus.COMPLETED);
+        assertEquals(3, subscriptions.size());
+    }
+
     //todo: verify multiple days' worth of summary record aggregation
     //todo: verify more stuff I can't think of now
 }
