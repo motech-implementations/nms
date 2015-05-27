@@ -18,14 +18,17 @@ import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
+import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.dto.CallSummaryRecordDto;
 import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.CallSummaryRecordDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
+import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.CsrService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
+import org.motechproject.nms.kilkari.utils.SubscriptionPackBuilder;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
 import org.motechproject.nms.props.domain.FinalCallStatus;
 import org.motechproject.nms.props.domain.RequestId;
@@ -106,6 +109,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
     @Inject
     private DistrictDataService districtDataService;
 
+    @Inject
+    private SubscriptionPackDataService subscriptionPackDataService;
 
     @Before
     public void cleanupDatabase() {
@@ -124,7 +129,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
         stateDataService.deleteAll();
         circleDataService.deleteAll();
         callRetryDataService.deleteAll();
-        subscriptionService.createSubscriptionPacks();
+        createSubscriptionPacks();
         csrService.buildMessageDurationCache();
     }
 
@@ -198,9 +203,27 @@ public class CsrServiceBundleIT extends BasePaxIT {
         return (long) (Math.random() * 9000000000L) + 1000000000L;
     }
 
+    private void createSubscriptionPacks() {
+        if (subscriptionPackDataService.byName("childPack") == null) {
+            subscriptionPackDataService.create(
+                    SubscriptionPackBuilder.createSubscriptionPack(
+                            "childPack",
+                            SubscriptionPackType.CHILD,
+                            SubscriptionPackBuilder.CHILD_PACK_WEEKS,
+                            1));
+        }
+        if (subscriptionPackDataService.byName("pregnancyPack") == null) {
+            subscriptionPackDataService.create(
+                    SubscriptionPackBuilder.createSubscriptionPack(
+                            "pregnancyPack",
+                            SubscriptionPackType.PREGNANCY,
+                            SubscriptionPackBuilder.PREGNANCY_PACK_WEEKS,
+                            2));
+        }
+    }
 
     private Subscription makeSubscription(SubscriptionOrigin origin, DateTime startDate) {
-        subscriptionService.createSubscriptionPacks();
+        createSubscriptionPacks();
         Subscriber subscriber = subscriberDataService.create(new Subscriber(
                 makeNumber(),
                 makeLanguageLocation(),
@@ -318,8 +341,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
         String timestamp = DateTime.now().toString(TIME_FORMATTER);
 
         CsrHelper helper = new CsrHelper(timestamp, subscriptionService, subscriberDataService,
-                languageDataService, languageLocationDataService, circleDataService, stateDataService,
-                districtDataService);
+                subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
+                stateDataService, districtDataService);
 
         helper.makeRecords(1,3,0,0);
 

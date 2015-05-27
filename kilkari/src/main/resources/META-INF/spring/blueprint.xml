@@ -49,6 +49,9 @@
     <osgi:reference id="subscriptionDataService"
                     interface="org.motechproject.nms.kilkari.repository.SubscriptionDataService" />
 
+    <osgi:reference id="subscriptionErrorDataService"
+                    interface="org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService" />
+
     <osgi:reference id="callRetryDataService"
                     interface="org.motechproject.nms.kilkari.repository.CallRetryDataService" />
 

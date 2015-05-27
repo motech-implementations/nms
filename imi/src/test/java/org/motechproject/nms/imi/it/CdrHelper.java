@@ -13,6 +13,7 @@ import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.dto.CallDetailRecordDto;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
+import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.domain.CallDisconnectReason;
 import org.motechproject.nms.props.domain.RequestId;
@@ -46,11 +47,11 @@ public class CdrHelper {
     public static final String LOCAL_CDR_DIR_PROP = "imi.local_cdr_dir";
     public static final String REMOTE_CDR_DIR_PROP = "imi.remote_cdr_dir";
 
-    private static final int CHILD_PACK_WEEKS = 48;
     private final String TEST_OBD_TIMESTAMP;
     private final String TEST_OBD_FILENAME;
     private final String TEST_CDR_DETAIL_FILENAME;
     private final String TEST_CDR_SUMMARY_FILENAME;
+    private static final int CHILD_PACK_WEEKS = 48;
 
     private SettingsService settingsService;
     private FileAuditRecordDataService fileAuditRecordDataService;
@@ -60,13 +61,13 @@ public class CdrHelper {
 
 
     public CdrHelper(SettingsService settingsService, SubscriptionService subscriptionService,
-                     SubscriberDataService subscriberDataService, LanguageDataService languageDataService,
-                     LanguageLocationDataService languageLocationDataService,
+                     SubscriberDataService subscriberDataService, SubscriptionPackDataService subscriptionPackDataService,
+                     LanguageDataService languageDataService, LanguageLocationDataService languageLocationDataService,
                      CircleDataService circleDataService, StateDataService stateDataService,
                      DistrictDataService districtDataService,
                      FileAuditRecordDataService fileAuditRecordDataService) throws IOException {
 
-        sh = new SubscriptionHelper(subscriptionService, subscriberDataService,
+        sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
                 languageDataService, languageLocationDataService, circleDataService, stateDataService,
                 districtDataService);
 
@@ -80,7 +81,12 @@ public class CdrHelper {
     }
 
 
-    public List<CallDetailRecordDto> getCrds() {
+    public void setCdrs(List<CallDetailRecordDto> cdrs) {
+        this.cdrs = cdrs;
+    }
+
+
+    public List<CallDetailRecordDto> getCdrs() {
         return cdrs;
     }
 

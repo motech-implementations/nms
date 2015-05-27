@@ -87,11 +87,6 @@ public interface SubscriptionService {
     List<Subscription> findActiveSubscriptionsForDay(DayOfTheWeek dayOfTheWeek, int page, int pageSize);
 
     /**
-     * Generate Pregnancy and Child subscription packs and associated messages. To be used only by test code.
-     */
-    void createSubscriptionPacks();
-
-    /**
      * MotechEvent handler that responds to scheduler events.  Purges subscription and subscriber records that
      * are in a closed state and have been for more than kilkari.weeks_to_keep_closed_subscriptions weeks
      *

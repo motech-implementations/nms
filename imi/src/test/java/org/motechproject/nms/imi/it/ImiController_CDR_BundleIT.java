@@ -16,6 +16,7 @@ import org.motechproject.nms.imi.web.contract.CdrFileNotificationRequest;
 import org.motechproject.nms.imi.web.contract.FileInfo;
 import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
+import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
@@ -58,6 +59,9 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
 
     @Inject
     private SubscriberDataService subscriberDataService;
+
+    @Inject
+    private SubscriptionPackDataService subscriptionPackDataService;
 
     @Inject
     private LanguageDataService languageDataService;
@@ -153,8 +157,8 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
         getLogger().debug("testCreateCdrFileNotificationRequest()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                languageDataService, languageLocationDataService, circleDataService, stateDataService,
-                districtDataService, fileAuditRecordDataService);
+                subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
+                stateDataService, districtDataService, fileAuditRecordDataService);
 
         helper.makeCdrs(1,0,0,0);
         helper.makeRemoteCsrFile();
@@ -174,8 +178,8 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
         getLogger().debug("testCreateCdrFileNotificationRequestBadCdrSummaryFileName()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                languageDataService, languageLocationDataService, circleDataService, stateDataService,
-                districtDataService, fileAuditRecordDataService);
+                subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
+                stateDataService, districtDataService, fileAuditRecordDataService);
 
         helper.makeCdrs(1,0,0,0);
         helper.makeRemoteCdrFile();
@@ -195,8 +199,8 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
         getLogger().debug("testCreateCdrFileNotificationRequestBadFileNames()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                languageDataService, languageLocationDataService, circleDataService, stateDataService,
-                districtDataService, fileAuditRecordDataService);
+                subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
+                stateDataService, districtDataService, fileAuditRecordDataService);
         HttpPost httpPost = createCdrFileNotificationHttpPost(helper, false, true, true);
 
         // All 3 filenames will be considered invalid because the target file is of invalid format, and the CDR

@@ -14,6 +14,7 @@ import org.motechproject.nms.imi.service.CsrValidatorService;
 import org.motechproject.nms.imi.service.SettingsService;
 import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
+import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
@@ -51,6 +52,9 @@ public class CsrValidatorServiceBundleIT extends BasePaxIT {
     private SubscriberDataService subscriberDataService;
 
     @Inject
+    private SubscriptionPackDataService subscriptionPackDataService;
+
+    @Inject
     private LanguageDataService languageDataService;
 
     @Inject
@@ -81,6 +85,7 @@ public class CsrValidatorServiceBundleIT extends BasePaxIT {
     public void cleanupDatabase() {
         subscriptionService.deleteAll();
         subscriberDataService.deleteAll();
+        subscriptionPackDataService.deleteAll();
         languageLocationDataService.deleteAll();
         languageDataService.deleteAll();
         districtDataService.deleteAll();
@@ -104,8 +109,8 @@ public class CsrValidatorServiceBundleIT extends BasePaxIT {
         String timestamp = DateTime.now().toString(TIME_FORMATTER);
 
         CsrHelper helper = new CsrHelper(timestamp, subscriptionService, subscriberDataService,
-                languageDataService, languageLocationDataService, circleDataService, stateDataService,
-                districtDataService);
+                subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
+                stateDataService, districtDataService);
 
         helper.makeRecords(1, 0, 0);
 
@@ -121,8 +126,8 @@ public class CsrValidatorServiceBundleIT extends BasePaxIT {
         String timestamp = DateTime.now().toString(TIME_FORMATTER);
 
         CsrHelper helper = new CsrHelper(timestamp, subscriptionService, subscriberDataService,
-                languageDataService, languageLocationDataService, circleDataService, stateDataService,
-                districtDataService);
+                subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
+                stateDataService, districtDataService);
 
         helper.makeRecords(0, 0, 1);
 

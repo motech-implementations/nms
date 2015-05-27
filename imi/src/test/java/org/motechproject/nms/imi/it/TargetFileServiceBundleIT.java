@@ -233,8 +233,8 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
     @Ignore
     public void createLargeFile() {
         SubscriptionHelper sh = new SubscriptionHelper(subscriptionService, subscriberDataService,
-                languageDataService, languageLocationDataService, circleDataService, stateDataService,
-                districtDataService);
+                subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
+                stateDataService, districtDataService);
 
         subscriptionService.deleteAll();
         subscriberDataService.deleteAll();
