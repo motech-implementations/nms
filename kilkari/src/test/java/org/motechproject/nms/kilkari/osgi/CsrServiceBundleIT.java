@@ -49,8 +49,7 @@ import javax.inject.Inject;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerSuite.class)
@@ -301,6 +300,332 @@ public class CsrServiceBundleIT extends BasePaxIT {
         assertEquals(DeactivationReason.INVALID_NUMBER, subscription.getDeactivationReason());
     }
 
+    @Test //NMS_FT_140
+    public void verifyCallRetryDeletedWhenAllRetryFailed() {
+        Subscription subscription = makeSubscription(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
+        Subscriber subscriber = subscription.getSubscriber();
+
+        LanguageLocation languageLocation;
+        languageLocation = (LanguageLocation) subscriberDataService.getDetachedField(subscriber,
+                "languageLocation");
+
+        Circle circle;
+        circle = (Circle) subscriberDataService.getDetachedField(subscriber, "circle");
+
+
+        csrDataService.create(new CallSummaryRecord(
+                new RequestId(subscription.getSubscriptionId(), "11112233445566").toString(),
+                subscription.getSubscriber().getCallingNumber(),
+                "w1_1.wav",
+                "w1_1",
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
+                FinalCallStatus.FAILED,
+                makeStatsMap(StatusCode.OBD_FAILED_NOANSWER, 10),
+                0,
+                10,
+                3
+        ));
+
+        callRetryDataService.create(new CallRetry(
+                subscription.getSubscriptionId(),
+                subscription.getSubscriber().getCallingNumber(),
+                DayOfTheWeek.today(),
+                CallStage.RETRY_LAST,
+                "w1_1.wav",
+                "w1_1",
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
+                SubscriptionOrigin.MCTS_IMPORT
+        ));
+
+        CallSummaryRecordDto csr = new CallSummaryRecordDto(
+                new RequestId(subscription.getSubscriptionId(), "11112233445566"),
+                subscription.getSubscriber().getCallingNumber(),
+                "w1_1.wav",
+                "w1_1",
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
+                FinalCallStatus.FAILED,
+                makeStatsMap(StatusCode.OBD_FAILED_NOANSWER, 3),
+                0,
+                3
+        );
+
+        Map<String, Object> eventParams = new HashMap<>();
+        eventParams.put(CSR_PARAM_KEY, csr);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD, eventParams);
+        csrService.processCallSummaryRecord(motechEvent);
+
+        CallRetry callRetry = callRetryDataService.findBySubscriptionId(subscription.getSubscriptionId());
+        assertNull(callRetry);
+
+    }
+
+    @Test //NMS_FT_144
+    public void verifyOBDRescheduledWhenFailedAsIVRDidNotAttempt() {
+        Subscription subscription = makeSubscription(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
+
+        csrDataService.create(new CallSummaryRecord(
+                new RequestId(subscription.getSubscriptionId(), "11112233445566").toString(),
+                subscription.getSubscriber().getCallingNumber(),
+                "w1_1.wav",
+                "w1_1",
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
+                FinalCallStatus.FAILED,
+                makeStatsMap(StatusCode.OBD_FAILED_NOATTEMPT, 1),
+                0,
+                10,
+                3
+        ));
+
+        callRetryDataService.create(new CallRetry(
+                subscription.getSubscriptionId(),
+                subscription.getSubscriber().getCallingNumber(),
+                DayOfTheWeek.today(),
+                CallStage.RETRY_1,
+                "w1_1.wav",
+                "w1_1",
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
+                SubscriptionOrigin.MCTS_IMPORT
+        ));
+
+        CallSummaryRecordDto csr = new CallSummaryRecordDto(
+                new RequestId(subscription.getSubscriptionId(), "11112233445566"),
+                subscription.getSubscriber().getCallingNumber(),
+                "w1_1.wav",
+                "w1_1",
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
+                FinalCallStatus.FAILED,
+                makeStatsMap(StatusCode.OBD_FAILED_NOATTEMPT, 1),
+                0,
+                3
+        );
+
+        Map<String, Object> eventParams = new HashMap<>();
+        eventParams.put(CSR_PARAM_KEY, csr);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD, eventParams);
+        csrService.processCallSummaryRecord(motechEvent);
+
+        CallRetry callRetry = callRetryDataService.findBySubscriptionId(subscription.getSubscriptionId());
+        assertNotNull(callRetry);
+        assertTrue(CallStage.RETRY_2.equals(callRetry.getCallStage()));
+    }
+
+    @Test //NMS_FT_145
+    public void verifyOBDRescheduledWhenFailedDueToUserNumberBusy() {
+        Subscription subscription = makeSubscription(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
+
+        csrDataService.create(new CallSummaryRecord(
+                new RequestId(subscription.getSubscriptionId(), "11112233445566").toString(),
+                subscription.getSubscriber().getCallingNumber(),
+                "w1_1.wav",
+                "w1_1",
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
+                FinalCallStatus.FAILED,
+                makeStatsMap(StatusCode.OBD_FAILED_BUSY, 1),
+                0,
+                10,
+                3
+        ));
+
+        callRetryDataService.create(new CallRetry(
+                subscription.getSubscriptionId(),
+                subscription.getSubscriber().getCallingNumber(),
+                DayOfTheWeek.today(),
+                CallStage.RETRY_1,
+                "w1_1.wav",
+                "w1_1",
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
+                SubscriptionOrigin.MCTS_IMPORT
+        ));
+
+        CallSummaryRecordDto csr = new CallSummaryRecordDto(
+                new RequestId(subscription.getSubscriptionId(), "11112233445566"),
+                subscription.getSubscriber().getCallingNumber(),
+                "w1_1.wav",
+                "w1_1",
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
+                FinalCallStatus.FAILED,
+                makeStatsMap(StatusCode.OBD_FAILED_BUSY, 1),
+                0,
+                3
+        );
+
+        Map<String, Object> eventParams = new HashMap<>();
+        eventParams.put(CSR_PARAM_KEY, csr);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD, eventParams);
+        csrService.processCallSummaryRecord(motechEvent);
+
+        CallRetry callRetry = callRetryDataService.findBySubscriptionId(subscription.getSubscriptionId());
+        assertNotNull(callRetry);
+        assertTrue(CallStage.RETRY_2.equals(callRetry.getCallStage()));
+    }
+
+    @Test //NMS_FT_146
+    public void verifyOBDRescheduledWhenFailedDueToUnansweredCall() {
+        Subscription subscription = makeSubscription(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
+
+        csrDataService.create(new CallSummaryRecord(
+                new RequestId(subscription.getSubscriptionId(), "11112233445566").toString(),
+                subscription.getSubscriber().getCallingNumber(),
+                "w1_1.wav",
+                "w1_1",
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
+                FinalCallStatus.FAILED,
+                makeStatsMap(StatusCode.OBD_FAILED_NOANSWER, 1),
+                0,
+                10,
+                3
+        ));
+
+        callRetryDataService.create(new CallRetry(
+                subscription.getSubscriptionId(),
+                subscription.getSubscriber().getCallingNumber(),
+                DayOfTheWeek.today(),
+                CallStage.RETRY_1,
+                "w1_1.wav",
+                "w1_1",
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
+                SubscriptionOrigin.MCTS_IMPORT
+        ));
+
+        CallSummaryRecordDto csr = new CallSummaryRecordDto(
+                new RequestId(subscription.getSubscriptionId(), "11112233445566"),
+                subscription.getSubscriber().getCallingNumber(),
+                "w1_1.wav",
+                "w1_1",
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
+                FinalCallStatus.FAILED,
+                makeStatsMap(StatusCode.OBD_FAILED_NOANSWER, 1),
+                0,
+                3
+        );
+
+        Map<String, Object> eventParams = new HashMap<>();
+        eventParams.put(CSR_PARAM_KEY, csr);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD, eventParams);
+        csrService.processCallSummaryRecord(motechEvent);
+
+        CallRetry callRetry = callRetryDataService.findBySubscriptionId(subscription.getSubscriptionId());
+        assertNotNull(callRetry);
+        assertTrue(CallStage.RETRY_2.equals(callRetry.getCallStage()));
+    }
+
+    @Test //NMS_FT_147
+    public void verifyOBDRescheduledWhenFailedDueToNumberSwitchedOff() {
+        Subscription subscription = makeSubscription(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
+
+        csrDataService.create(new CallSummaryRecord(
+                new RequestId(subscription.getSubscriptionId(), "11112233445566").toString(),
+                subscription.getSubscriber().getCallingNumber(),
+                "w1_1.wav",
+                "w1_1",
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
+                FinalCallStatus.FAILED,
+                makeStatsMap(StatusCode.OBD_FAILED_SWITCHEDOFF, 1),
+                0,
+                10,
+                3
+        ));
+
+        callRetryDataService.create(new CallRetry(
+                subscription.getSubscriptionId(),
+                subscription.getSubscriber().getCallingNumber(),
+                DayOfTheWeek.today(),
+                CallStage.RETRY_1,
+                "w1_1.wav",
+                "w1_1",
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
+                SubscriptionOrigin.MCTS_IMPORT
+        ));
+
+        CallSummaryRecordDto csr = new CallSummaryRecordDto(
+                new RequestId(subscription.getSubscriptionId(), "11112233445566"),
+                subscription.getSubscriber().getCallingNumber(),
+                "w1_1.wav",
+                "w1_1",
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
+                FinalCallStatus.FAILED,
+                makeStatsMap(StatusCode.OBD_FAILED_SWITCHEDOFF, 1),
+                0,
+                3
+        );
+
+        Map<String, Object> eventParams = new HashMap<>();
+        eventParams.put(CSR_PARAM_KEY, csr);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD, eventParams);
+        csrService.processCallSummaryRecord(motechEvent);
+
+        CallRetry callRetry = callRetryDataService.findBySubscriptionId(subscription.getSubscriptionId());
+        assertNotNull(callRetry);
+        assertTrue(CallStage.RETRY_2.equals(callRetry.getCallStage()));
+    }
+
+    @Test //NMS_FT_149
+    public void verifyOBDNotRetriedWhenRejectedDueToDNDForMCTSImport() {
+        Subscription subscription = makeSubscription(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(14));
+
+        csrDataService.create(new CallSummaryRecord(
+                new RequestId(subscription.getSubscriptionId(), "11112233445566").toString(),
+                subscription.getSubscriber().getCallingNumber(),
+                "w1_1.wav",
+                "w1_1",
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
+                FinalCallStatus.REJECTED,
+                makeStatsMap(StatusCode.OBD_DNIS_IN_DND, 1),
+                0,
+                10,
+                3
+        ));
+
+        callRetryDataService.create(new CallRetry(
+                subscription.getSubscriptionId(),
+                subscription.getSubscriber().getCallingNumber(),
+                DayOfTheWeek.today(),
+                CallStage.RETRY_1,
+                "w1_1.wav",
+                "w1_1",
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
+                SubscriptionOrigin.MCTS_IMPORT
+        ));
+
+        CallSummaryRecordDto csr = new CallSummaryRecordDto(
+                new RequestId(subscription.getSubscriptionId(), "11112233445566"),
+                subscription.getSubscriber().getCallingNumber(),
+                "w1_1.wav",
+                "w1_1",
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
+                FinalCallStatus.REJECTED,
+                makeStatsMap(StatusCode.OBD_DNIS_IN_DND, 1),
+                0,
+                3
+        );
+
+        Map<String, Object> eventParams = new HashMap<>();
+        eventParams.put(CSR_PARAM_KEY, csr);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD, eventParams);
+        csrService.processCallSummaryRecord(motechEvent);
+
+        CallRetry callRetry = callRetryDataService.findBySubscriptionId(subscription.getSubscriptionId());
+        assertNull(callRetry);
+
+    }
 
     //todo: verify successful subscription completion
     //todo: verify multiple days' worth of summary record aggregation

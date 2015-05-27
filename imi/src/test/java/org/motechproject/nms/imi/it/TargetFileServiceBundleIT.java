@@ -17,6 +17,7 @@ import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
+import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
 import org.motechproject.nms.region.domain.Circle;
@@ -46,6 +47,8 @@ import java.nio.file.Files;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.HashSet;
+import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -85,6 +88,9 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
 
     @Inject
     private DistrictDataService districtDataService;
+
+    @Inject
+    private SubscriberService subscriberService;
 
     @Inject
     SettingsService settingsService;
@@ -141,6 +147,16 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
 
         callRetryDataService.create(new CallRetry("123", 3333333333L, DayOfTheWeek.today(), CallStage.RETRY_1,
                 "w1_m1.wav", "w1_1", hindi.getCode(), aa.getName(), SubscriptionOrigin.IVR));
+        //NMS_FT_138
+        //NMS_FT_144
+        //NMS_FT_145
+        //NMS_FT_146
+        //NMS_FT_147
+        callRetryDataService.create(new CallRetry("124", 5555555555L, DayOfTheWeek.today(), CallStage.RETRY_2,
+                "w1_m1.wav", "w1_1", hindi.getCode(), aa.getName(), SubscriptionOrigin.IVR));
+        //NMS_FT_139
+        callRetryDataService.create(new CallRetry("125", 1111111111L, DayOfTheWeek.today(), CallStage.RETRY_LAST,
+                "w1_m1.wav", "w1_1", hindi.getCode(), aa.getName(), SubscriptionOrigin.IVR));
         callRetryDataService.create(new CallRetry("546", 4444444444L, DayOfTheWeek.today().nextDay(),
                 CallStage.RETRY_1, "w1_m1.wav", "w1_1", hindi.getCode(), bb.getName(),
                 SubscriptionOrigin.MCTS_IMPORT));
@@ -155,7 +171,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
 
         // Should not pickup subscription2 because its status is COMPLETED nor callRetry 546 because it's for
         // tomorrow
-        assertEquals(2, (int) tfn.getRecordCount());
+        assertEquals(4, (int) tfn.getRecordCount());
 
         //read the file to get checksum & record count
         File homeDir = new File(System.getProperty("user.home"));
