@@ -4,7 +4,6 @@ import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.domain.MdsEntity;
 
-import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Unique;
 
 /**
@@ -17,8 +16,7 @@ public class NmsCourse extends MdsEntity {
     @Unique
     private String name;
 
-    @Field
-    @Column(length = 21845) // max length
+    @Field(type = "text")
     private String content;
 
     public NmsCourse() {
