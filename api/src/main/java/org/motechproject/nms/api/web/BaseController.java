@@ -116,7 +116,7 @@ public class BaseController {
         if (!validateFieldPresent(errors, fieldName, value)) {
             return false;
         }
-        if (FinalCallStatus.isValid(value)) {
+        if (FinalCallStatus.isValidEnumValue(value)) {
             return true;
         }
         errors.append(String.format(INVALID, fieldName));
@@ -128,7 +128,7 @@ public class BaseController {
         if (!validateFieldPresent(errors, fieldName, value)) {
             return false;
         }
-        if (CallDisconnectReason.isValid(value)) {
+        if (CallDisconnectReason.isValidEnumValue(value)) {
             return true;
         }
         errors.append(String.format(INVALID, fieldName));

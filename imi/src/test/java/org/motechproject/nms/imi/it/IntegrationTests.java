@@ -9,6 +9,7 @@ import org.junit.runners.Suite;
         ImiController_OBD_BundleIT.class,
         TargetFileServiceBundleIT.class,
         CdrFileServiceBundleIT.class,
+        CsrValidatorServiceBundleIT.class,
 })
 public class IntegrationTests {
 }

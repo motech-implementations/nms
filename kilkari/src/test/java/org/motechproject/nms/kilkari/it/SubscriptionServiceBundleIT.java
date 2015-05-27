@@ -1,4 +1,4 @@
-package org.motechproject.nms.kilkari.osgi;
+package org.motechproject.nms.kilkari.it;
 
 import org.joda.time.DateTime;
 import org.junit.Rule;

@@ -13,7 +13,7 @@ import javax.validation.constraints.NotNull;
 import java.util.List;
 import java.util.UUID;
 
-@Entity(tableName = "nms_subscriptions")
+@Entity(maxFetchDepth = -1, tableName = "nms_subscriptions")
 @Index(name="status_endDate_composit_idx", members={"status", "endDate"})
 public class Subscription {
 
@@ -247,7 +247,7 @@ public class Subscription {
     public String toString() {
         return "Subscription{" +
                 "subscriptionId='" + subscriptionId + '\'' +
-                ", subscriptionPack=" + subscriptionPack +
+                //todo: put back subscriptionPack when the getDetachedField bug is fixed...
                 ", status=" + status +
                 ", origin=" + origin +
                 ", startDate=" + startDate +

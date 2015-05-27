@@ -8,8 +8,8 @@ import org.motechproject.nms.imi.web.contract.FileProcessedStatusRequest;
  */
 public interface TargetFileService {
     /**
-     * Probably only to be called by an IT. This service's constructor sets the repeating nms.obd.generate_target_file
-     * MOTECH event which triggers the daily generation of the targetFile.
+     * Probably only to be called by an IT. This service's constructor sets the repeating
+     * nms.obd.generate_target_file MOTECH event which triggers the daily generation of the targetFile.
      */
     TargetFileNotification generateTargetFile();
 

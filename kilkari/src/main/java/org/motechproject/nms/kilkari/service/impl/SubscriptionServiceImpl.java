@@ -365,10 +365,32 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
 
+    @Override
+    public List<SubscriptionPack> getSubscriptionPacks() {
+        return subscriptionPackDataService.retrieveAll();
+    }
+
+
     /**
      * To be used by ITs only!
      */
     public void deleteAll() {
+        DateTime now = DateTime.now();
+        DateTime oldEnough = now.minusWeeks(7);
+        for (Subscription sub : subscriptionDataService.retrieveAll()) {
+            boolean update = false;
+            if (sub.getStatus() == SubscriptionStatus.ACTIVE) {
+                sub.setStatus(SubscriptionStatus.COMPLETED);
+                update = true;
+            }
+            if (Math.abs(Weeks.weeksBetween(now, sub.getEndDate()).getWeeks()) < 6) {
+                sub.setEndDate(oldEnough);
+                update = true;
+            }
+            if (update) {
+                subscriptionDataService.update(sub);
+            }
+        }
         subscriptionDataService.deleteAll();
     }
 
