@@ -45,9 +45,6 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     private MobileAcademyService maService;
 
     @Inject
-    private MTrainingService mTrainingService;
-
-    @Inject
     private BookmarkDataService bookmarkDataService;
 
     @Inject
@@ -66,12 +63,6 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     @Before
     public void setupMobileAcademy() {
 
-        List<Course> courses = mTrainingService.getCourseByName(invalidCourseName);
-        if (courses != null) {
-            for (Course currentCourse : courses) {
-                mTrainingService.deleteCourse(currentCourse.getId());
-            }
-        }
         completionRecordDataService.deleteAll();
     }
 
@@ -131,7 +122,6 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     @Test
     public void testGetCourseVersion() {
 
-        addCourseHelper(validCourseName);
         assertNotNull(maService.getCourseVersion());
         assertTrue(maService.getCourseVersion() > 0);
     }
@@ -318,11 +308,6 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         completionRecordDataService.create(cr);
         smsNotificationService.sendSmsNotification(event);
         // TODO: cannot check the notification status yet since we don't have a real IMI url to hit
-    }
-
-    private void addCourseHelper(String courseName) {
-
-        mTrainingService.createCourse(new Course(courseName, CourseUnitState.Active, "[]"));
     }
 
 }
