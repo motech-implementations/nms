@@ -12,11 +12,14 @@ import java.util.regex.Pattern;
  *
  */
 public class RequestId implements Serializable {
+    private static final long serialVersionUID = 8600346000225276856L;
+
     private static final int TIMESTAMP_LENGTH = 14; //YYYYMMDDHHMMSS
+    private static final int UUID_LENGTH = 36;
+    private static final int REQUEST_ID_LENGTH = TIMESTAMP_LENGTH + UUID_LENGTH +  1;
     public static final Pattern TIMESTAMP_PATTERN = Pattern.compile("[0-9]{14}");
     public static final Pattern UUID_PATTERN = Pattern.compile(
             "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}");
-    private static final long serialVersionUID = 8600346000225276856L;
 
     private String subscriptionId;
     private String timestamp;
@@ -24,33 +27,56 @@ public class RequestId implements Serializable {
     //No reason to create an empty RequestId
     private RequestId() { }
 
+
+    private static void validateSubscriptionId(String s) {
+        if (!UUID_PATTERN.matcher(s).matches()) {
+            throw new IllegalArgumentException(String.format("Invalid subscriptionId: %s", s));
+        }
+    }
+
+
+    private static void validateTimestamp(String s) {
+        if (!TIMESTAMP_PATTERN.matcher(s).matches()) {
+            throw new IllegalArgumentException(String.format("Invalid timestamp: %s", s));
+        }
+    }
+
+
     public RequestId(String subscriptionId, String timestamp) {
+        validateSubscriptionId(subscriptionId);
+        validateTimestamp(timestamp);
+
         this.subscriptionId = subscriptionId;
         this.timestamp = timestamp;
     }
+
 
     public String getSubscriptionId() {
         return subscriptionId;
     }
 
+
     public String getTimestamp() {
         return timestamp;
     }
 
-    public static final RequestId fromString(String s) {
+
+    public static RequestId fromString(String s) {
+
+        if (s.length() != REQUEST_ID_LENGTH) {
+            throw new IllegalArgumentException(String.format("Invalid string length: %s", s));
+
+        }
 
         String timestamp = s.substring(0, TIMESTAMP_LENGTH);
-        if (!TIMESTAMP_PATTERN.matcher(timestamp).matches()) {
-            throw new IllegalArgumentException(String.format("Invalid timestamp: %s", timestamp));
-        }
+        validateTimestamp(timestamp);
 
         String subscriptionId = s.substring(TIMESTAMP_LENGTH + 1);
-        if (!UUID_PATTERN.matcher(subscriptionId).matches()) {
-            throw new IllegalArgumentException(String.format("Invalid subscriptionId: %s", subscriptionId));
-        }
+        validateSubscriptionId(subscriptionId);
 
         return new RequestId(subscriptionId, timestamp);
     }
+
 
     @Override
     public boolean equals(Object o) {

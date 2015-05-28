@@ -7,12 +7,14 @@ import org.motechproject.mds.annotations.Field;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
 
 import javax.jdo.annotations.Column;
+import javax.jdo.annotations.Index;
 import javax.jdo.annotations.Unique;
 import javax.validation.constraints.NotNull;
 import java.util.List;
 import java.util.UUID;
 
-@Entity(tableName = "nms_subscriptions")
+@Entity(maxFetchDepth = -1, tableName = "nms_subscriptions")
+@Index(name="status_endDate_composit_idx", members={"status", "endDate"})
 public class Subscription {
 
     private static final int DAYS_IN_WEEK = 7;
@@ -50,6 +52,9 @@ public class Subscription {
 
     @Field
     private DateTime startDate;
+
+    @Field
+    private DateTime endDate;
 
     @Field
     private DayOfTheWeek startDayOfTheWeek;
@@ -90,7 +95,15 @@ public class Subscription {
 
     public SubscriptionStatus getStatus() { return status; }
 
-    public void setStatus(SubscriptionStatus status) { this.status = status; }
+    public void setStatus(SubscriptionStatus status) {
+        this.status = status;
+
+        if (this.status == SubscriptionStatus.DEACTIVATED || this.status == SubscriptionStatus.COMPLETED) {
+            setEndDate(new DateTime());
+        } else {
+            setEndDate(null);
+        }
+    }
 
     public SubscriptionOrigin getOrigin() { return origin; }
 
@@ -101,6 +114,14 @@ public class Subscription {
     public void setStartDate(DateTime startDate) {
         this.startDate = startDate;
         this.startDayOfTheWeek = DayOfTheWeek.fromInt(startDate.getDayOfWeek());
+    }
+
+    public DateTime getEndDate() {
+        return endDate;
+    }
+
+    public void setEndDate(DateTime endDate) {
+        this.endDate = endDate;
     }
 
     public DayOfTheWeek getStartDayOfTheWeek() {
@@ -226,10 +247,11 @@ public class Subscription {
     public String toString() {
         return "Subscription{" +
                 "subscriptionId='" + subscriptionId + '\'' +
-                ", subscriptionPack=" + subscriptionPack +
+                //todo: put back subscriptionPack when the getDetachedField bug is fixed...
                 ", status=" + status +
                 ", origin=" + origin +
                 ", startDate=" + startDate +
+                ", endDate=" + endDate +
                 '}';
     }
 }

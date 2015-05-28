@@ -4,6 +4,7 @@ import org.joda.time.DateTime;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
+import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.domain.ServiceUsage;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.flw.repository.ServiceUsageDataService;
@@ -43,6 +44,13 @@ public class ServiceUsageServiceBundleIT extends BasePaxIT {
     private ServiceUsageService serviceUsageService;
 
     private void setupData() {
+        for (FrontLineWorker flw: frontLineWorkerDataService.retrieveAll()) {
+            flw.setStatus(FrontLineWorkerStatus.INVALID);
+            flw.setInvalidationDate(new DateTime().withDate(2011, 8, 1));
+
+            frontLineWorkerDataService.update(flw);
+        }
+
         serviceUsageDataService.deleteAll();
         frontLineWorkerDataService.deleteAll();
     }
@@ -93,7 +101,15 @@ public class ServiceUsageServiceBundleIT extends BasePaxIT {
         serviceUsageDataService.delete(differentFLW);
         serviceUsageDataService.delete(recordOne);
         serviceUsageDataService.delete(recordTwo);
+
+        flw.setStatus(FrontLineWorkerStatus.INVALID);
+        flw.setInvalidationDate(new DateTime().withDate(2011, 8, 1));
+        frontLineWorkerService.update(flw);
         frontLineWorkerService.delete(flw);
+
+        flwIgnored.setStatus(FrontLineWorkerStatus.INVALID);
+        flwIgnored.setInvalidationDate(new DateTime().withDate(2011, 8, 1));
+        frontLineWorkerService.update(flwIgnored);
         frontLineWorkerService.delete(flwIgnored);
     }
 
@@ -112,6 +128,10 @@ public class ServiceUsageServiceBundleIT extends BasePaxIT {
         assertEquals(0, serviceUsage.getWelcomePrompt());
 
         serviceUsageDataService.delete(serviceUsage);
+
+        flw.setStatus(FrontLineWorkerStatus.INVALID);
+        flw.setInvalidationDate(new DateTime().withDate(2011, 8, 1));
+        frontLineWorkerService.update(flw);
         frontLineWorkerService.delete(flw);
     }
 

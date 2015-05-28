@@ -94,12 +94,12 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
     }
 
     @Override
-    public int getCourseVersion() {
+    public long getCourseVersion() {
 
         Course course = getCourse();
         if (course != null) {
             DateTime version = course.getModificationDate();
-            return (int) version.getMillis();
+            return version.getMillis();
         } else {
             // return -1 and let the caller handle the upstream response
             return -1;
@@ -233,7 +233,7 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
      * @return map of course-score from the bookmark
      * @throws ClassCastException
      */
-    private Map<String, Integer> getScores(Bookmark bookmark) throws ClassCastException {
+    private Map<String, Integer> getScores(Bookmark bookmark) {
 
         if (bookmark != null && bookmark.getProgress() != null) {
             return (Map<String, Integer>) bookmark.getProgress().get(SCORES_KEY);

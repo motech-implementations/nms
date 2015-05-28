@@ -24,7 +24,7 @@ public interface MobileAcademyService {
      * Gets the course modification date as an epoch representation. This defaults to MobileAcademyCourse name
      * @return int representation (epoch) of modified course date
      */
-    int getCourseVersion();
+    long getCourseVersion();
 
     /**
      * Get the bookmark for a caller

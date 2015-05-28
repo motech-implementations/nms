@@ -14,6 +14,7 @@ import org.motechproject.nms.flw.service.ServiceUsageCapService;
 import org.motechproject.nms.flw.service.ServiceUsageService;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
+import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.props.domain.Service;
 import org.motechproject.nms.region.domain.Circle;
@@ -190,7 +191,10 @@ public class UserController extends BaseController {
         if (subscriber != null) {
             Set<Subscription> subscriptions = subscriber.getSubscriptions();
             for (Subscription subscription : subscriptions) {
-                packs.add(subscription.getSubscriptionPack().getName());
+                if ((subscription.getStatus() == SubscriptionStatus.ACTIVE) ||
+                        (subscription.getStatus() == SubscriptionStatus.PENDING_ACTIVATION)) {
+                    packs.add(subscription.getSubscriptionPack().getName());
+                }
             }
 
             LanguageLocation subscriberLanguageLocation = subscriber.getLanguageLocation();
