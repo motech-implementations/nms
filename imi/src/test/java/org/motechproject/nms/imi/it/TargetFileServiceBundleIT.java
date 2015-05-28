@@ -52,7 +52,9 @@ import java.nio.file.Files;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
@@ -167,6 +169,25 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
                 SubscriptionOrigin.MCTS_IMPORT);
         subscriptionService.deactivateSubscription(s, DeactivationReason.CHILD_DEATH);
 
+        //NMS_FT_152
+        Subscriber subscriber3 = new Subscriber(6666666666L, urdu, bb);
+        subscriber3.setDateOfBirth(DateTime.now().plusDays(1));
+        subscriber3 = subscriberDataService.create(subscriber3);
+
+
+        //create subscription for future date
+        Subscription s3 = subscriptionService.createSubscription(6666666666L, urdu, childPack,
+                SubscriptionOrigin.MCTS_IMPORT);
+        Set<Subscription> subscriptions = new HashSet<Subscription>();
+        subscriptions.add(s3);
+
+        subscriber3.setSubscriptions(subscriptions);
+        subscriberDataService.update(subscriber3);
+
+        //update dob of subscriber and hence subscription start date
+        subscriber3.setDateOfBirth(DateTime.now());
+        subscriberService.update(subscriber3);
+
         //NMS_FT_138
         //NMS_FT_144
         //NMS_FT_145
@@ -176,7 +197,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
                 DayOfTheWeek.today(), CallStage.RETRY_2,
                 "w1_m1.wav", "w1_1", hindi.getCode(), aa.getName(), SubscriptionOrigin.IVR));
         //NMS_FT_139
-        callRetryDataService.create(new CallRetry("44444444-4444-4444-4444-444444444444", 1111111111L, DayOfTheWeek.today(), CallStage.RETRY_LAST,
+        callRetryDataService.create(new CallRetry("44444444-4444-4444-4444-444444444444", 9999999999L, DayOfTheWeek.today(), CallStage.RETRY_LAST,
                 "w1_m1.wav", "w1_1", hindi.getCode(), aa.getName(), SubscriptionOrigin.IVR));
         callRetryDataService.create(new CallRetry("11111111-1111-1111-1111-111111111111", 3333333333L,
                 DayOfTheWeek.today(), CallStage.RETRY_1, "w1_m1.wav", "w1_1", hindi.getCode(), aa.getName(), 
@@ -213,12 +234,16 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
     @Test
     public void testTargetFileGeneration() throws NoSuchAlgorithmException, IOException {
         setupDatabase();
+        List<Long> msisdns = new ArrayList<>();
+        List<String> subscriptionIds = new ArrayList<>();
+        String[] values;
+        String line;
         TargetFileNotification tfn = targetFileService.generateTargetFile();
         assertNotNull(tfn);
 
         // Should not pickup subscription2 because its status is COMPLETED nor callRetry 22222222-2222-2222-2222-222222222222
         // because it's for tomorrow
-        assertEquals(4, (int) tfn.getRecordCount());
+        assertEquals(5, (int) tfn.getRecordCount());
 
         //read the file to get checksum & record count
         File targetDir = new File(settingsService.getSettingsFacade().getProperty("imi.local_obd_dir"));
@@ -228,7 +253,10 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         try (InputStream is = Files.newInputStream(targetFile.toPath());
              BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
             DigestInputStream dis = new DigestInputStream(is, md);
-            while ((reader.readLine()) != null) {
+            while ((line = reader.readLine()) != null) {
+                values = line.split(",");
+                msisdns.add(Long.parseLong(values[2]));
+                subscriptionIds.add(values[0].split(":")[1]);
                 recordCount++;
             }
         }
@@ -237,6 +265,14 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         assertEquals((int)tfn.getRecordCount(), recordCount);
 
         assertEquals(tfn.getChecksum(), md5Checksum);
+        assertTrue(msisdns.contains(1111111111L));
+        assertTrue(msisdns.contains(6666666666L));
+        assertTrue(msisdns.contains(3333333333L));
+        assertTrue(msisdns.contains(5555555555L));
+        assertTrue(msisdns.contains(9999999999L));
+        assertTrue(subscriptionIds.contains("33333333-3333-3333-3333-333333333333"));
+        assertTrue(subscriptionIds.contains("44444444-4444-4444-4444-444444444444"));
+        assertTrue(subscriptionIds.contains("11111111-1111-1111-1111-111111111111"));
     }
 
 

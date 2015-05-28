@@ -237,6 +237,21 @@ public class CsrServiceBundleIT extends BasePaxIT {
         return subscription;
     }
 
+    private Subscription makeSubscriptionForMotherPack(SubscriptionOrigin origin, DateTime startDate) {
+        subscriptionService.createSubscriptionPacks();
+        Subscriber subscriber = subscriberDataService.create(new Subscriber(
+                makeNumber(),
+                makeLanguageLocation(),
+                makeCircle()
+        ));
+        SubscriptionPack subscriptionPack = subscriptionService.getSubscriptionPack("pregnancyPack");
+        Subscription subscription = new Subscription(subscriber, subscriptionPack, origin);
+        subscription.setStartDate(startDate);
+        subscription.setStatus(SubscriptionStatus.ACTIVE);
+        subscription = subscriptionService.create(subscription);
+        getLogger().debug("Created subscription {}", subscription.toString());
+        return subscription;
+    }
 
     private Map<Integer, Integer> makeStatsMap(StatusCode statusCode, int count) {
         Map<Integer, Integer> map = new HashMap<>();
@@ -658,6 +673,336 @@ public class CsrServiceBundleIT extends BasePaxIT {
         CallRetry callRetry = callRetryDataService.findBySubscriptionId(subscription.getSubscriptionId());
         assertNull(callRetry);
 
+    }
+    
+    @Test //NMS_FT_141
+    public void verifyOBDRescheduledForMotherPack() {
+        Subscription subscription = makeSubscriptionForMotherPack(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
+        
+        csrDataService.create(new CallSummaryRecord(
+                new RequestId(subscription.getSubscriptionId(), "11112233445566").toString(),
+                subscription.getSubscriber().getCallingNumber(),
+                "w1_1.wav",
+                "w1_1",
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
+                FinalCallStatus.FAILED,
+                makeStatsMap(StatusCode.OBD_FAILED_BUSY, 1),
+                0,
+                10,
+                3
+        ));
+        
+        CallSummaryRecordDto csr = new CallSummaryRecordDto(
+                new RequestId(subscription.getSubscriptionId(), "11112233445566"),
+                subscription.getSubscriber().getCallingNumber(),
+                "w1_1.wav",
+                "w1_1",
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
+                FinalCallStatus.FAILED,
+                makeStatsMap(StatusCode.OBD_FAILED_BUSY, 1),
+                0,
+                3
+        );
+        
+        Map<String, Object> eventParams = new HashMap<>();
+        eventParams.put(CSR_PARAM_KEY, csr);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD, eventParams);
+        csrService.processCallSummaryRecord(motechEvent);
+        
+        CallRetry callRetry = callRetryDataService.findBySubscriptionId(subscription.getSubscriptionId());
+        assertNotNull(callRetry);
+        assertTrue(CallStage.RETRY_1.equals(callRetry.getCallStage()));
+    }
+    
+    @Test //NMS_FT_142
+    public void verifyOBDNotRescheduledForMotherPackIfAlreadyScheduled() {
+        Subscription subscription = makeSubscriptionForMotherPack(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
+        
+        csrDataService.create(new CallSummaryRecord(
+                new RequestId(subscription.getSubscriptionId(), "11112233445566").toString(),
+                subscription.getSubscriber().getCallingNumber(),
+                "w1_1.wav",
+                "w1_1",
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
+                FinalCallStatus.FAILED,
+                makeStatsMap(StatusCode.OBD_FAILED_BUSY, 1),
+                0,
+                10,
+                3
+        ));
+        
+        callRetryDataService.create(new CallRetry(
+                subscription.getSubscriptionId(),
+                subscription.getSubscriber().getCallingNumber(),
+                DayOfTheWeek.today(),
+                CallStage.RETRY_1,
+                "w1_1.wav",
+                "w1_1",
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
+                SubscriptionOrigin.MCTS_IMPORT
+        ));
+        
+        CallSummaryRecordDto csr = new CallSummaryRecordDto(
+                new RequestId(subscription.getSubscriptionId(), "11112233445566"),
+                subscription.getSubscriber().getCallingNumber(),
+                "w1_1.wav",
+                "w1_1",
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
+                FinalCallStatus.FAILED,
+                makeStatsMap(StatusCode.OBD_FAILED_BUSY, 1),
+                0,
+                3
+        );
+        
+        Map<String, Object> eventParams = new HashMap<>();
+        eventParams.put(CSR_PARAM_KEY, csr);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD, eventParams);
+        csrService.processCallSummaryRecord(motechEvent);
+        
+        CallRetry callRetry = callRetryDataService.findBySubscriptionId(subscription.getSubscriptionId());
+        assertNull(callRetry);
+    }
+    
+    @Test //NMS_FT_147
+    public void verifyOBDRescheduledWhenFailedDueOtherReason() {
+        Subscription subscription = makeSubscription(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
+        
+        csrDataService.create(new CallSummaryRecord(
+                new RequestId(subscription.getSubscriptionId(), "11112233445566").toString(),
+                subscription.getSubscriber().getCallingNumber(),
+                "w1_1.wav",
+                "w1_1",
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
+                FinalCallStatus.FAILED,
+                makeStatsMap(StatusCode.OBD_FAILED_OTHERS, 1),
+                0,
+                10,
+                3
+        ));
+        
+        callRetryDataService.create(new CallRetry(
+                subscription.getSubscriptionId(),
+                subscription.getSubscriber().getCallingNumber(),
+                DayOfTheWeek.today(),
+                CallStage.RETRY_1,
+                "w1_1.wav",
+                "w1_1",
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
+                SubscriptionOrigin.MCTS_IMPORT
+        ));
+        
+        CallSummaryRecordDto csr = new CallSummaryRecordDto(
+                new RequestId(subscription.getSubscriptionId(), "11112233445566"),
+                subscription.getSubscriber().getCallingNumber(),
+                "w1_1.wav",
+                "w1_1",
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
+                FinalCallStatus.FAILED,
+                makeStatsMap(StatusCode.OBD_FAILED_OTHERS, 1),
+                0,
+                3
+        );
+        
+        Map<String, Object> eventParams = new HashMap<>();
+        eventParams.put(CSR_PARAM_KEY, csr);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD, eventParams);
+        csrService.processCallSummaryRecord(motechEvent);
+        
+        CallRetry callRetry = callRetryDataService.findBySubscriptionId(subscription.getSubscriptionId());
+        assertNotNull(callRetry);
+        assertTrue(CallStage.RETRY_2.equals(callRetry.getCallStage()));
+    }
+    
+    @Test //NMS_FT_165
+    public void verifyPregnancyPackMarkCompleted() {
+        Subscription subscription = makeSubscriptionForMotherPack(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
+        
+        csrDataService.create(new CallSummaryRecord(
+                new RequestId(subscription.getSubscriptionId(), "11112233445566").toString(),
+                subscription.getSubscriber().getCallingNumber(),
+                "w72_2.wav",
+                "w72_2",
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
+                FinalCallStatus.SUCCESS,
+                makeStatsMap(StatusCode.OBD_SUCCESS_CALL_CONNECTED, 1),
+                0,
+                10,
+                3
+        ));
+        
+        CallSummaryRecordDto csr = new CallSummaryRecordDto(
+                new RequestId(subscription.getSubscriptionId(), "11112233445566"),
+                subscription.getSubscriber().getCallingNumber(),
+                "w72_2.wav",
+                "w72_2",
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
+                FinalCallStatus.SUCCESS,
+                makeStatsMap(StatusCode.OBD_SUCCESS_CALL_CONNECTED, 1),
+                0,
+                3
+        );
+        
+        Map<String, Object> eventParams = new HashMap<>();
+        eventParams.put(CSR_PARAM_KEY, csr);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD, eventParams);
+        csrService.processCallSummaryRecord(motechEvent);
+        
+        subscription = subscriptionDataService.findBySubscriptionId(subscription.getSubscriptionId());
+        assertEquals(SubscriptionStatus.COMPLETED, subscription.getStatus());
+    }
+    
+    @Test //NMS_FT_166
+    public void verifyChildPackMarkCompleted() {
+        Subscription subscription = makeSubscription(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
+        
+        csrDataService.create(new CallSummaryRecord(
+                new RequestId(subscription.getSubscriptionId(), "11112233445566").toString(),
+                subscription.getSubscriber().getCallingNumber(),
+                "w48_1.wav",
+                "w48_1",
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
+                FinalCallStatus.SUCCESS,
+                makeStatsMap(StatusCode.OBD_SUCCESS_CALL_CONNECTED, 1),
+                0,
+                10,
+                3
+        ));
+        
+        CallSummaryRecordDto csr = new CallSummaryRecordDto(
+                new RequestId(subscription.getSubscriptionId(), "11112233445566"),
+                subscription.getSubscriber().getCallingNumber(),
+                "w48_1.wav",
+                "w48_1",
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
+                FinalCallStatus.SUCCESS,
+                makeStatsMap(StatusCode.OBD_SUCCESS_CALL_CONNECTED, 1),
+                0,
+                3
+        );
+        
+        Map<String, Object> eventParams = new HashMap<>();
+        eventParams.put(CSR_PARAM_KEY, csr);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD, eventParams);
+        csrService.processCallSummaryRecord(motechEvent);
+        
+        subscription = subscriptionDataService.findBySubscriptionId(subscription.getSubscriptionId());
+        assertEquals(SubscriptionStatus.COMPLETED, subscription.getStatus());
+    }
+    
+    @Test //NMS_FT_167
+    public void verifyPregnancyPackMarkCompletedAfterFirstRetry() {
+        Subscription subscription = makeSubscriptionForMotherPack(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
+        
+        csrDataService.create(new CallSummaryRecord(
+                new RequestId(subscription.getSubscriptionId(), "11112233445566").toString(),
+                subscription.getSubscriber().getCallingNumber(),
+                "w72_2.wav",
+                "w72_2",
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
+                FinalCallStatus.FAILED,
+                makeStatsMap(StatusCode.OBD_FAILED_OTHERS, 1),
+                0,
+                10,
+                3
+        ));
+        
+        callRetryDataService.create(new CallRetry(
+                subscription.getSubscriptionId(),
+                subscription.getSubscriber().getCallingNumber(),
+                DayOfTheWeek.today(),
+                CallStage.RETRY_1,
+                "w72_2.wav",
+                "w72_2",
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
+                SubscriptionOrigin.MCTS_IMPORT
+        ));
+        
+        CallSummaryRecordDto csr = new CallSummaryRecordDto(
+                new RequestId(subscription.getSubscriptionId(), "11112233445566"),
+                subscription.getSubscriber().getCallingNumber(),
+                "w72_2.wav",
+                "w72_2",
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
+                FinalCallStatus.FAILED,
+                makeStatsMap(StatusCode.OBD_FAILED_OTHERS, 1),
+                0,
+                3
+        );
+        
+        Map<String, Object> eventParams = new HashMap<>();
+        eventParams.put(CSR_PARAM_KEY, csr);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD, eventParams);
+        csrService.processCallSummaryRecord(motechEvent);
+        
+        subscription = subscriptionDataService.findBySubscriptionId(subscription.getSubscriptionId());
+        assertEquals(SubscriptionStatus.COMPLETED, subscription.getStatus());
+    }
+    
+    @Test //NMS_FT_168
+    public void verifyChildPackMarkCompletedIncludingFirstRetry() {
+        Subscription subscription = makeSubscription(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
+        
+        csrDataService.create(new CallSummaryRecord(
+                new RequestId(subscription.getSubscriptionId(), "11112233445566").toString(),
+                subscription.getSubscriber().getCallingNumber(),
+                "w48_1.wav",
+                "w48_1",
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
+                FinalCallStatus.FAILED,
+                makeStatsMap(StatusCode.OBD_FAILED_OTHERS, 1),
+                0,
+                10,
+                3
+        ));
+        
+        callRetryDataService.create(new CallRetry(
+                subscription.getSubscriptionId(),
+                subscription.getSubscriber().getCallingNumber(),
+                DayOfTheWeek.today(),
+                CallStage.RETRY_LAST,
+                "w48_1.wav",
+                "w48_1",
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
+                SubscriptionOrigin.MCTS_IMPORT
+        ));
+        
+        CallSummaryRecordDto csr = new CallSummaryRecordDto(
+                new RequestId(subscription.getSubscriptionId(), "11112233445566"),
+                subscription.getSubscriber().getCallingNumber(),
+                "w48_1.wav",
+                "w48_1",
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
+                FinalCallStatus.FAILED,
+                makeStatsMap(StatusCode.OBD_FAILED_OTHERS, 1),
+                0,
+                3
+        );
+        
+        Map<String, Object> eventParams = new HashMap<>();
+        eventParams.put(CSR_PARAM_KEY, csr);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD, eventParams);
+        csrService.processCallSummaryRecord(motechEvent);
+        
+        subscription = subscriptionDataService.findBySubscriptionId(subscription.getSubscriptionId());
+        assertEquals(SubscriptionStatus.COMPLETED, subscription.getStatus());
     }
 
     @Test
