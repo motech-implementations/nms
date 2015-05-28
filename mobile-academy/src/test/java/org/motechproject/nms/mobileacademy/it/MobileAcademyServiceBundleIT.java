@@ -140,6 +140,15 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     }
 
     @Test
+    public void testSetNullBookmark() {
+        try {
+            maService.setBookmark(null);
+        } catch (IllegalArgumentException ia) {
+            assertTrue(ia.toString().contains("cannot be null"));
+        }
+    }
+
+    @Test
     public void testSetNewBookmark() {
         List<Bookmark> existing = bookmarkDataService.findBookmarksForUser("555");
         MaBookmark bookmark = new MaBookmark(555L, 666L, null, null);

@@ -3,6 +3,7 @@ package org.motechproject.nms.mobileacademy.ut;
 import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.mockito.Mock;
 
 import org.mockito.invocation.InvocationOnMock;
@@ -111,6 +112,12 @@ public class MobileAcademyServiceUnitTest {
 
         MaBookmark mab = mobileAcademyService.getBookmark(55L, 10L);
         assertTrue(mab.getCallingNumber() == 55);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void setBookmarkNullTest() {
+
+        mobileAcademyService.setBookmark(null);
     }
 
     @Test

@@ -48,6 +48,8 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
 
     private static final String NOT_COMPLETE = "<%s: Course not complete>";
 
+    private static final String COURSE_ENTITY_NAME = "MA.Course";
+
     private static final int CHAPTER_COUNT = 11;
 
     private static final int PASS_SCORE = 22;
@@ -107,7 +109,7 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
         NmsCourse course = nmsCourseDataService.getCourseByName(COURSE_NAME);
 
         if (course == null) {
-            alertService.create("MA.Course", COURSE_NAME, "Could not find course", AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            alertService.create(COURSE_ENTITY_NAME, COURSE_NAME, "Could not find course", AlertType.CRITICAL, AlertStatus.NEW, 0, null);
             throw new IllegalStateException("No course bootstrapped. Check deployment");
         }
 
@@ -119,7 +121,7 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
 
         if (courseDto == null) {
             LOGGER.error("Attempted to set null course, exiting operation");
-            alertService.create("MA.Course", "MaCourse", "Trying to set null MaCourse", AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            alertService.create(COURSE_ENTITY_NAME, "MaCourse", "Trying to set null MaCourse", AlertType.CRITICAL, AlertStatus.NEW, 0, null);
             return;
         }
 
@@ -132,7 +134,7 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
         NmsCourse course = nmsCourseDataService.getCourseByName(COURSE_NAME);
 
         if (course == null) {
-            alertService.create("MA.Course", COURSE_NAME, "Could not find course", AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            alertService.create(COURSE_ENTITY_NAME, COURSE_NAME, "Could not find course", AlertType.CRITICAL, AlertStatus.NEW, 0, null);
             throw new IllegalStateException("No course bootstrapped. Check deployment");
         }
 
@@ -156,6 +158,11 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
     @Override
     public void setBookmark(MaBookmark saveBookmark) {
 
+        if (saveBookmark == null) {
+            LOGGER.error("Bookmark cannot be null, check request");
+            throw new IllegalArgumentException("Invalid bookmark, cannot be null");
+        }
+
         String callingNumber = saveBookmark.getCallingNumber().toString();
         Bookmark existingBookmark = bookmarkService.getLatestBookmarkByUserId(callingNumber);
 
@@ -171,8 +178,8 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
         }
 
         if (saveBookmark.getBookmark() != null
-                && saveBookmark.getScoresByChapter() != null
                 && saveBookmark.getBookmark().equals(FINAL_BOOKMARK)
+                && saveBookmark.getScoresByChapter() != null
                 && saveBookmark.getScoresByChapter().size() == CHAPTER_COUNT) {
 
             LOGGER.debug("Found last bookmark and 11 scores. Starting evaluation & notification");
@@ -347,7 +354,7 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
         }
         catch (Exception e) {
             LOGGER.error("Error while reading course json. Check file. Exception: " + e.toString());
-            alertService.create("MA.Course", "MaCourse", "Error reading course json", AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            alertService.create(COURSE_ENTITY_NAME, "MaCourse", "Error reading course json", AlertType.CRITICAL, AlertStatus.NEW, 0, null);
         }
     }
 

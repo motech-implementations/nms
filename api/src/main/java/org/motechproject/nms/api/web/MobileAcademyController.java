@@ -91,8 +91,6 @@ public class MobileAcademyController extends BaseController {
         CourseResponse response = MobileAcademyConverter.convertCourseDto(getCourse);
 
         if (response != null) {
-
-            // TODO: course response format validations on the way out?
             return response;
         } else {
             LOGGER.error("Failed dto mapping, check object mapping");
@@ -122,7 +120,8 @@ public class MobileAcademyController extends BaseController {
      */
     @RequestMapping(
             value = "/bookmarkWithScore",
-            method = RequestMethod.GET)
+            method = RequestMethod.GET,
+            headers = { "Content-type=application/json" })
     public GetBookmarkResponse getBookmarkWithScore(@RequestParam Long callingNumber,
                                                  @RequestParam Long callId) {
 
@@ -142,6 +141,10 @@ public class MobileAcademyController extends BaseController {
     @ResponseStatus(HttpStatus.OK)
     @Transactional
     public void saveBookmarkWithScore(@RequestBody SaveBookmarkRequest bookmarkRequest) {
+
+        if (bookmarkRequest == null) {
+            throw new IllegalArgumentException(String.format(INVALID, "bookmarkRequest"));
+        }
 
         Long callingNumber = bookmarkRequest.getCallingNumber();
         if (callingNumber == null || callingNumber < SMALLEST_10_DIGIT_NUMBER || callingNumber > LARGEST_10_DIGIT_NUMBER) {
