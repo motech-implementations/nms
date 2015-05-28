@@ -5,14 +5,12 @@ import org.junit.Test;
 import org.motechproject.nms.api.utils.CourseBuilder;
 import org.motechproject.nms.api.web.contract.mobileAcademy.CourseResponse;
 import org.motechproject.nms.api.web.contract.mobileAcademy.SmsStatusRequest;
-import org.motechproject.nms.api.web.contract.mobileAcademy.course.Chapter;
 import org.motechproject.nms.api.web.contract.mobileAcademy.sms.DeliveryInfo;
 import org.motechproject.nms.api.web.contract.mobileAcademy.sms.DeliveryInfoNotification;
 import org.motechproject.nms.api.web.contract.mobileAcademy.sms.DeliveryStatus;
 import org.motechproject.nms.api.web.contract.mobileAcademy.sms.RequestData;
 import org.motechproject.nms.api.web.validator.MobileAcademyValidator;
 
-import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
@@ -36,31 +34,10 @@ public class MobileAcademyValidatorUnitTest {
     }
 
     @Test
-    public void TestValidateChapterCount() {
-
-        courseResponse.getChapters().add(new Chapter());
-        String errorString = MobileAcademyValidator.validateCourseResponse(courseResponse);
-        assertNotNull(errorString);
-    }
-
-    @Test
     public void TestValidateChapterNull() {
 
         courseResponse.setChapters(null);
         assertNotNull(MobileAcademyValidator.validateCourseResponse(courseResponse));
-    }
-
-    @Test
-    public void TestValidateLessonNull() {
-
-        courseResponse.getChapters().get(0).setLessons(null);
-        assertNotNull(MobileAcademyValidator.validateCourseResponse(courseResponse));
-    }
-
-    @Test
-    public void TestValidateCourseName() {
-
-        assertFalse(MobileAcademyValidator.validateCourseFormat(courseResponse));
     }
 
     @Test
