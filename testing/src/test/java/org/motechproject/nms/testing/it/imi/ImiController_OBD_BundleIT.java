@@ -19,6 +19,7 @@ import org.motechproject.nms.imi.repository.FileAuditRecordDataService;
 import org.motechproject.nms.imi.service.SettingsService;
 import org.motechproject.nms.imi.web.contract.BadRequest;
 import org.motechproject.nms.imi.web.contract.FileProcessedStatusRequest;
+import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.motechproject.testing.osgi.http.SimpleHttpClient;
@@ -54,15 +55,17 @@ public class ImiController_OBD_BundleIT extends BasePaxIT {
     AlertService alertService;
 
     @Inject
+    SettingsService settingsService;
+
+    @Inject
     FileAuditRecordDataService fileAuditRecordDataService;
 
     @Inject
-    private SettingsService settingsService;
-
+    TestingService testingService;
 
     @Before
     public void cleanupDatabase() {
-        fileAuditRecordDataService.deleteAll();
+        testingService.clearDatabase();
     }
 
 

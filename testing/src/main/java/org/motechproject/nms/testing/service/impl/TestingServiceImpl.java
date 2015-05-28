@@ -1,5 +1,6 @@
 package org.motechproject.nms.testing.service.impl;
 
+import org.motechproject.alerts.contract.AlertsDataService;
 import org.motechproject.nms.testing.service.TestingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,6 +50,10 @@ public class TestingServiceImpl implements TestingService {
     private org.motechproject.nms.region.service.IntegrationTestService region;
 
 
+    @Autowired
+    private AlertsDataService alertsDataService;
+
+
 
     @Override
     public void clearDatabase() {
@@ -83,6 +88,11 @@ public class TestingServiceImpl implements TestingService {
          * Region
          */
         region.deleteAll();
+
+        /**
+         * Alerts
+         */
+        alertsDataService.deleteAll();
     }
 
 }

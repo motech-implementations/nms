@@ -290,7 +290,8 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         assertNull(cdr.getContent().get(1).getType());
         assertNull(cdr.getContent().get(1).getCompletionFlag());
 
-        assertEquals(flw.getId(), cdr.getFrontLineWorker().getId());
+        assertEquals(flw.getId(), ((FrontLineWorker) callDetailRecordDataService.getDetachedField(cdr,
+                "frontLineWorker")).getId());
     }
 
     @Test
@@ -343,7 +344,9 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         assertNull(cdr.getContent().get(0).getMobileKunjiCardCode());
         assertEquals("chapter-01question-01", cdr.getContent().get(1).getContentName());
         assertNull(cdr.getContent().get(1).getMobileKunjiCardCode());
-        assertEquals(flw.getId(), cdr.getFrontLineWorker().getId());
+
+        assertEquals(flw.getId(), ((FrontLineWorker) callDetailRecordDataService.getDetachedField(cdr,
+                "frontLineWorker")).getId());
     }
 
     @Test
