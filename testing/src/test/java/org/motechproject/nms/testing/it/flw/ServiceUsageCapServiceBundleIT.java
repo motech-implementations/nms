@@ -9,6 +9,7 @@ import org.motechproject.nms.props.domain.Service;
 import org.motechproject.nms.props.repository.DeployedServiceDataService;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.ops4j.pax.exam.ExamFactory;
@@ -40,7 +41,11 @@ public class ServiceUsageCapServiceBundleIT extends BasePaxIT {
     @Inject
     private DeployedServiceDataService deployedServiceDataService;
 
+    @Inject
+    private TestingService testingService;
+
     private void setupData() {
+        testingService.clearDatabase();
         deployedServiceDataService.deleteAll();
         serviceUsageCapDataService.deleteAll();
         stateDataService.deleteAll();

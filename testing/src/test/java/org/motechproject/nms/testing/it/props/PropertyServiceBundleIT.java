@@ -8,6 +8,7 @@ import org.motechproject.nms.props.repository.DeployedServiceDataService;
 import org.motechproject.nms.props.service.PropertyService;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.ops4j.pax.exam.ExamFactory;
@@ -20,9 +21,6 @@ import javax.inject.Inject;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-/**
- * Created by rob on 5/14/15.
- */
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerSuite.class)
 @ExamFactory(MotechNativeTestContainerFactory.class)
@@ -37,9 +35,11 @@ public class PropertyServiceBundleIT extends BasePaxIT {
     @Inject
     private PropertyService propertyService;
 
+    @Inject
+    private TestingService testingService;
+
     private void cleanUp() {
-        deployedServiceDataService.deleteAll();
-        stateDataService.deleteAll();
+        testingService.clearDatabase();
     }
 
     private State makeState(Long code, String name) {

@@ -14,6 +14,7 @@ import org.motechproject.nms.flw.domain.ServiceUsageCap;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.flw.repository.ServiceUsageCapDataService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
+import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.props.domain.DeployedService;
 import org.motechproject.nms.props.domain.Service;
 import org.motechproject.nms.props.repository.DeployedServiceDataService;
@@ -27,6 +28,7 @@ import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.LanguageLocationDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.motechproject.testing.osgi.http.SimpleHttpClient;
@@ -77,7 +79,15 @@ public class LanguageControllerBundleIT extends BasePaxIT {
     @Inject
     private FrontLineWorkerDataService frontLineWorkerDataService;
 
+    @Inject
+    private SubscriberDataService subscriberDataService;
+
+    @Inject
+    private TestingService testingService;
+
     private void cleanAllData() {
+        testingService.clearDatabase();
+
         for (FrontLineWorker flw: frontLineWorkerDataService.retrieveAll()) {
             flw.setStatus(FrontLineWorkerStatus.INVALID);
             flw.setInvalidationDate(new DateTime().withDate(2011, 8, 1));
@@ -87,6 +97,7 @@ public class LanguageControllerBundleIT extends BasePaxIT {
 
         frontLineWorkerDataService.deleteAll();
         serviceUsageCapDataService.deleteAll();
+        subscriberDataService.deleteAll();
         languageLocationDataService.deleteAll();
         languageDataService.deleteAll();
         deployedServiceDataService.deleteAll();

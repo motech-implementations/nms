@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 @Service("itService")
 public class IntegrationTestServiceImpl implements IntegrationTestService {
+
     @Autowired
     private CompletionRecordDataService completionRecordDataService;
     @Autowired

@@ -19,12 +19,4 @@
             </map>
         </constructor-arg>
     </bean>
-
-    <bean id="testingSettings" class="org.motechproject.server.config.SettingsFacade" autowire="byType">
-        <property name="configFiles">
-            <list>
-                <value>classpath:testing.properties</value>
-            </list>
-        </property>
-    </bean>
 </beans>

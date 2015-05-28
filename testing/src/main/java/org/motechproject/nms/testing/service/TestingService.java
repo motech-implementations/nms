@@ -5,5 +5,5 @@ package org.motechproject.nms.testing.service;
  */
 public interface TestingService {
 
-    void setupDatabase();
+    void clearDatabase();
 }

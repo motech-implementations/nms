@@ -20,6 +20,7 @@ import org.motechproject.nms.region.repository.HealthSubFacilityDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.repository.TalukaDataService;
 import org.motechproject.nms.region.repository.VillageDataService;
+import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.ops4j.pax.exam.ExamFactory;
@@ -61,6 +62,9 @@ public class LocationServiceBundleIT extends BasePaxIT {
     @Inject
     private HealthSubFacilityDataService healthSubFacilityDataService;
 
+    @Inject
+    private TestingService testingService;
+
     State state;
     District district;
     Taluka taluka;
@@ -71,14 +75,7 @@ public class LocationServiceBundleIT extends BasePaxIT {
     HealthSubFacility healthSubFacility;
 
     private void cleanAll() {
-        healthSubFacilityDataService.deleteAll();
-        healthFacilityDataService.deleteAll();
-        healthFacilityTypeDataService.deleteAll();
-        healthBlockDataService.deleteAll();
-        villageDataService.deleteAll();
-        talukaDataService.deleteAll();
-        districtDataService.deleteAll();
-        stateDataService.deleteAll();
+        testingService.clearDatabase();
     }
 
     private void initAll() {

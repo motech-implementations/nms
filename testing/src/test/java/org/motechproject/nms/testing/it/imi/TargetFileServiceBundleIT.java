@@ -17,7 +17,7 @@ import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
-import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
+import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
@@ -34,6 +34,8 @@ import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.LanguageLocationDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.testing.it.api.utils.SubscriptionPackBuilder;
+import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.ops4j.pax.exam.ExamFactory;
@@ -104,22 +106,12 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
     @Inject
     SettingsService settingsService;
 
+    @Inject
+    TestingService testingService;
+
     private void setupDatabase() {
-        for (Subscription subscription: subscriptionDataService.retrieveAll()) {
-            subscription.setStatus(SubscriptionStatus.COMPLETED);
-            subscription.setEndDate(new DateTime().withDate(2011, 8, 1));
 
-            subscriptionDataService.update(subscription);
-        }
-
-        subscriptionService.deleteAll();
-        subscriberDataService.deleteAll();
-        languageLocationDataService.deleteAll();
-        languageDataService.deleteAll();
-        districtDataService.deleteAll();
-        stateDataService.deleteAll();
-        circleDataService.deleteAll();
-        callRetryDataService.deleteAll();
+        testingService.clearDatabase();
 
         District district = new District();
         district.setName("District 1");
@@ -144,8 +136,20 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         urdu.getDistrictSet().add(district);
         urdu = languageLocationDataService.create(urdu);
 
-        SubscriptionPack childPack = subscriptionPackDataService.byName("childPack");
-        SubscriptionPack pregnancyPack = subscriptionPackDataService.byName("pregnancyPack");
+
+        SubscriptionPack childPack = subscriptionPackDataService.create(
+                    SubscriptionPackBuilder.createSubscriptionPack(
+                            "childPack",
+                            SubscriptionPackType.CHILD,
+                            SubscriptionPackBuilder.CHILD_PACK_WEEKS,
+                            1));
+
+        SubscriptionPack pregnancyPack = subscriptionPackDataService.create(
+                    SubscriptionPackBuilder.createSubscriptionPack(
+                            "pregnancyPack",
+                            SubscriptionPackType.PREGNANCY,
+                            SubscriptionPackBuilder.PREGNANCY_PACK_WEEKS,
+                            2));
 
         Subscriber subscriber1 = new Subscriber(1111111111L, hindi, aa);
         subscriber1.setLastMenstrualPeriod(DateTime.now().minusDays(90)); // startDate will be today

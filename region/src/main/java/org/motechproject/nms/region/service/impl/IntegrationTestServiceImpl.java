@@ -6,6 +6,7 @@ import org.motechproject.nms.region.repository.HealthBlockDataService;
 import org.motechproject.nms.region.repository.HealthFacilityDataService;
 import org.motechproject.nms.region.repository.HealthFacilityTypeDataService;
 import org.motechproject.nms.region.repository.HealthSubFacilityDataService;
+import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.LanguageLocationDataService;
 import org.motechproject.nms.region.repository.NationalDefaultLanguageLocationDataService;
 import org.motechproject.nms.region.repository.StateDataService;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 @Service("itService")
 public class IntegrationTestServiceImpl implements IntegrationTestService {
+
     @Autowired
     private CircleDataService circleDataService;
     @Autowired
@@ -39,6 +41,8 @@ public class IntegrationTestServiceImpl implements IntegrationTestService {
     private TalukaDataService talukaDataService;
     @Autowired
     private VillageDataService villageDataService;
+    @Autowired
+    private LanguageDataService languageDataService;
 
 
     public void deleteAll() {
@@ -49,6 +53,7 @@ public class IntegrationTestServiceImpl implements IntegrationTestService {
         healthFacilityTypeDataService.deleteAll();
         healthSubFacilityDataService.deleteAll();
         languageLocationDataService.deleteAll();
+        languageDataService.deleteAll();
         nationalDefaultLanguageLocationDataService.deleteAll();
         stateDataService.deleteAll();
         talukaDataService.deleteAll();

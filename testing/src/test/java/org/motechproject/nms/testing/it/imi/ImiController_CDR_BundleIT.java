@@ -23,6 +23,7 @@ import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.LanguageLocationDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.motechproject.testing.osgi.http.SimpleHttpClient;
@@ -84,6 +85,8 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
     @Inject
     private FileAuditRecordDataService fileAuditRecordDataService;
 
+    @Inject
+    private TestingService testingService;
 
     private String localCdrDirBackup;
     private String remoteCdrDirBackup;
@@ -102,6 +105,12 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
     public void setupSettings() {
         localCdrDirBackup = setupTestDir(LOCAL_CDR_DIR, "cdr-local-dir-it");
         remoteCdrDirBackup = setupTestDir(REMOTE_CDR_DIR, "cdr-remote-dir-it");
+    }
+
+
+    @Before
+    public void setupDatabase() {
+        testingService.clearDatabase();
     }
 
 

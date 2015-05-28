@@ -42,6 +42,7 @@ import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.LanguageLocationDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.testing.it.api.utils.SubscriptionPackBuilder;
+import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.ops4j.pax.exam.ExamFactory;
@@ -108,24 +109,15 @@ public class CsrServiceBundleIT extends BasePaxIT {
     @Inject
     private DistrictDataService districtDataService;
 
+    @Inject
+    private TestingService testingService;
+
 
     @Before
     public void cleanupDatabase() {
-        for (Subscription subscription: subscriptionDataService.retrieveAll()) {
-            subscription.setStatus(SubscriptionStatus.COMPLETED);
-            subscription.setEndDate(new DateTime().withDate(2011, 8, 1));
 
-            subscriptionDataService.update(subscription);
-        }
+        testingService.clearDatabase();
 
-        subscriptionService.deleteAll();
-        subscriberDataService.deleteAll();
-        languageLocationDataService.deleteAll();
-        languageDataService.deleteAll();
-        districtDataService.deleteAll();
-        stateDataService.deleteAll();
-        circleDataService.deleteAll();
-        callRetryDataService.deleteAll();
         subscriptionPackDataService.create(
                 SubscriptionPackBuilder.createSubscriptionPack(
                         "childPack",
@@ -138,6 +130,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
                         SubscriptionPackType.PREGNANCY,
                         SubscriptionPackBuilder.PREGNANCY_PACK_WEEKS,
                         2));
+
         csrService.buildMessageDurationCache();
     }
 

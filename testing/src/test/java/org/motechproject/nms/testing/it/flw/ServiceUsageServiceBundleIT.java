@@ -11,6 +11,7 @@ import org.motechproject.nms.flw.repository.ServiceUsageDataService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.flw.service.ServiceUsageService;
 import org.motechproject.nms.props.domain.Service;
+import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.ops4j.pax.exam.ExamFactory;
@@ -43,7 +44,12 @@ public class ServiceUsageServiceBundleIT extends BasePaxIT {
     @Inject
     private ServiceUsageService serviceUsageService;
 
+    @Inject
+    private TestingService testingService;
+
     private void setupData() {
+        testingService.clearDatabase();
+
         for (FrontLineWorker flw: frontLineWorkerDataService.retrieveAll()) {
             flw.setStatus(FrontLineWorkerStatus.INVALID);
             flw.setInvalidationDate(new DateTime().withDate(2011, 8, 1));
@@ -69,7 +75,7 @@ public class ServiceUsageServiceBundleIT extends BasePaxIT {
         FrontLineWorker flwIgnored = new FrontLineWorker("Ignored Worker", 2222222222L);
         frontLineWorkerService.add(flwIgnored);
 
-        // A usage record from last month that should be ignored
+        // A usage record mcifrom last month that should be ignored
         ServiceUsage lastMonth = new ServiceUsage(flw, Service.MOBILE_ACADEMY, 1, 1, 1, DateTime.now().minusMonths(2));
         serviceUsageDataService.create(lastMonth);
 

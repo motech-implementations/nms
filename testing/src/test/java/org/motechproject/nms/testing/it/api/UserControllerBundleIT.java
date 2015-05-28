@@ -191,12 +191,10 @@ public class UserControllerBundleIT extends BasePaxIT {
         district.setName("District 1");
         district.setRegionalName("District 1");
         district.setCode(1L);
-
         State state = new State();
         state.setName("State 1");
         state.setCode(1L);
         state.getDistricts().add(district);
-
         stateDataService.create(state);
 
         deployedServiceDataService.create(new DeployedService(state, Service.KILKARI));

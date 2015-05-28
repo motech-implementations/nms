@@ -60,6 +60,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
     private static final String REMOTE_OBD_DIR = "imi.remote_obd_dir";
     private static final String LOCAL_CDR_DIR = "imi.local_cdr_dir";
     private static final String REMOTE_CDR_DIR = "imi.remote_cdr_dir";
+    private static final String INITIAL_RETRY_DELAY = "imi.initial_retry_delay";
 
     @Inject
     private SettingsService settingsService;
@@ -134,6 +135,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
     private String remoteCdrDirBackup;
     private String localObdDirBackup;
     private String remoteObdDirBackup;
+    private String initialRetryDelay;
 
 
 
@@ -152,6 +154,8 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         remoteCdrDirBackup = setupTestDir(REMOTE_CDR_DIR, "cdr-remote-dir-it");
         localObdDirBackup = setupTestDir(LOCAL_OBD_DIR, "obd-local-dir-it");
         remoteObdDirBackup = setupTestDir(REMOTE_OBD_DIR, "obd-remote-dir-it");
+        initialRetryDelay = settingsService.getSettingsFacade().getProperty(INITIAL_RETRY_DELAY);
+        settingsService.getSettingsFacade().setProperty(INITIAL_RETRY_DELAY, "0");
     }
 
 
@@ -161,7 +165,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         settingsService.getSettingsFacade().setProperty(LOCAL_OBD_DIR, localObdDirBackup);
         settingsService.getSettingsFacade().setProperty(REMOTE_CDR_DIR, remoteCdrDirBackup);
         settingsService.getSettingsFacade().setProperty(LOCAL_CDR_DIR, localCdrDirBackup);
-
+        settingsService.getSettingsFacade().setProperty(INITIAL_RETRY_DELAY, initialRetryDelay);
     }
 
 

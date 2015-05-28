@@ -10,6 +10,7 @@ import org.motechproject.nms.flw.repository.WhitelistStateDataService;
 import org.motechproject.nms.flw.service.WhitelistService;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.ops4j.pax.exam.ExamFactory;
@@ -47,7 +48,12 @@ public class WhiteListServiceBundleIT extends BasePaxIT {
     @Inject
     private WhitelistService whitelistService;
 
+    @Inject
+    private TestingService testingService;
+
     private void setupData() {
+        testingService.clearDatabase();
+
         whitelistEntryDataService.deleteAll();
         serviceUsageCapDataService.deleteAll();
         whitelistStateDataService.deleteAll();

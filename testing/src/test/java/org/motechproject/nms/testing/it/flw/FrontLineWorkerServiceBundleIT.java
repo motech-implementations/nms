@@ -25,6 +25,7 @@ import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.LanguageLocationDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.ops4j.pax.exam.ExamFactory;
@@ -83,7 +84,12 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
     @Inject
     private WhitelistStateDataService whitelistStateDataService;
 
+    @Inject
+    private TestingService testingService;
+
     private void setupData() {
+        testingService.clearDatabase();
+
         for (FrontLineWorker flw: frontLineWorkerDataService.retrieveAll()) {
             flw.setStatus(FrontLineWorkerStatus.INVALID);
             flw.setInvalidationDate(new DateTime().withDate(2011, 8, 1));

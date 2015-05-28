@@ -144,7 +144,7 @@ public class SubscriptionHelper {
     }
 
     public District makeDistrict() {
-        District district = districtDataService.findById(1L);
+        District district = districtDataService.findByCode(1L);
         if (district != null) {
             return district;
         }
