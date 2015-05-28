@@ -86,7 +86,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         MaCourse copyCourse = new MaCourse(originalCourse.getName(), originalCourse.getModificationDate().getMillis(), originalCourse.getContent() + "foo");
         maService.setCourse(copyCourse);
 
-        // verify that modified time (version) didn't change
+        // verify that modified time (version) did change
         assertNotEquals(nmsCourseDataService.getCourseByName(validCourseName).getModificationDate(),
                 originalCourse.getModificationDate());
         originalCourse.setContent(courseContent);
@@ -143,6 +143,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     public void testSetNullBookmark() {
         try {
             maService.setBookmark(null);
+            throw new IllegalStateException("This test expected an IllegalArgumentException");
         } catch (IllegalArgumentException ia) {
             assertTrue(ia.toString().contains("cannot be null"));
         }
