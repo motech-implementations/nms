@@ -169,7 +169,10 @@ public class CdrFileServiceImpl implements CdrFileService {
             }
             csr.getStatusStats().put(cdr.getStatusCode().getValue(), statusCodeCount);
 
-            // Increment the message play duration
+            /** Increment the message play duration
+             *  The thinking here is that we're trying to capture the longest amount of message that was played
+             *  for a call.
+             */
             if (cdr.getMsgPlayDuration() > csr.getSecondsPlayed()) {
                 csr.setSecondsPlayed(cdr.getMsgPlayDuration());
             }

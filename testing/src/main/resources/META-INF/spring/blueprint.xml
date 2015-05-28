@@ -17,36 +17,22 @@
                   interface="org.motechproject.nms.testing.service.TestingService" />
 
 
-    <osgi:reference id="subscriberDataService"
-                    interface="org.motechproject.nms.kilkari.repository.SubscriberDataService" />
+    <osgi:reference id="flw"
+                    interface="org.motechproject.nms.flw.service.IntegrationTestService" />
 
-    <osgi:reference id="subscribtionDataService"
-                    interface="org.motechproject.nms.kilkari.service.SubscriptionService" />
+    <osgi:reference id="imi"
+                    interface="org.motechproject.nms.imi.service.IntegrationTestService" />
 
-    <osgi:reference id="subscriptionPackDataService"
-                    interface="org.motechproject.nms.kilkari.repository.SubscriptionPackDataService" />
+    <osgi:reference id="kilkari"
+                    interface="org.motechproject.nms.kilkari.service.IntegrationTestService" />
 
-    <osgi:reference id="subscriptionPackMessageDataService"
-                    interface="org.motechproject.nms.kilkari.repository.SubscriptionPackMessageDataService" />
+    <osgi:reference id="mobileacademy"
+                    interface="org.motechproject.nms.mobileacademy.service.IntegrationTestService" />
 
-    <osgi:reference id="inboxCallDetailsDataService"
-                    interface="org.motechproject.nms.kilkari.repository.InboxCallDetailRecordDataService" />
+    <osgi:reference id="props"
+                    interface="org.motechproject.nms.props.service.IntegrationTestService" />
 
-    <osgi:reference id="csrDataService"
-                    interface="org.motechproject.nms.kilkari.repository.CallSummaryRecordDataService" />
+    <osgi:reference id="region"
+                    interface="org.motechproject.nms.region.service.IntegrationTestService" />
 
-    <osgi:reference id="inboxCallDataDataService"
-                    interface="org.motechproject.nms.kilkari.repository.InboxCallDataDataService" />
-
-    <osgi:reference id="inboxService"
-                    interface="org.motechproject.nms.kilkari.service.InboxService" />
-
-    <osgi:reference id="subscriptionDataService"
-                    interface="org.motechproject.nms.kilkari.repository.SubscriptionDataService" />
-
-    <osgi:reference id="callRetryDataService"
-                    interface="org.motechproject.nms.kilkari.repository.CallRetryDataService" />
-
-    <osgi:reference id="schedulerService"
-                    interface="org.motechproject.scheduler.service.MotechSchedulerService" />
 </beans>

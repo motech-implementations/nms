@@ -23,6 +23,7 @@ import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.CallSummaryRecordDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
+import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
@@ -67,6 +68,9 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
 
     @Inject
     private SubscriptionDataService subscriptionDataService;
+
+    @Inject
+    private SubscriptionPackDataService subscriptionPackDataService;
 
     @Inject
     private SubscriberDataService subscriberDataService;
@@ -121,9 +125,6 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
     }
 
 
-    private String userBackup;
-    private String hostBackup;
-    private String identityBackup;
     private String localCdrDirBackup;
     private String remoteCdrDirBackup;
     private String localObdDirBackup;
@@ -171,8 +172,8 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         getLogger().debug("testVerify()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                languageDataService, languageLocationDataService, circleDataService, stateDataService,
-                districtDataService, fileAuditRecordDataService);
+                subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
+                stateDataService, districtDataService, fileAuditRecordDataService);
 
         helper.makeCdrs(1,1,1,1);
         helper.makeLocalCdrFile();
@@ -188,8 +189,8 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         getLogger().debug("testChecksumError()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                languageDataService, languageLocationDataService, circleDataService, stateDataService,
-                districtDataService, fileAuditRecordDataService);
+                subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
+                stateDataService, districtDataService, fileAuditRecordDataService);
 
         helper.makeCdrs(1, 1, 1, 1);
         helper.makeLocalCdrFile();
@@ -205,8 +206,8 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         getLogger().debug("testCsvErrors()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                languageDataService, languageLocationDataService, circleDataService, stateDataService,
-                districtDataService, fileAuditRecordDataService);
+                subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
+                stateDataService, districtDataService, fileAuditRecordDataService);
 
         helper.makeCdrs(1, 1, 1, 1);
         helper.makeLocalCdrFile(2);
@@ -224,8 +225,8 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         getLogger().debug("testTooManyErrors()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                languageDataService, languageLocationDataService, circleDataService, stateDataService,
-                districtDataService, fileAuditRecordDataService);
+                subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
+                stateDataService, districtDataService, fileAuditRecordDataService);
 
         helper.makeCdrs(200,0,0,0);
         helper.makeLocalCdrFile(200);
@@ -245,8 +246,8 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         getLogger().debug("testProcess()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                languageDataService, languageLocationDataService, circleDataService, stateDataService,
-                districtDataService, fileAuditRecordDataService);
+                subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
+                stateDataService, districtDataService, fileAuditRecordDataService);
 
         helper.makeCdrs(1,1,1,1);
         helper.makeRemoteCdrFile();
@@ -271,11 +272,11 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         getLogger().debug("testAggregation()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                languageDataService, languageLocationDataService, circleDataService, stateDataService,
-                districtDataService, fileAuditRecordDataService);
+                subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
+                stateDataService, districtDataService, fileAuditRecordDataService);
 
         helper.makeSingleCallCdrs(3, true);
-        List<CallDetailRecordDto> cdrs = helper.getCrds();
+        List<CallDetailRecordDto> cdrs = helper.getCdrs();
         String sid1 = cdrs.get(cdrs.size()-1).getRequestId().getSubscriptionId();
 
         helper.makeSingleCallCdrs(4, false);

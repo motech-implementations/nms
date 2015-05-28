@@ -1,6 +1,5 @@
 package org.motechproject.nms.testing.service.impl;
 
-import org.motechproject.nms.imi.service.IntegrationTestService;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.server.config.SettingsFacade;
 import org.slf4j.Logger;
@@ -29,7 +28,7 @@ public class TestingServiceImpl implements TestingService {
      * IMI
      */
     @Autowired
-    private IntegrationTestService imi;
+    private org.motechproject.nms.imi.service.IntegrationTestService imi;
 
     /**
      * Kilkari
