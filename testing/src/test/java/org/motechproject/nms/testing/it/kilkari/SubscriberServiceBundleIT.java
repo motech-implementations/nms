@@ -10,6 +10,7 @@ import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
+import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.repository.InboxCallDataDataService;
 import org.motechproject.nms.kilkari.repository.InboxCallDetailRecordDataService;
@@ -29,6 +30,7 @@ import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.LanguageLocationDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.testing.it.api.utils.SubscriptionPackBuilder;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.ops4j.pax.exam.ExamFactory;
@@ -121,11 +123,20 @@ public class SubscriberServiceBundleIT extends BasePaxIT {
 
         languageLocation = new LanguageLocation("99", new Circle("BB"), language, true);
         languageLocation.getDistrictSet().add(district2);
-        languageLocationDataService.create(languageLocation);
+        gLanguageLocation = languageLocationDataService.create(languageLocation);
 
-        subscriptionService.createSubscriptionPacks();
-        gPack1 = subscriptionPackDataService.byName("childPack"); // 48 weeks, 1 message per week
-        gPack2 = subscriptionPackDataService.byName("pregnancyPack"); // 72 weeks, 2 messages per week
+        gPack1 = subscriptionPackDataService.create(
+                SubscriptionPackBuilder.createSubscriptionPack(
+                        "childPack",
+                        SubscriptionPackType.CHILD,
+                        SubscriptionPackBuilder.CHILD_PACK_WEEKS,
+                        1));
+        gPack2 = subscriptionPackDataService.create(
+                SubscriptionPackBuilder.createSubscriptionPack(
+                        "pregnancyPack",
+                        SubscriptionPackType.PREGNANCY,
+                        SubscriptionPackBuilder.PREGNANCY_PACK_WEEKS,
+                        2));
     }
 
     private void cleanupData() {

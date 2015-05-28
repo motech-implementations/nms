@@ -17,12 +17,14 @@ import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
+import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.dto.CallSummaryRecordDto;
 import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.CallSummaryRecordDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
+import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.CsrService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
@@ -39,6 +41,7 @@ import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.LanguageLocationDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.testing.it.api.utils.SubscriptionPackBuilder;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.ops4j.pax.exam.ExamFactory;
@@ -74,6 +77,9 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
     @Inject
     private SubscriptionService subscriptionService;
+
+    @Inject
+    private SubscriptionPackDataService subscriptionPackDataService;
 
     @Inject
     private SubscriptionDataService subscriptionDataService;
@@ -120,7 +126,18 @@ public class CsrServiceBundleIT extends BasePaxIT {
         stateDataService.deleteAll();
         circleDataService.deleteAll();
         callRetryDataService.deleteAll();
-        subscriptionService.createSubscriptionPacks();
+        subscriptionPackDataService.create(
+                SubscriptionPackBuilder.createSubscriptionPack(
+                        "childPack",
+                        SubscriptionPackType.CHILD,
+                        SubscriptionPackBuilder.CHILD_PACK_WEEKS,
+                        1));
+        subscriptionPackDataService.create(
+                SubscriptionPackBuilder.createSubscriptionPack(
+                        "pregnancyPack",
+                        SubscriptionPackType.PREGNANCY,
+                        SubscriptionPackBuilder.PREGNANCY_PACK_WEEKS,
+                        2));
         csrService.buildMessageDurationCache();
     }
 
@@ -196,7 +213,6 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
 
     private Subscription makeSubscription(SubscriptionOrigin origin, DateTime startDate) {
-        subscriptionService.createSubscriptionPacks();
         Subscriber subscriber = subscriberDataService.create(new Subscriber(
                 makeNumber(),
                 makeLanguageLocation(),
@@ -313,9 +329,9 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
         String timestamp = DateTime.now().toString(TIME_FORMATTER);
 
-        CsrHelper helper = new CsrHelper(timestamp, subscriptionService, subscriberDataService,
-                languageDataService, languageLocationDataService, circleDataService, stateDataService,
-                districtDataService);
+        CsrHelper helper = new CsrHelper(timestamp, subscriptionService, subscriptionPackDataService,
+                subscriberDataService, languageDataService, languageLocationDataService, circleDataService,
+                stateDataService, districtDataService);
 
         helper.makeRecords(1,3,0,0);
 

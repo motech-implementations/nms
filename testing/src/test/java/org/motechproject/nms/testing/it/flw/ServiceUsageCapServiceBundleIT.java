@@ -6,6 +6,7 @@ import org.motechproject.nms.flw.domain.ServiceUsageCap;
 import org.motechproject.nms.flw.repository.ServiceUsageCapDataService;
 import org.motechproject.nms.flw.service.ServiceUsageCapService;
 import org.motechproject.nms.props.domain.Service;
+import org.motechproject.nms.props.repository.DeployedServiceDataService;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.testing.osgi.BasePaxIT;
@@ -36,7 +37,11 @@ public class ServiceUsageCapServiceBundleIT extends BasePaxIT {
     @Inject
     private StateDataService stateDataService;
 
+    @Inject
+    private DeployedServiceDataService deployedServiceDataService;
+
     private void setupData() {
+        deployedServiceDataService.deleteAll();
         serviceUsageCapDataService.deleteAll();
         stateDataService.deleteAll();
     }

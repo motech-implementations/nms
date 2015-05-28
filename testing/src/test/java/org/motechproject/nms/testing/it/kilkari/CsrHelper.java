@@ -5,6 +5,7 @@ import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.dto.CallSummaryRecordDto;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
+import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.domain.FinalCallStatus;
 import org.motechproject.nms.props.domain.RequestId;
@@ -29,6 +30,7 @@ public class CsrHelper {
 
 
     public CsrHelper(String timestamp, SubscriptionService subscriptionService,
+                     SubscriptionPackDataService subscriptionPackDataService,
                      SubscriberDataService subscriberDataService, LanguageDataService languageDataService,
                      LanguageLocationDataService languageLocationDataService,
                      CircleDataService circleDataService, StateDataService stateDataService,
@@ -36,7 +38,7 @@ public class CsrHelper {
 
         TIMESTAMP = timestamp;
 
-        sh = new SubscriptionHelper(subscriptionService, subscriberDataService,
+        sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
                 languageDataService, languageLocationDataService, circleDataService, stateDataService,
                 districtDataService);
     }

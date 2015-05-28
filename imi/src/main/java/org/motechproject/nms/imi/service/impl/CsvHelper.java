@@ -104,7 +104,8 @@ public final class CsvHelper {
 
         if (fields.length != FieldName.FIELD_COUNT.ordinal()) {
             throw new IllegalArgumentException(String.format(
-                    "Invalid field count, expecting %d but received %d", FieldName.FIELD_COUNT, fields.length));
+                    "Invalid field count, expecting %d but received %d", FieldName.FIELD_COUNT.ordinal(),
+                    fields.length));
         }
 
 

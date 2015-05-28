@@ -15,6 +15,7 @@ import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
+import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.repository.InboxCallDataDataService;
 import org.motechproject.nms.kilkari.repository.InboxCallDetailRecordDataService;
@@ -36,6 +37,7 @@ import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.LanguageLocationDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.testing.it.api.utils.SubscriptionPackBuilder;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.ops4j.pax.exam.ExamFactory;
@@ -147,7 +149,19 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         languageLocation.getDistrictSet().add(district2);
         languageLocationDataService.create(languageLocation);
 
-        subscriptionService.createSubscriptionPacks();
+        subscriptionPackDataService.create(
+                SubscriptionPackBuilder.createSubscriptionPack(
+                        "childPack",
+                        SubscriptionPackType.CHILD,
+                        SubscriptionPackBuilder.CHILD_PACK_WEEKS,
+                        1));
+        subscriptionPackDataService.create(
+                SubscriptionPackBuilder.createSubscriptionPack(
+                        "pregnancyPack",
+                        SubscriptionPackType.PREGNANCY,
+                        SubscriptionPackBuilder.PREGNANCY_PACK_WEEKS,
+                        2));
+
         gPack1 = subscriptionPackDataService.byName("childPack"); // 48 weeks, 1 message per week
         gPack2 = subscriptionPackDataService.byName("pregnancyPack"); // 72 weeks, 2 messages per week
     }
@@ -409,7 +423,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     @Test
     public void testSubscriptionPackCreation() throws Exception {
         cleanupData();
-        subscriptionService.createSubscriptionPacks();
+        createLanguageAndSubscriptionPacks();
 
         SubscriptionPack fortyEightWeekPack = subscriptionPackDataService.byName("childPack");
         assertEquals(48, fortyEightWeekPack.getMessages().size());

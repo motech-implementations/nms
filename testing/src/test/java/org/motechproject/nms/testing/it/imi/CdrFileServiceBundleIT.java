@@ -25,6 +25,7 @@ import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
+import org.motechproject.nms.props.repository.DeployedServiceDataService;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
@@ -105,6 +106,9 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
     @Inject
     private FileAuditRecordDataService fileAuditRecordDataService;
 
+    @Inject
+    DeployedServiceDataService deployedServiceDataService;
+
     @Before
     public void cleanupDatabase() {
         for (Subscription subscription: subscriptionDataService.retrieveAll()) {
@@ -119,6 +123,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         languageLocationDataService.deleteAll();
         languageDataService.deleteAll();
         districtDataService.deleteAll();
+        deployedServiceDataService.deleteAll();
         stateDataService.deleteAll();
         circleDataService.deleteAll();
         callRetryDataService.deleteAll();
