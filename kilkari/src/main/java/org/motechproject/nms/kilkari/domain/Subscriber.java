@@ -18,7 +18,10 @@ import java.util.Set;
 
 /**
  * A Kilkari subscriber (recipient of the service, i.e. a pregnant woman) essentially identified by her
- * phone number
+ * phone number. May represent a beneficiary who was subscribed via IVR or MCTS. In the case of beneficiaries
+ * sourced from MCTS, there may actually be more than one beneficiary with the same phone number. These
+ * beneficiaries will be associated with the same Subscriber object, but may be correlated with MCTS data
+ * based on MctsBeneficiary.mctsId.
  */
 // TODO: Remove maxFetchDepth once https://applab.atlassian.net/browse/MOTECH-1678 is resolved
 @Entity(maxFetchDepth = -1, tableName = "nms_subscribers")
