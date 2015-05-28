@@ -238,7 +238,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
     }
 
     private Subscription makeSubscriptionForMotherPack(SubscriptionOrigin origin, DateTime startDate) {
-        subscriptionService.createSubscriptionPacks();
+        createSubscriptionPacks();
         Subscriber subscriber = subscriberDataService.create(new Subscriber(
                 makeNumber(),
                 makeLanguageLocation(),
@@ -402,7 +402,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
         Map<String, Object> eventParams = new HashMap<>();
         eventParams.put(CSR_PARAM_KEY, csr);
-        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD, eventParams);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
         csrService.processCallSummaryRecord(motechEvent);
 
         CallRetry callRetry = callRetryDataService.findBySubscriptionId(subscription.getSubscriptionId());
@@ -455,7 +455,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
         Map<String, Object> eventParams = new HashMap<>();
         eventParams.put(CSR_PARAM_KEY, csr);
-        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD, eventParams);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
         csrService.processCallSummaryRecord(motechEvent);
 
         CallRetry callRetry = callRetryDataService.findBySubscriptionId(subscription.getSubscriptionId());
@@ -508,7 +508,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
         Map<String, Object> eventParams = new HashMap<>();
         eventParams.put(CSR_PARAM_KEY, csr);
-        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD, eventParams);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
         csrService.processCallSummaryRecord(motechEvent);
 
         CallRetry callRetry = callRetryDataService.findBySubscriptionId(subscription.getSubscriptionId());
@@ -561,7 +561,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
         Map<String, Object> eventParams = new HashMap<>();
         eventParams.put(CSR_PARAM_KEY, csr);
-        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD, eventParams);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
         csrService.processCallSummaryRecord(motechEvent);
 
         CallRetry callRetry = callRetryDataService.findBySubscriptionId(subscription.getSubscriptionId());
@@ -614,7 +614,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
         Map<String, Object> eventParams = new HashMap<>();
         eventParams.put(CSR_PARAM_KEY, csr);
-        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD, eventParams);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
         csrService.processCallSummaryRecord(motechEvent);
 
         CallRetry callRetry = callRetryDataService.findBySubscriptionId(subscription.getSubscriptionId());
@@ -667,7 +667,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
         Map<String, Object> eventParams = new HashMap<>();
         eventParams.put(CSR_PARAM_KEY, csr);
-        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD, eventParams);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
         csrService.processCallSummaryRecord(motechEvent);
 
         CallRetry callRetry = callRetryDataService.findBySubscriptionId(subscription.getSubscriptionId());
@@ -708,7 +708,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
         
         Map<String, Object> eventParams = new HashMap<>();
         eventParams.put(CSR_PARAM_KEY, csr);
-        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD, eventParams);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
         csrService.processCallSummaryRecord(motechEvent);
         
         CallRetry callRetry = callRetryDataService.findBySubscriptionId(subscription.getSubscriptionId());
@@ -761,7 +761,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
         
         Map<String, Object> eventParams = new HashMap<>();
         eventParams.put(CSR_PARAM_KEY, csr);
-        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD, eventParams);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
         csrService.processCallSummaryRecord(motechEvent);
         
         CallRetry callRetry = callRetryDataService.findBySubscriptionId(subscription.getSubscriptionId());
@@ -813,7 +813,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
         
         Map<String, Object> eventParams = new HashMap<>();
         eventParams.put(CSR_PARAM_KEY, csr);
-        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD, eventParams);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
         csrService.processCallSummaryRecord(motechEvent);
         
         CallRetry callRetry = callRetryDataService.findBySubscriptionId(subscription.getSubscriptionId());
@@ -854,7 +854,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
         
         Map<String, Object> eventParams = new HashMap<>();
         eventParams.put(CSR_PARAM_KEY, csr);
-        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD, eventParams);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
         csrService.processCallSummaryRecord(motechEvent);
         
         subscription = subscriptionDataService.findBySubscriptionId(subscription.getSubscriptionId());
@@ -894,7 +894,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
         
         Map<String, Object> eventParams = new HashMap<>();
         eventParams.put(CSR_PARAM_KEY, csr);
-        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD, eventParams);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
         csrService.processCallSummaryRecord(motechEvent);
         
         subscription = subscriptionDataService.findBySubscriptionId(subscription.getSubscriptionId());
@@ -946,7 +946,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
         
         Map<String, Object> eventParams = new HashMap<>();
         eventParams.put(CSR_PARAM_KEY, csr);
-        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD, eventParams);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
         csrService.processCallSummaryRecord(motechEvent);
         
         subscription = subscriptionDataService.findBySubscriptionId(subscription.getSubscriptionId());
@@ -998,7 +998,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
         
         Map<String, Object> eventParams = new HashMap<>();
         eventParams.put(CSR_PARAM_KEY, csr);
-        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD, eventParams);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
         csrService.processCallSummaryRecord(motechEvent);
         
         subscription = subscriptionDataService.findBySubscriptionId(subscription.getSubscriptionId());
