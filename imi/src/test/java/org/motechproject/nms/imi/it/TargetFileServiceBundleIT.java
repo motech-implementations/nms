@@ -52,10 +52,7 @@ import java.nio.file.Files;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -111,6 +108,8 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
 
     @Inject
     SettingsService settingsService;
+
+    private Subscription s3;
 
     private void setupDatabase() {
         for (Subscription subscription: subscriptionDataService.retrieveAll()) {
@@ -176,7 +175,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
 
 
         //create subscription for future date
-        Subscription s3 = subscriptionService.createSubscription(6666666666L, urdu, childPack,
+        s3 = subscriptionService.createSubscription(6666666666L, urdu, childPack,
                 SubscriptionOrigin.MCTS_IMPORT);
         Set<Subscription> subscriptions = new HashSet<Subscription>();
         subscriptions.add(s3);
@@ -236,6 +235,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         setupDatabase();
         List<Long> msisdns = new ArrayList<>();
         List<String> subscriptionIds = new ArrayList<>();
+        Map<String, String> subscriptionContent = new HashMap<>();
         String[] values;
         String line;
         TargetFileNotification tfn = targetFileService.generateTargetFile();
@@ -257,6 +257,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
                 values = line.split(",");
                 msisdns.add(Long.parseLong(values[2]));
                 subscriptionIds.add(values[0].split(":")[1]);
+                subscriptionContent.put(values[0].split(":")[1], values[7]);
                 recordCount++;
             }
         }
@@ -265,14 +266,16 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         assertEquals((int)tfn.getRecordCount(), recordCount);
 
         assertEquals(tfn.getChecksum(), md5Checksum);
-        assertTrue(msisdns.contains(1111111111L));
-        assertTrue(msisdns.contains(6666666666L));
-        assertTrue(msisdns.contains(3333333333L));
-        assertTrue(msisdns.contains(5555555555L));
-        assertTrue(msisdns.contains(9999999999L));
+        assertTrue(msisdns.contains(1111111111L)); //subscription1
+        assertTrue(msisdns.contains(6666666666L)); //subscription3
+        assertTrue(msisdns.contains(3333333333L)); //retry1
+        assertTrue(msisdns.contains(5555555555L)); //retry2
+        assertTrue(msisdns.contains(9999999999L)); //retry_last
         assertTrue(subscriptionIds.contains("33333333-3333-3333-3333-333333333333"));
         assertTrue(subscriptionIds.contains("44444444-4444-4444-4444-444444444444"));
         assertTrue(subscriptionIds.contains("11111111-1111-1111-1111-111111111111"));
+        assertTrue(subscriptionIds.contains(s3.getSubscriptionId()));
+        assertTrue("welcome".equals(subscriptionContent.get(s3.getSubscriptionId())));
     }
 
 
