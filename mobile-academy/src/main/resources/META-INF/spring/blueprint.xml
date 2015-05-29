@@ -20,12 +20,6 @@
     <osgi:reference id="nmsCourseDataService"
                     interface="org.motechproject.nms.mobileacademy.repository.NmsCourseDataService" />
 
-    <osgi:reference id="questionDataService"
-                    interface="org.motechproject.nms.mobileacademy.repository.QuestionDataService" />
-
-    <osgi:reference id="lessonDataService"
-                    interface="org.motechproject.nms.mobileacademy.repository.LessonDataService" />
-
     <osgi:reference id="completionRecordDataService"
                     interface="org.motechproject.nms.mobileacademy.repository.CompletionRecordDataService" />
 

@@ -29,7 +29,6 @@ import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -83,16 +82,12 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     public void testSetCourseUpdate() {
 
         NmsCourse originalCourse = nmsCourseDataService.getCourseByName(validCourseName);
-        String courseContent = originalCourse.getContent();
-        MaCourse copyCourse = new MaCourse(originalCourse.getName(), originalCourse.getModificationDate().getMillis(), originalCourse.getContent() + "foo");
+        MaCourse copyCourse = new MaCourse(originalCourse.getName(), originalCourse.getModificationDate().getMillis(), originalCourse.getContent());
         maService.setCourse(copyCourse);
 
-        // verify that modified time (version) did change
-        assertNotEquals(nmsCourseDataService.getCourseByName(validCourseName).getModificationDate(),
-                originalCourse.getModificationDate());
-        originalCourse.setContent(courseContent);
-        nmsCourseDataService.update(originalCourse);
-    }
+        // verify that modified time (version) didn't change
+        assertEquals(nmsCourseDataService.getCourseByName(validCourseName).getModificationDate(),
+                originalCourse.getModificationDate());    }
 
     @Test
     public void testNoCoursePresent() {
