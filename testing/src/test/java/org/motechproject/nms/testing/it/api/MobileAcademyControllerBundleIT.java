@@ -8,17 +8,12 @@ import org.apache.http.client.methods.HttpPost;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.motechproject.nms.testing.it.api.utils.CourseBuilder;
-import org.motechproject.nms.testing.it.api.utils.RequestBuilder;
 import org.motechproject.nms.api.web.BaseController;
-import org.motechproject.nms.api.web.contract.mobileAcademy.CourseResponse;
 import org.motechproject.nms.api.web.contract.mobileAcademy.SaveBookmarkRequest;
 import org.motechproject.nms.api.web.contract.mobileAcademy.SmsStatusRequest;
 import org.motechproject.nms.api.web.contract.mobileAcademy.sms.RequestData;
-import org.motechproject.nms.api.web.converter.MobileAcademyConverter;
-import org.motechproject.nms.mobileacademy.dto.MaCourse;
-import org.motechproject.nms.mobileacademy.repository.NmsCourseDataService;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
+import org.motechproject.nms.testing.it.api.utils.RequestBuilder;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.motechproject.testing.osgi.http.SimpleHttpClient;
@@ -33,10 +28,9 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.when;
 
 /**
  * Integration tests for mobile academy controller
@@ -147,7 +141,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
         HttpGet request = RequestBuilder.createGetRequest(endpoint);
 
         HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(request, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
-        assertTrue(httpResponse.getStatusLine().getStatusCode() == 200);
+        assertEquals(200, httpResponse.getStatusLine().getStatusCode());
         String body = IOUtils.toString(httpResponse.getEntity().getContent());
         assertNotNull(body);
         //TODO: figure out a way to automate the body comparison from the course json resource file
