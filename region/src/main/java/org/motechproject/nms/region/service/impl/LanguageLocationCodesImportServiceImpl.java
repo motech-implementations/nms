@@ -15,7 +15,6 @@ import org.motechproject.nms.region.service.LanguageLocationCodesImportService;
 import org.motechproject.nms.region.utils.ConstraintViolationUtils;
 import org.motechproject.nms.region.utils.CsvMapImporter;
 import org.motechproject.nms.region.utils.GetBoolean;
-import org.motechproject.nms.region.utils.GetInstanceByLong;
 import org.motechproject.nms.region.utils.GetInstanceByString;
 import org.motechproject.nms.region.utils.GetString;
 import org.slf4j.Logger;
@@ -40,12 +39,12 @@ public class LanguageLocationCodesImportServiceImpl implements LanguageLocationC
 
     public static final Logger LOGGER = LoggerFactory.getLogger(LanguageLocationCodesImportServiceImpl.class);
 
-    public static final String LANGUAGE_LOCATION_CODE = "languageLocationCode";
-    public static final String LANGUAGE = "language";
-    public static final String CIRCLE = "circle";
-    public static final String STATE = "state";
-    public static final String DISTRICT = "district";
-    public static final String DEFAULT_FOR_CIRCLE = "defaultForCircle";
+    public static final String LANGUAGE_LOCATION_CODE = "languagelocation code";
+    public static final String LANGUAGE = "Language";
+    public static final String CIRCLE = "Circle";
+    public static final String STATE = "State";
+    public static final String DISTRICT = "District";
+    public static final String DEFAULT_FOR_CIRCLE = "Default Language for Circle (Y/N)";
 
     private LanguageLocationDataService languageLocationDataService;
     private LanguageDataService languageDataService;
@@ -172,18 +171,18 @@ public class LanguageLocationCodesImportServiceImpl implements LanguageLocationC
                 return circle;
             }
         });
-        mapping.put(STATE, new Optional(new GetInstanceByLong<State>() {
+        mapping.put(STATE, new Optional(new GetInstanceByString<State>() {
             @Override
-            public State retrieve(Long value) {
-                State state = stateDataService.findByCode(value);
+            public State retrieve(String value) {
+                State state = stateDataService.findByName(value);
                 verify(null != state, "State does not exists");
                 return state;
             }
         }));
-        mapping.put(DISTRICT, new Optional(new GetInstanceByLong<District>() {
+        mapping.put(DISTRICT, new Optional(new GetInstanceByString<District>() {
             @Override
-            public District retrieve(Long value) {
-                District district = districtDataService.findByCode(value);
+            public District retrieve(String value) {
+                District district = districtDataService.findByName(value);
                 verify(null != district, "District does not exists");
                 return district;
             }

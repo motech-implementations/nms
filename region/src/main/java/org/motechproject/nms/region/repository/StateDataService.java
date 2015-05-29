@@ -8,5 +8,8 @@ import org.motechproject.nms.region.domain.State;
 
 public interface StateDataService extends MotechDataService<State> {
     @Lookup
+    State findByName(@LookupField(name = "name") String name);
+
+    @Lookup
     State findByCode(@LookupField(name = "code") Long code);
 }
