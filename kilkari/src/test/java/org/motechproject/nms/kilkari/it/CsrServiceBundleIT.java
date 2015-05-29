@@ -283,7 +283,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
         csrService.processCallSummaryRecord(motechEvent);
     }
 
-
+    //NMS_FT_175
     // Deactivate if user phone number does not exist
     // https://github.com/motech-implementations/mim/issues/169
     @Test
@@ -346,6 +346,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
         subscription = subscriptionDataService.findBySubscriptionId(subscription.getSubscriptionId());
         assertEquals(SubscriptionStatus.DEACTIVATED, subscription.getStatus());
         assertEquals(DeactivationReason.INVALID_NUMBER, subscription.getDeactivationReason());
+        CallRetry callRetry = callRetryDataService.findBySubscriptionId(subscription.getSubscriptionId());
+        assertNull(callRetry);
     }
 
     @Test //NMS_FT_140
@@ -1025,6 +1027,63 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
         List<Subscription> subscriptions = subscriptionDataService.findByStatus(SubscriptionStatus.COMPLETED);
         assertEquals(3, subscriptions.size());
+    }
+
+    //NMS_FT_176
+    @Test
+    public void verifySubscriptionIsActiveIFOBDFailedForInvalidNumberNotForAllRetries() {
+        Subscription subscription = makeSubscription(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
+        Subscriber subscriber = subscription.getSubscriber();
+
+        csrDataService.create(new CallSummaryRecord(
+                new RequestId(subscription.getSubscriptionId(), "11112233445566").toString(),
+                subscription.getSubscriber().getCallingNumber(),
+                "w1_1.wav",
+                "w1_1",
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
+                FinalCallStatus.FAILED,
+                makeStatsMap(StatusCode.OBD_FAILED_INVALIDNUMBER, 1),
+                0,
+                10,
+                3
+        ));
+
+        callRetryDataService.create(new CallRetry(
+                subscription.getSubscriptionId(),
+                subscription.getSubscriber().getCallingNumber(),
+                DayOfTheWeek.today(),
+                CallStage.RETRY_2,
+                "w1_1.wav",
+                "w1_1",
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
+                SubscriptionOrigin.MCTS_IMPORT
+        ));
+
+        CallSummaryRecordDto csr = new CallSummaryRecordDto(
+                new RequestId(subscription.getSubscriptionId(), "11112233445566"),
+                subscription.getSubscriber().getCallingNumber(),
+                "w1_1.wav",
+                "w1_1",
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
+                FinalCallStatus.FAILED,
+                makeStatsMap(StatusCode.OBD_FAILED_INVALIDNUMBER, 1),
+                0,
+                3
+        );
+
+        Map<String, Object> eventParams = new HashMap<>();
+        eventParams.put(CSR_PARAM_KEY, csr);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
+        csrService.processCallSummaryRecord(motechEvent);
+
+        subscription = subscriptionDataService.findBySubscriptionId(subscription.getSubscriptionId());
+        assertEquals(SubscriptionStatus.ACTIVE, subscription.getStatus());
+        CallRetry callRetry = callRetryDataService.findBySubscriptionId(subscription.getSubscriptionId());
+        assertNotNull(callRetry);
+        assertTrue(CallStage.RETRY_LAST.equals(callRetry.getCallStage()));
     }
 
     //todo: verify multiple days' worth of summary record aggregation
