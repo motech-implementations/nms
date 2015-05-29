@@ -35,4 +35,7 @@
     <osgi:reference id="region"
                     interface="org.motechproject.nms.region.service.IntegrationTestService" />
 
+    <osgi:reference id="alertsDataServive"
+                    interface="org.motechproject.alerts.contract.AlertsDataService" />
+
 </beans>

@@ -52,7 +52,7 @@ public class IntegrationTestServiceImpl implements IntegrationTestService {
                 (flw.getInvalidationDate() == null) ||
                 (Math.abs(Weeks.weeksBetween(now, flw.getInvalidationDate()).getWeeks()) < weeks)) {
                 flw.setStatus(FrontLineWorkerStatus.INVALID);
-                flw.setInvalidationDate(new DateTime().withDate(2000, 1, 1));
+                flw.setInvalidationDate(DateTime.now().minusYears(1));
                 frontLineWorkerDataService.update(flw);
             }
         }

@@ -293,6 +293,7 @@
                             org.motechproject.nms.region.service,
                             org.motechproject.nms.region.repository,
                             org.motechproject.nms.region.domain,
+                            org.motechproject.alerts.contract,
                             *
                         </Import-Package>
                     </instructions>
