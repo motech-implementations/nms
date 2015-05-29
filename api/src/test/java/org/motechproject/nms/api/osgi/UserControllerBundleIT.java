@@ -1537,7 +1537,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         createKilkariTestData();
         createNationalDefaultLLcForKilkari();
         HttpGet httpGet = createHttpGet(true, "kilkari", // service
-                true, "1000000011", // callingNumber- first time caller
+                true, "1000000012", // callingNumber- first time caller
                 true, "OP", // operator
                 true, "99", // Unknown circle
                 true, "123456789012345" // callId
@@ -1659,4 +1659,82 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(expectedJsonResponse,
                 EntityUtils.toString(response.getEntity()));
     }
+    private void createCircleWithMultipleLLC() {
+        District district1 = new District();
+        district1.setName("District 1");
+        district1.setRegionalName("District 1");
+        district1.setCode(1L);
+
+        State state1 = new State();
+        state1.setName("State 1");
+        state1.setCode(1L);
+        state1.getDistricts().add(district1);
+
+        stateDataService.create(state1);
+
+        deployedServiceDataService.create(new DeployedService(state1,
+                Service.KILKARI));
+
+        Language ma = languageDataService.create(new Language("malyalam"));
+
+        Circle circle = new Circle("MM");
+        LanguageLocation languageLocation1 = new LanguageLocation("45", circle,
+                ma, true);// default LLC
+        languageLocation1.getDistrictSet().add(district1);
+        languageLocationDataService.create(languageLocation1);
+
+        // add non default LLC
+
+        District district2 = new District();
+        district2.setName("District 2");
+        district2.setRegionalName("District 2");
+        district2.setCode(2L);
+
+        State state2 = new State();
+        state2.setName("State 2");
+        state2.setCode(2L);
+        state2.getDistricts().add(district2);
+
+        stateDataService.create(state2);
+
+        deployedServiceDataService.create(new DeployedService(state2,
+                Service.KILKARI));
+
+        Language tu = languageDataService.create(new Language("telgu"));
+        LanguageLocation languageLocation2 = new LanguageLocation("55", circle,
+                tu, false);// not default LLC
+        languageLocation2.getDistrictSet().add(district2);
+        languageLocationDataService.create(languageLocation2);
+
+    }
+
+    /**
+     * NMS_FT_5 To get the details of the Subscriber identified by the
+     * callingNumber when Subscriber has called first time to subscribe and
+     * identified circle has multiple states.
+     */
+    @Test
+    public void testKilkariUserForCircleHaveMultipleStates()
+            throws IOException, InterruptedException {
+        cleanAllData();
+        createCircleWithMultipleLLC();
+        HttpGet httpGet = createHttpGet(true, "kilkari", // service
+                true, "1000000013", // callingNumber- first time caller
+                true, "OP", // operator
+                true, "MM", // circle have multiple LLC
+                true, "123456789012345" // callId
+        );
+        // defaultLanguageLocationCode== circle default language location
+        String expectedJsonResponse = createKilkariUserResponseJson("45", // defaultLanguageLocationCode
+                null, // locationCode
+                Arrays.asList("45", "55"), // allowedLanguageLocationCodes
+                new HashSet<String>() // subscriptionPackList
+        );
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
+
 }
