@@ -7,6 +7,7 @@ import org.motechproject.mds.service.MotechDataService;
 import org.motechproject.nms.region.exception.CsvImportDataException;
 import org.motechproject.nms.region.utils.CsvInstanceImporter;
 import org.motechproject.nms.region.utils.CsvMapImporter;
+import org.motechproject.nms.region.utils.GetBoolean;
 import org.motechproject.nms.region.utils.GetInstanceByLong;
 import org.motechproject.nms.region.utils.GetInteger;
 import org.motechproject.nms.region.utils.GetLong;
@@ -20,7 +21,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -135,6 +138,34 @@ public class CsvImportTest {
     }
 
     @Test
+    public void testGetBooleanWhenInputIsValid() throws Exception {
+        GetBoolean getBoolean = createGetBoolean();
+        assertTrue((Boolean) getBoolean.execute("True", csvContext));
+        assertTrue((Boolean) getBoolean.execute("t", csvContext));
+        assertTrue((Boolean) getBoolean.execute("yes", csvContext));
+        assertTrue((Boolean) getBoolean.execute("Y", csvContext));
+
+        assertFalse((Boolean) getBoolean.execute("false", csvContext));
+        assertFalse((Boolean) getBoolean.execute("F", csvContext));
+        assertFalse((Boolean) getBoolean.execute("NO", csvContext));
+        assertFalse((Boolean) getBoolean.execute("n", csvContext));
+    }
+
+    @Test(expected = CsvImportDataException.class)
+    public void testGetBooleanWhenInputIsNull() throws Exception {
+        GetBoolean getBoolean = createGetBoolean();
+
+        getBoolean.execute(null, csvContext);
+    }
+
+    @Test(expected = CsvImportDataException.class)
+    public void testGetBooleanWhenInputIsInvalid() throws Exception {
+        GetBoolean getBoolean = createGetBoolean();
+
+        getBoolean.execute("I'm not a boolean!", csvContext);
+    }
+
+    @Test
     public void testGetSampleById() throws Exception {
         GetInstanceByLong<Sample> getSampleById = createGetSampleById();
         assertEquals(sampleFromDataService, getSampleById.execute(1, csvContext));
@@ -176,6 +207,10 @@ public class CsvImportTest {
 
     private GetString createGetString() {
         return new GetString();
+    }
+
+    private GetBoolean createGetBoolean() {
+        return new GetBoolean();
     }
 
     private GetInstanceByLong<Sample> createGetSampleById() {
