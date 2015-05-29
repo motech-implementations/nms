@@ -17,7 +17,7 @@
 
     <osgi:service ref="settingsService" interface="org.motechproject.nms.imi.service.SettingsService" />
 
-    <osgi:service ref="itService"
+    <osgi:service ref="imiItService"
                   interface="org.motechproject.nms.imi.service.IntegrationTestService" />
 
 

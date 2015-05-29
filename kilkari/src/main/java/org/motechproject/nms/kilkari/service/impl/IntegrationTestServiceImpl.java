@@ -13,11 +13,15 @@ import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackMessageDataService;
 import org.motechproject.nms.kilkari.service.IntegrationTestService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
+import org.motechproject.server.config.SettingsFacade;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
-@Service("itService")
+@Service("kilkariItService")
 public class IntegrationTestServiceImpl implements IntegrationTestService {
+
+    private static final String TESTING_ENVIRONMENT="testing.environment";
 
     @Autowired
     private CallRetryDataService callRetryDataService;
@@ -38,8 +42,19 @@ public class IntegrationTestServiceImpl implements IntegrationTestService {
     @Autowired
     private SubscriptionDataService subscriptionDataService;
 
+    /**
+     * SettingsFacade
+     */
+    @Autowired
+    @Qualifier("kilkariSettings")
+    private SettingsFacade settingsFacade;
+
 
     public void deleteAll() {
+
+        if (!Boolean.parseBoolean(settingsFacade.getProperty(TESTING_ENVIRONMENT))) {
+            throw new IllegalStateException("calling clearDatabase() in a production environment is forbidden!");
+        }
 
         for (Subscription subscription: subscriptionDataService.retrieveAll()) {
             try {

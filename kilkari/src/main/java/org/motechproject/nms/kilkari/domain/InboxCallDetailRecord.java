@@ -49,13 +49,13 @@ public class InboxCallDetailRecord {
     private Set<InboxCallData> content;
 
     public InboxCallDetailRecord() {
-        content = new HashSet<>();
+        this(null, null, null, null, null, null, null, null, null, null);
     }
 
-    public InboxCallDetailRecord(Long callingNumber, String operator, String circle, // NO CHECKSTYLE More than 7 parameters
-                                 Long callId, DateTime callStartTime, DateTime callEndTime, Integer callDurationInPulses,
-                                 Integer callStatus, Integer callDisconnectReason, Set<InboxCallData> content) {
-        this();
+    public InboxCallDetailRecord(Long callingNumber, String operator, // NO CHECKSTYLE More than 7 parameters
+                                 String circle, Long callId, DateTime callStartTime, DateTime callEndTime,
+                                 Integer callDurationInPulses, Integer callStatus, Integer callDisconnectReason,
+                                 Set<InboxCallData> content) {
         this.callingNumber = callingNumber;
         this.operator = operator;
         this.circle = circle;
@@ -65,7 +65,9 @@ public class InboxCallDetailRecord {
         this.callDurationInPulses = callDurationInPulses;
         this.callStatus = callStatus;
         this.callDisconnectReason = callDisconnectReason;
-        if (content != null) {
+        if (content == null) {
+            this.content = new HashSet<>();
+        } else {
             this.content = content;
         }
     }

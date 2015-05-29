@@ -17,10 +17,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
-@Service("itService")
+@Service("flwItService")
 public class IntegrationTestServiceImpl implements IntegrationTestService {
 
     private static final String WEEKS_TO_KEEP_INVALID_FLWS = "flw.weeks_to_keep_invalid_flws";
+    private static final String TESTING_ENVIRONMENT="testing.environment";
 
     @Autowired
     private CallContentDataService callContentDataService;
@@ -42,6 +43,11 @@ public class IntegrationTestServiceImpl implements IntegrationTestService {
 
 
     public void deleteAll() {
+
+        if (!Boolean.parseBoolean(settingsFacade.getProperty(TESTING_ENVIRONMENT))) {
+            throw new IllegalStateException("calling clearDatabase() in a production environment is forbidden!");
+        }
+
         callContentDataService.deleteAll();
         callDetailRecordDataService.deleteAll();
 
