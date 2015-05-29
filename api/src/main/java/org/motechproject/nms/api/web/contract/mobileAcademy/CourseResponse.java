@@ -1,11 +1,8 @@
 package org.motechproject.nms.api.web.contract.mobileAcademy;
 
-import org.motechproject.nms.api.web.contract.mobileAcademy.course.Chapter;
+import org.codehaus.jackson.annotate.JsonRawValue;
 
-import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
-import java.util.List;
 
 /**
  * Response object for get course API 2.2.2
@@ -18,12 +15,11 @@ public class CourseResponse {
 
     // course version in epoch datetime format
     @NotNull
-    private int courseVersion;
+    private long courseVersion;
 
     @NotNull
-    @Size(min = 11, max = 11)
-    @Valid
-    private List<Chapter> chapters;
+    @JsonRawValue
+    private Object chapters;
 
     public CourseResponse() {
     }
@@ -36,19 +32,19 @@ public class CourseResponse {
         this.name = name;
     }
 
-    public int getCourseVersion() {
+    public long getCourseVersion() {
         return courseVersion;
     }
 
-    public void setCourseVersion(int courseVersion) {
+    public void setCourseVersion(long courseVersion) {
         this.courseVersion = courseVersion;
     }
 
-    public List<Chapter> getChapters() {
+    public Object getChapters() {
         return chapters;
     }
 
-    public void setChapters(List<Chapter> chapters) {
+    public void setChapters(Object chapters) {
         this.chapters = chapters;
     }
 }

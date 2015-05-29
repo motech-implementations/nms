@@ -47,6 +47,11 @@ public class MobileAcademyControllerUnitTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
+    public void testNullBookmark() {
+        mobileAcademyController.saveBookmarkWithScore(null);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
     public void testBookmarkMaxCallingNumber() {
         SaveBookmarkRequest sb = new SaveBookmarkRequest();
         sb.setCallingNumber(10000000000L);

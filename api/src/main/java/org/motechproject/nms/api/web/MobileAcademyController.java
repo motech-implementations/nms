@@ -10,8 +10,8 @@ import org.motechproject.nms.api.web.contract.mobileAcademy.SmsStatusRequest;
 import org.motechproject.nms.api.web.contract.mobileAcademy.sms.DeliveryInfo;
 import org.motechproject.nms.api.web.converter.MobileAcademyConverter;
 import org.motechproject.nms.api.web.validator.MobileAcademyValidator;
-import org.motechproject.nms.mobileacademy.domain.Course;
 import org.motechproject.nms.mobileacademy.dto.MaBookmark;
+import org.motechproject.nms.mobileacademy.dto.MaCourse;
 import org.motechproject.nms.mobileacademy.exception.CourseNotCompletedException;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
 import org.slf4j.Logger;
@@ -81,18 +81,16 @@ public class MobileAcademyController extends BaseController {
     @ResponseBody
     public CourseResponse getCourse() {
 
-        Course getCourse = mobileAcademyService.getCourse();
+        MaCourse getCourse = mobileAcademyService.getCourse();
 
         if (getCourse == null) {
             LOGGER.error("No course found in database. Check course ingestion and name");
             throw new InternalError(String.format(NOT_FOUND, "course"));
         }
 
-        CourseResponse response = MobileAcademyConverter.convertCourse(getCourse);
+        CourseResponse response = MobileAcademyConverter.convertCourseDto(getCourse);
 
         if (response != null) {
-
-            // TODO: course response format validations on the way out?
             return response;
         } else {
             LOGGER.error("Failed dto mapping, check object mapping");
@@ -122,11 +120,13 @@ public class MobileAcademyController extends BaseController {
      */
     @RequestMapping(
             value = "/bookmarkWithScore",
-            method = RequestMethod.GET)
+            method = RequestMethod.GET,
+            headers = { "Content-type=application/json" })
     public GetBookmarkResponse getBookmarkWithScore(@RequestParam Long callingNumber,
                                                  @RequestParam Long callId) {
 
-        return new GetBookmarkResponse();
+        MaBookmark bookmark = mobileAcademyService.getBookmark(callingNumber, callId);
+        return MobileAcademyConverter.convertBookmarkDto(bookmark);
     }
 
     /**
@@ -142,6 +142,10 @@ public class MobileAcademyController extends BaseController {
     @Transactional
     public void saveBookmarkWithScore(@RequestBody SaveBookmarkRequest bookmarkRequest) {
 
+        if (bookmarkRequest == null) {
+            throw new IllegalArgumentException(String.format(INVALID, "bookmarkRequest"));
+        }
+
         Long callingNumber = bookmarkRequest.getCallingNumber();
         if (callingNumber == null || callingNumber < SMALLEST_10_DIGIT_NUMBER || callingNumber > LARGEST_10_DIGIT_NUMBER) {
             throw new IllegalArgumentException(String.format(INVALID, "callingNumber"));
@@ -150,8 +154,7 @@ public class MobileAcademyController extends BaseController {
             throw new IllegalArgumentException(String.format(INVALID, "callId"));
         }
 
-        MaBookmark bookmark = new MaBookmark(bookmarkRequest.getCallingNumber(), bookmarkRequest.getCallId(),
-                bookmarkRequest.getBookmark(), bookmarkRequest.getScoresByChapter());
+        MaBookmark bookmark = MobileAcademyConverter.convertSaveBookmarkRequest(bookmarkRequest);
         mobileAcademyService.setBookmark(bookmark);
     }
 

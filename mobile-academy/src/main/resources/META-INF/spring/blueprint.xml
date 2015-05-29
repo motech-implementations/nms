@@ -17,8 +17,8 @@
     <osgi:service ref="itService"
                   interface="org.motechproject.nms.mobileacademy.service.IntegrationTestService" />
 
-    <osgi:reference id="courseDataService"
-                    interface="org.motechproject.nms.mobileacademy.repository.CourseDataService" />
+    <osgi:reference id="nmsCourseDataService"
+                    interface="org.motechproject.nms.mobileacademy.repository.NmsCourseDataService" />
 
     <osgi:reference id="questionDataService"
                     interface="org.motechproject.nms.mobileacademy.repository.QuestionDataService" />
@@ -29,8 +29,11 @@
     <osgi:reference id="completionRecordDataService"
                     interface="org.motechproject.nms.mobileacademy.repository.CompletionRecordDataService" />
 
-    <osgi:reference id="bookmarkDataService"
-                    interface="org.motechproject.mtraining.repository.BookmarkDataService" />
+    <osgi:reference id="mTrainingService"
+                    interface="org.motechproject.mtraining.service.MTrainingService" />
+
+    <osgi:reference id="bookmarkService"
+                    interface="org.motechproject.mtraining.service.BookmarkService" />
 
     <osgi:reference id="eventRelay"
                     interface="org.motechproject.event.listener.EventRelay"/>

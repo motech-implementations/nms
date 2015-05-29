@@ -7,29 +7,32 @@ import org.motechproject.event.MotechEvent;
 import org.motechproject.mtraining.domain.Bookmark;
 import org.motechproject.mtraining.repository.BookmarkDataService;
 import org.motechproject.nms.mobileacademy.domain.CompletionRecord;
-import org.motechproject.nms.mobileacademy.domain.Course;
+import org.motechproject.nms.mobileacademy.domain.NmsCourse;
 import org.motechproject.nms.mobileacademy.dto.MaBookmark;
+import org.motechproject.nms.mobileacademy.dto.MaCourse;
 import org.motechproject.nms.mobileacademy.exception.CourseNotCompletedException;
-import org.motechproject.nms.mobileacademy.service.SmsNotificationService;
-import org.motechproject.nms.mobileacademy.service.impl.SmsNotificationServiceImpl;
 import org.motechproject.nms.mobileacademy.repository.CompletionRecordDataService;
-import org.motechproject.nms.mobileacademy.repository.CourseDataService;
+import org.motechproject.nms.mobileacademy.repository.NmsCourseDataService;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
+import org.motechproject.nms.mobileacademy.service.SmsNotificationService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
-import org.springframework.test.context.ContextConfiguration;
 
-import javax.annotation.Resource;
 import javax.inject.Inject;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Verify that MobileAcademyService present, functional.
@@ -43,13 +46,13 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     private MobileAcademyService maService;
 
     @Inject
-    private CourseDataService courseDataService;
-
-    @Inject
     private BookmarkDataService bookmarkDataService;
 
     @Inject
     private CompletionRecordDataService completionRecordDataService;
+
+    @Inject
+    private NmsCourseDataService nmsCourseDataService;
 
     @Inject
     private SmsNotificationService smsNotificationService;
@@ -61,16 +64,49 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     @Before
     public void setupMobileAcademy() {
 
-        courseDataService.deleteAll();
         completionRecordDataService.deleteAll();
     }
 
     @Test
-    public void testSetCourse() {
+    public void testSetCourseNoUpdate() {
 
-        addCourseHelper(invalidCourseName);
-        Course retrieved = courseDataService.findCourseByName(invalidCourseName);
-        assertNotNull(retrieved);
+        NmsCourse originalCourse = nmsCourseDataService.getCourseByName(validCourseName);
+        MaCourse copyCourse = new MaCourse(originalCourse.getName(), originalCourse.getModificationDate().getMillis(), originalCourse.getContent());
+        maService.setCourse(copyCourse);
+
+        // verify that modified time (version) didn't change
+        assertEquals(nmsCourseDataService.getCourseByName(validCourseName).getModificationDate(),
+                originalCourse.getModificationDate());
+    }
+
+    @Test
+    public void testSetCourseUpdate() {
+
+        NmsCourse originalCourse = nmsCourseDataService.getCourseByName(validCourseName);
+        String courseContent = originalCourse.getContent();
+        MaCourse copyCourse = new MaCourse(originalCourse.getName(), originalCourse.getModificationDate().getMillis(), originalCourse.getContent() + "foo");
+        maService.setCourse(copyCourse);
+
+        // verify that modified time (version) did change
+        assertNotEquals(nmsCourseDataService.getCourseByName(validCourseName).getModificationDate(),
+                originalCourse.getModificationDate());
+        originalCourse.setContent(courseContent);
+        nmsCourseDataService.update(originalCourse);
+    }
+
+    @Test
+    public void testNoCoursePresent() {
+        NmsCourse originalCourse = nmsCourseDataService.getCourseByName(validCourseName);
+        nmsCourseDataService.delete(originalCourse);
+        assertNull(nmsCourseDataService.getCourseByName(validCourseName));
+
+        try {
+            maService.getCourse();
+        } catch (IllegalStateException is) {
+            assertTrue(is.toString().contains("No course bootstrapped. Check deployment"));
+        }
+
+        nmsCourseDataService.create(new NmsCourse(originalCourse.getName(), originalCourse.getContent()));
     }
 
     @Test
@@ -81,14 +117,12 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     @Test
     public void testGetCourse() {
 
-        addCourseHelper(validCourseName);
         assertNotNull(maService.getCourse());
     }
 
     @Test
     public void testGetCourseVersion() {
 
-        addCourseHelper(validCourseName);
         assertNotNull(maService.getCourseVersion());
         assertTrue(maService.getCourseVersion() > 0);
     }
@@ -104,6 +138,16 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     public void testGetEmptyBookmark() {
 
         assertNull(maService.getBookmark(123L, 456L));
+    }
+
+    @Test
+    public void testSetNullBookmark() {
+        try {
+            maService.setBookmark(null);
+            throw new IllegalStateException("This test expected an IllegalArgumentException");
+        } catch (IllegalArgumentException ia) {
+            assertTrue(ia.toString().contains("cannot be null"));
+        }
     }
 
     @Test
@@ -203,12 +247,6 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     }
 
     @Test
-    public void testGetBookmarkEmpty() {
-
-        assertNull(maService.getBookmark(0L, 1L));
-    }
-
-    @Test
     public void testTriggerNotificationSent() {
         bookmarkDataService.deleteAll();
         long callingNumber = 9876543210L;
@@ -281,12 +319,6 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         completionRecordDataService.create(cr);
         smsNotificationService.sendSmsNotification(event);
         // TODO: cannot check the notification status yet since we don't have a real IMI url to hit
-    }
-
-    private void addCourseHelper(String courseName) {
-        Course newCourse = new Course();
-        newCourse.setName(courseName);
-        courseDataService.create(newCourse);
     }
 
 }
