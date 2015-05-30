@@ -1,6 +1,5 @@
 package org.motechproject.nms.testing.it.imi;
 
-import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -16,8 +15,6 @@ import org.motechproject.nms.imi.repository.FileAuditRecordDataService;
 import org.motechproject.nms.imi.service.CdrFileService;
 import org.motechproject.nms.imi.service.SettingsService;
 import org.motechproject.nms.imi.web.contract.FileInfo;
-import org.motechproject.nms.kilkari.domain.Subscription;
-import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.dto.CallDetailRecordDto;
 import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.CallSummaryRecordDataService;
@@ -31,6 +28,7 @@ import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.LanguageLocationDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.ops4j.pax.exam.ExamFactory;
@@ -110,24 +108,12 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
     @Inject
     DeployedServiceDataService deployedServiceDataService;
 
+    @Inject
+    TestingService testingService;
+
     @Before
     public void cleanupDatabase() {
-        for (Subscription subscription: subscriptionDataService.retrieveAll()) {
-            subscription.setStatus(SubscriptionStatus.COMPLETED);
-            subscription.setEndDate(new DateTime().withDate(2011, 8, 1));
-
-            subscriptionDataService.update(subscription);
-        }
-
-        subscriptionService.deleteAll();
-        subscriberDataService.deleteAll();
-        languageLocationDataService.deleteAll();
-        languageDataService.deleteAll();
-        districtDataService.deleteAll();
-        deployedServiceDataService.deleteAll();
-        stateDataService.deleteAll();
-        circleDataService.deleteAll();
-        callRetryDataService.deleteAll();
+        testingService.clearDatabase();
     }
 
 

@@ -21,6 +21,7 @@ import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.LanguageLocationDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.ops4j.pax.exam.ExamFactory;
@@ -81,17 +82,13 @@ public class CsrValidatorServiceBundleIT extends BasePaxIT {
     @Inject
     private FileAuditRecordDataService fileAuditRecordDataService;
 
+    @Inject
+    TestingService testingService;
+
+
     @Before
     public void cleanupDatabase() {
-        subscriptionService.deleteAll();
-        subscriberDataService.deleteAll();
-        subscriptionPackDataService.deleteAll();
-        languageLocationDataService.deleteAll();
-        languageDataService.deleteAll();
-        districtDataService.deleteAll();
-        stateDataService.deleteAll();
-        circleDataService.deleteAll();
-        callRetryDataService.deleteAll();
+        testingService.clearDatabase();
     }
 
 
