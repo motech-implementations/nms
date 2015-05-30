@@ -87,6 +87,10 @@
     <osgi:service ref="regionItService"
                   interface="org.motechproject.nms.region.service.IntegrationTestService" />
 
+    <!-- Language Location Codes Import Service -->
+    <osgi:service ref="languageLocationCodesImportService"
+                  interface="org.motechproject.nms.region.service.LanguageLocationCodesImportService" />
+
     <!-- Alert Service -->
     <osgi:reference id="alertsService" interface="org.motechproject.alerts.contract.AlertService" />
 

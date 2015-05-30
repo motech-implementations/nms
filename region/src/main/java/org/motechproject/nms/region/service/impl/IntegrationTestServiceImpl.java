@@ -21,7 +21,7 @@ import org.springframework.stereotype.Service;
 @Service("regionItService")
 public class IntegrationTestServiceImpl implements IntegrationTestService {
 
-    private static final String TESTING_ENVIRONMENT="testing.environment";
+    private static final String TESTING_ENVIRONMENT = "testing.environment";
 
     @Autowired
     private CircleDataService circleDataService;

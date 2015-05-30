@@ -1,8 +1,7 @@
 package org.motechproject.nms.region.utils;
 
 import org.supercsv.cellprocessor.ift.CellProcessor;
-import org.supercsv.io.CsvBeanReader;
-import org.supercsv.prefs.CsvPreference;
+import org.supercsv.io.ICsvReader;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -11,34 +10,25 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class CsvImporter<T> implements Closeable {
+public abstract class CsvImporter<R extends ICsvReader> implements Closeable {
 
-    private CsvBeanReader csvReader;
-    private Class<T> type;
+    private R csvReader;
     private String[] fieldNames;
     private CellProcessor[] processors;
 
-    public CsvImporter(Class<T> type) {
-        this.type = type;
+    public void open(Reader reader, Map<String, CellProcessor> processorMapping) throws IOException {
+        open(reader, processorMapping, null);
     }
 
-    public void open(Reader reader, Map<String, String> fieldNameMapping, Map<String, CellProcessor> processorMapping)
+    public void open(Reader reader, Map<String, CellProcessor> processorMapping, Map<String, String> fieldNameMapping)
             throws IOException {
         if (null == this.csvReader) {
-            this.csvReader = new CsvBeanReader(reader, CsvPreference.STANDARD_PREFERENCE);
+            this.csvReader = createCsvReader(reader);
             String[] header = csvReader.getHeader(true);
             this.fieldNames = getFieldNames(header, fieldNameMapping);
             this.processors = getProcessors(header, processorMapping);
         } else {
             throw new IllegalStateException("CsvImporter is already open");
-        }
-    }
-
-    public T read() throws IOException {
-        if (null != csvReader) {
-            return csvReader.read(type, fieldNames, processors);
-        } else {
-            throw new IllegalStateException("CsvImporter is closed");
         }
     }
 
@@ -60,6 +50,26 @@ public class CsvImporter<T> implements Closeable {
         }
     }
 
+    public boolean isOpen() {
+        return null != csvReader;
+    }
+
+    protected R getCsvReader() {
+        return csvReader;
+    }
+
+    @SuppressWarnings("PMD.MethodReturnsInternalArray")
+    protected String[] getFieldNames() {
+        return fieldNames;
+    }
+
+    @SuppressWarnings("PMD.MethodReturnsInternalArray")
+    protected CellProcessor[] getProcessors() {
+        return processors;
+    }
+
+    protected abstract R createCsvReader(Reader reader);
+
     private CellProcessor[] getProcessors(String[] header, Map<String, CellProcessor> processorMapping) {
         List<CellProcessor> processorsList = new ArrayList<>(header.length);
         for (String column : header) {
@@ -74,15 +84,19 @@ public class CsvImporter<T> implements Closeable {
     }
 
     private String[] getFieldNames(String[] header, Map<String, String> fieldNameMapping) {
-        List<String> fieldNamesList = new ArrayList<>(header.length);
-        for (String column : header) {
-            if (fieldNameMapping.containsKey(column)) {
-                fieldNamesList.add(fieldNameMapping.get(column));
-            } else {
-                throw new IllegalStateException(String.format("Field name for column '%s' not specified", column));
+        if (null != fieldNameMapping) {
+            List<String> fieldNamesList = new ArrayList<>(header.length);
+            for (String column : header) {
+                if (fieldNameMapping.containsKey(column)) {
+                    fieldNamesList.add(fieldNameMapping.get(column));
+                } else {
+                    throw new IllegalStateException(String.format("Field name for column '%s' not specified", column));
+                }
             }
-        }
 
-        return fieldNamesList.toArray(new String[fieldNamesList.size()]);
+            return fieldNamesList.toArray(new String[fieldNamesList.size()]);
+        } else {
+            return header;
+        }
     }
 }

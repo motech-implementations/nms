@@ -27,11 +27,13 @@ public class Circle extends MdsEntity {
 
     public Circle() {
         this.states = new ArrayList<>();
+        this.languageLocations = new ArrayList<>();
     }
 
     public Circle(String name) {
         this.name = name;
         this.states = new ArrayList<>();
+        this.languageLocations = new ArrayList<>();
     }
 
     public String getName() {
@@ -56,6 +58,15 @@ public class Circle extends MdsEntity {
 
     public void setLanguageLocations(List<LanguageLocation> languageLocations) {
         this.languageLocations = languageLocations;
+    }
+
+    public LanguageLocation getDefaultLanguageLocation() {
+        for (LanguageLocation languageLocation : getLanguageLocations()) {
+            if (languageLocation.isDefaultForCircle()) {
+                return languageLocation;
+            }
+        }
+        return null;
     }
 
     @Override
