@@ -17,7 +17,7 @@ import javax.validation.constraints.Min;
 import java.util.Collections;
 import java.util.List;
 
-@Entity(tableName = "nms_call_detail_records")
+@Entity(tableName = "nms_flw_cdrs")
 public class CallDetailRecord {
 
     public CallDetailRecord() {

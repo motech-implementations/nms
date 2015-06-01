@@ -32,7 +32,7 @@ public class LanguageLocationCodeImportController {
     @ResponseStatus(HttpStatus.OK)
     public void importLanguageLocationCodes(@RequestParam MultipartFile csvFile) {
         try {
-            try(InputStream in = csvFile.getInputStream()) {
+            try (InputStream in = csvFile.getInputStream()) {
                 languageLocationCodesImportService.importData(new InputStreamReader(in));
             }
         } catch (CsvImportException e) {

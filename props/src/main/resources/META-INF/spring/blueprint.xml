@@ -16,6 +16,9 @@
     <osgi:service ref="propertyService"
                   interface="org.motechproject.nms.props.service.PropertyService" />
 
+    <osgi:service ref="propsItService"
+                  interface="org.motechproject.nms.props.service.IntegrationTestService" />
+
     <osgi:reference id="deployedServiceDataService"
                     interface="org.motechproject.nms.props.repository.DeployedServiceDataService" />
 </beans>

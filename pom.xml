@@ -734,6 +734,7 @@
         <module>region</module>
         <module>props</module>
         <module>imi</module>
+        <module>testing</module>
     </modules>
 
     <build>
@@ -809,14 +810,6 @@
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-release-plugin</artifactId>
-                <version>2.3.2</version>
-                <configuration>
-                    <preparationGoals>clean install</preparationGoals>
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -949,161 +942,6 @@
             </plugin>
         </plugins>
     </build>
-
-    <profiles>
-        <profile>
-            <id>IT</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-resources-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>copy-test-config-files</id>
-                                <phase>pre-integration-test</phase>
-                                <goals>
-                                    <goal>copy-resources</goal>
-                                </goals>
-                                <configuration>
-                                    <outputDirectory>${user.home}/.motech/config</outputDirectory>
-                                    <overwrite>true</overwrite>
-                                    <resources>
-                                        <resource>
-                                            <directory>${modules.root.dir}/testdata</directory>
-                                            <include>motech-settings.properties</include>
-                                        </resource>
-                                        <resource>
-                                            <directory>${modules.root.dir}/testdata/${motech.sql.dbtype}</directory>
-                                            <include>bootstrap.properties</include>
-                                        </resource>
-                                    </resources>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <artifactId>maven-clean-plugin</artifactId>
-                        <version>2.5</version>
-                        <inherited>false</inherited>
-                        <executions>
-                            <execution>
-                                <id>clean-test-config-files</id>
-                                <goals>
-                                    <goal>clean</goal>
-                                </goals>
-                                <phase>post-integration-test</phase>
-                                <configuration>
-                                    <excludeDefaultDirectories>true</excludeDefaultDirectories>
-                                    <filesets>
-                                        <fileset>
-                                            <followSymlinks>false</followSymlinks>
-                                            <directory>${user.home}/.motech/config</directory>
-                                            <includes>
-                                                <include>bootstrap.properties</include>
-                                                <include>motech-settings.properties</include>
-                                            </includes>
-                                        </fileset>
-                                    </filesets>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-failsafe-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>integration-test</id>
-                                <goals>
-                                    <goal>integration-test</goal>
-                                </goals>
-                                <configuration>
-                                    <includes>
-                                        <include>**/**/*IT.java</include>
-                                        <include>**/**/*IntegrationTests.java</include>
-                                    </includes>
-                                    <excludes>
-                                        <exclude>**/**/*BundleIT.java</exclude>
-                                        <exclude>**/**/*PaxIT.java</exclude>
-                                        <exclude>**/**/*ContextIT.java</exclude>
-                                    </excludes>
-                                    <encoding>UTF-8</encoding>
-                                    <summaryFile>target/failsafe-reports/failsafe-summary-it.xml</summaryFile>
-                                    <systemPropertiesFile>${modules.root.dir}/maven.properties</systemPropertiesFile>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <id>verify</id>
-                                <goals>
-                                    <goal>verify</goal>
-                                </goals>
-                                <configuration>
-                                    <summaryFiles>
-                                        <summaryFile>target/failsafe-reports/failsafe-summary-it.xml</summaryFile>
-                                    </summaryFiles>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>sql-maven-plugin</artifactId>
-                        <version>1.5</version>
-                        <dependencies>
-                            <dependency>
-                                <groupId>mysql</groupId>
-                                <artifactId>mysql-connector-java</artifactId>
-                                <version>${mysql.version}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>org.postgresql</groupId>
-                                <artifactId>org.motechproject.org.postgresql</artifactId>
-                                <version>${postgres.version}</version>
-                            </dependency>
-                        </dependencies>
-                        <configuration>
-                            <driver>${motech.sql.driver}</driver>
-                            <username>${motech.sql.user}</username>
-                            <password>${motech.sql.password}</password>
-                            <url>${motech.sql.url}</url>
-                        </configuration>
-                        <!-- For each Bundle IT tests in modules migrated to MDS the 'motech_data_services' 
-                            database has to be dropped and created again. -->
-                        <executions>
-                            <execution>
-                                <id>drop-db</id>
-                                <phase>pre-integration-test</phase>
-                                <goals>
-                                    <goal>execute</goal>
-                                </goals>
-                                <configuration>
-                                    <autocommit>true</autocommit>
-                                    <sqlCommand>
-                                        DROP DATABASE motech_data_services;
-                                    </sqlCommand>
-                                    <onError>continue</onError>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <id>create-db</id>
-                                <phase>pre-integration-test</phase>
-                                <goals>
-                                    <goal>execute</goal>
-                                </goals>
-                                <configuration>
-                                    <autocommit>true</autocommit>
-                                    <sqlCommand>
-                                        CREATE DATABASE motech_data_services;
-                                    </sqlCommand>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
 
     <repositories>
         <repository>

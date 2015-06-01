@@ -84,8 +84,10 @@
     <osgi:service ref="healthSubFacilityImportService"
                     interface="org.motechproject.nms.region.service.HealthSubFacilityImportService" />
 
-    <!-- Language Location Codes Import Service -->
+    <osgi:service ref="regionItService"
+                  interface="org.motechproject.nms.region.service.IntegrationTestService" />
 
+    <!-- Language Location Codes Import Service -->
     <osgi:service ref="languageLocationCodesImportService"
                   interface="org.motechproject.nms.region.service.LanguageLocationCodesImportService" />
 

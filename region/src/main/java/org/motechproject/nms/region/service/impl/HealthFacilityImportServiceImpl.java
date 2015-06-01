@@ -30,7 +30,7 @@ public class HealthFacilityImportServiceImpl extends BaseLocationImportService<H
     public static final String REGIONAL_NAME_FIELD = "regionalName";
     public static final String NAME_FIELD = "name";
     public static final String BID_FIELD = "healthBlock";
-    public static final String FACILITY_TYPE_FIELD= "healthFacilityType";
+    public static final String FACILITY_TYPE_FIELD = "healthFacilityType";
 
     private HealthBlockDataService healthBlockDataService;
     private HealthFacilityTypeDataService healthFacilityTypeDataService;

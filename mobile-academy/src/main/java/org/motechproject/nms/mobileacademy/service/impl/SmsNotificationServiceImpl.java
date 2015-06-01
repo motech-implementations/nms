@@ -70,7 +70,7 @@ public class SmsNotificationServiceImpl implements SmsNotificationService {
         this.alertService = alertService;
     }
 
-    @MotechListener(subjects = { COURSE_COMPLETED_SUBJECT })
+    @MotechListener(subjects = { COURSE_COMPLETED_SUBJECT } )
     public void sendSmsNotification(MotechEvent event) {
 
         LOGGER.debug("Handling course completion notification event");

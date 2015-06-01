@@ -108,12 +108,12 @@ public class InboxCallData {
 
     @Override
     public int hashCode() {
-        int result = subscriptionId.hashCode();
-        result = 31 * result + subscriptionPack.hashCode();
-        result = 31 * result + inboxWeekId.hashCode();
-        result = 31 * result + contentFileName.hashCode();
-        result = 31 * result + startTime.hashCode();
-        result = 31 * result + endTime.hashCode();
+        int result = subscriptionId != null ? subscriptionId.hashCode() : 0;
+        result = 31 * result + (subscriptionPack != null ? subscriptionPack.hashCode() : 0);
+        result = 31 * result + (inboxWeekId != null ? inboxWeekId.hashCode() : 0);
+        result = 31 * result + (contentFileName != null ? contentFileName.hashCode() : 0);
+        result = 31 * result + (startTime != null ? startTime.hashCode() : 0);
+        result = 31 * result + (endTime != null ? endTime.hashCode() : 0);
         return result;
     }
 }

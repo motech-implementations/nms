@@ -24,4 +24,13 @@
         <property name="maxUploadSize" value="10000000"/>
     </bean>
 
+
+    <bean id="regionSettings" class="org.motechproject.server.config.SettingsFacade" autowire="byType">
+        <property name="configFiles">
+            <list>
+                <value>classpath:region.properties</value>
+            </list>
+        </property>
+    </bean>
+
 </beans>
