@@ -3,7 +3,7 @@ package org.motechproject.nms.region.controller;
 import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.alerts.domain.AlertStatus;
 import org.motechproject.alerts.domain.AlertType;
-import org.motechproject.nms.region.exception.CsvImportException;
+import org.motechproject.nms.csv.exception.CsvImportException;
 import org.motechproject.nms.region.service.CensusVillageImportService;
 import org.motechproject.nms.region.service.DistrictImportService;
 import org.motechproject.nms.region.service.HealthBlockImportService;
