@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 @Service("testingService")
 public class TestingServiceImpl implements TestingService {
 
-    private static final String TESTING_ENVIRONMENT="testing.environment";
+    private static final String TESTING_ENVIRONMENT = "testing.environment";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TestingServiceImpl.class);
 
