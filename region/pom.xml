@@ -93,8 +93,6 @@
                             org.motechproject.nms.region.domain;version=${project.version},
                         </Export-Package>
                         <Import-Package>
-                            org.motechproject.nms.csv.exception,
-                            org.motechproject.nms.csv.utils,
                             net.sf.cglib.core,
                             net.sf.cglib.proxy,
                             net.sf.cglib.reflect,

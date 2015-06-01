@@ -8,5 +8,5 @@
         http://www.eclipse.org/gemini/blueprint/schema/blueprint
         http://www.eclipse.org/gemini/blueprint/schema/blueprint/gemini-blueprint.xsd
         http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.1.xsd">
-    
+
 </beans>
