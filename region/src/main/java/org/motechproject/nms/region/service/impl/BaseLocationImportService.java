@@ -3,7 +3,8 @@ package org.motechproject.nms.region.service.impl;
 import org.apache.commons.collections.CollectionUtils;
 import org.motechproject.mds.service.MotechDataService;
 import org.motechproject.nms.region.exception.CsvImportDataException;
-import org.motechproject.nms.region.utils.CsvImporter;
+import org.motechproject.nms.region.utils.ConstraintViolationUtils;
+import org.motechproject.nms.region.utils.CsvInstanceImporter;
 import org.springframework.transaction.annotation.Transactional;
 import org.supercsv.cellprocessor.ift.CellProcessor;
 
@@ -26,9 +27,9 @@ public abstract class BaseLocationImportService<T> {
 
     @Transactional
     public void importData(Reader reader) throws IOException {
-        CsvImporter<T> csvImporter = new CsvImporter<>(type);
+        CsvInstanceImporter<T> csvImporter = new CsvInstanceImporter<>(type);
         try {
-            csvImporter.open(reader, getFieldNameMapping(), getProcessorMapping());
+            csvImporter.open(reader, getProcessorMapping(), getFieldNameMapping());
             T instance;
             while (null != (instance = csvImporter.read())) {
                 dataService.create(instance);
@@ -44,13 +45,10 @@ public abstract class BaseLocationImportService<T> {
 
     private String createErrorMessage(Set<ConstraintViolation<?>> violations, int rowNumber) {
         if (CollectionUtils.isNotEmpty(violations)) {
-            StringBuilder builder = new StringBuilder();
-            for (ConstraintViolation<?> violation : violations) {
-                builder.append(String.format("{'%s': %s}", violation.getPropertyPath(), violation.getMessage()));
-            }
-            return String.format("CSV instance error [row: %d]: validation failed for instance of type %s, violations: %s", rowNumber, type.getName(), builder);
+            return String.format("CSV instance error [row: %d]: validation failed for instance of type %s, violations: %s", rowNumber, type.getName(), ConstraintViolationUtils.toString(violations));
         } else {
             return String.format("CSV instance error [row: %d]", rowNumber);
         }
     }
+
 }
