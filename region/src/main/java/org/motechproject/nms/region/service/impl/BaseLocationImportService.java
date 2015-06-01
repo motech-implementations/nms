@@ -2,9 +2,9 @@ package org.motechproject.nms.region.service.impl;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.motechproject.mds.service.MotechDataService;
-import org.motechproject.nms.region.exception.CsvImportDataException;
-import org.motechproject.nms.region.utils.ConstraintViolationUtils;
-import org.motechproject.nms.region.utils.CsvInstanceImporter;
+import org.motechproject.nms.csv.exception.CsvImportDataException;
+import org.motechproject.nms.csv.utils.ConstraintViolationUtils;
+import org.motechproject.nms.csv.utils.CsvInstanceImporter;
 import org.springframework.transaction.annotation.Transactional;
 import org.supercsv.cellprocessor.ift.CellProcessor;
 

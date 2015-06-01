@@ -9,10 +9,10 @@
         <relativePath>../</relativePath>
     </parent>
 
-    <artifactId>region</artifactId>
+    <artifactId>csv</artifactId>
     <version>0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
-    <name>Region Module</name>
+    <name>CSV Module</name>
 
     <properties>
         <modules.root.dir>${basedir}/..</modules.root.dir>
@@ -25,10 +25,12 @@
             <version>${motech.version}</version>
         </dependency>
 
+        <!-- OSGi IT -->
         <dependency>
             <groupId>org.motechproject</groupId>
-            <artifactId>motech-platform-server-config</artifactId>
+            <artifactId>motech-pax-it</artifactId>
             <version>${motech.version}</version>
+            <scope>test</scope>
         </dependency>
 
         <!-- Repository -->
@@ -38,23 +40,6 @@
             <version>${motech.version}</version>
         </dependency>
 
-        <!-- Alerts -->
-        <dependency>
-            <groupId>org.motechproject</groupId>
-            <artifactId>alerts</artifactId>
-            <version>${motech.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.motechproject.nms</groupId>
-            <artifactId>csv</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>commons-fileupload</groupId>
-            <artifactId>commons-fileupload</artifactId>
-        </dependency>
     </dependencies>
 
     <repositories>
@@ -85,24 +70,14 @@
                 <configuration>
                     <instructions>
                         <Blueprint-Enabled>true</Blueprint-Enabled>
-                        <Resource-Path>region/resources</Resource-Path>
-                        <Context-Path>region</Context-Path>
+                        <Resource-Path>csv/resources</Resource-Path>
+                        <Context-Path>csv</Context-Path>
                         <Export-Package>
-                            org.motechproject.nms.region.service;version=${project.version},
-                            org.motechproject.nms.region.repository;version=${project.version},
-                            org.motechproject.nms.region.domain;version=${project.version},
+                            org.motechproject.nms.csv.utils;version=${project.version},
+                            org.motechproject.nms.csv.exception;version=${project.version}
                         </Export-Package>
                         <Import-Package>
-                            net.sf.cglib.core,
-                            net.sf.cglib.proxy,
-                            net.sf.cglib.reflect,
-                            org.aopalliance.aop,
-                            org.apache.commons.fileupload,
-                            org.springframework.aop,
-                            org.springframework.aop.framework,
-                            org.springframework.transaction,
                             org.motechproject.osgi.web,
-                            org.springframework.web.multipart.commons,
                             *
                         </Import-Package>
                     </instructions>

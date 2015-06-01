@@ -1,4 +1,4 @@
-package org.motechproject.nms.region.utils;
+package org.motechproject.nms.csv.utils;
 
 import org.supercsv.io.CsvBeanReader;
 import org.supercsv.io.ICsvBeanReader;

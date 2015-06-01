@@ -1,4 +1,4 @@
-package org.motechproject.nms.region.exception;
+package org.motechproject.nms.csv.exception;
 
 public class CsvImportException extends RuntimeException {
 
