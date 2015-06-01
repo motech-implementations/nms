@@ -1,5 +1,6 @@
 package org.motechproject.nms.api.utils;
 
+
 import org.motechproject.nms.api.web.contract.mobileAcademy.CourseResponse;
 import org.motechproject.nms.mobileacademy.dto.MaCourse;
 

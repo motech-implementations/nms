@@ -25,14 +25,6 @@
             <version>${motech.version}</version>
         </dependency>
 
-        <!-- OSGi IT -->
-        <dependency>
-            <groupId>org.motechproject</groupId>
-            <artifactId>motech-pax-it</artifactId>
-            <version>${motech.version}</version>
-            <scope>test</scope>
-        </dependency>
-
         <dependency>
             <groupId>org.motechproject.nms</groupId>
             <artifactId>region</artifactId>

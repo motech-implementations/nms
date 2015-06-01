@@ -51,7 +51,7 @@ public class LocationDataImportController {
     @ResponseStatus(HttpStatus.OK)
     public void importLocationData(@RequestParam MultipartFile csvFile, @PathVariable String location) {
         try {
-            try(InputStream in = csvFile.getInputStream()) {
+            try (InputStream in = csvFile.getInputStream()) {
                 LocationDataImportService importService = getLocationDataImportServiceMapping().get(location);
                 if (null != importService) {
                     importService.importData(new InputStreamReader(in));
