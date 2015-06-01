@@ -15,7 +15,7 @@ public class SettingsServiceImpl implements SettingsService {
     private SettingsFacade settingsFacade;
 
     @Autowired
-    public SettingsServiceImpl(@Qualifier("maImiSettings") SettingsFacade settingsFacade) {
+    public SettingsServiceImpl(@Qualifier("maSettings") SettingsFacade settingsFacade) {
 
         this.settingsFacade = settingsFacade;
     }

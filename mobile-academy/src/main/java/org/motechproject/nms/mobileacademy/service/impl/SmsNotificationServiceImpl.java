@@ -63,14 +63,14 @@ public class SmsNotificationServiceImpl implements SmsNotificationService {
 
     @Autowired
     public SmsNotificationServiceImpl(CompletionRecordDataService completionRecordDataService,
-                                      @Qualifier("maImiSettings") SettingsFacade settingsFacade,
+                                      @Qualifier("maSettings") SettingsFacade settingsFacade,
                                       AlertService alertService) {
         this.completionRecordDataService = completionRecordDataService;
         this.settingsFacade = settingsFacade;
         this.alertService = alertService;
     }
 
-    @MotechListener(subjects = {COURSE_COMPLETED_SUBJECT})
+    @MotechListener(subjects = { COURSE_COMPLETED_SUBJECT } )
     public void sendSmsNotification(MotechEvent event) {
 
         LOGGER.debug("Handling course completion notification event");
@@ -87,7 +87,7 @@ public class SmsNotificationServiceImpl implements SmsNotificationService {
         completionRecordDataService.update(cr);
     }
 
-    @MotechListener(subjects = {SMS_STATUS_SUBJECT})
+    @MotechListener(subjects = { SMS_STATUS_SUBJECT })
     public void updateSmsStatus(MotechEvent event) {
 
         LOGGER.debug("Handling update sms delivery status event");

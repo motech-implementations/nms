@@ -7,9 +7,9 @@ import org.motechproject.nms.region.repository.HealthBlockDataService;
 import org.motechproject.nms.region.repository.HealthFacilityDataService;
 import org.motechproject.nms.region.repository.HealthFacilityTypeDataService;
 import org.motechproject.nms.region.service.HealthFacilityImportService;
-import org.motechproject.nms.region.utils.GetInstanceByLong;
-import org.motechproject.nms.region.utils.GetLong;
-import org.motechproject.nms.region.utils.GetString;
+import org.motechproject.nms.csv.utils.GetInstanceByLong;
+import org.motechproject.nms.csv.utils.GetLong;
+import org.motechproject.nms.csv.utils.GetString;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.supercsv.cellprocessor.ift.CellProcessor;
@@ -30,7 +30,7 @@ public class HealthFacilityImportServiceImpl extends BaseLocationImportService<H
     public static final String REGIONAL_NAME_FIELD = "regionalName";
     public static final String NAME_FIELD = "name";
     public static final String BID_FIELD = "healthBlock";
-    public static final String FACILITY_TYPE_FIELD= "healthFacilityType";
+    public static final String FACILITY_TYPE_FIELD = "healthFacilityType";
 
     private HealthBlockDataService healthBlockDataService;
     private HealthFacilityTypeDataService healthFacilityTypeDataService;

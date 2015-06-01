@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Entity(maxFetchDepth = -1, tableName = "nms_subscriptions")
-@Index(name="status_endDate_composit_idx", members={"status", "endDate"})
+@Index(name = "status_endDate_composit_idx", members = { "status", "endDate" })
 public class Subscription {
 
     private static final int DAYS_IN_WEEK = 7;
