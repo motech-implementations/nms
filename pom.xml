@@ -52,7 +52,6 @@
         <spring.osgi.core.version>1.2.1</spring.osgi.core.version>
 
         <javax.persistence.version>2.1.0</javax.persistence.version>
-        <exam.version>4.2.0</exam.version>
 
         <check.code.skip>${maven.test.skip}</check.code.skip>
         <pmd.skip>${check.code.skip}</pmd.skip>
