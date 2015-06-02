@@ -7,6 +7,7 @@ import org.motechproject.mds.annotations.Field;
 import javax.jdo.annotations.Column;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -47,11 +48,14 @@ public class InboxCallDetailRecord {
     @Field
     private Set<InboxCallData> content;
 
-    public InboxCallDetailRecord() { }
+    public InboxCallDetailRecord() {
+        this(null, null, null, null, null, null, null, null, null, null);
+    }
 
-    public InboxCallDetailRecord(Long callingNumber, String operator, String circle, // NO CHECKSTYLE More than 7 parameters
-                                 Long callId, DateTime callStartTime, DateTime callEndTime, Integer callDurationInPulses,
-                                 Integer callStatus, Integer callDisconnectReason, Set<InboxCallData> content) {
+    public InboxCallDetailRecord(Long callingNumber, String operator, // NO CHECKSTYLE More than 7 parameters
+                                 String circle, Long callId, DateTime callStartTime, DateTime callEndTime,
+                                 Integer callDurationInPulses, Integer callStatus, Integer callDisconnectReason,
+                                 Set<InboxCallData> content) {
         this.callingNumber = callingNumber;
         this.operator = operator;
         this.circle = circle;
@@ -61,7 +65,11 @@ public class InboxCallDetailRecord {
         this.callDurationInPulses = callDurationInPulses;
         this.callStatus = callStatus;
         this.callDisconnectReason = callDisconnectReason;
-        this.content = content;
+        if (content == null) {
+            this.content = new HashSet<>();
+        } else {
+            this.content = content;
+        }
     }
 
     public Long getCallingNumber() {

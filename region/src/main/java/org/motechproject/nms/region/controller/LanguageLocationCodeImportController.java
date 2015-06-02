@@ -3,7 +3,7 @@ package org.motechproject.nms.region.controller;
 import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.alerts.domain.AlertStatus;
 import org.motechproject.alerts.domain.AlertType;
-import org.motechproject.nms.region.exception.CsvImportException;
+import org.motechproject.nms.csv.exception.CsvImportException;
 import org.motechproject.nms.region.service.LanguageLocationCodesImportService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +32,7 @@ public class LanguageLocationCodeImportController {
     @ResponseStatus(HttpStatus.OK)
     public void importLanguageLocationCodes(@RequestParam MultipartFile csvFile) {
         try {
-            try(InputStream in = csvFile.getInputStream()) {
+            try (InputStream in = csvFile.getInputStream()) {
                 languageLocationCodesImportService.importData(new InputStreamReader(in));
             }
         } catch (CsvImportException e) {

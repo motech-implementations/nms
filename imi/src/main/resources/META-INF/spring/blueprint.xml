@@ -17,6 +17,9 @@
 
     <osgi:service ref="settingsService" interface="org.motechproject.nms.imi.service.SettingsService" />
 
+    <osgi:service ref="imiItService"
+                  interface="org.motechproject.nms.imi.service.IntegrationTestService" />
+
 
     <osgi:reference id="fileAuditRecordDataService"
                     interface="org.motechproject.nms.imi.repository.FileAuditRecordDataService" />

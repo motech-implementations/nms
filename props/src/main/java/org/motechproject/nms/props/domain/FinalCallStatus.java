@@ -9,6 +9,9 @@ public enum FinalCallStatus {
     REJECTED(3);
 
     private final int value;
+    private static final int SU = 1;
+    private static final int FA = 2;
+    private static final int RE = 3;
 
     FinalCallStatus(int value) {
         this.value = value;
@@ -19,13 +22,13 @@ public enum FinalCallStatus {
     }
 
     public static boolean isValidEnumValue(int i) {
-        return (i == 1 || i ==2 || i == 3);
+        return (i == SU || i == FA || i == RE);
     }
 
     public static FinalCallStatus fromInt(int i) {
-        if (i == 1) { return SUCCESS; }
-        if (i == 2) { return FAILED; }
-        if (i == 3) { return REJECTED; }
+        if (i == SU) { return SUCCESS; }
+        if (i == FA) { return FAILED; }
+        if (i == RE) { return REJECTED; }
         throw new IllegalArgumentException(String.format("%d is an invalid FinalCallStatus", i));
     }
 
