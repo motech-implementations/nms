@@ -391,6 +391,107 @@ public class CsrServiceBundleIT extends BasePaxIT {
         assertEquals(0, callRetryDataService.count());
     }
 
+
+    @Test
+    public void verifyFT144() {
+
+        String timestamp = DateTime.now().toString(TIME_FORMATTER);
+
+        // To check that NMS shall retry the OBD messages which failed as IVR did not attempt OBD for those messages.
+
+        SubscriptionHelper sh = new SubscriptionHelper(subscriptionService, subscriberDataService,
+                subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
+                stateDataService, districtDataService);
+
+        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now());
+        String contentFileName = sh.getContentMessageFile(subscription, 0);
+        CallRetry retry = callRetryDataService.create(new CallRetry(
+                subscription.getSubscriptionId(),
+                subscription.getSubscriber().getCallingNumber(),
+                DayOfTheWeek.today(),
+                CallStage.RETRY_1,
+                contentFileName,
+                "XXX",
+                "XXX",
+                "XX",
+                SubscriptionOrigin.MCTS_IMPORT
+        ));
+
+
+        Map<Integer, Integer> callStats = new HashMap<>();
+        callStats.put(StatusCode.OBD_FAILED_NOATTEMPT.getValue(),1);
+        CallSummaryRecordDto record = new CallSummaryRecordDto(
+                new RequestId(subscription.getSubscriptionId(), timestamp),
+                subscription.getSubscriber().getCallingNumber(),
+                contentFileName,
+                "XXX",
+                "XXX",
+                "XX",
+                FinalCallStatus.FAILED,
+                callStats,
+                0,
+                1
+        );
+
+
+        Map<String, Object> eventParams = new HashMap<>();
+        eventParams.put(CSR_PARAM_KEY, record);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
+        csrService.processCallSummaryRecord(motechEvent);
+
+        // There should be one calls to retry since the one above was the last failed with No attempt
+        assertEquals(1, callRetryDataService.count());
+
+        List<CallRetry> retries = callRetryDataService.retrieveAll();
+
+        assertEquals(subscription.getSubscriptionId(), retries.get(0).getSubscriptionId());
+        assertEquals(CallStage.RETRY_2, retries.get(0).getCallStage());
+        assertEquals(DayOfTheWeek.today().nextDay(),retries.get(0).getDayOfTheWeek());
+
+    }
+
+
+
+    @Test
+    public void verifyFT149() {
+
+        String timestamp = DateTime.now().toString(TIME_FORMATTER);
+
+        // To check that NMS shall not retry the OBD messages which failed due to user number in dnd.
+
+        SubscriptionHelper sh = new SubscriptionHelper(subscriptionService, subscriberDataService,
+                subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
+                stateDataService, districtDataService);
+
+        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now());
+        String contentFileName = sh.getContentMessageFile(subscription, 0);
+
+        Map<Integer, Integer> callStats = new HashMap<>();
+        callStats.put(StatusCode.OBD_DNIS_IN_DND.getValue(),1);
+        CallSummaryRecordDto record = new CallSummaryRecordDto(
+                new RequestId(subscription.getSubscriptionId(), timestamp),
+                subscription.getSubscriber().getCallingNumber(),
+                contentFileName,
+                "XXX",
+                "XXX",
+                "XX",
+                FinalCallStatus.REJECTED,
+                callStats,
+                0,
+                1
+        );
+
+
+        Map<String, Object> eventParams = new HashMap<>();
+        eventParams.put(CSR_PARAM_KEY, record);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
+        csrService.processCallSummaryRecord(motechEvent);
+
+        // There should be no calls to retry since the one above was the last rejected with DND reason
+        assertEquals(0, callRetryDataService.count());
+    }
+
+
     //todo: verify multiple days' worth of summary record aggregation
     //todo: verify more stuff I can't think of now
 }
