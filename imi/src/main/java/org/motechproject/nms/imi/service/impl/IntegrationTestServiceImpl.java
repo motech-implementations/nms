@@ -26,7 +26,7 @@ public class IntegrationTestServiceImpl implements IntegrationTestService {
     public void deleteAll() {
 
         if (!Boolean.parseBoolean(settingsFacade.getProperty(TESTING_ENVIRONMENT))) {
-            throw new IllegalStateException("calling clearDatabase() in a production environment is forbidden!");
+            throw new IllegalStateException("calling deleteAll() in a production environment is forbidden!");
         }
 
         fileAuditRecordDataService.deleteAll();

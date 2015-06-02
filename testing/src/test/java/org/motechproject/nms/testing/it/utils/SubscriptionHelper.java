@@ -1,4 +1,4 @@
-package org.motechproject.nms.testing.it.imi;
+package org.motechproject.nms.testing.it.utils;
 
 
 import org.joda.time.DateTime;
@@ -144,7 +144,7 @@ public class SubscriptionHelper {
     }
 
     public District makeDistrict() {
-        District district = districtDataService.findByCode(1L);
+        District district = districtDataService.findById(1L);
         if (district != null) {
             return district;
         }
@@ -168,6 +168,11 @@ public class SubscriptionHelper {
     }
 
 
+    public int getLastMessageIndex(Subscription sub) {
+        return sub.getSubscriptionPack().getMessages().size() - 1;
+    }
+
+
     public String getWeekId(Subscription sub, int index) {
         return sub.getSubscriptionPack().getMessages().get(index).getWeekId();
     }
@@ -188,6 +193,7 @@ public class SubscriptionHelper {
     public String getContentMessageFile(Subscription sub, int index) {
         return sub.getSubscriptionPack().getMessages().get(index).getMessageFileName();
     }
+
 
     public Subscription mksub(SubscriptionOrigin origin, DateTime startDate) {
         createSubscriptionPacks();
