@@ -342,8 +342,12 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
     @Test
     public void verifyFT140() {
+        /**
+         * To check that NMS shall not retry OBD message for which all OBD attempts(1 actual+3 retry) fails with
+         * single message per week configuration.
+         */
 
-        String timestamp = DateTime.now().toString(TIME_FORMATTER);
+            String timestamp = DateTime.now().toString(TIME_FORMATTER);
 
         // Create a record in the CallRetry table marked as "last try" and verify it is erased from the
         // CallRetry table
