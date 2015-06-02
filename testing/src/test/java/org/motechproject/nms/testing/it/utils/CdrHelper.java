@@ -1,4 +1,4 @@
-package org.motechproject.nms.testing.it.imi;
+package org.motechproject.nms.testing.it.utils;
 
 import org.apache.commons.codec.binary.Hex;
 import org.joda.time.DateTime;
