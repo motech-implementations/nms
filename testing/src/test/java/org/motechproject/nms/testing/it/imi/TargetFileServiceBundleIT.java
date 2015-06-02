@@ -109,7 +109,26 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
     @Inject
     TestingService testingService;
 
-    private void setupDatabase() {
+
+    Circle aa;
+    Circle bb;
+    LanguageLocation hindi;
+    LanguageLocation urdu;
+    SubscriptionPack childPack;
+    SubscriptionPack pregnancyPack;
+
+
+    private String setupTestDir(String property, String dir) {
+        String backup = settingsService.getSettingsFacade().getProperty(property);
+        File directory = new File(System.getProperty("user.home"), dir);
+        directory.mkdirs();
+        settingsService.getSettingsFacade().setProperty(property, directory.getAbsolutePath());
+        return backup;
+    }
+
+
+    @Before
+    public void setupDatabase() {
 
         testingService.clearDatabase();
 
@@ -125,61 +144,31 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
 
         stateDataService.create(state);
 
-        Circle aa = new Circle("AA");
-        Circle bb = new Circle("BB");
+        aa = new Circle("AA");
+        bb = new Circle("BB");
 
-        LanguageLocation hindi = new LanguageLocation("HI", aa, new Language("Hindi"), false);
+        hindi = new LanguageLocation("HI", aa, new Language("Hindi"), false);
         hindi.getDistrictSet().add(district);
         hindi = languageLocationDataService.create(hindi);
 
-        LanguageLocation urdu = new LanguageLocation("UR", aa, new Language("Urdu"), false);
+        urdu = new LanguageLocation("UR", aa, new Language("Urdu"), false);
         urdu.getDistrictSet().add(district);
         urdu = languageLocationDataService.create(urdu);
 
 
-        SubscriptionPack childPack = subscriptionPackDataService.create(
-                    SubscriptionPackBuilder.createSubscriptionPack(
-                            "childPack",
-                            SubscriptionPackType.CHILD,
-                            SubscriptionPackBuilder.CHILD_PACK_WEEKS,
-                            1));
+        childPack = subscriptionPackDataService.create(
+                SubscriptionPackBuilder.createSubscriptionPack(
+                        "childPack",
+                        SubscriptionPackType.CHILD,
+                        SubscriptionPackBuilder.CHILD_PACK_WEEKS,
+                        1));
 
-        SubscriptionPack pregnancyPack = subscriptionPackDataService.create(
-                    SubscriptionPackBuilder.createSubscriptionPack(
-                            "pregnancyPack",
-                            SubscriptionPackType.PREGNANCY,
-                            SubscriptionPackBuilder.PREGNANCY_PACK_WEEKS,
-                            2));
-
-        Subscriber subscriber1 = new Subscriber(1111111111L, hindi, aa);
-        subscriber1.setLastMenstrualPeriod(DateTime.now().minusDays(90)); // startDate will be today
-        subscriberDataService.create(subscriber1);
-
-        subscriptionService.createSubscription(1111111111L, hindi, pregnancyPack, SubscriptionOrigin.MCTS_IMPORT);
-
-        Subscriber subscriber2 = new Subscriber(2222222222L, urdu, bb);
-        subscriber2.setDateOfBirth(DateTime.now()); // startDate will be today
-        subscriberDataService.create(subscriber2);
-
-        Subscription s = subscriptionService.createSubscription(2222222222L, urdu, childPack,
-                SubscriptionOrigin.MCTS_IMPORT);
-        subscriptionService.deactivateSubscription(s, DeactivationReason.CHILD_DEATH);
-
-        callRetryDataService.create(new CallRetry("11111111-1111-1111-1111-111111111111", 3333333333L, 
-                DayOfTheWeek.today(), CallStage.RETRY_1, "w1_m1.wav", "w1_1", hindi.getCode(), aa.getName(), 
-                SubscriptionOrigin.IVR));
-        callRetryDataService.create(new CallRetry("22222222-2222-2222-2222-222222222222", 4444444444L,
-                DayOfTheWeek.today().nextDay(), CallStage.RETRY_1, "w1_m1.wav", "w1_1", hindi.getCode(),
-                bb.getName(), SubscriptionOrigin.MCTS_IMPORT));
-    }
-
-
-    private String setupTestDir(String property, String dir) {
-        String backup = settingsService.getSettingsFacade().getProperty(property);
-        File directory = new File(System.getProperty("user.home"), dir);
-        directory.mkdirs();
-        settingsService.getSettingsFacade().setProperty(property, directory.getAbsolutePath());
-        return backup;
+        pregnancyPack = subscriptionPackDataService.create(
+                SubscriptionPackBuilder.createSubscriptionPack(
+                        "pregnancyPack",
+                        SubscriptionPackType.PREGNANCY,
+                        SubscriptionPackBuilder.PREGNANCY_PACK_WEEKS,
+                        2));
     }
 
 
@@ -199,13 +188,43 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
 
     @Test
     public void testTargetFileGeneration() throws NoSuchAlgorithmException, IOException {
-        setupDatabase();
+
+        Subscriber subscriber1 = new Subscriber(1111111111L, hindi, aa);
+        subscriber1.setLastMenstrualPeriod(DateTime.now().minusDays(90)); // startDate will be today
+        subscriberDataService.create(subscriber1);
+        subscriptionService.createSubscription(1111111111L, hindi, pregnancyPack, SubscriptionOrigin.MCTS_IMPORT);
+
+
+        // Should not be picked up because it's been deactivated
+        Subscriber subscriber2 = new Subscriber(2222222222L, urdu, bb);
+        subscriber2.setLastMenstrualPeriod(DateTime.now().minusDays(90)); // startDate will be today
+        subscriberDataService.create(subscriber2);
+        Subscription subscription2 = subscriptionService.createSubscription(2222222222L, urdu, pregnancyPack,
+                SubscriptionOrigin.MCTS_IMPORT);
+        subscriptionService.deactivateSubscription(subscription2, DeactivationReason.CHILD_DEATH);
+
+        //Should not be picked up because it's not for today
+        Subscriber subscriber3 = new Subscriber(6666666666L, urdu, bb);
+        subscriber3.setDateOfBirth(DateTime.now().plusDays(1)); // startDate is DOB + 1 for child packs,
+                                                    // so setting the DOB tomorrow this should be picked up
+                                                    // the day after tomorrow
+        subscriberDataService.create(subscriber3);
+        subscriptionService.createSubscription(6666666666L, urdu, childPack, SubscriptionOrigin.IVR);
+
+
+        // Should not be picked up because it's not for today
+        callRetryDataService.create(new CallRetry("11111111-1111-1111-1111-111111111111", 3333333333L,
+                DayOfTheWeek.today().nextDay(), CallStage.RETRY_1, "w1_m1.wav", "w1_1", hindi.getCode(),
+                aa.getName(), SubscriptionOrigin.IVR));
+
+
         TargetFileNotification tfn = targetFileService.generateTargetFile();
         assertNotNull(tfn);
 
-        // Should not pickup subscription2 because its status is COMPLETED nor callRetry 546 because it's for
-        // tomorrow
-        assertEquals(2, (int) tfn.getRecordCount());
+        // Should not pickup subscription2 because its status is not ACTIVE
+        // Should not pickup subscription3 because it's for tomorrow
+        // Should not pickup call retry record because it's for tomorrow also
+        assertEquals(1, (int) tfn.getRecordCount());
 
         //read the file to get checksum & record count
         File targetDir = new File(settingsService.getSettingsFacade().getProperty("imi.local_obd_dir"));
