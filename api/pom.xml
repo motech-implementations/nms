@@ -25,14 +25,6 @@
             <version>${motech.version}</version>
         </dependency>
 
-        <!-- OSGi IT -->
-        <dependency>
-            <groupId>org.motechproject</groupId>
-            <artifactId>motech-pax-it</artifactId>
-            <version>${motech.version}</version>
-            <scope>test</scope>
-        </dependency>
-
         <!-- Repository -->
         <dependency>
             <groupId>org.motechproject</groupId>
@@ -75,11 +67,13 @@
             <artifactId>spring-test-mvc</artifactId>
             <scope>test</scope>
         </dependency>
+
         <dependency>
-            <groupId>org.modelmapper.extensions</groupId>
-            <artifactId>modelmapper-spring</artifactId>
-            <version>0.7.4</version>
+            <groupId>org.hibernate</groupId>
+            <artifactId>org.motechproject.org.hibernate.validator</artifactId>
+            <version>4.1.0.Final-${external.dependency.release.tag}</version>
         </dependency>
+
     </dependencies>
 
     <repositories>
@@ -117,6 +111,7 @@
                             org.motechproject.nms.api.web.contract.kilkari,
                             org.motechproject.nms.api.web.contract.mobileAcademy,
                             org.motechproject.nms.api.web.contract.mobileAcademy.course,
+                            org.motechproject.nms.api.web.contract.mobileAcademy.sms,
                             org.motechproject.nms.api.web.converter,
                         </Export-Package>
                         <Import-Package>
@@ -128,9 +123,7 @@
                             net.sf.cglib.proxy,
                             net.sf.cglib.reflect,
                             org.springframework.transaction,
-                            org.modelmapper.internal.cglib.proxy,
-                            org.modelmapper.internal.cglib.core,
-                            org.modelmapper.internal.cglib.transform,
+                            org.hibernate.validator,
                             *
                         </Import-Package>
                     </instructions>

@@ -2,8 +2,8 @@ package org.motechproject.nms.api.ut;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.motechproject.event.listener.EventRelay;
 import org.motechproject.nms.api.web.BaseController;
 import org.motechproject.nms.api.web.MobileAcademyController;
 import org.motechproject.nms.api.web.contract.mobileAcademy.SaveBookmarkRequest;
@@ -16,14 +16,17 @@ import static org.mockito.MockitoAnnotations.initMocks;
  */
 public class MobileAcademyControllerUnitTest {
 
+    private MobileAcademyController mobileAcademyController;
+    
     @Mock
     private MobileAcademyService mobileAcademyService;
 
-    @InjectMocks
-    private MobileAcademyController mobileAcademyController = new MobileAcademyController();
+    @Mock
+    private EventRelay eventRelay;
 
     @Before
     public void setup() {
+        mobileAcademyController = new MobileAcademyController(mobileAcademyService, eventRelay);
         initMocks(this);
     }
 
@@ -41,6 +44,11 @@ public class MobileAcademyControllerUnitTest {
         sb.setCallingNumber(999999999L);
         sb.setCallId(BaseController.SMALLEST_15_DIGIT_NUMBER);
         mobileAcademyController.saveBookmarkWithScore(sb);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testNullBookmark() {
+        mobileAcademyController.saveBookmarkWithScore(null);
     }
 
     @Test(expected = IllegalArgumentException.class)

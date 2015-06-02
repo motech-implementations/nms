@@ -1,34 +1,49 @@
 package org.motechproject.nms.mobileacademy.ut;
 
+import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.mockito.Mock;
+
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.EventRelay;
 import org.motechproject.mtraining.domain.Bookmark;
-import org.motechproject.mtraining.repository.BookmarkDataService;
+import org.motechproject.mtraining.domain.Course;
+import org.motechproject.mtraining.domain.CourseUnitState;
+import org.motechproject.mtraining.service.BookmarkService;
+import org.motechproject.mtraining.service.MTrainingService;
 import org.motechproject.nms.mobileacademy.domain.CompletionRecord;
-import org.motechproject.nms.mobileacademy.domain.Course;
+import org.motechproject.nms.mobileacademy.domain.NmsCourse;
 import org.motechproject.nms.mobileacademy.dto.MaBookmark;
+import org.motechproject.nms.mobileacademy.repository.NmsCourseDataService;
+import org.motechproject.nms.mobileacademy.service.impl.SmsNotificationServiceImpl;
 import org.motechproject.nms.mobileacademy.exception.CourseNotCompletedException;
 import org.motechproject.nms.mobileacademy.repository.CompletionRecordDataService;
-import org.motechproject.nms.mobileacademy.repository.CourseDataService;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
 import org.motechproject.nms.mobileacademy.service.impl.MobileAcademyServiceImpl;
+import org.motechproject.server.config.SettingsFacade;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import javax.validation.Validator;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.*;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyLong;
+import static org.mockito.Matchers.anyString;
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -42,10 +57,13 @@ public class MobileAcademyServiceUnitTest {
     private MobileAcademyService mobileAcademyService;
 
     @Mock
-    private CourseDataService courseDataService;
+    private MTrainingService mTrainingService;
 
     @Mock
-    private BookmarkDataService bookmarkDataService;
+    private BookmarkService bookmarkService;
+
+    @Mock
+    private NmsCourseDataService nmsCourseDataService;
 
     @Mock
     private CompletionRecordDataService completionRecordDataService;
@@ -53,40 +71,61 @@ public class MobileAcademyServiceUnitTest {
     @Mock
     private EventRelay eventRelay;
 
+    @Mock
+    private SmsNotificationServiceImpl smsNotificationServiceImpl;
+
+    @Mock
+    private SettingsFacade settingsFacade;
+
+    @Mock
+    private AlertService alertService;
+
     private Validator validator;
 
     @Before
     public void setup() {
         initMocks(this);
+        nmsCourseDataService.deleteAll();
+        when(settingsFacade.getRawConfig("nmsCourse.json")).thenReturn(getFileInputStream("nmsCourseTest.json"));
         mobileAcademyService = new MobileAcademyServiceImpl(
-                bookmarkDataService, courseDataService, completionRecordDataService, eventRelay);
+                bookmarkService, nmsCourseDataService, completionRecordDataService, eventRelay, settingsFacade, alertService);
+        smsNotificationServiceImpl = new SmsNotificationServiceImpl(completionRecordDataService, settingsFacade, alertService);
         validator = Validation.buildDefaultValidatorFactory().getValidator();
     }
 
     @Test
     public void getCourseTest() {
-        Course currentCourse = new Course();
-        when(courseDataService.findCourseByName("MobileAcademyCourse")).thenReturn(currentCourse);
-        assertEquals(mobileAcademyService.getCourse(), currentCourse);
+
+        NmsCourse newCourse = new NmsCourse("MobileAcademyCourse", "[]");
+        newCourse.setModificationDate(DateTime.now());
+        nmsCourseDataService.create(newCourse);
+        when(nmsCourseDataService.getCourseByName("MobileAcademyCourse")).thenReturn(newCourse);
+        assertTrue(mobileAcademyService.getCourse().getContent().equals(newCourse.getContent()));
     }
 
     @Test
     public void getBookmarkTest() {
         Bookmark newBookmark = new Bookmark("55", "getBookmarkTest", null, null, null);
 
-        when(bookmarkDataService.findBookmarksForUser(anyString()))
-                .thenReturn(new ArrayList<Bookmark>(Arrays.asList(newBookmark)));
+        when(bookmarkService.getLatestBookmarkByUserId(anyString()))
+                .thenReturn(newBookmark);
 
         MaBookmark mab = mobileAcademyService.getBookmark(55L, 10L);
         assertTrue(mab.getCallingNumber() == 55);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void setBookmarkNullTest() {
+
+        mobileAcademyService.setBookmark(null);
     }
 
     @Test
     public void setNewBookmarkTest() {
         MaBookmark mab = new MaBookmark(1234567890L, 123456789011121L, "Chapter1_Lesson1", null);
 
-        when(bookmarkDataService.create(any(Bookmark.class))).thenReturn(new Bookmark());
-        when(bookmarkDataService.findBookmarksForUser(anyString())).thenReturn(new ArrayList<Bookmark>());
+        when(bookmarkService.createBookmark(any(Bookmark.class))).thenReturn(new Bookmark());
+        when(bookmarkService.getLatestBookmarkByUserId(anyString())).thenReturn(null);
         mobileAcademyService.setBookmark(mab);
     }
 
@@ -94,10 +133,10 @@ public class MobileAcademyServiceUnitTest {
     public void setUpdateBookmarkTest() {
         MaBookmark mab = new MaBookmark(1234567890L, 123456789011121L, "Chapter1_Lesson1", null);
 
-        when(bookmarkDataService.create(any(Bookmark.class)))
+        when(bookmarkService.createBookmark(any(Bookmark.class)))
                 .thenReturn(new Bookmark());
-        when(bookmarkDataService.findBookmarksForUser(anyString()))
-                .thenReturn(new ArrayList<>(Arrays.asList(new Bookmark())));
+        when(bookmarkService.getLatestBookmarkByUserId(anyString()))
+                .thenReturn(new Bookmark());
         mobileAcademyService.setBookmark(mab);
     }
 
@@ -137,8 +176,8 @@ public class MobileAcademyServiceUnitTest {
         Map<String, Object> progress = new HashMap<>();
         progress.put("scoresByChapter", scores);
         Bookmark newBookmark = new Bookmark("55", "getBookmarkTest", "Chapter11", "Quiz", progress);
-        when(bookmarkDataService.findBookmarksForUser(anyString()))
-                .thenReturn(new ArrayList<Bookmark>(Arrays.asList(newBookmark)));
+        when(bookmarkService.getLatestBookmarkByUserId(anyString()))
+                .thenReturn(newBookmark);
 
         MaBookmark retreived = mobileAcademyService.getBookmark(55L, 56L);
         assertNull(retreived.getBookmark());
@@ -156,11 +195,11 @@ public class MobileAcademyServiceUnitTest {
         progress.put("scoresByChapter", scores);
         Bookmark newBookmark = new Bookmark("55", "getBookmarkTest", "Chapter11", "Quiz", progress);
 
-        when(bookmarkDataService.findBookmarksForUser(anyString()))
-                .thenReturn(new ArrayList<Bookmark>(Arrays.asList(newBookmark)));
-        MaBookmark retreived = mobileAcademyService.getBookmark(55L, 56L);
-        assertNotNull(retreived.getBookmark());
-        assertNotNull(retreived.getScoresByChapter());
+        when(bookmarkService.getLatestBookmarkByUserId(anyString()))
+                .thenReturn(newBookmark);
+        MaBookmark retrieved = mobileAcademyService.getBookmark(55L, 56L);
+        assertNotNull(retrieved.getBookmark());
+        assertNotNull(retrieved.getScoresByChapter());
     }
 
     @Test
@@ -179,6 +218,19 @@ public class MobileAcademyServiceUnitTest {
         assertEquals("callingNumber must be 10 digits", cv.iterator().next().getMessage());
     }
 
+    @Test
+    public void testStatusUpdateNotification() {
+        MotechEvent event = new MotechEvent();
+        event.getParameters().put("address", "tel: 9876543210");
+        event.getParameters().put("deliveryStatus", "DeliveredToTerminal");
+        CompletionRecord cr = new CompletionRecord(9876543210L, 34, true, 1);
+        assertNull(cr.getLastDeliveryStatus());
+
+        when(completionRecordDataService.findRecordByCallingNumber(anyLong())).thenReturn(cr);
+        smsNotificationServiceImpl.updateSmsStatus(event);
+        assertTrue(cr.getLastDeliveryStatus().equals("DeliveredToTerminal"));
+    }
+
     @Test(expected = CourseNotCompletedException.class)
     public void testNotificationTriggerException() {
         when(completionRecordDataService.findRecordByCallingNumber(anyLong())).thenReturn(null);
@@ -190,6 +242,8 @@ public class MobileAcademyServiceUnitTest {
         CompletionRecord cr = new CompletionRecord(1234567890L, 22);
         when(completionRecordDataService.findRecordByCallingNumber(anyLong())).thenReturn(cr);
         mobileAcademyService.triggerCompletionNotification(1234567890L);
+        mobileAcademyService.triggerCompletionNotification(1234567890L);
+        assertFalse(cr.isSentNotification());
     }
 
     @Test
@@ -207,7 +261,19 @@ public class MobileAcademyServiceUnitTest {
                 }
         );
 
-        mobileAcademyService.triggerCompletionNotification(1234567890L);
-        assertFalse(cr.isSentNotification());
+    }
+
+    private InputStream getFileInputStream(String fileName) {
+
+        try {
+            return new FileInputStream(
+                    new File(
+                            Thread.currentThread()
+                                    .getContextClassLoader()
+                                    .getResource("nmsCourseTest.json")
+                                    .getPath()));
+        } catch (IOException io) {
+            return null;
+        }
     }
 }

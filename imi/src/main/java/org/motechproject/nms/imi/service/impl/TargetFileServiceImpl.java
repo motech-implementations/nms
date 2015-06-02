@@ -2,13 +2,8 @@ package org.motechproject.nms.imi.service.impl;
 
 
 import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
@@ -22,9 +17,11 @@ import org.motechproject.mds.query.QueryParams;
 import org.motechproject.nms.imi.domain.FileAuditRecord;
 import org.motechproject.nms.imi.domain.FileProcessedStatus;
 import org.motechproject.nms.imi.domain.FileType;
+import org.motechproject.nms.imi.exception.ExecException;
+import org.motechproject.nms.imi.exception.InternalException;
 import org.motechproject.nms.imi.repository.FileAuditRecordDataService;
-import org.motechproject.nms.imi.service.contract.TargetFileNotification;
 import org.motechproject.nms.imi.service.TargetFileService;
+import org.motechproject.nms.imi.service.contract.TargetFileNotification;
 import org.motechproject.nms.imi.web.contract.FileProcessedStatusRequest;
 import org.motechproject.nms.kilkari.domain.CallRetry;
 import org.motechproject.nms.kilkari.domain.Subscriber;
@@ -57,10 +54,10 @@ import java.util.List;
 
 @Service("targetFileService")
 public class TargetFileServiceImpl implements TargetFileService {
+    private static final String LOCAL_OBD_DIR = "imi.local_obd_dir";
     private static final String TARGET_FILE_TIME = "imi.target_file_time";
     private static final String MAX_QUERY_BLOCK = "imi.max_query_block";
     private static final String TARGET_FILE_MS_INTERVAL = "imi.target_file_ms_interval";
-    private static final String TARGET_FILE_DIRECTORY = "imi.target_file_directory";
     private static final String TARGET_FILE_NOTIFICATION_URL = "imi.target_file_notification_url";
     private static final String TARGET_FILE_IMI_SERVICE_ID = "imi.target_file_imi_service_id";
     private static final String TARGET_FILE_CALL_FLOW_URL = "imi.target_file_call_flow_url";
@@ -136,37 +133,14 @@ public class TargetFileServiceImpl implements TargetFileService {
     }
 
 
-    private String targetFileName() {
-        return String.format("OBD_%s.csv", TIME_FORMATTER.print(DateTime.now()));
+    private String targetFileName(String timestamp) {
+        return String.format("OBD_%s.csv", timestamp);
     }
 
 
-    private void insertTargetFileAuditRecord(TargetFileNotification tfn, String status) {
-        fileAuditRecordDataService.create(new FileAuditRecord(FileType.TARGET_FILE, tfn.getFileName(), status,
-                tfn.getRecordCount(), tfn.getChecksum()));
-    }
-
-
-    //todo: verify we can do that - if the shared directory is an FTP share this might not work
-    private File createTargetFileDirectory() {
-        File userHome = new File(System.getProperty("user.home"));
-        File targetFileDirectory = new File(userHome, settingsFacade.getProperty(TARGET_FILE_DIRECTORY));
-
-        if (targetFileDirectory.exists()) {
-            LOGGER.debug("targetFile directory exists: {}", targetFileDirectory);
-        } else {
-            LOGGER.debug("creating targetFile directory: {}", targetFileDirectory);
-            if (!targetFileDirectory.mkdirs()) {
-                String error = String.format("Unable to create targetFileDirectory %s: mkdirs() failed",
-                        targetFileDirectory);
-                LOGGER.error(error);
-                alertService.create(targetFileDirectory.toString(), "targetFileDirectory", "mkdirs() failed",
-                        AlertType.CRITICAL, AlertStatus.NEW, 0, null);
-                insertTargetFileAuditRecord(new TargetFileNotification(), error);
-                throw new IllegalStateException();
-            }
-        }
-        return targetFileDirectory;
+    // Helper method that makes the code a bit cleaner
+    private void alert(String id, String name, String description) {
+        alertService.create(id, name, description, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
     }
 
 
@@ -267,10 +241,10 @@ public class TargetFileServiceImpl implements TargetFileService {
     }
 
 
-    private int generateFreshCalls(DateTime today, int maxQueryBlock, String imiServiceId, String callFlowUrl,
-                                   String targetFileName, OutputStreamWriter writer) throws IOException {
+    private int generateFreshCalls(DateTime timestamp, int maxQueryBlock, String imiServiceId,
+                                   String callFlowUrl, OutputStreamWriter writer) throws IOException {
 
-        DayOfTheWeek dow = DayOfTheWeek.fromDateTime(today);
+        DayOfTheWeek dow = DayOfTheWeek.fromDateTime(timestamp);
         int recordCount = 0;
         int page = 1;
         int numBlockRecord;
@@ -293,12 +267,14 @@ public class TargetFileServiceImpl implements TargetFileService {
                 Circle circle;
                 circle = (Circle) subscriberDataService.getDetachedField(subscriber, "circle");
 
-                RequestId requestId = new RequestId(subscription.getSubscriptionId(), targetFileName);
-                SubscriptionPackMessage msg = subscription.nextScheduledMessage(today);
+                RequestId requestId = new RequestId(subscription.getSubscriptionId(),
+                        TIME_FORMATTER.print(timestamp));
+                SubscriptionPackMessage msg = subscription.nextScheduledMessage(timestamp);
                 //todo: how do we choose a priority?
-                writeSubscriptionRow(requestId.toString(), imiServiceId, subscriber.getCallingNumber().toString(),
-                        NORMAL_PRIORITY, callFlowUrl, msg.getMessageFileName(), msg.getWeekId(),
-                        languageLocation.getCode(), circle.getName(), subscription.getOrigin().getCode(), writer);
+                writeSubscriptionRow(requestId.toString(), imiServiceId,
+                        subscriber.getCallingNumber().toString(), NORMAL_PRIORITY, callFlowUrl,
+                        msg.getMessageFileName(), msg.getWeekId(), languageLocation.getCode(), circle.getName(),
+                        subscription.getOrigin().getCode(), writer);
             }
 
             page++;
@@ -310,10 +286,10 @@ public class TargetFileServiceImpl implements TargetFileService {
     }
 
 
-    private int generateRetryCalls(DateTime today, int maxQueryBlock, String imiServiceId, String callFlowUrl,
-                                   String targetFileName, OutputStreamWriter writer) throws IOException {
+    private int generateRetryCalls(DateTime timestamp, int maxQueryBlock, String imiServiceId,
+                                   String callFlowUrl, OutputStreamWriter writer) throws IOException {
 
-        DayOfTheWeek dow = DayOfTheWeek.fromDateTime(today);
+        DayOfTheWeek dow = DayOfTheWeek.fromDateTime(timestamp);
         int recordCount = 0;
         int page = 1;
         int numBlockRecord;
@@ -323,7 +299,8 @@ public class TargetFileServiceImpl implements TargetFileService {
             numBlockRecord = callRetries.size();
 
             for (CallRetry callRetry : callRetries) {
-                RequestId requestId = new RequestId(callRetry.getSubscriptionId(), targetFileName);
+                RequestId requestId = new RequestId(callRetry.getSubscriptionId(),
+                        TIME_FORMATTER.print(timestamp));
                 //todo: look into priorities...
                 writeSubscriptionRow(requestId.toString(), imiServiceId, callRetry.getMsisdn().toString(),
                         NORMAL_PRIORITY, callFlowUrl, callRetry.getContentFileName(), callRetry.getWeekId(),
@@ -340,23 +317,23 @@ public class TargetFileServiceImpl implements TargetFileService {
     }
 
 
+    private File localObdDir() {
+        return new File(settingsFacade.getProperty(LOCAL_OBD_DIR));
+    }
+
+
     /*
     /**
      * 4.4.1 Target File Format
      */
     public TargetFileNotification generateTargetFile() {
-        String targetFileName = targetFileName();
-        File targetFileDirectory;
+        DateTime today = DateTime.now();
+        String targetFileName = targetFileName(TIME_FORMATTER.print(today));
+        File localTargetDir = localObdDir();
         MessageDigest md;
         int recordCount = 0;
 
-        try {
-            targetFileDirectory = createTargetFileDirectory();
-        } catch (IllegalStateException e) {
-            return null;
-        }
-
-        File targetFile = new File(targetFileDirectory, targetFileName);
+        File targetFile = new File(localTargetDir, targetFileName);
         try (FileOutputStream fos = new FileOutputStream(targetFile);
             OutputStreamWriter writer = new OutputStreamWriter(fos)) {
 
@@ -373,24 +350,19 @@ public class TargetFileServiceImpl implements TargetFileService {
                 callFlowUrl = "";
             }
 
-            DateTime today = DateTime.now();
-
             //FRESH calls
-            recordCount = generateFreshCalls(today, maxQueryBlock, imiServiceId, callFlowUrl, targetFileName,
-                    writer);
+            recordCount = generateFreshCalls(today, maxQueryBlock, imiServiceId, callFlowUrl, writer);
 
             //Retry calls
-            recordCount += generateRetryCalls(today, maxQueryBlock, imiServiceId, callFlowUrl, targetFileName,
-                    writer);
+            recordCount += generateRetryCalls(today, maxQueryBlock, imiServiceId, callFlowUrl, writer);
 
             LOGGER.debug("Created targetFile with {} record{}", recordCount, recordCount == 1 ? "" : "s");
 
         } catch (NoSuchAlgorithmException | IOException e) {
             LOGGER.error(e.getMessage());
-            alertService.create(targetFile.toString(), "targetFile", e.getMessage(), AlertType.CRITICAL,
-                    AlertStatus.NEW, 0, null);
-            insertTargetFileAuditRecord(new TargetFileNotification(targetFile.toString(), null, null),
-                    e.getMessage());
+            alert(targetFile.toString(), "targetFile", e.getMessage());
+            fileAuditRecordDataService.create(new FileAuditRecord(FileType.TARGET_FILE, targetFile.getName(),
+                    false, e.getMessage(), null, null));
             return null;
         }
 
@@ -399,7 +371,8 @@ public class TargetFileServiceImpl implements TargetFileService {
         LOGGER.debug("TargetFileNotification = {}", tfn.toString());
 
         //audit the success
-        insertTargetFileAuditRecord(tfn, "Success");
+        fileAuditRecordDataService.create(new FileAuditRecord(FileType.TARGET_FILE, tfn.getFileName(), true,
+                null, tfn.getRecordCount(), tfn.getChecksum()));
 
         return tfn;
     }
@@ -409,27 +382,22 @@ public class TargetFileServiceImpl implements TargetFileService {
         String notificationUrl = settingsFacade.getProperty(TARGET_FILE_NOTIFICATION_URL);
         LOGGER.debug("Sending {} to {}", tfn, notificationUrl);
 
+
+        ExponentialRetrySender sender = new ExponentialRetrySender(settingsFacade, alertService);
+
+        HttpPost httpPost = new HttpPost(notificationUrl);
+        ObjectMapper mapper = new ObjectMapper();
+
         try {
-            HttpClient httpClient = HttpClients.createDefault();
-            HttpPost httpPost = new HttpPost(notificationUrl);
-            ObjectMapper mapper = new ObjectMapper();
             String requestJson = mapper.writeValueAsString(tfn);
             httpPost.setHeader("Content-type", "application/json");
             httpPost.setEntity(new StringEntity(requestJson));
-            HttpResponse response = httpClient.execute(httpPost);
-            int responseCode = response.getStatusLine().getStatusCode();
-            if (responseCode != HttpStatus.SC_OK) {
-                String error = String.format("Expecting HTTP 200 response from %s but received HTTP %d : %s ",
-                        notificationUrl, responseCode, EntityUtils.toString(response.getEntity()));
-                LOGGER.error(error);
-                alertService.create("targetFile notification request", "targetFile", error, AlertType.CRITICAL,
-                        AlertStatus.NEW, 0, null);
-            }
         } catch (IOException e) {
-            LOGGER.error("Unable to send targetFile notification request: {}", e.getMessage());
-            alertService.create("targetFile notification request", "targetFile", e.getMessage(), AlertType.CRITICAL,
-                    AlertStatus.NEW, 0, null);
+            throw new InternalException(String.format("Unable to create targetFile notification request: %s",
+                    e.getMessage()), e);
         }
+
+        sender.sendNotificationRequest(httpPost, tfn.getFileName(), "targetFile Notification Request");
     }
 
 
@@ -440,24 +408,50 @@ public class TargetFileServiceImpl implements TargetFileService {
         TargetFileNotification tfn = generateTargetFile();
 
         if (tfn != null) {
+            // Copy the OBD file from the local imi.local_obd_dir to the remote imi.local_obd_dir network share
+            ScpHelper scpHelper = new ScpHelper(settingsFacade);
+            try {
+                scpHelper.scpObdToRemote(tfn.getFileName());
+            } catch (ExecException e) {
+                String error = String.format("Error copying CDR file %s: %s", tfn.getFileName(), e.getMessage());
+                LOGGER.error(error);
+                fileAuditRecordDataService.create(new FileAuditRecord(
+                        FileType.TARGET_FILE,
+                        tfn.getFileName(),
+                        false,
+                        error,
+                        null,
+                        null
+                ));
+                //todo: send alert
+                return;
+            }
+
             //notify the IVR system the file is ready
             sendNotificationRequest(tfn);
         }
     }
 
 
+    /**
+     * Log & audit the fact that IMI processed the OBD file (successfully or not)
+     *
+     * @param request file name & status
+     */
     @Override
     public void handleFileProcessedStatusNotification(FileProcessedStatusRequest request) {
-        if (request.getFileProcessedStatus() == FileProcessedStatus.FILE_PROCESSED_SUCCESSFULLY) {
-            LOGGER.debug(request.toString());
-            //We're happy.
-            //todo: audit that?
-        } else {
+        fileAuditRecordDataService.create(new FileAuditRecord(
+                FileType.TARGET_FILE,
+                request.getFileName(),
+                request.getFileProcessedStatus() == FileProcessedStatus.FILE_PROCESSED_SUCCESSFULLY,
+                request.getFileProcessedStatus().getName(),
+                null,
+                null
+        ));
+        if (request.getFileProcessedStatus() != FileProcessedStatus.FILE_PROCESSED_SUCCESSFULLY) {
             LOGGER.error(request.toString());
             //todo: IT check if alert was created
-            alertService.create(request.getFileName(), "targetFileName", "Target File Processing Error",
-                    AlertType.CRITICAL, AlertStatus.NEW, 0, null);
-            //todo: audit that?
+            alert(request.getFileName(), "targetFileName", "Target File Processing Error");
         }
     }
 }

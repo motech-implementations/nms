@@ -41,4 +41,6 @@
 
     <osgi:reference id="circleService" interface="org.motechproject.nms.region.service.CircleService"/>
 
+    <osgi:reference id="eventRelay" interface="org.motechproject.event.listener.EventRelay"/>
+
 </beans>

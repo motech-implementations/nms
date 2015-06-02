@@ -6,18 +6,33 @@
     <import resource="classpath*:META-INF/motech/*.xml" />
 
     <osgi:service ref="mobileAcademyService"
-        interface="org.motechproject.nms.mobileacademy.service.MobileAcademyService" />
+                  interface="org.motechproject.nms.mobileacademy.service.MobileAcademyService" />
 
-    <osgi:reference id="courseDataService"
-                    interface="org.motechproject.nms.mobileacademy.repository.CourseDataService" />
+    <osgi:service ref="smsNotificationService"
+                  interface="org.motechproject.nms.mobileacademy.service.SmsNotificationService" />
+
+    <osgi:service ref="settingsService"
+                  interface="org.motechproject.nms.mobileacademy.service.SettingsService" />
+
+    <osgi:service ref="maItService"
+                  interface="org.motechproject.nms.mobileacademy.service.IntegrationTestService" />
+
+    <osgi:reference id="nmsCourseDataService"
+                    interface="org.motechproject.nms.mobileacademy.repository.NmsCourseDataService" />
 
     <osgi:reference id="completionRecordDataService"
                     interface="org.motechproject.nms.mobileacademy.repository.CompletionRecordDataService" />
 
-    <osgi:reference id="bookmarkDataService"
-                    interface="org.motechproject.mtraining.repository.BookmarkDataService" />
+    <osgi:reference id="mTrainingService"
+                    interface="org.motechproject.mtraining.service.MTrainingService" />
+
+    <osgi:reference id="bookmarkService"
+                    interface="org.motechproject.mtraining.service.BookmarkService" />
 
     <osgi:reference id="eventRelay"
                     interface="org.motechproject.event.listener.EventRelay"/>
+
+    <osgi:reference id="alertsService"
+                    interface="org.motechproject.alerts.contract.AlertService" />
 
 </beans>

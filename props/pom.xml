@@ -25,12 +25,10 @@
             <version>${motech.version}</version>
         </dependency>
 
-        <!-- OSGi IT -->
         <dependency>
             <groupId>org.motechproject</groupId>
-            <artifactId>motech-pax-it</artifactId>
+            <artifactId>motech-platform-server-config</artifactId>
             <version>${motech.version}</version>
-            <scope>test</scope>
         </dependency>
 
         <!-- Repository -->

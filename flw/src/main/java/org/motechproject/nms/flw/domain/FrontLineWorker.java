@@ -1,17 +1,20 @@
 package org.motechproject.nms.flw.domain;
 
+import org.joda.time.DateTime;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.LanguageLocation;
 
 import javax.jdo.annotations.Column;
+import javax.jdo.annotations.Index;
 import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.Unique;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 
 @Entity(tableName = "nms_front_line_workers")
+@Index(name = "status_invalidationDate_composit_idx", members = { "status", "invalidationDate" })
 public class FrontLineWorker {
 
     @Field
@@ -35,6 +38,9 @@ public class FrontLineWorker {
 
     @Field
     private FrontLineWorkerStatus status;
+
+    @Field
+    private DateTime invalidationDate;
 
     @Field
     private LanguageLocation languageLocation;
@@ -98,6 +104,20 @@ public class FrontLineWorker {
 
     public void setStatus(FrontLineWorkerStatus status) {
         this.status = status;
+
+        if (this.status == FrontLineWorkerStatus.INVALID) {
+            setInvalidationDate(new DateTime());
+        } else {
+            setInvalidationDate(null);
+        }
+    }
+
+    public DateTime getInvalidationDate() {
+        return invalidationDate;
+    }
+
+    public void setInvalidationDate(DateTime invalidationDate) {
+        this.invalidationDate = invalidationDate;
     }
 
     public LanguageLocation getLanguageLocation() {

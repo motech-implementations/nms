@@ -73,4 +73,9 @@ public class SubscriberServiceImpl implements SubscriberService {
         }
     }
 
+    public void deleteAllowed(Subscriber subscriber) {
+        for (Subscription subscription: subscriber.getSubscriptions()) {
+            subscriptionService.deletePreconditionCheck(subscription);
+        }
+    }
 }

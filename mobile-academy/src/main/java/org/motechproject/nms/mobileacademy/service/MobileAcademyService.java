@@ -1,10 +1,11 @@
 package org.motechproject.nms.mobileacademy.service;
 
-import org.motechproject.nms.mobileacademy.domain.Course;
 import org.motechproject.nms.mobileacademy.dto.MaBookmark;
+import org.motechproject.nms.mobileacademy.dto.MaCourse;
 
 /**
- * Simple example of a service interface.
+ * Mobile academy service interface to perform crud operations on course and bookmarks
+ * This also lets you manually (re)trigger notifications for course completion
  */
 public interface MobileAcademyService {
 
@@ -12,19 +13,19 @@ public interface MobileAcademyService {
      * Get the MA course structure for the given course name. This defaults to "MobileAcademyCourse" name
      * @return Course data object with the course name
      */
-    Course getCourse();
+    MaCourse getCourse();
 
     /**
      * Set the MA course structure. This should only be called by the config handler on json update
      * @param course course to update and save
      */
-    void setCourse(Course course);
+    void setCourse(MaCourse course);
 
     /**
      * Gets the course modification date as an epoch representation. This defaults to MobileAcademyCourse name
      * @return int representation (epoch) of modified course date
      */
-    int getCourseVersion();
+    long getCourseVersion();
 
     /**
      * Get the bookmark for a caller

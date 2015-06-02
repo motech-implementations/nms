@@ -25,14 +25,6 @@
             <version>${motech.version}</version>
         </dependency>
 
-        <!-- OSGi IT -->
-        <dependency>
-            <groupId>org.motechproject</groupId>
-            <artifactId>motech-pax-it</artifactId>
-            <version>${motech.version}</version>
-            <scope>test</scope>
-        </dependency>
-
         <dependency>
             <groupId>org.motechproject.nms</groupId>
             <artifactId>region</artifactId>
@@ -57,6 +49,21 @@
             <artifactId>motech-platform-commons-api</artifactId>
             <version>${motech.version}</version>
         </dependency>
+
+        <!-- Scheduler -->
+        <dependency>
+            <groupId>org.motechproject</groupId>
+            <artifactId>motech-scheduler</artifactId>
+            <version>${motech.version}</version>
+        </dependency>
+
+        <!-- Event relay -->
+        <dependency>
+            <groupId>org.motechproject</groupId>
+            <artifactId>motech-platform-event</artifactId>
+            <version>${motech.version}</version>
+        </dependency>
+
     </dependencies>
 
     <repositories>

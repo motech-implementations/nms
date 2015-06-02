@@ -11,14 +11,18 @@
 
     <mvc:annotation-driven />
 
-    <bean id="moduleRegistrationData" class="org.motechproject.osgi.web.ModuleRegistrationData">
-        <constructor-arg name="moduleName" value="mobileacademy" />
-        <constructor-arg name="i18n">
-            <map>
-                <entry key="messages" value="../mobileacademy/resources/messages/" />
-            </map>
-        </constructor-arg>
+    <bean id="maSettings" class="org.motechproject.server.config.SettingsFacade" autowire="byType">
+        <property name="configFiles">
+            <list>
+                <value>classpath:ma-imi.properties</value>
+            </list>
+        </property>
+        <property name="rawConfigFiles">
+            <list>
+                <value>classpath:smsTemplate.json</value>
+                <value>classpath:nmsCourse.json</value>
+            </list>
+        </property>
     </bean>
-
 
 </beans>

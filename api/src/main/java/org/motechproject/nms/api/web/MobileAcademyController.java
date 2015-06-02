@@ -1,13 +1,17 @@
 package org.motechproject.nms.api.web;
 
-import org.apache.commons.lang.NotImplementedException;
+import org.motechproject.event.MotechEvent;
+import org.motechproject.event.listener.EventRelay;
 import org.motechproject.nms.api.web.contract.mobileAcademy.CourseResponse;
 import org.motechproject.nms.api.web.contract.mobileAcademy.CourseVersionResponse;
 import org.motechproject.nms.api.web.contract.mobileAcademy.GetBookmarkResponse;
 import org.motechproject.nms.api.web.contract.mobileAcademy.SaveBookmarkRequest;
+import org.motechproject.nms.api.web.contract.mobileAcademy.SmsStatusRequest;
+import org.motechproject.nms.api.web.contract.mobileAcademy.sms.DeliveryInfo;
 import org.motechproject.nms.api.web.converter.MobileAcademyConverter;
-import org.motechproject.nms.mobileacademy.domain.Course;
+import org.motechproject.nms.api.web.validator.MobileAcademyValidator;
 import org.motechproject.nms.mobileacademy.dto.MaBookmark;
+import org.motechproject.nms.mobileacademy.dto.MaCourse;
 import org.motechproject.nms.mobileacademy.exception.CourseNotCompletedException;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
 import org.slf4j.Logger;
@@ -23,6 +27,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import java.util.HashMap;
+import java.util.Map;
+
 
 /**
  * Mobile Academy controller
@@ -31,13 +38,35 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 @Controller
 public class MobileAcademyController extends BaseController {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(MobileAcademyController.class);
+
+    private static final String SMS_STATUS_SUBJECT = "nms.ma.sms.deliveryStatus";
+
     /**
      * MA service to handle all business logic
      */
     @Autowired
     private MobileAcademyService mobileAcademyService;
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(MobileAcademyController.class);
+    /**
+     * Event relay service to handle async notifications
+     */
+    private EventRelay eventRelay;
+
+    // Default constructor for CGLIB generation
+    public MobileAcademyController() {
+        super();
+    }
+    /**
+     * Constructor for controller
+     * @param mobileAcademyService mobile academy service
+     * @param eventRelay event relay service
+     */
+    @Autowired
+    public MobileAcademyController(MobileAcademyService mobileAcademyService, EventRelay eventRelay) {
+        this.mobileAcademyService = mobileAcademyService;
+        this.eventRelay = eventRelay;
+    }
 
     /**
      *
@@ -52,18 +81,16 @@ public class MobileAcademyController extends BaseController {
     @ResponseBody
     public CourseResponse getCourse() {
 
-        Course getCourse = mobileAcademyService.getCourse();
+        MaCourse getCourse = mobileAcademyService.getCourse();
 
         if (getCourse == null) {
             LOGGER.error("No course found in database. Check course ingestion and name");
             throw new InternalError(String.format(NOT_FOUND, "course"));
         }
 
-        CourseResponse response = MobileAcademyConverter.convertCourse(getCourse);
+        CourseResponse response = MobileAcademyConverter.convertCourseDto(getCourse);
 
         if (response != null) {
-
-            // TODO: course response format validations on the way out?
             return response;
         } else {
             LOGGER.error("Failed dto mapping, check object mapping");
@@ -93,11 +120,13 @@ public class MobileAcademyController extends BaseController {
      */
     @RequestMapping(
             value = "/bookmarkWithScore",
-            method = RequestMethod.GET)
+            method = RequestMethod.GET,
+            headers = { "Content-type=application/json" })
     public GetBookmarkResponse getBookmarkWithScore(@RequestParam Long callingNumber,
                                                  @RequestParam Long callId) {
 
-        return new GetBookmarkResponse();
+        MaBookmark bookmark = mobileAcademyService.getBookmark(callingNumber, callId);
+        return MobileAcademyConverter.convertBookmarkDto(bookmark);
     }
 
     /**
@@ -113,6 +142,10 @@ public class MobileAcademyController extends BaseController {
     @Transactional
     public void saveBookmarkWithScore(@RequestBody SaveBookmarkRequest bookmarkRequest) {
 
+        if (bookmarkRequest == null) {
+            throw new IllegalArgumentException(String.format(INVALID, "bookmarkRequest"));
+        }
+
         Long callingNumber = bookmarkRequest.getCallingNumber();
         if (callingNumber == null || callingNumber < SMALLEST_10_DIGIT_NUMBER || callingNumber > LARGEST_10_DIGIT_NUMBER) {
             throw new IllegalArgumentException(String.format(INVALID, "callingNumber"));
@@ -121,26 +154,37 @@ public class MobileAcademyController extends BaseController {
             throw new IllegalArgumentException(String.format(INVALID, "callId"));
         }
 
-        MaBookmark bookmark = new MaBookmark(bookmarkRequest.getCallingNumber(), bookmarkRequest.getCallId(),
-                bookmarkRequest.getBookmark(), bookmarkRequest.getScoresByChapter());
+        MaBookmark bookmark = MobileAcademyConverter.convertSaveBookmarkRequest(bookmarkRequest);
         mobileAcademyService.setBookmark(bookmark);
     }
 
     /**
      * Save sms
-     * @param smsDeliveryStatusRequest sms delivery details
+     * @param smsDeliveryStatus sms delivery details
      * @return OK or exception
      */
     @RequestMapping(
-            value = "/smsdelivery",
+            value = "/smsdeliverystatus",
             method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
-    public void saveSmsStatus(@RequestBody String smsDeliveryStatusRequest) {
+    public void saveSmsStatus(@RequestBody SmsStatusRequest smsDeliveryStatus) {
 
-        // placeholder for void returns
-        // TBD in Sprint 2: https://github.com/motech-implementations/mim/issues/150 and will be implemented
-        // using the SMS module
-        throw new NotImplementedException();
+        String errors = MobileAcademyValidator.validateSmsStatus(smsDeliveryStatus);
+
+        if (errors != null) {
+            throw new IllegalArgumentException(errors);
+        }
+
+        //TODO: should this be refactored into IMI module or sms module?
+        // we updated the completion record. Start event message to trigger notification workflow
+        DeliveryInfo deliveryInfo = smsDeliveryStatus.getRequestData()
+                .getDeliveryInfoNotification().getDeliveryInfo();
+        Map<String, Object> eventParams = new HashMap<>();
+        eventParams.put("address", deliveryInfo.getAddress());
+        eventParams.put("deliveryStatus", deliveryInfo.getDeliveryStatus().toString());
+        MotechEvent motechEvent = new MotechEvent(SMS_STATUS_SUBJECT, eventParams);
+        eventRelay.sendEventMessage(motechEvent);
+        LOGGER.debug("Sent event message to process completion notification");
     }
 
     @RequestMapping(

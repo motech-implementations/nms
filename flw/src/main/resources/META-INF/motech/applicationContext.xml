@@ -20,5 +20,12 @@
         </constructor-arg>
     </bean>
 
+    <bean id="flwSettings" class="org.motechproject.server.config.SettingsFacade" autowire="byType">
+        <property name="configFiles">
+            <list>
+                <value>classpath:flw.properties</value>
+            </list>
+        </property>
+    </bean>
 
 </beans>

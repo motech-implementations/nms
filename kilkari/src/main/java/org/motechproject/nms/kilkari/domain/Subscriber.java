@@ -47,6 +47,10 @@ public class Subscriber {
     @Persistent(mappedBy = "subscriber", defaultFetchGroup = "true")
     private Set<Subscription> subscriptions;
 
+    public Subscriber() {
+        this.subscriptions = new HashSet<>();
+    }
+
     public Subscriber(Long callingNumber) {
         this.callingNumber = callingNumber;
         this.subscriptions = new HashSet<>();
@@ -55,11 +59,13 @@ public class Subscriber {
     public Subscriber(Long callingNumber, LanguageLocation languageLocation) {
         this(callingNumber);
         this.languageLocation = languageLocation;
+        this.subscriptions = new HashSet<>();
     }
 
     public Subscriber(Long callingNumber, LanguageLocation languageLocation, Circle circle) {
         this(callingNumber, languageLocation);
         this.circle = circle;
+        this.subscriptions = new HashSet<>();
     }
 
     public Long getCallingNumber() {
