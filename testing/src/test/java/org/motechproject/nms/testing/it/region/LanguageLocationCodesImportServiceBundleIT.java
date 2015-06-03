@@ -22,6 +22,7 @@ import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.repository.TalukaDataService;
 import org.motechproject.nms.region.repository.VillageDataService;
 import org.motechproject.nms.region.service.LanguageLocationCodesImportService;
+import org.motechproject.nms.testing.it.utils.LocationDataUtils;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.ops4j.pax.exam.ExamFactory;
@@ -36,6 +37,7 @@ import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.motechproject.nms.testing.it.utils.LocationDataUtils.*;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerSuite.class)
@@ -220,44 +222,6 @@ public class LanguageLocationCodesImportServiceBundleIT extends BasePaxIT {
     public void testImportWhenLanguageLocationCodeNotExistsAndIsDefaultForCircleButNotUnique() throws Exception {
         Reader reader = createReaderWithHeaders("LLC 0,Lang 1,Circle 4,State 4,District 42,Y");
         languageLocationCodesImportService.importData(reader);
-    }
-
-    private State createState(Long code, String name) {
-        State state = new State();
-        state.setCode(code);
-        state.setName(name);
-        return state;
-    }
-
-    private District createDistrict(State state, Long code, String name) {
-        District district = new District();
-        district.setState(state);
-        district.setCode(code);
-        district.setName(name);
-        district.setRegionalName(regionalName(name));
-        return district;
-    }
-
-    private Language createLanguage(String name) {
-        return new Language(name);
-    }
-
-    private LanguageLocation createLanguageLocation(String code, Language language, Circle circle, boolean defaultForCircle, District... districts) {
-        LanguageLocation languageLocation = new LanguageLocation();
-        languageLocation.setCode(code);
-        languageLocation.setLanguage(language);
-        languageLocation.setCircle(circle);
-        languageLocation.setDefaultForCircle(defaultForCircle);
-        languageLocation.getDistrictSet().addAll(Arrays.asList(districts));
-        return languageLocation;
-    }
-
-    private Circle createCircle(String name) {
-        return new Circle(name);
-    }
-
-    private String regionalName(String name) {
-        return String.format("regional name of %s", name);
     }
 
     private Reader createReaderWithHeaders(String... lines) {
