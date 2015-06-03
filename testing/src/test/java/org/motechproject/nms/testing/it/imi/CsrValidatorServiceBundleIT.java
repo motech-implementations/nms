@@ -21,6 +21,7 @@ import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.LanguageLocationDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.testing.it.utils.CsrHelper;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
@@ -105,11 +106,11 @@ public class CsrValidatorServiceBundleIT extends BasePaxIT {
 
         String timestamp = DateTime.now().toString(TIME_FORMATTER);
 
-        CsrHelper helper = new CsrHelper(timestamp, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
+        CsrHelper helper = new CsrHelper(timestamp, subscriptionService, subscriptionPackDataService,
+                subscriberDataService, languageDataService, languageLocationDataService, circleDataService,
                 stateDataService, districtDataService);
 
-        helper.makeRecords(1, 0, 0);
+        helper.makeRecords(1, 0, 0, 0);
 
         // any error inside this would throw an exception
         csrValidatorService.validateSummaryRecord(helper.getRecords().get(0));
@@ -122,11 +123,11 @@ public class CsrValidatorServiceBundleIT extends BasePaxIT {
 
         String timestamp = DateTime.now().toString(TIME_FORMATTER);
 
-        CsrHelper helper = new CsrHelper(timestamp, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
+        CsrHelper helper = new CsrHelper(timestamp, subscriptionService, subscriptionPackDataService,
+                subscriberDataService, languageDataService, languageLocationDataService, circleDataService,
                 stateDataService, districtDataService);
 
-        helper.makeRecords(0, 0, 1);
+        helper.makeRecords(0, 0, 0, 1);
 
         csrValidatorService.validateSummaryRecord(helper.getRecords().get(0));
     }
