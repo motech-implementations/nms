@@ -26,6 +26,11 @@ public abstract class CsvImporter<R extends ICsvReader> implements Closeable {
         open(reader, processorMapping, fieldNameMapping, null);
     }
 
+    public void open(Reader reader, Map<String, CellProcessor> processorMapping, CsvPreference preference)
+        throws IOException {
+        open(reader, processorMapping, null, preference);
+    }
+
     public void open(Reader reader, Map<String, CellProcessor> processorMapping, Map<String, String> fieldNameMapping,
                      CsvPreference preference)
             throws IOException {

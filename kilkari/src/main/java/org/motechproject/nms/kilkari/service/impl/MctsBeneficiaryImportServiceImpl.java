@@ -38,6 +38,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.supercsv.cellprocessor.Optional;
 import org.supercsv.cellprocessor.ift.CellProcessor;
+import org.supercsv.prefs.CsvPreference;
 
 import javax.validation.ConstraintViolationException;
 import java.io.IOException;
@@ -97,7 +98,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     @Transactional
     public void importMotherData(Reader reader) throws IOException {
         CsvMapImporter csvImporter = new CsvMapImporter();
-        csvImporter.open(reader, getMotherProcessorMapping());
+        csvImporter.open(reader, getMotherProcessorMapping(), CsvPreference.TAB_PREFERENCE);
         Map<String, Object> record;
         while (null != (record = csvImporter.read())) {
             try {
@@ -113,7 +114,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     @Transactional
     public void importChildData(Reader reader) throws IOException {
         CsvMapImporter csvImporter = new CsvMapImporter();
-        csvImporter.open(reader, getChildProcessorMapping());
+        csvImporter.open(reader, getChildProcessorMapping(), CsvPreference.TAB_PREFERENCE);
         Map<String, Object> record;
         while (null != (record = csvImporter.read())) {
             try {

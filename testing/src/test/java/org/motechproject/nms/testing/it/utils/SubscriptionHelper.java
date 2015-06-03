@@ -93,7 +93,7 @@ public class SubscriptionHelper {
         return subscriptionService.getSubscriptionPack("childPack");
     }
 
-    private void createSubscriptionPacks() {
+    public void createSubscriptionPacks() {
         if (subscriptionPackDataService.byName("childPack") == null) {
             createSubscriptionPack("childPack", SubscriptionPackType.CHILD, CHILD_PACK_WEEKS, 1);
         }
