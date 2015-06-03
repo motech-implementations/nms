@@ -170,9 +170,9 @@ public class Subscriber {
     @Override
     public String toString() {
         return "Subscriber{" +
-                "callingNumber=" + callingNumber +
-                ", dateOfBirth=" + dateOfBirth +
-                ", lastMenstrualPeriod=" + lastMenstrualPeriod +
+                "callingNumber=" + "***" +
+                ", dateOfBirth=" + "***" +
+                ", lastMenstrualPeriod=" + "***" +
                 ", circle='" + circle +
                 ", subscriptions=" + subscriptions +
                 '}';

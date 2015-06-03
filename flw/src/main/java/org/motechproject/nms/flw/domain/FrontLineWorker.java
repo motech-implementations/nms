@@ -177,8 +177,8 @@ public class FrontLineWorker {
     public String toString() {
         return "FrontLineWorker{" +
                 "id=" + id +
-                ", contactNumber='" + contactNumber + '\'' +
-                ", name='" + name + '\'' +
+                ", contactNumber='" + "***" + '\'' +
+                ", name='" + "***" + '\'' +
                 ", languageLocation=" + languageLocation +
                 ", district=" + district +
                 '}';
