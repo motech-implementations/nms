@@ -3,6 +3,7 @@ package org.motechproject.nms.testing.it.utils;
 import org.joda.time.DateTime;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
+import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.dto.CallSummaryRecordDto;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
@@ -60,7 +61,7 @@ public class CsrHelper {
         records = new ArrayList<>();
 
         for (int i=0 ; i<numSuccess ; i++) {
-            Subscription sub = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(30));
+            Subscription sub = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(30), SubscriptionPackType.CHILD);
             int index = sh.getRandomMessageIndex(sub);
             if (index == sh.getLastMessageIndex(sub)) {
                 // We don't want this subscription to be completed
@@ -83,7 +84,8 @@ public class CsrHelper {
 
         for (int i=0 ; i<numCompleted ; i++) {
             int days = sh.getChildPack().getWeeks() * 7;
-            Subscription sub = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(days));
+            Subscription sub = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(days),
+                    SubscriptionPackType.CHILD);
             int index = sh.getLastMessageIndex(sub);
             CallSummaryRecordDto r = new CallSummaryRecordDto(
                     new RequestId(sub.getSubscriptionId(), TIMESTAMP),
@@ -101,7 +103,8 @@ public class CsrHelper {
         }
 
         for (int i=0 ; i<numFailed ; i++) {
-            Subscription sub = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(30));
+            Subscription sub = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(30),
+                    SubscriptionPackType.CHILD);
             int index = sh.getRandomMessageIndex(sub);
             CallSummaryRecordDto r = new CallSummaryRecordDto(
                     new RequestId(sub.getSubscriptionId(), TIMESTAMP),
@@ -119,7 +122,8 @@ public class CsrHelper {
         }
 
         for (int i=0 ; i<numInvalid ; i++) {
-            Subscription sub = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(30));
+            Subscription sub = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(30),
+                    SubscriptionPackType.CHILD);
             int index = sh.getRandomMessageIndex(sub);
             CallSummaryRecordDto r = new CallSummaryRecordDto(
                     new RequestId("00000000-0000-0000-0000-000000000000", TIMESTAMP),

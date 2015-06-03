@@ -9,38 +9,17 @@ import org.junit.runner.RunWith;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.EventRelay;
 import org.motechproject.mds.config.SettingsService;
-import org.motechproject.nms.kilkari.domain.CallRetry;
-import org.motechproject.nms.kilkari.domain.CallStage;
-import org.motechproject.nms.kilkari.domain.CallSummaryRecord;
-import org.motechproject.nms.kilkari.domain.DeactivationReason;
-import org.motechproject.nms.kilkari.domain.Subscriber;
-import org.motechproject.nms.kilkari.domain.Subscription;
-import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
-import org.motechproject.nms.kilkari.domain.SubscriptionPack;
-import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
-import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
+import org.motechproject.nms.kilkari.domain.*;
 import org.motechproject.nms.kilkari.dto.CallSummaryRecordDto;
-import org.motechproject.nms.kilkari.repository.CallRetryDataService;
-import org.motechproject.nms.kilkari.repository.CallSummaryRecordDataService;
-import org.motechproject.nms.kilkari.repository.SubscriberDataService;
-import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
-import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
+import org.motechproject.nms.kilkari.repository.*;
 import org.motechproject.nms.kilkari.service.CsrService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
 import org.motechproject.nms.props.domain.FinalCallStatus;
 import org.motechproject.nms.props.domain.RequestId;
 import org.motechproject.nms.props.domain.StatusCode;
-import org.motechproject.nms.region.domain.Circle;
-import org.motechproject.nms.region.domain.District;
-import org.motechproject.nms.region.domain.Language;
-import org.motechproject.nms.region.domain.LanguageLocation;
-import org.motechproject.nms.region.domain.State;
-import org.motechproject.nms.region.repository.CircleDataService;
-import org.motechproject.nms.region.repository.DistrictDataService;
-import org.motechproject.nms.region.repository.LanguageDataService;
-import org.motechproject.nms.region.repository.LanguageLocationDataService;
-import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.domain.*;
+import org.motechproject.nms.region.repository.*;
 import org.motechproject.nms.testing.it.api.utils.SubscriptionPackBuilder;
 import org.motechproject.nms.testing.it.utils.CsrHelper;
 import org.motechproject.nms.testing.it.utils.SubscriptionHelper;
@@ -357,8 +336,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
         SubscriptionHelper sh = new SubscriptionHelper(subscriptionService, subscriberDataService,
                 subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
                 stateDataService, districtDataService);
-
-        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(3));
+        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(3),SubscriptionPackType.CHILD);
         String contentFileName = sh.getContentMessageFile(subscription, 0);
         CallRetry retry = callRetryDataService.create(new CallRetry(
                 subscription.getSubscriptionId(),
@@ -409,7 +387,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
                 stateDataService, districtDataService);
 
-        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now());
+        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now(),SubscriptionPackType.CHILD);
         String contentFileName = sh.getContentMessageFile(subscription, 0);
         CallRetry retry = callRetryDataService.create(new CallRetry(
                 subscription.getSubscriptionId(),
@@ -469,8 +447,9 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
                 stateDataService, districtDataService);
 
-        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now());
+        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now(),SubscriptionPackType.CHILD);
         String contentFileName = sh.getContentMessageFile(subscription, 0);
+
 
         Map<Integer, Integer> callStats = new HashMap<>();
         callStats.put(StatusCode.OBD_DNIS_IN_DND.getValue(),1);
@@ -486,6 +465,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 0,
                 1
         );
+
 
 
         Map<String, Object> eventParams = new HashMap<>();
@@ -533,6 +513,69 @@ public class CsrServiceBundleIT extends BasePaxIT {
         csrService.processCallSummaryRecord(motechEvent);
 
         // There should be one call to retry since the one above call was rescheduled.
+        assertEquals(1, callRetryDataService.count());
+
+        List<CallRetry> retries = callRetryDataService.retrieveAll();
+
+        assertEquals(subscription.getSubscriptionId(), retries.get(0).getSubscriptionId());
+        assertEquals(CallStage.RETRY_1, retries.get(0).getCallStage());
+        assertEquals(DayOfTheWeek.today().nextDay(),retries.get(0).getDayOfTheWeek());
+    }
+
+    @Test
+    public void verifyFT141() {
+
+        String timestamp = DateTime.now().toString(TIME_FORMATTER);
+
+        // To check that NMS shall retry OBD message for which delivery fails for the first time with two message per
+        // week configuration.
+
+        SubscriptionHelper sh = new SubscriptionHelper(subscriptionService, subscriberDataService,
+                subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
+                stateDataService, districtDataService);
+
+        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now(),
+                SubscriptionPackType.PREGNANCY);
+        String contentFileName = sh.getContentMessageFile(subscription, 0);
+
+        csrDataService.create(new CallSummaryRecord(
+                new RequestId(subscription.getSubscriptionId(), "11112233445566").toString(),
+                subscription.getSubscriber().getCallingNumber(),
+                "w1_1.wav",
+                "w1_1",
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
+                FinalCallStatus.FAILED,
+                makeStatsMap(StatusCode.OBD_FAILED_BUSY, 1),
+                0,
+                10,
+                3
+        ));
+
+        Map<Integer, Integer> callStats = new HashMap<>();
+        callStats.put(StatusCode.OBD_FAILED_BUSY.getValue(),1);
+        CallSummaryRecordDto record = new CallSummaryRecordDto(
+                new RequestId(subscription.getSubscriptionId(), timestamp),
+                subscription.getSubscriber().getCallingNumber(),
+                contentFileName,
+                "XXX",
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
+                FinalCallStatus.FAILED,
+                callStats,
+                0,
+                3
+        );
+
+
+        Map<String, Object> eventParams = new HashMap<>();
+        eventParams.put(CSR_PARAM_KEY, record);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
+        csrService.processCallSummaryRecord(motechEvent);
+
+
+
+
         assertEquals(1, callRetryDataService.count());
 
         List<CallRetry> retries = callRetryDataService.retrieveAll();

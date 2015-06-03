@@ -93,6 +93,11 @@ public class SubscriptionHelper {
         return subscriptionService.getSubscriptionPack("childPack");
     }
 
+    public SubscriptionPack getPregnancyPack() {
+        createSubscriptionPacks();
+        return subscriptionService.getSubscriptionPack("pregnancyPack");
+    }
+
     private void createSubscriptionPacks() {
         if (subscriptionPackDataService.byName("childPack") == null) {
             createSubscriptionPack("childPack", SubscriptionPackType.CHILD, CHILD_PACK_WEEKS, 1);
@@ -195,14 +200,42 @@ public class SubscriptionHelper {
     }
 
 
-    public Subscription mksub(SubscriptionOrigin origin, DateTime startDate) {
+    public Subscription mksub(SubscriptionOrigin origin, DateTime startDate, SubscriptionPackType packType) {
+
+        Subscription subscription;
         createSubscriptionPacks();
         Subscriber subscriber = subscriberDataService.create(new Subscriber(
                 makeNumber(),
                 makeLanguageLocation(),
                 makeCircle()
         ));
-        Subscription subscription = new Subscription(subscriber, getChildPack(), origin);
+
+        if (SubscriptionPackType.PREGNANCY == packType) {
+            subscription = new Subscription(subscriber,getPregnancyPack() , origin);
+        } else {
+            subscription = new Subscription(subscriber, getChildPack(), origin);
+        }
+
+        subscription.setStartDate(startDate);
+        subscription.setStatus(SubscriptionStatus.ACTIVE);
+        subscription = subscriptionService.create(subscription);
+        LOGGER.debug("Created subscription {}", subscription.toString());
+        return subscription;
+    }
+
+
+    public Subscription mksub(SubscriptionOrigin origin, DateTime startDate) {
+
+        Subscription subscription;
+        createSubscriptionPacks();
+        Subscriber subscriber = subscriberDataService.create(new Subscriber(
+                makeNumber(),
+                makeLanguageLocation(),
+                makeCircle()
+        ));
+
+        subscription = new Subscription(subscriber, getChildPack(), origin);
+
         subscription.setStartDate(startDate);
         subscription.setStatus(SubscriptionStatus.ACTIVE);
         subscription = subscriptionService.create(subscription);
