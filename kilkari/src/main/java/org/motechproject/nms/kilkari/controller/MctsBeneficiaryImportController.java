@@ -3,8 +3,8 @@ package org.motechproject.nms.kilkari.controller;
 import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.alerts.domain.AlertStatus;
 import org.motechproject.alerts.domain.AlertType;
-import org.motechproject.nms.kilkari.service.MctsSubscriberImportService;
-import org.motechproject.nms.kilkari.exception.CsvImportException;
+import org.motechproject.nms.csv.exception.CsvImportException;
+import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,15 +23,15 @@ import java.io.InputStreamReader;
  * Controller that supports import of Kilkari subscribers (mother and child records) from MCTS
  */
 @Controller
-public class MctsSubscriberImportController {
+public class MctsBeneficiaryImportController {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(MctsSubscriberImportController.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(MctsBeneficiaryImportController.class);
 
     @Autowired
     private AlertService alertService;
 
     @Autowired
-    private MctsSubscriberImportService mctsSubscriberImportService;
+    private MctsBeneficiaryImportService mctsBeneficiaryImportService;
 
     @RequestMapping(value = "/mother/import", method = RequestMethod.POST)
         @ResponseStatus(HttpStatus.OK)
@@ -39,7 +39,7 @@ public class MctsSubscriberImportController {
 
         try {
             try (InputStream in = csvFile.getInputStream()) {
-                mctsSubscriberImportService.importMotherData(new InputStreamReader(in));
+                mctsBeneficiaryImportService.importMotherData(new InputStreamReader(in));
             }
         } catch (CsvImportException e) {
             logError(e);
@@ -56,7 +56,7 @@ public class MctsSubscriberImportController {
 
         try {
             try (InputStream in = csvFile.getInputStream()) {
-                mctsSubscriberImportService.importChildData(new InputStreamReader(in));
+                mctsBeneficiaryImportService.importChildData(new InputStreamReader(in));
             }
         } catch (CsvImportException e) {
             logError(e);

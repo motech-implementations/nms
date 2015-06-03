@@ -19,7 +19,10 @@ public class CsvMapImporter extends CsvImporter<ICsvMapReader> {
     }
 
     @Override
-    protected ICsvMapReader createCsvReader(Reader reader) {
-        return new CsvMapReader(reader, CsvPreference.STANDARD_PREFERENCE);
+    protected ICsvMapReader createCsvReader(Reader reader, CsvPreference preference) {
+        if (preference == null) {
+            return new CsvMapReader(reader, CsvPreference.STANDARD_PREFERENCE);
+        }
+        return new CsvMapReader(reader, preference);
     }
 }

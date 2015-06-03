@@ -2,6 +2,7 @@ package org.motechproject.nms.csv.utils;
 
 import org.supercsv.cellprocessor.ift.CellProcessor;
 import org.supercsv.io.ICsvReader;
+import org.supercsv.prefs.CsvPreference;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -17,13 +18,19 @@ public abstract class CsvImporter<R extends ICsvReader> implements Closeable {
     private CellProcessor[] processors;
 
     public void open(Reader reader, Map<String, CellProcessor> processorMapping) throws IOException {
-        open(reader, processorMapping, null);
+        open(reader, processorMapping, null, null);
     }
 
     public void open(Reader reader, Map<String, CellProcessor> processorMapping, Map<String, String> fieldNameMapping)
+        throws IOException {
+        open(reader, processorMapping, fieldNameMapping, null);
+    }
+
+    public void open(Reader reader, Map<String, CellProcessor> processorMapping, Map<String, String> fieldNameMapping,
+                     CsvPreference preference)
             throws IOException {
         if (null == this.csvReader) {
-            this.csvReader = createCsvReader(reader);
+            this.csvReader = createCsvReader(reader, preference);
             String[] header = csvReader.getHeader(true);
             this.fieldNames = getFieldNames(header, fieldNameMapping);
             this.processors = getProcessors(header, processorMapping);
@@ -68,7 +75,7 @@ public abstract class CsvImporter<R extends ICsvReader> implements Closeable {
         return processors;
     }
 
-    protected abstract R createCsvReader(Reader reader);
+    protected abstract R createCsvReader(Reader reader, CsvPreference preference);
 
     private CellProcessor[] getProcessors(String[] header, Map<String, CellProcessor> processorMapping) {
         List<CellProcessor> processorsList = new ArrayList<>(header.length);

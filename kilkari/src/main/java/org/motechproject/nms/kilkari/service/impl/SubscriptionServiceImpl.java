@@ -256,7 +256,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
         if (subscriber.getDateOfBirth() != null && pack.getType() == SubscriptionPackType.CHILD) {
             // DOB (with or without LMP) is present
-            if (subscriberHasActivePackType(subscriber, SubscriptionPackType.CHILD))
+            if (subscriberHasActiveSubscription(subscriber, SubscriptionPackType.CHILD))
             {
                 // reject the subscription if it already exists
                 logRejectedSubscription(subscriber.getCallingNumber(),
@@ -273,7 +273,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         } else if (subscriber.getLastMenstrualPeriod() != null && subscriber.getDateOfBirth() == null &&
                 pack.getType() == SubscriptionPackType.PREGNANCY) {
             // LMP is present and DOB is not
-            if (subscriberHasActivePackType(subscriber, SubscriptionPackType.PREGNANCY)) {
+            if (subscriberHasActiveSubscription(subscriber, SubscriptionPackType.PREGNANCY)) {
                 // reject the subscription if it already exists
                 logRejectedSubscription(subscriber.getCallingNumber(),
                         SubscriptionRejectionReason.ALREADY_SUBSCRIBED, SubscriptionPackType.PREGNANCY);
@@ -304,7 +304,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         subscriptionErrorDataService.create(error);
     }
 
-    private boolean subscriberHasActivePackType(Subscriber subscriber, SubscriptionPackType type) {
+    @Override
+    public boolean subscriberHasActiveSubscription(Subscriber subscriber, SubscriptionPackType type) {
         Iterator<Subscription> subscriptionIterator = subscriber.getSubscriptions().iterator();
         Subscription existingSubscription;
 

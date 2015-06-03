@@ -25,6 +25,9 @@
     <osgi:service ref="csrService"
                   interface="org.motechproject.nms.kilkari.service.CsrService" />
 
+    <osgi:service ref="mctsBeneficiaryImportService"
+                  interface="org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService" />
+
     <osgi:service ref="kilkariItService"
                   interface="org.motechproject.nms.kilkari.service.IntegrationTestService" />
 

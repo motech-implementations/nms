@@ -6,7 +6,7 @@ import java.io.Reader;
 /**
  * Service interface for importing Kilkari subscribers from MCTS
  */
-public interface MctsSubscriberImportService {
+public interface MctsBeneficiaryImportService {
 
     void importMotherData(Reader reader) throws IOException;
 
