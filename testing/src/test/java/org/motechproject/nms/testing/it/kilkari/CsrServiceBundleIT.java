@@ -514,7 +514,6 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
         // There should be one call to retry since the one above call was rescheduled.
         assertEquals(1, callRetryDataService.count());
-
         List<CallRetry> retries = callRetryDataService.retrieveAll();
 
         assertEquals(subscription.getSubscriptionId(), retries.get(0).getSubscriptionId());
@@ -551,7 +550,6 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 10,
                 3
         ));
-
         Map<Integer, Integer> callStats = new HashMap<>();
         callStats.put(StatusCode.OBD_FAILED_BUSY.getValue(),1);
         CallSummaryRecordDto record = new CallSummaryRecordDto(
@@ -584,6 +582,130 @@ public class CsrServiceBundleIT extends BasePaxIT {
         assertEquals(CallStage.RETRY_1, retries.get(0).getCallStage());
         assertEquals(DayOfTheWeek.today().nextDay(),retries.get(0).getDayOfTheWeek());
     }
+
+
+    @Test
+    public void verifyFT138() {
+        /**
+         * To check that NMS shall retry OBD message for which first OBD retry fails
+         * with single message per week configuration..
+         */
+
+        String timestamp = DateTime.now().toString(TIME_FORMATTER);
+
+        // Create a record in the CallRetry table marked as "retry_1" and verify it is updated as "retry_2" in
+        // CallRetry table
+
+        SubscriptionHelper sh = new SubscriptionHelper(subscriptionService, subscriberDataService,
+                subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
+                stateDataService, districtDataService);
+
+        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(3));
+        String contentFileName = sh.getContentMessageFile(subscription, 0);
+        CallRetry retry = callRetryDataService.create(new CallRetry(
+                subscription.getSubscriptionId(),
+                subscription.getSubscriber().getCallingNumber(),
+                DayOfTheWeek.today(),
+                CallStage.RETRY_1,
+                contentFileName,
+                "XXX",
+                "XXX",
+                "XX",
+                SubscriptionOrigin.MCTS_IMPORT
+        ));
+
+
+        Map<Integer, Integer> callStats = new HashMap<>();
+        CallSummaryRecordDto record = new CallSummaryRecordDto(
+                new RequestId(subscription.getSubscriptionId(), timestamp),
+                subscription.getSubscriber().getCallingNumber(),
+                contentFileName,
+                "XXX",
+                "XXX",
+                "XX",
+                FinalCallStatus.FAILED,
+                callStats,
+                0,
+                5
+        );
+
+
+        Map<String, Object> eventParams = new HashMap<>();
+        eventParams.put(CSR_PARAM_KEY, record);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
+        csrService.processCallSummaryRecord(motechEvent);
+
+        // There should be one calls to retry since the retry 1 was failed.
+        assertEquals(1, callRetryDataService.count());
+
+        List<CallRetry> retries = callRetryDataService.retrieveAll();
+
+        assertEquals(subscription.getSubscriptionId(), retries.get(0).getSubscriptionId());
+        assertEquals(CallStage.RETRY_2, retries.get(0).getCallStage());
+        assertEquals(DayOfTheWeek.today().nextDay(),retries.get(0).getDayOfTheWeek());
+    }
+
+    @Test
+    public void verifyFT139() {
+        /**
+         * To check that NMS shall retry OBD message for which second OBD retry fails with
+         * single message per week configuration.
+         */
+
+        String timestamp = DateTime.now().toString(TIME_FORMATTER);
+
+        // Create a record in the CallRetry table marked as "retry_2" and verify it is updated as "retry_last" in
+        // CallRetry table
+
+        SubscriptionHelper sh = new SubscriptionHelper(subscriptionService, subscriberDataService,
+                subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
+                stateDataService, districtDataService);
+
+        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(3));
+        String contentFileName = sh.getContentMessageFile(subscription, 0);
+        CallRetry retry = callRetryDataService.create(new CallRetry(
+                subscription.getSubscriptionId(),
+                subscription.getSubscriber().getCallingNumber(),
+                DayOfTheWeek.today(),
+                CallStage.RETRY_2,
+                contentFileName,
+                "XXX",
+                "XXX",
+                "XX",
+                SubscriptionOrigin.MCTS_IMPORT
+        ));
+
+
+        Map<Integer, Integer> callStats = new HashMap<>();
+        CallSummaryRecordDto record = new CallSummaryRecordDto(
+                new RequestId(subscription.getSubscriptionId(), timestamp),
+                subscription.getSubscriber().getCallingNumber(),
+                contentFileName,
+                "XXX",
+                "XXX",
+                "XX",
+                FinalCallStatus.FAILED,
+                callStats,
+                0,
+                5
+        );
+
+
+        Map<String, Object> eventParams = new HashMap<>();
+        eventParams.put(CSR_PARAM_KEY, record);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
+        csrService.processCallSummaryRecord(motechEvent);
+
+        // There should be one calls to retry since the retry 2 was failed.
+        assertEquals(1, callRetryDataService.count());
+
+        List<CallRetry> retries = callRetryDataService.retrieveAll();
+
+        assertEquals(subscription.getSubscriptionId(), retries.get(0).getSubscriptionId());
+        assertEquals(CallStage.RETRY_LAST, retries.get(0).getCallStage());
+        assertEquals(DayOfTheWeek.today().nextDay(),retries.get(0).getDayOfTheWeek());
+    }
+
 
 
     //todo: verify multiple days' worth of summary record aggregation
