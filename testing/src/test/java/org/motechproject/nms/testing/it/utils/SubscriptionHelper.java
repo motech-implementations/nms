@@ -225,21 +225,6 @@ public class SubscriptionHelper {
 
 
     public Subscription mksub(SubscriptionOrigin origin, DateTime startDate) {
-
-        Subscription subscription;
-        createSubscriptionPacks();
-        Subscriber subscriber = subscriberDataService.create(new Subscriber(
-                makeNumber(),
-                makeLanguageLocation(),
-                makeCircle()
-        ));
-
-        subscription = new Subscription(subscriber, getChildPack(), origin);
-
-        subscription.setStartDate(startDate);
-        subscription.setStatus(SubscriptionStatus.ACTIVE);
-        subscription = subscriptionService.create(subscription);
-        LOGGER.debug("Created subscription {}", subscription.toString());
-        return subscription;
+        return mksub(origin, startDate, SubscriptionPackType.CHILD);
     }
 }
