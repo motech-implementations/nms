@@ -1,4 +1,4 @@
-package org.motechproject.nms.testing.it.kilkari;
+package org.motechproject.nms.testing.it.utils;
 
 
 import org.joda.time.DateTime;
