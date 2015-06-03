@@ -56,6 +56,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(PaxExam.class)
@@ -355,8 +356,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
         SubscriptionHelper sh = new SubscriptionHelper(subscriptionService, subscriberDataService,
                 subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
                 stateDataService, districtDataService);
-
-        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(3));
+        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(3),SubscriptionPackType.CHILD);
         String contentFileName = sh.getContentMessageFile(subscription, 0);
         CallRetry retry = callRetryDataService.create(new CallRetry(
                 subscription.getSubscriptionId(),
@@ -407,7 +407,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
                 stateDataService, districtDataService);
 
-        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now());
+        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now(),SubscriptionPackType.CHILD);
         String contentFileName = sh.getContentMessageFile(subscription, 0);
         CallRetry retry = callRetryDataService.create(new CallRetry(
                 subscription.getSubscriptionId(),
@@ -467,7 +467,62 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
                 stateDataService, districtDataService);
 
-        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now());
+        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now(),SubscriptionPackType.CHILD);
+        String contentFileName = sh.getContentMessageFile(subscription, 0);
+
+        csrDataService.create(new CallSummaryRecord(
+                new RequestId(subscription.getSubscriptionId(), "11112233445566").toString(),
+                subscription.getSubscriber().getCallingNumber(),
+                "w1_1.wav",
+                "w1_1",
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
+                FinalCallStatus.FAILED,
+                makeStatsMap(StatusCode.OBD_FAILED_BUSY, 1),
+                0,
+                10,
+                3
+        ));
+
+        Map<Integer, Integer> callStats = new HashMap<>();
+        callStats.put(StatusCode.OBD_FAILED_BUSY.getValue(),1);
+        CallSummaryRecordDto record = new CallSummaryRecordDto(
+                new RequestId(subscription.getSubscriptionId(), timestamp),
+                subscription.getSubscriber().getCallingNumber(),
+                contentFileName,
+                "XXX",
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
+                FinalCallStatus.FAILED,
+                callStats,
+                0,
+                3
+        );
+
+        Map<String, Object> eventParams = new HashMap<>();
+        eventParams.put(CSR_PARAM_KEY, record);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
+        csrService.processCallSummaryRecord(motechEvent);
+
+        CallRetry callRetry = callRetryDataService.findBySubscriptionId(subscription.getSubscriptionId());
+        assertNotNull(callRetry);
+        assertTrue(CallStage.RETRY_1.equals(callRetry.getCallStage()));
+    }
+
+    @Test
+    public void verifyFT141() {
+
+        String timestamp = DateTime.now().toString(TIME_FORMATTER);
+
+        // To check that NMS shall retry OBD message for which delivery fails for the first time with two message per
+        // week configuration.
+
+        SubscriptionHelper sh = new SubscriptionHelper(subscriptionService, subscriberDataService,
+                subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
+                stateDataService, districtDataService);
+
+        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now(),
+                SubscriptionPackType.PREGNANCY);
         String contentFileName = sh.getContentMessageFile(subscription, 0);
 
         Map<Integer, Integer> callStats = new HashMap<>();
