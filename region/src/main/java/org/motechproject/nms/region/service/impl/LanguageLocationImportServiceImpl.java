@@ -146,12 +146,6 @@ public class LanguageLocationImportServiceImpl implements LanguageLocationImport
         verify(null == district.getLanguage(), "Language location for the '%s' district already specified", district.getName());
     }
 
-    private void verify(boolean condition, String message, String... args) {
-        if (!condition) {
-            throw new CsvImportDataException(String.format(message, args));
-        }
-    }
-
     private Map<String, CellProcessor> getProcessorMapping() {
         Map<String, CellProcessor> mapping = new HashMap<>();
         mapping.put(LANGUAGE_CODE, new GetString());
@@ -182,6 +176,12 @@ public class LanguageLocationImportServiceImpl implements LanguageLocationImport
         }));
         mapping.put(DEFAULT_FOR_CIRCLE, new GetBoolean());
         return mapping;
+    }
+
+    private void verify(boolean condition, String message, String... args) {
+        if (!condition) {
+            throw new CsvImportDataException(String.format(message, args));
+        }
     }
 
     @Autowired

@@ -73,11 +73,7 @@ public abstract class CsvImporter<R extends ICsvReader> implements Closeable {
     private CellProcessor[] getProcessors(String[] header, Map<String, CellProcessor> processorMapping) {
         List<CellProcessor> processorsList = new ArrayList<>(header.length);
         for (String column : header) {
-            if (processorMapping.containsKey(column)) {
-                processorsList.add(processorMapping.get(column));
-            } else {
-                throw new IllegalStateException(String.format("Cell processor for column '%s' not specified", column));
-            }
+            processorsList.add(processorMapping.get(column));
         }
 
         return processorsList.toArray(new CellProcessor[processorsList.size()]);
@@ -87,11 +83,7 @@ public abstract class CsvImporter<R extends ICsvReader> implements Closeable {
         if (null != fieldNameMapping) {
             List<String> fieldNamesList = new ArrayList<>(header.length);
             for (String column : header) {
-                if (fieldNameMapping.containsKey(column)) {
-                    fieldNamesList.add(fieldNameMapping.get(column));
-                } else {
-                    throw new IllegalStateException(String.format("Field name for column '%s' not specified", column));
-                }
+                fieldNamesList.add(fieldNameMapping.get(column));
             }
 
             return fieldNamesList.toArray(new String[fieldNamesList.size()]);
