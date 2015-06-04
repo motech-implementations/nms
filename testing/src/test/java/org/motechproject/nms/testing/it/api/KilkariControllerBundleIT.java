@@ -746,4 +746,113 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
+
+    @Test
+    public void verifyFT78() throws IOException, InterruptedException {
+        /*
+         * To check that message for both Pack should be returned from inbox
+         * within 7 days of user's subscription gets completed for 72Weeks Pack
+         * while user is subscribed for both Pack.
+         */
+        setupData();
+
+        Subscriber mctsSubscriber = new Subscriber(9999911122L);
+        mctsSubscriber.setDateOfBirth(DateTime.now());
+        subscriberDataService.create(mctsSubscriber);
+
+        // create subscription to child pack
+        Subscription childPackSubscription = subscriptionService
+                .createSubscription(9999911122L, gLanguageLocation, gPack1,
+                        SubscriptionOrigin.MCTS_IMPORT);
+        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+
+        // due to subscription rules detailed in #157, we need to clear out the
+        // DOB and set an LMP in order to
+        // create a second subscription for this MCTS subscriber
+        mctsSubscriber.setDateOfBirth(null);
+        mctsSubscriber.setLastMenstrualPeriod(DateTime.now());
+        subscriberDataService.update(mctsSubscriber);
+
+        // create subscription to pregnancy pack
+        Subscription pregnancyPackSubscription = subscriptionService
+                .createSubscription(9999911122L, gLanguageLocation, gPack2,
+                        SubscriptionOrigin.MCTS_IMPORT);
+        // update pregnancy subscription pack to mark complete
+        // setting the subscription to have ended less than a week ago -- the
+        // final message should be
+        // returned
+        subscriptionService.updateStartDate(pregnancyPackSubscription, DateTime
+                .now().minusDays(505 + 90));
+
+        Pattern childPackJsonPattern = Pattern
+                .compile(".*\"subscriptionId\":\""
+                        + childPackSubscription.getSubscriptionId()
+                        + "\",\"subscriptionPack\":\"childPack\",\"inboxWeekId\":\"w1_1\",\"contentFileName\":\"w1_1.wav.*");
+        Pattern pregnancyPackJsonPattern = Pattern
+                .compile(".*\"subscriptionId\":\""
+                        + pregnancyPackSubscription.getSubscriptionId()
+                        + "\",\"subscriptionPack\":\"pregnancyPack\",\"inboxWeekId\":\"w72_2\",\"contentFileName\":\"w72_2.wav.*");
+
+        HttpGet httpGet = createHttpGet(true, "9999911122", true,
+                "123456789012345");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
+                childPackJsonPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
+                pregnancyPackJsonPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    @Test
+    public void verifyFT82() throws IOException, InterruptedException {
+        /*
+         * To check that message for both Pack should be returned from inbox
+         * within 7 days of user's subscription gets completed for 48Weeks Pack
+         * while user is subscribed for both Pack.
+         */
+        setupData();
+
+        Subscriber mctsSubscriber = new Subscriber(9999911122L);
+        mctsSubscriber.setDateOfBirth(DateTime.now());
+        subscriberDataService.create(mctsSubscriber);
+
+        // create subscription to child pack
+        Subscription childPackSubscription = subscriptionService
+                .createSubscription(9999911122L, gLanguageLocation, gPack1,
+                        SubscriptionOrigin.MCTS_IMPORT);
+        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+
+        // update child pack subscription to mark complete
+        // setting the subscription to have ended less than a week ago -- the
+        // final message should be
+        // returned
+        subscriptionService.updateStartDate(childPackSubscription, DateTime
+                .now().minusDays(337));
+
+        // due to subscription rules detailed in #157, we need to clear out the
+        // DOB and set an LMP in order to
+        // create a second subscription for this MCTS subscriber
+        mctsSubscriber.setDateOfBirth(null);
+        mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(91));
+        subscriberDataService.update(mctsSubscriber);
+
+        // create subscription to pregnancy pack
+        Subscription pregnancyPackSubscription = subscriptionService
+                .createSubscription(9999911122L, gLanguageLocation, gPack2,
+                        SubscriptionOrigin.MCTS_IMPORT);
+
+        Pattern childPackJsonPattern = Pattern
+                .compile(".*\"subscriptionId\":\""
+                        + childPackSubscription.getSubscriptionId()
+                        + "\",\"subscriptionPack\":\"childPack\",\"inboxWeekId\":\"w48_1\",\"contentFileName\":\"w48_1.wav.*");
+        Pattern pregnancyPackJsonPattern = Pattern
+                .compile(".*\"subscriptionId\":\""
+                        + pregnancyPackSubscription.getSubscriptionId()
+                        + "\",\"subscriptionPack\":\"pregnancyPack\",\"inboxWeekId\":\"w1_1\",\"contentFileName\":\"w1_1.wav.*");
+
+        HttpGet httpGet = createHttpGet(true, "9999911122", true,
+                "123456789012345");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
+                childPackJsonPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
+                pregnancyPackJsonPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
 }
