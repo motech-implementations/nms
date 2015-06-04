@@ -847,4 +847,100 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         subscriber = subscriberDataService.findByCallingNumber(2000000000L);
         assertEquals(1, subscriber.getSubscriptions().size());
     }
+    
+    @Test
+    public void verifyFT156() {
+        /*
+         * To verify LMP is changed successfully and new subscription created
+         * when subscription already exist for 72Weeks Pack having status as "Completed".
+         */
+    	
+    	setupData();
+
+        Subscriber mctsSubscriber = new Subscriber(9999911122L);
+        mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(28));
+        subscriberDataService.create(mctsSubscriber);
+
+        subscriptionService.createSubscription(9999911122L, gLanguageLocation, gPack2, SubscriptionOrigin.MCTS_IMPORT);
+        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+        
+        // mark subscription as complete
+        mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(602));
+        subscriberService.update(mctsSubscriber);
+
+        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+        assertEquals(1, mctsSubscriber.getSubscriptions().size()); // Completed subscription should be there
+        assertEquals(0, mctsSubscriber.getActiveSubscriptions().size()); // No active subscription
+        
+        mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(100));
+        subscriberService.update(mctsSubscriber);
+        
+        // attempt to create subscription to the same pack -- should succeed
+        subscriptionService.createSubscription(9999911122L, gLanguageLocation, gPack2, SubscriptionOrigin.MCTS_IMPORT);
+
+        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+        assertEquals(2, mctsSubscriber.getSubscriptions().size());
+        assertEquals(1, mctsSubscriber.getActiveSubscriptions().size()); // One active subscription
+    }
+    
+    @Test
+    public void verifyFT159() {
+        /*
+         * To verify DOB is changed successfully and new subscription created
+         * when subscription already exist for 48Weeks Pack having status as "Deactivated".
+         */
+    	setupData();
+
+        Subscriber mctsSubscriber = new Subscriber(9999911122L);
+        mctsSubscriber.setDateOfBirth(DateTime.now());
+        subscriberDataService.create(mctsSubscriber);
+
+        subscriptionService.createSubscription(9999911122L, gLanguageLocation, gPack1, SubscriptionOrigin.MCTS_IMPORT);
+        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+        Subscription childSubscription = mctsSubscriber.getActiveSubscriptions().iterator().next();
+        childSubscription.setStatus(SubscriptionStatus.DEACTIVATED);
+        subscriptionDataService.update(childSubscription);
+
+        // attempt to create subscription to the same pack -- should succeed
+        subscriptionService.createSubscription(9999911122L, gLanguageLocation, gPack1, SubscriptionOrigin.MCTS_IMPORT);
+
+        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+        assertEquals(2, mctsSubscriber.getSubscriptions().size());
+        assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
+    }
+    
+    @Test
+    public void verifyFT160() {
+        /*
+         * To verify DOB is changed successfully and new subscription created
+         * when subscription already exist for 48Weeks Pack having status as "Completed".
+         */
+    	
+    	setupData();
+
+        Subscriber mctsSubscriber = new Subscriber(9999911122L);
+        mctsSubscriber.setDateOfBirth(DateTime.now());
+        subscriberDataService.create(mctsSubscriber);
+
+        subscriptionService.createSubscription(9999911122L, gLanguageLocation, gPack1, SubscriptionOrigin.MCTS_IMPORT);
+        
+        // mark subscription as complete
+        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+        mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(340));
+        subscriberService.update(mctsSubscriber);
+        
+        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+        assertEquals(1, mctsSubscriber.getSubscriptions().size());
+        assertEquals(0, mctsSubscriber.getActiveSubscriptions().size()); // No active subscription
+
+        mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(100));
+        subscriberService.update(mctsSubscriber);
+        // attempt to create subscription to the same pack -- should succeed
+        subscriptionService.createSubscription(9999911122L, gLanguageLocation, gPack1, SubscriptionOrigin.MCTS_IMPORT);
+
+        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+        assertEquals(2, mctsSubscriber.getSubscriptions().size());		 
+        assertEquals(1, mctsSubscriber.getActiveSubscriptions().size()); // One active subscription
+    }
+    
 }
