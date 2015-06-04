@@ -201,13 +201,20 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
         Subscriber subscriber1 = subscriberDataService.create(new Subscriber(1000000000L));
         Subscriber subscriber2 = subscriberDataService.create(new Subscriber(2000000000L));
+        Subscriber subscriber3 = subscriberDataService.create(new Subscriber(4000000000L));
 
+        // subscriber1 subscribed to 48 weeks pack only
         subscriptionService.createSubscription(subscriber1.getCallingNumber(), gLanguageLocation, gPack1,
                                                SubscriptionOrigin.IVR);
+
+        // subscriber2 subscribed to both 48 weeks pack and 72 weeks pack
         subscriptionService.createSubscription(subscriber2.getCallingNumber(), gLanguageLocation, gPack1,
                                                SubscriptionOrigin.IVR);
         subscriptionService.createSubscription(subscriber2.getCallingNumber(), gLanguageLocation, gPack2,
                                                SubscriptionOrigin.IVR);
+        // subscriber3 subscribed to 72 weeks pack only
+        subscriptionService.createSubscription(subscriber3.getCallingNumber(),
+                gLanguageLocation, gPack2, SubscriptionOrigin.IVR);
     }
 
     private HttpGet createHttpGet(boolean includeCallingNumber, String callingNumber,
@@ -746,4 +753,34 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
+
+
+    @Test
+    public void verifyFT77()
+            throws IOException, InterruptedException {
+        /**
+         * NMS_FT_77 To check that message should be returned from inbox within
+         * 7 days of user's subscription gets completed for 72Weeks Pack.
+         */
+        setupData();
+        // 4000000000L subscribed to 72Week Pack subscription
+        Subscriber subscriber = subscriberService.getSubscriber(4000000000L);
+        Subscription subscription = subscriber.getSubscriptions().iterator()
+                .next();
+        // setting the subscription to have ended less than a week ago -- the
+        // final message should be returned
+        subscription.setStartDate(DateTime.now().minusDays(505));
+        subscription.setStatus(SubscriptionStatus.COMPLETED);
+        subscriptionDataService.update(subscription);
+
+        Pattern expectedJsonPattern = Pattern
+                .compile(".*\"subscriptionPack\":\"pregnancyPack\",\"inboxWeekId\":\"w72_2\",\"contentFileName\":\"w72_2\\.wav.*");
+
+        HttpGet httpGet = createHttpGet(true, "4000000000", true,
+                "123456789012345");
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
+                expectedJsonPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
 }
