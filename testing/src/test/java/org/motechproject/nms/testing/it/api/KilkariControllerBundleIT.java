@@ -1,5 +1,17 @@
 package org.motechproject.nms.testing.it.api;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+import javax.inject.Inject;
+
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -55,17 +67,6 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
-
-import javax.inject.Inject;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.regex.Pattern;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Verify that Kilkari API is functional.
@@ -745,5 +746,101 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
                 ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    @Test
+    public void verifyFT76() throws IOException, InterruptedException {
+        /*
+         * To check that only message for Active Pack should be returned from
+         * inbox after 7 days of user's subscription gets completed for 72Weeks
+         * Pack while user is subscribed for both Pack.
+         */
+        setupData();
+
+        Subscriber mctsSubscriber = new Subscriber(9999911122L);
+        mctsSubscriber.setDateOfBirth(DateTime.now());
+        subscriberDataService.create(mctsSubscriber);
+
+        // create subscription to child pack for which start date is as per DOB
+        Subscription childPackSubscription = subscriptionService
+                .createSubscription(9999911122L, gLanguageLocation, gPack1,
+                        SubscriptionOrigin.MCTS_IMPORT);
+        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+
+        // due to subscription rules detailed in #157, we need to clear out the
+        // DOB and set an LMP in order to
+        // create a second subscription for this MCTS subscriber
+        mctsSubscriber.setDateOfBirth(null);
+        mctsSubscriber.setLastMenstrualPeriod(DateTime.now());
+        subscriberDataService.update(mctsSubscriber);
+
+        // create subscription to pregnancy pack
+        Subscription pregnancyPackSubscription = subscriptionService
+                .createSubscription(9999911122L, gLanguageLocation, gPack2,
+                        SubscriptionOrigin.MCTS_IMPORT);
+        // update pregnancy subscription pack to mark complete
+        // setting the subscription to have ended more than a week ago -- no
+        // message should be returned
+        subscriptionService.updateStartDate(pregnancyPackSubscription, DateTime
+                .now().minusDays(512 + 90));
+
+        String expectedJsonResponse = "{\"inboxSubscriptionDetailList\":[{\"subscriptionId\":\""
+                + childPackSubscription.getSubscriptionId()
+                + "\",\"subscriptionPack\":\"childPack\",\"inboxWeekId\":\"w1_1\",\"contentFileName\":\"w1_1.wav\"}]}";
+
+        HttpGet httpGet = createHttpGet(true, "9999911122", true,
+                "123456789012345");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
+                expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    @Test
+    public void verifyFT80() throws IOException, InterruptedException {
+        /*
+         * To check that only message for Active Pack should be returned from
+         * inbox after 7 days of user's subscription gets completed for 48Weeks
+         * Pack while user is subscribed for both Pack.
+         */
+        setupData();
+
+        Subscriber mctsSubscriber = new Subscriber(9999911122L);
+        mctsSubscriber.setDateOfBirth(DateTime.now());
+        subscriberDataService.create(mctsSubscriber);
+
+        // create subscription to child pack
+        Subscription childPackSubscription = subscriptionService
+                .createSubscription(9999911122L, gLanguageLocation, gPack1,
+                        SubscriptionOrigin.MCTS_IMPORT);
+
+        // update child Pack Subscription to mark complete
+        // setting the subscription to have ended more than a week ago -- no
+        // message should be returned
+        subscriptionService.updateStartDate(childPackSubscription, DateTime
+                .now().minusDays(344));
+
+        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+
+        // due to subscription rules detailed in #157, we need to clear out the
+        // DOB and set an LMP in order to
+        // create a second subscription for this MCTS subscriber
+        mctsSubscriber.setDateOfBirth(null);
+        mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(91));
+        subscriberDataService.update(mctsSubscriber);
+
+        // create subscription to pregnancy pack for which start date is
+        // yesterday
+        // date as per LMP
+        Subscription pregnancyPackSubscription = subscriptionService
+                .createSubscription(9999911122L, gLanguageLocation, gPack2,
+                        SubscriptionOrigin.MCTS_IMPORT);
+
+        String expectedJsonResponse = "{\"inboxSubscriptionDetailList\":[{\"subscriptionId\":\""
+                + pregnancyPackSubscription.getSubscriptionId()
+                + "\",\"subscriptionPack\":\"pregnancyPack\",\"inboxWeekId\":\"w1_1\",\"contentFileName\":\"w1_1.wav\"}]}";
+
+        HttpGet httpGet = createHttpGet(true, "9999911122", true,
+                "123456789012345");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
+                expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 }
