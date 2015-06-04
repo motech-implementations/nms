@@ -847,4 +847,15 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         subscriber = subscriberDataService.findByCallingNumber(2000000000L);
         assertEquals(1, subscriber.getSubscriptions().size());
     }
+    
+    @Test(expected=IllegalArgumentException.class)
+    public void verifyFT180() {
+    	/*
+    	 * To verify that number of Messages per week shouldn't get configured if invalid value is provided.
+    	 */
+    	setupData();
+    	gPack1 = subscriptionPackDataService.byName("childPack");
+    	gPack1.setMessagesPerWeek(3);
+    }
+    
 }
