@@ -3,6 +3,7 @@ package org.motechproject.nms.flw.domain;
 import org.joda.time.DateTime;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
+import org.motechproject.mds.domain.MdsEntity;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.LanguageLocation;
 
@@ -15,10 +16,7 @@ import javax.validation.constraints.Min;
 
 @Entity(tableName = "nms_front_line_workers")
 @Index(name = "status_invalidationDate_composit_idx", members = { "status", "invalidationDate" })
-public class FrontLineWorker {
-
-    @Field
-    private Long id;
+public class FrontLineWorker extends MdsEntity {
 
     @Field
     private String flwId;
@@ -56,14 +54,6 @@ public class FrontLineWorker {
     public FrontLineWorker(String name, Long contactNumber) {
         this.name = name;
         this.contactNumber = contactNumber;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public String getFlwId() {
@@ -147,7 +137,7 @@ public class FrontLineWorker {
 
         FrontLineWorker that = (FrontLineWorker) o;
 
-        if (!id.equals(that.id)) {
+        if (!this.getId().equals(that.getId())) {
             return false;
         }
         if (!contactNumber.equals(that.contactNumber)) {
@@ -165,7 +155,7 @@ public class FrontLineWorker {
 
     @Override
     public int hashCode() {
-        int result = (id != null ? id.hashCode() : 0);
+        int result = (getId() != null ? getId().hashCode() : 0);
         result = 31 * result + contactNumber.hashCode();
         result = 31 * result + (name != null ? name.hashCode() : 0);
         result = 31 * result + (languageLocation != null ? languageLocation.hashCode() : 0);
@@ -176,9 +166,7 @@ public class FrontLineWorker {
     @Override
     public String toString() {
         return "FrontLineWorker{" +
-                "id=" + id +
-                ", contactNumber='" + contactNumber + '\'' +
-                ", name='" + name + '\'' +
+                "id=" + getId() +
                 ", languageLocation=" + languageLocation +
                 ", district=" + district +
                 '}';
