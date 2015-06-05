@@ -919,7 +919,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
 	@Test
 	@Ignore
-	public void testGetSubscriberDetailsInvalidNo() throws IOException,
+	public void verifyFT6_7_8() throws IOException,
 			InterruptedException {
 
 		/**
