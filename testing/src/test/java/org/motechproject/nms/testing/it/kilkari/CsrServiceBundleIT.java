@@ -32,7 +32,6 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
-import javax.xml.rpc.Call;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
