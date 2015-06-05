@@ -119,4 +119,9 @@ public class RegionHelper {
 
         return language;
     }
+
+    public String airtelOperator()
+    {
+        return "A";
+    }
 }

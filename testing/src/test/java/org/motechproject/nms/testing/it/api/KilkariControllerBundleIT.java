@@ -184,9 +184,9 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         String expectedJson = createInboxResponseJson(new HashSet<>(Arrays.asList(
                 new InboxSubscriptionDetailResponse(
                         subscription.getSubscriptionId().toString(),
-                        "childPack",
-                        "w1_1",
-                        "w1_1.wav"
+                        sh.childPack().getName(),
+                        sh.getWeekId(subscription, 0),
+                        sh.getContentMessageFile(subscription, 0)
                 )
         )));
 
@@ -204,7 +204,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscriberDataService.create(mctsSubscriber);
 
         // create subscription to child pack
-        subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.childPack(), SubscriptionOrigin.MCTS_IMPORT);
+        subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.childPack(),
+                SubscriptionOrigin.MCTS_IMPORT);
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
 
         // due to subscription rules detailed in #157, we need to clear out the DOB and set an LMP in order to
@@ -214,7 +215,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscriberDataService.update(mctsSubscriber);
 
         // create subscription to pregnancy pack
-        subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
+        subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.pregnancyPack(),
+                SubscriptionOrigin.MCTS_IMPORT);
 
         Pattern childPackJsonPattern = Pattern.compile(".*\"subscriptionPack\":\"childPack\",\"inboxWeekId\":\"w36_1\",\"contentFileName\":\"w36_1\\.wav.*");
         Pattern pregnancyPackJsonPattern = Pattern.compile(".*\"subscriptionPack\":\"pregnancyPack\",\"inboxWeekId\":\"w2_2\",\"contentFileName\":\"w2_2\\.wav.*");
@@ -233,9 +235,11 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(30));
         subscriberDataService.create(mctsSubscriber);
         // create subscription to pregnancy pack, not due to start for 60 days
-        subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
+        subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.pregnancyPack(),
+                SubscriptionOrigin.MCTS_IMPORT);
 
-        Pattern expectedJsonPattern = Pattern.compile(".*\"subscriptionPack\":\"pregnancyPack\",\"inboxWeekId\":null,\"contentFileName\":null.*");
+        Pattern expectedJsonPattern = Pattern.compile(
+                ".*\"subscriptionPack\":\"pregnancyPack\",\"inboxWeekId\":null,\"contentFileName\":null.*");
 
         HttpGet httpGet = createHttpGet(true, "9999911122", true, "123456789012345");
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, expectedJsonPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
@@ -318,7 +322,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         // create subscription to child pack
         subscriber.setDateOfBirth(DateTime.now().minusDays(250));
         subscriberDataService.update(subscriber);
-        subscriptionService.createSubscription(2000000000L, rh.hindiLanguage(), sh.childPack(), SubscriptionOrigin.MCTS_IMPORT);
+        subscriptionService.createSubscription(2000000000L, rh.hindiLanguage(), sh.childPack(),
+                SubscriptionOrigin.MCTS_IMPORT);
         subscriber = subscriberDataService.findByCallingNumber(2000000000L);
 
         // due to subscription rules detailed in #157, we need to clear out the DOB and set an LMP in order to
@@ -328,7 +333,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscriberDataService.update(subscriber);
 
         // create subscription to pregnancy pack
-        subscriptionService.createSubscription(2000000000L, rh.hindiLanguage(), sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
+        subscriptionService.createSubscription(2000000000L, rh.hindiLanguage(), sh.pregnancyPack(),
+                SubscriptionOrigin.MCTS_IMPORT);
 
         subscriber = subscriberDataService.findByCallingNumber(2000000000L);
         assertEquals(2, subscriber.getActiveSubscriptions().size());
@@ -369,8 +375,13 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
     private HttpPost createSubscriptionHttpPost(long callingNumber, String subscriptionPack)
             throws IOException {
-        SubscriptionRequest subscriptionRequest = new SubscriptionRequest(callingNumber, "A", "AP",
-                123456789012545L, "10", subscriptionPack);
+        SubscriptionRequest subscriptionRequest = new SubscriptionRequest(
+                callingNumber,
+                rh.airtelOperator(),
+                rh.delhiCircle().getName(),
+                123456789012545L,
+                rh.hindiLanguage().getCode(),
+                subscriptionPack);
         ObjectMapper mapper = new ObjectMapper();
         String subscriptionRequestJson = mapper.writeValueAsString(subscriptionRequest);
 
@@ -383,7 +394,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testCreateSubscriptionRequest() throws IOException, InterruptedException {
-        HttpPost httpPost = createSubscriptionHttpPost(9999911122L, "childPack");
+        HttpPost httpPost = createSubscriptionHttpPost(9999911122L, sh.childPack().getName());
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
@@ -423,14 +434,14 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     public void testCreateSubscriptionRequestDifferentPacks() throws IOException, InterruptedException {
         long callingNumber = 9999911122L;
 
-        HttpPost httpPost1 = createSubscriptionHttpPost(callingNumber, "childPack");
+        HttpPost httpPost1 = createSubscriptionHttpPost(callingNumber, sh.childPack().getName());
 
         SimpleHttpClient.execHttpRequest(httpPost1, HttpStatus.SC_OK, ADMIN_USERNAME, ADMIN_PASSWORD);
 
         Subscriber subscriber = subscriberService.getSubscriber(callingNumber);
         int numberOfSubsBefore = subscriber.getActiveSubscriptions().size();
 
-        HttpPost httpPost2 = createSubscriptionHttpPost(callingNumber, "sh.pregnancyPack()");
+        HttpPost httpPost2 = createSubscriptionHttpPost(callingNumber, sh.pregnancyPack().getName());
 
         SimpleHttpClient.execHttpRequest(httpPost2, HttpStatus.SC_OK, ADMIN_USERNAME, ADMIN_PASSWORD);
 
@@ -443,8 +454,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testCreateSubscriptionsNoLanguageInDB() throws IOException, InterruptedException {
-        SubscriptionRequest subscriptionRequest = new SubscriptionRequest(9999911122L, "A", "AP",
-                123456789012545L, "99", "childPack");
+        SubscriptionRequest subscriptionRequest = new SubscriptionRequest(9999911122L, rh.airtelOperator(), rh.delhiCircle().getName(),
+                123456789012545L, "99", sh.childPack().getName());
         ObjectMapper mapper = new ObjectMapper();
         String subscriptionRequestJson = mapper.writeValueAsString(subscriptionRequest);
 
@@ -477,8 +488,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         Language kannadaLanguage = new Language("kn", "Kannada");
         languageDataService.create(kannadaLanguage);
 
-        SubscriptionRequest subscriptionRequest = new SubscriptionRequest(9999911122L, "A", "BB",
-                123456789012545L, "77", "childPack");
+        SubscriptionRequest subscriptionRequest = new SubscriptionRequest(9999911122L, rh.airtelOperator(), "BB",
+                123456789012545L, "77", sh.childPack().getName());
         ObjectMapper mapper = new ObjectMapper();
         String subscriptionRequestJson = mapper.writeValueAsString(subscriptionRequest);
 
@@ -500,8 +511,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         Subscription subscription = subscriber.getActiveSubscriptions().iterator().next();
         String subscriptionId = subscription.getSubscriptionId();
 
-        SubscriptionRequest subscriptionRequest = new SubscriptionRequest(1000000000L, "A", "AP",
-                123456789012545L, subscriptionId);
+        SubscriptionRequest subscriptionRequest = new SubscriptionRequest(1000000000L, rh.airtelOperator(),
+                rh.delhiCircle().getName(), 123456789012545L, subscriptionId);
         ObjectMapper mapper = new ObjectMapper();
         String subscriptionRequestJson = mapper.writeValueAsString(subscriptionRequest);
 
@@ -526,7 +537,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         String subscriptionId = subscription.getSubscriptionId();
         subscriptionService.deactivateSubscription(subscription, DeactivationReason.DEACTIVATED_BY_USER);
 
-        SubscriptionRequest subscriptionRequest = new SubscriptionRequest(1000000000L, "A", "AP",
+        SubscriptionRequest subscriptionRequest = new SubscriptionRequest(1000000000L, rh.airtelOperator(), rh.delhiCircle().getName(),
                 123456789012545L, subscriptionId);
         ObjectMapper mapper = new ObjectMapper();
         String subscriptionRequestJson = mapper.writeValueAsString(subscriptionRequest);
@@ -547,7 +558,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     @Test
     public void testDeactivateSubscriptionRequestInvalidSubscription() throws IOException, InterruptedException {
 
-        SubscriptionRequest subscriptionRequest = new SubscriptionRequest(1000000000L, "A", "AP",
+        SubscriptionRequest subscriptionRequest = new SubscriptionRequest(1000000000L, rh.airtelOperator(), rh.delhiCircle().getName(),
                 123456789012545L, "77f13128-037e-4f98-8651-285fa618d94a");
         ObjectMapper mapper = new ObjectMapper();
         String subscriptionRequestJson = mapper.writeValueAsString(subscriptionRequest);
@@ -576,8 +587,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     public void testSaveInboxCallDetails() throws IOException, InterruptedException {
         HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
                 1234567890L, //callingNumber
-                "A", //operator
-                "AP", //circle
+                rh.airtelOperator(), //operator
+                rh.delhiCircle().getName(), //circle
                 123456789012345L, //callId
                 123L, //callStartTime
                 456L, //callEndTime
@@ -608,8 +619,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     public void testSaveInboxCallDetailsInvalidParams() throws IOException, InterruptedException {
         HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
                 1234567890L, //callingNumber
-                "A", //operator
-                "AP", //circle
+                rh.airtelOperator(), //operator
+                rh.delhiCircle().getName(), //circle
                 123456789012345L, //callId
                 123L, //callStartTime
                 456L, //callEndTime
@@ -627,8 +638,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     public void testSaveInboxCallDetailsInvalidContent() throws IOException, InterruptedException {
         HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
                 1234567890L, //callingNumber
-                "A", //operator
-                "AP", //circle
+                rh.airtelOperator(), //operator
+                rh.delhiCircle().getName(), //circle
                 123456789012345L, //callId
                 123L, //callStartTime
                 456L, //callEndTime
