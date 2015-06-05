@@ -26,55 +26,55 @@ public class RegionHelper {
         this.stateDataService = stateDataService;
     }
 
-    public Circle makeCircle() {
-        Circle circle = circleDataService.findByName("XX");
+    public Circle delhiCircle() {
+        Circle circle = circleDataService.findByName("DE");
         if (circle != null) {
             return circle;
         }
 
-        return circleDataService.create(new Circle("XX"));
+        return circleDataService.create(new Circle("DE"));
     }
 
-    public State makeState() {
+    public State delhiState() {
         State state = stateDataService.findByCode(1l);
         if (state != null) {
             return state;
         }
 
         state = new State();
-        state.setName("State 1");
+        state.setName("National Capital Territory of Delhi");
         state.setCode(1L);
 
         return stateDataService.create(state);
     }
 
-    public District makeDistrict() {
+    public District newDelhiDistrict() {
         District district = districtDataService.findById(1L);
         if (district != null) {
             return district;
         }
 
         district = new District();
-        district.setName("District 1");
-        district.setRegionalName("District 1");
+        district.setName("New Delhi");
+        district.setRegionalName("New Delhi");
         district.setCode(1L);
-        district.setState(makeState());
+        district.setState(delhiState());
 
         return districtDataService.create(district);
     }
 
-    public Language makeLanguage() {
+    public Language hindiLanguage() {
         Language language = languageDataService.findByName("Hindi");
         if (language != null) {
             return language;
         }
-        language = languageDataService.create(new Language("99", "Hindi"));
+        language = languageDataService.create(new Language("hi", "Hindi"));
 
-        District district = makeDistrict();
+        District district = newDelhiDistrict();
         district.setLanguage(language);
         districtDataService.update(district);
 
-        Circle circle = makeCircle();
+        Circle circle = delhiCircle();
         circle.getStates().add(district.getState());
         circleDataService.update(circle);
 

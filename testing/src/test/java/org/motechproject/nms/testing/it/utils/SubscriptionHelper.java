@@ -13,9 +13,7 @@ import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.region.domain.Circle;
-import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Language;
-import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
@@ -23,7 +21,6 @@ import org.motechproject.nms.region.repository.StateDataService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.plaf.synth.Region;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -52,26 +49,22 @@ public class SubscriptionHelper {
         this.subscriberDataService = subscriberDataService;
         this.subscriptionPackDataService = subscriptionPackDataService;
 
-        this.regionHelper = new RegionHelper(languageDataService, circleDataService, stateDataService, districtDataService);
+        this.regionHelper = new RegionHelper(languageDataService, circleDataService, stateDataService,
+                districtDataService);
     }
 
-    public SubscriptionPack getChildPack() {
-        createSubscriptionPacks();
-        return subscriptionService.getSubscriptionPack("childPack");
-    }
-
-    public SubscriptionPack getPregnancyPack() {
-        createSubscriptionPacks();
-        return subscriptionService.getSubscriptionPack("pregnancyPack");
-    }
-
-    private void createSubscriptionPacks() {
+    public SubscriptionPack childPack() {
         if (subscriptionPackDataService.byName("childPack") == null) {
             createSubscriptionPack("childPack", SubscriptionPackType.CHILD, CHILD_PACK_WEEKS, 1);
         }
+        return subscriptionService.getSubscriptionPack("childPack");
+    }
+
+    public SubscriptionPack pregnancyPack() {
         if (subscriptionPackDataService.byName("pregnancyPack") == null) {
             createSubscriptionPack("pregnancyPack", SubscriptionPackType.PREGNANCY, PREGNANCY_PACK_WEEKS, 2);
         }
+        return subscriptionService.getSubscriptionPack("pregnancyPack");
     }
 
     private void createSubscriptionPack(String name, SubscriptionPackType type, int weeks,
@@ -133,17 +126,16 @@ public class SubscriptionHelper {
     public Subscription mksub(SubscriptionOrigin origin, DateTime startDate, SubscriptionPackType packType) {
 
         Subscription subscription;
-        createSubscriptionPacks();
         Subscriber subscriber = subscriberDataService.create(new Subscriber(
                 makeNumber(),
-                regionHelper.makeLanguage(),
-                regionHelper.makeCircle()
+                regionHelper.hindiLanguage(),
+                regionHelper.delhiCircle()
         ));
 
         if (SubscriptionPackType.PREGNANCY == packType) {
-            subscription = new Subscription(subscriber,getPregnancyPack() , origin);
+            subscription = new Subscription(subscriber, pregnancyPack() , origin);
         } else {
-            subscription = new Subscription(subscriber, getChildPack(), origin);
+            subscription = new Subscription(subscriber, childPack(), origin);
         }
 
         subscription.setStartDate(startDate);
