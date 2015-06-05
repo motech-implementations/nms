@@ -62,6 +62,7 @@ import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.LanguageLocationDataService;
+import org.motechproject.nms.region.repository.NationalDefaultLanguageLocationDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.testing.it.api.utils.HttpDeleteWithBody;
 import org.motechproject.nms.testing.it.api.utils.SubscriptionPackBuilder;
@@ -132,6 +133,9 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     @Inject
     private InboxCallDataDataService inboxCallDataDataService;
 
+    @Inject
+    private NationalDefaultLanguageLocationDataService nationalLanguageLocationDataService;
+
     public KilkariControllerBundleIT() {
         System.setProperty("org.motechproject.testing.osgi.http.numTries", "1");
     }
@@ -162,6 +166,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         serviceUsageCapDataService.deleteAll();
         serviceUsageDataService.deleteAll();
         frontLineWorkerDataService.deleteAll();
+        nationalLanguageLocationDataService.deleteAll();
         languageLocationDataService.deleteAll();
         languageDataService.deleteAll();
         deployedServiceDataService.deleteAll();
