@@ -16,7 +16,6 @@ import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
-import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.repository.InboxCallDataDataService;
 import org.motechproject.nms.kilkari.repository.InboxCallDetailRecordDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
@@ -26,7 +25,6 @@ import org.motechproject.nms.kilkari.repository.SubscriptionPackMessageDataServi
 import org.motechproject.nms.kilkari.service.InboxService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
-import org.motechproject.nms.testing.it.api.utils.SubscriptionPackBuilder;
 import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Language;
@@ -37,6 +35,8 @@ import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.LanguageLocationDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.testing.it.api.utils.SubscriptionPackBuilder;
+import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.ops4j.pax.exam.ExamFactory;
@@ -56,27 +56,17 @@ public class InboxServiceBundleIT extends BasePaxIT {
 	@Inject
 	private InboxService inboxService;
 	@Inject
-	private SubscriberDataService subscriberDataService;
-	@Inject
 	private SubscriptionPackDataService subscriptionPackDataService;
 	@Inject
-	private SubscriptionPackMessageDataService subscriptionPackMessageDataService;
-	@Inject
-	private SubscriptionDataService subscriptionDataService;
-	@Inject
 	private LanguageDataService languageDataService;
-	@Inject
-	private InboxCallDetailRecordDataService inboxCallDetailRecordDataService;
-	@Inject
-	private InboxCallDataDataService inboxCallDataDataService;
 	@Inject
 	private LanguageLocationDataService languageLocationDataService;
 	@Inject
 	private StateDataService stateDataService;
 	@Inject
-	private DistrictDataService districtDataService;
-	@Inject
-	private CircleDataService circleDataService;
+	private TestingService testingService;
+	
+	
 
 	private LanguageLocation gLanguageLocation;
 	private SubscriptionPack pregnancyPack;
@@ -127,26 +117,6 @@ public class InboxServiceBundleIT extends BasePaxIT {
 		pregnancyPack = subscriptionPackDataService.byName("pregnancyPack"); 
 	}
 
-	private void cleanupData() {
-		for (Subscription subscription: subscriptionDataService.retrieveAll()) {
-			subscription.setStatus(SubscriptionStatus.COMPLETED);
-			subscription.setEndDate(new DateTime().withDate(2011, 8, 1));
-
-			subscriptionDataService.update(subscription);
-		}
-		subscriptionDataService.deleteAll();
-		subscriptionPackDataService.deleteAll();
-		subscriptionPackMessageDataService.deleteAll();
-		subscriberDataService.deleteAll();
-		circleDataService.deleteAll();
-		districtDataService.deleteAll();
-		stateDataService.deleteAll();
-		languageLocationDataService.deleteAll();
-		languageDataService.deleteAll();
-		inboxCallDataDataService.deleteAll();
-		inboxCallDetailRecordDataService.deleteAll();
-	}
-
 	@Test
 	public void testServicePresent() throws Exception {
 		assertNotNull(inboxService);
@@ -162,7 +132,7 @@ public class InboxServiceBundleIT extends BasePaxIT {
 		 * To check NMS is able to make available a single message of current week  in inbox
 		 * when user is subscribed to 72Weeks Pack with 2 message per week configuration.
 		 */
-		cleanupData();
+		testingService.clearDatabase();
 		createLanguageAndSubscriptionPacks();
 		DateTime now = DateTime.now();
 
