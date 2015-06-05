@@ -4,6 +4,7 @@ import org.joda.time.DateTime;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.annotations.Ignore;
+import org.motechproject.mds.domain.MdsEntity;
 import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.LanguageLocation;
 
@@ -22,7 +23,7 @@ import java.util.Set;
  */
 // TODO: Remove maxFetchDepth once https://applab.atlassian.net/browse/MOTECH-1678 is resolved
 @Entity(maxFetchDepth = -1, tableName = "nms_subscribers")
-public class Subscriber {
+public class Subscriber extends MdsEntity {
     @Field
     @Unique
     @Min(value = 1000000000L, message = "callingNumber must be 10 digits")
@@ -170,9 +171,7 @@ public class Subscriber {
     @Override
     public String toString() {
         return "Subscriber{" +
-                "callingNumber=" + callingNumber +
-                ", dateOfBirth=" + dateOfBirth +
-                ", lastMenstrualPeriod=" + lastMenstrualPeriod +
+                "id=" + getId() +
                 ", circle='" + circle +
                 ", subscriptions=" + subscriptions +
                 '}';
