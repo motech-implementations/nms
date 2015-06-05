@@ -27,12 +27,10 @@ import org.motechproject.nms.props.domain.DayOfTheWeek;
 import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Language;
-import org.motechproject.nms.region.domain.LanguageLocation;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
-import org.motechproject.nms.region.repository.LanguageLocationDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.testing.it.api.utils.SubscriptionPackBuilder;
 import org.motechproject.nms.testing.it.utils.SubscriptionHelper;
@@ -130,9 +128,16 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
 
         testingService.clearDatabase();
 
+        hindi = new Language("HI", "Hindi");
+        languageDataService.create(hindi);
+
+        urdu = new Language("UR", "Urdu");
+        languageDataService.create(urdu);
+
         District district = new District();
         district.setName("District 1");
         district.setRegionalName("District 1");
+        district.setLanguage(hindi);
         district.setCode(1L);
 
         State state = new State();
@@ -143,16 +148,12 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         stateDataService.create(state);
 
         aa = new Circle("AA");
+        aa.getStates().add(state);
+        circleDataService.create(aa);
+
         bb = new Circle("BB");
-
-        hindi = new LanguageLocation("HI", aa, new Language("Hindi"), false);
-        hindi.getDistrictSet().add(district);
-        hindi = languageLocationDataService.create(hindi);
-
-        urdu = new LanguageLocation("UR", aa, new Language("Urdu"), false);
-        urdu.getDistrictSet().add(district);
-        urdu = languageLocationDataService.create(urdu);
-
+        bb.getStates().add(state);
+        circleDataService.create(bb);
 
         childPack = subscriptionPackDataService.create(
                 SubscriptionPackBuilder.createSubscriptionPack(
@@ -254,12 +255,11 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
     @Ignore
     public void createLargeFile() {
         SubscriptionHelper sh = new SubscriptionHelper(subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
+                subscriptionPackDataService, languageDataService, circleDataService,
                 stateDataService, districtDataService);
 
         subscriptionService.deleteAll();
         subscriberDataService.deleteAll();
-        languageLocationDataService.deleteAll();
         languageDataService.deleteAll();
         districtDataService.deleteAll();
         stateDataService.deleteAll();
@@ -272,7 +272,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
 
         for (int i=0 ; i<1000 ; i++) {
 
-            int randomWeek = (int) (Math.random() * sh.getChildPack().getWeeks());
+            int randomWeek = (int) (Math.random() * sh.childPack().getWeeks());
             Subscription sub = sh.mksub(
                     SubscriptionOrigin.MCTS_IMPORT,
                     DateTime.now().minusDays(7 * randomWeek - 1)
