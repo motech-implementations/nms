@@ -706,7 +706,69 @@ public class CsrServiceBundleIT extends BasePaxIT {
         assertEquals(DayOfTheWeek.today().nextDay(),retries.get(0).getDayOfTheWeek());
     }
 
+    @Test
+    public void verifyFT177() {
+        /**
+         * To verify that beneficiary(via mcts import) will be  deactivated if he/she
+         * has MSISDN number added to the DND database.
+         */
 
+        Subscription subscription = makeSubscription(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(14));
+
+        CallSummaryRecordDto csr = new CallSummaryRecordDto(
+                new RequestId(subscription.getSubscriptionId(), "11112233445566"),
+                subscription.getSubscriber().getCallingNumber(),
+                "w1_1.wav",
+                "w1_1",
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
+                FinalCallStatus.REJECTED,
+                makeStatsMap(StatusCode.OBD_DNIS_IN_DND, 3),
+                0,
+                3
+        );
+
+        Map<String, Object> eventParams = new HashMap<>();
+        eventParams.put(CSR_PARAM_KEY, csr);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
+        csrService.processCallSummaryRecord(motechEvent);
+
+        // verify that subscription created via MCTS-import is still Deactivated with reason "do not disturb"
+        subscription = subscriptionDataService.findBySubscriptionId(subscription.getSubscriptionId());
+        assertEquals(SubscriptionStatus.DEACTIVATED, subscription.getStatus());
+        assertEquals(DeactivationReason.DO_NOT_DISTURB, subscription.getDeactivationReason());
+
+
+
+        /*
+        *NMS_FT_163
+        *To verify 72Weeks Pack created via IVR, shouldn’t get deactivated due to reason DND.
+        */
+        Subscription subscription2 = makeSubscription(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
+        csr = new CallSummaryRecordDto(
+                new RequestId(subscription.getSubscriptionId(), "11112233445566"),
+                subscription.getSubscriber().getCallingNumber(),
+                "w1_1.wav",
+                "w1_1",
+                makeLanguageLocation().getCode(),
+                makeCircle().getName(),
+                FinalCallStatus.REJECTED,
+                makeStatsMap(StatusCode.OBD_DNIS_IN_DND, 3),
+                0,
+                3
+        );
+
+        eventParams = new HashMap<>();
+        eventParams.put(CSR_PARAM_KEY, csr);
+        motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
+        csrService.processCallSummaryRecord(motechEvent);
+
+        // verify that subscription created via IVR is still Active
+        subscription2 = subscriptionDataService.findBySubscriptionId(subscription2.getSubscriptionId());
+        assertEquals(SubscriptionStatus.ACTIVE, subscription2.getStatus());
+
+
+    }
 
     //todo: verify multiple days' worth of summary record aggregation
     //todo: verify more stuff I can't think of now
