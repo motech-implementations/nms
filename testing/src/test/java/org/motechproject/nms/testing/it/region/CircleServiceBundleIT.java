@@ -21,6 +21,7 @@ import org.motechproject.nms.region.repository.HealthSubFacilityDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.repository.TalukaDataService;
 import org.motechproject.nms.region.repository.VillageDataService;
+import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.ops4j.pax.exam.ExamFactory;
@@ -37,6 +38,9 @@ import static org.junit.Assert.assertNotNull;
 @ExamReactorStrategy(PerSuite.class)
 @ExamFactory(MotechNativeTestContainerFactory.class)
 public class CircleServiceBundleIT extends BasePaxIT {
+
+    @Inject
+    private TestingService testingService;
 
     @Inject
     private CircleDataService circleDataService;
@@ -77,15 +81,7 @@ public class CircleServiceBundleIT extends BasePaxIT {
     // Circle 2           -> State 2, State 3
     // Circle 3, Circle 4 -> State 4
     private void setupData() {
-        healthSubFacilityDataService.deleteAll();
-        healthFacilityDataService.deleteAll();
-        healthFacilityTypeDataService.deleteAll();
-        healthBlockDataService.deleteAll();
-        villageDataService.deleteAll();
-        talukaDataService.deleteAll();
-        districtDataService.deleteAll();
-        stateDataService.deleteAll();
-        circleDataService.deleteAll();
+        testingService.clearDatabase();
 
         healthSubFacility = new HealthSubFacility();
         healthSubFacility.setName("Health Sub Facility 1");

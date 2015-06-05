@@ -17,7 +17,6 @@ import org.motechproject.nms.region.repository.HealthBlockDataService;
 import org.motechproject.nms.region.repository.HealthFacilityDataService;
 import org.motechproject.nms.region.repository.HealthFacilityTypeDataService;
 import org.motechproject.nms.region.repository.HealthSubFacilityDataService;
-import org.motechproject.nms.region.repository.NationalDefaultLanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.repository.TalukaDataService;
 import org.motechproject.nms.region.repository.VillageDataService;
@@ -28,6 +27,7 @@ import org.motechproject.nms.region.service.HealthFacilityImportService;
 import org.motechproject.nms.region.service.HealthSubFacilityImportService;
 import org.motechproject.nms.region.service.NonCensusVillageImportService;
 import org.motechproject.nms.region.service.TalukaImportService;
+import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.ops4j.pax.exam.ExamFactory;
@@ -50,7 +50,8 @@ import static org.junit.Assert.assertTrue;
 public class LocationDataImportServiceBundleIT extends BasePaxIT {
 
     @Inject
-    private NationalDefaultLanguageDataService nationalDefaultLanguageLocationDataService;
+    private TestingService testingService;
+
     @Inject
     private StateDataService stateDataService;
     @Inject
@@ -85,15 +86,8 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
 
     @Before
     public void setUp() {
-        nationalDefaultLanguageLocationDataService.deleteAll();
-        healthSubFacilityDataService.deleteAll();
-        healthFacilityDataService.deleteAll();
-        healthFacilityTypeDataService.deleteAll();
-        healthBlockDataService.deleteAll();
-        villageDataService.deleteAll();
-        talukaDataService.deleteAll();
-        districtDataService.deleteAll();
-        stateDataService.deleteAll();
+
+        testingService.clearDatabase();
 
         stateDataService.create(new State("EXAMPLE STATE", 1234L));
         HealthFacilityType facilityType = new HealthFacilityType();

@@ -14,6 +14,7 @@ import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.NationalDefaultLanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.ops4j.pax.exam.ExamFactory;
@@ -28,6 +29,9 @@ import javax.jdo.JDODataStoreException;
 @ExamReactorStrategy(PerSuite.class)
 @ExamFactory(MotechNativeTestContainerFactory.class)
 public class NationalDefaultLanguageLocationBundleIT extends BasePaxIT{
+
+    @Inject
+    private TestingService testingService;
 
     @Inject
     private NationalDefaultLanguageDataService nationalDefaultLanguageLocationDataService;
@@ -45,11 +49,7 @@ public class NationalDefaultLanguageLocationBundleIT extends BasePaxIT{
     private LanguageDataService languageDataService;
 
     private void cleanAllData() {
-        nationalDefaultLanguageLocationDataService.deleteAll();
-        languageDataService.deleteAll();
-        districtDataService.deleteAll();
-        stateDataService.deleteAll();
-        circleDataService.deleteAll();
+        testingService.clearDatabase();
     }
 
     @Rule
