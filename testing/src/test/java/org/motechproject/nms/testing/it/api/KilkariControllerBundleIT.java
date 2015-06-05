@@ -7,6 +7,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.joda.time.DateTime;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.api.web.contract.BadRequest;
@@ -57,6 +58,7 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -782,5 +784,35 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
                 expectedJsonPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
+     
+    @Test @Ignore
+    public void verifyFT_83_84_85() throws IOException,
+    		InterruptedException {
+    	/**
+    	 * testing response of Get inbox Details API with calling Number as invalid value.
+    	 */
+    	// callingNumber less than 10 digits
+    	HttpGet httpGet = createHttpGet(true, "123456789", true,
+    			"123456789012345");
+    	String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
 
+    	assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
+    			HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+    			ADMIN_USERNAME, ADMIN_PASSWORD));
+
+    	// callingNumber more than 10 digits
+    	httpGet = createHttpGet(true, "12345678901", true, "123456789012345");
+
+    	assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
+    			HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+    			ADMIN_USERNAME, ADMIN_PASSWORD));
+
+    		// callingNumber alphanumeric
+    	httpGet = createHttpGet(true, "12345DF7890", true, "123456789012345");
+
+    	assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
+    			HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+    			ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+    
 }
