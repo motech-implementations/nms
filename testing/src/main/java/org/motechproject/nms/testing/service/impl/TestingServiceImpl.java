@@ -154,6 +154,14 @@ public class TestingServiceImpl implements TestingService {
 
 
 
+    public TestingServiceImpl() {
+        //
+        // Should only happen on dev / CI machines, so no need to save/restore settings
+        //
+        System.setProperty("org.motechproject.testing.osgi.http.numTries", "1");
+    }
+
+
     @Override
     public void clearDatabase() {
         LOGGER.debug("clearDatabase()");

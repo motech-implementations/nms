@@ -55,6 +55,7 @@ public class CdrHelper {
     private SettingsService settingsService;
     private FileAuditRecordDataService fileAuditRecordDataService;
     private SubscriptionHelper sh;
+    private RegionHelper rh;
 
     private List<CallDetailRecordDto> cdrs;
 
@@ -68,6 +69,9 @@ public class CdrHelper {
 
         sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
                 languageDataService, circleDataService, stateDataService,
+                districtDataService);
+
+        rh = new RegionHelper(languageDataService, circleDataService, stateDataService,
                 districtDataService);
 
         this.settingsService = settingsService;
@@ -96,8 +100,8 @@ public class CdrHelper {
         cdr.setMsisdn(sub.getSubscriber().getCallingNumber());
         cdr.setCallAnswerTime(DateTime.now().minusHours(5));
         cdr.setMsgPlayDuration(110 + (int) (Math.random() * 20));
-        cdr.setLanguageLocationId(sh.makeLanguage().getCode());
-        cdr.setCircleId(sh.makeCircle().getName());
+        cdr.setLanguageLocationId(rh.hindiLanguage().getCode());
+        cdr.setCircleId(rh.delhiCircle().getName());
         cdr.setOperatorId("xx");
         return cdr;
     }
@@ -124,7 +128,7 @@ public class CdrHelper {
         for (int i = 0; i < numFailure; i++) {
             CallDetailRecordDto cdr = makeCdrFile(sub);
             cdr.setStatusCode(randomFailureStatusCode());
-            cdr.setContentFile(sh.getChildPack().getMessages().get(5).getMessageFileName());
+            cdr.setContentFile(sh.childPack().getMessages().get(5).getMessageFileName());
             cdr.setCallDisconnectReason(CallDisconnectReason.NORMAL_DROP);
             cdr.setWeekId("w5_1");
             cdrs.add(cdr);
@@ -133,7 +137,7 @@ public class CdrHelper {
         if (eventuallySuccessful) {
             CallDetailRecordDto cdr = makeCdrFile(sub);
             cdr.setStatusCode(StatusCode.OBD_SUCCESS_CALL_CONNECTED);
-            cdr.setContentFile(sh.getChildPack().getMessages().get(5).getMessageFileName());
+            cdr.setContentFile(sh.childPack().getMessages().get(5).getMessageFileName());
             cdr.setCallDisconnectReason(CallDisconnectReason.NORMAL_DROP);
             cdr.setWeekId("w5_1");
             cdrs.add(cdr);
@@ -148,7 +152,7 @@ public class CdrHelper {
             Subscription sub = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(30));
             CallDetailRecordDto cdr = makeCdrFile(sub);
             cdr.setStatusCode(StatusCode.OBD_SUCCESS_CALL_CONNECTED);
-            cdr.setContentFile(sh.getChildPack().getMessages().get(5).getMessageFileName());
+            cdr.setContentFile(sh.childPack().getMessages().get(5).getMessageFileName());
             cdr.setCallDisconnectReason(CallDisconnectReason.NORMAL_DROP);
             cdr.setWeekId("w5_1");
             cdrs.add(cdr);
@@ -158,7 +162,7 @@ public class CdrHelper {
             Subscription sub = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(30));
             CallDetailRecordDto cdr = makeCdrFile(sub);
             cdr.setStatusCode(StatusCode.OBD_SUCCESS_CALL_CONNECTED);
-            cdr.setContentFile(sh.getChildPack().getMessages().get(5).getMessageFileName());
+            cdr.setContentFile(sh.childPack().getMessages().get(5).getMessageFileName());
             cdr.setCallDisconnectReason(CallDisconnectReason.NORMAL_DROP);
             cdr.setWeekId("w5_1");
             cdrs.add(cdr);
@@ -169,7 +173,7 @@ public class CdrHelper {
             Subscription sub = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(days));
             CallDetailRecordDto cdr = makeCdrFile(sub);
             cdr.setStatusCode(StatusCode.OBD_SUCCESS_CALL_CONNECTED);
-            cdr.setContentFile(sh.getChildPack().getMessages().get(CHILD_PACK_WEEKS-1).getMessageFileName());
+            cdr.setContentFile(sh.childPack().getMessages().get(CHILD_PACK_WEEKS-1).getMessageFileName());
             cdr.setCallDisconnectReason(CallDisconnectReason.NORMAL_DROP);
             cdr.setWeekId(String.format("w%d_1", CHILD_PACK_WEEKS));
             cdrs.add(cdr);
@@ -179,7 +183,7 @@ public class CdrHelper {
             Subscription sub = sh.mksub(SubscriptionOrigin.IVR, DateTime.now().minusDays(30));
             CallDetailRecordDto cdr = makeCdrFile(sub);
             cdr.setStatusCode(StatusCode.OBD_SUCCESS_CALL_CONNECTED);
-            cdr.setContentFile(sh.getChildPack().getMessages().get(5).getMessageFileName());
+            cdr.setContentFile(sh.childPack().getMessages().get(5).getMessageFileName());
             cdr.setCallDisconnectReason(CallDisconnectReason.NORMAL_DROP);
             cdr.setWeekId("w5_1");
             cdrs.add(cdr);

@@ -23,7 +23,7 @@
     <osgi:reference id="languageDataService"
                     interface="org.motechproject.nms.region.repository.LanguageDataService" />
 
-    <osgi:reference id="nationalLanguageLocationDataService"
+    <osgi:reference id="nationalDefaultLanguageDataService"
                     interface="org.motechproject.nms.region.repository.NationalDefaultLanguageDataService" />
 
     <!-- Location Services -->

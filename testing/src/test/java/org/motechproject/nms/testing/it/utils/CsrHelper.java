@@ -81,7 +81,7 @@ public class CsrHelper {
         }
 
         for (int i=0 ; i<numCompleted ; i++) {
-            int days = sh.getChildPack().getWeeks() * 7;
+            int days = sh.childPack().getWeeks() * 7;
             Subscription sub = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(days),
                     SubscriptionPackType.CHILD);
             int index = sh.getLastMessageIndex(sub);

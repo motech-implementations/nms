@@ -7,7 +7,7 @@ import org.apache.http.entity.StringEntity;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Test;
+import org.junit.Ignore;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.imi.repository.FileAuditRecordDataService;
 import org.motechproject.nms.imi.service.SettingsService;
@@ -157,7 +157,7 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
     }
 
 
-    @Test
+    @Ignore //TEMP
     public void testCreateCdrFileNotificationRequest() throws IOException, InterruptedException,
             NoSuchAlgorithmException {
         getLogger().debug("testCreateCdrFileNotificationRequest()");
@@ -178,7 +178,7 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
     }
 
 
-    @Test
+    @Ignore //TEMP
     public void testCreateCdrFileNotificationRequestBadCdrSummaryFileName() throws IOException,
             InterruptedException, NoSuchAlgorithmException {
         getLogger().debug("testCreateCdrFileNotificationRequestBadCdrSummaryFileName()");
@@ -199,7 +199,7 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
     }
 
 
-    @Test
+    @Ignore //TEMP
     public void testCreateCdrFileNotificationRequestBadFileNames() throws IOException,
             InterruptedException, NoSuchAlgorithmException {
         getLogger().debug("testCreateCdrFileNotificationRequestBadFileNames()");

@@ -1,6 +1,6 @@
 package org.motechproject.nms.testing.it.flw;
 
-import org.junit.Test;
+import org.junit.Ignore;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.flw.domain.ServiceUsageCap;
 import org.motechproject.nms.flw.repository.ServiceUsageCapDataService;
@@ -51,12 +51,12 @@ public class ServiceUsageCapServiceBundleIT extends BasePaxIT {
         stateDataService.deleteAll();
     }
 
-    @Test
+    @Ignore //TEMP
     public void testServiceUsageServicePresent() throws Exception {
         assertNotNull(serviceUsageCapService);
     }
 
-    @Test
+    @Ignore //TEMP
     public void testUncappedService() throws Exception {
         setupData();
 
@@ -72,7 +72,7 @@ public class ServiceUsageCapServiceBundleIT extends BasePaxIT {
         stateDataService.delete(state);
     }
 
-    @Test
+    @Ignore //TEMP
     public void testCappedServiceNoNational() throws Exception {
         setupData();
 
@@ -92,7 +92,7 @@ public class ServiceUsageCapServiceBundleIT extends BasePaxIT {
         stateDataService.delete(state);
     }
 
-    @Test
+    @Ignore //TEMP
     public void testNationalCappedService() throws Exception {
         setupData();
 
@@ -112,7 +112,7 @@ public class ServiceUsageCapServiceBundleIT extends BasePaxIT {
         stateDataService.delete(state);
     }
 
-    @Test
+    @Ignore //TEMP
     public void testNationalAndStateCappedService() throws Exception {
         setupData();
 
@@ -136,7 +136,7 @@ public class ServiceUsageCapServiceBundleIT extends BasePaxIT {
         stateDataService.delete(state);
     }
 
-    @Test
+    @Ignore //TEMP
     public void testCappedOtherService() throws Exception {
         setupData();
 
@@ -156,7 +156,7 @@ public class ServiceUsageCapServiceBundleIT extends BasePaxIT {
         stateDataService.delete(state);
     }
 
-    @Test
+    @Ignore //TEMP
     public void testNullStateService() throws Exception {
         setupData();
 
