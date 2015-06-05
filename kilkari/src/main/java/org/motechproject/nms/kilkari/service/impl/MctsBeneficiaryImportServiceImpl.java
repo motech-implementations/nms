@@ -1,6 +1,10 @@
 package org.motechproject.nms.kilkari.service.impl;
 
 import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.DateTimeFormatterBuilder;
+import org.joda.time.format.DateTimeParser;
 import org.motechproject.nms.csv.exception.CsvImportDataException;
 import org.motechproject.nms.csv.utils.ConstraintViolationUtils;
 import org.motechproject.nms.csv.utils.CsvMapImporter;
@@ -12,10 +16,14 @@ import org.motechproject.nms.kilkari.domain.MctsBeneficiary;
 import org.motechproject.nms.kilkari.domain.MctsChild;
 import org.motechproject.nms.kilkari.domain.MctsMother;
 import org.motechproject.nms.kilkari.domain.Subscriber;
+import org.motechproject.nms.kilkari.domain.SubscriptionError;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
+import org.motechproject.nms.kilkari.domain.SubscriptionRejectionReason;
+import org.motechproject.nms.kilkari.repository.MctsChildDataService;
 import org.motechproject.nms.kilkari.repository.MctsMotherDataService;
+import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
@@ -62,6 +70,8 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     private static final String BENEFICIARY_NAME = "Name";
     private static final String MSISDN = "Whom_PhoneNo";
     private static final String LMP = "LMP_Date";
+    private static final String DOB = "Birthdate";
+    private static final String MOTHER_ID = "Mother_ID";
 
     private StateDataService stateDataService;
     private DistrictDataService districtDataService;
@@ -70,17 +80,21 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     private HealthFacilityDataService healthFacilityDataService;
     private VillageDataService villageDataService;
     private MctsMotherDataService mctsMotherDataService;
+    private MctsChildDataService mctsChildDataService;
     private SubscriptionService subscriptionService;
     private SubscriberService subscriberService;
     private SubscriptionPackDataService subscriptionPackDataService;
+    private SubscriptionErrorDataService subscriptionErrorDataService;
 
     @Autowired
     MctsBeneficiaryImportServiceImpl(StateDataService stateDataService, DistrictDataService districtDataService,
                                      TalukaDataService talukaDataService, HealthBlockDataService healthBlockDataService,
                                      HealthFacilityDataService healthFacilityDataService,
                                      VillageDataService villageDataService, MctsMotherDataService mctsMotherDataService,
-                                     SubscriptionService subscriptionService, SubscriberService subscriberService,
-                                     SubscriptionPackDataService subscriptionPackDataService) {
+                                     MctsChildDataService mctsChildDataService, SubscriptionService subscriptionService,
+                                     SubscriberService subscriberService,
+                                     SubscriptionPackDataService subscriptionPackDataService,
+                                     SubscriptionErrorDataService subscriptionErrorDataService) {
         this.stateDataService = stateDataService;
         this.districtDataService = districtDataService;
         this.talukaDataService = talukaDataService;
@@ -88,9 +102,11 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         this.healthFacilityDataService = healthFacilityDataService;
         this.villageDataService = villageDataService;
         this.mctsMotherDataService = mctsMotherDataService;
+        this.mctsChildDataService = mctsChildDataService;
         this.subscriptionService = subscriptionService;
         this.subscriberService = subscriberService;
         this.subscriptionPackDataService = subscriptionPackDataService;
+        this.subscriptionErrorDataService = subscriptionErrorDataService;
     }
 
 
@@ -104,7 +120,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             try {
                 importMotherRecord(record);
             } catch (ConstraintViolationException e) {
-                throw new CsvImportDataException(String.format("CSV import error, constraints violated: %s",
+                throw new CsvImportDataException(String.format("MCTS mother import error, constraints violated: %s",
                         ConstraintViolationUtils.toString(e.getConstraintViolations())), e);
             }
         }
@@ -120,7 +136,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             try {
                 importChildRecord(record);
             } catch (ConstraintViolationException e) {
-                throw new CsvImportDataException(String.format("CSV import error, constraints violated: %s",
+                throw new CsvImportDataException(String.format("MCTS child import error, constraints violated: %s",
                         ConstraintViolationUtils.toString(e.getConstraintViolations())), e);
             }
         }
@@ -128,32 +144,54 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
 
     private void importMotherRecord(Map<String, Object> record) {
-        State state = (State) record.get(STATE);
-        District district = (District) record.get(DISTRICT);
-        Taluka taluka = (Taluka) record.get(TALUKA);
-        HealthBlock healthBlock = (HealthBlock) record.get(HEALTH_BLOCK);
-        HealthFacility phc = (HealthFacility) record.get(PHC);
-        Village village = (Village) record.get(VILLAGE);
         MctsMother mother = (MctsMother) record.get(BENEFICIARY_ID);
         String name = (String) record.get(BENEFICIARY_NAME);
         Long msisdn = (Long) record.get(MSISDN);
         DateTime lmp = (DateTime) record.get(LMP);
 
-        // TODO: more data validation specified in #111
-        if (state == null || district == null) {
-            rejectBeneficiary();
+        String errors = setLocationFields(record, mother);
+        if (errors != null) {
+            rejectBeneficiary(msisdn, SubscriptionRejectionReason.INVALID_LOCATION, SubscriptionPackType.PREGNANCY);
+            return;
         }
 
-        mother.setState(state);
-        mother.setDistrict(district);
-        mother.setTaluka(taluka);
-        mother.setHealthBlock(healthBlock);
-        mother.setPrimaryHealthCenter(phc);
-        mother.setVillage(village);
+        if (lmp == null) {
+            rejectBeneficiary(msisdn, SubscriptionRejectionReason.MISSING_LMP, SubscriptionPackType.PREGNANCY);
+            return;
+        }
+
+        // TODO: more data validation specified in #111
         mother.setName(name);
 
         processSubscriptionForBeneficiary(mother, msisdn, lmp, SubscriptionPackType.PREGNANCY);
     }
+
+
+    private void importChildRecord(Map<String, Object> record) {
+        MctsChild child = (MctsChild) record.get(BENEFICIARY_ID);
+        String name = (String) record.get(BENEFICIARY_NAME);
+        Long msisdn = (Long) record.get(MSISDN);
+        MctsMother mother = (MctsMother) record.get(MOTHER_ID);
+        DateTime dob = (DateTime) record.get(DOB);
+
+        String errors = setLocationFields(record, child);
+        if (errors != null) {
+            rejectBeneficiary(msisdn, SubscriptionRejectionReason.INVALID_LOCATION, SubscriptionPackType.CHILD);
+            return;
+        }
+
+        if (dob == null) {
+            rejectBeneficiary(msisdn, SubscriptionRejectionReason.MISSING_DOB, SubscriptionPackType.CHILD);
+            return;
+        }
+        // TODO: more data validation specified in #111
+
+        child.setName(name);
+        child.setMother(mother);
+
+        processSubscriptionForBeneficiary(child, msisdn, dob, SubscriptionPackType.CHILD);
+    }
+
 
     private void processSubscriptionForBeneficiary(MctsBeneficiary beneficiary, Long msisdn, DateTime referenceDate,
                                                   SubscriptionPackType type) {
@@ -181,7 +219,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
             } else if (existingBeneficiary.getBeneficiaryId() != beneficiary.getBeneficiaryId()) {
                 // if the MCTS ID doesn't match (i.e. there are two beneficiaries with the same phone number), reject the import
-                rejectBeneficiary();
+                rejectBeneficiary(msisdn, SubscriptionRejectionReason.ALREADY_SUBSCRIBED, type);
             } else {
                 // it's the same beneficiary, treat this import as an update
                 subscriber = updateSubscriber(subscriber, beneficiary, referenceDate, type);
@@ -200,7 +238,6 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     }
 
 
-
     private Subscriber updateSubscriber(Subscriber subscriber, MctsBeneficiary beneficiary, DateTime referenceDate,
                                         SubscriptionPackType type) {
         if (type == SubscriptionPackType.PREGNANCY) {
@@ -213,35 +250,32 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         return subscriber;
     }
 
-    private void importChildRecord(Map<String, Object> record) {
+    private String setLocationFields(Map<String, Object> record, MctsBeneficiary beneficiary) {
+        String errors = null;
+
         State state = (State) record.get(STATE);
         District district = (District) record.get(DISTRICT);
         Taluka taluka = (Taluka) record.get(TALUKA);
         HealthBlock healthBlock = (HealthBlock) record.get(HEALTH_BLOCK);
         HealthFacility phc = (HealthFacility) record.get(PHC);
         Village village = (Village) record.get(VILLAGE);
-        MctsChild child = (MctsChild) record.get(BENEFICIARY_ID);
-        String name = (String) record.get(BENEFICIARY_NAME);
-        Long msisdn = (Long) record.get(MSISDN);
 
-        // TODO: more data validation specified in #111
         if (state == null || district == null) {
-            rejectBeneficiary();
+            errors = "District and state must both be set for an MCTS beneficiary.";
         }
 
-        child.setState(state);
-        child.setDistrict(district);
-        child.setTaluka(taluka);
-        child.setHealthBlock(healthBlock);
-        child.setPrimaryHealthCenter(phc);
-        child.setVillage(village);
-        child.setName(name);
+        beneficiary.setState(state);
+        beneficiary.setDistrict(district);
+        beneficiary.setTaluka(taluka);
+        beneficiary.setHealthBlock(healthBlock);
+        beneficiary.setPrimaryHealthCenter(phc);
+        beneficiary.setVillage(village);
 
-        processSubscriptionForBeneficiary(child, msisdn, new DateTime() /* TODO */, SubscriptionPackType.CHILD);
+        return errors;
     }
 
-    private void rejectBeneficiary() {
-        // log in subscription error table
+    private void rejectBeneficiary(Long msisdn, SubscriptionRejectionReason reason, SubscriptionPackType packType) {
+        subscriptionErrorDataService.create(new SubscriptionError(msisdn, reason, packType));
     }
 
     private Map<String, CellProcessor> getBeneficiaryProcessorMapping() {
@@ -249,37 +283,49 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         mapping.put(STATE, new GetInstanceByLong<State>() {
             @Override
             public State retrieve(Long value) {
-                return stateDataService.findByCode(value);
+                State state = stateDataService.findByCode(value);
+                verify(null != state, "State does not exist");
+                return state;
             }
         });
         mapping.put(DISTRICT, new GetInstanceByLong<District>() {
             @Override
             public District retrieve(Long value) {
-                return districtDataService.findByCode(value);
+                District district = districtDataService.findByCode(value);
+                verify(null != district, "District does not exist");
+                return district;
             }
         });
         mapping.put(TALUKA, new Optional(new GetInstanceByString<Taluka>() {
             @Override
             public Taluka retrieve(String value) {
-                return talukaDataService.findByCode(value);
+                Taluka taluka = talukaDataService.findByCode(value);
+                verify(null != taluka, "Taluka does not exist");
+                return taluka;
             }
         }));
         mapping.put(HEALTH_BLOCK, new Optional(new GetInstanceByLong<HealthBlock>() {
             @Override
             public HealthBlock retrieve(Long value) {
-                return healthBlockDataService.findByCode(value);
+                HealthBlock healthBlock = healthBlockDataService.findByCode(value);
+                verify(null != healthBlock, "Health Block does not exist");
+                return healthBlock;
             }
         }));
         mapping.put(PHC, new Optional(new GetInstanceByLong<HealthFacility>() {
             @Override
             public HealthFacility retrieve(Long value) {
-                return healthFacilityDataService.findById(value);
+                HealthFacility phc = healthFacilityDataService.findById(value);
+                verify(null != phc, "Primary Health Center does not exist");
+                return phc;
             }
         }));
         mapping.put(VILLAGE, new Optional(new GetInstanceByLong<Village>() {
             @Override
             public Village retrieve(Long value) {
-                return villageDataService.findById(value);
+                Village village = villageDataService.findById(value);
+                verify(null != village, "Village does not exist");
+                return village;
             }
         }));
 
@@ -307,8 +353,21 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                 if (value == null) {
                     return null;
                 }
-                DateTime lmp = DateTime.parse(value);
-                // handle invalid date?
+
+                DateTime lmp;
+
+                try {
+                    DateTimeParser[] parsers = {
+                            DateTimeFormat.forPattern("dd-MM-yyyy").getParser(),
+                            DateTimeFormat.forPattern("dd/MM/yyyy").getParser() };
+                    DateTimeFormatter formatter = new DateTimeFormatterBuilder().append(null, parsers).toFormatter();
+
+                    lmp = formatter.parseDateTime(value);
+
+                } catch (IllegalArgumentException e) {
+                    throw new CsvImportDataException(String.format("LMP date %s is invalid", value), e);
+                }
+
                 return lmp;
             }
         });
@@ -321,10 +380,62 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     private Map<String, CellProcessor> getChildProcessorMapping() {
         Map<String, CellProcessor> mapping = getBeneficiaryProcessorMapping();
 
-        // TODO: Any other fields needed for children? Do the field names match for mother/child?
+        mapping.put(BENEFICIARY_ID, new GetInstanceByString<MctsChild>() {
+            @Override
+            public MctsChild retrieve(String value) {
+                MctsChild child = mctsChildDataService.findByBeneficiaryId(value);
+                if (child == null) {
+                    child = new MctsChild(value);
+                }
+                return child;
+            }
+        });
+        mapping.put(BENEFICIARY_NAME, new GetString());
+        mapping.put(MOTHER_ID, new Optional(new GetInstanceByString<MctsMother>() {
+            @Override
+            public MctsMother retrieve(String value) {
+                if (value == null) {
+                    return null;
+                }
+                return mctsMotherDataService.findByBeneficiaryId(value);
+            }
+        }));
+        mapping.put(MSISDN, new GetLong());
+        mapping.put(DOB, new GetInstanceByString<DateTime>() {
+            @Override
+            public DateTime retrieve(String value) {
+                if (value == null) {
+                    return null;
+                }
+
+                DateTime dob;
+
+                try {
+                    DateTimeParser[] parsers = {
+                            DateTimeFormat.forPattern("dd-MM-yyyy").getParser(),
+                            DateTimeFormat.forPattern("dd/MM/yyyy").getParser() };
+                    DateTimeFormatter formatter = new DateTimeFormatterBuilder().append(null, parsers).toFormatter();
+
+                    dob = formatter.parseDateTime(value);
+
+                } catch (IllegalArgumentException e) {
+                    throw new CsvImportDataException(String.format("DOB date %s is invalid", value), e);
+                }
+
+                return dob;
+            }
+        });
+
+        // TODO: Any other fields needed for children?
 
         return mapping;
 
+    }
+
+    private void verify(boolean condition, String message, String... args) {
+        if (!condition) {
+            throw new CsvImportDataException(String.format(message, args));
+        }
     }
 
 }

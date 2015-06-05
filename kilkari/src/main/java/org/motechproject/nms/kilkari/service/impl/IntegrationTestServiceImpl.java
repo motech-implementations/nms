@@ -7,8 +7,11 @@ import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.CallSummaryRecordDataService;
 import org.motechproject.nms.kilkari.repository.InboxCallDataDataService;
 import org.motechproject.nms.kilkari.repository.InboxCallDetailRecordDataService;
+import org.motechproject.nms.kilkari.repository.MctsChildDataService;
+import org.motechproject.nms.kilkari.repository.MctsMotherDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
+import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackMessageDataService;
 import org.motechproject.nms.kilkari.service.IntegrationTestService;
@@ -41,6 +44,12 @@ public class IntegrationTestServiceImpl implements IntegrationTestService {
     private SubscriptionPackMessageDataService subscriptionPackMessageDataService;
     @Autowired
     private SubscriptionDataService subscriptionDataService;
+    @Autowired
+    private MctsMotherDataService mctsMotherDataService;
+    @Autowired
+    private MctsChildDataService mctsChildDataService;
+    @Autowired
+    private SubscriptionErrorDataService subscriptionErrorDataService;
 
     /**
      * SettingsFacade
@@ -74,5 +83,8 @@ public class IntegrationTestServiceImpl implements IntegrationTestService {
         subscriptionService.deleteAll();
         subscriptionPackDataService.deleteAll();
         subscriptionPackMessageDataService.deleteAll();
+        mctsChildDataService.deleteAll();
+        mctsMotherDataService.deleteAll();
+        subscriptionErrorDataService.deleteAll();
     }
 }

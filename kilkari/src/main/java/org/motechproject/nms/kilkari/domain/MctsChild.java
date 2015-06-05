@@ -9,18 +9,22 @@ import org.motechproject.mds.annotations.Field;
 public class MctsChild extends MctsBeneficiary {
 
     @Field
-    private String motherId;
+    private MctsMother mother;
 
-    public MctsChild(String beneficiaryId, String name, String motherId) {
+    public MctsChild(String beneficiaryId) {
+        super(beneficiaryId);
+    }
+
+    public MctsChild(String beneficiaryId, String name, MctsMother mother) {
         super(beneficiaryId, name);
-        this.motherId = motherId;
+        this.mother = mother;
     }
 
-    public String getMotherId() {
-        return motherId;
+    public MctsMother getMother() {
+        return mother;
     }
 
-    public void setMotherId(String motherId) {
-        this.motherId = motherId;
+    public void setMother(MctsMother mother) {
+        this.mother = mother;
     }
 }

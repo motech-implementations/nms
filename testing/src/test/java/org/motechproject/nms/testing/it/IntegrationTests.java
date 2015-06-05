@@ -18,6 +18,7 @@ import org.motechproject.nms.testing.it.imi.ImiController_CDR_BundleIT;
 import org.motechproject.nms.testing.it.imi.ImiController_OBD_BundleIT;
 import org.motechproject.nms.testing.it.imi.TargetFileServiceBundleIT;
 import org.motechproject.nms.testing.it.kilkari.CsrServiceBundleIT;
+import org.motechproject.nms.testing.it.kilkari.MctsBeneficiaryImportServiceBundleIT;
 import org.motechproject.nms.testing.it.kilkari.SubscriberServiceBundleIT;
 import org.motechproject.nms.testing.it.kilkari.SubscriptionServiceBundleIT;
 import org.motechproject.nms.testing.it.ma.MobileAcademyServiceBundleIT;
@@ -33,56 +34,56 @@ import org.motechproject.nms.testing.it.region.NationalDefaultLanguageLocationBu
     /**
      * API
      */
-    LanguageControllerBundleIT.class,
+    /*LanguageControllerBundleIT.class,
     UserControllerBundleIT.class,
     CallDetailsControllerBundleIT.class,
     KilkariControllerBundleIT.class,
-    MobileAcademyControllerBundleIT.class,
+    MobileAcademyControllerBundleIT.class,*/
 
     /**
      * FLW
      */
-    ServiceUsageServiceBundleIT.class,
+    /*ServiceUsageServiceBundleIT.class,
     ServiceUsageCapServiceBundleIT.class,
     WhiteListServiceBundleIT.class,
     FrontLineWorkerServiceBundleIT.class,
-    FrontLineWorkerImportServiceBundleIT.class,
+    FrontLineWorkerImportServiceBundleIT.class,*/
 
     /**
      * IMI
      */
-    ImiController_CDR_BundleIT.class,
+    /*ImiController_CDR_BundleIT.class,
     ImiController_OBD_BundleIT.class,
     TargetFileServiceBundleIT.class,
     CdrFileServiceBundleIT.class,
-    CsrValidatorServiceBundleIT.class,
+    CsrValidatorServiceBundleIT.class,*/
 
     /**
      * Kilkari
      */
     SubscriptionServiceBundleIT.class,
     SubscriberServiceBundleIT.class,
-    CsrServiceBundleIT.class,
-    //MctsBeneficiaryImportServiceBundleIT.class,
+    //CsrServiceBundleIT.class,
+    MctsBeneficiaryImportServiceBundleIT.class,
 
     /**
      * Mobile Academy
      */
-    MobileAcademyServiceBundleIT.class,
+    //MobileAcademyServiceBundleIT.class,
 
     /**
      * Props
      */
-    PropertyServiceBundleIT.class,
+    //PropertyServiceBundleIT.class,
 
     /**
      * Region
      */
-    LocationServiceBundleIT.class,
+    /*LocationServiceBundleIT.class,
     CircleServiceBundleIT.class,
     NationalDefaultLanguageLocationBundleIT.class,
     LocationDataImportServiceBundleIT.class,
-    LanguageLocationCodesImportServiceBundleIT.class,
+    LanguageLocationCodesImportServiceBundleIT.class,*/
 })
 public class IntegrationTests {
 }

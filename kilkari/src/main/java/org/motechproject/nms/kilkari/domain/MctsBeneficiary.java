@@ -1,5 +1,6 @@
 package org.motechproject.nms.kilkari.domain;
 
+import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.HealthBlock;
@@ -14,6 +15,7 @@ import javax.validation.constraints.NotNull;
 /**
  * A beneficiary (mother or child) sourced from MCTS.
  */
+@Entity
 public abstract class MctsBeneficiary {
 
     // 18-digit IDs are used for most states but not all, so a strict length constraint cannot be set for this column
