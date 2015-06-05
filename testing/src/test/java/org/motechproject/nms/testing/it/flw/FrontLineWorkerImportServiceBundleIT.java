@@ -33,6 +33,7 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
+import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.Arrays;
@@ -145,6 +146,14 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         assertFLW(flw, "#0", 1234567890L, "FLW 0", null, null);
     }
 
+    @Test
+    public void testImportFromSampleDataFile() throws Exception {
+        frontLineWorkerImportService.importData(read("csv/anm-asha.txt"));
+
+        FrontLineWorker flw1 = frontLineWorkerDataService.findByContactNumber(9999999996L);
+        assertFLW(flw1, "72185", 9999999996L, "Bishnu Priya Behera", "Koraput", null);
+    }
+
     private void assertFLW(FrontLineWorker flw, String mctsFlwId, long contactNumber, String name, String districtName, String languageLocationCode) {
         assertNotNull(flw);
         assertEquals(mctsFlwId, flw.getMctsFlwId());
@@ -162,4 +171,9 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         }
         return new StringReader(builder.toString());
     }
+
+    private Reader read(String resource) {
+        return new InputStreamReader(getClass().getClassLoader().getResourceAsStream(resource));
+    }
+
 }
