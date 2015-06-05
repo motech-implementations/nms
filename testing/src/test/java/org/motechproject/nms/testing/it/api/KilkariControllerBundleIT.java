@@ -7,6 +7,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.joda.time.DateTime;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.api.web.contract.BadRequest;
@@ -57,6 +58,7 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -783,4 +785,34 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 expectedJsonPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
+    @Ignore
+ 	@Test
+ 	public void verifyFT_86_87_88() throws IOException,
+ 			InterruptedException {
+ 		/**
+ 		 * Testing GetInboxDetails API with invalid value of callId.
+ 		 */
+ 		// CallId less than 15 digits
+ 		HttpGet httpGet = createHttpGet(true, "1234567890", true,
+ 				"12345678901234");
+ 		String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
+
+ 		assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
+ 				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+ 				ADMIN_USERNAME, ADMIN_PASSWORD));
+
+ 		// CallId more than 15 digits
+ 		httpGet = createHttpGet(true, "1234567890", true, "1234567890123456");
+
+ 		assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
+ 				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+ 				ADMIN_USERNAME, ADMIN_PASSWORD));
+
+ 		// CallId alphanumeric
+ 		httpGet = createHttpGet(true, "1234567890", true, "12345678GT12345");
+
+ 		assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
+ 				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+ 				ADMIN_USERNAME, ADMIN_PASSWORD));
+ 	}
 }
