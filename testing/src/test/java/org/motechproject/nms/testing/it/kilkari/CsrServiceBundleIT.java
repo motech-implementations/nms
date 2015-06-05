@@ -706,7 +706,58 @@ public class CsrServiceBundleIT extends BasePaxIT {
         assertEquals(DayOfTheWeek.today().nextDay(),retries.get(0).getDayOfTheWeek());
     }
 
+    @Test
+    public void verifyFT142() {
+        /**
+         * To check that NMS shall not retry OBD message for which all OBD attempts(1 actual+1 retry) fails with
+         * two message per week configuration.
+         */
 
+        String timestamp = DateTime.now().toString(TIME_FORMATTER);
+
+        // Create a record in the CallRetry table marked as "retry 1" and verify it is erased from the
+        // CallRetry table
+
+        SubscriptionHelper sh = new SubscriptionHelper(subscriptionService, subscriberDataService,
+                subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
+                stateDataService, districtDataService);
+        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(3),SubscriptionPackType.PREGNANCY);
+        String contentFileName = sh.getContentMessageFile(subscription, 0);
+        CallRetry retry = callRetryDataService.create(new CallRetry(
+                subscription.getSubscriptionId(),
+                subscription.getSubscriber().getCallingNumber(),
+                DayOfTheWeek.today(),
+                CallStage.RETRY_1,
+                contentFileName,
+                "XXX",
+                "XXX",
+                "XX",
+                SubscriptionOrigin.MCTS_IMPORT
+        ));
+
+
+        Map<Integer, Integer> callStats = new HashMap<>();
+        CallSummaryRecordDto record = new CallSummaryRecordDto(
+                new RequestId(subscription.getSubscriptionId(), timestamp),
+                subscription.getSubscriber().getCallingNumber(),
+                contentFileName,
+                "XXX",
+                "XXX",
+                "XX",
+                FinalCallStatus.FAILED,
+                callStats,
+                0,
+                5
+        );
+
+        Map<String, Object> eventParams = new HashMap<>();
+        eventParams.put(CSR_PARAM_KEY, record);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
+        csrService.processCallSummaryRecord(motechEvent);
+
+        // There should be no calls to retry since the one above was the last try
+        assertEquals(0, callRetryDataService.count());
+    }
 
     //todo: verify multiple days' worth of summary record aggregation
     //todo: verify more stuff I can't think of now
