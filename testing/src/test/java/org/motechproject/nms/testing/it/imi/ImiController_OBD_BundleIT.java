@@ -6,7 +6,7 @@ import org.apache.http.entity.StringEntity;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.alerts.contract.AlertCriteria;
 import org.motechproject.alerts.contract.AlertService;
@@ -122,7 +122,7 @@ public class ImiController_OBD_BundleIT extends BasePaxIT {
     }
 
 
-    @Ignore //TEMP
+    @Test
     public void testCreateFileProcessedStatusRequest() throws IOException, InterruptedException {
         getLogger().debug("testCreateFileProcessedStatusRequest()");
         HttpPost httpPost = createFileProcessedStatusHttpPost("file.csv",
@@ -132,7 +132,7 @@ public class ImiController_OBD_BundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
-    @Ignore //TEMP
+    @Test
     public void testCreateFileProcessedStatusRequestNoStatusCode() throws IOException, InterruptedException {
         getLogger().debug("testCreateFileProcessedStatusRequestNoStatusCode()");
         HttpPost httpPost = createFileProcessedStatusHttpPost("file.csv", null);
@@ -143,7 +143,7 @@ public class ImiController_OBD_BundleIT extends BasePaxIT {
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
-    @Ignore //TEMP
+    @Test
     public void testCreateFileProcessedStatusRequestNoFileName() throws IOException, InterruptedException {
         getLogger().debug("testCreateFileProcessedStatusRequestNoFileName()");
         HttpPost httpPost = createFileProcessedStatusHttpPost(null,
@@ -155,7 +155,7 @@ public class ImiController_OBD_BundleIT extends BasePaxIT {
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
-    @Ignore //TEMP
+    @Test
     public void testCreateFileProcessedStatusRequestWithError() throws IOException, InterruptedException {
         getLogger().debug("testCreateFileProcessedStatusRequestWithError()");
         HttpPost httpPost = createFileProcessedStatusHttpPost("file.csv",

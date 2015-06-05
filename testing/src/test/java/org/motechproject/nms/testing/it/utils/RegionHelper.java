@@ -27,15 +27,27 @@ public class RegionHelper {
     }
 
     public Circle delhiCircle() {
-        Circle delhiCircle = circleDataService.findByName("DE");
+        Circle c = circleDataService.findByName("DE");
 
-        if (delhiCircle == null) {
-            delhiCircle = circleDataService.create(new Circle("DE"));
-            delhiCircle.getStates().add(delhiState());
-            circleDataService.update(delhiCircle);
+        if (c == null) {
+            c = circleDataService.create(new Circle("DE"));
+            c.getStates().add(delhiState());
+            circleDataService.update(c);
         }
 
-        return delhiCircle;
+        return c;
+    }
+
+    public Circle karnatakaCircle() {
+        Circle c = circleDataService.findByName("KA");
+
+        if (c == null) {
+            c = circleDataService.create(new Circle("KA"));
+            c.getStates().add(karnatakaState());
+            circleDataService.update(c);
+        }
+
+        return c;
     }
 
     public State delhiState() {

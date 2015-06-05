@@ -1,8 +1,8 @@
 package org.motechproject.nms.testing.it.flw;
 
 import org.joda.time.DateTime;
-import org.junit.Ignore;
 import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.motechproject.event.MotechEvent;
@@ -123,12 +123,12 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
         circleDataService.create(circle);
     }
 
-    @Ignore //TEMP
+    @Test
     public void testFrontLineWorkerServicePresent() throws Exception {
         assertNotNull(frontLineWorkerService);
     }
 
-    @Ignore //TEMP
+    @Test
     public void testPurgeOldInvalidFrontLineWorkers() {
         setupData();
 
@@ -185,7 +185,7 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
         assertTrue(records.contains(flw6));
     }
 
-    @Ignore //TEMP
+    @Test
     public void testFrontLineWorkerService() throws Exception {
         setupData();
         FrontLineWorker flw = new FrontLineWorker("Test Worker", 1111111111L);
@@ -208,7 +208,7 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
         assertNull(record);
     }
 
-    @Ignore //TEMP
+    @Test
     public void testFrontLineWorkerUpdate() {
         setupData();
         createLanguageLocationData();
@@ -239,7 +239,7 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
     @Rule
     public ExpectedException exception = ExpectedException.none();
 
-    @Ignore //TEMP
+    @Test
     public void testDeleteNonInvalidFrontLineWorker() {
         setupData();
 
@@ -253,7 +253,7 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
         frontLineWorkerService.delete(flw);
     }
 
-    @Ignore //TEMP
+    @Test
     public void testDeleteRecentInvalidFrontLineWorker() {
         setupData();
 
@@ -271,7 +271,7 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
         frontLineWorkerService.delete(flw);
     }
 
-    @Ignore //TEMP
+    @Test
     public void testDeleteOldInvalidFrontLineWorker() {
         setupData();
 

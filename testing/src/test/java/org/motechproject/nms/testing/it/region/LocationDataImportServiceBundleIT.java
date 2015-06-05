@@ -1,8 +1,9 @@
 package org.motechproject.nms.testing.it.region;
 
 import org.junit.Before;
-import org.junit.Ignore;
+import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.motechproject.nms.csv.exception.CsvImportDataException;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.HealthBlock;
 import org.motechproject.nms.region.domain.HealthFacility;
@@ -95,7 +96,7 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
         healthFacilityTypeDataService.create(facilityType);
     }
 
-    @Ignore //TEMP
+    @Test
     public void testLocationDataImport() throws Exception {
         districtImportService.importData(read("csv/district.csv"));
         District district = districtDataService.findByCode(1L);
@@ -167,17 +168,17 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
         assertNotNull(healthSubFacility.getHealthFacility());
     }
 
-    @Ignore //TEMP(expected = IllegalArgumentException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testThrowExceptionForMalformedCsv() throws Exception {
         districtImportService.importData(read("csv/district_malformed.csv"));
     }
 
-    @Ignore //TEMP(expected = CsvImportDataException.class)
+    @Test(expected = CsvImportDataException.class)
     public void testThrowExceptionForInvalidCellFormat() throws Exception {
         districtImportService.importData(read("csv/district_invalid_cell_format.csv"));
     }
 
-    @Ignore //TEMP
+    @Test
     public void testRollbackAllAfterSingleFailure() throws Exception {
         boolean thrown = false;
         try {

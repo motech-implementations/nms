@@ -1,7 +1,7 @@
 package org.motechproject.nms.testing.it.region;
 
-import org.junit.Ignore;
 import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.region.domain.Circle;
@@ -55,7 +55,7 @@ public class NationalDefaultLanguageLocationBundleIT extends BasePaxIT{
     @Rule
     public ExpectedException exception = ExpectedException.none();
 
-    @Ignore //TEMP
+    @Test
     public void testVerifyOnlyOneNationalDefaultLanguage() {
         cleanAllData();
 

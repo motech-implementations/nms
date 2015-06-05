@@ -185,7 +185,7 @@ public class CircleServiceBundleIT extends BasePaxIT {
         circleDataService.update(circle4);
     }
 
-    @Ignore //TEMP
+    @Test
     public void testCircleSingleState() throws Exception {
         setupData();
 
@@ -233,7 +233,7 @@ public class CircleServiceBundleIT extends BasePaxIT {
         assertEquals("Circle 2", circle.getName());
     }
 
-    @Ignore //TEMP
+    @Test
     public void testMultipleCirclesSingleState() throws Exception {
         setupData();
 

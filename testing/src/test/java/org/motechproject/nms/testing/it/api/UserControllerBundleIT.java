@@ -652,7 +652,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     }
 
     // Request undeployed service by language location
-    @Ignore //TEMP
+    @Test
     public void testUndeployedServiceByLanguageLocation() throws IOException, InterruptedException {
         createFlwWithLanguageNoDeployedServices();
 
@@ -691,7 +691,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     }
 
     // Request undeployed service by flw location
-    @Ignore //TEMP
+    @Test
     public void testUndeployedServiceByFLWLocation() throws IOException, InterruptedException {
         createFlwWithLocationNoLanguageNoDeployedServices();
 
@@ -734,7 +734,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     }
 
     // Request undeployed service by flw location
-    @Ignore //TEMP
+    @Test
     public void testUndeployedServiceByCircleLocation() throws IOException, InterruptedException {
         createFlwWithNoLocationNoLanguageNoDeployedServices();
 
@@ -753,7 +753,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, response.getStatusLine().getStatusCode());
     }
 
-    @Ignore //TEMP
+    @Test
     public void testKilkariUserRequestNoLanguage() throws IOException, InterruptedException {
         createKilkariTestData();
 
@@ -777,7 +777,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
-    @Ignore //TEMP
+    @Test
     public void testKilkariNonexistentUserRequest() throws IOException, InterruptedException {
         createKilkariTestData();
 
@@ -801,7 +801,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
-    @Ignore //TEMP
+    @Test
     public void testFlwUserRequestWithoutServiceUsage() throws IOException, InterruptedException {
         createFlwCappedServiceNoUsageNoLocationNoLanguage();
 
@@ -829,7 +829,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
-    @Ignore //TEMP
+    @Test
     public void testFlwUserRequestWithServiceUsageOnly() throws IOException, InterruptedException {
         createFlwWithLanguageServiceUsageAndCappedService();
 
@@ -857,7 +857,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
-    @Ignore //TEMP
+    @Test
     public void testFlwUserRequestWithServiceUsageAndEndOfUsageAndWelcomeMsg() throws IOException, InterruptedException {
         createFlwWithLanguageFullServiceUsageAndCappedService();
 
@@ -885,7 +885,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
-    @Ignore //TEMP
+    @Test
     public void testInvalidServiceName() throws IOException, InterruptedException {
         HttpGet httpGet = createHttpGet(
                 true, "INVALID!!!!",    //service
@@ -902,7 +902,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
-    @Ignore //TEMP
+    @Test
     public void testNoCallingNumber() throws IOException, InterruptedException {
         HttpGet httpGet = createHttpGet(
                 true, "kilkari",        //service
@@ -919,7 +919,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
-    @Ignore //TEMP
+    @Test
     public void testInvalidCallingNumber() throws IOException, InterruptedException {
         HttpGet httpGet = createHttpGet(
                 true, "kilkari",        //service
@@ -936,7 +936,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
-    @Ignore //TEMP
+    @Test
     public void testNoOperator() throws IOException, InterruptedException {
         HttpGet httpGet = createHttpGet(
                 true, "kilkari",        //service
@@ -953,7 +953,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
-    @Ignore //TEMP
+    @Test
     public void testNoCircle() throws IOException, InterruptedException {
         createCircleWithLanguage();
 
@@ -981,7 +981,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
-    @Ignore //TEMP
+    @Test
     public void testNoCallId() throws IOException, InterruptedException {
         HttpGet httpGet = createHttpGet(
                 true, "kilkari",    //service
@@ -999,7 +999,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     }
 
     // An FLW that does not exist
-    @Ignore //TEMP
+    @Test
     public void testGetUserDetailsUnknownUser() throws IOException, InterruptedException {
         createCircleWithLanguage();
 
@@ -1063,7 +1063,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals("FLW Language Code", "99", language.getCode());
     }
 
-    @Ignore //TEMP
+    @Test
     public void testGetUserDetailsUnknownUserUnknownCircle() throws IOException, InterruptedException {
         createCircleWithLanguage();
 
@@ -1092,7 +1092,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     }
 
     // An FLW with usage for both MA and MK
-    @Ignore //TEMP
+    @Test
     public void testGetUserDetailsUserOfBothServices() throws IOException, InterruptedException {
         createFlwWithLanguageFullUsageOfBothServiceUncapped();
 
@@ -1121,7 +1121,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     }
 
     // An FLW with usage and a service with a cap
-    @Ignore //TEMP
+    @Test
     public void testGetUserDetailsServiceCapped() throws IOException, InterruptedException {
         createFlwWithLanguageFullUsageOfBothServiceUncapped();
 
@@ -1149,7 +1149,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
-    @Ignore //TEMP
+    @Test
     public void testGetUserNotInWhitelistByState() throws IOException, InterruptedException {
         createFlwWithStateNotInWhitelist();
 
@@ -1168,7 +1168,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
-    @Ignore //TEMP
+    @Test
     public void testGetUserNotInWhitelistByLanguageLocationCode() throws IOException, InterruptedException {
         createFlwWithLanguageLocationCodeNotInWhitelist();
 
@@ -1187,7 +1187,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
-    @Ignore //TEMP
+    @Test
     public void testSetLanguageInvalidService() throws IOException, InterruptedException {
         HttpPost httpPost = createHttpPost("INVALID_SERVICE", new UserLanguageRequest(1111111111L, 123456789012345L,"10"));
 
@@ -1198,7 +1198,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
-    @Ignore //TEMP
+    @Test
     public void testSetLanguageMissingCallingNumber() throws IOException, InterruptedException {
         HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(null, 123456789012345L,"10"));
 
@@ -1209,7 +1209,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
-    @Ignore //TEMP
+    @Test
     public void testSetLanguageInvalidCallingNumber() throws IOException, InterruptedException {
         HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(123L, 123456789012345L,"10"));
 
@@ -1220,7 +1220,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
-    @Ignore //TEMP
+    @Test
     public void testSetLanguageMissingCallId() throws IOException, InterruptedException {
         HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(1111111111L, null,"10"));
 
@@ -1231,7 +1231,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
-    @Ignore //TEMP
+    @Test
     public void testSetLanguageInvalidCallId() throws IOException, InterruptedException {
         HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(1111111111L, 123L,"10"));
 
@@ -1242,7 +1242,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
-    @Ignore //TEMP
+    @Test
     public void testSetLanguageMissingLanguageLocationCode() throws IOException, InterruptedException {
         HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(1111111111L, 123456789012345L, null));
 
@@ -1253,7 +1253,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
-    @Ignore //TEMP
+    @Test
     public void testSetLanguageInvalidJson() throws IOException, InterruptedException {
         HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/languageLocationCode",
                 TestContext.getJettyPort()));
@@ -1267,7 +1267,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
-    @Ignore //TEMP
+    @Test
     public void testSetLanguageNoFLW() throws IOException, InterruptedException {
         createCircleWithLanguage();
 
@@ -1282,7 +1282,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals("FLW Language Code", "99", language.getCode());
     }
 
-    @Ignore //TEMP
+    @Test
     public void testSetLanguageLanguageNotFound() throws IOException, InterruptedException {
         createFlwCappedServiceNoUsageNoLocationNoLanguage();
 
@@ -1295,7 +1295,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
-    @Ignore //TEMP
+    @Test
     public void testSetLanguageValid() throws IOException, InterruptedException {
         createFlwCappedServiceNoUsageNoLocationNoLanguage();
 

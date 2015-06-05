@@ -1,7 +1,7 @@
 package org.motechproject.nms.testing.it.ma;
 
 import org.junit.Before;
-import org.junit.Ignore;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.mtraining.domain.Bookmark;
@@ -10,6 +10,7 @@ import org.motechproject.nms.mobileacademy.domain.CompletionRecord;
 import org.motechproject.nms.mobileacademy.domain.NmsCourse;
 import org.motechproject.nms.mobileacademy.dto.MaBookmark;
 import org.motechproject.nms.mobileacademy.dto.MaCourse;
+import org.motechproject.nms.mobileacademy.exception.CourseNotCompletedException;
 import org.motechproject.nms.mobileacademy.repository.CompletionRecordDataService;
 import org.motechproject.nms.mobileacademy.repository.NmsCourseDataService;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
@@ -66,7 +67,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         completionRecordDataService.deleteAll();
     }
 
-    @Ignore //TEMP
+    @Test
     public void testSetCourseNoUpdate() {
 
         NmsCourse originalCourse = nmsCourseDataService.getCourseByName(validCourseName);
@@ -78,7 +79,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
                 originalCourse.getModificationDate());
     }
 
-    @Ignore //TEMP
+    @Test
     public void testSetCourseUpdate() {
 
         NmsCourse originalCourse = nmsCourseDataService.getCourseByName(validCourseName);
@@ -93,7 +94,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         nmsCourseDataService.update(originalCourse);
     }
 
-    @Ignore //TEMP
+    @Test
     public void testNoCoursePresent() {
         NmsCourse originalCourse = nmsCourseDataService.getCourseByName(validCourseName);
         nmsCourseDataService.delete(originalCourse);
@@ -108,38 +109,38 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         nmsCourseDataService.create(new NmsCourse(originalCourse.getName(), originalCourse.getContent()));
     }
 
-    @Ignore //TEMP
+    @Test
     public void testMobileAcademyServicePresent() throws Exception {
         assertNotNull(maService);
     }
 
-    @Ignore //TEMP
+    @Test
     public void testGetCourse() {
 
         assertNotNull(maService.getCourse());
     }
 
-    @Ignore //TEMP
+    @Test
     public void testGetCourseVersion() {
 
         assertNotNull(maService.getCourseVersion());
         assertTrue(maService.getCourseVersion() > 0);
     }
 
-    @Ignore //TEMP
+    @Test
     public void testGetBookmark() {
 
         bookmarkDataService.create(new Bookmark("1", "1", "1", "1", new HashMap<String, Object>()));
         assertNotNull(maService.getBookmark(1L, 1L));
     }
 
-    @Ignore //TEMP
+    @Test
     public void testGetEmptyBookmark() {
 
         assertNull(maService.getBookmark(123L, 456L));
     }
 
-    @Ignore //TEMP
+    @Test
     public void testSetNullBookmark() {
         try {
             maService.setBookmark(null);
@@ -149,7 +150,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         }
     }
 
-    @Ignore //TEMP
+    @Test
     public void testSetNewBookmark() {
         List<Bookmark> existing = bookmarkDataService.findBookmarksForUser("555");
         MaBookmark bookmark = new MaBookmark(555L, 666L, null, null);
@@ -158,7 +159,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         assertTrue(added.size() == (existing.size() + 1));
     }
 
-    @Ignore //TEMP
+    @Test
     public void testSetExistingBookmark() {
         bookmarkDataService.deleteAll();
         MaBookmark bookmark = new MaBookmark(556L, 666L, null, null);
@@ -179,7 +180,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         assertTrue(retrieved.getScoresByChapter().get("Quiz1") == 4);
     }
 
-    @Ignore //TEMP
+    @Test
     public void testSetLastBookmark() {
         bookmarkDataService.deleteAll();
         long callingNumber = 9876543210L;
@@ -197,7 +198,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         maService.setBookmark(bookmark);
     }
 
-    @Ignore //TEMP
+    @Test
     public void testSetGetLastBookmark() {
         bookmarkDataService.deleteAll();
         long callingNumber = 9987654321L;
@@ -221,7 +222,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         assertNotNull(retrieved.getScoresByChapter());
     }
 
-    @Ignore //TEMP
+    @Test
     public void testSetGetResetBookmark() {
         bookmarkDataService.deleteAll();
         long callingNumber = 9987654321L;
@@ -245,7 +246,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         assertNull(retrieved.getScoresByChapter());
     }
 
-    @Ignore //TEMP
+    @Test
     public void testTriggerNotificationSent() {
         bookmarkDataService.deleteAll();
         long callingNumber = 9876543210L;
@@ -268,7 +269,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
 
     }
 
-    @Ignore //TEMP
+    @Test
     public void testTriggerNotificationNotSent() {
         bookmarkDataService.deleteAll();
         long callingNumber = 9876543211L;
@@ -288,7 +289,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         assertNull(completionRecordDataService.findRecordByCallingNumber(callingNumber));
     }
 
-    @Ignore //TEMP
+    @Test
     public void testRetriggerNotification() {
 
         long callingNumber = 9876543211L;
@@ -301,14 +302,14 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         assertFalse(cr.isSentNotification());
     }
 
-    @Ignore //TEMP(expected = CourseNotCompletedException.class)
+    @Test(expected = CourseNotCompletedException.class)
     public void testRetriggerNotificationException() {
 
         long callingNumber = 9876543222L;
         maService.triggerCompletionNotification(callingNumber);
     }
 
-    @Ignore //TEMP
+    @Test
     public void testNotification() {
 
         long callingNumber = 9876543211L;

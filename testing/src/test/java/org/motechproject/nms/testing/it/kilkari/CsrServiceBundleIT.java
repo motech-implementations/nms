@@ -4,7 +4,7 @@ import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.junit.Before;
-import org.junit.Ignore;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.EventRelay;
@@ -129,7 +129,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
     }
 
 
-    @Ignore //TEMP
+    @Test
     public void testServicePresent() {
         assertTrue(csrService != null);
     }
@@ -148,7 +148,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
     }
 
 
-    @Ignore //TEMP
+    @Test
     public void verifyServiceFunctional() {
         Subscription subscription = sh.mksub(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
 
@@ -174,7 +174,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
     // Deactivate if user phone number does not exist
     // https://github.com/motech-implementations/mim/issues/169
-    @Ignore //TEMP
+    @Test
     public void verifyIssue169() {
         Subscription subscription = sh.mksub(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
         Subscriber subscriber = subscription.getSubscriber();
@@ -229,7 +229,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
     }
 
 
-    @Ignore //TEMP
+    @Test
     public void verifySubscriptionCompletion() {
 
         String timestamp = DateTime.now().toString(TIME_FORMATTER);
@@ -252,7 +252,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
     }
 
 
-    @Ignore //TEMP
+    @Test
     public void verifyFT140() {
         /**
          * To check that NMS shall not retry OBD message for which all OBD attempts(1 actual+3 retry) fails with
@@ -305,7 +305,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
     }
 
 
-    @Ignore //TEMP
+    @Test
     public void verifyFT144() {
 
         String timestamp = DateTime.now().toString(TIME_FORMATTER);
@@ -361,7 +361,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
 
 
-    @Ignore //TEMP
+    @Test
     public void verifyFT149() {
 
         String timestamp = DateTime.now().toString(TIME_FORMATTER);
@@ -398,7 +398,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
         assertEquals(0, callRetryDataService.count());
     }
 
-    @Ignore //TEMP
+    @Test
     public void verifyFT150() {
 
         String timestamp = DateTime.now().toString(TIME_FORMATTER);
@@ -438,7 +438,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
         assertEquals(DayOfTheWeek.today().nextDay(),retries.get(0).getDayOfTheWeek());
     }
 
-    @Ignore //TEMP
+    @Test
     public void verifyFT141() {
 
         String timestamp = DateTime.now().toString(TIME_FORMATTER);
@@ -497,7 +497,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
     }
 
 
-    @Ignore //TEMP
+    @Test
     public void verifyFT138() {
         /**
          * To check that NMS shall retry OBD message for which first OBD retry fails
@@ -554,7 +554,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
         assertEquals(DayOfTheWeek.today().nextDay(),retries.get(0).getDayOfTheWeek());
     }
 
-    @Ignore //TEMP
+    @Test
     public void verifyFT139() {
         /**
          * To check that NMS shall retry OBD message for which second OBD retry fails with

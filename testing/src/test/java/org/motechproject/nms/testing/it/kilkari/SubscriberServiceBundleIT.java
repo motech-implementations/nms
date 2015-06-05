@@ -2,8 +2,8 @@ package org.motechproject.nms.testing.it.kilkari;
 
 import org.joda.time.DateTime;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.motechproject.mds.ex.JdoListenerInvocationException;
@@ -92,7 +92,7 @@ public class SubscriberServiceBundleIT extends BasePaxIT {
     }
 
 
-    @Ignore //TEMP
+    @Test
     public void testServicePresent() throws Exception {
         assertNotNull(subscriberService);
     }
@@ -101,7 +101,7 @@ public class SubscriberServiceBundleIT extends BasePaxIT {
     public ExpectedException exception = ExpectedException.none();
 
 
-    @Ignore //TEMP
+    @Test
     public void testDeleteSubscriberWithOpenSubscription() {
 
         Subscriber subscriber = subscriberService.getSubscriber(2000000000L);
@@ -116,7 +116,7 @@ public class SubscriberServiceBundleIT extends BasePaxIT {
     }
 
 
-    @Ignore //TEMP
+    @Test
     public void testDeleteSubscriberWithAllClosedSubscriptions() {
 
         Subscriber subscriber = subscriberService.getSubscriber(2000000000L);

@@ -1,6 +1,6 @@
 package org.motechproject.nms.testing.it.flw;
 
-import org.junit.Ignore;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.flw.domain.WhitelistEntry;
 import org.motechproject.nms.flw.domain.WhitelistState;
@@ -73,7 +73,7 @@ public class WhiteListServiceBundleIT extends BasePaxIT {
 
     // Test with record in whitelist entry for a state that isn't in whitelist table
     // In this test the whitelist isn't turned on for that state so the call should be allowed
-    @Ignore //TEMP
+    @Test
     public void testRecordInWhitelistEntryButStateNotWhitelisted() throws Exception {
         setupData();
 
@@ -85,7 +85,7 @@ public class WhiteListServiceBundleIT extends BasePaxIT {
     }
 
     // Test with null state
-    @Ignore //TEMP
+    @Test
     public void testNullState() throws Exception {
         setupData();
 
@@ -94,7 +94,7 @@ public class WhiteListServiceBundleIT extends BasePaxIT {
     }
 
     // Test with null contactNumber
-    @Ignore //TEMP
+    @Test
     public void testNullContactNumber() throws Exception {
         setupData();
 
@@ -103,7 +103,7 @@ public class WhiteListServiceBundleIT extends BasePaxIT {
     }
 
     // Test both state and contactNumber null
-    @Ignore //TEMP
+    @Test
     public void testNullStateAndContactNumber() throws Exception {
         setupData();
 
@@ -112,7 +112,7 @@ public class WhiteListServiceBundleIT extends BasePaxIT {
     }
 
     // Test for state without whitelist enabled
-    @Ignore //TEMP
+    @Test
     public void testStateWithoutWhitelist() throws Exception {
         setupData();
 
@@ -121,7 +121,7 @@ public class WhiteListServiceBundleIT extends BasePaxIT {
     }
 
     // Test state with whitelist, number in list
-    @Ignore //TEMP
+    @Test
     public void testStateWithWhitelistValidNumber() throws Exception {
         setupData();
 
@@ -130,7 +130,7 @@ public class WhiteListServiceBundleIT extends BasePaxIT {
     }
 
     // Test state with whitelist, number not in list
-    @Ignore //TEMP
+    @Test
     public void testStateWithWhitelistInvalidNumber() throws Exception {
         setupData();
 
@@ -139,7 +139,7 @@ public class WhiteListServiceBundleIT extends BasePaxIT {
     }
 
     // Test with non-whitelist state, number not whitelisted
-    @Ignore //TEMP
+    @Test
     public void testStateWithoutWhitelistInvalidNumber() throws Exception {
         setupData();
 
@@ -148,7 +148,7 @@ public class WhiteListServiceBundleIT extends BasePaxIT {
     }
 
     // Test with non-whitelist state + whitelist number and non-whitelist state + non-whitelist number
-    @Ignore //TEMP
+    @Test
     public void testNumberInWhitelistForStateButWhitelistNotOnForState() throws Exception {
         whitelistEntryDataService.deleteAll();
         serviceUsageCapDataService.deleteAll();

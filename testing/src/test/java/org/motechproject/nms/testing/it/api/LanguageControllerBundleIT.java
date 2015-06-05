@@ -5,7 +5,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Before;
-import org.junit.Ignore;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.api.web.contract.UserLanguageRequest;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
@@ -117,7 +117,7 @@ public class LanguageControllerBundleIT extends BasePaxIT {
         serviceUsageCapDataService.create(serviceUsageCap);
     }
 
-    @Ignore //TEMP
+    @Test
     public void testSetLanguageInvalidService() throws IOException, InterruptedException {
         HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/NO_SERVICE/languageLocationCode", TestContext.getJettyPort()));
         StringEntity params = new StringEntity("{\"callingNumber\":1111111111,\"callId\":123456789012345,\"languageLocationCode\":10}");
@@ -130,7 +130,7 @@ public class LanguageControllerBundleIT extends BasePaxIT {
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
-    @Ignore //TEMP
+    @Test
     public void testSetLanguageMissingCallingNumber() throws IOException, InterruptedException {
         HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/languageLocationCode", TestContext.getJettyPort()));
         StringEntity params = new StringEntity("{\"callId\":123456789012345,\"languageLocationCode\":10}");
@@ -143,7 +143,7 @@ public class LanguageControllerBundleIT extends BasePaxIT {
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
-    @Ignore //TEMP
+    @Test
     public void testSetLanguageInvalidCallingNumber() throws IOException, InterruptedException {
         HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/languageLocationCode", TestContext.getJettyPort()));
 
@@ -162,7 +162,7 @@ public class LanguageControllerBundleIT extends BasePaxIT {
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
-    @Ignore //TEMP
+    @Test
     public void testSetLanguageMissingCallId() throws IOException, InterruptedException {
         HttpPost httpPost = new HttpPost(
                 String.format("http://localhost:%d/api/mobilekunji/languageLocationCode",
@@ -177,7 +177,7 @@ public class LanguageControllerBundleIT extends BasePaxIT {
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
-    @Ignore //TEMP
+    @Test
     public void testSetLanguageInvalidCallId() throws IOException, InterruptedException {
         HttpPost httpPost = new HttpPost(
                 String.format("http://localhost:%d/api/mobilekunji/languageLocationCode",
@@ -192,7 +192,7 @@ public class LanguageControllerBundleIT extends BasePaxIT {
                 ADMIN_PASSWORD));
     }
 
-    @Ignore //TEMP
+    @Test
     public void testSetLanguageMissingLanguageLocationCode() throws IOException, InterruptedException {
         HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/languageLocationCode", TestContext.getJettyPort()));
         StringEntity params = new StringEntity("{\"callingNumber\":abcdef,\"callId\":123456789012345}");
@@ -204,7 +204,7 @@ public class LanguageControllerBundleIT extends BasePaxIT {
                 ADMIN_PASSWORD));
     }
 
-    @Ignore //TEMP
+    @Test
     public void testSetLanguageInvalidLanguageLocationCode() throws IOException, InterruptedException {
         HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/languageLocationCode", TestContext.getJettyPort()));
         StringEntity params = new StringEntity("{\"callingNumber\":abcdef,\"callId\":123456789012345,\"languageLocationCode\":\"AA\"}");
@@ -216,7 +216,7 @@ public class LanguageControllerBundleIT extends BasePaxIT {
                 ADMIN_PASSWORD));
     }
 
-    @Ignore //TEMP
+    @Test
     public void testSetLanguageNoFLW() throws IOException, InterruptedException {
         createCircleWithLanguage();
 
@@ -236,7 +236,7 @@ public class LanguageControllerBundleIT extends BasePaxIT {
         assertEquals("FLW Language Code", "99", language.getCode());
     }
 
-    @Ignore //TEMP
+    @Test
     public void testSetLanguageLanguageNotFound() throws IOException, InterruptedException {
         createFlwCappedServiceNoUsageNoLocationNoLanguage();
 
@@ -251,7 +251,7 @@ public class LanguageControllerBundleIT extends BasePaxIT {
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
-    @Ignore //TEMP
+    @Test
     public void testSetLanguageUndeployedState() throws IOException, InterruptedException {
         createFlwCappedServiceNoUsageNoLocationNoLanguage();
 
@@ -267,7 +267,7 @@ public class LanguageControllerBundleIT extends BasePaxIT {
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
-    @Ignore //TEMP
+    @Test
     public void testSetLanguageValid() throws IOException, InterruptedException {
         createFlwCappedServiceNoUsageNoLocationNoLanguage();
 

@@ -31,10 +31,9 @@ import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackMessageDataService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
+import org.motechproject.nms.props.domain.DeployedService;
+import org.motechproject.nms.props.domain.Service;
 import org.motechproject.nms.props.repository.DeployedServiceDataService;
-import org.motechproject.nms.region.domain.District;
-import org.motechproject.nms.region.domain.Language;
-import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
@@ -137,6 +136,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         // subscriber3 subscribed to 72 weeks pack only
         subscriptionService.createSubscription(subscriber3.getCallingNumber(), rh.hindiLanguage(),
                 sh.pregnancyPack(), SubscriptionOrigin.IVR);
+
+        deployedServiceDataService.create(new DeployedService(rh.delhiState(), Service.KILKARI));
     }
 
     
@@ -375,6 +376,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
     private HttpPost createSubscriptionHttpPost(long callingNumber, String subscriptionPack)
             throws IOException {
+
         SubscriptionRequest subscriptionRequest = new SubscriptionRequest(
                 callingNumber,
                 rh.airtelOperator(),
@@ -434,16 +436,16 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     public void testCreateSubscriptionRequestDifferentPacks() throws IOException, InterruptedException {
         long callingNumber = 9999911122L;
 
-        HttpPost httpPost1 = createSubscriptionHttpPost(callingNumber, sh.childPack().getName());
-
-        SimpleHttpClient.execHttpRequest(httpPost1, HttpStatus.SC_OK, ADMIN_USERNAME, ADMIN_PASSWORD);
+        HttpPost httpPost = createSubscriptionHttpPost(callingNumber, sh.childPack().getName());
+        HttpResponse resp = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, resp.getStatusLine().getStatusCode());
 
         Subscriber subscriber = subscriberService.getSubscriber(callingNumber);
         int numberOfSubsBefore = subscriber.getActiveSubscriptions().size();
 
-        HttpPost httpPost2 = createSubscriptionHttpPost(callingNumber, sh.pregnancyPack().getName());
-
-        SimpleHttpClient.execHttpRequest(httpPost2, HttpStatus.SC_OK, ADMIN_USERNAME, ADMIN_PASSWORD);
+        httpPost = createSubscriptionHttpPost(callingNumber, sh.pregnancyPack().getName());
+        resp = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, resp.getStatusLine().getStatusCode());
 
         subscriber = subscriberService.getSubscriber(callingNumber);
         int numberOfSubsAfter = subscriber.getActiveSubscriptions().size();
@@ -473,23 +475,13 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     @Test
     public void testCreateSubscriptionForUndeployedState() throws IOException, InterruptedException {
 
-        District mysuruDistrict = new District();
-        mysuruDistrict.setName("Mysuru");
-        mysuruDistrict.setRegionalName("Mysuru");
-        mysuruDistrict.setCode(2L);
-
-        State karnatakaState = new State();
-        karnatakaState.setName("Karnataka");
-        karnatakaState.setCode(2L);
-        karnatakaState.getDistricts().add(mysuruDistrict);
-
-        stateDataService.create(karnatakaState);
-
-        Language kannadaLanguage = new Language("kn", "Kannada");
-        languageDataService.create(kannadaLanguage);
-
-        SubscriptionRequest subscriptionRequest = new SubscriptionRequest(9999911122L, rh.airtelOperator(), "BB",
-                123456789012545L, "77", sh.childPack().getName());
+        SubscriptionRequest subscriptionRequest = new SubscriptionRequest(
+                9999911122L,
+                rh.airtelOperator(),
+                rh.karnatakaCircle().getName(),
+                123456789012545L,
+                rh.kannadaLanguage().getCode(),
+                sh.childPack().getName());
         ObjectMapper mapper = new ObjectMapper();
         String subscriptionRequestJson = mapper.writeValueAsString(subscriptionRequest);
 
@@ -499,8 +491,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         httpPost.setEntity(new StringEntity(subscriptionRequestJson));
 
         // Should return HTTP 501 (Not Implemented) because the service is not deployed for the specified state
-        assertTrue(SimpleHttpClient
-                .execHttpRequest(httpPost, HttpStatus.SC_NOT_IMPLEMENTED, ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, response.getStatusLine().getStatusCode());
     }
 
 

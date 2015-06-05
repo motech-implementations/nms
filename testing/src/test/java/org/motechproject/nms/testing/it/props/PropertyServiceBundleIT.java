@@ -1,6 +1,6 @@
 package org.motechproject.nms.testing.it.props;
 
-import org.junit.Ignore;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.props.domain.DeployedService;
 import org.motechproject.nms.props.domain.Service;
@@ -56,7 +56,7 @@ public class PropertyServiceBundleIT extends BasePaxIT {
     }
 
     // Test a state/service that is deployed
-    @Ignore //TEMP
+    @Test
     public void testDeployedStateAndDeployedService() {
         cleanUp();
 
@@ -67,7 +67,7 @@ public class PropertyServiceBundleIT extends BasePaxIT {
     }
 
     // Test a state that has a deployed service but not the one being queried
-    @Ignore //TEMP
+    @Test
     public void testDeployedStateNotDeployedService() {
         cleanUp();
 
@@ -78,7 +78,7 @@ public class PropertyServiceBundleIT extends BasePaxIT {
     }
 
     // Test a state with no deployments but a service that is in a different state
-    @Ignore //TEMP
+    @Test
     public void testNotDeployedStateDeployedService() {
         cleanUp();
 
@@ -91,7 +91,7 @@ public class PropertyServiceBundleIT extends BasePaxIT {
     }
 
     // Test with neither state or service deployed
-    @Ignore //TEMP
+    @Test
     public void testNotDeployedStateNotDeployedService() {
         cleanUp();
 

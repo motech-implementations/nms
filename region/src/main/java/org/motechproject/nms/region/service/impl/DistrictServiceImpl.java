@@ -1,5 +1,6 @@
 package org.motechproject.nms.region.service.impl;
 
+import org.datanucleus.store.rdbms.query.ForwardQueryResult;
 import org.motechproject.mds.query.QueryExecution;
 import org.motechproject.mds.util.InstanceSecurityRestriction;
 import org.motechproject.nms.region.domain.District;
@@ -15,6 +16,7 @@ import java.util.Set;
 
 @Service("districtService")
 public class DistrictServiceImpl implements DistrictService {
+
     private DistrictDataService districtDataService;
 
     @Autowired
@@ -32,16 +34,15 @@ public class DistrictServiceImpl implements DistrictService {
                 query.setFilter("language == _language");
                 query.declareParameters("org.motechproject.nms.region.domain.Language _language");
 
-                return (Set<District>) query.execute(language);
+                Set<District> districts = new HashSet<>();
+                ForwardQueryResult fqr = (ForwardQueryResult) query.execute(language);
+                for (Object o : fqr) {
+                    districts.add((District) o);
+                }
+                return districts;
             }
         };
 
-        Set<District> districts = districtDataService.executeQuery(stateQueryExecution);
-
-        if (districts == null) {
-            districts = new HashSet<>();
-        }
-
-        return districts;
+        return districtDataService.executeQuery(stateQueryExecution);
     }
 }

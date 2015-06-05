@@ -2,8 +2,8 @@ package org.motechproject.nms.testing.it.kilkari;
 
 import org.joda.time.DateTime;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.motechproject.event.MotechEvent;
@@ -113,13 +113,13 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     }
 
     
-    @Ignore //TEMP
+    @Test
     public void testServicePresent() throws Exception {
         assertNotNull(subscriptionService);
     }
 
     
-    @Ignore //TEMP
+    @Test
     public void testPurgeOldClosedSubscriptionsNothingToPurge() {
 
         // s1 & s2 should remain untouched
@@ -161,7 +161,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     }
 
 
-    @Ignore //TEMP
+    @Test
     public void testPurgeOldClosedSubscriptionsSubscribersDeleted() {
 
         Subscriber subscriber;
@@ -219,7 +219,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         assertNull(subscriber);
     }
 
-    @Ignore //TEMP
+    @Test
     public void testPurgeOldClosedSubscriptionsRemoveSubscriptionLeaveSubscriber() {
 
         Subscriber subscriber;
@@ -279,7 +279,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         assertEquals(1, subscriptions.size());
     }
 
-    @Ignore //TEMP
+    @Test
     public void testServiceFunctional() throws Exception {
 
         Subscriber subscriber = new Subscriber(1000000000L, rh.hindiLanguage());
@@ -338,7 +338,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         assertEquals(1111111111L, (long) inboxCallDetailRecordFromDatabase.getCallingNumber());
     }
 
-    @Ignore //TEMP
+    @Test
     public void testSubscriptionPackCreation() throws Exception {
         SubscriptionPack fortyEightWeekPack = subscriptionPackDataService.byName("childPack");
         assertEquals(48, fortyEightWeekPack.getMessages().size());
@@ -348,7 +348,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     }
 
 
-    @Ignore //TEMP
+    @Test
     public void testCreateSubscriptionNoSubscriber() throws Exception {
         // Just verify the db is clean
         Subscriber s = subscriberService.getSubscriber(1111111111L);
@@ -366,7 +366,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         assertEquals(sh.childPack(), subscription.getSubscriptionPack());
     }
 
-    @Ignore //TEMP
+    @Test
     public void testCreateSubscriptionExistingSubscriberDifferentLanguage() throws Exception {
 
         // Just verify the db is clean
@@ -389,7 +389,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         assertEquals(sh.childPack(), subscription.getSubscriptionPack());
     }
 
-    @Ignore //TEMP
+    @Test
     public void testCreateSubscriptionExistingSubscriberWithoutLanguage() throws Exception {
 
         // Just verify the db is clean
@@ -409,7 +409,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         assertEquals(rh.hindiLanguage(), subscriber.getLanguage());
     }
 
-    @Ignore //TEMP
+    @Test
     public void testCreateSubscriptionViaMcts() {
 
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
@@ -423,7 +423,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
     }
 
-    @Ignore //TEMP
+    @Test
     public void testCreateDuplicateChildSubscriptionViaMcts() {
 
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
@@ -443,7 +443,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
     }
 
-    @Ignore //TEMP
+    @Test
     public void testCreateDuplicatePregnancySubscriptionViaMcts() {
 
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
@@ -463,7 +463,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
     }
 
-    @Ignore //TEMP
+    @Test
     public void testCreateSecondPregnancySubscriptionAfterDeactivationViaMcts() {
 
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
@@ -485,7 +485,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
     }
 
-    @Ignore //TEMP
+    @Test
     public void testCreateSubscriptionsToDifferentPacksViaMcts() {
 
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
@@ -511,7 +511,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         assertEquals(2, mctsSubscriber.getActiveSubscriptions().size());
     }
 
-    @Ignore //TEMP
+    @Test
     public void testChangeDOB() {
         DateTime now = DateTime.now();
 
@@ -538,7 +538,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         assert(subscription.getStatus() == SubscriptionStatus.ACTIVE);
     }
 
-    @Ignore //TEMP
+    @Test
     public void testChangeLMP() {
         DateTime now = DateTime.now();
 
@@ -574,7 +574,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         assert(subscription.getStatus() == SubscriptionStatus.COMPLETED);
     }
 
-    @Ignore //TEMP
+    @Test
     public void testGetNextMessageForSubscription() {
         DateTime now = DateTime.now();
 
@@ -601,7 +601,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         assertEquals("w11_2", message.getWeekId());
     }
 
-    @Ignore //TEMP(expected = IllegalStateException.class)
+    @Test(expected = IllegalStateException.class)
     public void testGetNextMessageForCompletedSubscription() {
         DateTime now = DateTime.now();
 
@@ -619,7 +619,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         SubscriptionPackMessage message = subscription.nextScheduledMessage(now.plusDays(1000));
     }
 
-    @Ignore //TEMP
+    @Test
     public void testActiveSubscriptionsForDay() {
         DateTime startDate = DateTime.now().minusDays((int) (Math.random() * 100));
         DayOfTheWeek startDay = DayOfTheWeek.fromInt(startDate.getDayOfWeek());
@@ -641,7 +641,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     }
 
     // NMS shall allow a subscriber deactivated due to DND restrictions to activate the Testing service again via IVR.
-    @Ignore //TEMP
+    @Test
     public void verifyIssue182() {
 
         Subscriber subscriber = new Subscriber(4444444444L);
@@ -663,7 +663,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     @Rule
     public ExpectedException exception = ExpectedException.none();
 
-    @Ignore //TEMP
+    @Test
     public void testDeleteOpenSubscription() {
 
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
@@ -677,7 +677,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         subscriptionDataService.delete(subscription);
     }
 
-    @Ignore //TEMP
+    @Test
     public void testDeleteRecentDeactivateSubscription() {
 
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
@@ -693,7 +693,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         subscriptionDataService.delete(subscription);
     }
 
-    @Ignore //TEMP
+    @Test
     public void testDeleteRecentCompletedSubscription() {
 
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
@@ -709,7 +709,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         subscriptionDataService.delete(subscription);
     }
 
-    @Ignore //TEMP
+    @Test
     public void testDeleteOldDeactivatedSubscription() {
 
         Subscriber subscriber = subscriberService.getSubscriber(2000000000L);
@@ -728,7 +728,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         assertEquals(1, subscriber.getSubscriptions().size());
     }
 
-    @Ignore //TEMP
+    @Test
     public void testDeleteOldCompletedSubscription() {
 
         Subscriber subscriber = subscriberService.getSubscriber(2000000000L);
