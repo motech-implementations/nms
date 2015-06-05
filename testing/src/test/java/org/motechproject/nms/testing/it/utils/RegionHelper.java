@@ -27,41 +27,88 @@ public class RegionHelper {
     }
 
     public Circle delhiCircle() {
-        Circle circle = circleDataService.findByName("DE");
-        if (circle != null) {
-            return circle;
+        Circle delhiCircle = circleDataService.findByName("DE");
+
+        if (delhiCircle == null) {
+            delhiCircle = circleDataService.create(new Circle("DE"));
+            delhiCircle.getStates().add(delhiState());
+            circleDataService.update(delhiCircle);
         }
 
-        return circleDataService.create(new Circle("DE"));
+        return delhiCircle;
     }
 
     public State delhiState() {
         State state = stateDataService.findByCode(1l);
-        if (state != null) {
-            return state;
+
+        if (state == null) {
+            state = new State();
+            state.setName("National Capital Territory of Delhi");
+            state.setCode(1L);
+            stateDataService.create(state);
         }
 
-        state = new State();
-        state.setName("National Capital Territory of Delhi");
-        state.setCode(1L);
-
-        return stateDataService.create(state);
+        return state;
     }
+
+
+    public State karnatakaState() {
+        State state = stateDataService.findByCode(2l);
+
+        if (state == null) {
+            state = new State();
+            state.setName("Karnataka");
+            state.setCode(2L);
+            stateDataService.create(state);
+        }
+
+        return state;
+    }
+
 
     public District newDelhiDistrict() {
         District district = districtDataService.findById(1L);
-        if (district != null) {
-            return district;
+
+        if (district == null) {
+            district = new District();
+            district.setName("New Delhi");
+            district.setRegionalName("New Delhi");
+            district.setCode(1L);
+            district.setState(delhiState());
+            district.setLanguage(hindiLanguage());
+            districtDataService.create(district);
         }
 
-        district = new District();
-        district.setName("New Delhi");
-        district.setRegionalName("New Delhi");
-        district.setCode(1L);
-        district.setState(delhiState());
+        return district;
+    }
+
+
+    public District mysuruDistrict() {
+        District district = districtDataService.findById(2L);
+        if (district == null) {
+            district = new District();
+            district.setName("Mysuru");
+            district.setRegionalName("Mysuru");
+            district.setCode(2L);
+            district.setState(karnatakaState());
+            district.setLanguage(kannadaLanguage());
+            districtDataService.create(district);
+        }
 
         return districtDataService.create(district);
     }
+
+
+    public Language kannadaLanguage() {
+        Language language = languageDataService.findByName("Kannada");
+        if (language != null) {
+            return language;
+        }
+        language = languageDataService.create(new Language("kn", "Kannada"));
+
+        return language;
+    }
+
 
     public Language hindiLanguage() {
         Language language = languageDataService.findByName("Hindi");
@@ -69,14 +116,6 @@ public class RegionHelper {
             return language;
         }
         language = languageDataService.create(new Language("hi", "Hindi"));
-
-        District district = newDelhiDistrict();
-        district.setLanguage(language);
-        districtDataService.update(district);
-
-        Circle circle = delhiCircle();
-        circle.getStates().add(district.getState());
-        circleDataService.update(circle);
 
         return language;
     }

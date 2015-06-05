@@ -7,6 +7,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.joda.time.DateTime;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -105,10 +106,9 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     private TestingService testingService;
 
 
-    private String httpNumTries;
     private RegionHelper rh;
     private SubscriptionHelper sh;
-
+    private String httpNumTries;
 
 
     @Before
@@ -118,7 +118,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     }
 
 
-    @Before
+    @After
     public void restoreProperties() {
         System.setProperty("org.motechproject.testing.osgi.http.numTries", httpNumTries);
     }
@@ -506,7 +506,6 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
         Language kannadaLanguage = new Language("kn", "Kannada");
         languageDataService.create(kannadaLanguage);
-
 
         SubscriptionRequest subscriptionRequest = new SubscriptionRequest(9999911122L, "A", "BB",
                 123456789012545L, "77", "childPack");

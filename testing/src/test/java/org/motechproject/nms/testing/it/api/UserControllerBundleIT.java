@@ -8,6 +8,8 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.joda.time.DateTime;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -53,6 +55,9 @@ import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.LanguageLocationDataService;
 import org.motechproject.nms.region.repository.NationalDefaultLanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.testing.it.utils.RegionHelper;
+import org.motechproject.nms.testing.it.utils.SubscriptionHelper;
+import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.motechproject.testing.osgi.http.SimpleHttpClient;
@@ -114,9 +119,6 @@ public class UserControllerBundleIT extends BasePaxIT {
     private LanguageDataService languageDataService;
 
     @Inject
-    private LanguageLocationDataService languageLocationDataService;
-
-    @Inject
     private StateDataService stateDataService;
 
     @Inject
@@ -140,43 +142,45 @@ public class UserControllerBundleIT extends BasePaxIT {
     @Inject
     private NationalDefaultLanguageDataService nationalDefaultLanguageLocationDataService;
 
-    public UserControllerBundleIT() {
+    @Inject
+    private TestingService testingService;
+
+
+
+    private RegionHelper rh;
+    private SubscriptionHelper sh;
+    private String httpNumTries;
+
+
+    @Before
+    public void setupProperties() {
+        httpNumTries = System.getProperty("org.motechproject.testing.osgi.http.numTries");
         System.setProperty("org.motechproject.testing.osgi.http.numTries", "1");
     }
 
-    // TODO: Clean up data creation and cleanup
-    private void cleanAllData() {
-        for (FrontLineWorker flw: frontLineWorkerDataService.retrieveAll()) {
-            flw.setStatus(FrontLineWorkerStatus.INVALID);
-            flw.setInvalidationDate(new DateTime().withDate(2011, 8, 1));
 
-            frontLineWorkerDataService.update(flw);
-        }
-
-        for (Subscription subscription: subscriptionDataService.retrieveAll()) {
-            subscription.setStatus(SubscriptionStatus.COMPLETED);
-            subscription.setEndDate(new DateTime().withDate(2011, 8, 1));
-
-            subscriptionDataService.update(subscription);
-        }
-
-        whitelistEntryDataService.deleteAll();
-        whitelistStateDataService.deleteAll();
-        serviceUsageCapDataService.deleteAll();
-        serviceUsageDataService.deleteAll();
-        callDetailRecordDataService.deleteAll();
-        frontLineWorkerDataService.deleteAll();
-        subscriptionDataService.deleteAll();
-        subscriptionPackDataService.deleteAll();
-        subscriberDataService.deleteAll();
-        nationalDefaultLanguageLocationDataService.deleteAll();
-        languageLocationDataService.deleteAll();
-        languageDataService.deleteAll();
-        districtDataService.deleteAll();
-        deployedServiceDataService.deleteAll();
-        stateDataService.deleteAll();
-        circleDataService.deleteAll();
+    @After
+    public void restoreProperties() {
+        System.setProperty("org.motechproject.testing.osgi.http.numTries", httpNumTries);
     }
+
+
+    @Before
+    public void setupTestData() {
+        rh = new RegionHelper(languageDataService, circleDataService, stateDataService,
+                districtDataService);
+
+        sh = new SubscriptionHelper(subscriptionService,
+                subscriberDataService, subscriptionPackDataService, languageDataService, circleDataService,
+                stateDataService, districtDataService);
+    }
+
+
+    @Before
+    public void clearDatabase() {
+        testingService.clearDatabase();
+    }
+
 
     /*
     Creates two subscription packs ('pack1' and 'pack2')
@@ -185,7 +189,6 @@ public class UserControllerBundleIT extends BasePaxIT {
         Subscriber 2000000000L is subscribed to packs 'pack1' and 'pack2'
      */
     private void createKilkariTestData() {
-        cleanAllData();
 
         District district = new District();
         district.setName("District 1");
@@ -202,10 +205,6 @@ public class UserControllerBundleIT extends BasePaxIT {
         Language ta = languageDataService.create(new Language("tamil"));
 
         Circle circle = new Circle("AA");
-
-        LanguageLocation languageLocation = new LanguageLocation("50", circle, ta, true);
-        languageLocation.getDistrictSet().add(district);
-        languageLocationDataService.create(languageLocation);
 
         SubscriptionPack pack1 = subscriptionPackDataService.create(new SubscriptionPack("pack1",
                 SubscriptionPackType.CHILD, 48, 1, null));

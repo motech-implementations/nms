@@ -5,6 +5,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.joda.time.DateTime;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.api.web.contract.UserLanguageRequest;
@@ -28,6 +29,8 @@ import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.LanguageLocationDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.testing.it.utils.RegionHelper;
+import org.motechproject.nms.testing.it.utils.SubscriptionHelper;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
@@ -59,9 +62,6 @@ public class LanguageControllerBundleIT extends BasePaxIT {
     private LanguageDataService languageDataService;
 
     @Inject
-    private LanguageLocationDataService languageLocationDataService;
-
-    @Inject
     private ServiceUsageCapDataService serviceUsageCapDataService;
 
     @Inject
@@ -77,34 +77,24 @@ public class LanguageControllerBundleIT extends BasePaxIT {
     private CircleDataService circleDataService;
 
     @Inject
-    private FrontLineWorkerDataService frontLineWorkerDataService;
-
-    @Inject
-    private SubscriberDataService subscriberDataService;
-
-    @Inject
     private TestingService testingService;
 
-    private void cleanAllData() {
+
+    private RegionHelper rh;
+
+
+    @Before
+    public void clearDatabase() {
         testingService.clearDatabase();
-
-        for (FrontLineWorker flw: frontLineWorkerDataService.retrieveAll()) {
-            flw.setStatus(FrontLineWorkerStatus.INVALID);
-            flw.setInvalidationDate(new DateTime().withDate(2011, 8, 1));
-
-            frontLineWorkerDataService.update(flw);
-        }
-
-        frontLineWorkerDataService.deleteAll();
-        serviceUsageCapDataService.deleteAll();
-        subscriberDataService.deleteAll();
-        languageLocationDataService.deleteAll();
-        languageDataService.deleteAll();
-        deployedServiceDataService.deleteAll();
-        stateDataService.deleteAll();
-        districtDataService.deleteAll();
-        circleDataService.deleteAll();
     }
+
+
+    @Before
+    public void setupTestData() {
+        rh = new RegionHelper(languageDataService, circleDataService, stateDataService,
+                districtDataService);
+    }
+
 
     private void createCircleWithLanguage() {
         cleanAllData();
