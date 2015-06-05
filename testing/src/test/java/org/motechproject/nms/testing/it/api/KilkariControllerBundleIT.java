@@ -1,5 +1,17 @@
 package org.motechproject.nms.testing.it.api;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+import javax.inject.Inject;
+
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -21,12 +33,15 @@ import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.flw.repository.ServiceUsageCapDataService;
 import org.motechproject.nms.flw.repository.ServiceUsageDataService;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
+import org.motechproject.nms.kilkari.domain.InboxCallDetailRecord;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
+import org.motechproject.nms.kilkari.repository.InboxCallDataDataService;
+import org.motechproject.nms.kilkari.repository.InboxCallDetailRecordDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
@@ -55,17 +70,6 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
-
-import javax.inject.Inject;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.regex.Pattern;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Verify that Kilkari API is functional.
@@ -119,6 +123,12 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     @Inject
     private DeployedServiceDataService deployedServiceDataService;
 
+    @Inject
+    private InboxCallDetailRecordDataService inboxCallDetailsDataService;
+
+    @Inject
+    private InboxCallDataDataService inboxCallDataDataService;
+
     public KilkariControllerBundleIT() {
         System.setProperty("org.motechproject.testing.osgi.http.numTries", "1");
     }
@@ -154,6 +164,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         deployedServiceDataService.deleteAll();
         stateDataService.deleteAll();
         circleDataService.deleteAll();
+        inboxCallDataDataService.deleteAll();
+        inboxCallDetailsDataService.deleteAll();
     }
 
     private void createLanguageAndSubscriptionPacks() {
@@ -781,6 +793,82 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
                 expectedJsonPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    /**
+     * NMS_FT_21 To verify the that Save Inbox call Details API request should
+     * succeed for unsubscribed caller or caller with no active subscription
+     * without any content being saved.
+     */
+    @Test
+    public void verifyFT21() throws IOException,
+            InterruptedException {
+        cleanAllData();
+        createLanguageAndSubscriptionPacks();
+        // Test for unsubscribed caller
+        HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
+                1234567899L, // unsubscribed callingNumber
+                "A", // operator
+                "AP", // circle
+                123456789012345L, // callId
+                123L, // callStartTime
+                456L, // callEndTime
+                123, // callDurationInPulses
+                2, // callStatus
+                4, // callDisconnectReason
+                null)); // no content
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+        // assert inboxCallDetailRecord
+        InboxCallDetailRecord inboxCallDetailRecord = inboxCallDetailsDataService
+                .retrieve("callingNumber", 1234567899L);
+        assertTrue(1234567899L == inboxCallDetailRecord.getCallingNumber());
+        assertTrue(123456789012345L == inboxCallDetailRecord.getCallId());
+        assertEquals("A", inboxCallDetailRecord.getOperator());
+        assertEquals("AP", inboxCallDetailRecord.getCircle());
+        assertTrue(123 == inboxCallDetailRecord.getCallDurationInPulses());
+        assertTrue(2 == inboxCallDetailRecord.getCallStatus());
+        assertTrue(4 == inboxCallDetailRecord.getCallDisconnectReason());
+        assertTrue(123L == inboxCallDetailRecord.getCallStartTime().getMillis());
+        assertTrue(456L == inboxCallDetailRecord.getCallEndTime().getMillis());
+
+        // subscribed caller with deactivated subscription i.e no active and
+        // pending subscriptions
+        Subscriber subscriber = subscriberDataService.create(new Subscriber(
+                5000000000L));
+        Subscription subscription1 = subscriptionService.createSubscription(
+                subscriber.getCallingNumber(), gLanguageLocation, gPack1,
+                SubscriptionOrigin.IVR);
+        subscriptionService.deactivateSubscription(subscription1,
+                DeactivationReason.DEACTIVATED_BY_USER);
+        httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
+                5000000000L, // callingNumber
+                "A", // operator
+                "AP", // circle
+                123456789012345L, // callId
+                123L, // callStartTime
+                456L, // callEndTime
+                123, // callDurationInPulses
+                3, // callStatus
+                5, // callDisconnectReason
+                null)); // no content
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+        // assert inboxCallDetailRecord
+        InboxCallDetailRecord inboxCallDetailRecord2 = inboxCallDetailsDataService
+                .retrieve("callingNumber", 5000000000L);
+        assertTrue(5000000000L == inboxCallDetailRecord2.getCallingNumber());
+        assertTrue(123456789012345L == inboxCallDetailRecord2.getCallId());
+        assertEquals("A", inboxCallDetailRecord2.getOperator());
+        assertEquals("AP", inboxCallDetailRecord2.getCircle());
+        assertTrue(123 == inboxCallDetailRecord2.getCallDurationInPulses());
+        assertTrue(3 == inboxCallDetailRecord2.getCallStatus());
+        assertTrue(5 == inboxCallDetailRecord2.getCallDisconnectReason());
+        assertTrue(123L == inboxCallDetailRecord2.getCallStartTime()
+                .getMillis());
+        assertTrue(456L == inboxCallDetailRecord2.getCallEndTime().getMillis());
     }
 
 }
