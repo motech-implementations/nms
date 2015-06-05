@@ -1,5 +1,19 @@
 package org.motechproject.nms.testing.it.api;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+import javax.inject.Inject;
+
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -28,6 +42,7 @@ import org.motechproject.nms.flw.repository.ServiceUsageDataService;
 import org.motechproject.nms.flw.repository.WhitelistEntryDataService;
 import org.motechproject.nms.flw.repository.WhitelistStateDataService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
+import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
@@ -53,6 +68,7 @@ import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.LanguageLocationDataService;
 import org.motechproject.nms.region.repository.NationalDefaultLanguageLocationDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.testing.it.api.utils.SubscriptionPackBuilder;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.motechproject.testing.osgi.http.SimpleHttpClient;
@@ -61,19 +77,6 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
-
-import javax.inject.Inject;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.regex.Pattern;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 
 /**
@@ -197,33 +200,95 @@ public class UserControllerBundleIT extends BasePaxIT {
         state.getDistricts().add(district);
         stateDataService.create(state);
 
-        deployedServiceDataService.create(new DeployedService(state, Service.KILKARI));
+        deployedServiceDataService.create(new DeployedService(state,
+                Service.KILKARI));
 
         Language ta = languageDataService.create(new Language("tamil"));
 
         Circle circle = new Circle("AA");
 
-        LanguageLocation languageLocation = new LanguageLocation("50", circle, ta, true);
+        LanguageLocation languageLocation = new LanguageLocation("50", circle,
+                ta, true);// default LLC
         languageLocation.getDistrictSet().add(district);
         languageLocationDataService.create(languageLocation);
 
-        SubscriptionPack pack1 = subscriptionPackDataService.create(new SubscriptionPack("pack1",
-                SubscriptionPackType.CHILD, 48, 1, null));
-        SubscriptionPack pack2 = subscriptionPackDataService.create(new SubscriptionPack("pack2",
-                SubscriptionPackType.PREGNANCY, 72, 2, null));
-        List<SubscriptionPack> onePack = Arrays.asList(pack1);
-        List<SubscriptionPack> twoPacks = Arrays.asList(pack1, pack2);
+        // add circle "DL" with no default LLC
+        District district2 = new District();
+        district2.setName("District 2");
+        district2.setRegionalName("District 2");
+        district2.setCode(2L);
 
-        Subscriber subscriber1 = subscriberDataService.create(new Subscriber(1000000000L, languageLocation));
-        Subscriber subscriber2 = subscriberDataService.create(new Subscriber(2000000000L, languageLocation));
-        Subscriber subscriber3 = subscriberDataService.create(new Subscriber(3000000000L));
+        State state2 = new State();
+        state2.setName("State 2");
+        state2.setCode(2L);
+        state2.getDistricts().add(district2);
 
-        subscriptionService.createSubscription(subscriber1.getCallingNumber(), languageLocation, pack1,
+        stateDataService.create(state2);
+
+        deployedServiceDataService.create(new DeployedService(state2,
+                Service.KILKARI));
+        Language hi = languageDataService.create(new Language("hindi"));
+        Circle circle2 = new Circle("DL");
+        LanguageLocation languageLocation2 = new LanguageLocation("60",
+                circle2, hi, false);
+        languageLocation2.getDistrictSet().add(district2);
+        languageLocationDataService.create(languageLocation2);
+
+        // Creates two subscription packs ('childPack' and 'pregnancyPack')
+        subscriptionPackDataService.create(SubscriptionPackBuilder
+                .createSubscriptionPack("childPack",
+                        SubscriptionPackType.CHILD,
+                        SubscriptionPackBuilder.CHILD_PACK_WEEKS, 1));
+        subscriptionPackDataService.create(SubscriptionPackBuilder
+                .createSubscriptionPack("pregnancyPack",
+                        SubscriptionPackType.PREGNANCY,
+                        SubscriptionPackBuilder.PREGNANCY_PACK_WEEKS, 2));
+
+        SubscriptionPack pack1 = subscriptionPackDataService
+                .byName("childPack"); // 48 weeks
+        SubscriptionPack pack2 = subscriptionPackDataService
+                .byName("pregnancyPack"); // 72 weeks
+
+        Subscriber subscriber1 = subscriberDataService.create(new Subscriber(
+                1000000000L, languageLocation2));
+        Subscriber subscriber2 = subscriberDataService.create(new Subscriber(
+                2000000000L, languageLocation2));
+        Subscriber subscriber3 = subscriberDataService.create(new Subscriber(
+                3000000000L));
+        Subscriber subscriber4 = subscriberDataService.create(new Subscriber(
+                4000000000L, languageLocation2));
+        Subscriber subscriber5 = subscriberDataService.create(new Subscriber(
+                5000000000L, languageLocation2));
+
+        // subscriber1 1000000000L subscribed to 72 weeks pack
+        subscriptionService.createSubscription(subscriber1.getCallingNumber(),
+                languageLocation2, pack2, SubscriptionOrigin.IVR);
+
+        // subscriber2 2000000000L subscribed to both pack
+        subscriptionService.createSubscription(subscriber2.getCallingNumber(),
+                languageLocation2, pack1, SubscriptionOrigin.IVR);
+        subscriptionService.createSubscription(subscriber2.getCallingNumber(),
+                languageLocation2, pack2, SubscriptionOrigin.IVR);
+
+        // subscriber4 4000000000L subscribed to both pack and 72 weeks pack is
+        // deactivated
+        subscriptionService.createSubscription(subscriber4.getCallingNumber(),
+                languageLocation2, pack1, SubscriptionOrigin.IVR);
+        Subscription subscription42 = subscriptionService.createSubscription(
+                subscriber4.getCallingNumber(), languageLocation2, pack2,
                 SubscriptionOrigin.IVR);
-        subscriptionService.createSubscription(subscriber2.getCallingNumber(), languageLocation, pack1,
+        subscriptionService.deactivateSubscription(subscription42,
+                DeactivationReason.DEACTIVATED_BY_USER);
+
+        // subscriber5 5000000000L subscribed to both pack and 72 weeks pack is
+        // completed
+        subscriptionService.createSubscription(subscriber5.getCallingNumber(),
+                languageLocation2, pack1, SubscriptionOrigin.IVR);
+        Subscription subscription52 = subscriptionService.createSubscription(
+                subscriber5.getCallingNumber(), languageLocation2, pack2,
                 SubscriptionOrigin.IVR);
-        subscriptionService.createSubscription(subscriber2.getCallingNumber(), languageLocation, pack2,
-                SubscriptionOrigin.IVR);
+        subscriptionService.updateStartDate(subscription52, DateTime.now()
+                .minusDays(505 + 90));
     }
 
     private void createFlwCappedServiceNoUsageNoLocationNoLanguage() {
@@ -1341,5 +1406,65 @@ public class UserControllerBundleIT extends BasePaxIT {
         LanguageLocation languageLocation = flw.getLanguageLocation();
         assertNotNull(languageLocation);
         assertEquals("FLW Language Code", "99", languageLocation.getCode());
+    }
+    @Test
+    public void verifyFT183() throws IOException,
+            InterruptedException {
+        /**
+         * To verify that any DEACTIVATED subscription is not returned in get
+         * subscriber details.
+         */
+        createKilkariTestData();
+        Set<String> packs = new HashSet<>();
+        packs.add("childPack");
+        // callingNumber 4000000000L subscribed to both packs and 72 weeks pack
+        // is deactivated
+        HttpGet httpGet = createHttpGet(true, "kilkari", // service
+                true, "4000000000", // callingNumber
+                true, "OP", // operator
+                true, "DL", // circle
+                true, "123456789012345" // callId
+        );
+
+        String expectedJsonResponse = createKilkariUserResponseJson(null, // defaultLanguageLocationCode
+                "60", // locationCode
+                null, // allowedLanguageLocationCodes
+                packs // subscriptionPackList
+        );
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
+    @Test
+    public void verifyFT184() throws IOException,
+            InterruptedException {
+        /**
+         * NMS_FT_184 To verify that any COMPLETED subscription is not returned
+         * in get subscriber details.
+         */
+        createKilkariTestData();
+        Set<String> packs = new HashSet<>();
+        packs.add("childPack");
+        // callingNumber 5000000000L subscribed to both packs and 72 weeks pack
+        // is completed
+        HttpGet httpGet = createHttpGet(true, "kilkari", // service
+                true, "5000000000", // callingNumber
+                true, "OP", // operator
+                true, "DL", // circle
+                true, "123456789012345" // callId
+        );
+
+        String expectedJsonResponse = createKilkariUserResponseJson(null, // defaultLanguageLocationCode
+                "60", // locationCode
+                null, // allowedLanguageLocationCodes
+                packs // subscriptionPackList
+        );
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
     }
 }
