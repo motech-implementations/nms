@@ -7,6 +7,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.joda.time.DateTime;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.api.web.contract.BadRequest;
@@ -57,6 +58,7 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -782,5 +784,128 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
                 expectedJsonPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
+    
+    private HttpPost createInboxCallDetailsRequestHttpPost(
+			String callingNumber, String operator, String circle,
+			String callId, String callStartTime, String callEndTime,
+			String callDurationInPulses, String callStatus,
+			String callDisconnectReason) throws IOException {
+		HttpPost httpPost = new HttpPost(String.format(
+				"http://localhost:%d/api/kilkari/inboxCallDetails",
+				TestContext.getJettyPort()));
+
+		StringBuilder sb = new StringBuilder();
+		String seperator = "";
+		sb.append("{");
+		if (callingNumber != null) {
+			sb.append(String.format("%s\"callingNumber\": %s", seperator,
+					callingNumber));
+			seperator = ",";
+		}
+		if (operator != null) {
+			sb.append(String.format("%s\"operator\": \"%s\"", seperator,
+					operator));
+			seperator = ",";
+		}
+		if (circle != null) {
+			sb.append(String.format("%s\"circle\": \"%s\"", seperator, circle));
+			seperator = ",";
+		}
+		if (callId != null) {
+			sb.append(String.format("%s\"callId\": %s", seperator, callId));
+			seperator = ",";
+		}
+		if (callStartTime != null) {
+			sb.append(String.format("%s\"callStartTime\": %s", seperator,
+					callStartTime));
+			seperator = ",";
+		}
+		if (callEndTime != null) {
+			sb.append(String.format("%s\"callEndTime\": %s", seperator,
+					callEndTime));
+			seperator = ",";
+		}
+		if (callDurationInPulses != null) {
+			sb.append(String.format("%s\"callDurationInPulses\": %s",
+					seperator, callDurationInPulses));
+			seperator = ",";
+		}
+		if (callStatus != null) {
+			sb.append(String.format("%s\"callStatus\": %s", seperator,
+					callStatus));
+			seperator = ",";
+		}
+		if (callDisconnectReason != null) {
+			sb.append(String.format("%s\"callDisconnectReason\": %s",
+					seperator, callDisconnectReason));
+			seperator = ",";
+		}
+
+		sb.append("}");
+
+		StringEntity params = new StringEntity(sb.toString());
+		httpPost.setEntity(params);
+		httpPost.addHeader("content-type", "application/json");
+		return httpPost;
+	}
+    
+    @Ignore
+	@Test
+	public void verifyFT_24_25_26() throws IOException,
+			InterruptedException {
+		/**
+		 * NMS_FT_24_25_26 To check response of SaveInboxCallDetails API 
+		 * if callingNumber provided in the request is in invalid format
+		 */
+		HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
+				123456789L, // callingNumber less than 10 digit
+				"A", // operator
+				"AP", // circle
+				123456789012345L, // callId
+				123L, // callStartTime
+				456L, // callEndTime
+				123, // callDurationInPulses
+				1, // callStatus
+				1, // callDisconnectReason
+				null)); // content
+		String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
+
+		assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
+				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+				ADMIN_USERNAME, ADMIN_PASSWORD));
+
+		httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
+				12345678901L, // callingNumber more than 10 digit
+				"A", // operator
+				"AP", // circle
+				123456789012345L, // callId
+				123L, // callStartTime
+				456L, // callEndTime
+				123, // callDurationInPulses
+				1, // callStatus
+				1, // callDisconnectReason
+				null)); // content
+
+		assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
+				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+				ADMIN_USERNAME, ADMIN_PASSWORD));
+
+		// taking alpha numeric value of calling Number
+		httpPost = createInboxCallDetailsRequestHttpPost("12345AF890", // callingNumber
+																		// alphanumeric
+				"A", // operator
+				"AP", // circle
+				"123456789012345", // callId
+				"123", // callStartTime
+				"456", // callEndTime
+				"123", // callDurationInPulses
+				"1", // callStatus
+				"1" // callDisconnectReason
+		);
+
+		assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
+				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+				ADMIN_USERNAME, ADMIN_PASSWORD));
+	}
 
 }
