@@ -7,6 +7,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.joda.time.DateTime;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.api.web.contract.BadRequest;
@@ -57,6 +58,7 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -782,5 +784,144 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
                 expectedJsonPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
+    
+    @Ignore
+ 	@Test
+ 	public void verifyFT_49_50_51_52_53()
+ 			throws IOException, InterruptedException {
+ 		/**
+ 		 * Testing saveInboxCallDetails API with the internal parameter of content field missing.
+ 		 */
+ 		// Missing subscriptionPack
+ 		HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
+ 				1234567890L, // callingNumber
+ 				"A", // operator
+ 				"AP", // circle
+ 				123456789012345L, // callId
+ 				123L, // callStartTime
+ 				456L, // callEndTime
+ 				123, // callDurationInPulses
+ 				1, // callStatus
+ 				1, // callDisconnectReason
+ 				new HashSet<>(Arrays.asList(new CallDataRequest(
+ 						"00000000-0000-0000-0000-000000000000", // subscriptionId
+ 						null, // subscriptionPack missing
+ 						"123", // inboxWeekId
+ 						"foo", // contentFileName
+ 						123L, // startTime
+ 						456L // endTime
+ 						))))); // content
+ 		String expectedJsonResponse = createFailureResponseJson("<subscriptionPack: Not Present>");
+
+ 		assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
+ 				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+ 				ADMIN_USERNAME, ADMIN_PASSWORD));
+
+ 		// Missing inboxWeekId
+ 		httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
+ 				1234567890L, // callingNumber
+ 				"A", // operator
+ 				"AP", // circle
+ 				123456789012345L, // callId
+ 				123L, // callStartTime
+ 				456L, // callEndTime
+ 				123, // callDurationInPulses
+ 				1, // callStatus
+ 				1, // callDisconnectReason
+ 				new HashSet<>(Arrays.asList(new CallDataRequest(
+ 						"00000000-0000-0000-0000-000000000000", // subscriptionId
+ 						"48WeeksPack", // subscriptionPack
+ 						null, // inboxWeekId missing
+ 						"foo", // contentFileName
+ 						123L, // startTime
+ 						456L // endTime
+ 						))))); // content
+ 		expectedJsonResponse = createFailureResponseJson("<inboxWeekId: Not Present>");
+
+ 		assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
+ 				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+ 				ADMIN_USERNAME, ADMIN_PASSWORD));
+
+ 		// Missing contentFileName
+ 		httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
+ 				1234567890L, // callingNumber
+ 				"A", // operator
+ 				"AP", // circle
+ 				123456789012345L, // callId
+ 				123L, // callStartTime
+ 				456L, // callEndTime
+ 				123, // callDurationInPulses
+ 				1, // callStatus
+ 				1, // callDisconnectReason
+ 				new HashSet<>(Arrays.asList(new CallDataRequest(
+ 						"00000000-0000-0000-0000-000000000000", // subscriptionId
+ 						"48WeeksPack", // subscriptionPack
+ 						"123", // inboxWeekId
+ 						null, // contentFileName missing
+ 						123L, // startTime
+ 						456L // endTime
+ 						))))); // content
+ 		expectedJsonResponse = createFailureResponseJson("<contentFileName: Not Present>");
+
+ 		assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
+ 				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+ 				ADMIN_USERNAME, ADMIN_PASSWORD));
+
+ 		// Missing startTime
+ 		httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
+ 				1234567890L, // callingNumber
+ 				"A", // operator
+ 				"AP", // circle
+ 				123456789012345L, // callId
+ 				123L, // callStartTime
+ 				456L, // callEndTime
+ 				123, // callDurationInPulses
+ 				1, // callStatus
+ 				1, // callDisconnectReason
+ 				new HashSet<>(Arrays.asList(new CallDataRequest(
+ 						"00000000-0000-0000-0000-000000000000", // subscriptionId
+ 						"48WeeksPack", // subscriptionPack
+ 						"123", // inboxWeekId
+ 						"foo", // contentFileName
+ 						null, // startTime missing
+ 						456L // endTime
+ 						))))); // content
+
+ 		expectedJsonResponse = createFailureResponseJson("<startTime: Not Present>");
+
+ 		assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
+ 				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+ 				ADMIN_USERNAME, ADMIN_PASSWORD));
+
+ 		// Missing endTime
+ 		httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
+ 				1234567890L, // callingNumber
+ 				"A", // operator
+ 				"AP", // circle
+ 				123456789012345L, // callId
+ 				123L, // callStartTime
+ 				/*
+ 				 * assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
+ 				 * HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+ 				 * ADMIN_USERNAME, ADMIN_PASSWORD));
+ 				 */
+ 				456L, // callEndTime
+ 				123, // callDurationInPulses
+ 				1, // callStatus
+ 				1, // callDisconnectReason
+ 				new HashSet<>(Arrays.asList(new CallDataRequest(
+ 						"00000000-0000-0000-0000-000000000000", // subscriptionId
+ 						"48WeeksPack", // subscriptionPack
+ 						"123", // inboxWeekId
+ 						"foo", // contentFileName
+ 						123L, // startTime
+ 						null // endTime missing
+ 						))))); // content
+ 		expectedJsonResponse = createFailureResponseJson("<endTime: Not Present>");
+
+ 		assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
+ 				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+ 				ADMIN_USERNAME, ADMIN_PASSWORD));
+ 	}
 
 }
