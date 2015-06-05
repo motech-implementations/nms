@@ -21,7 +21,6 @@ import org.motechproject.nms.props.domain.StatusCode;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
-import org.motechproject.nms.region.repository.LanguageLocationDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,13 +61,13 @@ public class CdrHelper {
 
     public CdrHelper(SettingsService settingsService, SubscriptionService subscriptionService,
                      SubscriberDataService subscriberDataService, SubscriptionPackDataService subscriptionPackDataService,
-                     LanguageDataService languageDataService, LanguageLocationDataService languageLocationDataService,
+                     LanguageDataService languageDataService,
                      CircleDataService circleDataService, StateDataService stateDataService,
                      DistrictDataService districtDataService,
                      FileAuditRecordDataService fileAuditRecordDataService) throws IOException {
 
         sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
-                languageDataService, languageLocationDataService, circleDataService, stateDataService,
+                languageDataService, circleDataService, stateDataService,
                 districtDataService);
 
         this.settingsService = settingsService;
@@ -97,7 +96,7 @@ public class CdrHelper {
         cdr.setMsisdn(sub.getSubscriber().getCallingNumber());
         cdr.setCallAnswerTime(DateTime.now().minusHours(5));
         cdr.setMsgPlayDuration(110 + (int) (Math.random() * 20));
-        cdr.setLanguageLocationId(sh.makeLanguageLocation().getCode());
+        cdr.setLanguageLocationId(sh.makeLanguage().getCode());
         cdr.setCircleId(sh.makeCircle().getName());
         cdr.setOperatorId("xx");
         return cdr;

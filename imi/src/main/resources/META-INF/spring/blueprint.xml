@@ -25,8 +25,8 @@
                     interface="org.motechproject.nms.imi.repository.FileAuditRecordDataService" />
 
 
-    <osgi:reference id="languageLocationService"
-                    interface="org.motechproject.nms.region.service.LanguageLocationService" />
+    <osgi:reference id="languageService"
+                    interface="org.motechproject.nms.region.service.LanguageService" />
 
     <osgi:reference id="circleService"
                     interface="org.motechproject.nms.region.service.CircleService" />

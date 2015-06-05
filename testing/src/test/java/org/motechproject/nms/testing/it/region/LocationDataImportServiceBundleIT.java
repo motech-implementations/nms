@@ -17,8 +17,7 @@ import org.motechproject.nms.region.repository.HealthBlockDataService;
 import org.motechproject.nms.region.repository.HealthFacilityDataService;
 import org.motechproject.nms.region.repository.HealthFacilityTypeDataService;
 import org.motechproject.nms.region.repository.HealthSubFacilityDataService;
-import org.motechproject.nms.region.repository.LanguageLocationDataService;
-import org.motechproject.nms.region.repository.NationalDefaultLanguageLocationDataService;
+import org.motechproject.nms.region.repository.NationalDefaultLanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.repository.TalukaDataService;
 import org.motechproject.nms.region.repository.VillageDataService;
@@ -51,9 +50,7 @@ import static org.junit.Assert.assertTrue;
 public class LocationDataImportServiceBundleIT extends BasePaxIT {
 
     @Inject
-    private NationalDefaultLanguageLocationDataService nationalDefaultLanguageLocationDataService;
-    @Inject
-    private LanguageLocationDataService languageLocationDataService;
+    private NationalDefaultLanguageDataService nationalDefaultLanguageLocationDataService;
     @Inject
     private StateDataService stateDataService;
     @Inject
@@ -89,7 +86,6 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
     @Before
     public void setUp() {
         nationalDefaultLanguageLocationDataService.deleteAll();
-        languageLocationDataService.deleteAll();
         healthSubFacilityDataService.deleteAll();
         healthFacilityDataService.deleteAll();
         healthFacilityTypeDataService.deleteAll();

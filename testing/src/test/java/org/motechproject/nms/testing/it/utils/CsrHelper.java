@@ -14,7 +14,6 @@ import org.motechproject.nms.props.domain.StatusCode;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
-import org.motechproject.nms.region.repository.LanguageLocationDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 
 import java.util.ArrayList;
@@ -33,14 +32,13 @@ public class CsrHelper {
     public CsrHelper(String timestamp, SubscriptionService subscriptionService,
                      SubscriptionPackDataService subscriptionPackDataService,
                      SubscriberDataService subscriberDataService, LanguageDataService languageDataService,
-                     LanguageLocationDataService languageLocationDataService,
                      CircleDataService circleDataService, StateDataService stateDataService,
                      DistrictDataService districtDataService) {
 
         TIMESTAMP = timestamp;
 
         sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
-                languageDataService, languageLocationDataService, circleDataService, stateDataService,
+                languageDataService, circleDataService, stateDataService,
                 districtDataService);
     }
 

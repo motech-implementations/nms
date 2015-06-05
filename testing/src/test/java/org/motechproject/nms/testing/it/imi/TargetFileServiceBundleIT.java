@@ -93,9 +93,6 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
     LanguageDataService languageDataService;
 
     @Inject
-    LanguageLocationDataService languageLocationDataService;
-
-    @Inject
     private CircleDataService circleDataService;
 
     @Inject
@@ -113,8 +110,8 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
 
     Circle aa;
     Circle bb;
-    LanguageLocation hindi;
-    LanguageLocation urdu;
+    Language hindi;
+    Language urdu;
     SubscriptionPack childPack;
     SubscriptionPack pregnancyPack;
 

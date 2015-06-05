@@ -448,7 +448,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         Subscriber subscriber = subscriberService.getSubscriber(1111111111L);
         assertNotNull(subscriber);
-        assertEquals(languageLocation, subscriber.getLanguageLocation());
+        assertEquals(languageLocation, subscriber.getLanguage());
         assertEquals(1, subscriber.getSubscriptions().size());
 
         Subscription subscription = subscriber.getSubscriptions().iterator().next();
@@ -474,7 +474,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         Subscriber subscriber = subscriberService.getSubscriber(1111111111L);
         assertNotNull(subscriber);
-        assertEquals(ta, subscriber.getLanguageLocation());
+        assertEquals(ta, subscriber.getLanguage());
         assertEquals(1, subscriber.getSubscriptions().size());
 
         Subscription subscription = subscriber.getSubscriptions().iterator().next();
@@ -495,13 +495,13 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         subscriberService.create(new Subscriber(1111111111L));
         s = subscriberService.getSubscriber(1111111111L);
         assertNotNull(s);
-        assertNull(s.getLanguageLocation());
+        assertNull(s.getLanguage());
 
         subscriptionService.createSubscription(1111111111L, ta, gPack1, SubscriptionOrigin.IVR);
 
         Subscriber subscriber = subscriberService.getSubscriber(1111111111L);
         assertNotNull(subscriber);
-        assertEquals(ta, subscriber.getLanguageLocation());
+        assertEquals(ta, subscriber.getLanguage());
     }
 
     @Test

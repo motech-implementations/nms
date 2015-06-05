@@ -280,7 +280,7 @@ public class LanguageControllerBundleIT extends BasePaxIT {
         FrontLineWorker flw = frontLineWorkerService.getByContactNumber(1111111111l);
         assertNotNull(flw);
         assertEquals(FrontLineWorkerStatus.ANONYMOUS, flw.getStatus());
-        LanguageLocation languageLocation = flw.getLanguageLocation();
+        LanguageLocation languageLocation = flw.getLanguage();
         assertNotNull(languageLocation);
         assertEquals("FLW Language Code", "99", languageLocation.getCode());
     }
@@ -329,7 +329,7 @@ public class LanguageControllerBundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK));
 
         FrontLineWorker flw = frontLineWorkerService.getByContactNumber(1111111111l);
-        LanguageLocation languageLocation = flw.getLanguageLocation();
+        LanguageLocation languageLocation = flw.getLanguage();
         assertNotNull(languageLocation);
         assertEquals(FrontLineWorkerStatus.ANONYMOUS, flw.getStatus());
         assertEquals("FLW Language Code", "99", languageLocation.getCode());

@@ -17,17 +17,14 @@
     <osgi:reference id="transactionManager" interface="org.springframework.transaction.PlatformTransactionManager"/>
 
     <!-- Language Services -->
-    <osgi:service ref="languageLocationService"
-                  interface="org.motechproject.nms.region.service.LanguageLocationService" />
+    <osgi:service ref="languageService"
+                  interface="org.motechproject.nms.region.service.LanguageService" />
 
     <osgi:reference id="languageDataService"
                     interface="org.motechproject.nms.region.repository.LanguageDataService" />
 
-    <osgi:reference id="languageLocationDataService"
-                    interface="org.motechproject.nms.region.repository.LanguageLocationDataService" />
-
     <osgi:reference id="nationalLanguageLocationDataService"
-                    interface="org.motechproject.nms.region.repository.NationalDefaultLanguageLocationDataService" />
+                    interface="org.motechproject.nms.region.repository.NationalDefaultLanguageDataService" />
 
     <!-- Location Services -->
     <osgi:reference id="stateDataService"
@@ -35,6 +32,9 @@
 
     <osgi:reference id="districtDataService"
                     interface="org.motechproject.nms.region.repository.DistrictDataService" />
+
+    <osgi:service ref="districtService"
+                  interface="org.motechproject.nms.region.service.DistrictService" />
 
     <osgi:reference id="talukaDataService"
                     interface="org.motechproject.nms.region.repository.TalukaDataService" />
@@ -88,8 +88,8 @@
                   interface="org.motechproject.nms.region.service.IntegrationTestService" />
 
     <!-- Language Location Codes Import Service -->
-    <osgi:service ref="languageLocationCodesImportService"
-                  interface="org.motechproject.nms.region.service.LanguageLocationCodesImportService" />
+    <osgi:service ref="languageLocationImportService"
+                  interface="org.motechproject.nms.region.service.LanguageLocationImportService" />
 
     <!-- Alert Service -->
     <osgi:reference id="alertsService" interface="org.motechproject.alerts.contract.AlertService" />

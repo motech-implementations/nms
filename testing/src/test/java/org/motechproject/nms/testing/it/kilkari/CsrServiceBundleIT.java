@@ -79,9 +79,6 @@ public class CsrServiceBundleIT extends BasePaxIT {
     private CallSummaryRecordDataService csrDataService;
 
     @Inject
-    private LanguageLocationDataService languageLocationDataService;
-
-    @Inject
     private CircleDataService circleDataService;
 
     @Inject

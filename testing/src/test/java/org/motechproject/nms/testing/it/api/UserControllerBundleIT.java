@@ -51,7 +51,7 @@ import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.LanguageLocationDataService;
-import org.motechproject.nms.region.repository.NationalDefaultLanguageLocationDataService;
+import org.motechproject.nms.region.repository.NationalDefaultLanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
@@ -138,7 +138,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     private DeployedServiceDataService deployedServiceDataService;
 
     @Inject
-    private NationalDefaultLanguageLocationDataService nationalDefaultLanguageLocationDataService;
+    private NationalDefaultLanguageDataService nationalDefaultLanguageLocationDataService;
 
     public UserControllerBundleIT() {
         System.setProperty("org.motechproject.testing.osgi.http.numTries", "1");
@@ -292,7 +292,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         languageLocationDataService.create(languageLocation);
 
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
-        flw.setLanguageLocation(languageLocation);
+        flw.setLanguage(languageLocation);
         frontLineWorkerService.add(flw);
 
         language = new Language("Papiamento");
@@ -344,7 +344,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         languageLocationDataService.create(languageLocation);
 
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
-        flw.setLanguageLocation(languageLocation);
+        flw.setLanguage(languageLocation);
         frontLineWorkerService.add(flw);
 
         language = new Language("Papiamento");
@@ -395,7 +395,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         languageLocationDataService.create(languageLocation);
 
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
-        flw.setLanguageLocation(languageLocation);
+        flw.setLanguage(languageLocation);
         frontLineWorkerService.add(flw);
 
         language = new Language("Papiamento");
@@ -474,7 +474,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         whitelistEntryDataService.create(entry);
 
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111l);
-        flw.setLanguageLocation(languageLocation);
+        flw.setLanguage(languageLocation);
         frontLineWorkerService.add(flw);
     }
 
@@ -679,7 +679,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         languageLocationDataService.create(languageLocation);
 
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
-        flw.setLanguageLocation(languageLocation);
+        flw.setLanguage(languageLocation);
         frontLineWorkerService.add(flw);
     }
 
@@ -1092,7 +1092,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         FrontLineWorker flw = frontLineWorkerService.getByContactNumber(1111111112l);
         assertNotNull(flw);
-        LanguageLocation languageLocation = flw.getLanguageLocation();
+        LanguageLocation languageLocation = flw.getLanguage();
         assertNotNull(languageLocation);
         assertEquals("FLW Language Code", "99", languageLocation.getCode());
     }
@@ -1311,7 +1311,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         FrontLineWorker flw = frontLineWorkerService.getByContactNumber(1111111111l);
         assertNotNull(flw);
-        LanguageLocation languageLocation = flw.getLanguageLocation();
+        LanguageLocation languageLocation = flw.getLanguage();
         assertNotNull(languageLocation);
         assertEquals("FLW Language Code", "99", languageLocation.getCode());
     }
@@ -1338,7 +1338,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK));
 
         FrontLineWorker flw = frontLineWorkerService.getByContactNumber(1111111111L);
-        LanguageLocation languageLocation = flw.getLanguageLocation();
+        LanguageLocation languageLocation = flw.getLanguage();
         assertNotNull(languageLocation);
         assertEquals("FLW Language Code", "99", languageLocation.getCode());
     }

@@ -13,32 +13,32 @@ import javax.validation.constraints.NotNull;
 /**
  * Table holds the national default language location code.
  */
-@Entity(tableName = "nms_national_default_language_location")
-public class NationalDefaultLanguageLocation extends MdsEntity {
+@Entity(tableName = "nms_national_default_language")
+public class NationalDefaultLanguage extends MdsEntity {
     @Field
     @Unique
     @Column(allowsNull = "false", defaultValue = "0")
     @Max(0) @Min(0)
-    private int code = 0;
+    private int code;
 
     @Field
     @NotNull
     @Column(allowsNull = "false")
-    private LanguageLocation languageLocation;
+    private Language language;
 
-    public NationalDefaultLanguageLocation(LanguageLocation languageLocation) {
-        this.languageLocation = languageLocation;
+    public NationalDefaultLanguage(Language language) {
+        this.language = language;
     }
 
     public int getCode() {
         return code;
     }
 
-    public LanguageLocation getLanguageLocation() {
-        return languageLocation;
+    public Language getLanguage() {
+        return language;
     }
 
-    public void setLanguageLocation(LanguageLocation languageLocation) {
-        this.languageLocation = languageLocation;
+    public void setLanguage(Language language) {
+        this.language = language;
     }
 }
