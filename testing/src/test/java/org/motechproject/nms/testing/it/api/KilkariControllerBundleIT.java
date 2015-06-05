@@ -7,6 +7,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.joda.time.DateTime;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.api.web.contract.BadRequest;
@@ -57,6 +58,7 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -782,5 +784,176 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
                 expectedJsonPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
+    
+    @Ignore
+ 	@Test
+ 	public void verifyFT_39_40_41_42_43_44_45_46_47_48() throws IOException,
+ 			InterruptedException {
+		/**
+		 * NMS_FT_39_40_41_42_43_44_45_46_47_48 checking the response of saveInboxCallDetails API
+		 * when some of the mandatory parameter is missing
+		 */
+ 		// Missing calling Number
+ 		HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
+ 				null, // callingNumber missing
+ 				"A", // operator
+ 				"AP", // circle
+ 				123456789012345L, // callId
+ 				123L, // callStartTime
+ 				456L, // callEndTime
+ 				123, // callDurationInPulses
+ 				1, // callStatus
+ 				1, // callDisconnectReason
+ 				null)); // content
+ 		String expectedJsonResponse = createFailureResponseJson("<callingNumber: Not Present>");
+
+ 		assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
+ 				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+ 				ADMIN_USERNAME, ADMIN_PASSWORD));
+
+ 		// Missing Operator
+ 		httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
+ 				1234567890L, // callingNumber
+ 				null, // operator missing
+ 				"AP", // circle
+ 				123456789012345L, // callId
+ 				123L, // callStartTime
+ 				456L, // callEndTime
+ 				123, // callDurationInPulses
+ 				1, // callStatus
+ 				1, // callDisconnectReason
+ 				null)); // content
+ 		expectedJsonResponse = createFailureResponseJson("<operator: Not Present>");
+
+ 		assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
+ 				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+ 				ADMIN_USERNAME, ADMIN_PASSWORD));
+
+ 		// Missing circle
+ 		httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
+ 				1234567890L, // callingNumber
+ 				"A", // operator
+ 				null, // circle missing
+ 				123456789012345L, // callId
+ 				123L, // callStartTime
+ 				456L, // callEndTime
+ 				123, // callDurationInPulses
+ 				1, // callStatus
+ 				1, // callDisconnectReason
+ 				null)); // content
+ 		expectedJsonResponse = createFailureResponseJson("<circle: Not Present>");
+
+ 		assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
+ 				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+ 				ADMIN_USERNAME, ADMIN_PASSWORD));
+
+ 		// Missing callId
+ 		httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
+ 				1234567890L, // callingNumber
+ 				"A", // operator
+ 				"AP", // circle
+ 				null, // callId missing
+ 				123L, // callStartTime
+ 				456L, // callEndTime
+ 				123, // callDurationInPulses
+ 				1, // callStatus
+ 				1, // callDisconnectReason
+ 				null)); // content
+ 		expectedJsonResponse = createFailureResponseJson("<callId: Not Present>");
+
+ 		assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
+ 				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+ 				ADMIN_USERNAME, ADMIN_PASSWORD));
+
+ 		// Missing callStartTime
+ 		httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
+ 				1234567890L, // callingNumber
+ 				"A", // operator
+ 				"AP", // circle
+ 				123456789012345L, // callId
+ 				null, // callStartTime missing
+ 				456L, // callEndTime
+ 				123, // callDurationInPulses
+ 				1, // callStatus
+ 				1, // callDisconnectReason
+ 				null)); // content
+ 		expectedJsonResponse = createFailureResponseJson("<callStartTime: Not Present>");
+
+ 		assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
+ 				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+ 				ADMIN_USERNAME, ADMIN_PASSWORD));
+
+ 		// Missing callEndTime
+ 		httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
+ 				1234567890L, // callingNumber
+ 				"A", // operator
+ 				"AP", // circle
+ 				123456789012345L, // callId
+ 				123L, // callStartTime
+ 				null, // callEndTime missing
+ 				123, // callDurationInPulses
+ 				1, // callStatus
+ 				1, // callDisconnectReason
+ 				null)); // content
+ 		expectedJsonResponse = createFailureResponseJson("<callEndTime: Not Present>");
+
+ 		assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
+ 				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+ 				ADMIN_USERNAME, ADMIN_PASSWORD));
+
+ 		// Missing callDurationInPulses
+ 		httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
+ 				1234567890L, // callingNumber
+ 				"A", // operator
+ 				"AP", // circle
+ 				123456789012345L, // callId
+ 				123L, // callStartTime
+ 				456L, // callEndTime
+ 				null, // callDurationInPulses missing
+ 				1, // callStatus
+ 				1, // callDisconnectReason
+ 				null)); // content
+ 		expectedJsonResponse = createFailureResponseJson("<callDurationInPulses: Not Present>");
+
+ 		assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
+ 				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+ 				ADMIN_USERNAME, ADMIN_PASSWORD));
+
+ 		// Missing callStatus
+ 		httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
+ 				1234567890L, // callingNumber
+ 				"A", // operator
+ 				"AP", // circle
+ 				123456789012345L, // callId
+ 				123L, // callStartTime
+ 				456L, // callEndTime
+ 				123, // callDurationInPulses
+ 				null, // callStatus missing
+ 				1, // callDisconnectReason
+ 				null)); // content
+ 		expectedJsonResponse = createFailureResponseJson("<callStatus: Not Present>");
+
+ 		assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
+ 				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+ 				ADMIN_USERNAME, ADMIN_PASSWORD));
+
+ 		// Missing callDisconnectReason
+ 		httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
+ 				1234567890L, // callingNumber
+ 				"A", // operator
+ 				"AP", // circle
+ 				123456789012345L, // callId
+ 				123L, // callStartTime
+ 				456L, // callEndTime
+ 				123, // callDurationInPulses
+ 				1, // callStatus
+ 				null, // callDisconnectReason missing
+ 				null)); // content
+ 		expectedJsonResponse = createFailureResponseJson("<callDisconnectReason: Not Present>");
+
+ 		assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
+ 				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+ 				ADMIN_USERNAME, ADMIN_PASSWORD));
+ 	}
 
 }
