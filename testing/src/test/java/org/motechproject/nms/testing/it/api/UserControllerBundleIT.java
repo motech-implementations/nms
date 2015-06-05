@@ -1342,4 +1342,48 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertNotNull(languageLocation);
         assertEquals("FLW Language Code", "99", languageLocation.getCode());
     }
+
+    @Test
+    @Ignore
+    public void verifyFT16() throws IOException,
+            InterruptedException {
+        /**
+         * To verify the behavior of Get Subscriber Details API if the service
+         * is not deployed in provided Subscriber's state.
+         */
+        cleanAllData();
+
+        District district = new District();
+        district.setName("District 2");
+        district.setRegionalName("District 2");
+        district.setCode(2L);
+
+        State state = new State();
+        state.setName("State 2");
+        state.setCode(2L);
+        state.getDistricts().add(district);
+
+        stateDataService.create(state);
+
+        Language language = new Language("malayalam");
+        languageDataService.create(language);
+
+        LanguageLocation undeployedLanguageLocation = new LanguageLocation(
+                "77", new Circle("BB"), language, true);
+        undeployedLanguageLocation.getDistrictSet().add(district);
+        languageLocationDataService.create(undeployedLanguageLocation);
+
+        HttpGet httpGet = createHttpGet(true, "kilkari", // service
+                true, "1200000000", // callingNumber
+                true, "OP", // operator
+                true, "BB", // circle
+                true, "123456789012345" // callId
+        );
+        // Should return HTTP 501 because the service is not
+        // deployed for the specified state
+        String expectedJsonResponse = createFailureResponseJson("<KILKARI: Not Deployed In State>");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
+                HttpStatus.SC_NOT_IMPLEMENTED, expectedJsonResponse,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
 }
