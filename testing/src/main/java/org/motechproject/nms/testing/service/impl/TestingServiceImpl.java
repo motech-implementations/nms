@@ -164,7 +164,6 @@ public class TestingServiceImpl implements TestingService {
 
     @Override
     public void clearDatabase() {
-        LOGGER.debug("clearDatabase()");
 
         if (!Boolean.parseBoolean(settingsFacade.getProperty(TESTING_ENVIRONMENT))) {
             throw new IllegalStateException("calling clearDatabase() in a production environment is forbidden!");

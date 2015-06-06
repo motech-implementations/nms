@@ -106,7 +106,7 @@ public class SubscriptionHelper {
     }
 
 
-    public String getLanguageLocationCode(Subscription sub) {
+    public String getLanguageCode(Subscription sub) {
         return ((Language) subscriberDataService.getDetachedField(
                 sub.getSubscriber(),"language")).getCode();
     }
@@ -124,13 +124,21 @@ public class SubscriptionHelper {
 
 
     public Subscription mksub(SubscriptionOrigin origin, DateTime startDate, SubscriptionPackType packType) {
+        return mksub(origin, startDate, packType, makeNumber());
+    }
+
+    public Subscription mksub(SubscriptionOrigin origin, DateTime startDate, SubscriptionPackType packType, Long number) {
 
         Subscription subscription;
-        Subscriber subscriber = subscriberDataService.create(new Subscriber(
-                makeNumber(),
-                regionHelper.hindiLanguage(),
-                regionHelper.delhiCircle()
-        ));
+        Subscriber subscriber = subscriberDataService.findByCallingNumber(number);
+
+        if (null == subscriber) {
+            subscriber = subscriberDataService.create(new Subscriber(
+                    number,
+                    regionHelper.hindiLanguage(),
+                    regionHelper.delhiCircle()
+            ));
+        }
 
         if (SubscriptionPackType.PREGNANCY == packType) {
             subscription = new Subscription(subscriber, pregnancyPack() , origin);
