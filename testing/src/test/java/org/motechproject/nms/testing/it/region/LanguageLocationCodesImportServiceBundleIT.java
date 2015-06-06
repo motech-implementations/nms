@@ -102,88 +102,88 @@ public class LanguageLocationCodesImportServiceBundleIT extends BasePaxIT {
 
     @Test
     public void testImportWhenStateAndDistrictPresent() throws Exception {
-        Reader reader = createReaderWithHeaders("LLC 0,Lang 1,Circle 1,State 1,District 11,N");
+        Reader reader = createReaderWithHeaders("L1,Lang 1,Circle 1,State 1,District 11,N");
         languageLocationImportService.importData(reader);
 
         District district11 = districtDataService.findByCode(11L);
-        assertLanguageCode(district11.getLanguage(), "LLC 0", "Lang 1");
+        assertLanguageCode(district11.getLanguage(), "L1", "Lang 1");
     }
 
     @Test
     public void testImportWhenOnlyStatePresent() throws Exception {
-        Reader reader = createReaderWithHeaders("LLC 0,Lang 1,Circle 1,State 1,,N");
+        Reader reader = createReaderWithHeaders("L1,Lang 1,Circle 1,State 1,,N");
         languageLocationImportService.importData(reader);
 
         District district11 = districtDataService.findByCode(11L);
-        assertLanguageCode(district11.getLanguage(), "LLC 0", "Lang 1");
+        assertLanguageCode(district11.getLanguage(), "L1", "Lang 1");
 
         District district12 = districtDataService.findByCode(12L);
-        assertLanguageCode(district12.getLanguage(), "LLC 0", "Lang 1");
+        assertLanguageCode(district12.getLanguage(), "L1", "Lang 1");
     }
 
     @Test
     public void testImportWhenOnlyDistrictPresent() throws Exception {
-        Reader reader = createReaderWithHeaders("LLC 0,Lang 1,Circle 1,,District 11,N");
+        Reader reader = createReaderWithHeaders("L1,Lang 1,Circle 1,,District 11,N");
         languageLocationImportService.importData(reader);
 
         District district11 = districtDataService.findByCode(11L);
-        assertLanguageCode(district11.getLanguage(), "LLC 0", "Lang 1");
+        assertLanguageCode(district11.getLanguage(), "L1", "Lang 1");
     }
 
     @Test
     public void testImportWhenLanguageLocationCodeExists() throws Exception {
-        Reader reader = createReaderWithHeaders("LLC 31,Lang 1,Circle 3,State 3,District 31,N");
+        Reader reader = createReaderWithHeaders("L1,Lang 1,Circle 3,State 3,District 31,N");
         languageLocationImportService.importData(reader);
 
         District district32 = districtDataService.findByCode(31L);
-        assertLanguageCode(district32.getLanguage(), "LLC 31", "Lang 1");
+        assertLanguageCode(district32.getLanguage(), "L1", "Lang 1");
     }
 
     @Test(expected = CsvImportDataException.class)
     public void testImportWhenStateAndDistrictAreNull() throws Exception {
-        Reader reader = createReaderWithHeaders("LLC 0,Lang 1,Circle 1,,,N");
+        Reader reader = createReaderWithHeaders("L1,Lang 1,Circle 1,,,N");
         languageLocationImportService.importData(reader);
     }
 
     @Test(expected = CsvImportDataException.class)
     public void testImportWhenDistrictNotContainedInCircle() throws Exception {
-        Reader reader = createReaderWithHeaders("LLC 0,Lang 1,Circle 1,State 3,District 31,N");
+        Reader reader = createReaderWithHeaders("L1,Lang 1,Circle 1,State 3,District 31,N");
         languageLocationImportService.importData(reader);
     }
 
     @Test(expected = CsvImportDataException.class)
     public void testImportWhenLanguageLocationCodeAlreadySetForDistrict() throws Exception {
-        Reader reader = createReaderWithHeaders("LLC 0,Lang 1,Circle 4,State 4,District 41,N");
+        Reader reader = createReaderWithHeaders("L1,Lang 1,Circle 4,State 4,District 41,N");
         languageLocationImportService.importData(reader);
     }
 
     @Test(expected = CsvImportDataException.class)
     public void testImportWhenDistrictStateDoesNotMatch() throws Exception {
-        Reader reader = createReaderWithHeaders("LLC 0,Lang 1,Circle 1,State 1,District 21,N");
+        Reader reader = createReaderWithHeaders("L1,Lang 1,Circle 1,State 1,District 21,N");
         languageLocationImportService.importData(reader);
     }
 
     @Test(expected = CsvImportDataException.class)
     public void testImportWhenLanguageLocationCodeExistsAndLanguageDoesNotMatch() throws Exception {
-        Reader reader = createReaderWithHeaders("LLC 31,Lang 2,Circle 3,State 3,District 31,N");
+        Reader reader = createReaderWithHeaders("L2,Lang 2,Circle 3,State 3,District 31,N");
         languageLocationImportService.importData(reader);
     }
 
     @Test(expected = CsvImportDataException.class)
     public void testImportWhenLanguageLocationCodeExistsAndCircleDoesNotMatch() throws Exception {
-        Reader reader = createReaderWithHeaders("LLC 31,Lang 1,Circle 2,State 3,District 31,N");
+        Reader reader = createReaderWithHeaders("L1,Lang 1,Circle 2,State 3,District 31,N");
         languageLocationImportService.importData(reader);
     }
 
     @Test(expected = CsvImportDataException.class)
     public void testImportWhenLanguageLocationCodeExistsAndDefaultForCircleDoesNotMatch() throws Exception {
-        Reader reader = createReaderWithHeaders("LLC 31,Lang 1,Circle 3,State 3,District 31,Y");
+        Reader reader = createReaderWithHeaders("L1,Lang 1,Circle 3,State 3,District 31,Y");
         languageLocationImportService.importData(reader);
     }
 
     @Test(expected = CsvImportDataException.class)
     public void testImportWhenLanguageLocationCodeNotExistsAndIsDefaultForCircleButNotUnique() throws Exception {
-        Reader reader = createReaderWithHeaders("LLC 0,Lang 1,Circle 4,State 4,District 42,Y");
+        Reader reader = createReaderWithHeaders("L1,Lang 1,Circle 4,State 4,District 42,Y");
         languageLocationImportService.importData(reader);
     }
 
