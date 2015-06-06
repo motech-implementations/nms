@@ -96,6 +96,7 @@ public class LanguageLocationCodesImportServiceBundleIT extends BasePaxIT {
         circleDataService.create(circle3);
 
         Circle circle4 = createCircle("Circle 4");
+        circle4.setDefaultLanguage(lang1);
         circle4.getStates().addAll(Collections.singletonList(state4));
         circleDataService.create(circle4);
     }
@@ -131,7 +132,7 @@ public class LanguageLocationCodesImportServiceBundleIT extends BasePaxIT {
     }
 
     @Test
-    public void testImportWhenLanguageLocationCodeExists() throws Exception {
+    public void testImportWhenLanguageCodeExists() throws Exception {
         Reader reader = createReaderWithHeaders("L1,Lang 1,Circle 3,State 3,District 31,N");
         languageLocationImportService.importData(reader);
 
@@ -152,7 +153,7 @@ public class LanguageLocationCodesImportServiceBundleIT extends BasePaxIT {
     }
 
     @Test(expected = CsvImportDataException.class)
-    public void testImportWhenLanguageLocationCodeAlreadySetForDistrict() throws Exception {
+    public void testImportWhenLanguageCodeAlreadySetForDistrict() throws Exception {
         Reader reader = createReaderWithHeaders("L1,Lang 1,Circle 4,State 4,District 41,N");
         languageLocationImportService.importData(reader);
     }
@@ -164,26 +165,14 @@ public class LanguageLocationCodesImportServiceBundleIT extends BasePaxIT {
     }
 
     @Test(expected = CsvImportDataException.class)
-    public void testImportWhenLanguageLocationCodeExistsAndLanguageDoesNotMatch() throws Exception {
-        Reader reader = createReaderWithHeaders("L2,Lang 2,Circle 3,State 3,District 31,N");
+    public void testImportWhenLanguageCodeExistsAndLanguageNameDoesNotMatch() throws Exception {
+        Reader reader = createReaderWithHeaders("L2,Lang 3,Circle 3,State 3,District 31,N");
         languageLocationImportService.importData(reader);
     }
 
     @Test(expected = CsvImportDataException.class)
-    public void testImportWhenLanguageLocationCodeExistsAndCircleDoesNotMatch() throws Exception {
-        Reader reader = createReaderWithHeaders("L1,Lang 1,Circle 2,State 3,District 31,N");
-        languageLocationImportService.importData(reader);
-    }
-
-    @Test(expected = CsvImportDataException.class)
-    public void testImportWhenLanguageLocationCodeExistsAndDefaultForCircleDoesNotMatch() throws Exception {
-        Reader reader = createReaderWithHeaders("L1,Lang 1,Circle 3,State 3,District 31,Y");
-        languageLocationImportService.importData(reader);
-    }
-
-    @Test(expected = CsvImportDataException.class)
-    public void testImportWhenLanguageLocationCodeNotExistsAndIsDefaultForCircleButNotUnique() throws Exception {
-        Reader reader = createReaderWithHeaders("L1,Lang 1,Circle 4,State 4,District 42,Y");
+    public void testImportWhenLanguageCodeNotExistsAndIsDefaultForCircleButNotUnique() throws Exception {
+        Reader reader = createReaderWithHeaders("L3,Lang 3,Circle 4,State 4,District 42,Y");
         languageLocationImportService.importData(reader);
     }
 

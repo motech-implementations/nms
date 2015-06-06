@@ -78,6 +78,8 @@ public class LanguageLocationImportServiceImpl implements LanguageLocationImport
             importRecordForStateAndDistrict(languageCode, languageName, circle, defaultForCircle, state, district);
         } else if (null != state) {
             importRecordForState(languageCode, languageName, circle, defaultForCircle, state);
+        } else if (null != district) {
+            importRecordForDistrict(languageCode, languageName, circle, defaultForCircle, district);
         } else {
             throw new CsvImportDataException("State must be provided");
         }
@@ -99,6 +101,14 @@ public class LanguageLocationImportServiceImpl implements LanguageLocationImport
             verifyDistrictLanguage(stateDistrict);
         }
         addDistrictToLanguageLocation(languageCode, languageName, circle, defaultForCircle, state.getDistricts());
+    }
+
+    private void importRecordForDistrict(String languageCode, String languageName, Circle circle,
+                                         Boolean defaultForCircle, District district) {
+        LOGGER.warn("State not specified for the '{}' district", district.getName());
+        verifyStateInCircle(circle, district.getState());
+        verifyDistrictLanguage(district);
+        addDistrictToLanguageLocation(languageCode, languageName, circle, defaultForCircle, Collections.singletonList(district));
     }
 
     private void addDistrictToLanguageLocation(String languageCode, String languageName, Circle circle, Boolean defaultForCircle, Collection<District> districts) {
