@@ -51,9 +51,6 @@ public class TestingServiceImpl implements TestingService {
     private static final String TESTING_ENVIRONMENT = "testing.environment";
     private static final String WEEKS_TO_KEEP_INVALID_FLWS = "flw.weeks_to_keep_invalid_flws";
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(TestingServiceImpl.class);
-
-
     /**
      * FLW
      */
