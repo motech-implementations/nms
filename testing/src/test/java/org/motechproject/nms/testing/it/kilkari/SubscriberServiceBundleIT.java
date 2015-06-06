@@ -79,16 +79,16 @@ public class SubscriberServiceBundleIT extends BasePaxIT {
         sh = new SubscriptionHelper(subscriptionService,
                 subscriberDataService, subscriptionPackDataService, languageDataService, circleDataService,
                 stateDataService, districtDataService);
-    }
 
-
-    @Before
-    public void clearDatabase() {
-        testingService.clearDatabase();
+        clearDatabase();
 
         Subscriber subscriber = subscriberDataService.create(new Subscriber(2000000000L));
         subscriptionService.create(new Subscription(subscriber, sh.pregnancyPack() , SubscriptionOrigin.IVR));
-        subscriptionService.create(new Subscription(subscriber, sh.childPack() , SubscriptionOrigin.IVR));
+        subscriptionService.create(new Subscription(subscriber, sh.childPack(), SubscriptionOrigin.IVR));
+    }
+
+    public void clearDatabase() {
+        testingService.clearDatabase();
     }
 
 

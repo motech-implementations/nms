@@ -117,10 +117,11 @@ public class CsrServiceBundleIT extends BasePaxIT {
         sh = new SubscriptionHelper(subscriptionService,
                 subscriberDataService, subscriptionPackDataService, languageDataService, circleDataService,
                 stateDataService, districtDataService);
+
+        clearDatabase();
     }
 
 
-    @Before
     public void clearDatabase() {
         testingService.clearDatabase();
         sh.childPack();
