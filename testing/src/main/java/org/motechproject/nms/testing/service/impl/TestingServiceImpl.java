@@ -186,9 +186,9 @@ public class TestingServiceImpl implements TestingService {
                 frontLineWorkerDataService.update(flw);
             }
         }
+        serviceUsageDataService.deleteAll();
         frontLineWorkerDataService.deleteAll();
         serviceUsageCapDataService.deleteAll();
-        serviceUsageDataService.deleteAll();
         whitelistEntryDataService.deleteAll();
         whitelistStateDataService.deleteAll();
 
@@ -242,8 +242,8 @@ public class TestingServiceImpl implements TestingService {
         healthFacilityDataService.deleteAll();
         healthFacilityTypeDataService.deleteAll();
         healthSubFacilityDataService.deleteAll();
-        languageDataService.deleteAll();
         nationalDefaultLanguageLocationDataService.deleteAll();
+        languageDataService.deleteAll();
         stateDataService.deleteAll();
         talukaDataService.deleteAll();
         villageDataService.deleteAll();

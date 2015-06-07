@@ -453,13 +453,13 @@ public class UserControllerBundleIT extends BasePaxIT {
 
     private void createCircleWithLanguage() {
 
-        Language language = new Language("99", "Papiamento");
-        languageDataService.create(language);
+        Language papiamento = new Language("99", "Papiamento");
+        languageDataService.create(papiamento);
 
         District district = new District();
         district.setName("District 1");
         district.setRegionalName("District 1");
-        district.setLanguage(language);
+        district.setLanguage(papiamento);
         district.setCode(1L);
 
         State state = new State();
@@ -473,7 +473,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         deployedServiceDataService.create(new DeployedService(state, Service.MOBILE_KUNJI));
 
         Circle circle = new Circle("AA");
-        circle.setDefaultLanguage(language);
+        circle.setDefaultLanguage(papiamento);
         circle.getStates().add(state);
         circleDataService.create(circle);
 
@@ -493,7 +493,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         stateDataService.create(state2);
 
         circle.getStates().add(state2);
-        circleDataService.create(circle);
+        circleDataService.update(circle);
 
         nationalDefaultLanguageDataService.create(new NationalDefaultLanguage(hi));
     }

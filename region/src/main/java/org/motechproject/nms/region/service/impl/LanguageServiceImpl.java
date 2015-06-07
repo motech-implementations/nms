@@ -1,7 +1,5 @@
 package org.motechproject.nms.region.service.impl;
 
-import org.motechproject.mds.query.QueryExecution;
-import org.motechproject.mds.util.InstanceSecurityRestriction;
 import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Language;
@@ -14,7 +12,6 @@ import org.motechproject.nms.region.service.LanguageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.jdo.Query;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -46,31 +43,21 @@ public class LanguageServiceImpl implements LanguageService {
         return languageDataService.findByCode(code);
     }
 
+
     @Override
     public List<Language> getAllForCircle(final Circle circle) {
 
-        // TODO: This query needs to join from circle -> State -> District
-        QueryExecution<List<Language>> stateQueryExecution = new QueryExecution<List<Language>>() {
-            @Override
-            public List<Language> execute(Query query, InstanceSecurityRestriction restriction) {
+        List<Language> languages = new ArrayList<>();
 
-                query.setFilter("circle == _circle && circle.state == _state && circle.state.district == _district");
-                query.declareParameters("org.motechproject.nms.region.domain.Circle _circle, " +
-                        "org.motechproject.nms.region.domain.State _state, " +
-                        "org.motechproject.nms.region.domain.District _district");
-
-                return (List<Language>) query.execute(circle);
+        for (State state : circle.getStates()) {
+            for (District district : state.getDistricts()) {
+                languages.add(district.getLanguage());
             }
-        };
-
-        List<Language> languages = languageDataService.executeQuery(stateQueryExecution);
-
-        if (languages == null) {
-            languages = new ArrayList<>();
         }
 
         return languages;
     }
+
 
     @Override
     public List<Language> getAll() {
