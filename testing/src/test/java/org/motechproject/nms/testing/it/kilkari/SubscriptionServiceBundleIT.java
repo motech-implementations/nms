@@ -98,12 +98,23 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
     @Before
     public void setupTestData() {
+
         rh = new RegionHelper(languageDataService, circleDataService, stateDataService,
                 districtDataService);
 
         sh = new SubscriptionHelper(subscriptionService,
                 subscriberDataService, subscriptionPackDataService, languageDataService, circleDataService,
                 stateDataService, districtDataService);
+
+        Subscriber subscriber1 = subscriberDataService.create(new Subscriber(1000000000L));
+        Subscriber subscriber2 = subscriberDataService.create(new Subscriber(2000000000L));
+
+        subscriptionService.createSubscription(subscriber1.getCallingNumber(), rh.hindiLanguage(),
+                sh.childPack(), SubscriptionOrigin.IVR);
+        subscriptionService.createSubscription(subscriber2.getCallingNumber(), rh.hindiLanguage(),
+                sh.childPack(), SubscriptionOrigin.IVR);
+        subscriptionService.createSubscription(subscriber2.getCallingNumber(), rh.hindiLanguage(),
+                sh.pregnancyPack(), SubscriptionOrigin.IVR);
     }
     
 
@@ -123,9 +134,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     public void testPurgeOldClosedSubscriptionsNothingToPurge() {
 
         // s1 & s2 should remain untouched
-        Subscriber s1 = new Subscriber(1000000000L, rh.hindiLanguage());
-        subscriberService.create(s1);
-        subscriptionService.createSubscription(s1.getCallingNumber(), rh.hindiLanguage(), sh.childPack(),
+        subscriptionService.createSubscription(1000000000L, rh.hindiLanguage(), sh.childPack(),
                 SubscriptionOrigin.IVR);
 
         Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
@@ -282,17 +291,14 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     @Test
     public void testServiceFunctional() throws Exception {
 
-        Subscriber subscriber = new Subscriber(1000000000L, rh.hindiLanguage());
-        subscriberService.create(subscriber);
-
         SubscriptionPack pack1 = subscriptionPackDataService.byName("pack1");
         SubscriptionPack pack2 = subscriptionPackDataService.byName("pack2");
-        subscriptionService.createSubscription(subscriber.getCallingNumber(), rh.hindiLanguage(), sh.childPack(),
+        subscriptionService.createSubscription(1000000000L, rh.hindiLanguage(), sh.childPack(),
                 SubscriptionOrigin.IVR);
-        subscriptionService.createSubscription(subscriber.getCallingNumber(), rh.hindiLanguage(),
+        subscriptionService.createSubscription(1000000000L, rh.hindiLanguage(),
                 sh.pregnancyPack(), SubscriptionOrigin.IVR);
 
-        subscriber = subscriberService.getSubscriber(1000000000L);
+        Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
         Set<Subscription> subscriptions = subscriber.getSubscriptions();
 
         Set<String> packs = new HashSet<>();
