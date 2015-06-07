@@ -9,11 +9,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.flw.domain.CallDetailRecord;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
-import org.motechproject.nms.flw.repository.CallContentDataService;
 import org.motechproject.nms.flw.repository.CallDetailRecordDataService;
-import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
-import org.motechproject.nms.flw.repository.ServiceUsageCapDataService;
-import org.motechproject.nms.flw.repository.ServiceUsageDataService;
 import org.motechproject.nms.flw.service.CallDetailRecordService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.testing.service.TestingService;
@@ -52,29 +48,15 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
     private CallDetailRecordDataService callDetailRecordDataService;
 
     @Inject
-    private CallContentDataService callContentDataService;
-
-    @Inject
     private FrontLineWorkerService frontLineWorkerService;
-
-    @Inject
-    private FrontLineWorkerDataService frontLineWorkerDataService;
-
-    @Inject
-    private ServiceUsageDataService serviceUsageDataService;
-
-    @Inject
-    private ServiceUsageCapDataService serviceUsageCapDataService;
 
     @Inject
     private TestingService testingService;
 
-
     @Before
-    private void clearDatabase() {
+    public void clearDatabase() {
         testingService.clearDatabase();
     }
-
 
     private String createCallDetailsJson(boolean includeCallingNumber, Long callingNumber,
                                          boolean includeCallId, Long callId,

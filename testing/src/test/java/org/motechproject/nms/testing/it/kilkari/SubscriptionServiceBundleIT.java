@@ -340,6 +340,14 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
     @Test
     public void testSubscriptionPackCreation() throws Exception {
+        Subscriber s2 = new Subscriber(1000000001L, rh.hindiLanguage());
+        subscriberService.create(s2);
+
+        subscriptionService.createSubscription(s2.getCallingNumber(), rh.hindiLanguage(), sh.childPack(),
+                SubscriptionOrigin.IVR);
+        subscriptionService.createSubscription(s2.getCallingNumber(), rh.hindiLanguage(), sh.pregnancyPack(),
+                SubscriptionOrigin.IVR);
+
         SubscriptionPack fortyEightWeekPack = subscriptionPackDataService.byName("childPack");
         assertEquals(48, fortyEightWeekPack.getMessages().size());
 

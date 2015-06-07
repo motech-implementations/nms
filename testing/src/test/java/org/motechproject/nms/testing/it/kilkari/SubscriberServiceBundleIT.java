@@ -10,6 +10,7 @@ import org.motechproject.mds.ex.JdoListenerInvocationException;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
+import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.repository.InboxCallDataDataService;
 import org.motechproject.nms.kilkari.repository.InboxCallDetailRecordDataService;
@@ -79,16 +80,15 @@ public class SubscriberServiceBundleIT extends BasePaxIT {
         sh = new SubscriptionHelper(subscriptionService,
                 subscriberDataService, subscriptionPackDataService, languageDataService, circleDataService,
                 stateDataService, districtDataService);
+
+        clearDatabase();
+
+        sh.mksub(SubscriptionOrigin.IVR, new DateTime(), SubscriptionPackType.CHILD, 2000000000L);
+        sh.mksub(SubscriptionOrigin.IVR, new DateTime(), SubscriptionPackType.PREGNANCY, 2000000000L);
     }
 
-
-    @Before
     public void clearDatabase() {
         testingService.clearDatabase();
-
-        Subscriber subscriber = subscriberDataService.create(new Subscriber(2000000000L));
-        subscriptionService.create(new Subscription(subscriber, sh.pregnancyPack() , SubscriptionOrigin.IVR));
-        subscriptionService.create(new Subscription(subscriber, sh.childPack() , SubscriptionOrigin.IVR));
     }
 
 
