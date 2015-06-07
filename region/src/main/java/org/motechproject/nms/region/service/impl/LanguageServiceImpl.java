@@ -1,7 +1,6 @@
 package org.motechproject.nms.region.service.impl;
 
-import org.motechproject.mds.query.QueryExecution;
-import org.motechproject.mds.util.InstanceSecurityRestriction;
+import org.motechproject.mds.query.SqlQueryExecution;
 import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Language;
@@ -49,21 +48,27 @@ public class LanguageServiceImpl implements LanguageService {
     @Override
     public List<Language> getAllForCircle(final Circle circle) {
 
-        // TODO: This query needs to join from circle -> State -> District
-        QueryExecution<List<Language>> stateQueryExecution = new QueryExecution<List<Language>>() {
+        SqlQueryExecution<List<Language>> queryExecution = new SqlQueryExecution<List<Language>>() {
+
             @Override
-            public List<Language> execute(Query query, InstanceSecurityRestriction restriction) {
+            public String getSqlQuery() {
+                String query = "select * " +
+                        "from nms_languages l " +
+                        "join nms_districts d on  d.language_id_oid = l.id " +
+                        "join nms_states s on d.state_id_oid = s.id " +
+                        "join flw_module_join_circles_states cxs on s.id = cxs.state_id and cxs.circle_id = ?";
 
-                query.setFilter("circle == _circle && circle.state == _state && circle.state.district == _district");
-                query.declareParameters("org.motechproject.nms.region.domain.Circle _circle, " +
-                        "org.motechproject.nms.region.domain.State _state, " +
-                        "org.motechproject.nms.region.domain.District _district");
+                return query;
+            }
 
-                return (List<Language>) query.execute(circle);
+            @Override
+            public List<Language> execute(Query query) {
+                query.setClass(Language.class);
+                return (List<Language>) query.execute(circle.getId());
             }
         };
 
-        List<Language> languages = languageDataService.executeQuery(stateQueryExecution);
+        List<Language> languages = languageDataService.executeSQLQuery(queryExecution);
 
         if (languages == null) {
             languages = new ArrayList<>();
