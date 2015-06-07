@@ -1,5 +1,6 @@
 package org.motechproject.nms.region.service.impl;
 
+import org.motechproject.mds.query.SqlQueryExecution;
 import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Language;
@@ -12,6 +13,7 @@ import org.motechproject.nms.region.service.LanguageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.jdo.Query;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -47,12 +49,30 @@ public class LanguageServiceImpl implements LanguageService {
     @Override
     public List<Language> getAllForCircle(final Circle circle) {
 
-        List<Language> languages = new ArrayList<>();
+        SqlQueryExecution<List<Language>> queryExecution = new SqlQueryExecution<List<Language>>() {
 
-        for (State state : circle.getStates()) {
-            for (District district : state.getDistricts()) {
-                languages.add(district.getLanguage());
+            @Override
+            public String getSqlQuery() {
+                String query = "select * " +
+                        "from nms_languages l " +
+                        "join nms_districts d on  d.language_id_oid = l.id " +
+                        "join nms_states s on d.state_id_oid = s.id " +
+                        "join flw_module_join_circles_states cxs on s.id = cxs.state_id and cxs.circle_id = ?";
+
+                return query;
             }
+
+            @Override
+            public List<Language> execute(Query query) {
+                query.setClass(Language.class);
+                return (List<Language>) query.execute(circle.getId());
+            }
+        };
+
+        List<Language> languages = languageDataService.executeSQLQuery(queryExecution);
+
+        if (languages == null) {
+            languages = new ArrayList<>();
         }
 
         return languages;

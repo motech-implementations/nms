@@ -474,7 +474,6 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         Circle circle = new Circle("AA");
         circle.setDefaultLanguage(papiamento);
-        circle.getStates().add(state);
         circleDataService.create(circle);
 
         Language hi = languageDataService.create(new Language("88", "hindi"));
@@ -492,7 +491,9 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         stateDataService.create(state2);
 
-        circle.getStates().add(state2);
+        circle.getStates().addAll(Arrays.asList(state, state2));
+        state.getCircles().add(circle);
+        state2.getCircles().add(circle);
         circleDataService.update(circle);
 
         nationalDefaultLanguageDataService.create(new NationalDefaultLanguage(hi));
