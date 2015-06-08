@@ -8,6 +8,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.joda.time.DateTime;
+import org.junit.Ignore;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -52,6 +53,7 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -722,5 +724,54 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertTrue(expectedJson.equals(EntityUtils.toString(response.getEntity()))  );
 
     }
+     
+    @Test
+    public void verifyFT83() throws IOException,
+    		InterruptedException {
 
+        //To verify the behavior of  Get Inbox Details API  if provided beneficiary's callingNumber is not valid :
+        // less than 10 digits.
+
+    	HttpGet httpGet = createHttpGet(true, "123456789", true,
+    			"123456789012345");
+    	String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+        assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response.getEntity()))  );
+
+    }
+    @Test
+    public void verifyFT84() throws IOException,
+            InterruptedException {
+
+        //To verify the behavior of  Get Inbox Details API  if provided beneficiary's callingNumber is not valid :
+        // more than 10 digits.
+
+        HttpGet httpGet = createHttpGet(true, "12345678901", true, "123456789012345");
+        String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+        assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response.getEntity()))  );
+
+
+    }
+    @Test
+    @Ignore
+    public void verifyFT85() throws IOException,
+            InterruptedException {
+
+        //https://applab.atlassian.net/browse/NMS-186
+                
+        // callingNumber alphanumeric
+        HttpGet httpGet = createHttpGet(true, "12345DF7890", true, "123456789012345");
+        String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+        assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response.getEntity()))  );
+
+    }
+    
 }
