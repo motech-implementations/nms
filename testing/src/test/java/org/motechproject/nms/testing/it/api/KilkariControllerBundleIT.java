@@ -688,5 +688,28 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
                 expectedJsonPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
+    
+ 	@Test
+ 	public void verifyFT_89_90() throws IOException,
+ 			InterruptedException {
+ 		/**
+ 		 * Testing GetInboxDetails API with mandatory parameters missing
+ 		 */
+ 		// callingNumber missing
+ 		HttpGet httpGet = createHttpGet(false, "", true, "123456789012345");
+ 		String expectedJsonResponse = createFailureResponseJson("<callingNumber: Not Present>");
+
+ 		assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
+ 				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+ 				ADMIN_USERNAME, ADMIN_PASSWORD));
+
+ 		// CallId missing
+ 		httpGet = createHttpGet(true, "1234567890", false, "");
+ 		expectedJsonResponse = createFailureResponseJson("<callId: Not Present>");
+
+ 		assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
+ 				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+ 				ADMIN_USERNAME, ADMIN_PASSWORD));
+ 	}
 
 }
