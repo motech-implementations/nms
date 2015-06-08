@@ -33,7 +33,7 @@ import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
 import org.motechproject.nms.props.domain.RequestId;
 import org.motechproject.nms.region.domain.Circle;
-import org.motechproject.nms.region.domain.LanguageLocation;
+import org.motechproject.nms.region.domain.Language;
 import org.motechproject.scheduler.contract.RepeatingSchedulableJob;
 import org.motechproject.scheduler.service.MotechSchedulerService;
 import org.motechproject.server.config.SettingsFacade;
@@ -259,10 +259,10 @@ public class TargetFileServiceImpl implements TargetFileService {
 
                 //todo: don't understand why subscriber.getLanguage() doesn't work here...
                 // it's not working because of https://applab.atlassian.net/browse/MOTECH-1678
-                LanguageLocation languageLocation;
-                languageLocation = (LanguageLocation) subscriberDataService.getDetachedField(subscriber,
-                        "languageLocation");
-                writer.write(languageLocation.getCode());
+                Language language;
+                language = (Language) subscriberDataService.getDetachedField(subscriber,
+                        "language");
+                writer.write(language.getCode());
 
                 Circle circle;
                 circle = (Circle) subscriberDataService.getDetachedField(subscriber, "circle");
@@ -273,7 +273,7 @@ public class TargetFileServiceImpl implements TargetFileService {
                 //todo: how do we choose a priority?
                 writeSubscriptionRow(requestId.toString(), imiServiceId,
                         subscriber.getCallingNumber().toString(), NORMAL_PRIORITY, callFlowUrl,
-                        msg.getMessageFileName(), msg.getWeekId(), languageLocation.getCode(), circle.getName(),
+                        msg.getMessageFileName(), msg.getWeekId(), language.getCode(), circle.getName(),
                         subscription.getOrigin().getCode(), writer);
             }
 

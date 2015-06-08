@@ -4,7 +4,7 @@ import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.alerts.domain.AlertStatus;
 import org.motechproject.alerts.domain.AlertType;
 import org.motechproject.nms.csv.exception.CsvImportException;
-import org.motechproject.nms.region.service.LanguageLocationCodesImportService;
+import org.motechproject.nms.region.service.LanguageLocationImportService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,20 +20,20 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 
 @Controller
-public class LanguageLocationCodeImportController {
+public class LanguageLocationImportController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LocationDataImportController.class);
 
     private AlertService alertService;
 
-    private LanguageLocationCodesImportService languageLocationCodesImportService;
+    private LanguageLocationImportService languageLocationImportService;
 
     @RequestMapping(value = "/languageLocationCode/import", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
     public void importLanguageLocationCodes(@RequestParam MultipartFile csvFile) {
         try {
             try (InputStream in = csvFile.getInputStream()) {
-                languageLocationCodesImportService.importData(new InputStreamReader(in));
+                languageLocationImportService.importData(new InputStreamReader(in));
             }
         } catch (CsvImportException e) {
             logError(e);
@@ -56,7 +56,7 @@ public class LanguageLocationCodeImportController {
     }
 
     @Autowired
-    public void setLanguageLocationCodesImportService(LanguageLocationCodesImportService languageLocationCodesImportService) {
-        this.languageLocationCodesImportService = languageLocationCodesImportService;
+    public void setLanguageLocationImportService(LanguageLocationImportService languageLocationImportService) {
+        this.languageLocationImportService = languageLocationImportService;
     }
 }

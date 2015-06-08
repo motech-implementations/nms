@@ -7,8 +7,9 @@ import org.motechproject.nms.api.web.exception.NotFoundException;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.props.domain.Service;
-import org.motechproject.nms.region.domain.LanguageLocation;
-import org.motechproject.nms.region.service.LanguageLocationService;
+import org.motechproject.nms.region.domain.Language;
+import org.motechproject.nms.region.domain.State;
+import org.motechproject.nms.region.service.LanguageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -29,7 +30,7 @@ public class LanguageController extends BaseController {
     private FrontLineWorkerService frontLineWorkerService;
 
     @Autowired
-    private LanguageLocationService languageLocationService;
+    private LanguageService languageService;
 
     /**
      * 2.2.7 Set User Language Location Code API
@@ -72,18 +73,20 @@ public class LanguageController extends BaseController {
             flw = new FrontLineWorker(callingNumber);
         }
 
-        LanguageLocation languageLocation = languageLocationService.getForCode(languageLocationCode);
-        if (null == languageLocation) {
+        Language language = languageService.getForCode(languageLocationCode);
+        if (null == language) {
             throw new NotFoundException(String.format(NOT_FOUND, LANGUAGE_LOCATION_CODE));
         }
 
-        flw.setLanguageLocation(languageLocation);
+        flw.setLanguage(language);
 
-        if (!frontLineWorkerAuthorizedForAccess(flw)) {
+        State state =  getStateForFrontLineWorker(flw, null);
+
+        if (!frontLineWorkerAuthorizedForAccess(flw, state)) {
             throw new NotAuthorizedException(String.format(NOT_AUTHORIZED, CALLING_NUMBER));
         }
 
-        if (!serviceDeployedInFrontLineWorkersState(service, getStateForFrontLineWorker(flw))) {
+        if (!serviceDeployedInFrontLineWorkersState(service, state)) {
             throw new NotDeployedException(String.format(NOT_DEPLOYED, service));
         }
 

@@ -21,8 +21,11 @@ import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.domain.Service;
 import org.motechproject.nms.props.service.PropertyService;
-import org.motechproject.nms.region.domain.LanguageLocation;
-import org.motechproject.nms.region.service.LanguageLocationService;
+import org.motechproject.nms.region.domain.Circle;
+import org.motechproject.nms.region.domain.Language;
+import org.motechproject.nms.region.domain.State;
+import org.motechproject.nms.region.service.CircleService;
+import org.motechproject.nms.region.service.LanguageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -36,6 +39,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -58,7 +62,10 @@ public class KilkariController extends BaseController {
     private SubscriptionService subscriptionService;
 
     @Autowired
-    private LanguageLocationService languageLocationService;
+    private LanguageService languageService;
+
+    @Autowired
+    private CircleService circleService;
 
     @Autowired
     private InboxService inboxService;
@@ -232,13 +239,15 @@ public class KilkariController extends BaseController {
             throw new IllegalArgumentException(failureReasons.toString());
         }
 
-        LanguageLocation languageLocation;
-        languageLocation = languageLocationService.getForCode(subscriptionRequest.getLanguageLocationCode());
-        if (languageLocation == null) {
+        Language language;
+        language = languageService.getForCode(subscriptionRequest.getLanguageLocationCode());
+        if (language == null) {
             throw new NotFoundException(String.format(NOT_FOUND, "languageLocationCode"));
         }
 
-        if (!propertyService.isServiceDeployedInState(Service.KILKARI, languageLocation.getState())) {
+        Circle circle = circleService.getByName(subscriptionRequest.getCircle());
+        State state = getSingleStateFromCircleAndLanguage(circle, language);
+        if (!propertyService.isServiceDeployedInState(Service.KILKARI, state)) {
             throw new NotDeployedException(String.format(NOT_DEPLOYED, Service.KILKARI));
         }
 
@@ -248,10 +257,24 @@ public class KilkariController extends BaseController {
             throw new NotFoundException(String.format(NOT_FOUND, "subscriptionPack"));
         }
 
-        subscriptionService.createSubscription(subscriptionRequest.getCallingNumber(), languageLocation,
+        subscriptionService.createSubscription(subscriptionRequest.getCallingNumber(), language,
                                                subscriptionPack, SubscriptionOrigin.IVR);
     }
 
+    private State getSingleStateFromCircleAndLanguage(Circle circle, Language language) {
+        Set<State> stateSet = languageService.getAllStatesForLanguage(language);
+
+        if (stateSet.size() == 1) {
+            return stateSet.iterator().next();
+        }
+
+        List<State> stateList = circle.getStates();
+        if (stateList.size() == 1) {
+            return stateList.get(0);
+        }
+
+        return null;
+    }
     /**
      * 4.2.4
      * Deactivate Subscription
