@@ -8,6 +8,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.joda.time.DateTime;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -16,7 +17,6 @@ import org.motechproject.nms.api.web.contract.FlwUserResponse;
 import org.motechproject.nms.api.web.contract.UserLanguageRequest;
 import org.motechproject.nms.api.web.contract.kilkari.KilkariUserResponse;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
-import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.domain.ServiceUsage;
 import org.motechproject.nms.flw.domain.ServiceUsageCap;
 import org.motechproject.nms.flw.domain.WhitelistEntry;
@@ -29,11 +29,9 @@ import org.motechproject.nms.flw.repository.WhitelistEntryDataService;
 import org.motechproject.nms.flw.repository.WhitelistStateDataService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.kilkari.domain.Subscriber;
-import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
-import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
@@ -44,15 +42,16 @@ import org.motechproject.nms.props.repository.DeployedServiceDataService;
 import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Language;
-import org.motechproject.nms.region.domain.LanguageLocation;
-import org.motechproject.nms.region.domain.NationalDefaultLanguageLocation;
+import org.motechproject.nms.region.domain.NationalDefaultLanguage;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
-import org.motechproject.nms.region.repository.LanguageLocationDataService;
-import org.motechproject.nms.region.repository.NationalDefaultLanguageLocationDataService;
+import org.motechproject.nms.region.repository.NationalDefaultLanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.testing.it.utils.RegionHelper;
+import org.motechproject.nms.testing.it.utils.SubscriptionHelper;
+import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.motechproject.testing.osgi.http.SimpleHttpClient;
@@ -66,6 +65,7 @@ import javax.inject.Inject;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -114,9 +114,6 @@ public class UserControllerBundleIT extends BasePaxIT {
     private LanguageDataService languageDataService;
 
     @Inject
-    private LanguageLocationDataService languageLocationDataService;
-
-    @Inject
     private StateDataService stateDataService;
 
     @Inject
@@ -138,45 +135,33 @@ public class UserControllerBundleIT extends BasePaxIT {
     private DeployedServiceDataService deployedServiceDataService;
 
     @Inject
-    private NationalDefaultLanguageLocationDataService nationalDefaultLanguageLocationDataService;
+    private NationalDefaultLanguageDataService nationalDefaultLanguageDataService;
 
-    public UserControllerBundleIT() {
-        System.setProperty("org.motechproject.testing.osgi.http.numTries", "1");
+    @Inject
+    private TestingService testingService;
+
+
+
+    private RegionHelper rh;
+    private SubscriptionHelper sh;
+
+
+    @Before
+    public void setupTestData() {
+        rh = new RegionHelper(languageDataService, circleDataService, stateDataService,
+                districtDataService);
+
+        sh = new SubscriptionHelper(subscriptionService,
+                subscriberDataService, subscriptionPackDataService, languageDataService, circleDataService,
+                stateDataService, districtDataService);
     }
 
-    // TODO: Clean up data creation and cleanup
-    private void cleanAllData() {
-        for (FrontLineWorker flw: frontLineWorkerDataService.retrieveAll()) {
-            flw.setStatus(FrontLineWorkerStatus.INVALID);
-            flw.setInvalidationDate(new DateTime().withDate(2011, 8, 1));
 
-            frontLineWorkerDataService.update(flw);
-        }
-
-        for (Subscription subscription: subscriptionDataService.retrieveAll()) {
-            subscription.setStatus(SubscriptionStatus.COMPLETED);
-            subscription.setEndDate(new DateTime().withDate(2011, 8, 1));
-
-            subscriptionDataService.update(subscription);
-        }
-
-        whitelistEntryDataService.deleteAll();
-        whitelistStateDataService.deleteAll();
-        serviceUsageCapDataService.deleteAll();
-        serviceUsageDataService.deleteAll();
-        callDetailRecordDataService.deleteAll();
-        frontLineWorkerDataService.deleteAll();
-        subscriptionDataService.deleteAll();
-        subscriptionPackDataService.deleteAll();
-        subscriberDataService.deleteAll();
-        nationalDefaultLanguageLocationDataService.deleteAll();
-        languageLocationDataService.deleteAll();
-        languageDataService.deleteAll();
-        districtDataService.deleteAll();
-        deployedServiceDataService.deleteAll();
-        stateDataService.deleteAll();
-        circleDataService.deleteAll();
+    @Before
+    public void clearDatabase() {
+        testingService.clearDatabase();
     }
+
 
     /*
     Creates two subscription packs ('pack1' and 'pack2')
@@ -185,12 +170,15 @@ public class UserControllerBundleIT extends BasePaxIT {
         Subscriber 2000000000L is subscribed to packs 'pack1' and 'pack2'
      */
     private void createKilkariTestData() {
-        cleanAllData();
+
+        Language ta = languageDataService.create(new Language("50", "tamil"));
 
         District district = new District();
         district.setName("District 1");
         district.setRegionalName("District 1");
+        district.setLanguage(ta);
         district.setCode(1L);
+
         State state = new State();
         state.setName("State 1");
         state.setCode(1L);
@@ -199,35 +187,34 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         deployedServiceDataService.create(new DeployedService(state, Service.KILKARI));
 
-        Language ta = languageDataService.create(new Language("tamil"));
-
         Circle circle = new Circle("AA");
-
-        LanguageLocation languageLocation = new LanguageLocation("50", circle, ta, true);
-        languageLocation.getDistrictSet().add(district);
-        languageLocationDataService.create(languageLocation);
+        circle.setDefaultLanguage(ta);
+        circle.getStates().add(state);
+        circleDataService.create(circle);
 
         SubscriptionPack pack1 = subscriptionPackDataService.create(new SubscriptionPack("pack1",
                 SubscriptionPackType.CHILD, 48, 1, null));
         SubscriptionPack pack2 = subscriptionPackDataService.create(new SubscriptionPack("pack2",
                 SubscriptionPackType.PREGNANCY, 72, 2, null));
-        List<SubscriptionPack> onePack = Arrays.asList(pack1);
+        List<SubscriptionPack> onePack = Collections.singletonList(pack1);
         List<SubscriptionPack> twoPacks = Arrays.asList(pack1, pack2);
 
-        Subscriber subscriber1 = subscriberDataService.create(new Subscriber(1000000000L, languageLocation));
-        Subscriber subscriber2 = subscriberDataService.create(new Subscriber(2000000000L, languageLocation));
+        Subscriber subscriber1 = subscriberDataService.create(new Subscriber(1000000000L, ta));
+        Subscriber subscriber2 = subscriberDataService.create(new Subscriber(2000000000L, ta));
         Subscriber subscriber3 = subscriberDataService.create(new Subscriber(3000000000L));
 
-        subscriptionService.createSubscription(subscriber1.getCallingNumber(), languageLocation, pack1,
+        subscriptionService.createSubscription(subscriber1.getCallingNumber(), ta, pack1,
                 SubscriptionOrigin.IVR);
-        subscriptionService.createSubscription(subscriber2.getCallingNumber(), languageLocation, pack1,
+        subscriptionService.createSubscription(subscriber2.getCallingNumber(), ta, pack1,
                 SubscriptionOrigin.IVR);
-        subscriptionService.createSubscription(subscriber2.getCallingNumber(), languageLocation, pack2,
+        subscriptionService.createSubscription(subscriber2.getCallingNumber(), ta, pack2,
                 SubscriptionOrigin.IVR);
     }
 
     private void createFlwCappedServiceNoUsageNoLocationNoLanguage() {
-        cleanAllData();
+
+        Language language = new Language("99", "Papiamento");
+        languageDataService.create(language);
 
         FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 1111111111L);
         frontLineWorkerService.add(flw);
@@ -235,6 +222,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         District district = new District();
         district.setName("District 1");
         district.setRegionalName("District 1");
+        district.setLanguage(language);
         district.setCode(1L);
 
         State state = new State();
@@ -247,33 +235,33 @@ public class UserControllerBundleIT extends BasePaxIT {
         deployedServiceDataService.create(new DeployedService(state, Service.MOBILE_ACADEMY));
         deployedServiceDataService.create(new DeployedService(state, Service.MOBILE_KUNJI));
 
-        Language language = new Language("Papiamento");
-        languageDataService.create(language);
-
-        LanguageLocation languageLocation = new LanguageLocation("99", new Circle("AA"), language, true);
-        languageLocation.getDistrictSet().add(district);
-        languageLocationDataService.create(languageLocation);
+        Circle circle = new Circle("AA");
+        circle.getStates().add(state);
+        circle.setDefaultLanguage(language);
+        circleDataService.create(circle);
 
         ServiceUsageCap serviceUsageCap = new ServiceUsageCap(null, Service.MOBILE_KUNJI, 3600);
         serviceUsageCapDataService.create(serviceUsageCap);
     }
 
     private void createFlwWithLanguageServiceUsageAndCappedService() {
-        cleanAllData();
 
-        Language language = new Language("English");
-        languageDataService.create(language);
+        Language en = new Language("10", "English");
+        languageDataService.create(en);
 
-        Circle circle = new Circle("AA");
+        Language pa = new Language("99", "Papiamento");
+        languageDataService.create(pa);
 
         District district = new District();
         district.setName("District 1");
         district.setRegionalName("District 1");
+        district.setLanguage(en);
         district.setCode(1L);
 
         District district2 = new District();
         district2.setName("District 2");
         district2.setRegionalName("District 2");
+        district2.setLanguage(pa);
         district2.setCode(2L);
 
         State state = new State();
@@ -284,23 +272,17 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         stateDataService.create(state);
 
+        Circle circle = new Circle("AA");
+        circle.getStates().add(state);
+        circle.setDefaultLanguage(pa);
+        circleDataService.create(circle);
+
         deployedServiceDataService.create(new DeployedService(state, Service.MOBILE_ACADEMY));
         deployedServiceDataService.create(new DeployedService(state, Service.MOBILE_KUNJI));
 
-        LanguageLocation languageLocation = new LanguageLocation("10", circle, language, false);
-        languageLocation.getDistrictSet().add(district);
-        languageLocationDataService.create(languageLocation);
-
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
-        flw.setLanguageLocation(languageLocation);
+        flw.setLanguage(en);
         frontLineWorkerService.add(flw);
-
-        language = new Language("Papiamento");
-        languageDataService.create(language);
-
-        languageLocation = new LanguageLocation("99", circle, language, true);
-        languageLocation.getDistrictSet().add(district2);
-        languageLocationDataService.create(languageLocation);
 
         ServiceUsageCap serviceUsageCap = new ServiceUsageCap(null, Service.MOBILE_KUNJI, 3600);
         serviceUsageCapDataService.create(serviceUsageCap);
@@ -311,18 +293,23 @@ public class UserControllerBundleIT extends BasePaxIT {
     }
 
     private void createFlwWithLanguageFullServiceUsageAndCappedService() {
-        cleanAllData();
 
-        Circle circle = new Circle("AA");
+        Language en = new Language("10", "English");
+        languageDataService.create(en);
+
+        Language pa = new Language("99", "Papiamento");
+        languageDataService.create(pa);
 
         District district = new District();
         district.setName("District 1");
         district.setRegionalName("District 1");
+        district.setLanguage(en);
         district.setCode(1L);
 
         District district2 = new District();
         district2.setName("District 2");
         district2.setRegionalName("District 2");
+        district2.setLanguage(pa);
         district2.setCode(2L);
 
         State state = new State();
@@ -333,26 +320,17 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         stateDataService.create(state);
 
+        Circle circle = new Circle("AA");
+        circle.getStates().add(state);
+        circle.setDefaultLanguage(pa);
+        circleDataService.create(circle);
+
         deployedServiceDataService.create(new DeployedService(state, Service.MOBILE_ACADEMY));
         deployedServiceDataService.create(new DeployedService(state, Service.MOBILE_KUNJI));
 
-        Language language = new Language("English");
-        languageDataService.create(language);
-
-        LanguageLocation languageLocation = new LanguageLocation("10", circle, language, false);
-        languageLocation.getDistrictSet().add(district);
-        languageLocationDataService.create(languageLocation);
-
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
-        flw.setLanguageLocation(languageLocation);
+        flw.setLanguage(en);
         frontLineWorkerService.add(flw);
-
-        language = new Language("Papiamento");
-        languageDataService.create(language);
-
-        languageLocation = new LanguageLocation("99", circle, language, true);
-        languageLocation.getDistrictSet().add(district2);
-        languageLocationDataService.create(languageLocation);
 
         ServiceUsageCap serviceUsageCap = new ServiceUsageCap(null, Service.MOBILE_KUNJI, 3600);
         serviceUsageCapDataService.create(serviceUsageCap);
@@ -362,18 +340,23 @@ public class UserControllerBundleIT extends BasePaxIT {
     }
 
     private void createFlwWithLanguageFullUsageOfBothServiceUncapped() {
-        cleanAllData();
 
-        Circle circle = new Circle("AA");
+        Language en = new Language("10", "English");
+        languageDataService.create(en);
+
+        Language pa = new Language("99", "Papiamento");
+        languageDataService.create(pa);
 
         District district = new District();
         district.setName("District 1");
         district.setRegionalName("District 1");
+        district.setLanguage(en);
         district.setCode(1L);
 
         District district2 = new District();
         district2.setName("District 2");
         district2.setRegionalName("District 2");
+        district2.setLanguage(pa);
         district2.setCode(2L);
 
         State state = new State();
@@ -384,26 +367,17 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         stateDataService.create(state);
 
+        Circle circle = new Circle("AA");
+        circle.getStates().add(state);
+        circle.setDefaultLanguage(pa);
+        circleDataService.create(circle);
+
         deployedServiceDataService.create(new DeployedService(state, Service.MOBILE_ACADEMY));
         deployedServiceDataService.create(new DeployedService(state, Service.MOBILE_KUNJI));
 
-        Language language = new Language("English");
-        languageDataService.create(language);
-
-        LanguageLocation languageLocation = new LanguageLocation("10", circle, language, false);
-        languageLocation.getDistrictSet().add(district);
-        languageLocationDataService.create(languageLocation);
-
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
-        flw.setLanguageLocation(languageLocation);
+        flw.setLanguage(en);
         frontLineWorkerService.add(flw);
-
-        language = new Language("Papiamento");
-        languageDataService.create(language);
-
-        languageLocation = new LanguageLocation("99", circle, language, true);
-        languageLocation.getDistrictSet().add(district2);
-        languageLocationDataService.create(languageLocation);
 
         ServiceUsage serviceUsage = new ServiceUsage(flw, Service.MOBILE_KUNJI, 1, 1, 1, DateTime.now());
         serviceUsageDataService.create(serviceUsage);
@@ -417,7 +391,6 @@ public class UserControllerBundleIT extends BasePaxIT {
     }
 
     private void createFlwWithStateNotInWhitelist() {
-        cleanAllData();
 
         circleDataService.create(new Circle("AA"));
 
@@ -444,11 +417,14 @@ public class UserControllerBundleIT extends BasePaxIT {
     }
 
     private void createFlwWithLanguageLocationCodeNotInWhitelist() {
-        cleanAllData();
+
+        Language language = new Language("34", "Language From Whitelisted State");
+        languageDataService.create(language);
 
         District district = new District();
         district.setName("District 1");
         district.setRegionalName("District 1");
+        district.setLanguage(language);
         district.setCode(1L);
 
         State whitelist = new State();
@@ -461,12 +437,9 @@ public class UserControllerBundleIT extends BasePaxIT {
         deployedServiceDataService.create(new DeployedService(whitelist, Service.MOBILE_ACADEMY));
         deployedServiceDataService.create(new DeployedService(whitelist, Service.MOBILE_KUNJI));
 
-        Language language = new Language("Language From Whitelisted State");
-        languageDataService.create(language);
-
-        LanguageLocation languageLocation = new LanguageLocation("34", new Circle("AA"), language, false);
-        languageLocation.getDistrictSet().add(district);
-        languageLocationDataService.create(languageLocation);
+        Circle circle = new Circle("AA");
+        circle.getStates().add(whitelist);
+        circleDataService.create(circle);
 
         whitelistStateDataService.create(new WhitelistState(whitelist));
 
@@ -474,16 +447,19 @@ public class UserControllerBundleIT extends BasePaxIT {
         whitelistEntryDataService.create(entry);
 
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111l);
-        flw.setLanguageLocation(languageLocation);
+        flw.setLanguage(language);
         frontLineWorkerService.add(flw);
     }
 
     private void createCircleWithLanguage() {
-        cleanAllData();
+
+        Language papiamento = new Language("99", "Papiamento");
+        languageDataService.create(papiamento);
 
         District district = new District();
         district.setName("District 1");
         district.setRegionalName("District 1");
+        district.setLanguage(papiamento);
         district.setCode(1L);
 
         State state = new State();
@@ -496,18 +472,16 @@ public class UserControllerBundleIT extends BasePaxIT {
         deployedServiceDataService.create(new DeployedService(state, Service.MOBILE_ACADEMY));
         deployedServiceDataService.create(new DeployedService(state, Service.MOBILE_KUNJI));
 
-        Language language = new Language("Papiamento");
-        languageDataService.create(language);
-
         Circle circle = new Circle("AA");
+        circle.setDefaultLanguage(papiamento);
+        circleDataService.create(circle);
 
-        LanguageLocation languageLocation = new LanguageLocation("99", circle, language, true);
-        languageLocation.getDistrictSet().add(district);
-        languageLocationDataService.create(languageLocation);
+        Language hi = languageDataService.create(new Language("88", "hindi"));
 
         District district2 = new District();
         district2.setName("District 2");
         district2.setRegionalName("District 2");
+        district2.setLanguage(hi);
         district2.setCode(2L);
 
         State state2 = new State();
@@ -517,17 +491,15 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         stateDataService.create(state2);
 
-        Language hi = languageDataService.create(new Language("hindi"));
+        circle.getStates().addAll(Arrays.asList(state, state2));
+        state.getCircles().add(circle);
+        state2.getCircles().add(circle);
+        circleDataService.update(circle);
 
-        LanguageLocation languageLocation2 = new LanguageLocation("88", circle, hi, false);
-        languageLocation2.getDistrictSet().add(district2);
-        languageLocationDataService.create(languageLocation2);
-
-        nationalDefaultLanguageLocationDataService.create(new NationalDefaultLanguageLocation(languageLocation2));
+        nationalDefaultLanguageDataService.create(new NationalDefaultLanguage(hi));
     }
 
     private void createCircleWithSingleLanguage() {
-        cleanAllData();
 
         District district = new District();
         district.setName("District 1");
@@ -541,16 +513,15 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         stateDataService.create(state);
 
-        Language language = new Language("Papiamento");
+        Language language = new Language("99", "Papiamento");
         languageDataService.create(language);
 
         Circle circle = new Circle("AA");
+        circle.setDefaultLanguage(language);
+        circle.getStates().add(state);
+        circleDataService.create(circle);
 
-        LanguageLocation languageLocation = new LanguageLocation("99", circle, language, true);
-        languageLocation.getDistrictSet().add(district);
-        languageLocationDataService.create(languageLocation);
-
-        nationalDefaultLanguageLocationDataService.create(new NationalDefaultLanguageLocation(languageLocation));
+        nationalDefaultLanguageDataService.create(new NationalDefaultLanguage(language));
     }
 
     private HttpGet createHttpGet(boolean includeService, String service,
@@ -655,13 +626,14 @@ public class UserControllerBundleIT extends BasePaxIT {
     }
 
     private void createFlwWithLanguageNoDeployedServices() {
-        cleanAllData();
 
-        Circle circle = new Circle("AA");
+        Language language = new Language("10", "English");
+        languageDataService.create(language);
 
         District district = new District();
         district.setName("District 1");
         district.setRegionalName("District 1");
+        district.setLanguage(language);
         district.setCode(1L);
 
         State state = new State();
@@ -671,15 +643,12 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         stateDataService.create(state);
 
-        Language language = new Language("English");
-        languageDataService.create(language);
-
-        LanguageLocation languageLocation = new LanguageLocation("10", circle, language, false);
-        languageLocation.getDistrictSet().add(district);
-        languageLocationDataService.create(languageLocation);
+        Circle circle = new Circle("AA");
+        circle.getStates().add(state);
+        circleDataService.create(circle);
 
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
-        flw.setLanguageLocation(languageLocation);
+        flw.setLanguage(language);
         frontLineWorkerService.add(flw);
     }
 
@@ -704,7 +673,6 @@ public class UserControllerBundleIT extends BasePaxIT {
     }
 
     private void createFlwWithLocationNoLanguageNoDeployedServices() {
-        cleanAllData();
 
         District district = new District();
         district.setName("District 1");
@@ -745,7 +713,6 @@ public class UserControllerBundleIT extends BasePaxIT {
 
     // Request undeployed service by cirlce
     private void createFlwWithNoLocationNoLanguageNoDeployedServices() {
-        cleanAllData();
 
         District district = new District();
         district.setName("District 1");
@@ -802,7 +769,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         String expectedJsonResponse = createKilkariUserResponseJson(
                 "50", //defaultLanguageLocationCode
                 null, //locationCode
-                Arrays.asList("50"), // allowedLanguageLocationCodes
+                Collections.singletonList("50"), // allowedLanguageLocationCodes
                 new HashSet<String>() //subscriptionPackList
         );
 
@@ -826,7 +793,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         String expectedJsonResponse = createKilkariUserResponseJson(
                 "50", //defaultLanguageLocationCode
                 null, //locationCode
-                Arrays.asList("50"), // allowedLanguageLocationCodes
+                Collections.singletonList("50"), // allowedLanguageLocationCodes
                 new HashSet<String>() //subscriptionPackList
         );
 
@@ -850,7 +817,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         String expectedJsonResponse = createFlwUserResponseJson(
                 "99",  //defaultLanguageLocationCode
                 null,  //locationCode
-                Arrays.asList("99"), // allowedLanguageLocationCodes
+                Collections.singletonList("99"), // allowedLanguageLocationCodes
                 0L,    //currentUsageInPulses
                 0L,    //endOfUsagePromptCounter
                 false, //welcomePromptFlag
@@ -1063,7 +1030,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
 
     @Test
-    @Ignore  // Currenlty under discussion with IMI.  My preference would be for them to handle this case
+    @Ignore  // Currently under discussion with IMI.  My preference would be for them to handle this case
     public void testGetUserDetailsUnknownUserCircleSingleLanguage() throws IOException, InterruptedException {
         createCircleWithSingleLanguage();
 
@@ -1092,9 +1059,9 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         FrontLineWorker flw = frontLineWorkerService.getByContactNumber(1111111112l);
         assertNotNull(flw);
-        LanguageLocation languageLocation = flw.getLanguageLocation();
-        assertNotNull(languageLocation);
-        assertEquals("FLW Language Code", "99", languageLocation.getCode());
+        Language language = flw.getLanguage();
+        assertNotNull(language);
+        assertEquals("FLW Language Code", "99", language.getCode());
     }
 
     @Test
@@ -1311,9 +1278,9 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         FrontLineWorker flw = frontLineWorkerService.getByContactNumber(1111111111l);
         assertNotNull(flw);
-        LanguageLocation languageLocation = flw.getLanguageLocation();
-        assertNotNull(languageLocation);
-        assertEquals("FLW Language Code", "99", languageLocation.getCode());
+        Language language = flw.getLanguage();
+        assertNotNull(language);
+        assertEquals("FLW Language Code", "99", language.getCode());
     }
 
     @Test
@@ -1338,8 +1305,8 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK));
 
         FrontLineWorker flw = frontLineWorkerService.getByContactNumber(1111111111L);
-        LanguageLocation languageLocation = flw.getLanguageLocation();
-        assertNotNull(languageLocation);
-        assertEquals("FLW Language Code", "99", languageLocation.getCode());
+        Language language = flw.getLanguage();
+        assertNotNull(language);
+        assertEquals("FLW Language Code", "99", language.getCode());
     }
 }

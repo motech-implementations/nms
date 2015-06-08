@@ -1,22 +1,20 @@
 package org.motechproject.nms.region.service.impl;
 
-import org.motechproject.nms.region.domain.Circle;
-import org.motechproject.nms.region.domain.District;
-import org.motechproject.nms.region.domain.Language;
-import org.motechproject.nms.region.domain.LanguageLocation;
-import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.csv.exception.CsvImportDataException;
-import org.motechproject.nms.region.repository.CircleDataService;
-import org.motechproject.nms.region.repository.DistrictDataService;
-import org.motechproject.nms.region.repository.LanguageDataService;
-import org.motechproject.nms.region.repository.LanguageLocationDataService;
-import org.motechproject.nms.region.repository.StateDataService;
-import org.motechproject.nms.region.service.LanguageLocationCodesImportService;
 import org.motechproject.nms.csv.utils.ConstraintViolationUtils;
 import org.motechproject.nms.csv.utils.CsvMapImporter;
 import org.motechproject.nms.csv.utils.GetBoolean;
 import org.motechproject.nms.csv.utils.GetInstanceByString;
 import org.motechproject.nms.csv.utils.GetString;
+import org.motechproject.nms.region.domain.Circle;
+import org.motechproject.nms.region.domain.District;
+import org.motechproject.nms.region.domain.Language;
+import org.motechproject.nms.region.domain.State;
+import org.motechproject.nms.region.repository.CircleDataService;
+import org.motechproject.nms.region.repository.DistrictDataService;
+import org.motechproject.nms.region.repository.LanguageDataService;
+import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.service.LanguageLocationImportService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,25 +26,24 @@ import org.supercsv.cellprocessor.ift.CellProcessor;
 import javax.validation.ConstraintViolationException;
 import java.io.IOException;
 import java.io.Reader;
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-@Service("languageLocationCodesImportService")
-public class LanguageLocationCodesImportServiceImpl implements LanguageLocationCodesImportService {
+@Service("languageLocationImportService")
+public class LanguageLocationImportServiceImpl implements LanguageLocationImportService {
 
-    public static final Logger LOGGER = LoggerFactory.getLogger(LanguageLocationCodesImportServiceImpl.class);
+    public static final Logger LOGGER = LoggerFactory.getLogger(LanguageLocationImportServiceImpl.class);
 
-    public static final String LANGUAGE_LOCATION_CODE = "languagelocation code";
-    public static final String LANGUAGE = "Language";
+    public static final String LANGUAGE_CODE = "languagelocation code";
+    public static final String LANGUAGE_NAME = "Language";
     public static final String CIRCLE = "Circle";
     public static final String STATE = "State";
     public static final String DISTRICT = "District";
     public static final String DEFAULT_FOR_CIRCLE = "Default Language for Circle (Y/N)";
 
-    private LanguageLocationDataService languageLocationDataService;
     private LanguageDataService languageDataService;
     private CircleDataService circleDataService;
     private StateDataService stateDataService;
@@ -69,70 +66,75 @@ public class LanguageLocationCodesImportServiceImpl implements LanguageLocationC
     }
 
     private void importRecord(Map<String, Object> record) {
-        String languageLocationCode = (String) record.get(LANGUAGE_LOCATION_CODE);
-        Language language = (Language) record.get(LANGUAGE);
+        String languageCode = (String) record.get(LANGUAGE_CODE);
+        String languageName = (String) record.get(LANGUAGE_NAME);
         State state = (State) record.get(STATE);
+        // TODO: District code is not unique.  It must be looked up along with the state
         District district = (District) record.get(DISTRICT);
         Circle circle = (Circle) record.get(CIRCLE);
         Boolean defaultForCircle = (Boolean) record.get(DEFAULT_FOR_CIRCLE);
 
         if (null != state && null != district) {
-            importRecordForStateAndDistrict(languageLocationCode, language, circle, defaultForCircle, state, district);
+            importRecordForStateAndDistrict(languageCode, languageName, circle, defaultForCircle, state, district);
         } else if (null != state) {
-            importRecordForState(languageLocationCode, language, circle, defaultForCircle, state);
+            importRecordForState(languageCode, languageName, circle, defaultForCircle, state);
         } else if (null != district) {
-            importRecordForDistrict(languageLocationCode, language, circle, defaultForCircle, district);
+            importRecordForDistrict(languageCode, languageName, circle, defaultForCircle, district);
         } else {
-            throw new CsvImportDataException("Both state and district are null");
+            throw new CsvImportDataException("State must be provided");
         }
     }
 
-    private void importRecordForStateAndDistrict(String languageLocationCode, Language language, Circle circle,
+    private void importRecordForStateAndDistrict(String languageCode, String languageName, Circle circle,
                                                  Boolean defaultForCircle, State state, District district) {
         verify(Objects.equals(district.getState().getCode(), state.getCode()),
                 "District's state does not match the state supplied in the CSV record");
         verifyStateInCircle(circle, state);
-        verifyDistrictLanguageLocation(district);
-        addDistrictToLanguageLocation(languageLocationCode, language, circle, defaultForCircle, Arrays.asList(district));
+        verifyDistrictLanguage(district);
+        addDistrictToLanguageLocation(languageCode, languageName, circle, defaultForCircle, Collections.singletonList(district));
     }
 
-    private void importRecordForState(String languageLocationCode, Language language, Circle circle,
+    private void importRecordForState(String languageCode, String languageName, Circle circle,
                                       Boolean defaultForCircle, State state) {
         verifyStateInCircle(circle, state);
         for (District stateDistrict : state.getDistricts()) {
-            verifyDistrictLanguageLocation(stateDistrict);
+            verifyDistrictLanguage(stateDistrict);
         }
-        addDistrictToLanguageLocation(languageLocationCode, language, circle, defaultForCircle, state.getDistricts());
+        addDistrictToLanguageLocation(languageCode, languageName, circle, defaultForCircle, state.getDistricts());
     }
 
-    private void importRecordForDistrict(String languageLocationCode, Language language, Circle circle,
+    private void importRecordForDistrict(String languageCode, String languageName, Circle circle,
                                          Boolean defaultForCircle, District district) {
         LOGGER.warn("State not specified for the '{}' district", district.getName());
         verifyStateInCircle(circle, district.getState());
-        verifyDistrictLanguageLocation(district);
-        addDistrictToLanguageLocation(languageLocationCode, language, circle, defaultForCircle, Arrays.asList(district));
+        verifyDistrictLanguage(district);
+        addDistrictToLanguageLocation(languageCode, languageName, circle, defaultForCircle, Collections.singletonList(district));
     }
 
-    private void addDistrictToLanguageLocation(String languageLocationCode, Language language, Circle circle, Boolean defaultForCircle, Collection<District> districts) {
-        LanguageLocation languageLocation = languageLocationDataService.findByCode(languageLocationCode);
-        if (null != languageLocation) {
-            verify(Objects.equals(languageLocation.getLanguage().getName(), language.getName()),
-                    "Language location exists, yet its language does not match the language supplied in the CSV record");
-            verify(Objects.equals(languageLocation.getCircle().getName(), circle.getName()),
-                    "Language location exists, yet its circle does not match the circle supplied in the CSV record");
-            verify(Objects.equals(languageLocation.isDefaultForCircle(), defaultForCircle),
-                    "Language location exists, yet its 'defaultForCircle' property does not match the value supplied in the CSV record");
-            languageLocation.getDistrictSet().addAll(districts);
-        } else {
-            verify(!defaultForCircle || null == circle.getDefaultLanguageLocation(),
-                    "Language location with the code '%s' is marked as default for the circle, yet the default language location for this circle already exists", languageLocationCode);
-            languageLocation = new LanguageLocation();
-            languageLocation.setCode(languageLocationCode);
-            languageLocation.setLanguage(language);
-            languageLocation.setCircle(circle);
-            languageLocation.setDefaultForCircle(defaultForCircle);
-            languageLocation.getDistrictSet().addAll(districts);
-            languageLocationDataService.create(languageLocation);
+    private void addDistrictToLanguageLocation(String languageCode, String languageName, Circle circle, Boolean defaultForCircle, Collection<District> districts) {
+        Language language = languageDataService.findByCode(languageCode);
+        if (language == null) {
+            language = languageDataService.create(new Language(languageCode, languageName));
+        }
+
+        verify(Objects.equals(language.getName(), languageName),
+                "Language name provided '%s' does not match record in database",
+                languageName);
+
+        for (District district: districts) {
+            district.setLanguage(language);
+            districtDataService.update(district);
+        }
+
+        if (defaultForCircle) {
+            if (circle.getDefaultLanguage() != null) {
+                verify(Objects.equals(circle.getDefaultLanguage(), language),
+                        "Existing default language for circle '%s' does not match language provided in CSV record",
+                        circle.getDefaultLanguage().getCode());
+            } else {
+                circle.setDefaultLanguage(language);
+                circleDataService.update(circle);
+            }
         }
     }
 
@@ -140,8 +142,8 @@ public class LanguageLocationCodesImportServiceImpl implements LanguageLocationC
         verify(circle.getStates().contains(state), "State is not contained in the supplied circle");
     }
 
-    private void verifyDistrictLanguageLocation(District district) {
-        verify(null == district.getLanguageLocation(), "Language location for the '%s' district already specified", district.getName());
+    private void verifyDistrictLanguage(District district) {
+        verify(null == district.getLanguage(), "Language location for the '%s' district already specified", district.getName());
     }
 
     private void verify(boolean condition, String message, String... args) {
@@ -152,17 +154,8 @@ public class LanguageLocationCodesImportServiceImpl implements LanguageLocationC
 
     private Map<String, CellProcessor> getProcessorMapping() {
         Map<String, CellProcessor> mapping = new HashMap<>();
-        mapping.put(LANGUAGE_LOCATION_CODE, new GetString());
-        mapping.put(LANGUAGE, new GetInstanceByString<Language>() {
-            @Override
-            public Language retrieve(String value) {
-                Language language = languageDataService.findByName(value);
-                if (null == language) {
-                    language = languageDataService.create(new Language(value));
-                }
-                return language;
-            }
-        });
+        mapping.put(LANGUAGE_CODE, new GetString());
+        mapping.put(LANGUAGE_NAME, new GetString());
         mapping.put(CIRCLE, new GetInstanceByString<Circle>() {
             @Override
             public Circle retrieve(String value) {
@@ -189,11 +182,6 @@ public class LanguageLocationCodesImportServiceImpl implements LanguageLocationC
         }));
         mapping.put(DEFAULT_FOR_CIRCLE, new GetBoolean());
         return mapping;
-    }
-
-    @Autowired
-    public void setLanguageLocationDataService(LanguageLocationDataService languageLocationDataService) {
-        this.languageLocationDataService = languageLocationDataService;
     }
 
     @Autowired
