@@ -4,19 +4,15 @@ import com.google.common.base.Joiner;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
-import org.joda.time.DateTime;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.flw.domain.CallDetailRecord;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
-import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
-import org.motechproject.nms.flw.repository.CallContentDataService;
 import org.motechproject.nms.flw.repository.CallDetailRecordDataService;
-import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
-import org.motechproject.nms.flw.repository.ServiceUsageCapDataService;
-import org.motechproject.nms.flw.repository.ServiceUsageDataService;
 import org.motechproject.nms.flw.service.CallDetailRecordService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
+import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.motechproject.testing.osgi.http.SimpleHttpClient;
@@ -52,37 +48,14 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
     private CallDetailRecordDataService callDetailRecordDataService;
 
     @Inject
-    private CallContentDataService callContentDataService;
-
-    @Inject
     private FrontLineWorkerService frontLineWorkerService;
 
     @Inject
-    private FrontLineWorkerDataService frontLineWorkerDataService;
+    private TestingService testingService;
 
-    @Inject
-    private ServiceUsageDataService serviceUsageDataService;
-
-    @Inject
-    private ServiceUsageCapDataService serviceUsageCapDataService;
-
-    public CallDetailsControllerBundleIT() {
-        System.setProperty("org.motechproject.testing.osgi.http.numTries", "1");
-    }
-
-    private void cleanAllData() {
-        for (FrontLineWorker flw: frontLineWorkerDataService.retrieveAll()) {
-            flw.setStatus(FrontLineWorkerStatus.INVALID);
-            flw.setInvalidationDate(new DateTime().withDate(2011, 8, 1));
-
-            frontLineWorkerDataService.update(flw);
-        }
-
-        serviceUsageCapDataService.deleteAll();
-        serviceUsageDataService.deleteAll();
-        callDetailRecordDataService.deleteAll();
-        callContentDataService.deleteAll();
-        frontLineWorkerDataService.deleteAll();
+    @Before
+    public void clearDatabase() {
+        testingService.clearDatabase();
     }
 
     private String createCallDetailsJson(boolean includeCallingNumber, Long callingNumber,
@@ -237,7 +210,6 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testCallDetailsValidMobileKunji() throws IOException, InterruptedException {
-        cleanAllData();
 
         FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 9810320300L);
         frontLineWorkerService.add(flw);
@@ -296,7 +268,6 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testCallDetailsValidMobileAcademy() throws IOException, InterruptedException {
-        cleanAllData();
 
         FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 9810320300L);
         frontLineWorkerService.add(flw);
@@ -351,7 +322,6 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testCallDetailsValidNoContent() throws IOException, InterruptedException {
-        cleanAllData();
 
         FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 9810320300L);
         frontLineWorkerService.add(flw);
@@ -387,7 +357,6 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
      ****************************************************************************************************************/
     @Test
     public void testCallDetailsFLWNotFound() throws IOException, InterruptedException {
-        cleanAllData();
 
         HttpPost httpPost = createCallDetailsPost("mobileacademy",
                 /* callingNumber */ true, 9810320300l,

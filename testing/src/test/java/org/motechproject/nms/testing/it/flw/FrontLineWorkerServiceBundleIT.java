@@ -18,12 +18,10 @@ import org.motechproject.nms.flw.service.ServiceUsageService;
 import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Language;
-import org.motechproject.nms.region.domain.LanguageLocation;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
-import org.motechproject.nms.region.repository.LanguageLocationDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
@@ -70,9 +68,6 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
     private LanguageDataService languageDataService;
 
     @Inject
-    private LanguageLocationDataService languageLocationDataService;
-
-    @Inject
     private StateDataService stateDataService;
 
     @Inject
@@ -99,7 +94,6 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
 
         serviceUsageDataService.deleteAll();
         frontLineWorkerDataService.deleteAll();
-        languageLocationDataService.deleteAll();
         languageDataService.deleteAll();
         districtDataService.deleteAll();
         whitelistStateDataService.deleteAll();
@@ -109,9 +103,12 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
     }
 
     private void createLanguageLocationData() {
+        Language ta = languageDataService.create(new Language("50", "tamil"));
+
         District district = new District();
         district.setName("District 1");
         district.setRegionalName("District 1");
+        district.setLanguage(ta);
         district.setCode(1L);
 
         State state = new State();
@@ -121,13 +118,9 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
 
         stateDataService.create(state);
 
-        Language ta = languageDataService.create(new Language("tamil"));
-
         Circle circle = new Circle("AA");
-
-        LanguageLocation languageLocation = new LanguageLocation("50", circle, ta, true);
-        languageLocation.getDistrictSet().add(district);
-        languageLocationDataService.create(languageLocation);
+        circle.setDefaultLanguage(ta);
+        circleDataService.create(circle);
     }
 
     @Test
@@ -221,7 +214,7 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
         createLanguageLocationData();
 
         District district = districtDataService.findByName("District 1");
-        LanguageLocation languageLocation = languageLocationDataService.findByCode("50");
+        Language language = languageDataService.findByCode("50");
 
         FrontLineWorker flw = new FrontLineWorker("Test Worker", 2111111111L);
         frontLineWorkerService.add(flw);
@@ -231,7 +224,7 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
 
         flw.setDistrict(district);
         flw.setName("Frank Huster");
-        flw.setLanguageLocation(languageLocation);
+        flw.setLanguage(language);
 
         frontLineWorkerService.update(flw);
         flw = frontLineWorkerService.getByContactNumber(2111111111L);

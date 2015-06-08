@@ -17,16 +17,13 @@
 
     <osgi:service ref="settingsService" interface="org.motechproject.nms.imi.service.SettingsService" />
 
-    <osgi:service ref="imiItService"
-                  interface="org.motechproject.nms.imi.service.IntegrationTestService" />
-
 
     <osgi:reference id="fileAuditRecordDataService"
                     interface="org.motechproject.nms.imi.repository.FileAuditRecordDataService" />
 
 
-    <osgi:reference id="languageLocationService"
-                    interface="org.motechproject.nms.region.service.LanguageLocationService" />
+    <osgi:reference id="languageService"
+                    interface="org.motechproject.nms.region.service.LanguageService" />
 
     <osgi:reference id="circleService"
                     interface="org.motechproject.nms.region.service.CircleService" />

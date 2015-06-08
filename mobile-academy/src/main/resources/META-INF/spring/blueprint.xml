@@ -14,9 +14,6 @@
     <osgi:service ref="settingsService"
                   interface="org.motechproject.nms.mobileacademy.service.SettingsService" />
 
-    <osgi:service ref="maItService"
-                  interface="org.motechproject.nms.mobileacademy.service.IntegrationTestService" />
-
     <osgi:reference id="nmsCourseDataService"
                     interface="org.motechproject.nms.mobileacademy.repository.NmsCourseDataService" />
 

@@ -18,13 +18,28 @@ public class Language extends MdsEntity {
     @Unique
     @NotNull
     @Column(allowsNull = "false")
+    private String code;
+
+    @Field
+    @Unique
+    @NotNull
+    @Column(allowsNull = "false")
     private String name;
 
     public Language() {
     }
 
-    public Language(String name) {
+    public Language(String code, String name) {
+        this.code = code;
         this.name = name;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
     }
 
     public String getName() {
@@ -37,28 +52,28 @@ public class Language extends MdsEntity {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
+        if (this == o) { return true; }
+        if (o == null || getClass() != o.getClass()) { return false; }
 
         Language language = (Language) o;
 
+        if (code != null ? !code.equals(language.code) : language.code != null) { return false; }
         return !(name != null ? !name.equals(language.name) : language.name != null);
 
     }
 
     @Override
     public int hashCode() {
-        return name != null ? name.hashCode() : 0;
+        int result = code != null ? code.hashCode() : 0;
+        result = 31 * result + (name != null ? name.hashCode() : 0);
+        return result;
     }
 
     @Override
     public String toString() {
         return "Language{" +
-                "name='" + name + '\'' +
+                "code='" + code + '\'' +
+                ", name='" + name + '\'' +
                 '}';
     }
 }

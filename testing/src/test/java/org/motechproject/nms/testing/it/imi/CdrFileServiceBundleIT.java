@@ -26,7 +26,6 @@ import org.motechproject.nms.props.repository.DeployedServiceDataService;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
-import org.motechproject.nms.region.repository.LanguageLocationDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.testing.it.utils.CdrHelper;
 import org.motechproject.nms.testing.service.TestingService;
@@ -90,9 +89,6 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
 
     @Inject
     CdrFileService cdrFileService;
-
-    @Inject
-    private LanguageLocationDataService languageLocationDataService;
 
     @Inject
     private CircleDataService circleDataService;
@@ -168,7 +164,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         getLogger().debug("testVerify()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
+                subscriptionPackDataService, languageDataService, circleDataService,
                 stateDataService, districtDataService, fileAuditRecordDataService);
 
         helper.makeCdrs(1,1,1,1);
@@ -185,7 +181,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         getLogger().debug("testChecksumError()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
+                subscriptionPackDataService, languageDataService, circleDataService,
                 stateDataService, districtDataService, fileAuditRecordDataService);
 
         helper.makeCdrs(1, 1, 1, 1);
@@ -202,7 +198,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         getLogger().debug("testCsvErrors()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
+                subscriptionPackDataService, languageDataService, circleDataService,
                 stateDataService, districtDataService, fileAuditRecordDataService);
 
         helper.makeCdrs(1, 1, 1, 1);
@@ -221,7 +217,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         getLogger().debug("testTooManyErrors()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
+                subscriptionPackDataService, languageDataService, circleDataService,
                 stateDataService, districtDataService, fileAuditRecordDataService);
 
         helper.makeCdrs(200,0,0,0);
@@ -242,7 +238,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         getLogger().debug("testProcess()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
+                subscriptionPackDataService, languageDataService, circleDataService,
                 stateDataService, districtDataService, fileAuditRecordDataService);
 
         helper.makeCdrs(1,1,1,1);
@@ -268,7 +264,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         getLogger().debug("testAggregation()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
+                subscriptionPackDataService, languageDataService, circleDataService,
                 stateDataService, districtDataService, fileAuditRecordDataService);
 
         helper.makeSingleCallCdrs(3, true);

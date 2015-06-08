@@ -49,9 +49,8 @@ public class District extends MdsEntity {
     private List<Taluka> talukas;
 
     @Field
-    @Cascade(delete = true)
     @Persistent(defaultFetchGroup = "true")
-    private LanguageLocation languageLocation;
+    private Language language;
 
     public District() {
         this.talukas = new ArrayList<>();
@@ -97,12 +96,12 @@ public class District extends MdsEntity {
         this.talukas = talukas;
     }
 
-    public LanguageLocation getLanguageLocation() {
-        return languageLocation;
+    public Language getLanguage() {
+        return language;
     }
 
-    public void setLanguageLocation(LanguageLocation languageLocation) {
-        this.languageLocation = languageLocation;
+    public void setLanguage(Language language) {
+        this.language = language;
     }
 
     @Override
