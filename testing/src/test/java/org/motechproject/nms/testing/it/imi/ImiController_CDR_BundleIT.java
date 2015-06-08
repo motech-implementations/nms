@@ -21,7 +21,6 @@ import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
-import org.motechproject.nms.region.repository.LanguageLocationDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.testing.it.utils.CdrHelper;
 import org.motechproject.nms.testing.service.TestingService;
@@ -70,9 +69,6 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
 
     @Inject
     private CircleDataService circleDataService;
-
-    @Inject
-    private LanguageLocationDataService languageLocationDataService;
 
     @Inject
     private StateDataService stateDataService;
@@ -167,7 +163,7 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
         getLogger().debug("testCreateCdrFileNotificationRequest()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
+                subscriptionPackDataService, languageDataService, circleDataService,
                 stateDataService, districtDataService, fileAuditRecordDataService);
 
         helper.makeCdrs(1,0,0,0);
@@ -188,7 +184,7 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
         getLogger().debug("testCreateCdrFileNotificationRequestBadCdrSummaryFileName()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
+                subscriptionPackDataService, languageDataService, circleDataService,
                 stateDataService, districtDataService, fileAuditRecordDataService);
 
         helper.makeCdrs(1,0,0,0);
@@ -209,7 +205,7 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
         getLogger().debug("testCreateCdrFileNotificationRequestBadFileNames()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
+                subscriptionPackDataService, languageDataService, circleDataService,
                 stateDataService, districtDataService, fileAuditRecordDataService);
         HttpPost httpPost = createCdrFileNotificationHttpPost(helper, false, true, true);
 

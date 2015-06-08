@@ -4,8 +4,9 @@ import org.joda.time.DateTime;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.annotations.Ignore;
+import org.motechproject.mds.domain.MdsEntity;
 import org.motechproject.nms.region.domain.Circle;
-import org.motechproject.nms.region.domain.LanguageLocation;
+import org.motechproject.nms.region.domain.Language;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Persistent;
@@ -22,7 +23,7 @@ import java.util.Set;
  */
 // TODO: Remove maxFetchDepth once https://applab.atlassian.net/browse/MOTECH-1678 is resolved
 @Entity(maxFetchDepth = -1, tableName = "nms_subscribers")
-public class Subscriber {
+public class Subscriber extends MdsEntity {
     @Field
     @Unique
     @Min(value = 1000000000L, message = "callingNumber must be 10 digits")
@@ -37,7 +38,7 @@ public class Subscriber {
     private DateTime lastMenstrualPeriod;
 
     @Field
-    private LanguageLocation languageLocation;
+    private Language language;
 
     @Field
     private Circle circle;
@@ -56,14 +57,14 @@ public class Subscriber {
         this.subscriptions = new HashSet<>();
     }
 
-    public Subscriber(Long callingNumber, LanguageLocation languageLocation) {
+    public Subscriber(Long callingNumber, Language language) {
         this(callingNumber);
-        this.languageLocation = languageLocation;
+        this.language = language;
         this.subscriptions = new HashSet<>();
     }
 
-    public Subscriber(Long callingNumber, LanguageLocation languageLocation, Circle circle) {
-        this(callingNumber, languageLocation);
+    public Subscriber(Long callingNumber, Language language, Circle circle) {
+        this(callingNumber, language);
         this.circle = circle;
         this.subscriptions = new HashSet<>();
     }
@@ -92,12 +93,12 @@ public class Subscriber {
         this.lastMenstrualPeriod = lastMenstrualPeriod;
     }
 
-    public LanguageLocation getLanguageLocation() {
-        return languageLocation;
+    public Language getLanguage() {
+        return language;
     }
 
-    public void setLanguageLocation(LanguageLocation languageLocation) {
-        this.languageLocation = languageLocation;
+    public void setLanguage(Language language) {
+        this.language = language;
     }
 
     public Set<Subscription> getSubscriptions() {
@@ -170,9 +171,7 @@ public class Subscriber {
     @Override
     public String toString() {
         return "Subscriber{" +
-                "callingNumber=" + callingNumber +
-                ", dateOfBirth=" + dateOfBirth +
-                ", lastMenstrualPeriod=" + lastMenstrualPeriod +
+                "id=" + getId() +
                 ", circle='" + circle +
                 ", subscriptions=" + subscriptions +
                 '}';

@@ -4,6 +4,7 @@ import org.motechproject.event.MotechEvent;
 import org.motechproject.mds.annotations.InstanceLifecycleListener;
 import org.motechproject.mds.domain.InstanceLifecycleListenerType;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
+import org.motechproject.nms.region.domain.State;
 
 import java.util.List;
 
@@ -11,6 +12,8 @@ import java.util.List;
  * Simple example of a service interface.
  */
 public interface FrontLineWorkerService {
+
+    State getState(FrontLineWorker frontLineWorker);
 
     void add(FrontLineWorker frontLineWorker);
 

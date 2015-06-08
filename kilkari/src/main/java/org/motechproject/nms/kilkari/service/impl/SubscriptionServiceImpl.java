@@ -12,19 +12,19 @@ import org.motechproject.mds.util.InstanceSecurityRestriction;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
+import org.motechproject.nms.kilkari.domain.SubscriptionError;
+import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
-import org.motechproject.nms.kilkari.domain.SubscriptionError;
 import org.motechproject.nms.kilkari.domain.SubscriptionRejectionReason;
-import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
-import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
+import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
-import org.motechproject.nms.region.domain.LanguageLocation;
+import org.motechproject.nms.region.domain.Language;
 import org.motechproject.scheduler.contract.RepeatingSchedulableJob;
 import org.motechproject.scheduler.service.MotechSchedulerService;
 import org.motechproject.server.config.SettingsFacade;
@@ -182,18 +182,18 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @Override
-    public Subscription createSubscription(long callingNumber, LanguageLocation languagelocation, SubscriptionPack subscriptionPack,
+    public Subscription createSubscription(long callingNumber, Language language, SubscriptionPack subscriptionPack,
                                    SubscriptionOrigin mode) {
         Subscriber subscriber = subscriberDataService.findByCallingNumber(callingNumber);
         Subscription subscription;
 
         if (subscriber == null) {
-            subscriber = new Subscriber(callingNumber, languagelocation);
+            subscriber = new Subscriber(callingNumber, language);
             subscriberDataService.create(subscriber);
         }
 
-        if (subscriber.getLanguageLocation() == null && languagelocation != null) {
-            subscriber.setLanguageLocation(languagelocation);
+        if (subscriber.getLanguage() == null && language != null) {
+            subscriber.setLanguage(language);
             subscriberDataService.update(subscriber);
         }
 
