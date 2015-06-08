@@ -6,14 +6,13 @@ import org.motechproject.nms.api.web.exception.NotAuthorizedException;
 import org.motechproject.nms.api.web.exception.NotDeployedException;
 import org.motechproject.nms.api.web.exception.NotFoundException;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
+import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.flw.service.WhitelistService;
 import org.motechproject.nms.props.domain.CallDisconnectReason;
 import org.motechproject.nms.props.domain.FinalCallStatus;
 import org.motechproject.nms.props.domain.Service;
 import org.motechproject.nms.props.service.PropertyService;
 import org.motechproject.nms.region.domain.Circle;
-import org.motechproject.nms.region.domain.District;
-import org.motechproject.nms.region.domain.LanguageLocation;
 import org.motechproject.nms.region.domain.State;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,6 +58,9 @@ public class BaseController {
 
     @Autowired
     private PropertyService propertyService;
+
+    @Autowired
+    private FrontLineWorkerService frontLineWorkerService;
 
     protected static boolean validateFieldPresent(StringBuilder errors, String fieldName, Object value) {
         if (value != null) {
@@ -186,7 +188,7 @@ public class BaseController {
     }
 
     protected State getStateForFrontLineWorker(FrontLineWorker flw, Circle circle) {
-        State state = getStateForFrontLineWorker(flw);
+        State state = frontLineWorkerService.getState(flw);
 
         if (state == null && circle != null) {
             List<State> states = circle.getStates();
@@ -199,28 +201,7 @@ public class BaseController {
         return state;
     }
 
-    protected State getStateForFrontLineWorker(FrontLineWorker flw) {
-        District district = flw.getDistrict();
-        State state = null;
-
-        if (district != null) {
-            state = district.getState();
-        }
-
-        if (state == null) {
-            LanguageLocation languageLocation = flw.getLanguageLocation();
-
-            if (languageLocation != null) {
-                state = languageLocation.getState();
-            }
-        }
-
-        return state;
-    }
-
-    protected boolean frontLineWorkerAuthorizedForAccess(FrontLineWorker flw) {
-        State state = getStateForFrontLineWorker(flw);
-
+    protected boolean frontLineWorkerAuthorizedForAccess(FrontLineWorker flw, State state) {
         return whitelistService.numberWhitelistedForState(state, flw.getContactNumber());
     }
 
