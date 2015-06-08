@@ -17,9 +17,13 @@ import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.District;
+import org.motechproject.nms.region.domain.HealthBlock;
+import org.motechproject.nms.region.domain.HealthFacility;
+import org.motechproject.nms.region.domain.HealthFacilityType;
 import org.motechproject.nms.region.domain.Language;
 import org.motechproject.nms.region.domain.LanguageLocation;
 import org.motechproject.nms.region.domain.State;
+import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.HealthBlockDataService;
@@ -39,20 +43,26 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
+import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.Arrays;
 import java.util.Set;
 
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertEquals;
 
 import static org.motechproject.nms.testing.it.utils.LocationDataUtils.createCircle;
 import static org.motechproject.nms.testing.it.utils.LocationDataUtils.createDistrict;
+import static org.motechproject.nms.testing.it.utils.LocationDataUtils.createHealthFacilityType;
 import static org.motechproject.nms.testing.it.utils.LocationDataUtils.createLanguage;
 import static org.motechproject.nms.testing.it.utils.LocationDataUtils.createLanguageLocation;
 import static org.motechproject.nms.testing.it.utils.LocationDataUtils.createState;
+import static org.motechproject.nms.testing.it.utils.LocationDataUtils.createTaluka;
+import static org.motechproject.nms.testing.it.utils.LocationDataUtils.createHealthBlock;
+import static org.motechproject.nms.testing.it.utils.LocationDataUtils.createHealthFacility;
+import static org.motechproject.nms.testing.it.utils.LocationDataUtils.createHealthFacilityType;
+
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerSuite.class)
@@ -149,6 +159,18 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         circle4.getLanguageLocations().addAll(Arrays.asList(llc41));
         circleDataService.create(circle4);
 
+        // specific locations from the mother data file:
+        State state21 = createState(21L, "State 21");
+        District district3 = createDistrict(state21, 3L, "Sambalpur");
+        state21.getDistricts().add(district3);
+        Taluka taluka26 = createTaluka(district3, "26", "Govindpur P.S.", 26);
+        district3.getTalukas().add(taluka26);
+        HealthBlock healthBlock453 = createHealthBlock(taluka26, 453L, "Bamara", "hq");
+        taluka26.getHealthBlocks().add(healthBlock453);
+        HealthFacilityType facilityType = createHealthFacilityType("Garposh CHC", 41L);
+        HealthFacility healthFacility41 = createHealthFacility(healthBlock453, 41L, "Garposh CHC", facilityType);
+        healthBlock453.getHealthFacilities().add(healthFacility41);
+        stateDataService.create(state21);
     }
 
     @Test
@@ -256,6 +278,14 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         // TODO: more asserts...
     }
 
+    @Test
+    public void testImportMotherDataFromSampleFile() throws Exception {
+        mctsBeneficiaryImportService.importMotherData(read("csv/mother.txt"));
+
+        Subscriber subscriber1 = subscriberDataService.findByCallingNumber(9439986187L);
+        assertNotNull(subscriber1);
+    }
+
     private String getDateString(DateTime date) {
         return date.toString("dd-MM-yyyy");
     }
@@ -282,5 +312,8 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         return new StringReader(builder.toString());
     }
 
+    private Reader read(String resource) {
+        return new InputStreamReader(getClass().getClassLoader().getResourceAsStream(resource));
+    }
 
 }

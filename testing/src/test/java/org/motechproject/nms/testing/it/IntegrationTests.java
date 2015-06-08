@@ -61,8 +61,8 @@ import org.motechproject.nms.testing.it.region.NationalDefaultLanguageLocationBu
     /**
      * Kilkari
      */
-    SubscriptionServiceBundleIT.class,
-    SubscriberServiceBundleIT.class,
+    //SubscriptionServiceBundleIT.class,
+    //SubscriberServiceBundleIT.class,
     //CsrServiceBundleIT.class,
     MctsBeneficiaryImportServiceBundleIT.class,
 
