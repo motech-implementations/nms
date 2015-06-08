@@ -1,35 +1,25 @@
 package org.motechproject.nms.testing.it.kilkari;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
-import java.util.Set;
-
-import javax.inject.Inject;
-
 import org.joda.time.DateTime;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
-import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
-import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
+import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.InboxService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
-import org.motechproject.nms.region.domain.Circle;
-import org.motechproject.nms.region.domain.District;
-import org.motechproject.nms.region.domain.Language;
-import org.motechproject.nms.region.domain.LanguageLocation;
-import org.motechproject.nms.region.domain.State;
+import org.motechproject.nms.region.repository.CircleDataService;
+import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
-import org.motechproject.nms.region.repository.LanguageLocationDataService;
 import org.motechproject.nms.region.repository.StateDataService;
-import org.motechproject.nms.testing.it.api.utils.SubscriptionPackBuilder;
+import org.motechproject.nms.testing.it.utils.RegionHelper;
+import org.motechproject.nms.testing.it.utils.SubscriptionHelper;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
@@ -37,6 +27,12 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
+
+import javax.inject.Inject;
+import java.util.Set;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerSuite.class)
@@ -54,62 +50,37 @@ public class InboxServiceBundleIT extends BasePaxIT {
 	@Inject
 	private LanguageDataService languageDataService;
 	@Inject
-	private LanguageLocationDataService languageLocationDataService;
-	@Inject
 	private StateDataService stateDataService;
 	@Inject
 	private TestingService testingService;
-	
-	
+    @Inject
+    private CircleDataService circleDataService;
+    @Inject
+    private DistrictDataService districtDataService;
+    @Inject
+    private SubscriberDataService subscriberDataService;
 
-	private LanguageLocation gLanguageLocation;
-	private SubscriptionPack pregnancyPack;
 
-	private void createLanguageAndSubscriptionPacks() {
-		District district = new District();
-		district.setName("District 1");
-		district.setRegionalName("District 1");
-		district.setCode(1L);
+    private RegionHelper rh;
+    private SubscriptionHelper sh;
 
-		District district2 = new District();
-		district2.setName("District 2");
-		district2.setRegionalName("District 2");
-		district2.setCode(2L);
 
-		State state = new State();
-		state.setName("State 1");
-		state.setCode(1L);
-		state.getDistricts().add(district);
-		state.getDistricts().add(district2);
+    @Before
+    public void setupTestData() {
+        rh = new RegionHelper(languageDataService, circleDataService, stateDataService,
+                districtDataService);
 
-		stateDataService.create(state);
+        sh = new SubscriptionHelper(subscriptionService,
+                subscriberDataService, subscriptionPackDataService, languageDataService, circleDataService,
+                stateDataService, districtDataService);
+    }
 
-		Language language = new Language("tamil");
-		languageDataService.create(language);
 
-		LanguageLocation languageLocation = new LanguageLocation("10",
-				new Circle("AA"), language, true);
-		languageLocation.getDistrictSet().add(district);
-		languageLocationDataService.create(languageLocation);
+    @Before
+    public void clearDatabase() {
+        testingService.clearDatabase();
+    }
 
-		language = new Language("english");
-		languageDataService.create(language);
-
-		languageLocation = new LanguageLocation("99", new Circle("BB"),
-				language, true);
-		languageLocation.getDistrictSet().add(district2);
-		gLanguageLocation = languageLocationDataService
-				.create(languageLocation);
-
-		pregnancyPack = subscriptionPackDataService.create(
-				SubscriptionPackBuilder.createSubscriptionPack(
-						"pregnancyPack",
-						SubscriptionPackType.PREGNANCY, 			
-						SubscriptionPackBuilder.PREGNANCY_PACK_WEEKS,	//72
-						2));											// messages per week
-
-		pregnancyPack = subscriptionPackDataService.byName("pregnancyPack"); 
-	}
 
 	@Test
 	public void testServicePresent() throws Exception {
@@ -124,20 +95,18 @@ public class InboxServiceBundleIT extends BasePaxIT {
 	public void verifyFT108_121() throws Exception {
 
 		/*
-		 * To check NMS is able to make available a single message of current week  in inbox
+		 * To check NMS is able to make available a single message of current week in inbox
 		 * when user is subscribed to 72Weeks Pack with 2 message per week configuration.
 		 */
-		testingService.clearDatabase();
-		createLanguageAndSubscriptionPacks();
 		DateTime now = DateTime.now();
 
 		// Configuration for second msg of the week
-		Subscriber subscriber = new Subscriber(1000000002L, gLanguageLocation);
+		Subscriber subscriber = new Subscriber(1000000002L, rh.hindiLanguage());
 		subscriber.setLastMenstrualPeriod(now.minusDays(94));
 		subscriberService.create(subscriber);
 
-		subscriptionService.createSubscription(subscriber.getCallingNumber(), gLanguageLocation, pregnancyPack,
-				SubscriptionOrigin.MCTS_IMPORT);
+		subscriptionService.createSubscription(subscriber.getCallingNumber(), rh.hindiLanguage(),
+                sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
 
 		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber());
 		Set<Subscription> subscriptions = subscriber.getAllSubscriptions();
