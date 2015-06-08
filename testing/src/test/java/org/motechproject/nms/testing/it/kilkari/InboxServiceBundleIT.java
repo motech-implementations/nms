@@ -87,12 +87,10 @@ public class InboxServiceBundleIT extends BasePaxIT {
 		assertNotNull(inboxService);
 	}
 
-	/**
-	 * This test case covers the scenario for NMS_FT_108, NMS_FT_121  
-	 */
+
 	@Test
 	@Ignore
-	public void verifyFT108_121() throws Exception {
+	public void verifyFT108() throws Exception {
 
 		/*
 		 * To check NMS is able to make available a single message of current week in inbox
@@ -129,14 +127,39 @@ public class InboxServiceBundleIT extends BasePaxIT {
 		// first msg should be in inbox
 		assertEquals(msg.getWeekId(), "w1_1");
 		assertEquals(msg.getMessageFileName(), "w1_1.wav");
-		
+
+	}
+
+	@Test
+	public void verifyFT121() throws Exception {
+
 		/*
-		 *  To check NMS is able to make a message available for 7 days 
+		 *  To check NMS is able to make a message available for 7 days
 		 *  after user's subscription gets completed for 72Weeks Pack.
 		 */
+		DateTime now = DateTime.now();
+
+		// Configuration for second msg of the week
+		Subscriber subscriber = new Subscriber(1000000002L, rh.hindiLanguage());
+		subscriber.setLastMenstrualPeriod(now.minusDays(94));
+		subscriberService.create(subscriber);
+
+		subscriptionService.createSubscription(subscriber.getCallingNumber(), rh.hindiLanguage(),
+				sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
+
+		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber());
+		Set<Subscription> subscriptions = subscriber.getAllSubscriptions();
+		Subscription subscription = subscriptions.iterator().next();
+		SubscriptionPackMessage msg = inboxService.getInboxMessage(subscription);
+
+		// second msg should be in inbox
+		assertEquals(msg.getWeekId(), "w1_2");
+		assertEquals(msg.getMessageFileName(), "w1_2.wav");
+
+		// Configuration for last msg of the week
 		subscriber.setLastMenstrualPeriod(now.minusDays(595));
 		subscriberService.update(subscriber);
-		
+
 		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber());
 		subscriptions = subscriber.getAllSubscriptions();
 		subscription = subscriptions.iterator().next();
@@ -145,7 +168,7 @@ public class InboxServiceBundleIT extends BasePaxIT {
 		// last msg should be in inbox
 		assertEquals(msg.getWeekId(), "w72_2");
 		assertEquals(msg.getMessageFileName(), "w72_2.wav");
-		
+
 	}
 
 }
