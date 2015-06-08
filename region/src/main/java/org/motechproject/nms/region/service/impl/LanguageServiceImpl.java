@@ -57,7 +57,7 @@ public class LanguageServiceImpl implements LanguageService {
                         "from nms_languages l " +
                         "join nms_districts d on  d.language_id_oid = l.id " +
                         "join nms_states s on d.state_id_oid = s.id " +
-                        "join FLW_MODULE_JOIN_CIRCLES_STATES cxs on s.id = cxs.state_id and cxs.circle_id = ?";
+                        "join state_circles cxs on s.id = cxs.state_id and cxs.circle_id = ?";
 
                 return query;
             }
@@ -69,7 +69,12 @@ public class LanguageServiceImpl implements LanguageService {
             }
         };
 
-        List<Language> languages = languageDataService.executeSQLQuery(queryExecution);
+        List<Language> languages;
+        try {
+            languages = languageDataService.executeSQLQuery(queryExecution);
+        } catch (Exception e) {
+            return null;
+        }
 
         if (languages == null) {
             languages = new ArrayList<>();

@@ -60,6 +60,8 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.TransactionCallbackWithoutResult;
 
 import javax.inject.Inject;
 import java.io.IOException;
@@ -453,50 +455,28 @@ public class UserControllerBundleIT extends BasePaxIT {
 
     private void createCircleWithLanguage() {
 
-        Language papiamento = new Language("99", "Papiamento");
-        languageDataService.create(papiamento);
+        // Let's create a pretend circle with two states
 
-        District district = new District();
-        district.setName("District 1");
-        district.setRegionalName("District 1");
-        district.setLanguage(papiamento);
-        district.setCode(1L);
-
-        State state = new State();
-        state.setName("State 1");
-        state.setCode(1L);
-        state.getDistricts().add(district);
-
-        stateDataService.create(state);
-
-        deployedServiceDataService.create(new DeployedService(state, Service.MOBILE_ACADEMY));
-        deployedServiceDataService.create(new DeployedService(state, Service.MOBILE_KUNJI));
-
-        Circle circle = new Circle("AA");
-        circle.setDefaultLanguage(papiamento);
+        final Circle circle = new Circle("AA");
+        circle.setDefaultLanguage(rh.hindiLanguage());
         circleDataService.create(circle);
 
-        Language hi = languageDataService.create(new Language("88", "hindi"));
+        // Calling these will make sure the districts exist and will map the districts' language to their state
+        rh.newDelhiDistrict();
+        rh.mysuruDistrict();
 
-        District district2 = new District();
-        district2.setName("District 2");
-        district2.setRegionalName("District 2");
-        district2.setLanguage(hi);
-        district2.setCode(2L);
+        circleDataService.doInTransaction(new TransactionCallbackWithoutResult() {
+            @Override
+            protected void doInTransactionWithoutResult(TransactionStatus transactionStatus) {
+                circle.getStates().add(rh.delhiState());
+                circle.getStates().add(rh.karnatakaState());
+                circleDataService.update(circle);
+            }
+        });
 
-        State state2 = new State();
-        state2.setName("State 2");
-        state2.setCode(2L);
-        state2.getDistricts().add(district2);
+        deployedServiceDataService.create(new DeployedService(rh.delhiState(), Service.MOBILE_KUNJI));
 
-        stateDataService.create(state2);
-
-        circle.getStates().addAll(Arrays.asList(state, state2));
-        state.getCircles().add(circle);
-        state2.getCircles().add(circle);
-        circleDataService.update(circle);
-
-        nationalDefaultLanguageDataService.create(new NationalDefaultLanguage(hi));
+        nationalDefaultLanguageDataService.create(new NationalDefaultLanguage(rh.hindiLanguage()));
     }
 
     private void createCircleWithSingleLanguage() {
@@ -967,9 +947,9 @@ public class UserControllerBundleIT extends BasePaxIT {
         );
 
         String expectedJsonResponse = createFlwUserResponseJson(
-                "88",  //defaultLanguageLocationCode
+                rh.hindiLanguage().getCode(),  //defaultLanguageLocationCode
                 null,  //locationCode
-                Arrays.asList("99", "88"), // allowedLanguageLocationCodes
+                Arrays.asList(rh.hindiLanguage().getCode(), rh.kannadaLanguage().getCode()), // allowedLanguageLocationCodes
                 0L,    //currentUsageInPulses
                 0L,    //endOfUsagePromptCounter
                 false, //welcomePromptFlag
@@ -1013,9 +993,9 @@ public class UserControllerBundleIT extends BasePaxIT {
         );
 
         String expectedJsonResponse = createFlwUserResponseJson(
-                "99",  //defaultLanguageLocationCode
+                rh.hindiLanguage().getCode(),  //defaultLanguageLocationCode
                 null,  //locationCode
-                Arrays.asList("99", "88"), // allowedLanguageLocationCodes
+                Arrays.asList(rh.hindiLanguage().getCode(), rh.kannadaLanguage().getCode()), // allowedLanguageLocationCodes
                 0L,    //currentUsageInPulses
                 0L,    //endOfUsagePromptCounter
                 false, //welcomePromptFlag
@@ -1061,7 +1041,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertNotNull(flw);
         Language language = flw.getLanguage();
         assertNotNull(language);
-        assertEquals("FLW Language Code", "99", language.getCode());
+        assertEquals("FLW Language Code", rh.hindiLanguage().getCode(), language.getCode());
     }
 
     @Test
@@ -1077,9 +1057,9 @@ public class UserControllerBundleIT extends BasePaxIT {
         );
 
         String expectedJsonResponse = createFlwUserResponseJson(
-                "88",  //defaultLanguageLocationCode
+                rh.hindiLanguage().getCode(),  //defaultLanguageLocationCode
                 null,  //locationCode
-                Arrays.asList("99", "88"), // allowedLanguageLocationCodes
+                Arrays.asList(rh.hindiLanguage().getCode(), rh.kannadaLanguage().getCode()), // allowedLanguageLocationCodes
                 0L,    //currentUsageInPulses
                 0L,    //endOfUsagePromptCounter
                 false, //welcomePromptFlag
@@ -1106,7 +1086,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         );
 
         String expectedJsonResponse = createFlwUserResponseJson(
-                "99",  //defaultLanguageLocationCode
+                rh.hindiLanguage().getCode(),  //defaultLanguageLocationCode
                 "10",  //locationCode
                 new ArrayList<String>(),
                 1L,    //currentUsageInPulses
@@ -1272,7 +1252,8 @@ public class UserControllerBundleIT extends BasePaxIT {
     public void testSetLanguageNoFLW() throws IOException, InterruptedException {
         createCircleWithLanguage();
 
-        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(1111111111L, 123456789012345L, "99"));
+        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(1111111111L, 123456789012345L,
+                rh.hindiLanguage().getCode()));
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost));
 
@@ -1280,7 +1261,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertNotNull(flw);
         Language language = flw.getLanguage();
         assertNotNull(language);
-        assertEquals("FLW Language Code", "99", language.getCode());
+        assertEquals("FLW Language Code", rh.hindiLanguage().getCode(), language.getCode());
     }
 
     @Test

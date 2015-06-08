@@ -6,6 +6,8 @@ import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.domain.MdsEntity;
 
 import javax.jdo.annotations.Column;
+import javax.jdo.annotations.Element;
+import javax.jdo.annotations.Join;
 import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.Unique;
 import javax.validation.constraints.NotNull;
@@ -35,6 +37,10 @@ public class State extends MdsEntity {
     private List<District> districts;
 
     @Field
+    @Cascade(delete = true)
+    @Persistent(table = "state_circles", mappedBy = "states", defaultFetchGroup = "true")
+    @Join(column = "state_id")
+    @Element(column = "circle_id")
     private List<Circle> circles;
 
     public State() {

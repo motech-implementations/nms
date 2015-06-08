@@ -95,6 +95,39 @@ public class RegionHelper {
     }
 
 
+    public District southDelhiDistrict() {
+        District district = districtDataService.findById(5L);
+
+        if (district == null) {
+            district = new District();
+            district.setName("South Delhi");
+            district.setRegionalName("South Delhi");
+            district.setCode(5L);
+            district.setState(delhiState());
+            district.setLanguage(punjabiLanguage());
+            districtDataService.create(district);
+        }
+
+        return district;
+    }
+
+
+    public District bangaloreDistrict() {
+        District bangalore = districtDataService.findById(4L);
+        if (bangalore == null) {
+            bangalore = new District();
+            bangalore.setName("Bengaluru");
+            bangalore.setRegionalName("Bengaluru");
+            bangalore.setCode(4L);
+            bangalore.setState(karnatakaState());
+            bangalore.setLanguage(tamilLanguage());
+            districtDataService.create(bangalore);
+        }
+
+        return districtDataService.create(bangalore);
+    }
+
+
     public District mysuruDistrict() {
         District district = districtDataService.findById(2L);
         if (district == null) {
@@ -111,12 +144,34 @@ public class RegionHelper {
     }
 
 
+    public Language tamilLanguage() {
+        Language language = languageDataService.findByName("Tamil");
+        if (language != null) {
+            return language;
+        }
+        language = languageDataService.create(new Language("ta", "Tamil"));
+
+        return language;
+    }
+
+
     public Language kannadaLanguage() {
         Language language = languageDataService.findByName("Kannada");
         if (language != null) {
             return language;
         }
         language = languageDataService.create(new Language("kn", "Kannada"));
+
+        return language;
+    }
+
+
+    public Language punjabiLanguage() {
+        Language language = languageDataService.findByName("Punjabi");
+        if (language != null) {
+            return language;
+        }
+        language = languageDataService.create(new Language("pa", "Punjabi"));
 
         return language;
     }
