@@ -92,6 +92,8 @@ public class InboxServiceBundleIT extends BasePaxIT {
 	@Ignore
 	public void verifyFT108() throws Exception {
 
+		//https://applab.atlassian.net/browse/NMS-190
+
 		/*
 		 * To check NMS is able to make available a single message of current week in inbox
 		 * when user is subscribed to 72Weeks Pack with 2 message per week configuration.
