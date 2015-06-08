@@ -21,7 +21,6 @@ import org.motechproject.nms.region.domain.HealthBlock;
 import org.motechproject.nms.region.domain.HealthFacility;
 import org.motechproject.nms.region.domain.HealthFacilityType;
 import org.motechproject.nms.region.domain.Language;
-import org.motechproject.nms.region.domain.LanguageLocation;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.repository.CircleDataService;
@@ -29,7 +28,6 @@ import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.HealthBlockDataService;
 import org.motechproject.nms.region.repository.HealthFacilityDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
-import org.motechproject.nms.region.repository.LanguageLocationDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.repository.TalukaDataService;
 import org.motechproject.nms.region.repository.VillageDataService;
@@ -56,7 +54,6 @@ import static org.motechproject.nms.testing.it.utils.LocationDataUtils.createCir
 import static org.motechproject.nms.testing.it.utils.LocationDataUtils.createDistrict;
 import static org.motechproject.nms.testing.it.utils.LocationDataUtils.createHealthFacilityType;
 import static org.motechproject.nms.testing.it.utils.LocationDataUtils.createLanguage;
-import static org.motechproject.nms.testing.it.utils.LocationDataUtils.createLanguageLocation;
 import static org.motechproject.nms.testing.it.utils.LocationDataUtils.createState;
 import static org.motechproject.nms.testing.it.utils.LocationDataUtils.createTaluka;
 import static org.motechproject.nms.testing.it.utils.LocationDataUtils.createHealthBlock;
@@ -71,8 +68,6 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
     @Inject
     private TestingService testingService;
-    @Inject
-    private LanguageLocationDataService languageLocationDataService;
     @Inject
     private LanguageDataService languageDataService;
     @Inject
@@ -104,61 +99,13 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         createLocationData();
 
         SubscriptionHelper subscriptionHelper = new SubscriptionHelper(subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
+                subscriptionPackDataService, languageDataService, circleDataService,
                 stateDataService, districtDataService);
-        subscriptionHelper.createSubscriptionPacks();
+        subscriptionHelper.pregnancyPack();
+        subscriptionHelper.childPack();
     }
 
     private void createLocationData() {
-        State state1 = createState(1L, "State 1");
-        District district11 = createDistrict(state1, 11L, "District 11");
-        District district12 = createDistrict(state1, 12L, "District 12");
-        state1.getDistricts().addAll(Arrays.asList(district11, district12));
-        stateDataService.create(state1);
-
-        State state2 = createState(2L, "State 2");
-        District district21 = createDistrict(state2, 21L, "District 21");
-        state2.getDistricts().addAll(Arrays.asList(district21));
-        districtDataService.create(district21);
-
-        State state3 = createState(3L, "State 3");
-        District district31 = createDistrict(state3, 31L, "District 31");
-        District district32 = createDistrict(state3, 32L, "District 32");
-        state3.getDistricts().addAll(Arrays.asList(district31, district32));
-        stateDataService.create(state3);
-
-        State state4 = createState(4L, "State 4");
-        District district41 = createDistrict(state4, 41L, "District 41");
-        District district42 = createDistrict(state4, 42L, "District 42");
-        state4.getDistricts().addAll(Arrays.asList(district41, district42));
-        stateDataService.create(state3);
-
-        Language lang1 = createLanguage("Lang 1");
-        languageDataService.create(lang1);
-
-        Language lang2 = createLanguage("Lang 2");
-        languageDataService.create(lang2);
-
-        Circle circle1 = createCircle("Circle 1");
-        circle1.getStates().addAll(Arrays.asList(state1, state2));
-        circleDataService.create(circle1);
-
-        Circle circle2 = createCircle("Circle 2");
-        circle2.getStates().addAll(Arrays.asList(state3));
-        circleDataService.create(circle2);
-
-        Circle circle3 = createCircle("Circle 3");
-        LanguageLocation llc31 = createLanguageLocation("LLC 31", lang1, circle3, false, district32);
-        circle3.getStates().addAll(Arrays.asList(state3));
-        circle3.getLanguageLocations().addAll(Arrays.asList(llc31));
-        circleDataService.create(circle3);
-
-        Circle circle4 = createCircle("Circle 4");
-        LanguageLocation llc41 = createLanguageLocation("LLC 41", lang1, circle4, true, district41);
-        circle4.getStates().addAll(Arrays.asList(state4));
-        circle4.getLanguageLocations().addAll(Arrays.asList(llc41));
-        circleDataService.create(circle4);
-
         // specific locations from the mother data file:
         State state21 = createState(21L, "State 21");
         District district3 = createDistrict(state21, 3L, "Sambalpur");
@@ -177,7 +124,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     public void testImportMotherNewSubscriber() throws Exception {
         DateTime lmp = DateTime.now().minusDays(100);
         String lmpString = getDateString(lmp);
-        Reader reader = createMotherDataReaderWithHeaders("1\t11\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t" + lmpString);
+        Reader reader = createMotherDataReaderWithHeaders("21\t3\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t" + lmpString);
         mctsBeneficiaryImportService.importMotherData(reader);
 
         Subscriber subscriber = subscriberDataService.findByCallingNumber(9439986187L);
@@ -192,7 +139,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     public void testImportMotherAlternateDateFormat() throws Exception {
         DateTime lmp = DateTime.now().minusDays(100);
         String lmpString = lmp.toString("dd/MM/yyyy");
-        Reader reader = createMotherDataReaderWithHeaders("1\t11\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t" + lmpString);
+        Reader reader = createMotherDataReaderWithHeaders("21\t3\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t" + lmpString);
         mctsBeneficiaryImportService.importMotherData(reader);
 
         Subscriber subscriber = subscriberDataService.findByCallingNumber(9439986187L);
@@ -204,7 +151,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     public void testImportMotherWhoAlreadyExistsUpdateLmp() throws Exception {
         DateTime lmp = DateTime.now().minusDays(100);
         String lmpString = getDateString(lmp);
-        Reader reader = createMotherDataReaderWithHeaders("1\t11\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t" + lmpString);
+        Reader reader = createMotherDataReaderWithHeaders("21\t3\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t" + lmpString);
         mctsBeneficiaryImportService.importMotherData(reader);
 
         Subscriber subscriber = subscriberDataService.findByCallingNumber(9439986187L);
@@ -216,7 +163,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
         DateTime newLmp = DateTime.now().minusDays(150);
         String newLmpString = getDateString(newLmp);
-        reader = createMotherDataReaderWithHeaders("1\t11\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t" + newLmpString);
+        reader = createMotherDataReaderWithHeaders("21\t3\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t" + newLmpString);
         mctsBeneficiaryImportService.importMotherData(reader);
 
         subscriber = subscriberDataService.findByCallingNumber(9439986187L);
@@ -228,7 +175,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
     @Test(expected = CsvImportDataException.class)
     public void testImportMotherInvalidState() throws Exception {
-        Reader reader = createMotherDataReaderWithHeaders("9\t11\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t22-11-2014");
+        Reader reader = createMotherDataReaderWithHeaders("9\t3\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t22-11-2014");
         mctsBeneficiaryImportService.importMotherData(reader);
     }
 
@@ -236,7 +183,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     public void testImportChildNewSubscriberNoMotherId() throws Exception {
         DateTime dob = DateTime.now().minusDays(100);
         String dobString = getDateString(dob);
-        Reader reader = createChildDataReaderWithHeaders("1\t11\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t\t9439986187\t" + dobString);
+        Reader reader = createChildDataReaderWithHeaders("21\t3\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t\t9439986187\t" + dobString);
         mctsBeneficiaryImportService.importChildData(reader);
 
         Subscriber subscriber = subscriberDataService.findByCallingNumber(9439986187L);
@@ -253,7 +200,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         // import mother
         DateTime lmp = DateTime.now().minusDays(100);
         String lmpString = getDateString(lmp);
-        Reader reader = createMotherDataReaderWithHeaders("1\t11\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t" + lmpString);
+        Reader reader = createMotherDataReaderWithHeaders("21\t3\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t" + lmpString);
         mctsBeneficiaryImportService.importMotherData(reader);
 
         Subscriber subscriber = subscriberDataService.findByCallingNumber(9439986187L);
@@ -264,7 +211,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         // import child with same MSISDN and matching MotherID
         DateTime dob = DateTime.now().minusDays(200);
         String dobString = getDateString(dob);
-        reader = createChildDataReaderWithHeaders("1\t11\t\t\t\t\t9876543210\tBaby1 of Shanti Ekka\t1234567890\t9439986187\t" + dobString);
+        reader = createChildDataReaderWithHeaders("21\t3\t\t\t\t\t9876543210\tBaby1 of Shanti Ekka\t1234567890\t9439986187\t" + dobString);
         mctsBeneficiaryImportService.importChildData(reader);
 
         subscriber = subscriberDataService.findByCallingNumber(9439986187L);

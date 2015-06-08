@@ -274,26 +274,6 @@
                         </Export-Package>
                         <Import-Package>
                             org.motechproject.osgi.web,
-                            org.aopalliance.aop,
-                            org.springframework.aop,
-                            org.springframework.aop.framework,
-                            org.springframework.transaction,
-                            org.motechproject.nms.kilkari.service,
-                            org.motechproject.nms.kilkari.repository,
-                            org.motechproject.nms.kilkari.domain,
-                            org.motechproject.nms.kilkari.exception,
-                            org.motechproject.nms.kilkari.dto,
-                            org.motechproject.alerts.service,
-                            org.motechproject.scheduler.service,
-                            org.motechproject.nms.flw.service,
-                            org.motechproject.nms.flw.repository,
-                            org.motechproject.nms.flw.domain,
-                            org.motechproject.nms.props.service,
-                            org.motechproject.nms.imi.service,
-                            org.motechproject.nms.region.service,
-                            org.motechproject.nms.region.repository,
-                            org.motechproject.nms.region.domain,
-                            org.motechproject.alerts.contract,
                             *
                         </Import-Package>
                     </instructions>

@@ -7,7 +7,6 @@ import org.motechproject.nms.testing.it.api.KilkariControllerBundleIT;
 import org.motechproject.nms.testing.it.api.LanguageControllerBundleIT;
 import org.motechproject.nms.testing.it.api.MobileAcademyControllerBundleIT;
 import org.motechproject.nms.testing.it.api.UserControllerBundleIT;
-import org.motechproject.nms.testing.it.flw.FrontLineWorkerImportServiceBundleIT;
 import org.motechproject.nms.testing.it.flw.FrontLineWorkerServiceBundleIT;
 import org.motechproject.nms.testing.it.flw.ServiceUsageCapServiceBundleIT;
 import org.motechproject.nms.testing.it.flw.ServiceUsageServiceBundleIT;
@@ -34,56 +33,55 @@ import org.motechproject.nms.testing.it.region.NationalDefaultLanguageLocationBu
     /**
      * API
      */
-    /*LanguageControllerBundleIT.class,
+    LanguageControllerBundleIT.class,
     UserControllerBundleIT.class,
     CallDetailsControllerBundleIT.class,
     KilkariControllerBundleIT.class,
-    MobileAcademyControllerBundleIT.class,*/
+    MobileAcademyControllerBundleIT.class,
 
     /**
      * FLW
      */
-    /*ServiceUsageServiceBundleIT.class,
+    ServiceUsageServiceBundleIT.class,
     ServiceUsageCapServiceBundleIT.class,
     WhiteListServiceBundleIT.class,
     FrontLineWorkerServiceBundleIT.class,
-    FrontLineWorkerImportServiceBundleIT.class,*/
 
     /**
      * IMI
      */
-    /*ImiController_CDR_BundleIT.class,
+    ImiController_CDR_BundleIT.class,
     ImiController_OBD_BundleIT.class,
     TargetFileServiceBundleIT.class,
     CdrFileServiceBundleIT.class,
-    CsrValidatorServiceBundleIT.class,*/
+    CsrValidatorServiceBundleIT.class,
 
     /**
      * Kilkari
      */
-    //SubscriptionServiceBundleIT.class,
-    //SubscriberServiceBundleIT.class,
-    //CsrServiceBundleIT.class,
-    MctsBeneficiaryImportServiceBundleIT.class,
+    SubscriptionServiceBundleIT.class,
+    SubscriberServiceBundleIT.class,
+    CsrServiceBundleIT.class,
+    //MctsBeneficiaryImportServiceBundleIT.class,
 
     /**
      * Mobile Academy
      */
-    //MobileAcademyServiceBundleIT.class,
+    MobileAcademyServiceBundleIT.class,
 
     /**
      * Props
      */
-    //PropertyServiceBundleIT.class,
+    PropertyServiceBundleIT.class,
 
     /**
      * Region
      */
-    /*LocationServiceBundleIT.class,
+    LocationServiceBundleIT.class,
     CircleServiceBundleIT.class,
     NationalDefaultLanguageLocationBundleIT.class,
     LocationDataImportServiceBundleIT.class,
-    LanguageLocationCodesImportServiceBundleIT.class,*/
+    LanguageLocationCodesImportServiceBundleIT.class,
 })
 public class IntegrationTests {
 }

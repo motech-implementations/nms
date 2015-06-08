@@ -58,7 +58,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
 
     private FrontLineWorker processInstance(FrontLineWorker instance) {
         if (null != instance.getDistrict()) {
-            instance.setLanguageLocation(instance.getDistrict().getLanguageLocation());
+            instance.setLanguage(instance.getDistrict().getLanguage());
         }
         return instance;
     }

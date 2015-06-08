@@ -6,7 +6,6 @@ import org.motechproject.nms.region.domain.HealthBlock;
 import org.motechproject.nms.region.domain.HealthFacility;
 import org.motechproject.nms.region.domain.HealthFacilityType;
 import org.motechproject.nms.region.domain.Language;
-import org.motechproject.nms.region.domain.LanguageLocation;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.domain.Taluka;
 
@@ -69,19 +68,18 @@ public final class LocationDataUtils {
         return healthFacilityType;
     }
 
+    public static Language createLanguage(String code, String name, Circle circle, boolean defaultForCircle, District... districts) {
+        Language language = new Language();
+        language.setCode(code);
+        language.setName(name);
+        for (District district : districts) {
+            district.setLanguage(language);
+        }
+        if (defaultForCircle) {
+            circle.setDefaultLanguage(language);
+        }
 
-    public static Language createLanguage(String name) {
-        return new Language(name);
-    }
-
-    public static LanguageLocation createLanguageLocation(String code, Language language, Circle circle, boolean defaultForCircle, District... districts) {
-        LanguageLocation languageLocation = new LanguageLocation();
-        languageLocation.setCode(code);
-        languageLocation.setLanguage(language);
-        languageLocation.setCircle(circle);
-        languageLocation.setDefaultForCircle(defaultForCircle);
-        languageLocation.getDistrictSet().addAll(Arrays.asList(districts));
-        return languageLocation;
+        return language;
     }
 
     public static Circle createCircle(String name) {

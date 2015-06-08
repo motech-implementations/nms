@@ -13,14 +13,10 @@ import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.region.domain.Circle;
-import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Language;
-import org.motechproject.nms.region.domain.LanguageLocation;
-import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
-import org.motechproject.nms.region.repository.LanguageLocationDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,18 +35,12 @@ public class SubscriptionHelper {
     private SubscriptionService subscriptionService;
     private SubscriberDataService subscriberDataService;
     private SubscriptionPackDataService subscriptionPackDataService;
-    private LanguageDataService languageDataService;
-    private LanguageLocationDataService languageLocationDataService;
-    private CircleDataService circleDataService;
-    private StateDataService stateDataService;
-    private DistrictDataService districtDataService;
-
+    private RegionHelper regionHelper;
 
     public SubscriptionHelper(SubscriptionService subscriptionService,
                               SubscriberDataService subscriberDataService,
                               SubscriptionPackDataService subscriptionPackDataService,
                               LanguageDataService languageDataService,
-                              LanguageLocationDataService languageLocationDataService,
                               CircleDataService circleDataService,
                               StateDataService stateDataService,
                               DistrictDataService districtDataService) {
@@ -58,48 +48,23 @@ public class SubscriptionHelper {
         this.subscriptionService = subscriptionService;
         this.subscriberDataService = subscriberDataService;
         this.subscriptionPackDataService = subscriptionPackDataService;
-        this.languageDataService = languageDataService;
-        this.languageLocationDataService = languageLocationDataService;
-        this.circleDataService = circleDataService;
-        this.stateDataService = stateDataService;
-        this.districtDataService = districtDataService;
+
+        this.regionHelper = new RegionHelper(languageDataService, circleDataService, stateDataService,
+                districtDataService);
     }
 
-
-    private Language makeLanguage() {
-        Language language = languageDataService.findByName("Hindi");
-        if (language != null) {
-            return language;
-        }
-        return languageDataService.create(new Language("Hindi"));
-    }
-
-    public LanguageLocation makeLanguageLocation() {
-        LanguageLocation languageLocation = languageLocationDataService.findByCode("99");
-        if (languageLocation != null) {
-            return languageLocation;
-        }
-
-        Language language = makeLanguage();
-        Circle circle = makeCircle();
-
-        languageLocation = new LanguageLocation("99", circle, language, false);
-        languageLocation.getDistrictSet().add(makeDistrict());
-        return languageLocationDataService.create(languageLocation);
-    }
-
-    public SubscriptionPack getChildPack() {
-        createSubscriptionPacks();
-        return subscriptionService.getSubscriptionPack("childPack");
-    }
-
-    public void createSubscriptionPacks() {
+    public SubscriptionPack childPack() {
         if (subscriptionPackDataService.byName("childPack") == null) {
             createSubscriptionPack("childPack", SubscriptionPackType.CHILD, CHILD_PACK_WEEKS, 1);
         }
+        return subscriptionService.getSubscriptionPack("childPack");
+    }
+
+    public SubscriptionPack pregnancyPack() {
         if (subscriptionPackDataService.byName("pregnancyPack") == null) {
             createSubscriptionPack("pregnancyPack", SubscriptionPackType.PREGNANCY, PREGNANCY_PACK_WEEKS, 2);
         }
+        return subscriptionService.getSubscriptionPack("pregnancyPack");
     }
 
     private void createSubscriptionPack(String name, SubscriptionPackType type, int weeks,
@@ -121,43 +86,6 @@ public class SubscriptionHelper {
     }
 
 
-    public Circle makeCircle() {
-        Circle circle = circleDataService.findByName("XX");
-        if (circle != null) {
-            return circle;
-        }
-
-        return circleDataService.create(new Circle("XX"));
-    }
-
-    public State makeState() {
-        State state = stateDataService.findByCode(1l);
-        if (state != null) {
-            return state;
-        }
-
-        state = new State();
-        state.setName("State 1");
-        state.setCode(1L);
-
-        return stateDataService.create(state);
-    }
-
-    public District makeDistrict() {
-        District district = districtDataService.findById(1L);
-        if (district != null) {
-            return district;
-        }
-
-        district = new District();
-        district.setName("District 1");
-        district.setRegionalName("District 1");
-        district.setCode(1L);
-        district.setState(makeState());
-
-        return districtDataService.create(district);
-    }
-
     public Long makeNumber() {
         return (long) (Math.random() * 9000000000L) + 1000000000L;
     }
@@ -178,9 +106,9 @@ public class SubscriptionHelper {
     }
 
 
-    public String getLanguageLocationCode(Subscription sub) {
-        return ((LanguageLocation) subscriberDataService.getDetachedField(
-                sub.getSubscriber(),"languageLocation")).getCode();
+    public String getLanguageCode(Subscription sub) {
+        return ((Language) subscriberDataService.getDetachedField(
+                sub.getSubscriber(),"language")).getCode();
     }
 
 
@@ -195,18 +123,38 @@ public class SubscriptionHelper {
     }
 
 
-    public Subscription mksub(SubscriptionOrigin origin, DateTime startDate) {
-        createSubscriptionPacks();
-        Subscriber subscriber = subscriberDataService.create(new Subscriber(
-                makeNumber(),
-                makeLanguageLocation(),
-                makeCircle()
-        ));
-        Subscription subscription = new Subscription(subscriber, getChildPack(), origin);
+    public Subscription mksub(SubscriptionOrigin origin, DateTime startDate, SubscriptionPackType packType) {
+        return mksub(origin, startDate, packType, makeNumber());
+    }
+
+    public Subscription mksub(SubscriptionOrigin origin, DateTime startDate, SubscriptionPackType packType, Long number) {
+
+        Subscription subscription;
+        Subscriber subscriber = subscriberDataService.findByCallingNumber(number);
+
+        if (null == subscriber) {
+            subscriber = subscriberDataService.create(new Subscriber(
+                    number,
+                    regionHelper.hindiLanguage(),
+                    regionHelper.delhiCircle()
+            ));
+        }
+
+        if (SubscriptionPackType.PREGNANCY == packType) {
+            subscription = new Subscription(subscriber, pregnancyPack() , origin);
+        } else {
+            subscription = new Subscription(subscriber, childPack(), origin);
+        }
+
         subscription.setStartDate(startDate);
         subscription.setStatus(SubscriptionStatus.ACTIVE);
         subscription = subscriptionService.create(subscription);
         LOGGER.debug("Created subscription {}", subscription.toString());
         return subscription;
+    }
+
+
+    public Subscription mksub(SubscriptionOrigin origin, DateTime startDate) {
+        return mksub(origin, startDate, SubscriptionPackType.CHILD);
     }
 }

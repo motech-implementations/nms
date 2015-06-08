@@ -11,7 +11,7 @@ import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
-import org.motechproject.nms.region.domain.LanguageLocation;
+import org.motechproject.nms.region.domain.Language;
 
 import java.util.List;
 
@@ -26,12 +26,12 @@ public interface SubscriptionService {
      * reference date implies that the subscription would already have been completed, or if the beneficiary already
      * has a subscription to the specific pack.
      * @param callingNumber MSISDN of the beneficiary
-     * @param languageLocation Language/location pair of the beneficiary
+     * @param language Language of the beneficiary
      * @param subscriptionPack The subscription pack (e.g. Pregnancy, Child) for which to subscribe this beneficiary
      * @param mode How the subscription originated -- via IVR or MCTS import
      * @return The created subscription, or null if no subscription was created
      */
-    Subscription createSubscription(long callingNumber, LanguageLocation languageLocation, SubscriptionPack subscriptionPack,
+    Subscription createSubscription(long callingNumber, Language language, SubscriptionPack subscriptionPack,
                             SubscriptionOrigin mode);
 
     /**

@@ -31,7 +31,7 @@ import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.HealthBlock;
 import org.motechproject.nms.region.domain.HealthFacility;
-import org.motechproject.nms.region.domain.LanguageLocation;
+import org.motechproject.nms.region.domain.Language;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.domain.Village;
@@ -195,14 +195,14 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
     private void processSubscriptionForBeneficiary(MctsBeneficiary beneficiary, Long msisdn, DateTime referenceDate,
                                                   SubscriptionPackType type) {
-        LanguageLocation languageLocation = beneficiary.getDistrict().getLanguageLocation();
+        Language language = beneficiary.getDistrict().getLanguage();
         SubscriptionPack pack = subscriptionPackDataService.byType(type);
         Subscriber subscriber = subscriberService.getSubscriber(msisdn);
 
         if (subscriber == null) {
             // there's no subscriber with this MSISDN, create one
 
-            subscriber = new Subscriber(msisdn, languageLocation);
+            subscriber = new Subscriber(msisdn, language);
             subscriber = updateSubscriber(subscriber, beneficiary, referenceDate, type);
             subscriberService.create(subscriber);
 
@@ -233,7 +233,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             subscriberService.update(subscriber);
         }
 
-        subscriptionService.createSubscription(msisdn, languageLocation, pack, SubscriptionOrigin.MCTS_IMPORT);
+        subscriptionService.createSubscription(msisdn, language, pack, SubscriptionOrigin.MCTS_IMPORT);
 
     }
 
