@@ -880,7 +880,6 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response.getEntity())));
  	}
 
-
     /*
      * To verify that Get Inbox Details API request fails if the provided parameter value of callId is blank.
      */
