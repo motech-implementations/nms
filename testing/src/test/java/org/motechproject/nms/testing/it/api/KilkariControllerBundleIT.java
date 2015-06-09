@@ -724,6 +724,40 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertTrue(expectedJson.equals(EntityUtils.toString(response.getEntity()))  );
 
     }
+
+    
+ 	@Test
+ 	public void verifyFT92() throws IOException,
+ 			InterruptedException {
+        //To verify that Get Inbox Details API request fails if the provided parameter value of
+        // callingNumber is : blank.
+
+ 		HttpGet httpGet = createHttpGet(true, "", true, "123456789012345");
+ 		String expectedJsonResponse = createFailureResponseJson("<callingNumber: Not Present>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+        assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response.getEntity()))  );
+ 		 		
+
+ 	}
+
+
+    @Test
+    public void verifyFT93() throws IOException,
+            InterruptedException {
+
+        //To verify that Get Inbox Details API request fails if the provided parameter value of
+        // callId is : blank.
+
+        HttpGet httpGet = createHttpGet(true, "1234567890", true, "");
+        String expectedJsonResponse = createFailureResponseJson("<callId: Not Present>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+        assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response.getEntity()))  );
+    }
+
      
     @Test
     public void verifyFT83() throws IOException,
