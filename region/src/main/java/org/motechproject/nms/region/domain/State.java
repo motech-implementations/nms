@@ -38,7 +38,7 @@ public class State extends MdsEntity {
 
     @Field
     @Cascade(delete = true)
-    @Persistent(table = "state_circles", mappedBy = "states", defaultFetchGroup = "true")
+    @Persistent(table = "nms_states_circles", mappedBy = "states", defaultFetchGroup = "true")
     @Join(column = "state_id")
     @Element(column = "circle_id")
     private List<Circle> circles;
