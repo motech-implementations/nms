@@ -8,6 +8,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.joda.time.DateTime;
+import org.junit.Ignore;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -127,6 +128,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         Subscriber subscriber3 = subscriberDataService.create(new Subscriber(4000000000L));
 
         // subscriber1 subscribed to 48 weeks pack only
+
         subscriptionService.createSubscription(subscriber1.getCallingNumber(), rh.hindiLanguage(),
                 sh.childPack(), SubscriptionOrigin.IVR);
 
@@ -140,6 +142,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 sh.pregnancyPack(), SubscriptionOrigin.IVR);
 
         deployedServiceDataService.create(new DeployedService(rh.delhiState(), Service.KILKARI));
+
     }
 
     
@@ -671,6 +674,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
          * NMS_FT_77 To check that message should be returned from inbox within
          * 7 days of user's subscription gets completed for 72Weeks Pack.
          */
+
         // 4000000000L subscribed to 72Week Pack subscription
         Subscriber subscriber = subscriberService.getSubscriber(4000000000L);
         Subscription subscription = subscriber.getSubscriptions().iterator()
@@ -684,13 +688,92 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         Pattern expectedJsonPattern = Pattern
                 .compile(".*\"subscriptionPack\":\"pregnancyPack\",\"inboxWeekId\":\"w72_2\",\"contentFileName\":\"w72_2\\.wav.*");
 
+
         HttpGet httpGet = createHttpGet(true, "4000000000", true,
                 "123456789012345");
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
-                expectedJsonPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertTrue(Pattern.matches(expectedJsonPattern.pattern(), EntityUtils.toString(response.getEntity())));
+
     }
 
+
+    @Test
+    public void verifyFT75() throws IOException, InterruptedException {
+        /**
+         * NMS_FT_75 To check that no message should be returned from inbox
+         * after 7 days of user's subscription gets completed for 72Weeks Pack.
+         */
+
+        // 4000000000L subscribed to 72Week Pack subscription
+        Subscriber subscriber = subscriberService.getSubscriber(4000000000L);
+        Subscription subscription = subscriber.getSubscriptions().iterator()
+                .next();
+        // setting the subscription to have ended more than a week ago -- no
+        // message should be returned
+        subscription.setStartDate(DateTime.now().minusDays(512));
+        subscription.setStatus(SubscriptionStatus.COMPLETED);
+        subscriptionDataService.update(subscription);
+
+        String expectedJson = "{\"inboxSubscriptionDetailList\":[]}";
+
+        HttpGet httpGet = createHttpGet(true, "4000000000", true,
+                "123456789012345");
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertTrue(expectedJson.equals(EntityUtils.toString(response.getEntity()))  );
+
+    }
+     
+    @Test
+    public void verifyFT83() throws IOException,
+    		InterruptedException {
+
+        //To verify the behavior of  Get Inbox Details API  if provided beneficiary's callingNumber is not valid :
+        // less than 10 digits.
+
+    	HttpGet httpGet = createHttpGet(true, "123456789", true,
+    			"123456789012345");
+    	String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+        assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response.getEntity()))  );
+
+    }
+    @Test
+    public void verifyFT84() throws IOException,
+            InterruptedException {
+
+        //To verify the behavior of  Get Inbox Details API  if provided beneficiary's callingNumber is not valid :
+        // more than 10 digits.
+        HttpGet httpGet = createHttpGet(true, "12345678901", true, "123456789012345");
+        String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+        assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response.getEntity()))  );
+
+
+    }
+    @Test
+    @Ignore
+    public void verifyFT85() throws IOException,
+            InterruptedException {
+
+        //https://applab.atlassian.net/browse/NMS-186
+                
+        // callingNumber alphanumeric
+        HttpGet httpGet = createHttpGet(true, "12345DF7890", true,
+                "123456789012345");
+        String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+        assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response.getEntity()))  );
+
+    }
     @Test
     public void verifyFT109() throws IOException, InterruptedException {
         /**
@@ -699,7 +782,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
          * user's MSISDN is subscribed for 72Weeks Pack. b)user's MSISDN is
          * deactivated for an old subscription of 72Weeks Pack.
          **/
-        // setupData again to remove 2 messages per week configuration for 72 week pack
+        // setup data to remove 2 messages per week configuration for 72 week pack
         testingService.clearDatabase();
         rh = new RegionHelper(languageDataService, circleDataService,
                 stateDataService, districtDataService);
@@ -747,7 +830,6 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     }
 
     @Test
-    @Ignore
     public void verifyFT110() throws IOException, InterruptedException {
         /**
          * To check NMS is able to make available a single message of current
@@ -755,7 +837,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
          * user's MSISDN is subscribed for 72Weeks Pack. b)user's MSISDN status
          * is completed for an old subscription of 72Weeks Pack.
          **/
-        /// setupData again to remove 2 messages per week configuration for 72 week pack
+        /// setup data to remove 2 messages per week configuration for 72 week pack
         testingService.clearDatabase();
         rh = new RegionHelper(languageDataService, circleDataService,
                 stateDataService, districtDataService);
@@ -779,9 +861,9 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 SubscriptionOrigin.MCTS_IMPORT);
 
         // update old pregnancy subscription pack to mark complete setting the
-        // subscription to have ended less than a week ago
+        // subscription to have ended more than a week ago
         subscriptionService.updateStartDate(oldSubscription, DateTime.now()
-                .minusDays(505 + 90));
+                .minusDays(512 + 90));
 
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
 
@@ -802,5 +884,4 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
                 expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
-
 }
