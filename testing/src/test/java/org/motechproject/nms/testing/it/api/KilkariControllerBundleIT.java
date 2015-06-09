@@ -1,5 +1,17 @@
 package org.motechproject.nms.testing.it.api;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+import javax.inject.Inject;
+
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -8,8 +20,8 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.joda.time.DateTime;
-import org.junit.Ignore;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.api.web.contract.BadRequest;
@@ -51,18 +63,6 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
-
-import javax.inject.Inject;
-
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.regex.Pattern;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Verify that Kilkari API is functional.
@@ -774,4 +774,142 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
     }
     
+    // This method is a utility method for running the test cases. this is
+    // already used in the branch NMS.FT.24.25.26
+    private HttpPost createInboxCallDetailsRequestHttpPost(
+            String callingNumber, String operator, String circle,
+            String callId, String callStartTime, String callEndTime,
+            String callDurationInPulses, String callStatus,
+            String callDisconnectReason) throws IOException {
+        HttpPost httpPost = new HttpPost(String.format(
+                "http://localhost:%d/api/kilkari/inboxCallDetails",
+                TestContext.getJettyPort()));
+
+        StringBuilder sb = new StringBuilder();
+        String seperator = "";
+        sb.append("{");
+        if (callingNumber != null) {
+            sb.append(String.format("%s\"callingNumber\": %s", seperator,
+                    callingNumber));
+            seperator = ",";
+        }
+        if (operator != null) {
+            sb.append(String.format("%s\"operator\": \"%s\"", seperator,
+                    operator));
+            seperator = ",";
+        }
+        if (circle != null) {
+            sb.append(String.format("%s\"circle\": \"%s\"", seperator, circle));
+            seperator = ",";
+        }
+        if (callId != null) {
+            sb.append(String.format("%s\"callId\": %s", seperator, callId));
+            seperator = ",";
+        }
+        if (callStartTime != null) {
+            sb.append(String.format("%s\"callStartTime\": %s", seperator,
+                    callStartTime));
+            seperator = ",";
+        }
+        if (callEndTime != null) {
+            sb.append(String.format("%s\"callEndTime\": %s", seperator,
+                    callEndTime));
+            seperator = ",";
+        }
+        if (callDurationInPulses != null) {
+            sb.append(String.format("%s\"callDurationInPulses\": %s",
+                    seperator, callDurationInPulses));
+            seperator = ",";
+        }
+        if (callStatus != null) {
+            sb.append(String.format("%s\"callStatus\": %s", seperator,
+                    callStatus));
+            seperator = ",";
+        }
+        if (callDisconnectReason != null) {
+            sb.append(String.format("%s\"callDisconnectReason\": %s",
+                    seperator, callDisconnectReason));
+            seperator = ",";
+        }
+
+        sb.append("}");
+
+        StringEntity params = new StringEntity(sb.toString());
+        httpPost.setEntity(params);
+        httpPost.addHeader("content-type", "application/json");
+        return httpPost;
+    }
+
+    @Ignore
+    @Test
+    public void verifyFT32() throws IOException, InterruptedException {
+        /**
+         * test SaveInboxCallDetails API with InvalidParams(AlphaNumeric)
+         */
+        // Invalid callDurationInPulses: AlphaNumeric value
+        HttpPost httpPost = createInboxCallDetailsRequestHttpPost("1234567890", // callingNumber
+                "A", // operator
+                "AP", // circle
+                "123456789012345", // callId less
+                "123", // callStartTime
+                "456", // callEndTime
+                "1A3", // callDurationInPulses alphanumeric
+                "1", // callStatus
+                "1" // callDisconnectReason
+        );
+        String expectedJsonResponse = createFailureResponseJson("<callDurationInPulses: Invalid>");
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
+                HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    @Ignore
+    @Test
+    public void verifyFT33() throws IOException, InterruptedException {
+        /**
+         * test SaveInboxCallDetails API with InvalidParams
+         */
+        // Invalid callStatus: AlphaNumeric value
+        HttpPost httpPost = createInboxCallDetailsRequestHttpPost("1234567890", // callingNumber
+                "A", // operator
+                "AP", // circle
+                "123456789012345", // callId
+                "456", // callStartTime
+                "856", // callEndTime
+                "123", // callDurationInPulses
+                "1A", // callStatus alphanumeric
+                "1" // callDisconnectReason
+        );
+        String expectedJsonResponse = createFailureResponseJson("<callStatus: Invalid>");
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
+                HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    @Ignore
+    @Test
+    public void verifyFT34() throws IOException, InterruptedException {
+        /**
+         * test SaveInboxCallDetails API with InvalidParams
+         */
+        // Invalid callDisconnectReason: AlphaNumeric value
+        HttpPost httpPost = createInboxCallDetailsRequestHttpPost("1234567890", // callingNumber
+                "A", // operator
+                "AP", // circle
+                "123456789012345", // callId
+                "456", // callStartTime
+                "856", // callEndTime
+                "123", // callDurationInPulses
+                "1", // callStatus
+                "1A" // callDisconnectReason alphanumeric
+        );
+        String expectedJsonResponse = createFailureResponseJson("<callDisconnectReason: Invalid>");
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
+                HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
 }
