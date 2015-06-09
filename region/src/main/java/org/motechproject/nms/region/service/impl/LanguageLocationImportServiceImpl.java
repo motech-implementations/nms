@@ -2,6 +2,7 @@ package org.motechproject.nms.region.service.impl;
 
 import org.motechproject.nms.csv.exception.CsvImportDataException;
 import org.motechproject.nms.csv.utils.ConstraintViolationUtils;
+import org.motechproject.nms.csv.utils.CsvImporterBuilder;
 import org.motechproject.nms.csv.utils.CsvMapImporter;
 import org.motechproject.nms.csv.utils.GetBoolean;
 import org.motechproject.nms.csv.utils.GetInstanceByString;
@@ -52,8 +53,9 @@ public class LanguageLocationImportServiceImpl implements LanguageLocationImport
     @Override
     @Transactional
     public void importData(Reader reader) throws IOException {
-        CsvMapImporter csvImporter = new CsvMapImporter();
-        csvImporter.open(reader, getProcessorMapping());
+        CsvMapImporter csvImporter = new CsvImporterBuilder()
+                .setProcessorMapping(getProcessorMapping())
+                .createAndOpen(reader);
         Map<String, Object> record;
         while (null != (record = csvImporter.read())) {
             try {

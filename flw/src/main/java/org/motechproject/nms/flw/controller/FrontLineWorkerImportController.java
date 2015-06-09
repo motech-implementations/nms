@@ -28,7 +28,7 @@ public class FrontLineWorkerImportController {
 
     private FrontLineWorkerImportService frontLineWorkerImportService;
 
-    @RequestMapping(value = "/flw/import", method = RequestMethod.POST)
+    @RequestMapping(value = "/import", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
     public void importFrontLineWorkers(@RequestParam MultipartFile csvFile) {
         try {
