@@ -6,6 +6,8 @@ import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.domain.MdsEntity;
 
 import javax.jdo.annotations.Column;
+import javax.jdo.annotations.IdentityType;
+import javax.jdo.annotations.PersistenceCapable;
 import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.Unique;
 import javax.validation.constraints.NotNull;
@@ -15,6 +17,7 @@ import java.util.List;
 
 // TODO: Remove maxFetchDepth once https://applab.atlassian.net/browse/MOTECH-1678 is resolved
 @Entity(maxFetchDepth = -1, tableName = "nms_health_facilities")
+@PersistenceCapable(identityType = IdentityType.APPLICATION, detachable="true")
 public class HealthFacility extends MdsEntity {
 
     @Field

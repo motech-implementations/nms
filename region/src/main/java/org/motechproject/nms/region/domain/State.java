@@ -7,7 +7,10 @@ import org.motechproject.mds.domain.MdsEntity;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Element;
+import javax.jdo.annotations.IdentityType;
 import javax.jdo.annotations.Join;
+
+import javax.jdo.annotations.PersistenceCapable;
 import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.Unique;
 import javax.validation.constraints.NotNull;
@@ -18,6 +21,7 @@ import java.util.List;
  * This class Models data for State location records
  */
 @Entity(tableName = "nms_states")
+@PersistenceCapable(identityType = IdentityType.APPLICATION, detachable="true")
 public class State extends MdsEntity {
 
     @Field
