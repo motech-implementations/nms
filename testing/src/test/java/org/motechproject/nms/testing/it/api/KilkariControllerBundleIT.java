@@ -1,5 +1,17 @@
 package org.motechproject.nms.testing.it.api;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+import javax.inject.Inject;
+
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -8,8 +20,8 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.joda.time.DateTime;
-import org.junit.Ignore;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.api.web.contract.BadRequest;
@@ -51,18 +63,6 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
-
-import javax.inject.Inject;
-
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.regex.Pattern;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Verify that Kilkari API is functional.
@@ -774,4 +774,148 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
     }
     
+    private HttpPost createInboxCallDetailsRequestHttpPost(
+            String callingNumber, String operator, String circle,
+            String callId, String callStartTime, String callEndTime,
+            String callDurationInPulses, String callStatus,
+            String callDisconnectReason) throws IOException {
+        HttpPost httpPost = new HttpPost(String.format(
+                "http://localhost:%d/api/kilkari/inboxCallDetails",
+                TestContext.getJettyPort()));
+
+        StringBuilder sb = new StringBuilder();
+        String seperator = "";
+        sb.append("{");
+        if (callingNumber != null) {
+            sb.append(String.format("%s\"callingNumber\": %s", seperator,
+                    callingNumber));
+            seperator = ",";
+        }
+        if (operator != null) {
+            sb.append(String.format("%s\"operator\": \"%s\"", seperator,
+                    operator));
+            seperator = ",";
+        }
+        if (circle != null) {
+            sb.append(String.format("%s\"circle\": \"%s\"", seperator, circle));
+            seperator = ",";
+        }
+        if (callId != null) {
+            sb.append(String.format("%s\"callId\": %s", seperator, callId));
+            seperator = ",";
+        }
+        if (callStartTime != null) {
+            sb.append(String.format("%s\"callStartTime\": %s", seperator,
+                    callStartTime));
+            seperator = ",";
+        }
+        if (callEndTime != null) {
+            sb.append(String.format("%s\"callEndTime\": %s", seperator,
+                    callEndTime));
+            seperator = ",";
+        }
+        if (callDurationInPulses != null) {
+            sb.append(String.format("%s\"callDurationInPulses\": %s",
+                    seperator, callDurationInPulses));
+            seperator = ",";
+        }
+        if (callStatus != null) {
+            sb.append(String.format("%s\"callStatus\": %s", seperator,
+                    callStatus));
+            seperator = ",";
+        }
+        if (callDisconnectReason != null) {
+            sb.append(String.format("%s\"callDisconnectReason\": %s",
+                    seperator, callDisconnectReason));
+            seperator = ",";
+        }
+
+        sb.append("}");
+
+        StringEntity params = new StringEntity(sb.toString());
+        httpPost.setEntity(params);
+        httpPost.addHeader("content-type", "application/json");
+        return httpPost;
+    }
+
+    @Test
+    public void verifyFT54_72() throws IOException, InterruptedException {
+        /**
+         * test SaveInboxCallDetails API with Blank Params
+         */
+        // Blank callingNumber
+        HttpPost httpPost = createInboxCallDetailsRequestHttpPost("", // callingNumber
+                                                                      // blank
+                "A", // operator
+                "AP", // circle
+                "123456789012345", // callId
+                "456", // callStartTime
+                "785", // callEndTime invalid
+                "123", // callDurationInPulses
+                "1", // callStatus
+                "1" // callDisconnectReason
+        );
+        String expectedJsonResponse = createFailureResponseJson("<callingNumber: Not Present>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
+
+
+    @Test
+    public void verifyFT55_73() throws IOException, InterruptedException {
+        /**
+         * test SaveInboxCallDetails API with Blank Params
+         */
+        // Blank circle
+        HttpPost httpPost = createInboxCallDetailsRequestHttpPost("1234567890",
+                "A", // operator
+                "", // circle blank
+                "123456789012345", // callId
+                "456", // callStartTime
+                "785", // callEndTime invalid
+                "123", // callDurationInPulses
+                "1", // callStatus
+                "1" // callDisconnectReason
+        );
+        String expectedJsonResponse = createFailureResponseJson("<circle: Not Present>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
+
+    @Test
+    public void verifyFT56() throws IOException, InterruptedException {
+        /**
+         * test SaveInboxCallDetails API with Blank Params
+         */
+        // Blank callDisconnectReason
+        HttpPost httpPost = createInboxCallDetailsRequestHttpPost("1234567890",
+                "A", // operator
+                "AP", // circle
+                "123456789012345", // callId
+                "456", // callStartTime
+                "785", // callEndTime invalid
+                "123", // callDurationInPulses
+                "1", // callStatus
+                "" // callDisconnectReason blank
+        );
+        String expectedJsonResponse = createFailureResponseJson("<callDisconnectReason: Not Present>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
+
 }
