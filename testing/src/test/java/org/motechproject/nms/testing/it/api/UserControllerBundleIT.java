@@ -356,6 +356,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         rh.newDelhiDistrict();
         rh.mysuruDistrict();
 
+        //TODO: remove this when https://applab.atlassian.net/browse/MOTECH-1679 is fixed
         circleDataService.doInTransaction(new TransactionCallbackWithoutResult() {
             @Override
             protected void doInTransactionWithoutResult(TransactionStatus transactionStatus) {
