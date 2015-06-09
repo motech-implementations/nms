@@ -11,6 +11,7 @@ import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
+import org.motechproject.nms.kilkari.repository.SubscriptionPackMessageDataService;
 import org.motechproject.nms.kilkari.service.InboxService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
@@ -29,6 +30,7 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
+
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
@@ -59,6 +61,8 @@ public class InboxServiceBundleIT extends BasePaxIT {
     private DistrictDataService districtDataService;
     @Inject
     private SubscriberDataService subscriberDataService;
+    @Inject
+    private SubscriptionPackMessageDataService subscriptionPackMessageDataService;
 
 
     private RegionHelper rh;
@@ -172,5 +176,65 @@ public class InboxServiceBundleIT extends BasePaxIT {
 		assertEquals(msg.getMessageFileName(), "w72_2.wav");
 
 	}
+	
+	@Test
+ 	public void verifyFT178() throws InterruptedException, Exception {
+ 		/*
+ 		 * To verify number of Messages per week should be modified successfully from 1 to 2.
+ 		 */
+ 		
+ 		DateTime now = DateTime.now();
+
+ 		Subscriber subscriber = new Subscriber(1000000002L);
+ 		subscriber.setDateOfBirth(now.minusDays(4));
+ 		subscriberService.create(subscriber);
+
+ 		Subscription childSubscription = subscriptionService.createSubscription(subscriber.getCallingNumber(), rh.hindiLanguage(), sh.childPack(), 
+ 				SubscriptionOrigin.MCTS_IMPORT);
+ 		assertEquals(1, childSubscription.getSubscriptionPack().getMessagesPerWeek());
+ 		SubscriptionPackMessage packMessage = inboxService.getInboxMessage(childSubscription);
+ 		assertEquals("w1_1", packMessage.getWeekId());
+ 		assertEquals("w1_1.wav", packMessage.getMessageFileName());
+
+ 		//update subscriptionPack and subscriptionPackMeassage list according to 2 msg per week for childPack
+ 		sh.childPackFor2MessagePerWeek(subscriptionPackMessageDataService);
+
+ 		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber());
+ 		childSubscription = subscriber.getSubscriptions().iterator().next();
+ 		assertEquals(2, childSubscription.getSubscriptionPack().getMessagesPerWeek());
+ 		
+ 		packMessage = inboxService.getInboxMessage(childSubscription);
+ 		assertEquals("w1_2", packMessage.getWeekId());
+ 		assertEquals("w1_2.wav", packMessage.getMessageFileName());
+ 	}
+
+ 	@Test
+ 	public void verufyFT179() throws InterruptedException, Exception {
+ 		DateTime now = DateTime.now();
+
+ 		Subscriber subscriber = new Subscriber(1000000002L);
+ 		subscriber.setLastMenstrualPeriod(now.minusDays(94));
+ 		subscriberService.create(subscriber);
+
+ 		Subscription motherSubscription = subscriptionService.createSubscription(subscriber.getCallingNumber(), rh.hindiLanguage(), sh.pregnancyPack(),
+ 				SubscriptionOrigin.MCTS_IMPORT);
+ 		assertEquals(2, motherSubscription.getSubscriptionPack().getMessagesPerWeek());
+ 		
+ 		SubscriptionPackMessage packMessage = inboxService.getInboxMessage(motherSubscription);
+ 		assertEquals("w1_2", packMessage.getWeekId());
+ 		assertEquals("w1_2.wav", packMessage.getMessageFileName());
+
+ 		//update subscriptionPack and subscriptionPackMeassage list according to 1 msg per week for pregnancyPack
+ 		sh.pregnancyPackFor1MessagePerWeek(subscriptionPackMessageDataService);
+ 		
+ 		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber());
+ 		motherSubscription = subscriber.getSubscriptions().iterator().next();
+ 		assertEquals(1, motherSubscription.getSubscriptionPack().getMessagesPerWeek());
+ 		
+ 		packMessage = inboxService.getInboxMessage(motherSubscription);
+ 		assertEquals("w1_1", packMessage.getWeekId());
+ 		assertEquals("w1_1.wav", packMessage.getMessageFileName());
+
+ 	}
 
 }
