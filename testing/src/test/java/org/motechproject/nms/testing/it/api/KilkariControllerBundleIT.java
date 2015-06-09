@@ -1,5 +1,17 @@
 package org.motechproject.nms.testing.it.api;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+import javax.inject.Inject;
+
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -51,17 +63,6 @@ import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
-import javax.inject.Inject;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.regex.Pattern;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 /**
  * Verify that Kilkari API is functional.
  */
@@ -69,8 +70,8 @@ import static org.junit.Assert.assertTrue;
 @ExamReactorStrategy(PerSuite.class)
 @ExamFactory(MotechNativeTestContainerFactory.class)
 public class KilkariControllerBundleIT extends BasePaxIT {
-    private static final String ADMIN_USERNAME = "motech";
-    private static final String ADMIN_PASSWORD = "motech";
+    private static final String ADMIN_USERNAME = "root";
+    private static final String ADMIN_PASSWORD = "password";
 
 
     @Inject
@@ -690,7 +691,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     }
     
  	@Test
- 	public void verifyFT_89_90() throws IOException,
+    public void verifyFT89() throws IOException,
  			InterruptedException {
  		/**
  		 * Testing GetInboxDetails API with mandatory parameters missing
@@ -702,10 +703,17 @@ public class KilkariControllerBundleIT extends BasePaxIT {
  		assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
  				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
  				ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    @Test
+    public void verifyFT90() throws IOException, InterruptedException {
+        /**
+         * Testing GetInboxDetails API with mandatory parameters missing
+         */
 
  		// CallId missing
- 		httpGet = createHttpGet(true, "1234567890", false, "");
- 		expectedJsonResponse = createFailureResponseJson("<callId: Not Present>");
+        HttpGet httpGet = createHttpGet(true, "1234567890", false, "");
+        String expectedJsonResponse = createFailureResponseJson("<callId: Not Present>");
 
  		assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
  				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
