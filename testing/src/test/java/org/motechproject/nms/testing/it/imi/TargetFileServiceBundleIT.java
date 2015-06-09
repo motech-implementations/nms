@@ -49,6 +49,8 @@ import java.nio.file.Files;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -255,6 +257,72 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         getLogger().debug("Generated {}", tfn.getFileName());
     }
 
+    @Test
+    public void verifyFT190() throws NoSuchAlgorithmException, IOException {
+
+        // To verify welcome message is played along with next week’s content as per the LMP.
+        Subscriber subscriber1 = new Subscriber(1111111111L, hindi, dehliCircle);
+        subscriber1.setLastMenstrualPeriod(DateTime.now().minusDays(90)); // weekId will be W1_1
+        subscriberDataService.create(subscriber1);
+        subscriptionService.createSubscription(1111111111L, hindi, pregnancyPack, SubscriptionOrigin.MCTS_IMPORT);
+
+        List<String> contents = new ArrayList<>();
+        String line;
+
+        TargetFileNotification tfn = targetFileService.generateTargetFile();
+
+        File targetDir = new File(settingsService.getSettingsFacade().getProperty("imi.local_obd_dir"));
+        File targetFile = new File(targetDir, tfn.getFileName());
+        MessageDigest md = MessageDigest.getInstance("MD5");
+        int recordCount = 0;
+        try (InputStream is = Files.newInputStream(targetFile.toPath());
+             BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
+            DigestInputStream dis = new DigestInputStream(is, md);
+            while ((line = reader.readLine()) != null) {
+                recordCount++;
+                contents.add(line.split(",")[6]); //column 7 is for content filename
+            }
+        }
+        String md5Checksum = new String(Hex.encodeHex(md.digest()));
+
+        assertEquals((int)tfn.getRecordCount(), recordCount);
+        assertEquals(tfn.getChecksum(), md5Checksum);
+        assertTrue("welcome.wav".equals(contents.get(0)));
+    }
+
+    @Test
+    public void verifyFT191() throws NoSuchAlgorithmException, IOException {
+
+        // To verify welcome message is played along with next week’s content, as per the DOB.
+        Subscriber subscriber1 = new Subscriber(1111111111L, hindi, dehliCircle);
+        subscriber1.setDateOfBirth(DateTime.now()); // weekId will be W1_1
+        subscriberDataService.create(subscriber1);
+        subscriptionService.createSubscription(1111111111L, hindi, childPack, SubscriptionOrigin.MCTS_IMPORT);
+
+        List<String> contents = new ArrayList<>();
+        String line;
+
+        TargetFileNotification tfn = targetFileService.generateTargetFile();
+
+        File targetDir = new File(settingsService.getSettingsFacade().getProperty("imi.local_obd_dir"));
+        File targetFile = new File(targetDir, tfn.getFileName());
+        MessageDigest md = MessageDigest.getInstance("MD5");
+        int recordCount = 0;
+        try (InputStream is = Files.newInputStream(targetFile.toPath());
+             BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
+            DigestInputStream dis = new DigestInputStream(is, md);
+            while ((line = reader.readLine()) != null) {
+                recordCount++;
+                contents.add(line.split(",")[6]); //column 7 is for content filename
+            }
+        }
+        String md5Checksum = new String(Hex.encodeHex(md.digest()));
+
+        assertEquals((int)tfn.getRecordCount(), recordCount);
+        assertEquals(tfn.getChecksum(), md5Checksum);
+        assertTrue("welcome.wav".equals(contents.get(0)));
+
+    }
 
     //todo: test success notification is sent to the IVR system
 }
