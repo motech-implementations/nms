@@ -1,5 +1,17 @@
 package org.motechproject.nms.testing.it.api;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+import javax.inject.Inject;
+
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -56,18 +68,6 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
-
-import javax.inject.Inject;
-
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.regex.Pattern;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Verify that Kilkari API is functional.
@@ -785,9 +785,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 expectedJsonPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
-    @Ignore
  	@Test
- 	public void verifyFT_86_87_88() throws IOException,
+    public void verifyFT86() throws IOException,
  			InterruptedException {
  		/**
  		 * Testing GetInboxDetails API with invalid value of callId.
@@ -800,16 +799,33 @@ public class KilkariControllerBundleIT extends BasePaxIT {
  		assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
  				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
  				ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
 
- 		// CallId more than 15 digits
- 		httpGet = createHttpGet(true, "1234567890", true, "1234567890123456");
+    @Test
+    public void verifyFT87() throws IOException, InterruptedException {
+        /**
+         * Testing GetInboxDetails API with invalid value of callId.
+         */
+        // CallId more than 15 digits
+        HttpGet httpGet = createHttpGet(true, "1234567890", true,
+                "1234567890123456");
+        String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
 
  		assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
  				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
  				ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
 
- 		// CallId alphanumeric
- 		httpGet = createHttpGet(true, "1234567890", true, "12345678GT12345");
+    @Ignore
+    @Test
+    public void verifyFT88() throws IOException, InterruptedException {
+        /**
+         * Testing GetInboxDetails API with invalid value of callId.
+         */
+        // CallId alphanumeric
+        HttpGet httpGet = createHttpGet(true, "1234567890", true,
+                "12345678GT12345");
+        String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
 
  		assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
  				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
