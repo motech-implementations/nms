@@ -760,4 +760,90 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         subscriber = subscriberDataService.findByCallingNumber(2000000000L);
         assertEquals(1, subscriber.getSubscriptions().size());
     }
+    
+    @Test
+    public void verifyFT134() {
+    	/*
+    	 * To check 72Weeks Pack subscription is successfully created when 
+    	 * subscription already exist for 72Weeks Pack with status as "Completed".
+    	 */
+
+        Subscriber mctsSubscriber = new Subscriber(9999911122L);
+        mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(28));
+        subscriberDataService.create(mctsSubscriber);
+
+        subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.pregnancyPack(),
+                SubscriptionOrigin.MCTS_IMPORT);
+        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+        mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(610)); // Configuration for subscription completion
+        subscriberService.update(mctsSubscriber);
+
+        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+        mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(28)); // update LMP for new subscription creation
+        subscriberDataService.update(mctsSubscriber);
+        // attempt to create subscription to the same pack -- should succeed
+        subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.pregnancyPack(),
+                SubscriptionOrigin.MCTS_IMPORT);
+
+        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+        assertEquals(2, mctsSubscriber.getSubscriptions().size());
+        assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
+    }
+    
+    @Test
+    public void verifyFT132() {
+
+    	/*
+    	 * To check 48Weeks Pack subscription is successfully created when 
+    	 * subscription already exist for 48Weeks sPack with status as "Completed".
+    	 */
+    	Subscriber mctsSubscriber = new Subscriber(9999911122L);
+        mctsSubscriber.setDateOfBirth(DateTime.now());
+        subscriberDataService.create(mctsSubscriber);
+
+        subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.childPack(),
+                SubscriptionOrigin.MCTS_IMPORT);
+        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+        mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(350));  // Configuration for subscription completion
+        subscriberService.update(mctsSubscriber);
+
+        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+        mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(30)); // update DOB for new subscription creation
+        subscriberDataService.update(mctsSubscriber);
+        
+        // attempt to create subscription to the same pack -- should succeed
+        subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.childPack(),
+                SubscriptionOrigin.MCTS_IMPORT);
+
+        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+        assertEquals(2, mctsSubscriber.getSubscriptions().size());
+        assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
+    }
+    
+    @Test
+    public void verifyFT133() {
+
+    	/*
+    	 * To check subscription for 48Weeks Pack is successfully created when 
+    	 * subscription  already exist for  48Weeks Pack in state "Deactivated"
+    	 */
+        
+    	Subscriber mctsSubscriber = new Subscriber(9999911122L);
+        mctsSubscriber.setDateOfBirth(DateTime.now());
+        subscriberDataService.create(mctsSubscriber);
+
+        subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.childPack(),
+                SubscriptionOrigin.MCTS_IMPORT);
+        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+        Subscription childSubscription = mctsSubscriber.getActiveSubscriptions().iterator().next();
+        subscriptionService.deactivateSubscription(childSubscription, DeactivationReason.STILL_BIRTH); // Deactivate Subscription
+
+        // attempt to create subscription to the same pack -- should succeed
+        subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.childPack(),
+                SubscriptionOrigin.MCTS_IMPORT);
+
+        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+        assertEquals(2, mctsSubscriber.getSubscriptions().size());
+        assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
+    }
 }
