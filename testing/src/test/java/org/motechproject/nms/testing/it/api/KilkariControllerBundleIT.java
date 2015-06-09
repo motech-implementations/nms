@@ -1,5 +1,17 @@
 package org.motechproject.nms.testing.it.api;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+import javax.inject.Inject;
+
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -56,18 +68,6 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
-
-import javax.inject.Inject;
-
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.regex.Pattern;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Verify that Kilkari API is functional.
@@ -849,14 +849,13 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 		return httpPost;
 	}
     
-    @Ignore
 	@Test
-	public void verifyFT_24_25_26() throws IOException,
+    public void verifyFT24() throws IOException,
 			InterruptedException {
-		/**
-		 * NMS_FT_24_25_26 To check response of SaveInboxCallDetails API 
-		 * if callingNumber provided in the request is in invalid format
-		 */
+		        /**
+         * NMS_FT_24 To check response of SaveInboxCallDetails API if
+         * callingNumber provided in the request is in invalid format
+         */
 		HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
 				123456789L, // callingNumber less than 10 digit
 				"A", // operator
@@ -873,8 +872,15 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 		assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
 				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
 				ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
 
-		httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
+    @Test
+    public void verifyFT25() throws IOException, InterruptedException {
+        /**
+         * NMS_FT_25 To check response of SaveInboxCallDetails API if
+         * callingNumber provided in the request is in invalid format
+         */
+        HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
 				12345678901L, // callingNumber more than 10 digit
 				"A", // operator
 				"AP", // circle
@@ -886,12 +892,22 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 				1, // callDisconnectReason
 				null)); // content
 
-		assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
+        String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
 				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
 				ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
 
+    @Ignore
+    @Test
+    public void verifyFT26() throws IOException, InterruptedException {
+        /**
+         * NMS_FT_26 To check response of SaveInboxCallDetails API if
+         * callingNumber provided in the request is in invalid format
+         */
 		// taking alpha numeric value of calling Number
-		httpPost = createInboxCallDetailsRequestHttpPost("12345AF890", // callingNumber
+        HttpPost httpPost = createInboxCallDetailsRequestHttpPost("12345AF890", // callingNumber
 																		// alphanumeric
 				"A", // operator
 				"AP", // circle
@@ -902,6 +918,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 				"1", // callStatus
 				"1" // callDisconnectReason
 		);
+
+        String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
 
 		assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
 				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
