@@ -1,5 +1,17 @@
 package org.motechproject.nms.testing.it.api;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+import javax.inject.Inject;
+
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -8,8 +20,8 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.joda.time.DateTime;
-import org.junit.Ignore;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.api.web.contract.BadRequest;
@@ -52,18 +64,6 @@ import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
-import javax.inject.Inject;
-
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.regex.Pattern;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 /**
  * Verify that Kilkari API is functional.
  */
@@ -71,8 +71,8 @@ import static org.junit.Assert.assertTrue;
 @ExamReactorStrategy(PerSuite.class)
 @ExamFactory(MotechNativeTestContainerFactory.class)
 public class KilkariControllerBundleIT extends BasePaxIT {
-    private static final String ADMIN_USERNAME = "motech";
-    private static final String ADMIN_PASSWORD = "motech";
+    private static final String ADMIN_USERNAME = "root";
+    private static final String ADMIN_PASSWORD = "password";
 
 
     @Inject
@@ -774,4 +774,295 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
     }
     
+    // This method is a utility method for running the test cases. this is
+    // already
+    // used in the branch NMS.FT.24.25.26
+    private HttpPost createInboxCallDetailsRequestHttpPost(
+            String callingNumber, String operator, String circle,
+            String callId, String callStartTime, String callEndTime,
+            String callDurationInPulses, String callStatus,
+            String callDisconnectReason) throws IOException {
+        HttpPost httpPost = new HttpPost(String.format(
+                "http://localhost:%d/api/kilkari/inboxCallDetails",
+                TestContext.getJettyPort()));
+
+        StringBuilder sb = new StringBuilder();
+        String seperator = "";
+        sb.append("{");
+        if (callingNumber != null) {
+            sb.append(String.format("%s\"callingNumber\": %s", seperator,
+                    callingNumber));
+            seperator = ",";
+        }
+        if (operator != null) {
+            sb.append(String.format("%s\"operator\": \"%s\"", seperator,
+                    operator));
+            seperator = ",";
+        }
+        if (circle != null) {
+            sb.append(String.format("%s\"circle\": \"%s\"", seperator, circle));
+            seperator = ",";
+        }
+        if (callId != null) {
+            sb.append(String.format("%s\"callId\": %s", seperator, callId));
+            seperator = ",";
+        }
+        if (callStartTime != null) {
+            sb.append(String.format("%s\"callStartTime\": %s", seperator,
+                    callStartTime));
+            seperator = ",";
+        }
+        if (callEndTime != null) {
+            sb.append(String.format("%s\"callEndTime\": %s", seperator,
+                    callEndTime));
+            seperator = ",";
+        }
+        if (callDurationInPulses != null) {
+            sb.append(String.format("%s\"callDurationInPulses\": %s",
+                    seperator, callDurationInPulses));
+            seperator = ",";
+        }
+        if (callStatus != null) {
+            sb.append(String.format("%s\"callStatus\": %s", seperator,
+                    callStatus));
+            seperator = ",";
+        }
+        if (callDisconnectReason != null) {
+            sb.append(String.format("%s\"callDisconnectReason\": %s",
+                    seperator, callDisconnectReason));
+            seperator = ",";
+        }
+
+        sb.append("}");
+
+        StringEntity params = new StringEntity(sb.toString());
+        httpPost.setEntity(params);
+        httpPost.addHeader("content-type", "application/json");
+        return httpPost;
+    }
+
+    private HttpPost createInboxCallDetailsRequestHttpPost(
+            String callingNumber, String operator, String circle,
+            String callId, String callStartTime, String callEndTime,
+            String callDurationInPulses, String callStatus,
+            String callDisconnectReason, String content_subscriptionId,
+            String content_subscriptionPack, String content_inboxWeekId,
+            String content_contentFileName, String content_startTime,
+            String content_endTime) throws IOException {
+        HttpPost httpPost = new HttpPost(String.format(
+                "http://localhost:%d/api/kilkari/inboxCallDetails",
+                TestContext.getJettyPort()));
+
+        StringBuilder sb = new StringBuilder();
+        String seperator = "";
+        sb.append("{");
+        if (callingNumber != null) {
+            sb.append(String.format("%s\"callingNumber\": %s", seperator,
+                    callingNumber));
+            seperator = ",";
+        }
+        if (operator != null) {
+            sb.append(String.format("%s\"operator\": \"%s\"", seperator,
+                    operator));
+            seperator = ",";
+        }
+        if (circle != null) {
+            sb.append(String.format("%s\"circle\": \"%s\"", seperator, circle));
+            seperator = ",";
+        }
+        if (callId != null) {
+            sb.append(String.format("%s\"callId\": %s", seperator, callId));
+            seperator = ",";
+        }
+        if (callStartTime != null) {
+            sb.append(String.format("%s\"callStartTime\": %s", seperator,
+                    callStartTime));
+            seperator = ",";
+        }
+        if (callEndTime != null) {
+            sb.append(String.format("%s\"callEndTime\": %s", seperator,
+                    callEndTime));
+            seperator = ",";
+        }
+        if (callDurationInPulses != null) {
+            sb.append(String.format("%s\"callDurationInPulses\": %s",
+                    seperator, callDurationInPulses));
+            seperator = ",";
+        }
+        if (callStatus != null) {
+            sb.append(String.format("%s\"callStatus\": %s", seperator,
+                    callStatus));
+            seperator = ",";
+        }
+        if (callDisconnectReason != null) {
+            sb.append(String.format("%s\"callDisconnectReason\": %s",
+                    seperator, callDisconnectReason));
+            seperator = ",";
+        }
+        if (content_contentFileName != null || content_endTime != null
+                || content_inboxWeekId != null || content_startTime != null
+                || content_subscriptionId != null
+                || content_subscriptionPack != null) {
+            sb.append(String.format("%s\"content\": [{", seperator));
+            seperator = "";
+            if (content_subscriptionId != null) {
+                sb.append(String.format("%s\"subscriptionId\": %s", seperator,
+                        content_subscriptionId));
+                seperator = ",";
+            }
+            if (content_subscriptionPack != null) {
+                sb.append(String.format("%s\"subscriptionPack\": %s",
+                        seperator, content_subscriptionPack));
+                seperator = ",";
+            }
+            if (content_inboxWeekId != null) {
+                sb.append(String.format("%s\"inboxWeekId\": %s", seperator,
+                        content_inboxWeekId));
+                seperator = ",";
+            }
+            if (content_contentFileName != null) {
+                sb.append(String.format("%s\"contentFileName\": %s", seperator,
+                        content_contentFileName));
+                seperator = ",";
+            }
+            if (content_startTime != null) {
+                sb.append(String.format("%s\"startTime\": %s", seperator,
+                        content_startTime));
+                seperator = ",";
+            }
+            if (content_endTime != null) {
+                sb.append(String.format("%s\"endTime\": %s", seperator,
+                        content_endTime));
+                seperator = ",";
+            }
+            sb.append("}]");
+        }
+
+        sb.append("}");
+
+        StringEntity params = new StringEntity(sb.toString());
+        httpPost.setEntity(params);
+        httpPost.addHeader("content-type", "application/json");
+        return httpPost;
+    }
+
+    @Ignore
+    @Test
+    public void verifyFT30() throws IOException, InterruptedException {
+        /**
+         * test SaveInboxCallDetails API with InvalidDateFormat
+         */
+
+        // Invalid callStartTime not in Epoch format
+        HttpPost httpPost = createInboxCallDetailsRequestHttpPost("1234567890", // callingNumber
+                "A", // operator
+                "AP", // circle
+                "123456789012345", // callId
+                "7/12/2015", // callStartTime invalid
+                "456", // callEndTime
+                "123", // callDurationInPulses
+                "1", // callStatus
+                "1" // callDisconnectReason
+        );
+        String expectedJsonResponse = createFailureResponseJson("<callStartTime: Invalid>");
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+    }
+
+    @Ignore
+    @Test
+    public void verifyFT31() throws IOException, InterruptedException {
+        /**
+         * test SaveInboxCallDetails API with InvalidDateFormat
+         */
+        // Invalid callEndTime not in Epoch format
+        HttpPost httpPost = createInboxCallDetailsRequestHttpPost("1234567890", // callingNumber
+                "A", // operator
+                "AP", // circle
+                "123456789012345", // callId
+                "456", // callStartTime
+                "07/12/2015", // callEndTime invalid
+                "123", // callDurationInPulses
+                "1", // callStatus
+                "1" // callDisconnectReason
+        );
+        String expectedJsonResponse = createFailureResponseJson("<callEndTime: Invalid>");
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+    }
+
+    @Ignore
+    @Test
+    public void verifyFT37() throws IOException, InterruptedException {
+        /**
+         * test SaveInboxCallDetails API with InvalidDateFormat
+         */
+        // Invalid content startTime: not in Epoch format
+        HttpPost httpPost = createInboxCallDetailsRequestHttpPost("1234567890", // callingNumber
+                "A", // operator
+                "AP", // circle
+                "123456789012345", // callId
+                "456", // callStartTime
+                "876", // callEndTime
+                "123", // callDurationInPulses
+                "1", // callStatus
+                "1", // callDisconnectReason
+                // content part
+                "00000000-0000-0000-0000-000000000000", // subscriptionId
+                "48WeeksPack", // subscriptionPack
+                "10_1", // inboxWeekId missing
+                "foo", // contentFileName
+                "7/5/15", // startTime not in epoch format
+                "456" // endTime
+        );
+        String expectedJsonResponse = createFailureResponseJson("<startTime: Invalid>");
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+    }
+
+    @Ignore
+    @Test
+    public void verifyFT38() throws IOException, InterruptedException {
+        /**
+         * test SaveInboxCallDetails API with InvalidDateFormat
+         */
+        // Invalid content endTime: not in Epoch format
+        HttpPost httpPost = createInboxCallDetailsRequestHttpPost("1234567890", // callingNumber
+                "A", // operator
+                "AP", // circle
+                "123456789012345", // callId
+                "456", // callStartTime
+                "786", // callEndTime
+                "123", // callDurationInPulses
+                "1", // callStatus
+                "1", // callDisconnectReason
+                // content part
+                "00000000-0000-0000-0000-000000000000", // subscriptionId
+                "48WeeksPack", // subscriptionPack
+                "10_1", // inboxWeekId missing
+                "foo", // contentFileName
+                "454", // startTime
+                "7/5/15" // endTime not in epoch format
+        );
+        String expectedJsonResponse = createFailureResponseJson("<endTime: Invalid>");
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+    }
+
 }
