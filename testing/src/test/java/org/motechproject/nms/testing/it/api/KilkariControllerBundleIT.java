@@ -1,5 +1,17 @@
 package org.motechproject.nms.testing.it.api;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+import javax.inject.Inject;
+
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -8,8 +20,8 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.joda.time.DateTime;
-import org.junit.Ignore;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.api.web.contract.BadRequest;
@@ -51,18 +63,6 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
-
-import javax.inject.Inject;
-
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.regex.Pattern;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Verify that Kilkari API is functional.
@@ -774,4 +774,100 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
     }
     
+    // This method is a utility method for running the test cases. this is
+    // already
+    // used in the branch NMS.FT.58.59.60
+    private HttpPost createSubscriptionHttpPost(String callingNumber,
+            String operator, String circle, String callId,
+            String languageLocationCode, String subscriptionPack)
+            throws IOException {
+
+        StringBuilder sb = new StringBuilder();
+        String seperator = "";
+        sb.append("{");
+        if (callingNumber != null) {
+            sb.append(String.format("%s\"callingNumber\": %s", seperator,
+                    callingNumber));
+            seperator = ",";
+        }
+        if (operator != null) {
+            sb.append(String.format("%s\"operator\": \"%s\"", seperator,
+                    operator));
+            seperator = ",";
+        }
+        if (circle != null) {
+            sb.append(String.format("%s\"circle\": \"%s\"", seperator, circle));
+            seperator = ",";
+        }
+        if (callId != null) {
+            sb.append(String.format("%s\"callId\": %s", seperator, callId));
+            seperator = ",";
+        }
+        if (languageLocationCode != null) {
+            sb.append(String.format("%s\"languageLocationCode\": \"%s\"",
+                    seperator, languageLocationCode));
+            seperator = ",";
+        }
+        if (subscriptionPack != null) {
+            sb.append(String.format("%s\"subscriptionPack\": \"%s\"",
+                    seperator, subscriptionPack));
+            seperator = ",";
+        }
+
+        sb.append("}");
+
+        HttpPost httpPost = new HttpPost(String.format(
+                "http://localhost:%d/api/kilkari/subscription",
+                TestContext.getJettyPort()));
+        httpPost.setHeader("Content-type", "application/json");
+        httpPost.setEntity(new StringEntity(sb.toString()));
+        return httpPost;
+    }
+
+    // NMS_FT_61_62_63
+    @Test
+    public void verifyFT61() throws IOException,
+            InterruptedException {
+        /**
+         * test CreateSubscription API with Invalid CallId
+         */
+        // callId less than 10 digit
+        HttpPost httpPost = createSubscriptionHttpPost("1234567890", "A", "AP",
+                "12345678901254", "10", "childPack");
+
+        String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
+                HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    @Test
+    public void verifyFT62() throws IOException, InterruptedException {
+        /**
+         * test CreateSubscription API with Invalid CallId
+         */
+        // callId more than 15 digit
+        HttpPost httpPost = createSubscriptionHttpPost("1234567890", "A", "AP",
+                "1234567890125456", "10", "childPack");
+        String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
+                HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    @Ignore
+    @Test
+    public void verifyFT63() throws IOException, InterruptedException {
+        /**
+         * test CreateSubscription API with Invalid CallId
+         */
+        // callId alphanumeric
+        HttpPost httpPost = createSubscriptionHttpPost("1234567890", "A", "AP",
+                "12345678AR12545", "10", "childPack");
+        String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
+                HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
 }
