@@ -76,8 +76,8 @@ import org.ops4j.pax.exam.spi.reactors.PerSuite;
 @ExamReactorStrategy(PerSuite.class)
 @ExamFactory(MotechNativeTestContainerFactory.class)
 public class KilkariControllerBundleIT extends BasePaxIT {
-    private static final String ADMIN_USERNAME = "root";
-    private static final String ADMIN_PASSWORD = "password";
+    private static final String ADMIN_USERNAME = "motech";
+    private static final String ADMIN_PASSWORD = "motech";
 
 
     @Inject
