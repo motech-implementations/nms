@@ -1,5 +1,17 @@
 package org.motechproject.nms.testing.it.api;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+import javax.inject.Inject;
+
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -56,18 +68,6 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
-
-import javax.inject.Inject;
-
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.regex.Pattern;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Verify that Kilkari API is functional.
@@ -832,14 +832,13 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 		return httpPost;
 	}
 	
-    @Ignore
 	@Test 
-	public void verifyFT_58_59_60()
+    public void verifyFT58()
 			throws IOException, InterruptedException {
-		/**
-		 * NMS_FT_58_59_60 Testing Create Subscription Request with callingNumber 
-		 * as invalid value
-		 */
+        /**
+         * NMS_FT_58 Testing Create Subscription Request with callingNumber as
+         * invalid value
+         */
 		// Calling Number less than 10 digit
 		HttpPost httpPost = createSubscriptionHttpPost("123456789", "A", "AP",
 				"123456789012545", "10", "childPack");
@@ -849,19 +848,35 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 		assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
 				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
 				ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
 
+    @Test
+    public void verifyFT59() throws IOException, InterruptedException {
+        /**
+         * NMS_FT_59 Testing Create Subscription Request with callingNumber as
+         * invalid value
+         */
 		// Calling Number more than 10 digit
-		httpPost = createSubscriptionHttpPost("12345678901", "A", "AP",
+        HttpPost httpPost = createSubscriptionHttpPost("12345678901", "A",
+                "AP",
 				"123456789012545", "10", "childPack");
-
+        String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
 		assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
 				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
 				ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
 
+    @Ignore
+    @Test
+    public void verifyFT60() throws IOException, InterruptedException {
+        /**
+         * NMS_FT_60 Testing Create Subscription Request with callingNumber as
+         * invalid value
+         */
 		// Calling Number alphanumeric
-		httpPost = createSubscriptionHttpPost("12345AD890", "A", "AP",
+        HttpPost httpPost = createSubscriptionHttpPost("12345AD890", "A", "AP",
 				"123456789012545", "10", "childPack");
-
+        String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
 		assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
 				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
 				ADMIN_USERNAME, ADMIN_PASSWORD));
