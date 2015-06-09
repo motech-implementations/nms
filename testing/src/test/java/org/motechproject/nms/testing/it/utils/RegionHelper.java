@@ -32,6 +32,7 @@ public class RegionHelper {
         if (c == null) {
             c = circleDataService.create(new Circle("DE"));
             c.getStates().add(delhiState());
+            c.setDefaultLanguage(hindiLanguage());
             circleDataService.update(c);
         }
 
