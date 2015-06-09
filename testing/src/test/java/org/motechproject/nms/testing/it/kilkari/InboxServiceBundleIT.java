@@ -1,5 +1,12 @@
 package org.motechproject.nms.testing.it.kilkari;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
+import java.util.Set;
+
+import javax.inject.Inject;
+
 import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -9,6 +16,7 @@ import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
+import org.motechproject.nms.kilkari.exception.NoInboxForSubscriptionException;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.InboxService;
@@ -27,12 +35,6 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
-
-import javax.inject.Inject;
-import java.util.Set;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerSuite.class)
@@ -172,5 +174,83 @@ public class InboxServiceBundleIT extends BasePaxIT {
 		assertEquals(msg.getMessageFileName(), "w72_2.wav");
 
 	}
+	
+	@Test
+	public void verifyFT113() throws NoInboxForSubscriptionException {
+		/*
+		 *	"To check NMS is able to make available a single message of current week in inbox
+		 *	when user is subscribed to 48Weeks  Pack with single message per week configuration ."
+		 */
+		DateTime now = DateTime.now();
+		Subscriber subscriber = new Subscriber(1000000002L);
+		subscriber.setDateOfBirth(now);
+		subscriberService.create(subscriber);
+		
+		// create subscription for childPack with one message per week.
+		subscriptionService.createSubscription(subscriber.getCallingNumber(), rh.hindiLanguage(), sh.childPack(),
+				SubscriptionOrigin.MCTS_IMPORT);
+		
+		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber());
+		Set<Subscription> subscriptions = subscriber.getAllSubscriptions();
+		Subscription subscription = subscriptions.iterator().next();
+		SubscriptionPackMessage msg = inboxService.getInboxMessage(subscription);
+		
+		// first msg should be in inbox
+		assertEquals(msg.getWeekId(), "w1_1");
+		assertEquals(msg.getMessageFileName(), "w1_1.wav");
+		
+		// Configuration for last msg of the week
+		subscriber.setDateOfBirth(now.minusDays(6));
+		subscriberService.update(subscriber);
 
+		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber());
+		subscriptions = subscriber.getAllSubscriptions();
+		subscription = subscriptions.iterator().next();
+		msg = inboxService.getInboxMessage(subscription);
+
+		// still first message should be in inbox because messagePerWeek is one
+		assertEquals(msg.getWeekId(), "w1_1");
+		assertEquals(msg.getMessageFileName(), "w1_1.wav");
+		
+	}
+	
+	@Test
+	public void verifyFT122() throws Exception {
+
+		/*
+		 *  To check NMS is able to make a message available for 7 days 
+		 *  after user's subscription gets completed for 48Weeks Pack.
+		 */
+		DateTime now = DateTime.now();
+		Subscriber subscriber = new Subscriber(1000000002L);
+		subscriber.setDateOfBirth(now.minusDays(335));
+		subscriberService.create(subscriber);
+		
+		// create subscription for childPack with one message per week.
+		subscriptionService.createSubscription(subscriber.getCallingNumber(), rh.hindiLanguage(), sh.childPack(),
+				SubscriptionOrigin.MCTS_IMPORT);
+		
+		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber());
+		Set<Subscription> subscriptions = subscriber.getAllSubscriptions();
+		Subscription subscription = subscriptions.iterator().next();
+		SubscriptionPackMessage msg = inboxService.getInboxMessage(subscription);
+		
+		// last msg should be in inbox
+		assertEquals(msg.getWeekId(), "w48_1");
+		assertEquals(msg.getMessageFileName(), "w48_1.wav");
+		
+		subscriber.setDateOfBirth(DateTime.now().minusDays(342)); // completion_duration + 7 days
+		subscriberService.update(subscriber);
+
+		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber());
+		subscriptions = subscriber.getAllSubscriptions();
+		subscription = subscriptions.iterator().next();
+		msg = inboxService.getInboxMessage(subscription);
+
+		// last message should be in inbox till 7 days after subscription completion
+		assertEquals(msg.getWeekId(), "w48_1");
+		assertEquals(msg.getMessageFileName(), "w48_1.wav");
+
+	}
+	
 }
