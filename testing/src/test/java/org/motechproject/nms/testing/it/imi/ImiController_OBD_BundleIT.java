@@ -6,6 +6,7 @@ import org.apache.http.entity.StringEntity;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.alerts.contract.AlertCriteria;
@@ -171,5 +172,28 @@ public class ImiController_OBD_BundleIT extends BasePaxIT {
         List<Alert> alerts = alertService.search(criteria);
         assertEquals(1, alerts.size());
         assertEquals(AlertType.CRITICAL, alerts.get(0).getAlertType());
+    }
+
+    @Test
+    @Ignore
+    public void verifyFT200() throws IOException, InterruptedException {
+        /*
+        * Invoke "NotifyFileProcessedStatus" API having mandatory parameter
+        * fileProcessedStatus having invalid value(i.e status code which doesn’t exist in system).
+        */
+        getLogger().debug("testCreateFileProcessedStatusRequestWithInvalidFileProcessedStatusError()");
+        String requestJson = "{\"fileProcessedStatus\":\"invalidValue\",\"fileName\":\"file.csv\"}";
+        HttpPost httpPost = new HttpPost(String.format(
+                "http://localhost:%d/imi/obdFileProcessedStatusNotification",
+                TestContext.getJettyPort()));
+        httpPost.setHeader("Content-type", "application/json");
+        httpPost.setEntity(new StringEntity(requestJson));
+
+        fileAuditRecordDataService.create(new FileAuditRecord(FileType.TARGET_FILE, "file.csv", false, "ERROR",
+                null, null));
+
+        String expectedJsonResponse = createFailureResponseJson("<fileProcessedStatus: Invalid Value>");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 }
