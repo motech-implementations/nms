@@ -1,5 +1,17 @@
 package org.motechproject.nms.testing.it.api;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+import javax.inject.Inject;
+
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -57,18 +69,6 @@ import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
-import javax.inject.Inject;
-
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.regex.Pattern;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 /**
  * Verify that Kilkari API is functional.
  */
@@ -76,8 +76,8 @@ import static org.junit.Assert.assertTrue;
 @ExamReactorStrategy(PerSuite.class)
 @ExamFactory(MotechNativeTestContainerFactory.class)
 public class KilkariControllerBundleIT extends BasePaxIT {
-	private static final String ADMIN_USERNAME = "motech";
-	private static final String ADMIN_PASSWORD = "motech";
+    private static final String ADMIN_USERNAME = "root";
+    private static final String ADMIN_PASSWORD = "password";
 
 	@Inject
 	private SubscriberService subscriberService;
@@ -918,14 +918,13 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 	}
 
 	@Test
-	@Ignore
-	public void verifyFT6_7_8() throws IOException,
+    public void verifyFT6() throws IOException,
 			InterruptedException {
 
-		/**
-		 * NMS_FT_6_7_8 To check the response in case of invalid callingNumber
-		 * in Get Subscriber Details API
-		 */
+		        /**
+         * NMS_FT_6 To check the response in case of invalid callingNumber in
+         * Get Subscriber Details API
+         */
 
 		HttpGet httpGet = createGetSubscriberDetailsRequest("123456789", // callingNumber
 																			// less
@@ -942,26 +941,45 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 		assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
 				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
 				ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
 
-		httpGet = createGetSubscriberDetailsRequest("12345678901", // callingNumber
+    @Test
+    public void verifyFT7() throws IOException, InterruptedException {
+
+        /**
+         * NMS_FT_7 To check the response in case of invalid callingNumber in
+         * Get Subscriber Details API
+         */
+        HttpGet httpGet = createGetSubscriberDetailsRequest("12345678901", // callingNumber
 																	// more than
 																	// 10 digits
 				"A", // operator
 				"AP", // circle
 				"123456789012345" // callId
 		);
+        String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
 
 		assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
 				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
 				ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
 
-		httpGet = createGetSubscriberDetailsRequest("12345A6789", // callingNumber
+    @Test
+    @Ignore
+    public void verifyFT8() throws IOException, InterruptedException {
+
+        /**
+         * NMS_FT_8 To check the response in case of invalid callingNumber in
+         * Get Subscriber Details API
+         */
+        HttpGet httpGet = createGetSubscriberDetailsRequest("12345A6789", // callingNumber
 																	// alpha
 																	// numeric
 				"A", // operator
 				"AP", // circle
 				"123456789012345" // callId
 		);
+        String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
 
 		assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
 				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
