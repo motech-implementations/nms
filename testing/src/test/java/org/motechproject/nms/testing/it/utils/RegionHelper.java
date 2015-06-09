@@ -79,23 +79,6 @@ public class RegionHelper {
     }
 
 
-    public District southDelhiDistrict() {
-        District district = districtDataService.findById(3L);
-
-        if (district == null) {
-            district = new District();
-            district.setName("South Delhi");
-            district.setRegionalName("South Delhi");
-            district.setCode(3L);
-            district.setState(delhiState());
-            district.setLanguage(hindiLanguage());
-            districtDataService.create(district);
-        }
-
-        return district;
-    }
-
-
     public District newDelhiDistrict() {
         District district = districtDataService.findById(1L);
 
