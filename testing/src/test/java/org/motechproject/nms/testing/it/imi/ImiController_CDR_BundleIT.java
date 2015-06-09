@@ -142,6 +142,11 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
             cdrDetail = new FileInfo(detailFile, "", 0);
 
         }
+        return createHttpPost(targetFile, cdrSummary, cdrDetail);
+    }
+
+    private HttpPost createHttpPost(String targetFile, FileInfo cdrSummary, FileInfo cdrDetail)
+            throws IOException, NoSuchAlgorithmException {
         CdrFileNotificationRequest cdrFileNotificationRequest =
                 new CdrFileNotificationRequest(targetFile, cdrSummary, cdrDetail);
 
@@ -155,7 +160,6 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
 
         return httpPost;
     }
-
 
     @Test
     public void testCreateCdrFileNotificationRequest() throws IOException, InterruptedException,
@@ -214,6 +218,308 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
         String expectedJsonResponse =
                 createFailureResponseJson("<fileName: Invalid><cdrSummary: Invalid><cdrDetail: Invalid>");
 
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    @Test
+    public void verifyFT201() throws IOException,
+            InterruptedException, NoSuchAlgorithmException{
+        /*
+        * To check cdrFileNotification API is rejected in case mandatory parameter filename is missing.
+        */
+        getLogger().debug("cdrFileNotificationAPIRejectedIfOBDFileMissing()");
+
+        CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
+                subscriptionPackDataService, languageDataService, circleDataService,
+                stateDataService, districtDataService, fileAuditRecordDataService);
+
+        helper.makeCdrs(1,0,0,0);
+        helper.makeRemoteCsrFile();
+        helper.makeRemoteCdrFile();
+        helper.createObdFileAuditRecord(true, true);
+
+        String summaryFile = helper.csr();
+        String detailFile = helper.cdr();
+
+        FileInfo cdrSummary = new FileInfo(summaryFile, helper.csrRemoteChecksum(), 0);
+        FileInfo cdrDetail = new FileInfo(detailFile, helper.cdrRemoteChecksum(), 1);
+
+        HttpPost httpPost = createHttpPost(null, cdrSummary, cdrDetail);
+        String expectedJsonResponse =
+                createFailureResponseJson("<fileName: Not Present><cdrSummary: Invalid><cdrDetail: Invalid>");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    @Test
+    public void verifyFT202() throws IOException,
+            InterruptedException, NoSuchAlgorithmException{
+        /*
+        * To check cdrFileNotification API is rejected in case mandatory parameter cdrSummary is missing.
+        */
+        getLogger().debug("cdrFileNotificationAPIRejectedIfCdrSummaryMissing()");
+
+        CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
+                subscriptionPackDataService, languageDataService, circleDataService,
+                stateDataService, districtDataService, fileAuditRecordDataService);
+
+        helper.makeCdrs(1,0,0,0);
+        helper.makeRemoteCsrFile();
+        helper.makeRemoteCdrFile();
+        helper.createObdFileAuditRecord(true, true);
+
+        String targetFile = helper.obd();
+        String detailFile = helper.cdr();
+
+        FileInfo cdrDetail = new FileInfo(detailFile, helper.cdrRemoteChecksum(), 1);
+
+        HttpPost httpPost = createHttpPost(targetFile, null, cdrDetail);
+        String expectedJsonResponse =
+                createFailureResponseJson("<cdrSummary: Not Present>");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    @Test
+    public void verifyFT203() throws IOException,
+            InterruptedException, NoSuchAlgorithmException{
+        /*
+        * To check cdrFileNotification API is rejected in case mandatory parameter cdrDetail is missing.
+        */
+        getLogger().debug("cdrFileNotificationAPIRejectedIfCdrDetailMissing()");
+
+        CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
+                subscriptionPackDataService, languageDataService, circleDataService,
+                stateDataService, districtDataService, fileAuditRecordDataService);
+
+        helper.makeCdrs(1,0,0,0);
+        helper.makeRemoteCsrFile();
+        helper.makeRemoteCdrFile();
+        helper.createObdFileAuditRecord(true, true);
+
+        String targetFile = helper.obd();
+        String summaryFile = helper.csr();
+
+        FileInfo cdrSummary = new FileInfo(summaryFile, helper.csrRemoteChecksum(), 0);
+
+        HttpPost httpPost = createHttpPost(targetFile, cdrSummary, null);
+        String expectedJsonResponse =
+                createFailureResponseJson("<cdrDetail: Not Present>");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    @Test
+    public void verifyFT204() throws IOException,
+            InterruptedException, NoSuchAlgorithmException{
+        /*
+        * To check cdrFileNotification API is rejected in case filename is  not found in audit records.
+        */
+        getLogger().debug("cdrFileNotificationAPIRejectedIfOBDFileMissingINAuditRecord()");
+
+        CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
+                subscriptionPackDataService, languageDataService, circleDataService,
+                stateDataService, districtDataService, fileAuditRecordDataService);
+
+        helper.makeCdrs(1,0,0,0);
+        helper.makeRemoteCsrFile();
+        helper.makeRemoteCdrFile();
+
+        String targetFile = helper.obd();
+        String summaryFile = helper.csr();
+        String detailFile = helper.cdr();
+
+        FileInfo cdrSummary = new FileInfo(summaryFile, helper.csrRemoteChecksum(), 0);
+        FileInfo cdrDetail = new FileInfo(detailFile, helper.cdrRemoteChecksum(), 1);
+
+        HttpPost httpPost = createHttpPost(targetFile, cdrSummary, cdrDetail);
+        String expectedJsonResponse =
+                createFailureResponseJson("<" +targetFile +": Not Found>");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_NOT_FOUND, expectedJsonResponse,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    @Test
+    public void verifyFT205() throws IOException,
+            InterruptedException, NoSuchAlgorithmException{
+        /*
+        * To check cdrFileNotification API is rejected in case cdrFile is missing inside cdrSummary.
+        */
+        getLogger().debug("cdrFileNotificationAPIRejectedIfCdrFileMissingInsideCdrSummary()");
+
+        CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
+                subscriptionPackDataService, languageDataService, circleDataService,
+                stateDataService, districtDataService, fileAuditRecordDataService);
+
+        helper.makeCdrs(1,0,0,0);
+        helper.makeRemoteCsrFile();
+        helper.makeRemoteCdrFile();
+        helper.createObdFileAuditRecord(true, true);
+
+        String targetFile = helper.obd();
+        String detailFile = helper.cdr();
+
+        FileInfo cdrSummary = new FileInfo(null, helper.csrRemoteChecksum(), 0);
+        FileInfo cdrDetail = new FileInfo(detailFile, helper.cdrRemoteChecksum(), 1);
+
+        HttpPost httpPost = createHttpPost(targetFile, cdrSummary, cdrDetail);
+        String expectedJsonResponse =
+                createFailureResponseJson("<cdrFile: Not Present>");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    @Test
+    public void verifyFT206() throws IOException,
+            InterruptedException, NoSuchAlgorithmException{
+        /*
+        * To check cdrFileNotification API is rejected in case checksum is missing inside cdrSummary.
+        */
+        getLogger().debug("cdrFileNotificationAPIRejectedIfChecksumMissingInsideCdrSummary()");
+
+        CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
+                subscriptionPackDataService, languageDataService, circleDataService,
+                stateDataService, districtDataService, fileAuditRecordDataService);
+
+        helper.makeCdrs(1,0,0,0);
+        helper.makeRemoteCsrFile();
+        helper.makeRemoteCdrFile();
+        helper.createObdFileAuditRecord(true, true);
+
+        String targetFile = helper.obd();
+        String summaryFile = helper.csr();
+        String detailFile = helper.cdr();
+
+        FileInfo cdrSummary = new FileInfo(summaryFile, null, 0);
+        FileInfo cdrDetail = new FileInfo(detailFile, helper.cdrRemoteChecksum(), 1);
+
+        HttpPost httpPost = createHttpPost(targetFile, cdrSummary, cdrDetail);
+        String expectedJsonResponse =
+                createFailureResponseJson("<checksum: Not Present>");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    @Test
+    public void verifyFT207() throws IOException,
+            InterruptedException, NoSuchAlgorithmException{
+        /*
+        * To check cdrFileNotification API is rejected in case recordsCount is missing inside cdrSummary.
+        */
+        getLogger().debug("cdrFileNotificationAPIRejectedIfRecordsCountMissingInsideCdrSummary()");
+
+        CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
+                subscriptionPackDataService, languageDataService, circleDataService,
+                stateDataService, districtDataService, fileAuditRecordDataService);
+
+        helper.makeCdrs(1,0,0,0);
+        helper.makeRemoteCsrFile();
+        helper.makeRemoteCdrFile();
+        helper.createObdFileAuditRecord(true, true);
+
+        String targetFile = helper.obd();
+        String summaryFile = helper.csr();
+        String detailFile = helper.cdr();
+
+        FileInfo cdrSummary = new FileInfo(summaryFile, helper.csrRemoteChecksum(), -1);
+        FileInfo cdrDetail = new FileInfo(detailFile, helper.cdrRemoteChecksum(), 1);
+
+        HttpPost httpPost = createHttpPost(targetFile, cdrSummary, cdrDetail);
+        String expectedJsonResponse =
+                createFailureResponseJson("<recordsCount: Invalid>");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    @Test
+    public void verifyFT208() throws IOException,
+            InterruptedException, NoSuchAlgorithmException{
+        /*
+        * To check cdrFileNotification API is rejected in case cdrFile is missing inside cdrDetail
+        */
+        getLogger().debug("cdrFileNotificationAPIRejectedIfCdrFileMissingInsideCdrDetail()");
+
+        CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
+                subscriptionPackDataService, languageDataService, circleDataService,
+                stateDataService, districtDataService, fileAuditRecordDataService);
+
+        helper.makeCdrs(1,0,0,0);
+        helper.makeRemoteCsrFile();
+        helper.makeRemoteCdrFile();
+        helper.createObdFileAuditRecord(true, true);
+
+        String targetFile = helper.obd();
+        String summaryFile = helper.csr();
+
+        FileInfo cdrSummary = new FileInfo(summaryFile, helper.csrRemoteChecksum(), 0);
+        FileInfo cdrDetail = new FileInfo(null, helper.cdrRemoteChecksum(), 1);
+
+        HttpPost httpPost = createHttpPost(targetFile, cdrSummary, cdrDetail);
+        String expectedJsonResponse =
+                createFailureResponseJson("<cdrFile: Not Present>");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    @Test
+    public void verifyFT209() throws IOException,
+            InterruptedException, NoSuchAlgorithmException{
+        /*
+        * To check cdrFileNotification API is rejected in case checksum is missing inside cdrDetail.
+        */
+        getLogger().debug("cdrFileNotificationAPIRejectedIfChecksumMissingInsideCdrDetail()");
+
+        CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
+                subscriptionPackDataService, languageDataService, circleDataService,
+                stateDataService, districtDataService, fileAuditRecordDataService);
+
+        helper.makeCdrs(1,0,0,0);
+        helper.makeRemoteCsrFile();
+        helper.makeRemoteCdrFile();
+        helper.createObdFileAuditRecord(true, true);
+
+        String targetFile = helper.obd();
+        String summaryFile = helper.csr();
+        String detailFile = helper.cdr();
+
+        FileInfo cdrSummary = new FileInfo(summaryFile, helper.csrRemoteChecksum(), 0);
+        FileInfo cdrDetail = new FileInfo(detailFile, null, 1);
+
+        HttpPost httpPost = createHttpPost(targetFile, cdrSummary, cdrDetail);
+        String expectedJsonResponse =
+                createFailureResponseJson("<checksum: Not Present>");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    @Test
+    public void verifyFT210() throws IOException,
+            InterruptedException, NoSuchAlgorithmException{
+        /*
+        * To check cdrFileNotification API is rejected in case recordsCount is missing inside cdrDetail.
+        */
+        getLogger().debug("cdrFileNotificationAPIRejectedIfRecordsCountMissingInsideCdrDetail()");
+
+        CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
+                subscriptionPackDataService, languageDataService, circleDataService,
+                stateDataService, districtDataService, fileAuditRecordDataService);
+
+        helper.makeCdrs(1,0,0,0);
+        helper.makeRemoteCsrFile();
+        helper.makeRemoteCdrFile();
+        helper.createObdFileAuditRecord(true, true);
+
+        String targetFile = helper.obd();
+        String summaryFile = helper.csr();
+        String detailFile = helper.cdr();
+
+        FileInfo cdrSummary = new FileInfo(summaryFile, helper.csrRemoteChecksum(), 0);
+        FileInfo cdrDetail = new FileInfo(detailFile, helper.cdrRemoteChecksum(), -1);
+
+        HttpPost httpPost = createHttpPost(targetFile, cdrSummary, cdrDetail);
+        String expectedJsonResponse =
+                createFailureResponseJson("<recordsCount: Invalid>");
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
