@@ -1,5 +1,17 @@
 package org.motechproject.nms.testing.it.api;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+import javax.inject.Inject;
+
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -7,6 +19,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.joda.time.DateTime;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.api.web.contract.BadRequest;
@@ -55,17 +68,6 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
-
-import javax.inject.Inject;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.regex.Pattern;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Verify that Kilkari API is functional.
@@ -754,7 +756,6 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
-
     @Test
     public void verifyFT77()
             throws IOException, InterruptedException {
@@ -783,4 +784,84 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 expectedJsonPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
+    // This method is a utility method for running the test cases. this is already 
+    // used in the branch NMS.FT.6.7.8
+    private HttpGet createGetSubscriberDetailsRequest(String callingNumber,
+            String operator, String circle, String callId) {
+
+        StringBuilder sb = new StringBuilder(String.format(
+                "http://localhost:%d/api/kilkari/user?",
+                TestContext.getJettyPort()));
+        String sep = "";
+        if (callingNumber != null) {
+            sb.append(String.format("callingNumber=%s", callingNumber));
+            sep = "&";
+        }
+        if (operator != null) {
+            sb.append(String.format("%soperator=%s", sep, operator));
+            sep = "&";
+        }
+        if (circle != null) {
+            sb.append(String.format("%scircle=%s", sep, circle));
+            sep = "&";
+        }
+        if (callId != null) {
+            sb.append(String.format("%scallId=%s", sep, callId));
+            sep = "&";
+        }
+
+        return new HttpGet(sb.toString());
+    }
+
+    @Test
+    public void verifyFT9() throws IOException, InterruptedException {
+        /**
+         * test GetSubscriberDetails API with Invalid value of CallId
+         */
+        HttpGet httpGet = createGetSubscriberDetailsRequest("1234567890", // callingNumber
+                "A", // operator
+                "AP", // circle
+                "12345678901234" // callId less than 15 digits
+        );
+
+        String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
+                HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    @Test
+    public void verifyFT10() throws IOException, InterruptedException {
+        /**
+         * test GetSubscriberDetails API with Invalid value of CallId
+         */
+        HttpGet httpGet = createGetSubscriberDetailsRequest("1234567890", // callingNumber
+                "A", // operator
+                "AP", // circle
+                "1234567890123456" // callId more than 15 digits
+        );
+        String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
+                HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    @Ignore
+    @Test
+    public void verifyFT11() throws IOException, InterruptedException {
+        /**
+         * test GetSubscriberDetails API with Invalid value of CallId
+         */
+        HttpGet httpGet = createGetSubscriberDetailsRequest("1234567890", // callingNumber
+                "A", // operator
+                "AP", // circle
+                "123456789A12345" // callId alpha numeric
+        );
+        String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
+                HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+
+    }
 }
