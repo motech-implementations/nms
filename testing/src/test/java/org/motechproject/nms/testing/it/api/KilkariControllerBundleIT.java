@@ -1,10 +1,23 @@
 package org.motechproject.nms.testing.it.api;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+import javax.inject.Inject;
+
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.joda.time.DateTime;
 import org.junit.Ignore;
@@ -56,18 +69,6 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
-
-import javax.inject.Inject;
-
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.regex.Pattern;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Verify that Kilkari API is functional.
@@ -756,7 +757,6 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
-
     @Test
     public void verifyFT77()
             throws IOException, InterruptedException {
@@ -786,8 +786,50 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     }
     
     @Ignore
+    @Test
+    public void verifyFT48() throws IOException, InterruptedException {
+        /**
+         * Testing saveInboxCallDetails API with the internal parameter of
+         * content field missing.
+         */
+        // Missing subscriptionPack
+        HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
+                1234567890L, // callingNumber
+                "A", // operator
+                "AP", // circle
+                123456789012345L, // callId
+                123L, // callStartTime
+                456L, // callEndTime
+                123, // callDurationInPulses
+                1, // callStatus
+                1, // callDisconnectReason
+                new HashSet<>(Arrays.asList(new CallDataRequest(null, // subscriptionId
+                        "48WeeksPack", // subscriptionPack missing
+                        "123", // inboxWeekId
+                        "foo", // contentFileName
+                        123L, // startTime
+                        456L // endTime
+                        ), new CallDataRequest(
+                                "00000000-0000-0000-0000-000000000000", // subscriptionId
+                                "72WeeksPack", // subscriptionPack missing
+                                "123", // inboxWeekId
+                                "foo", // contentFileName
+                                123L, // startTime
+                                456L // endTime
+                        ))))); // content
+        String expectedJsonResponse = createFailureResponseJson("<subscriptionId: Not Present>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
+
+    @Ignore
  	@Test
- 	public void verifyFT_49_50_51_52_53()
+    public void verifyFT49()
  			throws IOException, InterruptedException {
  		/**
  		 * Testing saveInboxCallDetails API with the internal parameter of content field missing.
@@ -810,15 +852,33 @@ public class KilkariControllerBundleIT extends BasePaxIT {
  						"foo", // contentFileName
  						123L, // startTime
  						456L // endTime
- 						))))); // content
+                        ), new CallDataRequest(
+                                "00000100-0000-0000-0000-000000000000", // subscriptionId
+                                "72WeeksPack", // subscriptionPack missing
+                                "123", // inboxWeekId
+                                "foo", // contentFileName
+                                123L, // startTime
+                                456L // endTime
+                        ))))); // content
  		String expectedJsonResponse = createFailureResponseJson("<subscriptionPack: Not Present>");
 
- 		assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
- 				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
- 				ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
 
+    @Ignore
+    @Test
+    public void verifyFT50() throws IOException, InterruptedException {
+        /**
+         * Testing saveInboxCallDetails API with the internal parameter of
+         * content field missing.
+         */
  		// Missing inboxWeekId
- 		httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
+        HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
  				1234567890L, // callingNumber
  				"A", // operator
  				"AP", // circle
@@ -835,15 +895,33 @@ public class KilkariControllerBundleIT extends BasePaxIT {
  						"foo", // contentFileName
  						123L, // startTime
  						456L // endTime
- 						))))); // content
- 		expectedJsonResponse = createFailureResponseJson("<inboxWeekId: Not Present>");
+                        ), new CallDataRequest(
+                                "00000000-0000-0000-0000-000000000000", // subscriptionId
+                                "72WeeksPack", // subscriptionPack missing
+                                "123", // inboxWeekId
+                                "foo", // contentFileName
+                                123L, // startTime
+                                456L // endTime
+                        ))))); // content
+        String expectedJsonResponse = createFailureResponseJson("<inboxWeekId: Not Present>");
 
- 		assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
- 				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
- 				ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
 
+    @Ignore
+    @Test
+    public void verifyFT51() throws IOException, InterruptedException {
+        /**
+         * Testing saveInboxCallDetails API with the internal parameter of
+         * content field missing.
+         */
  		// Missing contentFileName
- 		httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
+        HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
  				1234567890L, // callingNumber
  				"A", // operator
  				"AP", // circle
@@ -860,15 +938,33 @@ public class KilkariControllerBundleIT extends BasePaxIT {
  						null, // contentFileName missing
  						123L, // startTime
  						456L // endTime
- 						))))); // content
- 		expectedJsonResponse = createFailureResponseJson("<contentFileName: Not Present>");
+                        ), new CallDataRequest(
+                                "00000000-0000-0000-0000-00005000000", // subscriptionId
+                                "72WeeksPack", // subscriptionPack missing
+                                "123", // inboxWeekId
+                                "foo", // contentFileName
+                                123L, // startTime
+                                456L // endTime
+                        ))))); // content
+        String expectedJsonResponse = createFailureResponseJson("<contentFileName: Not Present>");
 
- 		assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
- 				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
- 				ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
 
+    @Ignore
+    @Test
+    public void verifyFT52() throws IOException, InterruptedException {
+        /**
+         * Testing saveInboxCallDetails API with the internal parameter of
+         * content field missing.
+         */
  		// Missing startTime
- 		httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
+        HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
  				1234567890L, // callingNumber
  				"A", // operator
  				"AP", // circle
@@ -885,26 +981,39 @@ public class KilkariControllerBundleIT extends BasePaxIT {
  						"foo", // contentFileName
  						null, // startTime missing
  						456L // endTime
- 						))))); // content
+                        ), new CallDataRequest(
+                                "00000000-0000-0000-2000-000000000000", // subscriptionId
+                                "72WeeksPack", // subscriptionPack missing
+                                "123", // inboxWeekId
+                                "foo", // contentFileName
+                                123L, // startTime
+                                456L // endTime
+                        ))))); // content
 
- 		expectedJsonResponse = createFailureResponseJson("<startTime: Not Present>");
+        String expectedJsonResponse = createFailureResponseJson("<startTime: Not Present>");
 
- 		assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
- 				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
- 				ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
 
+    @Ignore
+    @Test
+    public void verifyFT53() throws IOException, InterruptedException {
+        /**
+         * Testing saveInboxCallDetails API with the internal parameter of
+         * content field missing.
+         */
  		// Missing endTime
- 		httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
+        HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
  				1234567890L, // callingNumber
  				"A", // operator
  				"AP", // circle
  				123456789012345L, // callId
  				123L, // callStartTime
- 				/*
- 				 * assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
- 				 * HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
- 				 * ADMIN_USERNAME, ADMIN_PASSWORD));
- 				 */
  				456L, // callEndTime
  				123, // callDurationInPulses
  				1, // callStatus
@@ -916,12 +1025,22 @@ public class KilkariControllerBundleIT extends BasePaxIT {
  						"foo", // contentFileName
  						123L, // startTime
  						null // endTime missing
- 						))))); // content
- 		expectedJsonResponse = createFailureResponseJson("<endTime: Not Present>");
+                        ), new CallDataRequest(
+                                "00000000-0000-0000-0200-000000000000", // subscriptionId
+                                "72WeeksPack", // subscriptionPack missing
+                                "123", // inboxWeekId
+                                "foo", // contentFileName
+                                123L, // startTime
+                                456L // endTime
+                        ))))); // content
+        String expectedJsonResponse = createFailureResponseJson("<endTime: Not Present>");
 
- 		assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
- 				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
- 				ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
  	}
 
 }
