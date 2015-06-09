@@ -773,5 +773,62 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response.getEntity()))  );
 
     }
+
+    @Test
+    public void verifyFT120() throws IOException, InterruptedException {
+        /**
+         * To check NMS is able to make available a message corresponding to
+         * each Pack of current week when user is subscribed to both 72Weeks
+         * Pack and 48 with two message per week configuration .
+         **/
+        // setup data to remove 1 messages per week configuration for child pack
+        testingService.clearDatabase();
+        rh = new RegionHelper(languageDataService, circleDataService,
+                stateDataService, districtDataService);
+
+        sh = new SubscriptionHelper(subscriptionService, subscriberDataService,
+                subscriptionPackDataService, languageDataService,
+                circleDataService, stateDataService, districtDataService);
+
+        deployedServiceDataService.create(new DeployedService(rh.delhiState(),
+                Service.KILKARI));
+
+        Subscriber mctsSubscriber = new Subscriber(9999911122L);
+        // set DOB for child pack
+        mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(14 + 4));
+        mctsSubscriber.setLastMenstrualPeriod(null);
+        subscriberDataService.create(mctsSubscriber);
+
+        // create subscription for child pack in Active state
+        Subscription childPackSubscription = subscriptionService
+                .createSubscription(9999911122L, rh.hindiLanguage(),
+                        sh.childPack(2), SubscriptionOrigin.MCTS_IMPORT);
+
+        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+
+        // create new subscription for pregnancy pack in Active state
+        mctsSubscriber.setDateOfBirth(null);
+        mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(90 + 4));
+        subscriberDataService.update(mctsSubscriber);
+        Subscription pregnancyPackSubscription = subscriptionService
+                .createSubscription(9999911122L, rh.hindiLanguage(),
+                        sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
+
+        Pattern childPackJsonPattern = Pattern
+                .compile(".*\"subscriptionId\":\""
+                        + childPackSubscription.getSubscriptionId()
+                        + "\",\"subscriptionPack\":\"childPack\",\"inboxWeekId\":\"w3_2\",\"contentFileName\":\"w3_2.wav.*");
+        Pattern pregnancyPackJsonPattern = Pattern
+                .compile(".*\"subscriptionId\":\""
+                        + pregnancyPackSubscription.getSubscriptionId()
+                        + "\",\"subscriptionPack\":\"pregnancyPack\",\"inboxWeekId\":\"w1_2\",\"contentFileName\":\"w1_2.wav.*");
+
+        HttpGet httpGet = createHttpGet(true, "9999911122", true,
+                "123456789012345");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
+                childPackJsonPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
+                pregnancyPackJsonPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
     
 }
