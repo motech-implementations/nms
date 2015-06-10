@@ -1,17 +1,5 @@
 package org.motechproject.nms.testing.it.api;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.regex.Pattern;
-
-import javax.inject.Inject;
-
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -63,6 +51,17 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
+
+import javax.inject.Inject;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Verify that Kilkari API is functional.
@@ -777,14 +776,14 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     }
 
 
-    /*
-     * To check that only message for Active Pack should be returned from
-     * inbox after 7 days of user's subscription gets completed for 72Weeks
-     * Pack while user is subscribed for both Pack.
-     */
+
     @Test
     public void verifyFT76() throws IOException, InterruptedException {
-
+        /*
+         * To check that only message for Active Pack should be returned from
+         * inbox after 7 days of user's subscription gets completed for 72Weeks
+         * Pack while user is subscribed for both Pack.
+         */
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
         mctsSubscriber.setDateOfBirth(DateTime.now());
         subscriberDataService.create(mctsSubscriber);
@@ -963,7 +962,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     @Test
     public void verifyFT17() throws IOException, InterruptedException {
         HttpGet httpGet = createGetSubscriberDetailsRequest("", // callingNumber
-                                                                // Blank
+                // Blank
                 "A", // operator
                 "AP", // circle
                 "123456789012345" // callId
