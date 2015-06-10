@@ -546,6 +546,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
         assertEquals(DayOfTheWeek.today().nextDay(),retries.get(0).getDayOfTheWeek());
     }
 
+
     @Test
     public void verifyFT139() {
         /**
@@ -603,13 +604,14 @@ public class CsrServiceBundleIT extends BasePaxIT {
         assertEquals(DayOfTheWeek.today().nextDay(),retries.get(0).getDayOfTheWeek());
     }
 
+
+    /**
+     * To verify that 48WeeksPack beneficiary should not be  deactivated if the error “user
+     * number does not exist” is not received for all failed delivery attempts during a scheduling
+     * period for a message.
+     */
     @Test
     public void verifyFT176() {
-        /**
-         * To verify that 48WeeksPack beneficiary should not be  deactivated if the error “user
-         * number does not exist” is not received for all failed delivery attempts during a scheduling
-         * period for a message.
-         */
 
         Subscription subscription = sh.mksub(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
 
