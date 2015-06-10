@@ -57,8 +57,8 @@ public class LanguageServiceImpl implements LanguageService {
                         "from nms_languages l " +
                         "join nms_districts d on  d.language_id_oid = l.id " +
                         "join nms_states s on d.state_id_oid = s.id " +
-                        "join FLW_MODULE_JOIN_CIRCLES_STATES cxs on s.id = cxs.state_id and cxs.circle_id = ?";
-
+                        "join nms_states_join_circles sxc on s.id = sxc.state_id and sxc.circle_id = ?";
+                
                 return query;
             }
 
