@@ -24,7 +24,7 @@ public class CsvInstanceImporter<T> extends CsvImporter<ICsvBeanReader> {
     }
 
     @Override
-    protected ICsvBeanReader createCsvReader(Reader reader) {
-        return new CsvBeanReader(reader, CsvPreference.STANDARD_PREFERENCE);
+    protected ICsvBeanReader createCsvReader(Reader reader, CsvPreference preferences) {
+        return new CsvBeanReader(reader, preferences);
     }
 }
