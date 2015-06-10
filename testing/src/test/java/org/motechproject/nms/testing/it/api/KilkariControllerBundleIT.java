@@ -34,10 +34,14 @@ import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.flw.repository.ServiceUsageCapDataService;
 import org.motechproject.nms.flw.repository.ServiceUsageDataService;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
+import org.motechproject.nms.kilkari.domain.InboxCallData;
+import org.motechproject.nms.kilkari.domain.InboxCallDetailRecord;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
+import org.motechproject.nms.kilkari.repository.InboxCallDataDataService;
+import org.motechproject.nms.kilkari.repository.InboxCallDetailRecordDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
@@ -105,6 +109,15 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     private DeployedServiceDataService deployedServiceDataService;
     @Inject
     private TestingService testingService;
+    @Inject
+    private InboxCallDetailRecordDataService inboxCallDetailsDataService;
+    @Inject
+    private InboxCallDataDataService inboxCallDataDataService;
+
+
+    public KilkariControllerBundleIT() {
+        System.setProperty("org.motechproject.testing.osgi.http.numTries", "1");
+    }
 
 
     private RegionHelper rh;
@@ -162,6 +175,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         return new HttpGet(sb.toString());
     }
 
+    
     private String createInboxResponseJson(Set<InboxSubscriptionDetailResponse> inboxSubscriptionDetailList)
             throws IOException {
         InboxResponse response = new InboxResponse(inboxSubscriptionDetailList);
@@ -169,11 +183,13 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         return mapper.writeValueAsString(response);
     }
 
+
     private String createFailureResponseJson(String failureReason) throws IOException {
         BadRequest badRequest = new BadRequest(failureReason);
         ObjectMapper mapper = new ObjectMapper();
         return mapper.writeValueAsString(badRequest);
     }
+
 
     @Test
     public void testInboxRequest() throws IOException, InterruptedException {
@@ -233,6 +249,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 ADMIN_PASSWORD));
     }
 
+
     @Test
     public void testInboxRequestEarlySubscription() throws IOException, InterruptedException {
 
@@ -266,6 +283,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, expectedJson, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
+
     @Test
     public void testInboxRequestRecentlyCompletedSubscription() throws IOException, InterruptedException {
 
@@ -282,6 +300,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, expectedJsonPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
+
     @Test
     public void testInboxRequestDeactivatedSubscription() throws IOException, InterruptedException {
 
@@ -296,6 +315,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         HttpGet httpGet = createHttpGet(true, "1000000000", true, "123456789012345");
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, expectedJson, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
+
 
     @Test
     public void testInboxRequestSeveralSubscriptionsInDifferentStates() throws IOException, InterruptedException {
@@ -358,6 +378,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 ADMIN_PASSWORD));
     }
 
+
     @Test
     public void testInboxRequestBadSubscriber() throws IOException, InterruptedException {
 
@@ -368,6 +389,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
+
     @Test
     public void testInboxRequestNoSubscriber() throws IOException, InterruptedException {
 
@@ -377,6 +399,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
+
 
     private HttpPost createSubscriptionHttpPost(long callingNumber, String subscriptionPack)
             throws IOException {
@@ -398,6 +421,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         return httpPost;
     }
 
+
     @Test
     public void testCreateSubscriptionRequest() throws IOException, InterruptedException {
         HttpPost httpPost = createSubscriptionHttpPost(9999911122L, sh.childPack().getName());
@@ -405,6 +429,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
     }
+
 
     @Test
     public void testCreateSubscriptionRequestInvalidPack() throws IOException, InterruptedException {
@@ -414,6 +439,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_NOT_FOUND, response.getStatusLine().getStatusCode());
     }
+
 
     @Test
     public void testCreateSubscriptionRequestSamePack() throws IOException, InterruptedException {
@@ -435,6 +461,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         // to this pack
         assertEquals(numberOfSubsBefore, numberOfSubsAfter);
     }
+
 
     @Test
     public void testCreateSubscriptionRequestDifferentPacks() throws IOException, InterruptedException {
@@ -458,6 +485,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertTrue((numberOfSubsBefore + 1) == numberOfSubsAfter);
     }
 
+
     @Test
     public void testCreateSubscriptionsNoLanguageInDB() throws IOException, InterruptedException {
         SubscriptionRequest subscriptionRequest = new SubscriptionRequest(9999911122L, rh.airtelOperator(), rh.delhiCircle().getName(),
@@ -475,6 +503,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient
                 .execHttpRequest(httpPost, HttpStatus.SC_NOT_FOUND, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
+
 
     @Test
     public void testCreateSubscriptionForUndeployedState() throws IOException, InterruptedException {
@@ -525,6 +554,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertTrue(subscription.getDeactivationReason().equals(DeactivationReason.DEACTIVATED_BY_USER));
     }
 
+
     @Test
     public void testDeactivateSubscriptionRequestAlreadyInactive() throws IOException, InterruptedException {
 
@@ -551,6 +581,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertTrue(subscription.getStatus().equals(SubscriptionStatus.DEACTIVATED));
     }
 
+
     @Test
     public void testDeactivateSubscriptionRequestInvalidSubscription() throws IOException, InterruptedException {
 
@@ -569,6 +600,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 ADMIN_PASSWORD));
     }
 
+
     private HttpPost createInboxCallDetailsRequestHttpPost(InboxCallDetailsRequest request) throws IOException {
         HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/kilkari/inboxCallDetails",
                 TestContext.getJettyPort()));
@@ -578,6 +610,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         httpPost.addHeader("content-type", "application/json");
         return httpPost;
     }
+
 
     @Test
     public void testSaveInboxCallDetails() throws IOException, InterruptedException {
@@ -611,6 +644,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
+
     @Test
     public void testSaveInboxCallDetailsInvalidParams() throws IOException, InterruptedException {
         HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
@@ -629,6 +663,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
+
 
     @Test
     public void testSaveInboxCallDetailsInvalidContent() throws IOException, InterruptedException {
@@ -665,14 +700,124 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
-
+    /**
+     * NMS_FT_22 To verify the that Save Inbox call Details API request
+     * should succeed with content being saved for both Pack as blank.
+     */
     @Test
-    public void verifyFT77()
+    public void verifyFT22()
             throws IOException, InterruptedException {
-        /**
-         * NMS_FT_77 To check that message should be returned from inbox within
-         * 7 days of user's subscription gets completed for 72Weeks Pack.
-         */
+        HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
+                3000000000L, // callingNumber
+                "A", // operator
+                "AP", // circle
+                123456789012345L, // callId
+                123L, // callStartTime
+                456L, // callEndTime
+                123, // callDurationInPulses
+                2, // callStatus
+                4, // callDisconnectReason
+                new HashSet<CallDataRequest>())); // content
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+        // assert inboxCallDetailRecord
+        InboxCallDetailRecord inboxCallDetailRecord = inboxCallDetailsDataService
+                .retrieve("callingNumber", 3000000000L);
+        assertTrue(3000000000L == inboxCallDetailRecord.getCallingNumber());
+        assertTrue(123456789012345L == inboxCallDetailRecord.getCallId());
+        assertEquals("A", inboxCallDetailRecord.getOperator());
+        assertEquals("AP", inboxCallDetailRecord.getCircle());
+        assertTrue(123 == inboxCallDetailRecord.getCallDurationInPulses());
+        assertTrue(2 == inboxCallDetailRecord.getCallStatus());
+        assertTrue(4 == inboxCallDetailRecord.getCallDisconnectReason());
+        assertTrue(123L == inboxCallDetailRecord.getCallStartTime().getMillis());
+        assertTrue(456L == inboxCallDetailRecord.getCallEndTime().getMillis());
+
+    }
+
+    /**
+     * To verify the that Save Inbox call Details API request should succeed
+     * with content being saved for both Pack.
+     */
+    @Test
+    public void verifyFT23() throws IOException, InterruptedException {
+
+        Subscriber subscriber1 = subscriberDataService.findByCallingNumber(1000000000L);
+        Subscription subscription1 = subscriber1.getAllSubscriptions().iterator().next();
+        Subscriber subscriber2 = subscriberDataService.findByCallingNumber(2000000000L);
+        Subscription subscription2 = subscriber2.getAllSubscriptions().iterator().next();
+
+        HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
+                3000000000L, // callingNumber
+                "A", // operator
+                "AP", // circle
+                123456789012345L, // callId
+                123L, // callStartTime
+                456L, // callEndTime
+                123, // callDurationInPulses
+                1, // callStatus
+                1, // callDisconnectReason
+                new HashSet<>(Arrays.asList(
+                        new CallDataRequest(subscription1.getSubscriptionId(), // subscriptionId
+
+                                "48WeeksPack", // subscriptionPack
+                                "123", // inboxWeekId
+                                "foo1.wav", // contentFileName
+                                123L, // startTime
+                                456L), // endTime
+                        new CallDataRequest(subscription2.getSubscriptionId(), // subscriptionId
+
+                                "72WeeksPack", // subscriptionPack
+                                "124", // inboxWeekId
+                                "foo2.wav", // contentFileName
+                                192L, // startTime
+                                678L) // endTime
+                )))); // content
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+        // assert inboxCallDetailRecord
+        InboxCallDetailRecord inboxCallDetailRecord = inboxCallDetailsDataService
+                .retrieve("callingNumber", 3000000000L);
+        assertTrue(3000000000L == inboxCallDetailRecord.getCallingNumber());
+        assertTrue(123456789012345L == inboxCallDetailRecord.getCallId());
+        assertEquals("A", inboxCallDetailRecord.getOperator());
+        assertEquals("AP", inboxCallDetailRecord.getCircle());
+        assertTrue(123 == inboxCallDetailRecord.getCallDurationInPulses());
+        assertTrue(1 == inboxCallDetailRecord.getCallStatus());
+        assertTrue(1 == inboxCallDetailRecord.getCallDisconnectReason());
+        assertTrue(123L == inboxCallDetailRecord.getCallStartTime().getMillis());
+        assertTrue(456L == inboxCallDetailRecord.getCallEndTime().getMillis());
+
+        // assert inboxCallData for both packs
+        InboxCallData inboxCallData48Pack = inboxCallDataDataService.retrieve(
+                "contentFileName", "foo1.wav");
+        assertEquals("foo1.wav", inboxCallData48Pack.getContentFileName());
+        assertTrue(456L == inboxCallData48Pack.getEndTime().getMillis());
+        assertEquals("123", inboxCallData48Pack.getInboxWeekId());
+        assertTrue(123L == inboxCallData48Pack.getStartTime().getMillis());
+        assertEquals(subscription1.getSubscriptionId(),
+                inboxCallData48Pack.getSubscriptionId());
+        assertEquals("48WeeksPack", inboxCallData48Pack.getSubscriptionPack());
+
+        InboxCallData inboxCallData72Pack = inboxCallDataDataService.retrieve(
+                "contentFileName", "foo2.wav");
+        assertEquals("foo2.wav", inboxCallData72Pack.getContentFileName());
+        assertTrue(678L == inboxCallData72Pack.getEndTime().getMillis());
+        assertEquals("124", inboxCallData72Pack.getInboxWeekId());
+        assertTrue(192L == inboxCallData72Pack.getStartTime().getMillis());
+        assertEquals(subscription2.getSubscriptionId(),
+                inboxCallData72Pack.getSubscriptionId());
+        assertEquals("72WeeksPack", inboxCallData72Pack.getSubscriptionPack());
+    }
+
+    /**
+     * NMS_FT_77 To check that message should be returned from inbox within
+     * 7 days of user's subscription gets completed for 72Weeks Pack.
+     */
+    @Test
+    public void verifyFT77() throws IOException, InterruptedException {
 
         // 4000000000L subscribed to 72Week Pack subscription
         Subscriber subscriber = subscriberService.getSubscriber(4000000000L);
@@ -698,12 +843,12 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     }
 
 
+    /**
+     * NMS_FT_75 To check that no message should be returned from inbox
+     * after 7 days of user's subscription gets completed for 72Weeks Pack.
+     */
     @Test
     public void verifyFT75() throws IOException, InterruptedException {
-        /**
-         * NMS_FT_75 To check that no message should be returned from inbox
-         * after 7 days of user's subscription gets completed for 72Weeks Pack.
-         */
 
         // 4000000000L subscribed to 72Week Pack subscription
         Subscriber subscriber = subscriberService.getSubscriber(4000000000L);
@@ -725,12 +870,11 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
     }
 
-    
+
+    //To verify that Get Inbox Details API request fails if the provided parameter value of
+    // callingNumber is : blank.
  	@Test
- 	public void verifyFT92() throws IOException,
- 			InterruptedException {
-        //To verify that Get Inbox Details API request fails if the provided parameter value of
-        // callingNumber is : blank.
+ 	public void verifyFT92() throws IOException, InterruptedException {
 
  		HttpGet httpGet = createHttpGet(true, "", true, "123456789012345");
  		String expectedJsonResponse = createFailureResponseJson("<callingNumber: Not Present>");
@@ -743,12 +887,10 @@ public class KilkariControllerBundleIT extends BasePaxIT {
  	}
 
 
+    //To verify that Get Inbox Details API request fails if the provided parameter value of
+    // callId is : blank.
     @Test
-    public void verifyFT93() throws IOException,
-            InterruptedException {
-
-        //To verify that Get Inbox Details API request fails if the provided parameter value of
-        // callId is : blank.
+    public void verifyFT93() throws IOException, InterruptedException {
 
         HttpGet httpGet = createHttpGet(true, "1234567890", true, "");
         String expectedJsonResponse = createFailureResponseJson("<callId: Not Present>");
@@ -758,16 +900,222 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response.getEntity()))  );
     }
 
-     
+
+    /*
+     * To check that message for both Pack should be returned from inbox
+     * within 7 days of user's subscription gets completed for 72Weeks Pack
+     * while user is subscribed for both Pack.
+     */
+    public void verifyFT78() throws IOException, InterruptedException {
+        Subscriber mctsSubscriber = new Subscriber(9999911122L);
+        mctsSubscriber.setDateOfBirth(DateTime.now());
+        subscriberDataService.create(mctsSubscriber);
+
+        // create subscription to child pack
+        Subscription childPackSubscription = subscriptionService
+                .createSubscription(9999911122L, rh.hindiLanguage(),
+                        sh.childPack(),
+                        SubscriptionOrigin.MCTS_IMPORT);
+        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+
+        // due to subscription rules detailed in #157, we need to clear out the
+        // DOB and set an LMP in order to
+        // create a second subscription for this MCTS subscriber
+        mctsSubscriber.setDateOfBirth(null);
+        mctsSubscriber.setLastMenstrualPeriod(DateTime.now());
+        subscriberDataService.update(mctsSubscriber);
+
+        // create subscription to pregnancy pack
+        Subscription pregnancyPackSubscription = subscriptionService
+                .createSubscription(9999911122L, rh.hindiLanguage(),
+                        sh.pregnancyPack(),
+                        SubscriptionOrigin.MCTS_IMPORT);
+        // update pregnancy subscription pack to mark complete
+        // setting the subscription to have ended less than a week ago -- the
+        // final message should be
+        // returned
+        subscriptionService.updateStartDate(pregnancyPackSubscription, DateTime
+                .now().minusDays(505 + 90));
+
+        Pattern childPackJsonPattern = Pattern
+                .compile(".*\"subscriptionId\":\""
+                        + childPackSubscription.getSubscriptionId()
+                        + "\",\"subscriptionPack\":\"childPack\",\"inboxWeekId\":\"w1_1\",\"contentFileName\":\"w1_1.wav.*");
+        Pattern pregnancyPackJsonPattern = Pattern
+                .compile(".*\"subscriptionId\":\""
+                        + pregnancyPackSubscription.getSubscriptionId()
+                        + "\",\"subscriptionPack\":\"pregnancyPack\",\"inboxWeekId\":\"w72_2\",\"contentFileName\":\"w72_2.wav.*");
+
+        HttpGet httpGet = createHttpGet(true, "9999911122", true,
+                "123456789012345");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
+                childPackJsonPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
+                pregnancyPackJsonPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
     @Test
-    public void verifyFT83() throws IOException,
-    		InterruptedException {
+    public void verifyFT76() throws IOException, InterruptedException {
+        /*
+         * To check that only message for Active Pack should be returned from
+         * inbox after 7 days of user's subscription gets completed for 72Weeks
+         * Pack while user is subscribed for both Pack.
+         */
+        Subscriber mctsSubscriber = new Subscriber(9999911122L);
+        mctsSubscriber.setDateOfBirth(DateTime.now());
+        subscriberDataService.create(mctsSubscriber);
 
-        //To verify the behavior of  Get Inbox Details API  if provided beneficiary's callingNumber is not valid :
-        // less than 10 digits.
+        // create subscription to child pack for which start date is as per DOB
+        Subscription childPackSubscription = subscriptionService
+                .createSubscription(9999911122L, rh.hindiLanguage(),
+                        sh.childPack(),
+                        SubscriptionOrigin.MCTS_IMPORT);
+        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
 
-    	HttpGet httpGet = createHttpGet(true, "123456789", true,
-    			"123456789012345");
+        // due to subscription rules detailed in #157, we need to clear out the
+        // DOB and set an LMP in order to
+        // create a second subscription for this MCTS subscriber
+        mctsSubscriber.setDateOfBirth(null);
+        mctsSubscriber.setLastMenstrualPeriod(DateTime.now());
+        subscriberDataService.update(mctsSubscriber);
+
+        // create subscription to pregnancy pack
+        Subscription pregnancyPackSubscription = subscriptionService
+                .createSubscription(9999911122L, rh.hindiLanguage(),
+                        sh.pregnancyPack(),
+                        SubscriptionOrigin.MCTS_IMPORT);
+        // update pregnancy subscription pack to mark complete
+        // setting the subscription to have ended more than a week ago -- no
+        // message should be returned
+        subscriptionService.updateStartDate(pregnancyPackSubscription, DateTime
+                .now().minusDays(512 + 90));
+
+        String expectedJsonResponse = "{\"inboxSubscriptionDetailList\":[{\"subscriptionId\":\""
+                + childPackSubscription.getSubscriptionId()
+                + "\",\"subscriptionPack\":\"childPack\",\"inboxWeekId\":\"w1_1\",\"contentFileName\":\"w1_1.wav\"}]}";
+
+        HttpGet httpGet = createHttpGet(true, "9999911122", true,
+                "123456789012345");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
+                expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+
+    @Test
+    public void verifyFT82() throws IOException, InterruptedException {
+        /*
+         * To check that message for both Pack should be returned from inbox
+         * within 7 days of user's subscription gets completed for 48Weeks Pack
+         * while user is subscribed for both Pack.
+         */
+        setupData();
+
+        Subscriber mctsSubscriber = new Subscriber(9999911122L);
+        mctsSubscriber.setDateOfBirth(DateTime.now());
+        subscriberDataService.create(mctsSubscriber);
+
+        // create subscription to child pack
+        Subscription childPackSubscription = subscriptionService
+                .createSubscription(9999911122L, rh.hindiLanguage(),
+                        sh.childPack(),
+                        SubscriptionOrigin.MCTS_IMPORT);
+        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+
+        // update child pack subscription to mark complete
+        // setting the subscription to have ended less than a week ago -- the
+        // final message should be
+        // returned
+        subscriptionService.updateStartDate(childPackSubscription, DateTime
+                .now().minusDays(337));
+
+        // due to subscription rules detailed in #157, we need to clear out the
+        // DOB and set an LMP in order to
+        // create a second subscription for this MCTS subscriber
+        mctsSubscriber.setDateOfBirth(null);
+        mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(91));
+        subscriberDataService.update(mctsSubscriber);
+
+        // create subscription to pregnancy pack
+        Subscription pregnancyPackSubscription = subscriptionService
+                .createSubscription(9999911122L, rh.hindiLanguage(),
+                        sh.pregnancyPack(),
+                        SubscriptionOrigin.MCTS_IMPORT);
+
+        Pattern childPackJsonPattern = Pattern
+                .compile(".*\"subscriptionId\":\""
+                        + childPackSubscription.getSubscriptionId()
+                        + "\",\"subscriptionPack\":\"childPack\",\"inboxWeekId\":\"w48_1\",\"contentFileName\":\"w48_1.wav.*");
+        Pattern pregnancyPackJsonPattern = Pattern
+                .compile(".*\"subscriptionId\":\""
+                        + pregnancyPackSubscription.getSubscriptionId()
+                        + "\",\"subscriptionPack\":\"pregnancyPack\",\"inboxWeekId\":\"w1_1\",\"contentFileName\":\"w1_1.wav.*");
+
+        HttpGet httpGet = createHttpGet(true, "9999911122", true,
+                "123456789012345");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
+                childPackJsonPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
+                pregnancyPackJsonPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    /*
+     * To check that only message for Active Pack should be returned from
+     * inbox after 7 days of user's subscription gets completed for 48Weeks
+     * Pack while user is subscribed for both Pack.
+     */
+    @Test
+    public void verifyFT80() throws IOException, InterruptedException {
+
+        Subscriber mctsSubscriber = new Subscriber(9999911122L);
+        mctsSubscriber.setDateOfBirth(DateTime.now());
+        subscriberDataService.create(mctsSubscriber);
+
+        // create subscription to child pack
+        Subscription childPackSubscription = subscriptionService
+                .createSubscription(9999911122L, rh.hindiLanguage(),
+                        sh.childPack(),
+                        SubscriptionOrigin.MCTS_IMPORT);
+
+        // update child Pack Subscription to mark complete
+        // setting the subscription to have ended more than a week ago -- no
+        // message should be returned
+        subscriptionService.updateStartDate(childPackSubscription, DateTime
+                .now().minusDays(344));
+
+        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+
+        // due to subscription rules detailed in #157, we need to clear out the
+        // DOB and set an LMP in order to
+        // create a second subscription for this MCTS subscriber
+        mctsSubscriber.setDateOfBirth(null);
+        mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(91));
+        subscriberDataService.update(mctsSubscriber);
+
+        // create subscription to pregnancy pack for which start date is
+        // yesterday
+        // date as per LMP
+        Subscription pregnancyPackSubscription = subscriptionService
+                .createSubscription(9999911122L, rh.hindiLanguage(),
+                        sh.pregnancyPack(),
+                        SubscriptionOrigin.MCTS_IMPORT);
+
+        String expectedJsonResponse = "{\"inboxSubscriptionDetailList\":[{\"subscriptionId\":\""
+                + pregnancyPackSubscription.getSubscriptionId()
+                + "\",\"subscriptionPack\":\"pregnancyPack\",\"inboxWeekId\":\"w1_1\",\"contentFileName\":\"w1_1.wav\"}]}";
+
+        HttpGet httpGet = createHttpGet(true, "9999911122", true,
+                "123456789012345");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
+                expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+
+    //To verify the behavior of  Get Inbox Details API  if provided beneficiary's callingNumber is not valid :
+    // less than 10 digits.
+    @Test
+    public void verifyFT83() throws IOException, InterruptedException {
+
+    	HttpGet httpGet = createHttpGet(true, "123456789", true, "123456789012345");
     	String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
@@ -775,12 +1123,14 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response.getEntity()))  );
 
     }
-    @Test
-    public void verifyFT84() throws IOException,
-            InterruptedException {
 
-        //To verify the behavior of  Get Inbox Details API  if provided beneficiary's callingNumber is not valid :
-        // more than 10 digits.
+
+    //To verify the behavior of  Get Inbox Details API  if provided beneficiary's callingNumber is not valid :
+    // more than 10 digits.
+    @Test
+    public void verifyFT84() throws IOException, InterruptedException {
+
+
 
         HttpGet httpGet = createHttpGet(true, "12345678901", true, "123456789012345");
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
@@ -789,15 +1139,18 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
         assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response.getEntity()))  );
 
-
     }
+
+
+    /*
+     * To verify the behavior of  Get Inbox Details API  if provided beneficiary's callId is not valid :
+     * more than 15 digits.
+     */
+    // https://applab.atlassian.net/browse/NMS-186
     @Test
     @Ignore
-    public void verifyFT85() throws IOException,
-            InterruptedException {
+    public void verifyFT85() throws IOException, InterruptedException {
 
-        //https://applab.atlassian.net/browse/NMS-186
-                
         // callingNumber alphanumeric
         HttpGet httpGet = createHttpGet(true, "12345DF7890", true, "123456789012345");
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
@@ -808,10 +1161,11 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
     }
 
+
     // This method is a utility method for running the test cases. this is
     // already used in the branch NMS.FT.6.7.8
-    private HttpGet createGetSubscriberDetailsRequest(String callingNumber,
-            String operator, String circle, String callId) {
+    private HttpGet createGetSubscriberDetailsRequest(String callingNumber, String operator, String circle,
+                                                      String callId) {
 
         StringBuilder sb = new StringBuilder(String.format(
                 "http://localhost:%d/api/kilkari/user?",
@@ -837,14 +1191,14 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         return new HttpGet(sb.toString());
     }
 
+
+    /**
+     * test GetSubscriberDetails API with Blank Params
+     */
     @Test
-    public void verifyFT17() throws IOException,
-            InterruptedException {
-        /**
-         * test GetSubscriberDetails API with Blank Params
-         */
+    public void verifyFT17() throws IOException, InterruptedException {
         HttpGet httpGet = createGetSubscriberDetailsRequest("", // callingNumber
-                                                                // Blank
+                // Blank
                 "A", // operator
                 "AP", // circle
                 "123456789012345" // callId
@@ -857,11 +1211,12 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
+
+    /**
+     * test GetSubscriberDetails API with Blank Params
+     */
     @Test
     public void verifyFT18() throws IOException, InterruptedException {
-        /**
-         * test GetSubscriberDetails API with Blank Params
-         */
         HttpGet httpGet = createGetSubscriberDetailsRequest("1234567890", // callingNumber
                 "", // operator Blank(optional param)
                 "AP", // circle
@@ -874,11 +1229,12 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 .getStatusCode());
     }
 
+
+    /**
+     * test GetSubscriberDetails API with Blank Params
+     */
     @Test
     public void verifyFT19() throws IOException, InterruptedException {
-        /**
-         * test GetSubscriberDetails API with Blank Params
-         */
         HttpGet httpGet = createGetSubscriberDetailsRequest("1234567890", // callingNumber
                 "A", // operator
                 "", // circle Blank (optional param)
@@ -891,11 +1247,12 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 .getStatusCode());
     }
 
+
+    /**
+     * test GetSubscriberDetails API with Blank Params
+     */
     @Test
     public void verifyFT20() throws IOException, InterruptedException {
-        /**
-         * test GetSubscriberDetails API with Blank Params
-         */
         HttpGet httpGet = createGetSubscriberDetailsRequest("1234567890", // callingNumber
                 "A", // operator
                 "AP", // circle
@@ -907,6 +1264,5 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
                 HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
                 ADMIN_USERNAME, ADMIN_PASSWORD));
-
     }
 }
