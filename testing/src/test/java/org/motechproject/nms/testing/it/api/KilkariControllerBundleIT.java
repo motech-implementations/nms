@@ -1605,13 +1605,15 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         return httpDelete;
     }
 
+
+    /**
+     * test DeactivateSubscription API with Blank Params
+     *
+     * JIRA issue: https://applab.atlassian.net/browse/NMS-193
+     */
     @Ignore
     @Test
     public void verifyFT105() throws IOException, InterruptedException {
-        /**
-         * test DeactivateSubscription API with Blank Params
-         */
-        setupData();
 
         Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
         Subscription subscription = subscriber.getActiveSubscriptions()
@@ -1627,13 +1629,14 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
+    /**
+     * test DeactivateSubscription API with Blank Params
+     *
+     * * JIRA issue: https://applab.atlassian.net/browse/NMS-200
+     */
     @Ignore
     @Test
     public void verifyFT106() throws IOException, InterruptedException {
-        /**
-         * test DeactivateSubscription API with Blank Params
-         */
-        setupData();
 
         Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
         Subscription subscription = subscriber.getActiveSubscriptions()
