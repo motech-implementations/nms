@@ -1,11 +1,9 @@
 package org.motechproject.nms.region.domain;
 
-import org.motechproject.mds.annotations.Cascade;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.domain.MdsEntity;
 
-import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.Unique;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,23 +15,18 @@ public class Circle extends MdsEntity {
     private String name;
 
     @Field
-    @Persistent(mappedBy = "circles", defaultFetchGroup = "true")
     private List<State> states;
 
     @Field
-    @Cascade(delete = true)
-    @Persistent(mappedBy = "circle", defaultFetchGroup = "true")
-    private List<LanguageLocation> languageLocations;
+    private Language defaultLanguage;
 
     public Circle() {
         this.states = new ArrayList<>();
-        this.languageLocations = new ArrayList<>();
     }
 
     public Circle(String name) {
         this.name = name;
         this.states = new ArrayList<>();
-        this.languageLocations = new ArrayList<>();
     }
 
     public String getName() {
@@ -52,21 +45,12 @@ public class Circle extends MdsEntity {
         this.states = states;
     }
 
-    public List<LanguageLocation> getLanguageLocations() {
-        return languageLocations;
+    public Language getDefaultLanguage() {
+        return defaultLanguage;
     }
 
-    public void setLanguageLocations(List<LanguageLocation> languageLocations) {
-        this.languageLocations = languageLocations;
-    }
-
-    public LanguageLocation getDefaultLanguageLocation() {
-        for (LanguageLocation languageLocation : getLanguageLocations()) {
-            if (languageLocation.isDefaultForCircle()) {
-                return languageLocation;
-            }
-        }
-        return null;
+    public void setDefaultLanguage(Language defaultLanguage) {
+        this.defaultLanguage = defaultLanguage;
     }
 
     @Override
