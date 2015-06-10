@@ -33,6 +33,9 @@
     <osgi:service ref="whitelistService"
                   interface="org.motechproject.nms.flw.service.WhitelistService" />
 
+    <osgi:service ref="frontLineWorkerImportService"
+                  interface="org.motechproject.nms.flw.service.FrontLineWorkerImportService" />
+
     <osgi:reference id="frontLineWorkerDataService"
                     interface="org.motechproject.nms.flw.repository.FrontLineWorkerDataService" />
 
@@ -68,5 +71,7 @@
 
     <osgi:reference id="schedulerService"
                     interface="org.motechproject.scheduler.service.MotechSchedulerService" />
+
+    <osgi:reference id="alertsService" interface="org.motechproject.alerts.contract.AlertService" />
 
 </beans>
