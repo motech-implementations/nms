@@ -98,7 +98,6 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
     @Before
     public void setupTestData() {
-
         testingService.clearDatabase();
 
         rh = new RegionHelper(languageDataService, circleDataService, stateDataService,
@@ -109,17 +108,17 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
                 stateDataService, districtDataService);
 
         Subscriber subscriber1 = subscriberDataService.create(new Subscriber(1000000000L));
-        Subscriber subscriber2 = subscriberDataService.create(new Subscriber(2000000000L));
-
         subscriptionService.createSubscription(subscriber1.getCallingNumber(), rh.hindiLanguage(),
                 sh.childPack(), SubscriptionOrigin.IVR);
+
+        Subscriber subscriber2 = subscriberDataService.create(new Subscriber(2000000000L));
         subscriptionService.createSubscription(subscriber2.getCallingNumber(), rh.hindiLanguage(),
                 sh.childPack(), SubscriptionOrigin.IVR);
         subscriptionService.createSubscription(subscriber2.getCallingNumber(), rh.hindiLanguage(),
                 sh.pregnancyPack(), SubscriptionOrigin.IVR);
     }
 
-    
+
     @Test
     public void testServicePresent() throws Exception {
         assertNotNull(subscriptionService);
@@ -781,14 +780,22 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         assertEquals(1, subscriber.getSubscriptions().size());
     }
 
-    
+
+    /*
+     * To verify that number of Messages per week shouldn't get configured if invalid value is provided.
+     */
+        @Test(expected=IllegalArgumentException.class)
+    public void verifyFT180() {
+            sh.childPack().setMessagesPerWeek(3);
+    }
+
+
     /*
      * To verify LMP is changed successfully and new subscription created
      * when subscription already exist for 72Weeks Pack having status as "Completed".
      */
     @Test
     public void verifyFT156() {
-    	
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
         mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(28));
         subscriberDataService.create(mctsSubscriber);
@@ -876,7 +883,6 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         assertEquals(2, mctsSubscriber.getSubscriptions().size());		 
-        assertEquals(1, mctsSubscriber.getActiveSubscriptions().size()); // One active subscription
     }
     
 }
