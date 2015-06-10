@@ -907,6 +907,112 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
                 HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
                 ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
 
+    // This method is a utility method for running the test cases. this is
+    // already
+    // used in the branch NMS.FT.95.96.97
+    private HttpDeleteWithBody createDeactivateSubscriptionHttpDelete(
+            String calledNumber, String operator, String circle, String callId,
+            String subscriptionId) throws IOException {
+
+        StringBuilder sb = new StringBuilder();
+        String seperator = "";
+        sb.append("{");
+        if (calledNumber != null) {
+            sb.append(String.format("%s\"calledNumber\": %s", seperator,
+                    calledNumber));
+            seperator = ",";
+        }
+        if (operator != null) {
+            sb.append(String.format("%s\"operator\": \"%s\"", seperator,
+                    operator));
+            seperator = ",";
+        }
+        if (circle != null) {
+            sb.append(String.format("%s\"circle\": \"%s\"", seperator, circle));
+            seperator = ",";
+        }
+        if (callId != null) {
+            sb.append(String.format("%s\"callId\": %s", seperator, callId));
+            seperator = ",";
+        }
+        if (subscriptionId != null) {
+            sb.append(String.format("%s\"subscriptionId\": \"%s\"", seperator,
+                    subscriptionId));
+            seperator = ",";
+        }
+
+        sb.append("}");
+
+        HttpDeleteWithBody httpDelete = new HttpDeleteWithBody(String.format(
+                "http://localhost:%d/api/kilkari/subscription",
+                TestContext.getJettyPort()));
+        httpDelete.setHeader("Content-type", "application/json");
+        httpDelete.setEntity(new StringEntity(sb.toString()));
+        return httpDelete;
+    }
+
+    @Test
+    public void verifyFT98() throws IOException, InterruptedException {
+        /**
+         * test Deactivate Subscription API with Invalid CallId
+         */
+        setupData();
+        Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
+        Subscription subscription = subscriber.getActiveSubscriptions()
+                .iterator().next();
+        String subscriptionId = subscription.getSubscriptionId();
+        // callId less than 15 digits
+        HttpDeleteWithBody httpDelete = createDeactivateSubscriptionHttpDelete(
+                "1000000000", "A", "AP", "12345678901234", subscriptionId);
+        String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpDelete,
+                HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    @Test
+    public void verifyFT99() throws IOException, InterruptedException {
+        /**
+         * test Deactivate Subscription API with Invalid CallId
+         */
+        setupData();
+        Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
+        Subscription subscription = subscriber.getActiveSubscriptions()
+                .iterator().next();
+        String subscriptionId = subscription.getSubscriptionId();
+        // callId more than 15 digits
+        HttpDeleteWithBody httpDelete = createDeactivateSubscriptionHttpDelete(
+                "1000000000", "A", "AP", "1234567890123455", subscriptionId);
+        String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpDelete,
+                HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    @Ignore
+    @Test
+    public void verifyFT100() throws IOException, InterruptedException {
+        /**
+         * test Deactivate Subscription API with Invalid CallId
+         */
+        setupData();
+        Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
+        Subscription subscription = subscriber.getActiveSubscriptions()
+                .iterator().next();
+        String subscriptionId = subscription.getSubscriptionId();
+        // callId alphanumeric
+        HttpDeleteWithBody httpDelete = createDeactivateSubscriptionHttpDelete(
+                "1000000000", "A", "AP", "12345RF89012345", subscriptionId);
+        String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpDelete, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
     }
 }
