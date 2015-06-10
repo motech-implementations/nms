@@ -25,9 +25,6 @@
     <osgi:service ref="csrService"
                   interface="org.motechproject.nms.kilkari.service.CsrService" />
 
-    <osgi:service ref="kilkariItService"
-                  interface="org.motechproject.nms.kilkari.service.IntegrationTestService" />
-
     <osgi:reference id="transactionManager"
                     interface="org.springframework.transaction.PlatformTransactionManager"/>
 

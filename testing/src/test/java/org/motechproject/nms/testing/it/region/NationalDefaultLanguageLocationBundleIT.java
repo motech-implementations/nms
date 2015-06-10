@@ -7,15 +7,14 @@ import org.junit.runner.RunWith;
 import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Language;
-import org.motechproject.nms.region.domain.LanguageLocation;
-import org.motechproject.nms.region.domain.NationalDefaultLanguageLocation;
+import org.motechproject.nms.region.domain.NationalDefaultLanguage;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
-import org.motechproject.nms.region.repository.LanguageLocationDataService;
-import org.motechproject.nms.region.repository.NationalDefaultLanguageLocationDataService;
+import org.motechproject.nms.region.repository.NationalDefaultLanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.ops4j.pax.exam.ExamFactory;
@@ -30,11 +29,12 @@ import javax.jdo.JDODataStoreException;
 @ExamReactorStrategy(PerSuite.class)
 @ExamFactory(MotechNativeTestContainerFactory.class)
 public class NationalDefaultLanguageLocationBundleIT extends BasePaxIT{
-    @Inject
-    private LanguageLocationDataService languageLocationDataService;
 
     @Inject
-    private NationalDefaultLanguageLocationDataService nationalDefaultLanguageLocationDataService;
+    private TestingService testingService;
+
+    @Inject
+    private NationalDefaultLanguageDataService nationalDefaultLanguageLocationDataService;
 
     @Inject
     private StateDataService stateDataService;
@@ -49,13 +49,7 @@ public class NationalDefaultLanguageLocationBundleIT extends BasePaxIT{
     private LanguageDataService languageDataService;
 
     private void cleanAllData() {
-        nationalDefaultLanguageLocationDataService.deleteAll();
-        languageLocationDataService.deleteAll();
-        languageLocationDataService.deleteAll();
-        languageDataService.deleteAll();
-        districtDataService.deleteAll();
-        stateDataService.deleteAll();
-        circleDataService.deleteAll();
+        testingService.clearDatabase();
     }
 
     @Rule
@@ -89,23 +83,23 @@ public class NationalDefaultLanguageLocationBundleIT extends BasePaxIT{
 
         stateDataService.create(state2);
 
-        Language ta = languageDataService.create(new Language("tamil"));
-        Language hi = languageDataService.create(new Language("hindi"));
+        Language ta = languageDataService.create(new Language("50", "tamil"));
+        Language hi = languageDataService.create(new Language("99", "hindi"));
 
         Circle circle = new Circle("AA");
+        circle.setDefaultLanguage(ta);
+        circleDataService.update(circle);
 
-        LanguageLocation languageLocation1 = new LanguageLocation("50", circle, ta, true);
-        languageLocation1.getDistrictSet().add(district);
-        languageLocationDataService.create(languageLocation1);
+        district.setLanguage(ta);
+        districtDataService.update(district);
 
-        LanguageLocation languageLocation2 = new LanguageLocation("99", circle, hi, false);
-        languageLocation2.getDistrictSet().add(district2);
-        languageLocationDataService.create(languageLocation2);
+        district2.setLanguage(hi);
+        districtDataService.update(district2);
 
-        nationalDefaultLanguageLocationDataService.create(new NationalDefaultLanguageLocation(languageLocation1));
+        nationalDefaultLanguageLocationDataService.create(new NationalDefaultLanguage(ta));
 
         exception.expect(JDODataStoreException.class);
-        nationalDefaultLanguageLocationDataService.create(new NationalDefaultLanguageLocation(languageLocation2));
+        nationalDefaultLanguageLocationDataService.create(new NationalDefaultLanguage(hi));
     }
 
 }

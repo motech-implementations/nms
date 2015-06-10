@@ -14,7 +14,6 @@ import org.motechproject.nms.props.domain.StatusCode;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
-import org.motechproject.nms.region.repository.LanguageLocationDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 
 import java.util.ArrayList;
@@ -33,14 +32,13 @@ public class CsrHelper {
     public CsrHelper(String timestamp, SubscriptionService subscriptionService,
                      SubscriptionPackDataService subscriptionPackDataService,
                      SubscriberDataService subscriberDataService, LanguageDataService languageDataService,
-                     LanguageLocationDataService languageLocationDataService,
                      CircleDataService circleDataService, StateDataService stateDataService,
                      DistrictDataService districtDataService) {
 
         TIMESTAMP = timestamp;
 
         sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
-                languageDataService, languageLocationDataService, circleDataService, stateDataService,
+                languageDataService, circleDataService, stateDataService,
                 districtDataService);
     }
 
@@ -72,7 +70,7 @@ public class CsrHelper {
                     sub.getSubscriber().getCallingNumber(),
                     sh.getContentMessageFile(sub, index),
                     sh.getWeekId(sub, index),
-                    sh.getLanguageLocationCode(sub),
+                    sh.getLanguageCode(sub),
                     sh.getCircle(sub),
                     FinalCallStatus.SUCCESS,
                     makeStatsMap(StatusCode.OBD_SUCCESS_CALL_CONNECTED, 1),
@@ -83,7 +81,7 @@ public class CsrHelper {
         }
 
         for (int i=0 ; i<numCompleted ; i++) {
-            int days = sh.getChildPack().getWeeks() * 7;
+            int days = sh.childPack().getWeeks() * 7;
             Subscription sub = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(days),
                     SubscriptionPackType.CHILD);
             int index = sh.getLastMessageIndex(sub);
@@ -92,7 +90,7 @@ public class CsrHelper {
                     sub.getSubscriber().getCallingNumber(),
                     sh.getContentMessageFile(sub, index),
                     sh.getWeekId(sub, index),
-                    sh.getLanguageLocationCode(sub),
+                    sh.getLanguageCode(sub),
                     sh.getCircle(sub),
                     FinalCallStatus.SUCCESS,
                     makeStatsMap(StatusCode.OBD_SUCCESS_CALL_CONNECTED, 1),
@@ -111,7 +109,7 @@ public class CsrHelper {
                     sub.getSubscriber().getCallingNumber(),
                     sh.getContentMessageFile(sub, index),
                     sh.getWeekId(sub, index),
-                    sh.getLanguageLocationCode(sub),
+                    sh.getLanguageCode(sub),
                     sh.getCircle(sub),
                     FinalCallStatus.FAILED,
                     makeStatsMap(StatusCode.OBD_FAILED_BUSY, 3),
@@ -130,7 +128,7 @@ public class CsrHelper {
                     sub.getSubscriber().getCallingNumber(),
                     sh.getContentMessageFile(sub, index),
                     sh.getWeekId(sub, index),
-                    sh.getLanguageLocationCode(sub),
+                    sh.getLanguageCode(sub),
                     sh.getCircle(sub),
                     FinalCallStatus.SUCCESS,
                     makeStatsMap(StatusCode.OBD_SUCCESS_CALL_CONNECTED, 1),
