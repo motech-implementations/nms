@@ -1,10 +1,11 @@
-package org.motechproject.nms.region.ut;
+package org.motechproject.nms.csv.ut;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.motechproject.mds.service.MotechDataService;
 import org.motechproject.nms.csv.exception.CsvImportDataException;
+import org.motechproject.nms.csv.utils.CsvImporterBuilder;
 import org.motechproject.nms.csv.utils.CsvInstanceImporter;
 import org.motechproject.nms.csv.utils.CsvMapImporter;
 import org.motechproject.nms.csv.utils.GetBoolean;
@@ -53,9 +54,8 @@ public class CsvImportTest {
 
     @Test
     public void testReadSampleAsMapWhenValid() throws Exception {
-        CsvMapImporter csvMapImporter = createCsvMapImporter();
         Reader reader = new StringReader("n,s,o\n12,hello,1");
-        csvMapImporter.open(reader, getProcessorMapping(), getFieldNameMapping());
+        CsvMapImporter csvMapImporter = createMapImporter(reader);
         Map<String, Object> record = csvMapImporter.read();
         assertEquals(12L, record.get("number"));
         assertEquals("hello", record.get("string"));
@@ -65,9 +65,8 @@ public class CsvImportTest {
 
     @Test
     public void testReadSampleAsInstanceWhenValid() throws Exception {
-        CsvInstanceImporter<Sample> csvInstanceImporter = createCsvInstanceImporter();
         Reader reader = new StringReader("n,s,o\n12,hello,1");
-        csvInstanceImporter.open(reader, getProcessorMapping(), getFieldNameMapping());
+        CsvInstanceImporter<Sample> csvInstanceImporter = createInstanceImporter(reader);
         Sample sample = csvInstanceImporter.read();
         assertEquals(12L, sample.getNumber());
         assertEquals("hello", sample.getString());
@@ -77,9 +76,8 @@ public class CsvImportTest {
 
     @Test
     public void testReadSampleWithDifferentColumnsOrderWhenValid() throws Exception {
-        CsvInstanceImporter<Sample> csvInstanceImporter = createCsvInstanceImporter();
         Reader reader = new StringReader("n,o,s\n12,1,hello");
-        csvInstanceImporter.open(reader, getProcessorMapping(), getFieldNameMapping());
+        CsvInstanceImporter<Sample> csvInstanceImporter = createInstanceImporter(reader);
         Sample sample = csvInstanceImporter.read();
         assertEquals(12, sample.getNumber());
         assertEquals("hello", sample.getString());
@@ -89,9 +87,8 @@ public class CsvImportTest {
 
     @Test(expected = CsvImportDataException.class)
     public void testReadSampleWhenProcessorConstraintIsViolated() throws Exception {
-        CsvInstanceImporter<Sample> csvInstanceImporter = createCsvInstanceImporter();
         Reader reader = new StringReader("n,s,o\n12,,1");
-        csvInstanceImporter.open(reader, getProcessorMapping(), getFieldNameMapping());
+        CsvInstanceImporter<Sample> csvInstanceImporter = createInstanceImporter(reader);
         csvInstanceImporter.read();
     }
 
@@ -171,6 +168,20 @@ public class CsvImportTest {
         assertEquals(sampleFromDataService, getSampleById.execute(1, csvContext));
         assertEquals(sampleFromDataService, getSampleById.execute("1", csvContext));
         assertNull(getSampleById.execute(2, csvContext));
+    }
+
+    private CsvMapImporter createMapImporter(Reader reader) throws java.io.IOException {
+        return new CsvImporterBuilder()
+                .setProcessorMapping(getProcessorMapping())
+                .setFieldNameMapping(getFieldNameMapping())
+                .createAndOpen(reader);
+    }
+
+    private CsvInstanceImporter<Sample> createInstanceImporter(Reader reader) throws java.io.IOException {
+        return new CsvImporterBuilder()
+                .setProcessorMapping(getProcessorMapping())
+                .setFieldNameMapping(getFieldNameMapping())
+                .createAndOpen(reader, Sample.class);
     }
 
     private Map<String, String> getFieldNameMapping() {
