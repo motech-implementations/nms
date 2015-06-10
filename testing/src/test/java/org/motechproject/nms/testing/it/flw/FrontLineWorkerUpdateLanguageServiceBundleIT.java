@@ -22,6 +22,7 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
+import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
 
@@ -57,6 +58,7 @@ public class FrontLineWorkerUpdateLanguageServiceBundleIT extends BasePaxIT {
     private FrontLineWorkerUpdateLanguageImportService flwUpdateLanguageImportService;
 
     private RegionHelper rh;
+    private String resource;
 
     @Before
     public void setUp() {
@@ -193,6 +195,26 @@ public class FrontLineWorkerUpdateLanguageServiceBundleIT extends BasePaxIT {
         assertEquals(rh.kannadaLanguage(), flw.getLanguage());
     }
 
+    @Test
+    public void testImportFromSampleDataFile() throws Exception {
+        FrontLineWorker flw = new FrontLineWorker(1000000000L);
+        flw.setLanguage(rh.kannadaLanguage());
+        flw.setFlwId("72185");
+        frontLineWorkerService.add(flw);
+
+        flw = new FrontLineWorker(2000000000L);
+        flw.setLanguage(rh.kannadaLanguage());
+        frontLineWorkerService.add(flw);
+
+        flwUpdateLanguageImportService.importData(read("csv/flw_language_update.csv"));
+
+        flw = frontLineWorkerDataService.findByContactNumber(1000000000L);
+        assertEquals(rh.hindiLanguage(), flw.getLanguage());
+
+        flw = frontLineWorkerDataService.findByContactNumber(2000000000L);
+        assertEquals(rh.hindiLanguage(), flw.getLanguage());
+    }
+
     private Reader createReaderWithHeaders(String... lines) {
         StringBuilder builder = new StringBuilder();
         builder.append("NMS FLW-ID,MCTS FLW-ID,MSISDN,LANGUAGE CODE").append("\n");
@@ -200,5 +222,9 @@ public class FrontLineWorkerUpdateLanguageServiceBundleIT extends BasePaxIT {
             builder.append(line).append("\n");
         }
         return new StringReader(builder.toString());
+    }
+
+    private Reader read(String resource) {
+        return new InputStreamReader(getClass().getClassLoader().getResourceAsStream(resource));
     }
 }
