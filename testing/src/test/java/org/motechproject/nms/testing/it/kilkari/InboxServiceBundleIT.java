@@ -1,12 +1,5 @@
 package org.motechproject.nms.testing.it.kilkari;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
-import java.util.Set;
-
-import javax.inject.Inject;
-
 import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -35,6 +28,13 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
+
+import javax.inject.Inject;
+import java.util.Set;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerSuite.class)
@@ -68,19 +68,15 @@ public class InboxServiceBundleIT extends BasePaxIT {
 
 
     @Before
-    public void setupTestData() {
-        rh = new RegionHelper(languageDataService, circleDataService, stateDataService,
+    public void setUp() {
+		testingService.clearDatabase();
+
+		rh = new RegionHelper(languageDataService, circleDataService, stateDataService,
                 districtDataService);
 
         sh = new SubscriptionHelper(subscriptionService,
                 subscriberDataService, subscriptionPackDataService, languageDataService, circleDataService,
                 stateDataService, districtDataService);
-    }
-
-
-    @Before
-    public void clearDatabase() {
-        testingService.clearDatabase();
     }
 
 
@@ -90,16 +86,16 @@ public class InboxServiceBundleIT extends BasePaxIT {
 	}
 
 
+	/*
+	 * To check NMS is able to make available a single message of current week in inbox when user is subscribed to
+	 * Pregnancy Pack with 2 message per week configuration.
+	 *
+	 * https://applab.atlassian.net/browse/NMS-190
+	 */
 	@Test
 	@Ignore
 	public void verifyFT108() throws Exception {
 
-		//https://applab.atlassian.net/browse/NMS-190
-
-		/*
-		 * To check NMS is able to make available a single message of current week in inbox
-		 * when user is subscribed to 72Weeks Pack with 2 message per week configuration.
-		 */
 		DateTime now = DateTime.now();
 
 		// Configuration for second msg of the week
@@ -134,13 +130,12 @@ public class InboxServiceBundleIT extends BasePaxIT {
 
 	}
 
+	/*
+	 *  To check NMS is able to make a message available for 7 days after user's subscription gets completed for
+	 *  Pregnancy Pack.
+	 */
 	@Test
 	public void verifyFT121() throws Exception {
-
-		/*
-		 *  To check NMS is able to make a message available for 7 days
-		 *  after user's subscription gets completed for 72Weeks Pack.
-		 */
 		DateTime now = DateTime.now();
 
 		// Configuration for second msg of the week
@@ -174,31 +169,31 @@ public class InboxServiceBundleIT extends BasePaxIT {
 		assertEquals(msg.getMessageFileName(), "w72_2.wav");
 
 	}
-	
+
+	/*
+	 *	To check NMS is able to make available a single message of current week in inbox when user is subscribed to
+	 *	Child Pack with single message per week configuration.
+	 */
 	@Test
 	public void verifyFT113() throws NoInboxForSubscriptionException {
-		/*
-		 *	"To check NMS is able to make available a single message of current week in inbox
-		 *	when user is subscribed to 48Weeks  Pack with single message per week configuration ."
-		 */
 		DateTime now = DateTime.now();
 		Subscriber subscriber = new Subscriber(1000000002L);
 		subscriber.setDateOfBirth(now);
 		subscriberService.create(subscriber);
-		
+
 		// create subscription for childPack with one message per week.
 		subscriptionService.createSubscription(subscriber.getCallingNumber(), rh.hindiLanguage(), sh.childPack(),
 				SubscriptionOrigin.MCTS_IMPORT);
-		
+
 		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber());
 		Set<Subscription> subscriptions = subscriber.getAllSubscriptions();
 		Subscription subscription = subscriptions.iterator().next();
 		SubscriptionPackMessage msg = inboxService.getInboxMessage(subscription);
-		
+
 		// first msg should be in inbox
 		assertEquals(msg.getWeekId(), "w1_1");
 		assertEquals(msg.getMessageFileName(), "w1_1.wav");
-		
+
 		// Configuration for last msg of the week
 		subscriber.setDateOfBirth(now.minusDays(6));
 		subscriberService.update(subscriber);
@@ -211,16 +206,39 @@ public class InboxServiceBundleIT extends BasePaxIT {
 		// still first message should be in inbox because messagePerWeek is one
 		assertEquals(msg.getWeekId(), "w1_1");
 		assertEquals(msg.getMessageFileName(), "w1_1.wav");
-		
+
 	}
-	
+
+
+	/*
+	 * To verify in case of "Early Subscription" of Pregnancy Pack, inbox should not contain any message.
+	 */
+	@Test
+	public void verifyFT162() throws NoInboxForSubscriptionException {
+		DateTime now = DateTime.now();
+		// create subscriber for early subscription
+		Subscriber subscriber = new Subscriber(1000000002L);
+		subscriber.setLastMenstrualPeriod(now.minusDays(30));
+		subscriberService.create(subscriber);
+
+		subscriptionService.createSubscription(subscriber.getCallingNumber(), rh.hindiLanguage(), sh.pregnancyPack(),
+				SubscriptionOrigin.MCTS_IMPORT);
+
+		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber());
+		Set<Subscription> subscriptions = subscriber.getAllSubscriptions();
+		Subscription subscription = subscriptions.iterator().next();
+
+		// Inbox should be empty
+		assertNull(inboxService.getInboxMessage(subscription));
+	}
+
+
+	/*
+	 *  To check NMS is able to make a message available for 7 days  after user's subscription gets completed for
+	 *  Child Pack.
+	 */
 	@Test
 	public void verifyFT122() throws Exception {
-
-		/*
-		 *  To check NMS is able to make a message available for 7 days 
-		 *  after user's subscription gets completed for 48Weeks Pack.
-		 */
 		DateTime now = DateTime.now();
 		Subscriber subscriber = new Subscriber(1000000002L);
 		subscriber.setDateOfBirth(now.minusDays(335));
