@@ -36,6 +36,9 @@
     <osgi:service ref="frontLineWorkerImportService"
                   interface="org.motechproject.nms.flw.service.FrontLineWorkerImportService" />
 
+    <osgi:service ref="frontLineWorkerUpdateLanguageImportService"
+                  interface="org.motechproject.nms.flw.service.FrontLineWorkerUpdateLanguageImportService" />
+
     <osgi:reference id="frontLineWorkerDataService"
                     interface="org.motechproject.nms.flw.repository.FrontLineWorkerDataService" />
 
@@ -73,7 +76,4 @@
                     interface="org.motechproject.scheduler.service.MotechSchedulerService" />
 
     <osgi:reference id="alertsService" interface="org.motechproject.alerts.contract.AlertService" />
-
-    <osgi:service ref="frontLineWorkerUpdateLanguageImportService"
-                    interface="org.motechproject.nms.flw.service.FrontLineWorkerUpdateLanguageImportService" />
 </beans>
