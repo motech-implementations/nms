@@ -4,6 +4,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.motechproject.mds.service.MotechDataService;
 import org.motechproject.nms.csv.exception.CsvImportDataException;
 import org.motechproject.nms.csv.utils.ConstraintViolationUtils;
+import org.motechproject.nms.csv.utils.CsvImporterBuilder;
 import org.motechproject.nms.csv.utils.CsvInstanceImporter;
 import org.springframework.transaction.annotation.Transactional;
 import org.supercsv.cellprocessor.ift.CellProcessor;
@@ -27,9 +28,11 @@ public abstract class BaseLocationImportService<T> {
 
     @Transactional
     public void importData(Reader reader) throws IOException {
-        CsvInstanceImporter<T> csvImporter = new CsvInstanceImporter<>(type);
+        CsvInstanceImporter<T> csvImporter = new CsvImporterBuilder()
+                .setProcessorMapping(getProcessorMapping())
+                .setFieldNameMapping(getFieldNameMapping())
+                .createAndOpen(reader, type);
         try {
-            csvImporter.open(reader, getProcessorMapping(), getFieldNameMapping());
             T instance;
             while (null != (instance = csvImporter.read())) {
                 dataService.create(instance);

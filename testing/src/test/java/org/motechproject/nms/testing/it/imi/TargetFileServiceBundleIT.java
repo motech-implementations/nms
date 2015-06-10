@@ -17,7 +17,6 @@ import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
-import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
@@ -25,16 +24,12 @@ import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
 import org.motechproject.nms.region.domain.Circle;
-import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Language;
-import org.motechproject.nms.region.domain.LanguageLocation;
-import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
-import org.motechproject.nms.region.repository.LanguageLocationDataService;
 import org.motechproject.nms.region.repository.StateDataService;
-import org.motechproject.nms.testing.it.api.utils.SubscriptionPackBuilder;
+import org.motechproject.nms.testing.it.utils.RegionHelper;
 import org.motechproject.nms.testing.it.utils.SubscriptionHelper;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
@@ -58,6 +53,7 @@ import java.security.NoSuchAlgorithmException;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerSuite.class)
@@ -93,9 +89,6 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
     LanguageDataService languageDataService;
 
     @Inject
-    LanguageLocationDataService languageLocationDataService;
-
-    @Inject
     private CircleDataService circleDataService;
 
     @Inject
@@ -111,10 +104,10 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
     TestingService testingService;
 
 
-    Circle aa;
-    Circle bb;
-    LanguageLocation hindi;
-    LanguageLocation urdu;
+    Circle dehliCircle;
+    Circle karnatakaCircle;
+    Language hindi;
+    Language kannada;
     SubscriptionPack childPack;
     SubscriptionPack pregnancyPack;
 
@@ -129,54 +122,27 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
 
 
     @Before
-    public void setupDatabase() {
-
+    public void before() {
         testingService.clearDatabase();
 
-        District district = new District();
-        district.setName("District 1");
-        district.setRegionalName("District 1");
-        district.setCode(1L);
-
-        State state = new State();
-        state.setName("State 1");
-        state.setCode(1L);
-        state.getDistricts().add(district);
-
-        stateDataService.create(state);
-
-        aa = new Circle("AA");
-        bb = new Circle("BB");
-
-        hindi = new LanguageLocation("HI", aa, new Language("Hindi"), false);
-        hindi.getDistrictSet().add(district);
-        hindi = languageLocationDataService.create(hindi);
-
-        urdu = new LanguageLocation("UR", aa, new Language("Urdu"), false);
-        urdu.getDistrictSet().add(district);
-        urdu = languageLocationDataService.create(urdu);
-
-
-        childPack = subscriptionPackDataService.create(
-                SubscriptionPackBuilder.createSubscriptionPack(
-                        "childPack",
-                        SubscriptionPackType.CHILD,
-                        SubscriptionPackBuilder.CHILD_PACK_WEEKS,
-                        1));
-
-        pregnancyPack = subscriptionPackDataService.create(
-                SubscriptionPackBuilder.createSubscriptionPack(
-                        "pregnancyPack",
-                        SubscriptionPackType.PREGNANCY,
-                        SubscriptionPackBuilder.PREGNANCY_PACK_WEEKS,
-                        2));
-    }
-
-
-    @Before
-    public void setupSettings() {
         localObdDirBackup = setupTestDir(LOCAL_OBD_DIR, "obd-local-dir-it");
         remoteObdDirBackup = setupTestDir(REMOTE_OBD_DIR, "obd-remote-dir-it");
+
+        RegionHelper rh = new RegionHelper(languageDataService, circleDataService, stateDataService,
+                                            districtDataService);
+
+        SubscriptionHelper sh = new SubscriptionHelper(subscriptionService,
+                subscriberDataService, subscriptionPackDataService, languageDataService, circleDataService,
+                stateDataService, districtDataService);
+
+        childPack = sh.childPack();
+        pregnancyPack = sh.pregnancyPack();
+
+        dehliCircle = rh.delhiCircle();
+        karnatakaCircle = rh.karnatakaCircle();
+
+        hindi = rh.hindiLanguage();
+        kannada = rh.kannadaLanguage();
     }
 
 
@@ -190,33 +156,33 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
     @Test
     public void testTargetFileGeneration() throws NoSuchAlgorithmException, IOException {
 
-        Subscriber subscriber1 = new Subscriber(1111111111L, hindi, aa);
+        Subscriber subscriber1 = new Subscriber(1111111111L, hindi, dehliCircle);
         subscriber1.setLastMenstrualPeriod(DateTime.now().minusDays(90)); // startDate will be today
         subscriberDataService.create(subscriber1);
         subscriptionService.createSubscription(1111111111L, hindi, pregnancyPack, SubscriptionOrigin.MCTS_IMPORT);
 
 
         // Should not be picked up because it's been deactivated
-        Subscriber subscriber2 = new Subscriber(2222222222L, urdu, bb);
+        Subscriber subscriber2 = new Subscriber(2222222222L, kannada, karnatakaCircle);
         subscriber2.setLastMenstrualPeriod(DateTime.now().minusDays(90)); // startDate will be today
         subscriberDataService.create(subscriber2);
-        Subscription subscription2 = subscriptionService.createSubscription(2222222222L, urdu, pregnancyPack,
+        Subscription subscription2 = subscriptionService.createSubscription(2222222222L, kannada, pregnancyPack,
                 SubscriptionOrigin.MCTS_IMPORT);
         subscriptionService.deactivateSubscription(subscription2, DeactivationReason.CHILD_DEATH);
 
         //Should not be picked up because it's not for today
-        Subscriber subscriber3 = new Subscriber(6666666666L, urdu, bb);
+        Subscriber subscriber3 = new Subscriber(6666666666L, kannada, karnatakaCircle);
         subscriber3.setDateOfBirth(DateTime.now().plusDays(1)); // startDate is DOB + 1 for child packs,
                                                     // so setting the DOB tomorrow this should be picked up
                                                     // the day after tomorrow
         subscriberDataService.create(subscriber3);
-        subscriptionService.createSubscription(6666666666L, urdu, childPack, SubscriptionOrigin.IVR);
+        subscriptionService.createSubscription(6666666666L, kannada, childPack, SubscriptionOrigin.IVR);
 
 
         // Should not be picked up because it's not for today
         callRetryDataService.create(new CallRetry("11111111-1111-1111-1111-111111111111", 3333333333L,
                 DayOfTheWeek.today().nextDay(), CallStage.RETRY_1, "w1_m1.wav", "w1_1", hindi.getCode(),
-                aa.getName(), SubscriptionOrigin.IVR));
+                dehliCircle.getName(), SubscriptionOrigin.IVR));
 
 
         TargetFileNotification tfn = targetFileService.generateTargetFile();
@@ -257,17 +223,8 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
     @Ignore
     public void createLargeFile() {
         SubscriptionHelper sh = new SubscriptionHelper(subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
-                stateDataService, districtDataService);
-
-        subscriptionService.deleteAll();
-        subscriberDataService.deleteAll();
-        languageLocationDataService.deleteAll();
-        languageDataService.deleteAll();
-        districtDataService.deleteAll();
-        stateDataService.deleteAll();
-        circleDataService.deleteAll();
-        callRetryDataService.deleteAll();
+                subscriptionPackDataService, languageDataService, circleDataService, stateDataService,
+                districtDataService);
 
         for (int i=0 ; i<1000 ; i++) {
             sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now());
@@ -275,7 +232,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
 
         for (int i=0 ; i<1000 ; i++) {
 
-            int randomWeek = (int) (Math.random() * sh.getChildPack().getWeeks());
+            int randomWeek = (int) (Math.random() * sh.childPack().getWeeks());
             Subscription sub = sh.mksub(
                     SubscriptionOrigin.MCTS_IMPORT,
                     DateTime.now().minusDays(7 * randomWeek - 1)
@@ -287,7 +244,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
                     CallStage.RETRY_1,
                     sh.getContentMessageFile(sub, randomWeek),
                     sh.getWeekId(sub, randomWeek),
-                    sh.getLanguageLocationCode(sub),
+                    sh.getLanguageCode(sub),
                     sh.getCircle(sub),
                     SubscriptionOrigin.MCTS_IMPORT
             ));

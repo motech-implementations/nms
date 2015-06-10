@@ -3,8 +3,9 @@ package org.motechproject.nms.flw.domain;
 import org.joda.time.DateTime;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
+import org.motechproject.mds.domain.MdsEntity;
 import org.motechproject.nms.region.domain.District;
-import org.motechproject.nms.region.domain.LanguageLocation;
+import org.motechproject.nms.region.domain.Language;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Index;
@@ -15,10 +16,7 @@ import javax.validation.constraints.Min;
 
 @Entity(tableName = "nms_front_line_workers")
 @Index(name = "status_invalidationDate_composit_idx", members = { "status", "invalidationDate" })
-public class FrontLineWorker {
-
-    @Field
-    private Long id;
+public class FrontLineWorker extends MdsEntity {
 
     @Field
     private String flwId;
@@ -43,7 +41,7 @@ public class FrontLineWorker {
     private DateTime invalidationDate;
 
     @Field
-    private LanguageLocation languageLocation;
+    private Language language;
 
     @Field
     @Persistent(defaultFetchGroup = "true")
@@ -56,14 +54,6 @@ public class FrontLineWorker {
     public FrontLineWorker(String name, Long contactNumber) {
         this.name = name;
         this.contactNumber = contactNumber;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public String getFlwId() {
@@ -120,12 +110,12 @@ public class FrontLineWorker {
         this.invalidationDate = invalidationDate;
     }
 
-    public LanguageLocation getLanguageLocation() {
-        return languageLocation;
+    public Language getLanguage() {
+        return language;
     }
 
-    public void setLanguageLocation(LanguageLocation languageLocation) {
-        this.languageLocation = languageLocation;
+    public void setLanguage(Language language) {
+        this.language = language;
     }
 
     public District getDistrict() {
@@ -147,7 +137,7 @@ public class FrontLineWorker {
 
         FrontLineWorker that = (FrontLineWorker) o;
 
-        if (!id.equals(that.id)) {
+        if (!this.getId().equals(that.getId())) {
             return false;
         }
         if (!contactNumber.equals(that.contactNumber)) {
@@ -156,7 +146,7 @@ public class FrontLineWorker {
         if (name != null ? !name.equals(that.name) : that.name != null) {
             return false;
         }
-        if (languageLocation != null ? !languageLocation.equals(that.languageLocation) : that.languageLocation != null) {
+        if (language != null ? !language.equals(that.language) : that.language != null) {
             return false;
         }
         return !(district != null ? !district.equals(that.district) : that.district != null);
@@ -165,10 +155,10 @@ public class FrontLineWorker {
 
     @Override
     public int hashCode() {
-        int result = (id != null ? id.hashCode() : 0);
+        int result = (getId() != null ? getId().hashCode() : 0);
         result = 31 * result + contactNumber.hashCode();
         result = 31 * result + (name != null ? name.hashCode() : 0);
-        result = 31 * result + (languageLocation != null ? languageLocation.hashCode() : 0);
+        result = 31 * result + (language != null ? language.hashCode() : 0);
         result = 31 * result + (district != null ? district.hashCode() : 0);
         return result;
     }
@@ -176,10 +166,8 @@ public class FrontLineWorker {
     @Override
     public String toString() {
         return "FrontLineWorker{" +
-                "id=" + id +
-                ", contactNumber='" + contactNumber + '\'' +
-                ", name='" + name + '\'' +
-                ", languageLocation=" + languageLocation +
+                "id=" + getId() +
+                ", language=" + language +
                 ", district=" + district +
                 '}';
     }
