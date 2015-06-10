@@ -51,7 +51,6 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(PaxExam.class)
@@ -111,7 +110,9 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
 
     @Before
-    public void setupTestData() {
+    public void doTheNeedful() {
+        testingService.clearDatabase();
+
         rh = new RegionHelper(languageDataService, circleDataService, stateDataService,
                 districtDataService);
 
@@ -119,27 +120,16 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 subscriberDataService, subscriptionPackDataService, languageDataService, circleDataService,
                 stateDataService, districtDataService);
 
-        clearDatabase();
-    }
-
-
-    public void clearDatabase() {
-        testingService.clearDatabase();
         sh.childPack();
         sh.pregnancyPack();
         csrService.buildMessageDurationCache();
+
     }
 
 
     @Test
     public void testServicePresent() {
         assertTrue(csrService != null);
-    }
-
-
-
-    private Long makeNumber() {
-        return (long) (Math.random() * 9000000000L) + 1000000000L;
     }
 
 
@@ -621,27 +611,27 @@ public class CsrServiceBundleIT extends BasePaxIT {
          * period for a message.
          */
 
-        Subscription subscription = makeSubscription(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
+        Subscription subscription = sh.mksub(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
 
         callRetryDataService.create(new CallRetry(
                 subscription.getSubscriptionId(),
                 subscription.getSubscriber().getCallingNumber(),
                 DayOfTheWeek.today(),
                 CallStage.RETRY_2,
-                "w1_1.wav",
-                "w1_1",
-                makeLanguageLocation().getCode(),
-                makeCircle().getName(),
+                sh.getContentMessageFile(subscription, 0),
+                sh.getWeekId(subscription, 0),
+                rh.hindiLanguage().getCode(),
+                rh.delhiCircle().getName(),
                 SubscriptionOrigin.MCTS_IMPORT
         ));
 
         CallSummaryRecordDto csr = new CallSummaryRecordDto(
                 new RequestId(subscription.getSubscriptionId(), "11112233445566"),
                 subscription.getSubscriber().getCallingNumber(),
-                "w1_1.wav",
-                "w1_1",
-                makeLanguageLocation().getCode(),
-                makeCircle().getName(),
+                sh.getContentMessageFile(subscription, 0),
+                sh.getWeekId(subscription, 0),
+                rh.hindiLanguage().getCode(),
+                rh.delhiCircle().getName(),
                 FinalCallStatus.FAILED,
                 makeStatsMap(StatusCode.OBD_FAILED_INVALIDNUMBER, 3),
                 0,
@@ -669,10 +659,10 @@ public class CsrServiceBundleIT extends BasePaxIT {
         csr = new CallSummaryRecordDto(
                 new RequestId(subscription.getSubscriptionId(), "11112233445566"),
                 subscription.getSubscriber().getCallingNumber(),
-                "w1_1.wav",
-                "w1_1",
-                makeLanguageLocation().getCode(),
-                makeCircle().getName(),
+                sh.getContentMessageFile(subscription, 0),
+                sh.getWeekId(subscription, 0),
+                rh.hindiLanguage().getCode(),
+                rh.delhiCircle().getName(),
                 FinalCallStatus.FAILED,
                 makeStatsMap(StatusCode.OBD_FAILED_SWITCHEDOFF, 3),
                 0,
