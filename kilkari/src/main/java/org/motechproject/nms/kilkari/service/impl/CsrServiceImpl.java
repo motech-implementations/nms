@@ -25,7 +25,7 @@ import org.motechproject.nms.props.domain.DayOfTheWeek;
 import org.motechproject.nms.props.domain.FinalCallStatus;
 import org.motechproject.nms.props.domain.StatusCode;
 import org.motechproject.nms.region.domain.Circle;
-import org.motechproject.nms.region.domain.LanguageLocation;
+import org.motechproject.nms.region.domain.Language;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -91,13 +91,13 @@ public class CsrServiceImpl implements CsrService {
     }
 
 
-    private String getLanguageLocationCode(Subscription subscription) {
+    private String getLanguageCode(Subscription subscription) {
         //todo: don't understand why subscriber.getLanguage() doesn't work here...
         // it's not working because of https://applab.atlassian.net/browse/MOTECH-1678
         Subscriber subscriber = subscription.getSubscriber();
-        LanguageLocation ll;
-        ll = (LanguageLocation) subscriberDataService.getDetachedField(subscriber, "languageLocation");
-        return ll.getCode();
+        Language language;
+        language = (Language) subscriberDataService.getDetachedField(subscriber, "language");
+        return language.getCode();
     }
 
 
@@ -156,7 +156,7 @@ public class CsrServiceImpl implements CsrService {
                     CallStage.RETRY_1,
                     record.getContentFileName(),
                     record.getWeekId(),
-                    getLanguageLocationCode(subscription),
+                    getLanguageCode(subscription),
                     getCircleName(subscription),
                     subscription.getOrigin()
             );
