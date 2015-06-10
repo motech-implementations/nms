@@ -1,17 +1,5 @@
 package org.motechproject.nms.testing.it.api;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.regex.Pattern;
-
-import javax.inject.Inject;
-
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -79,6 +67,17 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+
+import javax.inject.Inject;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Verify that Kilkari API is functional.
@@ -495,8 +494,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testCreateSubscriptionsNoLanguageInDB() throws IOException, InterruptedException {
-        SubscriptionRequest subscriptionRequest = new SubscriptionRequest(9999911122L, rh.airtelOperator(), rh.delhiCircle().getName(),
-                123456789012545L, "99", sh.childPack().getName());
+        SubscriptionRequest subscriptionRequest = new SubscriptionRequest(9999911122L, rh.airtelOperator(),
+                rh.delhiCircle().getName(), 123456789012545L, "99", sh.childPack().getName());
         ObjectMapper mapper = new ObjectMapper();
         String subscriptionRequestJson = mapper.writeValueAsString(subscriptionRequest);
 
@@ -1068,6 +1067,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 pregnancyPackJsonPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
+
     /*
      * To check that only message for Active Pack should be returned from
      * inbox after 7 days of user's subscription gets completed for 48Weeks
@@ -1158,6 +1158,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
      */
     // https://applab.atlassian.net/browse/NMS-186
     @Test
+    //todo: need JIRA issue
     @Ignore
     public void verifyFT85() throws IOException, InterruptedException {
 
