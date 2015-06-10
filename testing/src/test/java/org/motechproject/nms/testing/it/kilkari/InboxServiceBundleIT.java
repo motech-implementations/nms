@@ -1,5 +1,12 @@
 package org.motechproject.nms.testing.it.kilkari;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
+import java.util.Set;
+
+import javax.inject.Inject;
+
 import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -9,8 +16,10 @@ import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
+import org.motechproject.nms.kilkari.exception.NoInboxForSubscriptionException;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
+import org.motechproject.nms.kilkari.repository.SubscriptionPackMessageDataService;
 import org.motechproject.nms.kilkari.service.InboxService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
@@ -27,12 +36,6 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
-
-import javax.inject.Inject;
-import java.util.Set;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerSuite.class)
@@ -59,7 +62,8 @@ public class InboxServiceBundleIT extends BasePaxIT {
     private DistrictDataService districtDataService;
     @Inject
     private SubscriberDataService subscriberDataService;
-
+    @Inject
+    private SubscriptionPackMessageDataService subscriptionPackMessageDataService;
 
     private RegionHelper rh;
     private SubscriptionHelper sh;
@@ -171,6 +175,101 @@ public class InboxServiceBundleIT extends BasePaxIT {
 		assertEquals(msg.getWeekId(), "w72_2");
 		assertEquals(msg.getMessageFileName(), "w72_2.wav");
 
+	}
+	
+	@Test
+	public void verifyFT107() throws NoInboxForSubscriptionException {
+		/*
+		 *	"To check NMS is able to make available a single message of current week in inbox
+		 *	 when user is subscribed to 72Weeks Pack with single message per week configuration."
+		 */
+		DateTime now = DateTime.now();
+		// create subscriber for pregnancyPack
+		Subscriber subscriber = new Subscriber(1000000002L);
+		subscriber.setLastMenstrualPeriod(now.minusDays(90));
+		subscriberService.create(subscriber);
+		
+		// create pregnancyPack subscription for one message per week.
+		subscriptionService.createSubscription(subscriber.getCallingNumber(), rh.hindiLanguage(), 
+				sh.pregnancyPackFor1MessagePerWeek(subscriptionPackMessageDataService), SubscriptionOrigin.MCTS_IMPORT);
+		
+		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber());
+		Set<Subscription> subscriptions = subscriber.getAllSubscriptions();
+		Subscription subscription = subscriptions.iterator().next();
+		SubscriptionPackMessage msg = inboxService.getInboxMessage(subscription);
+		
+		// first msg should be in inbox
+		assertEquals(msg.getWeekId(), "w1_1");
+		assertEquals(msg.getMessageFileName(), "w1_1.wav");
+		
+		subscriber.setLastMenstrualPeriod(DateTime.now().minusDays(96)); // set lmp to check message lives seven days
+		subscriberService.update(subscriber);
+
+		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber());
+		subscriptions = subscriber.getAllSubscriptions();
+		subscription = subscriptions.iterator().next();
+		msg = inboxService.getInboxMessage(subscription);
+
+		// still first message should be in inbox because messagePerWeek is one
+		assertEquals(msg.getWeekId(), "w1_1");
+		assertEquals(msg.getMessageFileName(), "w1_1.wav");
+		
+	}
+	
+	@Test
+	public void verifyFT114() throws NoInboxForSubscriptionException {
+		/*
+		 *	"To check NMS is able to make available a single message of current week in inbox
+		 *	 when user is subscribed to 48Weeks Pack with single message per week configuration."
+		 */
+		DateTime now = DateTime.now();
+		// create subscriber for childPack
+		Subscriber subscriber = new Subscriber(1000000002L);
+		subscriber.setDateOfBirth(now);
+		subscriberService.create(subscriber);
+		
+		// create childPack subscription for two message per week.
+		subscriptionService.createSubscription(subscriber.getCallingNumber(), rh.hindiLanguage(), 
+				sh.childPackFor2MessagePerWeek(subscriptionPackMessageDataService),
+				SubscriptionOrigin.MCTS_IMPORT);
+		
+		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber());
+		Set<Subscription> subscriptions = subscriber.getAllSubscriptions();
+		Subscription subscription = subscriptions.iterator().next();
+		SubscriptionPackMessage msg = inboxService.getInboxMessage(subscription);
+		
+		// first msg should be in inbox
+		assertEquals(msg.getWeekId(), "w1_1");
+		assertEquals(msg.getMessageFileName(), "w1_1.wav");
+		
+		subscriber.setDateOfBirth(now.minusDays(4));
+		subscriberService.update(subscriber);
+
+		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber());
+		subscriptions = subscriber.getAllSubscriptions();
+		subscription = subscriptions.iterator().next();
+		msg = inboxService.getInboxMessage(subscription);
+
+		// second message should be in inbox because messagePerWeek is two
+		assertEquals(msg.getWeekId(), "w1_2");
+		assertEquals(msg.getMessageFileName(), "w1_2.wav");
+		
+		/*
+		 *  To check NMS is able to make a message available for 7 days 
+		 *  after user's subscription gets completed for 72Weeks Pack.
+		 */
+		subscriber.setDateOfBirth(now.minusDays(336));
+		subscriberService.update(subscriber);
+		
+		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber());
+		subscriptions = subscriber.getAllSubscriptions();
+		subscription = subscriptions.iterator().next();
+		msg = inboxService.getInboxMessage(subscription);
+
+		// last msg should be in inbox
+		assertEquals(msg.getWeekId(), "w48_2");
+		assertEquals(msg.getMessageFileName(), "w48_2.wav");
+		
 	}
 
 }
