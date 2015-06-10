@@ -1,5 +1,17 @@
 package org.motechproject.nms.testing.it.api;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+import javax.inject.Inject;
+
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -22,10 +34,14 @@ import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.flw.repository.ServiceUsageCapDataService;
 import org.motechproject.nms.flw.repository.ServiceUsageDataService;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
+import org.motechproject.nms.kilkari.domain.InboxCallData;
+import org.motechproject.nms.kilkari.domain.InboxCallDetailRecord;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
+import org.motechproject.nms.kilkari.repository.InboxCallDataDataService;
+import org.motechproject.nms.kilkari.repository.InboxCallDetailRecordDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
@@ -51,17 +67,6 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
-
-import javax.inject.Inject;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.regex.Pattern;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Verify that Kilkari API is functional.
@@ -104,6 +109,15 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     private DeployedServiceDataService deployedServiceDataService;
     @Inject
     private TestingService testingService;
+    @Inject
+    private InboxCallDetailRecordDataService inboxCallDetailsDataService;
+    @Inject
+    private InboxCallDataDataService inboxCallDataDataService;
+
+
+    public KilkariControllerBundleIT() {
+        System.setProperty("org.motechproject.testing.osgi.http.numTries", "1");
+    }
 
 
     private RegionHelper rh;
@@ -687,6 +701,118 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     }
 
     /**
+     * NMS_FT_22 To verify the that Save Inbox call Details API request
+     * should succeed with content being saved for both Pack as blank.
+     */
+    @Test
+    public void verifyFT22()
+            throws IOException, InterruptedException {
+        HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
+                3000000000L, // callingNumber
+                "A", // operator
+                "AP", // circle
+                123456789012345L, // callId
+                123L, // callStartTime
+                456L, // callEndTime
+                123, // callDurationInPulses
+                2, // callStatus
+                4, // callDisconnectReason
+                new HashSet<CallDataRequest>())); // content
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+        // assert inboxCallDetailRecord
+        InboxCallDetailRecord inboxCallDetailRecord = inboxCallDetailsDataService
+                .retrieve("callingNumber", 3000000000L);
+        assertTrue(3000000000L == inboxCallDetailRecord.getCallingNumber());
+        assertTrue(123456789012345L == inboxCallDetailRecord.getCallId());
+        assertEquals("A", inboxCallDetailRecord.getOperator());
+        assertEquals("AP", inboxCallDetailRecord.getCircle());
+        assertTrue(123 == inboxCallDetailRecord.getCallDurationInPulses());
+        assertTrue(2 == inboxCallDetailRecord.getCallStatus());
+        assertTrue(4 == inboxCallDetailRecord.getCallDisconnectReason());
+        assertTrue(123L == inboxCallDetailRecord.getCallStartTime().getMillis());
+        assertTrue(456L == inboxCallDetailRecord.getCallEndTime().getMillis());
+
+    }
+
+    /**
+     * To verify the that Save Inbox call Details API request should succeed
+     * with content being saved for both Pack.
+     */
+    @Test
+    public void verifyFT23() throws IOException, InterruptedException {
+
+        Subscriber subscriber1 = subscriberDataService.findByCallingNumber(1000000000L);
+        Subscription subscription1 = subscriber1.getAllSubscriptions().iterator().next();
+        Subscriber subscriber2 = subscriberDataService.findByCallingNumber(2000000000L);
+        Subscription subscription2 = subscriber2.getAllSubscriptions().iterator().next();
+
+        HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
+                3000000000L, // callingNumber
+                "A", // operator
+                "AP", // circle
+                123456789012345L, // callId
+                123L, // callStartTime
+                456L, // callEndTime
+                123, // callDurationInPulses
+                1, // callStatus
+                1, // callDisconnectReason
+                new HashSet<>(Arrays.asList(
+                        new CallDataRequest(subscription1.getSubscriptionId(), // subscriptionId
+
+                                "48WeeksPack", // subscriptionPack
+                                "123", // inboxWeekId
+                                "foo1.wav", // contentFileName
+                                123L, // startTime
+                                456L), // endTime
+                        new CallDataRequest(subscription2.getSubscriptionId(), // subscriptionId
+
+                                "72WeeksPack", // subscriptionPack
+                                "124", // inboxWeekId
+                                "foo2.wav", // contentFileName
+                                192L, // startTime
+                                678L) // endTime
+                )))); // content
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+        // assert inboxCallDetailRecord
+        InboxCallDetailRecord inboxCallDetailRecord = inboxCallDetailsDataService
+                .retrieve("callingNumber", 3000000000L);
+        assertTrue(3000000000L == inboxCallDetailRecord.getCallingNumber());
+        assertTrue(123456789012345L == inboxCallDetailRecord.getCallId());
+        assertEquals("A", inboxCallDetailRecord.getOperator());
+        assertEquals("AP", inboxCallDetailRecord.getCircle());
+        assertTrue(123 == inboxCallDetailRecord.getCallDurationInPulses());
+        assertTrue(1 == inboxCallDetailRecord.getCallStatus());
+        assertTrue(1 == inboxCallDetailRecord.getCallDisconnectReason());
+        assertTrue(123L == inboxCallDetailRecord.getCallStartTime().getMillis());
+        assertTrue(456L == inboxCallDetailRecord.getCallEndTime().getMillis());
+
+        // assert inboxCallData for both packs
+        InboxCallData inboxCallData48Pack = inboxCallDataDataService.retrieve(
+                "contentFileName", "foo1.wav");
+        assertEquals("foo1.wav", inboxCallData48Pack.getContentFileName());
+        assertTrue(456L == inboxCallData48Pack.getEndTime().getMillis());
+        assertEquals("123", inboxCallData48Pack.getInboxWeekId());
+        assertTrue(123L == inboxCallData48Pack.getStartTime().getMillis());
+        assertEquals(subscription1.getSubscriptionId(),
+                inboxCallData48Pack.getSubscriptionId());
+        assertEquals("48WeeksPack", inboxCallData48Pack.getSubscriptionPack());
+
+        InboxCallData inboxCallData72Pack = inboxCallDataDataService.retrieve(
+                "contentFileName", "foo2.wav");
+        assertEquals("foo2.wav", inboxCallData72Pack.getContentFileName());
+        assertTrue(678L == inboxCallData72Pack.getEndTime().getMillis());
+        assertEquals("124", inboxCallData72Pack.getInboxWeekId());
+        assertTrue(192L == inboxCallData72Pack.getStartTime().getMillis());
+        assertEquals(subscription2.getSubscriptionId(),
+                inboxCallData72Pack.getSubscriptionId());
+        assertEquals("72WeeksPack", inboxCallData72Pack.getSubscriptionPack());
+    }
+
+    /**
      * NMS_FT_77 To check that message should be returned from inbox within
      * 7 days of user's subscription gets completed for 72Weeks Pack.
      */
@@ -1138,6 +1264,5 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
                 HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
                 ADMIN_USERNAME, ADMIN_PASSWORD));
-
     }
 }
