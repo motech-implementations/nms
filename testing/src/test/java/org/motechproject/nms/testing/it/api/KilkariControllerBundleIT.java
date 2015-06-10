@@ -55,6 +55,7 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
+
 import javax.inject.Inject;
 import java.io.IOException;
 import java.util.Arrays;
@@ -65,18 +66,6 @@ import java.util.regex.Pattern;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
-
-import javax.inject.Inject;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.regex.Pattern;
-
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -1421,11 +1410,13 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         return httpDelete;
     }
 
+
+    //To verify the behavior of  Deactivate Subscription Request API  if a mandatory parameter :
+    // calledNumber is missing from the API request.
+
     @Test
     public void verifyFT101() throws IOException, InterruptedException {
-        /**
-         * test Deactivate Subscription API with Missing Param
-         */
+
         // calledNumber missing
         HttpDeleteWithBody httpDelete = createDeactivateSubscriptionHttpDelete(
                 null, "A", "AP", "123456789012345",
@@ -1439,11 +1430,12 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 EntityUtils.toString(response.getEntity()));
     }
 
+    //To verify the behavior of  Deactivate Subscription Request API  if a mandatory parameter :
+    // operator is missing from the API request.
+
     @Test
     public void verifyFT102() throws IOException, InterruptedException {
-        /**
-         * test Deactivate Subscription API with Missing Param
-         */
+        
         // operator missing
         HttpDeleteWithBody httpDelete = createDeactivateSubscriptionHttpDelete(
                 "1000000000", null, "AP", "123456789012345",
@@ -1457,12 +1449,15 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 EntityUtils.toString(response.getEntity()));
     }
 
+
+    //To verify the behavior of  Deactivate Subscription Request API  if a mandatory parameter :
+    // circle is missing from the API request.
+    // JIRA issue : https://applab.atlassian.net/browse/NMS-195
+
     @Ignore
     @Test
     public void verifyFT103() throws IOException, InterruptedException {
-        /**
-         * test Deactivate Subscription API with Missing Param
-         */
+
         // circle missing
         HttpDeleteWithBody httpDelete = createDeactivateSubscriptionHttpDelete(
                 "1000000000", "A", null, "123456789012345",
@@ -1476,11 +1471,12 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 EntityUtils.toString(response.getEntity()));
     }
 
+    //To verify the behavior of  Deactivate Subscription Request API  if a mandatory parameter :
+    // callId is missing from the API request.
+
     @Test
     public void verifyFT104() throws IOException, InterruptedException {
-        /**
-         * test Deactivate Subscription API with Missing Param
-         */
+
         // callId missing
         HttpDeleteWithBody httpDelete = createDeactivateSubscriptionHttpDelete(
                 "1000000000", "A", "AP", null,
