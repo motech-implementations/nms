@@ -1,17 +1,5 @@
 package org.motechproject.nms.testing.it.api;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.regex.Pattern;
-
-import javax.inject.Inject;
-
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -67,6 +55,17 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
+
+import javax.inject.Inject;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Verify that Kilkari API is functional.
@@ -488,8 +487,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testCreateSubscriptionsNoLanguageInDB() throws IOException, InterruptedException {
-        SubscriptionRequest subscriptionRequest = new SubscriptionRequest(9999911122L, rh.airtelOperator(), rh.delhiCircle().getName(),
-                123456789012545L, "99", sh.childPack().getName());
+        SubscriptionRequest subscriptionRequest = new SubscriptionRequest(9999911122L, rh.airtelOperator(),
+                rh.delhiCircle().getName(), 123456789012545L, "99", sh.childPack().getName());
         ObjectMapper mapper = new ObjectMapper();
         String subscriptionRequestJson = mapper.writeValueAsString(subscriptionRequest);
 
@@ -699,6 +698,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
+
 
     /**
      * NMS_FT_22 To verify the that Save Inbox call Details API request
@@ -954,13 +954,14 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 pregnancyPackJsonPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
+
+    /*
+     * To check that only message for Active Pack should be returned from
+     * inbox after 7 days of user's subscription gets completed for 72Weeks
+     * Pack while user is subscribed for both Pack.
+     */
     @Test
     public void verifyFT76() throws IOException, InterruptedException {
-        /*
-         * To check that only message for Active Pack should be returned from
-         * inbox after 7 days of user's subscription gets completed for 72Weeks
-         * Pack while user is subscribed for both Pack.
-         */
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
         mctsSubscriber.setDateOfBirth(DateTime.now());
         subscriberDataService.create(mctsSubscriber);
@@ -1001,14 +1002,13 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     }
 
 
+    /*
+     * To check that message for both Pack should be returned from inbox
+     * within 7 days of user's subscription gets completed for 48Weeks Pack
+     * while user is subscribed for both Pack.
+     */
     @Test
     public void verifyFT82() throws IOException, InterruptedException {
-        /*
-         * To check that message for both Pack should be returned from inbox
-         * within 7 days of user's subscription gets completed for 48Weeks Pack
-         * while user is subscribed for both Pack.
-         */
-        setupData();
 
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
         mctsSubscriber.setDateOfBirth(DateTime.now());
@@ -1057,6 +1057,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
                 pregnancyPackJsonPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
+
 
     /*
      * To check that only message for Active Pack should be returned from
@@ -1148,6 +1149,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
      */
     // https://applab.atlassian.net/browse/NMS-186
     @Test
+    //todo: need JIRA issue
     @Ignore
     public void verifyFT85() throws IOException, InterruptedException {
 

@@ -117,7 +117,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         subscriptionService.createSubscription(subscriber2.getCallingNumber(), rh.hindiLanguage(),
                 sh.pregnancyPack(), SubscriptionOrigin.IVR);
     }
-    
+
 
     @Test
     public void testServicePresent() throws Exception {
@@ -223,6 +223,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         assertNull(subscriber);
     }
 
+
     @Test
     public void testPurgeOldClosedSubscriptionsRemoveSubscriptionLeaveSubscriber() {
 
@@ -282,6 +283,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         subscriptions = subscriber.getSubscriptions();
         assertEquals(1, subscriptions.size());
     }
+
 
     @Test
     public void testServiceFunctional() throws Exception {
@@ -565,7 +567,8 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         subscriberDataService.create(mctsSubscriber);
 
-        subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
+        subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.pregnancyPack(),
+                SubscriptionOrigin.MCTS_IMPORT);
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
 
         Subscription subscription = mctsSubscriber.getSubscriptions().iterator().next();
@@ -591,6 +594,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         assertEquals(now.minusDays(910), subscription.getStartDate());
         assert(subscription.getStatus() == SubscriptionStatus.COMPLETED);
     }
+
 
     @Test
     public void testGetNextMessageForSubscription() {
@@ -696,7 +700,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         subscriberDataService.create(mctsSubscriber);
 
         Subscription subscription = subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(),
-                                                                         sh.childPack(), SubscriptionOrigin.MCTS_IMPORT);
+                sh.childPack(), SubscriptionOrigin.MCTS_IMPORT);
 
         exception.expect(JdoListenerInvocationException.class);
         subscriptionDataService.delete(subscription);
@@ -792,7 +796,6 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT156() {
-
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
         mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(28));
         subscriberDataService.create(mctsSubscriber);
@@ -828,7 +831,6 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT159() {
-
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
         mctsSubscriber.setDateOfBirth(DateTime.now());
         subscriberDataService.create(mctsSubscriber);
