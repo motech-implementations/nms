@@ -17,7 +17,7 @@ import java.util.List;
 
 // TODO: Remove maxFetchDepth once https://applab.atlassian.net/browse/MOTECH-1678 is resolved
 @Entity(maxFetchDepth = -1, tableName = "nms_health_facilities")
-@PersistenceCapable(identityType = IdentityType.APPLICATION, detachable="true")
+@PersistenceCapable(identityType = IdentityType.APPLICATION, detachable = "true")
 public class HealthFacility extends MdsEntity {
 
     @Field

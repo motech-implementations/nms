@@ -6,6 +6,8 @@ import org.motechproject.mds.annotations.Ignore;
 import org.motechproject.mds.domain.MdsEntity;
 
 import javax.jdo.annotations.Column;
+import javax.jdo.annotations.IdentityType;
+import javax.jdo.annotations.PersistenceCapable;
 import javax.jdo.annotations.Unique;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -29,6 +31,7 @@ import javax.validation.constraints.Size;
 //@ValidVillage
 @Entity(tableName = "nms_villages")
 @Unique(name = "uniqueVillageCode", members = {"vcode", "svid" })
+@PersistenceCapable(identityType = IdentityType.APPLICATION, detachable = "true")
 public class Village extends MdsEntity {
 
     @Field

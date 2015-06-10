@@ -21,7 +21,7 @@ import java.util.List;
  * This class Models data for State location records
  */
 @Entity(tableName = "nms_states")
-@PersistenceCapable(identityType = IdentityType.APPLICATION, detachable="true")
+@PersistenceCapable(identityType = IdentityType.APPLICATION, detachable = "true")
 public class State extends MdsEntity {
 
     @Field

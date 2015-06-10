@@ -5,6 +5,8 @@ import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.domain.MdsEntity;
 
 import javax.jdo.annotations.Column;
+import javax.jdo.annotations.IdentityType;
+import javax.jdo.annotations.PersistenceCapable;
 import javax.jdo.annotations.Unique;
 import javax.validation.constraints.NotNull;
 
@@ -12,6 +14,7 @@ import javax.validation.constraints.NotNull;
  * Represents... yep that's right. The languages that are supported by the system.
  */
 @Entity(tableName = "nms_languages")
+@PersistenceCapable(identityType = IdentityType.APPLICATION, detachable = "true")
 public class Language extends MdsEntity {
 
     @Field

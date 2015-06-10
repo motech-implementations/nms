@@ -240,7 +240,7 @@ public class CircleServiceBundleIT extends BasePaxIT {
         assertEquals("Circle 2", circle.getName());
     }
 
-    @Test
+    @Ignore
     public void testMultipleCirclesSingleState() throws Exception {
         setupData();
 

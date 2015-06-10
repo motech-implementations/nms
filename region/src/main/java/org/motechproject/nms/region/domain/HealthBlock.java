@@ -6,6 +6,8 @@ import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.domain.MdsEntity;
 
 import javax.jdo.annotations.Column;
+import javax.jdo.annotations.IdentityType;
+import javax.jdo.annotations.PersistenceCapable;
 import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.Unique;
 import javax.validation.constraints.NotNull;
@@ -17,6 +19,7 @@ import java.util.List;
  * This class Models data for HealthBlock location records
  */
 @Entity(tableName = "nms_health_blocks")
+@PersistenceCapable(identityType = IdentityType.APPLICATION, detachable = "true")
 public class HealthBlock extends MdsEntity {
 
     @Field
