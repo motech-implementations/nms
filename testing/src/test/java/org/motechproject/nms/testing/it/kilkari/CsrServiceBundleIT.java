@@ -612,22 +612,21 @@ public class CsrServiceBundleIT extends BasePaxIT {
         assertEquals(DayOfTheWeek.today().nextDay(),retries.get(0).getDayOfTheWeek());
     }
 
+
+    /**
+     * To check that NMS shall not retry OBD message for which all OBD attempts(1 actual+1 retry) fails with
+     * two message per week configuration.
+     */
     @Test
     public void verifyFT142() {
-        /**
-         * To check that NMS shall not retry OBD message for which all OBD attempts(1 actual+1 retry) fails with
-         * two message per week configuration.
-         */
 
         String timestamp = DateTime.now().toString(TIME_FORMATTER);
 
         // Create a record in the CallRetry table marked as "retry 1" and verify it is erased from the
         // CallRetry table
 
-        SubscriptionHelper sh = new SubscriptionHelper(subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
-                stateDataService, districtDataService);
-        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(3),SubscriptionPackType.PREGNANCY);
+        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(3),
+                SubscriptionPackType.PREGNANCY);
         String contentFileName = sh.getContentMessageFile(subscription, 0);
         CallRetry retry = callRetryDataService.create(new CallRetry(
                 subscription.getSubscriptionId(),
