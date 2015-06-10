@@ -838,6 +838,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         return httpPost;
     }
 
+    @Ignore
     @Test
     public void verifyFT54_72() throws IOException, InterruptedException {
         /**
@@ -865,7 +866,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 EntityUtils.toString(response.getEntity()));
     }
 
-
+    @Ignore
     @Test
     public void verifyFT55_73() throws IOException, InterruptedException {
         /**
@@ -892,6 +893,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 EntityUtils.toString(response.getEntity()));
     }
 
+    @Ignore
     @Test
     public void verifyFT56() throws IOException, InterruptedException {
         /**
