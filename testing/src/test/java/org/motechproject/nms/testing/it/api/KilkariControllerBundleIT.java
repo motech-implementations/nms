@@ -909,4 +909,95 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 ADMIN_USERNAME, ADMIN_PASSWORD));
 
     }
+
+    // This method is a utility method for running the test cases. this is
+    // already used in the branch NMS.FT.95.96.97
+    private HttpDeleteWithBody createDeactivateSubscriptionHttpDelete(
+            String calledNumber, String operator, String circle, String callId,
+            String subscriptionId) throws IOException {
+
+        StringBuilder sb = new StringBuilder();
+        String seperator = "";
+        sb.append("{");
+        if (calledNumber != null) {
+            sb.append(String.format("%s\"calledNumber\": %s", seperator,
+                    calledNumber));
+            seperator = ",";
+        }
+        if (operator != null) {
+            sb.append(String.format("%s\"operator\": \"%s\"", seperator,
+                    operator));
+            seperator = ",";
+        }
+        if (circle != null) {
+            sb.append(String.format("%s\"circle\": \"%s\"", seperator, circle));
+            seperator = ",";
+        }
+        if (callId != null) {
+            sb.append(String.format("%s\"callId\": %s", seperator, callId));
+            seperator = ",";
+        }
+        if (subscriptionId != null) {
+            sb.append(String.format("%s\"subscriptionId\": \"%s\"", seperator,
+                    subscriptionId));
+            seperator = ",";
+        }
+
+        sb.append("}");
+
+        HttpDeleteWithBody httpDelete = new HttpDeleteWithBody(String.format(
+                "http://localhost:%d/api/kilkari/subscription",
+                TestContext.getJettyPort()));
+        httpDelete.setHeader("Content-type", "application/json");
+        httpDelete.setEntity(new StringEntity(sb.toString()));
+        return httpDelete;
+    }
+
+    @Ignore
+    @Test
+    public void verifyFT105() throws IOException, InterruptedException {
+        /**
+         * test DeactivateSubscription API with Blank Params
+         */
+        setupData();
+
+        Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
+        Subscription subscription = subscriber.getActiveSubscriptions()
+                .iterator().next();
+        String subscriptionId = subscription.getSubscriptionId();
+        // callingNumber blank
+        HttpDeleteWithBody httpDelete = createDeactivateSubscriptionHttpDelete(
+                "", "A", "AP", "123456789012345", subscriptionId);
+        String expectedJsonResponse = createFailureResponseJson("<callingNumber: Not Present>");
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpDelete, ADMIN_USERNAME, ADMIN_PASSWORD);
+        
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
+    }
+
+    @Ignore
+    @Test
+    public void verifyFT106() throws IOException, InterruptedException {
+        /**
+         * test DeactivateSubscription API with Blank Params
+         */
+        setupData();
+
+        Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
+        Subscription subscription = subscriber.getActiveSubscriptions()
+                .iterator().next();
+        String subscriptionId = subscription.getSubscriptionId();
+        // circle blank
+        HttpDeleteWithBody httpDelete = createDeactivateSubscriptionHttpDelete(
+                "1000000000", "A", "", "123456789012345", subscriptionId);
+        String expectedJsonResponse = createFailureResponseJson("<circle: Not Present>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpDelete, ADMIN_USERNAME, ADMIN_PASSWORD);
+
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
 }
