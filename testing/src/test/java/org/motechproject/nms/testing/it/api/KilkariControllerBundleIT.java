@@ -1,5 +1,17 @@
 package org.motechproject.nms.testing.it.api;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+import javax.inject.Inject;
+
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -9,6 +21,7 @@ import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.joda.time.DateTime;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.api.web.contract.BadRequest;
@@ -50,17 +63,6 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
-
-import javax.inject.Inject;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.regex.Pattern;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Verify that Kilkari API is functional.
@@ -125,6 +127,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         Subscriber subscriber3 = subscriberDataService.create(new Subscriber(4000000000L));
 
         // subscriber1 subscribed to 48 weeks pack only
+
         subscriptionService.createSubscription(subscriber1.getCallingNumber(), rh.hindiLanguage(),
                 sh.childPack(), SubscriptionOrigin.IVR);
 
@@ -138,6 +141,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 sh.pregnancyPack(), SubscriptionOrigin.IVR);
 
         deployedServiceDataService.create(new DeployedService(rh.delhiState(), Service.KILKARI));
+
     }
 
     
@@ -669,6 +673,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
          * NMS_FT_77 To check that message should be returned from inbox within
          * 7 days of user's subscription gets completed for 72Weeks Pack.
          */
+
         // 4000000000L subscribed to 72Week Pack subscription
         Subscriber subscriber = subscriberService.getSubscriber(4000000000L);
         Subscription subscription = subscriber.getSubscriptions().iterator()
@@ -682,11 +687,226 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         Pattern expectedJsonPattern = Pattern
                 .compile(".*\"subscriptionPack\":\"pregnancyPack\",\"inboxWeekId\":\"w72_2\",\"contentFileName\":\"w72_2\\.wav.*");
 
+
         HttpGet httpGet = createHttpGet(true, "4000000000", true,
                 "123456789012345");
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
-                expectedJsonPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertTrue(Pattern.matches(expectedJsonPattern.pattern(), EntityUtils.toString(response.getEntity())));
+
     }
 
+
+    @Test
+    public void verifyFT75() throws IOException, InterruptedException {
+        /**
+         * NMS_FT_75 To check that no message should be returned from inbox
+         * after 7 days of user's subscription gets completed for 72Weeks Pack.
+         */
+
+        // 4000000000L subscribed to 72Week Pack subscription
+        Subscriber subscriber = subscriberService.getSubscriber(4000000000L);
+        Subscription subscription = subscriber.getSubscriptions().iterator()
+                .next();
+        // setting the subscription to have ended more than a week ago -- no
+        // message should be returned
+        subscription.setStartDate(DateTime.now().minusDays(512));
+        subscription.setStatus(SubscriptionStatus.COMPLETED);
+        subscriptionDataService.update(subscription);
+
+        String expectedJson = "{\"inboxSubscriptionDetailList\":[]}";
+
+        HttpGet httpGet = createHttpGet(true, "4000000000", true,
+                "123456789012345");
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertTrue(expectedJson.equals(EntityUtils.toString(response.getEntity()))  );
+
+    }
+
+    
+ 	@Test
+ 	public void verifyFT92() throws IOException,
+ 			InterruptedException {
+        //To verify that Get Inbox Details API request fails if the provided parameter value of
+        // callingNumber is : blank.
+
+ 		HttpGet httpGet = createHttpGet(true, "", true, "123456789012345");
+ 		String expectedJsonResponse = createFailureResponseJson("<callingNumber: Not Present>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+        assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response.getEntity()))  );
+ 		 		
+
+ 	}
+
+
+    @Test
+    public void verifyFT93() throws IOException,
+            InterruptedException {
+
+        //To verify that Get Inbox Details API request fails if the provided parameter value of
+        // callId is : blank.
+
+        HttpGet httpGet = createHttpGet(true, "1234567890", true, "");
+        String expectedJsonResponse = createFailureResponseJson("<callId: Not Present>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+        assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response.getEntity()))  );
+    }
+
+     
+    @Test
+    public void verifyFT83() throws IOException,
+    		InterruptedException {
+
+        //To verify the behavior of  Get Inbox Details API  if provided beneficiary's callingNumber is not valid :
+        // less than 10 digits.
+
+    	HttpGet httpGet = createHttpGet(true, "123456789", true,
+    			"123456789012345");
+    	String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+        assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response.getEntity()))  );
+
+    }
+    @Test
+    public void verifyFT84() throws IOException,
+            InterruptedException {
+
+        //To verify the behavior of  Get Inbox Details API  if provided beneficiary's callingNumber is not valid :
+        // more than 10 digits.
+
+        HttpGet httpGet = createHttpGet(true, "12345678901", true, "123456789012345");
+        String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+        assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response.getEntity()))  );
+
+
+    }
+    @Test
+    @Ignore
+    public void verifyFT85() throws IOException,
+            InterruptedException {
+
+        //https://applab.atlassian.net/browse/NMS-186
+                
+        // callingNumber alphanumeric
+        HttpGet httpGet = createHttpGet(true, "12345DF7890", true, "123456789012345");
+        String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+        assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response.getEntity()))  );
+
+    }
+
+    // This method is a utility method for running the test cases. this is
+    // already used in the branch NMS.FT.6.7.8
+    private HttpGet createGetSubscriberDetailsRequest(String callingNumber,
+            String operator, String circle, String callId) {
+
+        StringBuilder sb = new StringBuilder(String.format(
+                "http://localhost:%d/api/kilkari/user?",
+                TestContext.getJettyPort()));
+        String sep = "";
+        if (callingNumber != null) {
+            sb.append(String.format("callingNumber=%s", callingNumber));
+            sep = "&";
+        }
+        if (operator != null) {
+            sb.append(String.format("%soperator=%s", sep, operator));
+            sep = "&";
+        }
+        if (circle != null) {
+            sb.append(String.format("%scircle=%s", sep, circle));
+            sep = "&";
+        }
+        if (callId != null) {
+            sb.append(String.format("%scallId=%s", sep, callId));
+            sep = "&";
+        }
+
+        return new HttpGet(sb.toString());
+    }
+
+    @Test
+    public void verifyFT17() throws IOException,
+            InterruptedException {
+        /**
+         * test GetSubscriberDetails API with Blank Params
+         */
+        HttpGet httpGet = createGetSubscriberDetailsRequest("", // callingNumber
+                                                                // Blank
+                "A", // operator
+                "AP", // circle
+                "123456789012345" // callId
+        );
+
+        String expectedJsonResponse = createFailureResponseJson("<callingNumber: Not Present>");
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
+                HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    @Test
+    public void verifyFT18() throws IOException, InterruptedException {
+        /**
+         * test GetSubscriberDetails API with Blank Params
+         */
+        HttpGet httpGet = createGetSubscriberDetailsRequest("1234567890", // callingNumber
+                "", // operator Blank(optional param)
+                "AP", // circle
+                "123456789012345" // callId
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine()
+                .getStatusCode());
+    }
+
+    @Test
+    public void verifyFT19() throws IOException, InterruptedException {
+        /**
+         * test GetSubscriberDetails API with Blank Params
+         */
+        HttpGet httpGet = createGetSubscriberDetailsRequest("1234567890", // callingNumber
+                "A", // operator
+                "", // circle Blank (optional param)
+                "123456789012345" // callId
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine()
+                .getStatusCode());
+    }
+
+    @Test
+    public void verifyFT20() throws IOException, InterruptedException {
+        /**
+         * test GetSubscriberDetails API with Blank Params
+         */
+        HttpGet httpGet = createGetSubscriberDetailsRequest("1234567890", // callingNumber
+                "A", // operator
+                "AP", // circle
+                "" // callId Blank
+        );
+
+        String expectedJsonResponse = createFailureResponseJson("<callId: Not Present>");
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
+                HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+
+    }
 }
