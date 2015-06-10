@@ -1,3 +1,10 @@
+
+State Name :	
+User Name :	
+Password :	
+From Date (dd-mm-yyyy) :	
+To Date (dd-mm-yyyy) :	
+		
 StateID	District_ID	District_Name	Taluka_ID	Taluka_Name	HealthBlock_ID	HealthBlock_Name	PHC_ID	PHC_Name	SubCentre_ID	SubCentre_Name	Village_ID	Village_Name	Yr	GP_Village	Address	ID_No	Name	Husband_Name	PhoneNo_Of_Whom	Whom_PhoneNo	Birthdate	JSY_Beneficiary	Caste	SubCentre_Name1	ANM_Name	ANM_Phone	ASHA_Name	ASHA_Phone	Delivery_Lnk_Facility	Facility_Name	LMP_Date	ANC1_Date	ANC2_Date	ANC3_Date	ANC4_Date	TT1_Date	TT2_Date	TTBooster_Date	IFA100_Given_Date	Anemia	ANC_Complication	RTI_STI	Dly_Date	Dly_Place_Home_Type	Dly_Place_Public	Dly_Place_Private	Dly_Type	Dly_Complication	Discharge_Date	JSY_Paid_Date	Abortion	PNC_Home_Visit	PNC_Complication	PPC_Method	PNC_Checkup	Outcome_Nos	Child1_Name	Child1_Sex	Child1_Wt	Child1_Brestfeeding	Child2_Name	Child2_Sex	Child2_Wt	Child2_Brestfeeding	Child3_Name	Child3_Sex	Child3_Wt	Child3_Brestfeeding	Child4_Name	Child4_Sex	Child4_Wt	Child4_Brestfeeding	Age	MTHR_REG_DATE	LastUpdateDate	Remarks	ANM_ID	ASHA_ID	Call_Ans	NoCall_Reason	NoPhone_Reason	Created_By	Updated_By	Aadhar_No	BPL_APL	EID	EIDTime
 21	3	Sambalpur	0026	Govindpur P.S.	453	Bamara	41	Garposh CHC	7389	Babuniktimal	0	 	2014	 	At-Kandhabalunda, PS-Mahulpali, Dist-Sambalpur	210302604211400029	Shanti Ekka	Ses Ekka	Other	9439986187	01-01-1988	Yes	ST	Babuniktimal	Kuntala Bagh	9439986187	Sanjubala Rana	8280440491	SDH	Kuchinda	22-11-2014	23-01-2015	11-03-2015	24-03-2015	24-04-2015	23-01-2015	18-03-2015	 	24-03-2015	Normal	None	No	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	27	30-03-2015	27-04-2015	 	47361	47363		 	 	486	486	 	1	 	 
 21	3	Sambalpur	0026	Govindpur P.S.	453	Bamara	41	Garposh CHC	7389	Babuniktimal	0	 	2014	 	At-Tetelpara, PS-Mahulpali, Dist-Sambalpur	210302604211400030	Premlata Naik	Sahil Naik	Other	9439986187	01-01-1989	Yes	ST	Babuniktimal	Kuntala Bagh	9439986187	Sanjubala Rana	8280440491	SDH	Kuchinda	21-11-2014	23-01-2015	11-03-2015	27-03-2015	 	23-01-2015	11-03-2015	 	27-03-2015	Normal	None	No	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	26	30-03-2015	27-04-2015	 	47361	47363		 	 	486	486	 	1	 	 

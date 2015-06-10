@@ -62,7 +62,7 @@ import org.motechproject.nms.testing.it.region.NationalDefaultLanguageLocationBu
     SubscriptionServiceBundleIT.class,
     SubscriberServiceBundleIT.class,
     CsrServiceBundleIT.class,
-    //MctsBeneficiaryImportServiceBundleIT.class,
+    MctsBeneficiaryImportServiceBundleIT.class,
 
     /**
      * Mobile Academy

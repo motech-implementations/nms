@@ -3,6 +3,7 @@ package org.motechproject.nms.testing.it.kilkari;
 
 import org.joda.time.DateTime;
 import org.joda.time.Days;
+import org.joda.time.format.DateTimeFormat;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -15,14 +16,13 @@ import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
-import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.HealthBlock;
 import org.motechproject.nms.region.domain.HealthFacility;
 import org.motechproject.nms.region.domain.HealthFacilityType;
-import org.motechproject.nms.region.domain.Language;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.domain.Taluka;
+import org.motechproject.nms.region.domain.Village;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.HealthBlockDataService;
@@ -41,6 +41,7 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
+import org.joda.time.format.DateTimeFormatter;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
@@ -50,15 +51,13 @@ import java.util.Set;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertEquals;
 
-import static org.motechproject.nms.testing.it.utils.LocationDataUtils.createCircle;
-import static org.motechproject.nms.testing.it.utils.LocationDataUtils.createDistrict;
-import static org.motechproject.nms.testing.it.utils.LocationDataUtils.createHealthFacilityType;
-import static org.motechproject.nms.testing.it.utils.LocationDataUtils.createLanguage;
-import static org.motechproject.nms.testing.it.utils.LocationDataUtils.createState;
-import static org.motechproject.nms.testing.it.utils.LocationDataUtils.createTaluka;
-import static org.motechproject.nms.testing.it.utils.LocationDataUtils.createHealthBlock;
-import static org.motechproject.nms.testing.it.utils.LocationDataUtils.createHealthFacility;
-import static org.motechproject.nms.testing.it.utils.LocationDataUtils.createHealthFacilityType;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createDistrict;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthFacilityType;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createState;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createTaluka;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthBlock;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthFacility;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createVillage;
 
 
 @RunWith(PaxExam.class)
@@ -106,17 +105,57 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     }
 
     private void createLocationData() {
-        // specific locations from the mother data file:
+        // specific locations from the mother and child data files:
+
         State state21 = createState(21L, "State 21");
+        District district2 = createDistrict(state21, 2L, "Jharsuguda");
         District district3 = createDistrict(state21, 3L, "Sambalpur");
-        state21.getDistricts().add(district3);
-        Taluka taluka26 = createTaluka(district3, "26", "Govindpur P.S.", 26);
+        District district4 = createDistrict(state21, 4L, "Debagarh");
+        state21.getDistricts().addAll(Arrays.asList(district2, district3, district4));
+
+        Taluka taluka24 = createTaluka(district2, "0024", "Laikera P.S.", 24);
+        district2.getTalukas().add(taluka24);
+
+        Taluka taluka26 = createTaluka(district3, "0026", "Govindpur P.S.", 26);
         district3.getTalukas().add(taluka26);
+
+        Taluka taluka46 = createTaluka(district4, "0046", "Debagarh P.S.", 46);
+        district4.getTalukas().add(taluka46);
+
+        HealthBlock healthBlock259 = createHealthBlock(taluka24, 259L, "Laikera", "hq");
+        taluka24.getHealthBlocks().add(healthBlock259);
+
         HealthBlock healthBlock453 = createHealthBlock(taluka26, 453L, "Bamara", "hq");
         taluka26.getHealthBlocks().add(healthBlock453);
-        HealthFacilityType facilityType = createHealthFacilityType("Garposh CHC", 41L);
-        HealthFacility healthFacility41 = createHealthFacility(healthBlock453, 41L, "Garposh CHC", facilityType);
+
+        HealthBlock healthBlock153 = createHealthBlock(taluka46, 153L, "Tileibani", "hq");
+        taluka46.getHealthBlocks().add(healthBlock153);
+
+        HealthFacilityType facilityType635 = createHealthFacilityType("Mundrajore CHC", 635L);
+        HealthFacility healthFacility635 = createHealthFacility(healthBlock259, 635L, "Mundrajore CHC", facilityType635);
+        healthBlock259.getHealthFacilities().add(healthFacility635);
+
+        HealthFacilityType facilityType41 = createHealthFacilityType("Garposh CHC", 41L);
+        HealthFacility healthFacility41 = createHealthFacility(healthBlock453, 41L, "Garposh CHC", facilityType41);
         healthBlock453.getHealthFacilities().add(healthFacility41);
+
+        HealthFacilityType facilityType114 = createHealthFacilityType("CHC Tileibani", 114L);
+        HealthFacility healthFacility114 = createHealthFacility(healthBlock153, 114L, "CHC Tileibani", facilityType114);
+        healthBlock153.getHealthFacilities().add(healthFacility114);
+
+        Village village10004693 = createVillage(taluka24, 10004693L, null, "Khairdihi");
+        Village village10004691 = createVillage(taluka24, 10004691L, null, "Gambhariguda");
+        Village village1509 = createVillage(taluka24, null, 1509L, "Mundrajore");
+        Village village1505 = createVillage(taluka24, null, 1505L, "Kulemura");
+        Village village10004690 = createVillage(taluka24, 10004690L, null, "Ampada");
+        Village village10004697 = createVillage(taluka24, 10004697L, null, "Saletikra");
+
+        taluka24.getVillages().addAll(Arrays.asList(village10004693, village10004691, village1509, village1505,
+                village10004690, village10004697));
+
+        Village village3089 = createVillage(taluka46, null, 3089L, "Podapara");
+        taluka46.getVillages().add(village3089);
+
         stateDataService.create(state21);
     }
 
@@ -206,7 +245,8 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         Subscriber subscriber = subscriberDataService.findByCallingNumber(9439986187L);
         assertNotNull(subscriber);
         assertEquals(lmp.toLocalDate(), subscriber.getLastMenstrualPeriod().toLocalDate());
-        Subscription subscription = subscriber.getActiveSubscriptions().iterator().next();
+        Set<Subscription> subscriptions = subscriber.getActiveSubscriptions();
+        assertEquals(1, subscriptions.size());
 
         // import child with same MSISDN and matching MotherID
         DateTime dob = DateTime.now().minusDays(200);
@@ -218,23 +258,75 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         assertNotNull(subscriber);
         assertEquals(dob.toLocalDate(), subscriber.getDateOfBirth().toLocalDate());
 
-        Set<Subscription> subscriptions = subscriber.getActiveSubscriptions();
+        subscriptions = subscriber.getActiveSubscriptions();
         assertEquals(2, subscriptions.size());
-
-        // TODO: this passes -- but review spec to make sure this is actually the behavior we want.
-        // TODO: more asserts...
     }
 
     @Test
     public void testImportMotherDataFromSampleFile() throws Exception {
         mctsBeneficiaryImportService.importMotherData(read("csv/mother.txt"));
 
+        State expectedState = stateDataService.findByCode(21L);
+        District expectedDistrict = districtDataService.findByCode(3L);
+
         Subscriber subscriber1 = subscriberDataService.findByCallingNumber(9439986187L);
-        assertNotNull(subscriber1);
+        assertMother(subscriber1, "210302604211400029", getDateTime("22/11/2014"), "Shanti Ekka", expectedState,
+                expectedDistrict);
+
+        Subscriber subscriber2 = subscriberDataService.findByCallingNumber(7894221701L);
+        assertMother(subscriber2, "210302604611400023", getDateTime("15/6/2014"), "Damayanti Khadia", expectedState,
+                expectedDistrict);
+
+        // although our MCTS data file contains 10 mothers, we only create 3 subscribers due to duplicate phone numbers
+        assertEquals(3, subscriberDataService.count());
+    }
+
+    @Test
+    public void testImportChildDataFromSampleFile() throws Exception {
+        mctsBeneficiaryImportService.importChildData(read("csv/child.txt"));
+
+        State expectedState = stateDataService.findByCode(21L);
+        District expectedDistrict2 = districtDataService.findByCode(2L);
+        District expectedDistrict4 = districtDataService.findByCode(4L);
+
+        Subscriber subscriber1 = subscriberDataService.findByCallingNumber(9556374144L);
+        assertChild(subscriber1, "210202401221400027", getDateTime("3/7/2014"), "FCH", expectedState, expectedDistrict2);
+
+        Subscriber subscriber2 = subscriberDataService.findByCallingNumber(9439998253L);
+        assertChild(subscriber2, "210404600521400116", getDateTime("2/12/2014"), "Baby1 of PANI HEMRAM", expectedState,
+                expectedDistrict4);
+
+        // although our MCTS data file contains 10 children, we only create 9 subscribers due to duplicate phone numbers
+        assertEquals(9, subscriberDataService.count());
+    }
+
+    private void assertMother(Subscriber subscriber, String motherId, DateTime lmp, String name, State state, District district) {
+        assertNotNull(subscriber);
+        assertNotNull(subscriber.getMother());
+        assertEquals(motherId, subscriber.getMother().getBeneficiaryId());
+        assertEquals(name, subscriber.getMother().getName());
+        assertEquals(lmp.toLocalDate(), subscriber.getLastMenstrualPeriod().toLocalDate());
+        assertEquals(state, subscriber.getMother().getState());
+        assertEquals(district, subscriber.getMother().getDistrict());
+    }
+
+    private void assertChild(Subscriber subscriber, String childId, DateTime dob, String name, State state, District district) {
+        assertNotNull(subscriber);
+        assertNotNull(subscriber.getChild());
+        assertEquals(childId, subscriber.getChild().getBeneficiaryId());
+        assertEquals(name, subscriber.getChild().getName());
+        assertEquals(dob.toLocalDate(), subscriber.getDateOfBirth().toLocalDate());
+        assertEquals(state, subscriber.getChild().getState());
+        assertEquals(district, subscriber.getChild().getDistrict());
     }
 
     private String getDateString(DateTime date) {
         return date.toString("dd-MM-yyyy");
+    }
+
+    private DateTime getDateTime(String dateString) {
+        DateTimeFormatter formatter = DateTimeFormat.forPattern("dd/MM/yyyy");
+        return DateTime.parse(dateString, formatter);
     }
 
     private Reader createChildDataReaderWithHeaders(String... lines) {

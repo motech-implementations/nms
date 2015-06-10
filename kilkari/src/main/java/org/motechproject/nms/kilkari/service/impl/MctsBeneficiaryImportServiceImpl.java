@@ -8,6 +8,7 @@ import org.joda.time.format.DateTimeParser;
 import org.motechproject.nms.csv.exception.CsvImportDataException;
 import org.motechproject.nms.csv.utils.ConstraintViolationUtils;
 import org.motechproject.nms.csv.utils.CsvMapImporter;
+import org.motechproject.nms.csv.utils.DataServiceCommentMatcher;
 import org.motechproject.nms.csv.utils.GetInstanceByLong;
 import org.motechproject.nms.csv.utils.GetInstanceByString;
 import org.motechproject.nms.csv.utils.GetLong;
@@ -47,6 +48,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.supercsv.cellprocessor.Optional;
 import org.supercsv.cellprocessor.ift.CellProcessor;
 import org.supercsv.prefs.CsvPreference;
+import org.supercsv.prefs.CsvPreference.Builder;
 
 import javax.validation.ConstraintViolationException;
 import java.io.IOException;
@@ -114,7 +116,11 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     @Transactional
     public void importMotherData(Reader reader) throws IOException {
         CsvMapImporter csvImporter = new CsvMapImporter();
-        csvImporter.open(reader, getMotherProcessorMapping(), CsvPreference.TAB_PREFERENCE);
+
+        Builder preferenceBuilder = new Builder(CsvPreference.TAB_PREFERENCE);
+        preferenceBuilder.skipComments(new DataServiceCommentMatcher());
+
+        csvImporter.open(reader, getMotherProcessorMapping(), preferenceBuilder.build());
         Map<String, Object> record;
         while (null != (record = csvImporter.read())) {
             try {
@@ -130,7 +136,11 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     @Transactional
     public void importChildData(Reader reader) throws IOException {
         CsvMapImporter csvImporter = new CsvMapImporter();
-        csvImporter.open(reader, getChildProcessorMapping(), CsvPreference.TAB_PREFERENCE);
+
+        Builder preferenceBuilder = new Builder(CsvPreference.TAB_PREFERENCE);
+        preferenceBuilder.skipComments(new DataServiceCommentMatcher());
+
+        csvImporter.open(reader, getChildProcessorMapping(), preferenceBuilder.build());
         Map<String, Object> record;
         while (null != (record = csvImporter.read())) {
             try {
@@ -213,9 +223,11 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                     subscriber.getChild();
 
             if (existingBeneficiary == null) {
+                // there's already an IVR-originated subscription for this MSISDN
+                rejectBeneficiary(msisdn, SubscriptionRejectionReason.ALREADY_SUBSCRIBED, type);
 
-                // TODO: what do we do if someone has an IVR-originated subscription and then they are imported via MCTS?
-                // Does the MCTS data win, even though it might be a shared phone (and hence different beneficiary)?
+                // TODO: Do we just reject the subscription request, or do we update the subscriber record with MCTS data?
+                // TODO: Should we change the subscription start date based on the provided LMP/DOB?
 
             } else if (existingBeneficiary.getBeneficiaryId() != beneficiary.getBeneficiaryId()) {
                 // if the MCTS ID doesn't match (i.e. there are two beneficiaries with the same phone number), reject the import
@@ -323,7 +335,15 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         mapping.put(VILLAGE, new Optional(new GetInstanceByLong<Village>() {
             @Override
             public Village retrieve(Long value) {
-                Village village = villageDataService.findById(value);
+                if (value == 0) { // the sample mother data file has village ID=0 and village name blank
+                    return null;
+                }
+
+                Village village = villageDataService.findByVcodeAndSvid(value, null);
+                if (village == null) {
+                    village = villageDataService.findBySvid(value);
+                }
+
                 verify(null != village, "Village does not exist");
                 return village;
             }

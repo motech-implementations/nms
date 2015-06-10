@@ -343,6 +343,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 subscription.getSubscriptionPack())) {
             subscription.setStatus(SubscriptionStatus.COMPLETED);
         }
+
         subscriptionDataService.update(subscription);
     }
 

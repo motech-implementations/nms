@@ -15,7 +15,7 @@ import javax.validation.constraints.NotNull;
 /**
  * A beneficiary (mother or child) sourced from MCTS.
  */
-@Entity
+@Entity(tableName = "nms_mcts_beneficiaries")
 public abstract class MctsBeneficiary {
 
     // 18-digit IDs are used for most states but not all, so a strict length constraint cannot be set for this column
