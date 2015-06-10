@@ -1,19 +1,5 @@
 package org.motechproject.nms.testing.it.kilkari;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-
-import javax.inject.Inject;
-
 import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -55,6 +41,19 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
+
+import javax.inject.Inject;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Verify that SubscriptionService is present & functional.
@@ -763,13 +762,19 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         assertEquals(1, subscriber.getSubscriptions().size());
     }
     
+
+
+    /*
+     * To verify that user's subscription should create in pending state
+     *
+     * JIRA issue : https://applab.atlassian.net/browse/NMS-201
+     */
+
     @Ignore
     @Test
     public void verifyFT153() {
-    	/*
-    	 * To verify that user's subscription should create in pending state
-    	 */
-    	Subscriber subscriber = new Subscriber(9999911222L);
+
+        Subscriber subscriber = new Subscriber(9999911222L);
         subscriberService.create(subscriber);
         
         subscriptionService.createSubscription(subscriber.getCallingNumber(), rh.hindiLanguage(), sh.childPack(),
