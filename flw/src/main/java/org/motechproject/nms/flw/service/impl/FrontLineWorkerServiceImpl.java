@@ -167,6 +167,16 @@ public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
     }
 
     @Override
+    public FrontLineWorker getByFlwId(String flwId) {
+        return frontLineWorkerDataService.findByFlwId(flwId);
+    }
+
+    @Override
+    public FrontLineWorker getByMctsFlwId(String mctsFlwId) {
+        return frontLineWorkerDataService.findByMctsFlwId(mctsFlwId);
+    }
+
+    @Override
     public FrontLineWorker getByContactNumber(Long contactNumber) {
         return frontLineWorkerDataService.findByContactNumber(contactNumber);
     }

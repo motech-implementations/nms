@@ -74,4 +74,6 @@
 
     <osgi:reference id="alertsService" interface="org.motechproject.alerts.contract.AlertService" />
 
+    <osgi:service ref="frontLineWorkerUpdateLanguageImportService"
+                    interface="org.motechproject.nms.flw.service.FrontLineWorkerUpdateLanguageImportService" />
 </beans>
