@@ -95,21 +95,21 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 .withSecondOfMinute(0)
                 .withMillisOfSecond(0);
 
-        //Millisecond interval between events
+        //Second interval between events
         String intervalProp = settingsFacade.getProperty(SUBSCRIPTION_PURGE_MS_INTERVAL);
-        Long msInterval = Long.parseLong(intervalProp);
+        Integer secInterval = (int) (long) (Long.parseLong(intervalProp) / 1000);
 
-        LOGGER.debug(String.format("The %s message will be sent every %sms starting at %s",
-                SUBSCRIPTION_PURGE_EVENT_SUBJECT, msInterval.toString(), today.toString()));
+        LOGGER.debug(String.format("The %s message will be sent every %ss starting at %s",
+                SUBSCRIPTION_PURGE_EVENT_SUBJECT, secInterval.toString(), today.toString()));
 
         //Schedule repeating job
         MotechEvent event = new MotechEvent(SUBSCRIPTION_PURGE_EVENT_SUBJECT);
         RepeatingSchedulableJob job = new RepeatingSchedulableJob(
                 event,          //MOTECH event
+                null,           //repeatCount, null means infinity
+                secInterval,    //repeatIntervalInSeconds
                 today.toDate(), //startTime
                 null,           //endTime, null means no end time
-                null,           //repeatCount, null means infinity
-                msInterval,     //repeatIntervalInMilliseconds
                 true);          //ignorePastFiresAtStart
 
         schedulerService.safeScheduleRepeatingJob(job);

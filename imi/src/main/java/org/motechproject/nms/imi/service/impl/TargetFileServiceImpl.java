@@ -96,20 +96,21 @@ public class TargetFileServiceImpl implements TargetFileService {
 
         //Millisecond interval between events
         String intervalProp = settingsFacade.getProperty(TARGET_FILE_MS_INTERVAL);
-        Long msInterval = Long.parseLong(intervalProp);
+        Integer secInterval = (int) (long) (Long.parseLong(intervalProp) / 1000);
 
-        LOGGER.debug(String.format("The %s message will be sent every %sms starting %s",
-                GENERATE_TARGET_FILE_EVENT, msInterval.toString(), today.toString()));
+        LOGGER.debug(String.format("The %s message will be sent every %ss starting %s",
+                GENERATE_TARGET_FILE_EVENT, secInterval.toString(), today.toString()));
 
         //Schedule repeating job
         MotechEvent event = new MotechEvent(GENERATE_TARGET_FILE_EVENT);
         RepeatingSchedulableJob job = new RepeatingSchedulableJob(
                 event,          //MOTECH event
+                null,           //repeatCount, null means infinity
+                secInterval,    //repeatIntervalInSeconds
                 today.toDate(), //startTime
                 null,           //endTime, null means no end time
-                null,           //repeatCount, null means infinity
-                msInterval,     //repeatIntervalInMilliseconds
                 true);          //ignorePastFiresAtStart
+
         schedulerService.safeScheduleRepeatingJob(job);
     }
 
