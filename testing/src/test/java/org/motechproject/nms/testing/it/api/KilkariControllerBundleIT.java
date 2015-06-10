@@ -1,5 +1,18 @@
 package org.motechproject.nms.testing.it.api;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+import javax.inject.Inject;
+
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -55,30 +68,6 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
-import javax.inject.Inject;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.regex.Pattern;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
-
-import javax.inject.Inject;
-
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.regex.Pattern;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Verify that Kilkari API is functional.
@@ -1560,5 +1549,122 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         HttpGet httpGet = createHttpGet(true, "9999911122", true, "123456789012345");
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
                 expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    private HttpDeleteWithBody createDeactivateSubscriptionHttpDelete(
+            String calledNumber, String operator, String circle, String callId,
+            String subscriptionId) throws IOException {
+
+        StringBuilder sb = new StringBuilder();
+        String seperator = "";
+        sb.append("{");
+        if (calledNumber != null) {
+            sb.append(String.format("%s\"calledNumber\": %s", seperator,
+                    calledNumber));
+            seperator = ",";
+        }
+        if (operator != null) {
+            sb.append(String.format("%s\"operator\": \"%s\"", seperator,
+                    operator));
+            seperator = ",";
+        }
+        if (circle != null) {
+            sb.append(String.format("%s\"circle\": \"%s\"", seperator, circle));
+            seperator = ",";
+        }
+        if (callId != null) {
+            sb.append(String.format("%s\"callId\": %s", seperator, callId));
+            seperator = ",";
+        }
+        if (subscriptionId != null) {
+            sb.append(String.format("%s\"subscriptionId\": \"%s\"", seperator,
+                    subscriptionId));
+            seperator = ",";
+        }
+
+        sb.append("}");
+
+        HttpDeleteWithBody httpDelete = new HttpDeleteWithBody(String.format(
+                "http://localhost:%d/api/kilkari/subscription",
+                TestContext.getJettyPort()));
+        httpDelete.setHeader("Content-type", "application/json");
+        httpDelete.setEntity(new StringEntity(sb.toString()));
+        return httpDelete;
+    }
+
+    /**
+     * To verify Deactivate Subscription Request API fails if provided
+     * calledNumber has invalid value : less than 10 digits.
+     */
+    @Test
+    public void verifyFT95() throws IOException, InterruptedException {
+        setupData();
+        Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
+        Subscription subscription = subscriber.getActiveSubscriptions()
+                .iterator().next();
+        String subscriptionId = subscription.getSubscriptionId();
+        // callingNumber less than 10 digits
+        HttpDeleteWithBody httpDelete = createDeactivateSubscriptionHttpDelete(
+                "100000000", "A", "AP", "123456789012345", subscriptionId);
+        String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpDelete, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+    }
+
+    /**
+     * To verify Deactivate Subscription Request API fails if provided
+     * calledNumber has invalid value : more than 10 digits.
+     */
+    @Test
+    public void verifyFT96() throws IOException, InterruptedException {
+        setupData();
+        Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
+        Subscription subscription = subscriber.getActiveSubscriptions()
+                .iterator().next();
+        String subscriptionId = subscription.getSubscriptionId();
+        String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
+
+        // callingNumber more than 10 digits
+        HttpDeleteWithBody httpDelete = createDeactivateSubscriptionHttpDelete(
+                "12345678901", "A", "AP", "123456789012345", subscriptionId);
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpDelete, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+    }
+
+    /**
+     * To verify the behavior of Deactivate Subscription Request API if provided
+     * Subscriber's callingNumber is not valid : Alphanumeric value.
+     */
+    // TODO JIRA issue https://applab.atlassian.net/browse/NMS-187
+    @Ignore
+    @Test
+    public void verifyFT97() throws IOException, InterruptedException {
+        setupData();
+        Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
+        Subscription subscription = subscriber.getActiveSubscriptions()
+                .iterator().next();
+        String subscriptionId = subscription.getSubscriptionId();
+        String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
+
+        // callingNumber alphanumeric
+        HttpDeleteWithBody httpDelete = createDeactivateSubscriptionHttpDelete(
+                "1234DE678901", "A", "AP", "123456789012345", subscriptionId);
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpDelete, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
     }
 }
