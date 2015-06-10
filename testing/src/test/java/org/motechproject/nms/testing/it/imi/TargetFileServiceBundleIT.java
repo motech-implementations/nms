@@ -304,10 +304,10 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         getLogger().debug("Generated {}", tfn.getFileName());
     }
 
+    // To check that target file should contain correct weekID according to LMP of the subscriber.
     @Test
     public void verifyFT151() throws NoSuchAlgorithmException, IOException {
 
-        // To check that target file should contain correct weekID according to LMP of the subscriber.
 
         Subscriber subscriber1 = new Subscriber(1111111111L, hindi, aa);
         subscriber1.setLastMenstrualPeriod(DateTime.now().minusDays(125)); // weekId will be W6_1
@@ -338,12 +338,13 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         assertEquals((int)tfn.getRecordCount(), recordCount);
         assertEquals(tfn.getChecksum(), md5Checksum);
         assertTrue("w6_1".equals(contents.get(0)));
+        assertEquals(1, recordCount);
     }
 
+    // To check that target file should contain correct weekID according to DOB of the subscriber.
     @Test
     public void verifyFT152() throws NoSuchAlgorithmException, IOException {
 
-        // To check that target file should contain correct weekID according to DOB of the subscriber.
 
         Subscriber subscriber1 = new Subscriber(1111111111L, hindi, aa);
         subscriber1.setDateOfBirth(DateTime.now().minusDays(28)); // weekId will be W5_1
@@ -398,6 +399,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         assertEquals((int)tfn.getRecordCount(), recordCount);
         assertEquals(tfn.getChecksum(), md5Checksum);
         assertTrue("w4_1".equals(contents.get(0)));
+        assertEquals(1, recordCount);
     }
 
     //todo: test success notification is sent to the IVR system
