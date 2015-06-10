@@ -1,5 +1,13 @@
 package org.motechproject.nms.testing.it.kilkari;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+
+import java.util.Set;
+
+import javax.inject.Inject;
+
 import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -9,6 +17,7 @@ import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
+import org.motechproject.nms.kilkari.exception.NoInboxForSubscriptionException;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.InboxService;
@@ -27,12 +36,6 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
-
-import javax.inject.Inject;
-import java.util.Set;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerSuite.class)
@@ -171,6 +174,30 @@ public class InboxServiceBundleIT extends BasePaxIT {
 		assertEquals(msg.getWeekId(), "w72_2");
 		assertEquals(msg.getMessageFileName(), "w72_2.wav");
 
+	}
+	
+	@Test
+	public void verifyFT162() throws NoInboxForSubscriptionException {
+		/*
+		 * To verify in case of "Early Subscription" of 72Weeks Pack , inbox should not contain any message. 
+		 */
+		
+		DateTime now = DateTime.now();
+		// create subscriber for early subscription
+		Subscriber subscriber = new Subscriber(1000000002L);
+		subscriber.setLastMenstrualPeriod(now.minusDays(30));
+		subscriberService.create(subscriber);
+
+		subscriptionService.createSubscription(subscriber.getCallingNumber(), rh.hindiLanguage(), sh.pregnancyPack(),
+				SubscriptionOrigin.MCTS_IMPORT);
+		
+		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber());
+		Set<Subscription> subscriptions = subscriber.getAllSubscriptions();
+		Subscription subscription = subscriptions.iterator().next();
+		
+		// Inbox should be empty
+		assertNull(inboxService.getInboxMessage(subscription));
+		
 	}
 
 }
