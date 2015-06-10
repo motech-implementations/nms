@@ -1,5 +1,6 @@
 package org.motechproject.nms.kilkari.service.impl;
 
+import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -7,8 +8,8 @@ import org.joda.time.format.DateTimeFormatterBuilder;
 import org.joda.time.format.DateTimeParser;
 import org.motechproject.nms.csv.exception.CsvImportDataException;
 import org.motechproject.nms.csv.utils.ConstraintViolationUtils;
+import org.motechproject.nms.csv.utils.CsvImporterBuilder;
 import org.motechproject.nms.csv.utils.CsvMapImporter;
-import org.motechproject.nms.csv.utils.DataServiceCommentMatcher;
 import org.motechproject.nms.csv.utils.GetInstanceByLong;
 import org.motechproject.nms.csv.utils.GetInstanceByString;
 import org.motechproject.nms.csv.utils.GetLong;
@@ -48,9 +49,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.supercsv.cellprocessor.Optional;
 import org.supercsv.cellprocessor.ift.CellProcessor;
 import org.supercsv.prefs.CsvPreference;
-import org.supercsv.prefs.CsvPreference.Builder;
 
 import javax.validation.ConstraintViolationException;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.HashMap;
@@ -111,47 +112,56 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         this.subscriptionErrorDataService = subscriptionErrorDataService;
     }
 
-
+    /*
+        Expected file format:
+        * any number of empty lines
+        * header lines in the following format:  State Name : ACTUAL STATE NAME
+        * one empty line
+        * CSV data (tab-separated)
+     */
     @Override
     @Transactional
     public void importMotherData(Reader reader) throws IOException {
-        CsvMapImporter csvImporter = new CsvMapImporter();
+        BufferedReader bufferedReader = new BufferedReader(reader);
+        readHeader(bufferedReader); // ignoring header as all interesting data in tab separated rows
 
-        Builder preferenceBuilder = new Builder(CsvPreference.TAB_PREFERENCE);
-        preferenceBuilder.skipComments(new DataServiceCommentMatcher());
+        CsvMapImporter csvImporter = new CsvImporterBuilder()
+                .setProcessorMapping(getMotherProcessorMapping())
+                .setPreferences(CsvPreference.TAB_PREFERENCE)
+                .createAndOpen(bufferedReader);
 
-        csvImporter.open(reader, getMotherProcessorMapping(), preferenceBuilder.build());
-        Map<String, Object> record;
-        while (null != (record = csvImporter.read())) {
-            try {
+        try {
+            Map<String, Object> record;
+            while (null != (record = csvImporter.read())) {
                 importMotherRecord(record);
-            } catch (ConstraintViolationException e) {
-                throw new CsvImportDataException(String.format("MCTS mother import error, constraints violated: %s",
-                        ConstraintViolationUtils.toString(e.getConstraintViolations())), e);
             }
+        } catch (ConstraintViolationException e) {
+            throw new CsvImportDataException(String.format("MCTS mother import error, constraints violated: %s",
+                    ConstraintViolationUtils.toString(e.getConstraintViolations())), e);
         }
     }
 
     @Override
     @Transactional
     public void importChildData(Reader reader) throws IOException {
-        CsvMapImporter csvImporter = new CsvMapImporter();
+        BufferedReader bufferedReader = new BufferedReader(reader);
+        readHeader(bufferedReader); // ignoring header as all interesting data in tab separated rows
 
-        Builder preferenceBuilder = new Builder(CsvPreference.TAB_PREFERENCE);
-        preferenceBuilder.skipComments(new DataServiceCommentMatcher());
+        CsvMapImporter csvImporter = new CsvImporterBuilder()
+                .setProcessorMapping(getChildProcessorMapping())
+                .setPreferences(CsvPreference.TAB_PREFERENCE)
+                .createAndOpen(bufferedReader);
 
-        csvImporter.open(reader, getChildProcessorMapping(), preferenceBuilder.build());
-        Map<String, Object> record;
-        while (null != (record = csvImporter.read())) {
-            try {
+        try {
+            Map<String, Object> record;
+            while (null != (record = csvImporter.read())) {
                 importChildRecord(record);
-            } catch (ConstraintViolationException e) {
-                throw new CsvImportDataException(String.format("MCTS child import error, constraints violated: %s",
-                        ConstraintViolationUtils.toString(e.getConstraintViolations())), e);
             }
+        } catch (ConstraintViolationException e) {
+            throw new CsvImportDataException(String.format("MCTS child import error, constraints violated: %s",
+                    ConstraintViolationUtils.toString(e.getConstraintViolations())), e);
         }
     }
-
 
     private void importMotherRecord(Map<String, Object> record) {
         MctsMother mother = (MctsMother) record.get(BENEFICIARY_ID);
@@ -379,7 +389,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                 try {
                     DateTimeParser[] parsers = {
                             DateTimeFormat.forPattern("dd-MM-yyyy").getParser(),
-                            DateTimeFormat.forPattern("dd/MM/yyyy").getParser() };
+                            DateTimeFormat.forPattern("dd/MM/yyyy").getParser()};
                     DateTimeFormatter formatter = new DateTimeFormatterBuilder().append(null, parsers).toFormatter();
 
                     lmp = formatter.parseDateTime(value);
@@ -446,10 +456,29 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             }
         });
 
-        // TODO: Any other fields needed for children?
-
         return mapping;
 
+    }
+
+    private void readHeader(BufferedReader bufferedReader) throws IOException {
+        readLineWhileBlank(bufferedReader);
+        readLineWhileNotBlank(bufferedReader);
+    }
+
+    private String readLineWhileBlank(BufferedReader bufferedReader) throws IOException {
+        String line;
+        do {
+            line = bufferedReader.readLine();
+        } while (null != line && StringUtils.isBlank(line));
+        return line;
+    }
+
+    private String readLineWhileNotBlank(BufferedReader bufferedReader) throws IOException {
+        String line;
+        do {
+            line = bufferedReader.readLine();
+        } while (null != line && StringUtils.isNotBlank(line));
+        return line;
     }
 
     private void verify(boolean condition, String message, String... args) {

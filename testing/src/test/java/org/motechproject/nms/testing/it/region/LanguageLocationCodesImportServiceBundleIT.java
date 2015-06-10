@@ -29,6 +29,9 @@ import java.util.Collections;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createDistrict;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createState;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createCircle;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerSuite.class)
@@ -172,31 +175,6 @@ public class LanguageLocationCodesImportServiceBundleIT extends BasePaxIT {
     public void testImportWhenLanguageCodeNotExistsAndIsDefaultForCircleButNotUnique() throws Exception {
         Reader reader = createReaderWithHeaders("L3,Lang 3,Circle 4,State 4,District 42,Y");
         languageLocationImportService.importData(reader);
-    }
-
-    private State createState(Long code, String name) {
-        State state = new State();
-        state.setCode(code);
-        state.setName(name);
-        return state;
-    }
-
-    private District createDistrict(State state, Long code, String name, Language language) {
-        District district = new District();
-        district.setState(state);
-        district.setCode(code);
-        district.setName(name);
-        district.setRegionalName(regionalName(name));
-        district.setLanguage(language);
-        return district;
-    }
-
-    private Circle createCircle(String name) {
-        return new Circle(name);
-    }
-
-    private String regionalName(String name) {
-        return String.format("regional name of %s", name);
     }
 
     private Reader createReaderWithHeaders(String... lines) {

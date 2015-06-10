@@ -107,7 +107,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         RepeatingSchedulableJob job = new RepeatingSchedulableJob(
                 event,          //MOTECH event
                 null,           //repeatCount, null means infinity
-                secInterval,     //repeatIntervalInSeconds
+                secInterval,    //repeatIntervalInSeconds
                 today.toDate(), //startTime
                 null,           //endTime, null means no end time
                 true);          //ignorePastFiresAtStart

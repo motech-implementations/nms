@@ -206,12 +206,21 @@ public class RegionHelper {
     }
 
     public static District createDistrict(State state, Long code, String name) {
+        return createDistrict(state, code, name, null);
+    }
+
+    public static District createDistrict(State state, Long code, String name, Language language) {
         District district = new District();
         district.setState(state);
         district.setCode(code);
         district.setName(name);
         district.setRegionalName(regionalName(name));
+        district.setLanguage(language);
         return district;
+    }
+
+    public static Language createLanguage(String code, String name) {
+        return new Language(code, name);
     }
 
     public static Taluka createTaluka(District district, String code, String name, int identity) {
