@@ -835,7 +835,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
          * To check NMS is able to make available a single message of current
          * week in inbox with single message per week configuration . when a)
          * user's MSISDN is subscribed for 48Weeks Pack. b)user's MSISDN status
-         * is completed for an old subscription of 72Weeks Pack.
+         * is completed(with in 7 days) for an old subscription of 72Weeks Pack.
          **/
         // setup data to remove 2 messages per week configuration for 72 week
         // pack
@@ -861,9 +861,9 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 9999911122L, rh.hindiLanguage(), sh.pregnancyPack(1),
                 SubscriptionOrigin.MCTS_IMPORT);
         // update old pregnancy subscription pack to mark complete setting the
-        // subscription to have ended more than a week ago
+        // subscription to have ended less than a week ago
         subscriptionService.updateStartDate(oldSubscription, DateTime.now()
-                .minusDays(512 + 90));
+                .minusDays(505 + 90));
 
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
 
@@ -876,13 +876,20 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 9999911122L, rh.hindiLanguage(), sh.childPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
 
-        String expectedJsonResponse = "{\"inboxSubscriptionDetailList\":[{\"subscriptionId\":\""
-                + newSubscription.getSubscriptionId()
-                + "\",\"subscriptionPack\":\"childPack\",\"inboxWeekId\":\"w1_1\",\"contentFileName\":\"w1_1.wav\"}]}";
+        Pattern oldPregnancyPackPattern = Pattern
+                .compile(".*\"subscriptionId\":\""
+                        + oldSubscription.getSubscriptionId()
+                        + "\",\"subscriptionPack\":\"pregnancyPack\",\"inboxWeekId\":\"w72_1\",\"contentFileName\":\"w72_1.wav.*");
+        Pattern newchildPackPattern = Pattern
+                .compile(".*\"subscriptionId\":\""
+                        + newSubscription.getSubscriptionId()
+                        + "\",\"subscriptionPack\":\"childPack\",\"inboxWeekId\":\"w1_1\",\"contentFileName\":\"w1_1.wav.*");
 
         HttpGet httpGet = createHttpGet(true, "9999911122", true,
                 "123456789012345");
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
-                expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
+                oldPregnancyPackPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
+                newchildPackPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 }
