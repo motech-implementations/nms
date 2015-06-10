@@ -266,7 +266,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
     public void verifyFT151() throws NoSuchAlgorithmException, IOException {
 
 
-        Subscriber subscriber1 = new Subscriber(1111111111L, hindi, aa);
+        Subscriber subscriber1 = new Subscriber(1111111111L, hindi, dehliCircle);
         subscriber1.setLastMenstrualPeriod(DateTime.now().minusDays(125)); // weekId will be W6_1
         subscriberDataService.create(subscriber1);
         Subscription subscription = subscriptionService.createSubscription(1111111111L, hindi, pregnancyPack, SubscriptionOrigin.MCTS_IMPORT);
@@ -303,7 +303,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
     public void verifyFT152() throws NoSuchAlgorithmException, IOException {
 
 
-        Subscriber subscriber1 = new Subscriber(1111111111L, hindi, aa);
+        Subscriber subscriber1 = new Subscriber(1111111111L, hindi, dehliCircle);
         subscriber1.setDateOfBirth(DateTime.now().minusDays(28)); // weekId will be W5_1
         subscriberDataService.create(subscriber1);
         Subscription subscription = subscriptionService.createSubscription(1111111111L, hindi, childPack, SubscriptionOrigin.MCTS_IMPORT);
