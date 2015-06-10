@@ -239,7 +239,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 subscriberDataService, languageDataService, circleDataService, stateDataService,
                 districtDataService);
 
-        helper.makeRecords(1,3,0,0);
+        helper.makeRecords(1, 3, 0, 0);
 
         for (CallSummaryRecordDto record : helper.getRecords()) {
             Map<String, Object> eventParams = new HashMap<>();
@@ -374,7 +374,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
 
         Map<Integer, Integer> callStats = new HashMap<>();
-        callStats.put(StatusCode.OBD_DNIS_IN_DND.getValue(),1);
+        callStats.put(StatusCode.OBD_DNIS_IN_DND.getValue(), 1);
         CallSummaryRecordDto record = new CallSummaryRecordDto(
                 new RequestId(subscription.getSubscriptionId(), timestamp),
                 subscription.getSubscriber().getCallingNumber(),
@@ -619,15 +619,15 @@ public class CsrServiceBundleIT extends BasePaxIT {
          * has MSISDN number added to the DND database.
          */
 
-        Subscription subscription = makeSubscription(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(14));
+        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(14));
 
         CallSummaryRecordDto csr = new CallSummaryRecordDto(
                 new RequestId(subscription.getSubscriptionId(), "11112233445566"),
                 subscription.getSubscriber().getCallingNumber(),
-                "w1_1.wav",
-                "w1_1",
-                makeLanguageLocation().getCode(),
-                makeCircle().getName(),
+                sh.getContentMessageFile(subscription, 0),
+                sh.getWeekId(subscription, 0),
+                rh.hindiLanguage().getCode(),
+                rh.delhiCircle().getName(),
                 FinalCallStatus.REJECTED,
                 makeStatsMap(StatusCode.OBD_DNIS_IN_DND, 3),
                 0,
@@ -650,14 +650,14 @@ public class CsrServiceBundleIT extends BasePaxIT {
         *NMS_FT_163
         *To verify 72Weeks Pack created via IVR, shouldn’t get deactivated due to reason DND.
         */
-        Subscription subscription2 = makeSubscription(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
+        Subscription subscription2 = sh.mksub(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
         csr = new CallSummaryRecordDto(
                 new RequestId(subscription.getSubscriptionId(), "11112233445566"),
                 subscription.getSubscriber().getCallingNumber(),
-                "w1_1.wav",
-                "w1_1",
-                makeLanguageLocation().getCode(),
-                makeCircle().getName(),
+                sh.getContentMessageFile(subscription, 0),
+                sh.getWeekId(subscription, 0),
+                rh.hindiLanguage().getCode(),
+                rh.delhiCircle().getName(),
                 FinalCallStatus.REJECTED,
                 makeStatsMap(StatusCode.OBD_DNIS_IN_DND, 3),
                 0,
