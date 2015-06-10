@@ -7,13 +7,4 @@
     <context:annotation-config />
     <context:component-scan base-package="org.motechproject.nms.props" />
 
-
-    <bean id="propsSettings" class="org.motechproject.server.config.SettingsFacade" autowire="byType">
-        <property name="configFiles">
-            <list>
-                <value>classpath:props.properties</value>
-            </list>
-        </property>
-    </bean>
-
 </beans>
