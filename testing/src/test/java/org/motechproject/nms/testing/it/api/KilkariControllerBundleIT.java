@@ -1502,34 +1502,41 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
     
+    /**
+     * To verify the behavior of Get Inbox Details API if a mandatory parameter
+     * : callingNumber is missing from the API request.
+     */
  	@Test
     public void verifyFT89() throws IOException,
  			InterruptedException {
- 		/**
- 		 * Testing GetInboxDetails API with mandatory parameters missing
- 		 */
  		// callingNumber missing
  		HttpGet httpGet = createHttpGet(false, "", true, "123456789012345");
  		String expectedJsonResponse = createFailureResponseJson("<callingNumber: Not Present>");
 
- 		assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
- 				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
- 				ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
     }
 
+    /**
+     * To verify the behavior of Get Inbox Details API if a mandatory parameter
+     * : callId is missing from the API request.
+     */
     @Test
     public void verifyFT90() throws IOException, InterruptedException {
-        /**
-         * Testing GetInboxDetails API with mandatory parameters missing
-         */
-
  		// CallId missing
         HttpGet httpGet = createHttpGet(true, "1234567890", false, "");
         String expectedJsonResponse = createFailureResponseJson("<callId: Not Present>");
 
- 		assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
- 				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
- 				ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
  	}
 
     /**
