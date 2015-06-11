@@ -8,9 +8,9 @@ import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
 import org.motechproject.nms.kilkari.dto.CallSummaryRecordDto;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.region.domain.Circle;
-import org.motechproject.nms.region.domain.LanguageLocation;
+import org.motechproject.nms.region.domain.Language;
 import org.motechproject.nms.region.service.CircleService;
-import org.motechproject.nms.region.service.LanguageLocationService;
+import org.motechproject.nms.region.service.LanguageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,20 +24,20 @@ public class CsrValidatorServiceImpl implements CsrValidatorService {
 
     private Map<String, Set<String>> weekIds;
     private Map<String, Set<String>> contentFileNames;
-    private Set<String> languageLocationCodes;
+    private Set<String> languageCodes;
     private Set<String> circles;
 
     private SubscriptionService subscriptionService;
-    private LanguageLocationService languageLocationService;
+    private LanguageService languageService;
     private CircleService circleService;
 
 
     @Autowired
     public CsrValidatorServiceImpl(SubscriptionService subscriptionService,
-                                   LanguageLocationService languageLocationService,
+                                   LanguageService languageService,
                                    CircleService circleService) {
         this.subscriptionService = subscriptionService;
-        this.languageLocationService = languageLocationService;
+        this.languageService = languageService;
         this.circleService = circleService;
     }
 
@@ -59,9 +59,9 @@ public class CsrValidatorServiceImpl implements CsrValidatorService {
 
 
     private void loadLanguageLocationCodes() {
-        languageLocationCodes = new HashSet<String>();
-        for (LanguageLocation languageLocation : languageLocationService.getAll()) {
-            languageLocationCodes.add(languageLocation.getCode());
+        languageCodes = new HashSet<String>();
+        for (Language language : languageService.getAll()) {
+            languageCodes.add(language.getCode());
         }
     }
 
@@ -108,8 +108,8 @@ public class CsrValidatorServiceImpl implements CsrValidatorService {
 
 
     private void validateLanguageLocationCode(String code) {
-        if (languageLocationCodes == null) { loadLanguageLocationCodes(); }
-        if (languageLocationCodes.contains(code)) {
+        if (languageCodes == null) { loadLanguageLocationCodes(); }
+        if (languageCodes.contains(code)) {
             return;
         }
         throw new InvalidCsrException(String.format("Invalid language location code: %s", code));

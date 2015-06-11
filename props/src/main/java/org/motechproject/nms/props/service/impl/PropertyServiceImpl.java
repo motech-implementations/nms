@@ -21,7 +21,6 @@ public class PropertyServiceImpl implements PropertyService {
 
     @Override
     public boolean isServiceDeployedInState(final org.motechproject.nms.props.domain.Service service, final State state) {
-        // Find a state cap by providing a state
         QueryExecution<Long> stateQueryExecution = new QueryExecution<Long>() {
             @Override
             public Long execute(Query query, InstanceSecurityRestriction restriction) {
@@ -35,9 +34,9 @@ public class PropertyServiceImpl implements PropertyService {
             }
         };
 
-        Long isWhitelisted = deployedServiceDataService.executeQuery(stateQueryExecution);
+        Long isDeployed = deployedServiceDataService.executeQuery(stateQueryExecution);
 
-        if (isWhitelisted != null && isWhitelisted > 0) {
+        if (isDeployed != null && isDeployed > 0) {
             return true;
         }
 

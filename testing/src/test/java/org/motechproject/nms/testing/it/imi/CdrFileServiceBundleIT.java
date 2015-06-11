@@ -26,7 +26,6 @@ import org.motechproject.nms.props.repository.DeployedServiceDataService;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
-import org.motechproject.nms.region.repository.LanguageLocationDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.testing.it.utils.CdrHelper;
 import org.motechproject.nms.testing.service.TestingService;
@@ -60,6 +59,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
     private static final String LOCAL_CDR_DIR = "imi.local_cdr_dir";
     private static final String REMOTE_CDR_DIR = "imi.remote_cdr_dir";
     private static final String INITIAL_RETRY_DELAY = "imi.initial_retry_delay";
+    private static final String MAX_CDR_ERROR_COUNT = "imi.max_cdr_error_count";
 
     @Inject
     private SettingsService settingsService;
@@ -92,9 +92,6 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
     CdrFileService cdrFileService;
 
     @Inject
-    private LanguageLocationDataService languageLocationDataService;
-
-    @Inject
     private CircleDataService circleDataService;
 
     @Inject
@@ -123,6 +120,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
     private String localObdDirBackup;
     private String remoteObdDirBackup;
     private String initialRetryDelay;
+    private String maxErrorCountBackup;
 
 
 
@@ -143,6 +141,9 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         remoteObdDirBackup = setupTestDir(REMOTE_OBD_DIR, "obd-remote-dir-it");
         initialRetryDelay = settingsService.getSettingsFacade().getProperty(INITIAL_RETRY_DELAY);
         settingsService.getSettingsFacade().setProperty(INITIAL_RETRY_DELAY, "0");
+        settingsService.getSettingsFacade().setProperty(INITIAL_RETRY_DELAY, "0");
+        maxErrorCountBackup = settingsService.getSettingsFacade().getProperty(MAX_CDR_ERROR_COUNT);
+        settingsService.getSettingsFacade().setProperty(MAX_CDR_ERROR_COUNT, "3");
     }
 
 
@@ -153,6 +154,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         settingsService.getSettingsFacade().setProperty(REMOTE_CDR_DIR, remoteCdrDirBackup);
         settingsService.getSettingsFacade().setProperty(LOCAL_CDR_DIR, localCdrDirBackup);
         settingsService.getSettingsFacade().setProperty(INITIAL_RETRY_DELAY, initialRetryDelay);
+        settingsService.getSettingsFacade().setProperty(MAX_CDR_ERROR_COUNT, maxErrorCountBackup);
     }
 
 
@@ -168,7 +170,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         getLogger().debug("testVerify()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
+                subscriptionPackDataService, languageDataService, circleDataService,
                 stateDataService, districtDataService, fileAuditRecordDataService);
 
         helper.makeCdrs(1,1,1,1);
@@ -185,7 +187,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         getLogger().debug("testChecksumError()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
+                subscriptionPackDataService, languageDataService, circleDataService,
                 stateDataService, districtDataService, fileAuditRecordDataService);
 
         helper.makeCdrs(1, 1, 1, 1);
@@ -202,7 +204,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         getLogger().debug("testCsvErrors()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
+                subscriptionPackDataService, languageDataService, circleDataService,
                 stateDataService, districtDataService, fileAuditRecordDataService);
 
         helper.makeCdrs(1, 1, 1, 1);
@@ -221,17 +223,17 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         getLogger().debug("testTooManyErrors()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
+                subscriptionPackDataService, languageDataService, circleDataService,
                 stateDataService, districtDataService, fileAuditRecordDataService);
 
-        helper.makeCdrs(200,0,0,0);
-        helper.makeLocalCdrFile(200);
+        helper.makeCdrs(5,0,0,0);
+        helper.makeLocalCdrFile(5);
         FileInfo fileInfo = new FileInfo(helper.cdr(), helper.cdrLocalChecksum(), helper.cdrCount());
         try {
             cdrFileService.verifyDetailFileChecksumAndCount(fileInfo);
         } catch (InvalidCdrFileException e) {
             List<String> errors = e.getMessages();
-            assertEquals(101, errors.size());
+            assertEquals(4, errors.size());
             assertEquals("The maximum number of allowed errors", errors.get(errors.size() - 1).substring(0, 36));
         }
     }
@@ -242,7 +244,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         getLogger().debug("testProcess()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
+                subscriptionPackDataService, languageDataService, circleDataService,
                 stateDataService, districtDataService, fileAuditRecordDataService);
 
         helper.makeCdrs(1,1,1,1);
@@ -268,7 +270,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         getLogger().debug("testAggregation()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
+                subscriptionPackDataService, languageDataService, circleDataService,
                 stateDataService, districtDataService, fileAuditRecordDataService);
 
         helper.makeSingleCallCdrs(3, true);

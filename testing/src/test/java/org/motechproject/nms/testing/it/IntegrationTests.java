@@ -7,6 +7,7 @@ import org.motechproject.nms.testing.it.api.KilkariControllerBundleIT;
 import org.motechproject.nms.testing.it.api.LanguageControllerBundleIT;
 import org.motechproject.nms.testing.it.api.MobileAcademyControllerBundleIT;
 import org.motechproject.nms.testing.it.api.UserControllerBundleIT;
+import org.motechproject.nms.testing.it.flw.FrontLineWorkerImportServiceBundleIT;
 import org.motechproject.nms.testing.it.flw.FrontLineWorkerServiceBundleIT;
 import org.motechproject.nms.testing.it.flw.ServiceUsageCapServiceBundleIT;
 import org.motechproject.nms.testing.it.flw.ServiceUsageServiceBundleIT;
@@ -45,6 +46,7 @@ import org.motechproject.nms.testing.it.region.NationalDefaultLanguageLocationBu
     ServiceUsageCapServiceBundleIT.class,
     WhiteListServiceBundleIT.class,
     FrontLineWorkerServiceBundleIT.class,
+    FrontLineWorkerImportServiceBundleIT.class,
 
     /**
      * IMI
