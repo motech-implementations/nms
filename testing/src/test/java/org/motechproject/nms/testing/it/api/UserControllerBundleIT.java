@@ -22,6 +22,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.joda.time.DateTime;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -30,7 +31,6 @@ import org.motechproject.nms.api.web.contract.FlwUserResponse;
 import org.motechproject.nms.api.web.contract.UserLanguageRequest;
 import org.motechproject.nms.api.web.contract.kilkari.KilkariUserResponse;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
-import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.domain.ServiceUsage;
 import org.motechproject.nms.flw.domain.ServiceUsageCap;
 import org.motechproject.nms.flw.domain.WhitelistEntry;
@@ -44,11 +44,7 @@ import org.motechproject.nms.flw.repository.WhitelistStateDataService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.domain.Subscriber;
-import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
-import org.motechproject.nms.kilkari.domain.SubscriptionPack;
-import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
-import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
@@ -59,16 +55,16 @@ import org.motechproject.nms.props.repository.DeployedServiceDataService;
 import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Language;
-import org.motechproject.nms.region.domain.LanguageLocation;
-import org.motechproject.nms.region.domain.NationalDefaultLanguageLocation;
+import org.motechproject.nms.region.domain.NationalDefaultLanguage;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
-import org.motechproject.nms.region.repository.LanguageLocationDataService;
-import org.motechproject.nms.region.repository.NationalDefaultLanguageLocationDataService;
+import org.motechproject.nms.region.repository.NationalDefaultLanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
-import org.motechproject.nms.testing.it.api.utils.SubscriptionPackBuilder;
+import org.motechproject.nms.testing.it.utils.RegionHelper;
+import org.motechproject.nms.testing.it.utils.SubscriptionHelper;
+import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.motechproject.testing.osgi.http.SimpleHttpClient;
@@ -77,6 +73,22 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.TransactionCallbackWithoutResult;
+
+import javax.inject.Inject;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 
 /**
@@ -117,9 +129,6 @@ public class UserControllerBundleIT extends BasePaxIT {
     private LanguageDataService languageDataService;
 
     @Inject
-    private LanguageLocationDataService languageLocationDataService;
-
-    @Inject
     private StateDataService stateDataService;
 
     @Inject
@@ -141,158 +150,58 @@ public class UserControllerBundleIT extends BasePaxIT {
     private DeployedServiceDataService deployedServiceDataService;
 
     @Inject
-    private NationalDefaultLanguageLocationDataService nationalDefaultLanguageLocationDataService;
+    private NationalDefaultLanguageDataService nationalDefaultLanguageDataService;
 
-    public UserControllerBundleIT() {
-        System.setProperty("org.motechproject.testing.osgi.http.numTries", "1");
+    @Inject
+    private TestingService testingService;
+
+
+
+    private RegionHelper rh;
+    private SubscriptionHelper sh;
+
+
+    @Before
+    public void setupTestData() {
+        testingService.clearDatabase();
+
+        rh = new RegionHelper(languageDataService, circleDataService, stateDataService,
+                districtDataService);
+
+        sh = new SubscriptionHelper(subscriptionService,
+                subscriberDataService, subscriptionPackDataService, languageDataService, circleDataService,
+                stateDataService, districtDataService);
     }
 
-    // TODO: Clean up data creation and cleanup
-    private void cleanAllData() {
-        for (FrontLineWorker flw: frontLineWorkerDataService.retrieveAll()) {
-            flw.setStatus(FrontLineWorkerStatus.INVALID);
-            flw.setInvalidationDate(new DateTime().withDate(2011, 8, 1));
 
-            frontLineWorkerDataService.update(flw);
-        }
-
-        for (Subscription subscription: subscriptionDataService.retrieveAll()) {
-            subscription.setStatus(SubscriptionStatus.COMPLETED);
-            subscription.setEndDate(new DateTime().withDate(2011, 8, 1));
-
-            subscriptionDataService.update(subscription);
-        }
-
-        whitelistEntryDataService.deleteAll();
-        whitelistStateDataService.deleteAll();
-        serviceUsageCapDataService.deleteAll();
-        serviceUsageDataService.deleteAll();
-        callDetailRecordDataService.deleteAll();
-        frontLineWorkerDataService.deleteAll();
-        subscriptionDataService.deleteAll();
-        subscriptionPackDataService.deleteAll();
-        subscriberDataService.deleteAll();
-        nationalDefaultLanguageLocationDataService.deleteAll();
-        languageLocationDataService.deleteAll();
-        languageDataService.deleteAll();
-        districtDataService.deleteAll();
-        deployedServiceDataService.deleteAll();
-        stateDataService.deleteAll();
-        circleDataService.deleteAll();
-    }
-
-    /*
-    Creates two subscription packs ('pack1' and 'pack2')
-    Create two subscribers:
-        Subscriber 1000000000L is subscribed to pack 'pack1'
-        Subscriber 2000000000L is subscribed to packs 'pack1' and 'pack2'
-     */
     private void createKilkariTestData() {
-        cleanAllData();
 
-        District district = new District();
-        district.setName("District 1");
-        district.setRegionalName("District 1");
-        district.setCode(1L);
-        State state = new State();
-        state.setName("State 1");
-        state.setCode(1L);
-        state.getDistricts().add(district);
-        stateDataService.create(state);
+        rh.newDelhiDistrict();
+        rh.delhiCircle();
 
-        deployedServiceDataService.create(new DeployedService(state,
-                Service.KILKARI));
+        deployedServiceDataService.create(new DeployedService(rh.delhiState(), Service.KILKARI));
 
-        Language ta = languageDataService.create(new Language("tamil"));
+        Subscriber subscriber1 = subscriberDataService.create(new Subscriber(1000000000L, rh.hindiLanguage()));
+        subscriptionService.createSubscription(subscriber1.getCallingNumber(), rh.hindiLanguage(),
+                sh.childPack(), SubscriptionOrigin.IVR);
 
-        Circle circle = new Circle("AA");
+        Subscriber subscriber2 = subscriberDataService.create(new Subscriber(2000000000L, rh.hindiLanguage()));
+        subscriptionService.createSubscription(subscriber2.getCallingNumber(), rh.hindiLanguage(),
+                sh.childPack(), SubscriptionOrigin.IVR);
+        subscriptionService.createSubscription(subscriber2.getCallingNumber(), rh.hindiLanguage(),
+                sh.pregnancyPack(), SubscriptionOrigin.IVR);
 
-        LanguageLocation languageLocation = new LanguageLocation("50", circle,
-                ta, true);// default LLC
-        languageLocation.getDistrictSet().add(district);
-        languageLocationDataService.create(languageLocation);
-
-        // add circle "DL" with no default LLC
-        District district2 = new District();
-        district2.setName("District 2");
-        district2.setRegionalName("District 2");
-        district2.setCode(2L);
-
-        State state2 = new State();
-        state2.setName("State 2");
-        state2.setCode(2L);
-        state2.getDistricts().add(district2);
-
-        stateDataService.create(state2);
-
-        deployedServiceDataService.create(new DeployedService(state2,
-                Service.KILKARI));
-        Language hi = languageDataService.create(new Language("hindi"));
-        Circle circle2 = new Circle("DL");
-        LanguageLocation languageLocation2 = new LanguageLocation("60",
-                circle2, hi, false);
-        languageLocation2.getDistrictSet().add(district2);
-        languageLocationDataService.create(languageLocation2);
-
-        // Creates two subscription packs ('childPack' and 'pregnancyPack')
-        subscriptionPackDataService.create(SubscriptionPackBuilder
-                .createSubscriptionPack("childPack",
-                        SubscriptionPackType.CHILD,
-                        SubscriptionPackBuilder.CHILD_PACK_WEEKS, 1));
-        subscriptionPackDataService.create(SubscriptionPackBuilder
-                .createSubscriptionPack("pregnancyPack",
-                        SubscriptionPackType.PREGNANCY,
-                        SubscriptionPackBuilder.PREGNANCY_PACK_WEEKS, 2));
-
-        SubscriptionPack pack1 = subscriptionPackDataService
-                .byName("childPack"); // 48 weeks
-        SubscriptionPack pack2 = subscriptionPackDataService
-                .byName("pregnancyPack"); // 72 weeks
-
-        Subscriber subscriber1 = subscriberDataService.create(new Subscriber(
-                1000000000L, languageLocation2));
-        Subscriber subscriber2 = subscriberDataService.create(new Subscriber(
-                2000000000L, languageLocation2));
-        Subscriber subscriber3 = subscriberDataService.create(new Subscriber(
-                3000000000L));
-        Subscriber subscriber4 = subscriberDataService.create(new Subscriber(
-                4000000000L, languageLocation2));
-        Subscriber subscriber5 = subscriberDataService.create(new Subscriber(
-                5000000000L, languageLocation2));
-
-        // subscriber1 1000000000L subscribed to 72 weeks pack
-        subscriptionService.createSubscription(subscriber1.getCallingNumber(),
-                languageLocation2, pack2, SubscriptionOrigin.IVR);
-
-        // subscriber2 2000000000L subscribed to both pack
-        subscriptionService.createSubscription(subscriber2.getCallingNumber(),
-                languageLocation2, pack1, SubscriptionOrigin.IVR);
-        subscriptionService.createSubscription(subscriber2.getCallingNumber(),
-                languageLocation2, pack2, SubscriptionOrigin.IVR);
-
-        // subscriber4 4000000000L subscribed to both pack and 72 weeks pack is
-        // deactivated
-        subscriptionService.createSubscription(subscriber4.getCallingNumber(),
-                languageLocation2, pack1, SubscriptionOrigin.IVR);
-        Subscription subscription42 = subscriptionService.createSubscription(
-                subscriber4.getCallingNumber(), languageLocation2, pack2,
-                SubscriptionOrigin.IVR);
-        subscriptionService.deactivateSubscription(subscription42,
-                DeactivationReason.DEACTIVATED_BY_USER);
-
-        // subscriber5 5000000000L subscribed to both pack and 72 weeks pack is
-        // completed
-        subscriptionService.createSubscription(subscriber5.getCallingNumber(),
-                languageLocation2, pack1, SubscriptionOrigin.IVR);
-        Subscription subscription52 = subscriptionService.createSubscription(
-                subscriber5.getCallingNumber(), languageLocation2, pack2,
-                SubscriptionOrigin.IVR);
-        subscriptionService.updateStartDate(subscription52, DateTime.now()
-                .minusDays(505 + 90));
+        Subscriber subscriber3 = subscriberDataService.create(new Subscriber(3000000000L, rh.hindiLanguage()));
+        subscriptionService.createSubscription(subscriber3.getCallingNumber(), rh.hindiLanguage(),
+                sh.pregnancyPack(), SubscriptionOrigin.IVR);
     }
+
+
 
     private void createFlwCappedServiceNoUsageNoLocationNoLanguage() {
-        cleanAllData();
+
+        Language language = new Language("99", "Papiamento");
+        languageDataService.create(language);
 
         FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 1111111111L);
         frontLineWorkerService.add(flw);
@@ -300,6 +209,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         District district = new District();
         district.setName("District 1");
         district.setRegionalName("District 1");
+        district.setLanguage(language);
         district.setCode(1L);
 
         State state = new State();
@@ -312,60 +222,26 @@ public class UserControllerBundleIT extends BasePaxIT {
         deployedServiceDataService.create(new DeployedService(state, Service.MOBILE_ACADEMY));
         deployedServiceDataService.create(new DeployedService(state, Service.MOBILE_KUNJI));
 
-        Language language = new Language("Papiamento");
-        languageDataService.create(language);
-
-        LanguageLocation languageLocation = new LanguageLocation("99", new Circle("AA"), language, true);
-        languageLocation.getDistrictSet().add(district);
-        languageLocationDataService.create(languageLocation);
+        Circle circle = new Circle("AA");
+        circle.getStates().add(state);
+        circle.setDefaultLanguage(language);
+        circleDataService.create(circle);
 
         ServiceUsageCap serviceUsageCap = new ServiceUsageCap(null, Service.MOBILE_KUNJI, 3600);
         serviceUsageCapDataService.create(serviceUsageCap);
     }
 
     private void createFlwWithLanguageServiceUsageAndCappedService() {
-        cleanAllData();
 
-        Language language = new Language("English");
-        languageDataService.create(language);
+        rh.delhiState();
+        rh.delhiCircle();
 
-        Circle circle = new Circle("AA");
-
-        District district = new District();
-        district.setName("District 1");
-        district.setRegionalName("District 1");
-        district.setCode(1L);
-
-        District district2 = new District();
-        district2.setName("District 2");
-        district2.setRegionalName("District 2");
-        district2.setCode(2L);
-
-        State state = new State();
-        state.setName("State 1");
-        state.setCode(1L);
-        state.getDistricts().add(district);
-        state.getDistricts().add(district2);
-
-        stateDataService.create(state);
-
-        deployedServiceDataService.create(new DeployedService(state, Service.MOBILE_ACADEMY));
-        deployedServiceDataService.create(new DeployedService(state, Service.MOBILE_KUNJI));
-
-        LanguageLocation languageLocation = new LanguageLocation("10", circle, language, false);
-        languageLocation.getDistrictSet().add(district);
-        languageLocationDataService.create(languageLocation);
+        deployedServiceDataService.create(new DeployedService(rh.delhiState(), Service.MOBILE_ACADEMY));
+        deployedServiceDataService.create(new DeployedService(rh.delhiState(), Service.MOBILE_KUNJI));
 
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
-        flw.setLanguageLocation(languageLocation);
+        flw.setLanguage(rh.hindiLanguage());
         frontLineWorkerService.add(flw);
-
-        language = new Language("Papiamento");
-        languageDataService.create(language);
-
-        languageLocation = new LanguageLocation("99", circle, language, true);
-        languageLocation.getDistrictSet().add(district2);
-        languageLocationDataService.create(languageLocation);
 
         ServiceUsageCap serviceUsageCap = new ServiceUsageCap(null, Service.MOBILE_KUNJI, 3600);
         serviceUsageCapDataService.create(serviceUsageCap);
@@ -376,48 +252,17 @@ public class UserControllerBundleIT extends BasePaxIT {
     }
 
     private void createFlwWithLanguageFullServiceUsageAndCappedService() {
-        cleanAllData();
 
-        Circle circle = new Circle("AA");
+        rh.newDelhiDistrict();
+        rh.southDelhiDistrict();
+        rh.delhiCircle();
 
-        District district = new District();
-        district.setName("District 1");
-        district.setRegionalName("District 1");
-        district.setCode(1L);
-
-        District district2 = new District();
-        district2.setName("District 2");
-        district2.setRegionalName("District 2");
-        district2.setCode(2L);
-
-        State state = new State();
-        state.setName("State 1");
-        state.setCode(1L);
-        state.getDistricts().add(district);
-        state.getDistricts().add(district2);
-
-        stateDataService.create(state);
-
-        deployedServiceDataService.create(new DeployedService(state, Service.MOBILE_ACADEMY));
-        deployedServiceDataService.create(new DeployedService(state, Service.MOBILE_KUNJI));
-
-        Language language = new Language("English");
-        languageDataService.create(language);
-
-        LanguageLocation languageLocation = new LanguageLocation("10", circle, language, false);
-        languageLocation.getDistrictSet().add(district);
-        languageLocationDataService.create(languageLocation);
+        deployedServiceDataService.create(new DeployedService(rh.delhiState(), Service.MOBILE_ACADEMY));
+        deployedServiceDataService.create(new DeployedService(rh.delhiState(), Service.MOBILE_KUNJI));
 
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
-        flw.setLanguageLocation(languageLocation);
+        flw.setLanguage(rh.hindiLanguage());
         frontLineWorkerService.add(flw);
-
-        language = new Language("Papiamento");
-        languageDataService.create(language);
-
-        languageLocation = new LanguageLocation("99", circle, language, true);
-        languageLocation.getDistrictSet().add(district2);
-        languageLocationDataService.create(languageLocation);
 
         ServiceUsageCap serviceUsageCap = new ServiceUsageCap(null, Service.MOBILE_KUNJI, 3600);
         serviceUsageCapDataService.create(serviceUsageCap);
@@ -427,48 +272,19 @@ public class UserControllerBundleIT extends BasePaxIT {
     }
 
     private void createFlwWithLanguageFullUsageOfBothServiceUncapped() {
-        cleanAllData();
 
-        Circle circle = new Circle("AA");
+        // Make sure to create two districts (with two languages) for the delhi state
+        rh.newDelhiDistrict();
+        rh.southDelhiDistrict();
+        // And a circle
+        rh.delhiCircle();
 
-        District district = new District();
-        district.setName("District 1");
-        district.setRegionalName("District 1");
-        district.setCode(1L);
-
-        District district2 = new District();
-        district2.setName("District 2");
-        district2.setRegionalName("District 2");
-        district2.setCode(2L);
-
-        State state = new State();
-        state.setName("State 1");
-        state.setCode(1L);
-        state.getDistricts().add(district);
-        state.getDistricts().add(district2);
-
-        stateDataService.create(state);
-
-        deployedServiceDataService.create(new DeployedService(state, Service.MOBILE_ACADEMY));
-        deployedServiceDataService.create(new DeployedService(state, Service.MOBILE_KUNJI));
-
-        Language language = new Language("English");
-        languageDataService.create(language);
-
-        LanguageLocation languageLocation = new LanguageLocation("10", circle, language, false);
-        languageLocation.getDistrictSet().add(district);
-        languageLocationDataService.create(languageLocation);
+        deployedServiceDataService.create(new DeployedService(rh.delhiState(), Service.MOBILE_ACADEMY));
+        deployedServiceDataService.create(new DeployedService(rh.delhiState(), Service.MOBILE_KUNJI));
 
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
-        flw.setLanguageLocation(languageLocation);
+        flw.setLanguage(rh.hindiLanguage());
         frontLineWorkerService.add(flw);
-
-        language = new Language("Papiamento");
-        languageDataService.create(language);
-
-        languageLocation = new LanguageLocation("99", circle, language, true);
-        languageLocation.getDistrictSet().add(district2);
-        languageLocationDataService.create(languageLocation);
 
         ServiceUsage serviceUsage = new ServiceUsage(flw, Service.MOBILE_KUNJI, 1, 1, 1, DateTime.now());
         serviceUsageDataService.create(serviceUsage);
@@ -482,7 +298,6 @@ public class UserControllerBundleIT extends BasePaxIT {
     }
 
     private void createFlwWithStateNotInWhitelist() {
-        cleanAllData();
 
         circleDataService.create(new Circle("AA"));
 
@@ -509,11 +324,14 @@ public class UserControllerBundleIT extends BasePaxIT {
     }
 
     private void createFlwWithLanguageLocationCodeNotInWhitelist() {
-        cleanAllData();
+
+        Language language = new Language("34", "Language From Whitelisted State");
+        languageDataService.create(language);
 
         District district = new District();
         district.setName("District 1");
         district.setRegionalName("District 1");
+        district.setLanguage(language);
         district.setCode(1L);
 
         State whitelist = new State();
@@ -526,12 +344,9 @@ public class UserControllerBundleIT extends BasePaxIT {
         deployedServiceDataService.create(new DeployedService(whitelist, Service.MOBILE_ACADEMY));
         deployedServiceDataService.create(new DeployedService(whitelist, Service.MOBILE_KUNJI));
 
-        Language language = new Language("Language From Whitelisted State");
-        languageDataService.create(language);
-
-        LanguageLocation languageLocation = new LanguageLocation("34", new Circle("AA"), language, false);
-        languageLocation.getDistrictSet().add(district);
-        languageLocationDataService.create(languageLocation);
+        Circle circle = new Circle("AA");
+        circle.getStates().add(whitelist);
+        circleDataService.create(circle);
 
         whitelistStateDataService.create(new WhitelistState(whitelist));
 
@@ -539,60 +354,38 @@ public class UserControllerBundleIT extends BasePaxIT {
         whitelistEntryDataService.create(entry);
 
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111l);
-        flw.setLanguageLocation(languageLocation);
+        flw.setLanguage(language);
         frontLineWorkerService.add(flw);
     }
 
     private void createCircleWithLanguage() {
-        cleanAllData();
 
-        District district = new District();
-        district.setName("District 1");
-        district.setRegionalName("District 1");
-        district.setCode(1L);
+        // Let's create a pretend circle with two states
 
-        State state = new State();
-        state.setName("State 1");
-        state.setCode(1L);
-        state.getDistricts().add(district);
+        final Circle circle = new Circle("AA");
+        circle.setDefaultLanguage(rh.hindiLanguage());
+        circleDataService.create(circle);
 
-        stateDataService.create(state);
+        // Calling these will make sure the districts exist and will map the districts' language to their state
+        rh.newDelhiDistrict();
+        rh.mysuruDistrict();
 
-        deployedServiceDataService.create(new DeployedService(state, Service.MOBILE_ACADEMY));
-        deployedServiceDataService.create(new DeployedService(state, Service.MOBILE_KUNJI));
+        //TODO: remove this when https://applab.atlassian.net/browse/MOTECH-1679 is fixed
+        circleDataService.doInTransaction(new TransactionCallbackWithoutResult() {
+            @Override
+            protected void doInTransactionWithoutResult(TransactionStatus transactionStatus) {
+                circle.getStates().add(rh.delhiState());
+                circle.getStates().add(rh.karnatakaState());
+                circleDataService.update(circle);
+            }
+        });
 
-        Language language = new Language("Papiamento");
-        languageDataService.create(language);
+        deployedServiceDataService.create(new DeployedService(rh.delhiState(), Service.MOBILE_KUNJI));
 
-        Circle circle = new Circle("AA");
-
-        LanguageLocation languageLocation = new LanguageLocation("99", circle, language, true);
-        languageLocation.getDistrictSet().add(district);
-        languageLocationDataService.create(languageLocation);
-
-        District district2 = new District();
-        district2.setName("District 2");
-        district2.setRegionalName("District 2");
-        district2.setCode(2L);
-
-        State state2 = new State();
-        state2.setName("State 2");
-        state2.setCode(2L);
-        state2.getDistricts().add(district2);
-
-        stateDataService.create(state2);
-
-        Language hi = languageDataService.create(new Language("hindi"));
-
-        LanguageLocation languageLocation2 = new LanguageLocation("88", circle, hi, false);
-        languageLocation2.getDistrictSet().add(district2);
-        languageLocationDataService.create(languageLocation2);
-
-        nationalDefaultLanguageLocationDataService.create(new NationalDefaultLanguageLocation(languageLocation2));
+        nationalDefaultLanguageDataService.create(new NationalDefaultLanguage(rh.hindiLanguage()));
     }
 
     private void createCircleWithSingleLanguage() {
-        cleanAllData();
 
         District district = new District();
         district.setName("District 1");
@@ -606,16 +399,15 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         stateDataService.create(state);
 
-        Language language = new Language("Papiamento");
+        Language language = new Language("99", "Papiamento");
         languageDataService.create(language);
 
         Circle circle = new Circle("AA");
+        circle.setDefaultLanguage(language);
+        circle.getStates().add(state);
+        circleDataService.create(circle);
 
-        LanguageLocation languageLocation = new LanguageLocation("99", circle, language, true);
-        languageLocation.getDistrictSet().add(district);
-        languageLocationDataService.create(languageLocation);
-
-        nationalDefaultLanguageLocationDataService.create(new NationalDefaultLanguageLocation(languageLocation));
+        nationalDefaultLanguageDataService.create(new NationalDefaultLanguage(language));
     }
 
     private HttpGet createHttpGet(boolean includeService, String service,
@@ -720,13 +512,14 @@ public class UserControllerBundleIT extends BasePaxIT {
     }
 
     private void createFlwWithLanguageNoDeployedServices() {
-        cleanAllData();
 
-        Circle circle = new Circle("AA");
+        Language language = new Language("10", "English");
+        languageDataService.create(language);
 
         District district = new District();
         district.setName("District 1");
         district.setRegionalName("District 1");
+        district.setLanguage(language);
         district.setCode(1L);
 
         State state = new State();
@@ -736,15 +529,12 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         stateDataService.create(state);
 
-        Language language = new Language("English");
-        languageDataService.create(language);
-
-        LanguageLocation languageLocation = new LanguageLocation("10", circle, language, false);
-        languageLocation.getDistrictSet().add(district);
-        languageLocationDataService.create(languageLocation);
+        Circle circle = new Circle("AA");
+        circle.getStates().add(state);
+        circleDataService.create(circle);
 
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
-        flw.setLanguageLocation(languageLocation);
+        flw.setLanguage(language);
         frontLineWorkerService.add(flw);
     }
 
@@ -769,7 +559,6 @@ public class UserControllerBundleIT extends BasePaxIT {
     }
 
     private void createFlwWithLocationNoLanguageNoDeployedServices() {
-        cleanAllData();
 
         District district = new District();
         district.setName("District 1");
@@ -808,25 +597,11 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, response.getStatusLine().getStatusCode());
     }
 
-    // Request undeployed service by cirlce
+    // Request undeployed service by circle
     private void createFlwWithNoLocationNoLanguageNoDeployedServices() {
-        cleanAllData();
 
-        District district = new District();
-        district.setName("District 1");
-        district.setRegionalName("District 1");
-        district.setCode(1L);
-
-        State state = new State();
-        state.setName("State 1");
-        state.setCode(1L);
-        state.getDistricts().add(district);
-
-        stateDataService.create(state);
-
-        Circle circle = new Circle("AA");
-        circle.getStates().add(state);
-        circleDataService.create(circle);
+        rh.newDelhiDistrict();
+        rh.delhiCircle();
 
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
         frontLineWorkerService.add(flw);
@@ -841,7 +616,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "mobilekunji",    //service
                 true, "1111111111",     //callingNumber
                 true, "OP",             //operator
-                true, "AA",             //circle
+                true, rh.delhiCircle().getName(),//circle
                 true, "123456789012345" //callId
         );
 
@@ -854,20 +629,24 @@ public class UserControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testKilkariUserRequestNoLanguage() throws IOException, InterruptedException {
-        createKilkariTestData();
+
+        nationalDefaultLanguageDataService.create(new NationalDefaultLanguage(rh.hindiLanguage()));
+        subscriberDataService.create(new Subscriber(1000000000L));
+
+        rh.newDelhiDistrict();
 
         HttpGet httpGet = createHttpGet(
                 true, "kilkari",        //service
-                true, "3000000000",     //callingNumber
+                true, "1000000000",     //callingNumber
                 true, "OP",             //operator
-                true, "AA",             //circle
+                true, rh.delhiCircle().getName(),//circle
                 true, "123456789012345" //callId
         );
 
         String expectedJsonResponse = createKilkariUserResponseJson(
-                "50", //defaultLanguageLocationCode
+                rh.hindiLanguage().getCode(), //defaultLanguageLocationCode
                 null, //locationCode
-                Arrays.asList("50"), // allowedLanguageLocationCodes
+                Collections.singletonList(rh.hindiLanguage().getCode()), // allowedLanguageLocationCodes
                 new HashSet<String>() //subscriptionPackList
         );
 
@@ -884,14 +663,14 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "kilkari",        //service
                 true, "9999999999",     //callingNumber
                 true, "OP",             //operator
-                true, "AA",             //circle
+                true, rh.delhiCircle().getName(),//circle
                 true, "123456789012345" //callId
         );
 
         String expectedJsonResponse = createKilkariUserResponseJson(
-                "50", //defaultLanguageLocationCode
+                rh.hindiLanguage().getCode(), //defaultLanguageLocationCode
                 null, //locationCode
-                Arrays.asList("50"), // allowedLanguageLocationCodes
+                Collections.singletonList(rh.hindiLanguage().getCode()), // allowedLanguageLocationCodes
                 new HashSet<String>() //subscriptionPackList
         );
 
@@ -915,7 +694,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         String expectedJsonResponse = createFlwUserResponseJson(
                 "99",  //defaultLanguageLocationCode
                 null,  //locationCode
-                Arrays.asList("99"), // allowedLanguageLocationCodes
+                Collections.singletonList("99"), // allowedLanguageLocationCodes
                 0L,    //currentUsageInPulses
                 0L,    //endOfUsagePromptCounter
                 false, //welcomePromptFlag
@@ -936,13 +715,13 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "mobilekunji",    //service
                 true, "1111111111",     //callingNumber
                 true, "OP",             //operator
-                true, "AA",             //circle
+                true, rh.delhiCircle().getName(),//circle
                 true, "123456789012345" //callId
         );
 
         String expectedJsonResponse = createFlwUserResponseJson(
-                "99",  //defaultLanguageLocationCode
-                "10",  //locationCode
+                rh.hindiLanguage().getCode(),  //defaultLanguageLocationCode
+                rh.hindiLanguage().getCode(),  //locationCode
                 new ArrayList<String>(), // allowedLanguageLocationCodes
                 1L,    //currentUsageInPulses
                 0L,    //endOfUsagePromptCounter
@@ -964,13 +743,13 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "mobilekunji",    //service
                 true, "1111111111",     //callingNumber
                 true, "OP",             //operator
-                true, "AA",             //circle
+                true, rh.delhiCircle().getName(),             //circle
                 true, "123456789012345" //callId
         );
 
         String expectedJsonResponse = createFlwUserResponseJson(
-                "99",  //defaultLanguageLocationCode
-                "10",  //locationCode
+                rh.hindiLanguage().getCode(),  //defaultLanguageLocationCode
+                rh.hindiLanguage().getCode(),  //locationCode
                 new ArrayList<String>(), // allowedLanguageLocationCodes
                 1L,    //currentUsageInPulses
                 1L,    //endOfUsagePromptCounter
@@ -1065,9 +844,9 @@ public class UserControllerBundleIT extends BasePaxIT {
         );
 
         String expectedJsonResponse = createFlwUserResponseJson(
-                "88",  //defaultLanguageLocationCode
+                rh.hindiLanguage().getCode(),  //defaultLanguageLocationCode
                 null,  //locationCode
-                Arrays.asList("99", "88"), // allowedLanguageLocationCodes
+                Arrays.asList(rh.hindiLanguage().getCode(), rh.kannadaLanguage().getCode()), // allowedLanguageLocationCodes
                 0L,    //currentUsageInPulses
                 0L,    //endOfUsagePromptCounter
                 false, //welcomePromptFlag
@@ -1111,9 +890,9 @@ public class UserControllerBundleIT extends BasePaxIT {
         );
 
         String expectedJsonResponse = createFlwUserResponseJson(
-                "99",  //defaultLanguageLocationCode
+                rh.hindiLanguage().getCode(),  //defaultLanguageLocationCode
                 null,  //locationCode
-                Arrays.asList("99", "88"), // allowedLanguageLocationCodes
+                Arrays.asList(rh.hindiLanguage().getCode(), rh.kannadaLanguage().getCode()), // allowedLanguageLocationCodes
                 0L,    //currentUsageInPulses
                 0L,    //endOfUsagePromptCounter
                 false, //welcomePromptFlag
@@ -1128,7 +907,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
 
     @Test
-    @Ignore  // Currenlty under discussion with IMI.  My preference would be for them to handle this case
+    @Ignore  // Currently under discussion with IMI.  My preference would be for them to handle this case
     public void testGetUserDetailsUnknownUserCircleSingleLanguage() throws IOException, InterruptedException {
         createCircleWithSingleLanguage();
 
@@ -1157,9 +936,9 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         FrontLineWorker flw = frontLineWorkerService.getByContactNumber(1111111112l);
         assertNotNull(flw);
-        LanguageLocation languageLocation = flw.getLanguageLocation();
-        assertNotNull(languageLocation);
-        assertEquals("FLW Language Code", "99", languageLocation.getCode());
+        Language language = flw.getLanguage();
+        assertNotNull(language);
+        assertEquals("FLW Language Code", rh.hindiLanguage().getCode(), language.getCode());
     }
 
     @Test
@@ -1175,9 +954,9 @@ public class UserControllerBundleIT extends BasePaxIT {
         );
 
         String expectedJsonResponse = createFlwUserResponseJson(
-                "88",  //defaultLanguageLocationCode
+                rh.hindiLanguage().getCode(),  //defaultLanguageLocationCode
                 null,  //locationCode
-                Arrays.asList("99", "88"), // allowedLanguageLocationCodes
+                Arrays.asList(rh.hindiLanguage().getCode(), rh.kannadaLanguage().getCode()), // allowedLanguageLocationCodes
                 0L,    //currentUsageInPulses
                 0L,    //endOfUsagePromptCounter
                 false, //welcomePromptFlag
@@ -1199,13 +978,13 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "mobileacademy",  //service
                 true, "1111111111",     //callingNumber
                 true, "OP",             //operator
-                true, "AA",             //circle
+                true, rh.delhiCircle().getName(),//circle
                 true, "123456789012345" //callId
         );
 
         String expectedJsonResponse = createFlwUserResponseJson(
-                "99",  //defaultLanguageLocationCode
-                "10",  //locationCode
+                rh.hindiLanguage().getCode(),  //defaultLanguageLocationCode
+                rh.hindiLanguage().getCode(),  //locationCode
                 new ArrayList<String>(),
                 1L,    //currentUsageInPulses
                 1L,    //endOfUsagePromptCounter
@@ -1228,13 +1007,13 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "mobilekunji",    //service
                 true, "1111111111",     //callingNumber
                 true, "OP",             //operator
-                true, "AA",             //circle
+                true, rh.delhiCircle().getName(),//circle
                 true, "123456789012345" //callId
         );
 
         String expectedJsonResponse = createFlwUserResponseJson(
-                "99",  //defaultLanguageLocationCode
-                "10",  //locationCode
+                rh.hindiLanguage().getCode(),  //defaultLanguageLocationCode
+                rh.hindiLanguage().getCode(),  //locationCode
                 new ArrayList<String>(),
                 1L,    //currentUsageInPulses
                 1L,    //endOfUsagePromptCounter
@@ -1370,15 +1149,16 @@ public class UserControllerBundleIT extends BasePaxIT {
     public void testSetLanguageNoFLW() throws IOException, InterruptedException {
         createCircleWithLanguage();
 
-        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(1111111111L, 123456789012345L, "99"));
+        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(1111111111L, 123456789012345L,
+                rh.hindiLanguage().getCode()));
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost));
 
         FrontLineWorker flw = frontLineWorkerService.getByContactNumber(1111111111l);
         assertNotNull(flw);
-        LanguageLocation languageLocation = flw.getLanguageLocation();
-        assertNotNull(languageLocation);
-        assertEquals("FLW Language Code", "99", languageLocation.getCode());
+        Language language = flw.getLanguage();
+        assertNotNull(language);
+        assertEquals("FLW Language Code", rh.hindiLanguage().getCode(), language.getCode());
     }
 
     @Test
@@ -1403,170 +1183,171 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK));
 
         FrontLineWorker flw = frontLineWorkerService.getByContactNumber(1111111111L);
-        LanguageLocation languageLocation = flw.getLanguageLocation();
-        assertNotNull(languageLocation);
-        assertEquals("FLW Language Code", "99", languageLocation.getCode());
+        Language language = flw.getLanguage();
+        assertNotNull(language);
+        assertEquals("FLW Language Code", "99", language.getCode());
     }
 
-    private void createNationalDefaultLlcForKilkari() {
-        District district = new District();
-        district.setName("District 11");
-        district.setRegionalName("District 11");
-        district.setCode(11L);
 
-        State state = new State();
-        state.setName("State 11");
-        state.setCode(11L);
-        state.getDistricts().add(district);
+    /**
+     * To check that Get Subscriber Details API is returning correct
+     * information of subscriber subscribed to both Packs.
+     */
+    @Test
+    public void verifyFT1() throws IOException, InterruptedException {
+        createKilkariTestData();
+        HttpGet httpGet = createHttpGet(
+                true, "kilkari", // service
+                true, "2000000000", // callingNumber- subscribed to both packs
+                true, "OP", // operator
+                true, rh.delhiCircle().getName(), // circle
+                true, "123456789012345" // callId
+        );
 
-        stateDataService.create(state);
-
-        deployedServiceDataService.create(new DeployedService(state,
-                Service.KILKARI));
-        Language en = languageDataService.create(new Language("english"));
-        Circle circle = new Circle("NA");
-        LanguageLocation languageLocation = new LanguageLocation("80", circle,
-                en, false);
-        languageLocation.getDistrictSet().add(district);
-        languageLocationDataService.create(languageLocation);
-        nationalDefaultLanguageLocationDataService
-                .create(new NationalDefaultLanguageLocation(languageLocation));
+        String expectedJsonResponse = createKilkariUserResponseJson(
+                rh.hindiLanguage().getCode(), // defaultLanguageLocationCode
+                rh.hindiLanguage().getCode(), // locationCode
+                null, // allowedLanguageLocationCodes
+                // subscriptionPackList
+                new HashSet<>(Arrays.asList(sh.childPack().getName(), sh.pregnancyPack().getName()))
+        );
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
-    private void createCircleWithMultipleLlc() {
-        District district1 = new District();
-        district1.setName("District 1");
-        district1.setRegionalName("District 1");
-        district1.setCode(1L);
 
-        State state1 = new State();
-        state1.setName("State 1");
-        state1.setCode(1L);
-        state1.getDistricts().add(district1);
+    /**
+     * To check that Get Subscriber Details API is returning correct information of subscriber subscribed to
+     * pregnancy pack.
+     */
+    @Test
+    public void verifyFT2() throws IOException, InterruptedException {
+        createKilkariTestData();
+        HttpGet httpGet = createHttpGet(
+                true, "kilkari", // service
+                true, "3000000000", // callingNumber- subscribed to pregnancyPack
+                true, "OP", // operator
+                true, rh.delhiCircle().getName(), // circle
+                true, "123456789012345" // callId
+        );
 
-        stateDataService.create(state1);
-
-        deployedServiceDataService.create(new DeployedService(state1,
-                Service.KILKARI));
-
-        Language ma = languageDataService.create(new Language("malyalam"));
-
-        Circle circle = new Circle("MM");
-        LanguageLocation languageLocation1 = new LanguageLocation("45", circle,
-                ma, true);// default LLC
-        languageLocation1.getDistrictSet().add(district1);
-        languageLocationDataService.create(languageLocation1);
-
-        // add non default LLC
-
-        District district2 = new District();
-        district2.setName("District 2");
-        district2.setRegionalName("District 2");
-        district2.setCode(2L);
-
-        State state2 = new State();
-        state2.setName("State 2");
-        state2.setCode(2L);
-        state2.getDistricts().add(district2);
-
-        stateDataService.create(state2);
-
-        deployedServiceDataService.create(new DeployedService(state2,
-                Service.KILKARI));
-
-        Language tu = languageDataService.create(new Language("telgu"));
-        LanguageLocation languageLocation2 = new LanguageLocation("55", circle,
-                tu, false);// not default LLC
-        languageLocation2.getDistrictSet().add(district2);
-        languageLocationDataService.create(languageLocation2);
-
+        String expectedJsonResponse = createKilkariUserResponseJson(
+                rh.hindiLanguage().getCode(), // defaultLanguageLocationCode
+                rh.hindiLanguage().getCode(), // locationCode
+                null, // allowedLanguageLocationCodes
+                // subscriptionPackList
+                new HashSet<>(Arrays.asList(sh.pregnancyPack().getName()))
+        );
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
+
+
+    private void createNationalDefaultLanguageForKilkari() {
+        nationalDefaultLanguageDataService.create(new NationalDefaultLanguage(rh.hindiLanguage()));
+    }
+
+
+    private void createCircleWithMultipleLanguages() {
+
+        State s = rh.karnatakaState();
+        s.getDistricts().add(rh.mysuruDistrict());
+        s.getDistricts().add(rh.bangaloreDistrict());
+        stateDataService.update(s);
+
+        Circle c = rh.karnatakaCircle();
+        c.setDefaultLanguage(rh.kannadaLanguage());
+        circleDataService.update(c);
+
+        deployedServiceDataService.create(new DeployedService(rh.karnatakaState(), Service.KILKARI));
+    }
+
 
     @Test
-    public void verifyFT3()
-            throws IOException, InterruptedException {
+    public void verifyFT3() throws IOException, InterruptedException {
         /**
          * To get the details of the Subscriber identified by the callingNumber
          * when Subscriber has called first time to subscribe and LLC for
          * identified circle is not available.
          */
         createKilkariTestData();
-        createNationalDefaultLlcForKilkari();
-        HttpGet httpGet = createHttpGet(true, "kilkari", // service
+        createNationalDefaultLanguageForKilkari();
+        HttpGet httpGet = createHttpGet(
+                true, "kilkari", // service
                 true, "1000000011", // callingNumber- first time caller
                 true, "OP", // operator
-                true, "DL", // circle
+                true, rh.delhiCircle().getName(), // circle
                 true, "123456789012345" // callId
         );
         // defaultLanguageLocationCode== national default language location
-        String expectedJsonResponse = createKilkariUserResponseJson("80", // defaultLanguageLocationCode
+        String expectedJsonResponse = createKilkariUserResponseJson(
+                rh.hindiLanguage().getCode(), // defaultLanguageLocationCode
                 null, // locationCode
-                Arrays.asList("60"), // allowedLanguageLocationCodes
+                Arrays.asList(rh.hindiLanguage().getCode()), // allowedLanguageLocationCodes
                 new HashSet<String>() // subscriptionPackList
         );
-        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
-                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
-        assertEquals(expectedJsonResponse,
-                EntityUtils.toString(response.getEntity()));
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
 
+    /**
+     * To get the details of the Subscriber identified by the callingNumber
+     * when Subscriber has called first time to subscribe and circle is not
+     * available or not identified.
+     */
     @Test
-    public void verifyFT4()
-            throws IOException, InterruptedException {
-        /**
-         * To get the details of the Subscriber identified by the callingNumber
-         * when Subscriber has called first time to subscribe and circle is not
-         * available or not identified.
-         */
+    public void verifyFT4() throws IOException, InterruptedException {
         createKilkariTestData();
-        createNationalDefaultLlcForKilkari();
-        HttpGet httpGet = createHttpGet(true, "kilkari", // service
+        createNationalDefaultLanguageForKilkari();
+        HttpGet httpGet = createHttpGet(
+                true, "kilkari", // service
                 true, "1000000012", // callingNumber- first time caller
                 true, "OP", // operator
                 true, "99", // Unknown circle
                 true, "123456789012345" // callId
         );
         // defaultLanguageLocationCode== national default language location
-        String expectedJsonResponse = createKilkariUserResponseJson("80", // defaultLanguageLocationCode
+        String expectedJsonResponse = createKilkariUserResponseJson(
+                rh.hindiLanguage().getCode(), // defaultLanguageLocationCode
                 null, // locationCode
-                Arrays.asList("50", "60", "80"), // allowedLanguageLocationCodes
+                Arrays.asList(rh.hindiLanguage().getCode()), // allowedLanguageLocationCodes
                 new HashSet<String>() // subscriptionPackList
         );
-        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
-                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
-        assertEquals(expectedJsonResponse,
-                EntityUtils.toString(response.getEntity()));
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
+
+    /**
+     * To get the details of the Subscriber identified by the callingNumber
+     * when Subscriber has called first time to subscribe and identified
+     * circle has multiple states.
+     */
     @Test
-    public void verifyFT5()
-            throws IOException, InterruptedException {
-        /**
-         * To get the details of the Subscriber identified by the callingNumber
-         * when Subscriber has called first time to subscribe and identified
-         * circle has multiple states.
-         */
-        cleanAllData();
-        createCircleWithMultipleLlc();
-        HttpGet httpGet = createHttpGet(true, "kilkari", // service
+    public void verifyFT5() throws IOException, InterruptedException {
+        createCircleWithMultipleLanguages();
+        HttpGet httpGet = createHttpGet(
+                true, "kilkari", // service
                 true, "1000000013", // callingNumber- first time caller
                 true, "OP", // operator
-                true, "MM", // circle have multiple LLC
+                true, rh.karnatakaCircle().getName(), // circle have multiple LLC
                 true, "123456789012345" // callId
         );
         // defaultLanguageLocationCode== circle default language location
-        String expectedJsonResponse = createKilkariUserResponseJson("45", // defaultLanguageLocationCode
+        String expectedJsonResponse = createKilkariUserResponseJson(
+                rh.kannadaLanguage().getCode(), // defaultLanguageLocationCode
                 null, // locationCode
-                Arrays.asList("45", "55"), // allowedLanguageLocationCodes
+                // allowedLanguageLocationCodes
+                Arrays.asList(rh.kannadaLanguage().getCode(), rh.tamilLanguage().getCode()),
                 new HashSet<String>() // subscriptionPackList
         );
-        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
-                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
-        assertEquals(expectedJsonResponse,
-                EntityUtils.toString(response.getEntity()));
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 }

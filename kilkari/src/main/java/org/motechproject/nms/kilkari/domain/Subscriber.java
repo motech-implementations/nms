@@ -6,7 +6,7 @@ import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.annotations.Ignore;
 import org.motechproject.mds.domain.MdsEntity;
 import org.motechproject.nms.region.domain.Circle;
-import org.motechproject.nms.region.domain.LanguageLocation;
+import org.motechproject.nms.region.domain.Language;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Persistent;
@@ -38,7 +38,7 @@ public class Subscriber extends MdsEntity {
     private DateTime lastMenstrualPeriod;
 
     @Field
-    private LanguageLocation languageLocation;
+    private Language language;
 
     @Field
     private Circle circle;
@@ -57,14 +57,14 @@ public class Subscriber extends MdsEntity {
         this.subscriptions = new HashSet<>();
     }
 
-    public Subscriber(Long callingNumber, LanguageLocation languageLocation) {
+    public Subscriber(Long callingNumber, Language language) {
         this(callingNumber);
-        this.languageLocation = languageLocation;
+        this.language = language;
         this.subscriptions = new HashSet<>();
     }
 
-    public Subscriber(Long callingNumber, LanguageLocation languageLocation, Circle circle) {
-        this(callingNumber, languageLocation);
+    public Subscriber(Long callingNumber, Language language, Circle circle) {
+        this(callingNumber, language);
         this.circle = circle;
         this.subscriptions = new HashSet<>();
     }
@@ -93,12 +93,12 @@ public class Subscriber extends MdsEntity {
         this.lastMenstrualPeriod = lastMenstrualPeriod;
     }
 
-    public LanguageLocation getLanguageLocation() {
-        return languageLocation;
+    public Language getLanguage() {
+        return language;
     }
 
-    public void setLanguageLocation(LanguageLocation languageLocation) {
-        this.languageLocation = languageLocation;
+    public void setLanguage(Language language) {
+        this.language = language;
     }
 
     public Set<Subscription> getSubscriptions() {
