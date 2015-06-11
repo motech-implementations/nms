@@ -298,8 +298,8 @@ public class InboxServiceBundleIT extends BasePaxIT {
 		// first msg should be in inbox
 		assertEquals(msg.getWeekId(), "w1_1");
 		assertEquals(msg.getMessageFileName(), "w1_1.wav");
-		
-		subscriber.setLastMenstrualPeriod(DateTime.now().minusDays(96)); // set lmp to check message lives seven days
+		// set lmp as 7th day week of week to check message exist for seven days.
+		subscriber.setLastMenstrualPeriod(DateTime.now().minusDays(96)); 
 		subscriberService.update(subscriber);
 
 		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber());
