@@ -774,13 +774,13 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
     }
 
+    /**
+     * To check NMS is able to make available a message corresponding to each
+     * Pack of current week when user is subscribed to both 72Weeks Pack and 48
+     * with two message per week configuration .
+     **/
     @Test
     public void verifyFT120() throws IOException, InterruptedException {
-        /**
-         * To check NMS is able to make available a message corresponding to
-         * each Pack of current week when user is subscribed to both 72Weeks
-         * Pack and 48 with two message per week configuration .
-         **/
         // setup data to remove 1 messages per week configuration for child pack
         testingService.clearDatabase();
         rh = new RegionHelper(languageDataService, circleDataService,
