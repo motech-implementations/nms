@@ -32,6 +32,7 @@ public class RegionHelper {
         if (c == null) {
             c = circleDataService.create(new Circle("DE"));
             c.getStates().add(delhiState());
+            c.setDefaultLanguage(hindiLanguage());
             circleDataService.update(c);
         }
 
@@ -78,23 +79,6 @@ public class RegionHelper {
     }
 
 
-    public District southDelhiDistrict() {
-        District district = districtDataService.findById(3L);
-
-        if (district == null) {
-            district = new District();
-            district.setName("South Delhi");
-            district.setRegionalName("South Delhi");
-            district.setCode(3L);
-            district.setState(delhiState());
-            district.setLanguage(hindiLanguage());
-            districtDataService.create(district);
-        }
-
-        return district;
-    }
-
-
     public District newDelhiDistrict() {
         District district = districtDataService.findById(1L);
 
@@ -109,6 +93,39 @@ public class RegionHelper {
         }
 
         return district;
+    }
+
+
+    public District southDelhiDistrict() {
+        District district = districtDataService.findById(5L);
+
+        if (district == null) {
+            district = new District();
+            district.setName("South Delhi");
+            district.setRegionalName("South Delhi");
+            district.setCode(5L);
+            district.setState(delhiState());
+            district.setLanguage(punjabiLanguage());
+            districtDataService.create(district);
+        }
+
+        return district;
+    }
+
+
+    public District bangaloreDistrict() {
+        District bangalore = districtDataService.findById(4L);
+        if (bangalore == null) {
+            bangalore = new District();
+            bangalore.setName("Bengaluru");
+            bangalore.setRegionalName("Bengaluru");
+            bangalore.setCode(4L);
+            bangalore.setState(karnatakaState());
+            bangalore.setLanguage(tamilLanguage());
+            districtDataService.create(bangalore);
+        }
+
+        return districtDataService.create(bangalore);
     }
 
 
@@ -128,12 +145,34 @@ public class RegionHelper {
     }
 
 
+    public Language tamilLanguage() {
+        Language language = languageDataService.findByName("Tamil");
+        if (language != null) {
+            return language;
+        }
+        language = languageDataService.create(new Language("ta", "Tamil"));
+
+        return language;
+    }
+
+
     public Language kannadaLanguage() {
         Language language = languageDataService.findByName("Kannada");
         if (language != null) {
             return language;
         }
         language = languageDataService.create(new Language("kn", "Kannada"));
+
+        return language;
+    }
+
+
+    public Language punjabiLanguage() {
+        Language language = languageDataService.findByName("Punjabi");
+        if (language != null) {
+            return language;
+        }
+        language = languageDataService.create(new Language("pa", "Punjabi"));
 
         return language;
     }

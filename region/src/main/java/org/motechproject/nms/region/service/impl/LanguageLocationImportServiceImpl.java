@@ -2,6 +2,7 @@ package org.motechproject.nms.region.service.impl;
 
 import org.motechproject.nms.csv.exception.CsvImportDataException;
 import org.motechproject.nms.csv.utils.ConstraintViolationUtils;
+import org.motechproject.nms.csv.utils.CsvImporterBuilder;
 import org.motechproject.nms.csv.utils.CsvMapImporter;
 import org.motechproject.nms.csv.utils.GetBoolean;
 import org.motechproject.nms.csv.utils.GetInstanceByString;
@@ -52,8 +53,9 @@ public class LanguageLocationImportServiceImpl implements LanguageLocationImport
     @Override
     @Transactional
     public void importData(Reader reader) throws IOException {
-        CsvMapImporter csvImporter = new CsvMapImporter();
-        csvImporter.open(reader, getProcessorMapping());
+        CsvMapImporter csvImporter = new CsvImporterBuilder()
+                .setProcessorMapping(getProcessorMapping())
+                .createAndOpen(reader);
         Map<String, Object> record;
         while (null != (record = csvImporter.read())) {
             try {
@@ -146,12 +148,6 @@ public class LanguageLocationImportServiceImpl implements LanguageLocationImport
         verify(null == district.getLanguage(), "Language location for the '%s' district already specified", district.getName());
     }
 
-    private void verify(boolean condition, String message, String... args) {
-        if (!condition) {
-            throw new CsvImportDataException(String.format(message, args));
-        }
-    }
-
     private Map<String, CellProcessor> getProcessorMapping() {
         Map<String, CellProcessor> mapping = new HashMap<>();
         mapping.put(LANGUAGE_CODE, new GetString());
@@ -182,6 +178,12 @@ public class LanguageLocationImportServiceImpl implements LanguageLocationImport
         }));
         mapping.put(DEFAULT_FOR_CIRCLE, new GetBoolean());
         return mapping;
+    }
+
+    private void verify(boolean condition, String message, String... args) {
+        if (!condition) {
+            throw new CsvImportDataException(String.format(message, args));
+        }
     }
 
     @Autowired
