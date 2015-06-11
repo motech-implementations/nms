@@ -179,6 +179,7 @@ public class ImiController_OBD_BundleIT extends BasePaxIT {
     * fileProcessedStatus having invalid value(i.e status code which doesn’t exist in system).
     */
     @Test
+    //TODO :https://applab.atlassian.net/browse/NMS-191
     @Ignore
     public void verifyFT200() throws IOException, InterruptedException {
         getLogger().debug("testCreateFileProcessedStatusRequestWithInvalidFileProcessedStatusError()");
