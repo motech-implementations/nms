@@ -2,8 +2,13 @@ package org.motechproject.nms.testing.it.utils;
 
 import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.District;
+import org.motechproject.nms.region.domain.HealthBlock;
+import org.motechproject.nms.region.domain.HealthFacility;
+import org.motechproject.nms.region.domain.HealthFacilityType;
 import org.motechproject.nms.region.domain.Language;
 import org.motechproject.nms.region.domain.State;
+import org.motechproject.nms.region.domain.Taluka;
+import org.motechproject.nms.region.domain.Village;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
@@ -194,4 +199,99 @@ public class RegionHelper {
     {
         return "A";
     }
+
+    public static State createState(Long code, String name) {
+        State state = new State();
+        state.setCode(code);
+        state.setName(name);
+        return state;
+    }
+
+    public static District createDistrict(State state, Long code, String name) {
+        return createDistrict(state, code, name, null);
+    }
+
+    public static District createDistrict(State state, Long code, String name, Language language) {
+        District district = new District();
+        district.setState(state);
+        district.setCode(code);
+        district.setName(name);
+        district.setRegionalName(regionalName(name));
+        district.setLanguage(language);
+        return district;
+    }
+
+    public static Language createLanguage(String code, String name) {
+        return new Language(code, name);
+    }
+
+    public static Taluka createTaluka(District district, String code, String name, int identity) {
+        Taluka taluka = new Taluka();
+        taluka.setDistrict(district);
+        taluka.setCode(code);
+        taluka.setName(name);
+        taluka.setRegionalName(regionalName(name));
+        taluka.setIdentity(identity);
+        return taluka;
+    }
+
+    public static HealthBlock createHealthBlock(Taluka taluka, Long code, String name, String hq) {
+        HealthBlock healthBlock = new HealthBlock();
+        healthBlock.setTaluka(taluka);
+        healthBlock.setCode(code);
+        healthBlock.setName(name);
+        healthBlock.setRegionalName(regionalName(name));
+        healthBlock.setHq(hq);
+        return healthBlock;
+    }
+
+    public static Village createVillage(Taluka taluka, Long svid, Long vcode, String name) {
+        Village village = new Village();
+        village.setTaluka(taluka);
+        village.setSvid(svid);
+        village.setVcode(vcode);
+        village.setName(name);
+        village.setRegionalName(regionalName(name));
+        return village;
+    }
+
+    public static HealthFacility createHealthFacility(HealthBlock healthBlock, Long code, String name, HealthFacilityType type) {
+        HealthFacility healthFacility = new HealthFacility();
+        healthFacility.setHealthBlock(healthBlock);
+        healthFacility.setCode(code);
+        healthFacility.setName(name);
+        healthFacility.setRegionalName(regionalName(name));
+        healthFacility.setHealthFacilityType(type);
+        return healthFacility;
+    }
+
+    public static HealthFacilityType createHealthFacilityType(String name, Long code) {
+        HealthFacilityType healthFacilityType = new HealthFacilityType();
+        healthFacilityType.setName(name);
+        healthFacilityType.setCode(code);
+        return healthFacilityType;
+    }
+
+    public static Language createLanguage(String code, String name, Circle circle, boolean defaultForCircle, District... districts) {
+        Language language = new Language();
+        language.setCode(code);
+        language.setName(name);
+        for (District district : districts) {
+            district.setLanguage(language);
+        }
+        if (defaultForCircle) {
+            circle.setDefaultLanguage(language);
+        }
+
+        return language;
+    }
+
+    public static Circle createCircle(String name) {
+        return new Circle(name);
+    }
+
+    public static String regionalName(String name) {
+        return String.format("regional name of %s", name);
+    }
+
 }

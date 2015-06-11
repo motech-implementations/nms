@@ -19,8 +19,11 @@ import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.CallSummaryRecordDataService;
 import org.motechproject.nms.kilkari.repository.InboxCallDataDataService;
 import org.motechproject.nms.kilkari.repository.InboxCallDetailRecordDataService;
+import org.motechproject.nms.kilkari.repository.MctsChildDataService;
+import org.motechproject.nms.kilkari.repository.MctsMotherDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
+import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackMessageDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
@@ -94,6 +97,12 @@ public class TestingServiceImpl implements TestingService {
     private SubscriptionPackMessageDataService subscriptionPackMessageDataService;
     @Autowired
     private SubscriptionDataService subscriptionDataService;
+    @Autowired
+    private SubscriptionErrorDataService subscriptionErrorDataService;
+    @Autowired
+    private MctsMotherDataService mctsMotherDataService;
+    @Autowired
+    private MctsChildDataService mctsChildDataService;
 
     /**
      * Mobile Academy
@@ -213,7 +222,9 @@ public class TestingServiceImpl implements TestingService {
         subscriptionService.deleteAll();
         subscriptionPackDataService.deleteAll();
         subscriptionPackMessageDataService.deleteAll();
-
+        subscriptionErrorDataService.deleteAll();
+        mctsChildDataService.deleteAll();
+        mctsMotherDataService.deleteAll();
 
         /**
          * Mobile Academy
