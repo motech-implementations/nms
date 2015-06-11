@@ -46,7 +46,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private static final Logger LOGGER = LoggerFactory.getLogger(SubscriptionServiceImpl.class);
 
     private static final String SUBSCRIPTION_PURGE_TIME = "kilkari.purge_closed_subscriptions_start_time";
-    private static final String SUBSCRIPTION_PURGE_MS_INTERVAL = "kilkari.purge_closed_subscriptions_ms_interval";
+    private static final String SUBSCRIPTION_PURGE_SEC_INTERVAL = "kilkari.purge_closed_subscriptions_sec_interval";
     private static final String WEEKS_TO_KEEP_CLOSED_SUBSCRIPTIONS = "kilkari.weeks_to_keep_closed_subscriptions";
 
     private static final String SUBSCRIPTION_PURGE_EVENT_SUBJECT = "nms.kilkari.purge_closed_subscriptions";
@@ -82,7 +82,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     /**
      * Use the MOTECH scheduler to setup a repeating job
      * The job will start today at the time stored in flw.purge_invalid_flw_start_time in flw.properties
-     * It will repeat every flw.purge_invalid_flw_ms_interval milliseconds (default value is a day)
+     * It will repeat every flw.purge_invalid_flw_sec_interval seconds (default value is a day)
      */
     private void schedulePurgeOfOldSubscriptions() {
         //Calculate today's fire time
@@ -96,20 +96,20 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 .withMillisOfSecond(0);
 
         //Millisecond interval between events
-        String intervalProp = settingsFacade.getProperty(SUBSCRIPTION_PURGE_MS_INTERVAL);
-        Long msInterval = Long.parseLong(intervalProp);
+        String intervalProp = settingsFacade.getProperty(SUBSCRIPTION_PURGE_SEC_INTERVAL);
+        Integer secInterval = Integer.parseInt(intervalProp);
 
-        LOGGER.debug(String.format("The %s message will be sent every %sms starting at %s",
-                SUBSCRIPTION_PURGE_EVENT_SUBJECT, msInterval.toString(), today.toString()));
+        LOGGER.debug(String.format("The %s message will be sent every %ss starting at %s",
+                SUBSCRIPTION_PURGE_EVENT_SUBJECT, secInterval.toString(), today.toString()));
 
         //Schedule repeating job
         MotechEvent event = new MotechEvent(SUBSCRIPTION_PURGE_EVENT_SUBJECT);
         RepeatingSchedulableJob job = new RepeatingSchedulableJob(
                 event,          //MOTECH event
+                null,           //repeatCount, null means infinity
+                secInterval,     //repeatIntervalInSeconds
                 today.toDate(), //startTime
                 null,           //endTime, null means no end time
-                null,           //repeatCount, null means infinity
-                msInterval,     //repeatIntervalInMilliseconds
                 true);          //ignorePastFiresAtStart
 
         schedulerService.safeScheduleRepeatingJob(job);

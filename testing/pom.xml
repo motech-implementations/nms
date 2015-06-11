@@ -139,11 +139,11 @@
                                     <overwrite>true</overwrite>
                                     <resources>
                                         <resource>
-                                            <directory>${modules.root.dir}/testdata</directory>
+                                            <directory>${basedir}/src/test/resources</directory>
                                             <include>motech-settings.properties</include>
                                         </resource>
                                         <resource>
-                                            <directory>${modules.root.dir}/testdata/${motech.sql.dbtype}</directory>
+                                            <directory>${basedir}/src/test/resources</directory>
                                             <include>bootstrap.properties</include>
                                         </resource>
                                     </resources>
