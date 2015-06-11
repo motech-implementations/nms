@@ -606,7 +606,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
 
     /**
-     * To verify that 48WeeksPack beneficiary should not be  deactivated if the error “user
+     * To verify that childPack beneficiary should not be  deactivated if the error “user
      * number does not exist” is not received for all failed delivery attempts during a scheduling
      * period for a message.
      */
@@ -656,7 +656,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
         assertEquals(subscription.getSubscriptionId(), retries.get(0).getSubscriptionId());
         assertEquals(CallStage.RETRY_LAST, retries.get(0).getCallStage());
-        assertEquals(DayOfTheWeek.today().nextDay(),retries.get(0).getDayOfTheWeek());
+        assertEquals(DayOfTheWeek.today().nextDay(), retries.get(0).getDayOfTheWeek());
 
         csr = new CallSummaryRecordDto(
                 new RequestId(subscription.getSubscriptionId(), "11112233445566"),
@@ -680,6 +680,58 @@ public class CsrServiceBundleIT extends BasePaxIT {
         // due to invalid number for all retries.
         subscription = subscriptionDataService.findBySubscriptionId(subscription.getSubscriptionId());
         assertEquals(SubscriptionStatus.ACTIVE, subscription.getStatus());
+    }
+
+
+    /*
+     * To check that NMS shall not retry OBD message for which all OBD attempts(1 actual+1 retry) fails with
+     * two message per week configuration.
+     */
+    @Test
+    public void verifyFT142() {
+
+        String timestamp = DateTime.now().toString(TIME_FORMATTER);
+
+        // Create a record in the CallRetry table marked as "retry 1" and verify it is erased from the
+        // CallRetry table
+
+        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(3),
+                SubscriptionPackType.PREGNANCY);
+        String contentFileName = sh.getContentMessageFile(subscription, 0);
+        CallRetry retry = callRetryDataService.create(new CallRetry(
+                subscription.getSubscriptionId(),
+                subscription.getSubscriber().getCallingNumber(),
+                DayOfTheWeek.today(),
+                CallStage.RETRY_1,
+                contentFileName,
+                "XXX",
+                "XXX",
+                "XX",
+                SubscriptionOrigin.MCTS_IMPORT
+        ));
+
+
+        Map<Integer, Integer> callStats = new HashMap<>();
+        CallSummaryRecordDto record = new CallSummaryRecordDto(
+                new RequestId(subscription.getSubscriptionId(), timestamp),
+                subscription.getSubscriber().getCallingNumber(),
+                contentFileName,
+                "XXX",
+                "XXX",
+                "XX",
+                FinalCallStatus.FAILED,
+                callStats,
+                0,
+                5
+        );
+
+        Map<String, Object> eventParams = new HashMap<>();
+        eventParams.put(CSR_PARAM_KEY, record);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
+        csrService.processCallSummaryRecord(motechEvent);
+
+        // There should be no calls to retry since the one above was the last try
+        assertEquals(0, callRetryDataService.count());
     }
 
     //todo: verify multiple days' worth of summary record aggregation
