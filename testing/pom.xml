@@ -236,7 +236,7 @@
                                 <configuration>
                                     <autocommit>true</autocommit>
                                     <sqlCommand>
-                                        CREATE DATABASE motech_data_services character set utf8 collate utf8_general_ci;;
+                                        CREATE DATABASE motech_data_services character set utf8 collate utf8_general_ci;
                                     </sqlCommand>
                                 </configuration>
                             </execution>
