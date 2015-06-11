@@ -838,12 +838,14 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         return httpPost;
     }
 
+    /**
+     * To verify that Save Inbox call Details API request fails if the provided
+     * parameter value of callingNumber is : blank value.
+     */
+    // TODO JIRA issue https://applab.atlassian.net/browse/NMS-198
     @Ignore
     @Test
     public void verifyFT54_72() throws IOException, InterruptedException {
-        /**
-         * test SaveInboxCallDetails API with Blank Params
-         */
         // Blank callingNumber
         HttpPost httpPost = createInboxCallDetailsRequestHttpPost("", // callingNumber
                                                                       // blank
@@ -866,12 +868,14 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 EntityUtils.toString(response.getEntity()));
     }
 
+    /**
+     * To verify that Save Inbox call Details API request fails if the provided
+     * parameter value of circle is : empty value.
+     */
+    // TODO JIRA issue https://applab.atlassian.net/browse/NMS-200
     @Ignore
     @Test
     public void verifyFT55_73() throws IOException, InterruptedException {
-        /**
-         * test SaveInboxCallDetails API with Blank Params
-         */
         // Blank circle
         HttpPost httpPost = createInboxCallDetailsRequestHttpPost("1234567890",
                 "A", // operator
@@ -893,12 +897,14 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 EntityUtils.toString(response.getEntity()));
     }
 
+    /**
+     * To verify that Save Inbox call Details API request fails if the provided
+     * parameter value of callDisconnectReason is : empty value.
+     */
+    // TODO JIRA issue https://applab.atlassian.net/browse/NMS-198
     @Ignore
     @Test
     public void verifyFT56() throws IOException, InterruptedException {
-        /**
-         * test SaveInboxCallDetails API with Blank Params
-         */
         // Blank callDisconnectReason
         HttpPost httpPost = createInboxCallDetailsRequestHttpPost("1234567890",
                 "A", // operator
