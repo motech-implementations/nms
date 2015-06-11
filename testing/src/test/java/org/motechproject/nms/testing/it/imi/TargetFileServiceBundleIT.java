@@ -257,10 +257,11 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         getLogger().debug("Generated {}", tfn.getFileName());
     }
 
+   /*
+   *To verify welcome message is played along with next week’s content as per the LMP.
+   */
     @Test
     public void verifyFT190() throws NoSuchAlgorithmException, IOException {
-
-        // To verify welcome message is played along with next week’s content as per the LMP.
         Subscriber subscriber1 = new Subscriber(1111111111L, hindi, dehliCircle);
         subscriber1.setLastMenstrualPeriod(DateTime.now().minusDays(90)); // weekId will be W1_1
         subscriberDataService.create(subscriber1);
@@ -290,10 +291,11 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         assertTrue("welcome.wav".equals(contents.get(0)));
     }
 
+    /*
+    *To verify welcome message is played along with next week’s content, as per the DOB.
+    */
     @Test
     public void verifyFT191() throws NoSuchAlgorithmException, IOException {
-
-        // To verify welcome message is played along with next week’s content, as per the DOB.
         Subscriber subscriber1 = new Subscriber(1111111111L, hindi, dehliCircle);
         subscriber1.setDateOfBirth(DateTime.now()); // weekId will be W1_1
         subscriberDataService.create(subscriber1);
