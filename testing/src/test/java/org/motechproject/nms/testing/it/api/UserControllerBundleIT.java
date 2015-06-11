@@ -1343,14 +1343,15 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals("FLW Language Code", "99", languageLocation.getCode());
     }
 
+    /**
+     * To verify the behavior of Get Subscriber Details API if the service is
+     * not deployed in provided Subscriber's state.
+     */
     @Test
+    // TODO: https://applab.atlassian.net/browse/NMS-181
     @Ignore
     public void verifyFT16() throws IOException,
             InterruptedException {
-        /**
-         * To verify the behavior of Get Subscriber Details API if the service
-         * is not deployed in provided Subscriber's state.
-         */
         cleanAllData();
 
         District district = new District();
