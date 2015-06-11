@@ -38,7 +38,7 @@ public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
     private static final Logger LOGGER = LoggerFactory.getLogger(FrontLineWorkerServiceImpl.class);
 
     private static final String FLW_PURGE_TIME = "flw.purge_invalid_flw_start_time";
-    private static final String FLW_PURGE_MS_INTERVAL = "flw.purge_invalid_flw_ms_interval";
+    private static final String FLW_PURGE_SEC_INTERVAL = "flw.purge_invalid_flw_sec_interval";
     private static final String WEEKS_TO_KEEP_INVALID_FLWS = "flw.weeks_to_keep_invalid_flws";
 
     private static final String FLW_PURGE_EVENT_SUBJECT = "nms.flw.purge_invalid_flw";
@@ -65,7 +65,7 @@ public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
     /**
      * Use the MOTECH scheduler to setup a repeating job
      * The job will start today at the time stored in flw.purge_invalid_flw_start_time in flw.properties
-     * It will repeat every flw.purge_invalid_flw_ms_interval milliseconds (default value is a day)
+     * It will repeat every flw.purge_invalid_flw_sec_interval seconds (default value is a day)
      */
     private void schedulePurgeOfOldFrontLineWorkers() {
         //Calculate today's fire time
@@ -78,21 +78,21 @@ public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
                 .withSecondOfMinute(0)
                 .withMillisOfSecond(0);
 
-        //Millisecond interval between events
-        String intervalProp = settingsFacade.getProperty(FLW_PURGE_MS_INTERVAL);
-        Long msInterval = Long.parseLong(intervalProp);
+        //Second interval between events
+        String intervalProp = settingsFacade.getProperty(FLW_PURGE_SEC_INTERVAL);
+        Integer secInterval = Integer.parseInt(intervalProp);
 
-        LOGGER.debug(String.format("The %s message will be sent every %sms starting at %s",
-                                    FLW_PURGE_EVENT_SUBJECT, msInterval.toString(), today.toString()));
+        LOGGER.debug(String.format("The %s message will be sent every %ss starting at %s",
+                                    FLW_PURGE_EVENT_SUBJECT, secInterval.toString(), today.toString()));
 
         //Schedule repeating job
         MotechEvent event = new MotechEvent(FLW_PURGE_EVENT_SUBJECT);
         RepeatingSchedulableJob job = new RepeatingSchedulableJob(
                 event,          //MOTECH event
+                null,           //repeatCount, null means infinity
+                secInterval,     //repeatIntervalInSeconds
                 today.toDate(), //startTime
                 null,           //endTime, null means no end time
-                null,           //repeatCount, null means infinity
-                msInterval,     //repeatIntervalInMilliseconds
                 true);          //ignorePastFiresAtStart
 
         schedulerService.safeScheduleRepeatingJob(job);
