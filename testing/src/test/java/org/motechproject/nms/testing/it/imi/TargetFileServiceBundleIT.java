@@ -112,21 +112,12 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
     SubscriptionPack pregnancyPack;
 
 
-    private String setupTestDir(String property, String dir) {
-        String backup = settingsService.getSettingsFacade().getProperty(property);
-        File directory = new File(System.getProperty("user.home"), dir);
-        directory.mkdirs();
-        settingsService.getSettingsFacade().setProperty(property, directory.getAbsolutePath());
-        return backup;
-    }
-
-
     @Before
     public void before() {
         testingService.clearDatabase();
 
-        localObdDirBackup = setupTestDir(LOCAL_OBD_DIR, "obd-local-dir-it");
-        remoteObdDirBackup = setupTestDir(REMOTE_OBD_DIR, "obd-remote-dir-it");
+        localObdDirBackup = ImiTestHelper.setupTestDir(settingsService, LOCAL_OBD_DIR, "obd-local-dir-it");
+        remoteObdDirBackup = ImiTestHelper.setupTestDir(settingsService, REMOTE_OBD_DIR, "obd-remote-dir-it");
 
         RegionHelper rh = new RegionHelper(languageDataService, circleDataService, stateDataService,
                                             districtDataService);
