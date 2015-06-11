@@ -21,6 +21,7 @@ import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
+import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
 import org.motechproject.nms.region.domain.Circle;
@@ -49,6 +50,8 @@ import java.nio.file.Files;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -96,6 +99,9 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
 
     @Inject
     private DistrictDataService districtDataService;
+
+    @Inject
+    private SubscriberService subscriberService;
 
     @Inject
     SettingsService settingsService;
@@ -255,6 +261,103 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         getLogger().debug("Generated {}", tfn.getFileName());
     }
 
+    // To check that target file should contain correct weekID according to LMP of the subscriber.
+    @Test
+    public void verifyFT151() throws NoSuchAlgorithmException, IOException {
+
+
+        Subscriber subscriber1 = new Subscriber(1111111111L, hindi, dehliCircle);
+        subscriber1.setLastMenstrualPeriod(DateTime.now().minusDays(125)); // weekId will be W6_1
+        subscriberDataService.create(subscriber1);
+        Subscription subscription = subscriptionService.createSubscription(1111111111L, hindi, pregnancyPack, SubscriptionOrigin.MCTS_IMPORT);
+        subscription.setNeedsWelcomeMessage(false);
+        subscriptionDataService.update(subscription);
+
+        List<String> contents = new ArrayList<>();
+        String line;
+
+        TargetFileNotification tfn = targetFileService.generateTargetFile();
+
+        File targetDir = new File(settingsService.getSettingsFacade().getProperty("imi.local_obd_dir"));
+        File targetFile = new File(targetDir, tfn.getFileName());
+        MessageDigest md = MessageDigest.getInstance("MD5");
+        int recordCount = 0;
+        try (InputStream is = Files.newInputStream(targetFile.toPath());
+             BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
+            DigestInputStream dis = new DigestInputStream(is, md);
+            while ((line = reader.readLine()) != null) {
+                recordCount++;
+                contents.add(line.split(",")[7]); //column 8 is for weekId
+            }
+        }
+        String md5Checksum = new String(Hex.encodeHex(md.digest()));
+
+        assertEquals((int)tfn.getRecordCount(), recordCount);
+        assertEquals(tfn.getChecksum(), md5Checksum);
+        assertTrue("w6_1".equals(contents.get(0)));
+        assertEquals(1, recordCount);
+    }
+
+    // To check that target file should contain correct weekID according to DOB of the subscriber.
+    @Test
+    public void verifyFT152() throws NoSuchAlgorithmException, IOException {
+
+
+        Subscriber subscriber1 = new Subscriber(1111111111L, hindi, dehliCircle);
+        subscriber1.setDateOfBirth(DateTime.now().minusDays(28)); // weekId will be W5_1
+        subscriberDataService.create(subscriber1);
+        Subscription subscription = subscriptionService.createSubscription(1111111111L, hindi, childPack, SubscriptionOrigin.MCTS_IMPORT);
+        subscription.setNeedsWelcomeMessage(false);
+        subscriptionDataService.update(subscription);
+
+        List<String> contents = new ArrayList<>();
+        String line;
+
+        TargetFileNotification tfn = targetFileService.generateTargetFile();
+
+        File targetDir = new File(settingsService.getSettingsFacade().getProperty("imi.local_obd_dir"));
+        File targetFile = new File(targetDir, tfn.getFileName());
+        MessageDigest md = MessageDigest.getInstance("MD5");
+        int recordCount = 0;
+        try (InputStream is = Files.newInputStream(targetFile.toPath());
+             BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
+            DigestInputStream dis = new DigestInputStream(is, md);
+            while ((line = reader.readLine()) != null) {
+                recordCount++;
+                contents.add(line.split(",")[7]); //column 8 is for weekId
+            }
+        }
+        String md5Checksum = new String(Hex.encodeHex(md.digest()));
+
+        assertEquals((int)tfn.getRecordCount(), recordCount);
+        assertEquals(tfn.getChecksum(), md5Checksum);
+        assertTrue("w5_1".equals(contents.get(0)));
+
+        //update the date of birth of the subscriber
+        Subscriber subscriber2 = subscriberDataService.findByCallingNumber(1111111111L);
+        subscriber2.setDateOfBirth(DateTime.now().minusDays(21)); // weekId will be W4_1
+        subscriberService.update(subscriber2);
+
+        // again generate the target file to check correct weekId is picked after DOB is changed.
+        tfn = targetFileService.generateTargetFile();
+        contents.clear();
+        targetFile = new File(targetDir, tfn.getFileName());
+        recordCount = 0;
+        try (InputStream is = Files.newInputStream(targetFile.toPath());
+             BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
+            DigestInputStream dis = new DigestInputStream(is, md);
+            while ((line = reader.readLine()) != null) {
+                recordCount++;
+                contents.add(line.split(",")[7]); //column 8 is for weekId
+            }
+        }
+        md5Checksum = new String(Hex.encodeHex(md.digest()));
+
+        assertEquals((int)tfn.getRecordCount(), recordCount);
+        assertEquals(tfn.getChecksum(), md5Checksum);
+        assertTrue("w4_1".equals(contents.get(0)));
+        assertEquals(1, recordCount);
+    }
 
     //todo: test success notification is sent to the IVR system
 }
