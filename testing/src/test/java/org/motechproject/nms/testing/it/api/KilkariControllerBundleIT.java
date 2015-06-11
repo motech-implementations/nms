@@ -784,14 +784,15 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
                 expectedJsonPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
-    
+
+    /**
+     * To verify the behavior of Save Inbox call Details API if a mandatory
+     * parameter : subscriptionId is missing from the API request.
+     */
+    // TODO JIRA issue https://applab.atlassian.net/browse/NMS-185
     @Ignore
     @Test
     public void verifyFT48() throws IOException, InterruptedException {
-        /**
-         * Testing saveInboxCallDetails API with the internal parameter of
-         * content field missing.
-         */
         // Missing subscriptionPack
         HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
                 1234567890L, // callingNumber
@@ -803,15 +804,16 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 123, // callDurationInPulses
                 1, // callStatus
                 1, // callDisconnectReason
-                new HashSet<>(Arrays.asList(new CallDataRequest(null, // subscriptionId
-                        "48WeeksPack", // subscriptionPack missing
+                new HashSet<>(Arrays.asList(
+                        new CallDataRequest(null, // subscriptionId missing
+                                "48WeeksPack", // subscriptionPack
                         "123", // inboxWeekId
                         "foo", // contentFileName
                         123L, // startTime
                         456L // endTime
                         ), new CallDataRequest(
                                 "00000000-0000-0000-0000-000000000000", // subscriptionId
-                                "72WeeksPack", // subscriptionPack missing
+                                "72WeeksPack", // subscriptionPack
                                 "123", // inboxWeekId
                                 "foo", // contentFileName
                                 123L, // startTime
@@ -827,13 +829,15 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 EntityUtils.toString(response.getEntity()));
     }
 
+    /**
+     * To verify the behavior of Save Inbox call Details API if a mandatory
+     * parameter : subscritpionPack is missing from the API request.
+     */
+    // TODO JIRA issue https://applab.atlassian.net/browse/NMS-185
     @Ignore
  	@Test
     public void verifyFT49()
  			throws IOException, InterruptedException {
- 		/**
- 		 * Testing saveInboxCallDetails API with the internal parameter of content field missing.
- 		 */
  		// Missing subscriptionPack
  		HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
  				1234567890L, // callingNumber
@@ -854,7 +858,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
  						456L // endTime
                         ), new CallDataRequest(
                                 "00000100-0000-0000-0000-000000000000", // subscriptionId
-                                "72WeeksPack", // subscriptionPack missing
+                                "72WeeksPack", // subscriptionPack
                                 "123", // inboxWeekId
                                 "foo", // contentFileName
                                 123L, // startTime
@@ -870,13 +874,14 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 EntityUtils.toString(response.getEntity()));
     }
 
+    /**
+     * To verify the behavior of Save Inbox call Details API if a mandatory
+     * parameter : inboxWeekId is missing from the API request.
+     */
+    // TODO JIRA issue https://applab.atlassian.net/browse/NMS-185
     @Ignore
     @Test
     public void verifyFT50() throws IOException, InterruptedException {
-        /**
-         * Testing saveInboxCallDetails API with the internal parameter of
-         * content field missing.
-         */
  		// Missing inboxWeekId
         HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
  				1234567890L, // callingNumber
@@ -897,7 +902,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
  						456L // endTime
                         ), new CallDataRequest(
                                 "00000000-0000-0000-0000-000000000000", // subscriptionId
-                                "72WeeksPack", // subscriptionPack missing
+                                "72WeeksPack", // subscriptionPack
                                 "123", // inboxWeekId
                                 "foo", // contentFileName
                                 123L, // startTime
@@ -913,13 +918,14 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 EntityUtils.toString(response.getEntity()));
     }
 
+    /**
+     * To verify the behavior of Save Inbox call Details API if a mandatory
+     * parameter : contentFileName is missing from the API request.
+     */
+    // TODO JIRA issue https://applab.atlassian.net/browse/NMS-185
     @Ignore
     @Test
     public void verifyFT51() throws IOException, InterruptedException {
-        /**
-         * Testing saveInboxCallDetails API with the internal parameter of
-         * content field missing.
-         */
  		// Missing contentFileName
         HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
  				1234567890L, // callingNumber
@@ -940,7 +946,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
  						456L // endTime
                         ), new CallDataRequest(
                                 "00000000-0000-0000-0000-00005000000", // subscriptionId
-                                "72WeeksPack", // subscriptionPack missing
+                                "72WeeksPack", // subscriptionPack
                                 "123", // inboxWeekId
                                 "foo", // contentFileName
                                 123L, // startTime
@@ -956,13 +962,14 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 EntityUtils.toString(response.getEntity()));
     }
 
+    /**
+     * To verify the behavior of Save Inbox call Details API if a mandatory
+     * parameter : startTime is missing from the API request.
+     */
+    // TODO JIRA issue https://applab.atlassian.net/browse/NMS-185
     @Ignore
     @Test
     public void verifyFT52() throws IOException, InterruptedException {
-        /**
-         * Testing saveInboxCallDetails API with the internal parameter of
-         * content field missing.
-         */
  		// Missing startTime
         HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
  				1234567890L, // callingNumber
@@ -983,7 +990,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
  						456L // endTime
                         ), new CallDataRequest(
                                 "00000000-0000-0000-2000-000000000000", // subscriptionId
-                                "72WeeksPack", // subscriptionPack missing
+                                "72WeeksPack", // subscriptionPack
                                 "123", // inboxWeekId
                                 "foo", // contentFileName
                                 123L, // startTime
@@ -1000,13 +1007,14 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 EntityUtils.toString(response.getEntity()));
     }
 
+    /**
+     * To verify the behavior of Save Inbox call Details API if a mandatory
+     * parameter : endTime is missing from the API request.
+     */
+    // TODO JIRA issue https://applab.atlassian.net/browse/NMS-185
     @Ignore
     @Test
     public void verifyFT53() throws IOException, InterruptedException {
-        /**
-         * Testing saveInboxCallDetails API with the internal parameter of
-         * content field missing.
-         */
  		// Missing endTime
         HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
  				1234567890L, // callingNumber
@@ -1027,7 +1035,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
  						null // endTime missing
                         ), new CallDataRequest(
                                 "00000000-0000-0000-0200-000000000000", // subscriptionId
-                                "72WeeksPack", // subscriptionPack missing
+                                "72WeeksPack", // subscriptionPack
                                 "123", // inboxWeekId
                                 "foo", // contentFileName
                                 123L, // startTime
