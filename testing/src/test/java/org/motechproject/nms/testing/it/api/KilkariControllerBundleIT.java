@@ -1598,7 +1598,6 @@ public class KilkariControllerBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT95() throws IOException, InterruptedException {
-        setupData();
         Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
         Subscription subscription = subscriber.getActiveSubscriptions()
                 .iterator().next();
@@ -1622,7 +1621,6 @@ public class KilkariControllerBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT96() throws IOException, InterruptedException {
-        setupData();
         Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
         Subscription subscription = subscriber.getActiveSubscriptions()
                 .iterator().next();
@@ -1649,7 +1647,6 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     @Ignore
     @Test
     public void verifyFT97() throws IOException, InterruptedException {
-        setupData();
         Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
         Subscription subscription = subscriber.getActiveSubscriptions()
                 .iterator().next();
