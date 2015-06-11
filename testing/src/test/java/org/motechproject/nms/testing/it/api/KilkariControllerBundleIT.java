@@ -17,6 +17,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.joda.time.DateTime;
 import org.junit.Ignore;
@@ -785,50 +786,63 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 expectedJsonPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
+    /**
+     * To verify the behavior of Get Inbox Details API if provided beneficiary's
+     * callId is not valid : less than 15 digits.
+     */
  	@Test
     public void verifyFT86() throws IOException,
  			InterruptedException {
- 		/**
- 		 * Testing GetInboxDetails API with invalid value of callId.
- 		 */
  		// CallId less than 15 digits
  		HttpGet httpGet = createHttpGet(true, "1234567890", true,
  				"12345678901234");
  		String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
 
- 		assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
- 				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
- 				ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
     }
 
+    /**
+     * To verify the behavior of Get Inbox Details API if provided beneficiary's
+     * callId is not valid : more than 15 digits.
+     */
     @Test
     public void verifyFT87() throws IOException, InterruptedException {
-        /**
-         * Testing GetInboxDetails API with invalid value of callId.
-         */
         // CallId more than 15 digits
         HttpGet httpGet = createHttpGet(true, "1234567890", true,
                 "1234567890123456");
         String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
 
- 		assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
- 				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
- 				ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
     }
 
+    /**
+     * To verify the behavior of Get Inbox Details API if provided beneficiary's
+     * callId is not valid : Alphanumeric value.
+     */
+    // TODO JIRA issue https://applab.atlassian.net/browse/NMS-186
     @Ignore
     @Test
     public void verifyFT88() throws IOException, InterruptedException {
-        /**
-         * Testing GetInboxDetails API with invalid value of callId.
-         */
         // CallId alphanumeric
         HttpGet httpGet = createHttpGet(true, "1234567890", true,
                 "12345678GT12345");
         String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
 
- 		assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
- 				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
- 				ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
  	}
 }
