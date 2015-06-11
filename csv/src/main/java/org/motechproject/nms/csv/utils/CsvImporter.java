@@ -2,6 +2,7 @@ package org.motechproject.nms.csv.utils;
 
 import org.supercsv.cellprocessor.ift.CellProcessor;
 import org.supercsv.io.ICsvReader;
+import org.supercsv.prefs.CsvPreference;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -16,14 +17,10 @@ public abstract class CsvImporter<R extends ICsvReader> implements Closeable {
     private String[] fieldNames;
     private CellProcessor[] processors;
 
-    public void open(Reader reader, Map<String, CellProcessor> processorMapping) throws IOException {
-        open(reader, processorMapping, null);
-    }
-
-    public void open(Reader reader, Map<String, CellProcessor> processorMapping, Map<String, String> fieldNameMapping)
+    public void open(Reader reader, CsvPreference preferences, Map<String, CellProcessor> processorMapping, Map<String, String> fieldNameMapping)
             throws IOException {
         if (null == this.csvReader) {
-            this.csvReader = createCsvReader(reader);
+            this.csvReader = createCsvReader(reader, preferences);
             String[] header = csvReader.getHeader(true);
             this.fieldNames = getFieldNames(header, fieldNameMapping);
             this.processors = getProcessors(header, processorMapping);
@@ -68,16 +65,12 @@ public abstract class CsvImporter<R extends ICsvReader> implements Closeable {
         return processors;
     }
 
-    protected abstract R createCsvReader(Reader reader);
+    protected abstract R createCsvReader(Reader reader, CsvPreference preferences);
 
     private CellProcessor[] getProcessors(String[] header, Map<String, CellProcessor> processorMapping) {
         List<CellProcessor> processorsList = new ArrayList<>(header.length);
         for (String column : header) {
-            if (processorMapping.containsKey(column)) {
-                processorsList.add(processorMapping.get(column));
-            } else {
-                throw new IllegalStateException(String.format("Cell processor for column '%s' not specified", column));
-            }
+            processorsList.add(processorMapping.get(column));
         }
 
         return processorsList.toArray(new CellProcessor[processorsList.size()]);
@@ -87,11 +80,7 @@ public abstract class CsvImporter<R extends ICsvReader> implements Closeable {
         if (null != fieldNameMapping) {
             List<String> fieldNamesList = new ArrayList<>(header.length);
             for (String column : header) {
-                if (fieldNameMapping.containsKey(column)) {
-                    fieldNamesList.add(fieldNameMapping.get(column));
-                } else {
-                    throw new IllegalStateException(String.format("Field name for column '%s' not specified", column));
-                }
+                fieldNamesList.add(fieldNameMapping.get(column));
             }
 
             return fieldNamesList.toArray(new String[fieldNamesList.size()]);
