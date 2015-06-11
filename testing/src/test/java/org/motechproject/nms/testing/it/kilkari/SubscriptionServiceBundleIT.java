@@ -888,7 +888,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     /*
      * To verify that user's subscription should create in pending state
      *
-     * JIRA issue : https://applab.atlassian.net/browse/NMS-201
+     * JIRA issue: https://applab.atlassian.net/browse/NMS-201
      */
     @Ignore
     @Test
