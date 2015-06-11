@@ -824,28 +824,33 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         return httpPost;
     }
 
+    /**
+     * To verify the behavior of Create Subscription Request API if a mandatory
+     * parameter : callingNumber is missing from the API request.
+     */
     @Test
     public void verifyFT65() throws IOException,
             InterruptedException {
-        /**
-         * test CreateSubscription API with Missing Params
-         */
         // callingNumber missing
         HttpPost httpPost = createSubscriptionHttpPost(null, "A", "AP",
                 "123456789012545", "10", "childPack");
 
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Not Present>");
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
-                HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
     }
 
+    /**
+     * To verify the behavior of Create Subscription Request API if a mandatory
+     * parameter : operator is missing from the API request.
+     */
     @Test
     public void verifyFT66() throws IOException, InterruptedException {
-        /**
-         * test CreateSubscription API with Missing Params
-         */
         // operator missing
         HttpPost httpPost = createSubscriptionHttpPost("1234567890", null,
                 "AP",
@@ -853,17 +858,22 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
         String expectedJsonResponse = createFailureResponseJson("<operator: Not Present>");
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
-                HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
     }
 
+    /**
+     * To verify the behavior of Create Subscription Request API if a mandatory
+     * parameter : circle is missing from the API request.
+     */
+    // TODO JIRA issue https://applab.atlassian.net/browse/NMS-194
     @Ignore
     @Test
     public void verifyFT67() throws IOException, InterruptedException {
-        /**
-         * test CreateSubscription API with Missing Params
-         */
         // circle missing
         HttpPost httpPost = createSubscriptionHttpPost("1234567890", "A", null,
                 "123456789012545", "10", "childPack");
@@ -878,11 +888,12 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 EntityUtils.toString(response.getEntity()));
     }
 
+    /**
+     * To verify the behavior of Create Subscription Request API if a mandatory
+     * parameter : callId is missing from the API request.
+     */
     @Test
     public void verifyFT68() throws IOException, InterruptedException {
-        /**
-         * test CreateSubscription API with Missing Params
-         */
         // callId missing
         HttpPost httpPost = createSubscriptionHttpPost("1234567890", "A", "AP",
                 null,
@@ -890,40 +901,50 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
         String expectedJsonResponse = createFailureResponseJson("<callId: Not Present>");
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
-                HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
     }
 
+    /**
+     * To verify the behavior of Create Subscription Request API if a mandatory
+     * parameter : languageLocationCode is missing from the API request.
+     */
     @Test
     public void verifyFT69() throws IOException, InterruptedException {
-        /**
-         * test CreateSubscription API with Missing Params
-         */
         // languageLocationCode missing
         HttpPost httpPost = createSubscriptionHttpPost("1234567890", "A", "AP",
                 "123456789012545", null, "childPack");
-
         String expectedJsonResponse = createFailureResponseJson("<languageLocationCode: Not Present>");
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
-                HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
     }
 
+    /**
+     * To verify the behavior of Create Subscription Request API if a mandatory
+     * parameter : subscriptionPack is missing from the API request.
+     */
     @Test
     public void verifyFT70() throws IOException, InterruptedException {
-        /**
-         * test CreateSubscription API with Missing Params
-         */
         // subscriptionPack missing
         HttpPost httpPost = createSubscriptionHttpPost("1234567890", "A", "AP",
                 "123456789012545", "10", null);
 
         String expectedJsonResponse = createFailureResponseJson("<subscriptionPack: Not Present>");
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
-                HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
     }
 }
