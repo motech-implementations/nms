@@ -1407,13 +1407,14 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertNotNull(languageLocation);
         assertEquals("FLW Language Code", "99", languageLocation.getCode());
     }
+
+    /**
+     * To verify that any DEACTIVATED subscription is not returned in get
+     * subscriber details.
+     */
     @Test
     public void verifyFT183() throws IOException,
             InterruptedException {
-        /**
-         * To verify that any DEACTIVATED subscription is not returned in get
-         * subscriber details.
-         */
         createKilkariTestData();
         Set<String> packs = new HashSet<>();
         packs.add("childPack");
@@ -1437,13 +1438,14 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(expectedJsonResponse,
                 EntityUtils.toString(response.getEntity()));
     }
+
+    /**
+     * NMS_FT_184 To verify that any COMPLETED subscription is not returned in
+     * get subscriber details.
+     */
     @Test
     public void verifyFT184() throws IOException,
             InterruptedException {
-        /**
-         * NMS_FT_184 To verify that any COMPLETED subscription is not returned
-         * in get subscriber details.
-         */
         createKilkariTestData();
         Set<String> packs = new HashSet<>();
         packs.add("childPack");
