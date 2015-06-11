@@ -19,6 +19,10 @@ public interface FrontLineWorkerService {
 
     FrontLineWorker getByContactNumber(Long contactNumber);
 
+    FrontLineWorker getByFlwId(String flwId);
+
+    FrontLineWorker getByMctsFlwId(String mctsFlwId);
+
     List<FrontLineWorker> getRecords();
 
     void update(FrontLineWorker record);
