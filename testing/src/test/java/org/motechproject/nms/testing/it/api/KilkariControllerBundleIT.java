@@ -17,6 +17,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.joda.time.DateTime;
 import org.junit.Ignore;
@@ -831,55 +832,65 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 		httpPost.setEntity(new StringEntity(sb.toString()));
 		return httpPost;
 	}
-	
+
+    /**
+     * NMS_FT_58 To verify the behavior of Create Subscription Request API if
+     * provided beneficiary's callingNumber is not valid : less than 10 digits.
+     */
 	@Test 
     public void verifyFT58()
 			throws IOException, InterruptedException {
-        /**
-         * NMS_FT_58 Testing Create Subscription Request with callingNumber as
-         * invalid value
-         */
 		// Calling Number less than 10 digit
 		HttpPost httpPost = createSubscriptionHttpPost("123456789", "A", "AP",
 				"123456789012545", "10", "childPack");
 
 		String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
-
-		assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
-				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-				ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response
+                .getEntity())));
     }
 
+    /**
+     * To verify the behavior of Create Subscription Request API if provided
+     * beneficiary's callingNumber is not valid : more than 10 digits.
+     */
     @Test
     public void verifyFT59() throws IOException, InterruptedException {
-        /**
-         * NMS_FT_59 Testing Create Subscription Request with callingNumber as
-         * invalid value
-         */
 		// Calling Number more than 10 digit
         HttpPost httpPost = createSubscriptionHttpPost("12345678901", "A",
                 "AP",
 				"123456789012545", "10", "childPack");
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
-		assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
-				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-				ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response
+                .getEntity())));
+        ;
     }
 
+    /**
+     * To verify the behavior of Create Subscription Request API if provided
+     * Subscriber's callingNumber is not valid : Alphanumeric value.
+     */
+    // TODO JIRA issue https://applab.atlassian.net/browse/NMS-197
     @Ignore
     @Test
     public void verifyFT60() throws IOException, InterruptedException {
-        /**
-         * NMS_FT_60 Testing Create Subscription Request with callingNumber as
-         * invalid value
-         */
 		// Calling Number alphanumeric
         HttpPost httpPost = createSubscriptionHttpPost("12345AD890", "A", "AP",
 				"123456789012545", "10", "childPack");
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
-		assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
-				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-				ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response
+                .getEntity())));
 	}
 
 }
