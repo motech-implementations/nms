@@ -17,6 +17,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.joda.time.DateTime;
 import org.junit.Ignore;
@@ -784,14 +785,14 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
                 expectedJsonPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
-    
+
+    /**
+     * To verify the behavior of Save Inbox call Details API if a mandatory
+     * parameter : callingNumber is missing from the API request.
+     */
  	@Test
     public void verifyFT39() throws IOException,
  			InterruptedException {
-		        /**
-         * NMS_FT_39 checking the response of saveInboxCallDetails API when some
-         * of the mandatory parameter is missing
-         */
  		// Missing calling Number
  		HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
  				null, // callingNumber missing
@@ -806,17 +807,20 @@ public class KilkariControllerBundleIT extends BasePaxIT {
  				null)); // content
  		String expectedJsonResponse = createFailureResponseJson("<callingNumber: Not Present>");
 
- 		assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
- 				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
- 				ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
     }
 
+    /**
+     * To verify the behavior of Save Inbox call Details API if a mandatory
+     * parameter : operator is missing from the API request.
+     */
     @Test
     public void verifyFT40() throws IOException, InterruptedException {
-        /**
-         * NMS_FT_40 checking the response of saveInboxCallDetails API when some
-         * of the mandatory parameter is missing
-         */
  		// Missing Operator
         HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
  				1234567890L, // callingNumber
@@ -831,18 +835,22 @@ public class KilkariControllerBundleIT extends BasePaxIT {
  				null)); // content
         String expectedJsonResponse = createFailureResponseJson("<operator: Not Present>");
 
- 		assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
- 				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
- 				ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
     }
 
+    /**
+     * To verify the behavior of Save Inbox call Details API if a mandatory
+     * parameter : circle is missing from the API request.
+     */
+    // TODO JIRA issue https://applab.atlassian.net/browse/NMS-200
     @Ignore
     @Test
     public void verifyFT41() throws IOException, InterruptedException {
-        /**
-         * NMS_FT_41checking the response of saveInboxCallDetails API when some
-         * of the mandatory parameter is missing
-         */
  		// Missing circle
         HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
  				1234567890L, // callingNumber
@@ -857,17 +865,20 @@ public class KilkariControllerBundleIT extends BasePaxIT {
  				null)); // content
         String expectedJsonResponse = createFailureResponseJson("<circle: Not Present>");
 
- 		assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
- 				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
- 				ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
     }
 
+    /**
+     * To verify the behavior of Save Inbox call Details API if a mandatory
+     * parameter : callId is missing from the API request.
+     */
     @Test
     public void verifyFT42() throws IOException, InterruptedException {
-        /**
-         * NMS_FT_42 checking the response of saveInboxCallDetails API when some
-         * of the mandatory parameter is missing
-         */
  		// Missing callId
         HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
  				1234567890L, // callingNumber
@@ -882,17 +893,20 @@ public class KilkariControllerBundleIT extends BasePaxIT {
  				null)); // content
         String expectedJsonResponse = createFailureResponseJson("<callId: Not Present>");
 
- 		assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
- 				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
- 				ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
     }
 
+    /**
+     * To verify the behavior of Save Inbox call Details API if a mandatory
+     * parameter : callStartTime is missing from the API request.
+     */
     @Test
     public void verifyFT43() throws IOException, InterruptedException {
-        /**
-         * NMS_FT_43 checking the response of saveInboxCallDetails API when some
-         * of the mandatory parameter is missing
-         */
  		// Missing callStartTime
         HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
  				1234567890L, // callingNumber
@@ -907,17 +921,20 @@ public class KilkariControllerBundleIT extends BasePaxIT {
  				null)); // content
         String expectedJsonResponse = createFailureResponseJson("<callStartTime: Not Present>");
 
- 		assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
- 				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
- 				ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
     }
 
+    /**
+     * To verify the behavior of Save Inbox call Details API if a mandatory
+     * parameter : callEndTime is missing from the API request.
+     */
     @Test
     public void verifyFT44() throws IOException, InterruptedException {
-        /**
-         * NMS_FT_44 checking the response of saveInboxCallDetails API when some
-         * of the mandatory parameter is missing
-         */
  		// Missing callEndTime
         HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
  				1234567890L, // callingNumber
@@ -932,17 +949,20 @@ public class KilkariControllerBundleIT extends BasePaxIT {
  				null)); // content
         String expectedJsonResponse = createFailureResponseJson("<callEndTime: Not Present>");
 
- 		assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
- 				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
- 				ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
     }
 
+    /**
+     * To verify the behavior of Save Inbox call Details API if a mandatory
+     * parameter : callDurationInPulses is missing from the API request.
+     */
     @Test
     public void verifyFT45() throws IOException, InterruptedException {
-        /**
-         * NMS_FT_45 checking the response of saveInboxCallDetails API when some
-         * of the mandatory parameter is missing
-         */
  		// Missing callDurationInPulses
         HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
  				1234567890L, // callingNumber
@@ -957,17 +977,20 @@ public class KilkariControllerBundleIT extends BasePaxIT {
  				null)); // content
         String expectedJsonResponse = createFailureResponseJson("<callDurationInPulses: Not Present>");
 
- 		assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
- 				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
- 				ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
     }
 
+    /**
+     * To verify the behavior of Save Inbox call Details API if a mandatory
+     * parameter : callStatus is missing from the API request.
+     */
     @Test
     public void verifyFT46() throws IOException, InterruptedException {
-        /**
-         * NMS_FT_46 checking the response of saveInboxCallDetails API when some
-         * of the mandatory parameter is missing
-         */
  		// Missing callStatus
         HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
  				1234567890L, // callingNumber
@@ -982,17 +1005,20 @@ public class KilkariControllerBundleIT extends BasePaxIT {
  				null)); // content
         String expectedJsonResponse = createFailureResponseJson("<callStatus: Not Present>");
 
- 		assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
- 				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
- 				ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
     }
 
+    /**
+     * To verify the behavior of Save Inbox call Details API if a mandatory
+     * parameter : callDisconnectReason is missing from the API request.
+     */
     @Test
     public void verifyFT47() throws IOException, InterruptedException {
-        /**
-         * NMS_FT_47 checking the response of saveInboxCallDetails API when some
-         * of the mandatory parameter is missing
-         */
  		// Missing callDisconnectReason
         HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
  				1234567890L, // callingNumber
@@ -1007,9 +1033,12 @@ public class KilkariControllerBundleIT extends BasePaxIT {
  				null)); // content
         String expectedJsonResponse = createFailureResponseJson("<callDisconnectReason: Not Present>");
 
- 		assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
- 				HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
- 				ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
  	}
 
 }
