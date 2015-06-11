@@ -946,13 +946,15 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         return httpPost;
     }
 
+    /**
+     * To verify the behavior of Save Inbox call Details API if provided
+     * beneficiary's callStartTime is not valid : not in epoch format :
+     * 7/5/2015.
+     */
+    // TODO JIRA issue https://applab.atlassian.net/browse/NMS-199
     @Ignore
     @Test
     public void verifyFT30() throws IOException, InterruptedException {
-        /**
-         * test SaveInboxCallDetails API with InvalidDateFormat
-         */
-
         // Invalid callStartTime not in Epoch format
         HttpPost httpPost = createInboxCallDetailsRequestHttpPost("1234567890", // callingNumber
                 "A", // operator
@@ -973,12 +975,14 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 .getStatusCode());
     }
 
+    /**
+     * To verify the behavior of Save Inbox call Details API if provided
+     * beneficiary's callEndTime is not valid : not in epoch format : 7/5/2015.
+     */
+    // TODO JIRA issue https://applab.atlassian.net/browse/NMS-199
     @Ignore
     @Test
     public void verifyFT31() throws IOException, InterruptedException {
-        /**
-         * test SaveInboxCallDetails API with InvalidDateFormat
-         */
         // Invalid callEndTime not in Epoch format
         HttpPost httpPost = createInboxCallDetailsRequestHttpPost("1234567890", // callingNumber
                 "A", // operator
@@ -999,12 +1003,14 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 .getStatusCode());
     }
 
+    /**
+     * To verify the behavior of Save Inbox call Details API if provided
+     * beneficiary's startTime is not valid : not in epoch format : 7/5/2015.
+     */
+    // TODO JIRA issue https://applab.atlassian.net/browse/NMS-199
     @Ignore
     @Test
     public void verifyFT37() throws IOException, InterruptedException {
-        /**
-         * test SaveInboxCallDetails API with InvalidDateFormat
-         */
         // Invalid content startTime: not in Epoch format
         HttpPost httpPost = createInboxCallDetailsRequestHttpPost("1234567890", // callingNumber
                 "A", // operator
@@ -1032,12 +1038,14 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 .getStatusCode());
     }
 
+    /**
+     * To verify the behavior of Save Inbox call Details API if provided
+     * beneficiary's endTime is not valid : not in epoch format : 7/5/2015.
+     */
+    // TODO JIRA issue https://applab.atlassian.net/browse/NMS-199
     @Ignore
     @Test
     public void verifyFT38() throws IOException, InterruptedException {
-        /**
-         * test SaveInboxCallDetails API with InvalidDateFormat
-         */
         // Invalid content endTime: not in Epoch format
         HttpPost httpPost = createInboxCallDetailsRequestHttpPost("1234567890", // callingNumber
                 "A", // operator
