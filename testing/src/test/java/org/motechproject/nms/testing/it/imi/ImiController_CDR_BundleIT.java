@@ -222,12 +222,11 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
+    /*
+    * To check cdrFileNotification API is rejected in case mandatory parameter filename is missing.
+    */
     @Test
-    public void verifyFT201() throws IOException,
-            InterruptedException, NoSuchAlgorithmException{
-        /*
-        * To check cdrFileNotification API is rejected in case mandatory parameter filename is missing.
-        */
+    public void verifyFT201() throws IOException, InterruptedException, NoSuchAlgorithmException{
         getLogger().debug("cdrFileNotificationAPIRejectedIfOBDFileMissing()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
@@ -252,12 +251,11 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
+    /*
+    * To check cdrFileNotification API is rejected in case mandatory parameter cdrSummary is missing.
+    */
     @Test
-    public void verifyFT202() throws IOException,
-            InterruptedException, NoSuchAlgorithmException{
-        /*
-        * To check cdrFileNotification API is rejected in case mandatory parameter cdrSummary is missing.
-        */
+    public void verifyFT202() throws IOException, InterruptedException, NoSuchAlgorithmException{
         getLogger().debug("cdrFileNotificationAPIRejectedIfCdrSummaryMissing()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
@@ -281,12 +279,11 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
+    /*
+    * To check cdrFileNotification API is rejected in case mandatory parameter cdrDetail is missing.
+    */
     @Test
-    public void verifyFT203() throws IOException,
-            InterruptedException, NoSuchAlgorithmException{
-        /*
-        * To check cdrFileNotification API is rejected in case mandatory parameter cdrDetail is missing.
-        */
+    public void verifyFT203() throws IOException, InterruptedException, NoSuchAlgorithmException{
         getLogger().debug("cdrFileNotificationAPIRejectedIfCdrDetailMissing()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
@@ -310,12 +307,11 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
+    /*
+    * To check cdrFileNotification API is rejected in case filename is  not found in audit records.
+    */
     @Test
-    public void verifyFT204() throws IOException,
-            InterruptedException, NoSuchAlgorithmException{
-        /*
-        * To check cdrFileNotification API is rejected in case filename is  not found in audit records.
-        */
+    public void verifyFT204() throws IOException, InterruptedException, NoSuchAlgorithmException{
         getLogger().debug("cdrFileNotificationAPIRejectedIfOBDFileMissingINAuditRecord()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
@@ -340,12 +336,11 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
+    /*
+    * To check cdrFileNotification API is rejected in case cdrFile is missing inside cdrSummary.
+    */
     @Test
-    public void verifyFT205() throws IOException,
-            InterruptedException, NoSuchAlgorithmException{
-        /*
-        * To check cdrFileNotification API is rejected in case cdrFile is missing inside cdrSummary.
-        */
+    public void verifyFT205() throws IOException, InterruptedException, NoSuchAlgorithmException{
         getLogger().debug("cdrFileNotificationAPIRejectedIfCdrFileMissingInsideCdrSummary()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
@@ -370,12 +365,11 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
+    /*
+    * To check cdrFileNotification API is rejected in case checksum is missing inside cdrSummary.
+    */
     @Test
-    public void verifyFT206() throws IOException,
-            InterruptedException, NoSuchAlgorithmException{
-        /*
-        * To check cdrFileNotification API is rejected in case checksum is missing inside cdrSummary.
-        */
+    public void verifyFT206() throws IOException, InterruptedException, NoSuchAlgorithmException{
         getLogger().debug("cdrFileNotificationAPIRejectedIfChecksumMissingInsideCdrSummary()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
@@ -401,12 +395,11 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
+    /*
+    * To check cdrFileNotification API is rejected in case recordsCount is missing inside cdrSummary.
+    */
     @Test
-    public void verifyFT207() throws IOException,
-            InterruptedException, NoSuchAlgorithmException{
-        /*
-        * To check cdrFileNotification API is rejected in case recordsCount is missing inside cdrSummary.
-        */
+    public void verifyFT207() throws IOException, InterruptedException, NoSuchAlgorithmException{
         getLogger().debug("cdrFileNotificationAPIRejectedIfRecordsCountMissingInsideCdrSummary()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
@@ -432,12 +425,11 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
+    /*
+    * To check cdrFileNotification API is rejected in case cdrFile is missing inside cdrDetail
+    */
     @Test
-    public void verifyFT208() throws IOException,
-            InterruptedException, NoSuchAlgorithmException{
-        /*
-        * To check cdrFileNotification API is rejected in case cdrFile is missing inside cdrDetail
-        */
+    public void verifyFT208() throws IOException, InterruptedException, NoSuchAlgorithmException{
         getLogger().debug("cdrFileNotificationAPIRejectedIfCdrFileMissingInsideCdrDetail()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
@@ -462,12 +454,11 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
+    /*
+    * To check cdrFileNotification API is rejected in case checksum is missing inside cdrDetail.
+    */
     @Test
-    public void verifyFT209() throws IOException,
-            InterruptedException, NoSuchAlgorithmException{
-        /*
-        * To check cdrFileNotification API is rejected in case checksum is missing inside cdrDetail.
-        */
+    public void verifyFT209() throws IOException, InterruptedException, NoSuchAlgorithmException{
         getLogger().debug("cdrFileNotificationAPIRejectedIfChecksumMissingInsideCdrDetail()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
@@ -493,12 +484,11 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
+    /*
+    * To check cdrFileNotification API is rejected in case recordsCount is missing inside cdrDetail.
+    */
     @Test
-    public void verifyFT210() throws IOException,
-            InterruptedException, NoSuchAlgorithmException{
-        /*
-        * To check cdrFileNotification API is rejected in case recordsCount is missing inside cdrDetail.
-        */
+    public void verifyFT210() throws IOException, InterruptedException, NoSuchAlgorithmException{
         getLogger().debug("cdrFileNotificationAPIRejectedIfRecordsCountMissingInsideCdrDetail()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
