@@ -1607,7 +1607,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
      * parameter : callingNumber is missing from the API request.
      */
     @Test
-    public void verifyFT65() throws IOException, InterruptedException {
+    public void verifyFT65() throws IOException,
+            InterruptedException {
         // callingNumber missing
         HttpPost httpPost = createSubscriptionHttpPost(null, "A", "AP",
                 "123456789012545", "10", "childPack");
