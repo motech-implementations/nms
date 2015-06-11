@@ -840,12 +840,14 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         return httpPost;
     }
 
+    /**
+     * To verify the behavior of Save Inbox call Details API if provided
+     * beneficiary's callDurationInPulses is not valid : Alphanumeric value.
+     */
+    // TODO JIRA issue https://applab.atlassian.net/browse/NMS-187
     @Ignore
     @Test
     public void verifyFT32() throws IOException, InterruptedException {
-        /**
-         * test SaveInboxCallDetails API with InvalidParams(AlphaNumeric)
-         */
         // Invalid callDurationInPulses: AlphaNumeric value
         HttpPost httpPost = createInboxCallDetailsRequestHttpPost("1234567890", // callingNumber
                 "A", // operator
@@ -859,17 +861,22 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         );
         String expectedJsonResponse = createFailureResponseJson("<callDurationInPulses: Invalid>");
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
-                HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
     }
 
+    /**
+     * To verify the behavior of Save Inbox call Details API if provided
+     * beneficiary's callStatus is not valid : Alphanumeric value.
+     */
+    // TODO JIRA issue https://applab.atlassian.net/browse/NMS-187
     @Ignore
     @Test
     public void verifyFT33() throws IOException, InterruptedException {
-        /**
-         * test SaveInboxCallDetails API with InvalidParams
-         */
         // Invalid callStatus: AlphaNumeric value
         HttpPost httpPost = createInboxCallDetailsRequestHttpPost("1234567890", // callingNumber
                 "A", // operator
@@ -883,17 +890,22 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         );
         String expectedJsonResponse = createFailureResponseJson("<callStatus: Invalid>");
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
-                HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
     }
 
+    /**
+     * To verify the behavior of Save Inbox call Details API if provided
+     * beneficiary's callDisconnectReason is not valid : Alphanumeric value.
+     */
+    // TODO JIRA issue https://applab.atlassian.net/browse/NMS-187
     @Ignore
     @Test
     public void verifyFT34() throws IOException, InterruptedException {
-        /**
-         * test SaveInboxCallDetails API with InvalidParams
-         */
         // Invalid callDisconnectReason: AlphaNumeric value
         HttpPost httpPost = createInboxCallDetailsRequestHttpPost("1234567890", // callingNumber
                 "A", // operator
@@ -907,9 +919,12 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         );
         String expectedJsonResponse = createFailureResponseJson("<callDisconnectReason: Invalid>");
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
-                HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
     }
 
 }
