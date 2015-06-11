@@ -803,12 +803,13 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         return new HttpGet(sb.toString());
     }
 
+    /**
+     * To verify the behavior of Get Subscriber Details API if a mandatory
+     * parameter : callingNumber is missing from the API request.
+     */
     @Test
     public void verifyFT12() throws IOException,
             InterruptedException {
-        /**
-         * test GetSubscriberDetails API with mandatory params Missing
-         */
         HttpGet httpGet = createGetSubscriberDetailsRequest(null, // callingNumber
                                                                   // missing
                 "A", // operator
@@ -818,11 +819,19 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Not Present>");
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
-                HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
     }
 
+    /**
+     * To verify the behavior of Get Subscriber Details API if a mandatory
+     * parameter : operator is missing from the API request.
+     */
+    // JIRA issue https://applab.atlassian.net/browse/NMS-192
     @Ignore
     @Test
     public void verifyFT13() throws IOException, InterruptedException {
@@ -841,6 +850,10 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
+    /**
+     * To verify the behavior of Get Subscriber Details API if a mandatory
+     * parameter : Circle is missing from the API request.
+     */
     @Test
     public void verifyFT14() throws IOException, InterruptedException {
         /**
@@ -858,11 +871,12 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
+    /**
+     * To verify the behavior of Get Subscriber Details API if a mandatory
+     * parameter : callId is missing from the API request.
+     */
     @Test
     public void verifyFT15() throws IOException, InterruptedException {
-        /**
-         * test GetSubscriberDetails API with mandatory params Missing
-         */
         HttpGet httpGet = createGetSubscriberDetailsRequest("1234567890", // callingNumber
                 "A", // operator
                 "AP", // circle
@@ -871,8 +885,11 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
         String expectedJsonResponse = createFailureResponseJson("<callId: Not Present>");
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
-                HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
     }
 }
