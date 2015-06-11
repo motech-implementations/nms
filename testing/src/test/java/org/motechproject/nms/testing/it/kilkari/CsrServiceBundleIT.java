@@ -111,6 +111,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
     @Before
     public void setupTestData() {
+        testingService.clearDatabase();
+
         rh = new RegionHelper(languageDataService, circleDataService, stateDataService,
                 districtDataService);
 
@@ -118,12 +120,6 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 subscriberDataService, subscriptionPackDataService, languageDataService, circleDataService,
                 stateDataService, districtDataService);
 
-        clearDatabase();
-    }
-
-
-    public void clearDatabase() {
-        testingService.clearDatabase();
         sh.childPack();
         sh.pregnancyPack();
         csrService.buildMessageDurationCache();
@@ -133,12 +129,6 @@ public class CsrServiceBundleIT extends BasePaxIT {
     @Test
     public void testServicePresent() {
         assertTrue(csrService != null);
-    }
-
-
-
-    private Long makeNumber() {
-        return (long) (Math.random() * 9000000000L) + 1000000000L;
     }
 
 
@@ -612,12 +602,13 @@ public class CsrServiceBundleIT extends BasePaxIT {
         assertEquals(DayOfTheWeek.today().nextDay(),retries.get(0).getDayOfTheWeek());
     }
 
+
+    /**
+     * To verify that beneficiary(via mcts import) will be  deactivated if he/she
+     * has MSISDN number added to the DND database.
+     */
     @Test
     public void verifyFT177() {
-        /**
-         * To verify that beneficiary(via mcts import) will be  deactivated if he/she
-         * has MSISDN number added to the DND database.
-         */
 
         Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(14));
 
@@ -643,19 +634,23 @@ public class CsrServiceBundleIT extends BasePaxIT {
         subscription = subscriptionDataService.findBySubscriptionId(subscription.getSubscriptionId());
         assertEquals(SubscriptionStatus.DEACTIVATED, subscription.getStatus());
         assertEquals(DeactivationReason.DO_NOT_DISTURB, subscription.getDeactivationReason());
+    }
 
 
+    /*
+    * NMS_FT_163
+    * To verify 72Weeks Pack created via IVR, shouldn't get deactivated due to reason DND.
+    */
+    @Test
+    public void verifyFT163() {
 
-        /*
-        *NMS_FT_163
-        *To verify 72Weeks Pack created via IVR, shouldn’t get deactivated due to reason DND.
-        */
         Subscription subscription2 = sh.mksub(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
-        csr = new CallSummaryRecordDto(
-                new RequestId(subscription.getSubscriptionId(), "11112233445566"),
-                subscription.getSubscriber().getCallingNumber(),
-                sh.getContentMessageFile(subscription, 0),
-                sh.getWeekId(subscription, 0),
+
+        CallSummaryRecordDto csr = new CallSummaryRecordDto(
+                new RequestId(subscription2.getSubscriptionId(), "11112233445566"),
+                subscription2.getSubscriber().getCallingNumber(),
+                sh.getContentMessageFile(subscription2, 0),
+                sh.getWeekId(subscription2, 0),
                 rh.hindiLanguage().getCode(),
                 rh.delhiCircle().getName(),
                 FinalCallStatus.REJECTED,
@@ -664,16 +659,66 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 3
         );
 
-        eventParams = new HashMap<>();
+        Map<String, Object> eventParams = new HashMap<>();
         eventParams.put(CSR_PARAM_KEY, csr);
-        motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
         csrService.processCallSummaryRecord(motechEvent);
 
         // verify that subscription created via IVR is still Active
         subscription2 = subscriptionDataService.findBySubscriptionId(subscription2.getSubscriptionId());
         assertEquals(SubscriptionStatus.ACTIVE, subscription2.getStatus());
+    }
 
 
+    /**
+     * To check that NMS shall not retry OBD message for which all OBD attempts(1 actual+1 retry) fails with
+     * two message per week configuration.
+     */
+    @Test
+    public void verifyFT142() {
+
+        String timestamp = DateTime.now().toString(TIME_FORMATTER);
+
+        // Create a record in the CallRetry table marked as "retry 1" and verify it is erased from the
+        // CallRetry table
+
+        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(3),
+                SubscriptionPackType.PREGNANCY);
+        String contentFileName = sh.getContentMessageFile(subscription, 0);
+        CallRetry retry = callRetryDataService.create(new CallRetry(
+                subscription.getSubscriptionId(),
+                subscription.getSubscriber().getCallingNumber(),
+                DayOfTheWeek.today(),
+                CallStage.RETRY_1,
+                contentFileName,
+                "XXX",
+                "XXX",
+                "XX",
+                SubscriptionOrigin.MCTS_IMPORT
+        ));
+
+
+        Map<Integer, Integer> callStats = new HashMap<>();
+        CallSummaryRecordDto record = new CallSummaryRecordDto(
+                new RequestId(subscription.getSubscriptionId(), timestamp),
+                subscription.getSubscriber().getCallingNumber(),
+                contentFileName,
+                "XXX",
+                "XXX",
+                "XX",
+                FinalCallStatus.FAILED,
+                callStats,
+                0,
+                5
+        );
+
+        Map<String, Object> eventParams = new HashMap<>();
+        eventParams.put(CSR_PARAM_KEY, record);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
+        csrService.processCallSummaryRecord(motechEvent);
+
+        // There should be no calls to retry since the one above was the last try
+        assertEquals(0, callRetryDataService.count());
     }
 
     //todo: verify multiple days' worth of summary record aggregation
