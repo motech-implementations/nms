@@ -438,7 +438,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
 
     @Test
-    public void verifyFT149_164() {
+    public void verifyFT149() {
 
         String timestamp = DateTime.now().toString(TIME_FORMATTER);
 
