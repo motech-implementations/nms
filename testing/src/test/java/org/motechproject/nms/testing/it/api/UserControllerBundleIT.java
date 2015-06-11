@@ -1,5 +1,19 @@
 package org.motechproject.nms.testing.it.api;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+import javax.inject.Inject;
+
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -28,6 +42,7 @@ import org.motechproject.nms.flw.repository.ServiceUsageDataService;
 import org.motechproject.nms.flw.repository.WhitelistEntryDataService;
 import org.motechproject.nms.flw.repository.WhitelistStateDataService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
+import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
@@ -148,18 +163,14 @@ public class UserControllerBundleIT extends BasePaxIT {
 
     @Before
     public void setupTestData() {
+        testingService.clearDatabase();
+
         rh = new RegionHelper(languageDataService, circleDataService, stateDataService,
                 districtDataService);
 
         sh = new SubscriptionHelper(subscriptionService,
                 subscriberDataService, subscriptionPackDataService, languageDataService, circleDataService,
                 stateDataService, districtDataService);
-    }
-
-
-    @Before
-    public void clearDatabase() {
-        testingService.clearDatabase();
     }
 
 
@@ -170,16 +181,18 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         deployedServiceDataService.create(new DeployedService(rh.delhiState(), Service.KILKARI));
 
-        rh.delhiCircle();
-
         Subscriber subscriber1 = subscriberDataService.create(new Subscriber(1000000000L, rh.hindiLanguage()));
-        Subscriber subscriber2 = subscriberDataService.create(new Subscriber(2000000000L, rh.hindiLanguage()));
-
         subscriptionService.createSubscription(subscriber1.getCallingNumber(), rh.hindiLanguage(),
                 sh.childPack(), SubscriptionOrigin.IVR);
+
+        Subscriber subscriber2 = subscriberDataService.create(new Subscriber(2000000000L, rh.hindiLanguage()));
         subscriptionService.createSubscription(subscriber2.getCallingNumber(), rh.hindiLanguage(),
                 sh.childPack(), SubscriptionOrigin.IVR);
         subscriptionService.createSubscription(subscriber2.getCallingNumber(), rh.hindiLanguage(),
+                sh.pregnancyPack(), SubscriptionOrigin.IVR);
+
+        Subscriber subscriber3 = subscriberDataService.create(new Subscriber(3000000000L, rh.hindiLanguage()));
+        subscriptionService.createSubscription(subscriber3.getCallingNumber(), rh.hindiLanguage(),
                 sh.pregnancyPack(), SubscriptionOrigin.IVR);
     }
 
@@ -615,11 +628,15 @@ public class UserControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testKilkariUserRequestNoLanguage() throws IOException, InterruptedException {
-        createKilkariTestData();
+
+        nationalDefaultLanguageDataService.create(new NationalDefaultLanguage(rh.hindiLanguage()));
+        subscriberDataService.create(new Subscriber(1000000000L));
+
+        rh.newDelhiDistrict();
 
         HttpGet httpGet = createHttpGet(
                 true, "kilkari",        //service
-                true, "3000000000",     //callingNumber
+                true, "1000000000",     //callingNumber
                 true, "OP",             //operator
                 true, rh.delhiCircle().getName(),//circle
                 true, "123456789012345" //callId
@@ -1168,5 +1185,61 @@ public class UserControllerBundleIT extends BasePaxIT {
         Language language = flw.getLanguage();
         assertNotNull(language);
         assertEquals("FLW Language Code", "99", language.getCode());
+    }
+
+
+    /**
+     * To check that Get Subscriber Details API is returning correct
+     * information of subscriber subscribed to both Packs.
+     */
+    @Test
+    public void verifyFT1() throws IOException, InterruptedException {
+        createKilkariTestData();
+        HttpGet httpGet = createHttpGet(
+                true, "kilkari", // service
+                true, "2000000000", // callingNumber- subscribed to both packs
+                true, "OP", // operator
+                true, rh.delhiCircle().getName(), // circle
+                true, "123456789012345" // callId
+        );
+
+        String expectedJsonResponse = createKilkariUserResponseJson(
+                rh.hindiLanguage().getCode(), // defaultLanguageLocationCode
+                rh.hindiLanguage().getCode(), // locationCode
+                null, // allowedLanguageLocationCodes
+                // subscriptionPackList
+                new HashSet<>(Arrays.asList(sh.childPack().getName(), sh.pregnancyPack().getName()))
+        );
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
+    }
+
+
+    /**
+     * To check that Get Subscriber Details API is returning correct information of subscriber subscribed to
+     * pregnancy pack.
+     */
+    @Test
+    public void verifyFT2() throws IOException, InterruptedException {
+        createKilkariTestData();
+        HttpGet httpGet = createHttpGet(
+                true, "kilkari", // service
+                true, "3000000000", // callingNumber- subscribed to pregnancyPack
+                true, "OP", // operator
+                true, rh.delhiCircle().getName(), // circle
+                true, "123456789012345" // callId
+        );
+
+        String expectedJsonResponse = createKilkariUserResponseJson(
+                rh.hindiLanguage().getCode(), // defaultLanguageLocationCode
+                rh.hindiLanguage().getCode(), // locationCode
+                null, // allowedLanguageLocationCodes
+                // subscriptionPackList
+                new HashSet<>(Arrays.asList(sh.pregnancyPack().getName()))
+        );
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 }

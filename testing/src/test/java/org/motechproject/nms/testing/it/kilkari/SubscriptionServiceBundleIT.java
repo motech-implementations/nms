@@ -42,6 +42,7 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
+
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -50,6 +51,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -98,6 +100,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
     @Before
     public void setupTestData() {
+        testingService.clearDatabase();
 
         rh = new RegionHelper(languageDataService, circleDataService, stateDataService,
                 districtDataService);
@@ -107,23 +110,17 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
                 stateDataService, districtDataService);
 
         Subscriber subscriber1 = subscriberDataService.create(new Subscriber(1000000000L));
-        Subscriber subscriber2 = subscriberDataService.create(new Subscriber(2000000000L));
-
         subscriptionService.createSubscription(subscriber1.getCallingNumber(), rh.hindiLanguage(),
                 sh.childPack(), SubscriptionOrigin.IVR);
+
+        Subscriber subscriber2 = subscriberDataService.create(new Subscriber(2000000000L));
         subscriptionService.createSubscription(subscriber2.getCallingNumber(), rh.hindiLanguage(),
                 sh.childPack(), SubscriptionOrigin.IVR);
         subscriptionService.createSubscription(subscriber2.getCallingNumber(), rh.hindiLanguage(),
                 sh.pregnancyPack(), SubscriptionOrigin.IVR);
     }
-    
 
-    @Before
-    public void clearDatabase() {
-        testingService.clearDatabase();
-    }
 
-    
     @Test
     public void testServicePresent() throws Exception {
         assertNotNull(subscriptionService);
@@ -228,6 +225,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         assertNull(subscriber);
     }
 
+
     @Test
     public void testPurgeOldClosedSubscriptionsRemoveSubscriptionLeaveSubscriber() {
 
@@ -287,6 +285,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         subscriptions = subscriber.getSubscriptions();
         assertEquals(1, subscriptions.size());
     }
+
 
     @Test
     public void testServiceFunctional() throws Exception {
@@ -380,6 +379,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         assertEquals(sh.childPack(), subscription.getSubscriptionPack());
     }
 
+
     @Test
     public void testCreateSubscriptionExistingSubscriberDifferentLanguage() throws Exception {
 
@@ -403,6 +403,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         assertEquals(sh.childPack(), subscription.getSubscriptionPack());
     }
 
+
     @Test
     public void testCreateSubscriptionExistingSubscriberWithoutLanguage() throws Exception {
 
@@ -423,6 +424,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         assertEquals(rh.hindiLanguage(), subscriber.getLanguage());
     }
 
+
     @Test
     public void testCreateSubscriptionViaMcts() {
 
@@ -436,6 +438,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
     }
+
 
     @Test
     public void testCreateDuplicateChildSubscriptionViaMcts() {
@@ -457,6 +460,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
     }
 
+
     @Test
     public void testCreateDuplicatePregnancySubscriptionViaMcts() {
 
@@ -476,6 +480,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
     }
+
 
     @Test
     public void testCreateSecondPregnancySubscriptionAfterDeactivationViaMcts() {
@@ -498,6 +503,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
     }
+
 
     @Test
     public void testCreateSubscriptionsToDifferentPacksViaMcts() {
@@ -524,6 +530,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         assertEquals(2, mctsSubscriber.getActiveSubscriptions().size());
     }
+
 
     @Test
     public void testChangeDOB() {
@@ -552,6 +559,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         assert(subscription.getStatus() == SubscriptionStatus.ACTIVE);
     }
 
+
     @Test
     public void testChangeLMP() {
         DateTime now = DateTime.now();
@@ -561,7 +569,8 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         subscriberDataService.create(mctsSubscriber);
 
-        subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
+        subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.pregnancyPack(),
+                SubscriptionOrigin.MCTS_IMPORT);
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
 
         Subscription subscription = mctsSubscriber.getSubscriptions().iterator().next();
@@ -587,6 +596,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         assertEquals(now.minusDays(910), subscription.getStartDate());
         assert(subscription.getStatus() == SubscriptionStatus.COMPLETED);
     }
+
 
     @Test
     public void testGetNextMessageForSubscription() {
@@ -615,6 +625,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         assertEquals("w11_2", message.getWeekId());
     }
 
+
     @Test(expected = IllegalStateException.class)
     public void testGetNextMessageForCompletedSubscription() {
         DateTime now = DateTime.now();
@@ -632,6 +643,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         // should throw IllegalStateException
         SubscriptionPackMessage message = subscription.nextScheduledMessage(now.plusDays(1000));
     }
+
 
     @Test
     public void testActiveSubscriptionsForDay() {
@@ -654,7 +666,9 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         throw new IllegalStateException("Couldn't find our subscription by its start day!");
     }
 
-    // NMS shall allow a subscriber deactivated due to DND restrictions to activate the Testing service again via IVR.
+
+    // NMS shall allow a subscriber deactivated due to DND restrictions to activate the Testing service again
+    // via IVR.
     @Test
     public void verifyIssue182() {
 
@@ -663,19 +677,22 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         subscriber = subscriberDataService.create(subscriber);
 
         // Make a deactivated subscription
-        Subscription subscription = subscriptionService.createSubscription(4444444444L, rh.hindiLanguage(), sh.pregnancyPack(),
-                SubscriptionOrigin.MCTS_IMPORT);
+        Subscription subscription = subscriptionService.createSubscription(4444444444L, rh.hindiLanguage(),
+                sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
         subscriptionService.deactivateSubscription(subscription, DeactivationReason.DO_NOT_DISTURB);
 
         // Now mimick a subscriber calling
-        subscription = subscriptionService.createSubscription(4444444444L, rh.hindiLanguage(), sh.pregnancyPack(), SubscriptionOrigin.IVR);
+        subscription = subscriptionService.createSubscription(4444444444L, rh.hindiLanguage(),
+                sh.pregnancyPack(), SubscriptionOrigin.IVR);
 
         // And check the subscription is now active
         assertEquals(SubscriptionStatus.ACTIVE, subscription.getStatus());
     }
 
+
     @Rule
     public ExpectedException exception = ExpectedException.none();
+
 
     @Test
     public void testDeleteOpenSubscription() {
@@ -685,11 +702,12 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         subscriberDataService.create(mctsSubscriber);
 
         Subscription subscription = subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(),
-                                                                         sh.childPack(), SubscriptionOrigin.MCTS_IMPORT);
+                sh.childPack(), SubscriptionOrigin.MCTS_IMPORT);
 
         exception.expect(JdoListenerInvocationException.class);
         subscriptionDataService.delete(subscription);
     }
+
 
     @Test
     public void testDeleteRecentDeactivateSubscription() {
@@ -707,6 +725,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         subscriptionDataService.delete(subscription);
     }
 
+
     @Test
     public void testDeleteRecentCompletedSubscription() {
 
@@ -722,6 +741,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         exception.expect(JdoListenerInvocationException.class);
         subscriptionDataService.delete(subscription);
     }
+
 
     @Test
     public void testDeleteOldDeactivatedSubscription() {
@@ -742,6 +762,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         assertEquals(1, subscriber.getSubscriptions().size());
     }
 
+
     @Test
     public void testDeleteOldCompletedSubscription() {
 
@@ -760,14 +781,23 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         subscriber = subscriberDataService.findByCallingNumber(2000000000L);
         assertEquals(1, subscriber.getSubscriptions().size());
     }
-    
-    @Test
-    public void verifyFT134() {
-    	/*
-    	 * To check 72Weeks Pack subscription is successfully created when 
-    	 * subscription already exist for 72Weeks Pack with status as "Completed".
-    	 */
 
+    /*
+     * To verify that number of Messages per week shouldn't get configured if invalid value is provided.
+     */
+        @Test(expected=IllegalArgumentException.class)
+    public void verifyFT180() {
+            sh.childPack().setMessagesPerWeek(3);
+    }
+
+
+    /*
+     * To verify LMP is changed successfully and new subscription created
+     * when subscription already exist for 72Weeks Pack having status as "Completed".
+     * Now Added one more assert for updated LMP to cover NMS_FT_134.
+     */
+    @Test
+    public void verifyFT156() {
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
         mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(28));
         subscriberDataService.create(mctsSubscriber);
@@ -775,60 +805,40 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.pregnancyPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
-        mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(610)); // Configuration for subscription completion
+        
+        // mark subscription as complete
+        mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(602));
         subscriberService.update(mctsSubscriber);
 
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
-        mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(28)); // update LMP for new subscription creation
-        subscriberDataService.update(mctsSubscriber);
+        DateTime oldLMP = mctsSubscriber.getLastMenstrualPeriod();
+        assertEquals(1, mctsSubscriber.getSubscriptions().size()); // Completed subscription should be there
+        assertEquals(0, mctsSubscriber.getActiveSubscriptions().size()); // No active subscription
+        
+        DateTime newLMP = DateTime.now().minusDays(100);
+        mctsSubscriber.setLastMenstrualPeriod(newLMP);
+        subscriberService.update(mctsSubscriber);
+        
         // attempt to create subscription to the same pack -- should succeed
         subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.pregnancyPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
 
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+        assertFalse(mctsSubscriber.getLastMenstrualPeriod().equals(oldLMP));
+        assertEquals(mctsSubscriber.getLastMenstrualPeriod(), newLMP);
         assertEquals(2, mctsSubscriber.getSubscriptions().size());
-        assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
+        assertEquals(1, mctsSubscriber.getActiveSubscriptions().size()); // One active subscription
     }
-    
+
+
+    /*
+     * To verify DOB is changed successfully and new subscription created
+     * when subscription already exist for 48Weeks Pack having status as "Deactivated".
+     * Now Added one more assert for updated DOB to cover NMS_FT_132
+     */
     @Test
-    public void verifyFT132() {
-
-    	/*
-    	 * To check 48Weeks Pack subscription is successfully created when 
-    	 * subscription already exist for 48Weeks sPack with status as "Completed".
-    	 */
-    	Subscriber mctsSubscriber = new Subscriber(9999911122L);
-        mctsSubscriber.setDateOfBirth(DateTime.now());
-        subscriberDataService.create(mctsSubscriber);
-
-        subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.childPack(),
-                SubscriptionOrigin.MCTS_IMPORT);
-        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
-        mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(350));  // Configuration for subscription completion
-        subscriberService.update(mctsSubscriber);
-
-        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
-        mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(30)); // update DOB for new subscription creation
-        subscriberDataService.update(mctsSubscriber);
-        
-        // attempt to create subscription to the same pack -- should succeed
-        subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.childPack(),
-                SubscriptionOrigin.MCTS_IMPORT);
-
-        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
-        assertEquals(2, mctsSubscriber.getSubscriptions().size());
-        assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
-    }
-    
-    @Test
-    public void verifyFT133() {
-
-    	/*
-    	 * To check subscription for 48Weeks Pack is successfully created when 
-    	 * subscription  already exist for  48Weeks Pack in state "Deactivated"
-    	 */
-        
-    	Subscriber mctsSubscriber = new Subscriber(9999911122L);
+    public void verifyFT159() {
+        Subscriber mctsSubscriber = new Subscriber(9999911122L);
         mctsSubscriber.setDateOfBirth(DateTime.now());
         subscriberDataService.create(mctsSubscriber);
 
@@ -836,14 +846,63 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
                 SubscriptionOrigin.MCTS_IMPORT);
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         Subscription childSubscription = mctsSubscriber.getActiveSubscriptions().iterator().next();
-        subscriptionService.deactivateSubscription(childSubscription, DeactivationReason.STILL_BIRTH); // Deactivate Subscription
+        childSubscription.setStatus(SubscriptionStatus.DEACTIVATED);
+        subscriptionDataService.update(childSubscription);
+        
+        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+        DateTime oldDob = mctsSubscriber.getDateOfBirth();
+        DateTime newDob = DateTime.now().minusDays(100);
+        mctsSubscriber.setDateOfBirth(newDob);
+        subscriberService.update(mctsSubscriber);
 
         // attempt to create subscription to the same pack -- should succeed
         subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.childPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
 
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+        assertFalse(mctsSubscriber.getDateOfBirth().equals(oldDob));
+        assertEquals(mctsSubscriber.getDateOfBirth(), newDob);
         assertEquals(2, mctsSubscriber.getSubscriptions().size());
         assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
     }
+
+
+    /*
+     * To verify DOB is changed successfully and new subscription created
+     * when subscription already exist for 48Weeks Pack having status as "Completed".
+     * Now Added one more assert for updated DOB to cover NMS_FT_133
+     */
+    @Test
+    public void verifyFT160() {
+
+        Subscriber mctsSubscriber = new Subscriber(9999911122L);
+        mctsSubscriber.setDateOfBirth(DateTime.now());
+        subscriberDataService.create(mctsSubscriber);
+
+        subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.childPack(),
+                SubscriptionOrigin.MCTS_IMPORT);
+        
+        // mark subscription as complete
+        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+        mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(340));
+        subscriberService.update(mctsSubscriber);
+        
+        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+        DateTime oldDob = mctsSubscriber.getDateOfBirth(); 
+        assertEquals(1, mctsSubscriber.getSubscriptions().size());
+        assertEquals(0, mctsSubscriber.getActiveSubscriptions().size()); // No active subscription
+
+        DateTime newDob = DateTime.now().minusDays(100);
+        mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(100));
+        subscriberService.update(mctsSubscriber);
+        // attempt to create subscription to the same pack -- should succeed
+        subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.childPack(),
+                SubscriptionOrigin.MCTS_IMPORT);
+
+        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+        assertFalse(mctsSubscriber.getDateOfBirth().equals(oldDob));
+        assertEquals(mctsSubscriber.getDateOfBirth(), newDob);
+        assertEquals(2, mctsSubscriber.getSubscriptions().size());		 
+    }
+    
 }
