@@ -55,8 +55,21 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
+import javax.inject.Inject;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 
 import javax.inject.Inject;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -113,7 +126,6 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     @Inject
     private InboxCallDataDataService inboxCallDataDataService;
 
-
     public KilkariControllerBundleIT() {
         System.setProperty("org.motechproject.testing.osgi.http.numTries", "1");
     }
@@ -127,33 +139,29 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     public void setupData() {
         testingService.clearDatabase();
 
-        rh = new RegionHelper(languageDataService, circleDataService, stateDataService,
-                districtDataService);
+        rh = new RegionHelper(languageDataService, circleDataService, stateDataService, districtDataService);
 
-        sh = new SubscriptionHelper(subscriptionService,
-                subscriberDataService, subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService);
+        sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
+                languageDataService, circleDataService, stateDataService, districtDataService);
 
+        // subscriber1 subscribed to child pack only
         Subscriber subscriber1 = subscriberDataService.create(new Subscriber(1000000000L));
-        Subscriber subscriber2 = subscriberDataService.create(new Subscriber(2000000000L));
-        Subscriber subscriber3 = subscriberDataService.create(new Subscriber(4000000000L));
-
-        // subscriber1 subscribed to 48 weeks pack only
-
         subscriptionService.createSubscription(subscriber1.getCallingNumber(), rh.hindiLanguage(),
                 sh.childPack(), SubscriptionOrigin.IVR);
 
-        // subscriber2 subscribed to both 48 weeks pack and 72 weeks pack
+        // subscriber2 subscribed to both child & pregnancy pack
+        Subscriber subscriber2 = subscriberDataService.create(new Subscriber(2000000000L));
         subscriptionService.createSubscription(subscriber2.getCallingNumber(), rh.hindiLanguage(),
                 sh.childPack(), SubscriptionOrigin.IVR);
         subscriptionService.createSubscription(subscriber2.getCallingNumber(), rh.hindiLanguage(),
                 sh.pregnancyPack(), SubscriptionOrigin.IVR);
-        // subscriber3 subscribed to 72 weeks pack only
+
+        // subscriber3 subscribed to pregnancy pack only
+        Subscriber subscriber3 = subscriberDataService.create(new Subscriber(4000000000L));
         subscriptionService.createSubscription(subscriber3.getCallingNumber(), rh.hindiLanguage(),
                 sh.pregnancyPack(), SubscriptionOrigin.IVR);
 
         deployedServiceDataService.create(new DeployedService(rh.delhiState(), Service.KILKARI));
-
     }
 
     
@@ -967,10 +975,11 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscriberDataService.create(mctsSubscriber);
 
         // create subscription to child pack for which start date is as per DOB
-        Subscription childPackSubscription = subscriptionService
-                .createSubscription(9999911122L, rh.hindiLanguage(),
-                        sh.childPack(),
-                        SubscriptionOrigin.MCTS_IMPORT);
+        Subscription childPackSubscription = subscriptionService.createSubscription(
+                9999911122L,
+                rh.hindiLanguage(),
+                sh.childPack(),
+                SubscriptionOrigin.MCTS_IMPORT);
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
 
         // due to subscription rules detailed in #157, we need to clear out the
@@ -981,10 +990,11 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscriberDataService.update(mctsSubscriber);
 
         // create subscription to pregnancy pack
-        Subscription pregnancyPackSubscription = subscriptionService
-                .createSubscription(9999911122L, rh.hindiLanguage(),
-                        sh.pregnancyPack(),
-                        SubscriptionOrigin.MCTS_IMPORT);
+        Subscription pregnancyPackSubscription = subscriptionService.createSubscription(
+                9999911122L,
+                rh.hindiLanguage(),
+                sh.pregnancyPack(),
+                SubscriptionOrigin.MCTS_IMPORT);
         // update pregnancy subscription pack to mark complete
         // setting the subscription to have ended more than a week ago -- no
         // message should be returned
@@ -1143,6 +1153,108 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     }
 
 
+    /**
+     * To verify the behavior of Save Inbox call Details API if provided
+     * beneficiary's subscritpionPack is not valid : 12WeeksPack.
+     */
+    @Test
+    public void verifyFT36() throws IOException, InterruptedException {
+        Subscriber subscriber = subscriberDataService.create(new Subscriber(
+                3000000000L));
+        Subscription subscription1 = subscriptionService.createSubscription(
+                subscriber.getCallingNumber(), rh.hindiLanguage(), sh.childPack(),
+                SubscriptionOrigin.IVR);
+        Subscription subscription2 = subscriptionService.createSubscription(
+                subscriber.getCallingNumber(), rh.hindiLanguage(), sh.pregnancyPack(),
+                SubscriptionOrigin.IVR);
+        HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
+                1234567890L, // callingNumber
+                "A", // operator
+                "AP", // circle
+                123456789012345L, // callId
+                123L, // callStartTime
+                456L, // callEndTime
+                123, // callDurationInPulses
+                1, // callStatus
+                1, // callDisconnectReason
+                new HashSet<>(Arrays.asList(
+                        new CallDataRequest(
+                                subscription1.getSubscriptionId(), // subscriptionId
+                                sh.childPack().getName(), // subscriptionPack
+                                "123", // inboxWeekId
+                                "foo", // contentFileName
+                                123L, // startTime
+                                456L), // endTime
+                        new CallDataRequest(
+                                subscription2.getSubscriptionId(), // subscriptionId
+                                "12WeeksPack", // Invalid subscriptionPack
+                                "123", // inboxWeekId
+                                "foo", // contentFileName
+                                123L, // startTime
+                                456L) // endTime
+                        )))); // content
+        String expectedJsonResponse = createFailureResponseJson("<subscriptionPack: Invalid><content: Invalid>");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
+                HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    /**
+     * To verify that Save Inbox call Details API request fails if concerned
+     * subscription doesn't exist for beneficiary.
+     */
+    @Test
+    //TODO: https://applab.atlassian.net/browse/NMS-178
+    @Ignore
+    public void verifyFT185() throws IOException, InterruptedException {
+        // subscribed caller with deactivated subscription i.e no active and
+        // pending subscriptions
+        Subscriber subscriber = subscriberDataService.create(new Subscriber(
+                3000000000L));
+        Subscription subscription1 = subscriptionService.createSubscription(
+                subscriber.getCallingNumber(), rh.hindiLanguage(), sh.childPack(),
+                SubscriptionOrigin.IVR);
+        // deactivate subscription
+        subscriptionService.deactivateSubscription(subscription1,
+                DeactivationReason.DEACTIVATED_BY_USER);
+        HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
+                3000000000L, // callingNumber
+                "A", // operator
+                "AP", // circle
+                123456789012345L, // callId
+                123L, // callStartTime
+                456L, // callEndTime
+                123, // callDurationInPulses
+                1, // callStatus
+                1, // callDisconnectReason
+                new HashSet<>(Arrays.asList(
+                        new CallDataRequest(subscription1.getSubscriptionId(), // subscriptionId
+                                                                               // refer
+                                                                               // deactivated
+                                                                               // subscription
+                                "48WeeksPack", // subscriptionPack
+                                "123", // inboxWeekId
+                                "foo", // contentFileName
+                                123L, // startTime
+                                456L), // endTime
+                        new CallDataRequest(
+                                "ae7681ae-1f3c-4dba-365d-4b26e19f4335", // subscriptionId
+                                                                        // not
+                                                                        // exist
+                                "72WeeksPack", // subscriptionPack
+                                "123", // inboxWeekId
+                                "foo", // contentFileName
+                                123L, // startTime
+                                456L) // endTime
+                        )))); // content
+        String expectedJsonResponse = createFailureResponseJson("<subscriptionId: Invalid><content: Invalid>");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
+                HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+
+    }
+
+
     /*
      * To verify the behavior of  Get Inbox Details API  if provided beneficiary's callId is not valid :
      * more than 15 digits.
@@ -1161,6 +1273,107 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
         assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response.getEntity()))  );
 
+    }
+
+
+    /**
+     * To verify the that Save Inbox call Details API request should not
+     * succeed with content provided for only 1 subscription Pack and not
+     * even a place holder for second Pack details
+     */
+    @Test
+    public void verifyFT35() throws IOException, InterruptedException {
+        // subscriber subscribed to both pack
+        Subscriber subscriber = subscriberDataService.create(new Subscriber(3000000000L));
+        Subscription subscription = subscriptionService.createSubscription(subscriber.getCallingNumber(),
+                rh.hindiLanguage(), sh.childPack(), SubscriptionOrigin.IVR);
+        subscriptionService.createSubscription(subscriber.getCallingNumber(), rh.hindiLanguage(),
+                sh.pregnancyPack(), SubscriptionOrigin.IVR);
+        HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
+                3000000000L, // callingNumber
+                "A", // operator
+                "AP", // circle
+                123456789012345L, // callId
+                123L, // callStartTime
+                456L, // callEndTime
+                123, // callDurationInPulses
+                1, // callStatus
+                1, // callDisconnectReason
+                new HashSet<>(Arrays.asList(new CallDataRequest(subscription
+                        .getSubscriptionId(), // subscriptionId
+                        "48WeeksPack", // subscriptionPack
+                        "123", // inboxWeekId
+                        "foo1.wav", // contentFileName
+                        123L, // startTime
+                        456L))))); // content
+
+        String expectedJsonResponse = createFailureResponseJson("<content: Invalid>");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
+                HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+        // assert inboxCallDetailRecord
+        InboxCallDetailRecord inboxCallDetailRecord = inboxCallDetailsDataService
+                .retrieve("callingNumber", 3000000000L);
+        assertNull(inboxCallDetailRecord);
+    }
+
+
+    /**
+     * To verify that Save Inbox call Details API request should succeed
+     * with content provided for only 1 subscription Pack and place holder
+     * for second Pack also present with no details.
+     */
+    @Test
+    //todo: need JIRA issue #
+    @Ignore
+    public void verifyFT186() throws IOException, InterruptedException {
+        Subscriber subscriber = subscriberDataService.create(new Subscriber(3000000000L));
+        Subscription subscription = subscriptionService.createSubscription(subscriber.getCallingNumber(),
+                rh.hindiLanguage(), sh.childPack(), SubscriptionOrigin.IVR);
+        subscriptionService.createSubscription(subscriber.getCallingNumber(), rh.hindiLanguage(),
+                sh.pregnancyPack(), SubscriptionOrigin.IVR);
+        HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
+                3000000000L, // callingNumber
+                "A", // operator
+                "AP", // circle
+                123456789012345L, // callId
+                123L, // callStartTime
+                456L, // callEndTime
+                123, // callDurationInPulses
+                1, // callStatus
+                1, // callDisconnectReason
+                new HashSet<>(Arrays.asList(
+                        new CallDataRequest(subscription.getSubscriptionId(), // subscriptionId
+                                "48WeeksPack", // subscriptionPack
+                                "123", // inboxWeekId
+                                "foo1.wav", // contentFileName
+                                123L, // startTime
+                                456L), null)))); // place holder for pack2
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+        // assert inboxCallDetailRecord
+        InboxCallDetailRecord inboxCallDetailRecord = inboxCallDetailsDataService
+                .retrieve("callingNumber", 3000000000L);
+        assertTrue(3000000000L == inboxCallDetailRecord.getCallingNumber());
+        assertTrue(123456789012345L == inboxCallDetailRecord.getCallId());
+        assertEquals("A", inboxCallDetailRecord.getOperator());
+        assertEquals("AP", inboxCallDetailRecord.getCircle());
+        assertTrue(123 == inboxCallDetailRecord.getCallDurationInPulses());
+        assertTrue(1 == inboxCallDetailRecord.getCallStatus());
+        assertTrue(1 == inboxCallDetailRecord.getCallDisconnectReason());
+        assertTrue(123L == inboxCallDetailRecord.getCallStartTime().getMillis());
+        assertTrue(456L == inboxCallDetailRecord.getCallEndTime().getMillis());
+
+        // assert inboxCallData for 48WeeksPack
+        InboxCallData inboxCallData48Pack = inboxCallDataDataService.retrieve(
+                "contentFileName", "foo1.wav");
+        assertEquals("foo1.wav", inboxCallData48Pack.getContentFileName());
+        assertTrue(456L == inboxCallData48Pack.getEndTime().getMillis());
+        assertEquals("123", inboxCallData48Pack.getInboxWeekId());
+        assertTrue(123L == inboxCallData48Pack.getStartTime().getMillis());
+        assertEquals(subscription.getSubscriptionId(), inboxCallData48Pack.getSubscriptionId());
+        assertEquals("48WeeksPack", inboxCallData48Pack.getSubscriptionPack());
     }
 
 

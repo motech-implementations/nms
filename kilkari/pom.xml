@@ -25,20 +25,6 @@
             <version>${motech.version}</version>
         </dependency>
 
-        <!-- Repository -->
-        <dependency>
-            <groupId>org.motechproject</groupId>
-            <artifactId>motech-platform-dataservices</artifactId>
-            <version>${motech.version}</version>
-        </dependency>
-
-        <!-- Alerts -->
-        <dependency>
-            <groupId>org.motechproject</groupId>
-            <artifactId>alerts</artifactId>
-            <version>${motech.version}</version>
-        </dependency>
-
         <!-- Scheduler -->
         <dependency>
             <groupId>org.motechproject</groupId>
