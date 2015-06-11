@@ -838,7 +838,6 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
     }
 
-
     /**
      * NMS_FT_75 To check that no message should be returned from inbox after 7 days of user's subscription gets
      * completed for Pregnancy Pack.
@@ -1553,12 +1552,13 @@ public class KilkariControllerBundleIT extends BasePaxIT {
      * To verify the behavior of Get Inbox Details API if provided beneficiary's
      * callId is not valid : less than 15 digits.
      */
-    @Test
-    public void verifyFT86() throws IOException, InterruptedException {
-        // CallId less than 15 digits
-        HttpGet httpGet = createHttpGet(true, "1234567890", true,
-                "12345678901234");
-        String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
+ 	@Test
+    public void verifyFT86() throws IOException,
+ 			InterruptedException {
+ 		// CallId less than 15 digits
+ 		HttpGet httpGet = createHttpGet(true, "1234567890", true,
+ 				"12345678901234");
+ 		String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
                 httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
@@ -1606,5 +1606,5 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 .getStatusCode());
         assertEquals(expectedJsonResponse,
                 EntityUtils.toString(response.getEntity()));
-    }
+ 	}
 }
