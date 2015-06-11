@@ -840,11 +840,12 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         return httpPost;
     }
 
+    /**
+     * To verify the behavior of Save Inbox call Details API if provided
+     * beneficiary's callId is not valid : less than 15 digits.
+     */
     @Test
     public void verifyFT27() throws IOException, InterruptedException {
-        /**
-         * test SaveInboxCallDetails API with Invalid CallId
-         */
         HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
                 1234567890L, // callingNumber
                 "A", // operator
@@ -858,16 +859,20 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 null)); // content
         String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
-                HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
     }
 
+    /**
+     * To verify the behavior of Save Inbox call Details API if provided
+     * beneficiary's callId is not valid : more than 15 digits.
+     */
     @Test
     public void verifyFT28() throws IOException, InterruptedException {
-        /**
-         * test SaveInboxCallDetails API with Invalid CallId
-         */
         HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
                 1234567890L, // callingNumber
                 "A", // operator
@@ -881,17 +886,22 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 null)); // content
         String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
-                HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
     }
 
+    /**
+     * To verify the behavior of Save Inbox call Details API if provided
+     * beneficiary's callId is not valid : Alphanumeric value.
+     */
+    // TODO JIRA issue https://applab.atlassian.net/browse/NMS-187
     @Ignore
     @Test
     public void verifyFT29() throws IOException, InterruptedException {
-        /**
-         * test SaveInboxCallDetails API with Invalid CallId
-         */
         // callId alpha numeric
         HttpPost httpPost = createInboxCallDetailsRequestHttpPost("1234567890", // callingNumber
                 "A", // operator
@@ -906,9 +916,11 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
         String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
-                HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
     }
-
 }
