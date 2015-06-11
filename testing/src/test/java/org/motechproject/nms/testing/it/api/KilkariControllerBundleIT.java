@@ -950,12 +950,12 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         return httpDelete;
     }
 
+    /**
+     * To verify Deactivate Subscription Request API fails if provided
+     * calledNumber has invalid value : less than 10 digits.
+     */
     @Test
     public void verifyFT95() throws IOException, InterruptedException {
-        /**
-         * test DeactivateSubscription API with Invalid Calling Number
-         */
-        setupData();
         Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
         Subscription subscription = subscriber.getActiveSubscriptions()
                 .iterator().next();
@@ -973,12 +973,12 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 .getStatusCode());
     }
 
+    /**
+     * To verify Deactivate Subscription Request API fails if provided
+     * calledNumber has invalid value : more than 10 digits.
+     */
     @Test
     public void verifyFT96() throws IOException, InterruptedException {
-        /**
-         * test DeactivateSubscription API with Invalid Called Number
-         */
-        setupData();
         Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
         Subscription subscription = subscriber.getActiveSubscriptions()
                 .iterator().next();
@@ -997,13 +997,14 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 .getStatusCode());
     }
 
+    /**
+     * To verify the behavior of Deactivate Subscription Request API if provided
+     * Subscriber's callingNumber is not valid : Alphanumeric value.
+     */
+    // TODO JIRA issue https://applab.atlassian.net/browse/NMS-187
     @Ignore
     @Test
     public void verifyFT97() throws IOException, InterruptedException {
-        /**
-         * test DeactivateSubscription API with Invalid Called Number
-         */
-        setupData();
         Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
         Subscription subscription = subscriber.getActiveSubscriptions()
                 .iterator().next();
