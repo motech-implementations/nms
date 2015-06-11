@@ -866,6 +866,25 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 .getStatusCode());
         assertEquals(expectedJsonResponse,
                 EntityUtils.toString(response.getEntity()));
+
+        httpPost = createInboxCallDetailsRequestHttpPost(" ", // callingNumber
+                // blank(single space)
+                "A", // operator
+                "AP", // circle
+                "123456789012345", // callId
+                "456", // callStartTime
+                "785", // callEndTime invalid
+                "123", // callDurationInPulses
+                "1", // callStatus
+                "1" // callDisconnectReason
+        );
+
+        response = SimpleHttpClient.httpRequestAndResponse(httpPost,
+                ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
     }
 
     /**
@@ -895,6 +914,23 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 .getStatusCode());
         assertEquals(expectedJsonResponse,
                 EntityUtils.toString(response.getEntity()));
+
+        httpPost = createInboxCallDetailsRequestHttpPost("1234567890", "A", // operator
+                " ", // circle blank(single space)
+                "123456789012345", // callId
+                "456", // callStartTime
+                "785", // callEndTime invalid
+                "123", // callDurationInPulses
+                "1", // callStatus
+                "1" // callDisconnectReason
+        );
+
+        response = SimpleHttpClient.httpRequestAndResponse(httpPost,
+                ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
     }
 
     /**
@@ -920,6 +956,24 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
                 httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+
+        httpPost = createInboxCallDetailsRequestHttpPost("1234567890", "A", // operator
+                "AP", // circle
+                "123456789012345", // callId
+                "456", // callStartTime
+                "785", // callEndTime invalid
+                "123", // callDurationInPulses
+                "1", // callStatus
+                " " // callDisconnectReason blank(single space)
+        );
+        expectedJsonResponse = createFailureResponseJson("<callDisconnectReason: Not Present>");
+
+        response = SimpleHttpClient.httpRequestAndResponse(httpPost,
+                ADMIN_USERNAME, ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
                 .getStatusCode());
         assertEquals(expectedJsonResponse,
