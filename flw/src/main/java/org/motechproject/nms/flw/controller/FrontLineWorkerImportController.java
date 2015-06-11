@@ -5,7 +5,7 @@ import org.motechproject.alerts.domain.AlertStatus;
 import org.motechproject.alerts.domain.AlertType;
 import org.motechproject.nms.csv.exception.CsvImportException;
 import org.motechproject.nms.flw.service.FrontLineWorkerImportService;
-import org.motechproject.nms.flw.service.FrontLineWorkerUpdateLanguageImportService;
+import org.motechproject.nms.flw.service.FrontLineWorkerUpdateImportService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,20 +29,36 @@ public class FrontLineWorkerImportController {
 
     private FrontLineWorkerImportService frontLineWorkerImportService;
 
-    private FrontLineWorkerUpdateLanguageImportService flwUpdateLanguageImportService;
+    private FrontLineWorkerUpdateImportService flwUpdateImportService;
 
-    @RequestMapping(value = "/updateLanguage", method = RequestMethod.POST)
+    @RequestMapping(value = "/update/language", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
     public void updateFrontLineWorkersLanguage(@RequestParam MultipartFile csvFile) {
         try {
             try (InputStream in = csvFile.getInputStream()) {
-                flwUpdateLanguageImportService.importData(new InputStreamReader(in));
+                flwUpdateImportService.importLanguageData(new InputStreamReader(in));
             }
         } catch (CsvImportException e) {
             logError(e, "front_line_workers_language_import_error", "Front line workers language import error");
             throw e;
         } catch (Exception e) {
             logError(e, "front_line_workers_language_import_error", "Front line workers language import error");
+            throw new CsvImportException("An error occurred during CSV import", e);
+        }
+    }
+
+    @RequestMapping(value = "/update/msisdn", method = RequestMethod.POST)
+    @ResponseStatus(HttpStatus.OK)
+    public void updateFrontLineWorkersMSISDN(@RequestParam MultipartFile csvFile) {
+        try {
+            try (InputStream in = csvFile.getInputStream()) {
+                flwUpdateImportService.importMSISDNData(new InputStreamReader(in));
+            }
+        } catch (CsvImportException e) {
+            logError(e, "front_line_workers_msisdn_import_error", "Front line workers msisdn import error");
+            throw e;
+        } catch (Exception e) {
+            logError(e, "front_line_workers_msisdn_import_error", "Front line workers msisdn import error");
             throw new CsvImportException("An error occurred during CSV import", e);
         }
     }
@@ -79,7 +95,7 @@ public class FrontLineWorkerImportController {
     }
 
     @Autowired
-    public void setFlwUpdateLanguageImportService(FrontLineWorkerUpdateLanguageImportService flwUpdateLanguageImportService) {
-        this.flwUpdateLanguageImportService = flwUpdateLanguageImportService;
+    public void setFlwUpdateImportService(FrontLineWorkerUpdateImportService flwUpdateImportService) {
+        this.flwUpdateImportService = flwUpdateImportService;
     }
 }

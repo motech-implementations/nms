@@ -36,8 +36,8 @@
     <osgi:service ref="frontLineWorkerImportService"
                   interface="org.motechproject.nms.flw.service.FrontLineWorkerImportService" />
 
-    <osgi:service ref="frontLineWorkerUpdateLanguageImportService"
-                  interface="org.motechproject.nms.flw.service.FrontLineWorkerUpdateLanguageImportService" />
+    <osgi:service ref="frontLineWorkerUpdateImportService"
+                  interface="org.motechproject.nms.flw.service.FrontLineWorkerUpdateImportService" />
 
     <osgi:reference id="frontLineWorkerDataService"
                     interface="org.motechproject.nms.flw.repository.FrontLineWorkerDataService" />

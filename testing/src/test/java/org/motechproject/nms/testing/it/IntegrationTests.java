@@ -9,7 +9,7 @@ import org.motechproject.nms.testing.it.api.MobileAcademyControllerBundleIT;
 import org.motechproject.nms.testing.it.api.UserControllerBundleIT;
 import org.motechproject.nms.testing.it.flw.FrontLineWorkerImportServiceBundleIT;
 import org.motechproject.nms.testing.it.flw.FrontLineWorkerServiceBundleIT;
-import org.motechproject.nms.testing.it.flw.FrontLineWorkerUpdateLanguageServiceBundleIT;
+import org.motechproject.nms.testing.it.flw.FrontLineWorkerUpdateImportServiceBundleIT;
 import org.motechproject.nms.testing.it.flw.ServiceUsageCapServiceBundleIT;
 import org.motechproject.nms.testing.it.flw.ServiceUsageServiceBundleIT;
 import org.motechproject.nms.testing.it.flw.WhiteListServiceBundleIT;
@@ -48,7 +48,7 @@ import org.motechproject.nms.testing.it.region.NationalDefaultLanguageLocationBu
     WhiteListServiceBundleIT.class,
     FrontLineWorkerServiceBundleIT.class,
     FrontLineWorkerImportServiceBundleIT.class,
-    FrontLineWorkerUpdateLanguageServiceBundleIT.class,
+    FrontLineWorkerUpdateImportServiceBundleIT.class,
 
     /**
      * IMI
