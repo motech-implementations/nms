@@ -52,12 +52,13 @@ import org.motechproject.nms.testing.it.region.NationalDefaultLanguageLocationBu
 
     /**
      * IMI
+     * https://github.com/motech-implementations/mim/issues/381 (Re-enable)
      */
-    ImiController_CDR_BundleIT.class,
-    ImiController_OBD_BundleIT.class,
-    TargetFileServiceBundleIT.class,
-    CdrFileServiceBundleIT.class,
-    CsrValidatorServiceBundleIT.class,
+    // ImiController_CDR_BundleIT.class,
+    // ImiController_OBD_BundleIT.class,
+    // TargetFileServiceBundleIT.class,
+    // CdrFileServiceBundleIT.class,
+    // CsrValidatorServiceBundleIT.class,
 
     /**
      * Kilkari
