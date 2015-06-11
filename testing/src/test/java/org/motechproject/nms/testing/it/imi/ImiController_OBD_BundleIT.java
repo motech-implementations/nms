@@ -174,13 +174,13 @@ public class ImiController_OBD_BundleIT extends BasePaxIT {
         assertEquals(AlertType.CRITICAL, alerts.get(0).getAlertType());
     }
 
+    /*
+    * Invoke "NotifyFileProcessedStatus" API having mandatory parameter
+    * fileProcessedStatus having invalid value(i.e status code which doesn’t exist in system).
+    */
     @Test
     @Ignore
     public void verifyFT200() throws IOException, InterruptedException {
-        /*
-        * Invoke "NotifyFileProcessedStatus" API having mandatory parameter
-        * fileProcessedStatus having invalid value(i.e status code which doesn’t exist in system).
-        */
         getLogger().debug("testCreateFileProcessedStatusRequestWithInvalidFileProcessedStatusError()");
         String requestJson = "{\"fileProcessedStatus\":\"invalidValue\",\"fileName\":\"file.csv\"}";
         HttpPost httpPost = new HttpPost(String.format(
