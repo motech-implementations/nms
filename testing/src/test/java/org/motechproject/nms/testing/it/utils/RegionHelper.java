@@ -52,140 +52,142 @@ public class RegionHelper {
     }
 
     public State delhiState() {
-        State state = stateDataService.findByCode(1l);
+        State s = stateDataService.findByCode(1l);
 
-        if (state == null) {
-            state = new State();
-            state.setName("National Capital Territory of Delhi");
-            state.setCode(1L);
-            stateDataService.create(state);
+        if (s == null) {
+            s = new State();
+            s.setName("National Capital Territory of Delhi");
+            s.setCode(1L);
+            stateDataService.create(s);
         }
 
-        return state;
+        return s;
     }
 
 
     public State karnatakaState() {
-        State state = stateDataService.findByCode(2l);
+        State s = stateDataService.findByCode(2l);
 
-        if (state == null) {
-            state = new State();
-            state.setName("Karnataka");
-            state.setCode(2L);
-            stateDataService.create(state);
+        if (s == null) {
+            s = new State();
+            s.setName("Karnataka");
+            s.setCode(2L);
+            stateDataService.create(s);
         }
 
-        return state;
+        return s;
     }
 
 
     public District newDelhiDistrict() {
-        District district = districtDataService.findById(1L);
+        District d = districtDataService.findByCode(1L);
 
-        if (district == null) {
-            district = new District();
-            district.setName("New Delhi");
-            district.setRegionalName("New Delhi");
-            district.setCode(1L);
-            district.setState(delhiState());
-            district.setLanguage(hindiLanguage());
-            districtDataService.create(district);
+        if (d == null) {
+            d = new District();
+            d.setName("New Delhi");
+            d.setRegionalName("New Delhi");
+            d.setCode(1L);
+            d.setState(delhiState());
+            d.setLanguage(hindiLanguage());
+            districtDataService.create(d);
         }
 
-        return district;
+        return d;
     }
 
 
     public District southDelhiDistrict() {
-        District district = districtDataService.findById(5L);
+        District d = districtDataService.findByCode(5L);
 
-        if (district == null) {
-            district = new District();
-            district.setName("South Delhi");
-            district.setRegionalName("South Delhi");
-            district.setCode(5L);
-            district.setState(delhiState());
-            district.setLanguage(punjabiLanguage());
-            districtDataService.create(district);
+        if (d == null) {
+            d = new District();
+            d.setName("South Delhi");
+            d.setRegionalName("South Delhi");
+            d.setCode(5L);
+            d.setState(delhiState());
+            d.setLanguage(punjabiLanguage());
+            districtDataService.create(d);
         }
 
-        return district;
+        return d;
     }
 
 
     public District bangaloreDistrict() {
-        District bangalore = districtDataService.findById(4L);
-        if (bangalore == null) {
-            bangalore = new District();
-            bangalore.setName("Bengaluru");
-            bangalore.setRegionalName("Bengaluru");
-            bangalore.setCode(4L);
-            bangalore.setState(karnatakaState());
-            bangalore.setLanguage(tamilLanguage());
-            districtDataService.create(bangalore);
+        District d = districtDataService.findByCode(4L);
+
+        if (d == null) {
+            d = new District();
+            d.setName("Bengaluru");
+            d.setRegionalName("Bengaluru");
+            d.setCode(4L);
+            d.setState(karnatakaState());
+            d.setLanguage(tamilLanguage());
+            districtDataService.create(d);
         }
 
-        return districtDataService.create(bangalore);
+        return d;
     }
 
 
     public District mysuruDistrict() {
-        District district = districtDataService.findById(2L);
-        if (district == null) {
-            district = new District();
-            district.setName("Mysuru");
-            district.setRegionalName("Mysuru");
-            district.setCode(2L);
-            district.setState(karnatakaState());
-            district.setLanguage(kannadaLanguage());
-            districtDataService.create(district);
+        District d = districtDataService.findByCode(2L);
+
+        if (d == null) {
+            d = new District();
+            d.setName("Mysuru");
+            d.setRegionalName("Mysuru");
+            d.setCode(2L);
+            d.setState(karnatakaState());
+            d.setLanguage(kannadaLanguage());
+            districtDataService.create(d);
         }
 
-        return districtDataService.create(district);
+        return d;
     }
 
 
     public Language tamilLanguage() {
-        Language language = languageDataService.findByName("Tamil");
-        if (language != null) {
-            return language;
-        }
-        language = languageDataService.create(new Language("ta", "Tamil"));
+        Language l = languageDataService.findByName("Tamil");
 
-        return language;
+        if (l == null) {
+            l = languageDataService.create(new Language("ta", "Tamil"));
+        }
+
+        return l;
     }
 
 
     public Language kannadaLanguage() {
-        Language language = languageDataService.findByName("Kannada");
-        if (language != null) {
-            return language;
-        }
-        language = languageDataService.create(new Language("kn", "Kannada"));
+        Language l = languageDataService.findByName("Kannada");
 
-        return language;
+        if (l == null) {
+            l = languageDataService.create(new Language("kn", "Kannada"));
+        }
+
+        return l;
     }
 
 
     public Language punjabiLanguage() {
-        Language language = languageDataService.findByName("Punjabi");
-        if (language != null) {
-            return language;
-        }
-        language = languageDataService.create(new Language("pa", "Punjabi"));
+        Language l = languageDataService.findByName("Punjabi");
 
-        return language;
+        if (l == null) {
+            l = languageDataService.create(new Language("pa", "Punjabi"));
+        }
+
+        return l;
     }
 
 
     public Language hindiLanguage() {
-        Language language = languageDataService.findByName("Hindi");
-        if (language != null) {
-            return language;
-        }
-        language = languageDataService.create(new Language("hi", "Hindi"));
+        Language l = languageDataService.findByName("Hindi");
 
-        return language;
+        if (l == null) {
+            l = languageDataService.create(new Language("hi", "Hindi"));
+        }
+
+        return l;
     }
 
     public String airtelOperator()

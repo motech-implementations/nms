@@ -1,19 +1,5 @@
 package org.motechproject.nms.testing.it.api;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.regex.Pattern;
-
-import javax.inject.Inject;
-
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -42,7 +28,6 @@ import org.motechproject.nms.flw.repository.ServiceUsageDataService;
 import org.motechproject.nms.flw.repository.WhitelistEntryDataService;
 import org.motechproject.nms.flw.repository.WhitelistStateDataService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
-import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
@@ -62,6 +47,7 @@ import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.NationalDefaultLanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.service.LanguageService;
 import org.motechproject.nms.testing.it.utils.RegionHelper;
 import org.motechproject.nms.testing.it.utils.SubscriptionHelper;
 import org.motechproject.nms.testing.service.TestingService;
@@ -127,6 +113,9 @@ public class UserControllerBundleIT extends BasePaxIT {
 
     @Inject
     private LanguageDataService languageDataService;
+
+    @Inject
+    private LanguageService languageService;
 
     @Inject
     private StateDataService stateDataService;
@@ -1252,10 +1241,9 @@ public class UserControllerBundleIT extends BasePaxIT {
 
     private void createCircleWithMultipleLanguages() {
 
-        State s = rh.karnatakaState();
-        s.getDistricts().add(rh.mysuruDistrict());
-        s.getDistricts().add(rh.bangaloreDistrict());
-        stateDataService.update(s);
+        rh.karnatakaState();
+        rh.mysuruDistrict();
+        rh.bangaloreDistrict();
 
         Circle c = rh.karnatakaCircle();
         c.setDefaultLanguage(rh.kannadaLanguage());
@@ -1348,6 +1336,9 @@ public class UserControllerBundleIT extends BasePaxIT {
         );
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
-        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
+        String jsonResponse = EntityUtils.toString(response.getEntity());
+        getLogger().debug("expectedJsonResponse: {}", expectedJsonResponse);
+        getLogger().debug("        jsonResponse: {}", jsonResponse);
+        assertEquals(expectedJsonResponse, jsonResponse);
     }
 }
