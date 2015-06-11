@@ -774,14 +774,14 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
     }
 
+    /**
+     * To check NMS is able to make available a single message of current week
+     * in inbox with single message per week configuration . when a) user's
+     * MSISDN is subscribed for 48Weeks Pack. b)user's MSISDN is deactivated for
+     * an old subscription of 48Weeks Pack.
+     **/
     @Test
     public void verifyFT115() throws IOException, InterruptedException {
-        /**
-         * To check NMS is able to make available a single message of current
-         * week in inbox with single message per week configuration . when a)
-         * user's MSISDN is subscribed for 48Weeks Pack. b)user's MSISDN is
-         * deactivated for an old subscription of 48Weeks Pack.
-         **/
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
         // set DOB for old child pack
         mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(180));
@@ -815,14 +815,14 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
+    /**
+     * To check NMS is able to make available a single message of current week
+     * in inbox with single message per week configuration . when a) user's
+     * MSISDN is subscribed for 48Weeks Pack. b)user's MSISDN status is
+     * completed(with in 7 days) for an old subscription of 48Weeks Pack.
+     **/
     @Test
     public void verifyFT116() throws IOException, InterruptedException {
-        /**
-         * To check NMS is able to make available a single message of current
-         * week in inbox with single message per week configuration . when a)
-         * user's MSISDN is subscribed for 48Weeks Pack. b)user's MSISDN status
-         * is completed(with in 7 days) for an old subscription of 48Weeks Pack.
-         **/
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
         // set DOB for old child pack
         mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(180));
