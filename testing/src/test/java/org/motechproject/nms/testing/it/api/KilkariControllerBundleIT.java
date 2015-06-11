@@ -824,50 +824,62 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         return httpPost;
     }
 
-    // NMS_FT_61_62_63
+    /**
+     * To verify the behavior of Create Subscription Request API if provided
+     * beneficiary's callId is not valid : less than 15 digits.
+     */
     @Test
     public void verifyFT61() throws IOException,
             InterruptedException {
-        /**
-         * test CreateSubscription API with Invalid CallId
-         */
-        // callId less than 10 digit
+        // callId less than 15 digit
         HttpPost httpPost = createSubscriptionHttpPost("1234567890", "A", "AP",
                 "12345678901254", "10", "childPack");
 
         String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
-                HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
     }
 
+    /**
+     * To verify the behavior of Create Subscription Request API if provided
+     * beneficiary's callId is not valid : more than 15 digits.
+     */
     @Test
     public void verifyFT62() throws IOException, InterruptedException {
-        /**
-         * test CreateSubscription API with Invalid CallId
-         */
         // callId more than 15 digit
         HttpPost httpPost = createSubscriptionHttpPost("1234567890", "A", "AP",
                 "1234567890125456", "10", "childPack");
         String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
-                HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
     }
 
+    /**
+     * To verify the behavior of Create Subscription Request API if provided
+     * beneficiary's callId is not valid : Alphanumeric value.
+     */
+    // TODO JIRA issue https://applab.atlassian.net/browse/NMS-197
     @Ignore
     @Test
     public void verifyFT63() throws IOException, InterruptedException {
-        /**
-         * test CreateSubscription API with Invalid CallId
-         */
         // callId alphanumeric
         HttpPost httpPost = createSubscriptionHttpPost("1234567890", "A", "AP",
                 "12345678AR12545", "10", "childPack");
         String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
-                HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
     }
 }
