@@ -1,5 +1,18 @@
 package org.motechproject.nms.testing.it.api;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+import javax.inject.Inject;
+
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -55,30 +68,6 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
-import javax.inject.Inject;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.regex.Pattern;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
-
-import javax.inject.Inject;
-
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.regex.Pattern;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Verify that Kilkari API is functional.
@@ -1619,6 +1608,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         Subscription subscription = subscriber.getActiveSubscriptions()
                 .iterator().next();
         String subscriptionId = subscription.getSubscriptionId();
+
         // callingNumber blank
         HttpDeleteWithBody httpDelete = createDeactivateSubscriptionHttpDelete(
                 "", "A", "AP", "123456789012345", subscriptionId);
@@ -1627,6 +1617,17 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
         assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
+
+        // callingNumber blank
+        httpDelete = createDeactivateSubscriptionHttpDelete(" ", "A", "AP",
+                "123456789012345", subscriptionId);
+        response = SimpleHttpClient.httpRequestAndResponse(httpDelete,
+                ADMIN_USERNAME, ADMIN_PASSWORD);
+
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
     }
 
     /**
@@ -1654,5 +1655,19 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 .getStatusCode());
         assertEquals(expectedJsonResponse,
                 EntityUtils.toString(response.getEntity()));
+
+        // circle blank(single space)
+        httpDelete = createDeactivateSubscriptionHttpDelete("1000000000", "A",
+                " ", "123456789012345", subscriptionId);
+
+        response = SimpleHttpClient.httpRequestAndResponse(httpDelete,
+                ADMIN_USERNAME, ADMIN_PASSWORD);
+
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
     }
+    
+
 }
