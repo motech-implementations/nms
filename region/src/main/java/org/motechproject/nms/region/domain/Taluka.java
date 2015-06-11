@@ -7,12 +7,14 @@ import org.motechproject.mds.domain.MdsEntity;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Persistent;
+import javax.jdo.annotations.Unique;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity(tableName = "nms_talukas")
+@Unique(name = "UNIQUE_DISTRICT_CODE", members = { "district", "code" })
 public class Taluka extends MdsEntity {
 
     @Field

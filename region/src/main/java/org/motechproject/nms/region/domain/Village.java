@@ -7,6 +7,7 @@ import org.motechproject.mds.domain.MdsEntity;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Unique;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
@@ -28,7 +29,7 @@ import javax.validation.constraints.Size;
 // TODO: Reenable once https://applab.atlassian.net/browse/MOTECH-1691 is resolved
 //@ValidVillage
 @Entity(tableName = "nms_villages")
-@Unique(name = "uniqueVillageCode", members = {"vcode", "svid" })
+@Unique(name = "UNIQUE_TALUKA_VCODE_SVID", members = { "taluka", "vcode", "svid" })
 public class Village extends MdsEntity {
 
     @Field
@@ -44,13 +45,17 @@ public class Village extends MdsEntity {
     private String regionalName;
 
     @Field
+    @NotNull
+    @Min(0)
     // This is the village code for a census village.  One may be present for a non-census village if it is
     // associated with a census village
-    private Long vcode;
+    private long vcode;
 
     @Field
+    @NotNull
+    @Min(0)
     // This is the village code for a non-census village.
-    private Long svid;
+    private long svid;
 
     @Field
     @Column(allowsNull = "false")
@@ -58,6 +63,8 @@ public class Village extends MdsEntity {
     private Taluka taluka;
 
     public Village() {
+        vcode = 0L;
+        svid = 0L;
     }
 
     public String getName() {
@@ -84,31 +91,31 @@ public class Village extends MdsEntity {
      * @return vcode for a census village.  vcode or svid for a non-census village
      */
     @Ignore
-    public Long getVillageCode() {
-        if (vcode != null) {
+    public long getVillageCode() {
+        if (vcode != 0) {
             return vcode;
         }
 
-        if (svid != null) {
+        if (svid != 0) {
             return svid;
         }
 
-        return null;
+        return 0;
     }
 
-    public Long getVcode() {
+    public long getVcode() {
         return vcode;
     }
 
-    public void setVcode(Long vcode) {
+    public void setVcode(long vcode) {
         this.vcode = vcode;
     }
 
-    public Long getSvid() {
+    public long getSvid() {
         return svid;
     }
 
-    public void setSvid(Long svid) {
+    public void setSvid(long svid) {
         this.svid = svid;
     }
 
@@ -134,18 +141,18 @@ public class Village extends MdsEntity {
         if (name != null ? !name.equals(village.name) : village.name != null) {
             return false;
         }
-        if (vcode != null ? !vcode.equals(village.vcode) : village.vcode != null) {
+        if (vcode != 0 ? vcode != village.vcode : village.vcode != 0) {
             return false;
         }
-        return !(svid != null ? !svid.equals(village.svid) : village.svid != null);
+        return !(svid != 0 ? svid != village.svid : village.svid != 0);
 
     }
 
     @Override
     public int hashCode() {
         int result = name != null ? name.hashCode() : 0;
-        result = 31 * result + (vcode != null ? vcode.hashCode() : 0);
-        result = 31 * result + (svid != null ? svid.hashCode() : 0);
+        result = 31 * result + new Long(vcode).hashCode();
+        result = 31 * result + new Long(svid).hashCode();
         return result;
     }
 
