@@ -17,6 +17,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.joda.time.DateTime;
 import org.junit.Ignore;
@@ -813,11 +814,12 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         return new HttpGet(sb.toString());
     }
 
+    /**
+     * To verify the behavior of Get Subscriber Details API if provided
+     * beneficiary's callId is not valid : less than 15 digits.
+     */
     @Test
     public void verifyFT9() throws IOException, InterruptedException {
-        /**
-         * test GetSubscriberDetails API with Invalid value of CallId
-         */
         HttpGet httpGet = createGetSubscriberDetailsRequest("1234567890", // callingNumber
                 "A", // operator
                 "AP", // circle
@@ -825,43 +827,54 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         );
 
         String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
-
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
-                HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
     }
 
+    /**
+     * To verify the behavior of Get Subscriber Details API if provided
+     * beneficiary's callId is not valid : more than 15 digits.
+     */
     @Test
     public void verifyFT10() throws IOException, InterruptedException {
-        /**
-         * test GetSubscriberDetails API with Invalid value of CallId
-         */
         HttpGet httpGet = createGetSubscriberDetailsRequest("1234567890", // callingNumber
                 "A", // operator
                 "AP", // circle
                 "1234567890123456" // callId more than 15 digits
         );
         String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
-                HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
     }
 
+    /**
+     * To verify the behavior of Get Subscriber Details API if provided
+     * beneficiary's callId is not valid : Alphanumeric value.
+     */
+    // JIRA issue https://applab.atlassian.net/browse/NMS-184
     @Ignore
     @Test
     public void verifyFT11() throws IOException, InterruptedException {
-        /**
-         * test GetSubscriberDetails API with Invalid value of CallId
-         */
         HttpGet httpGet = createGetSubscriberDetailsRequest("1234567890", // callingNumber
                 "A", // operator
                 "AP", // circle
                 "123456789A12345" // callId alpha numeric
         );
         String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
-                HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
 
     }
 }
