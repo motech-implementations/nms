@@ -337,7 +337,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
         SubscriptionHelper sh = new SubscriptionHelper(subscriptionService, subscriberDataService,
                 subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
                 stateDataService, districtDataService);
-        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(3),SubscriptionPackType.CHILD);
+        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(3), SubscriptionPackType.CHILD);
         String contentFileName = sh.getContentMessageFile(subscription, 0);
         CallRetry retry = callRetryDataService.create(new CallRetry(
                 subscription.getSubscriptionId(),
@@ -709,11 +709,11 @@ public class CsrServiceBundleIT extends BasePaxIT {
         assertEquals(DayOfTheWeek.today().nextDay(),retries.get(0).getDayOfTheWeek());
     }
 
+    /*
+    *To verify 72Weeks Pack is marked completed after the Service Pack runs for its scheduled duration.
+    */
     @Test
     public void verifyFT165() {
-        /*
-        *To verify 72Weeks Pack is marked completed after the Service Pack runs for its scheduled duration.
-        */
         String timestamp = DateTime.now().toString(TIME_FORMATTER);
 
         SubscriptionHelper sh = new SubscriptionHelper(subscriptionService, subscriberDataService,
@@ -745,12 +745,12 @@ public class CsrServiceBundleIT extends BasePaxIT {
         assertTrue(SubscriptionStatus.COMPLETED == sub.getStatus());
     }
 
+    /*
+    * To verify 72Weeks Pack is marked completed after the Service Pack runs for its scheduled
+    * duration including one retry.
+    */
     @Test
     public void verifyFT167() {
-        /*
-        * To verify 72Weeks Pack is marked completed after the Service Pack runs for its scheduled
-        * duration including one retry.
-        */
         String timestamp = DateTime.now().toString(TIME_FORMATTER);
 
         SubscriptionHelper sh = new SubscriptionHelper(subscriptionService, subscriberDataService,
@@ -799,13 +799,12 @@ public class CsrServiceBundleIT extends BasePaxIT {
         assertNull(retry);
     }
 
+    /*
+    * To verify 48Weeks Pack is marked completed after the Service Pack runs for its scheduled
+    * duration including one retry.
+    */
     @Test
     public void verifyFT168() {
-        /*
-        * To verify 48Weeks Pack is marked completed after the Service Pack runs for its scheduled
-        * duration including one retry.
-        */
-
         String timestamp = DateTime.now().toString(TIME_FORMATTER);
 
         SubscriptionHelper sh = new SubscriptionHelper(subscriptionService, subscriberDataService,
