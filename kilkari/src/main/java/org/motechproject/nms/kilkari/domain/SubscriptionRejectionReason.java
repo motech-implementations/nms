@@ -7,5 +7,7 @@ public enum SubscriptionRejectionReason {
     INVALID_LOCATION,
     MISSING_DOB,
     MISSING_LMP,
+    INVALID_DOB,
+    INVALID_LMP,
     MISSING_MSISDN;
 }

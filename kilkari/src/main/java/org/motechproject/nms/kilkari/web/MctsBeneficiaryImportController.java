@@ -1,4 +1,4 @@
-package org.motechproject.nms.kilkari.controller;
+package org.motechproject.nms.kilkari.web;
 
 import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.alerts.domain.AlertStatus;

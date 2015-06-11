@@ -74,14 +74,6 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     @Inject
     private DistrictDataService districtDataService;
     @Inject
-    private TalukaDataService talukaDataService;
-    @Inject
-    private VillageDataService villageDataService;
-    @Inject
-    private HealthBlockDataService healthBlockDataService;
-    @Inject
-    private HealthFacilityDataService healthFacilityDataService;
-    @Inject
     private CircleDataService circleDataService;
     @Inject
     private SubscriberDataService subscriberDataService;
@@ -289,15 +281,12 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         District expectedDistrict2 = districtDataService.findByCode(2L);
         District expectedDistrict4 = districtDataService.findByCode(4L);
 
-        Subscriber subscriber1 = subscriberDataService.findByCallingNumber(9556374144L);
-        assertChild(subscriber1, "210202401221400027", getDateTime("3/7/2014"), "FCH", expectedState, expectedDistrict2);
-
-        Subscriber subscriber2 = subscriberDataService.findByCallingNumber(9439998253L);
-        assertChild(subscriber2, "210404600521400116", getDateTime("2/12/2014"), "Baby1 of PANI HEMRAM", expectedState,
+        Subscriber subscriber1 = subscriberDataService.findByCallingNumber(9439998253L);
+        assertChild(subscriber1, "210404600521400116", getDateTime("2/12/2014"), "Baby1 of PANI HEMRAM", expectedState,
                 expectedDistrict4);
 
-        // although our MCTS data file contains 10 children, we only create 9 subscribers due to duplicate phone numbers
-        assertEquals(9, subscriberDataService.count());
+        // although our MCTS data file contains 10 children, we only create 8 subscribers due to duplicate phone numbers
+        assertEquals(8, subscriberDataService.count());
     }
 
     private void assertMother(Subscriber subscriber, String motherId, DateTime lmp, String name, State state, District district) {

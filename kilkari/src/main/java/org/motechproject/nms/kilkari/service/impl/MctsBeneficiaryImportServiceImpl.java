@@ -86,8 +86,11 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     private MctsChildDataService mctsChildDataService;
     private SubscriptionService subscriptionService;
     private SubscriberService subscriberService;
-    private SubscriptionPackDataService subscriptionPackDataService;
     private SubscriptionErrorDataService subscriptionErrorDataService;
+    private SubscriptionPackDataService subscriptionPackDataService;
+
+    private SubscriptionPack pregnancyPack;
+    private SubscriptionPack childPack;
 
     @Autowired
     MctsBeneficiaryImportServiceImpl(StateDataService stateDataService, DistrictDataService districtDataService,
@@ -112,16 +115,18 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         this.subscriptionErrorDataService = subscriptionErrorDataService;
     }
 
-    /*
-        Expected file format:
-        * any number of empty lines
-        * header lines in the following format:  State Name : ACTUAL STATE NAME
-        * one empty line
-        * CSV data (tab-separated)
+    /**
+     * Expected file format:
+     * - any number of empty lines
+     * - header lines in the following format:  State Name : ACTUAL STATE NAME
+     * - one empty line
+     * - CSV data (tab-separated)
      */
     @Override
     @Transactional
     public void importMotherData(Reader reader) throws IOException {
+        pregnancyPack = subscriptionPackDataService.byType(SubscriptionPackType.PREGNANCY);
+
         BufferedReader bufferedReader = new BufferedReader(reader);
         readHeader(bufferedReader); // ignoring header as all interesting data in tab separated rows
 
@@ -144,6 +149,8 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     @Override
     @Transactional
     public void importChildData(Reader reader) throws IOException {
+        childPack = subscriptionPackDataService.byType(SubscriptionPackType.CHILD);
+
         BufferedReader bufferedReader = new BufferedReader(reader);
         readHeader(bufferedReader); // ignoring header as all interesting data in tab separated rows
 
@@ -175,15 +182,14 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             return;
         }
 
-        if (lmp == null) {
-            rejectBeneficiary(msisdn, SubscriptionRejectionReason.MISSING_LMP, SubscriptionPackType.PREGNANCY);
+        if (!validateLMP(lmp, msisdn)) {
             return;
         }
 
         // TODO: more data validation specified in #111
         mother.setName(name);
 
-        processSubscriptionForBeneficiary(mother, msisdn, lmp, SubscriptionPackType.PREGNANCY);
+        processSubscriptionForBeneficiary(mother, msisdn, lmp, pregnancyPack);
     }
 
 
@@ -200,8 +206,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             return;
         }
 
-        if (dob == null) {
-            rejectBeneficiary(msisdn, SubscriptionRejectionReason.MISSING_DOB, SubscriptionPackType.CHILD);
+        if (!validateDOB(dob, msisdn)) {
             return;
         }
         // TODO: more data validation specified in #111
@@ -209,60 +214,86 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         child.setName(name);
         child.setMother(mother);
 
-        processSubscriptionForBeneficiary(child, msisdn, dob, SubscriptionPackType.CHILD);
+        processSubscriptionForBeneficiary(child, msisdn, dob, childPack);
     }
 
+    private boolean validateLMP(DateTime lmp, Long msisdn) {
+        if (lmp == null) {
+            rejectBeneficiary(msisdn, SubscriptionRejectionReason.MISSING_LMP, SubscriptionPackType.PREGNANCY);
+            return false;
+        }
+        if (!pregnancyPack.isReferenceDateValidForPack(lmp)) {
+            rejectBeneficiary(msisdn, SubscriptionRejectionReason.INVALID_LMP, SubscriptionPackType.PREGNANCY);
+            return false;
+        }
+
+        return true;
+    }
+
+    private boolean validateDOB(DateTime dob, Long msisdn) {
+        if (dob == null) {
+            rejectBeneficiary(msisdn, SubscriptionRejectionReason.MISSING_DOB, SubscriptionPackType.CHILD);
+            return false;
+        }
+        if (!childPack.isReferenceDateValidForPack(dob)) {
+            rejectBeneficiary(msisdn, SubscriptionRejectionReason.INVALID_DOB, SubscriptionPackType.CHILD);
+            return false;
+        }
+
+        return true;
+    }
 
     private void processSubscriptionForBeneficiary(MctsBeneficiary beneficiary, Long msisdn, DateTime referenceDate,
-                                                  SubscriptionPackType type) {
+                                                  SubscriptionPack pack) {
         Language language = beneficiary.getDistrict().getLanguage();
-        SubscriptionPack pack = subscriptionPackDataService.byType(type);
         Subscriber subscriber = subscriberService.getSubscriber(msisdn);
 
         if (subscriber == null) {
             // there's no subscriber with this MSISDN, create one
 
             subscriber = new Subscriber(msisdn, language);
-            subscriber = updateSubscriber(subscriber, beneficiary, referenceDate, type);
+            subscriber = updateSubscriber(subscriber, beneficiary, referenceDate, pack.getType());
             subscriberService.create(subscriber);
+            subscriptionService.createSubscription(msisdn, language, pack, SubscriptionOrigin.MCTS_IMPORT);
 
-        } else if (subscriptionService.subscriberHasActiveSubscription(subscriber, type)) {
+            return;
+        }
+
+        if (subscriptionService.subscriberHasActiveSubscription(subscriber, pack.getType())) {
             // subscriber already has an active subscription to this pack
 
-            MctsBeneficiary existingBeneficiary = (type == SubscriptionPackType.PREGNANCY) ? subscriber.getMother() :
+            MctsBeneficiary existingBeneficiary = (pack.getType() == SubscriptionPackType.PREGNANCY) ? subscriber.getMother() :
                     subscriber.getChild();
 
             if (existingBeneficiary == null) {
                 // there's already an IVR-originated subscription for this MSISDN
-                rejectBeneficiary(msisdn, SubscriptionRejectionReason.ALREADY_SUBSCRIBED, type);
+                rejectBeneficiary(msisdn, SubscriptionRejectionReason.ALREADY_SUBSCRIBED, pack.getType());
 
                 // TODO: Do we just reject the subscription request, or do we update the subscriber record with MCTS data?
                 // TODO: Should we change the subscription start date based on the provided LMP/DOB?
 
             } else if (existingBeneficiary.getBeneficiaryId() != beneficiary.getBeneficiaryId()) {
                 // if the MCTS ID doesn't match (i.e. there are two beneficiaries with the same phone number), reject the import
-                rejectBeneficiary(msisdn, SubscriptionRejectionReason.ALREADY_SUBSCRIBED, type);
+                rejectBeneficiary(msisdn, SubscriptionRejectionReason.ALREADY_SUBSCRIBED, pack.getType());
             } else {
                 // it's the same beneficiary, treat this import as an update
-                subscriber = updateSubscriber(subscriber, beneficiary, referenceDate, type);
+                subscriber = updateSubscriber(subscriber, beneficiary, referenceDate, pack.getType());
                 subscriberService.update(subscriber);
             }
 
             return;
-        } else {
-            // subscriber exists, but doesn't have a subscription to this pack
-            subscriber = updateSubscriber(subscriber, beneficiary, referenceDate, type);
-            subscriberService.update(subscriber);
         }
 
+        // subscriber exists, but doesn't have a subscription to this pack
+        subscriber = updateSubscriber(subscriber, beneficiary, referenceDate, pack.getType());
+        subscriberService.update(subscriber);
         subscriptionService.createSubscription(msisdn, language, pack, SubscriptionOrigin.MCTS_IMPORT);
-
     }
 
 
     private Subscriber updateSubscriber(Subscriber subscriber, MctsBeneficiary beneficiary, DateTime referenceDate,
-                                        SubscriptionPackType type) {
-        if (type == SubscriptionPackType.PREGNANCY) {
+                                        SubscriptionPackType packType) {
+        if (packType == SubscriptionPackType.PREGNANCY) {
             subscriber.setLastMenstrualPeriod(referenceDate);
             subscriber.setMother((MctsMother) beneficiary);
         } else {

@@ -55,7 +55,7 @@ public class SubscriberServiceImpl implements SubscriberService {
         while (subscriptionIterator.hasNext()) {
             subscription = subscriptionIterator.next();
 
-            if (subscription.getSubscriptionPack().getType() == SubscriptionPackType.PREGNANCY)  {
+            if (subscription.getSubscriptionPack().getType() == SubscriptionPackType.PREGNANCY) {
 
                 subscriptionService.updateStartDate(subscription, subscriber.getLastMenstrualPeriod());
 
