@@ -953,12 +953,12 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         return httpDelete;
     }
 
+    /**
+     * To verify the behavior of Deactivate Subscription Request API if provided
+     * beneficiary's callId is not valid : less than 15 digits.
+     */
     @Test
     public void verifyFT98() throws IOException, InterruptedException {
-        /**
-         * test Deactivate Subscription API with Invalid CallId
-         */
-        setupData();
         Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
         Subscription subscription = subscriber.getActiveSubscriptions()
                 .iterator().next();
@@ -967,18 +967,20 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         HttpDeleteWithBody httpDelete = createDeactivateSubscriptionHttpDelete(
                 "1000000000", "A", "AP", "12345678901234", subscriptionId);
         String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
-
-        assertTrue(SimpleHttpClient.execHttpRequest(httpDelete,
-                HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpDelete, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
     }
 
+    /**
+     * To verify the behavior of Deactivate Subscription Request API if provided
+     * beneficiary's callId is not valid : more than 15 digits.
+     */
     @Test
     public void verifyFT99() throws IOException, InterruptedException {
-        /**
-         * test Deactivate Subscription API with Invalid CallId
-         */
-        setupData();
         Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
         Subscription subscription = subscriber.getActiveSubscriptions()
                 .iterator().next();
@@ -987,18 +989,22 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         HttpDeleteWithBody httpDelete = createDeactivateSubscriptionHttpDelete(
                 "1000000000", "A", "AP", "1234567890123455", subscriptionId);
         String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
-        assertTrue(SimpleHttpClient.execHttpRequest(httpDelete,
-                HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpDelete, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
     }
 
+    /**
+     * To verify the behavior of Deactivate Subscription Request API if provided
+     * beneficiary's callId is not valid : Alphanumeric value.
+     */
+    // TODO JIRA issue https://applab.atlassian.net/browse/NMS-187
     @Ignore
     @Test
     public void verifyFT100() throws IOException, InterruptedException {
-        /**
-         * test Deactivate Subscription API with Invalid CallId
-         */
-        setupData();
         Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
         Subscription subscription = subscriber.getActiveSubscriptions()
                 .iterator().next();
@@ -1010,9 +1016,9 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
                 httpDelete, ADMIN_USERNAME, ADMIN_PASSWORD);
-        assertEquals(expectedJsonResponse,
-                EntityUtils.toString(response.getEntity()));
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
                 .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
     }
 }
