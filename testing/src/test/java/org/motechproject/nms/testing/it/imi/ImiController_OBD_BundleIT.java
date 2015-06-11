@@ -173,14 +173,14 @@ public class ImiController_OBD_BundleIT extends BasePaxIT {
         assertEquals(AlertType.CRITICAL, alerts.get(0).getAlertType());
     }
 
+    /*
+    * NMS_FT_193 :To check "NotifyFileProcessedStatus" API is rejected in case the file could not
+    * be copied or the file is not available.
+    * NMS_FT_194 : To check "NotifyFileProcessedStatus" API is rejected in case there is an error in checksum
+    * NMS_FT_195 : To check "NotifyFileProcessedStatus" API is rejected in case there is an error in records check.
+    */
     @Test
     public void verifyFT193_194_195() throws IOException, InterruptedException {
-        /*
-        * To check "NotifyFileProcessedStatus" API is rejected in case the file could not
-        * be copied or the file is not available.
-        * NMS_FT_194 : To check "NotifyFileProcessedStatus" API is rejected in case there is an error in checksum
-        * NMS_FT_195 : To check "NotifyFileProcessedStatus" API is rejected in case there is an error in records check. 
-        */
         getLogger().debug("testCreateFileProcessedStatusRequestWithErrorFILE_NOT_ACCESSIBLE()");
         HttpPost httpPost = createFileProcessedStatusHttpPost("file.csv",
                 FileProcessedStatus.FILE_NOT_ACCESSIBLE);
