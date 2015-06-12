@@ -34,7 +34,7 @@ import java.util.Set;
 public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportService {
 
     public static final String ID = "ID";
-    public static final String CONTACT_NO ="Contact_No";
+    public static final String CONTACT_NO = "Contact_No";
     public static final String NAME = "Name";
     public static final String DISTRICT_ID = "District_ID";
 

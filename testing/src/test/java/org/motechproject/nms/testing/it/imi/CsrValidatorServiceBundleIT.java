@@ -6,13 +6,9 @@ import org.joda.time.format.DateTimeFormatter;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.nms.imi.exception.InvalidCsrException;
-import org.motechproject.nms.imi.repository.FileAuditRecordDataService;
 import org.motechproject.nms.imi.service.CdrFileService;
 import org.motechproject.nms.imi.service.CsrValidatorService;
-import org.motechproject.nms.imi.service.SettingsService;
-import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
@@ -44,9 +40,6 @@ public class CsrValidatorServiceBundleIT extends BasePaxIT {
     CsrValidatorService csrValidatorService;
 
     @Inject
-    private SettingsService settingsService;
-
-    @Inject
     private SubscriptionService subscriptionService;
 
     @Inject
@@ -59,12 +52,6 @@ public class CsrValidatorServiceBundleIT extends BasePaxIT {
     private LanguageDataService languageDataService;
 
     @Inject
-    private CallRetryDataService callRetryDataService;
-
-    @Inject
-    private AlertService alertService;
-
-    @Inject
     CdrFileService cdrFileService;
 
     @Inject
@@ -75,9 +62,6 @@ public class CsrValidatorServiceBundleIT extends BasePaxIT {
 
     @Inject
     private DistrictDataService districtDataService;
-
-    @Inject
-    private FileAuditRecordDataService fileAuditRecordDataService;
 
     @Inject
     TestingService testingService;
