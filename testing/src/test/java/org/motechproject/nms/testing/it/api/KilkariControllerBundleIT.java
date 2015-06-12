@@ -1552,35 +1552,6 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
-    // This method is a utility method for running the test cases. this is
-    // already used in the branch NMS.FT.6.7.8
-    private HttpGet createGetSubscriberDetailsRequest(String callingNumber,
-            String operator, String circle, String callId) {
-
-        StringBuilder sb = new StringBuilder(String.format(
-                "http://localhost:%d/api/kilkari/user?",
-                TestContext.getJettyPort()));
-        String sep = "";
-        if (callingNumber != null) {
-            sb.append(String.format("callingNumber=%s", callingNumber));
-            sep = "&";
-        }
-        if (operator != null) {
-            sb.append(String.format("%soperator=%s", sep, operator));
-            sep = "&";
-        }
-        if (circle != null) {
-            sb.append(String.format("%scircle=%s", sep, circle));
-            sep = "&";
-        }
-        if (callId != null) {
-            sb.append(String.format("%scallId=%s", sep, callId));
-            sep = "&";
-        }
-
-        return new HttpGet(sb.toString());
-    }
-
     /**
      * To verify the behavior of Get Subscriber Details API if a mandatory
      * parameter : callingNumber is missing from the API request.
