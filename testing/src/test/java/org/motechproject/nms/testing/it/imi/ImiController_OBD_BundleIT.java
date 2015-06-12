@@ -178,6 +178,6 @@ public class ImiController_OBD_BundleIT extends BasePaxIT {
 
         String expectedJsonResponse = createFailureResponseJson("<fileProcessedStatus: Invalid Value>");
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+                ImiTestHelper.ADMIN_USERNAME, ImiTestHelper.ADMIN_PASSWORD));
     }
 }
