@@ -1561,4 +1561,94 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
                 expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
-}
+    /**
+     * To check NMS is able to make available a single message of current week
+     * in inbox with single message per week configuration . when:
+     * a) user's MSISDN is subscribed for pregnancy Pack.
+     * b)user's MSISDN is deactivated for an old subscription of child Pack.
+     **/
+    @Test
+    public void verifyFT111() throws IOException, InterruptedException {
+        //update pregnancy pack to 1 message/week
+        sh.pregnancyPackFor1MessagePerWeek(subscriptionPackMessageDataService);
+
+        Subscriber mctsSubscriber = new Subscriber(9999911122L);
+        // set DOB for old child pack
+        mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(100));
+        mctsSubscriber.setLastMenstrualPeriod(null);
+        subscriberDataService.create(mctsSubscriber);
+
+        // create subscription for child pack and deactivate it
+        Subscription oldSubscription = subscriptionService.createSubscription(
+                9999911122L, rh.hindiLanguage(), sh.childPack(),
+                SubscriptionOrigin.MCTS_IMPORT);
+        subscriptionService.deactivateSubscription(oldSubscription,
+                DeactivationReason.DEACTIVATED_BY_USER);
+
+        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+
+        // create new subscription for pregnancy pack in Active state such that
+        // next OBD date falls on current date
+        mctsSubscriber.setDateOfBirth(null);
+        mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(90));
+        subscriberDataService.update(mctsSubscriber);
+        Subscription newSubscription = subscriptionService.createSubscription(
+                9999911122L, rh.hindiLanguage(), sh.pregnancyPack(),
+                SubscriptionOrigin.MCTS_IMPORT);
+
+        String expectedJsonResponse = "{\"inboxSubscriptionDetailList\":[{\"subscriptionId\":\""
+                + newSubscription.getSubscriptionId()
+                + "\",\"subscriptionPack\":\"pregnancyPack\",\"inboxWeekId\":\"w1_1\",\"contentFileName\":\"w1_1.wav\"}]}";
+
+        HttpGet httpGet = createHttpGet(true, "9999911122", true,
+                "123456789012345");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
+                expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    /**
+     * To check NMS is able to make available a single message of current week
+     * in inbox with single message per week configuration . when: 
+     * a) user's MSISDN is subscribed for Pregnancy Pack.
+     * b)user's MSISDN status is completed for an old subscription of child Pack.
+     **/
+    @Test
+    public void verifyFT112() throws IOException, InterruptedException {
+        //update pregnancy pack to 1 message/week
+        sh.pregnancyPackFor1MessagePerWeek(subscriptionPackMessageDataService);
+
+        Subscriber mctsSubscriber = new Subscriber(9999911122L);
+        // set DOB for old child pack
+        mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(100));
+        mctsSubscriber.setLastMenstrualPeriod(null);
+        subscriberDataService.create(mctsSubscriber);
+
+        // create subscription for child pack and complete it more than a week
+        // ago
+        Subscription oldSubscription = subscriptionService.createSubscription(
+                9999911122L, rh.hindiLanguage(), sh.childPack(),
+                SubscriptionOrigin.MCTS_IMPORT);
+        subscriptionService.updateStartDate(oldSubscription, DateTime.now()
+                .minusDays(344));
+
+        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+
+        // create new subscription for pregnancy pack in Active state such that
+        // next OBD date falls on current date
+        mctsSubscriber.setDateOfBirth(null);
+        mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(90));
+        subscriberDataService.update(mctsSubscriber);
+        Subscription newSubscription = subscriptionService.createSubscription(
+                9999911122L, rh.hindiLanguage(), sh.pregnancyPack(),
+                SubscriptionOrigin.MCTS_IMPORT);
+
+        String expectedJsonResponse = "{\"inboxSubscriptionDetailList\":[{\"subscriptionId\":\""
+                + newSubscription.getSubscriptionId()
+                + "\",\"subscriptionPack\":\"pregnancyPack\",\"inboxWeekId\":\"w1_1\",\"contentFileName\":\"w1_1.wav\"}]}";
+
+        HttpGet httpGet = createHttpGet(true, "9999911122", true,
+                "123456789012345");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
+                expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+ }
