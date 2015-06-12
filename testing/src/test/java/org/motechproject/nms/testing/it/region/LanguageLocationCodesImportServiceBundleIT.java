@@ -29,7 +29,9 @@ import java.util.Collections;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.motechproject.nms.testing.it.utils.LocationDataUtils.*;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createDistrict;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createState;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createCircle;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerSuite.class)
@@ -38,7 +40,6 @@ public class LanguageLocationCodesImportServiceBundleIT extends BasePaxIT {
 
     @Inject
     private TestingService testingService;
-
     @Inject
     private LanguageDataService languageDataService;
     @Inject
@@ -47,7 +48,6 @@ public class LanguageLocationCodesImportServiceBundleIT extends BasePaxIT {
     private DistrictDataService districtDataService;
     @Inject
     private CircleDataService circleDataService;
-
     @Inject
     private LanguageLocationImportService languageLocationImportService;
 

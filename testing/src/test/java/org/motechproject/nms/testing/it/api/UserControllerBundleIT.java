@@ -1,19 +1,5 @@
 package org.motechproject.nms.testing.it.api;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.regex.Pattern;
-
-import javax.inject.Inject;
-
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -42,7 +28,6 @@ import org.motechproject.nms.flw.repository.ServiceUsageDataService;
 import org.motechproject.nms.flw.repository.WhitelistEntryDataService;
 import org.motechproject.nms.flw.repository.WhitelistStateDataService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
-import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
@@ -62,6 +47,7 @@ import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.NationalDefaultLanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.service.LanguageService;
 import org.motechproject.nms.testing.it.utils.RegionHelper;
 import org.motechproject.nms.testing.it.utils.SubscriptionHelper;
 import org.motechproject.nms.testing.service.TestingService;
@@ -127,6 +113,9 @@ public class UserControllerBundleIT extends BasePaxIT {
 
     @Inject
     private LanguageDataService languageDataService;
+
+    @Inject
+    private LanguageService languageService;
 
     @Inject
     private StateDataService stateDataService;
@@ -195,6 +184,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         subscriptionService.createSubscription(subscriber3.getCallingNumber(), rh.hindiLanguage(),
                 sh.pregnancyPack(), SubscriptionOrigin.IVR);
     }
+
 
 
     private void createFlwCappedServiceNoUsageNoLocationNoLanguage() {
@@ -1241,5 +1231,114 @@ public class UserControllerBundleIT extends BasePaxIT {
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
         assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
+    }
+
+
+    private void createNationalDefaultLanguageForKilkari() {
+        nationalDefaultLanguageDataService.create(new NationalDefaultLanguage(rh.hindiLanguage()));
+    }
+
+
+    private void createCircleWithMultipleLanguages() {
+
+        rh.karnatakaState();
+        rh.mysuruDistrict();
+        rh.bangaloreDistrict();
+
+        Circle c = rh.karnatakaCircle();
+        c.setDefaultLanguage(rh.kannadaLanguage());
+        circleDataService.update(c);
+
+        deployedServiceDataService.create(new DeployedService(rh.karnatakaState(), Service.KILKARI));
+    }
+
+
+    @Test
+    public void verifyFT3() throws IOException, InterruptedException {
+        /**
+         * To get the details of the Subscriber identified by the callingNumber
+         * when Subscriber has called first time to subscribe and LLC for
+         * identified circle is not available.
+         */
+        createKilkariTestData();
+        createNationalDefaultLanguageForKilkari();
+        HttpGet httpGet = createHttpGet(
+                true, "kilkari", // service
+                true, "1000000011", // callingNumber- first time caller
+                true, "OP", // operator
+                true, rh.delhiCircle().getName(), // circle
+                true, "123456789012345" // callId
+        );
+        // defaultLanguageLocationCode== national default language location
+        String expectedJsonResponse = createKilkariUserResponseJson(
+                rh.hindiLanguage().getCode(), // defaultLanguageLocationCode
+                null, // locationCode
+                Arrays.asList(rh.hindiLanguage().getCode()), // allowedLanguageLocationCodes
+                new HashSet<String>() // subscriptionPackList
+        );
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
+    }
+
+
+    /**
+     * To get the details of the Subscriber identified by the callingNumber
+     * when Subscriber has called first time to subscribe and circle is not
+     * available or not identified.
+     */
+    @Test
+    public void verifyFT4() throws IOException, InterruptedException {
+        createKilkariTestData();
+        createNationalDefaultLanguageForKilkari();
+        HttpGet httpGet = createHttpGet(
+                true, "kilkari", // service
+                true, "1000000012", // callingNumber- first time caller
+                true, "OP", // operator
+                true, "99", // Unknown circle
+                true, "123456789012345" // callId
+        );
+        // defaultLanguageLocationCode== national default language location
+        String expectedJsonResponse = createKilkariUserResponseJson(
+                rh.hindiLanguage().getCode(), // defaultLanguageLocationCode
+                null, // locationCode
+                Arrays.asList(rh.hindiLanguage().getCode()), // allowedLanguageLocationCodes
+                new HashSet<String>() // subscriptionPackList
+        );
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
+    }
+
+
+    /**
+     * To get the details of the Subscriber identified by the callingNumber
+     * when Subscriber has called first time to subscribe and identified
+     * circle has multiple states.
+     */
+    @Test
+    public void verifyFT5() throws IOException, InterruptedException {
+        createCircleWithMultipleLanguages();
+        HttpGet httpGet = createHttpGet(
+                true, "kilkari", // service
+                true, "1000000013", // callingNumber- first time caller
+                true, "OP", // operator
+                true, rh.karnatakaCircle().getName(), // circle have multiple LLC
+                true, "123456789012345" // callId
+        );
+        // defaultLanguageLocationCode== circle default language location
+        String expectedJsonResponse = createKilkariUserResponseJson(
+                rh.kannadaLanguage().getCode(), // defaultLanguageLocationCode
+                null, // locationCode
+                // allowedLanguageLocationCodes
+                Arrays.asList(rh.kannadaLanguage().getCode(), rh.tamilLanguage().getCode()),
+                new HashSet<String>() // subscriptionPackList
+        );
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        String jsonResponse = EntityUtils.toString(response.getEntity());
+        getLogger().debug("expectedJsonResponse: {}", expectedJsonResponse);
+        getLogger().debug("        jsonResponse: {}", jsonResponse);
+        assertEquals(expectedJsonResponse, jsonResponse);
     }
 }
