@@ -1,5 +1,18 @@
 package org.motechproject.nms.testing.it.api;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+import javax.inject.Inject;
+
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -55,30 +68,6 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
-import javax.inject.Inject;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.regex.Pattern;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
-
-import javax.inject.Inject;
-
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.regex.Pattern;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Verify that Kilkari API is functional.
@@ -1364,8 +1353,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     /**
      * This method is a utility method for running the test cases.
      */
-    private HttpGet createGetSubscriberDetailsRequest(String callingNumber, String operator, String circle,
-                                                      String callId) {
+    private HttpGet createGetSubscriberDetailsRequest(String callingNumber,
+            String operator, String circle, String callId) {
 
         StringBuilder sb = new StringBuilder(String.format(
                 "http://localhost:%d/api/kilkari/user?",
@@ -1390,7 +1379,6 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
         return new HttpGet(sb.toString());
     }
-
 
     /**
      * test GetSubscriberDetails API with Blank Params
@@ -1560,5 +1548,69 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         HttpGet httpGet = createHttpGet(true, "9999911122", true, "123456789012345");
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
                 expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    /**
+     * To verify the behavior of Get Subscriber Details API if provided
+     * beneficiary's callId is not valid : less than 15 digits.
+     */
+    @Test
+    public void verifyFT9() throws IOException, InterruptedException {
+        HttpGet httpGet = createGetSubscriberDetailsRequest("1234567890", // callingNumber
+                "A", // operator
+                "AP", // circle
+                "12345678901234" // callId less than 15 digits
+        );
+
+        String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * To verify the behavior of Get Subscriber Details API if provided
+     * beneficiary's callId is not valid : more than 15 digits.
+     */
+    @Test
+    public void verifyFT10() throws IOException, InterruptedException {
+        HttpGet httpGet = createGetSubscriberDetailsRequest("1234567890", // callingNumber
+                "A", // operator
+                "AP", // circle
+                "1234567890123456" // callId more than 15 digits
+        );
+        String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * To verify the behavior of Get Subscriber Details API if provided
+     * beneficiary's callId is not valid : Alphanumeric value.
+     */
+    // JIRA issue https://applab.atlassian.net/browse/NMS-184
+    @Ignore
+    @Test
+    public void verifyFT11() throws IOException, InterruptedException {
+        HttpGet httpGet = createGetSubscriberDetailsRequest("1234567890", // callingNumber
+                "A", // operator
+                "AP", // circle
+                "123456789A12345" // callId alpha numeric
+        );
+        String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+
     }
 }
