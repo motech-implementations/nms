@@ -6,7 +6,7 @@ import org.motechproject.mds.annotations.Field;
 /**
  * Entity for logging rejected Kilkari subscriptions.
  */
-@Entity
+@Entity(tableName = "nms_subscription_errors")
 public class SubscriptionError {
 
     @Field

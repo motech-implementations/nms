@@ -16,10 +16,7 @@ import org.motechproject.nms.imi.service.CdrFileService;
 import org.motechproject.nms.imi.service.SettingsService;
 import org.motechproject.nms.imi.web.contract.FileInfo;
 import org.motechproject.nms.kilkari.dto.CallDetailRecordDto;
-import org.motechproject.nms.kilkari.repository.CallRetryDataService;
-import org.motechproject.nms.kilkari.repository.CallSummaryRecordDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
-import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.repository.DeployedServiceDataService;
@@ -54,10 +51,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
 
     private static final String PROCESS_DETAIL_FILE_SUBJECT = "nms.imi.kk.process_detail_file";
     private static final String FILE_INFO_PARAM_KEY = "fileInfo";
-    private static final String LOCAL_OBD_DIR = "imi.local_obd_dir";
-    private static final String REMOTE_OBD_DIR = "imi.remote_obd_dir";
-    private static final String LOCAL_CDR_DIR = "imi.local_cdr_dir";
-    private static final String REMOTE_CDR_DIR = "imi.remote_cdr_dir";
+
     private static final String INITIAL_RETRY_DELAY = "imi.initial_retry_delay";
     private static final String MAX_CDR_ERROR_COUNT = "imi.max_cdr_error_count";
 
@@ -68,9 +62,6 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
     private SubscriptionService subscriptionService;
 
     @Inject
-    private SubscriptionDataService subscriptionDataService;
-
-    @Inject
     private SubscriptionPackDataService subscriptionPackDataService;
 
     @Inject
@@ -78,12 +69,6 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
 
     @Inject
     private LanguageDataService languageDataService;
-
-    @Inject
-    private CallRetryDataService callRetryDataService;
-
-    @Inject
-    private CallSummaryRecordDataService callSummaryRecordDataService;
 
     @Inject
     private AlertService alertService;
@@ -122,23 +107,12 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
     private String initialRetryDelay;
     private String maxErrorCountBackup;
 
-
-
-    private String setupTestDir(String property, String dir) {
-        String backup = settingsService.getSettingsFacade().getProperty(property);
-        File directory = new File(System.getProperty("user.home"), dir);
-        directory.mkdirs();
-        settingsService.getSettingsFacade().setProperty(property, directory.getAbsolutePath());
-        return backup;
-    }
-
-
     @Before
     public void setupSettings() {
-        localCdrDirBackup = setupTestDir(LOCAL_CDR_DIR, "cdr-local-dir-it");
-        remoteCdrDirBackup = setupTestDir(REMOTE_CDR_DIR, "cdr-remote-dir-it");
-        localObdDirBackup = setupTestDir(LOCAL_OBD_DIR, "obd-local-dir-it");
-        remoteObdDirBackup = setupTestDir(REMOTE_OBD_DIR, "obd-remote-dir-it");
+        localCdrDirBackup = ImiTestHelper.setupTestDir(settingsService, ImiTestHelper.LOCAL_CDR_DIR, "cdr-local-dir-it");
+        remoteCdrDirBackup = ImiTestHelper.setupTestDir(settingsService, ImiTestHelper.REMOTE_CDR_DIR, "cdr-remote-dir-it");
+        localObdDirBackup = ImiTestHelper.setupTestDir(settingsService, ImiTestHelper.LOCAL_OBD_DIR, "obd-local-dir-it");
+        remoteObdDirBackup = ImiTestHelper.setupTestDir(settingsService, ImiTestHelper.REMOTE_OBD_DIR, "obd-remote-dir-it");
         initialRetryDelay = settingsService.getSettingsFacade().getProperty(INITIAL_RETRY_DELAY);
         settingsService.getSettingsFacade().setProperty(INITIAL_RETRY_DELAY, "0");
         settingsService.getSettingsFacade().setProperty(INITIAL_RETRY_DELAY, "0");
@@ -149,10 +123,10 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
 
     @After
     public void restoreSettings() {
-        settingsService.getSettingsFacade().setProperty(REMOTE_OBD_DIR, remoteObdDirBackup);
-        settingsService.getSettingsFacade().setProperty(LOCAL_OBD_DIR, localObdDirBackup);
-        settingsService.getSettingsFacade().setProperty(REMOTE_CDR_DIR, remoteCdrDirBackup);
-        settingsService.getSettingsFacade().setProperty(LOCAL_CDR_DIR, localCdrDirBackup);
+        settingsService.getSettingsFacade().setProperty(ImiTestHelper.REMOTE_OBD_DIR, remoteObdDirBackup);
+        settingsService.getSettingsFacade().setProperty(ImiTestHelper.LOCAL_OBD_DIR, localObdDirBackup);
+        settingsService.getSettingsFacade().setProperty(ImiTestHelper.REMOTE_CDR_DIR, remoteCdrDirBackup);
+        settingsService.getSettingsFacade().setProperty(ImiTestHelper.LOCAL_CDR_DIR, localCdrDirBackup);
         settingsService.getSettingsFacade().setProperty(INITIAL_RETRY_DELAY, initialRetryDelay);
         settingsService.getSettingsFacade().setProperty(MAX_CDR_ERROR_COUNT, maxErrorCountBackup);
     }
