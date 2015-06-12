@@ -112,6 +112,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
     @Before
     public void doTheNeedful() {
+
         testingService.clearDatabase();
 
         rh = new RegionHelper(languageDataService, circleDataService, stateDataService,
@@ -231,7 +232,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 subscriberDataService, languageDataService, circleDataService, stateDataService,
                 districtDataService);
 
-        helper.makeRecords(1,3,0,0);
+        helper.makeRecords(1, 3, 0, 0);
 
         for (CallSummaryRecordDto record : helper.getRecords()) {
             Map<String, Object> eventParams = new HashMap<>();
@@ -365,7 +366,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
 
         Map<Integer, Integer> callStats = new HashMap<>();
-        callStats.put(StatusCode.OBD_DNIS_IN_DND.getValue(),1);
+        callStats.put(StatusCode.OBD_DNIS_IN_DND.getValue(), 1);
         CallSummaryRecordDto record = new CallSummaryRecordDto(
                 new RequestId(subscription.getSubscriptionId(), timestamp),
                 subscription.getSubscriber().getCallingNumber(),
@@ -602,6 +603,72 @@ public class CsrServiceBundleIT extends BasePaxIT {
         assertEquals(DayOfTheWeek.today().nextDay(),retries.get(0).getDayOfTheWeek());
     }
 
+    /**
+     * To verify that beneficiary(via mcts import) will be  deactivated if he/she
+     * has MSISDN number added to the DND database.
+     */
+    @Test
+    public void verifyFT177() {
+
+        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(14));
+
+        CallSummaryRecordDto csr = new CallSummaryRecordDto(
+                new RequestId(subscription.getSubscriptionId(), "11112233445566"),
+                subscription.getSubscriber().getCallingNumber(),
+                sh.getContentMessageFile(subscription, 0),
+                sh.getWeekId(subscription, 0),
+                rh.hindiLanguage().getCode(),
+                rh.delhiCircle().getName(),
+                FinalCallStatus.REJECTED,
+                makeStatsMap(StatusCode.OBD_DNIS_IN_DND, 3),
+                0,
+                3
+        );
+
+        Map<String, Object> eventParams = new HashMap<>();
+        eventParams.put(CSR_PARAM_KEY, csr);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
+        csrService.processCallSummaryRecord(motechEvent);
+
+        // verify that subscription created via MCTS-import is still Deactivated with reason "do not disturb"
+        subscription = subscriptionDataService.findBySubscriptionId(subscription.getSubscriptionId());
+        assertEquals(SubscriptionStatus.DEACTIVATED, subscription.getStatus());
+        assertEquals(DeactivationReason.DO_NOT_DISTURB, subscription.getDeactivationReason());
+    }
+
+
+    /*
+    * NMS_FT_163
+    * To verify 72Weeks Pack created via IVR, shouldn't get deactivated due to reason DND.
+    */
+    @Test
+    public void verifyFT163() {
+
+        Subscription subscription2 = sh.mksub(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
+
+        CallSummaryRecordDto csr = new CallSummaryRecordDto(
+                new RequestId(subscription2.getSubscriptionId(), "11112233445566"),
+                subscription2.getSubscriber().getCallingNumber(),
+                sh.getContentMessageFile(subscription2, 0),
+                sh.getWeekId(subscription2, 0),
+                rh.hindiLanguage().getCode(),
+                rh.delhiCircle().getName(),
+                FinalCallStatus.REJECTED,
+                makeStatsMap(StatusCode.OBD_DNIS_IN_DND, 3),
+                0,
+                3
+        );
+
+        Map<String, Object> eventParams = new HashMap<>();
+        eventParams.put(CSR_PARAM_KEY, csr);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
+        csrService.processCallSummaryRecord(motechEvent);
+
+        // verify that subscription created via IVR is still Active
+        subscription2 = subscriptionDataService.findBySubscriptionId(subscription2.getSubscriptionId());
+        assertEquals(SubscriptionStatus.ACTIVE, subscription2.getStatus());
+    }
+
 
     /**
      * To verify that childPack beneficiary should not be  deactivated if the error “user
@@ -680,8 +747,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
         assertEquals(SubscriptionStatus.ACTIVE, subscription.getStatus());
     }
 
-
-    /*
+    
+    /**
      * To check that NMS shall not retry OBD message for which all OBD attempts(1 actual+1 retry) fails with
      * two message per week configuration.
      */
