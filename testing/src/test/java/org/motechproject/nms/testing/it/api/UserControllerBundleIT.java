@@ -1351,32 +1351,16 @@ public class UserControllerBundleIT extends BasePaxIT {
     @Ignore
     public void verifyFT16() throws IOException,
             InterruptedException {
-        cleanAllData();
-
-        District district = new District();
-        district.setName("District 2");
-        district.setRegionalName("District 2");
-        district.setCode(2L);
-
-        State state = new State();
-        state.setName("State 2");
-        state.setCode(2L);
-        state.getDistricts().add(district);
-
-        stateDataService.create(state);
-
-        Language language = new Language("malayalam");
-        languageDataService.create(language);
-
-        LanguageLocation undeployedLanguageLocation = new LanguageLocation(
-                "77", new Circle("BB"), language, true);
-        undeployedLanguageLocation.getDistrictSet().add(district);
-        languageLocationDataService.create(undeployedLanguageLocation);
+        rh.newDelhiDistrict();
+        rh.delhiCircle();
+        // Service is not deployed in delhi state i.e.
+        // deployedServiceDataService.create(new
+        // DeployedService(rh.delhiState(), Service.KILKARI));
 
         HttpGet httpGet = createHttpGet(true, "kilkari", // service
                 true, "1200000000", // callingNumber
                 true, "OP", // operator
-                true, "BB", // circle
+                true, rh.delhiCircle().getName(), // circle
                 true, "123456789012345" // callId
         );
         // Should return HTTP 501 because the service is not
