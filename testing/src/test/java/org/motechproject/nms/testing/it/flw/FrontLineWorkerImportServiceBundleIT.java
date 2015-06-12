@@ -30,10 +30,10 @@ import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.motechproject.nms.testing.it.utils.LocationDataUtils.createCircle;
-import static org.motechproject.nms.testing.it.utils.LocationDataUtils.createDistrict;
-import static org.motechproject.nms.testing.it.utils.LocationDataUtils.createLanguage;
-import static org.motechproject.nms.testing.it.utils.LocationDataUtils.createState;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createCircle;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createDistrict;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createLanguage;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createState;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerSuite.class)
