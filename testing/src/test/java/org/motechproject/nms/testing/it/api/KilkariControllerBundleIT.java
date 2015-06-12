@@ -1561,4 +1561,41 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
                 expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
+
+    /**
+     * To verify the behavior of Get Inbox Details API if the service is not
+     * deployed in provided Subscriber's state.
+     **/
+    @Test
+    // Similar to FT_16
+    // TODO: https://applab.atlassian.net/browse/NMS-181
+    @Ignore
+    public void verifyFT91() throws IOException, InterruptedException {
+        // Service is deployed for delhi circle in setup data
+        // create subscriber (with language and circle)for which service is not
+        // deployed
+        rh.mysuruDistrict();
+        rh.karnatakaCircle();
+        Subscriber mctsSubscriber = new Subscriber(9999911122L,
+                rh.kannadaLanguage(), rh.karnatakaCircle());
+
+        // create new subscription for pregnancy pack in Active state
+        mctsSubscriber.setDateOfBirth(null);
+        mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(90));
+        subscriberDataService.update(mctsSubscriber);
+        subscriptionService.createSubscription(9999911122L,
+                rh.kannadaLanguage(), sh.pregnancyPack(),
+                SubscriptionOrigin.MCTS_IMPORT);
+
+        HttpGet httpGet = createHttpGet(true, "9999911122", true,
+                "123456789012345");
+        String expectedJsonResponse = createFailureResponseJson("<KILKARI: Not Deployed In State>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
 }
