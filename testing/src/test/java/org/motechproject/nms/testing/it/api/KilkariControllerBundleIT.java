@@ -17,10 +17,8 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.joda.time.DateTime;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.api.web.contract.BadRequest;
@@ -785,112 +783,5 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
                 expectedJsonPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
-
-    private HttpPost createSubscriptionHttpPost(String callingNumber,
-			String operator, String circle, String callId,
-			String languageLocationCode, String subscriptionPack)
-			throws IOException {
-
-		StringBuilder sb = new StringBuilder();
-		String seperator = "";
-		sb.append("{");
-		if (callingNumber != null) {
-			sb.append(String.format("%s\"callingNumber\": %s", seperator,
-					callingNumber));
-			seperator = ",";
-		}
-		if (operator != null) {
-			sb.append(String.format("%s\"operator\": \"%s\"", seperator,
-					operator));
-			seperator = ",";
-		}
-		if (circle != null) {
-			sb.append(String.format("%s\"circle\": \"%s\"", seperator, circle));
-			seperator = ",";
-		}
-		if (callId != null) {
-			sb.append(String.format("%s\"callId\": %s", seperator, callId));
-			seperator = ",";
-		}
-		if (languageLocationCode != null) {
-			sb.append(String.format("%s\"languageLocationCode\": \"%s\"",
-					seperator, languageLocationCode));
-			seperator = ",";
-		}
-		if (subscriptionPack != null) {
-			sb.append(String.format("%s\"subscriptionPack\": \"%s\"",
-					seperator, subscriptionPack));
-			seperator = ",";
-		}
-
-		sb.append("}");
-
-		HttpPost httpPost = new HttpPost(String.format(
-				"http://localhost:%d/api/kilkari/subscription",
-				TestContext.getJettyPort()));
-		httpPost.setHeader("Content-type", "application/json");
-		httpPost.setEntity(new StringEntity(sb.toString()));
-		return httpPost;
-	}
-
-    /**
-     * NMS_FT_58 To verify the behavior of Create Subscription Request API if
-     * provided beneficiary's callingNumber is not valid : less than 10 digits.
-     */
-	@Test 
-    public void verifyFT58()
-			throws IOException, InterruptedException {
-		// Calling Number less than 10 digit
-		HttpPost httpPost = createSubscriptionHttpPost("123456789", "A", "AP",
-				"123456789012545", "10", "childPack");
-
-		String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
-        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
-                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
-                .getStatusCode());
-        assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response
-                .getEntity())));
-    }
-
-    /**
-     * To verify the behavior of Create Subscription Request API if provided
-     * beneficiary's callingNumber is not valid : more than 10 digits.
-     */
-    @Test
-    public void verifyFT59() throws IOException, InterruptedException {
-		// Calling Number more than 10 digit
-        HttpPost httpPost = createSubscriptionHttpPost("12345678901", "A",
-                "AP",
-				"123456789012545", "10", "childPack");
-        String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
-        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
-                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
-                .getStatusCode());
-        assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response
-                .getEntity())));
-        ;
-    }
-
-    /**
-     * To verify the behavior of Create Subscription Request API if provided
-     * Subscriber's callingNumber is not valid : Alphanumeric value.
-     */
-    // TODO JIRA issue https://applab.atlassian.net/browse/NMS-197
-    @Ignore
-    @Test
-    public void verifyFT60() throws IOException, InterruptedException {
-		// Calling Number alphanumeric
-        HttpPost httpPost = createSubscriptionHttpPost("12345AD890", "A", "AP",
-				"123456789012545", "10", "childPack");
-        String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
-        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
-                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
-                .getStatusCode());
-        assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response
-                .getEntity())));
-	}
 
 }
