@@ -25,32 +25,12 @@
             <version>${motech.version}</version>
         </dependency>
 
-        <dependency>
-            <groupId>org.motechproject</groupId>
-            <artifactId>motech-platform-server-config</artifactId>
-            <version>${motech.version}</version>
-        </dependency>
-
         <!-- OSGi IT -->
         <dependency>
             <groupId>org.motechproject</groupId>
             <artifactId>motech-pax-it</artifactId>
             <version>${motech.version}</version>
             <scope>test</scope>
-        </dependency>
-
-        <!-- Repository -->
-        <dependency>
-            <groupId>org.motechproject</groupId>
-            <artifactId>motech-platform-dataservices</artifactId>
-            <version>${motech.version}</version>
-        </dependency>
-
-        <!-- Alerts -->
-        <dependency>
-            <groupId>org.motechproject</groupId>
-            <artifactId>alerts</artifactId>
-            <version>${motech.version}</version>
         </dependency>
 
         <!-- Scheduler -->
@@ -139,11 +119,11 @@
                                     <overwrite>true</overwrite>
                                     <resources>
                                         <resource>
-                                            <directory>${modules.root.dir}/testdata</directory>
+                                            <directory>${basedir}/src/test/resources</directory>
                                             <include>motech-settings.properties</include>
                                         </resource>
                                         <resource>
-                                            <directory>${modules.root.dir}/testdata/${motech.sql.dbtype}</directory>
+                                            <directory>${basedir}/src/test/resources</directory>
                                             <include>bootstrap.properties</include>
                                         </resource>
                                     </resources>
@@ -236,7 +216,7 @@
                                 <configuration>
                                     <autocommit>true</autocommit>
                                     <sqlCommand>
-                                        CREATE DATABASE motech_data_services character set utf8 collate utf8_general_ci;;
+                                        CREATE DATABASE motech_data_services character set utf8 collate utf8_general_ci;
                                     </sqlCommand>
                                 </configuration>
                             </execution>
