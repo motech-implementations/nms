@@ -228,7 +228,7 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
         String expectedJsonResponse =
                 createFailureResponseJson("<fileName: Not Present><cdrSummary: Invalid><cdrDetail: Invalid>");
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+                ImiTestHelper.ADMIN_USERNAME, ImiTestHelper.ADMIN_PASSWORD));
     }
 
     /*
@@ -256,7 +256,7 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
         String expectedJsonResponse =
                 createFailureResponseJson("<cdrSummary: Not Present>");
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+                ImiTestHelper.ADMIN_USERNAME, ImiTestHelper.ADMIN_PASSWORD));
     }
 
     /*
@@ -284,7 +284,7 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
         String expectedJsonResponse =
                 createFailureResponseJson("<cdrDetail: Not Present>");
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+                ImiTestHelper.ADMIN_USERNAME, ImiTestHelper.ADMIN_PASSWORD));
     }
 
     /*
@@ -313,7 +313,7 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
         String expectedJsonResponse =
                 createFailureResponseJson("<" +targetFile +": Not Found>");
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_NOT_FOUND, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+                ImiTestHelper.ADMIN_USERNAME, ImiTestHelper.ADMIN_PASSWORD));
     }
 
     /*
@@ -342,7 +342,7 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
         String expectedJsonResponse =
                 createFailureResponseJson("<cdrFile: Not Present>");
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+                ImiTestHelper.ADMIN_USERNAME, ImiTestHelper.ADMIN_PASSWORD));
     }
 
     /*
@@ -372,7 +372,7 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
         String expectedJsonResponse =
                 createFailureResponseJson("<checksum: Not Present>");
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+                ImiTestHelper.ADMIN_USERNAME, ImiTestHelper.ADMIN_PASSWORD));
     }
 
     /*
@@ -402,7 +402,7 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
         String expectedJsonResponse =
                 createFailureResponseJson("<recordsCount: Invalid>");
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+                ImiTestHelper.ADMIN_USERNAME, ImiTestHelper.ADMIN_PASSWORD));
     }
 
     /*
@@ -431,7 +431,7 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
         String expectedJsonResponse =
                 createFailureResponseJson("<cdrFile: Not Present>");
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+                ImiTestHelper.ADMIN_USERNAME, ImiTestHelper.ADMIN_PASSWORD));
     }
 
     /*
@@ -461,7 +461,7 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
         String expectedJsonResponse =
                 createFailureResponseJson("<checksum: Not Present>");
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+                ImiTestHelper.ADMIN_USERNAME, ImiTestHelper.ADMIN_PASSWORD));
     }
 
     /*
@@ -491,6 +491,6 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
         String expectedJsonResponse =
                 createFailureResponseJson("<recordsCount: Invalid>");
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+                ImiTestHelper.ADMIN_USERNAME, ImiTestHelper.ADMIN_PASSWORD));
     }
 }
