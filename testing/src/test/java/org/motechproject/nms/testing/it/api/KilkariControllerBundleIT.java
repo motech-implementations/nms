@@ -698,8 +698,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
 
     /**
-     * NMS_FT_22 To verify the that Save Inbox call Details API request
-     * should succeed with content being saved for both Pack as blank.
+     * NMS_FT_22 To verify the that Save Inbox call Details API request should succeed with content being saved for both
+     * Packs as blank.
      */
     @Test
     public void verifyFT22()
@@ -734,8 +734,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     }
 
     /**
-     * To verify the that Save Inbox call Details API request should succeed
-     * with content being saved for both Pack.
+     * To verify the that Save Inbox call Details API request should succeed with content being saved for both Packs.
      */
     @Test
     public void verifyFT23() throws IOException, InterruptedException {
@@ -810,8 +809,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     }
 
     /**
-     * NMS_FT_77 To check that message should be returned from inbox within
-     * 7 days of user's subscription gets completed for 72Weeks Pack.
+     * NMS_FT_77 To check that message should be returned from inbox within days of user's subscription gets completed
+     * for Pregnancy Pack.
      */
     @Test
     public void verifyFT77() throws IOException, InterruptedException {
@@ -841,13 +840,13 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
 
     /**
-     * NMS_FT_75 To check that no message should be returned from inbox
-     * after 7 days of user's subscription gets completed for 72Weeks Pack.
+     * NMS_FT_75 To check that no message should be returned from inbox after 7 days of user's subscription gets
+     * completed for Pregnancy Pack.
      */
     @Test
     public void verifyFT75() throws IOException, InterruptedException {
 
-        // 4000000000L subscribed to 72Week Pack subscription
+        // 4000000000L subscribed to Pregnancy Pack subscription
         Subscriber subscriber = subscriberService.getSubscriber(4000000000L);
         Subscription subscription = subscriber.getSubscriptions().iterator()
                 .next();
@@ -867,9 +866,9 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
     }
 
-
-    //To verify that Get Inbox Details API request fails if the provided parameter value of
-    // callingNumber is : blank.
+    /*
+     * To verify that Get Inbox Details API request fails if the provided parameter value of callingNumber is blank.
+     */
  	@Test
  	public void verifyFT92() throws IOException, InterruptedException {
 
@@ -878,14 +877,13 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
-        assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response.getEntity()))  );
- 		 		
-
+        assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response.getEntity())));
  	}
 
 
-    //To verify that Get Inbox Details API request fails if the provided parameter value of
-    // callId is : blank.
+    /*
+     * To verify that Get Inbox Details API request fails if the provided parameter value of callId is blank.
+     */
     @Test
     public void verifyFT93() throws IOException, InterruptedException {
 
@@ -894,14 +892,13 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
-        assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response.getEntity()))  );
+        assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response.getEntity())));
     }
 
 
     /*
-     * To check that message for both Pack should be returned from inbox
-     * within 7 days of user's subscription gets completed for 72Weeks Pack
-     * while user is subscribed for both Pack.
+     * To check that message for both Packs should be returned from inbox within 7 days of user's subscription gets
+     * completed for Pregnancy Pack while user is subscribed for both Packs.
      */
     public void verifyFT78() throws IOException, InterruptedException {
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
@@ -953,9 +950,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
 
     /*
-     * To check that only message for Active Pack should be returned from
-     * inbox after 7 days of user's subscription gets completed for 72Weeks
-     * Pack while user is subscribed for both Pack.
+     * To check that only message for Active Pack should be returned from inbox after 7 days of user's subscription gets
+     * completed for Pregnancy Pack while user is subscribed to both Packs.
      */
     @Test
     public void verifyFT76() throws IOException, InterruptedException {
@@ -971,8 +967,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 SubscriptionOrigin.MCTS_IMPORT);
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
 
-        // due to subscription rules detailed in #157, we need to clear out the
-        // DOB and set an LMP in order to
+        // due to subscription rules detailed in #157, we need to clear out the DOB and set an LMP in order to
         // create a second subscription for this MCTS subscriber
         mctsSubscriber.setDateOfBirth(null);
         mctsSubscriber.setLastMenstrualPeriod(DateTime.now());
@@ -984,9 +979,9 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 rh.hindiLanguage(),
                 sh.pregnancyPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
+
         // update pregnancy subscription pack to mark complete
-        // setting the subscription to have ended more than a week ago -- no
-        // message should be returned
+        // setting the subscription to have ended more than a week ago -- no message should be returned
         subscriptionService.updateStartDate(pregnancyPackSubscription, DateTime
                 .now().minusDays(512 + 90));
 
@@ -1002,9 +997,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
 
     /*
-     * To check that message for both Pack should be returned from inbox
-     * within 7 days of user's subscription gets completed for 48Weeks Pack
-     * while user is subscribed for both Pack.
+     * To check that messages for both Packs should be returned from inbox within 7 days of user's subscription gets
+     * completed for Child Pack while user is subscribed for both Packs.
      */
     @Test
     public void verifyFT82() throws IOException, InterruptedException {
@@ -1059,9 +1053,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
 
     /*
-     * To check that only message for Active Pack should be returned from
-     * inbox after 7 days of user's subscription gets completed for 48Weeks
-     * Pack while user is subscribed for both Pack.
+     * To check that only message for Active Pack should be returned from inbox after 7 days of user's subscription gets
+     * completed for Child Pack while user is subscribed for both Packs.
      */
     @Test
     public void verifyFT80() throws IOException, InterruptedException {
@@ -1110,8 +1103,9 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     }
 
 
-    //To verify the behavior of  Get Inbox Details API  if provided beneficiary's callingNumber is not valid :
-    // less than 10 digits.
+    /*
+     * To verify the behavior of Get Inbox Details API if provided beneficiary's callingNumber is less than 10 digits.
+     */
     @Test
     public void verifyFT83() throws IOException, InterruptedException {
 
@@ -1121,30 +1115,25 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
         assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response.getEntity()))  );
-
     }
 
 
-    //To verify the behavior of  Get Inbox Details API  if provided beneficiary's callingNumber is not valid :
-    // more than 10 digits.
+    /*
+     * To verify the behavior of  Get Inbox Details API  if provided beneficiary's callingNumber is more than 10 digits.
+     */
     @Test
     public void verifyFT84() throws IOException, InterruptedException {
-
-
-
         HttpGet httpGet = createHttpGet(true, "12345678901", true, "123456789012345");
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
         assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response.getEntity()))  );
-
     }
 
 
     /**
-     * To verify the behavior of Save Inbox call Details API if provided
-     * beneficiary's subscritpionPack is not valid : 12WeeksPack.
+     * To verify the behavior of Save Inbox call Details API if provided beneficiary's subscriptionPack does not exist.
      */
     @Test
     public void verifyFT36() throws IOException, InterruptedException {
@@ -1189,8 +1178,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     }
 
     /**
-     * To verify that Save Inbox call Details API request fails if concerned
-     * subscription doesn't exist for beneficiary.
+     * To verify that Save Inbox call Details API request fails if specified subscription doesn't exist for beneficiary.
      */
     @Test
     //TODO: https://applab.atlassian.net/browse/NMS-178
@@ -1245,17 +1233,16 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
 
     /*
-     * To verify the behavior of  Get Inbox Details API  if provided beneficiary's callId is not valid :
-     * more than 15 digits.
+     * To verify the behavior of Get Inbox Details API if provided beneficiary's callId is not valid: more than 15 digits.
      */
-    // https://applab.atlassian.net/browse/NMS-186
     @Test
-    //todo: need JIRA issue
+    //TODO: https://applab.atlassian.net/browse/NMS-186
     @Ignore
     public void verifyFT85() throws IOException, InterruptedException {
 
         // callingNumber alphanumeric
-        HttpGet httpGet = createHttpGet(true, "12345DF7890", true, "123456789012345");
+        HttpGet httpGet = createHttpGet(true, "12345DF7890", true,
+                "123456789012345");
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
@@ -1265,9 +1252,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     }
 
     /**
-     * To verify the that Save Inbox call Details API request should not
-     * succeed with content provided for only 1 subscription Pack and not
-     * even a place holder for second Pack details
+     * To verify the that Save Inbox call Details API request should not succeed with content provided for only 1
+     * subscription pack and not even a place holder for second Pack details
      */
     @Test
     public void verifyFT35() throws IOException, InterruptedException {
@@ -1307,9 +1293,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
 
     /**
-     * To verify that Save Inbox call Details API request should succeed
-     * with content provided for only 1 subscription Pack and place holder
-     * for second Pack also present with no details.
+     * To verify that Save Inbox call Details API request should succeed with content provided for only 1 subscription
+     * Pack and place holder for second Pack also present with no details.
      */
     @Test
     //todo: need JIRA issue #
@@ -1365,8 +1350,9 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     }
 
 
-    // This method is a utility method for running the test cases. this is
-    // already used in the branch NMS.FT.6.7.8
+    /**
+     * This method is a utility method for running the test cases.
+     */
     private HttpGet createGetSubscriberDetailsRequest(String callingNumber, String operator, String circle,
                                                       String callId) {
 
@@ -1467,5 +1453,200 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
                 HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
                 ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    /**
+     * To check NMS is able to make available a single message of current week in inbox with single message per week
+     * configuration, when:
+     *  (a) user's MSISDN is subscribed for Pregnancy Pack.
+     *  (b) user's MSISDN is deactivated for an old subscription of Pregnancy Pack.
+     */
+    @Test
+    public void verifyFT109() throws IOException, InterruptedException {
+        // setup data to remove 2 messages per week configuration for Pregnancy pack
+        testingService.clearDatabase();
+
+        rh = new RegionHelper(languageDataService, circleDataService, stateDataService, districtDataService);
+
+        sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
+                languageDataService, circleDataService, stateDataService, districtDataService);
+
+        deployedServiceDataService.create(new DeployedService(rh.delhiState(), Service.KILKARI));
+
+        Subscriber mctsSubscriber = new Subscriber(9999911122L);
+        mctsSubscriber.setDateOfBirth(null);
+
+        // set LMP for old pack
+        mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(180));
+        subscriberDataService.create(mctsSubscriber);
+
+        // create old subscription for pregnancy pack and deactivate it
+        Subscription oldSubscription = subscriptionService.createSubscription(
+                9999911122L, rh.hindiLanguage(), sh.pregnancyPack(1), SubscriptionOrigin.MCTS_IMPORT);
+        subscriptionService.deactivateSubscription(oldSubscription, DeactivationReason.DEACTIVATED_BY_USER);
+
+        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+
+        // create new subscription for pregnancy pack in Active state such that next OBD date falls on current date
+        mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(90));
+        subscriberDataService.update(mctsSubscriber);
+        Subscription newSubscription = subscriptionService.createSubscription(
+                9999911122L, rh.hindiLanguage(), sh.pregnancyPack(1), SubscriptionOrigin.MCTS_IMPORT);
+
+        String expectedJsonResponse = "{\"inboxSubscriptionDetailList\":[{\"subscriptionId\":\""
+                + newSubscription.getSubscriptionId()
+                + "\",\"subscriptionPack\":\"pregnancyPack\",\"inboxWeekId\":\"w1_1\",\"contentFileName\":\"w1_1.wav\"}]}";
+
+        HttpGet httpGet = createHttpGet(true, "9999911122", true, "123456789012345");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
+                expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    /**
+     * To check NMS is able to make available a single message of current week in inbox with single message per week
+     * configuration, when:
+     *  (a) user's MSISDN is subscribed for Pregnancy Pack.
+     *  (b) user's MSISDN status is completed for an old subscription of Pregnancy Pack.
+     */
+    @Test
+    public void verifyFT110() throws IOException, InterruptedException {
+        // setup data to remove 2 messages per week configuration for Pregnancy pack
+        testingService.clearDatabase();
+
+        rh = new RegionHelper(languageDataService, circleDataService, stateDataService, districtDataService);
+
+        sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
+                languageDataService, circleDataService, stateDataService, districtDataService);
+
+        deployedServiceDataService.create(new DeployedService(rh.delhiState(), Service.KILKARI));
+
+        Subscriber mctsSubscriber = new Subscriber(9999911122L);
+        mctsSubscriber.setDateOfBirth(null);
+
+        // set LMP for old pack
+        mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(180));
+        subscriberDataService.create(mctsSubscriber);
+
+        // create old subscription for pregnancy pack
+        Subscription oldSubscription = subscriptionService.createSubscription(
+                9999911122L, rh.hindiLanguage(), sh.pregnancyPack(1), SubscriptionOrigin.MCTS_IMPORT);
+
+        // update old pregnancy subscription pack to complete, setting the subscription to have ended > a week ago
+        subscriptionService.updateStartDate(oldSubscription, DateTime.now().minusDays(512 + 90));
+
+        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+
+        // create new subscription to pregnancy pack in Active state such that next OBD date falls on current date
+        mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(90));
+        subscriberDataService.update(mctsSubscriber);
+        Subscription newSubscription = subscriptionService.createSubscription(
+                9999911122L, rh.hindiLanguage(), sh.pregnancyPack(1), SubscriptionOrigin.MCTS_IMPORT);
+
+        String expectedJsonResponse = "{\"inboxSubscriptionDetailList\":[{\"subscriptionId\":\""
+                + newSubscription.getSubscriptionId()
+                + "\",\"subscriptionPack\":\"pregnancyPack\",\"inboxWeekId\":\"w1_1\",\"contentFileName\":\"w1_1.wav\"}]}";
+
+        HttpGet httpGet = createHttpGet(true, "9999911122", true, "123456789012345");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
+                expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    /**
+     * To check NMS is able to make available a single message of current week
+     * in inbox with single message per week configuration . when:
+     * a) user's MSISDN is subscribed for child Pack.
+     * b)user's MSISDN is deactivated for an old subscription of pregnancy Pack.
+     **/
+    @Test
+    public void verifyFT117() throws IOException, InterruptedException {
+        // update pregnancy pack to 1 message/week configuration
+        sh.pregnancyPackFor1MessagePerWeek(subscriptionPackMessageDataService);
+
+        Subscriber mctsSubscriber = new Subscriber(9999911122L);
+        mctsSubscriber.setDateOfBirth(null);
+        // set LMP for pregnancy pack
+        mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(240));
+        subscriberDataService.create(mctsSubscriber);
+
+        // create old subscription for pregnancy pack and deactivate it
+        Subscription oldSubscription = subscriptionService.createSubscription(
+                9999911122L, rh.hindiLanguage(), sh.pregnancyPack(),
+                SubscriptionOrigin.MCTS_IMPORT);
+        subscriptionService.deactivateSubscription(oldSubscription,
+                DeactivationReason.DEACTIVATED_BY_USER);
+
+        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+
+        // create new subscription for child pack in Active state such that
+        // next OBD date falls on current date
+        mctsSubscriber.setLastMenstrualPeriod(null);
+        mctsSubscriber.setDateOfBirth(DateTime.now());
+        subscriberDataService.update(mctsSubscriber);
+        Subscription newSubscription = subscriptionService.createSubscription(
+                9999911122L, rh.hindiLanguage(), sh.childPack(),
+                SubscriptionOrigin.MCTS_IMPORT);
+
+        String expectedJsonResponse = "{\"inboxSubscriptionDetailList\":[{\"subscriptionId\":\""
+                + newSubscription.getSubscriptionId()
+                + "\",\"subscriptionPack\":\"childPack\",\"inboxWeekId\":\"w1_1\",\"contentFileName\":\"w1_1.wav\"}]}";
+
+        HttpGet httpGet = createHttpGet(true, "9999911122", true,
+                "123456789012345");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
+                expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    /**
+     * To check NMS is able to make available a single message of current week
+     * in inbox with single message per week configuration . when: 
+     * a) user's MSISDN is subscribed for child Pack. 
+     * b)user's MSISDN status is completed(with in 7 days) for an old subscription of pregnancy Pack.
+     **/
+    @Test
+    public void verifyFT118() throws IOException, InterruptedException {
+        // update pregnancy pack to 1 message/week configuration
+        sh.pregnancyPackFor1MessagePerWeek(subscriptionPackMessageDataService);
+
+        Subscriber mctsSubscriber = new Subscriber(9999911122L);
+        mctsSubscriber.setDateOfBirth(null);
+        // set LMP for pregnancy pack
+        mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(240));
+        subscriberDataService.create(mctsSubscriber);
+
+        // create old subscription for pregnancy pack
+        Subscription oldSubscription = subscriptionService.createSubscription(
+                9999911122L, rh.hindiLanguage(), sh.pregnancyPack(),
+                SubscriptionOrigin.MCTS_IMPORT);
+        // update old pregnancy subscription pack to mark complete setting the
+        // subscription to have ended less than a week ago
+        subscriptionService.updateStartDate(oldSubscription, DateTime.now()
+                .minusDays(505 + 90));
+
+        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+
+        // create new subscription for child pack in Active state such that
+        // next OBD date falls on current date
+        mctsSubscriber.setLastMenstrualPeriod(null);
+        mctsSubscriber.setDateOfBirth(DateTime.now());
+        subscriberDataService.update(mctsSubscriber);
+        Subscription newSubscription = subscriptionService.createSubscription(
+                9999911122L, rh.hindiLanguage(), sh.childPack(),
+                SubscriptionOrigin.MCTS_IMPORT);
+
+        Pattern oldPregnancyPackPattern = Pattern
+                .compile(".*\"subscriptionId\":\""
+                        + oldSubscription.getSubscriptionId()
+                        + "\",\"subscriptionPack\":\"pregnancyPack\",\"inboxWeekId\":\"w72_1\",\"contentFileName\":\"w72_1.wav.*");
+        Pattern newchildPackPattern = Pattern
+                .compile(".*\"subscriptionId\":\""
+                        + newSubscription.getSubscriptionId()
+                        + "\",\"subscriptionPack\":\"childPack\",\"inboxWeekId\":\"w1_1\",\"contentFileName\":\"w1_1.wav.*");
+
+        HttpGet httpGet = createHttpGet(true, "9999911122", true,
+                "123456789012345");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
+                oldPregnancyPackPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
+                newchildPackPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 }
