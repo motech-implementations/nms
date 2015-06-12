@@ -114,7 +114,7 @@ public class UserController extends BaseController {
         Kilkari in the house!
          */
         if (KILKARI.equals(serviceName)) {
-            user = getKilkariResponseUser(callingNumber);
+            user = getKilkariResponseUser(callingNumber, circleObj);
         }
 
         Language defaultLanguage = null;
@@ -153,11 +153,13 @@ public class UserController extends BaseController {
         return user;
     }
 
-    private UserResponse getKilkariResponseUser(Long callingNumber) {
+    private UserResponse getKilkariResponseUser(Long callingNumber, Circle circle) {
         KilkariUserResponse user = new KilkariUserResponse();
         Set<String> packs = new HashSet<>();
+        State state = null;
 
         Subscriber subscriber = subscriberService.getSubscriber(callingNumber);
+
         if (subscriber != null) {
             Set<Subscription> subscriptions = subscriber.getSubscriptions();
             for (Subscription subscription : subscriptions) {
@@ -170,6 +172,12 @@ public class UserController extends BaseController {
             Language subscriberLanguage = subscriber.getLanguage();
             if (subscriberLanguage != null) {
                 user.setLanguageLocationCode(subscriberLanguage.getCode());
+            }
+
+            state = getStateFromCircle(circle);
+
+            if (!serviceDeployedInUserState(Service.KILKARI, state)) {
+                throw new NotDeployedException(String.format(NOT_DEPLOYED, Service.KILKARI));
             }
         }
         user.setSubscriptionPackList(packs);
@@ -200,7 +208,7 @@ public class UserController extends BaseController {
                 throw new NotAuthorizedException(String.format(NOT_AUTHORIZED, CALLING_NUMBER));
             }
 
-            if (!serviceDeployedInFrontLineWorkersState(service, state)) {
+            if (!serviceDeployedInUserState(service, state)) {
                 throw new NotDeployedException(String.format(NOT_DEPLOYED, service));
             }
         }

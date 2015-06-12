@@ -185,6 +185,16 @@ public class UserControllerBundleIT extends BasePaxIT {
                 sh.pregnancyPack(), SubscriptionOrigin.IVR);
     }
 
+    private void createKilkariUndeployTestData() {
+
+        rh.delhiState();
+        rh.delhiCircle();
+
+        Subscriber subscriber1 = subscriberDataService.create(new Subscriber(1000000000L, rh.hindiLanguage()));
+        subscriptionService.createSubscription(subscriber1.getCallingNumber(), rh.hindiLanguage(),
+                sh.childPack(), SubscriptionOrigin.IVR);
+    }
+
 
 
     private void createFlwCappedServiceNoUsageNoLocationNoLanguage() {
@@ -623,6 +633,8 @@ public class UserControllerBundleIT extends BasePaxIT {
         subscriberDataService.create(new Subscriber(1000000000L));
 
         rh.newDelhiDistrict();
+
+        deployedServiceDataService.create(new DeployedService(rh.delhiState(), Service.KILKARI));
 
         HttpGet httpGet = createHttpGet(
                 true, "kilkari",        //service
@@ -1341,4 +1353,31 @@ public class UserControllerBundleIT extends BasePaxIT {
         getLogger().debug("        jsonResponse: {}", jsonResponse);
         assertEquals(expectedJsonResponse, jsonResponse);
     }
+
+
+    /**
+     * To verify the behavior of Get Subscriber Details API if the service is
+     * not deployed in provided Subscriber's state.
+     */
+    @Test
+    // TODO: https://applab.atlassian.net/browse/NMS-181
+    public void verifyFT16() throws IOException,
+            InterruptedException {
+        createKilkariUndeployTestData();
+
+                HttpGet httpGet = createHttpGet(true, "kilkari", // service
+                true, "1000000000", // callingNumber
+                true, "OP", // operator
+                true, rh.delhiCircle().getName(), // circle
+                true, "123456789012345" // callId
+        );
+        // Should return HTTP 501 because the service is not
+        // deployed for the specified state
+        String expectedJsonResponse = createFailureResponseJson("<KILKARI: Not Deployed In State>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
+    }
+
 }
