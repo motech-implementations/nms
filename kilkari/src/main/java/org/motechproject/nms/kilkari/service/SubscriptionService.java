@@ -5,11 +5,13 @@ import org.motechproject.event.MotechEvent;
 import org.motechproject.mds.annotations.InstanceLifecycleListener;
 import org.motechproject.mds.domain.InstanceLifecycleListenerType;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
+import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
+import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
-import org.motechproject.nms.region.domain.LanguageLocation;
+import org.motechproject.nms.region.domain.Language;
 
 import java.util.List;
 
@@ -24,12 +26,12 @@ public interface SubscriptionService {
      * reference date implies that the subscription would already have been completed, or if the beneficiary already
      * has a subscription to the specific pack.
      * @param callingNumber MSISDN of the beneficiary
-     * @param languageLocation Language/location pair of the beneficiary
+     * @param language Language of the beneficiary
      * @param subscriptionPack The subscription pack (e.g. Pregnancy, Child) for which to subscribe this beneficiary
      * @param mode How the subscription originated -- via IVR or MCTS import
      * @return The created subscription, or null if no subscription was created
      */
-    Subscription createSubscription(long callingNumber, LanguageLocation languageLocation, SubscriptionPack subscriptionPack,
+    Subscription createSubscription(long callingNumber, Language language, SubscriptionPack subscriptionPack,
                             SubscriptionOrigin mode);
 
     /**
@@ -61,6 +63,14 @@ public interface SubscriptionService {
      * @return Subscription pack with the specified name, or null if none exists
      */
     SubscriptionPack getSubscriptionPack(String name);
+
+    /**
+     * Returns boolean indicating whether or not the subscriber has an active subscription for the specified pack type
+     * @param subscriber The subscriber
+     * @param type The type of subscription pack
+     * @return True if the subscriber has an active subscription to this pack, false otherwise
+     */
+    boolean subscriberHasActiveSubscription(Subscriber subscriber, SubscriptionPackType type);
 
     List<SubscriptionPack> getSubscriptionPacks();
 

@@ -185,24 +185,6 @@ public class MobileAcademyServiceUnitTest {
     }
 
     @Test
-    public void getLastBookmarkNotReset() {
-        Map<String, Integer> scores = new HashMap<>();
-        for (int i = 1; i < 12; i++) {
-            scores.put(String.valueOf(i), 0);
-        }
-
-        Map<String, Object> progress = new HashMap<>();
-        progress.put("scoresByChapter", scores);
-        Bookmark newBookmark = new Bookmark("55", "getBookmarkTest", "Chapter11", "Quiz", progress);
-
-        when(bookmarkService.getLatestBookmarkByUserId(anyString()))
-                .thenReturn(newBookmark);
-        MaBookmark retrieved = mobileAcademyService.getBookmark(55L, 56L);
-        assertNotNull(retrieved.getBookmark());
-        assertNotNull(retrieved.getScoresByChapter());
-    }
-
-    @Test
     public void testCallingNumberTooShort() {
         CompletionRecord cr = new CompletionRecord(1L, 22);
         Set<ConstraintViolation<CompletionRecord>> cv = validator.validateProperty(cr, "callingNumber");
