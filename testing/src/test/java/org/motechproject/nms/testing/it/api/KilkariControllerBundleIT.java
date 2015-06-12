@@ -1,5 +1,18 @@
 package org.motechproject.nms.testing.it.api;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+import javax.inject.Inject;
+
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -55,30 +68,6 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
-import javax.inject.Inject;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.regex.Pattern;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
-
-import javax.inject.Inject;
-
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.regex.Pattern;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Verify that Kilkari API is functional.
@@ -706,7 +695,6 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
-
 
     /**
      * NMS_FT_22 To verify the that Save Inbox call Details API request should succeed with content being saved for both
@@ -1560,5 +1548,270 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         HttpGet httpGet = createHttpGet(true, "9999911122", true, "123456789012345");
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
                 expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    /**
+     * To verify the behavior of Save Inbox call Details API if a mandatory
+     * parameter : subscriptionId is missing from the API request.
+     */
+    // TODO JIRA issue https://applab.atlassian.net/browse/NMS-185
+    @Ignore
+    @Test
+    public void verifyFT48() throws IOException, InterruptedException {
+        // Missing subscriptionPack
+        HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
+                1234567890L, // callingNumber
+                "A", // operator
+                "AP", // circle
+                123456789012345L, // callId
+                123L, // callStartTime
+                456L, // callEndTime
+                123, // callDurationInPulses
+                1, // callStatus
+                1, // callDisconnectReason
+                new HashSet<>(Arrays.asList(
+                        new CallDataRequest(null, // subscriptionId missing
+                                "48WeeksPack", // subscriptionPack
+                                "123", // inboxWeekId
+                                "foo", // contentFileName
+                                123L, // startTime
+                                456L // endTime
+                        ), new CallDataRequest(
+                                "00000000-0000-0000-0000-000000000000", // subscriptionId
+                                "72WeeksPack", // subscriptionPack
+                                "123", // inboxWeekId
+                                "foo", // contentFileName
+                                123L, // startTime
+                                456L // endTime
+                        ))))); // content
+        String expectedJsonResponse = createFailureResponseJson("<subscriptionId: Not Present>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * To verify the behavior of Save Inbox call Details API if a mandatory
+     * parameter : subscritpionPack is missing from the API request.
+     */
+    // TODO JIRA issue https://applab.atlassian.net/browse/NMS-185
+    @Ignore
+    @Test
+    public void verifyFT49() throws IOException, InterruptedException {
+        // Missing subscriptionPack
+        HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
+                1234567890L, // callingNumber
+                "A", // operator
+                "AP", // circle
+                123456789012345L, // callId
+                123L, // callStartTime
+                456L, // callEndTime
+                123, // callDurationInPulses
+                1, // callStatus
+                1, // callDisconnectReason
+                new HashSet<>(Arrays.asList(new CallDataRequest(
+                        "00000000-0000-0000-0000-000000000000", // subscriptionId
+                        null, // subscriptionPack missing
+                        "123", // inboxWeekId
+                        "foo", // contentFileName
+                        123L, // startTime
+                        456L // endTime
+                        ), new CallDataRequest(
+                                "00000100-0000-0000-0000-000000000000", // subscriptionId
+                                "72WeeksPack", // subscriptionPack
+                                "123", // inboxWeekId
+                                "foo", // contentFileName
+                                123L, // startTime
+                                456L // endTime
+                        ))))); // content
+        String expectedJsonResponse = createFailureResponseJson("<subscriptionPack: Not Present>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * To verify the behavior of Save Inbox call Details API if a mandatory
+     * parameter : inboxWeekId is missing from the API request.
+     */
+    // TODO JIRA issue https://applab.atlassian.net/browse/NMS-185
+    @Ignore
+    @Test
+    public void verifyFT50() throws IOException, InterruptedException {
+        // Missing inboxWeekId
+        HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
+                1234567890L, // callingNumber
+                "A", // operator
+                "AP", // circle
+                123456789012345L, // callId
+                123L, // callStartTime
+                456L, // callEndTime
+                123, // callDurationInPulses
+                1, // callStatus
+                1, // callDisconnectReason
+                new HashSet<>(Arrays.asList(new CallDataRequest(
+                        "00000000-0000-0000-0000-000000000000", // subscriptionId
+                        "48WeeksPack", // subscriptionPack
+                        null, // inboxWeekId missing
+                        "foo", // contentFileName
+                        123L, // startTime
+                        456L // endTime
+                        ), new CallDataRequest(
+                                "00000000-0000-0000-0000-000000000000", // subscriptionId
+                                "72WeeksPack", // subscriptionPack
+                                "123", // inboxWeekId
+                                "foo", // contentFileName
+                                123L, // startTime
+                                456L // endTime
+                        ))))); // content
+        String expectedJsonResponse = createFailureResponseJson("<inboxWeekId: Not Present>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * To verify the behavior of Save Inbox call Details API if a mandatory
+     * parameter : contentFileName is missing from the API request.
+     */
+    // TODO JIRA issue https://applab.atlassian.net/browse/NMS-185
+    @Ignore
+    @Test
+    public void verifyFT51() throws IOException, InterruptedException {
+        // Missing contentFileName
+        HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
+                1234567890L, // callingNumber
+                "A", // operator
+                "AP", // circle
+                123456789012345L, // callId
+                123L, // callStartTime
+                456L, // callEndTime
+                123, // callDurationInPulses
+                1, // callStatus
+                1, // callDisconnectReason
+                new HashSet<>(Arrays.asList(new CallDataRequest(
+                        "00000000-0000-0000-0000-000000000000", // subscriptionId
+                        "48WeeksPack", // subscriptionPack
+                        "123", // inboxWeekId
+                        null, // contentFileName missing
+                        123L, // startTime
+                        456L // endTime
+                        ), new CallDataRequest(
+                                "00000000-0000-0000-0000-00005000000", // subscriptionId
+                                "72WeeksPack", // subscriptionPack
+                                "123", // inboxWeekId
+                                "foo", // contentFileName
+                                123L, // startTime
+                                456L // endTime
+                        ))))); // content
+        String expectedJsonResponse = createFailureResponseJson("<contentFileName: Not Present>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * To verify the behavior of Save Inbox call Details API if a mandatory
+     * parameter : startTime is missing from the API request.
+     */
+    // TODO JIRA issue https://applab.atlassian.net/browse/NMS-185
+    @Ignore
+    @Test
+    public void verifyFT52() throws IOException, InterruptedException {
+        // Missing startTime
+        HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
+                1234567890L, // callingNumber
+                "A", // operator
+                "AP", // circle
+                123456789012345L, // callId
+                123L, // callStartTime
+                456L, // callEndTime
+                123, // callDurationInPulses
+                1, // callStatus
+                1, // callDisconnectReason
+                new HashSet<>(Arrays.asList(new CallDataRequest(
+                        "00000000-0000-0000-0000-000000000000", // subscriptionId
+                        "48WeeksPack", // subscriptionPack
+                        "123", // inboxWeekId
+                        "foo", // contentFileName
+                        null, // startTime missing
+                        456L // endTime
+                        ), new CallDataRequest(
+                                "00000000-0000-0000-2000-000000000000", // subscriptionId
+                                "72WeeksPack", // subscriptionPack
+                                "123", // inboxWeekId
+                                "foo", // contentFileName
+                                123L, // startTime
+                                456L // endTime
+                        ))))); // content
+
+        String expectedJsonResponse = createFailureResponseJson("<startTime: Not Present>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * To verify the behavior of Save Inbox call Details API if a mandatory
+     * parameter : endTime is missing from the API request.
+     */
+    // TODO JIRA issue https://applab.atlassian.net/browse/NMS-185
+    @Ignore
+    @Test
+    public void verifyFT53() throws IOException, InterruptedException {
+        // Missing endTime
+        HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
+                1234567890L, // callingNumber
+                "A", // operator
+                "AP", // circle
+                123456789012345L, // callId
+                123L, // callStartTime
+                456L, // callEndTime
+                123, // callDurationInPulses
+                1, // callStatus
+                1, // callDisconnectReason
+                new HashSet<>(Arrays.asList(new CallDataRequest(
+                        "00000000-0000-0000-0000-000000000000", // subscriptionId
+                        "48WeeksPack", // subscriptionPack
+                        "123", // inboxWeekId
+                        "foo", // contentFileName
+                        123L, // startTime
+                        null // endTime missing
+                        ), new CallDataRequest(
+                                "00000000-0000-0000-0200-000000000000", // subscriptionId
+                                "72WeeksPack", // subscriptionPack
+                                "123", // inboxWeekId
+                                "foo", // contentFileName
+                                123L, // startTime
+                                456L // endTime
+                        ))))); // content
+        String expectedJsonResponse = createFailureResponseJson("<endTime: Not Present>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
     }
 }
