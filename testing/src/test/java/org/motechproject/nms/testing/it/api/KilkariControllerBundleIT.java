@@ -1,7 +1,10 @@
 package org.motechproject.nms.testing.it.api;
 
 import static org.junit.Assert.assertEquals;
+<<<<<<< HEAD
 import static org.junit.Assert.assertNull;
+=======
+>>>>>>> 1042170a8c963fc7e193ee81bcbd62886b39b939
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
@@ -21,7 +24,10 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.joda.time.DateTime;
+<<<<<<< HEAD
 import org.junit.Before;
+=======
+>>>>>>> 1042170a8c963fc7e193ee81bcbd62886b39b939
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -1098,7 +1104,6 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
                 expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
-
 
     /*
      * To verify the behavior of Get Inbox Details API if provided beneficiary's callingNumber is less than 10 digits.
