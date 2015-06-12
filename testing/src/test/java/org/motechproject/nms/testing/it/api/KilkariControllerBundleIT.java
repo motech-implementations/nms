@@ -17,10 +17,8 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.joda.time.DateTime;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.api.web.contract.BadRequest;
@@ -785,96 +783,4 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 expectedJsonPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
-    // This method is a utility method for running the test cases. this is already 
-    // used in the branch NMS.FT.6.7.8
-    private HttpGet createGetSubscriberDetailsRequest(String callingNumber,
-            String operator, String circle, String callId) {
-
-        StringBuilder sb = new StringBuilder(String.format(
-                "http://localhost:%d/api/kilkari/user?",
-                TestContext.getJettyPort()));
-        String sep = "";
-        if (callingNumber != null) {
-            sb.append(String.format("callingNumber=%s", callingNumber));
-            sep = "&";
-        }
-        if (operator != null) {
-            sb.append(String.format("%soperator=%s", sep, operator));
-            sep = "&";
-        }
-        if (circle != null) {
-            sb.append(String.format("%scircle=%s", sep, circle));
-            sep = "&";
-        }
-        if (callId != null) {
-            sb.append(String.format("%scallId=%s", sep, callId));
-            sep = "&";
-        }
-
-        return new HttpGet(sb.toString());
-    }
-
-    /**
-     * To verify the behavior of Get Subscriber Details API if provided
-     * beneficiary's callId is not valid : less than 15 digits.
-     */
-    @Test
-    public void verifyFT9() throws IOException, InterruptedException {
-        HttpGet httpGet = createGetSubscriberDetailsRequest("1234567890", // callingNumber
-                "A", // operator
-                "AP", // circle
-                "12345678901234" // callId less than 15 digits
-        );
-
-        String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
-        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
-                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
-                .getStatusCode());
-        assertEquals(expectedJsonResponse,
-                EntityUtils.toString(response.getEntity()));
-    }
-
-    /**
-     * To verify the behavior of Get Subscriber Details API if provided
-     * beneficiary's callId is not valid : more than 15 digits.
-     */
-    @Test
-    public void verifyFT10() throws IOException, InterruptedException {
-        HttpGet httpGet = createGetSubscriberDetailsRequest("1234567890", // callingNumber
-                "A", // operator
-                "AP", // circle
-                "1234567890123456" // callId more than 15 digits
-        );
-        String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
-        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
-                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
-                .getStatusCode());
-        assertEquals(expectedJsonResponse,
-                EntityUtils.toString(response.getEntity()));
-    }
-
-    /**
-     * To verify the behavior of Get Subscriber Details API if provided
-     * beneficiary's callId is not valid : Alphanumeric value.
-     */
-    // JIRA issue https://applab.atlassian.net/browse/NMS-184
-    @Ignore
-    @Test
-    public void verifyFT11() throws IOException, InterruptedException {
-        HttpGet httpGet = createGetSubscriberDetailsRequest("1234567890", // callingNumber
-                "A", // operator
-                "AP", // circle
-                "123456789A12345" // callId alpha numeric
-        );
-        String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
-        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
-                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
-                .getStatusCode());
-        assertEquals(expectedJsonResponse,
-                EntityUtils.toString(response.getEntity()));
-
-    }
 }
