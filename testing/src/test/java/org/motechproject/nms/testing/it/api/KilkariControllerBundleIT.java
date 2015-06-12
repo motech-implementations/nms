@@ -1632,11 +1632,9 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     }
 
     /**
-     * test DeactivateSubscription API with Blank Params
-     *
-     * * JIRA issue: https://applab.atlassian.net/browse/NMS-200
+     * To verify that Deactivate Subscription Request API request fails if the
+     * provided parameter value of circle is : empty value.
      */
-    @Ignore
     @Test
     public void verifyFT106() throws IOException, InterruptedException {
 
@@ -1647,15 +1645,12 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         // circle blank
         HttpDeleteWithBody httpDelete = createDeactivateSubscriptionHttpDelete(
                 "1000000000", "A", "", "123456789012345", subscriptionId);
-        String expectedJsonResponse = createFailureResponseJson("<circle: Not Present>");
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
                 httpDelete, ADMIN_USERNAME, ADMIN_PASSWORD);
 
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine()
                 .getStatusCode());
-        assertEquals(expectedJsonResponse,
-                EntityUtils.toString(response.getEntity()));
 
         // circle blank(single space)
         httpDelete = createDeactivateSubscriptionHttpDelete("1000000000", "A",
@@ -1664,9 +1659,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         response = SimpleHttpClient.httpRequestAndResponse(httpDelete,
                 ADMIN_USERNAME, ADMIN_PASSWORD);
 
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine()
                 .getStatusCode());
-        assertEquals(expectedJsonResponse,
-                EntityUtils.toString(response.getEntity()));
     }
 }
