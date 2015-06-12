@@ -171,7 +171,7 @@ public class ImiController_OBD_BundleIT extends BasePaxIT {
         fileAuditRecordDataService.create(new FileAuditRecord(FileType.TARGET_FILE, "file.csv", false, "ERROR",
                 null, null));
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK, ADMIN_USERNAME, ADMIN_PASSWORD));
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK, ImiTestHelper.ADMIN_USERNAME, ImiTestHelper.ADMIN_PASSWORD));
 
         //check an alert was sent
         AlertCriteria criteria = new AlertCriteria().byExternalId("file.csv");
