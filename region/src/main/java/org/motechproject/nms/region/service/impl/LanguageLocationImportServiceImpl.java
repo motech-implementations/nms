@@ -156,7 +156,7 @@ public class LanguageLocationImportServiceImpl implements LanguageLocationImport
             @Override
             public Circle retrieve(String value) {
                 Circle circle = circleDataService.findByName(value);
-                verify(null != circle, "Circle does not exists");
+                verify(null != circle, "Circle does not exist");
                 return circle;
             }
         });
@@ -164,7 +164,7 @@ public class LanguageLocationImportServiceImpl implements LanguageLocationImport
             @Override
             public State retrieve(String value) {
                 State state = stateDataService.findByName(value);
-                verify(null != state, "State does not exists");
+                verify(null != state, "State does not exist");
                 return state;
             }
         }));
@@ -172,7 +172,7 @@ public class LanguageLocationImportServiceImpl implements LanguageLocationImport
             @Override
             public District retrieve(String value) {
                 District district = districtDataService.findByName(value);
-                verify(null != district, "District does not exists");
+                verify(null != district, "District does not exist");
                 return district;
             }
         }));

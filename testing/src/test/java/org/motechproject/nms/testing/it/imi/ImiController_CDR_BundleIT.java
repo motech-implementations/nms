@@ -14,7 +14,6 @@ import org.motechproject.nms.imi.service.SettingsService;
 import org.motechproject.nms.imi.web.contract.BadRequest;
 import org.motechproject.nms.imi.web.contract.CdrFileNotificationRequest;
 import org.motechproject.nms.imi.web.contract.FileInfo;
-import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
@@ -34,7 +33,6 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
-import java.io.File;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 
@@ -45,12 +43,6 @@ import static org.junit.Assert.assertTrue;
 @ExamReactorStrategy(PerSuite.class)
 @ExamFactory(MotechNativeTestContainerFactory.class)
 public class ImiController_CDR_BundleIT extends BasePaxIT {
-
-    private static final String ADMIN_USERNAME = "motech";
-    private static final String ADMIN_PASSWORD = "motech";
-    private static final String LOCAL_CDR_DIR = "imi.local_cdr_dir";
-    private static final String REMOTE_CDR_DIR = "imi.remote_cdr_dir";
-
 
     @Inject
     private SettingsService settingsService;
@@ -77,9 +69,6 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
     private DistrictDataService districtDataService;
 
     @Inject
-    private CallRetryDataService callRetryDataService;
-
-    @Inject
     private FileAuditRecordDataService fileAuditRecordDataService;
 
     @Inject
@@ -89,19 +78,10 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
     private String remoteCdrDirBackup;
 
 
-    private String setupTestDir(String property, String dir) {
-        String backup = settingsService.getSettingsFacade().getProperty(property);
-        File directory = new File(System.getProperty("user.home"), dir);
-        directory.mkdirs();
-        settingsService.getSettingsFacade().setProperty(property, directory.getAbsolutePath());
-        return backup;
-    }
-
-
     @Before
     public void setupSettings() {
-        localCdrDirBackup = setupTestDir(LOCAL_CDR_DIR, "cdr-local-dir-it");
-        remoteCdrDirBackup = setupTestDir(REMOTE_CDR_DIR, "cdr-remote-dir-it");
+        localCdrDirBackup = ImiTestHelper.setupTestDir(settingsService, ImiTestHelper.LOCAL_CDR_DIR, "cdr-local-dir-it");
+        remoteCdrDirBackup = ImiTestHelper.setupTestDir(settingsService, ImiTestHelper.REMOTE_CDR_DIR, "cdr-remote-dir-it");
     }
 
 
@@ -113,8 +93,8 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
 
     @After
     public void restoreSettings() {
-        settingsService.getSettingsFacade().setProperty(REMOTE_CDR_DIR, remoteCdrDirBackup);
-        settingsService.getSettingsFacade().setProperty(LOCAL_CDR_DIR, localCdrDirBackup);
+        settingsService.getSettingsFacade().setProperty(ImiTestHelper.REMOTE_CDR_DIR, remoteCdrDirBackup);
+        settingsService.getSettingsFacade().setProperty(ImiTestHelper.LOCAL_CDR_DIR, localCdrDirBackup);
     }
 
 
@@ -173,7 +153,7 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
 
         HttpPost httpPost = createCdrFileNotificationHttpPost(helper, true, true, true);
 
-        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ImiTestHelper.ADMIN_USERNAME, ImiTestHelper.ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_ACCEPTED, response.getStatusLine().getStatusCode());
     }
 
@@ -195,7 +175,7 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
         String expectedJsonResponse = createFailureResponseJson("<cdrSummary: Invalid>");
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+                ImiTestHelper.ADMIN_USERNAME, ImiTestHelper.ADMIN_PASSWORD));
     }
 
 
@@ -215,6 +195,6 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
                 createFailureResponseJson("<fileName: Invalid><cdrSummary: Invalid><cdrDetail: Invalid>");
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+                ImiTestHelper.ADMIN_USERNAME, ImiTestHelper.ADMIN_PASSWORD));
     }
 }
