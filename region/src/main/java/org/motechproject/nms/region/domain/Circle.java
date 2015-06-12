@@ -4,7 +4,6 @@ import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.domain.MdsEntity;
 
-import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.Unique;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +15,6 @@ public class Circle extends MdsEntity {
     private String name;
 
     @Field
-    @Persistent(mappedBy = "circles", defaultFetchGroup = "true")
     private List<State> states;
 
     @Field

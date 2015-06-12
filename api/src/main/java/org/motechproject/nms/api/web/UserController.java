@@ -57,7 +57,7 @@ public class UserController extends BaseController {
     private CircleService circleService;
 
     @Autowired
-    private LanguageService languageLocationService;
+    private LanguageService languageService;
 
     /**
      * 2.2.1 Get User Details API
@@ -124,7 +124,7 @@ public class UserController extends BaseController {
 
         // If no circle was provided, or if the provided circle doesn't have a default language, use the national
         if (defaultLanguage == null) {
-            defaultLanguage = languageLocationService.getNationalDefaultLanguage();
+            defaultLanguage = languageService.getNationalDefaultLanguage();
         }
 
         if (defaultLanguage != null && user != null) {
@@ -135,11 +135,11 @@ public class UserController extends BaseController {
         // codes for the provided circle, or all if no circle was provided
         List<Language> languages = new ArrayList<>();
         if (user.getLanguageLocationCode() == null && circleObj != null) {
-            languages = languageLocationService.getAllForCircle(circleObj);
+            languages = languageService.getAllForCircle(circleObj);
         }
 
         if (user.getLanguageLocationCode() == null && circleObj == null) {
-            languages = languageLocationService.getAll();
+            languages = languageService.getAll();
         }
 
         if (languages.size() > 0) {
