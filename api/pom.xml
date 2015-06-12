@@ -25,13 +25,6 @@
             <version>${motech.version}</version>
         </dependency>
 
-        <!-- Repository -->
-        <dependency>
-            <groupId>org.motechproject</groupId>
-            <artifactId>motech-platform-dataservices</artifactId>
-            <version>${motech.version}</version>
-        </dependency>
-
         <dependency>
             <groupId>org.motechproject.nms</groupId>
             <artifactId>region</artifactId>
@@ -110,7 +103,6 @@
                             org.motechproject.nms.api.web.contract,
                             org.motechproject.nms.api.web.contract.kilkari,
                             org.motechproject.nms.api.web.contract.mobileAcademy,
-                            org.motechproject.nms.api.web.contract.mobileAcademy.course,
                             org.motechproject.nms.api.web.contract.mobileAcademy.sms,
                             org.motechproject.nms.api.web.converter,
                         </Export-Package>
