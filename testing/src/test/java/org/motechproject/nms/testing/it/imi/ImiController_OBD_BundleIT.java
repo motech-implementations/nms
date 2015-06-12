@@ -42,15 +42,9 @@ import static org.junit.Assert.assertTrue;
 @ExamReactorStrategy(PerSuite.class)
 @ExamFactory(MotechNativeTestContainerFactory.class)
 public class ImiController_OBD_BundleIT extends BasePaxIT {
-    private static final String ADMIN_USERNAME = "motech";
-    private static final String ADMIN_PASSWORD = "motech";
-    private static final String LOCAL_OBD_DIR = "imi.local_obd_dir";
-    private static final String REMOTE_OBD_DIR = "imi.remote_obd_dir";
-
 
     private String localObdDirBackup;
     private String remoteObdDirBackup;
-
 
     @Inject
     AlertService alertService;
@@ -69,29 +63,18 @@ public class ImiController_OBD_BundleIT extends BasePaxIT {
         testingService.clearDatabase();
     }
 
-
-    private String setupTestDir(String property, String dir) {
-        String backup = settingsService.getSettingsFacade().getProperty(property);
-        File directory = new File(System.getProperty("user.home"), dir);
-        directory.mkdirs();
-        settingsService.getSettingsFacade().setProperty(property, directory.getAbsolutePath());
-        return backup;
-    }
-
-
     @Before
     public void setupSettings() {
-        localObdDirBackup = setupTestDir(LOCAL_OBD_DIR, "obd-local-dir-it");
-        remoteObdDirBackup = setupTestDir(REMOTE_OBD_DIR, "obd-remote-dir-it");
+        localObdDirBackup = ImiTestHelper.setupTestDir(settingsService, ImiTestHelper.LOCAL_OBD_DIR, "obd-local-dir-it");
+        remoteObdDirBackup = ImiTestHelper.setupTestDir(settingsService, ImiTestHelper.REMOTE_OBD_DIR, "obd-remote-dir-it");
     }
 
 
     @After
     public void restoreSettings() {
-        settingsService.getSettingsFacade().setProperty(REMOTE_OBD_DIR, remoteObdDirBackup);
-        settingsService.getSettingsFacade().setProperty(LOCAL_OBD_DIR, localObdDirBackup);
+        settingsService.getSettingsFacade().setProperty(ImiTestHelper.REMOTE_OBD_DIR, remoteObdDirBackup);
+        settingsService.getSettingsFacade().setProperty(ImiTestHelper.LOCAL_OBD_DIR, localObdDirBackup);
     }
-
 
 
     private HttpPost createFileProcessedStatusHttpPost(String fileName, FileProcessedStatus fileProcessedStatus)
@@ -130,7 +113,7 @@ public class ImiController_OBD_BundleIT extends BasePaxIT {
                 FileProcessedStatus.FILE_PROCESSED_SUCCESSFULLY);
         fileAuditRecordDataService.create(new FileAuditRecord(FileType.TARGET_FILE, "file.csv", true, null, null,
                 null));
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK, ADMIN_USERNAME, ADMIN_PASSWORD));
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK, ImiTestHelper.ADMIN_USERNAME, ImiTestHelper.ADMIN_PASSWORD));
     }
 
     @Test
@@ -141,7 +124,7 @@ public class ImiController_OBD_BundleIT extends BasePaxIT {
         String expectedJsonResponse = createFailureResponseJson("<fileProcessedStatus: Not Present>");
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+                ImiTestHelper.ADMIN_USERNAME, ImiTestHelper.ADMIN_PASSWORD));
     }
 
     @Test
@@ -153,7 +136,7 @@ public class ImiController_OBD_BundleIT extends BasePaxIT {
         String expectedJsonResponse = createFailureResponseJson("<fileName: Not Present>");
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+                ImiTestHelper.ADMIN_USERNAME, ImiTestHelper.ADMIN_PASSWORD));
     }
 
     @Test
@@ -165,7 +148,7 @@ public class ImiController_OBD_BundleIT extends BasePaxIT {
         fileAuditRecordDataService.create(new FileAuditRecord(FileType.TARGET_FILE, "file.csv", false, "ERROR",
                 null, null));
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK, ADMIN_USERNAME, ADMIN_PASSWORD));
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK, ImiTestHelper.ADMIN_USERNAME, ImiTestHelper.ADMIN_PASSWORD));
 
         //check an alert was sent
         AlertCriteria criteria = new AlertCriteria().byExternalId("file.csv");

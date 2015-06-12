@@ -43,13 +43,6 @@
             <version>${project.version}</version>
         </dependency>
 
-        <!-- Repository -->
-        <dependency>
-            <groupId>org.motechproject</groupId>
-            <artifactId>motech-platform-dataservices</artifactId>
-            <version>${motech.version}</version>
-        </dependency>
-
         <dependency>
             <groupId>org.motechproject</groupId>
             <artifactId>motech-platform-commons-api</artifactId>
@@ -67,13 +60,6 @@
         <dependency>
             <groupId>org.motechproject</groupId>
             <artifactId>motech-platform-event</artifactId>
-            <version>${motech.version}</version>
-        </dependency>
-
-        <!-- Alerts -->
-        <dependency>
-            <groupId>org.motechproject</groupId>
-            <artifactId>alerts</artifactId>
             <version>${motech.version}</version>
         </dependency>
 
