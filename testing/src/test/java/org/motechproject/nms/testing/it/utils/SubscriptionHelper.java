@@ -60,14 +60,6 @@ public class SubscriptionHelper {
         return subscriptionService.getSubscriptionPack("childPack");
     }
 
-    public SubscriptionPack childPack(int messagesPerWeek) {
-        if (subscriptionPackDataService.byName("childPack") == null) {
-            createSubscriptionPack("childPack", SubscriptionPackType.CHILD,
-                    CHILD_PACK_WEEKS, messagesPerWeek);
-        }
-        return subscriptionService.getSubscriptionPack("childPack");
-    }
-
     public SubscriptionPack pregnancyPack() {
         if (subscriptionPackDataService.byName("pregnancyPack") == null) {
             createSubscriptionPack("pregnancyPack", SubscriptionPackType.PREGNANCY, PREGNANCY_PACK_WEEKS, 2);
