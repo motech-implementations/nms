@@ -163,7 +163,7 @@ public class LocationServiceBundleIT extends BasePaxIT {
         talukaDataService.create(taluka);
     }
 
-    @Test(expected = ConstraintViolationException.class)
+    @Test (expected = ConstraintViolationException.class)
     @Ignore // Remove once https://applab.atlassian.net/browse/MOTECH-1691 is resolved
     public void testCreateVillageNoCode() throws Exception {
         initAll();

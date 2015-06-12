@@ -59,4 +59,13 @@ public abstract class UserResponse {
     public void setAllowedLanguageLocationCodes(List<String> allowedLanguageLocationCodes) {
         this.allowedLanguageLocationCodes = allowedLanguageLocationCodes;
     }
+
+    @Override
+    public String toString() {
+        return "UserResponse{" +
+                "languageLocationCode='" + languageLocationCode + '\'' +
+                ", defaultLanguageLocationCode='" + defaultLanguageLocationCode + '\'' +
+                ", allowedLanguageLocationCodes=" + allowedLanguageLocationCodes +
+                '}';
+    }
 }

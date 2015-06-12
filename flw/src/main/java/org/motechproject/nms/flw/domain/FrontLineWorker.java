@@ -5,7 +5,7 @@ import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.domain.MdsEntity;
 import org.motechproject.nms.region.domain.District;
-import org.motechproject.nms.region.domain.LanguageLocation;
+import org.motechproject.nms.region.domain.Language;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Index;
@@ -41,7 +41,7 @@ public class FrontLineWorker extends MdsEntity {
     private DateTime invalidationDate;
 
     @Field
-    private LanguageLocation languageLocation;
+    private Language language;
 
     @Field
     @Persistent(defaultFetchGroup = "true")
@@ -110,12 +110,12 @@ public class FrontLineWorker extends MdsEntity {
         this.invalidationDate = invalidationDate;
     }
 
-    public LanguageLocation getLanguageLocation() {
-        return languageLocation;
+    public Language getLanguage() {
+        return language;
     }
 
-    public void setLanguageLocation(LanguageLocation languageLocation) {
-        this.languageLocation = languageLocation;
+    public void setLanguage(Language language) {
+        this.language = language;
     }
 
     public District getDistrict() {
@@ -146,7 +146,7 @@ public class FrontLineWorker extends MdsEntity {
         if (name != null ? !name.equals(that.name) : that.name != null) {
             return false;
         }
-        if (languageLocation != null ? !languageLocation.equals(that.languageLocation) : that.languageLocation != null) {
+        if (language != null ? !language.equals(that.language) : that.language != null) {
             return false;
         }
         return !(district != null ? !district.equals(that.district) : that.district != null);
@@ -158,7 +158,7 @@ public class FrontLineWorker extends MdsEntity {
         int result = (getId() != null ? getId().hashCode() : 0);
         result = 31 * result + contactNumber.hashCode();
         result = 31 * result + (name != null ? name.hashCode() : 0);
-        result = 31 * result + (languageLocation != null ? languageLocation.hashCode() : 0);
+        result = 31 * result + (language != null ? language.hashCode() : 0);
         result = 31 * result + (district != null ? district.hashCode() : 0);
         return result;
     }
@@ -167,7 +167,7 @@ public class FrontLineWorker extends MdsEntity {
     public String toString() {
         return "FrontLineWorker{" +
                 "id=" + getId() +
-                ", languageLocation=" + languageLocation +
+                ", language=" + language +
                 ", district=" + district +
                 '}';
     }
