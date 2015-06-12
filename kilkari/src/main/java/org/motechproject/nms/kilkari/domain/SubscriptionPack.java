@@ -1,5 +1,6 @@
 package org.motechproject.nms.kilkari.domain;
 
+import org.joda.time.DateTime;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.annotations.Ignore;
@@ -19,6 +20,8 @@ public class SubscriptionPack {
 
     private static final int NUM_RETRY_FOR_1_MSG_PER_WEEK = 3;
     private static final int NUM_RETRY_FOR_2_MSG_PER_WEEK = 1;
+    private static final int THREE_MONTHS = 90;
+    private static final int DAYS_IN_WEEK = 7;
 
     @Field
     @Unique
@@ -96,6 +99,21 @@ public class SubscriptionPack {
 
     public void setMessages(List<SubscriptionPackMessage> messages) {
         this.messages = messages;
+    }
+
+    public boolean isReferenceDateValidForPack(DateTime date) {
+        if (date.isAfterNow()) {
+            return false;
+        }
+
+        int packLengthInDays = weeks * DAYS_IN_WEEK;
+        DateTime startDate = date;
+
+        if (type == SubscriptionPackType.PREGNANCY) {
+            startDate = date.plusDays(THREE_MONTHS);
+        }
+
+        return startDate.plusDays(packLengthInDays).isAfterNow();
     }
 
     @Ignore
