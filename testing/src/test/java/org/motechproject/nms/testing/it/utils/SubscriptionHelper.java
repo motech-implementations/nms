@@ -68,6 +68,15 @@ public class SubscriptionHelper {
         return subscriptionService.getSubscriptionPack("pregnancyPack");
     }
 
+    public SubscriptionPack pregnancyPack(int messagesPerWeek) {
+        if (subscriptionPackDataService.byName("pregnancyPack") == null) {
+            createSubscriptionPack("pregnancyPack",
+                    SubscriptionPackType.PREGNANCY, PREGNANCY_PACK_WEEKS,
+                    messagesPerWeek);
+        }
+        return subscriptionService.getSubscriptionPack("pregnancyPack");
+    }
+
     private void createSubscriptionPack(String name, SubscriptionPackType type, int weeks,
                                         int messagesPerWeek) {
         List<SubscriptionPackMessage> messages = genratePackMessageList(weeks, messagesPerWeek);
