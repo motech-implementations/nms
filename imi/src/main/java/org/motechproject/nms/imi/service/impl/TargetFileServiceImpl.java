@@ -33,7 +33,7 @@ import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
 import org.motechproject.nms.props.domain.RequestId;
 import org.motechproject.nms.region.domain.Circle;
-import org.motechproject.nms.region.domain.LanguageLocation;
+import org.motechproject.nms.region.domain.Language;
 import org.motechproject.scheduler.contract.RepeatingSchedulableJob;
 import org.motechproject.scheduler.service.MotechSchedulerService;
 import org.motechproject.server.config.SettingsFacade;
@@ -57,7 +57,7 @@ public class TargetFileServiceImpl implements TargetFileService {
     private static final String LOCAL_OBD_DIR = "imi.local_obd_dir";
     private static final String TARGET_FILE_TIME = "imi.target_file_time";
     private static final String MAX_QUERY_BLOCK = "imi.max_query_block";
-    private static final String TARGET_FILE_MS_INTERVAL = "imi.target_file_ms_interval";
+    private static final String TARGET_FILE_SEC_INTERVAL = "imi.target_file_sec_interval";
     private static final String TARGET_FILE_NOTIFICATION_URL = "imi.target_file_notification_url";
     private static final String TARGET_FILE_IMI_SERVICE_ID = "imi.target_file_imi_service_id";
     private static final String TARGET_FILE_CALL_FLOW_URL = "imi.target_file_call_flow_url";
@@ -81,7 +81,7 @@ public class TargetFileServiceImpl implements TargetFileService {
     /**
      * Use the MOTECH scheduler to setup a repeating job
      * The job will start today at the time stored in imi.target_file_time in imi.properties
-     * It will repeat every imi.target_file_ms_interval milliseconds (default value is a day)
+     * It will repeat every imi.target_file_sec_interval seconds (default value is a day)
      */
     private void scheduleTargetFileGeneration() {
         //Calculate today's fire time
@@ -94,22 +94,23 @@ public class TargetFileServiceImpl implements TargetFileService {
                 .withSecondOfMinute(0)
                 .withMillisOfSecond(0);
 
-        //Millisecond interval between events
-        String intervalProp = settingsFacade.getProperty(TARGET_FILE_MS_INTERVAL);
-        Long msInterval = Long.parseLong(intervalProp);
+        //Second interval between events
+        String intervalProp = settingsFacade.getProperty(TARGET_FILE_SEC_INTERVAL);
+        Integer secInterval = Integer.parseInt(intervalProp);
 
-        LOGGER.debug(String.format("The %s message will be sent every %sms starting %s",
-                GENERATE_TARGET_FILE_EVENT, msInterval.toString(), today.toString()));
+        LOGGER.debug(String.format("The %s message will be sent every %ss starting %s",
+                GENERATE_TARGET_FILE_EVENT, secInterval.toString(), today.toString()));
 
         //Schedule repeating job
         MotechEvent event = new MotechEvent(GENERATE_TARGET_FILE_EVENT);
         RepeatingSchedulableJob job = new RepeatingSchedulableJob(
                 event,          //MOTECH event
+                null,           //repeatCount, null means infinity
+                secInterval,    //repeatIntervalInSeconds
                 today.toDate(), //startTime
                 null,           //endTime, null means no end time
-                null,           //repeatCount, null means infinity
-                msInterval,     //repeatIntervalInMilliseconds
                 true);          //ignorePastFiresAtStart
+
         schedulerService.safeScheduleRepeatingJob(job);
     }
 
@@ -259,10 +260,10 @@ public class TargetFileServiceImpl implements TargetFileService {
 
                 //todo: don't understand why subscriber.getLanguage() doesn't work here...
                 // it's not working because of https://applab.atlassian.net/browse/MOTECH-1678
-                LanguageLocation languageLocation;
-                languageLocation = (LanguageLocation) subscriberDataService.getDetachedField(subscriber,
-                        "languageLocation");
-                writer.write(languageLocation.getCode());
+                Language language;
+                language = (Language) subscriberDataService.getDetachedField(subscriber,
+                        "language");
+                writer.write(language.getCode());
 
                 Circle circle;
                 circle = (Circle) subscriberDataService.getDetachedField(subscriber, "circle");
@@ -273,7 +274,7 @@ public class TargetFileServiceImpl implements TargetFileService {
                 //todo: how do we choose a priority?
                 writeSubscriptionRow(requestId.toString(), imiServiceId,
                         subscriber.getCallingNumber().toString(), NORMAL_PRIORITY, callFlowUrl,
-                        msg.getMessageFileName(), msg.getWeekId(), languageLocation.getCode(), circle.getName(),
+                        msg.getMessageFileName(), msg.getWeekId(), language.getCode(), circle.getName(),
                         subscription.getOrigin().getCode(), writer);
             }
 

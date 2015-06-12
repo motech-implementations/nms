@@ -37,11 +37,10 @@
             <version>${project.version}</version>
         </dependency>
 
-        <!-- Repository -->
         <dependency>
-            <groupId>org.motechproject</groupId>
-            <artifactId>motech-platform-dataservices</artifactId>
-            <version>${motech.version}</version>
+            <groupId>org.motechproject.nms</groupId>
+            <artifactId>csv</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>
@@ -62,6 +61,11 @@
             <groupId>org.motechproject</groupId>
             <artifactId>motech-platform-event</artifactId>
             <version>${motech.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-fileupload</groupId>
+            <artifactId>commons-fileupload</artifactId>
         </dependency>
 
     </dependencies>
@@ -109,6 +113,8 @@
                             org.springframework.aop,
                             org.springframework.aop.framework,
                             org.springframework.transaction,
+                            org.apache.commons.fileupload,
+                            org.springframework.web.multipart.commons,
                             *
                         </Import-Package>
                     </instructions>

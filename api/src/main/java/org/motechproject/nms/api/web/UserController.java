@@ -18,10 +18,10 @@ import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.props.domain.Service;
 import org.motechproject.nms.region.domain.Circle;
-import org.motechproject.nms.region.domain.LanguageLocation;
+import org.motechproject.nms.region.domain.Language;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.service.CircleService;
-import org.motechproject.nms.region.service.LanguageLocationService;
+import org.motechproject.nms.region.service.LanguageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
@@ -57,7 +57,7 @@ public class UserController extends BaseController {
     private CircleService circleService;
 
     @Autowired
-    private LanguageLocationService languageLocationService;
+    private LanguageService languageService;
 
     /**
      * 2.2.1 Get User Details API
@@ -117,70 +117,40 @@ public class UserController extends BaseController {
             user = getKilkariResponseUser(callingNumber);
         }
 
-        LanguageLocation defaultLanguageLocation = null;
+        Language defaultLanguage = null;
         if (circleObj != null) {
-            defaultLanguageLocation = languageLocationService.getDefaultForCircle(circleObj);
+            defaultLanguage = circleObj.getDefaultLanguage();
         }
 
         // If no circle was provided, or if the provided circle doesn't have a default language, use the national
-        if (defaultLanguageLocation == null) {
-            defaultLanguageLocation = languageLocationService.getNationalDefaultLanguageLocation();
+        if (defaultLanguage == null) {
+            defaultLanguage = languageService.getNationalDefaultLanguage();
         }
 
-        if (defaultLanguageLocation != null && user != null) {
-            user.setDefaultLanguageLocationCode(defaultLanguageLocation.getCode());
+        if (defaultLanguage != null && user != null) {
+            user.setDefaultLanguageLocationCode(defaultLanguage.getCode());
         }
 
         // If the user does not have a language location code we want to return the allowed language location
         // codes for the provided circle, or all if no circle was provided
-        List<LanguageLocation> languageLocations = new ArrayList<>();
+        List<Language> languages = new ArrayList<>();
         if (user.getLanguageLocationCode() == null && circleObj != null) {
-            languageLocations = languageLocationService.getAllForCircle(circleObj);
-
-            // If there is only one language set that as the users language.  I would prefer if we instead
-            // returned the 1 element allowedLanguages array and had the IVR just skip prompting the user
-            // but that would result in two API calls without a prompt being played and that could
-            // be too long of a delay.  So instead we create or update the FLW in the get user api call.  bleh.
-            // This is an open question in an email thread with IMI. My preference is for the VXML to just call set language
-
-            if (false && languageLocations.size() == 1) {
-                if (MOBILE_ACADEMY.equals(serviceName) || MOBILE_KUNJI.equals(serviceName)) {
-                    updateFLWWithLanguage(callingNumber, languageLocations.get(0));
-                }
-
-                user.setLanguageLocationCode(languageLocations.get(0).getCode());
-            }
+            languages = languageService.getAllForCircle(circleObj);
         }
 
         if (user.getLanguageLocationCode() == null && circleObj == null) {
-            languageLocations = languageLocationService.getAll();
+            languages = languageService.getAll();
         }
 
-        if (languageLocations.size() > 0) {
+        if (languages.size() > 0) {
             List<String> allowedLanguageLocations = new ArrayList<>();
-            for (LanguageLocation languageLocation : languageLocations) {
-                allowedLanguageLocations.add(languageLocation.getCode());
+            for (Language language : languages) {
+                allowedLanguageLocations.add(language.getCode());
             }
             user.setAllowedLanguageLocationCodes(allowedLanguageLocations);
         }
 
         return user;
-    }
-
-    private void updateFLWWithLanguage(Long callingNumber, LanguageLocation languageLocation) {
-        FrontLineWorker flw = frontLineWorkerService.getByContactNumber(callingNumber);
-        if (flw == null) {
-            flw = new FrontLineWorker(callingNumber);
-        }
-
-        flw.setLanguageLocation(languageLocation);
-
-        // MOTECH-1667 added to get an upsert method included
-        if (flw.getId() == null) {
-            frontLineWorkerService.add(flw);
-        } else {
-            frontLineWorkerService.update(flw);
-        }
     }
 
     private UserResponse getKilkariResponseUser(Long callingNumber) {
@@ -197,9 +167,9 @@ public class UserController extends BaseController {
                 }
             }
 
-            LanguageLocation subscriberLanguageLocation = subscriber.getLanguageLocation();
-            if (subscriberLanguageLocation != null) {
-                user.setLanguageLocationCode(subscriberLanguageLocation.getCode());
+            Language subscriberLanguage = subscriber.getLanguage();
+            if (subscriberLanguage != null) {
+                user.setLanguageLocationCode(subscriberLanguage.getCode());
             }
         }
         user.setSubscriptionPackList(packs);
@@ -217,16 +187,16 @@ public class UserController extends BaseController {
 
         State state = null;
         if (null != flw) {
-            LanguageLocation languageLocation = flw.getLanguageLocation();
-            if (null != languageLocation) {
-                user.setLanguageLocationCode(languageLocation.getCode());
+            Language language = flw.getLanguage();
+            if (null != language) {
+                user.setLanguageLocationCode(language.getCode());
             }
 
             serviceUsage = serviceUsageService.getCurrentMonthlyUsageForFLWAndService(flw, service);
 
             state = getStateForFrontLineWorker(flw, circle);
 
-            if (!frontLineWorkerAuthorizedForAccess(flw)) {
+            if (!frontLineWorkerAuthorizedForAccess(flw, state)) {
                 throw new NotAuthorizedException(String.format(NOT_AUTHORIZED, CALLING_NUMBER));
             }
 
