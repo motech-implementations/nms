@@ -1,6 +1,5 @@
 package org.motechproject.nms.kilkari.service.impl;
 
-import org.joda.time.DateTime;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
@@ -44,10 +43,7 @@ public class SubscriberServiceImpl implements SubscriberService {
     @Transactional
     public void update(Subscriber subscriber) {
 
-        // cache the previous version of the subscriber in order to compare before/after
         Subscriber retrievedSubscriber = subscriberDataService.findByCallingNumber(subscriber.getCallingNumber());
-        DateTime oldLMP = retrievedSubscriber.getLastMenstrualPeriod();
-        DateTime oldDOB = retrievedSubscriber.getDateOfBirth();
 
         subscriberDataService.update(subscriber);
 
@@ -59,13 +55,11 @@ public class SubscriberServiceImpl implements SubscriberService {
         while (subscriptionIterator.hasNext()) {
             subscription = subscriptionIterator.next();
 
-            if ((subscription.getSubscriptionPack().getType() == SubscriptionPackType.PREGNANCY) &&
-                    (oldLMP != subscriber.getLastMenstrualPeriod()))  {
+            if (subscription.getSubscriptionPack().getType() == SubscriptionPackType.PREGNANCY) {
 
                 subscriptionService.updateStartDate(subscription, subscriber.getLastMenstrualPeriod());
 
-            } else if ((subscription.getSubscriptionPack().getType() == SubscriptionPackType.CHILD) &&
-                    (oldDOB != subscriber.getDateOfBirth())) {
+            } else if (subscription.getSubscriptionPack().getType() == SubscriptionPackType.CHILD) {
 
                 subscriptionService.updateStartDate(subscription, subscriber.getDateOfBirth());
 

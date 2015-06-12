@@ -16,17 +16,13 @@ import org.motechproject.nms.imi.service.CdrFileService;
 import org.motechproject.nms.imi.service.SettingsService;
 import org.motechproject.nms.imi.web.contract.FileInfo;
 import org.motechproject.nms.kilkari.dto.CallDetailRecordDto;
-import org.motechproject.nms.kilkari.repository.CallRetryDataService;
-import org.motechproject.nms.kilkari.repository.CallSummaryRecordDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
-import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.repository.DeployedServiceDataService;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
-import org.motechproject.nms.region.repository.LanguageLocationDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.testing.it.utils.CdrHelper;
 import org.motechproject.nms.testing.service.TestingService;
@@ -55,20 +51,15 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
 
     private static final String PROCESS_DETAIL_FILE_SUBJECT = "nms.imi.kk.process_detail_file";
     private static final String FILE_INFO_PARAM_KEY = "fileInfo";
-    private static final String LOCAL_OBD_DIR = "imi.local_obd_dir";
-    private static final String REMOTE_OBD_DIR = "imi.remote_obd_dir";
-    private static final String LOCAL_CDR_DIR = "imi.local_cdr_dir";
-    private static final String REMOTE_CDR_DIR = "imi.remote_cdr_dir";
+
     private static final String INITIAL_RETRY_DELAY = "imi.initial_retry_delay";
+    private static final String MAX_CDR_ERROR_COUNT = "imi.max_cdr_error_count";
 
     @Inject
     private SettingsService settingsService;
 
     @Inject
     private SubscriptionService subscriptionService;
-
-    @Inject
-    private SubscriptionDataService subscriptionDataService;
 
     @Inject
     private SubscriptionPackDataService subscriptionPackDataService;
@@ -80,19 +71,10 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
     private LanguageDataService languageDataService;
 
     @Inject
-    private CallRetryDataService callRetryDataService;
-
-    @Inject
-    private CallSummaryRecordDataService callSummaryRecordDataService;
-
-    @Inject
     private AlertService alertService;
 
     @Inject
     CdrFileService cdrFileService;
-
-    @Inject
-    private LanguageLocationDataService languageLocationDataService;
 
     @Inject
     private CircleDataService circleDataService;
@@ -123,36 +105,30 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
     private String localObdDirBackup;
     private String remoteObdDirBackup;
     private String initialRetryDelay;
-
-
-
-    private String setupTestDir(String property, String dir) {
-        String backup = settingsService.getSettingsFacade().getProperty(property);
-        File directory = new File(System.getProperty("user.home"), dir);
-        directory.mkdirs();
-        settingsService.getSettingsFacade().setProperty(property, directory.getAbsolutePath());
-        return backup;
-    }
-
+    private String maxErrorCountBackup;
 
     @Before
     public void setupSettings() {
-        localCdrDirBackup = setupTestDir(LOCAL_CDR_DIR, "cdr-local-dir-it");
-        remoteCdrDirBackup = setupTestDir(REMOTE_CDR_DIR, "cdr-remote-dir-it");
-        localObdDirBackup = setupTestDir(LOCAL_OBD_DIR, "obd-local-dir-it");
-        remoteObdDirBackup = setupTestDir(REMOTE_OBD_DIR, "obd-remote-dir-it");
+        localCdrDirBackup = ImiTestHelper.setupTestDir(settingsService, ImiTestHelper.LOCAL_CDR_DIR, "cdr-local-dir-it");
+        remoteCdrDirBackup = ImiTestHelper.setupTestDir(settingsService, ImiTestHelper.REMOTE_CDR_DIR, "cdr-remote-dir-it");
+        localObdDirBackup = ImiTestHelper.setupTestDir(settingsService, ImiTestHelper.LOCAL_OBD_DIR, "obd-local-dir-it");
+        remoteObdDirBackup = ImiTestHelper.setupTestDir(settingsService, ImiTestHelper.REMOTE_OBD_DIR, "obd-remote-dir-it");
         initialRetryDelay = settingsService.getSettingsFacade().getProperty(INITIAL_RETRY_DELAY);
         settingsService.getSettingsFacade().setProperty(INITIAL_RETRY_DELAY, "0");
+        settingsService.getSettingsFacade().setProperty(INITIAL_RETRY_DELAY, "0");
+        maxErrorCountBackup = settingsService.getSettingsFacade().getProperty(MAX_CDR_ERROR_COUNT);
+        settingsService.getSettingsFacade().setProperty(MAX_CDR_ERROR_COUNT, "3");
     }
 
 
     @After
     public void restoreSettings() {
-        settingsService.getSettingsFacade().setProperty(REMOTE_OBD_DIR, remoteObdDirBackup);
-        settingsService.getSettingsFacade().setProperty(LOCAL_OBD_DIR, localObdDirBackup);
-        settingsService.getSettingsFacade().setProperty(REMOTE_CDR_DIR, remoteCdrDirBackup);
-        settingsService.getSettingsFacade().setProperty(LOCAL_CDR_DIR, localCdrDirBackup);
+        settingsService.getSettingsFacade().setProperty(ImiTestHelper.REMOTE_OBD_DIR, remoteObdDirBackup);
+        settingsService.getSettingsFacade().setProperty(ImiTestHelper.LOCAL_OBD_DIR, localObdDirBackup);
+        settingsService.getSettingsFacade().setProperty(ImiTestHelper.REMOTE_CDR_DIR, remoteCdrDirBackup);
+        settingsService.getSettingsFacade().setProperty(ImiTestHelper.LOCAL_CDR_DIR, localCdrDirBackup);
         settingsService.getSettingsFacade().setProperty(INITIAL_RETRY_DELAY, initialRetryDelay);
+        settingsService.getSettingsFacade().setProperty(MAX_CDR_ERROR_COUNT, maxErrorCountBackup);
     }
 
 
@@ -168,7 +144,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         getLogger().debug("testVerify()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
+                subscriptionPackDataService, languageDataService, circleDataService,
                 stateDataService, districtDataService, fileAuditRecordDataService);
 
         helper.makeCdrs(1,1,1,1);
@@ -185,7 +161,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         getLogger().debug("testChecksumError()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
+                subscriptionPackDataService, languageDataService, circleDataService,
                 stateDataService, districtDataService, fileAuditRecordDataService);
 
         helper.makeCdrs(1, 1, 1, 1);
@@ -202,7 +178,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         getLogger().debug("testCsvErrors()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
+                subscriptionPackDataService, languageDataService, circleDataService,
                 stateDataService, districtDataService, fileAuditRecordDataService);
 
         helper.makeCdrs(1, 1, 1, 1);
@@ -221,17 +197,17 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         getLogger().debug("testTooManyErrors()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
+                subscriptionPackDataService, languageDataService, circleDataService,
                 stateDataService, districtDataService, fileAuditRecordDataService);
 
-        helper.makeCdrs(200,0,0,0);
-        helper.makeLocalCdrFile(200);
+        helper.makeCdrs(5,0,0,0);
+        helper.makeLocalCdrFile(5);
         FileInfo fileInfo = new FileInfo(helper.cdr(), helper.cdrLocalChecksum(), helper.cdrCount());
         try {
             cdrFileService.verifyDetailFileChecksumAndCount(fileInfo);
         } catch (InvalidCdrFileException e) {
             List<String> errors = e.getMessages();
-            assertEquals(101, errors.size());
+            assertEquals(4, errors.size());
             assertEquals("The maximum number of allowed errors", errors.get(errors.size() - 1).substring(0, 36));
         }
     }
@@ -242,7 +218,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         getLogger().debug("testProcess()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
+                subscriptionPackDataService, languageDataService, circleDataService,
                 stateDataService, districtDataService, fileAuditRecordDataService);
 
         helper.makeCdrs(1,1,1,1);
@@ -268,7 +244,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         getLogger().debug("testAggregation()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, languageLocationDataService, circleDataService,
+                subscriptionPackDataService, languageDataService, circleDataService,
                 stateDataService, districtDataService, fileAuditRecordDataService);
 
         helper.makeSingleCallCdrs(3, true);

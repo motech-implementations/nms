@@ -33,8 +33,11 @@
     <osgi:service ref="whitelistService"
                   interface="org.motechproject.nms.flw.service.WhitelistService" />
 
-    <osgi:service ref="flwItService"
-                  interface="org.motechproject.nms.flw.service.IntegrationTestService" />
+    <osgi:service ref="frontLineWorkerImportService"
+                  interface="org.motechproject.nms.flw.service.FrontLineWorkerImportService" />
+
+    <osgi:service ref="frontLineWorkerUpdateImportService"
+                  interface="org.motechproject.nms.flw.service.FrontLineWorkerUpdateImportService" />
 
     <osgi:reference id="frontLineWorkerDataService"
                     interface="org.motechproject.nms.flw.repository.FrontLineWorkerDataService" />
@@ -63,11 +66,8 @@
     <osgi:reference id="districtDataService"
                     interface="org.motechproject.nms.region.repository.DistrictDataService" />
 
-    <osgi:reference id="languageDataService"
-                    interface="org.motechproject.nms.region.repository.LanguageDataService" />
-
-    <osgi:reference id="languageLocationDataService"
-                    interface="org.motechproject.nms.region.repository.LanguageLocationDataService" />
+    <osgi:reference id="languageService"
+                    interface="org.motechproject.nms.region.service.LanguageService" />
 
     <osgi:reference id="circleDataService"
                     interface="org.motechproject.nms.region.repository.CircleDataService" />
@@ -75,4 +75,5 @@
     <osgi:reference id="schedulerService"
                     interface="org.motechproject.scheduler.service.MotechSchedulerService" />
 
+    <osgi:reference id="alertsService" interface="org.motechproject.alerts.contract.AlertService" />
 </beans>
