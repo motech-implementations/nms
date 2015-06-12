@@ -1353,8 +1353,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     /**
      * This method is a utility method for running the test cases.
      */
-    private HttpGet createGetSubscriberDetailsRequest(String callingNumber, String operator, String circle,
-                                                      String callId) {
+    private HttpGet createGetSubscriberDetailsRequest(String callingNumber,
+            String operator, String circle, String callId) {
 
         StringBuilder sb = new StringBuilder(String.format(
                 "http://localhost:%d/api/kilkari/user?",
@@ -1379,7 +1379,6 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
         return new HttpGet(sb.toString());
     }
-
 
     /**
      * test GetSubscriberDetails API with Blank Params
@@ -1549,36 +1548,6 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         HttpGet httpGet = createHttpGet(true, "9999911122", true, "123456789012345");
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
                 expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
-    }
-
-    // This method is a utility method for running the test cases. this is
-    // already
-    // used in the branch NMS.FT.6.7.8
-    private HttpGet createGetSubscriberDetailsRequest(String callingNumber,
-            String operator, String circle, String callId) {
-
-        StringBuilder sb = new StringBuilder(String.format(
-                "http://localhost:%d/api/kilkari/user?",
-                TestContext.getJettyPort()));
-        String sep = "";
-        if (callingNumber != null) {
-            sb.append(String.format("callingNumber=%s", callingNumber));
-            sep = "&";
-        }
-        if (operator != null) {
-            sb.append(String.format("%soperator=%s", sep, operator));
-            sep = "&";
-        }
-        if (circle != null) {
-            sb.append(String.format("%scircle=%s", sep, circle));
-            sep = "&";
-        }
-        if (callId != null) {
-            sb.append(String.format("%scallId=%s", sep, callId));
-            sep = "&";
-        }
-
-        return new HttpGet(sb.toString());
     }
 
     /**
