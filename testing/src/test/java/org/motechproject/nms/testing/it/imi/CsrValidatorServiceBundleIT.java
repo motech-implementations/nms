@@ -6,20 +6,15 @@ import org.joda.time.format.DateTimeFormatter;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.nms.imi.exception.InvalidCsrException;
-import org.motechproject.nms.imi.repository.FileAuditRecordDataService;
 import org.motechproject.nms.imi.service.CdrFileService;
 import org.motechproject.nms.imi.service.CsrValidatorService;
-import org.motechproject.nms.imi.service.SettingsService;
-import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
-import org.motechproject.nms.region.repository.LanguageLocationDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.testing.it.utils.CsrHelper;
 import org.motechproject.nms.testing.service.TestingService;
@@ -45,9 +40,6 @@ public class CsrValidatorServiceBundleIT extends BasePaxIT {
     CsrValidatorService csrValidatorService;
 
     @Inject
-    private SettingsService settingsService;
-
-    @Inject
     private SubscriptionService subscriptionService;
 
     @Inject
@@ -60,16 +52,7 @@ public class CsrValidatorServiceBundleIT extends BasePaxIT {
     private LanguageDataService languageDataService;
 
     @Inject
-    private CallRetryDataService callRetryDataService;
-
-    @Inject
-    private AlertService alertService;
-
-    @Inject
     CdrFileService cdrFileService;
-
-    @Inject
-    private LanguageLocationDataService languageLocationDataService;
 
     @Inject
     private CircleDataService circleDataService;
@@ -79,9 +62,6 @@ public class CsrValidatorServiceBundleIT extends BasePaxIT {
 
     @Inject
     private DistrictDataService districtDataService;
-
-    @Inject
-    private FileAuditRecordDataService fileAuditRecordDataService;
 
     @Inject
     TestingService testingService;
@@ -107,7 +87,7 @@ public class CsrValidatorServiceBundleIT extends BasePaxIT {
         String timestamp = DateTime.now().toString(TIME_FORMATTER);
 
         CsrHelper helper = new CsrHelper(timestamp, subscriptionService, subscriptionPackDataService,
-                subscriberDataService, languageDataService, languageLocationDataService, circleDataService,
+                subscriberDataService, languageDataService, circleDataService,
                 stateDataService, districtDataService);
 
         helper.makeRecords(1, 0, 0, 0);
@@ -124,7 +104,7 @@ public class CsrValidatorServiceBundleIT extends BasePaxIT {
         String timestamp = DateTime.now().toString(TIME_FORMATTER);
 
         CsrHelper helper = new CsrHelper(timestamp, subscriptionService, subscriptionPackDataService,
-                subscriberDataService, languageDataService, languageLocationDataService, circleDataService,
+                subscriberDataService, languageDataService, circleDataService,
                 stateDataService, districtDataService);
 
         helper.makeRecords(0, 0, 0, 1);

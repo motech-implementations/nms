@@ -32,12 +32,6 @@
         </dependency>
 
         <dependency>
-            <groupId>org.motechproject</groupId>
-            <artifactId>motech-platform-server-config</artifactId>
-            <version>${motech.version}</version>
-        </dependency>
-
-        <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient-osgi</artifactId>
             <version>4.4.1</version>

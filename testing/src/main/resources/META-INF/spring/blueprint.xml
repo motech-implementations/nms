@@ -13,29 +13,51 @@
 
     <tx:annotation-driven transaction-manager="transactionManager"/>
 
-    <osgi:service ref="testingService"
-                  interface="org.motechproject.nms.testing.service.TestingService" />
+    <osgi:service ref="testingService" interface="org.motechproject.nms.testing.service.TestingService" />
 
+    <osgi:reference id="1" interface="org.motechproject.nms.flw.repository.CallContentDataService" />
+    <osgi:reference id="2" interface="org.motechproject.nms.flw.repository.CallDetailRecordDataService" />
+    <osgi:reference id="3" interface="org.motechproject.nms.flw.repository.FrontLineWorkerDataService" />
+    <osgi:reference id="4" interface="org.motechproject.nms.flw.repository.ServiceUsageCapDataService" />
+    <osgi:reference id="5" interface="org.motechproject.nms.flw.repository.ServiceUsageDataService" />
+    <osgi:reference id="6" interface="org.motechproject.nms.flw.repository.WhitelistEntryDataService" />
+    <osgi:reference id="7" interface="org.motechproject.nms.flw.repository.WhitelistStateDataService" />
 
-    <osgi:reference id="flw"
-                    interface="org.motechproject.nms.flw.service.IntegrationTestService" />
+    <osgi:reference id="8" interface="org.motechproject.nms.imi.repository.FileAuditRecordDataService" />
 
-    <osgi:reference id="imi"
-                    interface="org.motechproject.nms.imi.service.IntegrationTestService" />
+    <osgi:reference id="9" interface="org.motechproject.nms.kilkari.repository.CallRetryDataService" />
+    <osgi:reference id="10" interface="org.motechproject.nms.kilkari.repository.CallSummaryRecordDataService" />
+    <osgi:reference id="11" interface="org.motechproject.nms.kilkari.repository.InboxCallDataDataService" />
+    <osgi:reference id="12" interface="org.motechproject.nms.kilkari.repository.InboxCallDetailRecordDataService" />
+    <osgi:reference id="13" interface="org.motechproject.nms.kilkari.repository.SubscriberDataService" />
+    <osgi:reference id="14" interface="org.motechproject.nms.kilkari.repository.SubscriptionDataService" />
+    <osgi:reference id="15" interface="org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService" />
+    <osgi:reference id="16" interface="org.motechproject.nms.kilkari.repository.SubscriptionPackDataService" />
+    <osgi:reference id="17" interface="org.motechproject.nms.kilkari.repository.SubscriptionPackMessageDataService" />
 
-    <osgi:reference id="kilkari"
-                    interface="org.motechproject.nms.kilkari.service.IntegrationTestService" />
+    <osgi:reference id="32" interface="org.motechproject.nms.kilkari.service.SubscriptionService" />
 
-    <osgi:reference id="mobileacademy"
-                    interface="org.motechproject.nms.mobileacademy.service.IntegrationTestService" />
+    <osgi:reference id="34" interface="org.motechproject.nms.kilkari.repository.MctsMotherDataService" />
+    <osgi:reference id="35" interface="org.motechproject.nms.kilkari.repository.MctsChildDataService" />
+    <osgi:reference id="36" interface="org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService" />
 
-    <osgi:reference id="props"
-                    interface="org.motechproject.nms.props.service.IntegrationTestService" />
+    <osgi:reference id="18" interface="org.motechproject.nms.mobileacademy.repository.CompletionRecordDataService" />
+    <osgi:reference id="19" interface="org.motechproject.nms.mobileacademy.repository.NmsCourseDataService" />
 
-    <osgi:reference id="region"
-                    interface="org.motechproject.nms.region.service.IntegrationTestService" />
+    <osgi:reference id="20" interface="org.motechproject.nms.props.repository.DeployedServiceDataService" />
 
-    <osgi:reference id="alertsDataServive"
-                    interface="org.motechproject.alerts.contract.AlertsDataService" />
+    <osgi:reference id="21" interface="org.motechproject.nms.region.repository.CircleDataService" />
+    <osgi:reference id="22" interface="org.motechproject.nms.region.repository.DistrictDataService" />
+    <osgi:reference id="23" interface="org.motechproject.nms.region.repository.HealthBlockDataService" />
+    <osgi:reference id="24" interface="org.motechproject.nms.region.repository.HealthFacilityDataService" />
+    <osgi:reference id="25" interface="org.motechproject.nms.region.repository.HealthSubFacilityDataService" />
+    <osgi:reference id="26" interface="org.motechproject.nms.region.repository.HealthFacilityTypeDataService" />
+    <osgi:reference id="27" interface="org.motechproject.nms.region.repository.LanguageDataService" />
+    <osgi:reference id="28" interface="org.motechproject.nms.region.repository.NationalDefaultLanguageDataService" />
+    <osgi:reference id="29" interface="org.motechproject.nms.region.repository.StateDataService" />
+    <osgi:reference id="30" interface="org.motechproject.nms.region.repository.TalukaDataService" />
+    <osgi:reference id="31" interface="org.motechproject.nms.region.repository.VillageDataService" />
+
+    <osgi:reference id="33" interface="org.motechproject.alerts.contract.AlertsDataService" />
 
 </beans>

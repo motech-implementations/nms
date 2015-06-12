@@ -12,19 +12,19 @@ import org.motechproject.mds.util.InstanceSecurityRestriction;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
+import org.motechproject.nms.kilkari.domain.SubscriptionError;
+import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
-import org.motechproject.nms.kilkari.domain.SubscriptionError;
 import org.motechproject.nms.kilkari.domain.SubscriptionRejectionReason;
-import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
-import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
+import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
-import org.motechproject.nms.region.domain.LanguageLocation;
+import org.motechproject.nms.region.domain.Language;
 import org.motechproject.scheduler.contract.RepeatingSchedulableJob;
 import org.motechproject.scheduler.service.MotechSchedulerService;
 import org.motechproject.server.config.SettingsFacade;
@@ -46,7 +46,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private static final Logger LOGGER = LoggerFactory.getLogger(SubscriptionServiceImpl.class);
 
     private static final String SUBSCRIPTION_PURGE_TIME = "kilkari.purge_closed_subscriptions_start_time";
-    private static final String SUBSCRIPTION_PURGE_MS_INTERVAL = "kilkari.purge_closed_subscriptions_ms_interval";
+    private static final String SUBSCRIPTION_PURGE_SEC_INTERVAL = "kilkari.purge_closed_subscriptions_sec_interval";
     private static final String WEEKS_TO_KEEP_CLOSED_SUBSCRIPTIONS = "kilkari.weeks_to_keep_closed_subscriptions";
 
     private static final String SUBSCRIPTION_PURGE_EVENT_SUBJECT = "nms.kilkari.purge_closed_subscriptions";
@@ -82,7 +82,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     /**
      * Use the MOTECH scheduler to setup a repeating job
      * The job will start today at the time stored in flw.purge_invalid_flw_start_time in flw.properties
-     * It will repeat every flw.purge_invalid_flw_ms_interval milliseconds (default value is a day)
+     * It will repeat every flw.purge_invalid_flw_sec_interval seconds (default value is a day)
      */
     private void schedulePurgeOfOldSubscriptions() {
         //Calculate today's fire time
@@ -95,21 +95,21 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 .withSecondOfMinute(0)
                 .withMillisOfSecond(0);
 
-        //Millisecond interval between events
-        String intervalProp = settingsFacade.getProperty(SUBSCRIPTION_PURGE_MS_INTERVAL);
-        Long msInterval = Long.parseLong(intervalProp);
+        //Second interval between events
+        String intervalProp = settingsFacade.getProperty(SUBSCRIPTION_PURGE_SEC_INTERVAL);
+        Integer secInterval = Integer.parseInt(intervalProp);
 
-        LOGGER.debug(String.format("The %s message will be sent every %sms starting at %s",
-                SUBSCRIPTION_PURGE_EVENT_SUBJECT, msInterval.toString(), today.toString()));
+        LOGGER.debug(String.format("The %s message will be sent every %ss starting at %s",
+                SUBSCRIPTION_PURGE_EVENT_SUBJECT, secInterval.toString(), today.toString()));
 
         //Schedule repeating job
         MotechEvent event = new MotechEvent(SUBSCRIPTION_PURGE_EVENT_SUBJECT);
         RepeatingSchedulableJob job = new RepeatingSchedulableJob(
                 event,          //MOTECH event
+                null,           //repeatCount, null means infinity
+                secInterval,    //repeatIntervalInSeconds
                 today.toDate(), //startTime
                 null,           //endTime, null means no end time
-                null,           //repeatCount, null means infinity
-                msInterval,     //repeatIntervalInMilliseconds
                 true);          //ignorePastFiresAtStart
 
         schedulerService.safeScheduleRepeatingJob(job);
@@ -182,18 +182,18 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @Override
-    public Subscription createSubscription(long callingNumber, LanguageLocation languagelocation, SubscriptionPack subscriptionPack,
+    public Subscription createSubscription(long callingNumber, Language language, SubscriptionPack subscriptionPack,
                                    SubscriptionOrigin mode) {
         Subscriber subscriber = subscriberDataService.findByCallingNumber(callingNumber);
         Subscription subscription;
 
         if (subscriber == null) {
-            subscriber = new Subscriber(callingNumber, languagelocation);
+            subscriber = new Subscriber(callingNumber, language);
             subscriberDataService.create(subscriber);
         }
 
-        if (subscriber.getLanguageLocation() == null && languagelocation != null) {
-            subscriber.setLanguageLocation(languagelocation);
+        if (subscriber.getLanguage() == null && language != null) {
+            subscriber.setLanguage(language);
             subscriberDataService.update(subscriber);
         }
 
@@ -256,7 +256,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
         if (subscriber.getDateOfBirth() != null && pack.getType() == SubscriptionPackType.CHILD) {
             // DOB (with or without LMP) is present
-            if (subscriberHasActivePackType(subscriber, SubscriptionPackType.CHILD))
+            if (subscriberHasActiveSubscription(subscriber, SubscriptionPackType.CHILD))
             {
                 // reject the subscription if it already exists
                 logRejectedSubscription(subscriber.getCallingNumber(),
@@ -273,7 +273,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         } else if (subscriber.getLastMenstrualPeriod() != null && subscriber.getDateOfBirth() == null &&
                 pack.getType() == SubscriptionPackType.PREGNANCY) {
             // LMP is present and DOB is not
-            if (subscriberHasActivePackType(subscriber, SubscriptionPackType.PREGNANCY)) {
+            if (subscriberHasActiveSubscription(subscriber, SubscriptionPackType.PREGNANCY)) {
                 // reject the subscription if it already exists
                 logRejectedSubscription(subscriber.getCallingNumber(),
                         SubscriptionRejectionReason.ALREADY_SUBSCRIBED, SubscriptionPackType.PREGNANCY);
@@ -304,7 +304,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         subscriptionErrorDataService.create(error);
     }
 
-    private boolean subscriberHasActivePackType(Subscriber subscriber, SubscriptionPackType type) {
+    @Override
+    public boolean subscriberHasActiveSubscription(Subscriber subscriber, SubscriptionPackType type) {
         Iterator<Subscription> subscriptionIterator = subscriber.getSubscriptions().iterator();
         Subscription existingSubscription;
 
@@ -342,6 +343,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 subscription.getSubscriptionPack())) {
             subscription.setStatus(SubscriptionStatus.COMPLETED);
         }
+
         subscriptionDataService.update(subscription);
     }
 
