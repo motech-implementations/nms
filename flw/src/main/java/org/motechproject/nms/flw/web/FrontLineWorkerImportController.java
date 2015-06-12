@@ -1,4 +1,4 @@
-package org.motechproject.nms.flw.controller;
+package org.motechproject.nms.flw.web;
 
 import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.alerts.domain.AlertStatus;
