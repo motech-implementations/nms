@@ -1636,23 +1636,22 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
     //To verify the behavior of  Deactivate Subscription Request API  if a mandatory parameter :
     // circle is missing from the API request.
-    // JIRA issue : https://applab.atlassian.net/browse/NMS-195
-
-    @Ignore
     @Test
     public void verifyFT103() throws IOException, InterruptedException {
+
+        Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
+        Subscription subscription = subscriber.getActiveSubscriptions()
+                .iterator().next();
+        String subscriptionId = subscription.getSubscriptionId();
 
         // circle missing
         HttpDeleteWithBody httpDelete = createDeactivateSubscriptionHttpDelete(
                 "1000000000", "A", null, "123456789012345",
-                "77f13128-037e-4f98-8651-285fa618d94a");
-        String expectedJsonResponse = createFailureResponseJson("<circle: Not Present>");
+ subscriptionId);
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
                 httpDelete, ADMIN_USERNAME, ADMIN_PASSWORD);
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine()
                 .getStatusCode());
-        assertEquals(expectedJsonResponse,
-                EntityUtils.toString(response.getEntity()));
     }
 
     //To verify the behavior of  Deactivate Subscription Request API  if a mandatory parameter :
