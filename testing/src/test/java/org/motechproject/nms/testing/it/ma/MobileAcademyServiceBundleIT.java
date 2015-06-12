@@ -218,8 +218,8 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         MaBookmark retrieved = maService.getBookmark(callingNumber, 666L);
         assertNotNull(retrieved.getCallingNumber());
         assertNotNull(retrieved.getCallId());
-        assertNotNull(retrieved.getBookmark());
-        assertNotNull(retrieved.getScoresByChapter());
+        assertNull(retrieved.getBookmark());
+        assertNull(retrieved.getScoresByChapter());
     }
 
     @Test
