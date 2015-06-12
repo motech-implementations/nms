@@ -1,5 +1,18 @@
 package org.motechproject.nms.testing.it.api;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+import javax.inject.Inject;
+
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -55,30 +68,6 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
-import javax.inject.Inject;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.regex.Pattern;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
-
-import javax.inject.Inject;
-
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.regex.Pattern;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Verify that Kilkari API is functional.
@@ -849,7 +838,6 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
     }
 
-
     /**
      * NMS_FT_75 To check that no message should be returned from inbox after 7 days of user's subscription gets
      * completed for Pregnancy Pack.
@@ -890,7 +878,6 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
         assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response.getEntity())));
  	}
-
 
     /*
      * To verify that Get Inbox Details API request fails if the provided parameter value of callId is blank.
@@ -1006,7 +993,6 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
-
     /*
      * To check that messages for both Packs should be returned from inbox within 7 days of user's subscription gets
      * completed for Child Pack while user is subscribed for both Packs.
@@ -1112,7 +1098,6 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
                 expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
-
 
     /*
      * To verify the behavior of Get Inbox Details API if provided beneficiary's callingNumber is less than 10 digits.
@@ -1561,4 +1546,64 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
                 expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
+
+    /**
+     * To verify the behavior of Get Inbox Details API if provided beneficiary's
+     * callId is not valid : less than 15 digits.
+     */
+ 	@Test
+    public void verifyFT86() throws IOException,
+ 			InterruptedException {
+ 		// CallId less than 15 digits
+ 		HttpGet httpGet = createHttpGet(true, "1234567890", true,
+ 				"12345678901234");
+ 		String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * To verify the behavior of Get Inbox Details API if provided beneficiary's
+     * callId is not valid : more than 15 digits.
+     */
+    @Test
+    public void verifyFT87() throws IOException, InterruptedException {
+        // CallId more than 15 digits
+        HttpGet httpGet = createHttpGet(true, "1234567890", true,
+                "1234567890123456");
+        String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * To verify the behavior of Get Inbox Details API if provided beneficiary's
+     * callId is not valid : Alphanumeric value.
+     */
+    // TODO JIRA issue https://applab.atlassian.net/browse/NMS-186
+    @Ignore
+    @Test
+    public void verifyFT88() throws IOException, InterruptedException {
+        // CallId alphanumeric
+        HttpGet httpGet = createHttpGet(true, "1234567890", true,
+                "12345678GT12345");
+        String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+ 	}
 }
