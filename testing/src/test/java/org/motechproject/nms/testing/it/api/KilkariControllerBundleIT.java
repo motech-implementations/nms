@@ -1561,4 +1561,98 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
                 expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
+
+    /**
+     * To check NMS is able to make available a single message of current week
+     * in inbox with single message per week configuration . when:
+     * a) user's MSISDN is subscribed for Child Pack. 
+     * b)user's MSISDN is deactivated for an old subscription of Child Pack.
+     **/
+    
+    @Test
+    public void verifyFT115() throws IOException, InterruptedException {
+        Subscriber mctsSubscriber = new Subscriber(9999911122L);
+        // set DOB for old child pack
+        mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(180));
+        mctsSubscriber.setLastMenstrualPeriod(null);
+        subscriberDataService.create(mctsSubscriber);
+
+        // create old subscription for child pack and deactivate it
+        Subscription oldSubscription = subscriptionService.createSubscription(
+                9999911122L, rh.hindiLanguage(), sh.childPack(),
+                SubscriptionOrigin.MCTS_IMPORT);
+        subscriptionService.deactivateSubscription(oldSubscription,
+                DeactivationReason.DEACTIVATED_BY_USER);
+
+        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+
+        // create new subscription for child pack in Active state such that
+        // next OBD date falls on current date
+        mctsSubscriber.setDateOfBirth(DateTime.now());
+        subscriberDataService.update(mctsSubscriber);
+        Subscription newSubscription = subscriptionService.createSubscription(
+                9999911122L, rh.hindiLanguage(), sh.childPack(),
+                SubscriptionOrigin.MCTS_IMPORT);
+
+        String expectedJsonResponse = "{\"inboxSubscriptionDetailList\":[{\"subscriptionId\":\""
+                + newSubscription.getSubscriptionId()
+                + "\",\"subscriptionPack\":\"childPack\",\"inboxWeekId\":\"w1_1\",\"contentFileName\":\"w1_1.wav\"}]}";
+
+        HttpGet httpGet = createHttpGet(true, "9999911122", true,
+                "123456789012345");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
+                expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    /**
+     * To check NMS is able to make available a single message of current week
+     * in inbox with single message per week configuration . when 
+     * a) user's MSISDN is subscribed for Child Pack. 
+     * b)user's MSISDN status is completed(with in 7 days) for an old subscription of Child Pack.
+     **/
+    
+    @Test
+    public void verifyFT116() throws IOException, InterruptedException {
+        Subscriber mctsSubscriber = new Subscriber(9999911122L);
+        // set DOB for old child pack
+        mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(180));
+        mctsSubscriber.setLastMenstrualPeriod(null);
+        subscriberDataService.create(mctsSubscriber);
+
+        // create old subscription for child pack
+        Subscription oldSubscription = subscriptionService.createSubscription(
+                9999911122L, rh.hindiLanguage(), sh.childPack(),
+                SubscriptionOrigin.MCTS_IMPORT);
+
+        // update old child pack subscription to mark complete setting the
+        // subscription to have ended less than a week ago
+        subscriptionService.updateStartDate(oldSubscription, DateTime.now()
+                .minusDays(337));
+
+        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+
+        // create new subscription to child pack in Active state such that
+        // next OBD date falls on current date
+        mctsSubscriber.setDateOfBirth(DateTime.now());
+        subscriberDataService.update(mctsSubscriber);
+        Subscription newSubscription = subscriptionService.createSubscription(
+                9999911122L, rh.hindiLanguage(), sh.childPack(),
+                SubscriptionOrigin.MCTS_IMPORT);
+
+        Pattern oldchildPackPattern = Pattern
+                .compile(".*\"subscriptionId\":\""
+                        + oldSubscription.getSubscriptionId()
+                        + "\",\"subscriptionPack\":\"childPack\",\"inboxWeekId\":\"w48_1\",\"contentFileName\":\"w48_1.wav.*");
+        Pattern newchildPackPattern = Pattern
+                .compile(".*\"subscriptionId\":\""
+                        + newSubscription.getSubscriptionId()
+                        + "\",\"subscriptionPack\":\"childPack\",\"inboxWeekId\":\"w1_1\",\"contentFileName\":\"w1_1.wav.*");
+
+        HttpGet httpGet = createHttpGet(true, "9999911122", true,
+                "123456789012345");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
+                oldchildPackPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
+                newchildPackPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
 }
