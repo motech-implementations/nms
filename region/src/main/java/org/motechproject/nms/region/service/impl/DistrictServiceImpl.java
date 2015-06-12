@@ -2,9 +2,11 @@ package org.motechproject.nms.region.service.impl;
 
 import org.datanucleus.store.rdbms.query.ForwardQueryResult;
 import org.motechproject.mds.query.QueryExecution;
+import org.motechproject.mds.query.SqlQueryExecution;
 import org.motechproject.mds.util.InstanceSecurityRestriction;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Language;
+import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.service.DistrictService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,4 +47,61 @@ public class DistrictServiceImpl implements DistrictService {
 
         return districtDataService.executeQuery(stateQueryExecution);
     }
+
+    @Override
+    public District findByStateAndCode(final State state, final Long code) {
+
+        SqlQueryExecution<District> queryExecution = new SqlQueryExecution<District>() {
+
+            @Override
+            public String getSqlQuery() {
+                return "select *  from nms_districts where  state_id_oid = ? and code = ?";
+            }
+
+            @Override
+            public District execute(Query query) {
+                query.setClass(District.class);
+                ForwardQueryResult fqr = (ForwardQueryResult) query.execute(state.getId(), code);
+                if (fqr.isEmpty()) {
+                    return null;
+                }
+                if (fqr.size() == 1) {
+                    return (District) fqr.get(0);
+                }
+                throw new IllegalStateException("More than one row returned!");
+            }
+        };
+
+        return districtDataService.executeSQLQuery(queryExecution);
+
+    }
+
+    @Override
+    public District findByStateAndName(final State state, final String name) {
+
+        SqlQueryExecution<District> queryExecution = new SqlQueryExecution<District>() {
+
+            @Override
+            public String getSqlQuery() {
+                return "select *  from nms_districts where  state_id_oid = ? and name = ?";
+            }
+
+            @Override
+            public District execute(Query query) {
+                query.setClass(District.class);
+                ForwardQueryResult fqr = (ForwardQueryResult) query.execute(state.getId(), name);
+                if (fqr.isEmpty()) {
+                    return null;
+                }
+                if (fqr.size() == 1) {
+                    return (District) fqr.get(0);
+                }
+                throw new IllegalStateException("More than one row returned!");
+            }
+        };
+
+        return districtDataService.executeSQLQuery(queryExecution);
+
+    }
+
 }

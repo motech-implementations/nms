@@ -12,6 +12,7 @@ import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.region.service.LanguageLocationImportService;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
@@ -29,9 +30,9 @@ import java.util.Collections;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createCircle;
 import static org.motechproject.nms.testing.it.utils.RegionHelper.createDistrict;
 import static org.motechproject.nms.testing.it.utils.RegionHelper.createState;
-import static org.motechproject.nms.testing.it.utils.RegionHelper.createCircle;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerSuite.class)
@@ -39,17 +40,24 @@ import static org.motechproject.nms.testing.it.utils.RegionHelper.createCircle;
 public class LanguageLocationCodesImportServiceBundleIT extends BasePaxIT {
 
     @Inject
-    private TestingService testingService;
+    TestingService testingService;
     @Inject
-    private LanguageDataService languageDataService;
+    LanguageDataService languageDataService;
     @Inject
-    private StateDataService stateDataService;
+    StateDataService stateDataService;
     @Inject
-    private DistrictDataService districtDataService;
+    DistrictDataService districtDataService;
     @Inject
-    private CircleDataService circleDataService;
+    DistrictService districtService;
     @Inject
-    private LanguageLocationImportService languageLocationImportService;
+    CircleDataService circleDataService;
+    @Inject
+    LanguageLocationImportService languageLocationImportService;
+
+
+    private State state1;
+    private State state3;
+
 
     @Before
     public void setUp() {
@@ -61,7 +69,7 @@ public class LanguageLocationCodesImportServiceBundleIT extends BasePaxIT {
         Language lang2 = new Language("L2", "Lang 2");
         languageDataService.create(lang2);
 
-        State state1 = createState(1L, "State 1");
+        state1 = createState(1L, "State 1");
         District district11 = createDistrict(state1, 11L, "District 11", null);
         District district12 = createDistrict(state1, 12L, "District 12", null);
         state1.getDistricts().addAll(Arrays.asList(district11, district12));
@@ -72,7 +80,7 @@ public class LanguageLocationCodesImportServiceBundleIT extends BasePaxIT {
         state2.getDistricts().addAll(Collections.singletonList(district21));
         districtDataService.create(district21);
 
-        State state3 = createState(3L, "State 3");
+        state3 = createState(3L, "State 3");
         District district31 = createDistrict(state3, 31L, "District 31", null);
         District district32 = createDistrict(state3, 32L, "District 32", lang1);
         state3.getDistricts().addAll(Arrays.asList(district31, district32));
@@ -107,7 +115,7 @@ public class LanguageLocationCodesImportServiceBundleIT extends BasePaxIT {
         Reader reader = createReaderWithHeaders("L1,Lang 1,Circle 1,State 1,District 11,N");
         languageLocationImportService.importData(reader);
 
-        District district11 = districtDataService.findByCode(11L);
+        District district11 = districtService.findByStateAndCode(state1, 11L);
         assertLanguageCode(district11.getLanguage(), "L1", "Lang 1");
     }
 
@@ -116,10 +124,10 @@ public class LanguageLocationCodesImportServiceBundleIT extends BasePaxIT {
         Reader reader = createReaderWithHeaders("L1,Lang 1,Circle 1,State 1,,N");
         languageLocationImportService.importData(reader);
 
-        District district11 = districtDataService.findByCode(11L);
+        District district11 = districtService.findByStateAndCode(state1, 11L);
         assertLanguageCode(district11.getLanguage(), "L1", "Lang 1");
 
-        District district12 = districtDataService.findByCode(12L);
+        District district12 = districtService.findByStateAndCode(state1, 12L);
         assertLanguageCode(district12.getLanguage(), "L1", "Lang 1");
     }
 
@@ -128,7 +136,7 @@ public class LanguageLocationCodesImportServiceBundleIT extends BasePaxIT {
         Reader reader = createReaderWithHeaders("L1,Lang 1,Circle 1,,District 11,N");
         languageLocationImportService.importData(reader);
 
-        District district11 = districtDataService.findByCode(11L);
+        District district11 = districtService.findByStateAndCode(state1, 11L);
         assertLanguageCode(district11.getLanguage(), "L1", "Lang 1");
     }
 
@@ -137,7 +145,7 @@ public class LanguageLocationCodesImportServiceBundleIT extends BasePaxIT {
         Reader reader = createReaderWithHeaders("L1,Lang 1,Circle 3,State 3,District 31,N");
         languageLocationImportService.importData(reader);
 
-        District district32 = districtDataService.findByCode(31L);
+        District district32 = districtService.findByStateAndCode(state3, 31L);
         assertLanguageCode(district32.getLanguage(), "L1", "Lang 1");
     }
 

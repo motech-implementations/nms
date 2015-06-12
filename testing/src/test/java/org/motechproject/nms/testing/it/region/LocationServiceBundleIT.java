@@ -44,31 +44,31 @@ import static org.junit.Assert.assertTrue;
 @ExamFactory(MotechNativeTestContainerFactory.class)
 public class LocationServiceBundleIT extends BasePaxIT {
     @Inject
-    private StateDataService stateDataService;
+    StateDataService stateDataService;
 
     @Inject
-    private DistrictDataService districtDataService;
+    DistrictDataService districtDataService;
 
     @Inject
-    private TalukaDataService talukaDataService;
+    TalukaDataService talukaDataService;
 
     @Inject
-    private VillageDataService villageDataService;
+    VillageDataService villageDataService;
 
     @Inject
-    private HealthBlockDataService healthBlockDataService;
+    HealthBlockDataService healthBlockDataService;
 
     @Inject
-    private HealthFacilityTypeDataService healthFacilityTypeDataService;
+    HealthFacilityTypeDataService healthFacilityTypeDataService;
 
     @Inject
-    private HealthFacilityDataService healthFacilityDataService;
+    HealthFacilityDataService healthFacilityDataService;
 
     @Inject
-    private HealthSubFacilityDataService healthSubFacilityDataService;
+    HealthSubFacilityDataService healthSubFacilityDataService;
 
     @Inject
-    private TestingService testingService;
+    TestingService testingService;
 
     State state;
     District district;

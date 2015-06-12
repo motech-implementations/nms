@@ -30,6 +30,7 @@ import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.testing.it.utils.RegionHelper;
 import org.motechproject.nms.testing.it.utils.SubscriptionHelper;
 import org.motechproject.nms.testing.service.TestingService;
@@ -72,40 +73,30 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
 
     @Inject
     TargetFileService targetFileService;
-
     @Inject
     SubscriptionService subscriptionService;
-
     @Inject
     SubscriptionDataService subscriptionDataService;
-
     @Inject
     SubscriberDataService subscriberDataService;
-
     @Inject
     SubscriptionPackDataService subscriptionPackDataService;
-
     @Inject
     CallRetryDataService callRetryDataService;
-
     @Inject
     LanguageDataService languageDataService;
-
     @Inject
-    private CircleDataService circleDataService;
-
+    CircleDataService circleDataService;
     @Inject
-    private StateDataService stateDataService;
-
+    StateDataService stateDataService;
     @Inject
-    private DistrictDataService districtDataService;
-
+    DistrictDataService districtDataService;
     @Inject
-    private SubscriberService subscriberService;
-
+    DistrictService districtService;
+    @Inject
+    SubscriberService subscriberService;
     @Inject
     SettingsService settingsService;
-
     @Inject
     TestingService testingService;
 
@@ -126,11 +117,11 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         remoteObdDirBackup = ImiTestHelper.setupTestDir(settingsService, REMOTE_OBD_DIR, "obd-remote-dir-it");
 
         RegionHelper rh = new RegionHelper(languageDataService, circleDataService, stateDataService,
-                                            districtDataService);
+                                            districtDataService, districtService);
 
         SubscriptionHelper sh = new SubscriptionHelper(subscriptionService,
                 subscriberDataService, subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService);
+                stateDataService, districtDataService, districtService);
 
         childPack = sh.childPack();
         pregnancyPack = sh.pregnancyPack();
@@ -221,7 +212,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
     public void createLargeFile() {
         SubscriptionHelper sh = new SubscriptionHelper(subscriptionService, subscriberDataService,
                 subscriptionPackDataService, languageDataService, circleDataService, stateDataService,
-                districtDataService);
+                districtDataService, districtService);
 
         for (int i=0 ; i<1000 ; i++) {
             sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now());

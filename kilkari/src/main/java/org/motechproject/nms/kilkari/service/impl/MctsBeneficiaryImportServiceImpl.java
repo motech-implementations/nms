@@ -37,12 +37,12 @@ import org.motechproject.nms.region.domain.Language;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.domain.Village;
-import org.motechproject.nms.region.repository.DistrictDataService;
-import org.motechproject.nms.region.repository.HealthBlockDataService;
-import org.motechproject.nms.region.repository.HealthFacilityDataService;
 import org.motechproject.nms.region.repository.StateDataService;
-import org.motechproject.nms.region.repository.TalukaDataService;
-import org.motechproject.nms.region.repository.VillageDataService;
+import org.motechproject.nms.region.service.DistrictService;
+import org.motechproject.nms.region.service.HealthBlockService;
+import org.motechproject.nms.region.service.HealthFacilityService;
+import org.motechproject.nms.region.service.TalukaService;
+import org.motechproject.nms.region.service.VillageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -77,11 +77,11 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     private static final String MOTHER_ID = "Mother_ID";
 
     private StateDataService stateDataService;
-    private DistrictDataService districtDataService;
-    private TalukaDataService talukaDataService;
-    private HealthBlockDataService healthBlockDataService;
-    private HealthFacilityDataService healthFacilityDataService;
-    private VillageDataService villageDataService;
+    private DistrictService districtService;
+    private TalukaService talukaService;
+    private HealthBlockService healthBlockService;
+    private HealthFacilityService healthFacilityService;
+    private VillageService villageService;
     private MctsMotherDataService mctsMotherDataService;
     private MctsChildDataService mctsChildDataService;
     private SubscriptionService subscriptionService;
@@ -93,20 +93,24 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     private SubscriptionPack childPack;
 
     @Autowired
-    MctsBeneficiaryImportServiceImpl(StateDataService stateDataService, DistrictDataService districtDataService,
-                                     TalukaDataService talukaDataService, HealthBlockDataService healthBlockDataService,
-                                     HealthFacilityDataService healthFacilityDataService,
-                                     VillageDataService villageDataService, MctsMotherDataService mctsMotherDataService,
-                                     MctsChildDataService mctsChildDataService, SubscriptionService subscriptionService,
+    MctsBeneficiaryImportServiceImpl(StateDataService stateDataService,
+                                     DistrictService districtService,
+                                     TalukaService talukaService,
+                                     HealthBlockService healthBlockService,
+                                     HealthFacilityService healthFacilityService,
+                                     VillageService villageService,
+                                     MctsMotherDataService mctsMotherDataService,
+                                     MctsChildDataService mctsChildDataService,
+                                     SubscriptionService subscriptionService,
                                      SubscriberService subscriberService,
                                      SubscriptionPackDataService subscriptionPackDataService,
                                      SubscriptionErrorDataService subscriptionErrorDataService) {
         this.stateDataService = stateDataService;
-        this.districtDataService = districtDataService;
-        this.talukaDataService = talukaDataService;
-        this.healthBlockDataService = healthBlockDataService;
-        this.healthFacilityDataService = healthFacilityDataService;
-        this.villageDataService = villageDataService;
+        this.districtService = districtService;
+        this.talukaService = talukaService;
+        this.healthBlockService = healthBlockService;
+        this.healthFacilityService = healthFacilityService;
+        this.villageService = villageService;
         this.mctsMotherDataService = mctsMotherDataService;
         this.mctsChildDataService = mctsChildDataService;
         this.subscriptionService = subscriptionService;
@@ -272,7 +276,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                 // TODO: Do we just reject the subscription request, or do we update the subscriber record with MCTS data?
                 // TODO: Should we change the subscription start date based on the provided LMP/DOB?
 
-            } else if (existingBeneficiary.getBeneficiaryId() != beneficiary.getBeneficiaryId()) {
+            } else if (!existingBeneficiary.getBeneficiaryId().equals(beneficiary.getBeneficiaryId())) {
                 // if the MCTS ID doesn't match (i.e. there are two beneficiaries with the same phone number), reject the import
                 rejectBeneficiary(msisdn, SubscriptionRejectionReason.ALREADY_SUBSCRIBED, pack.getType());
             } else {
@@ -307,11 +311,45 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         String errors = null;
 
         State state = (State) record.get(STATE);
-        District district = (District) record.get(DISTRICT);
-        Taluka taluka = (Taluka) record.get(TALUKA);
-        HealthBlock healthBlock = (HealthBlock) record.get(HEALTH_BLOCK);
-        HealthFacility phc = (HealthFacility) record.get(PHC);
-        Village village = (Village) record.get(VILLAGE);
+
+        District district = districtService.findByStateAndCode(state, (Long) record.get(DISTRICT));
+        if (district == null) {
+            return String.format("No district for state=%s and code=%d", state.getName(),
+                    (Long) record.get(DISTRICT));
+        }
+
+        Taluka taluka = talukaService.findByDistrictAndCode(district, (String) record.get(TALUKA));
+        if (taluka == null) {
+            return String.format("No taluka for district=%s and code=%s", district.getName(),
+                    (String) record.get(TALUKA));
+        }
+
+        HealthBlock healthBlock = healthBlockService.findByTalukaAndCode(taluka,
+                (Long) record.get(HEALTH_BLOCK));
+        if (healthBlock == null) {
+            return String.format("No health block for taluka=%s and code=%d", taluka.getName(),
+                    (Long) record.get(HEALTH_BLOCK));
+        }
+
+        HealthFacility phc = healthFacilityService.findByHealthBlockAndCode(healthBlock,
+                (Long) record.get(PHC));
+        if (phc == null) {
+            return String.format("No health facility for healthBlock=%s and code=%d", healthBlock.getName(),
+                    (Long) record.get(PHC));
+        }
+
+        Village village = null;
+        // the sample mother data file has village ID=0 and village name blank
+        if ((Long) record.get(VILLAGE) != 0L) {
+            villageService.findByTalukaAndVcodeAndSvid(taluka, (Long) record.get(VILLAGE), 0L);
+            if (village == null) {
+                village = villageService.findByTalukaAndSvid(taluka, (Long) record.get(VILLAGE));
+                if (village == null) {
+                    return String.format("No village for taluka=%s and code=%d", taluka.getName(),
+                            (Long) record.get(VILLAGE));
+                }
+            }
+        }
 
         if (state == null || district == null) {
             errors = "District and state must both be set for an MCTS beneficiary.";
@@ -341,54 +379,11 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                 return state;
             }
         });
-        mapping.put(DISTRICT, new GetInstanceByLong<District>() {
-            @Override
-            public District retrieve(Long value) {
-                District district = districtDataService.findByCode(value);
-                verify(null != district, "District does not exist");
-                return district;
-            }
-        });
-        mapping.put(TALUKA, new Optional(new GetInstanceByString<Taluka>() {
-            @Override
-            public Taluka retrieve(String value) {
-                Taluka taluka = talukaDataService.findByCode(value);
-                verify(null != taluka, "Taluka does not exist");
-                return taluka;
-            }
-        }));
-        mapping.put(HEALTH_BLOCK, new Optional(new GetInstanceByLong<HealthBlock>() {
-            @Override
-            public HealthBlock retrieve(Long value) {
-                HealthBlock healthBlock = healthBlockDataService.findByCode(value);
-                verify(null != healthBlock, "Health Block does not exist");
-                return healthBlock;
-            }
-        }));
-        mapping.put(PHC, new Optional(new GetInstanceByLong<HealthFacility>() {
-            @Override
-            public HealthFacility retrieve(Long value) {
-                HealthFacility phc = healthFacilityDataService.findById(value);
-                verify(null != phc, "Primary Health Center does not exist");
-                return phc;
-            }
-        }));
-        mapping.put(VILLAGE, new Optional(new GetInstanceByLong<Village>() {
-            @Override
-            public Village retrieve(Long value) {
-                if (value == 0) { // the sample mother data file has village ID=0 and village name blank
-                    return null;
-                }
-
-                Village village = villageDataService.findByVcodeAndSvid(value, null);
-                if (village == null) {
-                    village = villageDataService.findBySvid(value);
-                }
-
-                verify(null != village, "Village does not exist");
-                return village;
-            }
-        }));
+        mapping.put(DISTRICT, new GetLong());
+        mapping.put(TALUKA, new GetString());
+        mapping.put(HEALTH_BLOCK, new GetLong());
+        mapping.put(PHC, new GetLong());
+        mapping.put(VILLAGE, new Optional(new GetLong()));
 
         return mapping;
     }

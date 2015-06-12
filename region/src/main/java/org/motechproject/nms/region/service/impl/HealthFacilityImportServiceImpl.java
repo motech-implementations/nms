@@ -1,15 +1,13 @@
 package org.motechproject.nms.region.service.impl;
 
-import org.motechproject.nms.region.domain.HealthBlock;
-import org.motechproject.nms.region.domain.HealthFacility;
-import org.motechproject.nms.region.domain.HealthFacilityType;
-import org.motechproject.nms.region.repository.HealthBlockDataService;
-import org.motechproject.nms.region.repository.HealthFacilityDataService;
-import org.motechproject.nms.region.repository.HealthFacilityTypeDataService;
-import org.motechproject.nms.region.service.HealthFacilityImportService;
 import org.motechproject.nms.csv.utils.GetInstanceByLong;
 import org.motechproject.nms.csv.utils.GetLong;
 import org.motechproject.nms.csv.utils.GetString;
+import org.motechproject.nms.region.domain.HealthFacility;
+import org.motechproject.nms.region.domain.HealthFacilityType;
+import org.motechproject.nms.region.repository.HealthFacilityDataService;
+import org.motechproject.nms.region.repository.HealthFacilityTypeDataService;
+import org.motechproject.nms.region.service.HealthFacilityImportService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.supercsv.cellprocessor.ift.CellProcessor;
@@ -32,15 +30,12 @@ public class HealthFacilityImportServiceImpl extends BaseLocationImportService<H
     public static final String BID_FIELD = "healthBlock";
     public static final String FACILITY_TYPE_FIELD = "healthFacilityType";
 
-    private HealthBlockDataService healthBlockDataService;
     private HealthFacilityTypeDataService healthFacilityTypeDataService;
 
     @Autowired
     public HealthFacilityImportServiceImpl(HealthFacilityDataService healthFacilityDataService,
-                                           HealthBlockDataService healthBlockDataService,
                                            HealthFacilityTypeDataService healthFacilityTypeDataService) {
         super(HealthFacility.class, healthFacilityDataService);
-        this.healthBlockDataService = healthBlockDataService;
         this.healthFacilityTypeDataService = healthFacilityTypeDataService;
     }
 
@@ -50,12 +45,7 @@ public class HealthFacilityImportServiceImpl extends BaseLocationImportService<H
         mapping.put(PID, new GetLong());
         mapping.put(REGIONAL_NAME, new GetString());
         mapping.put(NAME, new GetString());
-        mapping.put(BID, new GetInstanceByLong<HealthBlock>() {
-            @Override
-            public HealthBlock retrieve(Long value) {
-                return healthBlockDataService.findByCode(value);
-            }
-        });
+        mapping.put(BID, new GetLong());
         mapping.put(FACILITY_TYPE, new GetInstanceByLong<HealthFacilityType>() {
             @Override
             public HealthFacilityType retrieve(Long value) {

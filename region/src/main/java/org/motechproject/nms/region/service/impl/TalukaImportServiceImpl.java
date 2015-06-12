@@ -1,13 +1,10 @@
 package org.motechproject.nms.region.service.impl;
 
-import org.motechproject.nms.region.domain.District;
-import org.motechproject.nms.region.domain.Taluka;
-import org.motechproject.nms.region.repository.DistrictDataService;
-import org.motechproject.nms.region.repository.TalukaDataService;
-import org.motechproject.nms.region.service.TalukaImportService;
-import org.motechproject.nms.csv.utils.GetInstanceByLong;
 import org.motechproject.nms.csv.utils.GetInteger;
 import org.motechproject.nms.csv.utils.GetString;
+import org.motechproject.nms.region.domain.Taluka;
+import org.motechproject.nms.region.repository.TalukaDataService;
+import org.motechproject.nms.region.service.TalukaImportService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.supercsv.cellprocessor.ift.CellProcessor;
@@ -30,12 +27,9 @@ public class TalukaImportServiceImpl extends BaseLocationImportService<Taluka> i
     public static final String NAME_FIELD = "name";
     public static final String DISTRICT_CODE_FIELD = "district";
 
-    private DistrictDataService districtDataService;
-
     @Autowired
-    public TalukaImportServiceImpl(TalukaDataService talukaDataService, DistrictDataService districtDataService) {
+    public TalukaImportServiceImpl(TalukaDataService talukaDataService) {
         super(Taluka.class, talukaDataService);
-        this.districtDataService = districtDataService;
     }
 
     @Override
@@ -45,12 +39,7 @@ public class TalukaImportServiceImpl extends BaseLocationImportService<Taluka> i
         mapping.put(IDENTITY, new GetInteger());
         mapping.put(REGIONAL_NAME, new GetString());
         mapping.put(NAME, new GetString());
-        mapping.put(DISTRICT_CODE, new GetInstanceByLong<District>() {
-            @Override
-            public District retrieve(Long value) {
-                return districtDataService.findByCode(value);
-            }
-        });
+        mapping.put(DISTRICT_CODE, new GetString());
         return mapping;
     }
 

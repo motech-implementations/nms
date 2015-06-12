@@ -18,6 +18,7 @@ import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.service.DistrictService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,14 +44,15 @@ public class SubscriptionHelper {
                               LanguageDataService languageDataService,
                               CircleDataService circleDataService,
                               StateDataService stateDataService,
-                              DistrictDataService districtDataService) {
+                              DistrictDataService districtDataService,
+                              DistrictService districtService) {
 
         this.subscriptionService = subscriptionService;
         this.subscriberDataService = subscriberDataService;
         this.subscriptionPackDataService = subscriptionPackDataService;
 
         this.regionHelper = new RegionHelper(languageDataService, circleDataService, stateDataService,
-                districtDataService);
+                districtDataService, districtService);
     }
 
     public SubscriptionPack childPack() {

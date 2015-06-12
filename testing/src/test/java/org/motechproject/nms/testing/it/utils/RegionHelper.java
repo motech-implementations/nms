@@ -13,22 +13,26 @@ import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.service.DistrictService;
 
 public class RegionHelper {
     private LanguageDataService languageDataService;
     private CircleDataService circleDataService;
     private DistrictDataService districtDataService;
+    private DistrictService districtService;
     private StateDataService stateDataService;
 
     public RegionHelper(LanguageDataService languageDataService,
-                              CircleDataService circleDataService,
-                              StateDataService stateDataService,
-                              DistrictDataService districtDataService) {
+                        CircleDataService circleDataService,
+                        StateDataService stateDataService,
+                        DistrictDataService districtDataService,
+                        DistrictService districtService) {
 
         this.languageDataService = languageDataService;
         this.circleDataService = circleDataService;
-        this.districtDataService = districtDataService;
         this.stateDataService = stateDataService;
+        this.districtDataService = districtDataService;
+        this.districtService = districtService;
     }
 
     public Circle delhiCircle() {
@@ -85,7 +89,7 @@ public class RegionHelper {
 
 
     public District newDelhiDistrict() {
-        District d = districtDataService.findByCode(1L);
+        District d = districtService.findByStateAndCode(delhiState(), 1L);
 
         if (d == null) {
             d = new District();
@@ -102,7 +106,7 @@ public class RegionHelper {
 
 
     public District southDelhiDistrict() {
-        District d = districtDataService.findByCode(5L);
+        District d = districtService.findByStateAndCode(delhiState(), 5L);
 
         if (d == null) {
             d = new District();
@@ -119,7 +123,7 @@ public class RegionHelper {
 
 
     public District bangaloreDistrict() {
-        District d = districtDataService.findByCode(4L);
+        District d = districtService.findByStateAndCode(karnatakaState(), 4L);
 
         if (d == null) {
             d = new District();
@@ -136,7 +140,7 @@ public class RegionHelper {
 
 
     public District mysuruDistrict() {
-        District d = districtDataService.findByCode(2L);
+        District d = districtService.findByStateAndCode(karnatakaState(), 2L);
 
         if (d == null) {
             d = new District();
