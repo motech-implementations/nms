@@ -1,13 +1,10 @@
 package org.motechproject.nms.region.service.impl;
 
-import org.motechproject.nms.region.domain.HealthFacility;
-import org.motechproject.nms.region.domain.HealthSubFacility;
-import org.motechproject.nms.region.repository.HealthFacilityDataService;
-import org.motechproject.nms.region.repository.HealthSubFacilityDataService;
-import org.motechproject.nms.region.service.HealthSubFacilityImportService;
-import org.motechproject.nms.csv.utils.GetInstanceByLong;
 import org.motechproject.nms.csv.utils.GetLong;
 import org.motechproject.nms.csv.utils.GetString;
+import org.motechproject.nms.region.domain.HealthSubFacility;
+import org.motechproject.nms.region.repository.HealthSubFacilityDataService;
+import org.motechproject.nms.region.service.HealthSubFacilityImportService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.supercsv.cellprocessor.ift.CellProcessor;
@@ -28,13 +25,9 @@ public class HealthSubFacilityImportServiceImpl extends BaseLocationImportServic
     public static final String NAME_FIELD = "name";
     public static final String PID_FIELD = "healthFacility";
 
-    private HealthFacilityDataService healthFacilityDataService;
-
     @Autowired
-    public HealthSubFacilityImportServiceImpl(HealthSubFacilityDataService healthSubFacilityDataService,
-                                              HealthFacilityDataService healthFacilityDataService) {
+    public HealthSubFacilityImportServiceImpl(HealthSubFacilityDataService healthSubFacilityDataService) {
         super(HealthSubFacility.class, healthSubFacilityDataService);
-        this.healthFacilityDataService = healthFacilityDataService;
     }
 
     @Override
@@ -43,12 +36,7 @@ public class HealthSubFacilityImportServiceImpl extends BaseLocationImportServic
         mapping.put(SID, new GetLong());
         mapping.put(REGIONAL_NAME, new GetString());
         mapping.put(NAME, new GetString());
-        mapping.put(PID, new GetInstanceByLong<HealthFacility>() {
-            @Override
-            public HealthFacility retrieve(Long value) {
-                return healthFacilityDataService.findByCode(value);
-            }
-        });
+        mapping.put(PID, new GetLong());
         return mapping;
     }
 

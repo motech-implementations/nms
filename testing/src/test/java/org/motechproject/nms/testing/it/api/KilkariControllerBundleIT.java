@@ -43,6 +43,7 @@ import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.testing.it.api.utils.HttpDeleteWithBody;
 import org.motechproject.nms.testing.it.utils.RegionHelper;
 import org.motechproject.nms.testing.it.utils.SubscriptionHelper;
@@ -55,6 +56,7 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
+
 import javax.inject.Inject;
 import java.io.IOException;
 import java.util.Arrays;
@@ -65,19 +67,6 @@ import java.util.regex.Pattern;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
-
-import javax.inject.Inject;
-
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.regex.Pattern;
-
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -92,39 +81,41 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
 
     @Inject
-    private SubscriberService subscriberService;
+    SubscriberService subscriberService;
     @Inject
-    private SubscriptionService subscriptionService;
+    SubscriptionService subscriptionService;
     @Inject
-    private SubscriberDataService subscriberDataService;
+    SubscriberDataService subscriberDataService;
     @Inject
-    private SubscriptionPackDataService subscriptionPackDataService;
+    SubscriptionPackDataService subscriptionPackDataService;
     @Inject
-    private SubscriptionPackMessageDataService subscriptionPackMessageDataService;
+    SubscriptionPackMessageDataService subscriptionPackMessageDataService;
     @Inject
-    private SubscriptionDataService subscriptionDataService;
+    SubscriptionDataService subscriptionDataService;
     @Inject
-    private FrontLineWorkerDataService frontLineWorkerDataService;
+    FrontLineWorkerDataService frontLineWorkerDataService;
     @Inject
-    private ServiceUsageDataService serviceUsageDataService;
+    ServiceUsageDataService serviceUsageDataService;
     @Inject
-    private ServiceUsageCapDataService serviceUsageCapDataService;
+    ServiceUsageCapDataService serviceUsageCapDataService;
     @Inject
-    private LanguageDataService languageDataService;
+    LanguageDataService languageDataService;
     @Inject
-    private CircleDataService circleDataService;
+    CircleDataService circleDataService;
     @Inject
-    private StateDataService stateDataService;
+    StateDataService stateDataService;
     @Inject
-    private DistrictDataService districtDataService;
+    DistrictDataService districtDataService;
     @Inject
-    private DeployedServiceDataService deployedServiceDataService;
+    DistrictService districtService;
     @Inject
-    private TestingService testingService;
+    DeployedServiceDataService deployedServiceDataService;
     @Inject
-    private InboxCallDetailRecordDataService inboxCallDetailsDataService;
+    TestingService testingService;
     @Inject
-    private InboxCallDataDataService inboxCallDataDataService;
+    InboxCallDetailRecordDataService inboxCallDetailsDataService;
+    @Inject
+    InboxCallDataDataService inboxCallDataDataService;
 
     public KilkariControllerBundleIT() {
         System.setProperty("org.motechproject.testing.osgi.http.numTries", "1");
@@ -139,10 +130,11 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     public void setupData() {
         testingService.clearDatabase();
 
-        rh = new RegionHelper(languageDataService, circleDataService, stateDataService, districtDataService);
+        rh = new RegionHelper(languageDataService, circleDataService, stateDataService, districtDataService,
+                districtService);
 
         sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
-                languageDataService, circleDataService, stateDataService, districtDataService);
+                languageDataService, circleDataService, stateDataService, districtDataService, districtService);
 
         // subscriber1 subscribed to child pack only
         Subscriber subscriber1 = subscriberDataService.create(new Subscriber(1000000000L));
@@ -1477,10 +1469,11 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         // setup data to remove 2 messages per week configuration for Pregnancy pack
         testingService.clearDatabase();
 
-        rh = new RegionHelper(languageDataService, circleDataService, stateDataService, districtDataService);
+        rh = new RegionHelper(languageDataService, circleDataService, stateDataService, districtDataService,
+                districtService);
 
         sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
-                languageDataService, circleDataService, stateDataService, districtDataService);
+                languageDataService, circleDataService, stateDataService, districtDataService, districtService);
 
         deployedServiceDataService.create(new DeployedService(rh.delhiState(), Service.KILKARI));
 
@@ -1524,10 +1517,11 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         // setup data to remove 2 messages per week configuration for Pregnancy pack
         testingService.clearDatabase();
 
-        rh = new RegionHelper(languageDataService, circleDataService, stateDataService, districtDataService);
+        rh = new RegionHelper(languageDataService, circleDataService, stateDataService, districtDataService,
+                districtService);
 
         sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
-                languageDataService, circleDataService, stateDataService, districtDataService);
+                languageDataService, circleDataService, stateDataService, districtDataService, districtService);
 
         deployedServiceDataService.create(new DeployedService(rh.delhiState(), Service.KILKARI));
 

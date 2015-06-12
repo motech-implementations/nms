@@ -42,16 +42,16 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
     private static final String ADMIN_PASSWORD = "motech";
 
     @Inject
-    private CallDetailRecordService callDetailRecordService;
+    CallDetailRecordService callDetailRecordService;
 
     @Inject
-    private CallDetailRecordDataService callDetailRecordDataService;
+    CallDetailRecordDataService callDetailRecordDataService;
 
     @Inject
-    private FrontLineWorkerService frontLineWorkerService;
+    FrontLineWorkerService frontLineWorkerService;
 
     @Inject
-    private TestingService testingService;
+    TestingService testingService;
 
     @Before
     public void clearDatabase() {

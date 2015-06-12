@@ -12,21 +12,21 @@ import org.motechproject.nms.region.domain.HealthSubFacility;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.domain.Village;
-import org.motechproject.nms.region.repository.DistrictDataService;
-import org.motechproject.nms.region.repository.HealthBlockDataService;
-import org.motechproject.nms.region.repository.HealthFacilityDataService;
 import org.motechproject.nms.region.repository.HealthFacilityTypeDataService;
-import org.motechproject.nms.region.repository.HealthSubFacilityDataService;
 import org.motechproject.nms.region.repository.StateDataService;
-import org.motechproject.nms.region.repository.TalukaDataService;
-import org.motechproject.nms.region.repository.VillageDataService;
 import org.motechproject.nms.region.service.CensusVillageImportService;
 import org.motechproject.nms.region.service.DistrictImportService;
+import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.region.service.HealthBlockImportService;
+import org.motechproject.nms.region.service.HealthBlockService;
 import org.motechproject.nms.region.service.HealthFacilityImportService;
+import org.motechproject.nms.region.service.HealthFacilityService;
 import org.motechproject.nms.region.service.HealthSubFacilityImportService;
+import org.motechproject.nms.region.service.HealthSubFacilityService;
 import org.motechproject.nms.region.service.NonCensusVillageImportService;
 import org.motechproject.nms.region.service.TalukaImportService;
+import org.motechproject.nms.region.service.TalukaService;
+import org.motechproject.nms.region.service.VillageService;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
@@ -50,56 +50,61 @@ import static org.junit.Assert.assertTrue;
 public class LocationDataImportServiceBundleIT extends BasePaxIT {
 
     @Inject
-    private TestingService testingService;
+    TestingService testingService;
 
     @Inject
-    private StateDataService stateDataService;
+    StateDataService stateDataService;
     @Inject
-    private DistrictDataService districtDataService;
+    DistrictService districtService;
     @Inject
-    private TalukaDataService talukaDataService;
+    TalukaService talukaService;
     @Inject
-    private VillageDataService villageDataService;
+    VillageService villageService;
     @Inject
-    private HealthBlockDataService healthBlockDataService;
+    HealthBlockService healthBlockService;
     @Inject
-    private HealthFacilityTypeDataService healthFacilityTypeDataService;
+    HealthFacilityTypeDataService healthFacilityTypeDataService;
     @Inject
-    private HealthFacilityDataService healthFacilityDataService;
+    HealthFacilityService healthFacilityService;
     @Inject
-    private HealthSubFacilityDataService healthSubFacilityDataService;
+    HealthSubFacilityService healthSubFacilityService;
+    @Inject
+    DistrictImportService districtImportService;
+    @Inject
+    TalukaImportService talukaImportService;
+    @Inject
+    NonCensusVillageImportService nonCensusVillageImportService;
+    @Inject
+    CensusVillageImportService censusVillageImportService;
+    @Inject
+    HealthBlockImportService healthBlockImportService;
+    @Inject
+    HealthFacilityImportService healthFacilityImportService;
+    @Inject
+    HealthSubFacilityImportService healthSubFacilityImportService;
 
-    @Inject
-    private DistrictImportService districtImportService;
-    @Inject
-    private TalukaImportService talukaImportService;
-    @Inject
-    private NonCensusVillageImportService nonCensusVillageImportService;
-    @Inject
-    private CensusVillageImportService censusVillageImportService;
-    @Inject
-    private HealthBlockImportService healthBlockImportService;
-    @Inject
-    private HealthFacilityImportService healthFacilityImportService;
-    @Inject
-    private HealthSubFacilityImportService healthSubFacilityImportService;
+    
+    State exampleState;
+    HealthFacilityType exampleFacilityType;
 
+    
     @Before
     public void setUp() {
 
         testingService.clearDatabase();
 
-        stateDataService.create(new State("EXAMPLE STATE", 1234L));
+        exampleState = stateDataService.create(new State("EXAMPLE STATE", 1234L));
         HealthFacilityType facilityType = new HealthFacilityType();
         facilityType.setName("EXAMPLE FACILITY TYPE");
         facilityType.setCode(5678L);
-        healthFacilityTypeDataService.create(facilityType);
+        exampleFacilityType = healthFacilityTypeDataService.create(facilityType);
     }
 
+    
     @Test
     public void testLocationDataImport() throws Exception {
         districtImportService.importData(read("csv/district.csv"));
-        District district = districtDataService.findByCode(1L);
+        District district = districtService.findByStateAndCode(exampleState, 1L);
         assertNotNull(district);
         assertEquals(1L, (long) district.getCode());
         assertEquals("district name", district.getName());
@@ -107,7 +112,7 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
         assertNotNull(district.getState());
 
         talukaImportService.importData(read("csv/taluka.csv"));
-        Taluka taluka = talukaDataService.findByCode("TALUKA");
+        Taluka taluka = talukaService.findByDistrictAndCode(district, "TALUKA");
         assertNotNull(taluka);
         assertEquals("TALUKA", taluka.getCode());
         assertEquals(2, (int) taluka.getIdentity());
@@ -116,7 +121,7 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
         assertNotNull(taluka.getDistrict());
 
         censusVillageImportService.importData(read("csv/census_village.csv"));
-        Village censusVillage = villageDataService.findByVcodeAndSvid(3L, null);
+        Village censusVillage = villageService.findByTalukaAndVcodeAndSvid(taluka, 3L, null);
         assertNotNull(censusVillage);
         assertEquals(3L, (long) censusVillage.getVcode());
         assertEquals("census village name", censusVillage.getName());
@@ -124,7 +129,7 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
         assertNotNull(censusVillage.getTaluka());
 
         nonCensusVillageImportService.importData(read("csv/non_census_village_associated.csv"));
-        Village nonCensusVillageAssociated = villageDataService.findByVcodeAndSvid(3L, 4L);
+        Village nonCensusVillageAssociated = villageService.findByTalukaAndVcodeAndSvid(taluka, 3L, 4L);
         assertNotNull(nonCensusVillageAssociated);
         assertEquals(4L, (long) nonCensusVillageAssociated.getSvid());
         assertEquals("non census village associated name", nonCensusVillageAssociated.getName());
@@ -133,7 +138,7 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
         assertEquals(3L, (long) nonCensusVillageAssociated.getVcode());
 
         nonCensusVillageImportService.importData(read("csv/non_census_village_non_associated.csv"));
-        Village nonCensusVillageNonAssociated = villageDataService.findByVcodeAndSvid(null, 5L);
+        Village nonCensusVillageNonAssociated = villageService.findByTalukaAndVcodeAndSvid(taluka, null, 5L);
         assertNotNull(nonCensusVillageNonAssociated);
         assertEquals(5L, (long) nonCensusVillageNonAssociated.getSvid());
         assertEquals("non census village non associated name", nonCensusVillageNonAssociated.getName());
@@ -142,7 +147,7 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
         assertNull(nonCensusVillageNonAssociated.getVcode());
 
         healthBlockImportService.importData(read("csv/health_block.csv"));
-        HealthBlock healthBlock = healthBlockDataService.findByCode(6L);
+        HealthBlock healthBlock = healthBlockService.findByTalukaAndCode(taluka, 6L);
         assertNotNull(healthBlock);
         assertEquals(6L, (long) healthBlock.getCode());
         assertEquals("health block name", healthBlock.getName());
@@ -151,7 +156,7 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
         assertNotNull(healthBlock.getTaluka());
 
         healthFacilityImportService.importData(read("csv/health_facility.csv"));
-        HealthFacility healthFacility = healthFacilityDataService.findByCode(7L);
+        HealthFacility healthFacility = healthFacilityService.findByHealthBlockAndCode(healthBlock, 7L);
         assertNotNull(healthFacility);
         assertEquals(7L, (long) healthFacility.getCode());
         assertEquals("health facility name", healthFacility.getName());
@@ -160,7 +165,8 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
         assertNotNull(healthFacility.getHealthFacilityType());
 
         healthSubFacilityImportService.importData(read("csv/health_sub_facility.csv"));
-        HealthSubFacility healthSubFacility = healthSubFacilityDataService.findByCode(8L);
+        HealthSubFacility healthSubFacility = healthSubFacilityService.findByHealthFacilityAndCode(
+                healthFacility, 8L);
         assertNotNull(healthSubFacility);
         assertEquals(8L, ((long) healthSubFacility.getCode()));
         assertEquals("health sub facility name", healthSubFacility.getName());
@@ -187,9 +193,9 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
             thrown = true;
         }
         assertTrue(thrown);
-        assertNull(districtDataService.findByCode(1002L));
-        assertNull(districtDataService.findByCode(1003L));
-        assertNull(districtDataService.findByCode(1004L));
+        assertNull(districtService.findByStateAndCode(exampleState, 1002L));
+        assertNull(districtService.findByStateAndCode(exampleState, 1003L));
+        assertNull(districtService.findByStateAndCode(exampleState, 1004L));
     }
 
     private Reader read(String resource) {

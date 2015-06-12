@@ -15,6 +15,7 @@ import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.region.service.LanguageLocationImportService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,6 +50,7 @@ public class LanguageLocationImportServiceImpl implements LanguageLocationImport
     private CircleDataService circleDataService;
     private StateDataService stateDataService;
     private DistrictDataService districtDataService;
+    private DistrictService districtService;
 
     @Override
     @Transactional
@@ -71,8 +73,7 @@ public class LanguageLocationImportServiceImpl implements LanguageLocationImport
         String languageCode = (String) record.get(LANGUAGE_CODE);
         String languageName = (String) record.get(LANGUAGE_NAME);
         State state = (State) record.get(STATE);
-        // TODO: District code is not unique.  It must be looked up along with the state
-        District district = (District) record.get(DISTRICT);
+        District district = districtService.findByStateAndName(state, (String) record.get(DISTRICT));
         Circle circle = (Circle) record.get(CIRCLE);
         Boolean defaultForCircle = (Boolean) record.get(DEFAULT_FOR_CIRCLE);
 
@@ -168,14 +169,7 @@ public class LanguageLocationImportServiceImpl implements LanguageLocationImport
                 return state;
             }
         }));
-        mapping.put(DISTRICT, new Optional(new GetInstanceByString<District>() {
-            @Override
-            public District retrieve(String value) {
-                District district = districtDataService.findByName(value);
-                verify(null != district, "District does not exist");
-                return district;
-            }
-        }));
+        mapping.put(DISTRICT, new Optional(new GetString()));
         mapping.put(DEFAULT_FOR_CIRCLE, new GetBoolean());
         return mapping;
     }
@@ -204,5 +198,10 @@ public class LanguageLocationImportServiceImpl implements LanguageLocationImport
     @Autowired
     public void setDistrictDataService(DistrictDataService districtDataService) {
         this.districtDataService = districtDataService;
+    }
+
+    @Autowired
+    public void setDistrictService(DistrictService districtService) {
+        this.districtService = districtService;
     }
 }

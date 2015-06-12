@@ -21,6 +21,7 @@ import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.testing.it.utils.CdrHelper;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
@@ -45,34 +46,28 @@ import static org.junit.Assert.assertTrue;
 public class ImiController_CDR_BundleIT extends BasePaxIT {
 
     @Inject
-    private SettingsService settingsService;
-
+    SettingsService settingsService;
     @Inject
-    private SubscriptionService subscriptionService;
-
+    SubscriptionService subscriptionService;
     @Inject
-    private SubscriberDataService subscriberDataService;
-
+    SubscriberDataService subscriberDataService;
     @Inject
-    private SubscriptionPackDataService subscriptionPackDataService;
-
+    SubscriptionPackDataService subscriptionPackDataService;
     @Inject
-    private LanguageDataService languageDataService;
-
+    LanguageDataService languageDataService;
     @Inject
-    private CircleDataService circleDataService;
-
+    CircleDataService circleDataService;
     @Inject
-    private StateDataService stateDataService;
-
+    StateDataService stateDataService;
     @Inject
-    private DistrictDataService districtDataService;
-
+    DistrictDataService districtDataService;
     @Inject
-    private FileAuditRecordDataService fileAuditRecordDataService;
-
+    DistrictService districtService;
     @Inject
-    private TestingService testingService;
+    FileAuditRecordDataService fileAuditRecordDataService;
+    @Inject
+    TestingService testingService;
+
 
     private String localCdrDirBackup;
     private String remoteCdrDirBackup;
@@ -80,8 +75,10 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
 
     @Before
     public void setupSettings() {
-        localCdrDirBackup = ImiTestHelper.setupTestDir(settingsService, ImiTestHelper.LOCAL_CDR_DIR, "cdr-local-dir-it");
-        remoteCdrDirBackup = ImiTestHelper.setupTestDir(settingsService, ImiTestHelper.REMOTE_CDR_DIR, "cdr-remote-dir-it");
+        localCdrDirBackup = ImiTestHelper.setupTestDir(settingsService, ImiTestHelper.LOCAL_CDR_DIR,
+                "cdr-local-dir-it");
+        remoteCdrDirBackup = ImiTestHelper.setupTestDir(settingsService, ImiTestHelper.REMOTE_CDR_DIR,
+                "cdr-remote-dir-it");
     }
 
 
@@ -143,8 +140,8 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
         getLogger().debug("testCreateCdrFileNotificationRequest()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService, fileAuditRecordDataService);
+                subscriptionPackDataService, languageDataService, circleDataService, stateDataService,
+                districtDataService, fileAuditRecordDataService, districtService);
 
         helper.makeCdrs(1,0,0,0);
         helper.makeRemoteCsrFile();
@@ -153,7 +150,8 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
 
         HttpPost httpPost = createCdrFileNotificationHttpPost(helper, true, true, true);
 
-        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ImiTestHelper.ADMIN_USERNAME, ImiTestHelper.ADMIN_PASSWORD);
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ImiTestHelper.ADMIN_USERNAME,
+                ImiTestHelper.ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_ACCEPTED, response.getStatusLine().getStatusCode());
     }
 
@@ -164,8 +162,8 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
         getLogger().debug("testCreateCdrFileNotificationRequestBadCdrSummaryFileName()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService, fileAuditRecordDataService);
+                subscriptionPackDataService, languageDataService, circleDataService, stateDataService,
+                districtDataService, fileAuditRecordDataService, districtService);
 
         helper.makeCdrs(1,0,0,0);
         helper.makeRemoteCdrFile();
@@ -185,8 +183,8 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
         getLogger().debug("testCreateCdrFileNotificationRequestBadFileNames()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService, fileAuditRecordDataService);
+                subscriptionPackDataService, languageDataService, circleDataService, stateDataService,
+                districtDataService, fileAuditRecordDataService, districtService);
         HttpPost httpPost = createCdrFileNotificationHttpPost(helper, false, true, true);
 
         // All 3 filenames will be considered invalid because the target file is of invalid format, and the CDR
