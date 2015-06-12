@@ -248,9 +248,14 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
         toReturn.setBookmark(bookmark);
         toReturn.setScoresByChapter(scores);
 
-        // if the bookmark is final and scores pass, reset it
-        if (bookmark.equals(FINAL_BOOKMARK) && getTotalScore(scores) >= PASS_SCORE) {
+        // if the bookmark is final, reset it
+        if (bookmark.equals(FINAL_BOOKMARK)) {
             LOGGER.debug("We need to reset bookmark to new state.");
+            fromBookmark.setChapterIdentifier(null);
+            fromBookmark.setLessonIdentifier(null);
+            fromBookmark.getProgress().remove(SCORES_KEY);
+            bookmarkService.updateBookmark(fromBookmark);
+
             toReturn.setScoresByChapter(null);
             toReturn.setBookmark(null);
         }

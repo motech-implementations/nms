@@ -37,7 +37,7 @@
 
     <osgi:reference id="mobileAcademyService" interface="org.motechproject.nms.mobileacademy.service.MobileAcademyService"/>
 
-    <osgi:reference id="languageLocationService" interface="org.motechproject.nms.region.service.LanguageLocationService"/>
+    <osgi:reference id="languageService" interface="org.motechproject.nms.region.service.LanguageService"/>
 
     <osgi:reference id="circleService" interface="org.motechproject.nms.region.service.CircleService"/>
 
