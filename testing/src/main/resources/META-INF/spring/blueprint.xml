@@ -40,7 +40,7 @@
     <osgi:reference id="34" interface="org.motechproject.nms.kilkari.repository.MctsMotherDataService" />
     <osgi:reference id="35" interface="org.motechproject.nms.kilkari.repository.MctsChildDataService" />
     <osgi:reference id="36" interface="org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService" />
-
+    <osgi:reference id="37" interface="org.motechproject.nms.kilkari.service.MctsBeneficiaryUpdateService" />
     <osgi:reference id="18" interface="org.motechproject.nms.mobileacademy.repository.CompletionRecordDataService" />
     <osgi:reference id="19" interface="org.motechproject.nms.mobileacademy.repository.NmsCourseDataService" />
 
