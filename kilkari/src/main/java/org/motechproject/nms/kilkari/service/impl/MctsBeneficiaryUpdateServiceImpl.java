@@ -9,10 +9,12 @@ import org.motechproject.nms.kilkari.domain.MctsBeneficiary;
 import org.motechproject.nms.kilkari.domain.MctsChild;
 import org.motechproject.nms.kilkari.domain.MctsMother;
 import org.motechproject.nms.kilkari.domain.Subscriber;
+import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.repository.MctsChildDataService;
 import org.motechproject.nms.kilkari.repository.MctsMotherDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
+import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryUpdateService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,6 +44,8 @@ public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateSe
     private MctsChildDataService mctsChildDataService;
     @Autowired
     private SubscriptionService subscriptionService;
+    @Autowired
+    private SubscriptionDataService subscriptionDataService;
 
     public static final String MCTS_ID = "FLW ID";
     public static final String NEW_MSISDN = "NEW MSISDN";
@@ -72,6 +76,10 @@ public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateSe
                 Subscriber subscriber = subscriberFromBeneficiary(beneficiary);
                 if (subscriber == null) {
                     // throw
+                }
+
+                if (subscriber.getCallingNumber() == msisdn) {
+                    return;
                 }
 
                 updateMsisdnForSubscriber(subscriber, beneficiary, msisdn);
@@ -120,9 +128,31 @@ public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateSe
 
         Subscriber subscriberWithMsisdn = subscriberDataService.findByCallingNumber(newMsisdn);
         if (subscriberWithMsisdn != null) {
-            // this number is already in use
-            if (subscriptionService.)
+            // this number is in use
+            if (subscriptionService.getActiveSubscription(subscriberWithMsisdn, packType) != null) {
+                // in fact, it's in use for this pack -- reject the subscription
+
+            }
         }
+
+        // do the update -- by creating a new Subscriber object and re-linking the beneficiary and subscription to it
+
+        Subscriber newSubscriber = new Subscriber(newMsisdn, subscriber.getLanguage(), subscriber.getCircle());
+        Subscription subscription = subscriptionService.getActiveSubscription(subscriber.getCallingNumber(), packType);
+        subscriber.getSubscriptions().remove(subscription);
+        newSubscriber.getSubscriptions().add(subscription);
+        subscription.setSubscriber(newSubscriber);
+
+        if (packType == SubscriptionPackType.CHILD) {
+            newSubscriber.setChild((MctsChild) beneficiary);
+            newSubscriber.setDateOfBirth(subscriber.getDateOfBirth());
+        } else {
+            newSubscriber.setMother((MctsMother) beneficiary);
+            newSubscriber.setLastMenstrualPeriod(subscriber.getLastMenstrualPeriod());
+        }
+
+        subscriberDataService.create(newSubscriber);
+        subscriptionDataService.update(subscription);
     }
 
     private MctsBeneficiary beneficiaryFromRecord(Map<String, Object> record) {

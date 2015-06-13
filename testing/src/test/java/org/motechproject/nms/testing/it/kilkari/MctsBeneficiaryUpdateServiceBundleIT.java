@@ -82,7 +82,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
 
         subscription.getSubscriber().setChild(new MctsChild(mctsId));
 
-        Reader reader = createMsisdnReaderWithHeaders(mctsId + ", " + oldMsisdn + ", " + newMsisdn);
+        Reader reader = createMsisdnReaderWithHeaders(mctsId + "," + newMsisdn);
         mctsBeneficiaryUpdateService.updateMsisdn(reader);
 
         assertNull(subscriberDataService.findByCallingNumber(oldMsisdn));
@@ -105,7 +105,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
 
     private Reader createMsisdnReaderWithHeaders(String... lines) {
         StringBuilder builder = new StringBuilder();
-        builder.append("MCTS ID,MSISDN,NEW MSISDN").append("\n");
+        builder.append("MCTS ID,NEW MSISDN").append("\n");
         for (String line : lines) {
             builder.append(line).append("\n");
         }
