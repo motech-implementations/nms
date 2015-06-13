@@ -46,6 +46,7 @@ import java.util.Set;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import static org.motechproject.nms.testing.it.utils.RegionHelper.createDistrict;
 import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthFacilityType;
@@ -247,7 +248,13 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         assertEquals(dob.toLocalDate(), subscriber.getDateOfBirth().toLocalDate());
 
         subscriptions = subscriber.getActiveSubscriptions();
-        assertEquals(2, subscriptions.size());
+        Subscription childSubscription = subscriptionService.getActiveSubscription(subscriber, SubscriptionPackType.CHILD);
+        Subscription pregnancySubscription = subscriptionService.getActiveSubscription(subscriber, SubscriptionPackType.PREGNANCY);
+
+        // the pregnancy subscription should have been deactivated
+        assertEquals(1, subscriptions.size());
+        assertNotNull(childSubscription);
+        assertNull(pregnancySubscription);
     }
 
     @Test
