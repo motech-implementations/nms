@@ -5,6 +5,7 @@ package org.motechproject.nms.kilkari.domain;
  */
 public enum DeactivationReason {
     DEACTIVATED_BY_USER,
+    LIVE_BIRTH,
     MISCARRIAGE_OR_ABORTION,
     STILL_BIRTH,
     CHILD_DEATH,

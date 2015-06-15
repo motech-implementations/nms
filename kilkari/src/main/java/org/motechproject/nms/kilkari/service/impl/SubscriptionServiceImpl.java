@@ -256,7 +256,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
         if (subscriber.getDateOfBirth() != null && pack.getType() == SubscriptionPackType.CHILD) {
             // DOB (with or without LMP) is present
-            if (subscriberHasActiveSubscription(subscriber, SubscriptionPackType.CHILD))
+            if (getActiveSubscription(subscriber, SubscriptionPackType.CHILD) != null)
             {
                 // reject the subscription if it already exists
                 logRejectedSubscription(subscriber.getCallingNumber(),
@@ -273,7 +273,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         } else if (subscriber.getLastMenstrualPeriod() != null && subscriber.getDateOfBirth() == null &&
                 pack.getType() == SubscriptionPackType.PREGNANCY) {
             // LMP is present and DOB is not
-            if (subscriberHasActiveSubscription(subscriber, SubscriptionPackType.PREGNANCY)) {
+            if (getActiveSubscription(subscriber, SubscriptionPackType.PREGNANCY) != null) {
                 // reject the subscription if it already exists
                 logRejectedSubscription(subscriber.getCallingNumber(),
                         SubscriptionRejectionReason.ALREADY_SUBSCRIBED, SubscriptionPackType.PREGNANCY);
@@ -305,7 +305,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @Override
-    public boolean subscriberHasActiveSubscription(Subscriber subscriber, SubscriptionPackType type) {
+    public Subscription getActiveSubscription(Subscriber subscriber, SubscriptionPackType type) {
         Iterator<Subscription> subscriptionIterator = subscriber.getSubscriptions().iterator();
         Subscription existingSubscription;
 
@@ -315,14 +315,14 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 if (type == SubscriptionPackType.PREGNANCY &&
                         (existingSubscription.getStatus() == SubscriptionStatus.ACTIVE ||
                          existingSubscription.getStatus() == SubscriptionStatus.PENDING_ACTIVATION)) {
-                    return true;
+                    return existingSubscription;
                 }
                 if (type == SubscriptionPackType.CHILD && existingSubscription.getStatus() == SubscriptionStatus.ACTIVE) {
-                    return true;
+                    return existingSubscription;
                 }
             }
         }
-        return false;
+        return null;
     }
 
     @Override
