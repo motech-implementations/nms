@@ -5,9 +5,11 @@ import org.motechproject.event.MotechEvent;
 import org.motechproject.mds.annotations.InstanceLifecycleListener;
 import org.motechproject.mds.domain.InstanceLifecycleListenerType;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
+import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
+import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
 import org.motechproject.nms.region.domain.Language;
 
@@ -61,6 +63,14 @@ public interface SubscriptionService {
      * @return Subscription pack with the specified name, or null if none exists
      */
     SubscriptionPack getSubscriptionPack(String name);
+
+    /**
+     * Returns active subscription for the specified pack type if the subscriber has one
+     * @param subscriber The subscriber
+     * @param type The type of subscription pack
+     * @return The subscription if an active one exists, null otherwise
+     */
+    Subscription getActiveSubscription(Subscriber subscriber, SubscriptionPackType type);
 
     List<SubscriptionPack> getSubscriptionPacks();
 

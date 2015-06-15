@@ -95,7 +95,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 .withSecondOfMinute(0)
                 .withMillisOfSecond(0);
 
-        //Millisecond interval between events
+        //Second interval between events
         String intervalProp = settingsFacade.getProperty(SUBSCRIPTION_PURGE_SEC_INTERVAL);
         Integer secInterval = Integer.parseInt(intervalProp);
 
@@ -107,7 +107,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         RepeatingSchedulableJob job = new RepeatingSchedulableJob(
                 event,          //MOTECH event
                 null,           //repeatCount, null means infinity
-                secInterval,     //repeatIntervalInSeconds
+                secInterval,    //repeatIntervalInSeconds
                 today.toDate(), //startTime
                 null,           //endTime, null means no end time
                 true);          //ignorePastFiresAtStart
@@ -256,7 +256,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
         if (subscriber.getDateOfBirth() != null && pack.getType() == SubscriptionPackType.CHILD) {
             // DOB (with or without LMP) is present
-            if (subscriberHasActivePackType(subscriber, SubscriptionPackType.CHILD))
+            if (getActiveSubscription(subscriber, SubscriptionPackType.CHILD) != null)
             {
                 // reject the subscription if it already exists
                 logRejectedSubscription(subscriber.getCallingNumber(),
@@ -273,7 +273,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         } else if (subscriber.getLastMenstrualPeriod() != null && subscriber.getDateOfBirth() == null &&
                 pack.getType() == SubscriptionPackType.PREGNANCY) {
             // LMP is present and DOB is not
-            if (subscriberHasActivePackType(subscriber, SubscriptionPackType.PREGNANCY)) {
+            if (getActiveSubscription(subscriber, SubscriptionPackType.PREGNANCY) != null) {
                 // reject the subscription if it already exists
                 logRejectedSubscription(subscriber.getCallingNumber(),
                         SubscriptionRejectionReason.ALREADY_SUBSCRIBED, SubscriptionPackType.PREGNANCY);
@@ -304,7 +304,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         subscriptionErrorDataService.create(error);
     }
 
-    private boolean subscriberHasActivePackType(Subscriber subscriber, SubscriptionPackType type) {
+    @Override
+    public Subscription getActiveSubscription(Subscriber subscriber, SubscriptionPackType type) {
         Iterator<Subscription> subscriptionIterator = subscriber.getSubscriptions().iterator();
         Subscription existingSubscription;
 
@@ -314,14 +315,14 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 if (type == SubscriptionPackType.PREGNANCY &&
                         (existingSubscription.getStatus() == SubscriptionStatus.ACTIVE ||
                          existingSubscription.getStatus() == SubscriptionStatus.PENDING_ACTIVATION)) {
-                    return true;
+                    return existingSubscription;
                 }
                 if (type == SubscriptionPackType.CHILD && existingSubscription.getStatus() == SubscriptionStatus.ACTIVE) {
-                    return true;
+                    return existingSubscription;
                 }
             }
         }
-        return false;
+        return null;
     }
 
     @Override
@@ -342,6 +343,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 subscription.getSubscriptionPack())) {
             subscription.setStatus(SubscriptionStatus.COMPLETED);
         }
+
         subscriptionDataService.update(subscription);
     }
 

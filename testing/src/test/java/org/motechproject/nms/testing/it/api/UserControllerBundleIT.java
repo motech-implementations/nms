@@ -1,5 +1,20 @@
 package org.motechproject.nms.testing.it.api;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+import javax.inject.Inject;
+
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -28,7 +43,9 @@ import org.motechproject.nms.flw.repository.ServiceUsageDataService;
 import org.motechproject.nms.flw.repository.WhitelistEntryDataService;
 import org.motechproject.nms.flw.repository.WhitelistStateDataService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
+import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.domain.Subscriber;
+import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
@@ -61,20 +78,6 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionCallbackWithoutResult;
-
-import javax.inject.Inject;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.regex.Pattern;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 
 /**
@@ -1355,6 +1358,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     }
 
 
+
     /**
      * To verify the behavior of Get Subscriber Details API if the service is
      * not deployed in provided Subscriber's state.
@@ -1367,17 +1371,102 @@ public class UserControllerBundleIT extends BasePaxIT {
 
                 HttpGet httpGet = createHttpGet(true, "kilkari", // service
                 true, "1000000000", // callingNumber
-                true, "OP", // operator
-                true, rh.delhiCircle().getName(), // circle
-                true, "123456789012345" // callId
-        );
+                        true, "OP", // operator
+                        true, rh.delhiCircle().getName(), // circle
+                        true, "123456789012345" // callId
+                );
+
         // Should return HTTP 501 because the service is not
         // deployed for the specified state
         String expectedJsonResponse = createFailureResponseJson("<KILKARI: Not Deployed In State>");
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, response.getStatusLine().getStatusCode());
+
         assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
+    /**
+     * To verify that any DEACTIVATED subscription is not returned in get
+     * subscriber details.
+     */
+    @Test
+    public void verifyFT183() throws IOException,
+            InterruptedException {
+        createKilkariTestData();
+        // subscriber 4000000000L subscribed to both pack and Pregnancy pack is
+        // deactivated
+        Subscriber subscriber = subscriberDataService.create(new Subscriber(4000000000L, rh.hindiLanguage()));
+        subscriptionService.createSubscription(subscriber.getCallingNumber(),
+                rh.hindiLanguage(), sh.childPack(), SubscriptionOrigin.IVR);
+        
+        Subscription pregnancyPack = subscriptionService.createSubscription(
+                subscriber.getCallingNumber(), rh.hindiLanguage(), sh.pregnancyPack(),
+                SubscriptionOrigin.IVR);
+        subscriptionService.deactivateSubscription(pregnancyPack,
+                DeactivationReason.DEACTIVATED_BY_USER);
+        
+        Set<String> expectedPacks = new HashSet<>();
+        expectedPacks.add("childPack");
+
+        HttpGet httpGet = createHttpGet(true, "kilkari", // service
+                true, "4000000000", // callingNumber
+                true, "OP", // operator
+                true, rh.delhiCircle().getName(), // circle
+                true, "123456789012345" // callId
+        );
+
+        String expectedJsonResponse = createKilkariUserResponseJson(rh.hindiLanguage().getCode(), // defaultLanguageLocationCode
+                rh.hindiLanguage().getCode(), // locationCode
+                null, // allowedLanguageLocationCodes
+                expectedPacks // subscriptionPackList
+        );
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * NMS_FT_184 To verify that any COMPLETED subscription is not returned in
+     * get subscriber details.
+     */
+    @Test
+    public void verifyFT184() throws IOException,
+            InterruptedException {
+        createKilkariTestData();
+        // subscriber subscribed to both packs and Pregnancy pack is completed
+        Subscriber subscriber = subscriberDataService.create(new Subscriber(5000000000L, rh.hindiLanguage()));
+        
+        subscriptionService.createSubscription(subscriber.getCallingNumber(),
+                rh.hindiLanguage(), sh.childPack(), SubscriptionOrigin.IVR);
+        
+        Subscription pregnancyPack=subscriptionService.createSubscription(
+                subscriber.getCallingNumber(), rh.hindiLanguage(), sh.pregnancyPack(),
+                SubscriptionOrigin.IVR);
+        subscriptionService.updateStartDate(pregnancyPack, DateTime.now()
+                .minusDays(505 + 90));
+ 
+        Set<String> expectedPacks = new HashSet<>();
+        expectedPacks.add("childPack");
+
+        HttpGet httpGet = createHttpGet(true, "kilkari", // service
+                true, "5000000000", // callingNumber
+                true, "OP", // operator
+                true, rh.delhiCircle().getName(), // circle
+                true, "123456789012345" // callId
+        );
+
+        String expectedJsonResponse = createKilkariUserResponseJson(rh.hindiLanguage().getCode(), // defaultLanguageLocationCode
+                rh.hindiLanguage().getCode(), // locationCode
+                null, // allowedLanguageLocationCodes
+                expectedPacks // subscriptionPackList
+        );
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
 }
