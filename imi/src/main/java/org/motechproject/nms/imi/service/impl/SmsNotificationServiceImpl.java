@@ -16,6 +16,8 @@ import org.motechproject.nms.imi.service.SmsNotificationService;
 import org.motechproject.server.config.SettingsFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,8 +27,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Created by kosh on 6/15/15.
+ * Sms notification service to talk to IMI
  */
+@Service("smsNotificationService")
 public class SmsNotificationServiceImpl implements SmsNotificationService {
 
     private static final String SMS_NOTIFICATION_URL = "imi.sms.notification.url";
@@ -45,6 +48,7 @@ public class SmsNotificationServiceImpl implements SmsNotificationService {
 
     private SettingsFacade settingsFacade;
 
+    @Autowired
     public SmsNotificationServiceImpl(AlertService alertService, SettingsFacade settingsFacade) {
         this.alertService = alertService;
         this.settingsFacade = settingsFacade;

@@ -23,6 +23,9 @@
     <osgi:reference id="mTrainingService"
                     interface="org.motechproject.mtraining.service.MTrainingService" />
 
+    <osgi:reference id="smsNotificationService"
+                    interface="org.motechproject.nms.imi.service.SmsNotificationService" />
+
     <osgi:reference id="bookmarkService"
                     interface="org.motechproject.mtraining.service.BookmarkService" />
 
