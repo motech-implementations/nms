@@ -120,4 +120,24 @@ public abstract class MctsBeneficiary {
     public void setVillage(Village village) {
         this.village = village;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        MctsBeneficiary that = (MctsBeneficiary) o;
+
+        return !(beneficiaryId != null ? !beneficiaryId.equals(that.beneficiaryId) : that.beneficiaryId != null);
+
+    }
+
+    @Override
+    public int hashCode() {
+        return beneficiaryId != null ? beneficiaryId.hashCode() : 0;
+    }
 }
