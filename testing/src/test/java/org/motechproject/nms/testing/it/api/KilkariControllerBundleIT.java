@@ -69,6 +69,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+
 /**
  * Verify that Kilkari API is functional.
  */
@@ -117,17 +118,13 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     @Inject
     InboxCallDataDataService inboxCallDataDataService;
 
-    public KilkariControllerBundleIT() {
-        System.setProperty("org.motechproject.testing.osgi.http.numTries", "1");
-    }
-
 
     private RegionHelper rh;
     private SubscriptionHelper sh;
 
 
     @Before
-    public void setupData() {
+    public void setupTestData() {
         testingService.clearDatabase();
 
         rh = new RegionHelper(languageDataService, circleDataService, stateDataService, districtDataService,
@@ -698,8 +695,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
-
-
+    
     /**
      * NMS_FT_22 To verify the that Save Inbox call Details API request should succeed with content being saved for both
      * Packs as blank.
@@ -735,6 +731,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertTrue(456L == inboxCallDetailRecord.getCallEndTime().getMillis());
 
     }
+
 
     /**
      * To verify the that Save Inbox call Details API request should succeed with content being saved for both Packs.
@@ -811,6 +808,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertEquals("72WeeksPack", inboxCallData72Pack.getSubscriptionPack());
     }
 
+
     /**
      * NMS_FT_77 To check that message should be returned from inbox within days of user's subscription gets completed
      * for Pregnancy Pack.
@@ -872,17 +870,16 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     /*
      * To verify that Get Inbox Details API request fails if the provided parameter value of callingNumber is blank.
      */
- 	@Test
- 	public void verifyFT92() throws IOException, InterruptedException {
+    @Test
+    public void verifyFT92() throws IOException, InterruptedException {
 
- 		HttpGet httpGet = createHttpGet(true, "", true, "123456789012345");
- 		String expectedJsonResponse = createFailureResponseJson("<callingNumber: Not Present>");
+        HttpGet httpGet = createHttpGet(true, "", true, "123456789012345");
+        String expectedJsonResponse = createFailureResponseJson("<callingNumber: Not Present>");
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
         assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response.getEntity())));
- 	}
-
+    }
 
     /*
      * To verify that Get Inbox Details API request fails if the provided parameter value of callId is blank.
@@ -897,7 +894,6 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
         assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response.getEntity())));
     }
-
 
     /*
      * To check that message for both Packs should be returned from inbox within 7 days of user's subscription gets
@@ -1105,7 +1101,6 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
-
     /*
      * To verify the behavior of Get Inbox Details API if provided beneficiary's callingNumber is less than 10 digits.
      */
@@ -1133,7 +1128,6 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
         assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response.getEntity()))  );
     }
-
 
     /**
      * To verify the behavior of Save Inbox call Details API if provided beneficiary's subscriptionPack does not exist.
@@ -1173,12 +1167,13 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                                 "foo", // contentFileName
                                 123L, // startTime
                                 456L) // endTime
-                        )))); // content
+                )))); // content
         String expectedJsonResponse = createFailureResponseJson("<subscriptionPack: Invalid><content: Invalid>");
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
                 HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
+
 
     /**
      * To verify that Save Inbox call Details API request fails if specified subscription doesn't exist for beneficiary.
@@ -1209,9 +1204,9 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 1, // callDisconnectReason
                 new HashSet<>(Arrays.asList(
                         new CallDataRequest(subscription1.getSubscriptionId(), // subscriptionId
-                                                                               // refer
-                                                                               // deactivated
-                                                                               // subscription
+                                // refer
+                                // deactivated
+                                // subscription
                                 "48WeeksPack", // subscriptionPack
                                 "123", // inboxWeekId
                                 "foo", // contentFileName
@@ -1219,14 +1214,14 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                                 456L), // endTime
                         new CallDataRequest(
                                 "ae7681ae-1f3c-4dba-365d-4b26e19f4335", // subscriptionId
-                                                                        // not
-                                                                        // exist
+                                // not
+                                // exist
                                 "72WeeksPack", // subscriptionPack
                                 "123", // inboxWeekId
                                 "foo", // contentFileName
                                 123L, // startTime
                                 456L) // endTime
-                        )))); // content
+                )))); // content
         String expectedJsonResponse = createFailureResponseJson("<subscriptionId: Invalid><content: Invalid>");
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
                 HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
@@ -1554,5 +1549,82 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         HttpGet httpGet = createHttpGet(true, "9999911122", true, "123456789012345");
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
                 expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    /**
+     * NMS_FT_21 To verify the that Save Inbox call Details API request should
+     * succeed for unsubscribed caller or caller with no active subscription
+     * without any content being saved.
+     */
+    @Test
+    public void verifyFT21() throws IOException, InterruptedException {
+        // Test for unsubscribed caller
+        HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
+                1234567899L, // unsubscribed callingNumber
+                "A", // operator
+                "AP", // circle
+                123456789012345L, // callId
+                123L, // callStartTime
+                456L, // callEndTime
+                123, // callDurationInPulses
+                2, // callStatus
+                4, // callDisconnectReason
+                null)); // no content
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+        // assert inboxCallDetailRecord
+        InboxCallDetailRecord inboxCallDetailRecord = inboxCallDetailsDataService
+                .retrieve("callingNumber", 1234567899L);
+        assertTrue(1234567899L == inboxCallDetailRecord.getCallingNumber());
+        assertTrue(123456789012345L == inboxCallDetailRecord.getCallId());
+        assertEquals("A", inboxCallDetailRecord.getOperator());
+        assertEquals("AP", inboxCallDetailRecord.getCircle());
+        assertTrue(123 == inboxCallDetailRecord.getCallDurationInPulses());
+        assertTrue(2 == inboxCallDetailRecord.getCallStatus());
+        assertTrue(4 == inboxCallDetailRecord.getCallDisconnectReason());
+        assertTrue(123L == inboxCallDetailRecord.getCallStartTime().getMillis());
+        assertTrue(456L == inboxCallDetailRecord.getCallEndTime().getMillis());
+
+        // subscribed caller with deactivated subscription i.e no active and
+        // pending subscriptions
+        Subscriber subscriber = subscriberDataService.create(new Subscriber(
+                5000000000L));
+        Subscription subscription1 = subscriptionService.createSubscription(
+                subscriber.getCallingNumber(), rh.hindiLanguage(),
+                sh.childPack(), SubscriptionOrigin.IVR);
+        subscriptionService.deactivateSubscription(subscription1,
+                DeactivationReason.DEACTIVATED_BY_USER);
+        httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
+                5000000000L, // callingNumber
+                "A", // operator
+                "AP", // circle
+                123456789012345L, // callId
+                123L, // callStartTime
+                456L, // callEndTime
+                123, // callDurationInPulses
+                3, // callStatus
+                5, // callDisconnectReason
+                null)); // no content
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+        // assert inboxCallDetailRecord
+        InboxCallDetailRecord inboxCallDetailRecord2 = inboxCallDetailsDataService
+                .retrieve("callingNumber", 5000000000L);
+        assertEquals(5000000000L,
+                (long) inboxCallDetailRecord2.getCallingNumber());
+        assertEquals(123456789012345L,
+                (long) inboxCallDetailRecord2.getCallId());
+        assertEquals("A", inboxCallDetailRecord2.getOperator());
+        assertEquals("AP", inboxCallDetailRecord2.getCircle());
+        assertEquals(123,
+                (int) inboxCallDetailRecord2.getCallDurationInPulses());
+        assertEquals(3, (int) inboxCallDetailRecord2.getCallStatus());
+        assertEquals(5, (int) inboxCallDetailRecord2.getCallDisconnectReason());
+        assertEquals(123L, (long) inboxCallDetailRecord2.getCallStartTime()
+                .getMillis());
+        assertEquals(456L, (long) inboxCallDetailRecord2.getCallEndTime()
+                .getMillis());
     }
 }
