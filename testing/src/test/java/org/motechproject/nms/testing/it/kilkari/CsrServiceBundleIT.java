@@ -797,7 +797,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
         SubscriptionHelper sh = new SubscriptionHelper(subscriptionService, subscriberDataService,
                 subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService);
+                stateDataService, districtDataService, districtService);
 
         int days = sh.childPack().getWeeks() * 7;
         Subscription sub = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(days),
