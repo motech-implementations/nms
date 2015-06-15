@@ -1,18 +1,5 @@
 package org.motechproject.nms.testing.it.api;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.regex.Pattern;
-
-import javax.inject.Inject;
-
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -68,6 +55,18 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
+
+import javax.inject.Inject;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 
 /**
@@ -1547,7 +1546,96 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     }
 
     /**
-     * NMS_FT_21 To verify the that Save Inbox call Details API request should
+     * To verify the behavior of Get Subscriber Details API if a mandatory
+     * parameter : callingNumber is missing from the API request.
+     */
+    @Test
+    public void verifyFT12() throws IOException, InterruptedException {
+        HttpGet httpGet = createGetSubscriberDetailsRequest(null, // callingNumber
+                                                                  // missing
+                "A", // operator
+                "AP", // circle
+                "123456789012345" // callId
+        );
+
+        String expectedJsonResponse = createFailureResponseJson("<callingNumber: Not Present>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * To verify the behavior of Get Subscriber Details API if a mandatory
+     * parameter : operator is missing from the API request.
+     */
+    // JIRA issue https://applab.atlassian.net/browse/NMS-192
+    @Ignore
+    @Test
+    public void verifyFT13() throws IOException, InterruptedException {
+        /**
+         * test GetSubscriberDetails API with operator Missing.. operator is
+         * treated as optional with this API spec update
+         * https://github.com/motech-implementations/mim/issues/287
+         */
+        HttpGet httpGet = createGetSubscriberDetailsRequest("1234567890", // callingNumber
+                null, // operator missing
+                "AP", // circle
+                "123456789012345" // callId more than 15 digits
+        );
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    /**
+     * To verify the behavior of Get Subscriber Details API if a mandatory
+     * parameter : Circle is missing from the API request.
+     */
+    @Test
+    public void verifyFT14() throws IOException, InterruptedException {
+        /**
+         * test GetSubscriberDetails API with circle Missing.. circle is treated
+         * as optional with this API spec update
+         * https://github.com/motech-implementations/mim/issues/287
+         */
+        HttpGet httpGet = createGetSubscriberDetailsRequest("1234567890", // callingNumber
+                "A", // operator
+                null, // circle missing
+                "123456789012345" // callId
+        );
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    /**
+     * To verify the behavior of Get Subscriber Details API if a mandatory
+     * parameter : callId is missing from the API request.
+     */
+    @Test
+    public void verifyFT15() throws IOException, InterruptedException {
+        HttpGet httpGet = createGetSubscriberDetailsRequest("1234567890", // callingNumber
+                "A", // operator
+                "AP", // circle
+                null // callId missing
+        );
+
+        String expectedJsonResponse = createFailureResponseJson("<callId: Not Present>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+
+    }
+
+     /* NMS_FT_21 To verify the that Save Inbox call Details API request should
      * succeed for unsubscribed caller or caller with no active subscription
      * without any content being saved.
      */
