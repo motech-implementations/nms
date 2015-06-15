@@ -14,7 +14,7 @@ import org.motechproject.nms.mobileacademy.exception.CourseNotCompletedException
 import org.motechproject.nms.mobileacademy.repository.CompletionRecordDataService;
 import org.motechproject.nms.mobileacademy.repository.NmsCourseDataService;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
-import org.motechproject.nms.mobileacademy.service.SmsNotificationService;
+import org.motechproject.nms.mobileacademy.service.CourseNotificationService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.ops4j.pax.exam.ExamFactory;
@@ -55,7 +55,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     private NmsCourseDataService nmsCourseDataService;
 
     @Inject
-    private SmsNotificationService smsNotificationService;
+    private CourseNotificationService courseNotificationService;
 
     private static String validCourseName = "MobileAcademyCourse";
 
@@ -317,7 +317,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         event.getParameters().put("callingNumber", callingNumber);
         CompletionRecord cr = new CompletionRecord(callingNumber, 35, false, 1);
         completionRecordDataService.create(cr);
-        smsNotificationService.sendSmsNotification(event);
+        courseNotificationService.sendSmsNotification(event);
         // TODO: cannot check the notification status yet since we don't have a real IMI url to hit
     }
 

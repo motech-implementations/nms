@@ -8,8 +8,8 @@
     <osgi:service ref="mobileAcademyService"
                   interface="org.motechproject.nms.mobileacademy.service.MobileAcademyService" />
 
-    <osgi:service ref="smsNotificationService"
-                  interface="org.motechproject.nms.mobileacademy.service.SmsNotificationService" />
+    <osgi:service ref="courseNotificationService"
+                  interface="org.motechproject.nms.mobileacademy.service.CourseNotificationService" />
 
     <osgi:service ref="settingsService"
                   interface="org.motechproject.nms.mobileacademy.service.SettingsService" />

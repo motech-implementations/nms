@@ -1,7 +1,6 @@
-package org.motechproject.nms.mobileacademy.service.impl;
+package org.motechproject.nms.imi.service.impl;
 
 import org.apache.commons.httpclient.HttpStatus;
-
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -13,17 +12,10 @@ import org.joda.time.DateTime;
 import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.alerts.domain.AlertStatus;
 import org.motechproject.alerts.domain.AlertType;
-import org.motechproject.event.MotechEvent;
-import org.motechproject.event.listener.annotations.MotechListener;
-import org.motechproject.nms.mobileacademy.domain.CompletionRecord;
-import org.motechproject.nms.mobileacademy.repository.CompletionRecordDataService;
-import org.motechproject.nms.mobileacademy.service.SmsNotificationService;
+import org.motechproject.nms.imi.service.SmsNotificationService;
 import org.motechproject.server.config.SettingsFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,15 +25,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * This handles all the integration pieces between MA and sms module to trigger and handle notifications
- * for course completion
+ * Created by kosh on 6/15/15.
  */
-@Service("smsNotificationService")
 public class SmsNotificationServiceImpl implements SmsNotificationService {
-
-    private static final String COURSE_COMPLETED_SUBJECT = "nms.ma.course.completed";
-
-    private static final String SMS_STATUS_SUBJECT = "nms.ma.sms.deliveryStatus";
 
     private static final String SMS_NOTIFICATION_URL = "imi.sms.notification.url";
 
@@ -55,59 +41,22 @@ public class SmsNotificationServiceImpl implements SmsNotificationService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SmsNotificationServiceImpl.class);
 
-    private CompletionRecordDataService completionRecordDataService;
+    private AlertService alertService;
 
     private SettingsFacade settingsFacade;
 
-    private AlertService alertService;
-
-    @Autowired
-    public SmsNotificationServiceImpl(CompletionRecordDataService completionRecordDataService,
-                                      @Qualifier("maSettings") SettingsFacade settingsFacade,
-                                      AlertService alertService) {
-        this.completionRecordDataService = completionRecordDataService;
-        this.settingsFacade = settingsFacade;
+    public SmsNotificationServiceImpl(AlertService alertService, SettingsFacade settingsFacade) {
         this.alertService = alertService;
+        this.settingsFacade = settingsFacade;
     }
 
-    @MotechListener(subjects = { COURSE_COMPLETED_SUBJECT } )
-    public void sendSmsNotification(MotechEvent event) {
-
-        LOGGER.debug("Handling course completion notification event");
-        Long callingNumber = (Long) event.getParameters().get("callingNumber");
-        CompletionRecord cr = completionRecordDataService.findRecordByCallingNumber(callingNumber);
-
-        if (cr == null) {
-            // this should never be possible since the event dispatcher upstream adds the record
-            LOGGER.error("No completion record found for callingNumber: " + callingNumber);
-            return;
-        }
-
-        cr.setSentNotification(sendNotificationRequest(callingNumber));
-        completionRecordDataService.update(cr);
-    }
-
-    @MotechListener(subjects = { SMS_STATUS_SUBJECT })
-    public void updateSmsStatus(MotechEvent event) {
-
-        LOGGER.debug("Handling update sms delivery status event");
-        String callingNumber = (String) event.getParameters().get("address");
-        int startIndex = callingNumber.indexOf(':') + 2;
-        callingNumber = callingNumber.substring(startIndex);
-        CompletionRecord cr = completionRecordDataService.findRecordByCallingNumber(
-                Long.parseLong(callingNumber));
-
-        if (cr == null) {
-            // this should never be possible since the event dispatcher upstream adds the record
-            LOGGER.error("No completion record found for callingNumber: " + callingNumber);
-            return;
-        }
-
-        cr.setLastDeliveryStatus((String) event.getParameters().get("deliveryStatus"));
-        completionRecordDataService.update(cr);
-    }
-
-    private boolean sendNotificationRequest(Long callingNumber) {
+    /**
+     * Used to initiate sms workflow with IMI
+     *
+     * @param callingNumber phone number to send sms to
+     */
+    @Override
+    public boolean sendSms(Long callingNumber) {
 
         CloseableHttpClient httpClient = HttpClients.createDefault();
         HttpPost httpPost = prepareSmsRequest(callingNumber);
