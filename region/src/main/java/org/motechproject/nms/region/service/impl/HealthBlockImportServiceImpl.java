@@ -1,10 +1,15 @@
 package org.motechproject.nms.region.service.impl;
 
+import org.motechproject.nms.csv.exception.CsvImportDataException;
+import org.motechproject.nms.csv.exception.CsvImportException;
 import org.motechproject.nms.csv.utils.GetLong;
 import org.motechproject.nms.csv.utils.GetString;
+import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.HealthBlock;
+import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.repository.HealthBlockDataService;
 import org.motechproject.nms.region.service.HealthBlockImportService;
+import org.motechproject.nms.region.service.TalukaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.supercsv.cellprocessor.ift.CellProcessor;
@@ -25,12 +30,20 @@ public class HealthBlockImportServiceImpl extends BaseLocationImportService<Heal
     public static final String REGIONAL_NAME_FIELD = "regionalName";
     public static final String NAME_FIELD = "name";
     public static final String HQ_FIELD = "hq";
-    public static final String TALUKA_CODE_FIELD = "taluka";
+    public static final String TALUKA_CODE_FIELD = "talukaCode";
 
+    private TalukaService talukaService;
 
     @Autowired
-    public HealthBlockImportServiceImpl(HealthBlockDataService healthBlockDataService) {
+    public HealthBlockImportServiceImpl(HealthBlockDataService healthBlockDataService,
+                                        TalukaService talukaService) {
         super(HealthBlock.class, healthBlockDataService);
+        this.talukaService = talukaService;
+    }
+
+    @Override
+    public void addParent(District district) {
+        addParent(PARENT_DISTRICT, district);
     }
 
     @Override
@@ -53,5 +66,27 @@ public class HealthBlockImportServiceImpl extends BaseLocationImportService<Heal
         mapping.put(HQ, HQ_FIELD);
         mapping.put(TALUKA_CODE, TALUKA_CODE_FIELD);
         return mapping;
+    }
+    @Override
+
+    protected void postReadStep(HealthBlock healthBlock) {
+        Taluka taluka;
+
+        District district = (District) getParent(PARENT_DISTRICT);
+        if (district == null) {
+            throw new CsvImportException("No district provided!");
+        }
+
+        try {
+            taluka = talukaService.findByDistrictAndCode(district, healthBlock.getTalukaCode());
+        } catch (NumberFormatException e) {
+            throw new CsvImportDataException(String.format("Invalid taluka: %s",
+                    (String) healthBlock.getTalukaCode()), e);
+        }
+        if (taluka == null) {
+            throw new CsvImportException(String.format("No such taluka '%s' for district '%s'",
+                    healthBlock.getTalukaCode(), district.getName()));
+        }
+        healthBlock.setTaluka(taluka);
     }
 }

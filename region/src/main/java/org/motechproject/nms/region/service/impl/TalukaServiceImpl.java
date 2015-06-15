@@ -24,7 +24,7 @@ public class TalukaServiceImpl implements TalukaService {
 
             @Override
             public String getSqlQuery() {
-                return "select *  from nms_talukas where  district_id_oid = ? and code = ?";
+                return "select *  from nms_talukas where district_id_oid = ? and code = ?";
             }
 
             @Override

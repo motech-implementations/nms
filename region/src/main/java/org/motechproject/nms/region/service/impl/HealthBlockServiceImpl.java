@@ -24,7 +24,7 @@ public class HealthBlockServiceImpl implements HealthBlockService {
 
             @Override
             public String getSqlQuery() {
-                return "select *  from nms_health_blocks where  taluka_id_oid = ? and code = ?";
+                return "select *  from nms_health_blocks where taluka_id_oid = ? and code = ?";
             }
 
             @Override

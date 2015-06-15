@@ -1,9 +1,13 @@
 package org.motechproject.nms.region.service.impl;
 
+import org.motechproject.nms.csv.exception.CsvImportException;
 import org.motechproject.nms.csv.utils.GetLong;
 import org.motechproject.nms.csv.utils.GetString;
+import org.motechproject.nms.region.domain.HealthBlock;
+import org.motechproject.nms.region.domain.HealthFacility;
 import org.motechproject.nms.region.domain.HealthSubFacility;
 import org.motechproject.nms.region.repository.HealthSubFacilityDataService;
+import org.motechproject.nms.region.service.HealthFacilityService;
 import org.motechproject.nms.region.service.HealthSubFacilityImportService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,11 +27,20 @@ public class HealthSubFacilityImportServiceImpl extends BaseLocationImportServic
     public static final String SID_FIELD = "code";
     public static final String REGIONAL_NAME_FIELD = "regionalName";
     public static final String NAME_FIELD = "name";
-    public static final String PID_FIELD = "healthFacility";
+    public static final String PID_FIELD = "healthFacilityCode";
+
+    private HealthFacilityService healthFacilityService;
 
     @Autowired
-    public HealthSubFacilityImportServiceImpl(HealthSubFacilityDataService healthSubFacilityDataService) {
+    public HealthSubFacilityImportServiceImpl(HealthSubFacilityDataService healthSubFacilityDataService,
+                                              HealthFacilityService healthFacilityService) {
         super(HealthSubFacility.class, healthSubFacilityDataService);
+        this.healthFacilityService = healthFacilityService;
+    }
+
+    @Override
+    public void addParent(HealthBlock healthBlock) {
+        addParent(PARENT_HEALTH_BLOCK, healthBlock);
     }
 
     @Override
@@ -48,5 +61,21 @@ public class HealthSubFacilityImportServiceImpl extends BaseLocationImportServic
         mapping.put(NAME, NAME_FIELD);
         mapping.put(PID, PID_FIELD);
         return mapping;
+    }
+
+    @Override
+    protected void postReadStep(HealthSubFacility healthSubFacility) {
+        HealthBlock healthBlock = (HealthBlock) getParent(PARENT_HEALTH_BLOCK);
+        if (healthBlock == null) {
+            throw new CsvImportException("No healthBlock provided!");
+        }
+
+        HealthFacility healthFacility = healthFacilityService.findByHealthBlockAndCode(healthBlock,
+                healthSubFacility.getHealthFacilityCode());
+        if (healthFacility == null) {
+            throw new CsvImportException(String.format("No such healthFacility '%d' for healthBlock '%s'",
+                    healthSubFacility.getHealthFacilityCode(), healthBlock.getName()));
+        }
+        healthSubFacility.setHealthFacility(healthFacility);
     }
 }

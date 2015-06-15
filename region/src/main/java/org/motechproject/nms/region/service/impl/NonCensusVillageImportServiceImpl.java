@@ -2,9 +2,10 @@ package org.motechproject.nms.region.service.impl;
 
 import org.motechproject.nms.csv.utils.GetLong;
 import org.motechproject.nms.csv.utils.GetString;
-import org.motechproject.nms.region.domain.Village;
+import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.repository.VillageDataService;
 import org.motechproject.nms.region.service.NonCensusVillageImportService;
+import org.motechproject.nms.region.service.TalukaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.supercsv.cellprocessor.Optional;
@@ -14,7 +15,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Service("nonCensusVillageImportService")
-public class NonCensusVillageImportServiceImpl extends BaseLocationImportService<Village> implements NonCensusVillageImportService {
+public class NonCensusVillageImportServiceImpl extends BaseVillageImportService
+        implements NonCensusVillageImportService {
 
     public static final String SVID = "SVID";
     public static final String REGIONAL_NAME = "Name_G";
@@ -25,12 +27,17 @@ public class NonCensusVillageImportServiceImpl extends BaseLocationImportService
     public static final String SVID_FIELD = "svid";
     public static final String REGIONAL_NAME_FIELD = "regionalName";
     public static final String NAME_FIELD = "name";
-    public static final String TALUKA_CODE_FIELD = "taluka";
+    public static final String TALUKA_CODE_FIELD = "talukaCode";
     public static final String VILLAGE_CODE_FIELD = "vcode";
 
     @Autowired
-    public NonCensusVillageImportServiceImpl(VillageDataService villageDataService) {
-        super(Village.class, villageDataService);
+    public NonCensusVillageImportServiceImpl(VillageDataService villageDataService, TalukaService talukaService) {
+        super(villageDataService, talukaService);
+    }
+
+    @Override
+    public void addParent(District district) {
+        addParent(PARENT_DISTRICT, district);
     }
 
     @Override

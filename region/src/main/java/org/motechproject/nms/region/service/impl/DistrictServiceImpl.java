@@ -55,7 +55,7 @@ public class DistrictServiceImpl implements DistrictService {
 
             @Override
             public String getSqlQuery() {
-                return "select *  from nms_districts where  state_id_oid = ? and code = ?";
+                return "select *  from nms_districts where state_id_oid = ? and code = ?";
             }
 
             @Override
@@ -83,7 +83,7 @@ public class DistrictServiceImpl implements DistrictService {
 
             @Override
             public String getSqlQuery() {
-                return "select *  from nms_districts where  state_id_oid = ? and name = ?";
+                return "select *  from nms_districts where state_id_oid = ? and name = ?";
             }
 
             @Override

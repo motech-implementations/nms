@@ -249,7 +249,7 @@ public class RegionHelper {
         return healthBlock;
     }
 
-    public static Village createVillage(Taluka taluka, Long svid, Long vcode, String name) {
+    public static Village createVillage(Taluka taluka, long svid, long vcode, String name) {
         Village village = new Village();
         village.setTaluka(taluka);
         village.setSvid(svid);

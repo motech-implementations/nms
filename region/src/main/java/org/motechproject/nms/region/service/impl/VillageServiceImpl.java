@@ -19,7 +19,7 @@ public class VillageServiceImpl implements VillageService {
 
 
     @Override
-    public Village findByTalukaAndVcodeAndSvid(final Taluka taluka, final Long vcode, final Long svid) {
+    public Village findByTalukaAndVcodeAndSvid(final Taluka taluka, final long vcode, final long svid) {
 
         SqlQueryExecution<Village> queryExecution = new SqlQueryExecution<Village>() {
 
@@ -47,7 +47,7 @@ public class VillageServiceImpl implements VillageService {
 
 
     @Override
-    public Village findByTalukaAndSvid(final Taluka taluka, final Long svid) {
+    public Village findByTalukaAndSvid(final Taluka taluka, final long svid) {
 
         SqlQueryExecution<Village> queryExecution = new SqlQueryExecution<Village>() {
 

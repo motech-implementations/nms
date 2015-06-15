@@ -3,6 +3,7 @@ package org.motechproject.nms.region.domain;
 import org.motechproject.mds.annotations.Cascade;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
+import org.motechproject.mds.annotations.Ignore;
 import org.motechproject.mds.domain.MdsEntity;
 
 import javax.jdo.annotations.Column;
@@ -39,6 +40,10 @@ public class HealthFacility extends MdsEntity {
     @Column(allowsNull = "false")
     @NotNull
     private HealthFacilityType healthFacilityType;
+
+    // used by CSV import as a placeholder for the healthBlock
+    @Ignore
+    private long healthBlockCode;
 
     @Field
     @Column(allowsNull = "false")
@@ -84,6 +89,14 @@ public class HealthFacility extends MdsEntity {
 
     public void setHealthFacilityType(HealthFacilityType healthFacilityType) {
         this.healthFacilityType = healthFacilityType;
+    }
+
+    public long getHealthBlockCode() {
+        return healthBlockCode;
+    }
+
+    public void setHealthBlockCode(long healthBlockCode) {
+        this.healthBlockCode = healthBlockCode;
     }
 
     public HealthBlock getHealthBlock() {

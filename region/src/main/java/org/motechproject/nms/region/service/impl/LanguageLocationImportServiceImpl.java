@@ -73,18 +73,27 @@ public class LanguageLocationImportServiceImpl implements LanguageLocationImport
         String languageCode = (String) record.get(LANGUAGE_CODE);
         String languageName = (String) record.get(LANGUAGE_NAME);
         State state = (State) record.get(STATE);
-        District district = districtService.findByStateAndName(state, (String) record.get(DISTRICT));
+        if (state == null) {
+            throw new CsvImportDataException("State must be provided");
+        }
+
+        District district = null;
+        if (record.get(DISTRICT) != null) {
+            district = districtService.findByStateAndName(state, (String) record.get(DISTRICT));
+            if (district == null) {
+                throw new CsvImportDataException(String.format("District %s doesn't exist in state %s",
+                        (String) record.get(DISTRICT), state.getName()));
+            }
+        }
         Circle circle = (Circle) record.get(CIRCLE);
         Boolean defaultForCircle = (Boolean) record.get(DEFAULT_FOR_CIRCLE);
 
-        if (null != state && null != district) {
+        if (state != null && district != null) {
             importRecordForStateAndDistrict(languageCode, languageName, circle, defaultForCircle, state, district);
-        } else if (null != state) {
+        } else if (state != null) {
             importRecordForState(languageCode, languageName, circle, defaultForCircle, state);
-        } else if (null != district) {
+        } else if (district != null) {
             importRecordForDistrict(languageCode, languageName, circle, defaultForCircle, district);
-        } else {
-            throw new CsvImportDataException("State must be provided");
         }
     }
 

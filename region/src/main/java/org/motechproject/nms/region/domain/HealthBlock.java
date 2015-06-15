@@ -3,6 +3,7 @@ package org.motechproject.nms.region.domain;
 import org.motechproject.mds.annotations.Cascade;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
+import org.motechproject.mds.annotations.Ignore;
 import org.motechproject.mds.domain.MdsEntity;
 
 import javax.jdo.annotations.Column;
@@ -42,6 +43,10 @@ public class HealthBlock extends MdsEntity {
     @Column(allowsNull = "false")
     @NotNull
     private Long code;
+
+    // used by CSV import as a placeholder for the taluka
+    @Ignore
+    private String talukaCode;
 
     @Field
     @Column(allowsNull = "false")
@@ -87,6 +92,14 @@ public class HealthBlock extends MdsEntity {
 
     public void setCode(Long code) {
         this.code = code;
+    }
+
+    public String getTalukaCode() {
+        return talukaCode;
+    }
+
+    public void setTalukaCode(String talukaCode) {
+        this.talukaCode = talukaCode;
     }
 
     public Taluka getTaluka() {

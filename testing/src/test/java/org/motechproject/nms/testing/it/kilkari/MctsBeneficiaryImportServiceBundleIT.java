@@ -133,17 +133,17 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         HealthFacility healthFacility114 = createHealthFacility(healthBlock153, 114L, "CHC Tileibani", facilityType114);
         healthBlock153.getHealthFacilities().add(healthFacility114);
 
-        Village village10004693 = createVillage(taluka24, 10004693L, null, "Khairdihi");
-        Village village10004691 = createVillage(taluka24, 10004691L, null, "Gambhariguda");
-        Village village1509 = createVillage(taluka24, null, 1509L, "Mundrajore");
-        Village village1505 = createVillage(taluka24, null, 1505L, "Kulemura");
-        Village village10004690 = createVillage(taluka24, 10004690L, null, "Ampada");
-        Village village10004697 = createVillage(taluka24, 10004697L, null, "Saletikra");
+        Village village10004693 = createVillage(taluka24, 10004693L, 0, "Khairdihi");
+        Village village10004691 = createVillage(taluka24, 10004691L, 0, "Gambhariguda");
+        Village village1509 = createVillage(taluka24, 0, 1509L, "Mundrajore");
+        Village village1505 = createVillage(taluka24, 0, 1505L, "Kulemura");
+        Village village10004690 = createVillage(taluka24, 10004690L, 0, "Ampada");
+        Village village10004697 = createVillage(taluka24, 10004697L, 0, "Saletikra");
 
         taluka24.getVillages().addAll(Arrays.asList(village10004693, village10004691, village1509, village1505,
                 village10004690, village10004697));
 
-        Village village3089 = createVillage(taluka46, null, 3089L, "Podapara");
+        Village village3089 = createVillage(taluka46, 0, 3089L, "Podapara");
         taluka46.getVillages().add(village3089);
 
         stateDataService.create(state21);

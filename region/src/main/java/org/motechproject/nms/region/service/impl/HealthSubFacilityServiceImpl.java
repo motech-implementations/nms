@@ -24,7 +24,7 @@ public class HealthSubFacilityServiceImpl implements HealthSubFacilityService {
 
             @Override
             public String getSqlQuery() {
-                return "select *  from nms_health_sub_facilities where  healthFacility_id_oid = ? and code = ?";
+                return "select *  from nms_health_sub_facilities where healthFacility_id_oid = ? and code = ?";
             }
 
             @Override

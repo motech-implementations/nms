@@ -312,41 +312,26 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
         State state = (State) record.get(STATE);
 
-        District district = districtService.findByStateAndCode(state, (Long) record.get(DISTRICT));
-        if (district == null) {
-            return String.format("No district for state=%s and code=%d", state.getName(),
-                    (Long) record.get(DISTRICT));
-        }
-
-        Taluka taluka = talukaService.findByDistrictAndCode(district, (String) record.get(TALUKA));
-        if (taluka == null) {
-            return String.format("No taluka for district=%s and code=%s", district.getName(),
-                    (String) record.get(TALUKA));
-        }
-
-        HealthBlock healthBlock = healthBlockService.findByTalukaAndCode(taluka,
-                (Long) record.get(HEALTH_BLOCK));
-        if (healthBlock == null) {
-            return String.format("No health block for taluka=%s and code=%d", taluka.getName(),
-                    (Long) record.get(HEALTH_BLOCK));
-        }
-
-        HealthFacility phc = healthFacilityService.findByHealthBlockAndCode(healthBlock,
-                (Long) record.get(PHC));
-        if (phc == null) {
-            return String.format("No health facility for healthBlock=%s and code=%d", healthBlock.getName(),
-                    (Long) record.get(PHC));
-        }
-
+        Taluka taluka = null;
+        HealthBlock healthBlock = null;
+        HealthFacility phc = null;
         Village village = null;
-        // the sample mother data file has village ID=0 and village name blank
-        if ((Long) record.get(VILLAGE) != 0L) {
-            villageService.findByTalukaAndVcodeAndSvid(taluka, (Long) record.get(VILLAGE), 0L);
-            if (village == null) {
-                village = villageService.findByTalukaAndSvid(taluka, (Long) record.get(VILLAGE));
-                if (village == null) {
-                    return String.format("No village for taluka=%s and code=%d", taluka.getName(),
-                            (Long) record.get(VILLAGE));
+
+        District district = districtService.findByStateAndCode(state, (Long) record.get(DISTRICT));
+        if (district != null) {
+
+            taluka = talukaService.findByDistrictAndCode(district, (String) record.get(TALUKA));
+            if (taluka != null) {
+                healthBlock = healthBlockService.findByTalukaAndCode(taluka, (Long) record.get(HEALTH_BLOCK));
+                if (healthBlock != null) {
+                    phc = healthFacilityService.findByHealthBlockAndCode(healthBlock, (Long) record.get(PHC));
+                }
+                // the sample mother data file has village ID=0 and village name blank
+                if ((Long) record.get(VILLAGE) != 0L) {
+                    villageService.findByTalukaAndVcodeAndSvid(taluka, (Long) record.get(VILLAGE), 0L);
+                    if (village == null) {
+                        village = villageService.findByTalukaAndSvid(taluka, (Long) record.get(VILLAGE));
+                    }
                 }
             }
         }
@@ -380,9 +365,9 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             }
         });
         mapping.put(DISTRICT, new GetLong());
-        mapping.put(TALUKA, new GetString());
-        mapping.put(HEALTH_BLOCK, new GetLong());
-        mapping.put(PHC, new GetLong());
+        mapping.put(TALUKA, new Optional(new GetString()));
+        mapping.put(HEALTH_BLOCK, new Optional(new GetLong()));
+        mapping.put(PHC, new Optional(new GetLong()));
         mapping.put(VILLAGE, new Optional(new GetLong()));
 
         return mapping;
