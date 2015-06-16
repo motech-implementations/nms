@@ -1,7 +1,23 @@
 package org.motechproject.nms.testing.it.kilkari;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+
+import javax.inject.Inject;
+
 import org.joda.time.DateTime;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -41,20 +57,7 @@ import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
-import javax.inject.Inject;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Verify that SubscriptionService is present & functional.
@@ -914,4 +917,21 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         assertEquals(2, mctsSubscriber.getSubscriptions().size());		 
     }
     
+    /*
+	 * To verify that MSISDN greater than 10 digit should be accepted during 
+	 * MCTS upload. subscriber should be created with last 10 digits of MSISDN.
+	 * 
+	 * https://applab.atlassian.net/browse/NMS-202
+	 */
+    @Ignore
+    @Test
+    public void verifyFT182() {
+    	
+    	//attempt to create subscriber and subscription having calling number more than 10 digit
+    	subscriptionService.createSubscription(111111111111L, rh.hindiLanguage(),
+				sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
+    	
+        Subscriber subscriber = subscriberDataService.findByCallingNumber(111111111111L);
+        assertNull(subscriber);
+    } 
 }
