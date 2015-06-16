@@ -1428,4 +1428,32 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(expectedJsonResponse,
                 EntityUtils.toString(response.getEntity()));
     }
+
+    /**
+     * To verify the behavior of Get Subscriber Details API if the service is
+     * not deployed in provided Subscriber's state.
+     */
+    @Test
+    // TODO: https://applab.atlassian.net/browse/NMS-181
+    @Ignore
+    public void verifyFT16() throws IOException, InterruptedException {
+        rh.newDelhiDistrict();
+        rh.delhiCircle();
+        // Service is not deployed in delhi state i.e.
+        // deployedServiceDataService.create(new
+        // DeployedService(rh.delhiState(), Service.KILKARI));
+
+        HttpGet httpGet = createHttpGet(true, "kilkari", // service
+                true, "1200000000", // callingNumber
+                true, "OP", // operator
+                true, rh.delhiCircle().getName(), // circle
+                true, "123456789012345" // callId
+        );
+        // Should return HTTP 501 because the service is not
+        // deployed for the specified state
+        String expectedJsonResponse = createFailureResponseJson("<KILKARI: Not Deployed In State>");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
+                HttpStatus.SC_NOT_IMPLEMENTED, expectedJsonResponse,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
 }
