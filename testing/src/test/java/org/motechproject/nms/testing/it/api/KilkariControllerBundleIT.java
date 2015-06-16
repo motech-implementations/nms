@@ -1,19 +1,5 @@
 package org.motechproject.nms.testing.it.api;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.regex.Pattern;
-
-import javax.inject.Inject;
-
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -73,6 +59,19 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
+
+import javax.inject.Inject;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Verify that Kilkari API is functional.
@@ -1933,4 +1932,285 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertEquals(456L, (long) inboxCallDetailRecord2.getCallEndTime()
                 .getMillis());
     }
+
+
+    /**
+     * To verify the behavior of Get Subscriber Details API if a mandatory
+     * parameter : callingNumber is missing from the API request.
+     */
+    @Test
+    public void verifyFT12() throws IOException, InterruptedException {
+        HttpGet httpGet = createGetSubscriberDetailsRequest(null, // callingNumber
+                // missing
+                "A", // operator
+                "AP", // circle
+                "123456789012345" // callId
+        );
+
+        String expectedJsonResponse = createFailureResponseJson("<callingNumber: Not Present>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * To verify the behavior of Get Subscriber Details API if a mandatory
+     * parameter : operator is missing from the API request.
+     */
+    // JIRA issue https://applab.atlassian.net/browse/NMS-192
+    @Ignore
+    @Test
+    public void verifyFT13() throws IOException, InterruptedException {
+        /**
+         * test GetSubscriberDetails API with operator Missing.. operator is
+         * treated as optional with this API spec update
+         * https://github.com/motech-implementations/mim/issues/287
+         */
+        HttpGet httpGet = createGetSubscriberDetailsRequest("1234567890", // callingNumber
+                null, // operator missing
+                "AP", // circle
+                "123456789012345" // callId more than 15 digits
+        );
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    /**
+     * To verify the behavior of Get Subscriber Details API if a mandatory
+     * parameter : Circle is missing from the API request.
+     */
+    @Test
+    public void verifyFT14() throws IOException, InterruptedException {
+        /**
+         * test GetSubscriberDetails API with circle Missing.. circle is treated
+         * as optional with this API spec update
+         * https://github.com/motech-implementations/mim/issues/287
+         */
+        HttpGet httpGet = createGetSubscriberDetailsRequest("1234567890", // callingNumber
+                "A", // operator
+                null, // circle missing
+                "123456789012345" // callId
+        );
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    /**
+     * To verify the behavior of Get Subscriber Details API if a mandatory
+     * parameter : callId is missing from the API request.
+     */
+    @Test
+    public void verifyFT15() throws IOException, InterruptedException {
+        HttpGet httpGet = createGetSubscriberDetailsRequest("1234567890", // callingNumber
+                "A", // operator
+                "AP", // circle
+                null // callId missing
+        );
+
+        String expectedJsonResponse = createFailureResponseJson("<callId: Not Present>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+
+    }
+
+
+    // This method is a utility method for running the test cases. this is
+    // already
+    // used in the branch NMS.FT.95.96.97
+    private HttpDeleteWithBody createDeactivateSubscriptionHttpDelete(
+            String calledNumber, String operator, String circle, String callId,
+            String subscriptionId) throws IOException {
+
+        StringBuilder sb = new StringBuilder();
+        String seperator = "";
+        sb.append("{");
+        if (calledNumber != null) {
+            sb.append(String.format("%s\"calledNumber\": %s", seperator,
+                    calledNumber));
+            seperator = ",";
+        }
+        if (operator != null) {
+            sb.append(String.format("%s\"operator\": \"%s\"", seperator,
+                    operator));
+            seperator = ",";
+        }
+        if (circle != null) {
+            sb.append(String.format("%s\"circle\": \"%s\"", seperator, circle));
+            seperator = ",";
+        }
+        if (callId != null) {
+            sb.append(String.format("%s\"callId\": %s", seperator, callId));
+            seperator = ",";
+        }
+        if (subscriptionId != null) {
+            sb.append(String.format("%s\"subscriptionId\": \"%s\"", seperator,
+                    subscriptionId));
+            seperator = ",";
+        }
+
+        sb.append("}");
+
+        HttpDeleteWithBody httpDelete = new HttpDeleteWithBody(String.format(
+                "http://localhost:%d/api/kilkari/subscription",
+                TestContext.getJettyPort()));
+        httpDelete.setHeader("Content-type", "application/json");
+        httpDelete.setEntity(new StringEntity(sb.toString()));
+        return httpDelete;
+    }
+
+    /**
+     * To verify the behavior of Deactivate Subscription Request API if provided
+     * beneficiary's callId is not valid : less than 15 digits.
+     */
+    @Test
+    public void verifyFT98() throws IOException, InterruptedException {
+        Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
+        Subscription subscription = subscriber.getActiveSubscriptions()
+                .iterator().next();
+        String subscriptionId = subscription.getSubscriptionId();
+        // callId less than 15 digits
+        HttpDeleteWithBody httpDelete = createDeactivateSubscriptionHttpDelete(
+                "1000000000", "A", "AP", "12345678901234", subscriptionId);
+        String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpDelete, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * To verify the behavior of Deactivate Subscription Request API if provided
+     * beneficiary's callId is not valid : more than 15 digits.
+     */
+    @Test
+    public void verifyFT99() throws IOException, InterruptedException {
+        Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
+        Subscription subscription = subscriber.getActiveSubscriptions()
+                .iterator().next();
+        String subscriptionId = subscription.getSubscriptionId();
+        // callId more than 15 digits
+        HttpDeleteWithBody httpDelete = createDeactivateSubscriptionHttpDelete(
+                "1000000000", "A", "AP", "1234567890123455", subscriptionId);
+        String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpDelete, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * To verify the behavior of Deactivate Subscription Request API if provided
+     * beneficiary's callId is not valid : Alphanumeric value.
+     */
+    // TODO JIRA issue https://applab.atlassian.net/browse/NMS-187
+    @Ignore
+    @Test
+    public void verifyFT100() throws IOException, InterruptedException {
+        Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
+        Subscription subscription = subscriber.getActiveSubscriptions()
+                .iterator().next();
+        String subscriptionId = subscription.getSubscriptionId();
+        // callId alphanumeric
+        HttpDeleteWithBody httpDelete = createDeactivateSubscriptionHttpDelete(
+                "1000000000", "A", "AP", "12345RF89012345", subscriptionId);
+        String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpDelete, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
+
+
+    /**
+     * To verify Deactivate Subscription Request API fails if provided
+     * calledNumber has invalid value : less than 10 digits.
+     */
+    @Test
+    public void verifyFT95() throws IOException, InterruptedException {
+        Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
+        Subscription subscription = subscriber.getActiveSubscriptions()
+                .iterator().next();
+        String subscriptionId = subscription.getSubscriptionId();
+        // callingNumber less than 10 digits
+        HttpDeleteWithBody httpDelete = createDeactivateSubscriptionHttpDelete(
+                "100000000", "A", "AP", "123456789012345", subscriptionId);
+        String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpDelete, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+    }
+
+    /**
+     * To verify Deactivate Subscription Request API fails if provided
+     * calledNumber has invalid value : more than 10 digits.
+     */
+    @Test
+    public void verifyFT96() throws IOException, InterruptedException {
+        Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
+        Subscription subscription = subscriber.getActiveSubscriptions()
+                .iterator().next();
+        String subscriptionId = subscription.getSubscriptionId();
+        String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
+
+        // callingNumber more than 10 digits
+        HttpDeleteWithBody httpDelete = createDeactivateSubscriptionHttpDelete(
+                "12345678901", "A", "AP", "123456789012345", subscriptionId);
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpDelete, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+    }
+
+    /**
+     * To verify the behavior of Deactivate Subscription Request API if provided
+     * Subscriber's callingNumber is not valid : Alphanumeric value.
+     */
+    // TODO JIRA issue https://applab.atlassian.net/browse/NMS-187
+    @Ignore
+    @Test
+    public void verifyFT97() throws IOException, InterruptedException {
+        Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
+        Subscription subscription = subscriber.getActiveSubscriptions()
+                .iterator().next();
+        String subscriptionId = subscription.getSubscriptionId();
+        String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
+
+        // callingNumber alphanumeric
+        HttpDeleteWithBody httpDelete = createDeactivateSubscriptionHttpDelete(
+                "1234DE678901", "A", "AP", "123456789012345", subscriptionId);
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpDelete, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+    }
+
+    
 }
