@@ -894,10 +894,13 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     public void verifyFT182() {
     	
     	//attempt to create subscriber and subscription having calling number more than 10 digit
-    	subscriptionService.createSubscription(111111111111L, rh.hindiLanguage(),
+    	subscriptionService.createSubscription(991111111122L, rh.hindiLanguage(),
 				sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
     	
-        Subscriber subscriber = subscriberDataService.findByCallingNumber(111111111111L);
-        assertNull(subscriber);
+        Subscriber subscriber1 = subscriberDataService.findByCallingNumber(991111111122L);
+        assertNull(subscriber1);
+
+        Subscriber subscriber2 = subscriberDataService.findByCallingNumber(1111111122L);
+        assertNotNull(subscriber2);
     } 
 }
