@@ -26,21 +26,22 @@ public class CsvMapImporter implements Closeable {
         }
     }
 
-    public void open(Reader reader, CsvPreference preferences, Map<String, CellProcessor> processorMapping, Map<String, String> fieldNameMapping)
+    public void open(Reader reader, CsvPreference preferences, Map<String, CellProcessor> processorMapping,
+                     Map<String, String> fieldNameMapping)
             throws IOException {
-        if (null == this.csvReader) {
+        if (isOpen()) {
+            throw new IllegalStateException("CsvImporter is already open");
+        } else {
             this.csvReader = new CsvMapReader(reader, preferences);
             String[] header = csvReader.getHeader(true);
             this.fieldNames = getFieldNames(header, fieldNameMapping);
             this.processors = getProcessors(header, processorMapping);
-        } else {
-            throw new IllegalStateException("CsvImporter is already open");
         }
     }
 
     @Override
     public void close() throws IOException {
-        if (null != csvReader) {
+        if (isOpen()) {
             csvReader.close();
             csvReader = null;
             fieldNames = null;
@@ -49,7 +50,7 @@ public class CsvMapImporter implements Closeable {
     }
 
     public int getRowNumber() {
-        if (null != csvReader) {
+        if (isOpen()) {
             return csvReader.getRowNumber();
         } else {
             return -1;
@@ -57,7 +58,7 @@ public class CsvMapImporter implements Closeable {
     }
 
     public boolean isOpen() {
-        return null != csvReader;
+        return csvReader != null;
     }
 
     private CellProcessor[] getProcessors(String[] header, Map<String, CellProcessor> processorMapping) {
@@ -70,15 +71,15 @@ public class CsvMapImporter implements Closeable {
     }
 
     private String[] getFieldNames(String[] header, Map<String, String> fieldNameMapping) {
-        if (null != fieldNameMapping) {
-            List<String> fieldNamesList = new ArrayList<>(header.length);
-            for (String column : header) {
-                fieldNamesList.add(fieldNameMapping.get(column));
-            }
-
-            return fieldNamesList.toArray(new String[fieldNamesList.size()]);
-        } else {
+        if (fieldNameMapping == null) {
             return header;
         }
+
+        List<String> fieldNamesList = new ArrayList<>(header.length);
+        for (String column : header) {
+            fieldNamesList.add(fieldNameMapping.get(column));
+        }
+
+        return fieldNamesList.toArray(new String[fieldNamesList.size()]);
     }
 }

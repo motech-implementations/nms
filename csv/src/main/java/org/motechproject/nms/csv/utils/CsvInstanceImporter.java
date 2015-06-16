@@ -32,34 +32,35 @@ public class CsvInstanceImporter<T> implements Closeable {
         if (isOpen()) {
             T instance = createInstance();
             Map<String, String> cells = csvReader.read(columnNames);
-            if (null != cells) {
+            if (cells == null) {
+                return null;
+            } else {
                 Map<String, ?> properties = processCells(cells);
                 setInstanceProperties(instance, properties);
                 return instance;
-            } else {
-                return null;
             }
         } else {
             throw new IllegalStateException("CsvImporter is closed");
         }
     }
 
-    public void open(Reader reader, CsvPreference preferences, Map<String, CellProcessor> processorMapping, Map<String, String> fieldNameMapping)
+    public void open(Reader reader, CsvPreference preferences, Map<String, CellProcessor> processorMapping,
+                     Map<String, String> fieldNameMapping)
             throws IOException {
-        if (null == this.csvReader) {
+        if (isOpen()) {
+            throw new IllegalStateException("CsvImporter is already open");
+        } else {
             this.csvReader = new CsvMapReader(reader, preferences);
             String[] header = csvReader.getHeader(true);
             this.columnNames = getColumnNames(header, fieldNameMapping);
             this.fieldMapping = fieldNameMapping;
             this.processorMapping = processorMapping;
-        } else {
-            throw new IllegalStateException("CsvImporter is already open");
         }
     }
 
     @Override
     public void close() throws IOException {
-        if (null != csvReader) {
+        if (isOpen()) {
             csvReader.close();
             csvReader = null;
             columnNames = null;
@@ -69,7 +70,7 @@ public class CsvInstanceImporter<T> implements Closeable {
     }
 
     public int getLineNumber() {
-        if (null != csvReader) {
+        if (isOpen()) {
             return csvReader.getLineNumber();
         } else {
             return -1;
@@ -77,7 +78,7 @@ public class CsvInstanceImporter<T> implements Closeable {
     }
 
     public int getRowNumber() {
-        if (null != csvReader) {
+        if (isOpen()) {
             return csvReader.getRowNumber();
         } else {
             return -1;
@@ -85,7 +86,7 @@ public class CsvInstanceImporter<T> implements Closeable {
     }
 
     public boolean isOpen() {
-        return null != csvReader;
+        return csvReader != null;
     }
 
     private T createInstance() {
@@ -106,7 +107,7 @@ public class CsvInstanceImporter<T> implements Closeable {
 
     private void setInstanceProperty(T instance, String propertyName, Object propertyValue) {
         try {
-            if (null != propertyValue) {
+            if (propertyValue != null) {
                 BeanUtils.setProperty(instance, propertyName, propertyValue);
             }
         } catch (IllegalAccessException | InvocationTargetException e) {
@@ -122,7 +123,7 @@ public class CsvInstanceImporter<T> implements Closeable {
         for (Map.Entry<String, CellProcessor> processorEntry : processorMapping.entrySet()) {
             String columnName = processorEntry.getKey();
             CellProcessor processor = processorEntry.getValue();
-            if (null != processor) {
+            if (processor != null) {
                 String cellValue = cells.get(columnName);
                 properties.put(columnName, processor.execute(cellValue, csvContext));
             }
@@ -140,14 +141,14 @@ public class CsvInstanceImporter<T> implements Closeable {
     }
 
     private String[] getColumnNames(String[] header, Map<String, String> fieldNameMapping) {
-        if (null != fieldNameMapping) {
+        if (fieldNameMapping == null) {
+            return header;
+        } else {
             List<String> fieldNamesList = new ArrayList<>(header.length);
             for (String column : header) {
                 fieldNamesList.add(fieldNameMapping.containsKey(column) ? column : null);
             }
             return fieldNamesList.toArray(new String[fieldNamesList.size()]);
-        } else {
-            return header;
         }
     }
 }
