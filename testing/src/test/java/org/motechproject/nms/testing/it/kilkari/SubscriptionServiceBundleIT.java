@@ -793,11 +793,11 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
     /*
      * To verify LMP is changed successfully and new subscription created
-     * when subscription already exist for 72Weeks Pack having status as "Completed".
+     * when subscription already exist for pregnancyPack having status as "Completed".
      * Now Added one more assert for updated LMP to cover NMS_FT_134.
      * NMS_FT_134 description ::
-     * To check 72Weeks Pack subscription is successfully created when subscription 
-     * already exist for 72Weeks Pack with status as "Completed".
+     * To check pregnancyPack subscription is successfully created when subscription 
+     * already exist for pregnancyPack with status as "Completed".
      */
     @Test
     public void verifyFT156() {
@@ -836,11 +836,11 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
     /*
      * To verify DOB is changed successfully and new subscription created
-     * when subscription already exist for 48Weeks Pack having status as "Deactivated".
+     * when subscription already exist for childPack having status as "Deactivated".
      * Now Added one more assert for updated DOB to cover NMS_FT_132.
      * NMS_FT_132 description ::
-     * To check subscription for 48Weeks Pack is successfully created when subscription  
-     * already exist for  48Weeks Pack in state "Deactivated"
+     * To check subscription for childPack is successfully created when subscription  
+     * already exist for  childPack in state "Deactivated"
      */
     @Test
     public void verifyFT159() {
@@ -875,11 +875,11 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
     /*
      * To verify DOB is changed successfully and new subscription created
-     * when subscription already exist for 48Weeks Pack having status as "Completed".
+     * when subscription already exist for childPack having status as "Completed".
      * Now Added one more assert for updated DOB to cover NMS_FT_133.
      * NMS_FT_133 description ::
-     * To check 48Weeks Pack subscription is successfully created when subscription 
-     * already exist for 48Weeks sPack with status as "Completed".
+     * To check childPack subscription is successfully created when subscription 
+     * already exist for childPack with status as "Completed".
      */
     @Test
     public void verifyFT160() {
