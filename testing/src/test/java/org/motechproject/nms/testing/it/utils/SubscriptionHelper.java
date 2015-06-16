@@ -162,7 +162,8 @@ public class SubscriptionHelper {
             createSubscriptionPack("childPack", SubscriptionPackType.CHILD, CHILD_PACK_WEEKS, 2);
         } else {
         	if(pack.getMessagesPerWeek() == 1) {
-        		updateSubscriptionPack(subscriptionPackMessageDataService, pack, CHILD_PACK_WEEKS, 2);
+        		updateSubscriptionPack(subscriptionPackMessageDataService, 
+        				pack, CHILD_PACK_WEEKS, 2);
         	}
         }
         return subscriptionService.getSubscriptionPack("childPack");
@@ -174,7 +175,8 @@ public class SubscriptionHelper {
             createSubscriptionPack("pregnancyPack", SubscriptionPackType.PREGNANCY, PREGNANCY_PACK_WEEKS, 1);
         } else {
         	if(pack.getMessagesPerWeek() == 2) {
-        		updateSubscriptionPack(subscriptionPackMessageDataService, pack, PREGNANCY_PACK_WEEKS, 1);
+        		updateSubscriptionPack(subscriptionPackMessageDataService, 
+        				pack, PREGNANCY_PACK_WEEKS, 1);
         	}
         }
         return subscriptionService.getSubscriptionPack("pregnancyPack");
@@ -192,7 +194,7 @@ public class SubscriptionHelper {
 
 	private List<SubscriptionPackMessage> genratePackMessageList(int packWeeks, int messagesPerWeek) {
 		List<SubscriptionPackMessage> messages = new ArrayList<>();
-		for (int week = 1; week <= packWeeks; week++) {
+        for (int week = 1; week <= packWeeks; week++) {
             messages.add(new SubscriptionPackMessage(week, String.format("w%s_1", week),
                     String.format("w%s_1.wav", week),
                     TWO_MINUTES - TEN_SECS + (int) (Math.random() * 2 * TEN_SECS)));
