@@ -1651,18 +1651,16 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     @Ignore
     @Test
     public void verifyFT67() throws IOException, InterruptedException {
-        // circle missing
-        HttpPost httpPost = createSubscriptionHttpPost("1234567890", "A", null,
-                "123456789012545", "10", "childPack");
-
-        String expectedJsonResponse = createFailureResponseJson("<circle: Not Present>");
+        // circle missing(optional parameter)
+        HttpPost httpPost = createSubscriptionHttpPost("9999911122",
+                rh.airtelOperator(), null, "123456789012545", rh
+                        .hindiLanguage().getCode(), sh.childPack().getName());
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
                 httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine()
                 .getStatusCode());
-        assertEquals(expectedJsonResponse,
-                EntityUtils.toString(response.getEntity()));
     }
 
     /**
