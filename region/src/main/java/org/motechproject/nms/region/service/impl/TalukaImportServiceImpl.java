@@ -42,11 +42,6 @@ public class TalukaImportServiceImpl extends BaseLocationImportService<Taluka>
     }
 
     @Override
-    public void addParent(State state) {
-        addParent(PARENT_STATE, state);
-    }
-
-    @Override
     protected Map<String, CellProcessor> getProcessorMapping() {
         Map<String, CellProcessor> mapping = new HashMap<>();
         mapping.put(TALUKA_CODE, new GetString());

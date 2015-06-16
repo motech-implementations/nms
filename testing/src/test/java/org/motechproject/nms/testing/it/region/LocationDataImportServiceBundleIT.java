@@ -112,7 +112,6 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
         assertEquals("district regional name", district.getRegionalName());
         assertNotNull(district.getState());
 
-        talukaImportService.addParent(exampleState);
         talukaImportService.importData(read("csv/taluka.csv"));
         Taluka taluka = talukaService.findByDistrictAndCode(district, "TALUKA");
         assertNotNull(taluka);
