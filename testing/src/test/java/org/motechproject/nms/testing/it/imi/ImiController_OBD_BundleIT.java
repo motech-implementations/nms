@@ -180,4 +180,28 @@ public class ImiController_OBD_BundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
                 ImiTestHelper.ADMIN_USERNAME, ImiTestHelper.ADMIN_PASSWORD));
     }
+
+    /*
+    * NMS_FT_193 :To check "NotifyFileProcessedStatus" API is rejected in case the file could not
+    * be copied or the file is not available.
+    * NMS_FT_194 : To check "NotifyFileProcessedStatus" API is rejected in case there is an error in checksum
+    * NMS_FT_195 : To check "NotifyFileProcessedStatus" API is rejected in case there is an error in records check.
+    */
+    @Test
+    public void verifyFT193_194_195() throws IOException, InterruptedException {
+        getLogger().debug("testCreateFileProcessedStatusRequestWithErrorFILE_NOT_ACCESSIBLE()");
+        HttpPost httpPost = createFileProcessedStatusHttpPost("file.csv",
+                FileProcessedStatus.FILE_NOT_ACCESSIBLE);
+
+        fileAuditRecordDataService.create(new FileAuditRecord(FileType.TARGET_FILE, "file.csv", false, "ERROR",
+                null, null));
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK, ImiTestHelper.ADMIN_USERNAME, ImiTestHelper.ADMIN_PASSWORD));
+
+        //check an alert was sent
+        AlertCriteria criteria = new AlertCriteria().byExternalId("file.csv");
+        List<Alert> alerts = alertService.search(criteria);
+        assertEquals(1, alerts.size());
+        assertEquals(AlertType.CRITICAL, alerts.get(0).getAlertType());
+    }
 }
