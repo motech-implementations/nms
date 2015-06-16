@@ -14,10 +14,12 @@ import org.motechproject.nms.csv.utils.GetInstanceByLong;
 import org.motechproject.nms.csv.utils.GetInstanceByString;
 import org.motechproject.nms.csv.utils.GetLong;
 import org.motechproject.nms.csv.utils.GetString;
+import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.domain.MctsBeneficiary;
 import org.motechproject.nms.kilkari.domain.MctsChild;
 import org.motechproject.nms.kilkari.domain.MctsMother;
 import org.motechproject.nms.kilkari.domain.Subscriber;
+import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionError;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
@@ -214,7 +216,23 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         child.setName(name);
         child.setMother(mother);
 
-        processSubscriptionForBeneficiary(child, msisdn, dob, childPack);
+        Subscription childSubscription = processSubscriptionForBeneficiary(child, msisdn, dob, childPack);
+
+        if (childSubscription != null) {
+            // a new child subscription was created -- deactivate mother's pregnancy subscription if she has one
+
+            Subscriber subscriber = childSubscription.getSubscriber();
+
+            if ((mother != null) && (mother.equals(subscriber.getMother()))) {
+
+                Subscription pregnancySubscription = subscriptionService.getActiveSubscription(subscriber,
+                        SubscriptionPackType.PREGNANCY);
+                if (pregnancySubscription != null) {
+                    subscriptionService.deactivateSubscription(pregnancySubscription, DeactivationReason.LIVE_BIRTH);
+                }
+
+            }
+        }
     }
 
     private boolean validateLMP(DateTime lmp, Long msisdn) {
@@ -243,7 +261,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         return true;
     }
 
-    private void processSubscriptionForBeneficiary(MctsBeneficiary beneficiary, Long msisdn, DateTime referenceDate,
+    private Subscription processSubscriptionForBeneficiary(MctsBeneficiary beneficiary, Long msisdn, DateTime referenceDate,
                                                   SubscriptionPack pack) {
         Language language = beneficiary.getDistrict().getLanguage();
         Subscriber subscriber = subscriberService.getSubscriber(msisdn);
@@ -254,12 +272,10 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             subscriber = new Subscriber(msisdn, language);
             subscriber = updateSubscriber(subscriber, beneficiary, referenceDate, pack.getType());
             subscriberService.create(subscriber);
-            subscriptionService.createSubscription(msisdn, language, pack, SubscriptionOrigin.MCTS_IMPORT);
-
-            return;
+            return subscriptionService.createSubscription(msisdn, language, pack, SubscriptionOrigin.MCTS_IMPORT);
         }
 
-        if (subscriptionService.subscriberHasActiveSubscription(subscriber, pack.getType())) {
+        if (subscriptionService.getActiveSubscription(subscriber, pack.getType()) != null) {
             // subscriber already has an active subscription to this pack
 
             MctsBeneficiary existingBeneficiary = (pack.getType() == SubscriptionPackType.PREGNANCY) ? subscriber.getMother() :
@@ -281,13 +297,13 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                 subscriberService.update(subscriber);
             }
 
-            return;
+            return null;
         }
 
         // subscriber exists, but doesn't have a subscription to this pack
         subscriber = updateSubscriber(subscriber, beneficiary, referenceDate, pack.getType());
         subscriberService.update(subscriber);
-        subscriptionService.createSubscription(msisdn, language, pack, SubscriptionOrigin.MCTS_IMPORT);
+        return subscriptionService.createSubscription(msisdn, language, pack, SubscriptionOrigin.MCTS_IMPORT);
     }
 
 

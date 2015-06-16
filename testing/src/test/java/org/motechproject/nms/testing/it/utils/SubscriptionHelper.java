@@ -1,6 +1,9 @@
 package org.motechproject.nms.testing.it.utils;
 
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.joda.time.DateTime;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
@@ -21,9 +24,6 @@ import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class SubscriptionHelper {
 
@@ -79,8 +79,7 @@ public class SubscriptionHelper {
 
     private void createSubscriptionPack(String name, SubscriptionPackType type, int weeks,
                                         int messagesPerWeek) {
-        List<SubscriptionPackMessage> messages = generatePackMessageList(weeks,
-                messagesPerWeek);
+        List<SubscriptionPackMessage> messages = genratePackMessageList(weeks, messagesPerWeek);
         subscriptionPackDataService.create(new SubscriptionPack(name, type, weeks, messagesPerWeek, messages));
     }
 
@@ -156,66 +155,56 @@ public class SubscriptionHelper {
     public Subscription mksub(SubscriptionOrigin origin, DateTime startDate) {
         return mksub(origin, startDate, SubscriptionPackType.CHILD);
     }
-
-    public SubscriptionPack childPackFor2MessagePerWeek(
-            SubscriptionPackMessageDataService subscriptionPackMessageDataService) {
-        SubscriptionPack pack = subscriptionPackDataService.byName("childPack");
-        if (pack == null) {
-            createSubscriptionPack("childPack", SubscriptionPackType.CHILD,
-                    CHILD_PACK_WEEKS, 2);
+    
+    public SubscriptionPack childPackFor2MessagePerWeek(SubscriptionPackMessageDataService subscriptionPackMessageDataService) {
+    	SubscriptionPack pack = subscriptionPackDataService.byName("childPack");
+    	if (pack == null) {
+            createSubscriptionPack("childPack", SubscriptionPackType.CHILD, CHILD_PACK_WEEKS, 2);
         } else {
-            if (pack.getMessagesPerWeek() == 1) {
-                updateSubscriptionPack(subscriptionPackMessageDataService,
-                        pack, CHILD_PACK_WEEKS, 2);
-            }
+        	if(pack.getMessagesPerWeek() == 1) {
+        		updateSubscriptionPack(subscriptionPackMessageDataService, 
+        				pack, CHILD_PACK_WEEKS, 2);
+        	}
         }
         return subscriptionService.getSubscriptionPack("childPack");
     }
-
-    public SubscriptionPack pregnancyPackFor1MessagePerWeek(
-            SubscriptionPackMessageDataService subscriptionPackMessageDataService) {
-        SubscriptionPack pack = subscriptionPackDataService
-                .byName("pregnancyPack");
-        if (pack == null) {
-            createSubscriptionPack("pregnancyPack",
-                    SubscriptionPackType.PREGNANCY, PREGNANCY_PACK_WEEKS, 1);
+    
+    public SubscriptionPack pregnancyPackFor1MessagePerWeek(SubscriptionPackMessageDataService subscriptionPackMessageDataService) {
+    	SubscriptionPack pack = subscriptionPackDataService.byName("pregnancyPack");
+    	if (pack == null) {
+            createSubscriptionPack("pregnancyPack", SubscriptionPackType.PREGNANCY, PREGNANCY_PACK_WEEKS, 1);
         } else {
-            if (pack.getMessagesPerWeek() == 2) {
-                updateSubscriptionPack(subscriptionPackMessageDataService,
-                        pack, PREGNANCY_PACK_WEEKS, 1);
-            }
+        	if(pack.getMessagesPerWeek() == 2) {
+        		updateSubscriptionPack(subscriptionPackMessageDataService, 
+        				pack, PREGNANCY_PACK_WEEKS, 1);
+        	}
         }
         return subscriptionService.getSubscriptionPack("pregnancyPack");
     }
 
-    private void updateSubscriptionPack(
-            SubscriptionPackMessageDataService subscriptionPackMessageDataService,
-            SubscriptionPack pack, int packWeeks, int messagesPerWeek) {
-        for (SubscriptionPackMessage message : pack.getMessages()) {
-            subscriptionPackMessageDataService.delete(message);
-        }
-        pack.setMessagesPerWeek(messagesPerWeek);
-        pack.setMessages(generatePackMessageList(packWeeks, messagesPerWeek));
-        subscriptionPackDataService.update(pack);
-    }
+    private void updateSubscriptionPack(SubscriptionPackMessageDataService subscriptionPackMessageDataService, 
+    		SubscriptionPack pack, int packWeeks, int messagesPerWeek) {
+    	for(SubscriptionPackMessage message : pack.getMessages()) {
+    		subscriptionPackMessageDataService.delete(message);
+    	}
+    	pack.setMessagesPerWeek(messagesPerWeek);
+    	pack.setMessages(genratePackMessageList(packWeeks, messagesPerWeek));
+    	subscriptionPackDataService.update(pack);
+	}
 
-    private List<SubscriptionPackMessage> generatePackMessageList(
-            int packWeeks, int messagesPerWeek) {
-        List<SubscriptionPackMessage> messages = new ArrayList<>();
+	private List<SubscriptionPackMessage> genratePackMessageList(int packWeeks, int messagesPerWeek) {
+		List<SubscriptionPackMessage> messages = new ArrayList<>();
         for (int week = 1; week <= packWeeks; week++) {
-            messages.add(new SubscriptionPackMessage(week, String.format(
-                    "w%s_1", week), String.format("w%s_1.wav", week),
-                    TWO_MINUTES - TEN_SECS
-                            + (int) (Math.random() * 2 * TEN_SECS)));
+            messages.add(new SubscriptionPackMessage(week, String.format("w%s_1", week),
+                    String.format("w%s_1.wav", week),
+                    TWO_MINUTES - TEN_SECS + (int) (Math.random() * 2 * TEN_SECS)));
 
             if (messagesPerWeek == 2) {
-                messages.add(new SubscriptionPackMessage(week, String.format(
-                        "w%s_2", week), String.format("w%s_2.wav", week),
-                        TWO_MINUTES - TEN_SECS
-                                + (int) (Math.random() * 2 * TEN_SECS)));
+                messages.add(new SubscriptionPackMessage(week, String.format("w%s_2", week),
+                        String.format("w%s_2.wav", week),
+                        TWO_MINUTES - TEN_SECS + (int) (Math.random() * 2 * TEN_SECS)));
             }
         }
         return messages;
-    }
-
+	}
 }
