@@ -315,7 +315,7 @@ public class InboxServiceBundleIT extends BasePaxIT {
 	
 	/*
 	 *	"To check NMS is able to make available a single message of current week in inbox
-	 *	 when user is subscribed to 48Weeks Pack with single message per week configuration."
+	 *	 when user is subscribed to 48Weeks Pack with two message per week configuration."
 	 */
 	@Test
 	public void verifyFT114() throws NoInboxForSubscriptionException {
