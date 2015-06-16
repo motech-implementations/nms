@@ -1,13 +1,8 @@
 package org.motechproject.nms.imi.service.impl;
 
-import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.io.IOUtils;
-import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
 import org.joda.time.DateTime;
 import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.alerts.domain.AlertStatus;
@@ -42,6 +37,10 @@ public class SmsNotificationServiceImpl implements SmsNotificationService {
 
     private static final String SMS_TEMPLATE_FILE = "smsTemplate.json";
 
+    private static final String ALERT_ID = "SmsNotification";
+
+    private static final String ALERT_NAME = "Sms notification failed";
+
     private static final Logger LOGGER = LoggerFactory.getLogger(SmsNotificationServiceImpl.class);
 
     private AlertService alertService;
@@ -62,35 +61,17 @@ public class SmsNotificationServiceImpl implements SmsNotificationService {
     @Override
     public boolean sendSms(Long callingNumber) {
 
-        CloseableHttpClient httpClient = HttpClients.createDefault();
         HttpPost httpPost = prepareSmsRequest(callingNumber);
 
         if (httpPost == null) {
             LOGGER.error("Unable to build POST request for SMS notification");
+            alertService.create(ALERT_ID, ALERT_NAME, "Could not create sms notification request",
+                    AlertType.CRITICAL, AlertStatus.NEW, 0, null);
             return false;
         }
 
-        try {
-            HttpResponse response = httpClient.execute(httpPost);
-            int responseCode = response.getStatusLine().getStatusCode();
-            if (responseCode != HttpStatus.SC_ACCEPTED) {
-                String error = String.format("Expecting HTTP 201 response from %s but received HTTP %d : %s ",
-                        httpPost.getURI().toString(), responseCode, EntityUtils.toString(response.getEntity()));
-                LOGGER.error(error);
-                if (response.getEntity() != null && response.getEntity().getContentLength() > 0) {
-                    LOGGER.error(getStringFromStream(response.getEntity().getContent()));
-                    alertService.create("ResponseCode", "Sms notification",
-                            "Could not get expected notification response",
-                            AlertType.CRITICAL, AlertStatus.NEW, 0, null);
-                }
-
-                return false;
-            }
-        } catch (IOException ie) {
-            LOGGER.error(ie.toString());
-            return false;
-        }
-
+        ExponentialRetrySender sender = new ExponentialRetrySender(settingsFacade, alertService);
+        sender.sendNotificationRequest(httpPost, ALERT_ID, ALERT_NAME);
         return true;
     }
 
