@@ -65,12 +65,12 @@ public interface SubscriptionService {
     SubscriptionPack getSubscriptionPack(String name);
 
     /**
-     * Returns boolean indicating whether or not the subscriber has an active subscription for the specified pack type
+     * Returns active subscription for the specified pack type if the subscriber has one
      * @param subscriber The subscriber
      * @param type The type of subscription pack
-     * @return True if the subscriber has an active subscription to this pack, false otherwise
+     * @return The subscription if an active one exists, null otherwise
      */
-    boolean subscriberHasActiveSubscription(Subscriber subscriber, SubscriptionPackType type);
+    Subscription getActiveSubscription(Subscriber subscriber, SubscriptionPackType type);
 
     List<SubscriptionPack> getSubscriptionPacks();
 
