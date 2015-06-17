@@ -26,17 +26,7 @@ public class TestingController {
         Map<String, Object> eventParams = new HashMap<>();
         MotechEvent motechEvent = new MotechEvent(subject, eventParams);
         eventRelay.sendEventMessage(motechEvent);
-        return String.format("Sent MOTECH event: %s with params: %s", subject, eventParams.toString());
+        return String.format("Sent MOTECH event: %s with empty params: %s", subject, eventParams.toString());
     }
 
-    @RequestMapping(value = "/sendEventWithParams")
-    @ResponseBody
-    @Transactional
-    public String sendEvent(@RequestParam(required = true) String subject,
-                            @RequestParam(required = true) Map<String, Object> eventParams) {
-
-        MotechEvent motechEvent = new MotechEvent(subject, eventParams);
-        eventRelay.sendEventMessage(motechEvent);
-        return String.format("Sent MOTECH event: %s with params: %s", subject, eventParams.toString());
-    }
 }
