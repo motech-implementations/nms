@@ -17,7 +17,6 @@ import javax.inject.Inject;
 
 import org.joda.time.DateTime;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -56,8 +55,6 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
-
-
 
 /**
  * Verify that SubscriptionService is present & functional.
@@ -923,15 +920,17 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 	 * 
 	 * https://applab.atlassian.net/browse/NMS-202
 	 */
-    @Ignore
     @Test
     public void verifyFT182() {
     	
     	//attempt to create subscriber and subscription having calling number more than 10 digit
-    	subscriptionService.createSubscription(111111111111L, rh.hindiLanguage(),
+    	subscriptionService.createSubscription(991111111122L, rh.hindiLanguage(),
 				sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
     	
-        Subscriber subscriber = subscriberDataService.findByCallingNumber(111111111111L);
-        assertNull(subscriber);
+        Subscriber subscriber1 = subscriberDataService.findByCallingNumber(991111111122L);
+        assertNull(subscriber1);
+
+        Subscriber subscriber2 = subscriberDataService.findByCallingNumber(1111111122L);
+        assertNotNull(subscriber2);
     } 
 }

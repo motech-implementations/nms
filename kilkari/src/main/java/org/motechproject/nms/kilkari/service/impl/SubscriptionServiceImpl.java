@@ -181,14 +181,17 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         }
     }
 
+
     @Override
-    public Subscription createSubscription(long callingNumber, Language language, SubscriptionPack subscriptionPack,
-                                   SubscriptionOrigin mode) {
-        Subscriber subscriber = subscriberDataService.findByCallingNumber(callingNumber);
+    public Subscription createSubscription(long callingNumber, Language language,
+                                           SubscriptionPack subscriptionPack, SubscriptionOrigin mode) {
+
+        long number = PhoneNumberHelper.truncateLongNumber(callingNumber);
+        Subscriber subscriber = subscriberDataService.findByCallingNumber(number);
         Subscription subscription;
 
         if (subscriber == null) {
-            subscriber = new Subscriber(callingNumber, language);
+            subscriber = new Subscriber(number, language);
             subscriberDataService.create(subscriber);
         }
 
