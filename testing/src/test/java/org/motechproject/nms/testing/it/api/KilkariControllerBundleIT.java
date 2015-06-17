@@ -74,6 +74,7 @@ import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
+
 /**
  * Verify that Kilkari API is functional.
  */
@@ -1932,5 +1933,53 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 .getMillis());
         assertEquals(456L, (long) inboxCallDetailRecord2.getCallEndTime()
                 .getMillis());
+    }
+    /**
+     * To check NMS is able to make available a message corresponding to each
+     * Pack of current week when user is subscribed to both pregnancy Pack and
+     * child Pack with single message per week configuration .
+     **/
+    @Test
+    public void verifyFT119() throws IOException, InterruptedException {
+        // update 2 messages/week to 1 message/week configuration for pregnancy
+        // pack
+        sh.pregnancyPackFor1MessagePerWeek(subscriptionPackMessageDataService);
+        
+        Subscriber mctsSubscriber = new Subscriber(9999911122L);
+        // set DOB for child pack such that
+        mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(14));
+        mctsSubscriber.setLastMenstrualPeriod(null);
+        subscriberDataService.create(mctsSubscriber);
+
+        // create subscription for child pack in Active state
+        Subscription childPackSubscription = subscriptionService
+                .createSubscription(9999911122L, rh.hindiLanguage(),
+                        sh.childPack(), SubscriptionOrigin.MCTS_IMPORT);
+
+        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+
+        // create new subscription for pregnancy pack in Active state
+        mctsSubscriber.setDateOfBirth(null);
+        mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(90));
+        subscriberDataService.update(mctsSubscriber);
+        Subscription pregnancyPackSubscription = subscriptionService
+                .createSubscription(9999911122L, rh.hindiLanguage(),
+                        sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
+
+        Pattern childPackJsonPattern = Pattern
+                .compile(".*\"subscriptionId\":\""
+                        + childPackSubscription.getSubscriptionId()
+                        + "\",\"subscriptionPack\":\"childPack\",\"inboxWeekId\":\"w3_1\",\"contentFileName\":\"w3_1.wav.*");
+        Pattern pregnancyPackJsonPattern = Pattern
+                .compile(".*\"subscriptionId\":\""
+                        + pregnancyPackSubscription.getSubscriptionId()
+                        + "\",\"subscriptionPack\":\"pregnancyPack\",\"inboxWeekId\":\"w1_1\",\"contentFileName\":\"w1_1.wav.*");
+
+        HttpGet httpGet = createHttpGet(true, "9999911122", true,
+                "123456789012345");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
+                childPackJsonPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
+                pregnancyPackJsonPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 }
