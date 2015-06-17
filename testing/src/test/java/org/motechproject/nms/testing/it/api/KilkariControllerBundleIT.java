@@ -1933,4 +1933,52 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertEquals(456L, (long) inboxCallDetailRecord2.getCallEndTime()
                 .getMillis());
     }
+
+    /**
+     * To check NMS is able to make available a message corresponding to each
+     * Pack of current week when user is subscribed to both pregnancy Pack and
+     * child with two message per week configuration .
+     **/
+    @Test
+    public void verifyFT120() throws IOException, InterruptedException {
+        // update child pack to 2 messages per week configuration
+        sh.childPackFor2MessagePerWeek(subscriptionPackMessageDataService);
+
+        Subscriber mctsSubscriber = new Subscriber(9999911122L);
+        // set DOB for child pack
+        mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(14 + 4));
+        mctsSubscriber.setLastMenstrualPeriod(null);
+        subscriberDataService.create(mctsSubscriber);
+
+        // create subscription for child pack in Active state
+        Subscription childPackSubscription = subscriptionService
+                .createSubscription(9999911122L, rh.hindiLanguage(),
+                        sh.childPack(), SubscriptionOrigin.MCTS_IMPORT);
+
+        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+
+        // create new subscription for pregnancy pack in Active state
+        mctsSubscriber.setDateOfBirth(null);
+        mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(90 + 4));
+        subscriberDataService.update(mctsSubscriber);
+        Subscription pregnancyPackSubscription = subscriptionService
+                .createSubscription(9999911122L, rh.hindiLanguage(),
+                        sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
+
+        Pattern childPackJsonPattern = Pattern
+                .compile(".*\"subscriptionId\":\""
+                        + childPackSubscription.getSubscriptionId()
+                        + "\",\"subscriptionPack\":\"childPack\",\"inboxWeekId\":\"w3_2\",\"contentFileName\":\"w3_2.wav.*");
+        Pattern pregnancyPackJsonPattern = Pattern
+                .compile(".*\"subscriptionId\":\""
+                        + pregnancyPackSubscription.getSubscriptionId()
+                        + "\",\"subscriptionPack\":\"pregnancyPack\",\"inboxWeekId\":\"w1_2\",\"contentFileName\":\"w1_2.wav.*");
+
+        HttpGet httpGet = createHttpGet(true, "9999911122", true,
+                "123456789012345");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
+                childPackJsonPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
+                pregnancyPackJsonPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
 }
