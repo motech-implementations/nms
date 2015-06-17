@@ -176,7 +176,7 @@ public class UserController extends BaseController {
 
             state = getStateFromCircle(circle);
 
-            if (!serviceDeployedInUserState(Service.KILKARI, state)) {
+            if (!serviceDeployedInUserState(Service.KILKARI, state, circle)) {
                 throw new NotDeployedException(String.format(NOT_DEPLOYED, Service.KILKARI));
             }
         }
@@ -208,7 +208,7 @@ public class UserController extends BaseController {
                 throw new NotAuthorizedException(String.format(NOT_AUTHORIZED, CALLING_NUMBER));
             }
 
-            if (!serviceDeployedInUserState(service, state)) {
+            if (!serviceDeployedInUserState(service, state, circle)) {
                 throw new NotDeployedException(String.format(NOT_DEPLOYED, service));
             }
         }

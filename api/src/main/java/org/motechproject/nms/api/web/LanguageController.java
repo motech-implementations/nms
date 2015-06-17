@@ -86,7 +86,7 @@ public class LanguageController extends BaseController {
             throw new NotAuthorizedException(String.format(NOT_AUTHORIZED, CALLING_NUMBER));
         }
 
-        if (!serviceDeployedInUserState(service, state)) {
+        if (!serviceDeployedInUserState(service, state , null)) {
             throw new NotDeployedException(String.format(NOT_DEPLOYED, service));
         }
 

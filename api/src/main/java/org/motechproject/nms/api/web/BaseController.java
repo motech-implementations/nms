@@ -221,10 +221,39 @@ public class BaseController {
         return whitelistService.numberWhitelistedForState(state, flw.getContactNumber());
     }
 
-    protected boolean serviceDeployedInUserState(Service service, State state) {
+
+    protected boolean checkForServiceDeployedInMultiplestate(Service service, Circle circle) {
+
+        List<State> states = null;
+
+        if (null == circle) {
+            return true;
+        }
+
+        states = circle.getStates();
+        // Check for multiple state in same circle
+        if (states != null && states.size() != 0) {
+
+            //iterate each state and check deployment status
+            for (State temp : states) {
+                //If service is deployed in any  state, handle it as deployed service for all states
+                if (propertyService.isServiceDeployedInState(service, temp)){
+                    return true;
+                }
+
+                return false;
+
+            }
+        }
+        return true;
+
+    }
+
+    protected boolean serviceDeployedInUserState(Service service, State state, Circle circle) {
         // If I don't have a state for the FLW let them continue further
         if (state == null) {
-            return true;
+
+            return checkForServiceDeployedInMultiplestate(service, circle);
         }
 
         return propertyService.isServiceDeployedInState(service, state);
