@@ -1294,7 +1294,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
      * Pack and place holder for second Pack also present with no details.
      */
     @Test
-    //todo: need JIRA issue #
+    //todo: https://applab.atlassian.net/browse/NMS-182
     @Ignore
     public void verifyFT186() throws IOException, InterruptedException {
         Subscriber subscriber = subscriberDataService.create(new Subscriber(3000000000L));
@@ -1961,7 +1961,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
      * To verify the behavior of Get Subscriber Details API if a mandatory
      * parameter : operator is missing from the API request.
      */
-    // JIRA issue https://applab.atlassian.net/browse/NMS-192
+    // TODO : JIRA issue https://applab.atlassian.net/browse/NMS-192
     @Ignore
     @Test
     public void verifyFT13() throws IOException, InterruptedException {
@@ -2768,8 +2768,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     /**
      * test DeactivateSubscription API with Blank Params
      *
-     * JIRA issue: https://applab.atlassian.net/browse/NMS-193
      */
+    // TODO :JIRA issue: https://applab.atlassian.net/browse/NMS-193
     @Ignore
     @Test
     public void verifyFT105() throws IOException, InterruptedException {
@@ -3084,7 +3084,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
      * To verify the behavior of Get Subscriber Details API if provided
      * beneficiary's callId is not valid : Alphanumeric value.
      */
-    // JIRA issue https://applab.atlassian.net/browse/NMS-184
+    // TODO: JIRA issue https://applab.atlassian.net/browse/NMS-184
     @Ignore
     @Test
     public void verifyFT11() throws IOException, InterruptedException {
@@ -3832,6 +3832,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
      * NMS_FT_26 To check response of SaveInboxCallDetails API if
      * callingNumber provided in the request is in invalid format
      */
+
+    //TODO: https://applab.atlassian.net/browse/NMS-187
     @Ignore
     @Test
     public void verifyFT26() throws IOException, InterruptedException {
@@ -3913,6 +3915,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
      * NMS_FT_8 To check the response in case of invalid callingNumber in
      * Get Subscriber Details API
      */
+
+    //TODO : https://applab.atlassian.net/browse/NMS-187
     @Test
     @Ignore
     public void verifyFT8() throws IOException, InterruptedException {
@@ -3931,4 +3935,240 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
+
+
+    /**
+     * To check NMS is able to make available a message corresponding to each
+     * Pack of current week when user is subscribed to both pregnancy Pack and
+     * child Pack with single message per week configuration .
+     **/
+    @Test
+    public void verifyFT119() throws IOException, InterruptedException {
+        // update 2 messages/week to 1 message/week configuration for pregnancy
+        // pack
+        sh.pregnancyPackFor1MessagePerWeek(subscriptionPackMessageDataService);
+
+        Subscriber mctsSubscriber = new Subscriber(9999911122L);
+        // set DOB for child pack such that
+        mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(14));
+        mctsSubscriber.setLastMenstrualPeriod(null);
+        subscriberDataService.create(mctsSubscriber);
+
+        // create subscription for child pack in Active state
+        Subscription childPackSubscription = subscriptionService
+                .createSubscription(9999911122L, rh.hindiLanguage(),
+                        sh.childPack(), SubscriptionOrigin.MCTS_IMPORT);
+
+        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+
+        // create new subscription for pregnancy pack in Active state
+        mctsSubscriber.setDateOfBirth(null);
+        mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(90));
+        subscriberDataService.update(mctsSubscriber);
+        Subscription pregnancyPackSubscription = subscriptionService
+                .createSubscription(9999911122L, rh.hindiLanguage(),
+                        sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
+
+        Pattern childPackJsonPattern = Pattern
+                .compile(".*\"subscriptionId\":\""
+                        + childPackSubscription.getSubscriptionId()
+                        + "\",\"subscriptionPack\":\"childPack\",\"inboxWeekId\":\"w3_1\",\"contentFileName\":\"w3_1.wav.*");
+        Pattern pregnancyPackJsonPattern = Pattern
+                .compile(".*\"subscriptionId\":\""
+                        + pregnancyPackSubscription.getSubscriptionId()
+                        + "\",\"subscriptionPack\":\"pregnancyPack\",\"inboxWeekId\":\"w1_1\",\"contentFileName\":\"w1_1.wav.*");
+
+        HttpGet httpGet = createHttpGet(true, "9999911122", true,
+                "123456789012345");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
+                childPackJsonPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
+                pregnancyPackJsonPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    /**
+     * To check NMS is able to make available a message corresponding to each
+     * Pack of current week when user is subscribed to both pregnancy Pack and
+     * child with two message per week configuration .
+     **/
+    @Test
+    public void verifyFT120() throws IOException, InterruptedException {
+        // update child pack to 2 messages per week configuration
+        sh.childPackFor2MessagePerWeek(subscriptionPackMessageDataService);
+
+        Subscriber mctsSubscriber = new Subscriber(9999911122L);
+        // set DOB for child pack
+        mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(14 + 4));
+        mctsSubscriber.setLastMenstrualPeriod(null);
+        subscriberDataService.create(mctsSubscriber);
+
+        // create subscription for child pack in Active state
+        Subscription childPackSubscription = subscriptionService
+                .createSubscription(9999911122L, rh.hindiLanguage(),
+                        sh.childPack(), SubscriptionOrigin.MCTS_IMPORT);
+
+        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+
+        // create new subscription for pregnancy pack in Active state
+        mctsSubscriber.setDateOfBirth(null);
+        mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(90 + 4));
+        subscriberDataService.update(mctsSubscriber);
+        Subscription pregnancyPackSubscription = subscriptionService
+                .createSubscription(9999911122L, rh.hindiLanguage(),
+                        sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
+
+        Pattern childPackJsonPattern = Pattern
+                .compile(".*\"subscriptionId\":\""
+                        + childPackSubscription.getSubscriptionId()
+                        + "\",\"subscriptionPack\":\"childPack\",\"inboxWeekId\":\"w3_2\",\"contentFileName\":\"w3_2.wav.*");
+        Pattern pregnancyPackJsonPattern = Pattern
+                .compile(".*\"subscriptionId\":\""
+                        + pregnancyPackSubscription.getSubscriptionId()
+                        + "\",\"subscriptionPack\":\"pregnancyPack\",\"inboxWeekId\":\"w1_2\",\"contentFileName\":\"w1_2.wav.*");
+
+        HttpGet httpGet = createHttpGet(true, "9999911122", true,
+                "123456789012345");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
+                childPackJsonPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
+                pregnancyPackJsonPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    /**
+     * To verify the behavior of Get Inbox Details API if the service is not
+     * deployed in provided Subscriber's state.
+     **/
+    @Test
+    // Similar to FT_16
+    // TODO: https://applab.atlassian.net/browse/NMS-181
+    @Ignore
+    public void verifyFT91() throws IOException, InterruptedException {
+        // Service is deployed for delhi circle in setup data
+        // create subscriber (with language and circle)for which service is not
+        // deployed
+        rh.mysuruDistrict();
+        rh.karnatakaCircle();
+
+        Subscriber mctsSubscriber = new Subscriber(9999911122L,
+                rh.kannadaLanguage(), rh.karnatakaCircle());
+
+        // create new subscription for pregnancy pack in Active state
+        mctsSubscriber.setDateOfBirth(null);
+        mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(90));
+        subscriberDataService.update(mctsSubscriber);
+        subscriptionService.createSubscription(9999911122L,
+                rh.kannadaLanguage(), sh.pregnancyPack(),
+                SubscriptionOrigin.MCTS_IMPORT);
+
+        HttpGet httpGet = createHttpGet(true, "9999911122", true,
+                "123456789012345");
+        String expectedJsonResponse = createFailureResponseJson("<KILKARI: Not Deployed In State>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * To check NMS is able to make available a single message of current week
+     * in inbox with single message per week configuration . when:
+     * a) user's MSISDN is subscribed for child Pack.
+     * b)user's MSISDN is deactivated for an old subscription of pregnancy Pack.
+     **/
+    @Test
+    public void verifyFT117() throws IOException, InterruptedException {
+        // update pregnancy pack to 1 message/week configuration
+        sh.pregnancyPackFor1MessagePerWeek(subscriptionPackMessageDataService);
+
+        Subscriber mctsSubscriber = new Subscriber(9999911122L);
+        mctsSubscriber.setDateOfBirth(null);
+        // set LMP for pregnancy pack
+        mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(240));
+        subscriberDataService.create(mctsSubscriber);
+
+        // create old subscription for pregnancy pack and deactivate it
+        Subscription oldSubscription = subscriptionService.createSubscription(
+                9999911122L, rh.hindiLanguage(), sh.pregnancyPack(),
+                SubscriptionOrigin.MCTS_IMPORT);
+        subscriptionService.deactivateSubscription(oldSubscription,
+                DeactivationReason.DEACTIVATED_BY_USER);
+
+        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+
+        // create new subscription for child pack in Active state such that
+        // next OBD date falls on current date
+        mctsSubscriber.setLastMenstrualPeriod(null);
+        mctsSubscriber.setDateOfBirth(DateTime.now());
+        subscriberDataService.update(mctsSubscriber);
+        Subscription newSubscription = subscriptionService.createSubscription(
+                9999911122L, rh.hindiLanguage(), sh.childPack(),
+                SubscriptionOrigin.MCTS_IMPORT);
+
+        String expectedJsonResponse = "{\"inboxSubscriptionDetailList\":[{\"subscriptionId\":\""
+                + newSubscription.getSubscriptionId()
+                + "\",\"subscriptionPack\":\"childPack\",\"inboxWeekId\":\"w1_1\",\"contentFileName\":\"w1_1.wav\"}]}";
+
+        HttpGet httpGet = createHttpGet(true, "9999911122", true,
+                "123456789012345");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
+                expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    /**
+     * To check NMS is able to make available a single message of current week
+     * in inbox with single message per week configuration . when:
+     * a) user's MSISDN is subscribed for child Pack.
+     * b)user's MSISDN status is completed(with in 7 days) for an old subscription of pregnancy Pack.
+     **/
+    @Test
+    public void verifyFT118() throws IOException, InterruptedException {
+        // update pregnancy pack to 1 message/week configuration
+        sh.pregnancyPackFor1MessagePerWeek(subscriptionPackMessageDataService);
+
+        Subscriber mctsSubscriber = new Subscriber(9999911122L);
+        mctsSubscriber.setDateOfBirth(null);
+        // set LMP for pregnancy pack
+        mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(240));
+        subscriberDataService.create(mctsSubscriber);
+
+        // create old subscription for pregnancy pack
+        Subscription oldSubscription = subscriptionService.createSubscription(
+                9999911122L, rh.hindiLanguage(), sh.pregnancyPack(),
+                SubscriptionOrigin.MCTS_IMPORT);
+        // update old pregnancy subscription pack to mark complete setting the
+        // subscription to have ended less than a week ago
+        subscriptionService.updateStartDate(oldSubscription, DateTime.now()
+                .minusDays(505 + 90));
+
+        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+
+        // create new subscription for child pack in Active state such that
+        // next OBD date falls on current date
+        mctsSubscriber.setLastMenstrualPeriod(null);
+        mctsSubscriber.setDateOfBirth(DateTime.now());
+        subscriberDataService.update(mctsSubscriber);
+        Subscription newSubscription = subscriptionService.createSubscription(
+                9999911122L, rh.hindiLanguage(), sh.childPack(),
+                SubscriptionOrigin.MCTS_IMPORT);
+
+        Pattern oldPregnancyPackPattern = Pattern
+                .compile(".*\"subscriptionId\":\""
+                        + oldSubscription.getSubscriptionId()
+                        + "\",\"subscriptionPack\":\"pregnancyPack\",\"inboxWeekId\":\"w72_1\",\"contentFileName\":\"w72_1.wav.*");
+        Pattern newchildPackPattern = Pattern
+                .compile(".*\"subscriptionId\":\""
+                        + newSubscription.getSubscriptionId()
+                        + "\",\"subscriptionPack\":\"childPack\",\"inboxWeekId\":\"w1_1\",\"contentFileName\":\"w1_1.wav.*");
+
+        HttpGet httpGet = createHttpGet(true, "9999911122", true,
+                "123456789012345");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
+                oldPregnancyPackPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
+                newchildPackPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
 }
