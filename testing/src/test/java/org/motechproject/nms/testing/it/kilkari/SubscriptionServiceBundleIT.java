@@ -783,11 +783,10 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     /*
      * To verify that number of Messages per week shouldn't get configured if invalid value is provided.
      */
-        @Test(expected=IllegalArgumentException.class)
+    @Test(expected=IllegalArgumentException.class)
     public void verifyFT180() {
             sh.childPack().setMessagesPerWeek(3);
     }
-
 
     /*
      * To verify LMP is changed successfully and new subscription created
@@ -900,4 +899,5 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         Subscriber subscriber = subscriberDataService.findByCallingNumber(111111111111L);
         assertNull(subscriber);
     } 
+
 }
