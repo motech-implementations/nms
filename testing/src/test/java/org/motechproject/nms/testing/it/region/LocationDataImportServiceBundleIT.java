@@ -34,6 +34,7 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
+import org.supercsv.exception.SuperCsvException;
 
 import javax.inject.Inject;
 import java.io.InputStreamReader;
@@ -168,7 +169,7 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
         assertNotNull(healthSubFacility.getHealthFacility());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = SuperCsvException.class)
     public void testThrowExceptionForMalformedCsv() throws Exception {
         districtImportService.importData(read("csv/district_malformed.csv"));
     }
