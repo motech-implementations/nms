@@ -13,11 +13,6 @@ import org.motechproject.nms.testing.it.flw.FrontLineWorkerUpdateImportServiceBu
 import org.motechproject.nms.testing.it.flw.ServiceUsageCapServiceBundleIT;
 import org.motechproject.nms.testing.it.flw.ServiceUsageServiceBundleIT;
 import org.motechproject.nms.testing.it.flw.WhiteListServiceBundleIT;
-import org.motechproject.nms.testing.it.imi.CdrFileServiceBundleIT;
-import org.motechproject.nms.testing.it.imi.CsrValidatorServiceBundleIT;
-import org.motechproject.nms.testing.it.imi.ImiController_CDR_BundleIT;
-import org.motechproject.nms.testing.it.imi.ImiController_OBD_BundleIT;
-import org.motechproject.nms.testing.it.imi.TargetFileServiceBundleIT;
 import org.motechproject.nms.testing.it.kilkari.CsrServiceBundleIT;
 import org.motechproject.nms.testing.it.kilkari.MctsBeneficiaryImportServiceBundleIT;
 import org.motechproject.nms.testing.it.kilkari.SubscriberServiceBundleIT;
