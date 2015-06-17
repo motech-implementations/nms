@@ -39,6 +39,7 @@ import org.supercsv.exception.SuperCsvException;
 import javax.inject.Inject;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.io.StringReader;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -85,6 +86,9 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
     @Inject
     private HealthSubFacilityImportService healthSubFacilityImportService;
 
+    private String districtHeader = "DCode,Name_G,Name_E,StateID";
+
+    private String talukaHeader = "TCode,ID,Name_G,Name_E,DCode";
     @Before
     public void setUp() {
 
@@ -191,6 +195,97 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
         assertNull(districtDataService.findByCode(1002L));
         assertNull(districtDataService.findByCode(1003L));
         assertNull(districtDataService.findByCode(1004L));
+    }
+
+    /*
+    * To verify district location data is rejected when mandatory parameter code is missing.
+    */
+    @Test(expected = CsvImportDataException.class)
+    public void verifyFT221() throws Exception {
+        Reader reader = createDistrictDataReaderWithHeaders(districtHeader, ",district regional name,district name,1234");
+        districtImportService.importData(reader);
+    }
+
+    /*
+    * To verify district location data is rejected when mandatory parameter state_id is missing.
+    */
+    @Test(expected = CsvImportDataException.class)
+    public void verifyFT222() throws Exception {
+        Reader reader = createDistrictDataReaderWithHeaders(districtHeader, "1,district regional name,district name,");
+        districtImportService.importData(reader);
+    }
+
+    /*
+    * To verify district location data is rejected when state_id is having invalid value.
+    */
+    @Test(expected = CsvImportDataException.class)
+    public void verifyFT223() throws Exception {
+        Reader reader = createDistrictDataReaderWithHeaders(districtHeader, "1,district regional name,district name,12345");
+        districtImportService.importData(reader);
+    }
+
+    /*
+    * To verify district location data is rejected when code is having invalid value.
+    */
+    @Test(expected = CsvImportDataException.class)
+    public void verifyFT224() throws Exception {
+        Reader reader = createDistrictDataReaderWithHeaders(districtHeader, "asd,district regional name,district name,1234");
+        districtImportService.importData(reader);
+    }
+
+    /*
+    * To verify taluka location data is rejected when mandatory parameter name is missing.
+    */
+    @Test(expected = CsvImportDataException.class)
+    public void verifyFT227() throws Exception {
+        Reader reader = createDistrictDataReaderWithHeaders(talukaHeader, "TALUKA,2,taluka regional name,,1");
+        talukaImportService.importData(reader);
+    }
+
+    /*
+    * To verify taluka location data is rejected when mandatory parameter code is missing.
+    */
+    @Test(expected = CsvImportDataException.class)
+    public void verifyFT228() throws Exception {
+        Reader reader = createDistrictDataReaderWithHeaders(talukaHeader, ",2,taluka regional name,taluka name,1");
+        talukaImportService.importData(reader);
+    }
+
+    /*
+    * To verify taluka location data is rejected when mandatory parameter district_id is missing.
+    */
+    @Test(expected = CsvImportDataException.class)
+    public void verifyFT229() throws Exception {
+        Reader reader = createDistrictDataReaderWithHeaders(talukaHeader, "TALUKA,2,taluka regional name,taluka name,");
+        talukaImportService.importData(reader);
+    }
+
+    /*
+    * To verify taluka location data is rejected when district_id is having invalid value.
+    */
+    @Test(expected = CsvImportDataException.class)
+    public void verifyFT230() throws Exception {
+        State state = stateDataService.create(new State("EXAMPLE STATE", 123489L));
+        District district = new District();
+        district.setName("D1");
+        district.setCode(1L);
+        district.setName("testDistrict");
+        district.setRegionalName("regional district name");
+        district.setState(state);
+        districtDataService.create(district);
+        Reader reader = createDistrictDataReaderWithHeaders(talukaHeader, "TALUKA,2,taluka regional name,taluka name,2");
+        talukaImportService.importData(reader);
+    }
+
+    private Reader createDistrictDataReaderWithHeaders(String header, String... lines) {
+        StringBuilder builder = new StringBuilder();
+        builder.append(header);
+        builder.append("\r\n");
+
+        for (String line : lines) {
+            builder.append(line).append("\r\n");
+        }
+        return new StringReader(builder.toString());
     }
 
     private Reader read(String resource) {
