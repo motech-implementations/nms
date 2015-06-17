@@ -209,7 +209,7 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
                 subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService, fileAuditRecordDataService);
+                stateDataService, districtDataService, fileAuditRecordDataService, districtService);
 
         helper.makeCdrs(1,0,0,0);
         helper.makeRemoteCsrFile();
@@ -238,7 +238,7 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
                 subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService, fileAuditRecordDataService);
+                stateDataService, districtDataService, fileAuditRecordDataService, districtService);
 
         helper.makeCdrs(1,0,0,0);
         helper.makeRemoteCsrFile();
@@ -266,7 +266,7 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
                 subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService, fileAuditRecordDataService);
+                stateDataService, districtDataService, fileAuditRecordDataService, districtService);
 
         helper.makeCdrs(1,0,0,0);
         helper.makeRemoteCsrFile();
@@ -294,7 +294,7 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
                 subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService, fileAuditRecordDataService);
+                stateDataService, districtDataService, fileAuditRecordDataService, districtService);
 
         helper.makeCdrs(1,0,0,0);
         helper.makeRemoteCsrFile();
@@ -323,7 +323,7 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
                 subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService, fileAuditRecordDataService);
+                stateDataService, districtDataService, fileAuditRecordDataService, districtService);
 
         helper.makeCdrs(1,0,0,0);
         helper.makeRemoteCsrFile();
@@ -352,7 +352,7 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
                 subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService, fileAuditRecordDataService);
+                stateDataService, districtDataService, fileAuditRecordDataService, districtService);
 
         helper.makeCdrs(1,0,0,0);
         helper.makeRemoteCsrFile();
@@ -382,7 +382,7 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
                 subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService, fileAuditRecordDataService);
+                stateDataService, districtDataService, fileAuditRecordDataService, districtService);
 
         helper.makeCdrs(1,0,0,0);
         helper.makeRemoteCsrFile();
@@ -412,7 +412,7 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
                 subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService, fileAuditRecordDataService);
+                stateDataService, districtDataService, fileAuditRecordDataService, districtService);
 
         helper.makeCdrs(1,0,0,0);
         helper.makeRemoteCsrFile();
@@ -441,7 +441,7 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
                 subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService, fileAuditRecordDataService);
+                stateDataService, districtDataService, fileAuditRecordDataService, districtService);
 
         helper.makeCdrs(1,0,0,0);
         helper.makeRemoteCsrFile();
@@ -471,7 +471,7 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
                 subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService, fileAuditRecordDataService);
+                stateDataService, districtDataService, fileAuditRecordDataService, districtService);
 
         helper.makeCdrs(1,0,0,0);
         helper.makeRemoteCsrFile();
