@@ -245,9 +245,9 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
         // Create a record in the CallRetry table marked as "last try" and verify it is erased from the
         // CallRetry table
-
         Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(3),
                 SubscriptionPackType.CHILD);
+
         String contentFileName = sh.getContentMessageFile(subscription, 0);
         CallRetry retry = callRetryDataService.create(new CallRetry(
                 subscription.getSubscriptionId(),
@@ -378,6 +378,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
         // There should be no calls to retry since the one above was the last rejected with DND reason
         assertEquals(0, callRetryDataService.count());
+        subscription = subscriptionService.getSubscription(subscription.getSubscriptionId());
+        assertTrue(SubscriptionStatus.DEACTIVATED == subscription.getStatus());
     }
 
     @Test
@@ -589,7 +591,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
         assertEquals(subscription.getSubscriptionId(), retries.get(0).getSubscriptionId());
         assertEquals(CallStage.RETRY_LAST, retries.get(0).getCallStage());
-        assertEquals(DayOfTheWeek.today().nextDay(),retries.get(0).getDayOfTheWeek());
+        assertEquals(DayOfTheWeek.today().nextDay(), retries.get(0).getDayOfTheWeek());
     }
 
     /**
@@ -977,6 +979,138 @@ public class CsrServiceBundleIT extends BasePaxIT {
         // due to invalid number for all retries.
         subscription = subscriptionDataService.findBySubscriptionId(subscription.getSubscriptionId());
         assertEquals(SubscriptionStatus.ACTIVE, subscription.getStatus());
+    }
+
+    /*
+    *To verify 72Weeks Pack is marked completed after the Service Pack runs for its scheduled duration.
+    */
+    @Test
+    public void verifyFT165() {
+        String timestamp = DateTime.now().toString(TIME_FORMATTER);
+
+        int days = sh.pregnancyPack().getWeeks() * 7;
+        Subscription sub = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(days),
+                SubscriptionPackType.PREGNANCY);
+        int index = sh.getLastMessageIndex(sub);
+        CallSummaryRecordDto r = new CallSummaryRecordDto(
+                new RequestId(sub.getSubscriptionId(), timestamp),
+                sub.getSubscriber().getCallingNumber(),
+                sh.getContentMessageFile(sub, index),
+                sh.getWeekId(sub, index),
+                rh.hindiLanguage().getCode(),
+                sh.getCircle(sub),
+                FinalCallStatus.SUCCESS,
+                makeStatsMap(StatusCode.OBD_SUCCESS_CALL_CONNECTED, 1),
+                120,
+                1
+        );
+
+        Map<String, Object> eventParams = new HashMap<>();
+        eventParams.put(CSR_PARAM_KEY, r);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
+        csrService.processCallSummaryRecord(motechEvent);
+        sub = subscriptionDataService.findBySubscriptionId(sub.getSubscriptionId());
+        assertTrue(SubscriptionStatus.COMPLETED == sub.getStatus());
+    }
+
+    /*
+    * To verify 72Weeks Pack is marked completed after the Service Pack runs for its scheduled
+    * duration including one retry.
+    */
+    @Test
+    public void verifyFT167() {
+        String timestamp = DateTime.now().toString(TIME_FORMATTER);
+
+        int days = sh.pregnancyPack().getWeeks() * 7;
+        Subscription sub = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(days),
+                SubscriptionPackType.PREGNANCY);
+
+        callRetryDataService.create(new CallRetry(
+                sub.getSubscriptionId(),
+                sub.getSubscriber().getCallingNumber(),
+                DayOfTheWeek.today(),
+                CallStage.RETRY_1,
+                "w72_2.wav",
+                "w72_2",
+                "XXX",
+                "XX",
+                SubscriptionOrigin.MCTS_IMPORT
+        ));
+
+        int index = sh.getLastMessageIndex(sub);
+        CallSummaryRecordDto r = new CallSummaryRecordDto(
+                new RequestId(sub.getSubscriptionId(), timestamp),
+                sub.getSubscriber().getCallingNumber(),
+                sh.getContentMessageFile(sub, index),
+                sh.getWeekId(sub, index),
+                rh.hindiLanguage().getCode(),
+                sh.getCircle(sub),
+                FinalCallStatus.SUCCESS,
+                makeStatsMap(StatusCode.OBD_SUCCESS_CALL_CONNECTED, 1),
+                120,
+                1
+        );
+
+        Map<String, Object> eventParams = new HashMap<>();
+        eventParams.put(CSR_PARAM_KEY, r);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
+        csrService.processCallSummaryRecord(motechEvent);
+        sub = subscriptionDataService.findBySubscriptionId(sub.getSubscriptionId());
+        assertTrue(SubscriptionStatus.COMPLETED == sub.getStatus());
+
+        // verify call retry entry is also deleted from the database
+        CallRetry retry = callRetryDataService.findBySubscriptionId(sub.getSubscriptionId());
+        assertNull(retry);
+    }
+
+    /*
+    * To verify 48Weeks Pack is marked completed after the Service Pack runs for its scheduled
+    * duration including one retry.
+    */
+    @Test
+    public void verifyFT168() {
+        String timestamp = DateTime.now().toString(TIME_FORMATTER);
+
+        int days = sh.childPack().getWeeks() * 7;
+        Subscription sub = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(days),
+                SubscriptionPackType.CHILD);
+
+        callRetryDataService.create(new CallRetry(
+                sub.getSubscriptionId(),
+                sub.getSubscriber().getCallingNumber(),
+                DayOfTheWeek.today(),
+                CallStage.RETRY_1,
+                "w48_1.wav",
+                "w48_1",
+                "XXX",
+                "XX",
+                SubscriptionOrigin.MCTS_IMPORT
+        ));
+
+        int index = sh.getLastMessageIndex(sub);
+        CallSummaryRecordDto r = new CallSummaryRecordDto(
+                new RequestId(sub.getSubscriptionId(), timestamp),
+                sub.getSubscriber().getCallingNumber(),
+                sh.getContentMessageFile(sub, index),
+                sh.getWeekId(sub, index),
+                rh.hindiLanguage().getCode(),
+                sh.getCircle(sub),
+                FinalCallStatus.SUCCESS,
+                makeStatsMap(StatusCode.OBD_SUCCESS_CALL_CONNECTED, 1),
+                120,
+                1
+        );
+
+        Map<String, Object> eventParams = new HashMap<>();
+        eventParams.put(CSR_PARAM_KEY, r);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
+        csrService.processCallSummaryRecord(motechEvent);
+        sub = subscriptionDataService.findBySubscriptionId(sub.getSubscriptionId());
+        assertTrue(SubscriptionStatus.COMPLETED == sub.getStatus());
+
+        // verify call retry entry is also deleted from the database
+        CallRetry retry = callRetryDataService.findBySubscriptionId(sub.getSubscriptionId());
+        assertNull(retry);
     }
 
     //todo: verify multiple days' worth of summary record aggregation

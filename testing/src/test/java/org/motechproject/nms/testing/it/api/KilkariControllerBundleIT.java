@@ -39,6 +39,10 @@ import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.domain.DeployedService;
 import org.motechproject.nms.props.domain.Service;
 import org.motechproject.nms.props.repository.DeployedServiceDataService;
+import org.motechproject.nms.region.domain.Circle;
+import org.motechproject.nms.region.domain.District;
+import org.motechproject.nms.region.domain.Language;
+import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
@@ -66,6 +70,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -79,7 +84,6 @@ import static org.junit.Assert.assertTrue;
 public class KilkariControllerBundleIT extends BasePaxIT {
     private static final String ADMIN_USERNAME = "motech";
     private static final String ADMIN_PASSWORD = "motech";
-
 
     @Inject
     SubscriberService subscriberService;
@@ -1551,8 +1555,316 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
+    // This method is a utility method for running the test cases. this is
+    // already
+    // used in the branch NMS.FT.24.25.26
+    private HttpPost createInboxCallDetailsRequestHttpPost(
+            String callingNumber, String operator, String circle,
+            String callId, String callStartTime, String callEndTime,
+            String callDurationInPulses, String callStatus,
+            String callDisconnectReason) throws IOException {
+        HttpPost httpPost = new HttpPost(String.format(
+                "http://localhost:%d/api/kilkari/inboxCallDetails",
+                TestContext.getJettyPort()));
+
+        StringBuilder sb = new StringBuilder();
+        String seperator = "";
+        sb.append("{");
+        if (callingNumber != null) {
+            sb.append(String.format("%s\"callingNumber\": %s", seperator,
+                    callingNumber));
+            seperator = ",";
+        }
+        if (operator != null) {
+            sb.append(String.format("%s\"operator\": \"%s\"", seperator,
+                    operator));
+            seperator = ",";
+        }
+        if (circle != null) {
+            sb.append(String.format("%s\"circle\": \"%s\"", seperator, circle));
+            seperator = ",";
+        }
+        if (callId != null) {
+            sb.append(String.format("%s\"callId\": %s", seperator, callId));
+            seperator = ",";
+        }
+        if (callStartTime != null) {
+            sb.append(String.format("%s\"callStartTime\": %s", seperator,
+                    callStartTime));
+            seperator = ",";
+        }
+        if (callEndTime != null) {
+            sb.append(String.format("%s\"callEndTime\": %s", seperator,
+                    callEndTime));
+            seperator = ",";
+        }
+        if (callDurationInPulses != null) {
+            sb.append(String.format("%s\"callDurationInPulses\": %s",
+                    seperator, callDurationInPulses));
+            seperator = ",";
+        }
+        if (callStatus != null) {
+            sb.append(String.format("%s\"callStatus\": %s", seperator,
+                    callStatus));
+            seperator = ",";
+        }
+        if (callDisconnectReason != null) {
+            sb.append(String.format("%s\"callDisconnectReason\": %s",
+                    seperator, callDisconnectReason));
+            seperator = ",";
+        }
+
+        sb.append("}");
+
+        StringEntity params = new StringEntity(sb.toString());
+        httpPost.setEntity(params);
+        httpPost.addHeader("content-type", "application/json");
+        return httpPost;
+    }
+
     /**
-     * NMS_FT_21 To verify the that Save Inbox call Details API request should
+     * To verify the behavior of Save Inbox call Details API if provided
+     * beneficiary's callId is not valid : less than 15 digits.
+     */
+    @Test
+    public void verifyFT27() throws IOException, InterruptedException {
+        HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
+                1234567890L, // callingNumber
+                "A", // operator
+                "AP", // circle
+                12345678901234L, // callId less than 15 digit
+                123L, // callStartTime
+                456L, // callEndTime
+                123, // callDurationInPulses
+                1, // callStatus
+                1, // callDisconnectReason
+                null)); // content
+        String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+    }
+
+    /**
+     * To verify the behavior of Save Inbox call Details API if provided
+     * beneficiary's callId is not valid : more than 15 digits.
+     */
+    @Test
+    public void verifyFT28() throws IOException, InterruptedException {
+        HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
+                1234567890L, // callingNumber
+                "A", // operator
+                "AP", // circle
+                1234567890123456L, // callId more than 15 digit
+                123L, // callStartTime
+                456L, // callEndTime
+                123, // callDurationInPulses
+                1, // callStatus
+                1, // callDisconnectReason
+                null)); // content
+        String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+    }
+
+    /**
+     * To verify the behavior of Save Inbox call Details API if provided
+     * beneficiary's callId is not valid : Alphanumeric value.
+     */
+    // TODO JIRA issue https://applab.atlassian.net/browse/NMS-187
+    @Ignore
+    @Test
+    public void verifyFT29() throws IOException, InterruptedException {
+        // callId alpha numeric
+        HttpPost httpPost = createInboxCallDetailsRequestHttpPost("1234567890", // callingNumber
+                "A", // operator
+                "AP", // circle
+                "123456789A12345", // callId alphanumeric
+                "123", // callStartTime
+                "456", // callEndTime
+                "123", // callDurationInPulses
+                "1", // callStatus
+                "1" // callDisconnectReason
+        );
+
+        String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+
+    }
+    /**
+     * To check anonymous user is able to access Kilkari with multiple states in
+     * user's circle, given that service is deployed in at least one of these
+     * states
+     */
+    @Test
+    // TODO: https://applab.atlassian.net/browse/NMS-196
+    @Ignore
+    public void verifyFT124() throws IOException, InterruptedException {
+        // setup state1 data
+        Language language1 = new Language("Ur", "urdu");
+        languageDataService.create(language1);
+
+        District district1 = new District();
+        district1.setName("Lucknow");
+        district1.setRegionalName("Lucknow");
+        district1.setLanguage(language1);
+        district1.setCode(11L);
+
+        State state1 = new State();
+        state1.setName("UP");
+        state1.setCode(11L);
+        state1.getDistricts().add(district1);
+
+        stateDataService.create(state1);
+
+        // setup state2 data
+        Language language2 = new Language("Br", "bhojpuri");
+        languageDataService.create(language2);
+
+        District district2 = new District();
+        district2.setName("Bhopal");
+        district2.setRegionalName("Bhopal");
+        district2.setLanguage(language2);
+        district2.setCode(21L);
+
+        State state2 = new State();
+        state2.setName("MP");
+        state2.setCode(21L);
+        state2.getDistricts().add(district2);
+
+        stateDataService.create(state2);
+
+        // deployed KILKARI service for state1 only
+        deployedServiceDataService.create(new DeployedService(state1,
+                Service.KILKARI));
+
+        Language language3 = new Language("RJ", "Rajasthai");
+        languageDataService.create(language3);
+
+        // create circle and add states to it
+        Circle circle = new Circle("NR");
+        circle.getStates().add(state1);
+        circle.getStates().add(state2);
+        circleDataService.create(circle);
+
+        // setup create subscription request
+        SubscriptionRequest subscriptionRequest = new SubscriptionRequest(
+                9999911122L, rh.airtelOperator(), circle.getName(),
+                123456789012545L, language3.getCode(),
+                sh.childPack().getName());
+        ObjectMapper mapper = new ObjectMapper();
+        String subscriptionRequestJson = mapper
+                .writeValueAsString(subscriptionRequest);
+        HttpPost httpPost = new HttpPost(String.format(
+                "http://localhost:%d/api/kilkari/subscription",
+                TestContext.getJettyPort()));
+        httpPost.setHeader("Content-type", "application/json");
+        httpPost.setEntity(new StringEntity(subscriptionRequestJson));
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        Subscriber subscriber = subscriberDataService
+                .findByCallingNumber(9999911122L);
+        assertNotNull(subscriber);
+        assertNotNull(subscriber.getSubscriptions());
+    }
+
+    /**
+     * To check anonymous user is not able to access Kilkari with multiple
+     * states in user's circle and service is not deployed in at least one of
+     * these states.
+     */
+    @Test
+    public void verifyFT126() throws IOException, InterruptedException {
+        // setup state1 data
+        Language language1 = new Language("Ur", "urdu");
+        languageDataService.create(language1);
+
+        District district1 = new District();
+        district1.setName("Lucknow");
+        district1.setRegionalName("Lucknow");
+        district1.setLanguage(language1);
+        district1.setCode(11L);
+
+        State state1 = new State();
+        state1.setName("UP");
+        state1.setCode(11L);
+        state1.getDistricts().add(district1);
+
+        stateDataService.create(state1);
+
+        // setup state2 data
+        Language language2 = new Language("Br", "bhojpuri");
+        languageDataService.create(language2);
+
+        District district2 = new District();
+        district2.setName("Bhopal");
+        district2.setRegionalName("Bhopal");
+        district2.setLanguage(language2);
+        district2.setCode(21L);
+
+        State state2 = new State();
+        state2.setName("MP");
+        state2.setCode(21L);
+        state2.getDistricts().add(district2);
+
+        stateDataService.create(state2);
+
+        // Not deployed KILKARI service for state1 and state2
+
+        Language language3 = new Language("RJ", "Rajasthai");
+        languageDataService.create(language3);
+
+        // create circle and add states to it
+        Circle circle = new Circle("NR");
+        circle.getStates().add(state1);
+        circle.getStates().add(state2);
+        circleDataService.create(circle);
+
+        // setup create subscription request
+        SubscriptionRequest subscriptionRequest = new SubscriptionRequest(
+                9999911122L, rh.airtelOperator(), circle.getName(),
+                123456789012545L, language3.getCode(), sh.childPack().getName());
+        ObjectMapper mapper = new ObjectMapper();
+        String subscriptionRequestJson = mapper
+                .writeValueAsString(subscriptionRequest);
+        HttpPost httpPost = new HttpPost(String.format(
+                "http://localhost:%d/api/kilkari/subscription",
+                TestContext.getJettyPort()));
+        httpPost.setHeader("Content-type", "application/json");
+        httpPost.setEntity(new StringEntity(subscriptionRequestJson));
+
+        String expectedJsonResponse = createFailureResponseJson("<KILKARI: Not Deployed In State>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+        assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, response.getStatusLine()
+                .getStatusCode());
+        Subscriber subscriber = subscriberDataService
+                .findByCallingNumber(9999911122L);
+        assertNull(subscriber);
+
+    }
+
+     /* NMS_FT_21 To verify the that Save Inbox call Details API request should
      * succeed for unsubscribed caller or caller with no active subscription
      * without any content being saved.
      */

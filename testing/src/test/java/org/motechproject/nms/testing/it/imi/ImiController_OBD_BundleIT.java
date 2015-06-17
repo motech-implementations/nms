@@ -1,8 +1,10 @@
 package org.motechproject.nms.testing.it.imi;
 
 import org.apache.commons.httpclient.HttpStatus;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.After;
 import org.junit.Before;
@@ -30,7 +32,6 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
-import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
@@ -154,5 +155,30 @@ public class ImiController_OBD_BundleIT extends BasePaxIT {
         List<Alert> alerts = alertService.search(criteria);
         assertEquals(1, alerts.size());
         assertEquals(AlertType.CRITICAL, alerts.get(0).getAlertType());
+    }
+
+    /*
+    * Invoke "NotifyFileProcessedStatus" API having mandatory parameter
+    * fileProcessedStatus having invalid value(i.e status code which doesn’t exist in system).
+    */
+    @Test
+    public void verifyFT200() throws IOException, InterruptedException {
+        getLogger().debug("testCreateFileProcessedStatusRequestWithInvalidFileProcessedStatusError()");
+        String requestJson = "{\"fileProcessedStatus\":\"invalidValue\",\"fileName\":\"file.csv\"}";
+        HttpPost httpPost = new HttpPost(String.format(
+                "http://localhost:%d/imi/obdFileProcessedStatusNotification",
+                TestContext.getJettyPort()));
+        httpPost.setHeader("Content-type", "application/json");
+        httpPost.setEntity(new StringEntity(requestJson));
+
+        fileAuditRecordDataService.create(new FileAuditRecord(FileType.TARGET_FILE, "file.csv", false, "ERROR",
+                null, null));
+
+        String expectedJsonResponse = createFailureResponseJson("<fileProcessedStatus: Invalid Value>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ImiTestHelper.ADMIN_USERNAME,
+                ImiTestHelper.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse,  EntityUtils.toString(response.getEntity()));
     }
 }
