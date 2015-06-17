@@ -271,11 +271,19 @@ public class TargetFileServiceImpl implements TargetFileService {
                 RequestId requestId = new RequestId(subscription.getSubscriptionId(),
                         TIME_FORMATTER.print(timestamp));
                 SubscriptionPackMessage msg = subscription.nextScheduledMessage(timestamp);
-                //todo: how do we choose a priority?
-                writeSubscriptionRow(requestId.toString(), imiServiceId,
-                        subscriber.getCallingNumber().toString(), NORMAL_PRIORITY, callFlowUrl,
-                        msg.getMessageFileName(), msg.getWeekId(), language.getCode(), circle.getName(),
-                        subscription.getOrigin().getCode(), writer);
+
+                writeSubscriptionRow(
+                        requestId.toString(),
+                        imiServiceId,
+                        subscriber.getCallingNumber().toString(),
+                        NORMAL_PRIORITY, //todo: how do we choose a priority?
+                        callFlowUrl,
+                        msg.getMessageFileName(),
+                        msg.getWeekId(),
+                        language.getCode(),
+                        circle == null ? "" : circle.getName(), //todo: are we happy with empty circles?
+                        subscription.getOrigin().getCode(),
+                        writer);
             }
 
             page++;

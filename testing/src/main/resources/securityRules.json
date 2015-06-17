@@ -1,0 +1,17 @@
+[
+  {
+    "active": true,
+    "pattern": "/**/testing/**",
+    "supportedSchemes": [
+      "NO_SECURITY"
+    ],
+    "protocol": "HTTP",
+    "priority": 2,
+    "rest": true,
+    "origin": "NMS_MODULE_TESTING",
+    "version": "0.26",
+    "methodsRequired": [
+      "ANY"
+    ]
+  }
+]
