@@ -1,12 +1,13 @@
 package org.motechproject.nms.testing.it.imi;
 
 import org.apache.commons.httpclient.HttpStatus;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.alerts.contract.AlertCriteria;
@@ -161,8 +162,6 @@ public class ImiControllerObdBundleIT extends BasePaxIT {
     * fileProcessedStatus having invalid value(i.e status code which doesn’t exist in system).
     */
     @Test
-    //TODO :https://applab.atlassian.net/browse/NMS-191
-    @Ignore
     public void verifyFT200() throws IOException, InterruptedException {
         getLogger().debug("testCreateFileProcessedStatusRequestWithInvalidFileProcessedStatusError()");
         String requestJson = "{\"fileProcessedStatus\":\"invalidValue\",\"fileName\":\"file.csv\"}";
@@ -176,8 +175,11 @@ public class ImiControllerObdBundleIT extends BasePaxIT {
                 null, null));
 
         String expectedJsonResponse = createFailureResponseJson("<fileProcessedStatus: Invalid Value>");
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ImiTestHelper.ADMIN_USERNAME, ImiTestHelper.ADMIN_PASSWORD));
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ImiTestHelper.ADMIN_USERNAME,
+                ImiTestHelper.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse,  EntityUtils.toString(response.getEntity()));
     }
 
     /*
