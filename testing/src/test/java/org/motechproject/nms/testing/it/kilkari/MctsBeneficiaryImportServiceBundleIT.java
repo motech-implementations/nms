@@ -538,7 +538,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
      * NMS_FT_289:: To verify new subscription is created successfully when subscription 
      * already exist having status as "Completed" for same MSISDN.
      * NMS_FT_306:: To verify LMP is changed successfully via CSV when subscription 
-     * already exist for 72Weeks Pack having status as "Completed"
+     * already exist for pregnancyPack having status as "Completed"
 
      */
     @Test
@@ -570,7 +570,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
      * NMS_FT_290:: To verify new subscription is created successfully when subscription 
      * already exist having status as "Deactivated" for same MSISDN.
      * NMS_FT_305:: To verify LMP is changed successfully via CSV when subscription 
-     * already exist for 72Weeks Pack having status as "Deactivated"
+     * already exist for pregnancyPack having status as "Deactivated"
      */
     @Test
     public void verifyFT290() throws Exception {
@@ -597,89 +597,4 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         assertEquals(lmpString, getDateString(subscriber.getLastMenstrualPeriod()));
     }
     
-    /*
-     * To verify DOB is changed successfully via CSV when subscription 
-     * already exist for 48Weeks Pack having status as "Deactivated"
-     */
-    @Test
-    public void verifyFT309() throws Exception {
-    	DateTime dob = DateTime.now();
-        String dobString = getDateString(dob);
-        Reader reader = createChildDataReaderWithHeaders("21\t3\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t\t9439986187\t" + dobString);
-        mctsBeneficiaryImportService.importChildData(reader);
-        
-        //Mark subscription deactivate
-        Subscriber subscriber = subscriberDataService.findByCallingNumber(9439986187L);
-        Subscription subscription =subscriber.getActiveSubscriptions().iterator().next(); 
-        subscriptionService.deactivateSubscription(subscription, DeactivationReason.STILL_BIRTH);
-        
-        //create a new subscription for subscriber whose subscription is deactivated.
-        dobString = getDateString(dob.minus(50));
-        reader = createChildDataReaderWithHeaders("21\t3\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t\t9439986187\t" + dobString);
-        mctsBeneficiaryImportService.importChildData(reader);
-
-        subscriber = subscriberDataService.findByCallingNumber(9439986187L);
-        assertEquals(2, subscriber.getAllSubscriptions().size());
-        assertEquals(1, subscriber.getActiveSubscriptions().size());
-        assertEquals(dobString, getDateString(subscriber.getDateOfBirth()));
-    }
-    
-    /*
-     * To verify DOB is changed successfully via CSV when subscription 
-     * already exist for 48Weeks Pack having status as "Deactivated"
-     */
-    @Test
-    public void verifyFT310() throws Exception {
-    	DateTime dob = DateTime.now();
-        String dobString = getDateString(dob);
-        Reader reader = createChildDataReaderWithHeaders("21\t3\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t\t9439986187\t" + dobString);
-        mctsBeneficiaryImportService.importChildData(reader);
-        
-        //Make subscription completed
-        Subscriber subscriber = subscriberDataService.findByCallingNumber(9439986187L);
-        subscriber.setLastMenstrualPeriod(dob.minusDays(500));
-        subscriberService.update(subscriber);
-        
-        //create a new subscription for subscriber whose subscription is deactivated.
-        dobString = getDateString(dob.minus(50));
-        reader = createChildDataReaderWithHeaders("21\t3\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t\t9439986187\t" + dobString);
-        mctsBeneficiaryImportService.importChildData(reader);
-
-        subscriber = subscriberDataService.findByCallingNumber(9439986187L);
-        assertEquals(2, subscriber.getAllSubscriptions().size());
-        assertEquals(1, subscriber.getActiveSubscriptions().size());
-        assertEquals(dobString, getDateString(subscriber.getDateOfBirth()));
-    }
-    
-    /*
-     * To verify DOB is changed successfully via CSV when subscription 
-     * already exist for childPack having status as "Active"
-     */
-    @Test
-    public void verifyFT311() throws Exception {
-    	DateTime dob = DateTime.now();
-        String dobString = getDateString(dob);
-        Reader reader = createChildDataReaderWithHeaders("21\t3\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t\t9439986187\t" + dobString);
-        mctsBeneficiaryImportService.importChildData(reader);
-
-        Subscriber subscriber = subscriberDataService.findByCallingNumber(9439986187L);
-        assertNotNull(subscriber);
-        assertEquals(dob.toLocalDate(), subscriber.getLastMenstrualPeriod().toLocalDate());
-        assertEquals("Baby1 of Lilima Kua", subscriber.getChild().getName());
-        Subscription subscription = subscriber.getActiveSubscriptions().iterator().next();
-        assertEquals(0, Days.daysBetween(dob.toLocalDate(), subscription.getStartDate().toLocalDate()).getDays());
-
-        // attempt to update dob through mcts upload
-        DateTime newDob = DateTime.now().minusDays(150);
-        String newDobString = getDateString(newDob);
-        reader = createChildDataReaderWithHeaders("21\t3\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t\t9439986187\t" + newDobString);
-        mctsBeneficiaryImportService.importMotherData(reader);
-
-        subscriber = subscriberDataService.findByCallingNumber(9439986187L);
-        assertNotNull(subscriber);
-        assertEquals(newDob.toLocalDate(), subscriber.getDateOfBirth().toLocalDate());
-        subscription = subscriber.getActiveSubscriptions().iterator().next();
-        assertEquals(0, Days.daysBetween(newDob.toLocalDate(), subscription.getStartDate().toLocalDate()).getDays());
-    }
-        
 }
