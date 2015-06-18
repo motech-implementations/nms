@@ -24,6 +24,7 @@ import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
+import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.Language;
 import org.motechproject.scheduler.contract.RepeatingSchedulableJob;
 import org.motechproject.scheduler.service.MotechSchedulerService;
@@ -156,7 +157,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         }
 
         LOGGER.info(String.format("Purged %s subscribers and %s subscriptions with status (%s or %s) and " +
-                                  "endDate date before %s",
+                        "endDate date before %s",
                 purgedSubscribers, purgedSubscriptions, SubscriptionStatus.COMPLETED,
                 SubscriptionStatus.DEACTIVATED, cutoff.toString()));
     }
@@ -181,9 +182,16 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         }
     }
 
-
     @Override
     public Subscription createSubscription(long callingNumber, Language language,
+                                           SubscriptionPack subscriptionPack, SubscriptionOrigin mode) {
+
+        // call overload with null circle
+        return createSubscription(callingNumber, language, null, subscriptionPack, mode);
+    }
+
+    @Override
+    public Subscription createSubscription(long callingNumber, Language language, Circle circle,
                                            SubscriptionPack subscriptionPack, SubscriptionOrigin mode) {
 
         long number = PhoneNumberHelper.truncateLongNumber(callingNumber);
@@ -191,25 +199,34 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         Subscription subscription;
 
         if (subscriber == null) {
-            subscriber = new Subscriber(number, language);
+            subscriber = new Subscriber(number, language, circle);
             subscriberDataService.create(subscriber);
         }
 
-        if (subscriber.getLanguage() == null && language != null) {
+        // todo: switch to subscriber.getLanguage() & .getCircle() when the ticket is fixed
+        // https://applab.atlassian.net/browse/MOTECH-1678
+        Language subscriberLanguage = (Language) subscriberDataService.getDetachedField(subscriber, "language");
+        Circle subscriberCircle = (Circle) subscriberDataService.getDetachedField(subscriber, "circle");
+
+        if (subscriberLanguage == null && language != null) {
             subscriber.setLanguage(language);
             subscriberDataService.update(subscriber);
         }
 
-        if (mode == SubscriptionOrigin.IVR) {
-            subscription = createSubscriptionViaIvr(subscriber, subscriptionPack);
-        } else { // MCTS_UPLOAD
-            subscription = createSubscriptionViaMcts(subscriber, subscriptionPack);
+        if (subscriberCircle == null && circle != null) {
+            subscriber.setCircle(circle);
+            subscriberDataService.update(subscriber);
         }
+
+        subscription = (mode == SubscriptionOrigin.IVR) ?
+                createSubscriptionViaIvr(subscriber, subscriptionPack) :
+                createSubscriptionViaMcts(subscriber, subscriptionPack);
 
         if (subscription != null) {
             subscriber.getSubscriptions().add(subscription);
             subscriberDataService.update(subscriber);
         }
+
         return subscription;
     }
 
