@@ -20,6 +20,7 @@ import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.testing.it.utils.RegionHelper;
 import org.motechproject.nms.testing.it.utils.SubscriptionHelper;
 import org.motechproject.nms.testing.service.TestingService;
@@ -58,14 +59,15 @@ public class InboxServiceBundleIT extends BasePaxIT {
 	@Inject
 	private TestingService testingService;
     @Inject
-    private CircleDataService circleDataService;
-    @Inject
-    private DistrictDataService districtDataService;
+    CircleDataService circleDataService;
+	@Inject
+	private DistrictDataService districtDataService;
+	@Inject
+	private DistrictService districtService;
     @Inject
     private SubscriberDataService subscriberDataService;
     @Inject
     private SubscriptionPackMessageDataService subscriptionPackMessageDataService;
-
 
     private RegionHelper rh;
     private SubscriptionHelper sh;
@@ -75,12 +77,11 @@ public class InboxServiceBundleIT extends BasePaxIT {
     public void setUp() {
 		testingService.clearDatabase();
 
-		rh = new RegionHelper(languageDataService, circleDataService, stateDataService,
-                districtDataService);
+		rh = new RegionHelper(languageDataService, circleDataService, stateDataService, districtDataService,
+				districtService);
 
-        sh = new SubscriptionHelper(subscriptionService,
-                subscriberDataService, subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService);
+        sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
+				languageDataService, circleDataService, stateDataService, districtDataService, districtService);
     }
 
 

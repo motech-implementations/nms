@@ -1,13 +1,11 @@
 package org.motechproject.nms.region.service.impl;
 
-import org.motechproject.nms.region.domain.Taluka;
-import org.motechproject.nms.region.domain.Village;
-import org.motechproject.nms.region.repository.TalukaDataService;
-import org.motechproject.nms.region.repository.VillageDataService;
-import org.motechproject.nms.region.service.CensusVillageImportService;
-import org.motechproject.nms.csv.utils.GetInstanceByString;
 import org.motechproject.nms.csv.utils.GetLong;
 import org.motechproject.nms.csv.utils.GetString;
+import org.motechproject.nms.region.domain.District;
+import org.motechproject.nms.region.repository.VillageDataService;
+import org.motechproject.nms.region.service.CensusVillageImportService;
+import org.motechproject.nms.region.service.TalukaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.supercsv.cellprocessor.ift.CellProcessor;
@@ -16,7 +14,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Service("censusVillageImportService")
-public class CensusVillageImportServiceImpl extends BaseLocationImportService<Village> implements CensusVillageImportService {
+public class CensusVillageImportServiceImpl extends BaseVillageImportService
+        implements CensusVillageImportService {
 
     public static final String VILLAGE_CODE = "VCode";
     public static final String REGIONAL_NAME = "Name_G";
@@ -26,14 +25,17 @@ public class CensusVillageImportServiceImpl extends BaseLocationImportService<Vi
     public static final String VILLAGE_CODE_FIELD = "vcode";
     public static final String REGIONAL_NAME_FIELD = "regionalName";
     public static final String NAME_FIELD = "name";
-    public static final String TALUKA_CODE_FIELD = "taluka";
+    public static final String TALUKA_CODE_FIELD = "talukaCode";
 
-    private TalukaDataService talukaDataService;
 
     @Autowired
-    public CensusVillageImportServiceImpl(VillageDataService villageDataService, TalukaDataService talukaDataService) {
-        super(Village.class, villageDataService);
-        this.talukaDataService = talukaDataService;
+    public CensusVillageImportServiceImpl(VillageDataService villageDataService, TalukaService talukaService) {
+        super(villageDataService, talukaService);
+    }
+
+    @Override
+    public void addParent(District district) {
+        addParent(PARENT_DISTRICT, district);
     }
 
     @Override
@@ -42,12 +44,7 @@ public class CensusVillageImportServiceImpl extends BaseLocationImportService<Vi
         mapping.put(VILLAGE_CODE, new GetLong());
         mapping.put(REGIONAL_NAME, new GetString());
         mapping.put(NAME, new GetString());
-        mapping.put(TALUKA_CODE, new GetInstanceByString<Taluka>() {
-            @Override
-            public Taluka retrieve(String value) {
-                return talukaDataService.findByCode(value);
-            }
-        });
+        mapping.put(TALUKA_CODE, new GetString());
         return mapping;
     }
 

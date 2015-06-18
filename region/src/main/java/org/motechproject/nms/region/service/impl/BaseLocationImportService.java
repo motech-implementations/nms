@@ -18,6 +18,11 @@ import java.util.Set;
 
 public abstract class BaseLocationImportService<T> {
 
+    public static final String PARENT_STATE = "state";
+    public static final String PARENT_DISTRICT = "district";
+    public static final String PARENT_TALUKA = "taluka";
+    public static final String PARENT_HEALTH_BLOCK = "healthBlock";
+
     private Class<T> type;
     private MotechDataService<T> dataService;
 

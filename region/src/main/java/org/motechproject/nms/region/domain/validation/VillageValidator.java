@@ -19,7 +19,7 @@ public class VillageValidator implements ConstraintValidator<ValidVillage, Villa
             return true;
         }
 
-        if (village.getVcode() == null && village.getSvid() == null) {
+        if (village.getVcode() == 0 && village.getSvid() == 0) {
             constraintValidatorContext
                     .buildConstraintViolationWithTemplate(constraintValidatorContext.getDefaultConstraintMessageTemplate())
                     .addPropertyNode("vcode").addConstraintViolation();
