@@ -65,6 +65,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
 
     private static final String LOCAL_OBD_DIR = "imi.local_obd_dir";
     private static final String REMOTE_OBD_DIR = "imi.remote_obd_dir";
+    private static final String GENERATE_TARGET_FILE_EVENT = "nms.obd.generate_target_file";
 
 
     private String localObdDirBackup;
@@ -213,6 +214,13 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
     @Test
     public void testServicePresent() {
         assertTrue(targetFileService != null);
+    }
+
+
+    @Test
+    public void generateTargetFile() {
+        TargetFileNotification tfn = targetFileService.generateTargetFile();
+        getLogger().debug(tfn.toString());
     }
 
 
