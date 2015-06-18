@@ -85,7 +85,6 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     private static final String ADMIN_USERNAME = "motech";
     private static final String ADMIN_PASSWORD = "motech";
 
-
     @Inject
     SubscriberService subscriberService;
     @Inject
@@ -1556,6 +1555,157 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
+    // This method is a utility method for running the test cases. this is
+    // already
+    // used in the branch NMS.FT.24.25.26
+    private HttpPost createInboxCallDetailsRequestHttpPost(
+            String callingNumber, String operator, String circle,
+            String callId, String callStartTime, String callEndTime,
+            String callDurationInPulses, String callStatus,
+            String callDisconnectReason) throws IOException {
+        HttpPost httpPost = new HttpPost(String.format(
+                "http://localhost:%d/api/kilkari/inboxCallDetails",
+                TestContext.getJettyPort()));
+
+        StringBuilder sb = new StringBuilder();
+        String seperator = "";
+        sb.append("{");
+        if (callingNumber != null) {
+            sb.append(String.format("%s\"callingNumber\": %s", seperator,
+                    callingNumber));
+            seperator = ",";
+        }
+        if (operator != null) {
+            sb.append(String.format("%s\"operator\": \"%s\"", seperator,
+                    operator));
+            seperator = ",";
+        }
+        if (circle != null) {
+            sb.append(String.format("%s\"circle\": \"%s\"", seperator, circle));
+            seperator = ",";
+        }
+        if (callId != null) {
+            sb.append(String.format("%s\"callId\": %s", seperator, callId));
+            seperator = ",";
+        }
+        if (callStartTime != null) {
+            sb.append(String.format("%s\"callStartTime\": %s", seperator,
+                    callStartTime));
+            seperator = ",";
+        }
+        if (callEndTime != null) {
+            sb.append(String.format("%s\"callEndTime\": %s", seperator,
+                    callEndTime));
+            seperator = ",";
+        }
+        if (callDurationInPulses != null) {
+            sb.append(String.format("%s\"callDurationInPulses\": %s",
+                    seperator, callDurationInPulses));
+            seperator = ",";
+        }
+        if (callStatus != null) {
+            sb.append(String.format("%s\"callStatus\": %s", seperator,
+                    callStatus));
+            seperator = ",";
+        }
+        if (callDisconnectReason != null) {
+            sb.append(String.format("%s\"callDisconnectReason\": %s",
+                    seperator, callDisconnectReason));
+            seperator = ",";
+        }
+
+        sb.append("}");
+
+        StringEntity params = new StringEntity(sb.toString());
+        httpPost.setEntity(params);
+        httpPost.addHeader("content-type", "application/json");
+        return httpPost;
+    }
+
+    /**
+     * To verify the behavior of Save Inbox call Details API if provided
+     * beneficiary's callId is not valid : less than 15 digits.
+     */
+    @Test
+    public void verifyFT27() throws IOException, InterruptedException {
+        HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
+                1234567890L, // callingNumber
+                "A", // operator
+                "AP", // circle
+                12345678901234L, // callId less than 15 digit
+                123L, // callStartTime
+                456L, // callEndTime
+                123, // callDurationInPulses
+                1, // callStatus
+                1, // callDisconnectReason
+                null)); // content
+        String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+    }
+
+    /**
+     * To verify the behavior of Save Inbox call Details API if provided
+     * beneficiary's callId is not valid : more than 15 digits.
+     */
+    @Test
+    public void verifyFT28() throws IOException, InterruptedException {
+        HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
+                1234567890L, // callingNumber
+                "A", // operator
+                "AP", // circle
+                1234567890123456L, // callId more than 15 digit
+                123L, // callStartTime
+                456L, // callEndTime
+                123, // callDurationInPulses
+                1, // callStatus
+                1, // callDisconnectReason
+                null)); // content
+        String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+    }
+
+    /**
+     * To verify the behavior of Save Inbox call Details API if provided
+     * beneficiary's callId is not valid : Alphanumeric value.
+     */
+    // TODO JIRA issue https://applab.atlassian.net/browse/NMS-187
+    @Ignore
+    @Test
+    public void verifyFT29() throws IOException, InterruptedException {
+        // callId alpha numeric
+        HttpPost httpPost = createInboxCallDetailsRequestHttpPost("1234567890", // callingNumber
+                "A", // operator
+                "AP", // circle
+                "123456789A12345", // callId alphanumeric
+                "123", // callStartTime
+                "456", // callEndTime
+                "123", // callDurationInPulses
+                "1", // callStatus
+                "1" // callDisconnectReason
+        );
+
+        String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+
+    }
     /**
      * To check anonymous user is able to access Kilkari with multiple states in
      * user's circle, given that service is deployed in at least one of these

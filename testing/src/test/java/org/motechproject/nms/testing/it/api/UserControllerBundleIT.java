@@ -1,20 +1,5 @@
 package org.motechproject.nms.testing.it.api;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.regex.Pattern;
-
-import javax.inject.Inject;
-
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -75,6 +60,20 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionCallbackWithoutResult;
+
+import javax.inject.Inject;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 
 /**
@@ -143,6 +142,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         rh.newDelhiDistrict();
         rh.delhiCircle();
 
+            
         deployedServiceDataService.create(new DeployedService(rh.delhiState(), Service.KILKARI));
 
         Subscriber subscriber1 = subscriberDataService.create(new Subscriber(1000000000L, rh.hindiLanguage()));
@@ -780,18 +780,27 @@ public class UserControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testNoOperator() throws IOException, InterruptedException {
+
+        createKilkariTestData();
+
+
         HttpGet httpGet = createHttpGet(
                 true, "kilkari",        //service
-                true, "1111111111",     //callingNumber
+                true, "9999999999",     //callingNumber
                 false, null,            //operator
-                true, "AA",             //circle
+                true, rh.delhiCircle().getName(),             //circle
                 true, "123456789012345" //callId
         );
 
-        String expectedJsonResponse = createFailureResponseJson("<operator: Not Present>");
+        String expectedJsonResponse = createKilkariUserResponseJson(
+                rh.hindiLanguage().getCode(), //defaultLanguageLocationCode
+                null, //locationCode
+                Collections.singletonList(rh.hindiLanguage().getCode()), // allowedLanguageLocationCodes
+                new HashSet<String>() //subscriptionPackList
+        );
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
         assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
