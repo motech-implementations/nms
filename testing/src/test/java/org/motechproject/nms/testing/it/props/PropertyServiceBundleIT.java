@@ -1,5 +1,6 @@
 package org.motechproject.nms.testing.it.props;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.props.domain.DeployedService;
@@ -38,7 +39,8 @@ public class PropertyServiceBundleIT extends BasePaxIT {
     @Inject
     private TestingService testingService;
 
-    private void cleanUp() {
+    @Before
+    public void doTheNeedful() {
         testingService.clearDatabase();
     }
 
@@ -58,7 +60,6 @@ public class PropertyServiceBundleIT extends BasePaxIT {
     // Test a state/service that is deployed
     @Test
     public void testDeployedStateAndDeployedService() {
-        cleanUp();
 
         State state = makeState(1L, "State 1");
         deployedServiceDataService.create(new DeployedService(state, Service.MOBILE_ACADEMY));
@@ -66,21 +67,44 @@ public class PropertyServiceBundleIT extends BasePaxIT {
         assertTrue(propertyService.isServiceDeployedInState(Service.MOBILE_ACADEMY, state));
     }
 
+    // Test KK (it's a special case) is always deployed - with no database entry
+    @Test
+    public void testKilkariDeployedNoDatabaseEntry() {
+
+        State state = makeState(1L, "State 1");
+
+        assertTrue(propertyService.isServiceDeployedInState(Service.KILKARI, state));
+    }
+
+    // Test KK (it's a special case) is always deployed - with a database entry
+    @Test
+    public void testKilkariDeployedWithDatabaseEntry() {
+
+        State state = makeState(1L, "State 1");
+        deployedServiceDataService.create(new DeployedService(state, Service.KILKARI));
+
+        assertTrue(propertyService.isServiceDeployedInState(Service.KILKARI, state));
+    }
+
+    // Test KK (it's a special case) is always deployed - with no state!
+    @Test
+    public void testKilkariDeployedWithNoState() {
+        assertTrue(propertyService.isServiceDeployedInState(Service.KILKARI, null));
+    }
+
     // Test a state that has a deployed service but not the one being queried
     @Test
     public void testDeployedStateNotDeployedService() {
-        cleanUp();
 
         State state = makeState(1L, "State 1");
         deployedServiceDataService.create(new DeployedService(state, Service.MOBILE_ACADEMY));
 
-        assertFalse(propertyService.isServiceDeployedInState(Service.KILKARI, state));
+        assertFalse(propertyService.isServiceDeployedInState(Service.MOBILE_KUNJI, state));
     }
 
     // Test a state with no deployments but a service that is in a different state
     @Test
     public void testNotDeployedStateDeployedService() {
-        cleanUp();
 
         State deployed = makeState(1L, "State 1");
         deployedServiceDataService.create(new DeployedService(deployed, Service.MOBILE_ACADEMY));
@@ -93,7 +117,6 @@ public class PropertyServiceBundleIT extends BasePaxIT {
     // Test with neither state or service deployed
     @Test
     public void testNotDeployedStateNotDeployedService() {
-        cleanUp();
 
         State notDeployed = makeState(2L, "State 2");
 
