@@ -42,7 +42,7 @@ import static org.junit.Assert.assertTrue;
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerSuite.class)
 @ExamFactory(MotechNativeTestContainerFactory.class)
-public class ImiController_CDR_BundleIT extends BasePaxIT {
+public class ImiControllerCdrBundleIT extends BasePaxIT {
 
     @Inject
     private SettingsService settingsService;

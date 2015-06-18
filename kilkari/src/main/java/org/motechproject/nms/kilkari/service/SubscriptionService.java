@@ -11,6 +11,7 @@ import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
+import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.Language;
 
 import java.util.List;
@@ -21,6 +22,7 @@ import java.util.List;
 public interface SubscriptionService {
 
     /**
+     * Used by MCTS import and overloaded
      * Create a new Kilkari subscription. Upon subscription creation, the start date for the subscription will be set
      * based on the subscriber's reference date (DOB or LMP) if it exists. No subscription will be created if the
      * reference date implies that the subscription would already have been completed, or if the beneficiary already
@@ -31,8 +33,23 @@ public interface SubscriptionService {
      * @param mode How the subscription originated -- via IVR or MCTS import
      * @return The created subscription, or null if no subscription was created
      */
-    Subscription createSubscription(long callingNumber, Language language, SubscriptionPack subscriptionPack,
-                            SubscriptionOrigin mode);
+    Subscription createSubscription(long callingNumber, Language language,
+                                    SubscriptionPack subscriptionPack, SubscriptionOrigin mode);
+
+    /**
+     * Create a new Kilkari subscription. Upon subscription creation, the start date for the subscription will be set
+     * based on the subscriber's reference date (DOB or LMP) if it exists. No subscription will be created if the
+     * reference date implies that the subscription would already have been completed, or if the beneficiary already
+     * has a subscription to the specific pack.
+     * @param callingNumber MSISDN of the beneficiary
+     * @param language Language of the beneficiary
+     * @param circle Circle of the beneficiary
+     * @param subscriptionPack The subscription pack (e.g. Pregnancy, Child) for which to subscribe this beneficiary
+     * @param mode How the subscription originated -- via IVR or MCTS import
+     * @return The created subscription, or null if no subscription was created
+     */
+    Subscription createSubscription(long callingNumber, Language language, Circle circle,
+                                    SubscriptionPack subscriptionPack, SubscriptionOrigin mode);
 
     /**
      * Get the subscription for the specified subscription ID
