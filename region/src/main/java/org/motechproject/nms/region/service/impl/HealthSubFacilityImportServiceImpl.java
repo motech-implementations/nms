@@ -1,11 +1,16 @@
 package org.motechproject.nms.region.service.impl;
 
 import org.motechproject.nms.csv.exception.CsvImportException;
+import org.motechproject.nms.csv.utils.GetInstanceByLong;
+import org.motechproject.nms.csv.utils.GetInstanceByString;
 import org.motechproject.nms.csv.utils.GetLong;
 import org.motechproject.nms.csv.utils.GetString;
+import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.HealthBlock;
 import org.motechproject.nms.region.domain.HealthFacility;
 import org.motechproject.nms.region.domain.HealthSubFacility;
+import org.motechproject.nms.region.domain.State;
+import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.repository.HealthSubFacilityDataService;
 import org.motechproject.nms.region.service.HealthFacilityService;
 import org.motechproject.nms.region.service.HealthSubFacilityImportService;
@@ -23,6 +28,10 @@ public class HealthSubFacilityImportServiceImpl extends BaseLocationImportServic
     public static final String REGIONAL_NAME = "Name_G";
     public static final String NAME = "Name_E";
     public static final String PID = "PID";
+    public static final String BID = "BID";
+    public static final String TALUKA_CODE = "TCode";
+    public static final String DISTRICT_CODE = "DCode";
+    public static final String STATE_ID = "StateID";
 
     public static final String SID_FIELD = "code";
     public static final String REGIONAL_NAME_FIELD = "regionalName";
@@ -50,6 +59,34 @@ public class HealthSubFacilityImportServiceImpl extends BaseLocationImportServic
         mapping.put(REGIONAL_NAME, new GetString());
         mapping.put(NAME, new GetString());
         mapping.put(PID, new GetLong());
+        mapping.put(STATE_ID, store.store("state", new GetInstanceByLong<State>() {
+            @Override
+            public State retrieve(Long value) {
+                return stateDataService.findByCode(value);
+            }
+        }));
+        mapping.put(DISTRICT_CODE, store.store("district", new GetInstanceByLong<District>() {
+            @Override
+            public District retrieve(Long value) {
+                State state = (State) store.get("state");
+                return districtService.findByStateAndCode(state, value);
+            }
+        }));
+        mapping.put(TALUKA_CODE, store.store("taluka", new GetInstanceByString<Taluka>() {
+            @Override
+            public Taluka retrieve(String value) {
+                District district = (District) store.get("district");
+                return talukaService.findByDistrictAndCode(district, value);
+            }
+        }));
+        mapping.put(BID, new GetInstanceByLong<HealthBlock>() {
+            @Override
+            public HealthBlock retrieve(Long value) {
+                Taluka taluka = (Taluka) store.get("taluka");
+                return healthBlockService.findByTalukaAndCode(taluka, value);
+            }
+        });
+
         return mapping;
     }
 

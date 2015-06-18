@@ -57,10 +57,6 @@ public class Village extends MdsEntity {
     // This is the village code for a non-census village.
     private long svid;
 
-    // used by CSV import as a placeholder for the taluka
-    @Ignore
-    private String talukaCode;
-
     @Field
     @Column(allowsNull = "false")
     @NotNull
@@ -121,14 +117,6 @@ public class Village extends MdsEntity {
 
     public void setSvid(long svid) {
         this.svid = svid;
-    }
-
-    public String getTalukaCode() {
-        return talukaCode;
-    }
-
-    public void setTalukaCode(String talukaCode) {
-        this.talukaCode = talukaCode;
     }
 
     public Taluka getTaluka() {
