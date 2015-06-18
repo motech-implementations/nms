@@ -14,7 +14,13 @@ import org.motechproject.nms.region.repository.HealthSubFacilityDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.repository.TalukaDataService;
 import org.motechproject.nms.region.repository.VillageDataService;
+import org.motechproject.nms.region.service.DistrictService;
+import org.motechproject.nms.region.service.HealthBlockService;
+import org.motechproject.nms.region.service.HealthFacilityService;
+import org.motechproject.nms.region.service.HealthSubFacilityService;
 import org.motechproject.nms.region.service.LocationService;
+import org.motechproject.nms.region.service.TalukaService;
+import org.motechproject.nms.region.service.VillageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -26,31 +32,30 @@ public class LocationServiceImpl implements LocationService {
 
     private StateDataService stateDataService;
 
-    private DistrictDataService districtDataService;
+    private DistrictService districtService;
 
-    private TalukaDataService talukaDataService;
+    private TalukaService talukaService;
 
-    private VillageDataService villageDataService;
+    private VillageService villageService;
 
-    private HealthBlockDataService healthBlockDataService;
+    private HealthBlockService healthBlockService;
 
-    private HealthFacilityDataService healthFacilityDataService;
+    private HealthFacilityService healthFacilityService;
 
-    private HealthSubFacilityDataService healthSubFacilityDataService;
+    private HealthSubFacilityService healthSubFacilityService;
 
     @Autowired
-    public LocationServiceImpl(StateDataService stateDataService, DistrictDataService districtDataService,
-                               TalukaDataService talukaDataService, VillageDataService villageDataService,
-                               HealthBlockDataService healthBlockDataService,
-                               HealthFacilityDataService healthFacilityDataService,
-                               HealthSubFacilityDataService healthSubFacilityDataService) {
+    public LocationServiceImpl(StateDataService stateDataService, DistrictService districtService,
+                               TalukaService talukaService, VillageService villageService,
+                               HealthBlockService healthBlockService, HealthFacilityService healthFacilityService,
+                               HealthSubFacilityService healthSubFacilityService) {
         this.stateDataService = stateDataService;
-        this.districtDataService = districtDataService;
-        this.talukaDataService = talukaDataService;
-        this.villageDataService = villageDataService;
-        this.healthBlockDataService = healthBlockDataService;
-        this.healthFacilityDataService = healthFacilityDataService;
-        this.healthSubFacilityDataService = healthSubFacilityDataService;
+        this.districtService = districtService;
+        this.talukaService = talukaService;
+        this.villageService = villageService;
+        this.healthBlockService = healthBlockService;
+        this.healthFacilityService = healthFacilityService;
+        this.healthSubFacilityService = healthSubFacilityService;
     }
 
     @Override
@@ -64,21 +69,40 @@ public class LocationServiceImpl implements LocationService {
 
         State state = getState(stateId);
 
+        if (state != null) {
+            return districtService.findByStateAndCode(state, districtId);
+        }
+
         return null;
     }
 
     @Override
-    public Taluka getTaluka(Long stateId, Long districtId, Long talukaId) {
+    public Taluka getTaluka(Long stateId, Long districtId, String talukaId) {
+
+        District district = getDistrict(stateId, districtId);
+
+        if (district != null) {
+            return talukaService.findByDistrictAndCode(district, talukaId);
+        }
+
         return null;
     }
 
     @Override
-    public Village getCensusVillage(Long stateId, Long DistrictId, Long talukaId, Long vCode) {
-        return null;
+    public Village getCensusVillage(Long stateId, Long districtId, Long talukaId, Long vCode) {
+
+
     }
 
     @Override
     public Village getNonCensusVillage(Long stateId, Long districtId, Long talukaId, Long svid) {
+
+        Taluka taluka = getTaluka(stateId, districtId, talukaId);
+
+        if (taluka != null) {
+            return villageService.findByTalukaAndSvid(taluka, svid);
+        }
+
         return null;
     }
 
