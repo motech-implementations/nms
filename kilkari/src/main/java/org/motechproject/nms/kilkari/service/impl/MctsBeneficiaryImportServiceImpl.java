@@ -35,6 +35,7 @@ import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.HealthBlock;
 import org.motechproject.nms.region.domain.HealthFacility;
+import org.motechproject.nms.region.domain.HealthSubFacility;
 import org.motechproject.nms.region.domain.Language;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.domain.Taluka;
@@ -43,6 +44,7 @@ import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.region.service.HealthBlockService;
 import org.motechproject.nms.region.service.HealthFacilityService;
+import org.motechproject.nms.region.service.HealthSubFacilityService;
 import org.motechproject.nms.region.service.TalukaService;
 import org.motechproject.nms.region.service.VillageService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,7 +71,8 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     private static final String DISTRICT = "District_ID";
     private static final String TALUKA = "Taluka_ID";
     private static final String HEALTH_BLOCK = "HealthBlock_ID";
-    private static final String PHC = "PHC";
+    private static final String PHC = "PHC_ID";
+    private static final String SUBCENTRE = "SubCentre_ID";
     private static final String VILLAGE = "Village_ID";
     private static final String BENEFICIARY_ID = "ID_No";
     private static final String BENEFICIARY_NAME = "Name";
@@ -83,6 +86,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     private TalukaService talukaService;
     private HealthBlockService healthBlockService;
     private HealthFacilityService healthFacilityService;
+    private HealthSubFacilityService healthSubFacilityService;
     private VillageService villageService;
     private MctsMotherDataService mctsMotherDataService;
     private MctsChildDataService mctsChildDataService;
@@ -95,11 +99,12 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     private SubscriptionPack childPack;
 
     @Autowired
-    MctsBeneficiaryImportServiceImpl(StateDataService stateDataService,
+      MctsBeneficiaryImportServiceImpl(StateDataService stateDataService, //NO CHECKSTYLE More than 7 parameters
                                      DistrictService districtService,
                                      TalukaService talukaService,
                                      HealthBlockService healthBlockService,
                                      HealthFacilityService healthFacilityService,
+                                     HealthSubFacilityService healthSubFacilityService,
                                      VillageService villageService,
                                      MctsMotherDataService mctsMotherDataService,
                                      MctsChildDataService mctsChildDataService,
@@ -112,6 +117,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         this.talukaService = talukaService;
         this.healthBlockService = healthBlockService;
         this.healthFacilityService = healthFacilityService;
+        this.healthSubFacilityService = healthSubFacilityService;
         this.villageService = villageService;
         this.mctsMotherDataService = mctsMotherDataService;
         this.mctsChildDataService = mctsChildDataService;
@@ -331,6 +337,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         Taluka taluka = null;
         HealthBlock healthBlock = null;
         HealthFacility phc = null;
+        HealthSubFacility hsf = null;
         Village village = null;
 
         District district = districtService.findByStateAndCode(state, (Long) record.get(DISTRICT));
@@ -341,6 +348,9 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                 healthBlock = healthBlockService.findByTalukaAndCode(taluka, (Long) record.get(HEALTH_BLOCK));
                 if (healthBlock != null) {
                     phc = healthFacilityService.findByHealthBlockAndCode(healthBlock, (Long) record.get(PHC));
+                    if (phc != null) {
+                        hsf = healthSubFacilityService.findByHealthFacilityAndCode(phc, (Long) record.get(SUBCENTRE));
+                    }
                 }
                 // the sample mother data file has village ID=0 and village name blank
                 if ((Long) record.get(VILLAGE) != 0L) {
@@ -361,6 +371,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         beneficiary.setTaluka(taluka);
         beneficiary.setHealthBlock(healthBlock);
         beneficiary.setPrimaryHealthCenter(phc);
+        beneficiary.setHealthSubFacility(hsf);
         beneficiary.setVillage(village);
 
         return errors;
@@ -384,6 +395,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         mapping.put(TALUKA, new Optional(new GetString()));
         mapping.put(HEALTH_BLOCK, new Optional(new GetLong()));
         mapping.put(PHC, new Optional(new GetLong()));
+        mapping.put(SUBCENTRE, new Optional(new GetLong()));
         mapping.put(VILLAGE, new Optional(new GetLong()));
 
         return mapping;

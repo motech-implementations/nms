@@ -31,8 +31,7 @@ public abstract class BaseVillageImportService extends BaseLocationImportService
         try {
             taluka = talukaService.findByDistrictAndCode(district, village.getTalukaCode());
         } catch (NumberFormatException e) {
-            throw new CsvImportDataException(String.format("Invalid taluka: %s",
-                    (String) village.getTalukaCode()), e);
+            throw new CsvImportDataException(String.format("Invalid taluka: %s", village.getTalukaCode()), e);
         }
         if (taluka == null) {
             throw new CsvImportException(String.format("No such taluka '%s' for district '%s'",

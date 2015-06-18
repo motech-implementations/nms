@@ -2,7 +2,6 @@ package org.motechproject.nms.region.domain;
 
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
-import org.motechproject.mds.annotations.Ignore;
 import org.motechproject.mds.domain.MdsEntity;
 
 import javax.jdo.annotations.Column;
@@ -30,9 +29,6 @@ public class HealthSubFacility extends MdsEntity {
     @Column(allowsNull = "false")
     @NotNull
     private Long code;
-
-    @Ignore
-    private long healthFacilityCode;
 
     @Field
     @Column(allowsNull = "false")
@@ -64,14 +60,6 @@ public class HealthSubFacility extends MdsEntity {
 
     public void setCode(Long code) {
         this.code = code;
-    }
-
-    public long getHealthFacilityCode() {
-        return healthFacilityCode;
-    }
-
-    public void setHealthFacilityCode(long healthFacilityCode) {
-        this.healthFacilityCode = healthFacilityCode;
     }
 
     public HealthFacility getHealthFacility() {

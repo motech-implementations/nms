@@ -13,7 +13,6 @@ import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 import java.io.IOException;
 import java.io.Reader;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -26,20 +25,10 @@ public abstract class BaseLocationImportService<T> {
 
     private Class<T> type;
     private MotechDataService<T> dataService;
-    private Map<String, Object> parents;
 
     public BaseLocationImportService(Class<T> type, MotechDataService<T> dataService) {
         this.type = type;
         this.dataService = dataService;
-        this.parents = new HashMap<>();
-    }
-
-    public void addParent(String k, Object v) {
-        parents.put(k, v);
-    }
-
-    public Object getParent(String k) {
-        return parents.get(k);
     }
 
     @Transactional
@@ -51,7 +40,6 @@ public abstract class BaseLocationImportService<T> {
         try {
             T instance;
             while (null != (instance = csvImporter.read())) {
-                postReadStep(instance);
                 dataService.create(instance);
             }
         } catch (ConstraintViolationException e) {
@@ -62,8 +50,6 @@ public abstract class BaseLocationImportService<T> {
     protected abstract Map<String, CellProcessor> getProcessorMapping();
 
     protected abstract Map<String, String> getFieldNameMapping();
-
-    protected void postReadStep(T instance) { }
 
     private String createErrorMessage(Set<ConstraintViolation<?>> violations, int rowNumber) {
         if (CollectionUtils.isNotEmpty(violations)) {
