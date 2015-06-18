@@ -85,6 +85,9 @@
     <osgi:reference id="healthFacilityService"
                     interface="org.motechproject.nms.region.service.HealthFacilityService" />
 
+    <osgi:reference id="healthSubFacilityService"
+                    interface="org.motechproject.nms.region.service.HealthSubFacilityService" />
+
     <osgi:reference id="alertsService" interface="org.motechproject.alerts.contract.AlertService" />
 
     <osgi:reference id="schedulerService"

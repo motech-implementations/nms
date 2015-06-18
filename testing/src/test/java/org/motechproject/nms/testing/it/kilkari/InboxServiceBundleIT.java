@@ -69,7 +69,6 @@ public class InboxServiceBundleIT extends BasePaxIT {
     @Inject
     private SubscriptionPackMessageDataService subscriptionPackMessageDataService;
 
-
     private RegionHelper rh;
     private SubscriptionHelper sh;
 
