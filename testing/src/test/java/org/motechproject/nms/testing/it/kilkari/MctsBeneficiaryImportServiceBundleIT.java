@@ -441,22 +441,6 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     }
     
     /*
-     * To verify MCTS upload is rejected when location information is incorrect.
-     */
-    @Ignore
-    @Test(expected = CsvImportDataException.class)
-    public void verifyFT286() throws Exception {
-    	State state31 = createState(31L, "State 31");
-    	stateDataService.create(state31);
-    	DateTime dob = DateTime.now();
-        String dobString = getDateString(dob);
-        
-        //attempt to create subscriber and subscription with wrong state-district combination. it should be rejected
-        Reader reader = createChildDataReaderWithHeaders("31\t3\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t\t9439986187\t" + dobString);
-        mctsBeneficiaryImportService.importChildData(reader);
-    }
-    
-    /*
      * To verify MCTS upload is rejected when MSISDN number already exist 
      * for subscriber with new mctsid(beneficiary id).
      */
