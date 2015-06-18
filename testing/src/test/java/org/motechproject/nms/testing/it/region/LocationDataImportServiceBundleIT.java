@@ -89,6 +89,13 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
     private String districtHeader = "DCode,Name_G,Name_E,StateID";
 
     private String talukaHeader = "TCode,ID,Name_G,Name_E,DCode";
+
+    private String healthBlockHeader = "BID,Name_G,Name_E,HQ,TCode";
+
+    private String healthFacilityHeader = "PID,Name_G,Name_E,BID,Facility_Type";
+
+    private String healthSubFacilityHeader = "SID,Name_G,Name_E,PID";
+
     @Before
     public void setUp() {
 
@@ -218,10 +225,19 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
     /*
     * To verify district location data is rejected when state_id is having invalid value.
     */
-    @Test(expected = CsvImportDataException.class)
+    @Test
     public void verifyFT223() throws Exception {
+        boolean thrown = false;
+        String errorMessage = "CSV instance error [row: 2]: validation failed for instance of type " +
+                "org.motechproject.nms.region.domain.District, violations: {'state': may not be null}";
         Reader reader = createDistrictDataReaderWithHeaders(districtHeader, "1,district regional name,district name,12345");
-        districtImportService.importData(reader);
+        try {
+            districtImportService.importData(reader);
+        } catch (CsvImportDataException e) {
+            thrown = true;
+            assertTrue(errorMessage.equals(e.getMessage()));
+        }
+        assertTrue(thrown);
     }
 
     /*
@@ -263,18 +279,196 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
     /*
     * To verify taluka location data is rejected when district_id is having invalid value.
     */
-    @Test(expected = CsvImportDataException.class)
+    @Test
     public void verifyFT230() throws Exception {
-        State state = stateDataService.create(new State("EXAMPLE STATE", 123489L));
-        District district = new District();
-        district.setName("D1");
-        district.setCode(1L);
-        district.setName("testDistrict");
-        district.setRegionalName("regional district name");
-        district.setState(state);
-        districtDataService.create(district);
+        boolean thrown = false;
+        String errorMessage = "CSV instance error [row: 2]: validation failed for instance of type " +
+                "org.motechproject.nms.region.domain.Taluka, violations: {'district': may not be null}";
         Reader reader = createDistrictDataReaderWithHeaders(talukaHeader, "TALUKA,2,taluka regional name,taluka name,2");
-        talukaImportService.importData(reader);
+        try {
+            talukaImportService.importData(reader);
+        } catch (CsvImportDataException e) {
+            thrown = true;
+            assertTrue(errorMessage.equals(e.getMessage()));
+        }
+        assertTrue(thrown);
+    }
+
+    /*
+    * To verify health block location data is rejected when mandatory parameter name is missing.
+    */
+    @Test(expected = CsvImportDataException.class)
+    public void verifyFT234() throws Exception {
+        Reader reader = createDistrictDataReaderWithHeaders(
+                healthBlockHeader, "6,health block regional name,,health block hq,TALUKA");
+        healthBlockImportService.importData(reader);
+    }
+
+    /*
+    * To verify health block location data is rejected when mandatory parameter code is missing.
+    */
+    @Test(expected = CsvImportDataException.class)
+    public void verifyFT235() throws Exception {
+        Reader reader = createDistrictDataReaderWithHeaders(
+                healthBlockHeader, ",health block regional name,health block name,health block hq,TALUKA");
+        healthBlockImportService.importData(reader);
+    }
+
+    /*
+    * To verify health block location data is rejected when mandatory parameter taluka_id is missing.
+    */
+    @Test(expected = CsvImportDataException.class)
+    public void verifyFT236() throws Exception {
+        Reader reader = createDistrictDataReaderWithHeaders(
+                healthBlockHeader, "6,health block regional name,health block name,health block hq,");
+        healthBlockImportService.importData(reader);
+    }
+
+    /*
+    * To verify health block location data is rejected when taluka_id is having invalid value.
+    */
+    @Test
+    public void verifyFT237() throws Exception {
+        boolean thrown = false;
+        String errorMessage = "CSV instance error [row: 2]: validation failed for instance of type " +
+                "org.motechproject.nms.region.domain.HealthBlock, violations: {'taluka': may not be null}";
+        Reader reader = createDistrictDataReaderWithHeaders(
+                healthBlockHeader, "6,health block regional name,health block name,health block hq, invalid taluka");
+        try {
+            healthBlockImportService.importData(reader);
+        } catch (CsvImportDataException e) {
+            thrown = true;
+            assertTrue(errorMessage.equals(e.getMessage()));
+        }
+        assertTrue(thrown);
+    }
+
+    /*
+    * To verify health block location data is rejected when code is having invalid value.
+    */
+    @Test(expected = CsvImportDataException.class)
+    public void verifyFT238() throws Exception {
+        Reader reader = createDistrictDataReaderWithHeaders(
+                healthBlockHeader, "abc,health block regional name,health block name,health block hq,TALUKA");
+        healthBlockImportService.importData(reader);
+    }
+
+    /*
+    * To verify health facility location data is rejected when mandatory parameter name is missing.
+    */
+    @Test(expected = CsvImportDataException.class)
+    public void verifyFT241() throws Exception {
+        Reader reader = createDistrictDataReaderWithHeaders(
+                healthFacilityHeader, "7,health facility regional name,,6,5678");
+        healthFacilityImportService.importData(reader);
+    }
+
+    /*
+    * To verify health facility location data is rejected when mandatory parameter code is missing.
+    */
+    @Test(expected = CsvImportDataException.class)
+    public void verifyFT242() throws Exception {
+        Reader reader = createDistrictDataReaderWithHeaders(
+                healthFacilityHeader, ",health facility regional name,health facility name,6,5678");
+        healthFacilityImportService.importData(reader);
+    }
+
+    /*
+    * To verify health facility location data is rejected when mandatory parameter health_block_id is missing.
+    */
+    @Test(expected = CsvImportDataException.class)
+    public void verifyFT243() throws Exception {
+        Reader reader = createDistrictDataReaderWithHeaders(
+                healthFacilityHeader, "7,health facility regional name,health facility name,,5678");
+        healthFacilityImportService.importData(reader);
+    }
+
+    /*
+    * To verify health facility location data is rejected when health_block_id is having invalid value.
+    */
+    @Test
+    public void verifyFT244() throws Exception {
+        boolean thrown = false;
+        String errorMessage = "CSV instance error [row: 2]: validation failed for instance of type " +
+                "org.motechproject.nms.region.domain.HealthFacility, violations: {'healthBlock': may not be null}";
+        Reader reader = createDistrictDataReaderWithHeaders(
+                healthFacilityHeader, "7,health facility regional name,health facility name,10,5678");
+        try {
+            healthFacilityImportService.importData(reader);
+        } catch (CsvImportDataException e) {
+            thrown = true;
+            assertTrue(errorMessage.equals(e.getMessage()));
+        }
+        assertTrue(thrown);
+    }
+
+    /*
+    * To verify health facility location data is rejected when code is having invalid value.
+    */
+    @Test(expected = CsvImportDataException.class)
+    public void verifyFT245() throws Exception {
+        Reader reader = createDistrictDataReaderWithHeaders(
+                healthFacilityHeader, "abc,health facility regional name,health facility name,6,5678");
+        healthFacilityImportService.importData(reader);
+    }
+
+    /*
+    * To verify health sub facility location data is rejected when mandatory parameter name is missing.
+    */
+    @Test(expected = CsvImportDataException.class)
+    public void verifyFT248() throws Exception {
+        Reader reader = createDistrictDataReaderWithHeaders(
+                healthSubFacilityHeader, "8,health sub facility regional name,,7");
+        healthSubFacilityImportService.importData(reader);
+    }
+
+    /*
+    * To verify health sub facility location data is rejected when mandatory parameter code is missing.
+    */
+    @Test(expected = CsvImportDataException.class)
+    public void verifyFT249() throws Exception {
+        Reader reader = createDistrictDataReaderWithHeaders(
+                healthSubFacilityHeader, ",health sub facility regional name,health sub facility name,7");
+        healthSubFacilityImportService.importData(reader);
+    }
+
+    /*
+    * To verify health sub facility location data is rejected when mandatory parameter health_facality_id is missing.
+    */
+    @Test(expected = CsvImportDataException.class)
+    public void verifyFT250() throws Exception {
+        Reader reader = createDistrictDataReaderWithHeaders(
+                healthSubFacilityHeader, "8,health sub facility regional name,health sub facility name,");
+        healthSubFacilityImportService.importData(reader);
+    }
+
+    /*
+    * To verify health sub facility location data is rejected when health_facality_id is having invalid value.
+    */
+    @Test
+    public void verifyFT251() throws Exception {
+        boolean thrown = false;
+        String errorMessage = "CSV instance error [row: 2]: validation failed for instance of type " +
+                "org.motechproject.nms.region.domain.HealthSubFacility, violations: {'healthFacility': may not be null}";
+        Reader reader = createDistrictDataReaderWithHeaders(
+                healthSubFacilityHeader, "8,health sub facility regional name,health sub facility name,7");
+        try {
+            healthSubFacilityImportService.importData(reader);
+        } catch (CsvImportDataException e) {
+            thrown = true;
+            assertTrue(errorMessage.equals(e.getMessage()));
+        }
+        assertTrue(thrown);
+    }
+
+    /*
+    * To verify health sub facility location data is rejected when code is having invalid value.
+    */
+    @Test(expected = CsvImportDataException.class)
+    public void verifyFT252() throws Exception {
+        Reader reader = createDistrictDataReaderWithHeaders(
+                healthSubFacilityHeader, "abc,health sub facility regional name,health sub facility name,7");
+        healthSubFacilityImportService.importData(reader);
     }
 
     private Reader createDistrictDataReaderWithHeaders(String header, String... lines) {
