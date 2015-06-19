@@ -17,18 +17,18 @@ public interface LocationService {
 
     District getDistrict(Long stateId, Long districtId);
 
-    Taluka getTaluka(Long stateId, Long districtId, Long talukaId);
+    Taluka getTaluka(Long stateId, Long districtId, String talukaId);
 
-    Village getCensusVillage(Long stateId, Long DistrictId, Long talukaId, Long vCode);
+    Village getCensusVillage(Long stateId, Long DistrictId, String talukaId, Long vCode);
 
-    Village getNonCensusVillage(Long stateId, Long districtId, Long talukaId, Long svid);
+    Village getNonCensusVillage(Long stateId, Long districtId, String talukaId, Long svid);
 
-    HealthBlock getHealthBlock(Long stateId, Long districtId, Long talukaId, Long healthBlockId);
+    HealthBlock getHealthBlock(Long stateId, Long districtId, String talukaId, Long healthBlockId);
 
-    HealthFacility getHealthFacility(Long stateId, Long districtId, Long talukaId, Long healthBlockId,
+    HealthFacility getHealthFacility(Long stateId, Long districtId, String talukaId, Long healthBlockId,
                                      Long healthFacilityId);
 
-    HealthSubFacility getHealthSubFacility(Long stateId, Long districtId, Long talukaId, Long healthBlockId,
+    HealthSubFacility getHealthSubFacility(Long stateId, Long districtId, String talukaId, Long healthBlockId,
                                            Long healthFacilityId, Long healthSubFacilityId);
 
 }

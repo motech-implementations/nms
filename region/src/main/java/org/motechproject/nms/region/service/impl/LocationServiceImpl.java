@@ -89,35 +89,69 @@ public class LocationServiceImpl implements LocationService {
     }
 
     @Override
-    public Village getCensusVillage(Long stateId, Long districtId, Long talukaId, Long vCode) {
-
-
-    }
-
-    @Override
-    public Village getNonCensusVillage(Long stateId, Long districtId, Long talukaId, Long svid) {
+    public Village getCensusVillage(Long stateId, Long districtId, String talukaId, Long vCode) {
 
         Taluka taluka = getTaluka(stateId, districtId, talukaId);
 
         if (taluka != null) {
-            return villageService.findByTalukaAndSvid(taluka, svid);
+            return villageService.findByTalukaAndVcodeAndSvid(taluka, vCode, null);
         }
 
         return null;
     }
 
     @Override
-    public HealthBlock getHealthBlock(Long stateId, Long districtId, Long talukaId, Long healthBlockId) {
+    public Village getNonCensusVillage(Long stateId, Long districtId, String talukaId, Long svid) {
+
+        Taluka taluka = getTaluka(stateId, districtId, talukaId);
+
+        if (taluka != null) {
+            return villageService.findByTalukaAndVcodeAndSvid(taluka, null, svid);
+        }
+
         return null;
     }
 
     @Override
-    public HealthFacility getHealthFacility(Long stateId, Long districtId, Long talukaId, Long healthBlockId, Long healthFacilityId) {
+    public HealthBlock getHealthBlock(Long stateId, Long districtId, String talukaId, Long healthBlockId) {
+
+        Taluka taluka = getTaluka(stateId, districtId, talukaId);
+
+        if (taluka != null) {
+
+            return healthBlockService.findByTalukaAndCode(taluka, healthBlockId);
+        }
+
         return null;
     }
 
     @Override
-    public HealthSubFacility getHealthSubFacility(Long stateId, Long districtId, Long talukaId, Long healthBlockId, Long healthFacilityId, Long healthSubFacilityId) {
+    public HealthFacility getHealthFacility(Long stateId, Long districtId, String talukaId, Long healthBlockId,
+                                            Long healthFacilityId) {
+
+        HealthBlock healthBlock = getHealthBlock(stateId, districtId, talukaId, healthBlockId);
+
+        if (healthBlock != null) {
+
+            return healthFacilityService.findByHealthBlockAndCode(healthBlock, healthFacilityId);
+        }
+
+        return null;
+    }
+
+    @Override
+    public HealthSubFacility getHealthSubFacility(Long stateId, Long districtId, String talukaId,
+                                                  Long healthBlockId, Long healthFacilityId,
+                                                  Long healthSubFacilityId) {
+
+        HealthFacility healthFacility = getHealthFacility(stateId, districtId, talukaId, healthBlockId,
+                healthFacilityId);
+
+        if (healthFacility != null) {
+
+            return healthSubFacilityService.findByHealthFacilityAndCode(healthFacility, healthSubFacilityId);
+        }
+
         return null;
     }
 }
