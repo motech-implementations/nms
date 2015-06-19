@@ -11,11 +11,7 @@ public final class ChecksumHelper {
 
     private ChecksumHelper() { }
 
-    public static String checksum(File file) {
-        try {
+    public static String checksum(File file) throws IOException {
             return DigestUtils.sha1Hex(new FileInputStream(file));
-        } catch (IOException e) {
-            throw new IllegalStateException(String.format("Unable to generate checksum: %s", e.getMessage()), e);
-        }
     }
 }
