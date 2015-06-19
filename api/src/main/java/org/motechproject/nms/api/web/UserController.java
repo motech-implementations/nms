@@ -176,7 +176,7 @@ public class UserController extends BaseController {
 
             state = getStateFromCircle(circle);
 
-            if (!serviceDeployedInUserState(Service.KILKARI, state, circle)) {
+            if (!serviceDeployedInUserState(Service.KILKARI, state)) {
                 throw new NotDeployedException(String.format(NOT_DEPLOYED, Service.KILKARI));
             }
         }
@@ -204,13 +204,15 @@ public class UserController extends BaseController {
 
             state = getStateForFrontLineWorker(flw, circle);
 
+            if (!serviceDeployedInUserState(service, state)) {
+                throw new NotDeployedException(String.format(NOT_DEPLOYED, service));
+            }
+
             if (!frontLineWorkerAuthorizedForAccess(flw, state)) {
                 throw new NotAuthorizedException(String.format(NOT_AUTHORIZED, CALLING_NUMBER));
             }
 
-            if (!serviceDeployedInUserState(service, state, circle)) {
-                throw new NotDeployedException(String.format(NOT_DEPLOYED, service));
-            }
+
         }
 
         ServiceUsageCap serviceUsageCap = serviceUsageCapService.getServiceUsageCap(state, service);
