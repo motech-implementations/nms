@@ -2867,17 +2867,14 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     @Test
     public void verifyFT66() throws IOException, InterruptedException {
         // operator missing
-        HttpPost httpPost = createSubscriptionHttpPost("1234567890", null,
-                "AP", "123456789012545", "10", "childPack");
+        HttpPost httpPost = createSubscriptionHttpPost("1234567890", null, "AP", "123456789012545", "10",
+                "childPack");
 
         String expectedJsonResponse = createFailureResponseJson("<operator: Not Present>");
 
-        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
-                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
-                .getStatusCode());
-        assertEquals(expectedJsonResponse,
-                EntityUtils.toString(response.getEntity()));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
     /**
@@ -3424,12 +3421,9 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 null)); // content
         String expectedJsonResponse = createFailureResponseJson("<operator: Not Present>");
 
-        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
-                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
-                .getStatusCode());
-        assertEquals(expectedJsonResponse,
-                EntityUtils.toString(response.getEntity()));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
     /**
