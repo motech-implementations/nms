@@ -21,6 +21,7 @@ import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.testing.it.utils.CdrHelper;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
@@ -42,52 +43,57 @@ import static org.junit.Assert.assertTrue;
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerSuite.class)
 @ExamFactory(MotechNativeTestContainerFactory.class)
-public class ImiController_CDR_BundleIT extends BasePaxIT {
+public class ImiControllerCdrBundleIT extends BasePaxIT {
 
     @Inject
-    private SettingsService settingsService;
-
+    SettingsService settingsService;
     @Inject
-    private SubscriptionService subscriptionService;
-
+    SubscriptionService subscriptionService;
     @Inject
-    private SubscriberDataService subscriberDataService;
-
+    SubscriberDataService subscriberDataService;
     @Inject
-    private SubscriptionPackDataService subscriptionPackDataService;
-
+    SubscriptionPackDataService subscriptionPackDataService;
     @Inject
-    private LanguageDataService languageDataService;
-
+    LanguageDataService languageDataService;
     @Inject
-    private CircleDataService circleDataService;
-
+    CircleDataService circleDataService;
     @Inject
-    private StateDataService stateDataService;
-
+    StateDataService stateDataService;
     @Inject
-    private DistrictDataService districtDataService;
-
+    DistrictDataService districtDataService;
     @Inject
-    private FileAuditRecordDataService fileAuditRecordDataService;
-
+    DistrictService districtService;
     @Inject
-    private TestingService testingService;
+    FileAuditRecordDataService fileAuditRecordDataService;
+    @Inject
+    TestingService testingService;
+
 
     private String localCdrDirBackup;
     private String remoteCdrDirBackup;
+    private CdrHelper helper;
 
 
     @Before
     public void setupSettings() {
-        localCdrDirBackup = ImiTestHelper.setupTestDir(settingsService, ImiTestHelper.LOCAL_CDR_DIR, "cdr-local-dir-it");
-        remoteCdrDirBackup = ImiTestHelper.setupTestDir(settingsService, ImiTestHelper.REMOTE_CDR_DIR, "cdr-remote-dir-it");
+        localCdrDirBackup = ImiTestHelper.setupTestDir(settingsService, ImiTestHelper.LOCAL_CDR_DIR,
+                "cdr-local-dir-it");
+        remoteCdrDirBackup = ImiTestHelper.setupTestDir(settingsService, ImiTestHelper.REMOTE_CDR_DIR,
+                "cdr-remote-dir-it");
     }
 
 
     @Before
     public void setupDatabase() {
         testingService.clearDatabase();
+    }
+
+
+    @Before
+    public void setupCdrHelper() throws IOException {
+        helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
+                subscriptionPackDataService, languageDataService, circleDataService, stateDataService,
+                districtDataService, fileAuditRecordDataService, districtService);
     }
 
 
@@ -105,8 +111,8 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
     }
 
 
-    private HttpPost createCdrFileNotificationHttpPost(CdrHelper helper, boolean useValidTargetFile,
-                                                       boolean useValidSummaryFile, boolean useValidDetailFile)
+    private HttpPost createCdrFileNotificationHttpPost(boolean useValidTargetFile, boolean useValidSummaryFile,
+                                                       boolean useValidDetailFile)
             throws IOException, NoSuchAlgorithmException {
         String targetFile = useValidTargetFile ? helper.obd() : helper.obd() + "xxx";
         String summaryFile = useValidSummaryFile ? helper.csr() : helper.csr() + "xxx";
@@ -146,18 +152,15 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
             NoSuchAlgorithmException {
         getLogger().debug("testCreateCdrFileNotificationRequest()");
 
-        CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService, fileAuditRecordDataService);
-
         helper.makeCdrs(1,0,0,0);
         helper.makeRemoteCsrFile();
         helper.makeRemoteCdrFile();
         helper.createObdFileAuditRecord(true, true);
 
-        HttpPost httpPost = createCdrFileNotificationHttpPost(helper, true, true, true);
+        HttpPost httpPost = createCdrFileNotificationHttpPost(true, true, true);
 
-        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ImiTestHelper.ADMIN_USERNAME, ImiTestHelper.ADMIN_PASSWORD);
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ImiTestHelper.ADMIN_USERNAME,
+                ImiTestHelper.ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_ACCEPTED, response.getStatusLine().getStatusCode());
     }
 
@@ -167,14 +170,10 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
             InterruptedException, NoSuchAlgorithmException {
         getLogger().debug("testCreateCdrFileNotificationRequestBadCdrSummaryFileName()");
 
-        CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService, fileAuditRecordDataService);
-
         helper.makeCdrs(1,0,0,0);
         helper.makeRemoteCdrFile();
 
-        HttpPost httpPost = createCdrFileNotificationHttpPost(helper, true, false, true);
+        HttpPost httpPost = createCdrFileNotificationHttpPost(true, false, true);
 
         String expectedJsonResponse = createFailureResponseJson("<cdrSummary: Invalid>");
 
@@ -188,10 +187,7 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
             InterruptedException, NoSuchAlgorithmException {
         getLogger().debug("testCreateCdrFileNotificationRequestBadFileNames()");
 
-        CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService, fileAuditRecordDataService);
-        HttpPost httpPost = createCdrFileNotificationHttpPost(helper, false, true, true);
+        HttpPost httpPost = createCdrFileNotificationHttpPost(false, true, true);
 
         // All 3 filenames will be considered invalid because the target file is of invalid format, and the CDR
         // Summary and CDR Detail don't match it (even though their formats are technically valid on their own)
@@ -208,10 +204,6 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
     @Test
     public void verifyFT201() throws IOException, InterruptedException, NoSuchAlgorithmException{
         getLogger().debug("cdrFileNotificationAPIRejectedIfOBDFileMissing()");
-
-        CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService, fileAuditRecordDataService);
 
         helper.makeCdrs(1,0,0,0);
         helper.makeRemoteCsrFile();
@@ -238,10 +230,6 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
     public void verifyFT202() throws IOException, InterruptedException, NoSuchAlgorithmException{
         getLogger().debug("cdrFileNotificationAPIRejectedIfCdrSummaryMissing()");
 
-        CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService, fileAuditRecordDataService);
-
         helper.makeCdrs(1,0,0,0);
         helper.makeRemoteCsrFile();
         helper.makeRemoteCdrFile();
@@ -266,10 +254,6 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
     public void verifyFT203() throws IOException, InterruptedException, NoSuchAlgorithmException{
         getLogger().debug("cdrFileNotificationAPIRejectedIfCdrDetailMissing()");
 
-        CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService, fileAuditRecordDataService);
-
         helper.makeCdrs(1,0,0,0);
         helper.makeRemoteCsrFile();
         helper.makeRemoteCdrFile();
@@ -293,10 +277,6 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
     @Test
     public void verifyFT204() throws IOException, InterruptedException, NoSuchAlgorithmException{
         getLogger().debug("cdrFileNotificationAPIRejectedIfOBDFileMissingINAuditRecord()");
-
-        CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService, fileAuditRecordDataService);
 
         helper.makeCdrs(1,0,0,0);
         helper.makeRemoteCsrFile();
@@ -323,10 +303,6 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
     public void verifyFT205() throws IOException, InterruptedException, NoSuchAlgorithmException{
         getLogger().debug("cdrFileNotificationAPIRejectedIfCdrFileMissingInsideCdrSummary()");
 
-        CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService, fileAuditRecordDataService);
-
         helper.makeCdrs(1,0,0,0);
         helper.makeRemoteCsrFile();
         helper.makeRemoteCdrFile();
@@ -351,10 +327,6 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
     @Test
     public void verifyFT206() throws IOException, InterruptedException, NoSuchAlgorithmException{
         getLogger().debug("cdrFileNotificationAPIRejectedIfChecksumMissingInsideCdrSummary()");
-
-        CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService, fileAuditRecordDataService);
 
         helper.makeCdrs(1,0,0,0);
         helper.makeRemoteCsrFile();
@@ -382,10 +354,6 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
     public void verifyFT207() throws IOException, InterruptedException, NoSuchAlgorithmException{
         getLogger().debug("cdrFileNotificationAPIRejectedIfRecordsCountMissingInsideCdrSummary()");
 
-        CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService, fileAuditRecordDataService);
-
         helper.makeCdrs(1,0,0,0);
         helper.makeRemoteCsrFile();
         helper.makeRemoteCdrFile();
@@ -412,10 +380,6 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
     public void verifyFT208() throws IOException, InterruptedException, NoSuchAlgorithmException{
         getLogger().debug("cdrFileNotificationAPIRejectedIfCdrFileMissingInsideCdrDetail()");
 
-        CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService, fileAuditRecordDataService);
-
         helper.makeCdrs(1,0,0,0);
         helper.makeRemoteCsrFile();
         helper.makeRemoteCdrFile();
@@ -440,10 +404,6 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
     @Test
     public void verifyFT209() throws IOException, InterruptedException, NoSuchAlgorithmException{
         getLogger().debug("cdrFileNotificationAPIRejectedIfChecksumMissingInsideCdrDetail()");
-
-        CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService, fileAuditRecordDataService);
 
         helper.makeCdrs(1,0,0,0);
         helper.makeRemoteCsrFile();
@@ -470,10 +430,6 @@ public class ImiController_CDR_BundleIT extends BasePaxIT {
     @Test
     public void verifyFT210() throws IOException, InterruptedException, NoSuchAlgorithmException{
         getLogger().debug("cdrFileNotificationAPIRejectedIfRecordsCountMissingInsideCdrDetail()");
-
-        CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService, fileAuditRecordDataService);
 
         helper.makeCdrs(1,0,0,0);
         helper.makeRemoteCsrFile();

@@ -17,6 +17,7 @@ import java.util.List;
  * This class Models data for District location records
  */
 @Entity(maxFetchDepth = -1, tableName = "nms_districts")
+@Unique(name = "UNIQUE_STATE_CODE", members = { "state", "code" })
 public class District extends MdsEntity {
 
     @Field
@@ -32,7 +33,6 @@ public class District extends MdsEntity {
     private String regionalName;
 
     @Field
-    @Unique
     @Column(allowsNull = "false")
     @NotNull
     private Long code;
