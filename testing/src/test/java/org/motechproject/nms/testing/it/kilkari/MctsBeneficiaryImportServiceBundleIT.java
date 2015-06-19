@@ -1,26 +1,6 @@
 package org.motechproject.nms.testing.it.kilkari;
 
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.motechproject.nms.testing.it.utils.RegionHelper.createDistrict;
-import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthBlock;
-import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthFacility;
-import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthFacilityType;
-import static org.motechproject.nms.testing.it.utils.RegionHelper.createState;
-import static org.motechproject.nms.testing.it.utils.RegionHelper.createTaluka;
-import static org.motechproject.nms.testing.it.utils.RegionHelper.createVillage;
-
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.StringReader;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
-
-import javax.inject.Inject;
-
 import org.joda.time.DateTime;
 import org.joda.time.Days;
 import org.joda.time.format.DateTimeFormat;
@@ -69,12 +49,12 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-
 import static org.motechproject.nms.testing.it.utils.RegionHelper.createDistrict;
 import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthBlock;
 import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthFacility;
