@@ -61,9 +61,8 @@ public abstract class BaseLocationImportService<T> {
         } catch (IllegalStateException e) {
             throw new CsvImportDataException(createErrorMessage(e.getMessage(),
                 csvImporter.getRowNumber()), e);
+        }
     }
-
-}
 
     protected CellProcessor mapState(final StateDataService stateDataService) {
         return new GetInstanceByLong<State>() {
