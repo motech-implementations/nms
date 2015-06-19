@@ -94,7 +94,7 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
 
         testingService.clearDatabase();
 
-        exampleState = stateDataService.create(new State("EXAMPLE STATE", 1234L));
+        exampleState = stateDataService.create(new State("EXAMPLE STATE", 1L));
         HealthFacilityType facilityType = new HealthFacilityType();
         facilityType.setName("EXAMPLE FACILITY TYPE");
         facilityType.setCode(5678L);
@@ -121,16 +121,14 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
         assertEquals("taluka regional name", taluka.getRegionalName());
         assertNotNull(taluka.getDistrict());
 
-        censusVillageImportService.addParent(district);
         censusVillageImportService.importData(read("csv/census_village.csv"));
         Village censusVillage = villageService.findByTalukaAndVcodeAndSvid(taluka, 3L, 0);
         assertNotNull(censusVillage);
-        assertEquals(3L, (long) censusVillage.getVcode());
+        assertEquals(3L, censusVillage.getVcode());
         assertEquals("census village name", censusVillage.getName());
         assertEquals("census village regional name", censusVillage.getRegionalName());
         assertNotNull(censusVillage.getTaluka());
 
-        nonCensusVillageImportService.addParent(district);
         nonCensusVillageImportService.importData(read("csv/non_census_village_associated.csv"));
         Village nonCensusVillageAssociated = villageService.findByTalukaAndVcodeAndSvid(taluka, 3L, 4L);
         assertNotNull(nonCensusVillageAssociated);
@@ -145,11 +143,11 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
         assertNotNull(nonCensusVillageNonAssociated);
         assertEquals(5L, nonCensusVillageNonAssociated.getSvid());
         assertEquals("non census village non associated name", nonCensusVillageNonAssociated.getName());
-        assertEquals("non census village non associated regional name", nonCensusVillageNonAssociated.getRegionalName());
+        assertEquals("non census village non associated regional name",
+                nonCensusVillageNonAssociated.getRegionalName());
         assertNotNull(nonCensusVillageNonAssociated.getTaluka());
         assertEquals(0, nonCensusVillageNonAssociated.getVcode());
 
-        healthBlockImportService.addParent(district);
         healthBlockImportService.importData(read("csv/health_block.csv"));
         HealthBlock healthBlock = healthBlockService.findByTalukaAndCode(taluka, 6L);
         assertNotNull(healthBlock);
@@ -159,7 +157,6 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
         assertEquals("health block hq", healthBlock.getHq());
         assertNotNull(healthBlock.getTaluka());
 
-        healthFacilityImportService.addParent(taluka);
         healthFacilityImportService.importData(read("csv/health_facility.csv"));
         HealthFacility healthFacility = healthFacilityService.findByHealthBlockAndCode(healthBlock, 7L);
         assertNotNull(healthFacility);
@@ -169,7 +166,6 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
         assertNotNull(healthFacility.getHealthBlock());
         assertNotNull(healthFacility.getHealthFacilityType());
 
-        healthSubFacilityImportService.addParent(healthBlock);
         healthSubFacilityImportService.importData(read("csv/health_sub_facility.csv"));
         HealthSubFacility healthSubFacility = healthSubFacilityService.findByHealthFacilityAndCode(
                 healthFacility, 8L);

@@ -1,14 +1,9 @@
 package org.motechproject.nms.region.service.impl;
 
-import org.motechproject.nms.csv.utils.GetInstanceByLong;
-import org.motechproject.nms.csv.utils.GetInstanceByString;
 import org.motechproject.nms.csv.utils.GetLong;
 import org.motechproject.nms.csv.utils.GetString;
 import org.motechproject.nms.csv.utils.Store;
-import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.HealthBlock;
-import org.motechproject.nms.region.domain.State;
-import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.repository.HealthBlockDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
@@ -46,9 +41,13 @@ public class HealthBlockImportServiceImpl extends BaseLocationImportService<Heal
 
     @Autowired
     public HealthBlockImportServiceImpl(HealthBlockDataService healthBlockDataService,
-                                        TalukaService talukaService) {
+                                        TalukaService talukaService,
+                                        DistrictService districtService,
+                                        StateDataService stateDataService) {
         super(HealthBlock.class, healthBlockDataService);
         this.talukaService = talukaService;
+        this.districtService = districtService;
+        this.stateDataService = stateDataService;
     }
 
     @Override
@@ -60,26 +59,9 @@ public class HealthBlockImportServiceImpl extends BaseLocationImportService<Heal
         mapping.put(REGIONAL_NAME, new GetString());
         mapping.put(NAME, new GetString());
         mapping.put(HQ, new GetString());
-        mapping.put(STATE_ID, store.store("state", new GetInstanceByLong<State>() {
-            @Override
-            public State retrieve(Long value) {
-                return stateDataService.findByCode(value);
-            }
-        }));
-        mapping.put(DISTRICT_CODE, store.store("district", new GetInstanceByLong<District>() {
-            @Override
-            public District retrieve(Long value) {
-                State state = (State) store.get("state");
-                return districtService.findByStateAndCode(state, value);
-            }
-        }));
-        mapping.put(TALUKA_CODE, new GetInstanceByString<Taluka>() {
-            @Override
-            public Taluka retrieve(String value) {
-                District district = (District) store.get("district");
-                return talukaService.findByDistrictAndCode(district, value);
-            }
-        });
+        mapping.put(STATE_ID, store.store(STATE, mapState(stateDataService)));
+        mapping.put(DISTRICT_CODE, store.store(DISTRICT, mapDistrict(store, districtService)));
+        mapping.put(TALUKA_CODE, mapTaluka(store, talukaService));
         return mapping;
     }
 
@@ -90,7 +72,9 @@ public class HealthBlockImportServiceImpl extends BaseLocationImportService<Heal
         mapping.put(REGIONAL_NAME, REGIONAL_NAME_FIELD);
         mapping.put(NAME, NAME_FIELD);
         mapping.put(HQ, HQ_FIELD);
-        mapping.put(TALUKA_FIELD, TALUKA_CODE);
+        mapping.put(TALUKA_CODE, TALUKA_FIELD);
+        mapping.put(STATE_ID, null);
+        mapping.put(DISTRICT_CODE, null);
         return mapping;
     }
 }
