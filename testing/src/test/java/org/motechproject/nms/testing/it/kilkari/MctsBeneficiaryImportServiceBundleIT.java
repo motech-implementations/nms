@@ -720,7 +720,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         Subscription childSubscription = subscriptionService.getActiveSubscription(subscriber, SubscriptionPackType.CHILD);
         Subscription pregnancySubscription = subscriptionService.getActiveSubscription(subscriber, SubscriptionPackType.PREGNANCY);
 
-        // both subscription should have been activated
+        //both subscription should have been activated
         assertEquals(2, subscriptions.size());
         assertNotNull(childSubscription);
         assertNotNull(pregnancySubscription);
