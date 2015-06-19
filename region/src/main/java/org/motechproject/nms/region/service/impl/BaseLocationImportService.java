@@ -6,6 +6,19 @@ import org.motechproject.nms.csv.exception.CsvImportDataException;
 import org.motechproject.nms.csv.utils.ConstraintViolationUtils;
 import org.motechproject.nms.csv.utils.CsvImporterBuilder;
 import org.motechproject.nms.csv.utils.CsvInstanceImporter;
+import org.motechproject.nms.csv.utils.GetInstanceByLong;
+import org.motechproject.nms.csv.utils.GetInstanceByString;
+import org.motechproject.nms.csv.utils.Store;
+import org.motechproject.nms.region.domain.District;
+import org.motechproject.nms.region.domain.HealthBlock;
+import org.motechproject.nms.region.domain.HealthFacility;
+import org.motechproject.nms.region.domain.State;
+import org.motechproject.nms.region.domain.Taluka;
+import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.service.DistrictService;
+import org.motechproject.nms.region.service.HealthBlockService;
+import org.motechproject.nms.region.service.HealthFacilityService;
+import org.motechproject.nms.region.service.TalukaService;
 import org.springframework.transaction.annotation.Transactional;
 import org.supercsv.cellprocessor.ift.CellProcessor;
 
@@ -17,6 +30,11 @@ import java.util.Map;
 import java.util.Set;
 
 public abstract class BaseLocationImportService<T> {
+
+    public static final String STATE = "state";
+    public static final String DISTRICT = "district";
+    public static final String TALUKA = "taluka";
+    public static final String HEALTH_BLOCK = "healthBlock";
 
     private Class<T> type;
     private MotechDataService<T> dataService;
@@ -38,9 +56,62 @@ public abstract class BaseLocationImportService<T> {
                 dataService.create(instance);
             }
         } catch (ConstraintViolationException e) {
-            throw new CsvImportDataException(createErrorMessage(e.getConstraintViolations(), csvImporter.getRowNumber()), e);
+            throw new CsvImportDataException(createErrorMessage(e.getConstraintViolations(),
+                    csvImporter.getRowNumber()), e);
         }
     }
+
+    protected CellProcessor mapState(final StateDataService stateDataService) {
+        return new GetInstanceByLong<State>() {
+            @Override
+            public State retrieve(Long value) {
+                return stateDataService.findByCode(value);
+            }
+        };
+    }
+
+
+    protected CellProcessor mapDistrict(final Store store, final DistrictService districtService) {
+        return new GetInstanceByLong<District>() {
+            @Override
+            public District retrieve(Long value) {
+                State state = (State) store.get(STATE);
+                return districtService.findByStateAndCode(state, value);
+            }
+        };
+    }
+
+    protected CellProcessor mapTaluka(final Store store, final TalukaService talukaService) {
+        return new GetInstanceByString<Taluka>() {
+            @Override
+            public Taluka retrieve(String value) {
+                District district = (District) store.get(DISTRICT);
+                return talukaService.findByDistrictAndCode(district, value);
+            }
+        };
+    }
+
+    protected CellProcessor mapHealthBlock(final Store store, final HealthBlockService healthBlockService) {
+        return new GetInstanceByLong<HealthBlock>() {
+            @Override
+            public HealthBlock retrieve(Long value) {
+                Taluka taluka = (Taluka) store.get(TALUKA);
+                return healthBlockService.findByTalukaAndCode(taluka, value);
+            }
+        };
+    }
+
+    protected CellProcessor mapHealthFacility(final Store store,
+                                              final HealthFacilityService healthFacilityService) {
+        return new GetInstanceByLong<HealthFacility>() {
+            @Override
+            public HealthFacility retrieve(Long value) {
+                HealthBlock healthBlock = (HealthBlock) store.get(HEALTH_BLOCK);
+                return healthFacilityService.findByHealthBlockAndCode(healthBlock, value);
+            }
+        };
+    }
+
 
     protected abstract Map<String, CellProcessor> getProcessorMapping();
 

@@ -42,34 +42,34 @@ import static org.junit.Assert.assertNotNull;
 public class CircleServiceBundleIT extends BasePaxIT {
 
     @Inject
-    private TestingService testingService;
+    TestingService testingService;
 
     @Inject
-    private CircleDataService circleDataService;
+    CircleDataService circleDataService;
 
     @Inject
-    private StateDataService stateDataService;
+    StateDataService stateDataService;
 
     @Inject
-    private DistrictDataService districtDataService;
+    DistrictDataService districtDataService;
 
     @Inject
-    private TalukaDataService talukaDataService;
+    TalukaDataService talukaDataService;
 
     @Inject
-    private VillageDataService villageDataService;
+    VillageDataService villageDataService;
 
     @Inject
-    private HealthBlockDataService healthBlockDataService;
+    HealthBlockDataService healthBlockDataService;
 
     @Inject
-    private HealthFacilityTypeDataService healthFacilityTypeDataService;
+    HealthFacilityTypeDataService healthFacilityTypeDataService;
 
     @Inject
-    private HealthFacilityDataService healthFacilityDataService;
+    HealthFacilityDataService healthFacilityDataService;
 
     @Inject
-    private HealthSubFacilityDataService healthSubFacilityDataService;
+    HealthSubFacilityDataService healthSubFacilityDataService;
 
     District district;
     Taluka taluka;

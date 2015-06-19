@@ -15,6 +15,7 @@ import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.service.DistrictService;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,17 +30,22 @@ public class CsrHelper {
     private List<CallSummaryRecordDto> records;
 
 
-    public CsrHelper(String timestamp, SubscriptionService subscriptionService,
-                     SubscriptionPackDataService subscriptionPackDataService,
-                     SubscriberDataService subscriberDataService, LanguageDataService languageDataService,
-                     CircleDataService circleDataService, StateDataService stateDataService,
-                     DistrictDataService districtDataService) {
+    public CsrHelper(
+            String timestamp,
+            SubscriptionService subscriptionService,
+            SubscriptionPackDataService subscriptionPackDataService,
+            SubscriberDataService subscriberDataService,
+            LanguageDataService languageDataService,
+            CircleDataService circleDataService,
+            StateDataService stateDataService,
+            DistrictDataService districtDataService,
+            DistrictService districtService
+    ) {
 
         TIMESTAMP = timestamp;
 
         sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
-                languageDataService, circleDataService, stateDataService,
-                districtDataService);
+                languageDataService, circleDataService, stateDataService, districtDataService, districtService);
     }
 
 
@@ -59,7 +65,8 @@ public class CsrHelper {
         records = new ArrayList<>();
 
         for (int i=0 ; i<numSuccess ; i++) {
-            Subscription sub = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(30), SubscriptionPackType.CHILD);
+            Subscription sub = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(30),
+                    SubscriptionPackType.CHILD);
             int index = sh.getRandomMessageIndex(sub);
             if (index == sh.getLastMessageIndex(sub)) {
                 // We don't want this subscription to be completed

@@ -1,2 +1,2 @@
-BID,Name_G,Name_E,HQ,TCode
-6,health block regional name,health block name,health block hq,TALUKA
+BID,Name_G,Name_E,HQ,TCode,DCode,StateID
+6,health block regional name,health block name,health block hq,TALUKA,1,1

@@ -34,6 +34,7 @@ import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.testing.it.utils.CsrHelper;
 import org.motechproject.nms.testing.it.utils.RegionHelper;
 import org.motechproject.nms.testing.it.utils.SubscriptionHelper;
@@ -65,45 +66,34 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
     @Inject
     EventRelay eventRelay;
-
     @Inject
     CsrService csrService;
-
     @Inject
-    private SettingsService settingsService;
-
+    SettingsService settingsService;
     @Inject
-    private SubscriptionService subscriptionService;
-
+    SubscriptionService subscriptionService;
     @Inject
-    private SubscriptionPackDataService subscriptionPackDataService;
-
+    SubscriptionPackDataService subscriptionPackDataService;
     @Inject
-    private SubscriptionDataService subscriptionDataService;
-
+    SubscriptionDataService subscriptionDataService;
     @Inject
-    private SubscriberDataService subscriberDataService;
-
+    SubscriberDataService subscriberDataService;
     @Inject
-    private LanguageDataService languageDataService;
-
+    LanguageDataService languageDataService;
     @Inject
-    private CallRetryDataService callRetryDataService;
-
+    CallRetryDataService callRetryDataService;
     @Inject
-    private CallSummaryRecordDataService csrDataService;
-
+    CallSummaryRecordDataService csrDataService;
     @Inject
-    private CircleDataService circleDataService;
-
+    CircleDataService circleDataService;
     @Inject
-    private StateDataService stateDataService;
-
+    StateDataService stateDataService;
     @Inject
-    private DistrictDataService districtDataService;
-
+    DistrictDataService districtDataService;
     @Inject
-    private TestingService testingService;
+    DistrictService districtService;
+    @Inject
+    TestingService testingService;
 
 
     private RegionHelper rh;
@@ -115,12 +105,11 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
         testingService.clearDatabase();
 
-        rh = new RegionHelper(languageDataService, circleDataService, stateDataService,
-                districtDataService);
+        rh = new RegionHelper(languageDataService, circleDataService, stateDataService, districtDataService,
+                districtService);
 
-        sh = new SubscriptionHelper(subscriptionService,
-                subscriberDataService, subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService);
+        sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
+                languageDataService, circleDataService, stateDataService, districtDataService, districtService);
 
         sh.childPack();
         sh.pregnancyPack();
@@ -230,7 +219,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
         CsrHelper helper = new CsrHelper(timestamp, subscriptionService, subscriptionPackDataService,
                 subscriberDataService, languageDataService, circleDataService, stateDataService,
-                districtDataService);
+                districtDataService, districtService);
 
         helper.makeRecords(1, 3, 0, 0);
 
@@ -810,7 +799,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
         SubscriptionHelper sh = new SubscriptionHelper(subscriptionService, subscriberDataService,
                 subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService);
+                stateDataService, districtDataService, districtService);
 
         int days = sh.childPack().getWeeks() * 7;
         Subscription sub = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(days),
