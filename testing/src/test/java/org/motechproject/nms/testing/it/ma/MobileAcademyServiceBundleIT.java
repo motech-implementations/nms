@@ -43,19 +43,19 @@ import static org.junit.Assert.assertTrue;
 public class MobileAcademyServiceBundleIT extends BasePaxIT {
 
     @Inject
-    private MobileAcademyService maService;
+    MobileAcademyService maService;
 
     @Inject
-    private BookmarkDataService bookmarkDataService;
+    BookmarkDataService bookmarkDataService;
 
     @Inject
-    private CompletionRecordDataService completionRecordDataService;
+    CompletionRecordDataService completionRecordDataService;
 
     @Inject
-    private NmsCourseDataService nmsCourseDataService;
+    NmsCourseDataService nmsCourseDataService;
 
     @Inject
-    private SmsNotificationService smsNotificationService;
+    SmsNotificationService smsNotificationService;
 
     private static String validCourseName = "MobileAcademyCourse";
 

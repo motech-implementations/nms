@@ -33,19 +33,19 @@ import static org.junit.Assert.assertNotNull;
 public class ServiceUsageServiceBundleIT extends BasePaxIT {
 
     @Inject
-    private FrontLineWorkerDataService frontLineWorkerDataService;
+    FrontLineWorkerDataService frontLineWorkerDataService;
 
     @Inject
-    private FrontLineWorkerService frontLineWorkerService;
+    FrontLineWorkerService frontLineWorkerService;
 
     @Inject
-    private ServiceUsageDataService serviceUsageDataService;
+    ServiceUsageDataService serviceUsageDataService;
 
     @Inject
-    private ServiceUsageService serviceUsageService;
+    ServiceUsageService serviceUsageService;
 
     @Inject
-    private TestingService testingService;
+    TestingService testingService;
 
     private void setupData() {
         testingService.clearDatabase();

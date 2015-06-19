@@ -22,6 +22,7 @@ import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.service.DistrictService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,19 +61,24 @@ public class CdrHelper {
     private List<CallDetailRecordDto> cdrs;
 
 
-    public CdrHelper(SettingsService settingsService, SubscriptionService subscriptionService,
-                     SubscriberDataService subscriberDataService, SubscriptionPackDataService subscriptionPackDataService,
-                     LanguageDataService languageDataService,
-                     CircleDataService circleDataService, StateDataService stateDataService,
-                     DistrictDataService districtDataService,
-                     FileAuditRecordDataService fileAuditRecordDataService) throws IOException {
+    public CdrHelper(
+            SettingsService settingsService,
+            SubscriptionService subscriptionService,
+            SubscriberDataService subscriberDataService,
+            SubscriptionPackDataService subscriptionPackDataService,
+            LanguageDataService languageDataService,
+            CircleDataService circleDataService,
+            StateDataService stateDataService,
+            DistrictDataService districtDataService,
+            FileAuditRecordDataService fileAuditRecordDataService,
+            DistrictService districtService
+    ) throws IOException {
 
         sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
-                languageDataService, circleDataService, stateDataService,
-                districtDataService);
+                languageDataService, circleDataService, stateDataService, districtDataService, districtService);
 
-        rh = new RegionHelper(languageDataService, circleDataService, stateDataService,
-                districtDataService);
+        rh = new RegionHelper(languageDataService, circleDataService, stateDataService, districtDataService,
+                districtService);
 
         this.settingsService = settingsService;
         this.fileAuditRecordDataService = fileAuditRecordDataService;

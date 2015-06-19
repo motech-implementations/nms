@@ -176,7 +176,7 @@ public class BaseController {
     protected StringBuilder validate(Long callingNumber, Long callId, String operator, String circle) {
         StringBuilder failureReasons = validate(callingNumber, callId);
 
-        validateFieldMaxLength(failureReasons, "operator", operator, MAX_LENGTH_255);
+        validateRequiredFieldMaxLength(failureReasons, "operator", operator, MAX_LENGTH_255);
 
         validateFieldMaxLength(failureReasons, "circle", circle, MAX_LENGTH_255);
 
