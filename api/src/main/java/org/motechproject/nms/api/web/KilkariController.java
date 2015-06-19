@@ -257,7 +257,7 @@ public class KilkariController extends BaseController {
             throw new NotFoundException(String.format(NOT_FOUND, "subscriptionPack"));
         }
 
-        subscriptionService.createSubscription(subscriptionRequest.getCallingNumber(), language,
+        subscriptionService.createSubscription(subscriptionRequest.getCallingNumber(), language, circle,
                                                subscriptionPack, SubscriptionOrigin.IVR);
     }
 

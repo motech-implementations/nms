@@ -1,6 +1,7 @@
 package org.motechproject.nms.testing.it.kilkari;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -13,7 +14,6 @@ import java.util.Set;
 import java.util.UUID;
 
 import javax.inject.Inject;
-import javax.validation.ConstraintViolationException;
 
 import org.joda.time.DateTime;
 import org.junit.Before;
@@ -47,6 +47,7 @@ import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.testing.it.utils.RegionHelper;
 import org.motechproject.nms.testing.it.utils.SubscriptionHelper;
 import org.motechproject.nms.testing.service.TestingService;
@@ -66,33 +67,35 @@ import org.ops4j.pax.exam.spi.reactors.PerSuite;
 public class SubscriptionServiceBundleIT extends BasePaxIT {
 
     @Inject
-    private SubscriberService subscriberService;
+    SubscriberService subscriberService;
     @Inject
-    private SubscriptionService subscriptionService;
+    SubscriptionService subscriptionService;
     @Inject
-    private InboxService inboxService;
+    InboxService inboxService;
     @Inject
-    private SubscriberDataService subscriberDataService;
+    SubscriberDataService subscriberDataService;
     @Inject
-    private SubscriptionPackDataService subscriptionPackDataService;
+    SubscriptionPackDataService subscriptionPackDataService;
     @Inject
-    private SubscriptionPackMessageDataService subscriptionPackMessageDataService;
+    SubscriptionPackMessageDataService subscriptionPackMessageDataService;
     @Inject
-    private SubscriptionDataService subscriptionDataService;
+    SubscriptionDataService subscriptionDataService;
     @Inject
-    private LanguageDataService languageDataService;
+    LanguageDataService languageDataService;
     @Inject
-    private InboxCallDetailRecordDataService inboxCallDetailRecordDataService;
+    InboxCallDetailRecordDataService inboxCallDetailRecordDataService;
     @Inject
-    private InboxCallDataDataService inboxCallDataDataService;
+    InboxCallDataDataService inboxCallDataDataService;
     @Inject
-    private StateDataService stateDataService;
+    StateDataService stateDataService;
     @Inject
-    private DistrictDataService districtDataService;
+    DistrictDataService districtDataService;
     @Inject
-    private CircleDataService circleDataService;
+    DistrictService districtService;
     @Inject
-    private TestingService testingService;
+    CircleDataService circleDataService;
+    @Inject
+    TestingService testingService;
 
 
     private RegionHelper rh;
@@ -103,12 +106,11 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     public void setupTestData() {
         testingService.clearDatabase();
 
-        rh = new RegionHelper(languageDataService, circleDataService, stateDataService,
-                districtDataService);
+        rh = new RegionHelper(languageDataService, circleDataService, stateDataService, districtDataService,
+                districtService);
 
-        sh = new SubscriptionHelper(subscriptionService,
-                subscriberDataService, subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService);
+        sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
+                languageDataService, circleDataService, stateDataService, districtDataService, districtService);
 
         Subscriber subscriber1 = subscriberDataService.create(new Subscriber(1000000000L));
         subscriptionService.createSubscription(subscriber1.getCallingNumber(), rh.hindiLanguage(),
@@ -786,15 +788,18 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     /*
      * To verify that number of Messages per week shouldn't get configured if invalid value is provided.
      */
-        @Test(expected=IllegalArgumentException.class)
+    @Test(expected=IllegalArgumentException.class)
     public void verifyFT180() {
             sh.childPack().setMessagesPerWeek(3);
     }
 
-
     /*
      * To verify LMP is changed successfully and new subscription created
-     * when subscription already exist for 72Weeks Pack having status as "Completed".
+     * when subscription already exist for pregnancyPack having status as "Completed".
+     * Now Added one more assert for updated LMP to cover NMS_FT_134.
+     * NMS_FT_134 description ::
+     * To check pregnancyPack subscription is successfully created when subscription 
+     * already exist for pregnancyPack with status as "Completed".
      */
     @Test
     public void verifyFT156() {
@@ -811,10 +816,12 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         subscriberService.update(mctsSubscriber);
 
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+        DateTime oldLMP = mctsSubscriber.getLastMenstrualPeriod();
         assertEquals(1, mctsSubscriber.getSubscriptions().size()); // Completed subscription should be there
         assertEquals(0, mctsSubscriber.getActiveSubscriptions().size()); // No active subscription
         
-        mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(100));
+        DateTime newLMP = DateTime.now().minusDays(100);
+        mctsSubscriber.setLastMenstrualPeriod(newLMP);
         subscriberService.update(mctsSubscriber);
         
         // attempt to create subscription to the same pack -- should succeed
@@ -822,6 +829,8 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
                 SubscriptionOrigin.MCTS_IMPORT);
 
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+        assertFalse(mctsSubscriber.getLastMenstrualPeriod().equals(oldLMP));
+        assertEquals(mctsSubscriber.getLastMenstrualPeriod(), newLMP);
         assertEquals(2, mctsSubscriber.getSubscriptions().size());
         assertEquals(1, mctsSubscriber.getActiveSubscriptions().size()); // One active subscription
     }
@@ -829,7 +838,11 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
     /*
      * To verify DOB is changed successfully and new subscription created
-     * when subscription already exist for 48Weeks Pack having status as "Deactivated".
+     * when subscription already exist for childPack having status as "Deactivated".
+     * Now Added one more assert for updated DOB to cover NMS_FT_132.
+     * NMS_FT_132 description ::
+     * To check subscription for childPack is successfully created when subscription  
+     * already exist for  childPack in state "Deactivated"
      */
     @Test
     public void verifyFT159() {
@@ -843,12 +856,20 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         Subscription childSubscription = mctsSubscriber.getActiveSubscriptions().iterator().next();
         childSubscription.setStatus(SubscriptionStatus.DEACTIVATED);
         subscriptionDataService.update(childSubscription);
+        
+        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+        DateTime oldDob = mctsSubscriber.getDateOfBirth();
+        DateTime newDob = DateTime.now().minusDays(100);
+        mctsSubscriber.setDateOfBirth(newDob);
+        subscriberService.update(mctsSubscriber);
 
         // attempt to create subscription to the same pack -- should succeed
         subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.childPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
 
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+        assertFalse(mctsSubscriber.getDateOfBirth().equals(oldDob));
+        assertEquals(mctsSubscriber.getDateOfBirth(), newDob);
         assertEquals(2, mctsSubscriber.getSubscriptions().size());
         assertEquals(1, mctsSubscriber.getActiveSubscriptions().size());
     }
@@ -856,7 +877,11 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
     /*
      * To verify DOB is changed successfully and new subscription created
-     * when subscription already exist for 48Weeks Pack having status as "Completed".
+     * when subscription already exist for childPack having status as "Completed".
+     * Now Added one more assert for updated DOB to cover NMS_FT_133.
+     * NMS_FT_133 description ::
+     * To check childPack subscription is successfully created when subscription 
+     * already exist for childPack with status as "Completed".
      */
     @Test
     public void verifyFT160() {
@@ -874,9 +899,11 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         subscriberService.update(mctsSubscriber);
         
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+        DateTime oldDob = mctsSubscriber.getDateOfBirth(); 
         assertEquals(1, mctsSubscriber.getSubscriptions().size());
         assertEquals(0, mctsSubscriber.getActiveSubscriptions().size()); // No active subscription
 
+        DateTime newDob = DateTime.now().minusDays(100);
         mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(100));
         subscriberService.update(mctsSubscriber);
         // attempt to create subscription to the same pack -- should succeed
@@ -884,6 +911,8 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
                 SubscriptionOrigin.MCTS_IMPORT);
 
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+        assertFalse(mctsSubscriber.getDateOfBirth().equals(oldDob));
+        assertEquals(mctsSubscriber.getDateOfBirth(), newDob);
         assertEquals(2, mctsSubscriber.getSubscriptions().size());		 
     }
     
@@ -893,15 +922,39 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 	 * 
 	 * https://applab.atlassian.net/browse/NMS-202
 	 */
-    @Ignore
     @Test
     public void verifyFT182() {
     	
     	//attempt to create subscriber and subscription having calling number more than 10 digit
-    	subscriptionService.createSubscription(111111111111L, rh.hindiLanguage(),
+    	subscriptionService.createSubscription(991111111122L, rh.hindiLanguage(),
 				sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
     	
-        Subscriber subscriber = subscriberDataService.findByCallingNumber(111111111111L);
-        assertNull(subscriber);
+        Subscriber subscriber1 = subscriberDataService.findByCallingNumber(991111111122L);
+        assertNull(subscriber1);
+
+        Subscriber subscriber2 = subscriberDataService.findByCallingNumber(1111111122L);
+        assertNotNull(subscriber2);
     } 
+    
+    /*
+     * To verify that user's subscription should create in pending state
+     *
+     * JIRA issue: https://applab.atlassian.net/browse/NMS-201
+     */
+    @Ignore
+    @Test
+    public void verifyFT153() {
+
+        Subscriber subscriber = new Subscriber(9999911222L);
+        subscriberService.create(subscriber);
+        
+        subscriptionService.createSubscription(subscriber.getCallingNumber(), rh.hindiLanguage(), sh.childPack(),
+                SubscriptionOrigin.IVR);
+        
+        subscriber = subscriberDataService.findByCallingNumber(9999911222L);
+        Subscription subscription = subscriber.getSubscriptions().iterator().next();
+        assertEquals(1, subscriber.getSubscriptions().size());
+        assertEquals(SubscriptionStatus.PENDING_ACTIVATION, subscription.getStatus());
+    }
+
 }

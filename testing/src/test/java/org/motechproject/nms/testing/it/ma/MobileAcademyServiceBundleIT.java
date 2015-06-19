@@ -43,23 +43,22 @@ import static org.junit.Assert.assertTrue;
 public class MobileAcademyServiceBundleIT extends BasePaxIT {
 
     @Inject
-    private MobileAcademyService maService;
+    MobileAcademyService maService;
 
     @Inject
-    private BookmarkDataService bookmarkDataService;
+    BookmarkDataService bookmarkDataService;
 
     @Inject
-    private CompletionRecordDataService completionRecordDataService;
+    CompletionRecordDataService completionRecordDataService;
 
     @Inject
-    private NmsCourseDataService nmsCourseDataService;
+    NmsCourseDataService nmsCourseDataService;
 
     @Inject
-    private CourseNotificationService courseNotificationService;
+    CourseNotificationService courseNotificationService;
 
-    private static String validCourseName = "MobileAcademyCourse";
+    private static final String VALID_COURSE_NAME = "MobileAcademyCourse";
 
-    private static String invalidCourseName = "SampleCourse";
 
     @Before
     public void setupMobileAcademy() {
@@ -70,25 +69,25 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     @Test
     public void testSetCourseNoUpdate() {
 
-        NmsCourse originalCourse = nmsCourseDataService.getCourseByName(validCourseName);
+        NmsCourse originalCourse = nmsCourseDataService.getCourseByName(VALID_COURSE_NAME);
         MaCourse copyCourse = new MaCourse(originalCourse.getName(), originalCourse.getModificationDate().getMillis(), originalCourse.getContent());
         maService.setCourse(copyCourse);
 
         // verify that modified time (version) didn't change
-        assertEquals(nmsCourseDataService.getCourseByName(validCourseName).getModificationDate(),
+        assertEquals(nmsCourseDataService.getCourseByName(VALID_COURSE_NAME).getModificationDate(),
                 originalCourse.getModificationDate());
     }
 
     @Test
     public void testSetCourseUpdate() {
 
-        NmsCourse originalCourse = nmsCourseDataService.getCourseByName(validCourseName);
+        NmsCourse originalCourse = nmsCourseDataService.getCourseByName(VALID_COURSE_NAME);
         String courseContent = originalCourse.getContent();
         MaCourse copyCourse = new MaCourse(originalCourse.getName(), originalCourse.getModificationDate().getMillis(), originalCourse.getContent() + "foo");
         maService.setCourse(copyCourse);
 
         // verify that modified time (version) did change
-        assertNotEquals(nmsCourseDataService.getCourseByName(validCourseName).getModificationDate(),
+        assertNotEquals(nmsCourseDataService.getCourseByName(VALID_COURSE_NAME).getModificationDate(),
                 originalCourse.getModificationDate());
         originalCourse.setContent(courseContent);
         nmsCourseDataService.update(originalCourse);
@@ -96,9 +95,9 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
 
     @Test
     public void testNoCoursePresent() {
-        NmsCourse originalCourse = nmsCourseDataService.getCourseByName(validCourseName);
+        NmsCourse originalCourse = nmsCourseDataService.getCourseByName(VALID_COURSE_NAME);
         nmsCourseDataService.delete(originalCourse);
-        assertNull(nmsCourseDataService.getCourseByName(validCourseName));
+        assertNull(nmsCourseDataService.getCourseByName(VALID_COURSE_NAME));
 
         try {
             maService.getCourse();

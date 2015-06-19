@@ -31,22 +31,22 @@ import javax.jdo.JDODataStoreException;
 public class NationalDefaultLanguageLocationBundleIT extends BasePaxIT{
 
     @Inject
-    private TestingService testingService;
+    TestingService testingService;
 
     @Inject
-    private NationalDefaultLanguageDataService nationalDefaultLanguageLocationDataService;
+    NationalDefaultLanguageDataService nationalDefaultLanguageLocationDataService;
 
     @Inject
-    private StateDataService stateDataService;
+    StateDataService stateDataService;
 
     @Inject
-    private DistrictDataService districtDataService;
+    DistrictDataService districtDataService;
 
     @Inject
-    private CircleDataService circleDataService;
+    CircleDataService circleDataService;
 
     @Inject
-    private LanguageDataService languageDataService;
+    LanguageDataService languageDataService;
 
     private void cleanAllData() {
         testingService.clearDatabase();

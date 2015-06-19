@@ -4,7 +4,6 @@ import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.motechproject.alerts.contract.AlertService;
@@ -17,11 +16,11 @@ import org.motechproject.nms.imi.service.SmsNotificationService;
 import org.motechproject.nms.mobileacademy.domain.CompletionRecord;
 import org.motechproject.nms.mobileacademy.domain.NmsCourse;
 import org.motechproject.nms.mobileacademy.dto.MaBookmark;
-import org.motechproject.nms.mobileacademy.repository.NmsCourseDataService;
-import org.motechproject.nms.mobileacademy.service.impl.CourseNotificationServiceImpl;
 import org.motechproject.nms.mobileacademy.exception.CourseNotCompletedException;
 import org.motechproject.nms.mobileacademy.repository.CompletionRecordDataService;
+import org.motechproject.nms.mobileacademy.repository.NmsCourseDataService;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
+import org.motechproject.nms.mobileacademy.service.impl.CourseNotificationServiceImpl;
 import org.motechproject.nms.mobileacademy.service.impl.MobileAcademyServiceImpl;
 import org.motechproject.server.config.SettingsFacade;
 
@@ -32,16 +31,17 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
-import static org.junit.Assert.*;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -88,9 +88,10 @@ public class MobileAcademyServiceUnitTest {
         initMocks(this);
         nmsCourseDataService.deleteAll();
         when(settingsFacade.getRawConfig("nmsCourse.json")).thenReturn(getFileInputStream("nmsCourseTest.json"));
-        mobileAcademyService = new MobileAcademyServiceImpl(
-                bookmarkService, nmsCourseDataService, completionRecordDataService, eventRelay, settingsFacade, alertService);
-        courseNotificationService = new CourseNotificationServiceImpl(completionRecordDataService, smsNotificationService);
+        mobileAcademyService = new MobileAcademyServiceImpl(bookmarkService, nmsCourseDataService,
+                completionRecordDataService, eventRelay, settingsFacade, alertService);
+        courseNotificationService = new CourseNotificationServiceImpl(completionRecordDataService,
+                smsNotificationService);
         validator = Validation.buildDefaultValidatorFactory().getValidator();
     }
 

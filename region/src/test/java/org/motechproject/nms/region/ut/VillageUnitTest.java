@@ -132,7 +132,7 @@ public class VillageUnitTest {
 
         assertEquals(0, constraintViolations.size());
 
-        village.setVcode(null);
+        village.setVcode(0);
         village.setSvid(1L);
 
         constraintViolations = validator.validate(village);

@@ -258,24 +258,28 @@ public class TargetFileServiceImpl implements TargetFileService {
 
                 Subscriber subscriber = subscription.getSubscriber();
 
-                //todo: don't understand why subscriber.getLanguage() doesn't work here...
-                // it's not working because of https://applab.atlassian.net/browse/MOTECH-1678
-                Language language;
-                language = (Language) subscriberDataService.getDetachedField(subscriber,
-                        "language");
-                writer.write(language.getCode());
-
-                Circle circle;
-                circle = (Circle) subscriberDataService.getDetachedField(subscriber, "circle");
-
                 RequestId requestId = new RequestId(subscription.getSubscriptionId(),
                         TIME_FORMATTER.print(timestamp));
                 SubscriptionPackMessage msg = subscription.nextScheduledMessage(timestamp);
-                //todo: how do we choose a priority?
-                writeSubscriptionRow(requestId.toString(), imiServiceId,
-                        subscriber.getCallingNumber().toString(), NORMAL_PRIORITY, callFlowUrl,
-                        msg.getMessageFileName(), msg.getWeekId(), language.getCode(), circle.getName(),
-                        subscription.getOrigin().getCode(), writer);
+
+                //todo: don't understand why subscriber.getLanguage() doesn't work here...
+                // it's not working because of https://applab.atlassian.net/browse/MOTECH-1678
+                Language language = (Language) subscriberDataService.getDetachedField(subscriber, "language");
+                Circle circle = (Circle) subscriberDataService.getDetachedField(subscriber, "circle");
+
+                writeSubscriptionRow(
+                        requestId.toString(),
+                        imiServiceId,
+                        subscriber.getCallingNumber().toString(),
+                        NORMAL_PRIORITY, //todo: how do we choose a priority?
+                        callFlowUrl,
+                        msg.getMessageFileName(),
+                        msg.getWeekId(),
+                        // we are happy with empty language and circle since they are optional
+                        language == null ? "" : language.getCode(),
+                        circle == null ? "" : circle.getName(),
+                        subscription.getOrigin().getCode(),
+                        writer);
             }
 
             page++;

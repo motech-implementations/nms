@@ -12,18 +12,16 @@ import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
-import org.motechproject.nms.kilkari.repository.InboxCallDataDataService;
-import org.motechproject.nms.kilkari.repository.InboxCallDetailRecordDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
-import org.motechproject.nms.kilkari.repository.SubscriptionPackMessageDataService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.testing.it.utils.SubscriptionHelper;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
@@ -44,32 +42,29 @@ import static org.junit.Assert.assertNotNull;
 @ExamReactorStrategy(PerSuite.class)
 @ExamFactory(MotechNativeTestContainerFactory.class)
 public class SubscriberServiceBundleIT extends BasePaxIT {
+
     @Inject
-    private SubscriberService subscriberService;
+    SubscriberService subscriberService;
     @Inject
-    private SubscriptionService subscriptionService;
+    SubscriptionService subscriptionService;
     @Inject
-    private SubscriberDataService subscriberDataService;
+    SubscriberDataService subscriberDataService;
     @Inject
-    private SubscriptionPackDataService subscriptionPackDataService;
+    SubscriptionPackDataService subscriptionPackDataService;
     @Inject
-    private SubscriptionPackMessageDataService subscriptionPackMessageDataService;
+    SubscriptionDataService subscriptionDataService;
     @Inject
-    private SubscriptionDataService subscriptionDataService;
+    LanguageDataService languageDataService;
     @Inject
-    private LanguageDataService languageDataService;
+    StateDataService stateDataService;
     @Inject
-    private InboxCallDetailRecordDataService inboxCallDetailRecordDataService;
+    DistrictDataService districtDataService;
     @Inject
-    private InboxCallDataDataService inboxCallDataDataService;
+    DistrictService districtService;
     @Inject
-    private StateDataService stateDataService;
+    CircleDataService circleDataService;
     @Inject
-    private DistrictDataService districtDataService;
-    @Inject
-    private CircleDataService circleDataService;
-    @Inject
-    private TestingService testingService;
+    TestingService testingService;
 
 
     private SubscriptionHelper sh;
@@ -77,9 +72,8 @@ public class SubscriberServiceBundleIT extends BasePaxIT {
 
     @Before
     public void setupTestData() {
-        sh = new SubscriptionHelper(subscriptionService,
-                subscriberDataService, subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService);
+        sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
+                languageDataService, circleDataService, stateDataService, districtDataService, districtService);
 
         clearDatabase();
 
