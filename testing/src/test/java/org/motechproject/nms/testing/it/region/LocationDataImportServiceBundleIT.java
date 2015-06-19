@@ -49,6 +49,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createDistrict;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthBlock;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthFacility;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthFacilityType;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createTaluka;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerSuite.class)
@@ -122,44 +127,19 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
 
         exampleState = stateDataService.create(new State("EXAMPLE STATE", 1L));
 
-        exampleDistrict = new District();
-        exampleDistrict.setState(exampleState);
-        exampleDistrict.setCode(2l);
-        exampleDistrict.setName("EXAMPLE DISTRICT");
-        exampleDistrict.setRegionalName("REGIONAL NAME");
-
+        exampleDistrict = createDistrict(exampleState, 2L, "EXAMPLE DISTRICT");
         districtDataService.create(exampleDistrict);
 
-        exampleTaluka = new Taluka();
-        exampleTaluka.setDistrict(exampleDistrict);
-        exampleTaluka.setCode("00003");
-        exampleTaluka.setName("EXAMPLE TALUKA");
-        exampleTaluka.setRegionalName("REGIONAL NAME");
-        exampleTaluka.setIdentity(1);
-
+        exampleTaluka = createTaluka(exampleDistrict, "00003", "EXAMPLE TALUKA", 1);
         talukaDataService.create(exampleTaluka);
 
-        HealthFacilityType facilityType = new HealthFacilityType();
-        facilityType.setName("EXAMPLE FACILITY TYPE");
-        facilityType.setCode(5678L);
+        HealthFacilityType facilityType = createHealthFacilityType("EXAMPLE FACILITY TYPE", 5678L);
         exampleFacilityType = healthFacilityTypeDataService.create(facilityType);
 
-        HealthBlock healthBlock = new HealthBlock();
-        healthBlock.setTaluka(exampleTaluka);
-        healthBlock.setCode(4L);
-        healthBlock.setName("EXAMPLE HEALTH BLOCK");
-        healthBlock.setRegionalName("REGIONAL NAME");
-        healthBlock.setHq("hq");
-
+        HealthBlock healthBlock = createHealthBlock(exampleTaluka, 4L, "EXAMPLE HEALTH BLOCK", "hq");
         healthBlockDataService.create(healthBlock);
 
-        HealthFacility healthFacility = new HealthFacility();
-        healthFacility.setHealthBlock(healthBlock);
-        healthFacility.setCode(5L);
-        healthFacility.setName("EXAMPLE HEALTH FACILITY");
-        healthFacility.setRegionalName("REGIONAL NAME");
-        healthFacility.setHealthFacilityType(exampleFacilityType);
-
+        HealthFacility healthFacility = createHealthFacility(healthBlock, 5L, "EXAMPLE HEALTH FACILITY", exampleFacilityType);
         healthFacilityDataService.create(healthFacility);
     }
 
