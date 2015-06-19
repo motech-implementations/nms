@@ -96,6 +96,8 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
 
     private String healthSubFacilityHeader = "SID,Name_G,Name_E,PID";
 
+    private String villageHeader = "VCode,Name_G,Name_E,TCode";
+
     @Before
     public void setUp() {
 
@@ -469,6 +471,65 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
         Reader reader = createDistrictDataReaderWithHeaders(
                 healthSubFacilityHeader, "abc,health sub facility regional name,health sub facility name,7");
         healthSubFacilityImportService.importData(reader);
+    }
+
+    /*
+    * To verify village location data is rejected when mandatory parameter name is missing.
+    */
+    @Test(expected = CsvImportDataException.class)
+    public void verifyFT255() throws Exception {
+        Reader reader = createDistrictDataReaderWithHeaders(
+                villageHeader, "3,census village regional name,,TALUKA");
+        censusVillageImportService.importData(reader);
+    }
+
+    /*
+    * To verify village location data is rejected when mandatory parameter code is missing.
+    */
+    @Test(expected = CsvImportDataException.class)
+    public void verifyFT256() throws Exception {
+        Reader reader = createDistrictDataReaderWithHeaders(
+                villageHeader, ",census village regional name,census village name,TALUKA");
+        censusVillageImportService.importData(reader);
+    }
+
+    /*
+    * To verify village location data is rejected when mandatory parameter taluka_id is missing.
+    */
+    @Test(expected = CsvImportDataException.class)
+    public void verifyFT257() throws Exception {
+        Reader reader = createDistrictDataReaderWithHeaders(
+                villageHeader, "3,census village regional name,census village name,");
+        censusVillageImportService.importData(reader);
+    }
+
+    /*
+    * To verify village location data is rejected when taluka_id is having invalid value.
+    */
+    @Test
+    public void verifyFT258() throws Exception {
+        boolean thrown = false;
+        String errorMessage = "CSV instance error [row: 2]: validation failed for instance of type " +
+                "org.motechproject.nms.region.domain.Village, violations: {'taluka': may not be null}";
+        Reader reader = createDistrictDataReaderWithHeaders(
+                villageHeader, "3,census village regional name,census village name,invalid taluka");
+        try {
+            censusVillageImportService.importData(reader);
+        } catch (CsvImportDataException e) {
+            thrown = true;
+            assertTrue(errorMessage.equals(e.getMessage()));
+        }
+        assertTrue(thrown);
+    }
+
+    /*
+    * To verify village location data is rejected when code is having invalid value.
+    */
+    @Test(expected = CsvImportDataException.class)
+    public void verifyFT259() throws Exception {
+        Reader reader = createDistrictDataReaderWithHeaders(
+                villageHeader, "abc,census village regional name,census village name,TALUKA");
+        censusVillageImportService.importData(reader);
     }
 
     private Reader createDistrictDataReaderWithHeaders(String header, String... lines) {
