@@ -4,6 +4,7 @@ package org.motechproject.nms.testing.it.kilkari;
 import org.joda.time.DateTime;
 import org.joda.time.Days;
 import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -27,6 +28,7 @@ import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.testing.it.utils.SubscriptionHelper;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
@@ -37,23 +39,22 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
-import org.joda.time.format.DateTimeFormatter;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.Arrays;
 import java.util.Set;
 
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import static org.motechproject.nms.testing.it.utils.RegionHelper.createDistrict;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthBlock;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthFacility;
 import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthFacilityType;
 import static org.motechproject.nms.testing.it.utils.RegionHelper.createState;
 import static org.motechproject.nms.testing.it.utils.RegionHelper.createTaluka;
-import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthBlock;
-import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthFacility;
 import static org.motechproject.nms.testing.it.utils.RegionHelper.createVillage;
 
 
@@ -63,34 +64,36 @@ import static org.motechproject.nms.testing.it.utils.RegionHelper.createVillage;
 public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
     @Inject
-    private TestingService testingService;
+    TestingService testingService;
     @Inject
-    private LanguageDataService languageDataService;
+    LanguageDataService languageDataService;
     @Inject
-    private StateDataService stateDataService;
+    StateDataService stateDataService;
     @Inject
-    private DistrictDataService districtDataService;
+    DistrictDataService districtDataService;
     @Inject
-    private CircleDataService circleDataService;
+    DistrictService districtService;
     @Inject
-    private SubscriberDataService subscriberDataService;
+    CircleDataService circleDataService;
     @Inject
-    private SubscriptionService subscriptionService;
+    SubscriberDataService subscriberDataService;
     @Inject
-    private SubscriptionPackDataService subscriptionPackDataService;
+    SubscriptionService subscriptionService;
     @Inject
-    private MctsBeneficiaryImportService mctsBeneficiaryImportService;
+    SubscriptionPackDataService subscriptionPackDataService;
+    @Inject
+    MctsBeneficiaryImportService mctsBeneficiaryImportService;
 
     @Before
     public void setUp() {
         testingService.clearDatabase();
         createLocationData();
 
-        SubscriptionHelper subscriptionHelper = new SubscriptionHelper(subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService);
-        subscriptionHelper.pregnancyPack();
-        subscriptionHelper.childPack();
+        SubscriptionHelper sh = new SubscriptionHelper(subscriptionService, subscriberDataService,
+                subscriptionPackDataService, languageDataService, circleDataService, stateDataService,
+                districtDataService, districtService);
+        sh.pregnancyPack();
+        sh.childPack();
     }
 
     private void createLocationData() {
@@ -132,17 +135,17 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         HealthFacility healthFacility114 = createHealthFacility(healthBlock153, 114L, "CHC Tileibani", facilityType114);
         healthBlock153.getHealthFacilities().add(healthFacility114);
 
-        Village village10004693 = createVillage(taluka24, 10004693L, null, "Khairdihi");
-        Village village10004691 = createVillage(taluka24, 10004691L, null, "Gambhariguda");
-        Village village1509 = createVillage(taluka24, null, 1509L, "Mundrajore");
-        Village village1505 = createVillage(taluka24, null, 1505L, "Kulemura");
-        Village village10004690 = createVillage(taluka24, 10004690L, null, "Ampada");
-        Village village10004697 = createVillage(taluka24, 10004697L, null, "Saletikra");
+        Village village10004693 = createVillage(taluka24, 10004693L, 0, "Khairdihi");
+        Village village10004691 = createVillage(taluka24, 10004691L, 0, "Gambhariguda");
+        Village village1509 = createVillage(taluka24, 0, 1509L, "Mundrajore");
+        Village village1505 = createVillage(taluka24, 0, 1505L, "Kulemura");
+        Village village10004690 = createVillage(taluka24, 10004690L, 0, "Ampada");
+        Village village10004697 = createVillage(taluka24, 10004697L, 0, "Saletikra");
 
         taluka24.getVillages().addAll(Arrays.asList(village10004693, village10004691, village1509, village1505,
                 village10004690, village10004697));
 
-        Village village3089 = createVillage(taluka46, null, 3089L, "Podapara");
+        Village village3089 = createVillage(taluka46, 0, 3089L, "Podapara");
         taluka46.getVillages().add(village3089);
 
         stateDataService.create(state21);
@@ -262,7 +265,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         mctsBeneficiaryImportService.importMotherData(read("csv/mother.txt"));
 
         State expectedState = stateDataService.findByCode(21L);
-        District expectedDistrict = districtDataService.findByCode(3L);
+        District expectedDistrict = districtService.findByStateAndCode(expectedState, 3L);
 
         Subscriber subscriber1 = subscriberDataService.findByCallingNumber(9439986187L);
         assertMother(subscriber1, "210302604211400029", getDateTime("22/11/2014"), "Shanti Ekka", expectedState,
@@ -281,8 +284,8 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         mctsBeneficiaryImportService.importChildData(read("csv/child.txt"));
 
         State expectedState = stateDataService.findByCode(21L);
-        District expectedDistrict2 = districtDataService.findByCode(2L);
-        District expectedDistrict4 = districtDataService.findByCode(4L);
+        District expectedDistrict2 = districtService.findByStateAndCode(expectedState, 2L);
+        District expectedDistrict4 = districtService.findByStateAndCode(expectedState, 4L);
 
         Subscriber subscriber1 = subscriberDataService.findByCallingNumber(9439998253L);
         assertChild(subscriber1, "210404600521400116", getDateTime("2/12/2014"), "Baby1 of PANI HEMRAM", expectedState,

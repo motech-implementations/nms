@@ -5,6 +5,7 @@ import org.motechproject.mds.annotations.Field;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.HealthBlock;
 import org.motechproject.nms.region.domain.HealthFacility;
+import org.motechproject.nms.region.domain.HealthSubFacility;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.domain.Village;
@@ -41,6 +42,9 @@ public abstract class MctsBeneficiary {
 
     @Field
     private HealthFacility primaryHealthCenter;
+
+    @Field
+    private HealthSubFacility healthSubFacility;
 
     @Field
     private Village village;
@@ -111,6 +115,14 @@ public abstract class MctsBeneficiary {
 
     public void setPrimaryHealthCenter(HealthFacility primaryHealthCenter) {
         this.primaryHealthCenter = primaryHealthCenter;
+    }
+
+    public HealthSubFacility getHealthSubFacility() {
+        return healthSubFacility;
+    }
+
+    public void setHealthSubFacility(HealthSubFacility healthSubFacility) {
+        this.healthSubFacility = healthSubFacility;
     }
 
     public Village getVillage() {

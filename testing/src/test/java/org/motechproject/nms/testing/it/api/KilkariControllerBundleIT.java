@@ -47,6 +47,7 @@ import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.testing.it.api.utils.HttpDeleteWithBody;
 import org.motechproject.nms.testing.it.utils.RegionHelper;
 import org.motechproject.nms.testing.it.utils.SubscriptionHelper;
@@ -73,6 +74,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+
 /**
  * Verify that Kilkari API is functional.
  */
@@ -84,39 +86,41 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     private static final String ADMIN_PASSWORD = "motech";
 
     @Inject
-    private SubscriberService subscriberService;
+    SubscriberService subscriberService;
     @Inject
-    private SubscriptionService subscriptionService;
+    SubscriptionService subscriptionService;
     @Inject
-    private SubscriberDataService subscriberDataService;
+    SubscriberDataService subscriberDataService;
     @Inject
-    private SubscriptionPackDataService subscriptionPackDataService;
+    SubscriptionPackDataService subscriptionPackDataService;
     @Inject
-    private SubscriptionPackMessageDataService subscriptionPackMessageDataService;
+    SubscriptionPackMessageDataService subscriptionPackMessageDataService;
     @Inject
-    private SubscriptionDataService subscriptionDataService;
+    SubscriptionDataService subscriptionDataService;
     @Inject
-    private FrontLineWorkerDataService frontLineWorkerDataService;
+    FrontLineWorkerDataService frontLineWorkerDataService;
     @Inject
-    private ServiceUsageDataService serviceUsageDataService;
+    ServiceUsageDataService serviceUsageDataService;
     @Inject
-    private ServiceUsageCapDataService serviceUsageCapDataService;
+    ServiceUsageCapDataService serviceUsageCapDataService;
     @Inject
-    private LanguageDataService languageDataService;
+    LanguageDataService languageDataService;
     @Inject
-    private CircleDataService circleDataService;
+    CircleDataService circleDataService;
     @Inject
-    private StateDataService stateDataService;
+    StateDataService stateDataService;
     @Inject
-    private DistrictDataService districtDataService;
+    DistrictDataService districtDataService;
     @Inject
-    private DeployedServiceDataService deployedServiceDataService;
+    DistrictService districtService;
     @Inject
-    private TestingService testingService;
+    DeployedServiceDataService deployedServiceDataService;
     @Inject
-    private InboxCallDetailRecordDataService inboxCallDetailsDataService;
+    TestingService testingService;
     @Inject
-    private InboxCallDataDataService inboxCallDataDataService;
+    InboxCallDetailRecordDataService inboxCallDetailsDataService;
+    @Inject
+    InboxCallDataDataService inboxCallDataDataService;
 
 
     private RegionHelper rh;
@@ -127,10 +131,11 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     public void setupTestData() {
         testingService.clearDatabase();
 
-        rh = new RegionHelper(languageDataService, circleDataService, stateDataService, districtDataService);
+        rh = new RegionHelper(languageDataService, circleDataService, stateDataService, districtDataService,
+                districtService);
 
         sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
-                languageDataService, circleDataService, stateDataService, districtDataService);
+                languageDataService, circleDataService, stateDataService, districtDataService, districtService);
 
         // subscriber1 subscribed to child pack only
         Subscriber subscriber1 = subscriberDataService.create(new Subscriber(1000000000L));
@@ -1463,10 +1468,11 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         // setup data to remove 2 messages per week configuration for Pregnancy pack
         testingService.clearDatabase();
 
-        rh = new RegionHelper(languageDataService, circleDataService, stateDataService, districtDataService);
+        rh = new RegionHelper(languageDataService, circleDataService, stateDataService, districtDataService,
+                districtService);
 
         sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
-                languageDataService, circleDataService, stateDataService, districtDataService);
+                languageDataService, circleDataService, stateDataService, districtDataService, districtService);
 
         deployedServiceDataService.create(new DeployedService(rh.delhiState(), Service.KILKARI));
 
@@ -1510,10 +1516,11 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         // setup data to remove 2 messages per week configuration for Pregnancy pack
         testingService.clearDatabase();
 
-        rh = new RegionHelper(languageDataService, circleDataService, stateDataService, districtDataService);
+        rh = new RegionHelper(languageDataService, circleDataService, stateDataService, districtDataService,
+                districtService);
 
         sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
-                languageDataService, circleDataService, stateDataService, districtDataService);
+                languageDataService, circleDataService, stateDataService, districtDataService, districtService);
 
         deployedServiceDataService.create(new DeployedService(rh.delhiState(), Service.KILKARI));
 
@@ -2860,17 +2867,14 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     @Test
     public void verifyFT66() throws IOException, InterruptedException {
         // operator missing
-        HttpPost httpPost = createSubscriptionHttpPost("1234567890", null,
-                "AP", "123456789012545", "10", "childPack");
+        HttpPost httpPost = createSubscriptionHttpPost("1234567890", null, "AP", "123456789012545", "10",
+                "childPack");
 
         String expectedJsonResponse = createFailureResponseJson("<operator: Not Present>");
 
-        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
-                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
-                .getStatusCode());
-        assertEquals(expectedJsonResponse,
-                EntityUtils.toString(response.getEntity()));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
     /**
@@ -3417,12 +3421,9 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 null)); // content
         String expectedJsonResponse = createFailureResponseJson("<operator: Not Present>");
 
-        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
-                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
-                .getStatusCode());
-        assertEquals(expectedJsonResponse,
-                EntityUtils.toString(response.getEntity()));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
     /**
