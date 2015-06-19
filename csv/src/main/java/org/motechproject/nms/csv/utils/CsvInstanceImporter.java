@@ -107,7 +107,7 @@ public class CsvInstanceImporter<T> implements Closeable {
 
     private void setInstanceProperty(T instance, String propertyName, Object propertyValue) {
         try {
-            if (propertyValue != null) {
+            if (propertyValue != null && propertyName != null) {
                 BeanUtils.setProperty(instance, propertyName, propertyValue);
             }
         } catch (IllegalAccessException | InvocationTargetException e) {

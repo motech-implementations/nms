@@ -1,28 +1,27 @@
 package org.motechproject.nms.region.service.impl;
 
-import org.motechproject.nms.csv.exception.CsvImportException;
-import org.motechproject.nms.csv.utils.GetInstanceByLong;
-import org.motechproject.nms.csv.utils.GetInstanceByString;
 import org.motechproject.nms.csv.utils.GetLong;
 import org.motechproject.nms.csv.utils.GetString;
-import org.motechproject.nms.region.domain.District;
-import org.motechproject.nms.region.domain.HealthBlock;
-import org.motechproject.nms.region.domain.HealthFacility;
+import org.motechproject.nms.csv.utils.Store;
 import org.motechproject.nms.region.domain.HealthSubFacility;
-import org.motechproject.nms.region.domain.State;
-import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.repository.HealthSubFacilityDataService;
+import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.service.DistrictService;
+import org.motechproject.nms.region.service.HealthBlockService;
 import org.motechproject.nms.region.service.HealthFacilityService;
 import org.motechproject.nms.region.service.HealthSubFacilityImportService;
+import org.motechproject.nms.region.service.TalukaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.supercsv.cellprocessor.ift.CellProcessor;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Service("healthSubFacilityImportService")
-public class HealthSubFacilityImportServiceImpl extends BaseLocationImportService<HealthSubFacility> implements HealthSubFacilityImportService {
+public class HealthSubFacilityImportServiceImpl extends BaseLocationImportService<HealthSubFacility>
+        implements HealthSubFacilityImportService {
 
     public static final String SID = "SID";
     public static final String REGIONAL_NAME = "Name_G";
@@ -36,56 +35,43 @@ public class HealthSubFacilityImportServiceImpl extends BaseLocationImportServic
     public static final String SID_FIELD = "code";
     public static final String REGIONAL_NAME_FIELD = "regionalName";
     public static final String NAME_FIELD = "name";
-    public static final String PID_FIELD = "healthFacilityCode";
+    public static final String PID_FIELD = "healthFacility";
 
+    private HealthBlockService healthBlockService;
+    private DistrictService districtService;
+    private StateDataService stateDataService;
+    private TalukaService talukaService;
     private HealthFacilityService healthFacilityService;
 
     @Autowired
-    public HealthSubFacilityImportServiceImpl(HealthSubFacilityDataService healthSubFacilityDataService,
-                                              HealthFacilityService healthFacilityService) {
+    public HealthSubFacilityImportServiceImpl(
+            HealthSubFacilityDataService healthSubFacilityDataService,
+            HealthFacilityService healthFacilityService,
+            HealthBlockService healthBlockService,
+            DistrictService districtService,
+            StateDataService stateDataService,
+            TalukaService talukaService) {
         super(HealthSubFacility.class, healthSubFacilityDataService);
         this.healthFacilityService = healthFacilityService;
-    }
-
-    @Override
-    public void addParent(HealthBlock healthBlock) {
-        addParent(PARENT_HEALTH_BLOCK, healthBlock);
+        this.healthBlockService = healthBlockService;
+        this.districtService = districtService;
+        this.stateDataService = stateDataService;
+        this.talukaService = talukaService;
     }
 
     @Override
     protected Map<String, CellProcessor> getProcessorMapping() {
-        Map<String, CellProcessor> mapping = new HashMap<>();
+        Map<String, CellProcessor> mapping = new LinkedHashMap<>();
+        final Store store = new Store();
+
         mapping.put(SID, new GetLong());
         mapping.put(REGIONAL_NAME, new GetString());
         mapping.put(NAME, new GetString());
-        mapping.put(PID, new GetLong());
-        mapping.put(STATE_ID, store.store("state", new GetInstanceByLong<State>() {
-            @Override
-            public State retrieve(Long value) {
-                return stateDataService.findByCode(value);
-            }
-        }));
-        mapping.put(DISTRICT_CODE, store.store("district", new GetInstanceByLong<District>() {
-            @Override
-            public District retrieve(Long value) {
-                State state = (State) store.get("state");
-                return districtService.findByStateAndCode(state, value);
-            }
-        }));
-        mapping.put(TALUKA_CODE, store.store("taluka", new GetInstanceByString<Taluka>() {
-            @Override
-            public Taluka retrieve(String value) {
-                District district = (District) store.get("district");
-                return talukaService.findByDistrictAndCode(district, value);
-            }
-        }));
-        mapping.put(BID, new GetInstanceByLong<HealthBlock>() {
-            @Override
-            public HealthBlock retrieve(Long value) {
-                Taluka taluka = (Taluka) store.get("taluka");
-                return healthBlockService.findByTalukaAndCode(taluka, value);
-            }
-        });
+        mapping.put(STATE_ID, store.store(STATE, mapState(stateDataService)));
+        mapping.put(DISTRICT_CODE, store.store(DISTRICT, mapDistrict(store, districtService)));
+        mapping.put(TALUKA_CODE, store.store(TALUKA, mapTaluka(store, talukaService)));
+        mapping.put(BID, store.store(HEALTH_BLOCK, mapHealthBlock(store, healthBlockService)));
+        mapping.put(PID, mapHealthFacility(store, healthFacilityService));
 
         return mapping;
     }
@@ -97,22 +83,10 @@ public class HealthSubFacilityImportServiceImpl extends BaseLocationImportServic
         mapping.put(REGIONAL_NAME, REGIONAL_NAME_FIELD);
         mapping.put(NAME, NAME_FIELD);
         mapping.put(PID, PID_FIELD);
+        mapping.put(STATE_ID, null);
+        mapping.put(DISTRICT_CODE, null);
+        mapping.put(TALUKA_CODE, null);
+        mapping.put(BID, null);
         return mapping;
-    }
-
-    @Override
-    protected void postReadStep(HealthSubFacility healthSubFacility) {
-        HealthBlock healthBlock = (HealthBlock) getParent(PARENT_HEALTH_BLOCK);
-        if (healthBlock == null) {
-            throw new CsvImportException("No healthBlock provided!");
-        }
-
-        HealthFacility healthFacility = healthFacilityService.findByHealthBlockAndCode(healthBlock,
-                healthSubFacility.getHealthFacilityCode());
-        if (healthFacility == null) {
-            throw new CsvImportException(String.format("No such healthFacility '%d' for healthBlock '%s'",
-                    healthSubFacility.getHealthFacilityCode(), healthBlock.getName()));
-        }
-        healthSubFacility.setHealthFacility(healthFacility);
     }
 }

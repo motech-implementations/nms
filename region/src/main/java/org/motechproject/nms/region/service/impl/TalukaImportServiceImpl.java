@@ -1,11 +1,8 @@
 package org.motechproject.nms.region.service.impl;
 
-import org.motechproject.nms.csv.utils.GetInstanceByLong;
 import org.motechproject.nms.csv.utils.GetInteger;
 import org.motechproject.nms.csv.utils.GetString;
 import org.motechproject.nms.csv.utils.Store;
-import org.motechproject.nms.region.domain.District;
-import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.repository.TalukaDataService;
@@ -56,19 +53,8 @@ public class TalukaImportServiceImpl extends BaseLocationImportService<Taluka>
         mapping.put(IDENTITY, new GetInteger());
         mapping.put(REGIONAL_NAME, new GetString());
         mapping.put(NAME, new GetString());
-        mapping.put(STATE_ID, store.store("state", new GetInstanceByLong<State>() {
-            @Override
-            public State retrieve(Long value) {
-                return stateDataService.findByCode(value);
-            }
-        }));
-        mapping.put(DISTRICT_CODE, new GetInstanceByLong<District>() {
-            @Override
-            public District retrieve(Long value) {
-                State state = (State) store.get("state");
-                return districtService.findByStateAndCode(state, value);
-            }
-        });
+        mapping.put(STATE_ID, store.store(STATE, mapState(stateDataService)));
+        mapping.put(DISTRICT_CODE, mapDistrict(store, districtService));
 
         return mapping;
     }
@@ -81,6 +67,7 @@ public class TalukaImportServiceImpl extends BaseLocationImportService<Taluka>
         mapping.put(REGIONAL_NAME, REGIONAL_NAME_FIELD);
         mapping.put(DISTRICT_CODE, DISTRICT_FIELD);
         mapping.put(NAME, NAME_FIELD);
+        mapping.put(STATE_ID, STATE_ID);
         return mapping;
     }
 }
