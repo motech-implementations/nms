@@ -1,20 +1,5 @@
 package org.motechproject.nms.testing.it.api;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.regex.Pattern;
-
-import javax.inject.Inject;
-
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -36,8 +21,6 @@ import org.motechproject.nms.flw.domain.ServiceUsage;
 import org.motechproject.nms.flw.domain.ServiceUsageCap;
 import org.motechproject.nms.flw.domain.WhitelistEntry;
 import org.motechproject.nms.flw.domain.WhitelistState;
-import org.motechproject.nms.flw.repository.CallDetailRecordDataService;
-import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.flw.repository.ServiceUsageCapDataService;
 import org.motechproject.nms.flw.repository.ServiceUsageDataService;
 import org.motechproject.nms.flw.repository.WhitelistEntryDataService;
@@ -48,7 +31,6 @@ import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
-import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.domain.DeployedService;
@@ -64,7 +46,7 @@ import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.NationalDefaultLanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
-import org.motechproject.nms.region.service.LanguageService;
+import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.testing.it.utils.RegionHelper;
 import org.motechproject.nms.testing.it.utils.SubscriptionHelper;
 import org.motechproject.nms.testing.service.TestingService;
@@ -79,6 +61,20 @@ import org.ops4j.pax.exam.spi.reactors.PerSuite;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionCallbackWithoutResult;
 
+import javax.inject.Inject;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 
 /**
  * Verify that User API is present and functional.
@@ -91,61 +87,37 @@ public class UserControllerBundleIT extends BasePaxIT {
     private static final String ADMIN_PASSWORD = "motech";
 
     @Inject
-    private SubscriptionService subscriptionService;
-
+    SubscriptionService subscriptionService;
     @Inject
-    private SubscriberDataService subscriberDataService;
-
+    SubscriberDataService subscriberDataService;
     @Inject
-    private SubscriptionPackDataService subscriptionPackDataService;
-
+    SubscriptionPackDataService subscriptionPackDataService;
     @Inject
-    private SubscriptionDataService subscriptionDataService;
-
+    FrontLineWorkerService frontLineWorkerService;
     @Inject
-    private FrontLineWorkerService frontLineWorkerService;
-
+    ServiceUsageDataService serviceUsageDataService;
     @Inject
-    private FrontLineWorkerDataService frontLineWorkerDataService;
-
+    ServiceUsageCapDataService serviceUsageCapDataService;
     @Inject
-    private ServiceUsageDataService serviceUsageDataService;
-
+    LanguageDataService languageDataService;
     @Inject
-    private ServiceUsageCapDataService serviceUsageCapDataService;
-
+    StateDataService stateDataService;
     @Inject
-    private LanguageDataService languageDataService;
-
+    WhitelistEntryDataService whitelistEntryDataService;
     @Inject
-    private LanguageService languageService;
-
+    WhitelistStateDataService whitelistStateDataService;
     @Inject
-    private StateDataService stateDataService;
-
+    CircleDataService circleDataService;
     @Inject
-    private WhitelistEntryDataService whitelistEntryDataService;
-
+    DistrictDataService districtDataService;
     @Inject
-    private WhitelistStateDataService whitelistStateDataService;
-
+    DistrictService districtService;
     @Inject
-    private CallDetailRecordDataService callDetailRecordDataService;
-
+    DeployedServiceDataService deployedServiceDataService;
     @Inject
-    private CircleDataService circleDataService;
-
+    NationalDefaultLanguageDataService nationalDefaultLanguageDataService;
     @Inject
-    private DistrictDataService districtDataService;
-
-    @Inject
-    private DeployedServiceDataService deployedServiceDataService;
-
-    @Inject
-    private NationalDefaultLanguageDataService nationalDefaultLanguageDataService;
-
-    @Inject
-    private TestingService testingService;
+    TestingService testingService;
 
 
 
@@ -157,12 +129,11 @@ public class UserControllerBundleIT extends BasePaxIT {
     public void setupTestData() {
         testingService.clearDatabase();
 
-        rh = new RegionHelper(languageDataService, circleDataService, stateDataService,
-                districtDataService);
+        rh = new RegionHelper(languageDataService, circleDataService, stateDataService, districtDataService,
+                districtService);
 
-        sh = new SubscriptionHelper(subscriptionService,
-                subscriberDataService, subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService);
+        sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
+                languageDataService, circleDataService, stateDataService, districtDataService, districtService);
     }
 
 
@@ -171,6 +142,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         rh.newDelhiDistrict();
         rh.delhiCircle();
 
+            
         deployedServiceDataService.create(new DeployedService(rh.delhiState(), Service.KILKARI));
 
         Subscriber subscriber1 = subscriberDataService.create(new Subscriber(1000000000L, rh.hindiLanguage()));

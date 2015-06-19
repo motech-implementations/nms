@@ -1,13 +1,11 @@
 package org.motechproject.nms.region.service.impl;
 
+import org.motechproject.nms.csv.utils.GetLong;
+import org.motechproject.nms.csv.utils.GetString;
 import org.motechproject.nms.region.domain.District;
-import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictImportService;
-import org.motechproject.nms.csv.utils.GetInstanceByLong;
-import org.motechproject.nms.csv.utils.GetLong;
-import org.motechproject.nms.csv.utils.GetString;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.supercsv.cellprocessor.ift.CellProcessor;
@@ -42,12 +40,7 @@ public class DistrictImportServiceImpl extends BaseLocationImportService<Distric
         mapping.put(DISTRICT_CODE, new GetLong());
         mapping.put(REGIONAL_NAME, new GetString());
         mapping.put(NAME, new GetString());
-        mapping.put(STATE, new GetInstanceByLong<State>() {
-            @Override
-            public State retrieve(Long value) {
-                return stateDataService.findByCode(value);
-            }
-        });
+        mapping.put(STATE, mapState(stateDataService));
         return mapping;
     }
 

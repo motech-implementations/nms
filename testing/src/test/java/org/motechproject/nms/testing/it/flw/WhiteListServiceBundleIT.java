@@ -34,22 +34,22 @@ public class WhiteListServiceBundleIT extends BasePaxIT {
     private State nonWhitelistState;
 
     @Inject
-    private ServiceUsageCapDataService serviceUsageCapDataService;
+    ServiceUsageCapDataService serviceUsageCapDataService;
 
     @Inject
-    private WhitelistEntryDataService whitelistEntryDataService;
+    WhitelistEntryDataService whitelistEntryDataService;
 
     @Inject
-    private WhitelistStateDataService whitelistStateDataService;
+    WhitelistStateDataService whitelistStateDataService;
 
     @Inject
-    private StateDataService stateDataService;
+    StateDataService stateDataService;
 
     @Inject
-    private WhitelistService whitelistService;
+    WhitelistService whitelistService;
 
     @Inject
-    private TestingService testingService;
+    TestingService testingService;
 
     private void setupData() {
         testingService.clearDatabase();

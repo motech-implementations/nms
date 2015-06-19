@@ -256,6 +256,8 @@
                         </Export-Package>
                         <Import-Package>
                             org.motechproject.osgi.web,
+                            org.motechproject.nms.region.service,
+                            org.motechproject.nms.kilkari.service,
                             org.aopalliance.aop,
                             org.springframework.aop,
                             org.springframework.aop.framework,
