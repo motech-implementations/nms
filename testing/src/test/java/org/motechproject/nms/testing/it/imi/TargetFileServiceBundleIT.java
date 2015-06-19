@@ -15,6 +15,7 @@ import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
+import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
@@ -132,7 +133,6 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         subscriptionService.createSubscription(1111111111L, rh.hindiLanguage(), sh.pregnancyPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
 
-
         // Should not be picked up because it's been deactivated
         Subscriber subscriber2 = new Subscriber(2222222222L, rh.kannadaLanguage(), rh.karnatakaCircle());
         subscriber2.setLastMenstrualPeriod(DateTime.now().minusDays(90)); // startDate will be today
@@ -150,6 +150,26 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         subscriptionService.createSubscription(6666666666L, rh.kannadaLanguage(), sh.childPack(),
                 SubscriptionOrigin.IVR);
 
+        Subscriber subscriber4 = new Subscriber(4000000000L, rh.hindiLanguage(), rh.delhiCircle());
+        subscriber4.setLastMenstrualPeriod(DateTime.now().minusDays(90)); // startDate will be today
+        subscriberDataService.create(subscriber4);
+        Subscription subscription4 = subscriptionService.createSubscription(4000000000L, rh.hindiLanguage(), sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
+        subscription4.setStatus(SubscriptionStatus.PENDING_ACTIVATION);
+        subscriptionDataService.update(subscription4);
+
+        Subscriber subscriber5 = new Subscriber(5000000000L, rh.hindiLanguage(), rh.delhiCircle());
+        subscriber5.setLastMenstrualPeriod(DateTime.now().minusDays(92)); // startDate will be the day before yesterday
+        subscriberDataService.create(subscriber5);
+        Subscription subscription5 = subscriptionService.createSubscription(5000000000L, rh.hindiLanguage(), sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
+        subscription5.setStatus(SubscriptionStatus.PENDING_ACTIVATION);
+        subscriptionDataService.update(subscription5);
+
+        Subscriber subscriber6 = new Subscriber(6000000000L, rh.hindiLanguage(), rh.delhiCircle());
+        subscriber6.setLastMenstrualPeriod(DateTime.now().minusDays(88)); // startDate will be the day after tomorrow
+        subscriberDataService.create(subscriber6);
+        Subscription subscription6 = subscriptionService.createSubscription(6000000000L, rh.hindiLanguage(), sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
+        subscription6.setStatus(SubscriptionStatus.PENDING_ACTIVATION);
+        subscriptionDataService.update(subscription6);
 
         // Should not be picked up because it's not for today
         callRetryDataService.create(new CallRetry("11111111-1111-1111-1111-111111111111", 3333333333L,
@@ -160,10 +180,14 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         TargetFileNotification tfn = targetFileService.generateTargetFile();
         assertNotNull(tfn);
 
+        // Should pickup subscription1
         // Should not pickup subscription2 because its status is not ACTIVE
         // Should not pickup subscription3 because it's for tomorrow
         // Should not pickup call retry record because it's for tomorrow also
-        assertEquals(1, (int) tfn.getRecordsCount());
+        // Should pickup subscription4 and set its status to ACTIVE
+        // Should not pickup subscription5 because its start DOW doesn't match today's DOW but should set its status to ACTIVE
+        // Should not pickup subscription6 because it's for tomorrow
+        assertEquals(2, (int) tfn.getRecordsCount());
 
         //read the file to get record count
         File targetDir = new File(settingsService.getSettingsFacade().getProperty("imi.local_obd_dir"));
@@ -180,6 +204,11 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         assertEquals((int)tfn.getRecordsCount(), recordCount);
 
         assertEquals(tfn.getChecksum(), checksum);
+
+        assertEquals(SubscriptionStatus.ACTIVE,
+                subscriptionDataService.findBySubscriptionId(subscription4.getSubscriptionId()).getStatus());
+        assertEquals(SubscriptionStatus.ACTIVE,
+                subscriptionDataService.findBySubscriptionId(subscription5.getSubscriptionId()).getStatus());
     }
 
 

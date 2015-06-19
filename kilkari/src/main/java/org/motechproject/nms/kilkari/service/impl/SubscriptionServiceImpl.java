@@ -375,6 +375,14 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @Override
+    public void activateSubscription(Subscription subscription) {
+        if (subscription.getStatus() == SubscriptionStatus.PENDING_ACTIVATION) {
+            subscription.setStatus(SubscriptionStatus.ACTIVE);
+            subscriptionDataService.update(subscription);
+        }
+    }
+
+    @Override
     public void deactivateSubscription(Subscription subscription, DeactivationReason reason) {
         if (subscription.getStatus() == SubscriptionStatus.ACTIVE ||
                 subscription.getStatus() == SubscriptionStatus.PENDING_ACTIVATION) {
@@ -427,7 +435,12 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
 
     public List<Subscription> findActiveSubscriptionsForDay(DayOfTheWeek dayOfTheWeek, int page, int pageSize) {
-        return subscriptionDataService.findByStatusAndDay(SubscriptionStatus.ACTIVE, dayOfTheWeek,
+        return subscriptionDataService.findByStatusAndStartDayOfWeek(SubscriptionStatus.ACTIVE, dayOfTheWeek,
+                new QueryParams(page, pageSize));
+    }
+
+    public List<Subscription> findPendingSubscriptionsFromDate(DateTime startDate, int page, int pageSize) {
+        return subscriptionDataService.findByStatusAndStartDate(SubscriptionStatus.PENDING_ACTIVATION, startDate,
                 new QueryParams(page, pageSize));
     }
 
