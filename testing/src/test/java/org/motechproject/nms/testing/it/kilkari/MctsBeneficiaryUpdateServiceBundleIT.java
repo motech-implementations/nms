@@ -2,8 +2,10 @@ package org.motechproject.nms.testing.it.kilkari;
 
 import org.joda.time.DateTime;
 import org.junit.Before;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.kilkari.domain.MctsChild;
+import org.motechproject.nms.kilkari.domain.MctsMother;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
@@ -30,6 +32,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
 
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertEquals;
@@ -73,14 +76,17 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         subscriptionHelper.childPack();
     }
 
+    @Test
     public void testUpdateMsisdn() throws Exception {
         Long oldMsisdn = subscriptionHelper.makeNumber();
         Long newMsisdn = subscriptionHelper.makeNumber();
 
-        Subscription subscription = subscriptionHelper.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now(), SubscriptionPackType.CHILD, oldMsisdn);
+        Subscription subscription = subscriptionHelper.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now(),
+                SubscriptionPackType.CHILD, oldMsisdn);
         String mctsId = "0123456789";
 
         subscription.getSubscriber().setChild(new MctsChild(mctsId));
+        subscriberDataService.update(subscription.getSubscriber());
 
         Reader reader = createMsisdnReaderWithHeaders(mctsId + "," + newMsisdn);
         mctsBeneficiaryUpdateService.updateMsisdn(reader);
@@ -92,8 +98,40 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         assertEquals(mctsId, subscriber.getChild().getBeneficiaryId());
     }
 
+    @Test
     public void testUpdateMsisdnForSubscriberWithBothPacks() throws Exception {
+        Long oldMsisdn = subscriptionHelper.makeNumber();
+        Long newMsisdn = subscriptionHelper.makeNumber();
 
+        Subscription childSubscription = subscriptionHelper.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now(),
+                SubscriptionPackType.CHILD, oldMsisdn);
+        String childId = "0123456789";
+        childSubscription.getSubscriber().setChild(new MctsChild(childId));
+        subscriberDataService.update(childSubscription.getSubscriber());
+
+        Subscription pregnancySubscription = subscriptionHelper.mksub(SubscriptionOrigin.MCTS_IMPORT,
+                DateTime.now().minusDays(150), SubscriptionPackType.PREGNANCY, oldMsisdn);
+        String motherId = "9876543210";
+        pregnancySubscription.getSubscriber().setMother(new MctsMother(motherId));
+        subscriberDataService.update(pregnancySubscription.getSubscriber());
+
+        assertEquals(2, subscriberDataService.findByCallingNumber(oldMsisdn).getActiveSubscriptions().size());
+
+        Reader reader = createMsisdnReaderWithHeaders(motherId + "," + newMsisdn);
+        mctsBeneficiaryUpdateService.updateMsisdn(reader);
+
+        Subscriber pregnancySubscriber = subscriberDataService.findByCallingNumber(newMsisdn);
+        Subscriber childSubscriber = subscriberDataService.findByCallingNumber(oldMsisdn);
+
+        assertNotNull(pregnancySubscriber);
+        assertNotNull(childSubscriber);
+        assertNotEquals(childSubscriber, pregnancySubscriber);
+        assertEquals(newMsisdn, pregnancySubscriber.getCallingNumber());
+        assertEquals(oldMsisdn, childSubscriber.getCallingNumber());
+        assertNull(pregnancySubscriber.getMother());
+        assertNull(childSubscriber.getMother());
+        assertEquals(1, pregnancySubscriber.getActiveSubscriptions().size());
+        assertEquals(1, childSubscriber.getActiveSubscriptions().size());
     }
 
 
@@ -101,7 +139,9 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
 
     }
 
+    public void testupdateMsisdnFromFile() throws Exception {
 
+    }
 
     private Reader createMsisdnReaderWithHeaders(String... lines) {
         StringBuilder builder = new StringBuilder();

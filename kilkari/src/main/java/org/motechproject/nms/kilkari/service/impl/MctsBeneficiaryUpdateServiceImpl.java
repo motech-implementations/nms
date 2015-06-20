@@ -1,34 +1,41 @@
 package org.motechproject.nms.kilkari.service.impl;
 
+import org.joda.time.DateTime;
 import org.motechproject.nms.csv.exception.CsvImportDataException;
+import org.motechproject.nms.csv.utils.ConstraintViolationUtils;
 import org.motechproject.nms.csv.utils.CsvImporterBuilder;
 import org.motechproject.nms.csv.utils.CsvMapImporter;
 import org.motechproject.nms.csv.utils.GetInstanceByString;
 import org.motechproject.nms.csv.utils.GetString;
 import org.motechproject.nms.kilkari.domain.MctsBeneficiary;
-import org.motechproject.nms.kilkari.domain.MctsChild;
-import org.motechproject.nms.kilkari.domain.MctsMother;
 import org.motechproject.nms.kilkari.domain.Subscriber;
-import org.motechproject.nms.kilkari.domain.Subscription;
-import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.repository.MctsChildDataService;
 import org.motechproject.nms.kilkari.repository.MctsMotherDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryUpdateService;
+import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
+import org.motechproject.nms.region.domain.District;
+import org.motechproject.nms.region.domain.HealthBlock;
+import org.motechproject.nms.region.domain.HealthFacility;
+import org.motechproject.nms.region.domain.State;
+import org.motechproject.nms.region.domain.Taluka;
+import org.motechproject.nms.region.domain.Village;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.supercsv.cellprocessor.Optional;
 import org.supercsv.cellprocessor.ift.CellProcessor;
 import org.supercsv.prefs.CsvPreference;
 
+import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Implementation of the {@link MctsBeneficiaryUpdateService} interface.
@@ -46,10 +53,24 @@ public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateSe
     private SubscriptionService subscriptionService;
     @Autowired
     private SubscriptionDataService subscriptionDataService;
+    @Autowired
+    private SubscriberService subscriberService;
 
-    public static final String MCTS_ID = "FLW ID";
-    public static final String NEW_MSISDN = "NEW MSISDN";
-
+    public static final String MCTS_ID = "MCTS ID";
+    public static final String STATE_MCTS_ID = "STATE ID";
+    public static final String NEW_DOB = "Beneficiary New DOB change";
+    public static final String NEW_LMP = "Beneficiary New LMP change";
+    public static final String NEW_STATE = "State_ID";
+    public static final String NEW_DISTRICT = "District_ID";
+    public static final String NEW_TALUKA = "Taluka_ID";
+    public static final String NEW_HEALTH_BLOCK = "HealthBlock_ID";
+    public static final String NEW_PHC = "PHC_ID";
+    public static final String NEW_SUBCENTRE = "SubCentre_ID";
+    public static final String NEW_VILLAGE = "Village_ID";
+    public static final String NEW_GPVILLAGE = "GP_Village";
+    public static final String NEW_ADDRESS = "Address";
+    public static final String NEW_MSISDN = "Beneficiary New Mobile no change";
+    public static final String NEW_LANGUAGE = "Beneficiary New Language change";
 
     @Override
     public void updateMsisdn(Reader reader) throws IOException {
@@ -63,32 +84,61 @@ public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateSe
             Map<String, Object> record;
             while (null != (record = csvImporter.read())) {
 
-                Long msisdn = (Long) record.get(NEW_MSISDN);
-                if (msisdn == null) {
-                    // throw
-                }
-
-                MctsBeneficiary beneficiary = beneficiaryFromRecord(record);
-                if (beneficiary == null) {
-                    // throw
-                }
-
-                Subscriber subscriber = subscriberFromBeneficiary(beneficiary);
-                if (subscriber == null) {
-                    // throw
-                }
-
-                if (subscriber.getCallingNumber() == msisdn) {
-                    return;
-                }
-
-                updateMsisdnForSubscriber(subscriber, beneficiary, msisdn);
+                processRecord(record);
             }
         } catch (ConstraintViolationException e) {
             throw new CsvImportDataException(createErrorMessage(e.getConstraintViolations(), csvImporter.getRowNumber()), e);
         } catch (NumberFormatException e) {
             throw new CsvImportDataException(createErrorMessage("Invalid number", csvImporter.getRowNumber()), e);
         }
+    }
+
+    private void processRecord(Map<String, Object> record) {
+
+        String mctsId = (String) record.get(MCTS_ID);
+        String stateMctsId = (String) record.get(STATE_MCTS_ID);
+
+        MctsBeneficiary beneficiary = beneficiaryFromId(mctsId);
+
+        // TODO: also lookup by state id
+
+        if (beneficiary == null) {
+            throw new CsvImportDataException(String.format("Unable to locate MCTS beneficiary: %s(%s)", MCTS_ID, mctsId));
+        }
+
+        DateTime newLmp = (DateTime) record.get(NEW_LMP);
+        DateTime newDob = (DateTime) record.get(NEW_DOB);
+        State newState = (State) record.get(NEW_STATE);
+        District newDistrict = (District) record.get(NEW_DISTRICT);
+        Taluka newTaluka = (Taluka) record.get(NEW_TALUKA);
+        HealthBlock newHealthBlock = (HealthBlock) record.get(NEW_HEALTH_BLOCK);
+        HealthFacility newPhc = (HealthFacility) record.get(NEW_PHC);
+        Village newVillage = (Village) record.get(NEW_VILLAGE);
+        Long newMsisdn = (Long) record.get(NEW_MSISDN);
+        String newLanguage = (String) record.get(NEW_LANGUAGE);
+
+        Subscriber subscriber = subscriberFromBeneficiary(beneficiary);
+        if (subscriber == null) {
+            // potentially create one?
+        }
+
+        if (newLmp != null) {
+
+        }
+        if (newDob != null) {
+
+        }
+        if ((newState != null) || (newDistrict != null) || (newTaluka != null) || (newHealthBlock != null) ||
+                (newPhc != null) || (newVillage != null)) {
+
+        }
+        if (newMsisdn != null) {
+            subscriberService.updateMsisdnForSubscriber(subscriber, beneficiary, newMsisdn);
+        }
+        if (newLanguage != null) {
+
+        }
+
     }
 
     @Override
@@ -121,42 +171,7 @@ public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateSe
         return mapping;
     }
 
-    private void updateMsisdnForSubscriber(Subscriber subscriber, MctsBeneficiary beneficiary, Long newMsisdn) {
-
-        SubscriptionPackType packType;
-        packType = (beneficiary instanceof MctsChild) ? SubscriptionPackType.CHILD : SubscriptionPackType.PREGNANCY;
-
-        Subscriber subscriberWithMsisdn = subscriberDataService.findByCallingNumber(newMsisdn);
-        if (subscriberWithMsisdn != null) {
-            // this number is in use
-            if (subscriptionService.getActiveSubscription(subscriberWithMsisdn, packType) != null) {
-                // in fact, it's in use for this pack -- reject the subscription
-
-            }
-        }
-
-        // do the update -- by creating a new Subscriber object and re-linking the beneficiary and subscription to it
-
-        Subscriber newSubscriber = new Subscriber(newMsisdn, subscriber.getLanguage(), subscriber.getCircle());
-        Subscription subscription = subscriptionService.getActiveSubscription(subscriber.getCallingNumber(), packType);
-        subscriber.getSubscriptions().remove(subscription);
-        newSubscriber.getSubscriptions().add(subscription);
-        subscription.setSubscriber(newSubscriber);
-
-        if (packType == SubscriptionPackType.CHILD) {
-            newSubscriber.setChild((MctsChild) beneficiary);
-            newSubscriber.setDateOfBirth(subscriber.getDateOfBirth());
-        } else {
-            newSubscriber.setMother((MctsMother) beneficiary);
-            newSubscriber.setLastMenstrualPeriod(subscriber.getLastMenstrualPeriod());
-        }
-
-        subscriberDataService.create(newSubscriber);
-        subscriptionDataService.update(subscription);
-    }
-
-    private MctsBeneficiary beneficiaryFromRecord(Map<String, Object> record) {
-        String mctsId = (String) record.get(MCTS_ID);
+    private MctsBeneficiary beneficiaryFromId(String mctsId) {
         if (mctsId == null) {
             return null;
         }
@@ -170,12 +185,17 @@ public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateSe
     }
 
     private Subscriber subscriberFromBeneficiary(MctsBeneficiary beneficiary) {
-        if (beneficiary instanceof MctsChild) {
-            return subscriberDataService.findByMctsChild((MctsChild) beneficiary);
-        } else if (beneficiary instanceof MctsMother) {
-            return subscriberDataService.findByMctsMother((MctsMother) beneficiary);
-        }
-        return null;
+        return subscriberService.getSubscriberByBeneficiaryId(beneficiary.getBeneficiaryId());
     }
+
+    private String createErrorMessage(String message, int rowNumber) {
+        return String.format("CSV instance error [row: %d]: %s", rowNumber, message);
+    }
+
+    private String createErrorMessage(Set<ConstraintViolation<?>> violations, int rowNumber) {
+        return String.format("CSV instance error [row: %d]: validation failed for instance of type %s, violations: %s",
+                rowNumber, MctsBeneficiary.class.getName(), ConstraintViolationUtils.toString(violations));
+    }
+
 
 }

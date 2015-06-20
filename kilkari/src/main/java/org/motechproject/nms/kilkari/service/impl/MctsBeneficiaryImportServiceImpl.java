@@ -266,6 +266,8 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         Language language = beneficiary.getDistrict().getLanguage();
         Subscriber subscriber = subscriberService.getSubscriber(msisdn);
 
+        // TODO: Handle the case in which the MCTS beneficiary already exists but with a different phone number
+
         if (subscriber == null) {
             // there's no subscriber with this MSISDN, create one
 
