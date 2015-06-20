@@ -7,11 +7,16 @@ import org.motechproject.nms.region.domain.HealthSubFacility;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.domain.Village;
+import org.motechproject.nms.region.exception.InvalidLocationException;
+
+import java.util.Map;
 
 /**
  * Location service to get and validation location data
  */
 public interface LocationService {
+
+    Map<String, Object> getLocations(Map<String, Object> locationMapping) throws InvalidLocationException;
 
     State getState(Long stateId);
 

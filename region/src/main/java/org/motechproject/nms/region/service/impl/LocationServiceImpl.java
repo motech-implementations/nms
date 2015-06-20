@@ -7,13 +7,8 @@ import org.motechproject.nms.region.domain.HealthSubFacility;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.domain.Village;
-import org.motechproject.nms.region.repository.DistrictDataService;
-import org.motechproject.nms.region.repository.HealthBlockDataService;
-import org.motechproject.nms.region.repository.HealthFacilityDataService;
-import org.motechproject.nms.region.repository.HealthSubFacilityDataService;
+import org.motechproject.nms.region.exception.InvalidLocationException;
 import org.motechproject.nms.region.repository.StateDataService;
-import org.motechproject.nms.region.repository.TalukaDataService;
-import org.motechproject.nms.region.repository.VillageDataService;
 import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.region.service.HealthBlockService;
 import org.motechproject.nms.region.service.HealthFacilityService;
@@ -24,11 +19,24 @@ import org.motechproject.nms.region.service.VillageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Location service impl to get location objects
  */
 @Service("locationService")
 public class LocationServiceImpl implements LocationService {
+
+    private static final String INVALID = "<%s - %s : Invalid location>";
+    private static final String STATE = "StateID";
+    private static final String DISTRICT = "District_ID";
+    private static final String TALUKA = "Taluka_ID";
+    private static final String HEALTH_BLOCK = "HealthBlock_ID";
+    private static final String PHC = "PHC_ID";
+    private static final String SUBCENTRE = "SubCentre_ID";
+    private static final String CENSUS_VILLAGE = "Village_ID";
+    private static final String NON_CENSUS_VILLAGE = "SVID";
 
     private StateDataService stateDataService;
 
@@ -56,6 +64,93 @@ public class LocationServiceImpl implements LocationService {
         this.healthBlockService = healthBlockService;
         this.healthFacilityService = healthFacilityService;
         this.healthSubFacilityService = healthSubFacilityService;
+    }
+
+    @Override
+    public Map<String, Object> getLocations(Map<String, Object> locationMapping) throws InvalidLocationException {
+
+        Map<String, Object> locations = new HashMap<>();
+        do { // Note: this is not a true loop, just a better way to break and pass control
+
+            // set state
+            if (locationMapping.get(STATE) == null) {
+                break;
+            }
+            State state = stateDataService.findByCode((Long) locationMapping.get(STATE));
+            if (state == null) { // we are here because stateId wasn't null but fetch returned no data
+                throw new InvalidLocationException(String.format(INVALID, STATE, locationMapping.get(STATE)));
+            }
+            locations.put(STATE, state);
+
+            // set district
+            if (locationMapping.get(DISTRICT) == null) {
+                break;
+            }
+            District district = districtService.findByStateAndCode(state, (Long) locationMapping.get(DISTRICT));
+            if (district == null) {
+                throw new InvalidLocationException(String.format(INVALID, DISTRICT, locationMapping.get(DISTRICT)));
+            }
+            locations.put(DISTRICT, district);
+
+            // set taluka
+            if (locationMapping.get(TALUKA) == null) {
+                break;
+            }
+            Taluka taluka = talukaService.findByDistrictAndCode(district, (String) locationMapping.get(TALUKA));
+            if (taluka == null) {
+                throw new InvalidLocationException(String.format(INVALID, DISTRICT, locationMapping.get(DISTRICT)));
+            }
+            locations.put(TALUKA, taluka);
+
+            // check for more sub-locations to fetch
+            if (locationMapping.get(HEALTH_BLOCK) == null) {
+                // Try and set the village if healthblock data isn't available
+                if (locationMapping.get(CENSUS_VILLAGE) == null && locationMapping.get(NON_CENSUS_VILLAGE) == null) {
+                    break;
+                }
+                Village village = villageService.findByTalukaAndVcodeAndSvid(taluka,
+                            (Long) locationMapping.get(CENSUS_VILLAGE), (Long) locationMapping.get(NON_CENSUS_VILLAGE));
+                if (village == null) {
+                    throw new InvalidLocationException(String.format(INVALID,
+                            CENSUS_VILLAGE + " " + NON_CENSUS_VILLAGE,
+                            locationMapping.get(CENSUS_VILLAGE) + " " + locationMapping.get(NON_CENSUS_VILLAGE)));
+                }
+                locations.put(CENSUS_VILLAGE + NON_CENSUS_VILLAGE, village);
+                break;
+            } else {
+
+                // set health block
+                HealthBlock healthBlock = healthBlockService.findByTalukaAndCode(taluka, (Long) locationMapping.get(HEALTH_BLOCK));
+                if (healthBlock == null) {
+                    throw new InvalidLocationException(String.format(INVALID, HEALTH_BLOCK, locationMapping.get(HEALTH_BLOCK)));
+                }
+                locations.put(HEALTH_BLOCK, healthBlock);
+
+                // set health facility
+                if (locationMapping.get(PHC) == null) {
+                    break;
+                }
+                HealthFacility healthFacility = healthFacilityService.findByHealthBlockAndCode(healthBlock, (Long) locationMapping.get(PHC));
+                if (healthFacility == null) {
+                    throw new InvalidLocationException(String.format(INVALID, PHC, locationMapping.get(PHC)));
+                }
+                locations.put(PHC, healthFacility);
+
+                // set health sub-facility
+                if (locationMapping.get(SUBCENTRE) == null) {
+                    break;
+                }
+                HealthSubFacility healthSubFacility = healthSubFacilityService.findByHealthFacilityAndCode(healthFacility, (Long) locationMapping.get(SUBCENTRE));
+                if (healthSubFacility == null) {
+                    throw new InvalidLocationException(String.format(INVALID, SUBCENTRE, locationMapping.get(SUBCENTRE)));
+                }
+                locations.put(SUBCENTRE, healthSubFacility);
+                break;
+            }
+
+        } while (true);
+
+        return locations;
     }
 
     @Override

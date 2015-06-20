@@ -40,6 +40,7 @@ import org.motechproject.nms.region.domain.Language;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.domain.Village;
+import org.motechproject.nms.region.exception.InvalidLocationException;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.region.service.HealthBlockService;
@@ -47,6 +48,8 @@ import org.motechproject.nms.region.service.HealthFacilityService;
 import org.motechproject.nms.region.service.HealthSubFacilityService;
 import org.motechproject.nms.region.service.TalukaService;
 import org.motechproject.nms.region.service.VillageService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -73,13 +76,16 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     private static final String HEALTH_BLOCK = "HealthBlock_ID";
     private static final String PHC = "PHC_ID";
     private static final String SUBCENTRE = "SubCentre_ID";
-    private static final String VILLAGE = "Village_ID";
+    private static final String VILLAGE = "Village";
+    private static final String CENSUS_VILLAGE = "Village_ID";
+    private static final String NON_CENSUS_VILAGE = "SVID";
     private static final String BENEFICIARY_ID = "ID_No";
     private static final String BENEFICIARY_NAME = "Name";
     private static final String MSISDN = "Whom_PhoneNo";
     private static final String LMP = "LMP_Date";
     private static final String DOB = "Birthdate";
     private static final String MOTHER_ID = "Mother_ID";
+    private static final Logger LOGGER = LoggerFactory.getLogger(MctsBeneficiaryImportServiceImpl.class);
 
     private StateDataService stateDataService;
     private DistrictService districtService;
@@ -212,10 +218,12 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         MctsMother mother = (MctsMother) record.get(MOTHER_ID);
         DateTime dob = (DateTime) record.get(DOB);
 
-        String errors = setLocationFields(record, child);
-        if (errors != null) {
+        // validate and set location
+        try {
+            setLocationFields(record, child);
+        } catch (InvalidLocationException le) {
+            LOGGER.error(le.toString());
             rejectBeneficiary(msisdn, SubscriptionRejectionReason.INVALID_LOCATION, SubscriptionPackType.CHILD);
-            return;
         }
 
         if (!validateDOB(dob, msisdn)) {
@@ -333,34 +341,14 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         String errors = null;
 
         State state = (State) record.get(STATE);
-
+        District district = (District)
         Taluka taluka = null;
         HealthBlock healthBlock = null;
         HealthFacility phc = null;
         HealthSubFacility hsf = null;
         Village village = null;
 
-        District district = districtService.findByStateAndCode(state, (Long) record.get(DISTRICT));
-        if (district != null) {
 
-            taluka = talukaService.findByDistrictAndCode(district, (String) record.get(TALUKA));
-            if (taluka != null) {
-                healthBlock = healthBlockService.findByTalukaAndCode(taluka, (Long) record.get(HEALTH_BLOCK));
-                if (healthBlock != null) {
-                    phc = healthFacilityService.findByHealthBlockAndCode(healthBlock, (Long) record.get(PHC));
-                    if (phc != null) {
-                        hsf = healthSubFacilityService.findByHealthFacilityAndCode(phc, (Long) record.get(SUBCENTRE));
-                    }
-                }
-                // the sample mother data file has village ID=0 and village name blank
-                if ((Long) record.get(VILLAGE) != 0L) {
-                    villageService.findByTalukaAndVcodeAndSvid(taluka, (Long) record.get(VILLAGE), 0L);
-                    if (village == null) {
-                        village = villageService.findByTalukaAndSvid(taluka, (Long) record.get(VILLAGE));
-                    }
-                }
-            }
-        }
 
         if (state == null || district == null) {
             errors = "District and state must both be set for an MCTS beneficiary.";
@@ -369,6 +357,8 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         beneficiary.setState(state);
         beneficiary.setDistrict(district);
         beneficiary.setTaluka(taluka);
+
+        // TODO: is it valid to set both village and healthblock data?
         beneficiary.setHealthBlock(healthBlock);
         beneficiary.setPrimaryHealthCenter(phc);
         beneficiary.setHealthSubFacility(hsf);
@@ -381,28 +371,22 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         subscriptionErrorDataService.create(new SubscriptionError(msisdn, reason, packType));
     }
 
-    private Map<String, CellProcessor> getBeneficiaryProcessorMapping() {
+    private Map<String, CellProcessor> getBeneficiaryLocationMapping() {
         Map<String, CellProcessor> mapping = new HashMap<>();
-        mapping.put(STATE, new GetInstanceByLong<State>() {
-            @Override
-            public State retrieve(Long value) {
-                State state = stateDataService.findByCode(value);
-                verify(null != state, "State does not exist");
-                return state;
-            }
-        });
+        mapping.put(STATE, new GetLong());
         mapping.put(DISTRICT, new GetLong());
         mapping.put(TALUKA, new Optional(new GetString()));
         mapping.put(HEALTH_BLOCK, new Optional(new GetLong()));
         mapping.put(PHC, new Optional(new GetLong()));
         mapping.put(SUBCENTRE, new Optional(new GetLong()));
-        mapping.put(VILLAGE, new Optional(new GetLong()));
+        mapping.put(CENSUS_VILLAGE, new Optional(new GetLong()));
+        mapping.put(NON_CENSUS_VILAGE, new Optional(new GetLong()));
 
         return mapping;
     }
 
     private Map<String, CellProcessor> getMotherProcessorMapping() {
-        Map<String, CellProcessor> mapping = getBeneficiaryProcessorMapping();
+        Map<String, CellProcessor> mapping = getBeneficiaryLocationMapping();
 
         mapping.put(BENEFICIARY_ID, new GetInstanceByString<MctsMother>() {
             @Override
@@ -447,7 +431,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     }
 
     private Map<String, CellProcessor> getChildProcessorMapping() {
-        Map<String, CellProcessor> mapping = getBeneficiaryProcessorMapping();
+        Map<String, CellProcessor> mapping = getBeneficiaryLocationMapping();
 
         mapping.put(BENEFICIARY_ID, new GetInstanceByString<MctsChild>() {
             @Override
