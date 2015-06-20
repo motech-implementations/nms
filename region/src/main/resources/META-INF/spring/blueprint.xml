@@ -50,6 +50,7 @@
     <osgi:reference id="circleDataService" interface="org.motechproject.nms.region.repository.CircleDataService" />
 
     <!-- Location Data Import Services -->
+    <osgi:service ref="stateImportService" interface="org.motechproject.nms.region.service.StateImportService" />
     <osgi:service ref="districtImportService" interface="org.motechproject.nms.region.service.DistrictImportService" />
     <osgi:service ref="talukaImportService" interface="org.motechproject.nms.region.service.TalukaImportService" />
     <osgi:service ref="censusVillageImportService" interface="org.motechproject.nms.region.service.CensusVillageImportService" />

@@ -28,6 +28,7 @@ import org.motechproject.nms.region.service.HealthFacilityService;
 import org.motechproject.nms.region.service.HealthSubFacilityImportService;
 import org.motechproject.nms.region.service.HealthSubFacilityService;
 import org.motechproject.nms.region.service.NonCensusVillageImportService;
+import org.motechproject.nms.region.service.StateImportService;
 import org.motechproject.nms.region.service.TalukaImportService;
 import org.motechproject.nms.region.service.TalukaService;
 import org.motechproject.nms.region.service.VillageService;
@@ -88,6 +89,8 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
     @Inject
     HealthSubFacilityService healthSubFacilityService;
     @Inject
+    StateImportService stateImportService;
+    @Inject
     DistrictImportService districtImportService;
     @Inject
     TalukaImportService talukaImportService;
@@ -107,6 +110,8 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
     District exampleDistrict;
     Taluka exampleTaluka;
     HealthFacilityType exampleFacilityType;
+
+    private String stateHeader = "StateID,Name";
 
     private String districtHeader = "DCode,Name_G,Name_E,StateID";
 
@@ -146,8 +151,14 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
     
     @Test
     public void testLocationDataImport() throws Exception {
+        stateImportService.importData(read("csv/state.csv"));
+        State state = stateDataService.findByCode(1234L);
+        assertNotNull(state);
+        assertEquals(1234L, (long) state.getCode());
+        assertEquals("Delhi", state.getName());
+
         districtImportService.importData(read("csv/district.csv"));
-        District district = districtService.findByStateAndCode(exampleState, 1L);
+        District district = districtService.findByStateAndCode(state, 1L);
         assertNotNull(district);
         assertEquals(1L, (long) district.getCode());
         assertEquals("district name", district.getName());
@@ -242,12 +253,31 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
         assertNull(districtService.findByStateAndCode(exampleState, 1004L));
     }
 
+
+    @Test(expected = CsvImportDataException.class)
+    public void verifyStateRejectedIfIdMissing() throws Exception {
+        Reader reader = createReaderWithHeaders(stateHeader, ",foo");
+        stateImportService.importData(reader);
+    }
+
+    @Test(expected = CsvImportDataException.class)
+    public void verifyStateRejectedIfNameMissing() throws Exception {
+        Reader reader = createReaderWithHeaders(stateHeader, "123,");
+        stateImportService.importData(reader);
+    }
+
+    @Test(expected = CsvImportDataException.class)
+    public void verifyStateRejectedIfIdInvalid() throws Exception {
+        Reader reader = createReaderWithHeaders(stateHeader, "foo,bar");
+        stateImportService.importData(reader);
+    }
+
     /*
     * To verify district location data is rejected when mandatory parameter code is missing.
     */
     @Test(expected = CsvImportDataException.class)
     public void verifyFT221() throws Exception {
-        Reader reader = createDistrictDataReaderWithHeaders(districtHeader, ",district regional name,district name,1234");
+        Reader reader = createReaderWithHeaders(districtHeader, ",district regional name,district name,1234");
         districtImportService.importData(reader);
     }
 
@@ -256,7 +286,7 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
     */
     @Test(expected = CsvImportDataException.class)
     public void verifyFT222() throws Exception {
-        Reader reader = createDistrictDataReaderWithHeaders(districtHeader, "1,district regional name,district name,");
+        Reader reader = createReaderWithHeaders(districtHeader, "1,district regional name,district name,");
         districtImportService.importData(reader);
     }
 
@@ -268,7 +298,7 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
         boolean thrown = false;
         String errorMessage = "CSV instance error [row: 2]: validation failed for instance of type " +
                 "org.motechproject.nms.region.domain.District, violations: {'state': may not be null}";
-        Reader reader = createDistrictDataReaderWithHeaders(districtHeader, "1,district regional name,district name,12345");
+        Reader reader = createReaderWithHeaders(districtHeader, "1,district regional name,district name,12345");
         try {
             districtImportService.importData(reader);
         } catch (CsvImportDataException e) {
@@ -283,7 +313,7 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
     */
     @Test(expected = CsvImportDataException.class)
     public void verifyFT224() throws Exception {
-        Reader reader = createDistrictDataReaderWithHeaders(districtHeader, "asd,district regional name,district name,1234");
+        Reader reader = createReaderWithHeaders(districtHeader, "asd,district regional name,district name,1234");
         districtImportService.importData(reader);
     }
 
@@ -292,7 +322,7 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
     */
     @Test(expected = CsvImportDataException.class)
     public void verifyFT227() throws Exception {
-        Reader reader = createDistrictDataReaderWithHeaders(talukaHeader, "TALUKA,2,taluka regional name,,1,2");
+        Reader reader = createReaderWithHeaders(talukaHeader, "TALUKA,2,taluka regional name,,1,2");
         talukaImportService.importData(reader);
     }
 
@@ -301,7 +331,7 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
     */
     @Test(expected = CsvImportDataException.class)
     public void verifyFT228() throws Exception {
-        Reader reader = createDistrictDataReaderWithHeaders(talukaHeader, ",2,taluka regional name,taluka name,1,2");
+        Reader reader = createReaderWithHeaders(talukaHeader, ",2,taluka regional name,taluka name,1,2");
         talukaImportService.importData(reader);
     }
 
@@ -310,7 +340,7 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
     */
     @Test(expected = CsvImportDataException.class)
     public void verifyFT229() throws Exception {
-        Reader reader = createDistrictDataReaderWithHeaders(talukaHeader, "TALUKA,2,taluka regional name,taluka name,1,");
+        Reader reader = createReaderWithHeaders(talukaHeader, "TALUKA,2,taluka regional name,taluka name,1,");
         talukaImportService.importData(reader);
     }
 
@@ -322,7 +352,7 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
         boolean thrown = false;
         String errorMessage = "CSV instance error [row: 2]: validation failed for instance of type " +
                 "org.motechproject.nms.region.domain.Taluka, violations: {'district': may not be null}";
-        Reader reader = createDistrictDataReaderWithHeaders(talukaHeader, "TALUKA,2,taluka regional name,taluka name,1,3");
+        Reader reader = createReaderWithHeaders(talukaHeader, "TALUKA,2,taluka regional name,taluka name,1,3");
         try {
             talukaImportService.importData(reader);
         } catch (CsvImportDataException e) {
@@ -337,7 +367,7 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
     */
     @Test(expected = CsvImportDataException.class)
     public void verifyFT234() throws Exception {
-        Reader reader = createDistrictDataReaderWithHeaders(
+        Reader reader = createReaderWithHeaders(
                 healthBlockHeader, "6,health block regional name,,health block hq,1,2,TALUKA");
         healthBlockImportService.importData(reader);
     }
@@ -347,7 +377,7 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
     */
     @Test(expected = CsvImportDataException.class)
     public void verifyFT235() throws Exception {
-        Reader reader = createDistrictDataReaderWithHeaders(
+        Reader reader = createReaderWithHeaders(
                 healthBlockHeader, ",health block regional name,health block name,health block hq,1,2,TALUKA");
         healthBlockImportService.importData(reader);
     }
@@ -357,7 +387,7 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
     */
     @Test(expected = CsvImportDataException.class)
     public void verifyFT236() throws Exception {
-        Reader reader = createDistrictDataReaderWithHeaders(
+        Reader reader = createReaderWithHeaders(
                 healthBlockHeader, "6,health block regional name,health block name,health block hq,1,2,");
         healthBlockImportService.importData(reader);
     }
@@ -370,7 +400,7 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
         boolean thrown = false;
         String errorMessage = "CSV instance error [row: 2]: validation failed for instance of type " +
                 "org.motechproject.nms.region.domain.HealthBlock, violations: {'taluka': may not be null}";
-        Reader reader = createDistrictDataReaderWithHeaders(
+        Reader reader = createReaderWithHeaders(
                 healthBlockHeader, "6,health block regional name,health block name,health block hq,1,2,invalid taluka");
         try {
             healthBlockImportService.importData(reader);
@@ -386,7 +416,7 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
     */
     @Test(expected = CsvImportDataException.class)
     public void verifyFT238() throws Exception {
-        Reader reader = createDistrictDataReaderWithHeaders(
+        Reader reader = createReaderWithHeaders(
                 healthBlockHeader, "abc,health block regional name,health block name,health block hq,1,2,TALUKA");
         healthBlockImportService.importData(reader);
     }
@@ -396,7 +426,7 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
     */
     @Test(expected = CsvImportDataException.class)
     public void verifyFT241() throws Exception {
-        Reader reader = createDistrictDataReaderWithHeaders(
+        Reader reader = createReaderWithHeaders(
                 healthFacilityHeader, "7,health facility regional name,,1,2,00003,6,5678");
         healthFacilityImportService.importData(reader);
     }
@@ -406,7 +436,7 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
     */
     @Test(expected = CsvImportDataException.class)
     public void verifyFT242() throws Exception {
-        Reader reader = createDistrictDataReaderWithHeaders(
+        Reader reader = createReaderWithHeaders(
                 healthFacilityHeader, ",health facility regional name,health facility name,1,2,00003,6,5678");
         healthFacilityImportService.importData(reader);
     }
@@ -416,7 +446,7 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
     */
     @Test(expected = CsvImportDataException.class)
     public void verifyFT243() throws Exception {
-        Reader reader = createDistrictDataReaderWithHeaders(
+        Reader reader = createReaderWithHeaders(
                 healthFacilityHeader, "7,health facility regional name,health facility name,1,2,00003,,5678");
         healthFacilityImportService.importData(reader);
     }
@@ -429,7 +459,7 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
         boolean thrown = false;
         String errorMessage = "CSV instance error [row: 2]: validation failed for instance of type " +
                 "org.motechproject.nms.region.domain.HealthFacility, violations: {'healthBlock': may not be null}";
-        Reader reader = createDistrictDataReaderWithHeaders(
+        Reader reader = createReaderWithHeaders(
                 healthFacilityHeader, "7,health facility regional name,health facility name,1,2,00003,10,5678");
         try {
             healthFacilityImportService.importData(reader);
@@ -445,7 +475,7 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
     */
     @Test(expected = CsvImportDataException.class)
     public void verifyFT245() throws Exception {
-        Reader reader = createDistrictDataReaderWithHeaders(
+        Reader reader = createReaderWithHeaders(
                 healthFacilityHeader, "abc,health facility regional name,health facility name,1,2,00003,6,5678");
         healthFacilityImportService.importData(reader);
     }
@@ -455,7 +485,7 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
     */
     @Test(expected = CsvImportDataException.class)
     public void verifyFT248() throws Exception {
-        Reader reader = createDistrictDataReaderWithHeaders(
+        Reader reader = createReaderWithHeaders(
                 healthSubFacilityHeader, "8,health sub facility regional name,,1,2,00003,4,5");
         healthSubFacilityImportService.importData(reader);
     }
@@ -465,7 +495,7 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
     */
     @Test(expected = CsvImportDataException.class)
     public void verifyFT249() throws Exception {
-        Reader reader = createDistrictDataReaderWithHeaders(
+        Reader reader = createReaderWithHeaders(
                 healthSubFacilityHeader, ",health sub facility regional name,health sub facility name,1,2,00003,4,5");
         healthSubFacilityImportService.importData(reader);
     }
@@ -475,7 +505,7 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
     */
     @Test(expected = CsvImportDataException.class)
     public void verifyFT250() throws Exception {
-        Reader reader = createDistrictDataReaderWithHeaders(
+        Reader reader = createReaderWithHeaders(
                 healthSubFacilityHeader, "8,health sub facility regional name,health sub facility name,1,2,00003,4,");
         healthSubFacilityImportService.importData(reader);
     }
@@ -488,7 +518,7 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
         boolean thrown = false;
         String errorMessage = "CSV instance error [row: 2]: validation failed for instance of type " +
                 "org.motechproject.nms.region.domain.HealthSubFacility, violations: {'healthFacility': may not be null}";
-        Reader reader = createDistrictDataReaderWithHeaders(
+        Reader reader = createReaderWithHeaders(
                 healthSubFacilityHeader, "8,health sub facility regional name,health sub facility name,1,2,00003,4,6");
         try {
             healthSubFacilityImportService.importData(reader);
@@ -504,7 +534,7 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
     */
     @Test(expected = CsvImportDataException.class)
     public void verifyFT252() throws Exception {
-        Reader reader = createDistrictDataReaderWithHeaders(
+        Reader reader = createReaderWithHeaders(
                 healthSubFacilityHeader, "abc,health sub facility regional name,health sub facility name,1,2,00003,4,5");
         healthSubFacilityImportService.importData(reader);
     }
@@ -514,7 +544,7 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
     */
     @Test(expected = CsvImportDataException.class)
     public void verifyFT255() throws Exception {
-        Reader reader = createDistrictDataReaderWithHeaders(
+        Reader reader = createReaderWithHeaders(
                 villageHeader, "3,census village regional name,,1,2,TALUKA");
         censusVillageImportService.importData(reader);
     }
@@ -524,7 +554,7 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
     */
     @Test(expected = CsvImportDataException.class)
     public void verifyFT256() throws Exception {
-        Reader reader = createDistrictDataReaderWithHeaders(
+        Reader reader = createReaderWithHeaders(
                 villageHeader, ",census village regional name,census village name,1,2,TALUKA");
         censusVillageImportService.importData(reader);
     }
@@ -534,7 +564,7 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
     */
     @Test(expected = CsvImportDataException.class)
     public void verifyFT257() throws Exception {
-        Reader reader = createDistrictDataReaderWithHeaders(
+        Reader reader = createReaderWithHeaders(
                 villageHeader, "3,census village regional name,census village name,1,2,");
         censusVillageImportService.importData(reader);
     }
@@ -547,7 +577,7 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
         boolean thrown = false;
         String errorMessage = "CSV instance error [row: 2]: validation failed for instance of type " +
                 "org.motechproject.nms.region.domain.Village, violations: {'taluka': may not be null}";
-        Reader reader = createDistrictDataReaderWithHeaders(
+        Reader reader = createReaderWithHeaders(
                 villageHeader, "3,census village regional name,census village name,1,2,invalid taluka");
         try {
             censusVillageImportService.importData(reader);
@@ -563,12 +593,12 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
     */
     @Test(expected = CsvImportDataException.class)
     public void verifyFT259() throws Exception {
-        Reader reader = createDistrictDataReaderWithHeaders(
+        Reader reader = createReaderWithHeaders(
                 villageHeader, "abc,census village regional name,census village name,1,2,TALUKA");
         censusVillageImportService.importData(reader);
     }
 
-    private Reader createDistrictDataReaderWithHeaders(String header, String... lines) {
+    private Reader createReaderWithHeaders(String header, String... lines) {
         StringBuilder builder = new StringBuilder();
         builder.append(header);
         builder.append("\r\n");
