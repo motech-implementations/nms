@@ -3,27 +3,24 @@ package org.motechproject.nms.mobileacademy.ut;
 import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.mockito.Mock;
-
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.EventRelay;
 import org.motechproject.mtraining.domain.Bookmark;
-import org.motechproject.mtraining.domain.Course;
-import org.motechproject.mtraining.domain.CourseUnitState;
 import org.motechproject.mtraining.service.BookmarkService;
 import org.motechproject.mtraining.service.MTrainingService;
+import org.motechproject.nms.imi.service.SmsNotificationService;
 import org.motechproject.nms.mobileacademy.domain.CompletionRecord;
 import org.motechproject.nms.mobileacademy.domain.NmsCourse;
 import org.motechproject.nms.mobileacademy.dto.MaBookmark;
-import org.motechproject.nms.mobileacademy.repository.NmsCourseDataService;
-import org.motechproject.nms.mobileacademy.service.impl.SmsNotificationServiceImpl;
 import org.motechproject.nms.mobileacademy.exception.CourseNotCompletedException;
 import org.motechproject.nms.mobileacademy.repository.CompletionRecordDataService;
+import org.motechproject.nms.mobileacademy.repository.NmsCourseDataService;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
+import org.motechproject.nms.mobileacademy.service.impl.CourseNotificationServiceImpl;
 import org.motechproject.nms.mobileacademy.service.impl.MobileAcademyServiceImpl;
 import org.motechproject.server.config.SettingsFacade;
 
@@ -34,16 +31,17 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
-import static org.junit.Assert.*;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -72,7 +70,10 @@ public class MobileAcademyServiceUnitTest {
     private EventRelay eventRelay;
 
     @Mock
-    private SmsNotificationServiceImpl smsNotificationServiceImpl;
+    private CourseNotificationServiceImpl courseNotificationService;
+
+    @Mock
+    private SmsNotificationService smsNotificationService;
 
     @Mock
     private SettingsFacade settingsFacade;
@@ -87,9 +88,10 @@ public class MobileAcademyServiceUnitTest {
         initMocks(this);
         nmsCourseDataService.deleteAll();
         when(settingsFacade.getRawConfig("nmsCourse.json")).thenReturn(getFileInputStream("nmsCourseTest.json"));
-        mobileAcademyService = new MobileAcademyServiceImpl(
-                bookmarkService, nmsCourseDataService, completionRecordDataService, eventRelay, settingsFacade, alertService);
-        smsNotificationServiceImpl = new SmsNotificationServiceImpl(completionRecordDataService, settingsFacade, alertService);
+        mobileAcademyService = new MobileAcademyServiceImpl(bookmarkService, nmsCourseDataService,
+                completionRecordDataService, eventRelay, settingsFacade, alertService);
+        courseNotificationService = new CourseNotificationServiceImpl(completionRecordDataService,
+                smsNotificationService);
         validator = Validation.buildDefaultValidatorFactory().getValidator();
     }
 
@@ -209,7 +211,7 @@ public class MobileAcademyServiceUnitTest {
         assertNull(cr.getLastDeliveryStatus());
 
         when(completionRecordDataService.findRecordByCallingNumber(anyLong())).thenReturn(cr);
-        smsNotificationServiceImpl.updateSmsStatus(event);
+        courseNotificationService.updateSmsStatus(event);
         assertTrue(cr.getLastDeliveryStatus().equals("DeliveredToTerminal"));
     }
 

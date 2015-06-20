@@ -330,11 +330,10 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
         return totalScore;
     }
 
-    @SuppressWarnings("PMD.UnusedPrivateMethod")
     @MotechListener(subjects = {
             ConfigurationConstants.FILE_CHANGED_EVENT_SUBJECT,
             ConfigurationConstants.FILE_CREATED_EVENT_SUBJECT })
-    private void handleCourseChanges(MotechEvent event) {
+    public void handleCourseChanges(MotechEvent event) {
 
         String filePath = (String) event.getParameters().get(ConfigurationConstants.FILE_PATH);
 

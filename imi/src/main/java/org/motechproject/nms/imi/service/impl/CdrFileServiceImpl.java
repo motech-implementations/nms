@@ -1,6 +1,5 @@
 package org.motechproject.nms.imi.service.impl;
 
-import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
@@ -37,9 +36,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.security.DigestInputStream;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -233,11 +229,6 @@ public class CdrFileServiceImpl implements CdrFileService {
              InputStreamReader isr = new InputStreamReader(fis);
              BufferedReader reader = new BufferedReader(isr)) {
 
-            MessageDigest md = null;
-            @SuppressWarnings("PMD.UnusedLocalVariable")
-            DigestInputStream dis = new DigestInputStream(fis, md);
-            md = MessageDigest.getInstance("MD5");
-
             String line;
             while ((line = reader.readLine()) != null) {
                 try {
@@ -257,13 +248,14 @@ public class CdrFileServiceImpl implements CdrFileService {
                 lineNumber++;
             }
 
-            thisChecksum = new String(Hex.encodeHex(md.digest()));
+            reader.close();
+            isr.close();
+            fis.close();
+
+            thisChecksum = ChecksumHelper.checksum(file);
 
         } catch (IOException e) {
             String error = String.format("Unable to read %s: %s", fileName, e.getMessage());
-            errors.add(error);
-        } catch (NoSuchAlgorithmException e) {
-            String error = String.format("Unable to compute checksum: %s", e.getMessage());
             errors.add(error);
         }
 

@@ -58,6 +58,9 @@ public abstract class BaseLocationImportService<T> {
         } catch (ConstraintViolationException e) {
             throw new CsvImportDataException(createErrorMessage(e.getConstraintViolations(),
                     csvImporter.getRowNumber()), e);
+        } catch (IllegalStateException e) {
+            throw new CsvImportDataException(createErrorMessage(e.getMessage(),
+                csvImporter.getRowNumber()), e);
         }
     }
 
@@ -76,6 +79,11 @@ public abstract class BaseLocationImportService<T> {
             @Override
             public District retrieve(Long value) {
                 State state = (State) store.get(STATE);
+                if (state == null) {
+                    throw new IllegalStateException(String
+                            .format("Unable to load District %s with a null state", value));
+                }
+
                 return districtService.findByStateAndCode(state, value);
             }
         };
@@ -86,6 +94,11 @@ public abstract class BaseLocationImportService<T> {
             @Override
             public Taluka retrieve(String value) {
                 District district = (District) store.get(DISTRICT);
+                if (district == null) {
+                    throw new IllegalStateException(String
+                            .format("Unable to load Taluka %s with a null district", value));
+                }
+
                 return talukaService.findByDistrictAndCode(district, value);
             }
         };
@@ -96,6 +109,11 @@ public abstract class BaseLocationImportService<T> {
             @Override
             public HealthBlock retrieve(Long value) {
                 Taluka taluka = (Taluka) store.get(TALUKA);
+                if (taluka == null) {
+                    throw new IllegalStateException(String
+                            .format("Unable to load HealthBlock %s with a null taluka", value));
+                }
+
                 return healthBlockService.findByTalukaAndCode(taluka, value);
             }
         };
@@ -107,6 +125,11 @@ public abstract class BaseLocationImportService<T> {
             @Override
             public HealthFacility retrieve(Long value) {
                 HealthBlock healthBlock = (HealthBlock) store.get(HEALTH_BLOCK);
+                if (healthBlock == null) {
+                    throw new IllegalStateException(String
+                            .format("Unable to load HealthFacility %s with a null HealthBlock", value));
+                }
+
                 return healthFacilityService.findByHealthBlockAndCode(healthBlock, value);
             }
         };
@@ -125,4 +148,7 @@ public abstract class BaseLocationImportService<T> {
         }
     }
 
+    private String createErrorMessage(String message, int rowNumber) {
+        return String.format("CSV instance error [row: %d]: Error loading entities in record for instance of type %s, message: %s", rowNumber, type.getName(), message);
+    }
 }
