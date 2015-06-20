@@ -41,20 +41,20 @@ import static org.motechproject.nms.testing.it.utils.RegionHelper.createState;
 public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
 
     @Inject
-    private LanguageDataService languageDataService;
+    LanguageDataService languageDataService;
     @Inject
-    private StateDataService stateDataService;
+    StateDataService stateDataService;
     @Inject
-    private DistrictDataService districtDataService;
+    DistrictDataService districtDataService;
     @Inject
-    private CircleDataService circleDataService;
+    CircleDataService circleDataService;
     @Inject
-    private FrontLineWorkerDataService frontLineWorkerDataService;
+    FrontLineWorkerDataService frontLineWorkerDataService;
     @Inject
-    private TestingService testingService;
+    TestingService testingService;
 
     @Inject
-    private FrontLineWorkerImportService frontLineWorkerImportService;
+    FrontLineWorkerImportService frontLineWorkerImportService;
 
     @Before
     public void setUp() {

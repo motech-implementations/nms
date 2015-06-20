@@ -1,7 +1,6 @@
 package org.motechproject.nms.imi.service.impl;
 
 
-import org.apache.commons.codec.binary.Hex;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -47,9 +46,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.security.DigestOutputStream;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 @Service("targetFileService")
@@ -135,7 +131,7 @@ public class TargetFileServiceImpl implements TargetFileService {
 
 
     private String targetFileName(String timestamp) {
-        return String.format("OBD_%s.csv", timestamp);
+        return String.format("OBD_NMS_%s.csv", timestamp);
     }
 
 
@@ -258,24 +254,28 @@ public class TargetFileServiceImpl implements TargetFileService {
 
                 Subscriber subscriber = subscription.getSubscriber();
 
-                //todo: don't understand why subscriber.getLanguage() doesn't work here...
-                // it's not working because of https://applab.atlassian.net/browse/MOTECH-1678
-                Language language;
-                language = (Language) subscriberDataService.getDetachedField(subscriber,
-                        "language");
-                writer.write(language.getCode());
-
-                Circle circle;
-                circle = (Circle) subscriberDataService.getDetachedField(subscriber, "circle");
-
                 RequestId requestId = new RequestId(subscription.getSubscriptionId(),
                         TIME_FORMATTER.print(timestamp));
                 SubscriptionPackMessage msg = subscription.nextScheduledMessage(timestamp);
-                //todo: how do we choose a priority?
-                writeSubscriptionRow(requestId.toString(), imiServiceId,
-                        subscriber.getCallingNumber().toString(), NORMAL_PRIORITY, callFlowUrl,
-                        msg.getMessageFileName(), msg.getWeekId(), language.getCode(), circle.getName(),
-                        subscription.getOrigin().getCode(), writer);
+
+                //todo: don't understand why subscriber.getLanguage() doesn't work here...
+                // it's not working because of https://applab.atlassian.net/browse/MOTECH-1678
+                Language language = (Language) subscriberDataService.getDetachedField(subscriber, "language");
+                Circle circle = (Circle) subscriberDataService.getDetachedField(subscriber, "circle");
+
+                writeSubscriptionRow(
+                        requestId.toString(),
+                        imiServiceId,
+                        subscriber.getCallingNumber().toString(),
+                        NORMAL_PRIORITY, //todo: how do we choose a priority?
+                        callFlowUrl,
+                        msg.getMessageFileName(),
+                        msg.getWeekId(),
+                        // we are happy with empty language and circle since they are optional
+                        language == null ? "" : language.getCode(),
+                        circle == null ? "" : circle.getName(),
+                        subscription.getOrigin().getCode(),
+                        writer);
             }
 
             page++;
@@ -331,16 +331,12 @@ public class TargetFileServiceImpl implements TargetFileService {
         DateTime today = DateTime.now();
         String targetFileName = targetFileName(TIME_FORMATTER.print(today));
         File localTargetDir = localObdDir();
-        MessageDigest md;
         int recordCount = 0;
+        String checksum;
 
         File targetFile = new File(localTargetDir, targetFileName);
         try (FileOutputStream fos = new FileOutputStream(targetFile);
             OutputStreamWriter writer = new OutputStreamWriter(fos)) {
-
-            md = MessageDigest.getInstance("MD5");
-            @SuppressWarnings("PMD.UnusedLocalVariable")
-            DigestOutputStream dos = new DigestOutputStream(fos, md);
 
             int maxQueryBlock = Integer.parseInt(settingsFacade.getProperty(MAX_QUERY_BLOCK));
             String imiServiceId = settingsFacade.getProperty(TARGET_FILE_IMI_SERVICE_ID);
@@ -359,7 +355,12 @@ public class TargetFileServiceImpl implements TargetFileService {
 
             LOGGER.debug("Created targetFile with {} record{}", recordCount, recordCount == 1 ? "" : "s");
 
-        } catch (NoSuchAlgorithmException | IOException e) {
+            writer.close();
+            fos.close();
+
+            checksum = ChecksumHelper.checksum(targetFile);
+
+        } catch (IOException e) {
             LOGGER.error(e.getMessage());
             alert(targetFile.toString(), "targetFile", e.getMessage());
             fileAuditRecordDataService.create(new FileAuditRecord(FileType.TARGET_FILE, targetFile.getName(),
@@ -367,8 +368,7 @@ public class TargetFileServiceImpl implements TargetFileService {
             return null;
         }
 
-        String md5Checksum = new String(Hex.encodeHex(md.digest()));
-        TargetFileNotification tfn = new TargetFileNotification(targetFileName, md5Checksum, recordCount);
+        TargetFileNotification tfn = new TargetFileNotification(targetFileName, checksum, recordCount);
         LOGGER.debug("TargetFileNotification = {}", tfn.toString());
 
         //audit the success

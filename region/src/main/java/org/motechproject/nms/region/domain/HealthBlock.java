@@ -17,6 +17,7 @@ import java.util.List;
  * This class Models data for HealthBlock location records
  */
 @Entity(tableName = "nms_health_blocks")
+@Unique(name = "UNIQUE_TALUKA_CODE", members = { "taluka", "code" })
 public class HealthBlock extends MdsEntity {
 
     @Field
@@ -38,7 +39,6 @@ public class HealthBlock extends MdsEntity {
     private String hq;
 
     @Field
-    @Unique
     @Column(allowsNull = "false")
     @NotNull
     private Long code;

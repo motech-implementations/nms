@@ -73,17 +73,23 @@
     <osgi:reference id="districtDataService"
                     interface="org.motechproject.nms.region.repository.DistrictDataService" />
 
-    <osgi:reference id="talukaDataService"
-                    interface="org.motechproject.nms.region.repository.TalukaDataService" />
+    <osgi:reference id="districtService"
+                    interface="org.motechproject.nms.region.service.DistrictService" />
 
-    <osgi:reference id="villageDataService"
-                    interface="org.motechproject.nms.region.repository.VillageDataService" />
+    <osgi:reference id="talukaService"
+                    interface="org.motechproject.nms.region.service.TalukaService" />
 
-    <osgi:reference id="healthBlockDataService"
-                    interface="org.motechproject.nms.region.repository.HealthBlockDataService" />
+    <osgi:reference id="villageService"
+                    interface="org.motechproject.nms.region.service.VillageService" />
 
-    <osgi:reference id="healthFacilityDataService"
-                    interface="org.motechproject.nms.region.repository.HealthFacilityDataService" />
+    <osgi:reference id="healthBlockService"
+                    interface="org.motechproject.nms.region.service.HealthBlockService" />
+
+    <osgi:reference id="healthFacilityService"
+                    interface="org.motechproject.nms.region.service.HealthFacilityService" />
+
+    <osgi:reference id="healthSubFacilityService"
+                    interface="org.motechproject.nms.region.service.HealthSubFacilityService" />
 
     <osgi:reference id="alertsService" interface="org.motechproject.alerts.contract.AlertService" />
 

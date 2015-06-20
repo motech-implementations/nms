@@ -12,6 +12,7 @@ import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.testing.it.utils.RegionHelper;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
@@ -36,35 +37,33 @@ import static org.junit.Assert.assertNull;
 public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
 
     @Inject
-    private CircleDataService circleDataService;
-
+    CircleDataService circleDataService;
     @Inject
-    private DistrictDataService districtDataService;
-
+    DistrictDataService districtDataService;
     @Inject
-    private StateDataService stateDataService;
-
+    DistrictService districtService;
     @Inject
-    private LanguageDataService languageDataService;
-
+    StateDataService stateDataService;
     @Inject
-    private FrontLineWorkerDataService frontLineWorkerDataService;
-
+    LanguageDataService languageDataService;
     @Inject
-    private FrontLineWorkerService frontLineWorkerService;
-
+    FrontLineWorkerDataService frontLineWorkerDataService;
     @Inject
-    private TestingService testingService;
-
+    FrontLineWorkerService frontLineWorkerService;
     @Inject
-    private FrontLineWorkerUpdateImportService frontLineWorkerUpdateImportService;
+    TestingService testingService;
+    @Inject
+    FrontLineWorkerUpdateImportService frontLineWorkerUpdateImportService;
+
 
     private RegionHelper rh;
     private String resource;
 
+
     @Before
     public void setUp() {
-        rh = new RegionHelper(languageDataService, circleDataService, stateDataService, districtDataService);
+        rh = new RegionHelper(languageDataService, circleDataService, stateDataService, districtDataService,
+                districtService);
 
         testingService.clearDatabase();
 

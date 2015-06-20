@@ -27,16 +27,16 @@ import static org.junit.Assert.assertTrue;
 public class PropertyServiceBundleIT extends BasePaxIT {
 
     @Inject
-    private StateDataService stateDataService;
+    StateDataService stateDataService;
 
     @Inject
-    private DeployedServiceDataService deployedServiceDataService;
+    DeployedServiceDataService deployedServiceDataService;
 
     @Inject
-    private PropertyService propertyService;
+    PropertyService propertyService;
 
     @Inject
-    private TestingService testingService;
+    TestingService testingService;
 
     private void cleanUp() {
         testingService.clearDatabase();

@@ -38,6 +38,8 @@ public class ImiController {
 
     public static final String NOT_PRESENT = "<%s: Not Present>";
     public static final String INVALID = "<%s: Invalid>";
+    public static final String INVALID_STATUS_ENUM = "Can not construct instance of " +
+            "org.motechproject.nms.imi.domain.FileProcessedStatus from String value";
     public static final Pattern TARGET_FILENAME_PATTERN = Pattern.compile("OBD_[0-9]{14}\\.csv");
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ImiController.class);
@@ -224,6 +226,9 @@ public class ImiController {
     @ResponseBody
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public BadRequest handleException(HttpMessageNotReadableException e) {
+        if (e.getLocalizedMessage().contains(INVALID_STATUS_ENUM)) {
+            return new BadRequest("<fileProcessedStatus: Invalid Value>");
+        }
         return new BadRequest(e.getMessage());
     }
 

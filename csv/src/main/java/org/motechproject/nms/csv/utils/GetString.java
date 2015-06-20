@@ -10,11 +10,13 @@ public class GetString implements CellProcessor {
     public Object execute(Object value, CsvContext context) {
         if (value instanceof String) {
             return value;
-        } else if (null != value) {
-            return String.valueOf(value);
-        } else {
+        }
+
+        if (value == null) {
             throw new CsvImportDataException(getErrorMessage(context));
         }
+
+        return String.valueOf(value);
     }
 
     private String getErrorMessage(CsvContext context) {

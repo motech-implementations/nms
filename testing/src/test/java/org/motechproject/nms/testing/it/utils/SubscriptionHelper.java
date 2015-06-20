@@ -11,6 +11,7 @@ import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
+import org.motechproject.nms.kilkari.repository.SubscriptionPackMessageDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.Language;
@@ -18,6 +19,7 @@ import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.service.DistrictService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,14 +45,15 @@ public class SubscriptionHelper {
                               LanguageDataService languageDataService,
                               CircleDataService circleDataService,
                               StateDataService stateDataService,
-                              DistrictDataService districtDataService) {
+                              DistrictDataService districtDataService,
+                              DistrictService districtService) {
 
         this.subscriptionService = subscriptionService;
         this.subscriberDataService = subscriberDataService;
         this.subscriptionPackDataService = subscriptionPackDataService;
 
         this.regionHelper = new RegionHelper(languageDataService, circleDataService, stateDataService,
-                districtDataService);
+                districtDataService, districtService);
     }
 
     public SubscriptionPack childPack() {
@@ -78,19 +81,7 @@ public class SubscriptionHelper {
 
     private void createSubscriptionPack(String name, SubscriptionPackType type, int weeks,
                                         int messagesPerWeek) {
-        List<SubscriptionPackMessage> messages = new ArrayList<>();
-        for (int week = 1; week <= weeks; week++) {
-            messages.add(new SubscriptionPackMessage(week, String.format("w%s_1", week),
-                    String.format("w%s_1.wav", week),
-                    TWO_MINUTES - TEN_SECS + (int) (Math.random() * 2 * TEN_SECS)));
-
-            if (messagesPerWeek == 2) {
-                messages.add(new SubscriptionPackMessage(week, String.format("w%s_2", week),
-                        String.format("w%s_2.wav", week),
-                        TWO_MINUTES - TEN_SECS + (int) (Math.random() * 2 * TEN_SECS)));
-            }
-        }
-
+        List<SubscriptionPackMessage> messages = genratePackMessageList(weeks, messagesPerWeek);
         subscriptionPackDataService.create(new SubscriptionPack(name, type, weeks, messagesPerWeek, messages));
     }
 
@@ -166,4 +157,56 @@ public class SubscriptionHelper {
     public Subscription mksub(SubscriptionOrigin origin, DateTime startDate) {
         return mksub(origin, startDate, SubscriptionPackType.CHILD);
     }
+    
+    public SubscriptionPack childPackFor2MessagePerWeek(SubscriptionPackMessageDataService subscriptionPackMessageDataService) {
+    	SubscriptionPack pack = subscriptionPackDataService.byName("childPack");
+    	if (pack == null) {
+            createSubscriptionPack("childPack", SubscriptionPackType.CHILD, CHILD_PACK_WEEKS, 2);
+        } else {
+        	if(pack.getMessagesPerWeek() == 1) {
+        		updateSubscriptionPack(subscriptionPackMessageDataService, 
+        				pack, CHILD_PACK_WEEKS, 2);
+        	}
+        }
+        return subscriptionService.getSubscriptionPack("childPack");
+    }
+    
+    public SubscriptionPack pregnancyPackFor1MessagePerWeek(SubscriptionPackMessageDataService subscriptionPackMessageDataService) {
+    	SubscriptionPack pack = subscriptionPackDataService.byName("pregnancyPack");
+    	if (pack == null) {
+            createSubscriptionPack("pregnancyPack", SubscriptionPackType.PREGNANCY, PREGNANCY_PACK_WEEKS, 1);
+        } else {
+        	if(pack.getMessagesPerWeek() == 2) {
+        		updateSubscriptionPack(subscriptionPackMessageDataService, 
+        				pack, PREGNANCY_PACK_WEEKS, 1);
+        	}
+        }
+        return subscriptionService.getSubscriptionPack("pregnancyPack");
+    }
+
+    private void updateSubscriptionPack(SubscriptionPackMessageDataService subscriptionPackMessageDataService, 
+    		SubscriptionPack pack, int packWeeks, int messagesPerWeek) {
+    	for(SubscriptionPackMessage message : pack.getMessages()) {
+    		subscriptionPackMessageDataService.delete(message);
+    	}
+    	pack.setMessagesPerWeek(messagesPerWeek);
+    	pack.setMessages(genratePackMessageList(packWeeks, messagesPerWeek));
+    	subscriptionPackDataService.update(pack);
+	}
+
+	private List<SubscriptionPackMessage> genratePackMessageList(int packWeeks, int messagesPerWeek) {
+		List<SubscriptionPackMessage> messages = new ArrayList<>();
+        for (int week = 1; week <= packWeeks; week++) {
+            messages.add(new SubscriptionPackMessage(week, String.format("w%s_1", week),
+                    String.format("w%s_1.wav", week),
+                    TWO_MINUTES - TEN_SECS + (int) (Math.random() * 2 * TEN_SECS)));
+
+            if (messagesPerWeek == 2) {
+                messages.add(new SubscriptionPackMessage(week, String.format("w%s_2", week),
+                        String.format("w%s_2.wav", week),
+                        TWO_MINUTES - TEN_SECS + (int) (Math.random() * 2 * TEN_SECS)));
+            }
+        }
+        return messages;
+	}
 }

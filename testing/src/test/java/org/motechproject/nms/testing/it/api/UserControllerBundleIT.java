@@ -21,17 +21,16 @@ import org.motechproject.nms.flw.domain.ServiceUsage;
 import org.motechproject.nms.flw.domain.ServiceUsageCap;
 import org.motechproject.nms.flw.domain.WhitelistEntry;
 import org.motechproject.nms.flw.domain.WhitelistState;
-import org.motechproject.nms.flw.repository.CallDetailRecordDataService;
-import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.flw.repository.ServiceUsageCapDataService;
 import org.motechproject.nms.flw.repository.ServiceUsageDataService;
 import org.motechproject.nms.flw.repository.WhitelistEntryDataService;
 import org.motechproject.nms.flw.repository.WhitelistStateDataService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
+import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.domain.Subscriber;
+import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
-import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.domain.DeployedService;
@@ -47,7 +46,7 @@ import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.NationalDefaultLanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
-import org.motechproject.nms.region.service.LanguageService;
+import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.testing.it.utils.RegionHelper;
 import org.motechproject.nms.testing.it.utils.SubscriptionHelper;
 import org.motechproject.nms.testing.service.TestingService;
@@ -88,61 +87,37 @@ public class UserControllerBundleIT extends BasePaxIT {
     private static final String ADMIN_PASSWORD = "motech";
 
     @Inject
-    private SubscriptionService subscriptionService;
-
+    SubscriptionService subscriptionService;
     @Inject
-    private SubscriberDataService subscriberDataService;
-
+    SubscriberDataService subscriberDataService;
     @Inject
-    private SubscriptionPackDataService subscriptionPackDataService;
-
+    SubscriptionPackDataService subscriptionPackDataService;
     @Inject
-    private SubscriptionDataService subscriptionDataService;
-
+    FrontLineWorkerService frontLineWorkerService;
     @Inject
-    private FrontLineWorkerService frontLineWorkerService;
-
+    ServiceUsageDataService serviceUsageDataService;
     @Inject
-    private FrontLineWorkerDataService frontLineWorkerDataService;
-
+    ServiceUsageCapDataService serviceUsageCapDataService;
     @Inject
-    private ServiceUsageDataService serviceUsageDataService;
-
+    LanguageDataService languageDataService;
     @Inject
-    private ServiceUsageCapDataService serviceUsageCapDataService;
-
+    StateDataService stateDataService;
     @Inject
-    private LanguageDataService languageDataService;
-
+    WhitelistEntryDataService whitelistEntryDataService;
     @Inject
-    private LanguageService languageService;
-
+    WhitelistStateDataService whitelistStateDataService;
     @Inject
-    private StateDataService stateDataService;
-
+    CircleDataService circleDataService;
     @Inject
-    private WhitelistEntryDataService whitelistEntryDataService;
-
+    DistrictDataService districtDataService;
     @Inject
-    private WhitelistStateDataService whitelistStateDataService;
-
+    DistrictService districtService;
     @Inject
-    private CallDetailRecordDataService callDetailRecordDataService;
-
+    DeployedServiceDataService deployedServiceDataService;
     @Inject
-    private CircleDataService circleDataService;
-
+    NationalDefaultLanguageDataService nationalDefaultLanguageDataService;
     @Inject
-    private DistrictDataService districtDataService;
-
-    @Inject
-    private DeployedServiceDataService deployedServiceDataService;
-
-    @Inject
-    private NationalDefaultLanguageDataService nationalDefaultLanguageDataService;
-
-    @Inject
-    private TestingService testingService;
+    TestingService testingService;
 
 
 
@@ -154,12 +129,11 @@ public class UserControllerBundleIT extends BasePaxIT {
     public void setupTestData() {
         testingService.clearDatabase();
 
-        rh = new RegionHelper(languageDataService, circleDataService, stateDataService,
-                districtDataService);
+        rh = new RegionHelper(languageDataService, circleDataService, stateDataService, districtDataService,
+                districtService);
 
-        sh = new SubscriptionHelper(subscriptionService,
-                subscriberDataService, subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService);
+        sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
+                languageDataService, circleDataService, stateDataService, districtDataService, districtService);
     }
 
 
@@ -168,6 +142,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         rh.newDelhiDistrict();
         rh.delhiCircle();
 
+            
         deployedServiceDataService.create(new DeployedService(rh.delhiState(), Service.KILKARI));
 
         Subscriber subscriber1 = subscriberDataService.create(new Subscriber(1000000000L, rh.hindiLanguage()));
@@ -1340,5 +1315,117 @@ public class UserControllerBundleIT extends BasePaxIT {
         getLogger().debug("expectedJsonResponse: {}", expectedJsonResponse);
         getLogger().debug("        jsonResponse: {}", jsonResponse);
         assertEquals(expectedJsonResponse, jsonResponse);
+    }
+
+    /**
+     * To verify that any DEACTIVATED subscription is not returned in get
+     * subscriber details.
+     */
+    @Test
+    public void verifyFT183() throws IOException,
+            InterruptedException {
+        createKilkariTestData();
+        // subscriber 4000000000L subscribed to both pack and Pregnancy pack is
+        // deactivated
+        Subscriber subscriber = subscriberDataService.create(new Subscriber(4000000000L, rh.hindiLanguage()));
+        subscriptionService.createSubscription(subscriber.getCallingNumber(),
+                rh.hindiLanguage(), sh.childPack(), SubscriptionOrigin.IVR);
+        
+        Subscription pregnancyPack = subscriptionService.createSubscription(
+                subscriber.getCallingNumber(), rh.hindiLanguage(), sh.pregnancyPack(),
+                SubscriptionOrigin.IVR);
+        subscriptionService.deactivateSubscription(pregnancyPack,
+                DeactivationReason.DEACTIVATED_BY_USER);
+        
+        Set<String> expectedPacks = new HashSet<>();
+        expectedPacks.add("childPack");
+
+        HttpGet httpGet = createHttpGet(true, "kilkari", // service
+                true, "4000000000", // callingNumber
+                true, "OP", // operator
+                true, rh.delhiCircle().getName(), // circle
+                true, "123456789012345" // callId
+        );
+
+        String expectedJsonResponse = createKilkariUserResponseJson(rh.hindiLanguage().getCode(), // defaultLanguageLocationCode
+                rh.hindiLanguage().getCode(), // locationCode
+                null, // allowedLanguageLocationCodes
+                expectedPacks // subscriptionPackList
+        );
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * NMS_FT_184 To verify that any COMPLETED subscription is not returned in
+     * get subscriber details.
+     */
+    @Test
+    public void verifyFT184() throws IOException,
+            InterruptedException {
+        createKilkariTestData();
+        // subscriber subscribed to both packs and Pregnancy pack is completed
+        Subscriber subscriber = subscriberDataService.create(new Subscriber(5000000000L, rh.hindiLanguage()));
+        
+        subscriptionService.createSubscription(subscriber.getCallingNumber(),
+                rh.hindiLanguage(), sh.childPack(), SubscriptionOrigin.IVR);
+        
+        Subscription pregnancyPack=subscriptionService.createSubscription(
+                subscriber.getCallingNumber(), rh.hindiLanguage(), sh.pregnancyPack(),
+                SubscriptionOrigin.IVR);
+        subscriptionService.updateStartDate(pregnancyPack, DateTime.now()
+                .minusDays(505 + 90));
+ 
+        Set<String> expectedPacks = new HashSet<>();
+        expectedPacks.add("childPack");
+
+        HttpGet httpGet = createHttpGet(true, "kilkari", // service
+                true, "5000000000", // callingNumber
+                true, "OP", // operator
+                true, rh.delhiCircle().getName(), // circle
+                true, "123456789012345" // callId
+        );
+
+        String expectedJsonResponse = createKilkariUserResponseJson(rh.hindiLanguage().getCode(), // defaultLanguageLocationCode
+                rh.hindiLanguage().getCode(), // locationCode
+                null, // allowedLanguageLocationCodes
+                expectedPacks // subscriptionPackList
+        );
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * To verify the behavior of Get Subscriber Details API if the service is
+     * not deployed in provided Subscriber's state.
+     */
+    @Test
+    // TODO: https://applab.atlassian.net/browse/NMS-181
+    @Ignore
+    public void verifyFT16() throws IOException, InterruptedException {
+        rh.newDelhiDistrict();
+        rh.delhiCircle();
+        // Service is not deployed in delhi state i.e.
+        // deployedServiceDataService.create(new
+        // DeployedService(rh.delhiState(), Service.KILKARI));
+
+        HttpGet httpGet = createHttpGet(true, "kilkari", // service
+                true, "1200000000", // callingNumber
+                true, "OP", // operator
+                true, rh.delhiCircle().getName(), // circle
+                true, "123456789012345" // callId
+        );
+        // Should return HTTP 501 because the service is not
+        // deployed for the specified state
+        String expectedJsonResponse = createFailureResponseJson("<KILKARI: Not Deployed In State>");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
+                HttpStatus.SC_NOT_IMPLEMENTED, expectedJsonResponse,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 }

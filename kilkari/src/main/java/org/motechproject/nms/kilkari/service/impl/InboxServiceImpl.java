@@ -65,10 +65,19 @@ public class InboxServiceImpl implements InboxService {
         } else if (subscription.getSubscriptionPack().getMessagesPerWeek() == 1) {
             messageIndex = currentWeek - 1;
         } else { // messagesPerWeek == 2
-            if (daysIntoWeek > 0 && daysIntoWeek < 4) { // use this week's first message
+
+            // day of and next 3 days, so if day of week is Monday: Mon, Tue, Wed, Thu
+            if (daysIntoWeek >= 0 && daysIntoWeek < 4) {
+
+                // use this week's first message
                 messageIndex = 2 * (currentWeek - 1);
-            } else { // use this week's second message
+
+            // remaining days, so if day of week is Monday: Fri, Sat, Sun
+            } else {
+
+                // use this week's second message
                 messageIndex = 2 * (currentWeek - 1) + 1;
+
             }
         }
 

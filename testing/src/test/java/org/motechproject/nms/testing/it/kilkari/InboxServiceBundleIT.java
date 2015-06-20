@@ -12,6 +12,7 @@ import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
 import org.motechproject.nms.kilkari.exception.NoInboxForSubscriptionException;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
+import org.motechproject.nms.kilkari.repository.SubscriptionPackMessageDataService;
 import org.motechproject.nms.kilkari.service.InboxService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
@@ -19,6 +20,7 @@ import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.testing.it.utils.RegionHelper;
 import org.motechproject.nms.testing.it.utils.SubscriptionHelper;
 import org.motechproject.nms.testing.service.TestingService;
@@ -56,27 +58,28 @@ public class InboxServiceBundleIT extends BasePaxIT {
 	@Inject
 	private TestingService testingService;
     @Inject
-    private CircleDataService circleDataService;
-    @Inject
-    private DistrictDataService districtDataService;
+    CircleDataService circleDataService;
+	@Inject
+	private DistrictDataService districtDataService;
+	@Inject
+	private DistrictService districtService;
     @Inject
     private SubscriberDataService subscriberDataService;
-
+    @Inject
+    private SubscriptionPackMessageDataService subscriptionPackMessageDataService;
 
     private RegionHelper rh;
     private SubscriptionHelper sh;
-
 
     @Before
     public void setUp() {
 		testingService.clearDatabase();
 
-		rh = new RegionHelper(languageDataService, circleDataService, stateDataService,
-                districtDataService);
+		rh = new RegionHelper(languageDataService, circleDataService, stateDataService, districtDataService,
+				districtService);
 
-        sh = new SubscriptionHelper(subscriptionService,
-                subscriberDataService, subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService);
+        sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
+				languageDataService, circleDataService, stateDataService, districtDataService, districtService);
     }
 
 
@@ -169,7 +172,7 @@ public class InboxServiceBundleIT extends BasePaxIT {
 		assertEquals(msg.getMessageFileName(), "w72_2.wav");
 
 	}
-
+	
 	/*
 	 *	To check NMS is able to make available a single message of current week in inbox when user is subscribed to
 	 *	Child Pack with single message per week configuration.
@@ -232,7 +235,6 @@ public class InboxServiceBundleIT extends BasePaxIT {
 		assertNull(inboxService.getInboxMessage(subscription));
 	}
 
-
 	/*
 	 *  To check NMS is able to make a message available for 7 days  after user's subscription gets completed for
 	 *  Child Pack.
@@ -271,4 +273,148 @@ public class InboxServiceBundleIT extends BasePaxIT {
 
 	}
 	
+	/*
+	 *	"To check NMS is able to make available a single message of current week in inbox
+	 *	 when user is subscribed to 72Weeks Pack with single message per week configuration."
+	 */
+	@Test
+	public void verifyFT107() throws NoInboxForSubscriptionException {
+		
+		DateTime now = DateTime.now();
+		// create subscriber for pregnancyPack
+		Subscriber subscriber = new Subscriber(1000000002L);
+		subscriber.setLastMenstrualPeriod(now.minusDays(90));
+		subscriberService.create(subscriber);
+		
+		// create pregnancyPack subscription for one message per week.
+		subscriptionService.createSubscription(subscriber.getCallingNumber(), rh.hindiLanguage(), 
+				sh.pregnancyPackFor1MessagePerWeek(subscriptionPackMessageDataService), SubscriptionOrigin.MCTS_IMPORT);
+		
+		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber());
+		Set<Subscription> subscriptions = subscriber.getAllSubscriptions();
+		Subscription subscription = subscriptions.iterator().next();
+		SubscriptionPackMessage msg = inboxService.getInboxMessage(subscription);
+		
+		// first msg should be in inbox
+		assertEquals(msg.getWeekId(), "w1_1");
+		assertEquals(msg.getMessageFileName(), "w1_1.wav");
+		// set lmp as 7th day week of week to check message exist for seven days.
+		subscriber.setLastMenstrualPeriod(DateTime.now().minusDays(96)); 
+		subscriberService.update(subscriber);
+
+		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber());
+		subscriptions = subscriber.getAllSubscriptions();
+		subscription = subscriptions.iterator().next();
+		msg = inboxService.getInboxMessage(subscription);
+
+		// still first message should be in inbox because messagePerWeek is one
+		assertEquals(msg.getWeekId(), "w1_1");
+		assertEquals(msg.getMessageFileName(), "w1_1.wav");
+		
+	}
+	
+	/*
+	 *	"To check NMS is able to make available a single message of current week in inbox
+	 *	 when user is subscribed to 48Weeks Pack with two message per week configuration."
+	 */
+	@Test
+	public void verifyFT114() throws NoInboxForSubscriptionException {
+		
+		DateTime now = DateTime.now();
+		// create subscriber for childPack
+		Subscriber subscriber = new Subscriber(1000000002L);
+		subscriber.setDateOfBirth(now);
+		subscriberService.create(subscriber);
+		
+		// create childPack subscription for two message per week.
+		subscriptionService.createSubscription(subscriber.getCallingNumber(), rh.hindiLanguage(), 
+				sh.childPackFor2MessagePerWeek(subscriptionPackMessageDataService),
+				SubscriptionOrigin.MCTS_IMPORT);
+		
+		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber());
+		Set<Subscription> subscriptions = subscriber.getAllSubscriptions();
+		Subscription subscription = subscriptions.iterator().next();
+		SubscriptionPackMessage msg = inboxService.getInboxMessage(subscription);
+		
+		// first msg should be in inbox
+		assertEquals(msg.getWeekId(), "w1_1");
+		assertEquals(msg.getMessageFileName(), "w1_1.wav");
+		
+		subscriber.setDateOfBirth(now.minusDays(4));
+		subscriberService.update(subscriber);
+
+		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber());
+		subscriptions = subscriber.getAllSubscriptions();
+		subscription = subscriptions.iterator().next();
+		msg = inboxService.getInboxMessage(subscription);
+
+		// second message should be in inbox because messagePerWeek is two
+		assertEquals(msg.getWeekId(), "w1_2");
+		assertEquals(msg.getMessageFileName(), "w1_2.wav");
+		
+	}
+	
+	/*
+	 * To verify number of Messages per week should be modified successfully from 1 to 2.
+	 */
+	@Test
+ 	public void verifyFT178() throws InterruptedException, Exception {
+ 		
+ 		DateTime now = DateTime.now();
+
+ 		Subscriber subscriber = new Subscriber(1000000002L);
+ 		subscriber.setDateOfBirth(now.minusDays(4));
+ 		subscriberService.create(subscriber);
+
+ 		Subscription childSubscription = subscriptionService.createSubscription(subscriber.getCallingNumber(), rh.hindiLanguage(), sh.childPack(), 
+ 				SubscriptionOrigin.MCTS_IMPORT);
+ 		assertEquals(1, childSubscription.getSubscriptionPack().getMessagesPerWeek());
+ 		SubscriptionPackMessage packMessage = inboxService.getInboxMessage(childSubscription);
+ 		assertEquals("w1_1", packMessage.getWeekId());
+ 		assertEquals("w1_1.wav", packMessage.getMessageFileName());
+
+ 		//update subscriptionPack and subscriptionPackMeassage list according to 2 msg per week for childPack
+ 		sh.childPackFor2MessagePerWeek(subscriptionPackMessageDataService);
+
+ 		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber());
+ 		childSubscription = subscriber.getSubscriptions().iterator().next();
+ 		assertEquals(2, childSubscription.getSubscriptionPack().getMessagesPerWeek());
+ 		
+ 		packMessage = inboxService.getInboxMessage(childSubscription);
+ 		assertEquals("w1_2", packMessage.getWeekId());
+ 		assertEquals("w1_2.wav", packMessage.getMessageFileName());
+ 	}
+
+	/*
+	 * To verify number of Messages per week should be modified successfully from 2 to 1.
+	 */
+ 	@Test
+ 	public void verifyFT179() throws InterruptedException, Exception {
+ 		DateTime now = DateTime.now();
+
+ 		Subscriber subscriber = new Subscriber(1000000002L);
+ 		subscriber.setLastMenstrualPeriod(now.minusDays(94));
+ 		subscriberService.create(subscriber);
+
+ 		Subscription motherSubscription = subscriptionService.createSubscription(subscriber.getCallingNumber(), rh.hindiLanguage(), sh.pregnancyPack(),
+ 				SubscriptionOrigin.MCTS_IMPORT);
+ 		assertEquals(2, motherSubscription.getSubscriptionPack().getMessagesPerWeek());
+ 		
+ 		SubscriptionPackMessage packMessage = inboxService.getInboxMessage(motherSubscription);
+ 		assertEquals("w1_2", packMessage.getWeekId());
+ 		assertEquals("w1_2.wav", packMessage.getMessageFileName());
+
+ 		//update subscriptionPack and subscriptionPackMeassage list according to 1 msg per week for pregnancyPack
+ 		sh.pregnancyPackFor1MessagePerWeek(subscriptionPackMessageDataService);
+ 		
+ 		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber());
+ 		motherSubscription = subscriber.getSubscriptions().iterator().next();
+ 		assertEquals(1, motherSubscription.getSubscriptionPack().getMessagesPerWeek());
+ 		
+ 		packMessage = inboxService.getInboxMessage(motherSubscription);
+ 		assertEquals("w1_1", packMessage.getWeekId());
+ 		assertEquals("w1_1.wav", packMessage.getMessageFileName());
+
+ 	}
+
 }

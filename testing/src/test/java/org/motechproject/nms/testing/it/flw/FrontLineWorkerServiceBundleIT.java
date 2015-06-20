@@ -1,6 +1,7 @@
 package org.motechproject.nms.testing.it.flw;
 
 import org.joda.time.DateTime;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -23,6 +24,7 @@ import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
@@ -50,56 +52,37 @@ import static org.junit.Assert.assertTrue;
 public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
 
     @Inject
-    private FrontLineWorkerDataService frontLineWorkerDataService;
-
+    FrontLineWorkerDataService frontLineWorkerDataService;
     @Inject
-    private FrontLineWorkerService frontLineWorkerService;
-
+    FrontLineWorkerService frontLineWorkerService;
     @Inject
-    private ServiceUsageDataService serviceUsageDataService;
-
+    ServiceUsageDataService serviceUsageDataService;
     @Inject
-    private ServiceUsageService serviceUsageService;
-
+    ServiceUsageService serviceUsageService;
     @Inject
-    private DistrictDataService districtDataService;
-
+    DistrictDataService districtDataService;
     @Inject
-    private LanguageDataService languageDataService;
-
+    DistrictService districtService;
     @Inject
-    private StateDataService stateDataService;
-
+    LanguageDataService languageDataService;
     @Inject
-    private CircleDataService circleDataService;
-
+    StateDataService stateDataService;
     @Inject
-    private WhitelistEntryDataService whitelistEntryDataService;
-
+    CircleDataService circleDataService;
     @Inject
-    private WhitelistStateDataService whitelistStateDataService;
-
+    WhitelistEntryDataService whitelistEntryDataService;
     @Inject
-    private TestingService testingService;
+    WhitelistStateDataService whitelistStateDataService;
+    @Inject
+    TestingService testingService;
 
-    private void setupData() {
+
+    private State sampleState;
+
+
+    @Before
+    public void doTheNeedful() {
         testingService.clearDatabase();
-
-        for (FrontLineWorker flw: frontLineWorkerDataService.retrieveAll()) {
-            flw.setStatus(FrontLineWorkerStatus.INVALID);
-            flw.setInvalidationDate(new DateTime().withDate(2011, 8, 1));
-
-            frontLineWorkerDataService.update(flw);
-        }
-
-        serviceUsageDataService.deleteAll();
-        frontLineWorkerDataService.deleteAll();
-        languageDataService.deleteAll();
-        districtDataService.deleteAll();
-        whitelistStateDataService.deleteAll();
-        whitelistEntryDataService.deleteAll();
-        stateDataService.deleteAll();
-        circleDataService.deleteAll();
     }
 
     private void createLanguageLocationData() {
@@ -115,8 +98,7 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
         state.setName("State 1");
         state.setCode(1L);
         state.getDistricts().add(district);
-
-        stateDataService.create(state);
+        sampleState = stateDataService.create(state);
 
         Circle circle = new Circle("AA");
         circle.setDefaultLanguage(ta);
@@ -130,8 +112,6 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
 
     @Test
     public void testPurgeOldInvalidFrontLineWorkers() {
-        setupData();
-
         // FLW1 & 2 Should be purged, the others should remain
 
         FrontLineWorker flw1 = new FrontLineWorker("Test Worker", 1111111110L);
@@ -187,7 +167,6 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
 
     @Test
     public void testFrontLineWorkerService() throws Exception {
-        setupData();
         FrontLineWorker flw = new FrontLineWorker("Test Worker", 1111111111L);
         frontLineWorkerService.add(flw);
 
@@ -210,10 +189,9 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
 
     @Test
     public void testFrontLineWorkerUpdate() {
-        setupData();
         createLanguageLocationData();
 
-        District district = districtDataService.findByName("District 1");
+        District district = districtService.findByStateAndCode(sampleState, 1L);
         Language language = languageDataService.findByCode("50");
 
         FrontLineWorker flw = new FrontLineWorker("Test Worker", 2111111111L);
@@ -241,8 +219,6 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
 
     @Test
     public void testDeleteNonInvalidFrontLineWorker() {
-        setupData();
-
         FrontLineWorker flw = new FrontLineWorker("Test Worker", 2111111111L);
         frontLineWorkerService.add(flw);
         flw = frontLineWorkerService.getByContactNumber(2111111111L);
@@ -255,8 +231,6 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
 
     @Test
     public void testDeleteRecentInvalidFrontLineWorker() {
-        setupData();
-
         FrontLineWorker flw = new FrontLineWorker("Test Worker", 2111111111L);
         frontLineWorkerService.add(flw);
 
@@ -273,8 +247,6 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
 
     @Test
     public void testDeleteOldInvalidFrontLineWorker() {
-        setupData();
-
         FrontLineWorker flw = new FrontLineWorker("Test Worker", 2111111111L);
         frontLineWorkerService.add(flw);
 

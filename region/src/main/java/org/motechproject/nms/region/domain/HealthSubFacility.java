@@ -10,6 +10,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 @Entity(tableName = "nms_health_sub_facilities")
+@Unique(name = "UNIQUE_HEALTH_FACILITY_CODE", members = { "healthFacility", "code" })
 public class HealthSubFacility extends MdsEntity {
 
     @Field
@@ -25,7 +26,6 @@ public class HealthSubFacility extends MdsEntity {
     private String regionalName;
 
     @Field
-    @Unique
     @Column(allowsNull = "false")
     @NotNull
     private Long code;
