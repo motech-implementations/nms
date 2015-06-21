@@ -16,6 +16,12 @@ import java.util.Map;
  */
 public interface LocationService {
 
+    /**
+     * Get locations method that fetches the associated location code from the mapping
+     * @param locationMapping mapping codes for location hierarchy
+     * @return mapping of code to location object
+     * @throws InvalidLocationException when the map of code set violates the location hierarchy
+     */
     Map<String, Object> getLocations(Map<String, Object> locationMapping) throws InvalidLocationException;
 
     State getState(Long stateId);
@@ -24,7 +30,7 @@ public interface LocationService {
 
     Taluka getTaluka(Long stateId, Long districtId, String talukaId);
 
-    Village getCensusVillage(Long stateId, Long DistrictId, String talukaId, Long vCode);
+    Village getCensusVillage(Long stateId, Long districtId, String talukaId, Long vCode);
 
     Village getNonCensusVillage(Long stateId, Long districtId, String talukaId, Long svid);
 

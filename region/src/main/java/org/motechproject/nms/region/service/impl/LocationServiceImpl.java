@@ -66,7 +66,7 @@ public class LocationServiceImpl implements LocationService {
         this.healthSubFacilityService = healthSubFacilityService;
     }
 
-    @Override
+    @Override // NO CHECKSTYLE Cyclomatic Complexity
     public Map<String, Object> getLocations(Map<String, Object> locationMapping) throws InvalidLocationException {
 
         Map<String, Object> locations = new HashMap<>();
@@ -103,8 +103,8 @@ public class LocationServiceImpl implements LocationService {
             locations.put(TALUKA, taluka);
 
             // check for more sub-locations to fetch
-            if (locationMapping.get(HEALTH_BLOCK) == null) {
-                // Try and set the village if healthblock data isn't available
+            if (locationMapping.get(HEALTH_BLOCK) == null) { // Try and set the village if healthblock data isn't available
+
                 if (locationMapping.get(CENSUS_VILLAGE) == null && locationMapping.get(NON_CENSUS_VILLAGE) == null) {
                     break;
                 }

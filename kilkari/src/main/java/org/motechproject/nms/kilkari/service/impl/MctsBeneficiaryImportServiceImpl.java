@@ -10,7 +10,6 @@ import org.motechproject.nms.csv.exception.CsvImportDataException;
 import org.motechproject.nms.csv.utils.ConstraintViolationUtils;
 import org.motechproject.nms.csv.utils.CsvImporterBuilder;
 import org.motechproject.nms.csv.utils.CsvMapImporter;
-import org.motechproject.nms.csv.utils.GetInstanceByLong;
 import org.motechproject.nms.csv.utils.GetInstanceByString;
 import org.motechproject.nms.csv.utils.GetLong;
 import org.motechproject.nms.csv.utils.GetString;
@@ -41,13 +40,7 @@ import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.domain.Village;
 import org.motechproject.nms.region.exception.InvalidLocationException;
-import org.motechproject.nms.region.repository.StateDataService;
-import org.motechproject.nms.region.service.DistrictService;
-import org.motechproject.nms.region.service.HealthBlockService;
-import org.motechproject.nms.region.service.HealthFacilityService;
-import org.motechproject.nms.region.service.HealthSubFacilityService;
-import org.motechproject.nms.region.service.TalukaService;
-import org.motechproject.nms.region.service.VillageService;
+import org.motechproject.nms.region.service.LocationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -76,7 +69,6 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     private static final String HEALTH_BLOCK = "HealthBlock_ID";
     private static final String PHC = "PHC_ID";
     private static final String SUBCENTRE = "SubCentre_ID";
-    private static final String VILLAGE = "Village";
     private static final String CENSUS_VILLAGE = "Village_ID";
     private static final String NON_CENSUS_VILAGE = "SVID";
     private static final String BENEFICIARY_ID = "ID_No";
@@ -87,13 +79,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     private static final String MOTHER_ID = "Mother_ID";
     private static final Logger LOGGER = LoggerFactory.getLogger(MctsBeneficiaryImportServiceImpl.class);
 
-    private StateDataService stateDataService;
-    private DistrictService districtService;
-    private TalukaService talukaService;
-    private HealthBlockService healthBlockService;
-    private HealthFacilityService healthFacilityService;
-    private HealthSubFacilityService healthSubFacilityService;
-    private VillageService villageService;
+    private LocationService locationService;
     private MctsMotherDataService mctsMotherDataService;
     private MctsChildDataService mctsChildDataService;
     private SubscriptionService subscriptionService;
@@ -105,26 +91,14 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     private SubscriptionPack childPack;
 
     @Autowired
-      MctsBeneficiaryImportServiceImpl(StateDataService stateDataService, //NO CHECKSTYLE More than 7 parameters
-                                     DistrictService districtService,
-                                     TalukaService talukaService,
-                                     HealthBlockService healthBlockService,
-                                     HealthFacilityService healthFacilityService,
-                                     HealthSubFacilityService healthSubFacilityService,
-                                     VillageService villageService,
-                                     MctsMotherDataService mctsMotherDataService,
-                                     MctsChildDataService mctsChildDataService,
-                                     SubscriptionService subscriptionService,
-                                     SubscriberService subscriberService,
-                                     SubscriptionPackDataService subscriptionPackDataService,
-                                     SubscriptionErrorDataService subscriptionErrorDataService) {
-        this.stateDataService = stateDataService;
-        this.districtService = districtService;
-        this.talukaService = talukaService;
-        this.healthBlockService = healthBlockService;
-        this.healthFacilityService = healthFacilityService;
-        this.healthSubFacilityService = healthSubFacilityService;
-        this.villageService = villageService;
+      MctsBeneficiaryImportServiceImpl(LocationService locationService,
+                                       MctsMotherDataService mctsMotherDataService,
+                                       MctsChildDataService mctsChildDataService,
+                                       SubscriptionService subscriptionService,
+                                       SubscriberService subscriberService,
+                                       SubscriptionPackDataService subscriptionPackDataService,
+                                       SubscriptionErrorDataService subscriptionErrorDataService) {
+        this.locationService = locationService;
         this.mctsMotherDataService = mctsMotherDataService;
         this.mctsChildDataService = mctsChildDataService;
         this.subscriptionService = subscriptionService;
@@ -194,9 +168,13 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         Long msisdn = (Long) record.get(MSISDN);
         DateTime lmp = (DateTime) record.get(LMP);
 
-        String errors = setLocationFields(record, mother);
-        if (errors != null) {
-            rejectBeneficiary(msisdn, SubscriptionRejectionReason.INVALID_LOCATION, SubscriptionPackType.PREGNANCY);
+        // validate and set location
+        try {
+            setLocationFields(locationService.getLocations(record), mother);
+        } catch (InvalidLocationException le) {
+            LOGGER.error(le.toString());
+            rejectBeneficiaryWithMessage(msisdn, SubscriptionRejectionReason.INVALID_LOCATION,
+                    SubscriptionPackType.PREGNANCY, le.getMessage());
             return;
         }
 
@@ -210,7 +188,6 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         processSubscriptionForBeneficiary(mother, msisdn, lmp, pregnancyPack);
     }
 
-
     private void importChildRecord(Map<String, Object> record) {
         MctsChild child = (MctsChild) record.get(BENEFICIARY_ID);
         String name = (String) record.get(BENEFICIARY_NAME);
@@ -220,10 +197,12 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
         // validate and set location
         try {
-            setLocationFields(record, child);
+            setLocationFields(locationService.getLocations(record), child);
         } catch (InvalidLocationException le) {
             LOGGER.error(le.toString());
-            rejectBeneficiary(msisdn, SubscriptionRejectionReason.INVALID_LOCATION, SubscriptionPackType.CHILD);
+            rejectBeneficiaryWithMessage(msisdn, SubscriptionRejectionReason.INVALID_LOCATION,
+                    SubscriptionPackType.CHILD, le.getMessage());
+            return;
         }
 
         if (!validateDOB(dob, msisdn)) {
@@ -337,38 +316,27 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         return subscriber;
     }
 
-    private String setLocationFields(Map<String, Object> record, MctsBeneficiary beneficiary) {
-        String errors = null;
+    private void setLocationFields(Map<String, Object> locations, MctsBeneficiary beneficiary) throws InvalidLocationException {
 
-        State state = (State) record.get(STATE);
-        District district = (District)
-        Taluka taluka = null;
-        HealthBlock healthBlock = null;
-        HealthFacility phc = null;
-        HealthSubFacility hsf = null;
-        Village village = null;
-
-
-
-        if (state == null || district == null) {
-            errors = "District and state must both be set for an MCTS beneficiary.";
+        if (locations.get(STATE) == null || locations.get(DISTRICT) == null) {
+            throw new InvalidLocationException("Missing mandatory state and district fields");
         }
 
-        beneficiary.setState(state);
-        beneficiary.setDistrict(district);
-        beneficiary.setTaluka(taluka);
-
-        // TODO: is it valid to set both village and healthblock data?
-        beneficiary.setHealthBlock(healthBlock);
-        beneficiary.setPrimaryHealthCenter(phc);
-        beneficiary.setHealthSubFacility(hsf);
-        beneficiary.setVillage(village);
-
-        return errors;
+        beneficiary.setState((State) locations.get(STATE));
+        beneficiary.setDistrict((District) locations.get(DISTRICT));
+        beneficiary.setTaluka((Taluka) locations.get(TALUKA));
+        beneficiary.setHealthBlock((HealthBlock) locations.get(HEALTH_BLOCK));
+        beneficiary.setPrimaryHealthCenter((HealthFacility) locations.get(PHC));
+        beneficiary.setHealthSubFacility((HealthSubFacility) locations.get(SUBCENTRE));
+        beneficiary.setVillage((Village) locations.get(CENSUS_VILLAGE + NON_CENSUS_VILAGE));
     }
 
     private void rejectBeneficiary(Long msisdn, SubscriptionRejectionReason reason, SubscriptionPackType packType) {
         subscriptionErrorDataService.create(new SubscriptionError(msisdn, reason, packType));
+    }
+
+    private void rejectBeneficiaryWithMessage(Long msisdn, SubscriptionRejectionReason reason, SubscriptionPackType packType, String rejectionMessage) {
+        subscriptionErrorDataService.create(new SubscriptionError(msisdn, reason, packType, rejectionMessage));
     }
 
     private Map<String, CellProcessor> getBeneficiaryLocationMapping() {
@@ -502,12 +470,6 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             line = bufferedReader.readLine();
         } while (null != line && StringUtils.isNotBlank(line));
         return line;
-    }
-
-    private void verify(boolean condition, String message, String... args) {
-        if (!condition) {
-            throw new CsvImportDataException(String.format(message, args));
-        }
     }
 
 }
