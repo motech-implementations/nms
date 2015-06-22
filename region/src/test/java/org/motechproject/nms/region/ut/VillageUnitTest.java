@@ -98,7 +98,6 @@ public class VillageUnitTest {
     }
 
     @Test
-    @Ignore
     public void testVillageCodeInvalid() {
         Taluka taluka = new Taluka();
         taluka.setName("Taluka 1");
