@@ -1,4 +1,4 @@
-package org.motechproject.nms.region.service.impl;
+package org.motechproject.nms.region.service.impl.csv;
 
 import org.motechproject.nms.csv.exception.CsvImportDataException;
 import org.motechproject.nms.csv.utils.ConstraintViolationUtils;

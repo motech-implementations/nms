@@ -1,4 +1,4 @@
-package org.motechproject.nms.region.service.impl;
+package org.motechproject.nms.region.service.impl.csv;
 
 import org.motechproject.nms.csv.utils.GetLong;
 import org.motechproject.nms.csv.utils.GetString;
