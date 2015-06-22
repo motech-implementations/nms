@@ -10,8 +10,4 @@ public interface MctsBeneficiaryUpdateService {
 
     void updateMsisdn(Reader reader) throws IOException;
 
-    void updateReferenceDate(Reader reader) throws IOException;
-
-    void updateAddress(Reader reader) throws IOException;
-
 }
