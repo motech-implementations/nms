@@ -163,7 +163,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         // Should not pickup subscription2 because its status is not ACTIVE
         // Should not pickup subscription3 because it's for tomorrow
         // Should not pickup call retry record because it's for tomorrow also
-        assertEquals(1, (int) tfn.getRecordCount());
+        assertEquals(1, (int) tfn.getRecordsCount());
 
         //read the file to get record count
         File targetDir = new File(settingsService.getSettingsFacade().getProperty("imi.local_obd_dir"));
@@ -177,7 +177,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         }
         String checksum = ChecksumHelper.checksum(targetFile);
 
-        assertEquals((int)tfn.getRecordCount(), recordCount);
+        assertEquals((int)tfn.getRecordsCount(), recordCount);
 
         assertEquals(tfn.getChecksum(), checksum);
     }
@@ -254,7 +254,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         }
         String checksum = ChecksumHelper.checksum(targetFile);
 
-        assertEquals((int)tfn.getRecordCount(), recordCount);
+        assertEquals((int)tfn.getRecordsCount(), recordCount);
         assertEquals(tfn.getChecksum(), checksum);
         assertTrue("w6_1".equals(contents.get(0)));
         assertEquals(1, recordCount);
@@ -289,7 +289,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
             }
         }
         String checksum = ChecksumHelper.checksum(targetFile);
-        assertEquals((int)tfn.getRecordCount(), recordCount);
+        assertEquals((int)tfn.getRecordsCount(), recordCount);
         assertEquals(tfn.getChecksum(), checksum);
         assertTrue("w5_1".equals(contents.get(0)));
 
@@ -311,7 +311,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
             }
         }
         checksum = ChecksumHelper.checksum(targetFile);
-        assertEquals((int)tfn.getRecordCount(), recordCount);
+        assertEquals((int)tfn.getRecordsCount(), recordCount);
         assertEquals(tfn.getChecksum(), checksum);
         assertTrue("w4_1".equals(contents.get(0)));
         assertEquals(1, recordCount);
@@ -344,7 +344,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
             }
         }
         String checksum = ChecksumHelper.checksum(targetFile);
-        assertEquals((int)tfn.getRecordCount(), recordCount);
+        assertEquals((int)tfn.getRecordsCount(), recordCount);
         assertEquals(tfn.getChecksum(), checksum);
         assertTrue("welcome.wav".equals(contents.get(0)));
     }
@@ -376,7 +376,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
             }
         }
         String checksum = ChecksumHelper.checksum(targetFile);
-        assertEquals((int)tfn.getRecordCount(), recordCount);
+        assertEquals((int)tfn.getRecordsCount(), recordCount);
         assertEquals(tfn.getChecksum(), checksum);
         assertTrue("welcome.wav".equals(contents.get(0)));
 
