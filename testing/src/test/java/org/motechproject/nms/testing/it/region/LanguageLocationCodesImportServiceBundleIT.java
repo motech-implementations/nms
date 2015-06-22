@@ -32,6 +32,7 @@ import java.util.Collections;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.motechproject.nms.testing.it.utils.RegionHelper.createCircle;
 import static org.motechproject.nms.testing.it.utils.RegionHelper.createDistrict;
 import static org.motechproject.nms.testing.it.utils.RegionHelper.createState;
@@ -192,6 +193,63 @@ public class LanguageLocationCodesImportServiceBundleIT extends BasePaxIT {
         Reader reader = createReaderWithHeaders("L3,Lang 3,Circle 4,State 4,District 42,Y");
         exception.expect(CsvImportDataException.class);
         languageLocationImportService.importData(reader);
+    }
+
+
+    /**
+     * To verify language location code is rejected when mandatory parameter circle is missing.
+     */
+    @Test
+    public void verifyFT266() throws Exception {
+        Reader reader = createReaderWithHeaders("L1,Lang 1,,State 1,District 11,Y");
+        exception.expect(CsvImportDataException.class);
+        languageLocationImportService.importData(reader);
+    }
+
+    /**
+     * To verify language location code is rejected when state is having invalid value.
+     */
+    @Test
+    public void verifyFT269() throws Exception {
+        Boolean thrown = false;
+        String errorMessage = "State does not exist";
+        Reader reader = createReaderWithHeaders("L1,Lang 1,Circle 1,State 10,,N");
+        try {
+            languageLocationImportService.importData(reader);
+        } catch (CsvImportDataException e) {
+            thrown = true;
+            assertTrue(errorMessage.equals(e.getMessage()));
+        }
+        assertTrue(thrown);
+    }
+
+    /**
+     * To verify language location code is rejected when district is having invalid value.
+     */
+    @Test
+    public void verifyFT271() throws Exception {
+        Boolean thrown = false;
+        String errorMessage = "District District 31 doesn't exist in state State 1";
+        Reader reader = createReaderWithHeaders("L1,Lang 1,Circle 1,State 1,District 31,N");
+        try {
+            languageLocationImportService.importData(reader);
+        } catch (CsvImportDataException e) {
+            thrown = true;
+            assertTrue(errorMessage.equals(e.getMessage()));
+        }
+        assertTrue(thrown);
+    }
+
+    /**
+     * To verify default LLC is set for circle during language location code upload
+     */
+    @Test
+    public void verifyFT272() throws Exception {
+        Reader reader = createReaderWithHeaders("L1,Lang 1,Circle 1,State 1,District 11,Y");
+        languageLocationImportService.importData(reader);
+        Circle circle1 = circleDataService.findByName("Circle 1");
+        assertNotNull(circle1);
+        assertEquals("L1", circle1.getDefaultLanguage().getCode());
     }
 
     private Reader createReaderWithHeaders(String... lines) {
