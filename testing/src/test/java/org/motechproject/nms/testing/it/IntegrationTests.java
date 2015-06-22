@@ -13,6 +13,11 @@ import org.motechproject.nms.testing.it.flw.FrontLineWorkerUpdateImportServiceBu
 import org.motechproject.nms.testing.it.flw.ServiceUsageCapServiceBundleIT;
 import org.motechproject.nms.testing.it.flw.ServiceUsageServiceBundleIT;
 import org.motechproject.nms.testing.it.flw.WhiteListServiceBundleIT;
+import org.motechproject.nms.testing.it.imi.CdrFileServiceBundleIT;
+import org.motechproject.nms.testing.it.imi.CsrValidatorServiceBundleIT;
+import org.motechproject.nms.testing.it.imi.ImiControllerCdrBundleIT;
+import org.motechproject.nms.testing.it.imi.ImiControllerObdBundleIT;
+import org.motechproject.nms.testing.it.imi.TargetFileServiceBundleIT;
 import org.motechproject.nms.testing.it.kilkari.CsrServiceBundleIT;
 import org.motechproject.nms.testing.it.kilkari.MctsBeneficiaryImportServiceBundleIT;
 import org.motechproject.nms.testing.it.kilkari.SubscriberServiceBundleIT;
@@ -50,11 +55,11 @@ import org.motechproject.nms.testing.it.region.NationalDefaultLanguageLocationBu
      * IMI
      * https://github.com/motech-implementations/mim/issues/381 (Re-enable)
      */
-    // ImiController_CDR_BundleIT.class,
-    // ImiController_OBD_BundleIT.class,
-    // TargetFileServiceBundleIT.class,
-    // CdrFileServiceBundleIT.class,
-    // CsrValidatorServiceBundleIT.class,
+    ImiControllerCdrBundleIT.class,
+    ImiControllerObdBundleIT.class,
+    TargetFileServiceBundleIT.class,
+    CdrFileServiceBundleIT.class,
+    CsrValidatorServiceBundleIT.class,
 
     /**
      * Kilkari
