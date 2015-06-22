@@ -240,18 +240,6 @@ public class LanguageLocationCodesImportServiceBundleIT extends BasePaxIT {
         assertTrue(thrown);
     }
 
-    /**
-     * To verify default LLC is set for circle during language location code upload
-     */
-    @Test
-    public void verifyFT272() throws Exception {
-        Reader reader = createReaderWithHeaders("L1,Lang 1,Circle 1,State 1,District 11,Y");
-        languageLocationImportService.importData(reader);
-        Circle circle1 = circleDataService.findByName("Circle 1");
-        assertNotNull(circle1);
-        assertEquals("L1", circle1.getDefaultLanguage().getCode());
-    }
-
     private Reader createReaderWithHeaders(String... lines) {
         StringBuilder builder = new StringBuilder();
         builder.append("languagelocation code,Language,Circle,State,District,Default Language for Circle (Y/N)").append("\n");
