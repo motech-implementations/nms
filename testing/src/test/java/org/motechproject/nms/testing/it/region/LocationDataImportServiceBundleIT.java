@@ -175,7 +175,7 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
         assertNotNull(taluka.getDistrict());
 
         censusVillageImportService.importData(read("csv/census_village.csv"));
-        Village censusVillage = villageService.findByTalukaAndVcodeAndSvid(taluka, 3L, 0);
+        Village censusVillage = villageService.findByTalukaAndVcodeAndSvid(taluka, 3L, 0L);
         assertNotNull(censusVillage);
         assertEquals(3L, censusVillage.getVcode());
         assertEquals("census village name", censusVillage.getName());
@@ -192,7 +192,7 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
         assertEquals(3L, nonCensusVillageAssociated.getVcode());
 
         nonCensusVillageImportService.importData(read("csv/non_census_village_non_associated.csv"));
-        Village nonCensusVillageNonAssociated = villageService.findByTalukaAndVcodeAndSvid(taluka, 0, 5L);
+        Village nonCensusVillageNonAssociated = villageService.findByTalukaAndVcodeAndSvid(taluka, 0L, 5L);
         assertNotNull(nonCensusVillageNonAssociated);
         assertEquals(5L, nonCensusVillageNonAssociated.getSvid());
         assertEquals("non census village non associated name", nonCensusVillageNonAssociated.getName());
