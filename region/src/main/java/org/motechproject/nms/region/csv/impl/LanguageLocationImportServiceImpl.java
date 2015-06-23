@@ -1,4 +1,4 @@
-package org.motechproject.nms.region.service.impl.csv;
+package org.motechproject.nms.region.csv.impl;
 
 import org.motechproject.nms.csv.exception.CsvImportDataException;
 import org.motechproject.nms.csv.utils.ConstraintViolationUtils;
@@ -16,7 +16,7 @@ import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
-import org.motechproject.nms.region.service.LanguageLocationImportService;
+import org.motechproject.nms.region.csv.LanguageLocationImportService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
