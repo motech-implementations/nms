@@ -199,12 +199,13 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
         // override the default start date (today + 1 day) in order to see a non-empty inbox
         subscription.setStartDate(DateTime.now().minusDays(2));
+        subscription.setStatus(Subscription.getStatus(subscription, DateTime.now()));
         subscriptionDataService.update(subscription);
 
         HttpGet httpGet = createHttpGet(true, "1000000000", true, "123456789012345");
         String expectedJson = createInboxResponseJson(new HashSet<>(Arrays.asList(
                 new InboxSubscriptionDetailResponse(
-                        subscription.getSubscriptionId().toString(),
+                        subscription.getSubscriptionId(),
                         sh.childPack().getName(),
                         sh.getWeekId(subscription, 0),
                         sh.getContentMessageFile(subscription, 0)
@@ -362,7 +363,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 SubscriptionOrigin.MCTS_IMPORT);
 
         subscriber = subscriberDataService.findByCallingNumber(2000000000L);
-        assertEquals(2, subscriber.getActiveSubscriptions().size());
+        assertEquals(2, subscriber.getActiveAndPendingSubscriptions().size());
         assertEquals(4, subscriber.getAllSubscriptions().size());
 
         Pattern childPackJsonPattern = Pattern.compile(".*\"subscriptionPack\":\"childPack\",\"inboxWeekId\":\"w36_1\",\"contentFileName\":\"w36_1\\.wav.*");
@@ -433,7 +434,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     @Test
     public void testCreateSubscriptionRequestAlreadySubscribedViaMCTS() throws IOException, InterruptedException {
         Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
-        Subscription subscription = subscriber.getActiveSubscriptions().iterator().next();
+        Subscription subscription = subscriber.getActiveAndPendingSubscriptions().iterator().next();
         subscription.setOrigin(SubscriptionOrigin.MCTS_IMPORT);
         subscriptionDataService.update(subscription);
 
@@ -467,12 +468,12 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK, ADMIN_USERNAME, ADMIN_PASSWORD);
 
         Subscriber subscriber = subscriberService.getSubscriber(callingNumber);
-        int numberOfSubsBefore = subscriber.getActiveSubscriptions().size();
+        int numberOfSubsBefore = subscriber.getActiveAndPendingSubscriptions().size();
 
         SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK, ADMIN_USERNAME, ADMIN_PASSWORD);
 
         subscriber = subscriberService.getSubscriber(callingNumber);
-        int numberOfSubsAfter = subscriber.getActiveSubscriptions().size();
+        int numberOfSubsAfter = subscriber.getActiveAndPendingSubscriptions().size();
 
         // No additional subscription should be created because subscriber already has an active subscription
         // to this pack
@@ -489,14 +490,14 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertEquals(HttpStatus.SC_OK, resp.getStatusLine().getStatusCode());
 
         Subscriber subscriber = subscriberService.getSubscriber(callingNumber);
-        int numberOfSubsBefore = subscriber.getActiveSubscriptions().size();
+        int numberOfSubsBefore = subscriber.getActiveAndPendingSubscriptions().size();
 
         httpPost = createSubscriptionHttpPost(callingNumber, sh.pregnancyPack().getName());
         resp = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, resp.getStatusLine().getStatusCode());
 
         subscriber = subscriberService.getSubscriber(callingNumber);
-        int numberOfSubsAfter = subscriber.getActiveSubscriptions().size();
+        int numberOfSubsAfter = subscriber.getActiveAndPendingSubscriptions().size();
 
         // Another subscription should be allowed because these are two different packs
         assertTrue((numberOfSubsBefore + 1) == numberOfSubsAfter);
@@ -550,7 +551,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     public void testDeactivateSubscriptionRequest() throws IOException, InterruptedException {
 
         Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
-        Subscription subscription = subscriber.getActiveSubscriptions().iterator().next();
+        Subscription subscription = subscriber.getActiveAndPendingSubscriptions().iterator().next();
         String subscriptionId = subscription.getSubscriptionId();
 
         SubscriptionRequest subscriptionRequest = new SubscriptionRequest(1000000000L, rh.airtelOperator(),
@@ -576,7 +577,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     public void testDeactivateSubscriptionRequestAlreadyInactive() throws IOException, InterruptedException {
 
         Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
-        Subscription subscription = subscriber.getActiveSubscriptions().iterator().next();
+        Subscription subscription = subscriber.getActiveAndPendingSubscriptions().iterator().next();
         String subscriptionId = subscription.getSubscriptionId();
         subscriptionService.deactivateSubscription(subscription, DeactivationReason.DEACTIVATED_BY_USER);
 
@@ -2100,7 +2101,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     @Test
     public void verifyFT98() throws IOException, InterruptedException {
         Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
-        Subscription subscription = subscriber.getActiveSubscriptions()
+        Subscription subscription = subscriber.getActiveAndPendingSubscriptions()
                 .iterator().next();
         String subscriptionId = subscription.getSubscriptionId();
         // callId less than 15 digits
@@ -2122,7 +2123,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     @Test
     public void verifyFT99() throws IOException, InterruptedException {
         Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
-        Subscription subscription = subscriber.getActiveSubscriptions()
+        Subscription subscription = subscriber.getActiveAndPendingSubscriptions()
                 .iterator().next();
         String subscriptionId = subscription.getSubscriptionId();
         // callId more than 15 digits
@@ -2146,7 +2147,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     @Test
     public void verifyFT100() throws IOException, InterruptedException {
         Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
-        Subscription subscription = subscriber.getActiveSubscriptions()
+        Subscription subscription = subscriber.getActiveAndPendingSubscriptions()
                 .iterator().next();
         String subscriptionId = subscription.getSubscriptionId();
         // callId alphanumeric
@@ -2170,7 +2171,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     @Test
     public void verifyFT95() throws IOException, InterruptedException {
         Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
-        Subscription subscription = subscriber.getActiveSubscriptions()
+        Subscription subscription = subscriber.getActiveAndPendingSubscriptions()
                 .iterator().next();
         String subscriptionId = subscription.getSubscriptionId();
         // callingNumber less than 10 digits
@@ -2193,7 +2194,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     @Test
     public void verifyFT96() throws IOException, InterruptedException {
         Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
-        Subscription subscription = subscriber.getActiveSubscriptions()
+        Subscription subscription = subscriber.getActiveAndPendingSubscriptions()
                 .iterator().next();
         String subscriptionId = subscription.getSubscriptionId();
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
@@ -2219,7 +2220,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     @Test
     public void verifyFT97() throws IOException, InterruptedException {
         Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
-        Subscription subscription = subscriber.getActiveSubscriptions()
+        Subscription subscription = subscriber.getActiveAndPendingSubscriptions()
                 .iterator().next();
         String subscriptionId = subscription.getSubscriptionId();
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
@@ -2281,7 +2282,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     public void verifyFT103() throws IOException, InterruptedException {
 
         Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
-        Subscription subscription = subscriber.getActiveSubscriptions()
+        Subscription subscription = subscriber.getActiveAndPendingSubscriptions()
                 .iterator().next();
         String subscriptionId = subscription.getSubscriptionId();
 
@@ -2799,7 +2800,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     public void verifyFT105() throws IOException, InterruptedException {
 
         Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
-        Subscription subscription = subscriber.getActiveSubscriptions()
+        Subscription subscription = subscriber.getActiveAndPendingSubscriptions()
                 .iterator().next();
         String subscriptionId = subscription.getSubscriptionId();
 
@@ -2832,7 +2833,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     public void verifyFT106() throws IOException, InterruptedException {
 
         Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
-        Subscription subscription = subscriber.getActiveSubscriptions()
+        Subscription subscription = subscriber.getActiveAndPendingSubscriptions()
                 .iterator().next();
         String subscriptionId = subscription.getSubscriptionId();
         // circle blank

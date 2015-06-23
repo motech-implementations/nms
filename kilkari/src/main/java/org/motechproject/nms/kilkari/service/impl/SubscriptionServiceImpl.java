@@ -255,8 +255,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         }
 
         Subscription subscription = new Subscription(subscriber, pack, SubscriptionOrigin.IVR);
-        subscription.setStatus(SubscriptionStatus.ACTIVE);
         subscription.setStartDate(DateTime.now().plusDays(1));
+        subscription.setStatus(Subscription.getStatus(subscription, DateTime.now()));
 
         return subscriptionDataService.create(subscription);
     }
@@ -295,7 +295,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             } else {
                 subscription = new Subscription(subscriber, pack, SubscriptionOrigin.MCTS_IMPORT);
                 subscription.setStartDate(subscriber.getDateOfBirth());
-                subscription.setStatus(SubscriptionStatus.ACTIVE);
+                subscription.setStatus(Subscription.getStatus(subscription, DateTime.now()));
             }
         } else if (subscriber.getLastMenstrualPeriod() != null && subscriber.getDateOfBirth() == null &&
                 pack.getType() == SubscriptionPackType.PREGNANCY) {
@@ -315,7 +315,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
                 // the pregnancy pack starts 3 months after LMP
                 subscription.setStartDate(subscriber.getLastMenstrualPeriod().plusDays(THREE_MONTHS));
-                subscription.setStatus(SubscriptionStatus.ACTIVE);
+                subscription.setStatus(Subscription.getStatus(subscription, DateTime.now()));
             }
         } else {
             // TODO: #117 need to log any other error cases? In theory we shouldn't land here.
@@ -365,12 +365,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         } else { // CHILD pack
             subscription.setStartDate(newReferenceDate);
         }
-
-        if (Subscription.hasCompletedForStartDate(subscription.getStartDate(), DateTime.now(),
-                subscription.getSubscriptionPack())) {
-            subscription.setStatus(SubscriptionStatus.COMPLETED);
-        }
-
+        subscription.setStatus(Subscription.getStatus(subscription, DateTime.now()));
         subscriptionDataService.update(subscription);
     }
 
