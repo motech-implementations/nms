@@ -124,14 +124,12 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
 
     @Test
     public void testServicePresent() {
-        getLogger().debug("testServicePresent()");
         assertTrue(cdrFileService != null);
     }
 
 
     @Test
     public void testVerify() throws IOException, NoSuchAlgorithmException {
-        getLogger().debug("testVerify()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
                 subscriptionPackDataService, languageDataService, circleDataService, stateDataService,
@@ -148,7 +146,6 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
 
     @Test
     public void testChecksumError() throws IOException, NoSuchAlgorithmException {
-        getLogger().debug("testChecksumError()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
                 subscriptionPackDataService, languageDataService, circleDataService, stateDataService,
@@ -165,7 +162,6 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
 
     @Test
     public void testCsvErrors() throws IOException, NoSuchAlgorithmException {
-        getLogger().debug("testCsvErrors()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
                 subscriptionPackDataService, languageDataService, circleDataService, stateDataService,
@@ -184,7 +180,6 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
 
     @Test
     public void testTooManyErrors() throws IOException, NoSuchAlgorithmException {
-        getLogger().debug("testTooManyErrors()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
                 subscriptionPackDataService, languageDataService, circleDataService, stateDataService,
@@ -205,7 +200,6 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
 
     @Test
     public void testProcess() throws IOException, NoSuchAlgorithmException {
-        getLogger().debug("testProcess()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
                 subscriptionPackDataService, languageDataService, circleDataService, stateDataService,
@@ -224,14 +218,12 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         // didn't setup a server
         AlertCriteria criteria = new AlertCriteria().byExternalId(helper.cdrLocalFileInfo().getCdrFile());
         List<Alert> alerts = alertService.search(criteria);
-        getLogger().debug("alerts={}", alerts);
         assertEquals(4, alerts.size()); //three warnings plus one error
     }
 
 
     @Test
     public void testAggregation() throws IOException, NoSuchAlgorithmException {
-        getLogger().debug("testAggregation()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
                 subscriptionPackDataService, languageDataService, circleDataService, stateDataService,

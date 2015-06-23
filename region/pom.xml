@@ -72,6 +72,7 @@
                             org.motechproject.nms.region.repository;version=${project.version},
                             org.motechproject.nms.region.domain;version=${project.version},
                             org.motechproject.nms.region.exception;version=${project.version}
+                            org.motechproject.nms.region.csv;version=${project.version},
                         </Export-Package>
                         <Import-Package>
                             net.sf.cglib.core,

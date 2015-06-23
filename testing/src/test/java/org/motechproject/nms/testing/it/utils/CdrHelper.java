@@ -1,6 +1,5 @@
 package org.motechproject.nms.testing.it.utils;
 
-import org.apache.commons.codec.binary.Hex;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -26,15 +25,10 @@ import org.motechproject.nms.region.service.DistrictService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.security.DigestInputStream;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
@@ -382,36 +376,23 @@ public class CdrHelper {
     }
 
 
-    private String checksum(File file) throws IOException, NoSuchAlgorithmException {
-        FileInputStream fis = new FileInputStream(file);
-        InputStreamReader isr = new InputStreamReader(fis);
-        BufferedReader reader = new BufferedReader(isr);
-        MessageDigest md = MessageDigest.getInstance("MD5");
-        DigestInputStream dis = new DigestInputStream(fis, md);
-
-        while (reader.readLine() != null) { }
-
-        return new String(Hex.encodeHex(md.digest()));
-    }
-
-
     public String csrLocalChecksum() throws IOException, NoSuchAlgorithmException {
-        return checksum(new File(localDir(), csr()));
+        return ChecksumHelper.checksum(new File(localDir(), csr()));
     }
 
 
     public String cdrLocalChecksum() throws IOException, NoSuchAlgorithmException {
-        return checksum(new File(localDir(), cdr()));
+        return ChecksumHelper.checksum(new File(localDir(), cdr()));
     }
 
 
     public String csrRemoteChecksum() throws IOException, NoSuchAlgorithmException {
-        return checksum(new File(remoteDir(), csr()));
+        return ChecksumHelper.checksum(new File(remoteDir(), csr()));
     }
 
 
     public String cdrRemoteChecksum() throws IOException, NoSuchAlgorithmException {
-        return checksum(new File(remoteDir(), cdr()));
+        return ChecksumHelper.checksum(new File(remoteDir(), cdr()));
     }
 
 
