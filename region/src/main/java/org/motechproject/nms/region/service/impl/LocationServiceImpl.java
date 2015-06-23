@@ -67,6 +67,7 @@ public class LocationServiceImpl implements LocationService {
     }
 
     @Override // NO CHECKSTYLE Cyclomatic Complexity
+    @SuppressWarnings("PMD")
     public Map<String, Object> getLocations(Map<String, Object> locationMapping) throws InvalidLocationException {
 
         Map<String, Object> locations = new HashMap<>();
@@ -103,21 +104,7 @@ public class LocationServiceImpl implements LocationService {
             locations.put(TALUKA, taluka);
 
             // check for more sub-locations to fetch
-            if (locationMapping.get(HEALTH_BLOCK) == null) { // Try and set the village if healthblock data isn't available
-
-                if (locationMapping.get(CENSUS_VILLAGE) == null && locationMapping.get(NON_CENSUS_VILLAGE) == null) {
-                    break;
-                }
-                Village village = villageService.findByTalukaAndVcodeAndSvid(taluka,
-                            (Long) locationMapping.get(CENSUS_VILLAGE), (Long) locationMapping.get(NON_CENSUS_VILLAGE));
-                if (village == null) {
-                    throw new InvalidLocationException(String.format(INVALID,
-                            CENSUS_VILLAGE + " " + NON_CENSUS_VILLAGE,
-                            locationMapping.get(CENSUS_VILLAGE) + " " + locationMapping.get(NON_CENSUS_VILLAGE)));
-                }
-                locations.put(CENSUS_VILLAGE + NON_CENSUS_VILLAGE, village);
-                break;
-            } else {
+            if (locationMapping.get(HEALTH_BLOCK) != null) {
 
                 // set health block
                 HealthBlock healthBlock = healthBlockService.findByTalukaAndCode(taluka, (Long) locationMapping.get(HEALTH_BLOCK));
@@ -145,6 +132,21 @@ public class LocationServiceImpl implements LocationService {
                     throw new InvalidLocationException(String.format(INVALID, SUBCENTRE, locationMapping.get(SUBCENTRE)));
                 }
                 locations.put(SUBCENTRE, healthSubFacility);
+                break;
+            } else { // Try and set the village if healthblock data isn't available
+                Long svid = locationMapping.get(NON_CENSUS_VILLAGE) == null ? 0 : (Long) locationMapping.get(NON_CENSUS_VILLAGE);
+                Long vcode = locationMapping.get(CENSUS_VILLAGE) == null ? 0 : (Long) locationMapping.get(CENSUS_VILLAGE);
+                if (vcode == 0 && svid == 0) { // nothing to do
+                    break;
+                }
+
+                Village village = villageService.findByTalukaAndVcodeAndSvid(taluka, vcode, svid);
+                if (village == null) {
+                    throw new InvalidLocationException(String.format(INVALID,
+                            CENSUS_VILLAGE + " " + NON_CENSUS_VILLAGE,
+                            locationMapping.get(CENSUS_VILLAGE) + " " + locationMapping.get(NON_CENSUS_VILLAGE)));
+                }
+                locations.put(CENSUS_VILLAGE + NON_CENSUS_VILLAGE, village);
                 break;
             }
 
