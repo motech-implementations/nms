@@ -10,14 +10,14 @@ package org.motechproject.nms.imi.service.contract;
 public class TargetFileNotification {
     private String fileName;
     private String checksum;
-    private Integer recordCount;
+    private Integer recordsCount;
 
     public TargetFileNotification() { }
 
-    public TargetFileNotification(String fileName, String checksum, Integer recordCount) {
+    public TargetFileNotification(String fileName, String checksum, Integer recordsCount) {
         this.fileName = fileName;
         this.checksum = checksum;
-        this.recordCount = recordCount;
+        this.recordsCount = recordsCount;
     }
 
     public String getFileName() {
@@ -36,12 +36,12 @@ public class TargetFileNotification {
         this.checksum = checksum;
     }
 
-    public Integer getRecordCount() {
-        return recordCount;
+    public Integer getRecordsCount() {
+        return recordsCount;
     }
 
-    public void setRecordCount(Integer recordCount) {
-        this.recordCount = recordCount;
+    public void setRecordsCount(Integer recordsCount) {
+        this.recordsCount = recordsCount;
     }
 
     @Override
@@ -49,7 +49,7 @@ public class TargetFileNotification {
         return "TargetFileNotification{" +
                 "fileName='" + fileName + '\'' +
                 ", checksum='" + checksum + '\'' +
-                ", recordCount=" + recordCount +
+                ", recordsCount=" + recordsCount +
                 '}';
     }
 }

@@ -373,7 +373,7 @@ public class TargetFileServiceImpl implements TargetFileService {
 
         //audit the success
         fileAuditRecordDataService.create(new FileAuditRecord(FileType.TARGET_FILE, tfn.getFileName(), true,
-                null, tfn.getRecordCount(), tfn.getChecksum()));
+                null, tfn.getRecordsCount(), tfn.getChecksum()));
 
         return tfn;
     }
