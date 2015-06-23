@@ -78,7 +78,7 @@ public class CdrHelper {
         this.fileAuditRecordDataService = fileAuditRecordDataService;
 
         TEST_OBD_TIMESTAMP = DateTime.now().toString(TIME_FORMATTER);
-        TEST_OBD_FILENAME = String.format("OBD_%s.csv", TEST_OBD_TIMESTAMP);
+        TEST_OBD_FILENAME = String.format("OBD_NMS_%s.csv", TEST_OBD_TIMESTAMP);
         TEST_CDR_DETAIL_FILENAME = String.format("cdrDetail_%s", TEST_OBD_FILENAME);
         TEST_CDR_SUMMARY_FILENAME = String.format("cdrSummary_%s", TEST_OBD_FILENAME);
     }
