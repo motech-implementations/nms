@@ -241,7 +241,14 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             if (existingSubscription.getSubscriptionPack().equals(pack)) {
                 if (existingSubscription.getStatus().equals(SubscriptionStatus.ACTIVE) ||
                         existingSubscription.getStatus().equals(SubscriptionStatus.PENDING_ACTIVATION)) {
+
                     // subscriber already has an active subscription to this pack, don't create a new one
+                    // however if origin of existing subscription is MCTS then we want to update it to IVR
+                    if (existingSubscription.getOrigin() == SubscriptionOrigin.MCTS_IMPORT) {
+                        existingSubscription.setOrigin(SubscriptionOrigin.IVR);
+                        subscriptionDataService.update(existingSubscription);
+                    }
+
                     return null;
                 }
             }
