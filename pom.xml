@@ -39,7 +39,6 @@
         <javax.batch.version>1.0</javax.batch.version>
         <apache.ibatis.version>2.3.4.726_4</apache.ibatis.version>
         <mongodb.version>2.12.2</mongodb.version>
-        <springsource.hibernate.version>3.6.0.Final-${external.dependency.release.tag}</springsource.hibernate.version>
         <springframework.amqp.version>1.3.3.RELEASE-${external.dependency.release.tag}</springframework.amqp.version>
         <springframework.retry.version>1.1.0.RELEASE-${external.dependency.release.tag}</springframework.retry.version>
         <fasterxml.jackson.version>2.0.2</fasterxml.jackson.version>
@@ -168,11 +167,6 @@
                 <groupId>org.eclipse.persistence</groupId>
                 <artifactId>javax.persistence</artifactId>
                 <version>${javax.persistence.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>javax.validation</groupId>
-                <artifactId>validation-api</artifactId>
-                <version>1.1.0.Final</version>
             </dependency>
             <dependency>
                 <groupId>javax.transaction</groupId>
@@ -405,11 +399,6 @@
                 <groupId>org.apache.httpcomponents</groupId>
                 <artifactId>httpcore-osgi</artifactId>
                 <version>4.4.1</version>
-            </dependency>
-            <dependency>
-                <groupId>org.hibernate</groupId>
-                <artifactId>org.motechproject.org.hibernate.validator</artifactId>
-                <version>4.1.0.Final-${external.dependency.release.tag}</version>
             </dependency>
             <dependency>
                 <groupId>commons-net</groupId>
