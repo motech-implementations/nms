@@ -110,8 +110,10 @@ public class VillageUnitTest {
 
         Set<ConstraintViolation<Village>> constraintViolations = validator.validate(village);
 
-        assertEquals(2, constraintViolations.size());
-//        assertEquals("At least one of vcode or svid must be set.", constraintViolations.iterator().next().getMessage());
+        assertEquals(2, constraintViolations.size()); // We get the same message twice...
+        for (ConstraintViolation<Village> constraintViolation : constraintViolations) {
+            assertEquals("At least one of vcode or svid must be set.", constraintViolation.getMessage());
+        }
     }
 
     @Test
