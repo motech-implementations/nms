@@ -21,6 +21,7 @@ public class FileAuditRecord {
     private Boolean success;
 
     @Field
+    @Column(length = 1024)
     private String error;
 
     @Field

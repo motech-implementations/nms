@@ -430,6 +430,23 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
     }
 
+    @Test
+    public void testCreateSubscriptionRequestAlreadySubscribedViaMCTS() throws IOException, InterruptedException {
+        Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
+        Subscription subscription = subscriber.getActiveSubscriptions().iterator().next();
+        subscription.setOrigin(SubscriptionOrigin.MCTS_IMPORT);
+        subscriptionDataService.update(subscription);
+
+        String subscriptionId = subscription.getSubscriptionId();
+
+        HttpPost httpPost = createSubscriptionHttpPost(1000000000L, sh.childPack().getName());
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+
+        subscription = subscriptionDataService.findBySubscriptionId(subscriptionId);
+        assertEquals(SubscriptionOrigin.IVR, subscription.getOrigin());
+    }
 
     @Test
     public void testCreateSubscriptionRequestInvalidPack() throws IOException, InterruptedException {

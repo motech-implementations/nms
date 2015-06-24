@@ -5,6 +5,7 @@ import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.HealthBlock;
 import org.motechproject.nms.region.domain.HealthFacility;
 import org.motechproject.nms.region.domain.HealthFacilityType;
+import org.motechproject.nms.region.domain.HealthSubFacility;
 import org.motechproject.nms.region.domain.Language;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.domain.Taluka;
@@ -274,6 +275,15 @@ public class RegionHelper {
         healthFacilityType.setName(name);
         healthFacilityType.setCode(code);
         return healthFacilityType;
+    }
+
+    public static HealthSubFacility createHealthSubFacilityType(String name, Long code, HealthFacility healthFacility) {
+        HealthSubFacility healthSubFacility = new HealthSubFacility();
+        healthSubFacility.setName(name);
+        healthSubFacility.setCode(code);
+        healthSubFacility.setRegionalName(name + " regional name");
+        healthSubFacility.setHealthFacility(healthFacility);
+        return healthSubFacility;
     }
 
     public static Language createLanguage(String code, String name, Circle circle, boolean defaultForCircle, District... districts) {
