@@ -1,7 +1,6 @@
 package org.motechproject.nms.region.ut;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.domain.Village;
@@ -14,9 +13,6 @@ import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 
-/**
- * Created by rob on 5/4/15.
- */
 public class VillageUnitTest {
     Validator validator;
 
