@@ -5,5 +5,5 @@ import org.motechproject.nms.region.domain.Village;
 
 public interface VillageService {
 
-    Village findByTalukaAndVcodeAndSvid(Taluka taluka, Long vcode, Long svid);
+    Village findByTalukaAndVcodeAndSvid(Taluka taluka, long vcode, long svid);
 }

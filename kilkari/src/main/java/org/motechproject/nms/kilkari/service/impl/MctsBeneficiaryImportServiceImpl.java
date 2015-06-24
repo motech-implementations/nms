@@ -318,8 +318,16 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
     private void setLocationFields(Map<String, Object> locations, MctsBeneficiary beneficiary) throws InvalidLocationException {
 
-        if (locations.get(STATE) == null || locations.get(DISTRICT) == null) {
+        if (locations.get(STATE) == null && locations.get(DISTRICT) == null) {
             throw new InvalidLocationException("Missing mandatory state and district fields");
+        }
+        
+        if (locations.get(STATE) == null) {
+            throw new InvalidLocationException("Missing mandatory state field");
+        }
+
+        if (locations.get(DISTRICT) == null) {
+            throw new InvalidLocationException("Missing mandatory district field");
         }
 
         beneficiary.setState((State) locations.get(STATE));
