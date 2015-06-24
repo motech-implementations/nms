@@ -12,7 +12,7 @@ import org.motechproject.nms.region.exception.InvalidLocationException;
 import java.util.Map;
 
 /**
- * Location service to get and validation location data
+ * Location service to get and validate location data
  */
 public interface LocationService {
 
@@ -29,6 +29,8 @@ public interface LocationService {
     District getDistrict(Long stateId, Long districtId);
 
     Taluka getTaluka(Long stateId, Long districtId, String talukaId);
+
+    Village getVillage(Long stateId, Long districtId, String talukaId, Long vCode, Long svid);
 
     Village getCensusVillage(Long stateId, Long districtId, String talukaId, Long vCode);
 

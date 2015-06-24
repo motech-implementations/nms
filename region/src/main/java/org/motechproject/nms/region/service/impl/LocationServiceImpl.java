@@ -71,88 +71,84 @@ public class LocationServiceImpl implements LocationService {
     public Map<String, Object> getLocations(Map<String, Object> locationMapping) throws InvalidLocationException {
 
         Map<String, Object> locations = new HashMap<>();
-        do { // Note: this is not a true loop, just a better way to break and pass control
 
-            // set state
-            if (locationMapping.get(STATE) == null) {
-                break;
+        // set state
+        if (locationMapping.get(STATE) == null) {
+            return locations;
+        }
+        State state = stateDataService.findByCode((Long) locationMapping.get(STATE));
+        if (state == null) { // we are here because stateId wasn't null but fetch returned no data
+            throw new InvalidLocationException(String.format(INVALID, STATE, locationMapping.get(STATE)));
+        }
+        locations.put(STATE, state);
+
+        // set district
+        if (locationMapping.get(DISTRICT) == null) {
+            return locations;
+        }
+        District district = districtService.findByStateAndCode(state, (Long) locationMapping.get(DISTRICT));
+        if (district == null) {
+            throw new InvalidLocationException(String.format(INVALID, DISTRICT, locationMapping.get(DISTRICT)));
+        }
+        locations.put(DISTRICT, district);
+
+        // set taluka
+        if (locationMapping.get(TALUKA) == null) {
+            return locations;
+        }
+        Taluka taluka = talukaService.findByDistrictAndCode(district, (String) locationMapping.get(TALUKA));
+        if (taluka == null) {
+            throw new InvalidLocationException(String.format(INVALID, DISTRICT, locationMapping.get(DISTRICT)));
+        }
+        locations.put(TALUKA, taluka);
+
+        // check for more sub-locations to fetch
+        if (locationMapping.get(HEALTH_BLOCK) != null) {
+
+            // set health block
+            HealthBlock healthBlock = healthBlockService.findByTalukaAndCode(taluka, (Long) locationMapping.get(HEALTH_BLOCK));
+            if (healthBlock == null) {
+                throw new InvalidLocationException(String.format(INVALID, HEALTH_BLOCK, locationMapping.get(HEALTH_BLOCK)));
             }
-            State state = stateDataService.findByCode((Long) locationMapping.get(STATE));
-            if (state == null) { // we are here because stateId wasn't null but fetch returned no data
-                throw new InvalidLocationException(String.format(INVALID, STATE, locationMapping.get(STATE)));
+            locations.put(HEALTH_BLOCK, healthBlock);
+
+            // set health facility
+            if (locationMapping.get(PHC) == null) {
+                return locations;
             }
-            locations.put(STATE, state);
-
-            // set district
-            if (locationMapping.get(DISTRICT) == null) {
-                break;
+            HealthFacility healthFacility = healthFacilityService.findByHealthBlockAndCode(healthBlock, (Long) locationMapping.get(PHC));
+            if (healthFacility == null) {
+                throw new InvalidLocationException(String.format(INVALID, PHC, locationMapping.get(PHC)));
             }
-            District district = districtService.findByStateAndCode(state, (Long) locationMapping.get(DISTRICT));
-            if (district == null) {
-                throw new InvalidLocationException(String.format(INVALID, DISTRICT, locationMapping.get(DISTRICT)));
+            locations.put(PHC, healthFacility);
+
+            // set health sub-facility
+            if (locationMapping.get(SUBCENTRE) == null) {
+                return locations;
             }
-            locations.put(DISTRICT, district);
-
-            // set taluka
-            if (locationMapping.get(TALUKA) == null) {
-                break;
+            HealthSubFacility healthSubFacility = healthSubFacilityService.findByHealthFacilityAndCode(healthFacility, (Long) locationMapping.get(SUBCENTRE));
+            if (healthSubFacility == null) {
+                throw new InvalidLocationException(String.format(INVALID, SUBCENTRE, locationMapping.get(SUBCENTRE)));
             }
-            Taluka taluka = talukaService.findByDistrictAndCode(district, (String) locationMapping.get(TALUKA));
-            if (taluka == null) {
-                throw new InvalidLocationException(String.format(INVALID, DISTRICT, locationMapping.get(DISTRICT)));
-            }
-            locations.put(TALUKA, taluka);
-
-            // check for more sub-locations to fetch
-            if (locationMapping.get(HEALTH_BLOCK) != null) {
-
-                // set health block
-                HealthBlock healthBlock = healthBlockService.findByTalukaAndCode(taluka, (Long) locationMapping.get(HEALTH_BLOCK));
-                if (healthBlock == null) {
-                    throw new InvalidLocationException(String.format(INVALID, HEALTH_BLOCK, locationMapping.get(HEALTH_BLOCK)));
-                }
-                locations.put(HEALTH_BLOCK, healthBlock);
-
-                // set health facility
-                if (locationMapping.get(PHC) == null) {
-                    break;
-                }
-                HealthFacility healthFacility = healthFacilityService.findByHealthBlockAndCode(healthBlock, (Long) locationMapping.get(PHC));
-                if (healthFacility == null) {
-                    throw new InvalidLocationException(String.format(INVALID, PHC, locationMapping.get(PHC)));
-                }
-                locations.put(PHC, healthFacility);
-
-                // set health sub-facility
-                if (locationMapping.get(SUBCENTRE) == null) {
-                    break;
-                }
-                HealthSubFacility healthSubFacility = healthSubFacilityService.findByHealthFacilityAndCode(healthFacility, (Long) locationMapping.get(SUBCENTRE));
-                if (healthSubFacility == null) {
-                    throw new InvalidLocationException(String.format(INVALID, SUBCENTRE, locationMapping.get(SUBCENTRE)));
-                }
-                locations.put(SUBCENTRE, healthSubFacility);
-                break;
-            } else { // Try and set the village if healthblock data isn't available
-                Long svid = locationMapping.get(NON_CENSUS_VILLAGE) == null ? 0 : (Long) locationMapping.get(NON_CENSUS_VILLAGE);
-                Long vcode = locationMapping.get(CENSUS_VILLAGE) == null ? 0 : (Long) locationMapping.get(CENSUS_VILLAGE);
-                if (vcode == 0 && svid == 0) { // nothing to do
-                    break;
-                }
-
-                Village village = villageService.findByTalukaAndVcodeAndSvid(taluka, vcode, svid);
-                if (village == null) {
-                    throw new InvalidLocationException(String.format(INVALID,
-                            CENSUS_VILLAGE + " " + NON_CENSUS_VILLAGE,
-                            locationMapping.get(CENSUS_VILLAGE) + " " + locationMapping.get(NON_CENSUS_VILLAGE)));
-                }
-                locations.put(CENSUS_VILLAGE + NON_CENSUS_VILLAGE, village);
-                break;
+            locations.put(SUBCENTRE, healthSubFacility);
+            return locations;
+        } else {
+            // Try and set the village if healthblock data isn't available
+            Long svid = locationMapping.get(NON_CENSUS_VILLAGE) == null ? 0 : (Long) locationMapping.get(NON_CENSUS_VILLAGE);
+            Long vcode = locationMapping.get(CENSUS_VILLAGE) == null ? 0 : (Long) locationMapping.get(CENSUS_VILLAGE);
+            if (vcode == 0 && svid == 0) { // nothing to do
+                return locations;
             }
 
-        } while (true);
-
-        return locations;
+            Village village = villageService.findByTalukaAndVcodeAndSvid(taluka, vcode, svid);
+            if (village == null) {
+                throw new InvalidLocationException(String.format(INVALID,
+                        CENSUS_VILLAGE + " " + NON_CENSUS_VILLAGE,
+                        locationMapping.get(CENSUS_VILLAGE) + " " + locationMapping.get(NON_CENSUS_VILLAGE)));
+            }
+            locations.put(CENSUS_VILLAGE + NON_CENSUS_VILLAGE, village);
+            return locations;
+        }
     }
 
     @Override
@@ -186,27 +182,27 @@ public class LocationServiceImpl implements LocationService {
     }
 
     @Override
-    public Village getCensusVillage(Long stateId, Long districtId, String talukaId, Long vCode) {
+    public Village getVillage(Long stateId, Long districtId, String talukaId, Long vCode, Long svid) {
 
         Taluka taluka = getTaluka(stateId, districtId, talukaId);
 
         if (taluka != null) {
-            return villageService.findByTalukaAndVcodeAndSvid(taluka, vCode, null);
+            return villageService.findByTalukaAndVcodeAndSvid(taluka, vCode, svid);
         }
 
         return null;
     }
 
     @Override
+    public Village getCensusVillage(Long stateId, Long districtId, String talukaId, Long vCode) {
+
+        return getVillage(stateId, districtId, talukaId, vCode, 0L);
+    }
+
+    @Override
     public Village getNonCensusVillage(Long stateId, Long districtId, String talukaId, Long svid) {
 
-        Taluka taluka = getTaluka(stateId, districtId, talukaId);
-
-        if (taluka != null) {
-            return villageService.findByTalukaAndVcodeAndSvid(taluka, null, svid);
-        }
-
-        return null;
+        return getVillage(stateId, districtId, talukaId, 0L, svid);
     }
 
     @Override
