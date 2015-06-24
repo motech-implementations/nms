@@ -6,6 +6,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.csv.exception.CsvImportDataException;
+import org.motechproject.nms.region.csv.LanguageLocationImportService;
 import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Language;
@@ -15,7 +16,6 @@ import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
-import org.motechproject.nms.region.service.LanguageLocationImportService;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
@@ -32,6 +32,7 @@ import java.util.Collections;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.motechproject.nms.testing.it.utils.RegionHelper.createCircle;
 import static org.motechproject.nms.testing.it.utils.RegionHelper.createDistrict;
 import static org.motechproject.nms.testing.it.utils.RegionHelper.createState;
@@ -192,6 +193,51 @@ public class LanguageLocationCodesImportServiceBundleIT extends BasePaxIT {
         Reader reader = createReaderWithHeaders("L3,Lang 3,Circle 4,State 4,District 42,Y");
         exception.expect(CsvImportDataException.class);
         languageLocationImportService.importData(reader);
+    }
+
+
+    /**
+     * To verify language location code is rejected when mandatory parameter circle is missing.
+     */
+    @Test
+    public void verifyFT266() throws Exception {
+        Reader reader = createReaderWithHeaders("L1,Lang 1,,State 1,District 11,Y");
+        exception.expect(CsvImportDataException.class);
+        languageLocationImportService.importData(reader);
+    }
+
+    /**
+     * To verify language location code is rejected when state is having invalid value.
+     */
+    @Test
+    public void verifyFT269() throws Exception {
+        Boolean thrown = false;
+        String errorMessage = "State does not exist";
+        Reader reader = createReaderWithHeaders("L1,Lang 1,Circle 1,State 10,,N");
+        try {
+            languageLocationImportService.importData(reader);
+        } catch (CsvImportDataException e) {
+            thrown = true;
+            assertTrue(errorMessage.equals(e.getMessage()));
+        }
+        assertTrue(thrown);
+    }
+
+    /**
+     * To verify language location code is rejected when district is having invalid value.
+     */
+    @Test
+    public void verifyFT271() throws Exception {
+        Boolean thrown = false;
+        String errorMessage = "District District 31 doesn't exist in state State 1";
+        Reader reader = createReaderWithHeaders("L1,Lang 1,Circle 1,State 1,District 31,N");
+        try {
+            languageLocationImportService.importData(reader);
+        } catch (CsvImportDataException e) {
+            thrown = true;
+            assertTrue(errorMessage.equals(e.getMessage()));
+        }
+        assertTrue(thrown);
     }
 
     private Reader createReaderWithHeaders(String... lines) {

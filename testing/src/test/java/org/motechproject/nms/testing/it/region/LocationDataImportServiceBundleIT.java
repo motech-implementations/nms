@@ -4,6 +4,14 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.csv.exception.CsvImportDataException;
+import org.motechproject.nms.region.csv.CensusVillageImportService;
+import org.motechproject.nms.region.csv.DistrictImportService;
+import org.motechproject.nms.region.csv.HealthBlockImportService;
+import org.motechproject.nms.region.csv.HealthFacilityImportService;
+import org.motechproject.nms.region.csv.HealthSubFacilityImportService;
+import org.motechproject.nms.region.csv.NonCensusVillageImportService;
+import org.motechproject.nms.region.csv.StateImportService;
+import org.motechproject.nms.region.csv.TalukaImportService;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.HealthBlock;
 import org.motechproject.nms.region.domain.HealthFacility;
@@ -18,18 +26,10 @@ import org.motechproject.nms.region.repository.HealthFacilityDataService;
 import org.motechproject.nms.region.repository.HealthFacilityTypeDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.repository.TalukaDataService;
-import org.motechproject.nms.region.service.CensusVillageImportService;
-import org.motechproject.nms.region.service.DistrictImportService;
 import org.motechproject.nms.region.service.DistrictService;
-import org.motechproject.nms.region.service.HealthBlockImportService;
 import org.motechproject.nms.region.service.HealthBlockService;
-import org.motechproject.nms.region.service.HealthFacilityImportService;
 import org.motechproject.nms.region.service.HealthFacilityService;
-import org.motechproject.nms.region.service.HealthSubFacilityImportService;
 import org.motechproject.nms.region.service.HealthSubFacilityService;
-import org.motechproject.nms.region.service.NonCensusVillageImportService;
-import org.motechproject.nms.region.service.StateImportService;
-import org.motechproject.nms.region.service.TalukaImportService;
 import org.motechproject.nms.region.service.TalukaService;
 import org.motechproject.nms.region.service.VillageService;
 import org.motechproject.nms.testing.service.TestingService;
@@ -63,7 +63,6 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
 
     @Inject
     TestingService testingService;
-
     @Inject
     StateDataService stateDataService;
     @Inject
@@ -175,7 +174,7 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
         assertNotNull(taluka.getDistrict());
 
         censusVillageImportService.importData(read("csv/census_village.csv"));
-        Village censusVillage = villageService.findByTalukaAndVcodeAndSvid(taluka, 3L, 0);
+        Village censusVillage = villageService.findByTalukaAndVcodeAndSvid(taluka, 3L, 0L);
         assertNotNull(censusVillage);
         assertEquals(3L, censusVillage.getVcode());
         assertEquals("census village name", censusVillage.getName());
@@ -192,7 +191,7 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
         assertEquals(3L, nonCensusVillageAssociated.getVcode());
 
         nonCensusVillageImportService.importData(read("csv/non_census_village_non_associated.csv"));
-        Village nonCensusVillageNonAssociated = villageService.findByTalukaAndVcodeAndSvid(taluka, 0, 5L);
+        Village nonCensusVillageNonAssociated = villageService.findByTalukaAndVcodeAndSvid(taluka, 0L, 5L);
         assertNotNull(nonCensusVillageNonAssociated);
         assertEquals(5L, nonCensusVillageNonAssociated.getSvid());
         assertEquals("non census village non associated name", nonCensusVillageNonAssociated.getName());

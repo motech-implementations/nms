@@ -4,16 +4,22 @@ import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.imi.repository.FileAuditRecordDataService;
 import org.motechproject.nms.imi.service.SettingsService;
+import org.motechproject.nms.imi.service.TargetFileService;
+import org.motechproject.nms.imi.service.contract.TargetFileNotification;
 import org.motechproject.nms.imi.web.contract.BadRequest;
 import org.motechproject.nms.imi.web.contract.CdrFileNotificationRequest;
 import org.motechproject.nms.imi.web.contract.FileInfo;
+import org.motechproject.nms.kilkari.domain.Subscriber;
+import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
@@ -23,6 +29,8 @@ import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.testing.it.utils.CdrHelper;
+import org.motechproject.nms.testing.it.utils.RegionHelper;
+import org.motechproject.nms.testing.it.utils.SubscriptionHelper;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
@@ -38,6 +46,7 @@ import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(PaxExam.class)
@@ -67,10 +76,14 @@ public class ImiControllerCdrBundleIT extends BasePaxIT {
     FileAuditRecordDataService fileAuditRecordDataService;
     @Inject
     TestingService testingService;
+    @Inject
+    TargetFileService targetFileService;
 
 
     private String localCdrDirBackup;
     private String remoteCdrDirBackup;
+    private String localObdDirBackup;
+    private String remoteObdDirBackup;
     private CdrHelper helper;
 
 
@@ -80,6 +93,10 @@ public class ImiControllerCdrBundleIT extends BasePaxIT {
                 "cdr-local-dir-it");
         remoteCdrDirBackup = ImiTestHelper.setupTestDir(settingsService, ImiTestHelper.REMOTE_CDR_DIR,
                 "cdr-remote-dir-it");
+        localObdDirBackup = ImiTestHelper.setupTestDir(settingsService, ImiTestHelper.LOCAL_OBD_DIR,
+                "obd-local-dir-it");
+        remoteObdDirBackup = ImiTestHelper.setupTestDir(settingsService, ImiTestHelper.REMOTE_OBD_DIR,
+                "obd-remote-dir-it");
     }
 
 
@@ -101,6 +118,8 @@ public class ImiControllerCdrBundleIT extends BasePaxIT {
     public void restoreSettings() {
         settingsService.getSettingsFacade().setProperty(ImiTestHelper.REMOTE_CDR_DIR, remoteCdrDirBackup);
         settingsService.getSettingsFacade().setProperty(ImiTestHelper.LOCAL_CDR_DIR, localCdrDirBackup);
+        settingsService.getSettingsFacade().setProperty(ImiTestHelper.REMOTE_OBD_DIR, remoteObdDirBackup);
+        settingsService.getSettingsFacade().setProperty(ImiTestHelper.LOCAL_OBD_DIR, localObdDirBackup);
     }
 
 
@@ -448,5 +467,54 @@ public class ImiControllerCdrBundleIT extends BasePaxIT {
                 createFailureResponseJson("<recordsCount: Invalid>");
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
                 ImiTestHelper.ADMIN_USERNAME, ImiTestHelper.ADMIN_PASSWORD));
+    }
+
+    /*
+    * Verify that the filename returned by generateTargetFile can be passed back to us
+    */
+    @Test
+    public void verifyTargetFileNameRoundTrip() throws IOException, InterruptedException, NoSuchAlgorithmException{
+
+        RegionHelper rh = new RegionHelper(languageDataService, circleDataService, stateDataService,
+                districtDataService, districtService);
+
+        SubscriptionHelper sh = new SubscriptionHelper(subscriptionService, subscriberDataService,
+                subscriptionPackDataService, languageDataService, circleDataService, stateDataService,
+                districtDataService, districtService);
+
+        Subscriber subscriber1 = new Subscriber(1111111111L, rh.hindiLanguage(), rh.delhiCircle());
+        subscriber1.setLastMenstrualPeriod(DateTime.now().minusDays(90)); // startDate will be today
+        subscriberDataService.create(subscriber1);
+        subscriptionService.createSubscription(1111111111L, rh.hindiLanguage(), sh.pregnancyPack(),
+                SubscriptionOrigin.MCTS_IMPORT);
+
+        TargetFileNotification tfn = targetFileService.generateTargetFile();
+        assertNotNull(tfn);
+
+        CdrHelper cdrHelper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
+                subscriptionPackDataService, languageDataService, circleDataService, stateDataService,
+                districtDataService, fileAuditRecordDataService, districtService, tfn.getFileName());
+
+
+        String targetFile = cdrHelper.obd();
+        String summaryFile = cdrHelper.csr();
+        String detailFile = cdrHelper.cdr();
+
+        FileInfo cdrSummary = new FileInfo(summaryFile, "checksum", 1);
+        FileInfo cdrDetail = new FileInfo(detailFile, "checksum", 1);
+
+        HttpPost httpPost = createHttpPost(targetFile, cdrSummary, cdrDetail);
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ImiTestHelper.ADMIN_USERNAME,
+                ImiTestHelper.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+
+        //We're expecting for the file copy to fail, what we wanted to check here is that the given file name
+        //is valid
+        String expectedJsonFailure1 = "{\"failureReason\":\"Error 1 running";
+        String expectedJsonFailure2 = ": No such file or directory\\n\"}";
+        String responseBody = EntityUtils.toString(response.getEntity());
+        assertEquals(expectedJsonFailure1,  responseBody.substring(0, expectedJsonFailure1.length()));
+        assertEquals(expectedJsonFailure2,
+                responseBody.substring(responseBody.length() - expectedJsonFailure2.length()));
     }
 }

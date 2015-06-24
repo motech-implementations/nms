@@ -18,10 +18,20 @@ public class SubscriptionError {
     @Field
     private SubscriptionPackType packType;
 
-    public SubscriptionError(long contactNumber, SubscriptionRejectionReason rejectionReason, SubscriptionPackType packType) {
+    @Field
+    private String rejectionMessage;
+
+    public SubscriptionError(long contactNumber, SubscriptionRejectionReason rejectionReason,
+                             SubscriptionPackType packType) {
+        this(contactNumber, rejectionReason, packType, null);
+    }
+
+    public SubscriptionError(long contactNumber, SubscriptionRejectionReason rejectionReason,
+                             SubscriptionPackType packType, String rejectionMessage) {
         this.contactNumber = contactNumber;
         this.rejectionReason = rejectionReason;
         this.packType = packType;
+        this.rejectionMessage = rejectionMessage;
     }
 
     public long getContactNumber() {
@@ -46,5 +56,13 @@ public class SubscriptionError {
 
     public void setPackType(SubscriptionPackType packType) {
         this.packType = packType;
+    }
+
+    public String getRejectionMessage() {
+        return rejectionMessage;
+    }
+
+    public void setRejectionMessage(String rejectionMessage) {
+        this.rejectionMessage = rejectionMessage;
     }
 }

@@ -1,6 +1,5 @@
 package org.motechproject.nms.testing.it.utils;
 
-import org.apache.commons.codec.binary.Hex;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -26,22 +25,24 @@ import org.motechproject.nms.region.service.DistrictService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.security.DigestInputStream;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static org.junit.Assert.assertTrue;
 
 public class CdrHelper {
 
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormat.forPattern("yyyyMMddHHmmss");
+    private static final String OBD_FILENAME_FORMAT = "OBD_NMS_%s.csv";
+    private static final Pattern OBD_TIMESTAMP_PATTERN = Pattern.compile("OBD_NMS_([0-9]*).csv");
+
     private static final Logger LOGGER = LoggerFactory.getLogger(CdrHelper.class);
 
     public static final String LOCAL_CDR_DIR_PROP = "imi.local_cdr_dir";
@@ -71,7 +72,8 @@ public class CdrHelper {
             StateDataService stateDataService,
             DistrictDataService districtDataService,
             FileAuditRecordDataService fileAuditRecordDataService,
-            DistrictService districtService
+            DistrictService districtService,
+            String obdFileName
     ) throws IOException {
 
         sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
@@ -83,10 +85,31 @@ public class CdrHelper {
         this.settingsService = settingsService;
         this.fileAuditRecordDataService = fileAuditRecordDataService;
 
-        TEST_OBD_TIMESTAMP = DateTime.now().toString(TIME_FORMATTER);
-        TEST_OBD_FILENAME = String.format("OBD_%s.csv", TEST_OBD_TIMESTAMP);
+        TEST_OBD_FILENAME = obdFileName;
+        Matcher m = OBD_TIMESTAMP_PATTERN.matcher(obdFileName);
+        assertTrue(m.find());
+        TEST_OBD_TIMESTAMP = m.group(1);
         TEST_CDR_DETAIL_FILENAME = String.format("cdrDetail_%s", TEST_OBD_FILENAME);
         TEST_CDR_SUMMARY_FILENAME = String.format("cdrSummary_%s", TEST_OBD_FILENAME);
+    }
+
+
+    public CdrHelper(
+            SettingsService settingsService,
+            SubscriptionService subscriptionService,
+            SubscriberDataService subscriberDataService,
+            SubscriptionPackDataService subscriptionPackDataService,
+            LanguageDataService languageDataService,
+            CircleDataService circleDataService,
+            StateDataService stateDataService,
+            DistrictDataService districtDataService,
+            FileAuditRecordDataService fileAuditRecordDataService,
+            DistrictService districtService
+    ) throws IOException {
+        this(settingsService, subscriptionService, subscriberDataService, subscriptionPackDataService,
+                languageDataService, circleDataService, stateDataService, districtDataService,
+                fileAuditRecordDataService, districtService,
+                String.format(OBD_FILENAME_FORMAT, DateTime.now().toString(TIME_FORMATTER)));
     }
 
 
@@ -382,36 +405,23 @@ public class CdrHelper {
     }
 
 
-    private String checksum(File file) throws IOException, NoSuchAlgorithmException {
-        FileInputStream fis = new FileInputStream(file);
-        InputStreamReader isr = new InputStreamReader(fis);
-        BufferedReader reader = new BufferedReader(isr);
-        MessageDigest md = MessageDigest.getInstance("MD5");
-        DigestInputStream dis = new DigestInputStream(fis, md);
-
-        while (reader.readLine() != null) { }
-
-        return new String(Hex.encodeHex(md.digest()));
-    }
-
-
     public String csrLocalChecksum() throws IOException, NoSuchAlgorithmException {
-        return checksum(new File(localDir(), csr()));
+        return ChecksumHelper.checksum(new File(localDir(), csr()));
     }
 
 
     public String cdrLocalChecksum() throws IOException, NoSuchAlgorithmException {
-        return checksum(new File(localDir(), cdr()));
+        return ChecksumHelper.checksum(new File(localDir(), cdr()));
     }
 
 
     public String csrRemoteChecksum() throws IOException, NoSuchAlgorithmException {
-        return checksum(new File(remoteDir(), csr()));
+        return ChecksumHelper.checksum(new File(remoteDir(), csr()));
     }
 
 
     public String cdrRemoteChecksum() throws IOException, NoSuchAlgorithmException {
-        return checksum(new File(remoteDir(), cdr()));
+        return ChecksumHelper.checksum(new File(remoteDir(), cdr()));
     }
 
 

@@ -90,7 +90,7 @@ public class ExponentialRetrySender {
             } catch (InterruptedException e) {
                 LOGGER.warn("Thread.sleep interrupted: {}", e.getMessage());
             }
-            retryDelay = retryDelay * retryDelay;
+            retryDelay *= retryDelay;
         }
 
         // Retry count exceeded, consider this a critical error

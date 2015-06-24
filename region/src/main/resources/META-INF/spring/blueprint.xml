@@ -17,52 +17,77 @@
     <osgi:reference id="transactionManager" interface="org.springframework.transaction.PlatformTransactionManager"/>
 
     <!-- Language Services -->
-    <osgi:service ref="languageService" interface="org.motechproject.nms.region.service.LanguageService" />
-    <osgi:reference id="languageDataService" interface="org.motechproject.nms.region.repository.LanguageDataService" />
+    <osgi:service ref="languageService"
+                  interface="org.motechproject.nms.region.service.LanguageService" />
+    <osgi:reference id="languageDataService"
+                    interface="org.motechproject.nms.region.repository.LanguageDataService" />
 
-    <osgi:reference id="nationalDefaultLanguageDataService" interface="org.motechproject.nms.region.repository.NationalDefaultLanguageDataService" />
+    <osgi:reference id="nationalDefaultLanguageDataService"
+                    interface="org.motechproject.nms.region.repository.NationalDefaultLanguageDataService" />
 
     <!-- Location Services -->
-    <osgi:reference id="stateDataService" interface="org.motechproject.nms.region.repository.StateDataService" />
 
-    <osgi:reference id="districtDataService" interface="org.motechproject.nms.region.repository.DistrictDataService" />
-    <osgi:service ref="districtService" interface="org.motechproject.nms.region.service.DistrictService" />
+    <osgi:service ref="locationService"
+                  interface="org.motechproject.nms.region.service.LocationService" />
 
-    <osgi:reference id="talukaDataService" interface="org.motechproject.nms.region.repository.TalukaDataService" />
-    <osgi:service ref="talukaService" interface="org.motechproject.nms.region.service.TalukaService" />
+    <osgi:reference id="stateDataService"
+                    interface="org.motechproject.nms.region.repository.StateDataService" />
 
-    <osgi:reference id="villageDataService" interface="org.motechproject.nms.region.repository.VillageDataService" />
-    <osgi:service ref="villageService" interface="org.motechproject.nms.region.service.VillageService" />
+    <osgi:reference id="districtDataService"
+                    interface="org.motechproject.nms.region.repository.DistrictDataService" />
+    <osgi:service ref="districtService"
+                  interface="org.motechproject.nms.region.service.DistrictService" />
 
-    <osgi:reference id="healthBlockDataService" interface="org.motechproject.nms.region.repository.HealthBlockDataService" />
-    <osgi:service ref="healthBlockService" interface="org.motechproject.nms.region.service.HealthBlockService" />
+    <osgi:reference id="talukaDataService"
+                    interface="org.motechproject.nms.region.repository.TalukaDataService" />
+    <osgi:service ref="talukaService"
+                  interface="org.motechproject.nms.region.service.TalukaService" />
 
-    <osgi:reference id="healthFacilityTypeDataService" interface="org.motechproject.nms.region.repository.HealthFacilityTypeDataService" />
+    <osgi:reference id="villageDataService"
+                    interface="org.motechproject.nms.region.repository.VillageDataService" />
+    <osgi:service ref="villageService"
+                  interface="org.motechproject.nms.region.service.VillageService" />
 
-    <osgi:reference id="healthFacilityDataService" interface="org.motechproject.nms.region.repository.HealthFacilityDataService" />
-    <osgi:service ref="healthFacilityService" interface="org.motechproject.nms.region.service.HealthFacilityService" />
+    <osgi:reference id="healthBlockDataService"
+                    interface="org.motechproject.nms.region.repository.HealthBlockDataService" />
+    <osgi:service ref="healthBlockService"
+                  interface="org.motechproject.nms.region.service.HealthBlockService" />
 
-    <osgi:reference id="healthSubFacilityDataService" interface="org.motechproject.nms.region.repository.HealthSubFacilityDataService" />
-    <osgi:service ref="healthSubFacilityService" interface="org.motechproject.nms.region.service.HealthSubFacilityService" />
+    <osgi:reference id="healthFacilityTypeDataService"
+                    interface="org.motechproject.nms.region.repository.HealthFacilityTypeDataService" />
+
+    <osgi:reference id="healthFacilityDataService"
+                    interface="org.motechproject.nms.region.repository.HealthFacilityDataService" />
+    <osgi:service ref="healthFacilityService"
+                  interface="org.motechproject.nms.region.service.HealthFacilityService" />
+
+    <osgi:reference id="healthSubFacilityDataService"
+                    interface="org.motechproject.nms.region.repository.HealthSubFacilityDataService" />
+    <osgi:service ref="healthSubFacilityService"
+                  interface="org.motechproject.nms.region.service.HealthSubFacilityService" />
 
     <!--- Circle Services -->
-    <osgi:service ref="circleService" interface="org.motechproject.nms.region.service.CircleService" />
-    <osgi:reference id="circleDataService" interface="org.motechproject.nms.region.repository.CircleDataService" />
+    <osgi:service ref="circleService"
+                  interface="org.motechproject.nms.region.service.CircleService" />
+    <osgi:reference id="circleDataService"
+                    interface="org.motechproject.nms.region.repository.CircleDataService" />
 
     <!-- Location Data Import Services -->
-    <osgi:service ref="stateImportService" interface="org.motechproject.nms.region.service.StateImportService" />
-    <osgi:service ref="districtImportService" interface="org.motechproject.nms.region.service.DistrictImportService" />
-    <osgi:service ref="talukaImportService" interface="org.motechproject.nms.region.service.TalukaImportService" />
-    <osgi:service ref="censusVillageImportService" interface="org.motechproject.nms.region.service.CensusVillageImportService" />
-    <osgi:service ref="nonCensusVillageImportService" interface="org.motechproject.nms.region.service.NonCensusVillageImportService" />
-    <osgi:service ref="healthBlockImportService" interface="org.motechproject.nms.region.service.HealthBlockImportService" />
-    <osgi:service ref="healthFacilityImportService" interface="org.motechproject.nms.region.service.HealthFacilityImportService" />
-    <osgi:service ref="healthSubFacilityImportService" interface="org.motechproject.nms.region.service.HealthSubFacilityImportService" />
+
+    <osgi:service ref="stateImportService" interface="org.motechproject.nms.region.csv.StateImportService" />
+    <osgi:service ref="districtImportService" interface="org.motechproject.nms.region.csv.DistrictImportService" />
+    <osgi:service ref="talukaImportService" interface="org.motechproject.nms.region.csv.TalukaImportService" />
+    <osgi:service ref="censusVillageImportService" interface="org.motechproject.nms.region.csv.CensusVillageImportService" />
+    <osgi:service ref="nonCensusVillageImportService" interface="org.motechproject.nms.region.csv.NonCensusVillageImportService" />
+    <osgi:service ref="healthBlockImportService" interface="org.motechproject.nms.region.csv.HealthBlockImportService" />
+    <osgi:service ref="healthFacilityImportService" interface="org.motechproject.nms.region.csv.HealthFacilityImportService" />
+    <osgi:service ref="healthSubFacilityImportService" interface="org.motechproject.nms.region.csv.HealthSubFacilityImportService" />
 
     <!-- Language Location Codes Import Service -->
-    <osgi:service ref="languageLocationImportService" interface="org.motechproject.nms.region.service.LanguageLocationImportService" />
+    <osgi:service ref="languageLocationImportService" interface="org.motechproject.nms.region.csv.LanguageLocationImportService" />
 
     <!-- Alert Service -->
-    <osgi:reference id="alertsService" interface="org.motechproject.alerts.contract.AlertService" />
+    <osgi:reference id="alertsService"
+                    interface="org.motechproject.alerts.contract.AlertService" />
 
 </beans>
