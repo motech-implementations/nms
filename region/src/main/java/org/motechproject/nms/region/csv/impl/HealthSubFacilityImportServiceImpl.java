@@ -1,4 +1,4 @@
-package org.motechproject.nms.region.service.impl.csv;
+package org.motechproject.nms.region.csv.impl;
 
 import org.motechproject.nms.csv.utils.GetLong;
 import org.motechproject.nms.csv.utils.GetString;
@@ -9,9 +9,8 @@ import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.region.service.HealthBlockService;
 import org.motechproject.nms.region.service.HealthFacilityService;
-import org.motechproject.nms.region.service.HealthSubFacilityImportService;
+import org.motechproject.nms.region.csv.HealthSubFacilityImportService;
 import org.motechproject.nms.region.service.TalukaService;
-import org.motechproject.nms.region.service.impl.csv.BaseLocationImportService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.supercsv.cellprocessor.ift.CellProcessor;
