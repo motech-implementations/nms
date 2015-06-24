@@ -4,16 +4,22 @@ import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.imi.repository.FileAuditRecordDataService;
 import org.motechproject.nms.imi.service.SettingsService;
+import org.motechproject.nms.imi.service.TargetFileService;
+import org.motechproject.nms.imi.service.contract.TargetFileNotification;
 import org.motechproject.nms.imi.web.contract.BadRequest;
 import org.motechproject.nms.imi.web.contract.CdrFileNotificationRequest;
 import org.motechproject.nms.imi.web.contract.FileInfo;
+import org.motechproject.nms.kilkari.domain.Subscriber;
+import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
@@ -23,6 +29,8 @@ import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.testing.it.utils.CdrHelper;
+import org.motechproject.nms.testing.it.utils.RegionHelper;
+import org.motechproject.nms.testing.it.utils.SubscriptionHelper;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
@@ -38,6 +46,7 @@ import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(PaxExam.class)
@@ -67,6 +76,8 @@ public class ImiControllerCdrBundleIT extends BasePaxIT {
     FileAuditRecordDataService fileAuditRecordDataService;
     @Inject
     TestingService testingService;
+    @Inject
+    TargetFileService targetFileService;
 
 
     private String localCdrDirBackup;
@@ -448,5 +459,46 @@ public class ImiControllerCdrBundleIT extends BasePaxIT {
                 createFailureResponseJson("<recordsCount: Invalid>");
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
                 ImiTestHelper.ADMIN_USERNAME, ImiTestHelper.ADMIN_PASSWORD));
+    }
+
+    /*
+    * Verify that the filename returned by generateTargetFile can be passed back to us
+    */
+    @Test
+    public void verifyTargetFileNameRoundTrip() throws IOException, InterruptedException, NoSuchAlgorithmException{
+
+        RegionHelper rh = new RegionHelper(languageDataService, circleDataService, stateDataService,
+                districtDataService, districtService);
+
+        SubscriptionHelper sh = new SubscriptionHelper(subscriptionService, subscriberDataService,
+                subscriptionPackDataService, languageDataService, circleDataService, stateDataService,
+                districtDataService, districtService);
+
+        Subscriber subscriber1 = new Subscriber(1111111111L, rh.hindiLanguage(), rh.delhiCircle());
+        subscriber1.setLastMenstrualPeriod(DateTime.now().minusDays(90)); // startDate will be today
+        subscriberDataService.create(subscriber1);
+        subscriptionService.createSubscription(1111111111L, rh.hindiLanguage(), sh.pregnancyPack(),
+                SubscriptionOrigin.MCTS_IMPORT);
+
+        TargetFileNotification tfn = targetFileService.generateTargetFile();
+        assertNotNull(tfn);
+
+        CdrHelper cdrHelper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
+                subscriptionPackDataService, languageDataService, circleDataService, stateDataService,
+                districtDataService, fileAuditRecordDataService, districtService, tfn.getFileName());
+
+
+        String targetFile = cdrHelper.obd();
+        String summaryFile = cdrHelper.csr();
+        String detailFile = cdrHelper.cdr();
+
+        FileInfo cdrSummary = new FileInfo(summaryFile, "checksum", 1);
+        FileInfo cdrDetail = new FileInfo(detailFile, "checksum", 1);
+
+        HttpPost httpPost = createHttpPost(targetFile, cdrSummary, cdrDetail);
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ImiTestHelper.ADMIN_USERNAME,
+                ImiTestHelper.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+        assertEquals("foobar",  EntityUtils.toString(response.getEntity()));
     }
 }

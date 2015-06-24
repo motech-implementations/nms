@@ -69,7 +69,6 @@ public class ImiController {
     }
 
 
-
     private static boolean validateTargetFileName(StringBuilder errors, String targetFileName) {
         if (validateFieldPresent(errors, "fileName", targetFileName)) {
             if (TARGET_FILENAME_PATTERN.matcher(targetFileName).matches()) {
