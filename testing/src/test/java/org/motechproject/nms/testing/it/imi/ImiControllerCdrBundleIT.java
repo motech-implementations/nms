@@ -82,6 +82,8 @@ public class ImiControllerCdrBundleIT extends BasePaxIT {
 
     private String localCdrDirBackup;
     private String remoteCdrDirBackup;
+    private String localObdDirBackup;
+    private String remoteObdDirBackup;
     private CdrHelper helper;
 
 
@@ -91,6 +93,10 @@ public class ImiControllerCdrBundleIT extends BasePaxIT {
                 "cdr-local-dir-it");
         remoteCdrDirBackup = ImiTestHelper.setupTestDir(settingsService, ImiTestHelper.REMOTE_CDR_DIR,
                 "cdr-remote-dir-it");
+        localObdDirBackup = ImiTestHelper.setupTestDir(settingsService, ImiTestHelper.LOCAL_OBD_DIR,
+                "obd-local-dir-it");
+        remoteObdDirBackup = ImiTestHelper.setupTestDir(settingsService, ImiTestHelper.REMOTE_OBD_DIR,
+                "obd-remote-dir-it");
     }
 
 
@@ -112,6 +118,8 @@ public class ImiControllerCdrBundleIT extends BasePaxIT {
     public void restoreSettings() {
         settingsService.getSettingsFacade().setProperty(ImiTestHelper.REMOTE_CDR_DIR, remoteCdrDirBackup);
         settingsService.getSettingsFacade().setProperty(ImiTestHelper.LOCAL_CDR_DIR, localCdrDirBackup);
+        settingsService.getSettingsFacade().setProperty(ImiTestHelper.REMOTE_OBD_DIR, remoteObdDirBackup);
+        settingsService.getSettingsFacade().setProperty(ImiTestHelper.LOCAL_OBD_DIR, localObdDirBackup);
     }
 
 
@@ -499,6 +507,14 @@ public class ImiControllerCdrBundleIT extends BasePaxIT {
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ImiTestHelper.ADMIN_USERNAME,
                 ImiTestHelper.ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
-        assertEquals("foobar",  EntityUtils.toString(response.getEntity()));
+
+        //We're expecting for the file copy to fail, what we wanted to check here is that the given file name
+        //is valid
+        String expectedJsonFailure1 = "{\"failureReason\":\"Error 1 running";
+        String expectedJsonFailure2 = ": No such file or directory\\n\"}";
+        String responseBody = EntityUtils.toString(response.getEntity());
+        assertEquals(expectedJsonFailure1,  responseBody.substring(0, expectedJsonFailure1.length()));
+        assertEquals(expectedJsonFailure2,
+                responseBody.substring(responseBody.length() - expectedJsonFailure2.length()));
     }
 }
