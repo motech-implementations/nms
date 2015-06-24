@@ -63,7 +63,6 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
 
     @Inject
     TestingService testingService;
-
     @Inject
     StateDataService stateDataService;
     @Inject
