@@ -102,6 +102,7 @@
                             org.springframework.aop,
                             org.springframework.aop.framework,
                             org.springframework.transaction,
+                            org.motechproject.nms.region.repository,
                             *
                         </Import-Package>
                     </instructions>

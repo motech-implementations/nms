@@ -1,4 +1,4 @@
-package org.motechproject.nms.region.service.impl.csv;
+package org.motechproject.nms.region.csv.impl;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.motechproject.mds.service.MotechDataService;

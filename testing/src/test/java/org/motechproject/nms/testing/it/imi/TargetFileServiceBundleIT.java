@@ -193,12 +193,18 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         File targetDir = new File(settingsService.getSettingsFacade().getProperty("imi.local_obd_dir"));
         File targetFile = new File(targetDir, tfn.getFileName());
         int recordCount = 0;
+        boolean header = true;
         try (InputStream is = Files.newInputStream(targetFile.toPath());
              BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
             while ((reader.readLine()) != null) {
+                if (header) {
+                    header = false;
+                    continue;
+                }
                 recordCount++;
             }
         }
+
         String checksum = ChecksumHelper.checksum(targetFile);
 
         assertEquals((int)tfn.getRecordsCount(), recordCount);
@@ -274,13 +280,19 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         File targetDir = new File(settingsService.getSettingsFacade().getProperty("imi.local_obd_dir"));
         File targetFile = new File(targetDir, tfn.getFileName());
         int recordCount = 0;
+        boolean header = true;
         try (InputStream is = Files.newInputStream(targetFile.toPath());
              BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
             while ((line = reader.readLine()) != null) {
+                if (header) {
+                    header = false;
+                    continue;
+                }
                 recordCount++;
                 contents.add(line.split(",")[7]); //column 8 is for weekId
             }
         }
+
         String checksum = ChecksumHelper.checksum(targetFile);
 
         assertEquals((int)tfn.getRecordsCount(), recordCount);
@@ -310,13 +322,19 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         File targetDir = new File(settingsService.getSettingsFacade().getProperty("imi.local_obd_dir"));
         File targetFile = new File(targetDir, tfn.getFileName());
         int recordCount = 0;
+        boolean header = true;
         try (InputStream is = Files.newInputStream(targetFile.toPath());
              BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
             while ((line = reader.readLine()) != null) {
+                if (header) {
+                    header = false;
+                    continue;
+                }
                 recordCount++;
                 contents.add(line.split(",")[7]); //column 8 is for weekId
             }
         }
+
         String checksum = ChecksumHelper.checksum(targetFile);
         assertEquals((int)tfn.getRecordsCount(), recordCount);
         assertEquals(tfn.getChecksum(), checksum);
@@ -332,9 +350,14 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         contents.clear();
         targetFile = new File(targetDir, tfn.getFileName());
         recordCount = 0;
+        header = true;
         try (InputStream is = Files.newInputStream(targetFile.toPath());
              BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
             while ((line = reader.readLine()) != null) {
+                if (header) {
+                    header = false;
+                    continue;
+                }
                 recordCount++;
                 contents.add(line.split(",")[7]); //column 8 is for weekId
             }
@@ -365,13 +388,19 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         File targetDir = new File(settingsService.getSettingsFacade().getProperty("imi.local_obd_dir"));
         File targetFile = new File(targetDir, tfn.getFileName());
         int recordCount = 0;
+        boolean header = true;
         try (InputStream is = Files.newInputStream(targetFile.toPath());
              BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
             while ((line = reader.readLine()) != null) {
+                if (header) {
+                    header = false;
+                    continue;
+                }
                 recordCount++;
                 contents.add(line.split(",")[6]); //column 7 is for content filename
             }
         }
+
         String checksum = ChecksumHelper.checksum(targetFile);
         assertEquals((int)tfn.getRecordsCount(), recordCount);
         assertEquals(tfn.getChecksum(), checksum);
@@ -397,13 +426,19 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         File targetDir = new File(settingsService.getSettingsFacade().getProperty("imi.local_obd_dir"));
         File targetFile = new File(targetDir, tfn.getFileName());
         int recordCount = 0;
+        boolean header = true;
         try (InputStream is = Files.newInputStream(targetFile.toPath());
              BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
             while ((line = reader.readLine()) != null) {
+                if (header) {
+                    header = false;
+                    continue;
+                }
                 recordCount++;
                 contents.add(line.split(",")[6]); //column 7 is for content filename
             }
         }
+
         String checksum = ChecksumHelper.checksum(targetFile);
         assertEquals((int)tfn.getRecordsCount(), recordCount);
         assertEquals(tfn.getChecksum(), checksum);

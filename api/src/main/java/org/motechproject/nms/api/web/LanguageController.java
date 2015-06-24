@@ -82,13 +82,15 @@ public class LanguageController extends BaseController {
 
         State state =  getStateForFrontLineWorker(flw, null);
 
+        if (!serviceDeployedInUserState(service, state)) {
+            throw new NotDeployedException(String.format(NOT_DEPLOYED, service));
+        }
+
         if (!frontLineWorkerAuthorizedForAccess(flw, state)) {
             throw new NotAuthorizedException(String.format(NOT_AUTHORIZED, CALLING_NUMBER));
         }
 
-        if (!serviceDeployedInFrontLineWorkersState(service, state)) {
-            throw new NotDeployedException(String.format(NOT_DEPLOYED, service));
-        }
+
 
         // MOTECH-1667 added to get an upsert method included
         if (flw.getId() == null) {

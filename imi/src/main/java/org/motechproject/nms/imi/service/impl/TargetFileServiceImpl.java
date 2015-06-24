@@ -142,6 +142,87 @@ public class TargetFileServiceImpl implements TargetFileService {
     }
 
 
+    private void writeHeader(OutputStreamWriter writer) throws IOException {
+        /*
+         * #1 RequestId
+         *
+         */
+        writer.write("RequestId");
+        writer.write(",");
+
+        /*
+         * #2 ServiceId
+         *
+         */
+        writer.write("ServiceId");
+        writer.write(",");
+
+        /*
+         * #3 Msisdn
+         *
+         */
+        writer.write("Msisdn");
+        writer.write(",");
+
+        /*
+         * #4 Cli
+         *
+         */
+        writer.write("Cli");
+        writer.write(",");
+
+        /*
+         * #5 Priority
+         *
+         */
+        writer.write("Priority");
+        writer.write(",");
+
+        /*
+         * #6 CallFlowURL
+         *
+         */
+        writer.write("CallFlowURL");
+        writer.write(",");
+
+        /*
+         * #7 ContentFileName
+         *
+         */
+        writer.write("ContentFileName");
+        writer.write(",");
+
+        /*
+         * #8 WeekId
+         *
+         */
+        writer.write("WeekId");
+        writer.write(",");
+
+        /*
+         * #9 LanguageLocationCode
+         *
+         */
+        writer.write("LanguageLocationCode");
+        writer.write(",");
+
+        /*
+         * #10 Circle
+         *
+         */
+        writer.write("Circle");
+        writer.write(",");
+
+        /*
+         * #11 subscription mode
+         *
+         */
+        writer.write("SubscriptionOrigin");
+
+        writer.write("\n");
+    }
+
+
     private void writeSubscriptionRow(String requestId, String serviceId, // NO CHECKSTYLE More than 7 parameters
                                       String msisdn, String priority,  String callFlowUrl, String contentFileName,
                                       String weekId, String languageLocationCode, String circle,
@@ -349,7 +430,10 @@ public class TargetFileServiceImpl implements TargetFileService {
 
             activatePendingSubscriptions(today, maxQueryBlock);
 
-            //FRESH calls
+            //Header
+            writeHeader(writer);
+
+            //Fresh calls
             recordCount = generateFreshCalls(today, maxQueryBlock, imiServiceId, callFlowUrl, writer);
 
             //Retry calls

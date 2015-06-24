@@ -27,6 +27,7 @@ import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.HealthBlock;
 import org.motechproject.nms.region.domain.HealthFacility;
 import org.motechproject.nms.region.domain.HealthFacilityType;
+import org.motechproject.nms.region.domain.HealthSubFacility;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.domain.Village;
@@ -59,6 +60,7 @@ import static org.motechproject.nms.testing.it.utils.RegionHelper.createDistrict
 import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthBlock;
 import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthFacility;
 import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthFacilityType;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthSubFacilityType;
 import static org.motechproject.nms.testing.it.utils.RegionHelper.createState;
 import static org.motechproject.nms.testing.it.utils.RegionHelper.createTaluka;
 import static org.motechproject.nms.testing.it.utils.RegionHelper.createVillage;
@@ -145,6 +147,18 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         HealthFacility healthFacility114 = createHealthFacility(healthBlock153, 114L, "CHC Tileibani", facilityType114);
         healthBlock153.getHealthFacilities().add(healthFacility114);
 
+        HealthSubFacility subFacilityType7389 = createHealthSubFacilityType("Babuniktimal", 7389L, healthFacility41);
+        healthFacility41.getHealthSubFacilities().add(subFacilityType7389);
+
+        HealthSubFacility subFacilityType7393 = createHealthSubFacilityType("Jarabaga", 7393L, healthFacility41);
+        healthFacility41.getHealthSubFacilities().add(subFacilityType7393);
+
+        HealthSubFacility subFacilityType2104 = createHealthSubFacilityType("Chupacabra", 2104L, healthFacility635);
+        healthFacility635.getHealthSubFacilities().add(subFacilityType2104);
+
+        HealthSubFacility subFacilityType342 = createHealthSubFacilityType("El Dorado", 342L, healthFacility114);
+        healthFacility114.getHealthSubFacilities().add(subFacilityType342);
+
         Village village10004693 = createVillage(taluka24, 10004693L, 0, "Khairdihi");
         Village village10004691 = createVillage(taluka24, 10004691L, 0, "Gambhariguda");
         Village village1509 = createVillage(taluka24, 0, 1509L, "Mundrajore");
@@ -214,10 +228,13 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         assertEquals(90, Days.daysBetween(newLmp.toLocalDate(), subscription.getStartDate().toLocalDate()).getDays());
     }
 
-    @Test(expected = CsvImportDataException.class)
+    @Test
     public void testImportMotherInvalidState() throws Exception {
         Reader reader = createMotherDataReaderWithHeaders("9\t3\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t22-11-2014");
         mctsBeneficiaryImportService.importMotherData(reader);
+        List<SubscriptionError> se = subscriptionErrorDataService.findByContactNumber(9439986187L);
+        assertEquals(1, se.size());
+        assertEquals(SubscriptionRejectionReason.INVALID_LOCATION, se.get(0).getRejectionReason());
     }
 
     @Test
@@ -294,7 +311,6 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         mctsBeneficiaryImportService.importChildData(read("csv/child.txt"));
 
         State expectedState = stateDataService.findByCode(21L);
-        District expectedDistrict2 = districtService.findByStateAndCode(expectedState, 2L);
         District expectedDistrict4 = districtService.findByStateAndCode(expectedState, 4L);
 
         Subscriber subscriber1 = subscriberDataService.findByCallingNumber(9439998253L);
