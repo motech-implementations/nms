@@ -125,7 +125,7 @@ public class Subscriber extends MdsEntity {
     }
 
     @Ignore
-    public Set<Subscription> getActiveSubscriptions() {
+    public Set<Subscription> getActiveAndPendingSubscriptions() {
         Set<Subscription> activeSubscriptions = new HashSet<>();
 
         Iterator<Subscription> subscriptionIterator = subscriptions.iterator();
@@ -133,7 +133,8 @@ public class Subscriber extends MdsEntity {
         while (subscriptionIterator.hasNext()) {
             currentSubscription = subscriptionIterator.next();
 
-            if (currentSubscription.getStatus() == SubscriptionStatus.ACTIVE) {
+            if (currentSubscription.getStatus() == SubscriptionStatus.ACTIVE ||
+                    currentSubscription.getStatus() == SubscriptionStatus.PENDING_ACTIVATION) {
                 activeSubscriptions.add(currentSubscription);
             }
         }

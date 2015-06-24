@@ -1,6 +1,7 @@
 package org.motechproject.nms.imi.service.impl;
 
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -367,7 +368,6 @@ public class TargetFileServiceImpl implements TargetFileService {
         return recordCount;
     }
 
-
     private int generateRetryCalls(DateTime timestamp, int maxQueryBlock, String imiServiceId,
                                    String callFlowUrl, OutputStreamWriter writer) throws IOException {
 
@@ -428,6 +428,8 @@ public class TargetFileServiceImpl implements TargetFileService {
                 callFlowUrl = "";
             }
 
+            activatePendingSubscriptions(today, maxQueryBlock);
+
             //Header
             writeHeader(writer);
 
@@ -462,6 +464,21 @@ public class TargetFileServiceImpl implements TargetFileService {
         return tfn;
     }
 
+    private void activatePendingSubscriptions(DateTime today, int maxQueryBlock) {
+        int page = 1;
+        while (true) {
+            List<Subscription> subscriptions = subscriptionService
+                    .findPendingSubscriptionsFromDate(today, page, maxQueryBlock);
+            if (CollectionUtils.isNotEmpty(subscriptions)) {
+                for (Subscription subscription : subscriptions) {
+                    subscriptionService.activateSubscription(subscription);
+                }
+                page++;
+            } else {
+                break;
+            }
+        }
+    }
 
     private void sendNotificationRequest(TargetFileNotification tfn) {
         String notificationUrl = settingsFacade.getProperty(TARGET_FILE_NOTIFICATION_URL);

@@ -2,10 +2,10 @@ package org.motechproject.nms.region.csv.impl;
 
 import org.motechproject.nms.csv.utils.GetLong;
 import org.motechproject.nms.csv.utils.GetString;
+import org.motechproject.nms.region.csv.DistrictImportService;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.StateDataService;
-import org.motechproject.nms.region.csv.DistrictImportService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.supercsv.cellprocessor.ift.CellProcessor;
