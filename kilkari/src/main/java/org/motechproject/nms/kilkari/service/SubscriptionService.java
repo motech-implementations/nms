@@ -68,6 +68,12 @@ public interface SubscriptionService {
     void updateStartDate(Subscription subscription, DateTime newReferenceDate);
 
     /**
+     * Activate the specified subscription
+     * @param subscription The subscription to activate
+     */
+    void activateSubscription(Subscription subscription);
+
+    /**
      * Deactivate the specified subscription
      * @param subscription The subscription to deactivate
      * @param reason The reason for deactivation
@@ -114,6 +120,15 @@ public interface SubscriptionService {
     List<Subscription> findActiveSubscriptionsForDay(DayOfTheWeek dayOfTheWeek, int page, int pageSize);
 
     /**
+     * Get the list of pending subscriptions that starts after the specified date.
+     * @param startDate The start date from which to find subscriptins
+     * @param page The page for which to return results
+     * @param pageSize The number of results to return per page
+     * @return The list of pending subscriptions that starts after the specified date
+     */
+    List<Subscription> findPendingSubscriptionsFromDate(DateTime startDate, int page, int pageSize);
+
+    /**
      * MotechEvent handler that responds to scheduler events.  Purges subscription and subscriber records that
      * are in a closed state and have been for more than kilkari.weeks_to_keep_closed_subscriptions weeks
      *
@@ -129,5 +144,4 @@ public interface SubscriptionService {
      */
     @InstanceLifecycleListener(InstanceLifecycleListenerType.PRE_DELETE)
     void deletePreconditionCheck(Subscription subscription);
-
 }
