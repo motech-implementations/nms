@@ -83,6 +83,12 @@ public class CsrServiceImpl implements CsrService {
 
     //todo: IT
     private int calculatePercentPlayed(String contentFileName, int duration) {
+
+       //refresh Cache if empty
+        if (messageDuration.size() == 0) {
+            buildMessageDurationCache();
+        }
+
         if (messageDuration.containsKey(contentFileName)) {
             int totalDuration = messageDuration.get(contentFileName);
             return duration / totalDuration * ONE_HUNDRED;
