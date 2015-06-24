@@ -19,23 +19,16 @@ import org.motechproject.nms.kilkari.domain.MctsChild;
 import org.motechproject.nms.kilkari.domain.MctsMother;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
-import org.motechproject.nms.kilkari.domain.SubscriptionError;
-import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.domain.SubscriptionRejectionReason;
 import org.motechproject.nms.kilkari.repository.MctsChildDataService;
 import org.motechproject.nms.kilkari.repository.MctsMotherDataService;
-import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
-import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
-import org.motechproject.nms.kilkari.service.SubscriberService;
-import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.HealthBlock;
 import org.motechproject.nms.region.domain.HealthFacility;
 import org.motechproject.nms.region.domain.HealthSubFacility;
-import org.motechproject.nms.region.domain.Language;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.domain.Village;
@@ -61,7 +54,7 @@ import java.util.Map;
  * Implementation of the {@link MctsBeneficiaryImportService} interface.
  */
 @Service("mctsBeneficiaryImportService")
-public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportService {
+public class MctsBeneficiaryImportServiceImpl extends BaseMctsBeneficiaryService implements MctsBeneficiaryImportService {
 
     private static final String STATE = "StateID";
     private static final String DISTRICT = "District_ID";
@@ -82,29 +75,17 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     private LocationService locationService;
     private MctsMotherDataService mctsMotherDataService;
     private MctsChildDataService mctsChildDataService;
-    private SubscriptionService subscriptionService;
-    private SubscriberService subscriberService;
-    private SubscriptionErrorDataService subscriptionErrorDataService;
-    private SubscriptionPackDataService subscriptionPackDataService;
 
     private SubscriptionPack pregnancyPack;
     private SubscriptionPack childPack;
 
     @Autowired
-      MctsBeneficiaryImportServiceImpl(LocationService locationService,
-                                       MctsMotherDataService mctsMotherDataService,
-                                       MctsChildDataService mctsChildDataService,
-                                       SubscriptionService subscriptionService,
-                                       SubscriberService subscriberService,
-                                       SubscriptionPackDataService subscriptionPackDataService,
-                                       SubscriptionErrorDataService subscriptionErrorDataService) {
+    MctsBeneficiaryImportServiceImpl(LocationService locationService,
+                                     MctsMotherDataService mctsMotherDataService,
+                                     MctsChildDataService mctsChildDataService) {
         this.locationService = locationService;
         this.mctsMotherDataService = mctsMotherDataService;
         this.mctsChildDataService = mctsChildDataService;
-        this.subscriptionService = subscriptionService;
-        this.subscriberService = subscriberService;
-        this.subscriptionPackDataService = subscriptionPackDataService;
-        this.subscriptionErrorDataService = subscriptionErrorDataService;
     }
 
     /**
@@ -258,65 +239,6 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         return true;
     }
 
-    private Subscription processSubscriptionForBeneficiary(MctsBeneficiary beneficiary, Long msisdn, DateTime referenceDate,
-                                                  SubscriptionPack pack) {
-        Language language = beneficiary.getDistrict().getLanguage();
-        Subscriber subscriber = subscriberService.getSubscriber(msisdn);
-
-        // TODO: Handle the case in which the MCTS beneficiary already exists but with a different phone number
-
-        if (subscriber == null) {
-            // there's no subscriber with this MSISDN, create one
-
-            subscriber = new Subscriber(msisdn, language);
-            subscriber = updateSubscriber(subscriber, beneficiary, referenceDate, pack.getType());
-            subscriberService.create(subscriber);
-            return subscriptionService.createSubscription(msisdn, language, pack, SubscriptionOrigin.MCTS_IMPORT);
-        }
-
-        if (subscriptionService.getActiveSubscription(subscriber, pack.getType()) != null) {
-            // subscriber already has an active subscription to this pack
-
-            MctsBeneficiary existingBeneficiary = (pack.getType() == SubscriptionPackType.PREGNANCY) ? subscriber.getMother() :
-                    subscriber.getChild();
-
-            if (existingBeneficiary == null) {
-                // there's already an IVR-originated subscription for this MSISDN
-                rejectBeneficiary(msisdn, SubscriptionRejectionReason.ALREADY_SUBSCRIBED, pack.getType());
-
-                // TODO: Do we just reject the subscription request, or do we update the subscriber record with MCTS data?
-                // TODO: Should we change the subscription start date based on the provided LMP/DOB?
-
-            } else if (!existingBeneficiary.getBeneficiaryId().equals(beneficiary.getBeneficiaryId())) {
-                // if the MCTS ID doesn't match (i.e. there are two beneficiaries with the same phone number), reject the import
-                rejectBeneficiary(msisdn, SubscriptionRejectionReason.ALREADY_SUBSCRIBED, pack.getType());
-            } else {
-                // it's the same beneficiary, treat this import as an update
-                subscriber = updateSubscriber(subscriber, beneficiary, referenceDate, pack.getType());
-                subscriberService.update(subscriber);
-            }
-
-            return null;
-        }
-
-        // subscriber exists, but doesn't have a subscription to this pack
-        subscriber = updateSubscriber(subscriber, beneficiary, referenceDate, pack.getType());
-        subscriberService.update(subscriber);
-        return subscriptionService.createSubscription(msisdn, language, pack, SubscriptionOrigin.MCTS_IMPORT);
-    }
-
-
-    private Subscriber updateSubscriber(Subscriber subscriber, MctsBeneficiary beneficiary, DateTime referenceDate,
-                                        SubscriptionPackType packType) {
-        if (packType == SubscriptionPackType.PREGNANCY) {
-            subscriber.setLastMenstrualPeriod(referenceDate);
-            subscriber.setMother((MctsMother) beneficiary);
-        } else {
-            subscriber.setDateOfBirth(referenceDate);
-            subscriber.setChild((MctsChild) beneficiary);
-        }
-        return subscriber;
-    }
 
     private void setLocationFields(Map<String, Object> locations, MctsBeneficiary beneficiary) throws InvalidLocationException {
 
@@ -333,13 +255,6 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         beneficiary.setVillage((Village) locations.get(CENSUS_VILLAGE + NON_CENSUS_VILAGE));
     }
 
-    private void rejectBeneficiary(Long msisdn, SubscriptionRejectionReason reason, SubscriptionPackType packType) {
-        subscriptionErrorDataService.create(new SubscriptionError(msisdn, reason, packType));
-    }
-
-    private void rejectBeneficiaryWithMessage(Long msisdn, SubscriptionRejectionReason reason, SubscriptionPackType packType, String rejectionMessage) {
-        subscriptionErrorDataService.create(new SubscriptionError(msisdn, reason, packType, rejectionMessage));
-    }
 
     private Map<String, CellProcessor> getBeneficiaryLocationMapping() {
         Map<String, CellProcessor> mapping = new HashMap<>();
@@ -436,7 +351,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                 try {
                     DateTimeParser[] parsers = {
                             DateTimeFormat.forPattern("dd-MM-yyyy").getParser(),
-                            DateTimeFormat.forPattern("dd/MM/yyyy").getParser() };
+                            DateTimeFormat.forPattern("dd/MM/yyyy").getParser()};
                     DateTimeFormatter formatter = new DateTimeFormatterBuilder().append(null, parsers).toFormatter();
 
                     dob = formatter.parseDateTime(value);

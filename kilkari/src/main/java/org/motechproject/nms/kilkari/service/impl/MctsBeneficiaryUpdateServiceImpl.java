@@ -22,15 +22,8 @@ import org.motechproject.nms.kilkari.repository.MctsMotherDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryUpdateService;
-import org.motechproject.nms.kilkari.service.SubscriberService;
-import org.motechproject.nms.kilkari.service.SubscriptionService;
-import org.motechproject.nms.region.domain.District;
-import org.motechproject.nms.region.domain.HealthBlock;
-import org.motechproject.nms.region.domain.HealthFacility;
 import org.motechproject.nms.region.domain.Language;
 import org.motechproject.nms.region.domain.State;
-import org.motechproject.nms.region.domain.Taluka;
-import org.motechproject.nms.region.domain.Village;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,7 +45,7 @@ import java.util.Set;
  * Implementation of the {@link MctsBeneficiaryUpdateService} interface.
  */
 @Service("mctsBeneficiaryUpdateService")
-public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateService {
+public class MctsBeneficiaryUpdateServiceImpl extends BaseMctsBeneficiaryService implements MctsBeneficiaryUpdateService {
 
     @Autowired
     private SubscriberDataService subscriberDataService;
@@ -61,11 +54,7 @@ public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateSe
     @Autowired
     private MctsChildDataService mctsChildDataService;
     @Autowired
-    private SubscriptionService subscriptionService;
-    @Autowired
     private SubscriptionDataService subscriptionDataService;
-    @Autowired
-    private SubscriberService subscriberService;
     @Autowired
     private StateDataService stateDataService;
     @Autowired
@@ -141,6 +130,8 @@ public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateSe
 
         // if subscriber is null (and we have the appropriate info), or we have a new reference date, call
         // processSubscriptionForBeneficiary (move it to base class)
+
+        processSubscriptionForBeneficiary(beneficiary,
 
         // update location fields for beneficiary if they are updated (this should also be a common method across updates / imports)
 
