@@ -2,7 +2,6 @@ package org.motechproject.nms.testing.it.kilkari;
 
 import org.joda.time.DateTime;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.kilkari.domain.Subscriber;
@@ -93,10 +92,8 @@ public class InboxServiceBundleIT extends BasePaxIT {
 	 * To check NMS is able to make available a single message of current week in inbox when user is subscribed to
 	 * Pregnancy Pack with 2 message per week configuration.
 	 *
-	 * https://applab.atlassian.net/browse/NMS-190
 	 */
 	@Test
-	@Ignore
 	public void verifyFT108() throws Exception {
 
 		DateTime now = DateTime.now();
