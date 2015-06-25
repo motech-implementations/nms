@@ -1,4 +1,4 @@
-package org.motechproject.nms.region.service.impl;
+package org.motechproject.nms.region.csv.impl;
 
 import org.motechproject.nms.csv.exception.CsvImportDataException;
 import org.motechproject.nms.csv.utils.ConstraintViolationUtils;
@@ -7,6 +7,7 @@ import org.motechproject.nms.csv.utils.CsvMapImporter;
 import org.motechproject.nms.csv.utils.GetBoolean;
 import org.motechproject.nms.csv.utils.GetInstanceByString;
 import org.motechproject.nms.csv.utils.GetString;
+import org.motechproject.nms.region.csv.LanguageLocationImportService;
 import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Language;
@@ -15,7 +16,7 @@ import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
-import org.motechproject.nms.region.service.LanguageLocationImportService;
+import org.motechproject.nms.region.service.DistrictService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,6 +50,7 @@ public class LanguageLocationImportServiceImpl implements LanguageLocationImport
     private CircleDataService circleDataService;
     private StateDataService stateDataService;
     private DistrictDataService districtDataService;
+    private DistrictService districtService;
 
     @Override
     @Transactional
@@ -71,19 +73,27 @@ public class LanguageLocationImportServiceImpl implements LanguageLocationImport
         String languageCode = (String) record.get(LANGUAGE_CODE);
         String languageName = (String) record.get(LANGUAGE_NAME);
         State state = (State) record.get(STATE);
-        // TODO: District code is not unique.  It must be looked up along with the state
-        District district = (District) record.get(DISTRICT);
+        if (state == null) {
+            throw new CsvImportDataException("State must be provided");
+        }
+
+        District district = null;
+        if (record.get(DISTRICT) != null) {
+            district = districtService.findByStateAndName(state, (String) record.get(DISTRICT));
+            if (district == null) {
+                throw new CsvImportDataException(String.format("District %s doesn't exist in state %s",
+                        (String) record.get(DISTRICT), state.getName()));
+            }
+        }
         Circle circle = (Circle) record.get(CIRCLE);
         Boolean defaultForCircle = (Boolean) record.get(DEFAULT_FOR_CIRCLE);
 
-        if (null != state && null != district) {
+        if (state != null && district != null) {
             importRecordForStateAndDistrict(languageCode, languageName, circle, defaultForCircle, state, district);
-        } else if (null != state) {
+        } else if (state != null) {
             importRecordForState(languageCode, languageName, circle, defaultForCircle, state);
-        } else if (null != district) {
+        } else if (district != null) {
             importRecordForDistrict(languageCode, languageName, circle, defaultForCircle, district);
-        } else {
-            throw new CsvImportDataException("State must be provided");
         }
     }
 
@@ -168,14 +178,7 @@ public class LanguageLocationImportServiceImpl implements LanguageLocationImport
                 return state;
             }
         }));
-        mapping.put(DISTRICT, new Optional(new GetInstanceByString<District>() {
-            @Override
-            public District retrieve(String value) {
-                District district = districtDataService.findByName(value);
-                verify(null != district, "District does not exist");
-                return district;
-            }
-        }));
+        mapping.put(DISTRICT, new Optional(new GetString()));
         mapping.put(DEFAULT_FOR_CIRCLE, new GetBoolean());
         return mapping;
     }
@@ -204,5 +207,10 @@ public class LanguageLocationImportServiceImpl implements LanguageLocationImport
     @Autowired
     public void setDistrictDataService(DistrictDataService districtDataService) {
         this.districtDataService = districtDataService;
+    }
+
+    @Autowired
+    public void setDistrictService(DistrictService districtService) {
+        this.districtService = districtService;
     }
 }

@@ -8,6 +8,7 @@ import static org.motechproject.nms.testing.it.utils.RegionHelper.createDistrict
 import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthBlock;
 import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthFacility;
 import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthFacilityType;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthSubFacilityType;
 import static org.motechproject.nms.testing.it.utils.RegionHelper.createState;
 import static org.motechproject.nms.testing.it.utils.RegionHelper.createTaluka;
 import static org.motechproject.nms.testing.it.utils.RegionHelper.createVillage;
@@ -37,6 +38,7 @@ import org.motechproject.nms.kilkari.domain.SubscriptionError;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.domain.SubscriptionRejectionReason;
+import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
@@ -47,6 +49,7 @@ import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.HealthBlock;
 import org.motechproject.nms.region.domain.HealthFacility;
 import org.motechproject.nms.region.domain.HealthFacilityType;
+import org.motechproject.nms.region.domain.HealthSubFacility;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.domain.Village;
@@ -54,6 +57,7 @@ import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.testing.it.utils.SubscriptionHelper;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
@@ -70,38 +74,40 @@ import org.ops4j.pax.exam.spi.reactors.PerSuite;
 public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
     @Inject
-    private TestingService testingService;
+    TestingService testingService;
     @Inject
-    private LanguageDataService languageDataService;
+    LanguageDataService languageDataService;
     @Inject
-    private StateDataService stateDataService;
+    StateDataService stateDataService;
     @Inject
-    private DistrictDataService districtDataService;
+    DistrictDataService districtDataService;
     @Inject
-    private CircleDataService circleDataService;
+    DistrictService districtService;
     @Inject
-    private SubscriberDataService subscriberDataService;
+    CircleDataService circleDataService;
     @Inject
-    private SubscriptionService subscriptionService;
+    SubscriberDataService subscriberDataService;
     @Inject
-    private SubscriptionPackDataService subscriptionPackDataService;
+    SubscriptionService subscriptionService;
     @Inject
-    private MctsBeneficiaryImportService mctsBeneficiaryImportService;
+    SubscriptionPackDataService subscriptionPackDataService;
     @Inject
-    private SubscriptionErrorDataService subscriptionErrorDataService;
+    MctsBeneficiaryImportService mctsBeneficiaryImportService;
     @Inject
-    private SubscriberService subscriberService;
+    SubscriptionErrorDataService subscriptionErrorDataService;
+    @Inject
+    SubscriberService subscriberService;
 
     @Before
     public void setUp() {
         testingService.clearDatabase();
         createLocationData();
 
-        SubscriptionHelper subscriptionHelper = new SubscriptionHelper(subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService);
-        subscriptionHelper.pregnancyPack();
-        subscriptionHelper.childPack();
+        SubscriptionHelper sh = new SubscriptionHelper(subscriptionService, subscriberDataService,
+                subscriptionPackDataService, languageDataService, circleDataService, stateDataService,
+                districtDataService, districtService);
+        sh.pregnancyPack();
+        sh.childPack();
     }
 
     private void createLocationData() {
@@ -143,17 +149,29 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         HealthFacility healthFacility114 = createHealthFacility(healthBlock153, 114L, "CHC Tileibani", facilityType114);
         healthBlock153.getHealthFacilities().add(healthFacility114);
 
-        Village village10004693 = createVillage(taluka24, 10004693L, null, "Khairdihi");
-        Village village10004691 = createVillage(taluka24, 10004691L, null, "Gambhariguda");
-        Village village1509 = createVillage(taluka24, null, 1509L, "Mundrajore");
-        Village village1505 = createVillage(taluka24, null, 1505L, "Kulemura");
-        Village village10004690 = createVillage(taluka24, 10004690L, null, "Ampada");
-        Village village10004697 = createVillage(taluka24, 10004697L, null, "Saletikra");
+        HealthSubFacility subFacilityType7389 = createHealthSubFacilityType("Babuniktimal", 7389L, healthFacility41);
+        healthFacility41.getHealthSubFacilities().add(subFacilityType7389);
+
+        HealthSubFacility subFacilityType7393 = createHealthSubFacilityType("Jarabaga", 7393L, healthFacility41);
+        healthFacility41.getHealthSubFacilities().add(subFacilityType7393);
+
+        HealthSubFacility subFacilityType2104 = createHealthSubFacilityType("Chupacabra", 2104L, healthFacility635);
+        healthFacility635.getHealthSubFacilities().add(subFacilityType2104);
+
+        HealthSubFacility subFacilityType342 = createHealthSubFacilityType("El Dorado", 342L, healthFacility114);
+        healthFacility114.getHealthSubFacilities().add(subFacilityType342);
+
+        Village village10004693 = createVillage(taluka24, 10004693L, 0, "Khairdihi");
+        Village village10004691 = createVillage(taluka24, 10004691L, 0, "Gambhariguda");
+        Village village1509 = createVillage(taluka24, 0, 1509L, "Mundrajore");
+        Village village1505 = createVillage(taluka24, 0, 1505L, "Kulemura");
+        Village village10004690 = createVillage(taluka24, 10004690L, 0, "Ampada");
+        Village village10004697 = createVillage(taluka24, 10004697L, 0, "Saletikra");
 
         taluka24.getVillages().addAll(Arrays.asList(village10004693, village10004691, village1509, village1505,
                 village10004690, village10004697));
 
-        Village village3089 = createVillage(taluka46, null, 3089L, "Podapara");
+        Village village3089 = createVillage(taluka46, 0, 3089L, "Podapara");
         taluka46.getVillages().add(village3089);
 
         stateDataService.create(state21);
@@ -170,7 +188,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         assertNotNull(subscriber);
         assertEquals(lmp.toLocalDate(), subscriber.getLastMenstrualPeriod().toLocalDate());
         assertEquals("Shanti Ekka", subscriber.getMother().getName());
-        Subscription subscription = subscriber.getActiveSubscriptions().iterator().next();
+        Subscription subscription = subscriber.getActiveAndPendingSubscriptions().iterator().next();
         assertEquals(SubscriptionOrigin.MCTS_IMPORT, subscription.getOrigin());
     }
 
@@ -197,7 +215,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         assertNotNull(subscriber);
         assertEquals(lmp.toLocalDate(), subscriber.getLastMenstrualPeriod().toLocalDate());
         assertEquals("Shanti Ekka", subscriber.getMother().getName());
-        Subscription subscription = subscriber.getActiveSubscriptions().iterator().next();
+        Subscription subscription = subscriber.getActiveAndPendingSubscriptions().iterator().next();
         assertEquals(90, Days.daysBetween(lmp.toLocalDate(), subscription.getStartDate().toLocalDate()).getDays());
 
         DateTime newLmp = DateTime.now().minusDays(150);
@@ -208,14 +226,17 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         subscriber = subscriberDataService.findByCallingNumber(9439986187L);
         assertNotNull(subscriber);
         assertEquals(newLmp.toLocalDate(), subscriber.getLastMenstrualPeriod().toLocalDate());
-        subscription = subscriber.getActiveSubscriptions().iterator().next();
+        subscription = subscriber.getActiveAndPendingSubscriptions().iterator().next();
         assertEquals(90, Days.daysBetween(newLmp.toLocalDate(), subscription.getStartDate().toLocalDate()).getDays());
     }
 
-    @Test(expected = CsvImportDataException.class)
+    @Test
     public void testImportMotherInvalidState() throws Exception {
         Reader reader = createMotherDataReaderWithHeaders("9\t3\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t22-11-2014");
         mctsBeneficiaryImportService.importMotherData(reader);
+        List<SubscriptionError> se = subscriptionErrorDataService.findByContactNumber(9439986187L);
+        assertEquals(1, se.size());
+        assertEquals(SubscriptionRejectionReason.INVALID_LOCATION, se.get(0).getRejectionReason());
     }
 
     @Test
@@ -229,7 +250,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         assertNotNull(subscriber);
         assertEquals(dob.toLocalDate(), subscriber.getDateOfBirth().toLocalDate());
         assertEquals("Baby1 of Lilima Kua", subscriber.getChild().getName());
-        Subscription subscription = subscriber.getActiveSubscriptions().iterator().next();
+        Subscription subscription = subscriber.getActiveAndPendingSubscriptions().iterator().next();
         assertEquals(SubscriptionOrigin.MCTS_IMPORT, subscription.getOrigin());
         assertEquals(SubscriptionPackType.CHILD, subscription.getSubscriptionPack().getType());
     }
@@ -245,7 +266,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         Subscriber subscriber = subscriberDataService.findByCallingNumber(9439986187L);
         assertNotNull(subscriber);
         assertEquals(lmp.toLocalDate(), subscriber.getLastMenstrualPeriod().toLocalDate());
-        Set<Subscription> subscriptions = subscriber.getActiveSubscriptions();
+        Set<Subscription> subscriptions = subscriber.getActiveAndPendingSubscriptions();
         assertEquals(1, subscriptions.size());
 
         // import child with same MSISDN and matching MotherID
@@ -258,7 +279,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         assertNotNull(subscriber);
         assertEquals(dob.toLocalDate(), subscriber.getDateOfBirth().toLocalDate());
 
-        subscriptions = subscriber.getActiveSubscriptions();
+        subscriptions = subscriber.getActiveAndPendingSubscriptions();
         Subscription childSubscription = subscriptionService.getActiveSubscription(subscriber, SubscriptionPackType.CHILD);
         Subscription pregnancySubscription = subscriptionService.getActiveSubscription(subscriber, SubscriptionPackType.PREGNANCY);
 
@@ -273,7 +294,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         mctsBeneficiaryImportService.importMotherData(read("csv/mother.txt"));
 
         State expectedState = stateDataService.findByCode(21L);
-        District expectedDistrict = districtDataService.findByCode(3L);
+        District expectedDistrict = districtService.findByStateAndCode(expectedState, 3L);
 
         Subscriber subscriber1 = subscriberDataService.findByCallingNumber(9439986187L);
         assertMother(subscriber1, "210302604211400029", getDateTime("22/11/2014"), "Shanti Ekka", expectedState,
@@ -292,8 +313,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         mctsBeneficiaryImportService.importChildData(read("csv/child.txt"));
 
         State expectedState = stateDataService.findByCode(21L);
-        District expectedDistrict2 = districtDataService.findByCode(2L);
-        District expectedDistrict4 = districtDataService.findByCode(4L);
+        District expectedDistrict4 = districtService.findByStateAndCode(expectedState, 4L);
 
         Subscriber subscriber1 = subscriberDataService.findByCallingNumber(9439998253L);
         assertChild(subscriber1, "210404600521400116", getDateTime("2/12/2014"), "Baby1 of PANI HEMRAM", expectedState,
@@ -546,7 +566,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         
         subscriber = subscriberDataService.findByCallingNumber(9439986187L);
         assertEquals(2, subscriber.getAllSubscriptions().size());
-        assertEquals(1, subscriber.getActiveSubscriptions().size());
+        assertEquals(1, subscriber.getActiveAndPendingSubscriptions().size());
         assertEquals(lmpString, getDateString(subscriber.getLastMenstrualPeriod()));
     }
     
@@ -567,7 +587,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
         //Mark subscription deactivate
         Subscriber subscriber = subscriberDataService.findByCallingNumber(9439986187L);
-        Subscription subscription =subscriber.getActiveSubscriptions().iterator().next(); 
+        Subscription subscription =subscriber.getActiveAndPendingSubscriptions().iterator().next();
         subscriptionService.deactivateSubscription(subscription, DeactivationReason.MISCARRIAGE_OR_ABORTION);
         
         //create a new subscription for subscriber whose subscription is deactivated.
@@ -577,14 +597,18 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         
         subscriber = subscriberDataService.findByCallingNumber(9439986187L);
         assertEquals(2, subscriber.getAllSubscriptions().size());
-        assertEquals(1, subscriber.getActiveSubscriptions().size());
+        assertEquals(1, subscriber.getActiveAndPendingSubscriptions().size());
         assertEquals(lmpString, getDateString(subscriber.getLastMenstrualPeriod()));
     }
     
     /*
      * To verify MCTS upload is rejected when location information is incorrect.
      * 
+<<<<<<< HEAD
      * https://applab.atlassian.net/browse/NMS-208
+=======
+     * https://applab.atlassian.net/browse/NMS-207
+>>>>>>> ac333e99414c5cc812715216223fb00ded73de47
      */
     @Test(expected = CsvImportDataException.class)
     @Ignore
@@ -613,7 +637,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         
         //Mark subscription deactivate
         Subscriber subscriber = subscriberDataService.findByCallingNumber(9439986187L);
-        Subscription subscription =subscriber.getActiveSubscriptions().iterator().next(); 
+        Subscription subscription =subscriber.getActiveAndPendingSubscriptions().iterator().next();
         subscriptionService.deactivateSubscription(subscription, DeactivationReason.STILL_BIRTH);
         
         //create a new subscription for subscriber whose subscription is deactivated.
@@ -623,13 +647,13 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
         subscriber = subscriberDataService.findByCallingNumber(9439986187L);
         assertEquals(2, subscriber.getAllSubscriptions().size());
-        assertEquals(1, subscriber.getActiveSubscriptions().size());
+        assertEquals(1, subscriber.getActiveAndPendingSubscriptions().size());
         assertEquals(dobString, getDateString(subscriber.getDateOfBirth()));
     }
     
     /*
      * To verify DOB is changed successfully via CSV when subscription 
-     * already exist for childPack having status as "Deactivated"
+     * already exist for childPack having status as "Completed"
      */
     @Test
     public void verifyFT310() throws Exception {
@@ -650,7 +674,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
         subscriber = subscriberDataService.findByCallingNumber(9439986187L);
         assertEquals(2, subscriber.getAllSubscriptions().size());
-        assertEquals(1, subscriber.getActiveSubscriptions().size());
+        assertEquals(1, subscriber.getActiveAndPendingSubscriptions().size());
         assertEquals(dobString, getDateString(subscriber.getDateOfBirth()));
     }
     
@@ -669,7 +693,8 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         assertNotNull(subscriber);
         assertEquals(dob.toLocalDate(), subscriber.getDateOfBirth().toLocalDate());
         assertEquals("Baby1 of Lilima Kua", subscriber.getChild().getName());
-        Subscription subscription = subscriber.getActiveSubscriptions().iterator().next();
+
+        Subscription subscription = subscriber.getActiveAndPendingSubscriptions().iterator().next();
         assertEquals(0, Days.daysBetween(dob.toLocalDate(), subscription.getStartDate().toLocalDate()).getDays());
 
         // attempt to update dob through mcts upload
@@ -681,7 +706,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         subscriber = subscriberDataService.findByCallingNumber(9439986187L);
         assertNotNull(subscriber);
         assertEquals(newDob.toLocalDate(), subscriber.getDateOfBirth().toLocalDate());
-        subscription = subscriber.getActiveSubscriptions().iterator().next();
+        subscription = subscriber.getActiveAndPendingSubscriptions().iterator().next();
         assertEquals(0, Days.daysBetween(newDob.toLocalDate(), subscription.getStartDate().toLocalDate()).getDays());
     }
     
@@ -703,7 +728,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         Subscriber subscriber = subscriberDataService.findByCallingNumber(9439986187L);
         assertNotNull(subscriber);
         assertEquals(lmp.toLocalDate(), subscriber.getLastMenstrualPeriod().toLocalDate());
-        Set<Subscription> subscriptions = subscriber.getActiveSubscriptions();
+        Set<Subscription> subscriptions = subscriber.getActiveAndPendingSubscriptions();
         assertEquals(1, subscriptions.size());
 
         // import child with same MSISDN and no MotherID
@@ -716,11 +741,11 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         assertNotNull(subscriber);
         assertEquals(dob.toLocalDate(), subscriber.getDateOfBirth().toLocalDate());
 
-        subscriptions = subscriber.getActiveSubscriptions();
+        subscriptions = subscriber.getActiveAndPendingSubscriptions();
         Subscription childSubscription = subscriptionService.getActiveSubscription(subscriber, SubscriptionPackType.CHILD);
         Subscription pregnancySubscription = subscriptionService.getActiveSubscription(subscriber, SubscriptionPackType.PREGNANCY);
 
-        //both subscription should have been activated
+        // both subscription should have been activated
         assertEquals(2, subscriptions.size());
         assertNotNull(childSubscription);
         assertNotNull(pregnancySubscription);
@@ -730,7 +755,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         mctsBeneficiaryImportService.importChildData(reader);
         
         subscriber = subscriberDataService.findByCallingNumber(9439986187L);
-        subscriptions = subscriber.getActiveSubscriptions();
+        subscriptions = subscriber.getActiveAndPendingSubscriptions();
         childSubscription = subscriptionService.getActiveSubscription(subscriber, SubscriptionPackType.CHILD);
         pregnancySubscription = subscriptionService.getActiveSubscription(subscriber, SubscriptionPackType.PREGNANCY);
 
@@ -738,6 +763,38 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         assertEquals(1, subscriptions.size());
         assertNotNull(childSubscription);
         assertNull(pregnancySubscription);
+    }
+    
+    /*
+     * To verify LMP is changed successfully via CSV when subscription 
+     * already exist for pregnancyPack having status as "Pending Activation"
+     */
+    @Test
+    public void verifyFT308() throws Exception {
+        DateTime lmp = DateTime.now().minusDays(30);
+        String lmpString = getDateString(lmp);
+        Reader reader = createMotherDataReaderWithHeaders("21\t3\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t" + lmpString);
+        mctsBeneficiaryImportService.importMotherData(reader);
+
+        Subscriber subscriber = subscriberDataService.findByCallingNumber(9439986187L);
+        assertNotNull(subscriber);
+        assertEquals(lmp.toLocalDate(), subscriber.getLastMenstrualPeriod().toLocalDate());
+        assertEquals("Shanti Ekka", subscriber.getMother().getName());
+        Subscription subscription = subscriber.getActiveAndPendingSubscriptions().iterator().next();
+        assertEquals(90, Days.daysBetween(lmp.toLocalDate(), subscription.getStartDate().toLocalDate()).getDays());
+        assertEquals(subscription.getStatus(), SubscriptionStatus.PENDING_ACTIVATION);
+        
+        DateTime newLmp = DateTime.now().minusDays(90);
+        String newLmpString = getDateString(newLmp);
+        reader = createMotherDataReaderWithHeaders("21\t3\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t" + newLmpString);
+        mctsBeneficiaryImportService.importMotherData(reader);
+
+        subscriber = subscriberDataService.findByCallingNumber(9439986187L);
+        assertNotNull(subscriber);
+        assertEquals(newLmp.toLocalDate(), subscriber.getLastMenstrualPeriod().toLocalDate());
+        subscription = subscriber.getActiveAndPendingSubscriptions().iterator().next();
+        assertEquals(90, Days.daysBetween(newLmp.toLocalDate(), subscription.getStartDate().toLocalDate()).getDays());
+        assertEquals(subscription.getStatus(), SubscriptionStatus.ACTIVE);
     }
     
 }

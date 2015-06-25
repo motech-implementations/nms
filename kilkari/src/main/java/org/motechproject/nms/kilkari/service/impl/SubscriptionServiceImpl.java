@@ -241,15 +241,22 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             if (existingSubscription.getSubscriptionPack().equals(pack)) {
                 if (existingSubscription.getStatus().equals(SubscriptionStatus.ACTIVE) ||
                         existingSubscription.getStatus().equals(SubscriptionStatus.PENDING_ACTIVATION)) {
+
                     // subscriber already has an active subscription to this pack, don't create a new one
+                    // however if origin of existing subscription is MCTS then we want to update it to IVR
+                    if (existingSubscription.getOrigin() == SubscriptionOrigin.MCTS_IMPORT) {
+                        existingSubscription.setOrigin(SubscriptionOrigin.IVR);
+                        subscriptionDataService.update(existingSubscription);
+                    }
+
                     return null;
                 }
             }
         }
 
         Subscription subscription = new Subscription(subscriber, pack, SubscriptionOrigin.IVR);
-        subscription.setStatus(SubscriptionStatus.ACTIVE);
         subscription.setStartDate(DateTime.now().plusDays(1));
+        subscription.setStatus(Subscription.getStatus(subscription, DateTime.now()));
 
         return subscriptionDataService.create(subscription);
     }
@@ -288,7 +295,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             } else {
                 subscription = new Subscription(subscriber, pack, SubscriptionOrigin.MCTS_IMPORT);
                 subscription.setStartDate(subscriber.getDateOfBirth());
-                subscription.setStatus(SubscriptionStatus.ACTIVE);
+                subscription.setStatus(Subscription.getStatus(subscription, DateTime.now()));
             }
         } else if (subscriber.getLastMenstrualPeriod() != null && subscriber.getDateOfBirth() == null &&
                 pack.getType() == SubscriptionPackType.PREGNANCY) {
@@ -308,7 +315,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
                 // the pregnancy pack starts 3 months after LMP
                 subscription.setStartDate(subscriber.getLastMenstrualPeriod().plusDays(THREE_MONTHS));
-                subscription.setStatus(SubscriptionStatus.ACTIVE);
+                subscription.setStatus(Subscription.getStatus(subscription, DateTime.now()));
             }
         } else {
             // TODO: #117 need to log any other error cases? In theory we shouldn't land here.
@@ -358,13 +365,16 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         } else { // CHILD pack
             subscription.setStartDate(newReferenceDate);
         }
-
-        if (Subscription.hasCompletedForStartDate(subscription.getStartDate(), DateTime.now(),
-                subscription.getSubscriptionPack())) {
-            subscription.setStatus(SubscriptionStatus.COMPLETED);
-        }
-
+        subscription.setStatus(Subscription.getStatus(subscription, DateTime.now()));
         subscriptionDataService.update(subscription);
+    }
+
+    @Override
+    public void activateSubscription(Subscription subscription) {
+        if (subscription.getStatus() == SubscriptionStatus.PENDING_ACTIVATION) {
+            subscription.setStatus(SubscriptionStatus.ACTIVE);
+            subscriptionDataService.update(subscription);
+        }
     }
 
     @Override
@@ -420,7 +430,12 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
 
     public List<Subscription> findActiveSubscriptionsForDay(DayOfTheWeek dayOfTheWeek, int page, int pageSize) {
-        return subscriptionDataService.findByStatusAndDay(SubscriptionStatus.ACTIVE, dayOfTheWeek,
+        return subscriptionDataService.findByStatusAndStartDayOfWeek(SubscriptionStatus.ACTIVE, dayOfTheWeek,
+                new QueryParams(page, pageSize));
+    }
+
+    public List<Subscription> findPendingSubscriptionsFromDate(DateTime startDate, int page, int pageSize) {
+        return subscriptionDataService.findByStatusAndStartDate(SubscriptionStatus.PENDING_ACTIVATION, startDate,
                 new QueryParams(page, pageSize));
     }
 

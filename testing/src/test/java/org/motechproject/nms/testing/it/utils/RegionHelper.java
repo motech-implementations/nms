@@ -5,6 +5,7 @@ import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.HealthBlock;
 import org.motechproject.nms.region.domain.HealthFacility;
 import org.motechproject.nms.region.domain.HealthFacilityType;
+import org.motechproject.nms.region.domain.HealthSubFacility;
 import org.motechproject.nms.region.domain.Language;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.domain.Taluka;
@@ -13,22 +14,26 @@ import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.service.DistrictService;
 
 public class RegionHelper {
     private LanguageDataService languageDataService;
     private CircleDataService circleDataService;
     private DistrictDataService districtDataService;
+    private DistrictService districtService;
     private StateDataService stateDataService;
 
     public RegionHelper(LanguageDataService languageDataService,
-                              CircleDataService circleDataService,
-                              StateDataService stateDataService,
-                              DistrictDataService districtDataService) {
+                        CircleDataService circleDataService,
+                        StateDataService stateDataService,
+                        DistrictDataService districtDataService,
+                        DistrictService districtService) {
 
         this.languageDataService = languageDataService;
         this.circleDataService = circleDataService;
-        this.districtDataService = districtDataService;
         this.stateDataService = stateDataService;
+        this.districtDataService = districtDataService;
+        this.districtService = districtService;
     }
 
     public Circle delhiCircle() {
@@ -85,7 +90,7 @@ public class RegionHelper {
 
 
     public District newDelhiDistrict() {
-        District d = districtDataService.findByCode(1L);
+        District d = districtService.findByStateAndCode(delhiState(), 1L);
 
         if (d == null) {
             d = new District();
@@ -102,7 +107,7 @@ public class RegionHelper {
 
 
     public District southDelhiDistrict() {
-        District d = districtDataService.findByCode(5L);
+        District d = districtService.findByStateAndCode(delhiState(), 5L);
 
         if (d == null) {
             d = new District();
@@ -119,7 +124,7 @@ public class RegionHelper {
 
 
     public District bangaloreDistrict() {
-        District d = districtDataService.findByCode(4L);
+        District d = districtService.findByStateAndCode(karnatakaState(), 4L);
 
         if (d == null) {
             d = new District();
@@ -136,7 +141,7 @@ public class RegionHelper {
 
 
     public District mysuruDistrict() {
-        District d = districtDataService.findByCode(2L);
+        District d = districtService.findByStateAndCode(karnatakaState(), 2L);
 
         if (d == null) {
             d = new District();
@@ -245,7 +250,7 @@ public class RegionHelper {
         return healthBlock;
     }
 
-    public static Village createVillage(Taluka taluka, Long svid, Long vcode, String name) {
+    public static Village createVillage(Taluka taluka, long svid, long vcode, String name) {
         Village village = new Village();
         village.setTaluka(taluka);
         village.setSvid(svid);
@@ -270,6 +275,15 @@ public class RegionHelper {
         healthFacilityType.setName(name);
         healthFacilityType.setCode(code);
         return healthFacilityType;
+    }
+
+    public static HealthSubFacility createHealthSubFacilityType(String name, Long code, HealthFacility healthFacility) {
+        HealthSubFacility healthSubFacility = new HealthSubFacility();
+        healthSubFacility.setName(name);
+        healthSubFacility.setCode(code);
+        healthSubFacility.setRegionalName(name + " regional name");
+        healthSubFacility.setHealthFacility(healthFacility);
+        return healthSubFacility;
     }
 
     public static Language createLanguage(String code, String name, Circle circle, boolean defaultForCircle, District... districts) {

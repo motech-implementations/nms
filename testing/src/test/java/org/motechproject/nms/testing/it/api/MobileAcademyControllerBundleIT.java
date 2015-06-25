@@ -41,7 +41,7 @@ import static org.junit.Assert.assertTrue;
 public class MobileAcademyControllerBundleIT extends BasePaxIT {
 
     @Inject
-    private MobileAcademyService mobileAcademyService;
+    MobileAcademyService mobileAcademyService;
 
     @Test
     public void testBookmarkBadCallingNumber() throws IOException, InterruptedException {

@@ -19,11 +19,11 @@ import org.motechproject.nms.kilkari.dto.CallDetailRecordDto;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
-import org.motechproject.nms.props.repository.DeployedServiceDataService;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.testing.it.utils.CdrHelper;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
@@ -56,40 +56,30 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
     private static final String MAX_CDR_ERROR_COUNT = "imi.max_cdr_error_count";
 
     @Inject
-    private SettingsService settingsService;
-
+    SettingsService settingsService;
     @Inject
-    private SubscriptionService subscriptionService;
-
+    SubscriptionService subscriptionService;
     @Inject
-    private SubscriptionPackDataService subscriptionPackDataService;
-
+    SubscriptionPackDataService subscriptionPackDataService;
     @Inject
-    private SubscriberDataService subscriberDataService;
-
+    SubscriberDataService subscriberDataService;
     @Inject
-    private LanguageDataService languageDataService;
-
+    LanguageDataService languageDataService;
     @Inject
-    private AlertService alertService;
-
+    AlertService alertService;
     @Inject
     CdrFileService cdrFileService;
-
     @Inject
-    private CircleDataService circleDataService;
-
+    CircleDataService circleDataService;
     @Inject
-    private StateDataService stateDataService;
-
+    StateDataService stateDataService;
     @Inject
-    private DistrictDataService districtDataService;
-
+    DistrictDataService districtDataService;
     @Inject
-    private FileAuditRecordDataService fileAuditRecordDataService;
-
+    DistrictService districtService;
     @Inject
-    DeployedServiceDataService deployedServiceDataService;
+    FileAuditRecordDataService fileAuditRecordDataService;
+
 
     @Inject
     TestingService testingService;
@@ -134,18 +124,16 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
 
     @Test
     public void testServicePresent() {
-        getLogger().debug("testServicePresent()");
         assertTrue(cdrFileService != null);
     }
 
 
     @Test
     public void testVerify() throws IOException, NoSuchAlgorithmException {
-        getLogger().debug("testVerify()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService, fileAuditRecordDataService);
+                subscriptionPackDataService, languageDataService, circleDataService, stateDataService,
+                districtDataService, fileAuditRecordDataService, districtService);
 
         helper.makeCdrs(1,1,1,1);
         helper.makeLocalCdrFile();
@@ -158,11 +146,10 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
 
     @Test
     public void testChecksumError() throws IOException, NoSuchAlgorithmException {
-        getLogger().debug("testChecksumError()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService, fileAuditRecordDataService);
+                subscriptionPackDataService, languageDataService, circleDataService, stateDataService,
+                districtDataService, fileAuditRecordDataService, districtService);
 
         helper.makeCdrs(1, 1, 1, 1);
         helper.makeLocalCdrFile();
@@ -175,11 +162,10 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
 
     @Test
     public void testCsvErrors() throws IOException, NoSuchAlgorithmException {
-        getLogger().debug("testCsvErrors()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService, fileAuditRecordDataService);
+                subscriptionPackDataService, languageDataService, circleDataService, stateDataService,
+                districtDataService, fileAuditRecordDataService, districtService);
 
         helper.makeCdrs(1, 1, 1, 1);
         helper.makeLocalCdrFile(2);
@@ -194,11 +180,10 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
 
     @Test
     public void testTooManyErrors() throws IOException, NoSuchAlgorithmException {
-        getLogger().debug("testTooManyErrors()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService, fileAuditRecordDataService);
+                subscriptionPackDataService, languageDataService, circleDataService, stateDataService,
+                districtDataService, fileAuditRecordDataService, districtService);
 
         helper.makeCdrs(5,0,0,0);
         helper.makeLocalCdrFile(5);
@@ -215,11 +200,10 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
 
     @Test
     public void testProcess() throws IOException, NoSuchAlgorithmException {
-        getLogger().debug("testProcess()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService, fileAuditRecordDataService);
+                subscriptionPackDataService, languageDataService, circleDataService, stateDataService,
+                districtDataService, fileAuditRecordDataService, districtService);
 
         helper.makeCdrs(1,1,1,1);
         helper.makeRemoteCdrFile();
@@ -234,18 +218,16 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         // didn't setup a server
         AlertCriteria criteria = new AlertCriteria().byExternalId(helper.cdrLocalFileInfo().getCdrFile());
         List<Alert> alerts = alertService.search(criteria);
-        getLogger().debug("alerts={}", alerts);
         assertEquals(4, alerts.size()); //three warnings plus one error
     }
 
 
     @Test
     public void testAggregation() throws IOException, NoSuchAlgorithmException {
-        getLogger().debug("testAggregation()");
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService, fileAuditRecordDataService);
+                subscriptionPackDataService, languageDataService, circleDataService, stateDataService,
+                districtDataService, fileAuditRecordDataService, districtService);
 
         helper.makeSingleCallCdrs(3, true);
         List<CallDetailRecordDto> cdrs = helper.getCdrs();

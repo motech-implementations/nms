@@ -30,19 +30,19 @@ import static org.junit.Assert.assertNotNull;
 @ExamFactory(MotechNativeTestContainerFactory.class)
 public class ServiceUsageCapServiceBundleIT extends BasePaxIT {
     @Inject
-    private ServiceUsageCapDataService serviceUsageCapDataService;
+    ServiceUsageCapDataService serviceUsageCapDataService;
 
     @Inject
-    private ServiceUsageCapService serviceUsageCapService;
+    ServiceUsageCapService serviceUsageCapService;
 
     @Inject
-    private StateDataService stateDataService;
+    StateDataService stateDataService;
 
     @Inject
-    private DeployedServiceDataService deployedServiceDataService;
+    DeployedServiceDataService deployedServiceDataService;
 
     @Inject
-    private TestingService testingService;
+    TestingService testingService;
 
     private void setupData() {
         testingService.clearDatabase();

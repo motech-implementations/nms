@@ -62,6 +62,7 @@ public class BaseController {
     @Autowired
     private FrontLineWorkerService frontLineWorkerService;
 
+
     protected static boolean validateFieldPresent(StringBuilder errors, String fieldName, Object value) {
         if (value != null) {
             return true;
@@ -176,7 +177,7 @@ public class BaseController {
     protected StringBuilder validate(Long callingNumber, Long callId, String operator, String circle) {
         StringBuilder failureReasons = validate(callingNumber, callId);
 
-        validateFieldMaxLength(failureReasons, "operator", operator, MAX_LENGTH_255);
+        validateRequiredFieldMaxLength(failureReasons, "operator", operator, MAX_LENGTH_255);
 
         validateFieldMaxLength(failureReasons, "circle", circle, MAX_LENGTH_255);
 
@@ -191,11 +192,26 @@ public class BaseController {
         State state = frontLineWorkerService.getState(flw);
 
         if (state == null && circle != null) {
+            state = getStateFromCircle(circle);
+        }
+
+        return state;
+    }
+
+
+
+
+    protected State getStateFromCircle(Circle circle) {
+
+        State state = null;
+
+        if (circle != null) {
             List<State> states = circle.getStates();
 
             if (states.size() == 1) {
                 state = states.get(0);
             }
+
         }
 
         return state;
@@ -205,9 +221,11 @@ public class BaseController {
         return whitelistService.numberWhitelistedForState(state, flw.getContactNumber());
     }
 
-    protected boolean serviceDeployedInFrontLineWorkersState(Service service, State state) {
+
+    protected boolean serviceDeployedInUserState(Service service, State state) {
         // If I don't have a state for the FLW let them continue further
         if (state == null) {
+
             return true;
         }
 

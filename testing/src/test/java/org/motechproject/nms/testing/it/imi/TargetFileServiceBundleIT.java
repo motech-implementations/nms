@@ -1,6 +1,5 @@
 package org.motechproject.nms.testing.it.imi;
 
-import org.apache.commons.codec.binary.Hex;
 import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.Before;
@@ -16,7 +15,7 @@ import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
-import org.motechproject.nms.kilkari.domain.SubscriptionPack;
+import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
@@ -24,12 +23,12 @@ import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
-import org.motechproject.nms.region.domain.Circle;
-import org.motechproject.nms.region.domain.Language;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.service.DistrictService;
+import org.motechproject.nms.testing.it.utils.ChecksumHelper;
 import org.motechproject.nms.testing.it.utils.RegionHelper;
 import org.motechproject.nms.testing.it.utils.SubscriptionHelper;
 import org.motechproject.nms.testing.service.TestingService;
@@ -47,13 +46,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
-import java.security.DigestInputStream;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -72,50 +70,36 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
 
     @Inject
     TargetFileService targetFileService;
-
     @Inject
     SubscriptionService subscriptionService;
-
     @Inject
     SubscriptionDataService subscriptionDataService;
-
     @Inject
     SubscriberDataService subscriberDataService;
-
     @Inject
     SubscriptionPackDataService subscriptionPackDataService;
-
     @Inject
     CallRetryDataService callRetryDataService;
-
     @Inject
     LanguageDataService languageDataService;
-
     @Inject
-    private CircleDataService circleDataService;
-
+    CircleDataService circleDataService;
     @Inject
-    private StateDataService stateDataService;
-
+    StateDataService stateDataService;
     @Inject
-    private DistrictDataService districtDataService;
-
+    DistrictDataService districtDataService;
     @Inject
-    private SubscriberService subscriberService;
-
+    DistrictService districtService;
+    @Inject
+    SubscriberService subscriberService;
     @Inject
     SettingsService settingsService;
-
     @Inject
     TestingService testingService;
 
 
-    Circle dehliCircle;
-    Circle karnatakaCircle;
-    Language hindi;
-    Language kannada;
-    SubscriptionPack childPack;
-    SubscriptionPack pregnancyPack;
+    RegionHelper rh;
+    SubscriptionHelper sh;
 
 
     @Before
@@ -125,21 +109,11 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         localObdDirBackup = ImiTestHelper.setupTestDir(settingsService, LOCAL_OBD_DIR, "obd-local-dir-it");
         remoteObdDirBackup = ImiTestHelper.setupTestDir(settingsService, REMOTE_OBD_DIR, "obd-remote-dir-it");
 
-        RegionHelper rh = new RegionHelper(languageDataService, circleDataService, stateDataService,
-                                            districtDataService);
+        rh = new RegionHelper(languageDataService, circleDataService, stateDataService, districtDataService,
+                districtService);
 
-        SubscriptionHelper sh = new SubscriptionHelper(subscriptionService,
-                subscriberDataService, subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService);
-
-        childPack = sh.childPack();
-        pregnancyPack = sh.pregnancyPack();
-
-        dehliCircle = rh.delhiCircle();
-        karnatakaCircle = rh.karnatakaCircle();
-
-        hindi = rh.hindiLanguage();
-        kannada = rh.kannadaLanguage();
+        sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
+                languageDataService, circleDataService, stateDataService, districtDataService, districtService);
     }
 
 
@@ -153,60 +127,94 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
     @Test
     public void testTargetFileGeneration() throws NoSuchAlgorithmException, IOException {
 
-        Subscriber subscriber1 = new Subscriber(1111111111L, hindi, dehliCircle);
+        Subscriber subscriber1 = new Subscriber(1111111111L, rh.hindiLanguage(), rh.delhiCircle());
         subscriber1.setLastMenstrualPeriod(DateTime.now().minusDays(90)); // startDate will be today
         subscriberDataService.create(subscriber1);
-        subscriptionService.createSubscription(1111111111L, hindi, pregnancyPack, SubscriptionOrigin.MCTS_IMPORT);
-
+        subscriptionService.createSubscription(1111111111L, rh.hindiLanguage(), sh.pregnancyPack(),
+                SubscriptionOrigin.MCTS_IMPORT);
 
         // Should not be picked up because it's been deactivated
-        Subscriber subscriber2 = new Subscriber(2222222222L, kannada, karnatakaCircle);
+        Subscriber subscriber2 = new Subscriber(2222222222L, rh.kannadaLanguage(), rh.karnatakaCircle());
         subscriber2.setLastMenstrualPeriod(DateTime.now().minusDays(90)); // startDate will be today
         subscriberDataService.create(subscriber2);
-        Subscription subscription2 = subscriptionService.createSubscription(2222222222L, kannada, pregnancyPack,
-                SubscriptionOrigin.MCTS_IMPORT);
+        Subscription subscription2 = subscriptionService.createSubscription(2222222222L, rh.kannadaLanguage(),
+                sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
         subscriptionService.deactivateSubscription(subscription2, DeactivationReason.CHILD_DEATH);
 
         //Should not be picked up because it's not for today
-        Subscriber subscriber3 = new Subscriber(6666666666L, kannada, karnatakaCircle);
+        Subscriber subscriber3 = new Subscriber(6666666666L, rh.kannadaLanguage(), rh.karnatakaCircle());
         subscriber3.setDateOfBirth(DateTime.now().plusDays(1)); // startDate is DOB + 1 for child packs,
                                                     // so setting the DOB tomorrow this should be picked up
                                                     // the day after tomorrow
         subscriberDataService.create(subscriber3);
-        subscriptionService.createSubscription(6666666666L, kannada, childPack, SubscriptionOrigin.IVR);
+        subscriptionService.createSubscription(6666666666L, rh.kannadaLanguage(), sh.childPack(),
+                SubscriptionOrigin.IVR);
 
+        Subscriber subscriber4 = new Subscriber(4000000000L, rh.hindiLanguage(), rh.delhiCircle());
+        subscriber4.setLastMenstrualPeriod(DateTime.now().minusDays(90)); // startDate will be today
+        subscriberDataService.create(subscriber4);
+        Subscription subscription4 = subscriptionService.createSubscription(4000000000L, rh.hindiLanguage(), sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
+        subscription4.setStatus(SubscriptionStatus.PENDING_ACTIVATION);
+        subscriptionDataService.update(subscription4);
+
+        Subscriber subscriber5 = new Subscriber(5000000000L, rh.hindiLanguage(), rh.delhiCircle());
+        subscriber5.setLastMenstrualPeriod(DateTime.now().minusDays(92)); // startDate will be the day before yesterday
+        subscriberDataService.create(subscriber5);
+        Subscription subscription5 = subscriptionService.createSubscription(5000000000L, rh.hindiLanguage(), sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
+        subscription5.setStatus(SubscriptionStatus.PENDING_ACTIVATION);
+        subscriptionDataService.update(subscription5);
+
+        Subscriber subscriber6 = new Subscriber(6000000000L, rh.hindiLanguage(), rh.delhiCircle());
+        subscriber6.setLastMenstrualPeriod(DateTime.now().minusDays(88)); // startDate will be the day after tomorrow
+        subscriberDataService.create(subscriber6);
+        Subscription subscription6 = subscriptionService.createSubscription(6000000000L, rh.hindiLanguage(), sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
+        subscription6.setStatus(SubscriptionStatus.PENDING_ACTIVATION);
+        subscriptionDataService.update(subscription6);
 
         // Should not be picked up because it's not for today
         callRetryDataService.create(new CallRetry("11111111-1111-1111-1111-111111111111", 3333333333L,
-                DayOfTheWeek.today().nextDay(), CallStage.RETRY_1, "w1_m1.wav", "w1_1", hindi.getCode(),
-                dehliCircle.getName(), SubscriptionOrigin.IVR));
+                DayOfTheWeek.today().nextDay(), CallStage.RETRY_1, "w1_m1.wav", "w1_1",
+                rh.hindiLanguage().getCode(), rh.delhiCircle().getName(), SubscriptionOrigin.IVR));
 
 
         TargetFileNotification tfn = targetFileService.generateTargetFile();
         assertNotNull(tfn);
 
+        // Should pickup subscription1
         // Should not pickup subscription2 because its status is not ACTIVE
         // Should not pickup subscription3 because it's for tomorrow
         // Should not pickup call retry record because it's for tomorrow also
-        assertEquals(1, (int) tfn.getRecordCount());
+        // Should pickup subscription4 and set its status to ACTIVE
+        // Should not pickup subscription5 because its start DOW doesn't match today's DOW but should set its status to ACTIVE
+        // Should not pickup subscription6 because it's for tomorrow
+        assertEquals(2, (int) tfn.getRecordsCount());
 
-        //read the file to get checksum & record count
+        //read the file to get record count
         File targetDir = new File(settingsService.getSettingsFacade().getProperty("imi.local_obd_dir"));
         File targetFile = new File(targetDir, tfn.getFileName());
-        MessageDigest md = MessageDigest.getInstance("MD5");
         int recordCount = 0;
+        boolean header = true;
         try (InputStream is = Files.newInputStream(targetFile.toPath());
              BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
-            DigestInputStream dis = new DigestInputStream(is, md);
             while ((reader.readLine()) != null) {
+                if (header) {
+                    header = false;
+                    continue;
+                }
                 recordCount++;
             }
         }
-        String md5Checksum = new String(Hex.encodeHex(md.digest()));
 
-        assertEquals((int)tfn.getRecordCount(), recordCount);
+        String checksum = ChecksumHelper.checksum(targetFile);
 
-        assertEquals(tfn.getChecksum(), md5Checksum);
+        assertEquals((int)tfn.getRecordsCount(), recordCount);
+
+        assertEquals(tfn.getChecksum(), checksum);
+
+        assertEquals(SubscriptionStatus.ACTIVE,
+                subscriptionDataService.findBySubscriptionId(subscription4.getSubscriptionId()).getStatus());
+        assertEquals(SubscriptionStatus.ACTIVE,
+                subscriptionDataService.findBySubscriptionId(subscription5.getSubscriptionId()).getStatus());
     }
 
 
@@ -221,7 +229,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
     public void createLargeFile() {
         SubscriptionHelper sh = new SubscriptionHelper(subscriptionService, subscriberDataService,
                 subscriptionPackDataService, languageDataService, circleDataService, stateDataService,
-                districtDataService);
+                districtDataService, districtService);
 
         for (int i=0 ; i<1000 ; i++) {
             sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now());
@@ -256,10 +264,11 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
     @Test
     public void verifyFT151() throws NoSuchAlgorithmException, IOException {
 
-        Subscriber subscriber1 = new Subscriber(1111111111L, hindi, dehliCircle);
+        Subscriber subscriber1 = new Subscriber(1111111111L, rh.hindiLanguage(), rh.delhiCircle());
         subscriber1.setLastMenstrualPeriod(DateTime.now().minusDays(125)); // weekId will be W6_1
         subscriberDataService.create(subscriber1);
-        Subscription subscription = subscriptionService.createSubscription(1111111111L, hindi, pregnancyPack, SubscriptionOrigin.MCTS_IMPORT);
+        Subscription subscription = subscriptionService.createSubscription(1111111111L, rh.hindiLanguage(),
+                sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
         subscription.setNeedsWelcomeMessage(false);
         subscriptionDataService.update(subscription);
 
@@ -270,20 +279,24 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
 
         File targetDir = new File(settingsService.getSettingsFacade().getProperty("imi.local_obd_dir"));
         File targetFile = new File(targetDir, tfn.getFileName());
-        MessageDigest md = MessageDigest.getInstance("MD5");
         int recordCount = 0;
+        boolean header = true;
         try (InputStream is = Files.newInputStream(targetFile.toPath());
              BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
-            DigestInputStream dis = new DigestInputStream(is, md);
             while ((line = reader.readLine()) != null) {
+                if (header) {
+                    header = false;
+                    continue;
+                }
                 recordCount++;
                 contents.add(line.split(",")[7]); //column 8 is for weekId
             }
         }
-        String md5Checksum = new String(Hex.encodeHex(md.digest()));
 
-        assertEquals((int)tfn.getRecordCount(), recordCount);
-        assertEquals(tfn.getChecksum(), md5Checksum);
+        String checksum = ChecksumHelper.checksum(targetFile);
+
+        assertEquals((int)tfn.getRecordsCount(), recordCount);
+        assertEquals(tfn.getChecksum(), checksum);
         assertTrue("w6_1".equals(contents.get(0)));
         assertEquals(1, recordCount);
     }
@@ -293,10 +306,11 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
     public void verifyFT152() throws NoSuchAlgorithmException, IOException {
 
 
-        Subscriber subscriber1 = new Subscriber(1111111111L, hindi, dehliCircle);
+        Subscriber subscriber1 = new Subscriber(1111111111L, rh.hindiLanguage(), rh.delhiCircle());
         subscriber1.setDateOfBirth(DateTime.now().minusDays(28)); // weekId will be W5_1
         subscriberDataService.create(subscriber1);
-        Subscription subscription = subscriptionService.createSubscription(1111111111L, hindi, childPack, SubscriptionOrigin.MCTS_IMPORT);
+        Subscription subscription = subscriptionService.createSubscription(1111111111L, rh.hindiLanguage(),
+                sh.childPack(), SubscriptionOrigin.MCTS_IMPORT);
         subscription.setNeedsWelcomeMessage(false);
         subscriptionDataService.update(subscription);
 
@@ -307,20 +321,23 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
 
         File targetDir = new File(settingsService.getSettingsFacade().getProperty("imi.local_obd_dir"));
         File targetFile = new File(targetDir, tfn.getFileName());
-        MessageDigest md = MessageDigest.getInstance("MD5");
         int recordCount = 0;
+        boolean header = true;
         try (InputStream is = Files.newInputStream(targetFile.toPath());
              BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
-            DigestInputStream dis = new DigestInputStream(is, md);
             while ((line = reader.readLine()) != null) {
+                if (header) {
+                    header = false;
+                    continue;
+                }
                 recordCount++;
                 contents.add(line.split(",")[7]); //column 8 is for weekId
             }
         }
-        String md5Checksum = new String(Hex.encodeHex(md.digest()));
 
-        assertEquals((int)tfn.getRecordCount(), recordCount);
-        assertEquals(tfn.getChecksum(), md5Checksum);
+        String checksum = ChecksumHelper.checksum(targetFile);
+        assertEquals((int)tfn.getRecordsCount(), recordCount);
+        assertEquals(tfn.getChecksum(), checksum);
         assertTrue("w5_1".equals(contents.get(0)));
 
         //update the date of birth of the subscriber
@@ -333,18 +350,21 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         contents.clear();
         targetFile = new File(targetDir, tfn.getFileName());
         recordCount = 0;
+        header = true;
         try (InputStream is = Files.newInputStream(targetFile.toPath());
              BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
-            DigestInputStream dis = new DigestInputStream(is, md);
             while ((line = reader.readLine()) != null) {
+                if (header) {
+                    header = false;
+                    continue;
+                }
                 recordCount++;
                 contents.add(line.split(",")[7]); //column 8 is for weekId
             }
         }
-        md5Checksum = new String(Hex.encodeHex(md.digest()));
-
-        assertEquals((int)tfn.getRecordCount(), recordCount);
-        assertEquals(tfn.getChecksum(), md5Checksum);
+        checksum = ChecksumHelper.checksum(targetFile);
+        assertEquals((int)tfn.getRecordsCount(), recordCount);
+        assertEquals(tfn.getChecksum(), checksum);
         assertTrue("w4_1".equals(contents.get(0)));
         assertEquals(1, recordCount);
     }
@@ -354,10 +374,11 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
     */
     @Test
     public void verifyFT190() throws NoSuchAlgorithmException, IOException {
-        Subscriber subscriber1 = new Subscriber(1111111111L, hindi, dehliCircle);
+        Subscriber subscriber1 = new Subscriber(1111111111L, rh.hindiLanguage(), rh.delhiCircle());
         subscriber1.setLastMenstrualPeriod(DateTime.now().minusDays(90)); // weekId will be W1_1
         subscriberDataService.create(subscriber1);
-        subscriptionService.createSubscription(1111111111L, hindi, pregnancyPack, SubscriptionOrigin.MCTS_IMPORT);
+        subscriptionService.createSubscription(1111111111L, rh.hindiLanguage(), sh.pregnancyPack(),
+                SubscriptionOrigin.MCTS_IMPORT);
 
         List<String> contents = new ArrayList<>();
         String line;
@@ -366,20 +387,23 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
 
         File targetDir = new File(settingsService.getSettingsFacade().getProperty("imi.local_obd_dir"));
         File targetFile = new File(targetDir, tfn.getFileName());
-        MessageDigest md = MessageDigest.getInstance("MD5");
         int recordCount = 0;
+        boolean header = true;
         try (InputStream is = Files.newInputStream(targetFile.toPath());
              BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
-            DigestInputStream dis = new DigestInputStream(is, md);
             while ((line = reader.readLine()) != null) {
+                if (header) {
+                    header = false;
+                    continue;
+                }
                 recordCount++;
                 contents.add(line.split(",")[6]); //column 7 is for content filename
             }
         }
-        String md5Checksum = new String(Hex.encodeHex(md.digest()));
 
-        assertEquals((int)tfn.getRecordCount(), recordCount);
-        assertEquals(tfn.getChecksum(), md5Checksum);
+        String checksum = ChecksumHelper.checksum(targetFile);
+        assertEquals((int)tfn.getRecordsCount(), recordCount);
+        assertEquals(tfn.getChecksum(), checksum);
         assertTrue("welcome.wav".equals(contents.get(0)));
     }
 
@@ -388,10 +412,11 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
     */
     @Test
     public void verifyFT191() throws NoSuchAlgorithmException, IOException {
-        Subscriber subscriber1 = new Subscriber(1111111111L, hindi, dehliCircle);
+        Subscriber subscriber1 = new Subscriber(1111111111L, rh.hindiLanguage(), rh.delhiCircle());
         subscriber1.setDateOfBirth(DateTime.now()); // weekId will be W1_1
         subscriberDataService.create(subscriber1);
-        subscriptionService.createSubscription(1111111111L, hindi, childPack, SubscriptionOrigin.MCTS_IMPORT);
+        subscriptionService.createSubscription(1111111111L, rh.hindiLanguage(), sh.childPack(),
+                SubscriptionOrigin.MCTS_IMPORT);
 
         List<String> contents = new ArrayList<>();
         String line;
@@ -400,22 +425,61 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
 
         File targetDir = new File(settingsService.getSettingsFacade().getProperty("imi.local_obd_dir"));
         File targetFile = new File(targetDir, tfn.getFileName());
-        MessageDigest md = MessageDigest.getInstance("MD5");
         int recordCount = 0;
+        boolean header = true;
         try (InputStream is = Files.newInputStream(targetFile.toPath());
              BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
-            DigestInputStream dis = new DigestInputStream(is, md);
             while ((line = reader.readLine()) != null) {
+                if (header) {
+                    header = false;
+                    continue;
+                }
                 recordCount++;
                 contents.add(line.split(",")[6]); //column 7 is for content filename
             }
         }
-        String md5Checksum = new String(Hex.encodeHex(md.digest()));
 
-        assertEquals((int)tfn.getRecordCount(), recordCount);
-        assertEquals(tfn.getChecksum(), md5Checksum);
+        String checksum = ChecksumHelper.checksum(targetFile);
+        assertEquals((int)tfn.getRecordsCount(), recordCount);
+        assertEquals(tfn.getChecksum(), checksum);
         assertTrue("welcome.wav".equals(contents.get(0)));
 
     }
     //todo: test success notification is sent to the IVR system
+
+
+
+
+    @Test
+    public void testChecksumsVaryWithFileContent() throws NoSuchAlgorithmException, IOException,
+            InterruptedException {
+
+        Subscriber subscriber1 = new Subscriber(1111111111L, rh.hindiLanguage(), rh.delhiCircle());
+        subscriber1.setLastMenstrualPeriod(DateTime.now().minusDays(90)); // startDate will be today
+        subscriberDataService.create(subscriber1);
+        subscriptionService.createSubscription(subscriber1.getCallingNumber(), rh.hindiLanguage(),
+                sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
+
+        TargetFileNotification tfn1 = targetFileService.generateTargetFile();
+        assertNotNull(tfn1);
+        getLogger().debug(tfn1.toString());
+
+        // Sleep two seconds so the file names are different
+        Thread.sleep(2000L);
+
+        testingService.clearDatabase();
+
+        Subscriber subscriber2 = new Subscriber(2222222222L, rh.kannadaLanguage(), rh.karnatakaCircle());
+        subscriber2.setLastMenstrualPeriod(DateTime.now().minusDays(90)); // startDate will be today
+        subscriberDataService.create(subscriber2);
+        subscriptionService.createSubscription(subscriber2.getCallingNumber(), rh.kannadaLanguage(),
+                sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
+
+        TargetFileNotification tfn2 = targetFileService.generateTargetFile();
+        assertNotNull(tfn2);
+        getLogger().debug(tfn2.toString());
+
+        assertFalse(tfn1.getChecksum().equals(tfn2.getChecksum()));
+    }
+
 }

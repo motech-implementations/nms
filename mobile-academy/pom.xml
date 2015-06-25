@@ -32,15 +32,9 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient-osgi</artifactId>
-            <version>4.4.1</version>
-        </dependency>
-
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>2.4</version>
+            <groupId>org.motechproject.nms</groupId>
+            <artifactId>imi</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>

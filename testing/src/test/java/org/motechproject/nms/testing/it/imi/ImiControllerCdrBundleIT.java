@@ -4,16 +4,22 @@ import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.imi.repository.FileAuditRecordDataService;
 import org.motechproject.nms.imi.service.SettingsService;
+import org.motechproject.nms.imi.service.TargetFileService;
+import org.motechproject.nms.imi.service.contract.TargetFileNotification;
 import org.motechproject.nms.imi.web.contract.BadRequest;
 import org.motechproject.nms.imi.web.contract.CdrFileNotificationRequest;
 import org.motechproject.nms.imi.web.contract.FileInfo;
+import org.motechproject.nms.kilkari.domain.Subscriber;
+import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
@@ -21,7 +27,10 @@ import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.testing.it.utils.CdrHelper;
+import org.motechproject.nms.testing.it.utils.RegionHelper;
+import org.motechproject.nms.testing.it.utils.SubscriptionHelper;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
@@ -37,6 +46,7 @@ import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(PaxExam.class)
@@ -45,43 +55,48 @@ import static org.junit.Assert.assertTrue;
 public class ImiControllerCdrBundleIT extends BasePaxIT {
 
     @Inject
-    private SettingsService settingsService;
-
+    SettingsService settingsService;
     @Inject
-    private SubscriptionService subscriptionService;
-
+    SubscriptionService subscriptionService;
     @Inject
-    private SubscriberDataService subscriberDataService;
-
+    SubscriberDataService subscriberDataService;
     @Inject
-    private SubscriptionPackDataService subscriptionPackDataService;
-
+    SubscriptionPackDataService subscriptionPackDataService;
     @Inject
-    private LanguageDataService languageDataService;
-
+    LanguageDataService languageDataService;
     @Inject
-    private CircleDataService circleDataService;
-
+    CircleDataService circleDataService;
     @Inject
-    private StateDataService stateDataService;
-
+    StateDataService stateDataService;
     @Inject
-    private DistrictDataService districtDataService;
-
+    DistrictDataService districtDataService;
     @Inject
-    private FileAuditRecordDataService fileAuditRecordDataService;
-
+    DistrictService districtService;
     @Inject
-    private TestingService testingService;
+    FileAuditRecordDataService fileAuditRecordDataService;
+    @Inject
+    TestingService testingService;
+    @Inject
+    TargetFileService targetFileService;
+
 
     private String localCdrDirBackup;
     private String remoteCdrDirBackup;
+    private String localObdDirBackup;
+    private String remoteObdDirBackup;
+    private CdrHelper helper;
 
 
     @Before
     public void setupSettings() {
-        localCdrDirBackup = ImiTestHelper.setupTestDir(settingsService, ImiTestHelper.LOCAL_CDR_DIR, "cdr-local-dir-it");
-        remoteCdrDirBackup = ImiTestHelper.setupTestDir(settingsService, ImiTestHelper.REMOTE_CDR_DIR, "cdr-remote-dir-it");
+        localCdrDirBackup = ImiTestHelper.setupTestDir(settingsService, ImiTestHelper.LOCAL_CDR_DIR,
+                "cdr-local-dir-it");
+        remoteCdrDirBackup = ImiTestHelper.setupTestDir(settingsService, ImiTestHelper.REMOTE_CDR_DIR,
+                "cdr-remote-dir-it");
+        localObdDirBackup = ImiTestHelper.setupTestDir(settingsService, ImiTestHelper.LOCAL_OBD_DIR,
+                "obd-local-dir-it");
+        remoteObdDirBackup = ImiTestHelper.setupTestDir(settingsService, ImiTestHelper.REMOTE_OBD_DIR,
+                "obd-remote-dir-it");
     }
 
 
@@ -91,10 +106,20 @@ public class ImiControllerCdrBundleIT extends BasePaxIT {
     }
 
 
+    @Before
+    public void setupCdrHelper() throws IOException {
+        helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
+                subscriptionPackDataService, languageDataService, circleDataService, stateDataService,
+                districtDataService, fileAuditRecordDataService, districtService);
+    }
+
+
     @After
     public void restoreSettings() {
         settingsService.getSettingsFacade().setProperty(ImiTestHelper.REMOTE_CDR_DIR, remoteCdrDirBackup);
         settingsService.getSettingsFacade().setProperty(ImiTestHelper.LOCAL_CDR_DIR, localCdrDirBackup);
+        settingsService.getSettingsFacade().setProperty(ImiTestHelper.REMOTE_OBD_DIR, remoteObdDirBackup);
+        settingsService.getSettingsFacade().setProperty(ImiTestHelper.LOCAL_OBD_DIR, localObdDirBackup);
     }
 
 
@@ -105,8 +130,8 @@ public class ImiControllerCdrBundleIT extends BasePaxIT {
     }
 
 
-    private HttpPost createCdrFileNotificationHttpPost(CdrHelper helper, boolean useValidTargetFile,
-                                                       boolean useValidSummaryFile, boolean useValidDetailFile)
+    private HttpPost createCdrFileNotificationHttpPost(boolean useValidTargetFile, boolean useValidSummaryFile,
+                                                       boolean useValidDetailFile)
             throws IOException, NoSuchAlgorithmException {
         String targetFile = useValidTargetFile ? helper.obd() : helper.obd() + "xxx";
         String summaryFile = useValidSummaryFile ? helper.csr() : helper.csr() + "xxx";
@@ -146,18 +171,15 @@ public class ImiControllerCdrBundleIT extends BasePaxIT {
             NoSuchAlgorithmException {
         getLogger().debug("testCreateCdrFileNotificationRequest()");
 
-        CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService, fileAuditRecordDataService);
-
         helper.makeCdrs(1,0,0,0);
         helper.makeRemoteCsrFile();
         helper.makeRemoteCdrFile();
         helper.createObdFileAuditRecord(true, true);
 
-        HttpPost httpPost = createCdrFileNotificationHttpPost(helper, true, true, true);
+        HttpPost httpPost = createCdrFileNotificationHttpPost(true, true, true);
 
-        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ImiTestHelper.ADMIN_USERNAME, ImiTestHelper.ADMIN_PASSWORD);
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ImiTestHelper.ADMIN_USERNAME,
+                ImiTestHelper.ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_ACCEPTED, response.getStatusLine().getStatusCode());
     }
 
@@ -167,14 +189,10 @@ public class ImiControllerCdrBundleIT extends BasePaxIT {
             InterruptedException, NoSuchAlgorithmException {
         getLogger().debug("testCreateCdrFileNotificationRequestBadCdrSummaryFileName()");
 
-        CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService, fileAuditRecordDataService);
-
         helper.makeCdrs(1,0,0,0);
         helper.makeRemoteCdrFile();
 
-        HttpPost httpPost = createCdrFileNotificationHttpPost(helper, true, false, true);
+        HttpPost httpPost = createCdrFileNotificationHttpPost(true, false, true);
 
         String expectedJsonResponse = createFailureResponseJson("<cdrSummary: Invalid>");
 
@@ -188,10 +206,7 @@ public class ImiControllerCdrBundleIT extends BasePaxIT {
             InterruptedException, NoSuchAlgorithmException {
         getLogger().debug("testCreateCdrFileNotificationRequestBadFileNames()");
 
-        CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService, fileAuditRecordDataService);
-        HttpPost httpPost = createCdrFileNotificationHttpPost(helper, false, true, true);
+        HttpPost httpPost = createCdrFileNotificationHttpPost(false, true, true);
 
         // All 3 filenames will be considered invalid because the target file is of invalid format, and the CDR
         // Summary and CDR Detail don't match it (even though their formats are technically valid on their own)
@@ -208,10 +223,6 @@ public class ImiControllerCdrBundleIT extends BasePaxIT {
     @Test
     public void verifyFT201() throws IOException, InterruptedException, NoSuchAlgorithmException{
         getLogger().debug("cdrFileNotificationAPIRejectedIfOBDFileMissing()");
-
-        CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService, fileAuditRecordDataService);
 
         helper.makeCdrs(1,0,0,0);
         helper.makeRemoteCsrFile();
@@ -238,10 +249,6 @@ public class ImiControllerCdrBundleIT extends BasePaxIT {
     public void verifyFT202() throws IOException, InterruptedException, NoSuchAlgorithmException{
         getLogger().debug("cdrFileNotificationAPIRejectedIfCdrSummaryMissing()");
 
-        CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService, fileAuditRecordDataService);
-
         helper.makeCdrs(1,0,0,0);
         helper.makeRemoteCsrFile();
         helper.makeRemoteCdrFile();
@@ -266,10 +273,6 @@ public class ImiControllerCdrBundleIT extends BasePaxIT {
     public void verifyFT203() throws IOException, InterruptedException, NoSuchAlgorithmException{
         getLogger().debug("cdrFileNotificationAPIRejectedIfCdrDetailMissing()");
 
-        CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService, fileAuditRecordDataService);
-
         helper.makeCdrs(1,0,0,0);
         helper.makeRemoteCsrFile();
         helper.makeRemoteCdrFile();
@@ -293,10 +296,6 @@ public class ImiControllerCdrBundleIT extends BasePaxIT {
     @Test
     public void verifyFT204() throws IOException, InterruptedException, NoSuchAlgorithmException{
         getLogger().debug("cdrFileNotificationAPIRejectedIfOBDFileMissingINAuditRecord()");
-
-        CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService, fileAuditRecordDataService);
 
         helper.makeCdrs(1,0,0,0);
         helper.makeRemoteCsrFile();
@@ -323,10 +322,6 @@ public class ImiControllerCdrBundleIT extends BasePaxIT {
     public void verifyFT205() throws IOException, InterruptedException, NoSuchAlgorithmException{
         getLogger().debug("cdrFileNotificationAPIRejectedIfCdrFileMissingInsideCdrSummary()");
 
-        CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService, fileAuditRecordDataService);
-
         helper.makeCdrs(1,0,0,0);
         helper.makeRemoteCsrFile();
         helper.makeRemoteCdrFile();
@@ -351,10 +346,6 @@ public class ImiControllerCdrBundleIT extends BasePaxIT {
     @Test
     public void verifyFT206() throws IOException, InterruptedException, NoSuchAlgorithmException{
         getLogger().debug("cdrFileNotificationAPIRejectedIfChecksumMissingInsideCdrSummary()");
-
-        CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService, fileAuditRecordDataService);
 
         helper.makeCdrs(1,0,0,0);
         helper.makeRemoteCsrFile();
@@ -382,10 +373,6 @@ public class ImiControllerCdrBundleIT extends BasePaxIT {
     public void verifyFT207() throws IOException, InterruptedException, NoSuchAlgorithmException{
         getLogger().debug("cdrFileNotificationAPIRejectedIfRecordsCountMissingInsideCdrSummary()");
 
-        CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService, fileAuditRecordDataService);
-
         helper.makeCdrs(1,0,0,0);
         helper.makeRemoteCsrFile();
         helper.makeRemoteCdrFile();
@@ -412,10 +399,6 @@ public class ImiControllerCdrBundleIT extends BasePaxIT {
     public void verifyFT208() throws IOException, InterruptedException, NoSuchAlgorithmException{
         getLogger().debug("cdrFileNotificationAPIRejectedIfCdrFileMissingInsideCdrDetail()");
 
-        CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService, fileAuditRecordDataService);
-
         helper.makeCdrs(1,0,0,0);
         helper.makeRemoteCsrFile();
         helper.makeRemoteCdrFile();
@@ -440,10 +423,6 @@ public class ImiControllerCdrBundleIT extends BasePaxIT {
     @Test
     public void verifyFT209() throws IOException, InterruptedException, NoSuchAlgorithmException{
         getLogger().debug("cdrFileNotificationAPIRejectedIfChecksumMissingInsideCdrDetail()");
-
-        CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService, fileAuditRecordDataService);
 
         helper.makeCdrs(1,0,0,0);
         helper.makeRemoteCsrFile();
@@ -471,10 +450,6 @@ public class ImiControllerCdrBundleIT extends BasePaxIT {
     public void verifyFT210() throws IOException, InterruptedException, NoSuchAlgorithmException{
         getLogger().debug("cdrFileNotificationAPIRejectedIfRecordsCountMissingInsideCdrDetail()");
 
-        CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService, fileAuditRecordDataService);
-
         helper.makeCdrs(1,0,0,0);
         helper.makeRemoteCsrFile();
         helper.makeRemoteCdrFile();
@@ -492,5 +467,54 @@ public class ImiControllerCdrBundleIT extends BasePaxIT {
                 createFailureResponseJson("<recordsCount: Invalid>");
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
                 ImiTestHelper.ADMIN_USERNAME, ImiTestHelper.ADMIN_PASSWORD));
+    }
+
+    /*
+    * Verify that the filename returned by generateTargetFile can be passed back to us
+    */
+    @Test
+    public void verifyTargetFileNameRoundTrip() throws IOException, InterruptedException, NoSuchAlgorithmException{
+
+        RegionHelper rh = new RegionHelper(languageDataService, circleDataService, stateDataService,
+                districtDataService, districtService);
+
+        SubscriptionHelper sh = new SubscriptionHelper(subscriptionService, subscriberDataService,
+                subscriptionPackDataService, languageDataService, circleDataService, stateDataService,
+                districtDataService, districtService);
+
+        Subscriber subscriber1 = new Subscriber(1111111111L, rh.hindiLanguage(), rh.delhiCircle());
+        subscriber1.setLastMenstrualPeriod(DateTime.now().minusDays(90)); // startDate will be today
+        subscriberDataService.create(subscriber1);
+        subscriptionService.createSubscription(1111111111L, rh.hindiLanguage(), sh.pregnancyPack(),
+                SubscriptionOrigin.MCTS_IMPORT);
+
+        TargetFileNotification tfn = targetFileService.generateTargetFile();
+        assertNotNull(tfn);
+
+        CdrHelper cdrHelper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
+                subscriptionPackDataService, languageDataService, circleDataService, stateDataService,
+                districtDataService, fileAuditRecordDataService, districtService, tfn.getFileName());
+
+
+        String targetFile = cdrHelper.obd();
+        String summaryFile = cdrHelper.csr();
+        String detailFile = cdrHelper.cdr();
+
+        FileInfo cdrSummary = new FileInfo(summaryFile, "checksum", 1);
+        FileInfo cdrDetail = new FileInfo(detailFile, "checksum", 1);
+
+        HttpPost httpPost = createHttpPost(targetFile, cdrSummary, cdrDetail);
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ImiTestHelper.ADMIN_USERNAME,
+                ImiTestHelper.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+
+        //We're expecting for the file copy to fail, what we wanted to check here is that the given file name
+        //is valid
+        String expectedJsonFailure1 = "{\"failureReason\":\"Error 1 running";
+        String expectedJsonFailure2 = ": No such file or directory\\n\"}";
+        String responseBody = EntityUtils.toString(response.getEntity());
+        assertEquals(expectedJsonFailure1,  responseBody.substring(0, expectedJsonFailure1.length()));
+        assertEquals(expectedJsonFailure2,
+                responseBody.substring(responseBody.length() - expectedJsonFailure2.length()));
     }
 }

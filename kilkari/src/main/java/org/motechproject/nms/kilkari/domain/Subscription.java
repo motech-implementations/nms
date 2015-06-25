@@ -221,6 +221,30 @@ public class Subscription {
         return messages.get(messages.size() - 1).getMessageFileName().equals(contentFileName);
     }
 
+    /**
+     * Helper method which determines the subscription status based on its start date, subscription pack length
+     * and current status (deactivated subscriptions remains deactivated)
+     * @param subscription subscription for which the status has to be determined
+     * @param today today's, date
+     * @return status determined for the provided subscription
+     */
+    public static SubscriptionStatus getStatus(Subscription subscription, DateTime today) {
+        if (subscription.getStatus() == SubscriptionStatus.DEACTIVATED) {
+            return SubscriptionStatus.DEACTIVATED;
+        } else {
+            int daysInPack = subscription.getSubscriptionPack().getWeeks() * DAYS_IN_WEEK;
+            DateTime startDate = subscription.getStartDate();
+            DateTime completionDate = startDate.plusDays(daysInPack);
+
+            if (today.isBefore(startDate)) {
+                return SubscriptionStatus.PENDING_ACTIVATION;
+            } else if (today.isAfter(startDate) && today.isBefore(completionDate)) {
+                return SubscriptionStatus.ACTIVE;
+            } else {
+                return SubscriptionStatus.COMPLETED;
+            }
+        }
+    }
 
     @Override
     public boolean equals(Object o) {

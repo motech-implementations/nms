@@ -1,9 +1,6 @@
 package org.motechproject.nms.testing.it.utils;
 
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.joda.time.DateTime;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
@@ -22,8 +19,12 @@ import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.service.DistrictService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class SubscriptionHelper {
 
@@ -44,14 +45,15 @@ public class SubscriptionHelper {
                               LanguageDataService languageDataService,
                               CircleDataService circleDataService,
                               StateDataService stateDataService,
-                              DistrictDataService districtDataService) {
+                              DistrictDataService districtDataService,
+                              DistrictService districtService) {
 
         this.subscriptionService = subscriptionService;
         this.subscriberDataService = subscriberDataService;
         this.subscriptionPackDataService = subscriptionPackDataService;
 
         this.regionHelper = new RegionHelper(languageDataService, circleDataService, stateDataService,
-                districtDataService);
+                districtDataService, districtService);
     }
 
     public SubscriptionPack childPack() {

@@ -49,25 +49,25 @@ public class LanguageControllerBundleIT extends BasePaxIT {
     private static final String ADMIN_PASSWORD = "motech";
 
     @Inject
-    private FrontLineWorkerService frontLineWorkerService;
+    FrontLineWorkerService frontLineWorkerService;
 
     @Inject
-    private LanguageDataService languageDataService;
+    LanguageDataService languageDataService;
 
     @Inject
-    private ServiceUsageCapDataService serviceUsageCapDataService;
+    ServiceUsageCapDataService serviceUsageCapDataService;
 
     @Inject
-    private StateDataService stateDataService;
+    StateDataService stateDataService;
 
     @Inject
-    private DeployedServiceDataService deployedServiceDataService;
+    DeployedServiceDataService deployedServiceDataService;
 
     @Inject
-    private CircleDataService circleDataService;
+    CircleDataService circleDataService;
 
     @Inject
-    private TestingService testingService;
+    TestingService testingService;
 
 
     private RegionHelper rh;

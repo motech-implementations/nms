@@ -5,7 +5,7 @@ import org.motechproject.event.MotechEvent;
 /**
  * Service to initiate sms notifications via IMI
  */
-public interface SmsNotificationService {
+public interface CourseNotificationService {
 
     // This is defined as an empty service to work around the OSGI limitations to inject a @Component
     void sendSmsNotification(MotechEvent event);

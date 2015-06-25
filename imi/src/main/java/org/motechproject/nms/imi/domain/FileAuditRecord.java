@@ -21,6 +21,7 @@ public class FileAuditRecord {
     private Boolean success;
 
     @Field
+    @Column(length = 1024)
     private String error;
 
     @Field
@@ -28,7 +29,7 @@ public class FileAuditRecord {
     private Integer recordCount;
 
     @Field
-    @Column(length = 32)
+    @Column(length = 40)
     private String checksum;
 
     public FileAuditRecord() { }

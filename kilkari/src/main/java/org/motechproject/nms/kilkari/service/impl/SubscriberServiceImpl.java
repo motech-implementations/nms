@@ -48,7 +48,7 @@ public class SubscriberServiceImpl implements SubscriberService {
         subscriberDataService.update(subscriber);
 
         // update start dates for subscriptions if reference date (LMP/DOB) has changed
-        Set<Subscription> subscriptions = retrievedSubscriber.getActiveSubscriptions();
+        Set<Subscription> subscriptions = retrievedSubscriber.getActiveAndPendingSubscriptions();
         Iterator<Subscription> subscriptionIterator = subscriptions.iterator();
         Subscription subscription;
 

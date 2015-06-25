@@ -1,7 +1,7 @@
 package org.motechproject.nms.imi.service.impl;
 
 
-import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -47,9 +47,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.security.DigestOutputStream;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 @Service("targetFileService")
@@ -135,13 +132,94 @@ public class TargetFileServiceImpl implements TargetFileService {
 
 
     private String targetFileName(String timestamp) {
-        return String.format("OBD_%s.csv", timestamp);
+        return String.format("OBD_NMS_%s.csv", timestamp);
     }
 
 
     // Helper method that makes the code a bit cleaner
     private void alert(String id, String name, String description) {
         alertService.create(id, name, description, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+    }
+
+
+    private void writeHeader(OutputStreamWriter writer) throws IOException {
+        /*
+         * #1 RequestId
+         *
+         */
+        writer.write("RequestId");
+        writer.write(",");
+
+        /*
+         * #2 ServiceId
+         *
+         */
+        writer.write("ServiceId");
+        writer.write(",");
+
+        /*
+         * #3 Msisdn
+         *
+         */
+        writer.write("Msisdn");
+        writer.write(",");
+
+        /*
+         * #4 Cli
+         *
+         */
+        writer.write("Cli");
+        writer.write(",");
+
+        /*
+         * #5 Priority
+         *
+         */
+        writer.write("Priority");
+        writer.write(",");
+
+        /*
+         * #6 CallFlowURL
+         *
+         */
+        writer.write("CallFlowURL");
+        writer.write(",");
+
+        /*
+         * #7 ContentFileName
+         *
+         */
+        writer.write("ContentFileName");
+        writer.write(",");
+
+        /*
+         * #8 WeekId
+         *
+         */
+        writer.write("WeekId");
+        writer.write(",");
+
+        /*
+         * #9 LanguageLocationCode
+         *
+         */
+        writer.write("LanguageLocationCode");
+        writer.write(",");
+
+        /*
+         * #10 Circle
+         *
+         */
+        writer.write("Circle");
+        writer.write(",");
+
+        /*
+         * #11 subscription mode
+         *
+         */
+        writer.write("SubscriptionOrigin");
+
+        writer.write("\n");
     }
 
 
@@ -290,7 +368,6 @@ public class TargetFileServiceImpl implements TargetFileService {
         return recordCount;
     }
 
-
     private int generateRetryCalls(DateTime timestamp, int maxQueryBlock, String imiServiceId,
                                    String callFlowUrl, OutputStreamWriter writer) throws IOException {
 
@@ -335,16 +412,12 @@ public class TargetFileServiceImpl implements TargetFileService {
         DateTime today = DateTime.now();
         String targetFileName = targetFileName(TIME_FORMATTER.print(today));
         File localTargetDir = localObdDir();
-        MessageDigest md;
         int recordCount = 0;
+        String checksum;
 
         File targetFile = new File(localTargetDir, targetFileName);
         try (FileOutputStream fos = new FileOutputStream(targetFile);
             OutputStreamWriter writer = new OutputStreamWriter(fos)) {
-
-            md = MessageDigest.getInstance("MD5");
-            @SuppressWarnings("PMD.UnusedLocalVariable")
-            DigestOutputStream dos = new DigestOutputStream(fos, md);
 
             int maxQueryBlock = Integer.parseInt(settingsFacade.getProperty(MAX_QUERY_BLOCK));
             String imiServiceId = settingsFacade.getProperty(TARGET_FILE_IMI_SERVICE_ID);
@@ -355,7 +428,12 @@ public class TargetFileServiceImpl implements TargetFileService {
                 callFlowUrl = "";
             }
 
-            //FRESH calls
+            activatePendingSubscriptions(today, maxQueryBlock);
+
+            //Header
+            writeHeader(writer);
+
+            //Fresh calls
             recordCount = generateFreshCalls(today, maxQueryBlock, imiServiceId, callFlowUrl, writer);
 
             //Retry calls
@@ -363,7 +441,12 @@ public class TargetFileServiceImpl implements TargetFileService {
 
             LOGGER.debug("Created targetFile with {} record{}", recordCount, recordCount == 1 ? "" : "s");
 
-        } catch (NoSuchAlgorithmException | IOException e) {
+            writer.close();
+            fos.close();
+
+            checksum = ChecksumHelper.checksum(targetFile);
+
+        } catch (IOException e) {
             LOGGER.error(e.getMessage());
             alert(targetFile.toString(), "targetFile", e.getMessage());
             fileAuditRecordDataService.create(new FileAuditRecord(FileType.TARGET_FILE, targetFile.getName(),
@@ -371,17 +454,31 @@ public class TargetFileServiceImpl implements TargetFileService {
             return null;
         }
 
-        String md5Checksum = new String(Hex.encodeHex(md.digest()));
-        TargetFileNotification tfn = new TargetFileNotification(targetFileName, md5Checksum, recordCount);
+        TargetFileNotification tfn = new TargetFileNotification(targetFileName, checksum, recordCount);
         LOGGER.debug("TargetFileNotification = {}", tfn.toString());
 
         //audit the success
         fileAuditRecordDataService.create(new FileAuditRecord(FileType.TARGET_FILE, tfn.getFileName(), true,
-                null, tfn.getRecordCount(), tfn.getChecksum()));
+                null, tfn.getRecordsCount(), tfn.getChecksum()));
 
         return tfn;
     }
 
+    private void activatePendingSubscriptions(DateTime today, int maxQueryBlock) {
+        int page = 1;
+        while (true) {
+            List<Subscription> subscriptions = subscriptionService
+                    .findPendingSubscriptionsFromDate(today, page, maxQueryBlock);
+            if (CollectionUtils.isNotEmpty(subscriptions)) {
+                for (Subscription subscription : subscriptions) {
+                    subscriptionService.activateSubscription(subscription);
+                }
+                page++;
+            } else {
+                break;
+            }
+        }
+    }
 
     private void sendNotificationRequest(TargetFileNotification tfn) {
         String notificationUrl = settingsFacade.getProperty(TARGET_FILE_NOTIFICATION_URL);
