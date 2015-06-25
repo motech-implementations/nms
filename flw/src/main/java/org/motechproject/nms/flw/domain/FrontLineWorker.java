@@ -1,6 +1,7 @@
 package org.motechproject.nms.flw.domain;
 
 import org.joda.time.DateTime;
+import org.motechproject.mds.annotations.Cascade;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.domain.MdsEntity;
@@ -13,6 +14,8 @@ import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.Unique;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity(tableName = "nms_front_line_workers")
 @Index(name = "status_invalidationDate_composit_idx", members = { "status", "invalidationDate" })
@@ -47,13 +50,20 @@ public class FrontLineWorker extends MdsEntity {
     @Persistent(defaultFetchGroup = "true")
     private District district;
 
+    @Field
+    @Cascade(delete = true)
+    @Persistent(mappedBy = "frontLineWorker")
+    private List<FrontLineWorkerLanguageChange> languageChanges;
+
     public FrontLineWorker(Long contactNumber) {
         this.contactNumber = contactNumber;
+        this.languageChanges = new ArrayList<>();
     }
 
     public FrontLineWorker(String name, Long contactNumber) {
         this.name = name;
         this.contactNumber = contactNumber;
+        this.languageChanges = new ArrayList<>();
     }
 
     public String getFlwId() {
@@ -124,6 +134,14 @@ public class FrontLineWorker extends MdsEntity {
 
     public void setDistrict(District district) {
         this.district = district;
+    }
+
+    public List<FrontLineWorkerLanguageChange> getLanguageChanges() {
+        return languageChanges;
+    }
+
+    public void setLanguageChanges(List<FrontLineWorkerLanguageChange> languageChanges) {
+        this.languageChanges = languageChanges;
     }
 
     @Override //NO CHECKSTYLE CyclomaticComplexity

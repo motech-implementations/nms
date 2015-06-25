@@ -8,6 +8,7 @@ import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.flw.service.FrontLineWorkerUpdateImportService;
+import org.motechproject.nms.region.domain.Language;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
@@ -209,11 +210,17 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
 
         frontLineWorkerUpdateImportService.importLanguageData(read("csv/flw_language_update.csv"));
 
-        flw = frontLineWorkerDataService.findByContactNumber(1000000000L);
-        assertEquals(rh.hindiLanguage(), flw.getLanguage());
+        assertFLW(1000000000L, rh.kannadaLanguage(), rh.hindiLanguage());
+        assertFLW(2000000000L, rh.kannadaLanguage(), rh.hindiLanguage());
+    }
 
-        flw = frontLineWorkerDataService.findByContactNumber(2000000000L);
-        assertEquals(rh.hindiLanguage(), flw.getLanguage());
+    private void assertFLW(long contactNumber, Language oldLanguage, Language newLanguage) {
+        FrontLineWorker flw = frontLineWorkerDataService.findByContactNumber(contactNumber);
+        assertNotNull(flw);
+        assertEquals(newLanguage, flw.getLanguage());
+        assertEquals(1, flw.getLanguageChanges().size());
+        assertEquals(oldLanguage, flw.getLanguageChanges().get(0).getOldLanguage());
+        assertEquals(newLanguage, flw.getLanguageChanges().get(0).getNewLanguage());
     }
 
     /************************************************************************************************************
