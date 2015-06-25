@@ -72,8 +72,7 @@ public class FrontLineWorkerUpdateImportServiceImpl implements FrontLineWorkerUp
                                                                         csvImporter.getRowNumber()));
                 }
 
-                flw.setLanguage(language);
-                frontLineWorkerService.update(flw);
+                frontLineWorkerService.updateLanguage(flw, language);
             }
         } catch (ConstraintViolationException e) {
             throw new CsvImportDataException(createErrorMessage(e.getConstraintViolations(), csvImporter.getRowNumber()), e);

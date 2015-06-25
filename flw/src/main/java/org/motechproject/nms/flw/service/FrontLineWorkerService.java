@@ -4,6 +4,7 @@ import org.motechproject.event.MotechEvent;
 import org.motechproject.mds.annotations.InstanceLifecycleListener;
 import org.motechproject.mds.domain.InstanceLifecycleListenerType;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
+import org.motechproject.nms.region.domain.Language;
 import org.motechproject.nms.region.domain.State;
 
 import java.util.List;
@@ -28,6 +29,8 @@ public interface FrontLineWorkerService {
     void update(FrontLineWorker record);
 
     void delete(FrontLineWorker record);
+
+    void updateLanguage(FrontLineWorker record, Language language);
 
     /**
      * MotechEvent handler that responds to scheduler events.  Purges FLW records that are in invalid state

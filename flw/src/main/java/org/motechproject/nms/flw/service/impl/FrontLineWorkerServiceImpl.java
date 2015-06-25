@@ -9,6 +9,7 @@ import org.motechproject.event.listener.annotations.MotechListener;
 import org.motechproject.mds.query.QueryExecution;
 import org.motechproject.mds.util.InstanceSecurityRestriction;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
+import org.motechproject.nms.flw.domain.FrontLineWorkerLanguageChange;
 import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
@@ -220,6 +221,14 @@ public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
     @Override
     public void delete(FrontLineWorker record) {
         frontLineWorkerDataService.delete(record);
+    }
+
+    @Override
+    public void updateLanguage(FrontLineWorker frontLineWorker, Language newLanguage) {
+        Language oldLanguage = frontLineWorker.getLanguage();
+        frontLineWorker.setLanguage(newLanguage);
+        FrontLineWorkerLanguageChange change = new FrontLineWorkerLanguageChange(oldLanguage, newLanguage);
+        frontLineWorker.getLanguageChanges().add(change);
     }
 
     @Override
