@@ -1,7 +1,6 @@
 package org.motechproject.nms.region.ut;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.domain.Village;
@@ -14,9 +13,6 @@ import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 
-/**
- * Created by rob on 5/4/15.
- */
 public class VillageUnitTest {
     Validator validator;
 
@@ -98,7 +94,6 @@ public class VillageUnitTest {
     }
 
     @Test
-    @Ignore
     public void testVillageCodeInvalid() {
         Taluka taluka = new Taluka();
         taluka.setName("Taluka 1");
@@ -111,8 +106,10 @@ public class VillageUnitTest {
 
         Set<ConstraintViolation<Village>> constraintViolations = validator.validate(village);
 
-        assertEquals(1, constraintViolations.size());
-        assertEquals("At least one of vcode or svid must be set.", constraintViolations.iterator().next().getMessage());
+        assertEquals(2, constraintViolations.size()); // We get the same message twice...
+        for (ConstraintViolation<Village> constraintViolation : constraintViolations) {
+            assertEquals("At least one of vcode or svid must be set.", constraintViolation.getMessage());
+        }
     }
 
     @Test

@@ -52,7 +52,7 @@ public class CsrServiceImpl implements CsrService {
     private AlertService alertService;
     private SubscriptionPackMessageDataService subscriptionPackMessageDataService;
 
-    private Map<String, Integer> messageDuration;
+    private Map<String, Integer> messageDurationCache;
 
 
     @Autowired
@@ -74,17 +74,28 @@ public class CsrServiceImpl implements CsrService {
 
 
     public final void buildMessageDurationCache() {
-        messageDuration = new HashMap<>();
+        messageDurationCache = new HashMap<>();
         for (SubscriptionPackMessage msg : subscriptionPackMessageDataService.retrieveAll()) {
-            messageDuration.put(msg.getMessageFileName(), msg.getDuration());
+            messageDurationCache.put(msg.getMessageFileName(), msg.getDuration());
+        }
+
+        if (messageDurationCache.size() == 0) {
+            alertService.create("MessageDuration Cache", "Subscription Message duration cache empty",
+                    "Subscription pack messages not found", AlertType.CRITICAL, AlertStatus.NEW, 0, null);
         }
     }
 
 
     //todo: IT
     private int calculatePercentPlayed(String contentFileName, int duration) {
-        if (messageDuration.containsKey(contentFileName)) {
-            int totalDuration = messageDuration.get(contentFileName);
+
+       //refresh Cache if empty
+        if (messageDurationCache.size() == 0) {
+            buildMessageDurationCache();
+        }
+
+        if (messageDurationCache.containsKey(contentFileName)) {
+            int totalDuration = messageDurationCache.get(contentFileName);
             return duration / totalDuration * ONE_HUNDRED;
         }
         throw new IllegalArgumentException(String.format("Invalid contentFileName: %s", contentFileName));
