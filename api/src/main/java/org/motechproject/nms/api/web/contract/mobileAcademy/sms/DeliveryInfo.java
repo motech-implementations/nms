@@ -32,4 +32,16 @@ public class DeliveryInfo {
     public void setDeliveryStatus(DeliveryStatus deliveryStatus) {
         this.deliveryStatus = deliveryStatus;
     }
+
+    private static String obscure(String a) {
+        return "tel: *******" + a.substring(a.length() - 3);
+    }
+
+    @Override
+    public String toString() {
+        return "DeliveryInfo{" +
+                "address='" + obscure(address) + '\'' +
+                ", deliveryStatus=" + deliveryStatus +
+                '}';
+    }
 }

@@ -2,6 +2,7 @@ package org.motechproject.nms.api.web;
 
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.EventRelay;
+import org.motechproject.nms.api.web.contract.LogHelper;
 import org.motechproject.nms.api.web.contract.mobileAcademy.CourseResponse;
 import org.motechproject.nms.api.web.contract.mobileAcademy.CourseVersionResponse;
 import org.motechproject.nms.api.web.contract.mobileAcademy.GetBookmarkResponse;
@@ -81,6 +82,8 @@ public class MobileAcademyController extends BaseController {
     @ResponseBody
     public CourseResponse getCourse() {
 
+        log("/mobileacademy/course");
+
         MaCourse getCourse = mobileAcademyService.getCourse();
 
         if (getCourse == null) {
@@ -109,6 +112,8 @@ public class MobileAcademyController extends BaseController {
     @ResponseBody
     public CourseVersionResponse getCourseVersion() {
 
+        log("/mobileacademy/courseVersion");
+
         return new CourseVersionResponse(mobileAcademyService.getCourseVersion());
     }
 
@@ -124,6 +129,9 @@ public class MobileAcademyController extends BaseController {
             headers = { "Content-type=application/json" })
     public GetBookmarkResponse getBookmarkWithScore(@RequestParam Long callingNumber,
                                                  @RequestParam Long callId) {
+
+        log("/mobileacademy/bookmarkWithScore (GET)", String.format("callingNumber=%s, callId=%s",
+                LogHelper.obscure(callingNumber), callId));
 
         MaBookmark bookmark = mobileAcademyService.getBookmark(callingNumber, callId);
         return MobileAcademyConverter.convertBookmarkDto(bookmark);
@@ -141,6 +149,8 @@ public class MobileAcademyController extends BaseController {
     @ResponseStatus(HttpStatus.OK)
     @Transactional
     public void saveBookmarkWithScore(@RequestBody SaveBookmarkRequest bookmarkRequest) {
+
+        log("/mobileacademy/bookmarkWithScore (POST)", LogHelper.nullOrString(bookmarkRequest));
 
         if (bookmarkRequest == null) {
             throw new IllegalArgumentException(String.format(INVALID, "bookmarkRequest"));
@@ -169,6 +179,8 @@ public class MobileAcademyController extends BaseController {
     @ResponseStatus(HttpStatus.OK)
     public void saveSmsStatus(@RequestBody SmsStatusRequest smsDeliveryStatus) {
 
+        log("/mobileacademy/smsdeliverystatus (POST)", LogHelper.nullOrString(smsDeliveryStatus));
+
         String errors = MobileAcademyValidator.validateSmsStatus(smsDeliveryStatus);
 
         if (errors != null) {
@@ -192,6 +204,8 @@ public class MobileAcademyController extends BaseController {
             method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
     public void sendNotification(@RequestBody Long callingNumber) {
+
+        log("/mobileacademy/notify", String.format("callingNumber=%s", LogHelper.obscure(callingNumber)));
 
         StringBuilder errors = new StringBuilder();
         validateField10Digits(errors, "callingNumber", callingNumber);

@@ -1,5 +1,7 @@
 package org.motechproject.nms.api.web.contract.kilkari;
 
+import org.motechproject.nms.api.web.contract.LogHelper;
+
 import java.util.Set;
 
 /**
@@ -119,5 +121,21 @@ public class InboxCallDetailsRequest {
 
     public void setContent(Set<CallDataRequest> content) {
         this.content = content;
+    }
+
+    @Override
+    public String toString() {
+        return "InboxCallDetailsRequest{" +
+                "callingNumber=" + LogHelper.obscure(callingNumber) +
+                ", operator='" + operator + '\'' +
+                ", circle='" + circle + '\'' +
+                ", callId=" + callId +
+                ", callStartTime=" + callStartTime +
+                ", callEndTime=" + callEndTime +
+                ", callDurationInPulses=" + callDurationInPulses +
+                ", callStatus=" + callStatus +
+                ", callDisconnectReason=" + callDisconnectReason +
+                ", content=" + content +
+                '}';
     }
 }
