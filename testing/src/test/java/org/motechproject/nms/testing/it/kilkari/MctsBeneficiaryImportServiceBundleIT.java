@@ -604,11 +604,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     /*
      * To verify MCTS upload is rejected when location information is incorrect.
      * 
-<<<<<<< HEAD
      * https://applab.atlassian.net/browse/NMS-208
-=======
-     * https://applab.atlassian.net/browse/NMS-207
->>>>>>> ac333e99414c5cc812715216223fb00ded73de47
      */
     @Test(expected = CsvImportDataException.class)
     @Ignore
