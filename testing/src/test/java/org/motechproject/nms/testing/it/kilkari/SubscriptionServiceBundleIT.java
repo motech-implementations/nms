@@ -2,7 +2,6 @@ package org.motechproject.nms.testing.it.kilkari;
 
 import org.joda.time.DateTime;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -939,9 +938,8 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     /*
      * To verify that user's subscription should create in pending state
      *
-     * JIRA issue: https://applab.atlassian.net/browse/NMS-201
      */
-    @Ignore
+
     @Test
     public void verifyFT153() {
 

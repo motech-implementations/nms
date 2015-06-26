@@ -1274,6 +1274,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     /**
      * To verify the that Save Inbox call Details API request should not succeed with content provided for only 1
      * subscription pack and not even a place holder for second Pack details
+     *
+     * //TODO : FT case to be modified .Refer NMS -182
      */
     @Test
     public void verifyFT35() throws IOException, InterruptedException {
@@ -1301,14 +1303,16 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                         123L, // startTime
                         456L))))); // content
 
-        String expectedJsonResponse = createFailureResponseJson("<content: Invalid>");
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
-                HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine()
+                .getStatusCode());
         // assert inboxCallDetailRecord
         InboxCallDetailRecord inboxCallDetailRecord = inboxCallDetailsDataService
                 .retrieve("callingNumber", 3000000000L);
-        assertNull(inboxCallDetailRecord);
+        assertNotNull(inboxCallDetailRecord);
     }
 
 

@@ -126,8 +126,8 @@ public class KilkariController extends BaseController {
             // Empty content is acceptable (when the IVR vendor plays promotional content)
             return;
         }
-        if (content.size() != 2) {
-            // Valid content must contain two elements
+        if (content.size() > 2) {
+            // Valid content must contain max two elements
             failureReasons.append(String.format(INVALID, "content"));
             return;
         }
@@ -143,7 +143,7 @@ public class KilkariController extends BaseController {
         }
 
         //check we have all required subscription packs
-        if (!SUBSCRIPTION_PACK_SET.equals(subscriptionPacks)) {
+        if (!SUBSCRIPTION_PACK_SET.containsAll(subscriptionPacks)) {
             failureReasons.append(String.format(INVALID, "subscriptionPack"));
         }
 
