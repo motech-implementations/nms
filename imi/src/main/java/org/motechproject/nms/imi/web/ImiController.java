@@ -63,7 +63,7 @@ public class ImiController {
 
 
     protected static void log(final String endpoint, final String s) {
-        LOGGER.debug(IVR_INTERACTION_LOG.format(endpoint) + (StringUtils.isBlank(s) ? "" : " : " + s));
+        LOGGER.info(IVR_INTERACTION_LOG.format(endpoint) + (StringUtils.isBlank(s) ? "" : " : " + s));
     }
 
 
