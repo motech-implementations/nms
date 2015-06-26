@@ -22,4 +22,11 @@ public class RequestData {
     public void setDeliveryInfoNotification(DeliveryInfoNotification deliveryInfoNotification) {
         this.deliveryInfoNotification = deliveryInfoNotification;
     }
+
+    @Override
+    public String toString() {
+        return "RequestData{" +
+                "deliveryInfoNotification=" + deliveryInfoNotification +
+                '}';
+    }
 }

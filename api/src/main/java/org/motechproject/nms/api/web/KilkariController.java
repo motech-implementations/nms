@@ -1,5 +1,6 @@
 package org.motechproject.nms.api.web;
 
+import org.motechproject.nms.api.web.contract.LogHelper;
 import org.motechproject.nms.api.web.contract.kilkari.CallDataRequest;
 import org.motechproject.nms.api.web.contract.kilkari.InboxCallDetailsRequest;
 import org.motechproject.nms.api.web.contract.kilkari.InboxResponse;
@@ -83,6 +84,9 @@ public class KilkariController extends BaseController {
     @ResponseBody
     public InboxResponse getInboxDetails(@RequestParam(required = false) Long callingNumber,
                                          @RequestParam(required = false) Long callId) {
+
+        log("/kilkari/inbox", String.format("callingNumber=%s, callId=%s",
+                LogHelper.obscure(callingNumber), callId));
 
         StringBuilder failureReasons = validate(callingNumber, callId);
         if (failureReasons.length() > 0) {
@@ -182,6 +186,9 @@ public class KilkariController extends BaseController {
     @ResponseStatus(HttpStatus.OK)
     @Transactional
     public void saveInboxCallDetails(@RequestBody InboxCallDetailsRequest request) {
+
+        log("/kilkari/inboxCallDetails", LogHelper.nullOrString(request));
+
         StringBuilder failureReasons = validateSaveInboxCallDetails(request);
         if (failureReasons.length() > 0) {
             throw new IllegalArgumentException(failureReasons.toString());
@@ -227,6 +234,9 @@ public class KilkariController extends BaseController {
     @ResponseStatus(HttpStatus.OK)
     @Transactional
     public void createSubscription(@RequestBody SubscriptionRequest subscriptionRequest) {
+
+        log("/kilkari/subscription (POST)", LogHelper.nullOrString(subscriptionRequest));
+
         StringBuilder failureReasons = validate(subscriptionRequest.getCallingNumber(),
                                                 subscriptionRequest.getCallId(),
                                                 subscriptionRequest.getOperator(),
@@ -287,6 +297,9 @@ public class KilkariController extends BaseController {
     @ResponseStatus(HttpStatus.OK)
     @Transactional
     public void deactivateSubscription(@RequestBody SubscriptionRequest subscriptionRequest) {
+
+        log("/kilkari/subscription (DELETE)", LogHelper.nullOrString(subscriptionRequest));
+
         StringBuilder failureReasons = validate(subscriptionRequest.getCallingNumber(),
                 subscriptionRequest.getCallId(), subscriptionRequest.getOperator(),
                 subscriptionRequest.getCircle());

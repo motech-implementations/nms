@@ -24,4 +24,11 @@ public class SmsStatusRequest {
     public void setRequestData(RequestData requestData) {
         this.requestData = requestData;
     }
+
+    @Override
+    public String toString() {
+        return "SmsStatusRequest{" +
+                "requestData=" + requestData +
+                '}';
+    }
 }

@@ -43,4 +43,13 @@ public class DeliveryInfoNotification {
     public void setDeliveryInfo(DeliveryInfo deliveryInfo) {
         this.deliveryInfo = deliveryInfo;
     }
+
+    @Override
+    public String toString() {
+        return "DeliveryInfoNotification{" +
+                "clientCorrelator='" + clientCorrelator + '\'' +
+                ", callbackData='" + callbackData + '\'' +
+                ", deliveryInfo=" + deliveryInfo +
+                '}';
+    }
 }

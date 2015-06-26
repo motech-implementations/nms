@@ -2,6 +2,7 @@ package org.motechproject.nms.api.web;
 
 import org.joda.time.DateTime;
 import org.motechproject.nms.api.web.contract.FlwUserResponse;
+import org.motechproject.nms.api.web.contract.LogHelper;
 import org.motechproject.nms.api.web.contract.UserResponse;
 import org.motechproject.nms.api.web.contract.kilkari.KilkariUserResponse;
 import org.motechproject.nms.api.web.exception.NotAuthorizedException;
@@ -81,6 +82,10 @@ public class UserController extends BaseController {
                              @RequestParam(required = false) String operator,
                              @RequestParam(required = false) String circle,
                              @RequestParam(required = false) Long callId) {
+
+        log(String.format("/%s/user", serviceName), String.format(
+                "callingNumber=%s, callId=%s, operator=%s, callId=%s",
+                LogHelper.obscure(callingNumber), operator, circle, callId));
 
         StringBuilder failureReasons = validate(callingNumber, callId, operator, circle);
         if (failureReasons.length() > 0) {

@@ -1,5 +1,6 @@
 package org.motechproject.nms.api.web;
 
+import org.motechproject.nms.api.web.contract.LogHelper;
 import org.motechproject.nms.api.web.contract.UserLanguageRequest;
 import org.motechproject.nms.api.web.exception.NotAuthorizedException;
 import org.motechproject.nms.api.web.exception.NotDeployedException;
@@ -49,6 +50,10 @@ public class LanguageController extends BaseController {
     @Transactional
     public void setUserLanguageLocationCode(@PathVariable String serviceName,
                                             @RequestBody UserLanguageRequest userLanguageRequest) {
+
+
+        log(String.format("/%s/languageLocationCode", serviceName), LogHelper.nullOrString(userLanguageRequest));
+
         Long callingNumber = userLanguageRequest.getCallingNumber();
         Long callId = userLanguageRequest.getCallId();
         String languageLocationCode = userLanguageRequest.getLanguageLocationCode();

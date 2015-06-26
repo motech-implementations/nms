@@ -131,4 +131,23 @@ public class CallDetailRecordRequest {
     public void setContent(List<CallContentRequest> content) {
         this.content = content;
     }
+
+    // Must hide PII
+    @Override
+    public String toString() {
+        return "CallDetailRecordRequest{" +
+                "callingNumber=" + LogHelper.obscure(callingNumber) +
+                ", callId=" + callId +
+                ", operator='" + operator + '\'' +
+                ", circle='" + circle + '\'' +
+                ", callStartTime=" + callStartTime +
+                ", callEndTime=" + callEndTime +
+                ", callDurationInPulses=" + callDurationInPulses +
+                ", endOfUsagePromptCounter=" + endOfUsagePromptCounter +
+                ", welcomeMessagePromptFlag=" + welcomeMessagePromptFlag +
+                ", callStatus=" + callStatus +
+                ", callDisconnectReason=" + callDisconnectReason +
+                ", content=" + content +
+                '}';
+    }
 }

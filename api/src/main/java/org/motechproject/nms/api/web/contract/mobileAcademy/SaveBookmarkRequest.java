@@ -1,5 +1,7 @@
 package org.motechproject.nms.api.web.contract.mobileAcademy;
 
+import org.motechproject.nms.api.web.contract.LogHelper;
+
 import java.util.Map;
 
 /**
@@ -48,5 +50,15 @@ public class SaveBookmarkRequest {
 
     public void setScoresByChapter(Map<String, Integer> scoresByChapter) {
         this.scoresByChapter = scoresByChapter;
+    }
+
+    @Override
+    public String toString() {
+        return "SaveBookmarkRequest{" +
+                "callingNumber=" + LogHelper.obscure(callingNumber) +
+                ", callId=" + callId +
+                ", bookmark='" + bookmark + '\'' +
+                ", scoresByChapter=" + scoresByChapter +
+                '}';
     }
 }
