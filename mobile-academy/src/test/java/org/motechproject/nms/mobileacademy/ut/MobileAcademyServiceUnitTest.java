@@ -9,7 +9,9 @@ import org.mockito.stubbing.Answer;
 import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.EventRelay;
+import org.motechproject.mtraining.domain.ActivityRecord;
 import org.motechproject.mtraining.domain.Bookmark;
+import org.motechproject.mtraining.service.ActivityService;
 import org.motechproject.mtraining.service.BookmarkService;
 import org.motechproject.mtraining.service.MTrainingService;
 import org.motechproject.nms.imi.service.SmsNotificationService;
@@ -61,6 +63,9 @@ public class MobileAcademyServiceUnitTest {
     private BookmarkService bookmarkService;
 
     @Mock
+    private ActivityService activityService;
+
+    @Mock
     private NmsCourseDataService nmsCourseDataService;
 
     @Mock
@@ -88,11 +93,12 @@ public class MobileAcademyServiceUnitTest {
         initMocks(this);
         nmsCourseDataService.deleteAll();
         when(settingsFacade.getRawConfig("nmsCourse.json")).thenReturn(getFileInputStream("nmsCourseTest.json"));
-        mobileAcademyService = new MobileAcademyServiceImpl(bookmarkService, nmsCourseDataService,
+        mobileAcademyService = new MobileAcademyServiceImpl(bookmarkService, activityService, nmsCourseDataService,
                 completionRecordDataService, eventRelay, settingsFacade, alertService);
         courseNotificationService = new CourseNotificationServiceImpl(completionRecordDataService,
                 smsNotificationService);
         validator = Validation.buildDefaultValidatorFactory().getValidator();
+        when(activityService.createActivity(any(ActivityRecord.class))).thenReturn(new ActivityRecord());
     }
 
     @Test

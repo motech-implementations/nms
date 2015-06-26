@@ -5,6 +5,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.mtraining.domain.Bookmark;
+import org.motechproject.mtraining.repository.ActivityDataService;
 import org.motechproject.mtraining.repository.BookmarkDataService;
 import org.motechproject.nms.mobileacademy.domain.CompletionRecord;
 import org.motechproject.nms.mobileacademy.domain.NmsCourse;
@@ -49,6 +50,9 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     BookmarkDataService bookmarkDataService;
 
     @Inject
+    ActivityDataService activityDataService;
+
+    @Inject
     CompletionRecordDataService completionRecordDataService;
 
     @Inject
@@ -64,6 +68,8 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     public void setupMobileAcademy() {
 
         completionRecordDataService.deleteAll();
+        activityDataService.deleteAll();
+        bookmarkDataService.deleteAll();
     }
 
     @Test
@@ -95,6 +101,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
 
     @Test
     public void testNoCoursePresent() {
+
         NmsCourse originalCourse = nmsCourseDataService.getCourseByName(VALID_COURSE_NAME);
         nmsCourseDataService.delete(originalCourse);
         assertNull(nmsCourseDataService.getCourseByName(VALID_COURSE_NAME));
@@ -160,7 +167,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
 
     @Test
     public void testSetExistingBookmark() {
-        bookmarkDataService.deleteAll();
+
         MaBookmark bookmark = new MaBookmark(556L, 666L, null, null);
         maService.setBookmark(bookmark);
         List<Bookmark> added = bookmarkDataService.findBookmarksForUser("556");
@@ -181,7 +188,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
 
     @Test
     public void testSetLastBookmark() {
-        bookmarkDataService.deleteAll();
+
         long callingNumber = 9876543210L;
         MaBookmark bookmark = new MaBookmark(callingNumber, 666L, null, null);
         maService.setBookmark(bookmark);
@@ -198,8 +205,30 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     }
 
     @Test
+    public void testCompletionCount() {
+
+        long callingNumber = 9876543210L;
+        int completionCountBefore = activityDataService.findRecordsForUser(String.valueOf(callingNumber)).size();
+        MaBookmark bookmark = new MaBookmark(callingNumber, 666L, null, null);
+        maService.setBookmark(bookmark);
+        List<Bookmark> added = bookmarkDataService.findBookmarksForUser("9876543210");
+        assertTrue(added.size() == 1);
+
+        bookmark.setBookmark("Chapter11_Quiz");
+        Map<String, Integer> scores = new HashMap<>();
+        for (int i = 1; i < 12; i++) {
+            scores.put(String.valueOf(i), ((int) (Math.random() * 100)) % 5);
+        }
+        bookmark.setScoresByChapter(scores);
+        maService.setBookmark(bookmark);
+        int completionCountAfter = activityDataService.findRecordsForUser(String.valueOf(callingNumber)).size();
+
+        assertEquals(completionCountBefore + 1, completionCountAfter);
+    }
+
+    @Test
     public void testSetGetLastBookmark() {
-        bookmarkDataService.deleteAll();
+
         long callingNumber = 9987654321L;
         MaBookmark bookmark = new MaBookmark(callingNumber, 666L, null, null);
         maService.setBookmark(bookmark);
@@ -223,7 +252,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
 
     @Test
     public void testSetGetResetBookmark() {
-        bookmarkDataService.deleteAll();
+
         long callingNumber = 9987654321L;
         MaBookmark bookmark = new MaBookmark(callingNumber, 666L, null, null);
         maService.setBookmark(bookmark);
@@ -247,7 +276,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
 
     @Test
     public void testTriggerNotificationSent() {
-        bookmarkDataService.deleteAll();
+
         long callingNumber = 9876543210L;
         MaBookmark bookmark = new MaBookmark(callingNumber, 666L, null, null);
         maService.setBookmark(bookmark);
@@ -265,12 +294,11 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         assertNotNull(cr);
         assertEquals(cr.getCallingNumber(), callingNumber);
         assertEquals(cr.getScore(), 33);
-
     }
 
     @Test
     public void testTriggerNotificationNotSent() {
-        bookmarkDataService.deleteAll();
+
         long callingNumber = 9876543211L;
         MaBookmark bookmark = new MaBookmark(callingNumber, 666L, null, null);
         maService.setBookmark(bookmark);

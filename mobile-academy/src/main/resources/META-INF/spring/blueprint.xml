@@ -29,6 +29,9 @@
     <osgi:reference id="bookmarkService"
                     interface="org.motechproject.mtraining.service.BookmarkService" />
 
+    <osgi:reference id="activityService"
+                    interface="org.motechproject.mtraining.service.ActivityService" />
+
     <osgi:reference id="eventRelay"
                     interface="org.motechproject.event.listener.EventRelay"/>
 

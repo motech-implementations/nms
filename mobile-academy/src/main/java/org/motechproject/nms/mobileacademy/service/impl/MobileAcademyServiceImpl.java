@@ -1,6 +1,7 @@
 package org.motechproject.nms.mobileacademy.service.impl;
 
 import org.apache.commons.io.IOUtils;
+import org.joda.time.DateTime;
 import org.json.JSONObject;
 import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.alerts.domain.AlertStatus;
@@ -9,7 +10,10 @@ import org.motechproject.config.core.constants.ConfigurationConstants;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.EventRelay;
 import org.motechproject.event.listener.annotations.MotechListener;
+import org.motechproject.mtraining.domain.ActivityRecord;
+import org.motechproject.mtraining.domain.ActivityState;
 import org.motechproject.mtraining.domain.Bookmark;
+import org.motechproject.mtraining.service.ActivityService;
 import org.motechproject.mtraining.service.BookmarkService;
 import org.motechproject.nms.mobileacademy.domain.CompletionRecord;
 import org.motechproject.nms.mobileacademy.domain.NmsCourse;
@@ -60,6 +64,11 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
     private BookmarkService bookmarkService;
 
     /**
+     * Activity service to track user completion data
+     */
+    private ActivityService activityService;
+
+    /**
      * Completion record data service
      */
     private CompletionRecordDataService completionRecordDataService;
@@ -88,13 +97,14 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
 
     @Autowired
     public MobileAcademyServiceImpl(BookmarkService bookmarkService,
+                                    ActivityService activityService,
                                     NmsCourseDataService nmsCourseDataService,
                                     CompletionRecordDataService completionRecordDataService,
-
                                     EventRelay eventRelay,
                                     @Qualifier("maSettings") SettingsFacade settingsFacade,
                                     AlertService alertService) {
         this.bookmarkService = bookmarkService;
+        this.activityService = activityService;
         this.nmsCourseDataService = nmsCourseDataService;
         this.completionRecordDataService = completionRecordDataService;
         this.eventRelay = eventRelay;
@@ -183,6 +193,9 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
                 && saveBookmark.getScoresByChapter().size() == CHAPTER_COUNT) {
 
             LOGGER.debug("Found last bookmark and 11 scores. Starting evaluation & notification");
+            // Create an activity record here since pass/fail counts as 1 try
+            activityService.createActivity(
+                    new ActivityRecord(callingNumber.toString(), null, null, null, null, DateTime.now(), ActivityState.COMPLETED));
             evaluateCourseCompletion(saveBookmark.getCallingNumber(), saveBookmark.getScoresByChapter());
         }
     }
