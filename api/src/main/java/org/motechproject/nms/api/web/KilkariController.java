@@ -255,7 +255,10 @@ public class KilkariController extends BaseController {
             throw new NotFoundException(String.format(NOT_FOUND, "languageLocationCode"));
         }
 
+
         Circle circle = circleService.getByName(subscriptionRequest.getCircle());
+
+
         State state = getSingleStateFromCircleAndLanguage(circle, language);
         if (!propertyService.isServiceDeployedInState(Service.KILKARI, state)) {
             throw new NotDeployedException(String.format(NOT_DEPLOYED, Service.KILKARI));
@@ -272,15 +275,22 @@ public class KilkariController extends BaseController {
     }
 
     private State getSingleStateFromCircleAndLanguage(Circle circle, Language language) {
+
+
+
         Set<State> stateSet = languageService.getAllStatesForLanguage(language);
 
         if (stateSet.size() == 1) {
             return stateSet.iterator().next();
         }
 
+        if (null != circle) {
+
         List<State> stateList = circle.getStates();
-        if (stateList.size() == 1) {
+            if (stateList.size() == 1) {
             return stateList.get(0);
+            }
+
         }
 
         return null;

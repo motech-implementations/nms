@@ -21,6 +21,12 @@ public class PropertyServiceImpl implements PropertyService {
 
     @Override
     public boolean isServiceDeployedInState(final org.motechproject.nms.props.domain.Service service, final State state) {
+
+        if (null == state) {
+            return true;
+        }
+
+
         QueryExecution<Long> stateQueryExecution = new QueryExecution<Long>() {
             @Override
             public Long execute(Query query, InstanceSecurityRestriction restriction) {
