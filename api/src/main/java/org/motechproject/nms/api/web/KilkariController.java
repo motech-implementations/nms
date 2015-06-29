@@ -284,7 +284,7 @@ public class KilkariController extends BaseController {
             return stateSet.iterator().next();
         }
 
-        if (null != circle) {
+        if (circle != null) {
 
         List<State> stateList = circle.getStates();
             if (stateList.size() == 1) {

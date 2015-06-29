@@ -22,7 +22,7 @@ public class PropertyServiceImpl implements PropertyService {
     @Override
     public boolean isServiceDeployedInState(final org.motechproject.nms.props.domain.Service service, final State state) {
 
-        if (null == state) {
+        if (state == null) {
             return true;
         }
 
