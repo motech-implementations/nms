@@ -67,10 +67,10 @@ public class ExponentialRetrySender {
                 HttpClient httpClient = HttpClients.createDefault();
                 HttpResponse response = httpClient.execute(httpPost);
                 int responseCode = response.getStatusLine().getStatusCode();
-                if (responseCode == HttpStatus.SC_OK) {
+                if (responseCode == HttpStatus.SC_ACCEPTED) {
                     return;
                 } else {
-                    error = String.format("Expecting HTTP 200 response but received HTTP %d: %s",
+                    error = String.format("Expecting HTTP 202 response but received HTTP %d: %s",
                             responseCode, EntityUtils.toString(response.getEntity()));
                     LOGGER.warn(error);
                     alertService.create(id, name, error, AlertType.MEDIUM, AlertStatus.NEW, 0, null);
