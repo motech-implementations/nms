@@ -153,6 +153,7 @@ public class CallSummaryRecordDto implements Serializable {
         return "CallSummaryRecordDto{" +
                 "requestId='" + requestId + '\'' +
                 ", msisdn=" + msisdn +
+                ", finalStatus=" + finalStatus +
                 '}';
     }
 }

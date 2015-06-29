@@ -10,12 +10,15 @@ import org.motechproject.alerts.contract.AlertCriteria;
 import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.alerts.domain.Alert;
 import org.motechproject.event.MotechEvent;
+import org.motechproject.event.listener.annotations.MotechListener;
 import org.motechproject.nms.imi.exception.InvalidCdrFileException;
 import org.motechproject.nms.imi.repository.FileAuditRecordDataService;
 import org.motechproject.nms.imi.service.CdrFileService;
 import org.motechproject.nms.imi.service.SettingsService;
 import org.motechproject.nms.imi.web.contract.FileInfo;
+import org.motechproject.nms.kilkari.domain.CallRetry;
 import org.motechproject.nms.kilkari.dto.CallDetailRecordDto;
+import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
@@ -51,6 +54,8 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
 
     private static final String PROCESS_DETAIL_FILE_SUBJECT = "nms.imi.kk.process_detail_file";
     private static final String FILE_INFO_PARAM_KEY = "fileInfo";
+    private static final String PROCESS_SUMMARY_RECORD_SUBJECT = "nms.imi.kk.process_summary_record";
+    private static final int MAX_MILLISECOND_WAIT = 5;
 
     private static final String INITIAL_RETRY_DELAY = "imi.initial_retry_delay";
     private static final String MAX_CDR_ERROR_COUNT = "imi.max_cdr_error_count";
@@ -79,6 +84,10 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
     DistrictService districtService;
     @Inject
     FileAuditRecordDataService fileAuditRecordDataService;
+    @Inject
+    CallRetryDataService callRetryDataService;
+
+    private int eventCount;
 
 
     @Inject
@@ -198,8 +207,13 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
     }
 
 
+    @MotechListener(subjects = { PROCESS_SUMMARY_RECORD_SUBJECT })
+    public void processCallSummaryRecord(MotechEvent event) {
+        eventCount++;
+    }
+
     @Test
-    public void testProcess() throws IOException, NoSuchAlgorithmException {
+    public void testProcess() throws IOException, NoSuchAlgorithmException, InterruptedException {
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
                 subscriptionPackDataService, languageDataService, circleDataService, stateDataService,
@@ -219,6 +233,20 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         AlertCriteria criteria = new AlertCriteria().byExternalId(helper.cdrLocalFileInfo().getCdrFile());
         List<Alert> alerts = alertService.search(criteria);
         assertEquals(4, alerts.size()); //three warnings plus one error
+
+        //Fancy code that waits for all 4 CDRs to be processed
+        eventCount = 0;
+        long start = System.currentTimeMillis();
+        while (eventCount < 4) {
+            Thread.sleep(100L);
+            if (System.currentTimeMillis() - start > MAX_MILLISECOND_WAIT) {
+                assertTrue("Timeout while waiting for message processing", false);
+            }
+        }
+
+        //Now verify that we should be rescheduling one call (the failed one)
+        List<CallRetry> callRetries = callRetryDataService.retrieveAll();
+        assertEquals(1, callRetries.size());
     }
 
 

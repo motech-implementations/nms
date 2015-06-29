@@ -171,7 +171,9 @@ public class CsrServiceImpl implements CsrService {
                     getCircleName(subscription),
                     subscription.getOrigin()
             );
+            LOGGER.debug("Inserting CallRetry {}", newCallRetry);
             callRetryDataService.create(newCallRetry);
+            LOGGER.debug("Inserted CallRetry {}", newCallRetry);
             return;
         }
 
@@ -274,6 +276,8 @@ public class CsrServiceImpl implements CsrService {
 
     @MotechListener(subjects = { PROCESS_SUMMARY_RECORD_SUBJECT })
     public void processCallSummaryRecord(MotechEvent event) {
+
+        LOGGER.debug("processCallSummaryRecord({})", event);
 
         CallSummaryRecordDto csr = (CallSummaryRecordDto) event.getParameters().get(CSR_PARAM_KEY);
         String subscriptionId = csr.getRequestId().getSubscriptionId();
