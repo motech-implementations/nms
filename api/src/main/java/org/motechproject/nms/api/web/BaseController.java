@@ -196,7 +196,7 @@ public class BaseController {
     }
 
     protected DateTime epochToDateTime(long epoch) {
-        return new DateTime(epoch);
+        return new DateTime(epoch*1000); // epoch time sent by IVR is in secs
     }
 
     protected State getStateForFrontLineWorker(FrontLineWorker flw, Circle circle) {
