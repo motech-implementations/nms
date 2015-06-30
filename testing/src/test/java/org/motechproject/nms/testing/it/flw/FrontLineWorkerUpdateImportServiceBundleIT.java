@@ -70,6 +70,7 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
         rh.hindiLanguage();
         rh.kannadaLanguage();
         rh.delhiState();
+        rh.newDelhiDistrict();
     }
 
     // Test when state not provided
@@ -137,6 +138,8 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
         flw = new FrontLineWorker(2000000000L);
         flw.setMctsFlwId("210302604211400029");
         flw.setLanguage(rh.kannadaLanguage());
+        flw.setState(rh.delhiState());
+        flw.setDistrict(rh.newDelhiDistrict());
         frontLineWorkerService.add(flw);
 
         Reader reader = createLanguageReaderWithHeaders("72185,210302604211400029,,hi,1");
@@ -178,6 +181,7 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
         flw.setMctsFlwId("210302604211400029");
         flw.setLanguage(rh.kannadaLanguage());
         flw.setState(rh.delhiState());
+        flw.setDistrict(rh.newDelhiDistrict());
         frontLineWorkerService.add(flw);
 
         flw = new FrontLineWorker(2000000000L);
@@ -275,6 +279,8 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
 
         flw = new FrontLineWorker(2000000000L);
         flw.setMctsFlwId("210302604211400029");
+        flw.setState(rh.delhiState());
+        flw.setDistrict(rh.newDelhiDistrict());
         frontLineWorkerService.add(flw);
 
         Reader reader = createMSISDNReaderWithHeaders("72185,210302604211400029,,9439986187,1");
@@ -321,6 +327,7 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
         FrontLineWorker flw = new FrontLineWorker(1000000000L);
         flw.setMctsFlwId("210302604211400029");
         flw.setState(rh.delhiState());
+        flw.setDistrict(rh.newDelhiDistrict());
         frontLineWorkerService.add(flw);
 
         flw = new FrontLineWorker(2000000000L);

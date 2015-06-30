@@ -39,8 +39,7 @@ public class FullLocationValidatorUnitTest {
 
         Set<ConstraintViolation<TestLocation>> constraintViolations = validator.validate(testLocation);
 
-        assertEquals(1, constraintViolations.size());
-        assertEquals("A location at District or below must be provided", constraintViolations.iterator().next().getMessage());
+        assertEquals(0, constraintViolations.size());
     }
 
     // Test only state
@@ -57,12 +56,19 @@ public class FullLocationValidatorUnitTest {
 
     public void buildValidFullLocation(TestLocation testLocation) {
         State state = new State();
+        state.setId(1L);
         District district = new District();
+        district.setId(2L);
         Taluka taluka = new Taluka();
+        taluka.setId(3L);
         Village village = new Village();
+        village.setId(4L);
         HealthBlock healthBlock = new HealthBlock();
+        healthBlock.setId(5L);
         HealthFacility healthFacility = new HealthFacility();
+        healthFacility.setId(6L);
         HealthSubFacility healthSubFacility = new HealthSubFacility();
+        healthSubFacility.setId(7L);
 
         state.getDistricts().add(district);
         district.setState(state);
