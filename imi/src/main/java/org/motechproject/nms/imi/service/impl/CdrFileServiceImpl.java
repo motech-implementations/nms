@@ -200,7 +200,6 @@ public class CdrFileServiceImpl implements CdrFileService {
 
 
     private void sendProcessSummaryRecordEvent(CallSummaryRecordDto record) {
-        LOGGER.debug("sendProcessSummaryRecordEvent({})", record);
         Map<String, Object> eventParams = new HashMap<>();
         eventParams.put(CSR_PARAM_KEY, record);
         MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
@@ -399,6 +398,8 @@ public class CdrFileServiceImpl implements CdrFileService {
                 }
                 lineNumber++;
             }
+            sendProcessSummaryRecordEvent(csr);
+
 
         } catch (IOException e) {
             String error = String.format("Unable to read %s: %s", fileName, e.getMessage());
