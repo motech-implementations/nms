@@ -4,7 +4,7 @@ import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.alerts.domain.AlertStatus;
 import org.motechproject.alerts.domain.AlertType;
 import org.motechproject.nms.csv.exception.CsvImportException;
-import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
+import org.motechproject.nms.kilkari.csv.MctsBeneficiaryImportService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

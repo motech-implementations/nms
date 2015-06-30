@@ -26,10 +26,10 @@
                   interface="org.motechproject.nms.kilkari.service.CsrService" />
 
     <osgi:service ref="mctsBeneficiaryImportService"
-                  interface="org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService" />
+                  interface="org.motechproject.nms.kilkari.csv.MctsBeneficiaryImportService" />
 
     <osgi:service ref="mctsBeneficiaryUpdateService"
-                  interface="org.motechproject.nms.kilkari.service.MctsBeneficiaryUpdateService" />
+                  interface="org.motechproject.nms.kilkari.csv.MctsBeneficiaryUpdateService" />
 
     <osgi:reference id="transactionManager"
                     interface="org.springframework.transaction.PlatformTransactionManager"/>

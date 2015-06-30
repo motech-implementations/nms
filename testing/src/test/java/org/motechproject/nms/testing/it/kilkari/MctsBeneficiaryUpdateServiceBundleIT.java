@@ -12,12 +12,13 @@ import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
-import org.motechproject.nms.kilkari.service.MctsBeneficiaryUpdateService;
+import org.motechproject.nms.kilkari.csv.MctsBeneficiaryUpdateService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.testing.it.utils.SubscriptionHelper;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
@@ -62,6 +63,8 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
     private SubscriptionService subscriptionService;
     @Inject
     private SubscriptionPackDataService subscriptionPackDataService;
+    @Inject
+    private DistrictService districtService;
 
     private SubscriptionHelper subscriptionHelper;
 
@@ -71,7 +74,8 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
 
         subscriptionHelper = new SubscriptionHelper(subscriptionService, subscriberDataService,
                 subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService);
+                stateDataService, districtDataService, districtService);
+
         subscriptionHelper.pregnancyPack();
         subscriptionHelper.childPack();
     }
@@ -89,7 +93,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         subscriberDataService.update(subscription.getSubscriber());
 
         Reader reader = createMsisdnReaderWithHeaders(mctsId + "," + newMsisdn);
-        mctsBeneficiaryUpdateService.updateMsisdn(reader);
+        mctsBeneficiaryUpdateService.updateBeneficiary(reader);
 
         assertNull(subscriberDataService.findByCallingNumber(oldMsisdn));
 
@@ -115,10 +119,10 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         pregnancySubscription.getSubscriber().setMother(new MctsMother(motherId));
         subscriberDataService.update(pregnancySubscription.getSubscriber());
 
-        assertEquals(2, subscriberDataService.findByCallingNumber(oldMsisdn).getActiveSubscriptions().size());
+        assertEquals(2, subscriberDataService.findByCallingNumber(oldMsisdn).getActiveAndPendingSubscriptions().size());
 
         Reader reader = createMsisdnReaderWithHeaders(motherId + "," + newMsisdn);
-        mctsBeneficiaryUpdateService.updateMsisdn(reader);
+        mctsBeneficiaryUpdateService.updateBeneficiary(reader);
 
         Subscriber pregnancySubscriber = subscriberDataService.findByCallingNumber(newMsisdn);
         Subscriber childSubscriber = subscriberDataService.findByCallingNumber(oldMsisdn);
@@ -130,8 +134,8 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         assertEquals(oldMsisdn, childSubscriber.getCallingNumber());
         assertNull(pregnancySubscriber.getMother());
         assertNull(childSubscriber.getMother());
-        assertEquals(1, pregnancySubscriber.getActiveSubscriptions().size());
-        assertEquals(1, childSubscriber.getActiveSubscriptions().size());
+        assertEquals(1, pregnancySubscriber.getActiveAndPendingSubscriptions().size());
+        assertEquals(1, childSubscriber.getActiveAndPendingSubscriptions().size());
     }
 
 

@@ -1,17 +1,25 @@
 package org.motechproject.nms.kilkari.service.impl;
 
 import org.datanucleus.store.rdbms.query.ForwardQueryResult;
+import org.joda.time.DateTime;
 import org.motechproject.mds.query.SqlQueryExecution;
 import org.motechproject.nms.kilkari.domain.MctsBeneficiary;
 import org.motechproject.nms.kilkari.domain.MctsChild;
 import org.motechproject.nms.kilkari.domain.MctsMother;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
+import org.motechproject.nms.kilkari.domain.SubscriptionError;
+import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
+import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
+import org.motechproject.nms.kilkari.domain.SubscriptionRejectionReason;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
+import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
+import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
+import org.motechproject.nms.region.domain.Language;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,13 +38,19 @@ public class SubscriberServiceImpl implements SubscriberService {
     private SubscriberDataService subscriberDataService;
     private SubscriptionService subscriptionService;
     private SubscriptionDataService subscriptionDataService;
+    private SubscriptionErrorDataService subscriptionErrorDataService;
+    private SubscriptionPackDataService subscriptionPackDataService;
 
     @Autowired
     public SubscriberServiceImpl(SubscriberDataService subscriberDataService, SubscriptionService subscriptionService,
-                                 SubscriptionDataService subscriptionDataService) {
+                                 SubscriptionDataService subscriptionDataService,
+                                 SubscriptionErrorDataService subscriptionErrorDataService,
+                                 SubscriptionPackDataService subscriptionPackDataService) {
         this.subscriberDataService = subscriberDataService;
         this.subscriptionService = subscriptionService;
         this.subscriptionDataService = subscriptionDataService;
+        this.subscriptionErrorDataService = subscriptionErrorDataService;
+        this.subscriptionPackDataService = subscriptionPackDataService;
     }
 
     @Override
@@ -145,6 +159,70 @@ public class SubscriberServiceImpl implements SubscriberService {
         subscriptionDataService.update(subscription);
     }
 
+    @Override
+    public Subscription updateOrCreateMctsSubscriber(MctsBeneficiary beneficiary, Long msisdn, DateTime referenceDate,
+                                                     SubscriptionPackType packType) {
+        Language language = beneficiary.getDistrict().getLanguage();
+        Subscriber subscriber = getSubscriber(msisdn);
+
+        SubscriptionPack pack = subscriptionPackDataService.byType(packType);
+
+        // TODO: Handle the case in which the MCTS beneficiary already exists but with a different phone number
+
+        if (subscriber == null) {
+            // there's no subscriber with this MSISDN, create one
+
+            subscriber = new Subscriber(msisdn, language);
+            subscriber = setSubscriberFields(subscriber, beneficiary, referenceDate, packType);
+            create(subscriber);
+            return subscriptionService.createSubscription(msisdn, language, pack, SubscriptionOrigin.MCTS_IMPORT);
+        }
+
+        if (subscriptionService.getActiveSubscription(subscriber, packType) != null) {
+            // subscriber already has an active subscription to this pack
+
+            MctsBeneficiary existingBeneficiary = (packType == SubscriptionPackType.PREGNANCY) ? subscriber.getMother() :
+                    subscriber.getChild();
+
+            if (existingBeneficiary == null) {
+                // there's already an IVR-originated subscription for this MSISDN
+                subscriptionErrorDataService.create(
+                        new SubscriptionError(msisdn, SubscriptionRejectionReason.ALREADY_SUBSCRIBED, packType));
+
+                // TODO: Do we just reject the subscription request, or do we update the subscriber record with MCTS data?
+                // TODO: Should we change the subscription start date based on the provided LMP/DOB?
+
+            } else if (!existingBeneficiary.getBeneficiaryId().equals(beneficiary.getBeneficiaryId())) {
+                // if the MCTS ID doesn't match (i.e. there are two beneficiaries with the same phone number), reject the import
+                subscriptionErrorDataService.create(
+                        new SubscriptionError(msisdn, SubscriptionRejectionReason.ALREADY_SUBSCRIBED, packType));
+            } else {
+                // it's the same beneficiary, treat this import as an update
+                subscriber = setSubscriberFields(subscriber, beneficiary, referenceDate, packType);
+                update(subscriber);
+            }
+
+            return null;
+        }
+
+        // subscriber exists, but doesn't have a subscription to this pack
+        subscriber = setSubscriberFields(subscriber, beneficiary, referenceDate, packType);
+        update(subscriber);
+        return subscriptionService.createSubscription(msisdn, language, pack, SubscriptionOrigin.MCTS_IMPORT);
+    }
+
+
+    private Subscriber setSubscriberFields(Subscriber subscriber, MctsBeneficiary beneficiary, DateTime referenceDate,
+                                             SubscriptionPackType packType) {
+        if (packType == SubscriptionPackType.PREGNANCY) {
+            subscriber.setLastMenstrualPeriod(referenceDate);
+            subscriber.setMother((MctsMother) beneficiary);
+        } else {
+            subscriber.setDateOfBirth(referenceDate);
+            subscriber.setChild((MctsChild) beneficiary);
+        }
+        return subscriber;
+    }
 
 
     public void deleteAllowed(Subscriber subscriber) {

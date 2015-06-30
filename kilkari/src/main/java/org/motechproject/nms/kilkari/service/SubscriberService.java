@@ -1,9 +1,12 @@
 package org.motechproject.nms.kilkari.service;
 
+import org.joda.time.DateTime;
 import org.motechproject.mds.annotations.InstanceLifecycleListener;
 import org.motechproject.mds.domain.InstanceLifecycleListenerType;
 import org.motechproject.nms.kilkari.domain.MctsBeneficiary;
 import org.motechproject.nms.kilkari.domain.Subscriber;
+import org.motechproject.nms.kilkari.domain.Subscription;
+import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 
 /**
  * Service interface for managing Kilkari subscribers
@@ -46,6 +49,9 @@ public interface SubscriberService {
      */
     void updateMsisdnForSubscriber(Subscriber subscriber, MctsBeneficiary beneficiary, Long newMsisdn);
 
+    Subscription updateOrCreateMctsSubscriber(MctsBeneficiary beneficiary, Long msisdn, DateTime referenceDate,
+                                              SubscriptionPackType packType);
+
     /**
      * Lifecycle listener that verifies a subscriber can only be deleted if all of their subscriptions have
      * been closed at least 6 weeks
@@ -54,4 +60,5 @@ public interface SubscriberService {
      */
     @InstanceLifecycleListener(InstanceLifecycleListenerType.PRE_DELETE)
     void deleteAllowed(Subscriber subscriber);
+
 }

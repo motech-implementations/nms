@@ -1,11 +1,7 @@
-package org.motechproject.nms.kilkari.service.impl;
+package org.motechproject.nms.kilkari.csv.impl;
 
 import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
-import org.joda.time.format.DateTimeFormatterBuilder;
-import org.joda.time.format.DateTimeParser;
 import org.motechproject.nms.csv.exception.CsvImportDataException;
 import org.motechproject.nms.csv.utils.ConstraintViolationUtils;
 import org.motechproject.nms.csv.utils.CsvImporterBuilder;
@@ -14,24 +10,21 @@ import org.motechproject.nms.csv.utils.GetInstanceByString;
 import org.motechproject.nms.csv.utils.GetLong;
 import org.motechproject.nms.csv.utils.GetString;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
-import org.motechproject.nms.kilkari.domain.MctsBeneficiary;
 import org.motechproject.nms.kilkari.domain.MctsChild;
 import org.motechproject.nms.kilkari.domain.MctsMother;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
+import org.motechproject.nms.kilkari.domain.SubscriptionError;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.domain.SubscriptionRejectionReason;
+import org.motechproject.nms.kilkari.csv.MctsBeneficiaryImportService;
 import org.motechproject.nms.kilkari.repository.MctsChildDataService;
 import org.motechproject.nms.kilkari.repository.MctsMotherDataService;
-import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
-import org.motechproject.nms.region.domain.District;
-import org.motechproject.nms.region.domain.HealthBlock;
-import org.motechproject.nms.region.domain.HealthFacility;
-import org.motechproject.nms.region.domain.HealthSubFacility;
-import org.motechproject.nms.region.domain.State;
-import org.motechproject.nms.region.domain.Taluka;
-import org.motechproject.nms.region.domain.Village;
+import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
+import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
+import org.motechproject.nms.kilkari.service.SubscriberService;
+import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.region.exception.InvalidLocationException;
 import org.motechproject.nms.region.service.LocationService;
 import org.slf4j.Logger;
@@ -56,14 +49,14 @@ import java.util.Map;
 @Service("mctsBeneficiaryImportService")
 public class MctsBeneficiaryImportServiceImpl extends BaseMctsBeneficiaryService implements MctsBeneficiaryImportService {
 
-    private static final String STATE = "StateID";
-    private static final String DISTRICT = "District_ID";
-    private static final String TALUKA = "Taluka_ID";
-    private static final String HEALTH_BLOCK = "HealthBlock_ID";
-    private static final String PHC = "PHC_ID";
-    private static final String SUBCENTRE = "SubCentre_ID";
-    private static final String CENSUS_VILLAGE = "Village_ID";
-    private static final String NON_CENSUS_VILAGE = "SVID";
+    private SubscriptionService subscriptionService;
+    private SubscriptionErrorDataService subscriptionErrorDataService;
+    private SubscriptionPackDataService subscriptionPackDataService;
+    private LocationService locationService;
+    private MctsMotherDataService mctsMotherDataService;
+    private MctsChildDataService mctsChildDataService;
+    private SubscriberService subscriberService;
+
     private static final String BENEFICIARY_ID = "ID_No";
     private static final String BENEFICIARY_NAME = "Name";
     private static final String MSISDN = "Whom_PhoneNo";
@@ -72,20 +65,23 @@ public class MctsBeneficiaryImportServiceImpl extends BaseMctsBeneficiaryService
     private static final String MOTHER_ID = "Mother_ID";
     private static final Logger LOGGER = LoggerFactory.getLogger(MctsBeneficiaryImportServiceImpl.class);
 
-    private LocationService locationService;
-    private MctsMotherDataService mctsMotherDataService;
-    private MctsChildDataService mctsChildDataService;
-
     private SubscriptionPack pregnancyPack;
     private SubscriptionPack childPack;
 
+
     @Autowired
-    MctsBeneficiaryImportServiceImpl(LocationService locationService,
-                                     MctsMotherDataService mctsMotherDataService,
-                                     MctsChildDataService mctsChildDataService) {
+    public MctsBeneficiaryImportServiceImpl(SubscriptionService subscriptionService,
+                                            SubscriptionErrorDataService subscriptionErrorDataService,
+                                            SubscriptionPackDataService subscriptionPackDataService,
+                                            LocationService locationService, MctsMotherDataService mctsMotherDataService,
+                                            MctsChildDataService mctsChildDataService, SubscriberService subscriberService) {
+        this.subscriptionService = subscriptionService;
+        this.subscriptionErrorDataService = subscriptionErrorDataService;
+        this.subscriptionPackDataService = subscriptionPackDataService;
         this.locationService = locationService;
         this.mctsMotherDataService = mctsMotherDataService;
         this.mctsChildDataService = mctsChildDataService;
+        this.subscriberService = subscriberService;
     }
 
     /**
@@ -101,7 +97,7 @@ public class MctsBeneficiaryImportServiceImpl extends BaseMctsBeneficiaryService
         pregnancyPack = subscriptionPackDataService.byType(SubscriptionPackType.PREGNANCY);
 
         BufferedReader bufferedReader = new BufferedReader(reader);
-        readHeader(bufferedReader); // ignoring header as all interesting data in tab separated rows
+        readHeader(bufferedReader); // ignoring header as all interesting data is in the tab separated rows
 
         CsvMapImporter csvImporter = new CsvImporterBuilder()
                 .setProcessorMapping(getMotherProcessorMapping())
@@ -154,8 +150,8 @@ public class MctsBeneficiaryImportServiceImpl extends BaseMctsBeneficiaryService
             setLocationFields(locationService.getLocations(record), mother);
         } catch (InvalidLocationException le) {
             LOGGER.error(le.toString());
-            rejectBeneficiaryWithMessage(msisdn, SubscriptionRejectionReason.INVALID_LOCATION,
-                    SubscriptionPackType.PREGNANCY, le.getMessage());
+            subscriptionErrorDataService.create(new SubscriptionError(msisdn, SubscriptionRejectionReason.INVALID_LOCATION,
+                    SubscriptionPackType.PREGNANCY, le.getMessage()));
             return;
         }
 
@@ -166,7 +162,7 @@ public class MctsBeneficiaryImportServiceImpl extends BaseMctsBeneficiaryService
         // TODO: more data validation specified in #111
         mother.setName(name);
 
-        processSubscriptionForBeneficiary(mother, msisdn, lmp, pregnancyPack);
+        subscriberService.updateOrCreateMctsSubscriber(mother, msisdn, lmp, SubscriptionPackType.PREGNANCY);
     }
 
     private void importChildRecord(Map<String, Object> record) {
@@ -181,8 +177,8 @@ public class MctsBeneficiaryImportServiceImpl extends BaseMctsBeneficiaryService
             setLocationFields(locationService.getLocations(record), child);
         } catch (InvalidLocationException le) {
             LOGGER.error(le.toString());
-            rejectBeneficiaryWithMessage(msisdn, SubscriptionRejectionReason.INVALID_LOCATION,
-                    SubscriptionPackType.CHILD, le.getMessage());
+            subscriptionErrorDataService.create(new SubscriptionError(msisdn, SubscriptionRejectionReason.INVALID_LOCATION,
+                    SubscriptionPackType.CHILD, le.getMessage()));
             return;
         }
 
@@ -194,7 +190,8 @@ public class MctsBeneficiaryImportServiceImpl extends BaseMctsBeneficiaryService
         child.setName(name);
         child.setMother(mother);
 
-        Subscription childSubscription = processSubscriptionForBeneficiary(child, msisdn, dob, childPack);
+        Subscription childSubscription = subscriberService.updateOrCreateMctsSubscriber(child, msisdn, dob,
+                SubscriptionPackType.CHILD);
 
         if (childSubscription != null) {
             // a new child subscription was created -- deactivate mother's pregnancy subscription if she has one
@@ -215,11 +212,13 @@ public class MctsBeneficiaryImportServiceImpl extends BaseMctsBeneficiaryService
 
     private boolean validateLMP(DateTime lmp, Long msisdn) {
         if (lmp == null) {
-            rejectBeneficiary(msisdn, SubscriptionRejectionReason.MISSING_LMP, SubscriptionPackType.PREGNANCY);
+            subscriptionErrorDataService.create(
+                    new SubscriptionError(msisdn, SubscriptionRejectionReason.MISSING_LMP, SubscriptionPackType.PREGNANCY));
             return false;
         }
         if (!pregnancyPack.isReferenceDateValidForPack(lmp)) {
-            rejectBeneficiary(msisdn, SubscriptionRejectionReason.INVALID_LMP, SubscriptionPackType.PREGNANCY);
+            subscriptionErrorDataService.create(
+                    new SubscriptionError(msisdn, SubscriptionRejectionReason.INVALID_LMP, SubscriptionPackType.PREGNANCY));
             return false;
         }
 
@@ -228,39 +227,18 @@ public class MctsBeneficiaryImportServiceImpl extends BaseMctsBeneficiaryService
 
     private boolean validateDOB(DateTime dob, Long msisdn) {
         if (dob == null) {
-            rejectBeneficiary(msisdn, SubscriptionRejectionReason.MISSING_DOB, SubscriptionPackType.CHILD);
+            subscriptionErrorDataService.create(
+                    new SubscriptionError(msisdn, SubscriptionRejectionReason.MISSING_DOB, SubscriptionPackType.CHILD));
+
             return false;
         }
         if (!childPack.isReferenceDateValidForPack(dob)) {
-            rejectBeneficiary(msisdn, SubscriptionRejectionReason.INVALID_DOB, SubscriptionPackType.CHILD);
+            subscriptionErrorDataService.create(
+                    new SubscriptionError(msisdn, SubscriptionRejectionReason.INVALID_DOB, SubscriptionPackType.CHILD));
             return false;
         }
 
         return true;
-    }
-
-
-    private void setLocationFields(Map<String, Object> locations, MctsBeneficiary beneficiary) throws InvalidLocationException {
-
-        if (locations.get(STATE) == null && locations.get(DISTRICT) == null) {
-            throw new InvalidLocationException("Missing mandatory state and district fields");
-        }
-        
-        if (locations.get(STATE) == null) {
-            throw new InvalidLocationException("Missing mandatory state field");
-        }
-
-        if (locations.get(DISTRICT) == null) {
-            throw new InvalidLocationException("Missing mandatory district field");
-        }
-
-        beneficiary.setState((State) locations.get(STATE));
-        beneficiary.setDistrict((District) locations.get(DISTRICT));
-        beneficiary.setTaluka((Taluka) locations.get(TALUKA));
-        beneficiary.setHealthBlock((HealthBlock) locations.get(HEALTH_BLOCK));
-        beneficiary.setPrimaryHealthCenter((HealthFacility) locations.get(PHC));
-        beneficiary.setHealthSubFacility((HealthSubFacility) locations.get(SUBCENTRE));
-        beneficiary.setVillage((Village) locations.get(CENSUS_VILLAGE + NON_CENSUS_VILAGE));
     }
 
 
@@ -273,7 +251,7 @@ public class MctsBeneficiaryImportServiceImpl extends BaseMctsBeneficiaryService
         mapping.put(PHC, new Optional(new GetLong()));
         mapping.put(SUBCENTRE, new Optional(new GetLong()));
         mapping.put(CENSUS_VILLAGE, new Optional(new GetLong()));
-        mapping.put(NON_CENSUS_VILAGE, new Optional(new GetLong()));
+        mapping.put(NON_CENSUS_VILLAGE, new Optional(new GetLong()));
 
         return mapping;
     }
@@ -293,30 +271,7 @@ public class MctsBeneficiaryImportServiceImpl extends BaseMctsBeneficiaryService
         });
         mapping.put(BENEFICIARY_NAME, new GetString());
         mapping.put(MSISDN, new GetLong());
-        mapping.put(LMP, new GetInstanceByString<DateTime>() {
-            @Override
-            public DateTime retrieve(String value) {
-                if (value == null) {
-                    return null;
-                }
-
-                DateTime lmp;
-
-                try {
-                    DateTimeParser[] parsers = {
-                            DateTimeFormat.forPattern("dd-MM-yyyy").getParser(),
-                            DateTimeFormat.forPattern("dd/MM/yyyy").getParser()};
-                    DateTimeFormatter formatter = new DateTimeFormatterBuilder().append(null, parsers).toFormatter();
-
-                    lmp = formatter.parseDateTime(value);
-
-                } catch (IllegalArgumentException e) {
-                    throw new CsvImportDataException(String.format("LMP date %s is invalid", value), e);
-                }
-
-                return lmp;
-            }
-        });
+        mapping.put(LMP, getDateProcessor());
 
         // TODO: Any other fields needed for mothers? e.g. Abortion, etc.
 
@@ -347,33 +302,9 @@ public class MctsBeneficiaryImportServiceImpl extends BaseMctsBeneficiaryService
             }
         }));
         mapping.put(MSISDN, new GetLong());
-        mapping.put(DOB, new GetInstanceByString<DateTime>() {
-            @Override
-            public DateTime retrieve(String value) {
-                if (value == null) {
-                    return null;
-                }
-
-                DateTime dob;
-
-                try {
-                    DateTimeParser[] parsers = {
-                            DateTimeFormat.forPattern("dd-MM-yyyy").getParser(),
-                            DateTimeFormat.forPattern("dd/MM/yyyy").getParser()};
-                    DateTimeFormatter formatter = new DateTimeFormatterBuilder().append(null, parsers).toFormatter();
-
-                    dob = formatter.parseDateTime(value);
-
-                } catch (IllegalArgumentException e) {
-                    throw new CsvImportDataException(String.format("DOB date %s is invalid", value), e);
-                }
-
-                return dob;
-            }
-        });
+        mapping.put(DOB, getDateProcessor());
 
         return mapping;
-
     }
 
     private void readHeader(BufferedReader bufferedReader) throws IOException {
@@ -396,5 +327,6 @@ public class MctsBeneficiaryImportServiceImpl extends BaseMctsBeneficiaryService
         } while (null != line && StringUtils.isNotBlank(line));
         return line;
     }
+
 
 }

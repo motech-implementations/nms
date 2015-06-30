@@ -331,6 +331,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         subscriptionErrorDataService.create(error);
     }
 
+
+
     @Override
     public Subscription getActiveSubscription(Subscriber subscriber, SubscriptionPackType type) {
         Iterator<Subscription> subscriptionIterator = subscriber.getSubscriptions().iterator();

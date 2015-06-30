@@ -1,4 +1,4 @@
-package org.motechproject.nms.kilkari.service;
+package org.motechproject.nms.kilkari.csv;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -8,6 +8,6 @@ import java.io.Reader;
  */
 public interface MctsBeneficiaryUpdateService {
 
-    void updateMsisdn(Reader reader) throws IOException;
+    void updateBeneficiary(Reader reader) throws IOException;
 
 }

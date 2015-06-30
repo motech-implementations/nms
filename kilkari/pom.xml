@@ -95,6 +95,7 @@
                             org.motechproject.nms.kilkari.domain;version=${project.version},
                             org.motechproject.nms.kilkari.exception;version=${project.version},
                             org.motechproject.nms.kilkari.dto;version=${project.version},
+                            org.motechproject.nms.kilkari.csv;version=${project.version}
                         </Export-Package>
                         <Import-Package>
                             org.motechproject.osgi.web,
