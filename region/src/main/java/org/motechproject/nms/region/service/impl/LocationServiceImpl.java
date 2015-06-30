@@ -73,7 +73,7 @@ public class LocationServiceImpl implements LocationService {
         Map<String, Object> locations = new HashMap<>();
 
         // set state
-        if (locationMapping.get(STATE) == null || (Long)locationMapping.get(STATE) == 0) {
+        if (locationMapping.get(STATE) == null || (Long) locationMapping.get(STATE) == 0) {
             return locations;
         }
         State state = stateDataService.findByCode((Long) locationMapping.get(STATE));
@@ -83,7 +83,7 @@ public class LocationServiceImpl implements LocationService {
         locations.put(STATE, state);
 
         // set district
-        if (locationMapping.get(DISTRICT) == null || (Long)locationMapping.get(DISTRICT) == 0) {
+        if (locationMapping.get(DISTRICT) == null || (Long) locationMapping.get(DISTRICT) == 0) {
             return locations;
         }
         District district = districtService.findByStateAndCode(state, (Long) locationMapping.get(DISTRICT));
@@ -113,7 +113,7 @@ public class LocationServiceImpl implements LocationService {
             locations.put(HEALTH_BLOCK, healthBlock);
 
             // set health facility
-            if (locationMapping.get(PHC) == null || (Long)locationMapping.get(PHC) == 0) {
+            if (locationMapping.get(PHC) == null || (Long) locationMapping.get(PHC) == 0) {
                 return locations;
             }
             HealthFacility healthFacility = healthFacilityService.findByHealthBlockAndCode(healthBlock, (Long) locationMapping.get(PHC));
@@ -123,7 +123,7 @@ public class LocationServiceImpl implements LocationService {
             locations.put(PHC, healthFacility);
 
             // set health sub-facility
-            if (locationMapping.get(SUBCENTRE) == null || (Long)locationMapping.get(SUBCENTRE) == 0) {
+            if (locationMapping.get(SUBCENTRE) == null || (Long) locationMapping.get(SUBCENTRE) == 0) {
                 return locations;
             }
             HealthSubFacility healthSubFacility = healthSubFacilityService.findByHealthFacilityAndCode(healthFacility, (Long) locationMapping.get(SUBCENTRE));
