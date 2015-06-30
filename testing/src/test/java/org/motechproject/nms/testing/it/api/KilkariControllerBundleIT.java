@@ -71,7 +71,6 @@ import java.util.regex.Pattern;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 
@@ -1811,6 +1810,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
      * To check anonymous user is not able to access Kilkari with multiple
      * states in user's circle and service is not deployed in at least one of
      * these states.
+     * //TODO : FT doc needs correction.
      */
     @Test
     public void verifyFT126() throws IOException, InterruptedException {
@@ -1872,17 +1872,14 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         httpPost.setHeader("Content-type", "application/json");
         httpPost.setEntity(new StringEntity(subscriptionRequestJson));
 
-        String expectedJsonResponse = createFailureResponseJson("<KILKARI: Not Deployed In State>");
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
                 httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
-        assertEquals(expectedJsonResponse,
-                EntityUtils.toString(response.getEntity()));
-        assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, response.getStatusLine()
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine()
                 .getStatusCode());
         Subscriber subscriber = subscriberDataService
                 .findByCallingNumber(9999911122L);
-        assertNull(subscriber);
+        assertNotNull(subscriber);
 
     }
 
@@ -2267,16 +2264,19 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     public void verifyFT102() throws IOException, InterruptedException {
 
         // operator missing
+        Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
+        Subscription subscription = subscriber.getActiveAndPendingSubscriptions()
+                .iterator().next();
+        String subscriptionId = subscription.getSubscriptionId();
+
+        // circle missing
         HttpDeleteWithBody httpDelete = createDeactivateSubscriptionHttpDelete(
                 "1000000000", null, "AP", "123456789012345",
-                "77f13128-037e-4f98-8651-285fa618d94a");
-        String expectedJsonResponse = createFailureResponseJson("<operator: Not Present>");
+                subscriptionId);
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
                 httpDelete, ADMIN_USERNAME, ADMIN_PASSWORD);
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine()
                 .getStatusCode());
-        assertEquals(expectedJsonResponse,
-                EntityUtils.toString(response.getEntity()));
     }
 
 
@@ -2889,22 +2889,20 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     @Test
     public void verifyFT66() throws IOException, InterruptedException {
         // operator missing
-        HttpPost httpPost = createSubscriptionHttpPost("1234567890", null, "AP", "123456789012545", "10",
-                "childPack");
+        HttpPost httpPost = createSubscriptionHttpPost("1234567890", null, rh.delhiCircle().getName(), "123456789012545", rh.hindiLanguage().getCode(),
+                sh.childPack().getName());
 
-        String expectedJsonResponse = createFailureResponseJson("<operator: Not Present>");
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
 
-        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
-        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
+            assertEquals(HttpStatus.SC_OK, response.getStatusLine()
+                .getStatusCode());
     }
 
     /**
      * To verify the behavior of Create Subscription Request API if a mandatory
      * parameter : circle is missing from the API request.
      */
-    // TODO JIRA issue https://applab.atlassian.net/browse/NMS-194
-    @Ignore
     @Test
     public void verifyFT67() throws IOException, InterruptedException {
         // circle missing(optional parameter)
@@ -2918,6 +2916,9 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertEquals(HttpStatus.SC_OK, response.getStatusLine()
                 .getStatusCode());
     }
+
+
+    
 
     /**
      * To verify the behavior of Create Subscription Request API if a mandatory
@@ -3441,11 +3442,10 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 1, // callStatus
                 1, // callDisconnectReason
                 null)); // content
-        String expectedJsonResponse = createFailureResponseJson("<operator: Not Present>");
-
-        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
-        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine()
+                .getStatusCode());
     }
 
     /**
