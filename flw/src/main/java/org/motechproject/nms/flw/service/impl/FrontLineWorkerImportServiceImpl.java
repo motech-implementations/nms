@@ -11,8 +11,15 @@ import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.service.FrontLineWorkerImportService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.region.domain.District;
+import org.motechproject.nms.region.domain.HealthBlock;
+import org.motechproject.nms.region.domain.HealthFacility;
+import org.motechproject.nms.region.domain.HealthSubFacility;
 import org.motechproject.nms.region.domain.State;
+import org.motechproject.nms.region.domain.Taluka;
+import org.motechproject.nms.region.domain.Village;
+import org.motechproject.nms.region.exception.InvalidLocationException;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.service.LocationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +27,7 @@ import org.supercsv.cellprocessor.Optional;
 import org.supercsv.cellprocessor.ift.CellProcessor;
 import org.supercsv.prefs.CsvPreference;
 
+import javax.jdo.JDODataStoreException;
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 import java.io.BufferedReader;
@@ -27,7 +35,6 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 @Service("frontLineWorkerImportService")
@@ -36,10 +43,19 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
     public static final String ID = "ID";
     public static final String CONTACT_NO = "Contact_No";
     public static final String NAME = "Name";
+    private static final String STATE = "StateID";
     public static final String DISTRICT_ID = "District_ID";
+    private static final String TALUKA = "Taluka_ID";
+    private static final String HEALTH_BLOCK = "HealthBlock_ID";
+    private static final String PHC = "PHC_ID";
+    private static final String SUBCENTRE = "SubCentre_ID";
+    private static final String CENSUS_VILLAGE = "Village_ID";
+    private static final String NON_CENSUS_VILAGE = "SVID";
+
 
     private FrontLineWorkerService frontLineWorkerService;
     private StateDataService stateDataService;
+    private LocationService locationService;
 
     /*
         Expected file format:
@@ -63,10 +79,26 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
         try {
             Map<String, Object> record;
             while (null != (record = csvImporter.read())) {
-                frontLineWorkerService.add(processInstance(record, state));
+
+                FrontLineWorker flw = flwFromRecord(record, state);
+
+                record.put(STATE, state.getCode());
+                Map<String, Object> location = locationService.getLocations(record);
+
+                if (flw == null) {
+                    frontLineWorkerService.add(processInstance(record, location));
+                } else {
+                    frontLineWorkerService.update(processInstance(flw, record, location));
+                }
             }
         } catch (ConstraintViolationException e) {
             throw new CsvImportDataException(createErrorMessage(e.getConstraintViolations(), csvImporter.getRowNumber()), e);
+        } catch (InvalidLocationException e) {
+            throw new CsvImportDataException(createErrorMessage(e.getMessage(), csvImporter.getRowNumber()), e);
+        } catch (CsvImportDataException e) {
+            throw new CsvImportDataException(createErrorMessage(e.getMessage(), csvImporter.getRowNumber()), e);
+        } catch (JDODataStoreException e) {
+            throw new CsvImportDataException(createErrorMessage(e.getMessage(), csvImporter.getRowNumber()), e);
         }
     }
 
@@ -82,6 +114,31 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
         } else {
             throw new IllegalArgumentException("Invalid file format");
         }
+    }
+
+    private FrontLineWorker flwFromRecord(Map<String, Object> record, State state) {
+        FrontLineWorker flw = null;
+
+        String mctsFlwId = (String) record.get(ID);
+        Long msisdn = (Long) record.get(CONTACT_NO);
+
+        if (flw == null && mctsFlwId != null) {
+            flw = frontLineWorkerService.getByMctsFlwIdAndState(mctsFlwId, state);
+        }
+
+        if (flw == null && msisdn != null) {
+            flw = frontLineWorkerService.getByContactNumber(msisdn);
+
+            // If we loaded the flw by msisdn but the flw we found has a different mcts id
+            // then the data needs to be hand corrected since we don't know if the msisdn has changed or
+            // if the mcts id has changed.
+            if (flw != null && mctsFlwId != null && !mctsFlwId.equals(flw.getMctsFlwId())) {
+                throw new CsvImportDataException(String.format("Existing FLW with same MSISDN (%s) but " +
+                                        "different MCTS ID (%s != %s)", msisdn, mctsFlwId, flw.getMctsFlwId()));
+            }
+        }
+
+        return flw;
     }
 
     private String readLineWhileBlank(BufferedReader bufferedReader) throws IOException {
@@ -101,34 +158,51 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
     }
 
 
-    private FrontLineWorker processInstance(Map<String, Object> record, State state) {
+    private FrontLineWorker processInstance(Map<String, Object> record, Map<String, Object> location)
+            throws InvalidLocationException {
+        Long contactNumber = (Long) record.get(CONTACT_NO);
+
+        return processInstance(new FrontLineWorker(contactNumber), record, location);
+    }
+
+    private FrontLineWorker processInstance(FrontLineWorker flw, Map<String, Object> record,
+                                            Map<String, Object> location) throws InvalidLocationException {
+
         String mctsFlwId = (String) record.get(ID);
         Long contactNumber = (Long) record.get(CONTACT_NO);
         String name = (String) record.get(NAME);
-        Long districtId = (Long) record.get(DISTRICT_ID);
-        District district = getDistrictById(state, districtId);
 
-        FrontLineWorker instance = new FrontLineWorker(contactNumber);
-        instance.setMctsFlwId(mctsFlwId);
-        instance.setName(name);
-        instance.setDistrict(district);
-        if (null != district) {
-            instance.setLanguage(district.getLanguage());
-        }
-        return instance;
+        flw.setContactNumber(contactNumber);
+        flw.setMctsFlwId(mctsFlwId);
+        flw.setName(name);
+
+        setFrontLineWorkerLocation(flw, location);
+
+        flw.setLanguage(flw.getDistrict().getLanguage());
+
+        return flw;
     }
 
-    private District getDistrictById(State state, Long districtId) {
-        if (null == districtId) {
-            return null;
-        } else {
-            for (District district : state.getDistricts()) {
-                if (Objects.equals(district.getCode(), districtId)) {
-                    return district;
-                }
-            }
-            throw new CsvImportDataException("District does not exists");
+    private void setFrontLineWorkerLocation(FrontLineWorker flw, Map<String, Object> locations) throws InvalidLocationException {
+        if (locations.get(STATE) == null && locations.get(DISTRICT_ID) == null) {
+            throw new InvalidLocationException("Missing mandatory state and district fields");
         }
+
+        if (locations.get(STATE) == null) {
+            throw new InvalidLocationException("Missing mandatory state field");
+        }
+
+        if (locations.get(DISTRICT_ID) == null) {
+            throw new InvalidLocationException("Missing mandatory district field");
+        }
+
+        flw.setState((State) locations.get(STATE));
+        flw.setDistrict((District) locations.get(DISTRICT_ID));
+        flw.setTaluka((Taluka) locations.get(TALUKA));
+        flw.setHealthBlock((HealthBlock) locations.get(HEALTH_BLOCK));
+        flw.setHealthFacility((HealthFacility) locations.get(PHC));
+        flw.setHealthSubFacility((HealthSubFacility) locations.get(SUBCENTRE));
+        flw.setVillage((Village) locations.get(CENSUS_VILLAGE + NON_CENSUS_VILAGE));
     }
 
     private Map<String, CellProcessor> getProcessorMapping() {
@@ -137,7 +211,18 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
         mapping.put(CONTACT_NO, new GetLong());
         mapping.put(NAME, new GetString());
         mapping.put(DISTRICT_ID, new Optional(new GetLong()));
+        mapping.put(TALUKA, new Optional(new GetString()));
+        mapping.put(HEALTH_BLOCK, new Optional(new GetLong()));
+        mapping.put(PHC, new Optional(new GetLong()));
+        mapping.put(SUBCENTRE, new Optional(new GetLong()));
+        mapping.put(CENSUS_VILLAGE, new Optional(new GetLong()));
+        mapping.put(NON_CENSUS_VILAGE, new Optional(new GetLong()));
+
         return mapping;
+    }
+
+    private String createErrorMessage(String message, int rowNumber) {
+        return String.format("CSV instance error [row: %d]: %s", rowNumber, message);
     }
 
     private String createErrorMessage(Set<ConstraintViolation<?>> violations, int rowNumber) {
@@ -159,5 +244,10 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
     @Autowired
     public void setStateDataService(StateDataService stateDataService) {
         this.stateDataService = stateDataService;
+    }
+
+    @Autowired
+    public void setLocationService(LocationService locationService) {
+        this.locationService = locationService;
     }
 }

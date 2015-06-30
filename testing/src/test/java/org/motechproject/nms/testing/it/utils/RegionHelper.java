@@ -277,7 +277,7 @@ public class RegionHelper {
         return healthFacilityType;
     }
 
-    public static HealthSubFacility createHealthSubFacilityType(String name, Long code, HealthFacility healthFacility) {
+    public static HealthSubFacility createHealthSubFacility(String name, Long code, HealthFacility healthFacility) {
         HealthSubFacility healthSubFacility = new HealthSubFacility();
         healthSubFacility.setName(name);
         healthSubFacility.setCode(code);

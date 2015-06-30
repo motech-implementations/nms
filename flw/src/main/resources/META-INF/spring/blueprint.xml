@@ -60,6 +60,9 @@
     <osgi:reference id="whitelistStateDataService"
                     interface="org.motechproject.nms.flw.repository.WhitelistStateDataService" />
 
+    <osgi:reference id="locationService"
+                    interface="org.motechproject.nms.region.service.LocationService" />
+
     <osgi:reference id="stateDataService"
                     interface="org.motechproject.nms.region.repository.StateDataService" />
 
