@@ -3,6 +3,7 @@ package org.motechproject.nms.kilkari.domain;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.nms.region.domain.District;
+import org.motechproject.nms.region.domain.FullLocation;
 import org.motechproject.nms.region.domain.HealthBlock;
 import org.motechproject.nms.region.domain.HealthFacility;
 import org.motechproject.nms.region.domain.HealthSubFacility;
@@ -16,8 +17,9 @@ import javax.validation.constraints.NotNull;
 /**
  * A beneficiary (mother or child) sourced from MCTS.
  */
+//@ValidFullLocation
 @Entity(tableName = "nms_mcts_beneficiaries")
-public abstract class MctsBeneficiary {
+public abstract class MctsBeneficiary implements FullLocation {
 
     // 18-digit IDs are used for most states but not all, so a strict length constraint cannot be set for this column
     @Field
@@ -77,58 +79,72 @@ public abstract class MctsBeneficiary {
         this.name = name;
     }
 
+    @Override
     public State getState() {
         return state;
     }
 
+    @Override
     public void setState(State state) {
         this.state = state;
     }
 
+    @Override
     public District getDistrict() {
         return district;
     }
 
+    @Override
     public void setDistrict(District district) {
         this.district = district;
     }
 
+    @Override
     public Taluka getTaluka() {
         return taluka;
     }
 
+    @Override
     public void setTaluka(Taluka taluka) {
         this.taluka = taluka;
     }
 
+    @Override
     public HealthBlock getHealthBlock() {
         return healthBlock;
     }
 
+    @Override
     public void setHealthBlock(HealthBlock healthBlock) {
         this.healthBlock = healthBlock;
     }
 
-    public HealthFacility getPrimaryHealthCenter() {
+    @Override
+    public HealthFacility getHealthFacility() {
         return primaryHealthCenter;
     }
 
-    public void setPrimaryHealthCenter(HealthFacility primaryHealthCenter) {
+    @Override
+    public void setHealthFacility(HealthFacility primaryHealthCenter) {
         this.primaryHealthCenter = primaryHealthCenter;
     }
 
+    @Override
     public HealthSubFacility getHealthSubFacility() {
         return healthSubFacility;
     }
 
+    @Override
     public void setHealthSubFacility(HealthSubFacility healthSubFacility) {
         this.healthSubFacility = healthSubFacility;
     }
 
+    @Override
     public Village getVillage() {
         return village;
     }
 
+    @Override
     public void setVillage(Village village) {
         this.village = village;
     }

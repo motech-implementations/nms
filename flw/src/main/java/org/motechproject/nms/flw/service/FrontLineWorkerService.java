@@ -21,7 +21,7 @@ public interface FrontLineWorkerService {
 
     FrontLineWorker getByFlwId(String flwId);
 
-    FrontLineWorker getByMctsFlwId(String mctsFlwId);
+    FrontLineWorker getByMctsFlwIdAndState(String mctsFlwId, State state);
 
     List<FrontLineWorker> getRecords();
 

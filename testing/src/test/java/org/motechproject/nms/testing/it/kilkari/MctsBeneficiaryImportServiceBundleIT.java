@@ -1,27 +1,6 @@
 package org.motechproject.nms.testing.it.kilkari;
 
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.motechproject.nms.testing.it.utils.RegionHelper.createDistrict;
-import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthBlock;
-import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthFacility;
-import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthFacilityType;
-import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthSubFacilityType;
-import static org.motechproject.nms.testing.it.utils.RegionHelper.createState;
-import static org.motechproject.nms.testing.it.utils.RegionHelper.createTaluka;
-import static org.motechproject.nms.testing.it.utils.RegionHelper.createVillage;
-
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.StringReader;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
-
-import javax.inject.Inject;
-
 import org.joda.time.DateTime;
 import org.joda.time.Days;
 import org.joda.time.format.DateTimeFormat;
@@ -66,6 +45,26 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
+
+import javax.inject.Inject;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.StringReader;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createDistrict;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthBlock;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthFacility;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthFacilityType;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthSubFacility;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createState;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createTaluka;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createVillage;
 
 
 @RunWith(PaxExam.class)
@@ -149,16 +148,16 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         HealthFacility healthFacility114 = createHealthFacility(healthBlock153, 114L, "CHC Tileibani", facilityType114);
         healthBlock153.getHealthFacilities().add(healthFacility114);
 
-        HealthSubFacility subFacilityType7389 = createHealthSubFacilityType("Babuniktimal", 7389L, healthFacility41);
+        HealthSubFacility subFacilityType7389 = createHealthSubFacility("Babuniktimal", 7389L, healthFacility41);
         healthFacility41.getHealthSubFacilities().add(subFacilityType7389);
 
-        HealthSubFacility subFacilityType7393 = createHealthSubFacilityType("Jarabaga", 7393L, healthFacility41);
+        HealthSubFacility subFacilityType7393 = createHealthSubFacility("Jarabaga", 7393L, healthFacility41);
         healthFacility41.getHealthSubFacilities().add(subFacilityType7393);
 
-        HealthSubFacility subFacilityType2104 = createHealthSubFacilityType("Chupacabra", 2104L, healthFacility635);
+        HealthSubFacility subFacilityType2104 = createHealthSubFacility("Chupacabra", 2104L, healthFacility635);
         healthFacility635.getHealthSubFacilities().add(subFacilityType2104);
 
-        HealthSubFacility subFacilityType342 = createHealthSubFacilityType("El Dorado", 342L, healthFacility114);
+        HealthSubFacility subFacilityType342 = createHealthSubFacility("El Dorado", 342L, healthFacility114);
         healthFacility114.getHealthSubFacilities().add(subFacilityType342);
 
         Village village10004693 = createVillage(taluka24, 10004693L, 0, "Khairdihi");
