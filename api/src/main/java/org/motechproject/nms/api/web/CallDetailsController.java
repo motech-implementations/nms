@@ -3,6 +3,7 @@ package org.motechproject.nms.api.web;
 import org.joda.time.DateTime;
 import org.motechproject.nms.api.web.contract.CallContentRequest;
 import org.motechproject.nms.api.web.contract.CallDetailRecordRequest;
+import org.motechproject.nms.api.web.contract.LogHelper;
 import org.motechproject.nms.api.web.exception.NotFoundException;
 import org.motechproject.nms.flw.domain.CallContent;
 import org.motechproject.nms.flw.domain.CallDetailRecord;
@@ -54,6 +55,9 @@ public class CallDetailsController extends BaseController {
     @Transactional
     public void saveCallDetails(@PathVariable String serviceName,
                                 @RequestBody CallDetailRecordRequest callDetailRecordRequest) {
+
+        log(String.format("/%s/callDetails", serviceName), LogHelper.nullOrString(callDetailRecordRequest));
+
         Service service = null;
         StringBuilder failureReasons;
 

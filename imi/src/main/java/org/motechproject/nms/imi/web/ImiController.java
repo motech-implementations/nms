@@ -1,5 +1,6 @@
 package org.motechproject.nms.imi.web;
 
+import org.apache.commons.lang3.StringUtils;
 import org.motechproject.nms.imi.domain.FileAuditRecord;
 import org.motechproject.nms.imi.domain.FileType;
 import org.motechproject.nms.imi.exception.ExecException;
@@ -41,6 +42,7 @@ public class ImiController {
     public static final String INVALID_STATUS_ENUM = "Can not construct instance of " +
             "org.motechproject.nms.imi.domain.FileProcessedStatus from String value";
     public static final Pattern TARGET_FILENAME_PATTERN = Pattern.compile("OBD_NMS_[0-9]{14}\\.csv");
+    public static final String IVR_INTERACTION_LOG = "IVR INTERACTION: %s";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ImiController.class);
 
@@ -57,6 +59,11 @@ public class ImiController {
         this.cdrFileService = cdrFileService;
         this.targetFileService = targetFileService;
         this.fileAuditRecordDataService = fileAuditRecordDataService;
+    }
+
+
+    protected static void log(final String endpoint, final String s) {
+        LOGGER.info(IVR_INTERACTION_LOG.format(endpoint) + (StringUtils.isBlank(s) ? "" : " : " + s));
     }
 
 
@@ -130,6 +137,9 @@ public class ImiController {
             headers = { "Content-type=application/json" })
     @ResponseStatus(HttpStatus.ACCEPTED)
     public void notifyNewCdrFile(@RequestBody CdrFileNotificationRequest request) {
+
+        log("cdrFileNotification", request.toString());
+
         StringBuilder failureReasons = new StringBuilder();
         validateTargetFileName(failureReasons, request.getFileName());
         validateCdrFileInfo(failureReasons, request.getCdrSummary(), "cdrSummary",
@@ -184,6 +194,9 @@ public class ImiController {
             headers = { "Content-type=application/json" })
     @ResponseStatus(HttpStatus.OK)
     public void notifyFileProcessedStatus(@RequestBody FileProcessedStatusRequest request) {
+
+        log("obdFileProcessedStatusNotification", request.toString());
+
         StringBuilder failureReasons = new StringBuilder();
 
         validateFieldPresent(failureReasons, "fileProcessedStatus",
@@ -230,6 +243,8 @@ public class ImiController {
         }
         return new BadRequest(e.getMessage());
     }
+
+
 
 
     /**

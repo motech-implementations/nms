@@ -16,6 +16,7 @@ import org.motechproject.nms.imi.service.CdrFileService;
 import org.motechproject.nms.imi.service.SettingsService;
 import org.motechproject.nms.imi.web.contract.FileInfo;
 import org.motechproject.nms.kilkari.dto.CallDetailRecordDto;
+import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
@@ -51,6 +52,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
 
     private static final String PROCESS_DETAIL_FILE_SUBJECT = "nms.imi.kk.process_detail_file";
     private static final String FILE_INFO_PARAM_KEY = "fileInfo";
+    private static final long MAX_MILLISECOND_WAIT = 2000L;
 
     private static final String INITIAL_RETRY_DELAY = "imi.initial_retry_delay";
     private static final String MAX_CDR_ERROR_COUNT = "imi.max_cdr_error_count";
@@ -79,6 +81,8 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
     DistrictService districtService;
     @Inject
     FileAuditRecordDataService fileAuditRecordDataService;
+    @Inject
+    CallRetryDataService callRetryDataService;
 
 
     @Inject
@@ -185,7 +189,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
                 subscriptionPackDataService, languageDataService, circleDataService, stateDataService,
                 districtDataService, fileAuditRecordDataService, districtService);
 
-        helper.makeCdrs(5,0,0,0);
+        helper.makeCdrs(5, 0, 0, 0);
         helper.makeLocalCdrFile(5);
         FileInfo fileInfo = new FileInfo(helper.cdr(), helper.cdrLocalChecksum(), helper.cdrCount());
         try {
@@ -199,7 +203,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
 
 
     @Test
-    public void testProcess() throws IOException, NoSuchAlgorithmException {
+    public void testProcess() throws IOException, NoSuchAlgorithmException, InterruptedException {
 
         CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
                 subscriptionPackDataService, languageDataService, circleDataService, stateDataService,
@@ -219,6 +223,23 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         AlertCriteria criteria = new AlertCriteria().byExternalId(helper.cdrLocalFileInfo().getCdrFile());
         List<Alert> alerts = alertService.search(criteria);
         assertEquals(4, alerts.size()); //three warnings plus one error
+
+        // Fancy code that waits for all 4 CDRs to be processed
+        long start = System.currentTimeMillis();
+        while (true) {
+            //Now verify that we should be rescheduling one call (the failed one)
+            if (callRetryDataService.count() == 1) {
+                getLogger().debug("Found retry record in {} ms", System.currentTimeMillis() - start);
+                return;
+            }
+
+            Thread.sleep(100L);
+
+            if (System.currentTimeMillis() - start > MAX_MILLISECOND_WAIT) {
+                assertTrue("Timeout while waiting for CSR processing", false);
+            }
+        }
+
     }
 
 

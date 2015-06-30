@@ -50,4 +50,13 @@ public class UserLanguageRequest {
     public void setLanguageLocationCode(String languageLocationCode) {
         this.languageLocationCode = languageLocationCode;
     }
+
+    @Override
+    public String toString() {
+        return "UserLanguageRequest{" +
+                "callingNumber=" + LogHelper.obscure(callingNumber) +
+                ", callId=" + callId +
+                ", languageLocationCode='" + languageLocationCode + '\'' +
+                '}';
+    }
 }

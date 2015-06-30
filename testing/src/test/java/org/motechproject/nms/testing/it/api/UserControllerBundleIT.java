@@ -792,19 +792,31 @@ public class UserControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testNoOperator() throws IOException, InterruptedException {
+
+
+        createKilkariTestData();
+
         HttpGet httpGet = createHttpGet(
                 true, "kilkari",        //service
-                true, "1111111111",     //callingNumber
-                false, null,            //operator
-                true, "AA",             //circle
+                true, "9999999999",     //callingNumber
+                false, null,             //operator
+                true, rh.delhiCircle().getName(),//circle
                 true, "123456789012345" //callId
         );
 
-        String expectedJsonResponse = createFailureResponseJson("<operator: Not Present>");
+
+
+        String expectedJsonResponse = createKilkariUserResponseJson(
+                rh.hindiLanguage().getCode(), //defaultLanguageLocationCode
+                null, //locationCode
+                Collections.singletonList(rh.hindiLanguage().getCode()), // allowedLanguageLocationCodes
+                new HashSet<String>() //subscriptionPackList
+        );
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
         assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
+
     }
 
     @Test

@@ -1,5 +1,6 @@
 package org.motechproject.nms.api.web;
 
+import org.motechproject.nms.api.web.contract.LogHelper;
 import org.motechproject.nms.api.web.contract.kilkari.CallDataRequest;
 import org.motechproject.nms.api.web.contract.kilkari.InboxCallDetailsRequest;
 import org.motechproject.nms.api.web.contract.kilkari.InboxResponse;
@@ -84,6 +85,9 @@ public class KilkariController extends BaseController {
     public InboxResponse getInboxDetails(@RequestParam(required = false) Long callingNumber,
                                          @RequestParam(required = false) Long callId) {
 
+        log("/kilkari/inbox", String.format("callingNumber=%s, callId=%s",
+                LogHelper.obscure(callingNumber), callId));
+
         StringBuilder failureReasons = validate(callingNumber, callId);
         if (failureReasons.length() > 0) {
             throw new IllegalArgumentException(failureReasons.toString());
@@ -126,8 +130,8 @@ public class KilkariController extends BaseController {
             // Empty content is acceptable (when the IVR vendor plays promotional content)
             return;
         }
-        if (content.size() != 2) {
-            // Valid content must contain two elements
+        if (content.size() > 2) {
+            // Valid content must contain max two elements
             failureReasons.append(String.format(INVALID, "content"));
             return;
         }
@@ -143,7 +147,7 @@ public class KilkariController extends BaseController {
         }
 
         //check we have all required subscription packs
-        if (!SUBSCRIPTION_PACK_SET.equals(subscriptionPacks)) {
+        if (!SUBSCRIPTION_PACK_SET.containsAll(subscriptionPacks)) {
             failureReasons.append(String.format(INVALID, "subscriptionPack"));
         }
 
@@ -182,6 +186,9 @@ public class KilkariController extends BaseController {
     @ResponseStatus(HttpStatus.OK)
     @Transactional
     public void saveInboxCallDetails(@RequestBody InboxCallDetailsRequest request) {
+
+        log("/kilkari/inboxCallDetails", LogHelper.nullOrString(request));
+
         StringBuilder failureReasons = validateSaveInboxCallDetails(request);
         if (failureReasons.length() > 0) {
             throw new IllegalArgumentException(failureReasons.toString());
@@ -227,6 +234,9 @@ public class KilkariController extends BaseController {
     @ResponseStatus(HttpStatus.OK)
     @Transactional
     public void createSubscription(@RequestBody SubscriptionRequest subscriptionRequest) {
+
+        log("/kilkari/subscription (POST)", LogHelper.nullOrString(subscriptionRequest));
+
         StringBuilder failureReasons = validate(subscriptionRequest.getCallingNumber(),
                                                 subscriptionRequest.getCallId(),
                                                 subscriptionRequest.getOperator(),
@@ -245,7 +255,10 @@ public class KilkariController extends BaseController {
             throw new NotFoundException(String.format(NOT_FOUND, "languageLocationCode"));
         }
 
+
         Circle circle = circleService.getByName(subscriptionRequest.getCircle());
+
+
         State state = getSingleStateFromCircleAndLanguage(circle, language);
         if (!propertyService.isServiceDeployedInState(Service.KILKARI, state)) {
             throw new NotDeployedException(String.format(NOT_DEPLOYED, Service.KILKARI));
@@ -262,15 +275,22 @@ public class KilkariController extends BaseController {
     }
 
     private State getSingleStateFromCircleAndLanguage(Circle circle, Language language) {
+
+
+
         Set<State> stateSet = languageService.getAllStatesForLanguage(language);
 
         if (stateSet.size() == 1) {
             return stateSet.iterator().next();
         }
 
+        if (circle != null) {
+
         List<State> stateList = circle.getStates();
-        if (stateList.size() == 1) {
+            if (stateList.size() == 1) {
             return stateList.get(0);
+            }
+
         }
 
         return null;
@@ -287,6 +307,9 @@ public class KilkariController extends BaseController {
     @ResponseStatus(HttpStatus.OK)
     @Transactional
     public void deactivateSubscription(@RequestBody SubscriptionRequest subscriptionRequest) {
+
+        log("/kilkari/subscription (DELETE)", LogHelper.nullOrString(subscriptionRequest));
+
         StringBuilder failureReasons = validate(subscriptionRequest.getCallingNumber(),
                 subscriptionRequest.getCallId(), subscriptionRequest.getOperator(),
                 subscriptionRequest.getCircle());

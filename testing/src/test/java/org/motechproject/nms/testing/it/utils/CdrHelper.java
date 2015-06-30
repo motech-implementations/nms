@@ -190,7 +190,7 @@ public class CdrHelper {
         for (int i=0 ; i<numFailed ; i++) {
             Subscription sub = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(30));
             CallDetailRecordDto cdr = makeCdrFile(sub);
-            cdr.setStatusCode(StatusCode.OBD_SUCCESS_CALL_CONNECTED);
+            cdr.setStatusCode(StatusCode.OBD_FAILED_NOANSWER);
             cdr.setContentFile(sh.childPack().getMessages().get(5).getMessageFileName());
             cdr.setCallDisconnectReason(CallDisconnectReason.NORMAL_DROP);
             cdr.setWeekId("w5_1");

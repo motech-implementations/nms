@@ -398,6 +398,8 @@ public class CdrFileServiceImpl implements CdrFileService {
                 }
                 lineNumber++;
             }
+            sendProcessSummaryRecordEvent(csr);
+
 
         } catch (IOException e) {
             String error = String.format("Unable to read %s: %s", fileName, e.getMessage());

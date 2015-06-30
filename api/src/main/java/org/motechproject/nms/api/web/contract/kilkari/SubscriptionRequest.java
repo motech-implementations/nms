@@ -1,5 +1,7 @@
 package org.motechproject.nms.api.web.contract.kilkari;
 
+import org.motechproject.nms.api.web.contract.LogHelper;
+
 /**
  * Request body
  *
@@ -106,4 +108,16 @@ public class SubscriptionRequest {
         this.subscriptionId = subscriptionId;
     }
 
+    @Override
+    public String toString() {
+        return "SubscriptionRequest{" +
+                "callingNumber=" + LogHelper.obscure(callingNumber) +
+                ", operator='" + operator + '\'' +
+                ", circle='" + circle + '\'' +
+                ", callId=" + callId +
+                ", languageLocationCode='" + languageLocationCode + '\'' +
+                ", subscriptionPack='" + subscriptionPack + '\'' +
+                ", subscriptionId='" + subscriptionId + '\'' +
+                '}';
+    }
 }

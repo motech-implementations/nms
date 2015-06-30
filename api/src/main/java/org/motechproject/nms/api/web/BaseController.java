@@ -1,5 +1,6 @@
 package org.motechproject.nms.api.web;
 
+import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.motechproject.nms.api.web.contract.BadRequest;
 import org.motechproject.nms.api.web.exception.NotAuthorizedException;
@@ -43,6 +44,8 @@ public class BaseController {
     public static final String NOT_AUTHORIZED = "<%s: Not Authorized>";
     public static final String NOT_DEPLOYED = "<%s: Not Deployed In State>";
 
+    public static final String IVR_INTERACTION_LOG = "IVR INTERACTION: %s";
+
     public static final long SMALLEST_10_DIGIT_NUMBER = 1000000000L;
     public static final long LARGEST_10_DIGIT_NUMBER  = 9999999999L;
     public static final long SMALLEST_15_DIGIT_NUMBER = 100000000000000L;
@@ -62,6 +65,14 @@ public class BaseController {
     @Autowired
     private FrontLineWorkerService frontLineWorkerService;
 
+
+    protected static void log(final String endpoint, final String s) {
+        LOGGER.info(IVR_INTERACTION_LOG.format(endpoint) + (StringUtils.isBlank(s) ? "" : " : " + s));
+    }
+
+    protected static void log(final String endpoint) {
+        log(endpoint, null);
+    }
 
     protected static boolean validateFieldPresent(StringBuilder errors, String fieldName, Object value) {
         if (value != null) {
@@ -177,7 +188,7 @@ public class BaseController {
     protected StringBuilder validate(Long callingNumber, Long callId, String operator, String circle) {
         StringBuilder failureReasons = validate(callingNumber, callId);
 
-        validateRequiredFieldMaxLength(failureReasons, "operator", operator, MAX_LENGTH_255);
+        validateFieldMaxLength(failureReasons, "operator", operator, MAX_LENGTH_255);
 
         validateFieldMaxLength(failureReasons, "circle", circle, MAX_LENGTH_255);
 
