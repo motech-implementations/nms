@@ -748,8 +748,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertTrue(123 == inboxCallDetailRecord.getCallDurationInPulses());
         assertTrue(2 == inboxCallDetailRecord.getCallStatus());
         assertTrue(4 == inboxCallDetailRecord.getCallDisconnectReason());
-        assertTrue(123L == inboxCallDetailRecord.getCallStartTime().getMillis());
-        assertTrue(456L == inboxCallDetailRecord.getCallEndTime().getMillis());
+        assertTrue(123000L == inboxCallDetailRecord.getCallStartTime().getMillis());
+        assertTrue(456000L == inboxCallDetailRecord.getCallEndTime().getMillis());
 
     }
 
@@ -804,16 +804,16 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertTrue(123 == inboxCallDetailRecord.getCallDurationInPulses());
         assertTrue(1 == inboxCallDetailRecord.getCallStatus());
         assertTrue(1 == inboxCallDetailRecord.getCallDisconnectReason());
-        assertTrue(123L == inboxCallDetailRecord.getCallStartTime().getMillis());
-        assertTrue(456L == inboxCallDetailRecord.getCallEndTime().getMillis());
+        assertTrue(123000L == inboxCallDetailRecord.getCallStartTime().getMillis());
+        assertTrue(456000L == inboxCallDetailRecord.getCallEndTime().getMillis());
 
         // assert inboxCallData for both packs
         InboxCallData inboxCallData48Pack = inboxCallDataDataService.retrieve(
                 "contentFileName", "foo1.wav");
         assertEquals("foo1.wav", inboxCallData48Pack.getContentFileName());
-        assertTrue(456L == inboxCallData48Pack.getEndTime().getMillis());
+        assertTrue(456000L == inboxCallData48Pack.getEndTime().getMillis());
         assertEquals("123", inboxCallData48Pack.getInboxWeekId());
-        assertTrue(123L == inboxCallData48Pack.getStartTime().getMillis());
+        assertTrue(123000L == inboxCallData48Pack.getStartTime().getMillis());
         assertEquals(subscription1.getSubscriptionId(),
                 inboxCallData48Pack.getSubscriptionId());
         assertEquals("48WeeksPack", inboxCallData48Pack.getSubscriptionPack());
@@ -821,9 +821,9 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         InboxCallData inboxCallData72Pack = inboxCallDataDataService.retrieve(
                 "contentFileName", "foo2.wav");
         assertEquals("foo2.wav", inboxCallData72Pack.getContentFileName());
-        assertTrue(678L == inboxCallData72Pack.getEndTime().getMillis());
+        assertTrue(678000L == inboxCallData72Pack.getEndTime().getMillis());
         assertEquals("124", inboxCallData72Pack.getInboxWeekId());
-        assertTrue(192L == inboxCallData72Pack.getStartTime().getMillis());
+        assertTrue(192000L == inboxCallData72Pack.getStartTime().getMillis());
         assertEquals(subscription2.getSubscriptionId(),
                 inboxCallData72Pack.getSubscriptionId());
         assertEquals("72WeeksPack", inboxCallData72Pack.getSubscriptionPack());
@@ -1914,8 +1914,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertTrue(123 == inboxCallDetailRecord.getCallDurationInPulses());
         assertTrue(2 == inboxCallDetailRecord.getCallStatus());
         assertTrue(4 == inboxCallDetailRecord.getCallDisconnectReason());
-        assertTrue(123L == inboxCallDetailRecord.getCallStartTime().getMillis());
-        assertTrue(456L == inboxCallDetailRecord.getCallEndTime().getMillis());
+        assertTrue(123000L == inboxCallDetailRecord.getCallStartTime().getMillis());
+        assertTrue(456000L == inboxCallDetailRecord.getCallEndTime().getMillis());
 
         // subscribed caller with deactivated subscription i.e no active and
         // pending subscriptions
@@ -1953,9 +1953,9 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 (int) inboxCallDetailRecord2.getCallDurationInPulses());
         assertEquals(3, (int) inboxCallDetailRecord2.getCallStatus());
         assertEquals(5, (int) inboxCallDetailRecord2.getCallDisconnectReason());
-        assertEquals(123L, (long) inboxCallDetailRecord2.getCallStartTime()
+        assertEquals(123000L, (long) inboxCallDetailRecord2.getCallStartTime()
                 .getMillis());
-        assertEquals(456L, (long) inboxCallDetailRecord2.getCallEndTime()
+        assertEquals(456000L, (long) inboxCallDetailRecord2.getCallEndTime()
                 .getMillis());
     }
 
