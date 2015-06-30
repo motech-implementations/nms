@@ -4,7 +4,6 @@ import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.After;
 import org.junit.Before;
@@ -109,8 +108,13 @@ public class ImiControllerObdBundleIT extends BasePaxIT {
     @Test
     public void testCreateFileProcessedStatusRequest() throws IOException, InterruptedException {
         getLogger().debug("testCreateFileProcessedStatusRequest()");
-        HttpPost httpPost = createFileProcessedStatusHttpPost("file.csv",
-                FileProcessedStatus.FILE_PROCESSED_SUCCESSFULLY);
+        String requestJson = "{\"fileProcessedStatus\":8000,\"fileName\":\"file.csv\"}";
+        HttpPost httpPost = new HttpPost(String.format(
+                "http://localhost:%d/imi/obdFileProcessedStatusNotification",
+                TestContext.getJettyPort()));
+        httpPost.setHeader("Content-type", "application/json");
+        httpPost.setEntity(new StringEntity(requestJson));
+
         fileAuditRecordDataService.create(new FileAuditRecord(FileType.TARGET_FILE, "file.csv", true, null, null,
                 null));
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK, ImiTestHelper.ADMIN_USERNAME, ImiTestHelper.ADMIN_PASSWORD));
@@ -130,8 +134,13 @@ public class ImiControllerObdBundleIT extends BasePaxIT {
     @Test
     public void testCreateFileProcessedStatusRequestNoFileName() throws IOException, InterruptedException {
         getLogger().debug("testCreateFileProcessedStatusRequestNoFileName()");
-        HttpPost httpPost = createFileProcessedStatusHttpPost(null,
-                FileProcessedStatus.FILE_PROCESSED_SUCCESSFULLY);
+
+        String requestJson = "{\"fileProcessedStatus\":8000}";
+        HttpPost httpPost = new HttpPost(String.format(
+                "http://localhost:%d/imi/obdFileProcessedStatusNotification",
+                TestContext.getJettyPort()));
+        httpPost.setHeader("Content-type", "application/json");
+        httpPost.setEntity(new StringEntity(requestJson));
 
         String expectedJsonResponse = createFailureResponseJson("<fileName: Not Present>");
 
@@ -142,8 +151,12 @@ public class ImiControllerObdBundleIT extends BasePaxIT {
     @Test
     public void testCreateFileProcessedStatusRequestWithError() throws IOException, InterruptedException {
         getLogger().debug("testCreateFileProcessedStatusRequestWithError()");
-        HttpPost httpPost = createFileProcessedStatusHttpPost("file.csv",
-                FileProcessedStatus.FILE_ERROR_IN_FILE_FORMAT);
+        String requestJson = "{\"fileProcessedStatus\":8005,\"fileName\":\"file.csv\"}";
+        HttpPost httpPost = new HttpPost(String.format(
+                "http://localhost:%d/imi/obdFileProcessedStatusNotification",
+                TestContext.getJettyPort()));
+        httpPost.setHeader("Content-type", "application/json");
+        httpPost.setEntity(new StringEntity(requestJson));
 
         fileAuditRecordDataService.create(new FileAuditRecord(FileType.TARGET_FILE, "file.csv", false, "ERROR",
                 null, null));
@@ -161,6 +174,7 @@ public class ImiControllerObdBundleIT extends BasePaxIT {
     * Invoke "NotifyFileProcessedStatus" API having mandatory parameter
     * fileProcessedStatus having invalid value(i.e status code which doesn’t exist in system).
     */
+
     @Test
     public void verifyFT200() throws IOException, InterruptedException {
         getLogger().debug("testCreateFileProcessedStatusRequestWithInvalidFileProcessedStatusError()");
@@ -174,12 +188,34 @@ public class ImiControllerObdBundleIT extends BasePaxIT {
         fileAuditRecordDataService.create(new FileAuditRecord(FileType.TARGET_FILE, "file.csv", false, "ERROR",
                 null, null));
 
-        String expectedJsonResponse = createFailureResponseJson("<fileProcessedStatus: Invalid Value>");
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ImiTestHelper.ADMIN_USERNAME,
                 ImiTestHelper.ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
-        assertEquals(expectedJsonResponse,  EntityUtils.toString(response.getEntity()));
+
+    }
+
+
+    /*
+    * NMS-214
+    */
+    @Test
+    public void verifyNMS214() throws IOException, InterruptedException {
+        getLogger().debug("testCreateFileProcessedStatusRequestWithInvalidFileProcessedStatusError()");
+        String requestJson = "{\"fileProcessedStatus\":8000,\"fileName\":\"file.csv\"}";
+        HttpPost httpPost = new HttpPost(String.format(
+                "http://localhost:%d/imi/obdFileProcessedStatusNotification",
+                TestContext.getJettyPort()));
+        httpPost.setHeader("Content-type", "application/json");
+        httpPost.setEntity(new StringEntity(requestJson));
+
+        fileAuditRecordDataService.create(new FileAuditRecord(FileType.TARGET_FILE, "file.csv", false, "ERROR",
+                null, null));
+
+       HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ImiTestHelper.ADMIN_USERNAME,
+                ImiTestHelper.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+
     }
 
     /*
@@ -189,8 +225,13 @@ public class ImiControllerObdBundleIT extends BasePaxIT {
     @Test
     public void verifyFT193() throws IOException, InterruptedException {
         getLogger().debug("testCreateFileProcessedStatusRequestWithErrorFILE_NOT_ACCESSIBLE()");
-        HttpPost httpPost = createFileProcessedStatusHttpPost("file.csv",
-                FileProcessedStatus.FILE_NOT_ACCESSIBLE);
+
+        String requestJson = "{\"fileProcessedStatus\":8001,\"fileName\":\"file.csv\"}";
+        HttpPost httpPost = new HttpPost(String.format(
+                "http://localhost:%d/imi/obdFileProcessedStatusNotification",
+                TestContext.getJettyPort()));
+        httpPost.setHeader("Content-type", "application/json");
+        httpPost.setEntity(new StringEntity(requestJson));
 
         fileAuditRecordDataService.create(new FileAuditRecord(FileType.TARGET_FILE, "file.csv", false, "ERROR",
                 null, null));
@@ -210,8 +251,12 @@ public class ImiControllerObdBundleIT extends BasePaxIT {
     @Test
     public void verifyFT194() throws IOException, InterruptedException {
         getLogger().debug("testCreateFileProcessedStatusRequestWithErrorFILE_CHECKSUM_ERROR()");
-        HttpPost httpPost = createFileProcessedStatusHttpPost("file.csv",
-                FileProcessedStatus.FILE_CHECKSUM_ERROR);
+        String requestJson = "{\"fileProcessedStatus\":8002,\"fileName\":\"file.csv\"}";
+        HttpPost httpPost = new HttpPost(String.format(
+                "http://localhost:%d/imi/obdFileProcessedStatusNotification",
+                TestContext.getJettyPort()));
+        httpPost.setHeader("Content-type", "application/json");
+        httpPost.setEntity(new StringEntity(requestJson));
 
         fileAuditRecordDataService.create(new FileAuditRecord(FileType.TARGET_FILE, "file.csv", false, "ERROR",
                 null, null));
@@ -232,8 +277,12 @@ public class ImiControllerObdBundleIT extends BasePaxIT {
     @Test
     public void verifyFT195() throws IOException, InterruptedException {
         getLogger().debug("testCreateFileProcessedStatusRequestWithErrorFILE_RECORDSCOUNT_ERROR()");
-        HttpPost httpPost = createFileProcessedStatusHttpPost("file.csv",
-                FileProcessedStatus.FILE_RECORDSCOUNT_ERROR);
+        String requestJson = "{\"fileProcessedStatus\":8003,\"fileName\":\"file.csv\"}";
+        HttpPost httpPost = new HttpPost(String.format(
+                "http://localhost:%d/imi/obdFileProcessedStatusNotification",
+                TestContext.getJettyPort()));
+        httpPost.setHeader("Content-type", "application/json");
+        httpPost.setEntity(new StringEntity(requestJson));
 
         fileAuditRecordDataService.create(new FileAuditRecord(FileType.TARGET_FILE, "file.csv", false, "ERROR",
                 null, null));
