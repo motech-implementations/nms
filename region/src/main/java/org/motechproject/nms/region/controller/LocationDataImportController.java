@@ -4,6 +4,7 @@ import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.alerts.domain.AlertStatus;
 import org.motechproject.alerts.domain.AlertType;
 import org.motechproject.nms.csv.exception.CsvImportException;
+import org.motechproject.nms.csv.service.CsvAuditService;
 import org.motechproject.nms.region.csv.CensusVillageImportService;
 import org.motechproject.nms.region.csv.DistrictImportService;
 import org.motechproject.nms.region.csv.HealthBlockImportService;
@@ -44,25 +45,32 @@ public class LocationDataImportController {
     private HealthBlockImportService healthBlockImportService;
     private HealthFacilityImportService healthFacilityImportService;
     private HealthSubFacilityImportService healthSubFacilityImportService;
+    private CsvAuditService csvAuditService;
 
     private Map<String, LocationDataImportService> locationDataImportServiceMapping;
 
     @RequestMapping(value = "/data/import/{location}", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
     public void importLocationData(@RequestParam MultipartFile csvFile, @PathVariable String location) {
+        String endpoint = String.format("region/data/import/%s", location);
         try {
             try (InputStream in = csvFile.getInputStream()) {
                 LocationDataImportService importService = getLocationDataImportServiceMapping().get(location);
                 if (null != importService) {
                     importService.importData(new InputStreamReader(in));
+                    csvAuditService.auditSuccess(csvFile.getName(), endpoint);
                 } else {
-                    throw new IllegalArgumentException(String.format("Location type '%s' not supported", location));
+                    String error = String.format("Location type '%s' not supported", location);
+                    csvAuditService.auditFailure(csvFile.getName(), endpoint, error);
+                    throw new IllegalArgumentException(error);
                 }
             }
         } catch (CsvImportException e) {
+            csvAuditService.auditFailure(csvFile.getName(), endpoint, e.getMessage());
             logError(location, e);
             throw e;
         } catch (Exception e) {
+            csvAuditService.auditFailure(csvFile.getName(), endpoint, e.getMessage());
             logError(location, e);
             throw new CsvImportException("An error occurred during CSV import", e);
         }
@@ -117,6 +125,11 @@ public class LocationDataImportController {
     @Autowired
     public void setHealthSubFacilityImportService(HealthSubFacilityImportService healthSubFacilityImportService) {
         this.healthSubFacilityImportService = healthSubFacilityImportService;
+    }
+
+    @Autowired
+    public void setCsvAuditService(CsvAuditService csvAuditService) {
+        this.csvAuditService = csvAuditService;
     }
 
     private Map<String, LocationDataImportService> getLocationDataImportServiceMapping() {

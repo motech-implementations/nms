@@ -91,6 +91,12 @@
             <artifactId>region</artifactId>
             <version>${project.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.motechproject.nms</groupId>
+            <artifactId>csv</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 
     <repositories>
@@ -258,6 +264,7 @@
                             org.motechproject.osgi.web,
                             org.motechproject.nms.region.service,
                             org.motechproject.nms.kilkari.service,
+                            org.motechproject.nms.csv.service,
                             org.aopalliance.aop,
                             org.springframework.aop,
                             org.springframework.aop.framework,

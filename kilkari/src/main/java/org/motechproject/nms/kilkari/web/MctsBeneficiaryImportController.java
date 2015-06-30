@@ -4,6 +4,7 @@ import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.alerts.domain.AlertStatus;
 import org.motechproject.alerts.domain.AlertType;
 import org.motechproject.nms.csv.exception.CsvImportException;
+import org.motechproject.nms.csv.service.CsvAuditService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,11 +28,24 @@ public class MctsBeneficiaryImportController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MctsBeneficiaryImportController.class);
 
-    @Autowired
     private AlertService alertService;
+    private MctsBeneficiaryImportService mctsBeneficiaryImportService;
+    private CsvAuditService csvAuditService;
 
     @Autowired
-    private MctsBeneficiaryImportService mctsBeneficiaryImportService;
+    public void setAlertService(AlertService alertService) {
+        this.alertService = alertService;
+    }
+
+    @Autowired
+    public void setMctsBeneficiaryImportService(MctsBeneficiaryImportService mctsBeneficiaryImportService) {
+        this.mctsBeneficiaryImportService = mctsBeneficiaryImportService;
+    }
+
+    @Autowired
+    public void setCsvAuditService(CsvAuditService csvAuditService) {
+        this.csvAuditService = csvAuditService;
+    }
 
     @RequestMapping(value = "/mother/import", method = RequestMethod.POST)
         @ResponseStatus(HttpStatus.OK)
@@ -40,11 +54,14 @@ public class MctsBeneficiaryImportController {
         try {
             try (InputStream in = csvFile.getInputStream()) {
                 mctsBeneficiaryImportService.importMotherData(new InputStreamReader(in));
+                csvAuditService.auditSuccess(csvFile.getName(), "/kilkari/mother/import");
             }
         } catch (CsvImportException e) {
+            csvAuditService.auditFailure(csvFile.getName(), "/kilkari/mother/import", e.getMessage());
             logError(e);
             throw e;
         } catch (Exception e) {
+            csvAuditService.auditFailure(csvFile.getName(), "/kilkari/mother/import", e.getMessage());
             logError(e);
             throw new CsvImportException("An error occurred during CSV import", e);
         }
@@ -57,11 +74,14 @@ public class MctsBeneficiaryImportController {
         try {
             try (InputStream in = csvFile.getInputStream()) {
                 mctsBeneficiaryImportService.importChildData(new InputStreamReader(in));
+                csvAuditService.auditSuccess(csvFile.getName(), "/kilkari/child/import");
             }
         } catch (CsvImportException e) {
+            csvAuditService.auditFailure(csvFile.getName(), "/kilkari/child/import", e.getMessage());
             logError(e);
             throw e;
         } catch (Exception e) {
+            csvAuditService.auditFailure(csvFile.getName(), "/kilkari/child/import", e.getMessage());
             logError(e);
             throw new CsvImportException("An error occurred during CSV import", e);
         }
@@ -69,8 +89,9 @@ public class MctsBeneficiaryImportController {
 
     private void logError(Exception exception) {
         LOGGER.error(exception.getMessage(), exception);
-        alertService.create("mcts_import_error", "MCTS data import error", exception.getMessage(), AlertType.CRITICAL,
-                AlertStatus.NEW, 0, null);
+        alertService.create("mcts_import_error", "MCTS data import error", exception.getMessage(),
+                AlertType.CRITICAL, AlertStatus.NEW, 0, null);
     }
+
 
 }
