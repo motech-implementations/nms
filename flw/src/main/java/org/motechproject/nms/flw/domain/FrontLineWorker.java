@@ -4,6 +4,7 @@ import org.joda.time.DateTime;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.domain.MdsEntity;
+import org.motechproject.nms.flw.domain.validation.ValidFrontLineWorker;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.FullLocation;
 import org.motechproject.nms.region.domain.HealthBlock;
@@ -13,6 +14,7 @@ import org.motechproject.nms.region.domain.Language;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.domain.Village;
+import org.motechproject.nms.region.domain.validation.ValidFullLocation;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Index;
@@ -21,7 +23,8 @@ import javax.jdo.annotations.Unique;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 
-//@ValidFullLocation
+@ValidFullLocation
+@ValidFrontLineWorker
 @Entity(tableName = "nms_front_line_workers")
 @Index(name = "status_invalidationDate_composit_idx", members = { "status", "invalidationDate" })
 public class FrontLineWorker extends MdsEntity implements FullLocation {

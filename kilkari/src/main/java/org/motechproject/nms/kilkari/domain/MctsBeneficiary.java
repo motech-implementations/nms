@@ -10,6 +10,7 @@ import org.motechproject.nms.region.domain.HealthSubFacility;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.domain.Village;
+import org.motechproject.nms.region.domain.validation.ValidFullLocation;
 
 import javax.jdo.annotations.Unique;
 import javax.validation.constraints.NotNull;
@@ -17,7 +18,7 @@ import javax.validation.constraints.NotNull;
 /**
  * A beneficiary (mother or child) sourced from MCTS.
  */
-//@ValidFullLocation
+@ValidFullLocation
 @Entity(tableName = "nms_mcts_beneficiaries")
 public abstract class MctsBeneficiary implements FullLocation {
 

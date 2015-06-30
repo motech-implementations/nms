@@ -179,15 +179,18 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     @Test(expected = CsvImportDataException.class)
     public void testImportMSISDNConflict() throws Exception {
         State state = stateDataService.findByName("State 1");
+        District district = state.getDistricts().get(0);
 
         FrontLineWorker flw = new FrontLineWorker("Existing With MSISDN", 1234567890L);
         flw.setMctsFlwId("#0");
         flw.setState(state);
+        flw.setDistrict(district);
         frontLineWorkerService.add(flw);
 
         flw = new FrontLineWorker("Will Update Conflict MSISDN", 1111111111L);
         flw.setMctsFlwId("#1");
         flw.setState(state);
+        flw.setDistrict(district);
         frontLineWorkerService.add(flw);
 
         Reader reader = createReaderWithHeaders("#1\t1234567890\tFLW 0\t11");
