@@ -1,5 +1,7 @@
 package org.motechproject.nms.imi.domain;
 
+import org.codehaus.jackson.annotate.JsonCreator;
+
 /**
  * File processing status, provided by IVR
  */
@@ -14,10 +16,12 @@ public enum FileProcessedStatus {
     private final int value;
     private final String name;
 
+
     FileProcessedStatus(int value, String name) {
         this.value = value;
         this.name = name;
     }
+
 
     public int getValue() {
         return value;
@@ -31,6 +35,7 @@ public enum FileProcessedStatus {
         return (i >= FILE_PROCESSED_SUCCESSFULLY.getValue() && i <= FILE_ERROR_IN_FILE_FORMAT.getValue());
     }
 
+    @JsonCreator
     public static FileProcessedStatus fromInt(int i) {
         if (isValidEnumValue(i)) {
             return values()[i - FILE_PROCESSED_SUCCESSFULLY.getValue()];
