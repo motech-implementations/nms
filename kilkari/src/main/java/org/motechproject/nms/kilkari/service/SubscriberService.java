@@ -22,10 +22,10 @@ public interface SubscriberService {
 
     /**
      * Get the Kilkari subscriber corresponding to the specified MCTS beneficiary.
-     * @param beneficiaryId ID of the MCTS beneficiary.
+     * @param beneficiary The MCTS beneficiary.
      * @return The subscriber who has a Mother or Child field with the specified ID.
      */
-    Subscriber getSubscriberByBeneficiaryId(final String beneficiaryId);
+    Subscriber getSubscriberByBeneficiary(final MctsBeneficiary beneficiary);
 
     /**
      * Create a new Kilkari subscriber in the database.

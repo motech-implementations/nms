@@ -134,7 +134,7 @@ public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateSe
                     mctsId, STATE_MCTS_ID, stateMctsId));
         }
 
-        Subscriber subscriber = subscriberFromBeneficiary(beneficiary);
+        Subscriber subscriber = subscriberService.getSubscriberByBeneficiary(beneficiary);
         SubscriptionPackType packType;
         DateTime newReferenceDate;
 
@@ -180,15 +180,19 @@ public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateSe
         // Finally, update the beneficiary's MSISDN if a new one is provided
 
         if (newMsisdn != null) {
-            subscriberService.updateMsisdnForSubscriber(subscriber, beneficiary, newMsisdn);
-            // TODO: roll this logic into the subscriber update method?
+            try {
+                subscriberService.updateMsisdnForSubscriber(subscriber, beneficiary, newMsisdn);
+            } catch (IllegalStateException e) {
+                subscriptionErrorDataService.create(new SubscriptionError(newMsisdn,
+                        SubscriptionRejectionReason.ALREADY_SUBSCRIBED, packType, e.getMessage()));
+            }
         }
 
     }
 
     private Map<String, CellProcessor> getProcessorMapping() {
         Map<String, CellProcessor> mapping = new HashMap<>();
-        mapping.put(SR_NO, new GetString());
+        mapping.put(SR_NO, new Optional(new GetString()));
         mapping.put(MCTS_ID, new Optional(new GetString()));
         mapping.put(STATE_MCTS_ID, new Optional(new GetString()));
         mapping.put(DOB, new Optional(MctsBeneficiaryUtils.DATE_BY_STRING));
@@ -221,20 +225,21 @@ public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateSe
             return null;
         }
 
+        // try the MCTS ID first
         MctsBeneficiary beneficiary = mctsMotherDataService.findByBeneficiaryId(mctsId);
         if (beneficiary == null) {
             beneficiary = mctsChildDataService.findByBeneficiaryId(mctsId);
+        }
 
-            if (beneficiary == null) {
-                beneficiary = mctsChildDataService.findByBeneficiaryId(stateMctsId);
-            }
+        // then try the State ID
+        if (beneficiary == null) {
+            beneficiary = mctsMotherDataService.findByBeneficiaryId(stateMctsId);
+        }
+        if (beneficiary == null) {
+            beneficiary = mctsChildDataService.findByBeneficiaryId(stateMctsId);
         }
 
         return beneficiary;
-    }
-
-    private Subscriber subscriberFromBeneficiary(MctsBeneficiary beneficiary) {
-        return subscriberService.getSubscriberByBeneficiaryId(beneficiary.getBeneficiaryId());
     }
 
     private boolean containsLocationUpdate(Map<String, Object> record) {

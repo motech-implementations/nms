@@ -59,19 +59,20 @@ public class SubscriberServiceImpl implements SubscriberService {
     }
 
     @Override
-    public Subscriber getSubscriberByBeneficiaryId(final String beneficiaryId) {
+    public Subscriber getSubscriberByBeneficiary(final MctsBeneficiary beneficiary) {
 
         SqlQueryExecution<Subscriber> queryExecution = new SqlQueryExecution<Subscriber>() {
 
             @Override
             public String getSqlQuery() {
-                return "select *  from nms_subscribers where mother_id_oid = ? or child_id_oid = ?";
+                return "select *  from nms_subscribers where mother_id_OID = ? or child_id_OID = ?";
             }
 
             @Override
             public Subscriber execute(Query query) {
                 query.setClass(Subscriber.class);
-                ForwardQueryResult fqr = (ForwardQueryResult) query.execute(beneficiaryId, beneficiaryId);
+                Long id = beneficiary.getId();
+                ForwardQueryResult fqr = (ForwardQueryResult) query.execute(id, id);
                 if (fqr.isEmpty()) {
                     return null;
                 }
@@ -121,7 +122,6 @@ public class SubscriberServiceImpl implements SubscriberService {
 
     @Override
     public void updateMsisdnForSubscriber(Subscriber subscriber, MctsBeneficiary beneficiary, Long newMsisdn) {
-
         SubscriptionPackType packType;
         packType = (beneficiary instanceof MctsChild) ? SubscriptionPackType.CHILD : SubscriptionPackType.PREGNANCY;
 
