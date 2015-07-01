@@ -1,27 +1,6 @@
 package org.motechproject.nms.testing.it.kilkari;
 
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.motechproject.nms.testing.it.utils.RegionHelper.createDistrict;
-import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthBlock;
-import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthFacility;
-import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthFacilityType;
-import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthSubFacilityType;
-import static org.motechproject.nms.testing.it.utils.RegionHelper.createState;
-import static org.motechproject.nms.testing.it.utils.RegionHelper.createTaluka;
-import static org.motechproject.nms.testing.it.utils.RegionHelper.createVillage;
-
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.StringReader;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
-
-import javax.inject.Inject;
-
 import org.joda.time.DateTime;
 import org.joda.time.Days;
 import org.joda.time.format.DateTimeFormat;
@@ -66,6 +45,26 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
+
+import javax.inject.Inject;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.StringReader;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createDistrict;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthBlock;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthFacility;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthFacilityType;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthSubFacilityType;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createState;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createTaluka;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createVillage;
 
 
 @RunWith(PaxExam.class)
@@ -713,7 +712,6 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
      * https://applab.atlassian.net/browse/NMS-207
      */
     @Test
-    @Ignore
     public void verifyFT322() throws Exception {
         // import mother
         DateTime lmp = DateTime.now().minusDays(100);
@@ -745,11 +743,11 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         assertEquals(2, subscriptions.size());
         assertNotNull(childSubscription);
         assertNotNull(pregnancySubscription);
-        
+
         // import child with same MSISDN and above MotherID --> child should be updated and mother be deactivated
         reader = createChildDataReaderWithHeaders("21\t3\t\t\t\t\t9876543210\tBaby1 of Shanti Ekka\t1234567890\t9439986187\t" + dobString);
         mctsBeneficiaryImportService.importChildData(reader);
-        
+
         subscriber = subscriberDataService.findByCallingNumber(9439986187L);
         subscriptions = subscriber.getActiveAndPendingSubscriptions();
         childSubscription = subscriptionService.getActiveSubscription(subscriber, SubscriptionPackType.CHILD);
