@@ -42,7 +42,9 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.security.NoSuchAlgorithmException;
 
 import static org.junit.Assert.assertEquals;
@@ -495,7 +497,9 @@ public class ImiControllerCdrBundleIT extends BasePaxIT {
                 subscriptionPackDataService, languageDataService, circleDataService, stateDataService,
                 districtDataService, fileAuditRecordDataService, districtService, tfn.getFileName());
 
-
+        helper.makeCdrs(1, 0, 0, 0);
+        File remoteCdrFile = helper.makeRemoteCdrFile();
+        Files.deleteIfExists(remoteCdrFile.toPath());
         String targetFile = cdrHelper.obd();
         String summaryFile = cdrHelper.csr();
         String detailFile = cdrHelper.cdr();

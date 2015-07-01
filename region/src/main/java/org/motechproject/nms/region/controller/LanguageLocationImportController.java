@@ -4,6 +4,7 @@ import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.alerts.domain.AlertStatus;
 import org.motechproject.alerts.domain.AlertType;
 import org.motechproject.nms.csv.exception.CsvImportException;
+import org.motechproject.nms.csv.service.CsvAuditService;
 import org.motechproject.nms.region.csv.LanguageLocationImportService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,8 +26,9 @@ public class LanguageLocationImportController {
     private static final Logger LOGGER = LoggerFactory.getLogger(LocationDataImportController.class);
 
     private AlertService alertService;
-
     private LanguageLocationImportService languageLocationImportService;
+    private CsvAuditService csvAuditService;
+
 
     @RequestMapping(value = "/languageLocationCode/import", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
@@ -34,18 +36,20 @@ public class LanguageLocationImportController {
         try {
             try (InputStream in = csvFile.getInputStream()) {
                 languageLocationImportService.importData(new InputStreamReader(in));
+                csvAuditService.auditSuccess(csvFile.getName(), "/region/languageLocationCode/import");
             }
         } catch (CsvImportException e) {
-            logError(e);
+            logError(csvFile.getName(), "/region/languageLocationCode/import", e);
             throw e;
         } catch (Exception e) {
-            logError(e);
+            logError(csvFile.getName(), "/region/languageLocationCode/import", e);
             throw new CsvImportException("An error occurred during CSV import", e);
         }
     }
 
-    private void logError(Exception exception) {
+    private void logError(String fileName, String endpoint, Exception exception) {
         LOGGER.error(exception.getMessage(), exception);
+        csvAuditService.auditFailure(fileName, endpoint, exception.getMessage());
         alertService.create("language_location_codes_import_error", "Language location codes import error",
                 exception.getMessage(), AlertType.CRITICAL, AlertStatus.NEW, 0, null);
     }
@@ -58,5 +62,10 @@ public class LanguageLocationImportController {
     @Autowired
     public void setLanguageLocationImportService(LanguageLocationImportService languageLocationImportService) {
         this.languageLocationImportService = languageLocationImportService;
+    }
+
+    @Autowired
+    public void setCsvAuditService(CsvAuditService csvAuditService) {
+        this.csvAuditService = csvAuditService;
     }
 }
