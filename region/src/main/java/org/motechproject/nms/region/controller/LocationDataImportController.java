@@ -66,19 +66,19 @@ public class LocationDataImportController {
                 }
             }
         } catch (CsvImportException e) {
-            csvAuditService.auditFailure(csvFile.getName(), endpoint, e.getMessage());
-            logError(location, e);
+            logError(csvFile.getName(), endpoint, location, e);
             throw e;
         } catch (Exception e) {
-            csvAuditService.auditFailure(csvFile.getName(), endpoint, e.getMessage());
-            logError(location, e);
+            logError(csvFile.getName(), endpoint, location, e);
             throw new CsvImportException("An error occurred during CSV import", e);
         }
     }
 
-    private void logError(String location, Exception exception) {
+    private void logError(String fileName, String endpoint, String location, Exception exception) {
         LOGGER.error(exception.getMessage(), exception);
-        alertService.create("location_data_import_error", String.format("Location data import error: %s", location),
+        csvAuditService.auditFailure(fileName, endpoint, exception.getMessage());
+        alertService.create("location_data_import_error",
+                String.format("Location data import error: %s", location),
                 exception.getMessage(), AlertType.CRITICAL, AlertStatus.NEW, 0, null);
     }
 

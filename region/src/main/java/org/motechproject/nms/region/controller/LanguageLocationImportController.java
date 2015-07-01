@@ -39,18 +39,17 @@ public class LanguageLocationImportController {
                 csvAuditService.auditSuccess(csvFile.getName(), "/region/languageLocationCode/import");
             }
         } catch (CsvImportException e) {
-            csvAuditService.auditFailure(csvFile.getName(), "/region/languageLocationCode/import", e.getMessage());
-            logError(e);
+            logError(csvFile.getName(), "/region/languageLocationCode/import", e);
             throw e;
         } catch (Exception e) {
-            csvAuditService.auditFailure(csvFile.getName(), "/region/languageLocationCode/import", e.getMessage());
-            logError(e);
+            logError(csvFile.getName(), "/region/languageLocationCode/import", e);
             throw new CsvImportException("An error occurred during CSV import", e);
         }
     }
 
-    private void logError(Exception exception) {
+    private void logError(String fileName, String endpoint, Exception exception) {
         LOGGER.error(exception.getMessage(), exception);
+        csvAuditService.auditFailure(fileName, endpoint, exception.getMessage());
         alertService.create("language_location_codes_import_error", "Language location codes import error",
                 exception.getMessage(), AlertType.CRITICAL, AlertStatus.NEW, 0, null);
     }

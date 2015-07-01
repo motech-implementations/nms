@@ -28,8 +28,8 @@ public class CsvAuditServiceImpl implements CsvAuditService {
 
         if (outcome.length() > CsvAuditRecord.MAX_OUTCOME_LENGTH) {
             truncatedOutcome = outcome.substring(0, CsvAuditRecord.MAX_OUTCOME_LENGTH);
-            LOGGER.warn("The provided outcome field was more than {} characters and was truncated",
-                    CsvAuditRecord.MAX_OUTCOME_LENGTH - FAILURE.length());
+            LOGGER.warn("The provided outcome field was more than {} characters and was truncated, original " +
+                            "outcome: {}", CsvAuditRecord.MAX_OUTCOME_LENGTH - FAILURE.length(), outcome);
         } else {
             truncatedOutcome = outcome;
         }

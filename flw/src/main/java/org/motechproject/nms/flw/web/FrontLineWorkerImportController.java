@@ -40,12 +40,12 @@ public class FrontLineWorkerImportController {
                 csvAuditService.auditSuccess(csvFile.getName(), "/flw/update/language");
             }
         } catch (CsvImportException e) {
-            csvAuditService.auditFailure(csvFile.getName(), "/flw/update/language", e.getMessage());
-            logError(e, "front_line_workers_language_import_error", "Front line workers language import error");
+            logError(csvFile.getName(), "/flw/update/language", e, "front_line_workers_language_import_error",
+                    "Front line workers language import error");
             throw e;
         } catch (Exception e) {
-            csvAuditService.auditFailure(csvFile.getName(), "/flw/update/language", e.getMessage());
-            logError(e, "front_line_workers_language_import_error", "Front line workers language import error");
+            logError(csvFile.getName(), "/flw/update/language", e, "front_line_workers_language_import_error",
+                    "Front line workers language import error");
             throw new CsvImportException("An error occurred during CSV import", e);
         }
     }
@@ -59,12 +59,12 @@ public class FrontLineWorkerImportController {
                 csvAuditService.auditSuccess(csvFile.getName(), "/flw/update/msisdn");
             }
         } catch (CsvImportException e) {
-            csvAuditService.auditFailure(csvFile.getName(), "/flw/update/msisdn", e.getMessage());
-            logError(e, "front_line_workers_msisdn_import_error", "Front line workers msisdn import error");
+            logError(csvFile.getName(), "/flw/update/msisdn", e, "front_line_workers_msisdn_import_error",
+                    "Front line workers msisdn import error");
             throw e;
         } catch (Exception e) {
-            csvAuditService.auditFailure(csvFile.getName(), "/flw/update/msisdn", e.getMessage());
-            logError(e, "front_line_workers_msisdn_import_error", "Front line workers msisdn import error");
+            logError(csvFile.getName(), "/flw/update/msisdn", e, "front_line_workers_msisdn_import_error",
+                    "Front line workers msisdn import error");
             throw new CsvImportException("An error occurred during CSV import", e);
         }
     }
@@ -78,18 +78,19 @@ public class FrontLineWorkerImportController {
                 csvAuditService.auditSuccess(csvFile.getName(), "/flw/import");
             }
         } catch (CsvImportException e) {
-            csvAuditService.auditFailure(csvFile.getName(), "/flw/import", e.getMessage());
-            logError(e, "front_line_workers_import_error", "Front line workers import error");
+            logError(csvFile.getName(), "/flw/import", e, "front_line_workers_import_error",
+                    "Front line workers import error");
             throw e;
         } catch (Exception e) {
-            csvAuditService.auditFailure(csvFile.getName(), "/flw/import", e.getMessage());
-            logError(e, "front_line_workers_import_error", "Front line workers import error");
+            logError(csvFile.getName(), "/flw/import", e, "front_line_workers_import_error",
+                    "Front line workers import error");
             throw new CsvImportException("An error occurred during CSV import", e);
         }
     }
 
-    private void logError(Exception exception, String entityId, String name) {
+    private void logError(String fileName, String endpoint, Exception exception, String entityId, String name) {
         LOGGER.error(exception.getMessage(), exception);
+        csvAuditService.auditFailure(fileName, endpoint, exception.getMessage());
         alertService.create(entityId, name, exception.getMessage(), AlertType.CRITICAL, AlertStatus.NEW, 0, null);
     }
 
