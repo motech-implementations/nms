@@ -325,6 +325,20 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
         talukaImportService.importData(reader);
     }
 
+
+    /*
+    * To verify taluka location data is rejected when mandatory parameter name is missing.
+    */
+    @Test
+    public void verifyErrorMessageHasCorrectColumnNumber() throws Exception {
+        Reader reader = createReaderWithHeaders(talukaHeader, "TALUKA,2,,Taluka 2,1,2");
+        try {
+            talukaImportService.importData(reader);
+        } catch (CsvImportDataException e) {
+            assertEquals("CSV field error [row: 2, col: 3]: Expected String value, found null", e.getMessage());
+        }
+    }
+
     /*
     * To verify taluka location data is rejected when mandatory parameter code is missing.
     */
