@@ -281,6 +281,7 @@ public class CsrServiceImpl implements CsrService {
 
         CallRetry callRetry = callRetryDataService.findBySubscriptionId(subscriptionId);
         Subscription subscription = subscriptionDataService.findBySubscriptionId(subscriptionId);
+        resetWelcomeFlagInSubscription(subscription);
 
         if (csr.getFinalStatus() == FinalCallStatus.SUCCESS) {
             completeSubscriptionIfNeeded(subscription, record, callRetry);
@@ -292,6 +293,14 @@ public class CsrServiceImpl implements CsrService {
 
         if (csr.getFinalStatus() == FinalCallStatus.REJECTED) {
             deactivateSubscription(subscription, callRetry);
+        }
+    }
+
+    private void resetWelcomeFlagInSubscription(Subscription subscription) {
+
+        if (subscription.getNeedsWelcomeMessage() == true) {
+            subscription.setNeedsWelcomeMessage(false);
+            subscriptionDataService.update(subscription);
         }
     }
 }
