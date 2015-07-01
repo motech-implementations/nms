@@ -1,4 +1,4 @@
-package org.motechproject.nms.kilkari.csv.impl;
+package org.motechproject.nms.kilkari.service.impl;
 
 import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
@@ -18,7 +18,7 @@ import org.motechproject.nms.kilkari.domain.SubscriptionError;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.domain.SubscriptionRejectionReason;
-import org.motechproject.nms.kilkari.csv.MctsBeneficiaryImportService;
+import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.motechproject.nms.kilkari.repository.MctsChildDataService;
 import org.motechproject.nms.kilkari.repository.MctsMotherDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
@@ -47,7 +47,7 @@ import java.util.Map;
  * Implementation of the {@link MctsBeneficiaryImportService} interface.
  */
 @Service("mctsBeneficiaryImportService")
-public class MctsBeneficiaryImportServiceImpl extends BaseMctsBeneficiaryService implements MctsBeneficiaryImportService {
+public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportService {
 
     private SubscriptionService subscriptionService;
     private SubscriptionErrorDataService subscriptionErrorDataService;
@@ -63,6 +63,15 @@ public class MctsBeneficiaryImportServiceImpl extends BaseMctsBeneficiaryService
     private static final String LMP = "LMP_Date";
     private static final String DOB = "Birthdate";
     private static final String MOTHER_ID = "Mother_ID";
+    private static final String STATE = "StateID";
+    private static final String DISTRICT = "District_ID";
+    private static final String TALUKA = "Taluka_ID";
+    private static final String HEALTH_BLOCK = "HealthBlock_ID";
+    private static final String PHC = "PHC_ID";
+    private static final String SUBCENTRE = "SubCentre_ID";
+    private static final String CENSUS_VILLAGE = "Village_ID";
+    private static final String NON_CENSUS_VILLAGE = "SVID";
+
     private static final Logger LOGGER = LoggerFactory.getLogger(MctsBeneficiaryImportServiceImpl.class);
 
     private SubscriptionPack pregnancyPack;
@@ -147,7 +156,7 @@ public class MctsBeneficiaryImportServiceImpl extends BaseMctsBeneficiaryService
 
         // validate and set location
         try {
-            setLocationFields(locationService.getLocations(record), mother);
+            MctsBeneficiaryUtils.setLocationFields(locationService.getLocations(record), mother);
         } catch (InvalidLocationException le) {
             LOGGER.error(le.toString());
             subscriptionErrorDataService.create(new SubscriptionError(msisdn, SubscriptionRejectionReason.INVALID_LOCATION,
@@ -174,7 +183,7 @@ public class MctsBeneficiaryImportServiceImpl extends BaseMctsBeneficiaryService
 
         // validate and set location
         try {
-            setLocationFields(locationService.getLocations(record), child);
+            MctsBeneficiaryUtils.setLocationFields(locationService.getLocations(record), child);
         } catch (InvalidLocationException le) {
             LOGGER.error(le.toString());
             subscriptionErrorDataService.create(new SubscriptionError(msisdn, SubscriptionRejectionReason.INVALID_LOCATION,
@@ -270,8 +279,8 @@ public class MctsBeneficiaryImportServiceImpl extends BaseMctsBeneficiaryService
             }
         });
         mapping.put(BENEFICIARY_NAME, new GetString());
-        mapping.put(MSISDN, new GetLong());
-        mapping.put(LMP, getDateProcessor());
+        mapping.put(MSISDN, MctsBeneficiaryUtils.MSISDN_BY_STRING);
+        mapping.put(LMP, MctsBeneficiaryUtils.DATE_BY_STRING);
 
         // TODO: Any other fields needed for mothers? e.g. Abortion, etc.
 
@@ -301,8 +310,8 @@ public class MctsBeneficiaryImportServiceImpl extends BaseMctsBeneficiaryService
                 return mctsMotherDataService.findByBeneficiaryId(value);
             }
         }));
-        mapping.put(MSISDN, new GetLong());
-        mapping.put(DOB, getDateProcessor());
+        mapping.put(MSISDN, MctsBeneficiaryUtils.MSISDN_BY_STRING);
+        mapping.put(DOB, MctsBeneficiaryUtils.DATE_BY_STRING);
 
         return mapping;
     }

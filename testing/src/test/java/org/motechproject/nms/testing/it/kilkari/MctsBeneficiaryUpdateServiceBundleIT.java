@@ -2,6 +2,7 @@ package org.motechproject.nms.testing.it.kilkari;
 
 import org.joda.time.DateTime;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.kilkari.domain.MctsChild;
@@ -12,7 +13,7 @@ import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
-import org.motechproject.nms.kilkari.csv.MctsBeneficiaryUpdateService;
+import org.motechproject.nms.kilkari.service.MctsBeneficiaryUpdateService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
@@ -92,7 +93,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         subscription.getSubscriber().setChild(new MctsChild(mctsId));
         subscriberDataService.update(subscription.getSubscriber());
 
-        Reader reader = createMsisdnReaderWithHeaders(mctsId + "," + newMsisdn);
+        Reader reader = createUpdateReaderWithHeaders("1," + mctsId + ",,,,,,,,,,,,," + newMsisdn);
         mctsBeneficiaryUpdateService.updateBeneficiary(reader);
 
         assertNull(subscriberDataService.findByCallingNumber(oldMsisdn));
@@ -121,7 +122,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
 
         assertEquals(2, subscriberDataService.findByCallingNumber(oldMsisdn).getActiveAndPendingSubscriptions().size());
 
-        Reader reader = createMsisdnReaderWithHeaders(motherId + "," + newMsisdn);
+        Reader reader = createUpdateReaderWithHeaders("1," + motherId + ",,,,,,,,,,,,," + newMsisdn);
         mctsBeneficiaryUpdateService.updateBeneficiary(reader);
 
         Subscriber pregnancySubscriber = subscriberDataService.findByCallingNumber(newMsisdn);
@@ -138,21 +139,29 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         assertEquals(1, childSubscriber.getActiveAndPendingSubscriptions().size());
     }
 
-
+    @Test
+    @Ignore
     public void testUpdateMsisdnNumberAlreadyInUse() throws Exception {
 
     }
 
-    public void testupdateMsisdnFromFile() throws Exception {
-
+    @Test
+    @Ignore
+    public void testupdateBeneficiariesFromFile() throws Exception {
+        mctsBeneficiaryUpdateService.updateBeneficiary(read("csv/mcts_beneficiary_update.csv"));
     }
 
-    private Reader createMsisdnReaderWithHeaders(String... lines) {
+    private Reader createUpdateReaderWithHeaders(String... lines) {
         StringBuilder builder = new StringBuilder();
-        builder.append("MCTS ID,NEW MSISDN").append("\n");
+        builder.append("Sr No,MCTS ID,STATE ID,Beneficiary New DOB change,Beneficiary New LMP change,State_ID,");
+        builder.append("District_ID,Taluka_ID,HealthBlock_ID,PHC_ID,SubCentre_ID,Village_ID,GP_Village,Address,");
+        builder.append("Beneficiary New Mobile no change");
+        builder.append("\n");
+
         for (String line : lines) {
             builder.append(line).append("\n");
         }
+
         return new StringReader(builder.toString());
     }
 

@@ -20,6 +20,7 @@ import org.motechproject.nms.testing.it.imi.ImiControllerObdBundleIT;
 import org.motechproject.nms.testing.it.imi.TargetFileServiceBundleIT;
 import org.motechproject.nms.testing.it.kilkari.CsrServiceBundleIT;
 import org.motechproject.nms.testing.it.kilkari.MctsBeneficiaryImportServiceBundleIT;
+import org.motechproject.nms.testing.it.kilkari.MctsBeneficiaryUpdateServiceBundleIT;
 import org.motechproject.nms.testing.it.kilkari.SubscriberServiceBundleIT;
 import org.motechproject.nms.testing.it.kilkari.SubscriptionServiceBundleIT;
 import org.motechproject.nms.testing.it.ma.MobileAcademyServiceBundleIT;
@@ -68,6 +69,7 @@ import org.motechproject.nms.testing.it.region.NationalDefaultLanguageLocationBu
     SubscriberServiceBundleIT.class,
     CsrServiceBundleIT.class,
     MctsBeneficiaryImportServiceBundleIT.class,
+    MctsBeneficiaryUpdateServiceBundleIT.class,
 
     /**
      * Mobile Academy

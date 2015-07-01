@@ -1,4 +1,4 @@
-package org.motechproject.nms.kilkari.csv.impl;
+package org.motechproject.nms.kilkari.service.impl;
 
 
 import org.joda.time.DateTime;
@@ -23,18 +23,21 @@ import javax.validation.ConstraintViolation;
 import java.util.Map;
 import java.util.Set;
 
-public abstract class BaseMctsBeneficiaryService {
+public final class MctsBeneficiaryUtils {
 
-    protected static final String STATE = "StateID";
-    protected static final String DISTRICT = "District_ID";
-    protected static final String TALUKA = "Taluka_ID";
-    protected static final String HEALTH_BLOCK = "HealthBlock_ID";
-    protected static final String PHC = "PHC_ID";
-    protected static final String SUBCENTRE = "SubCentre_ID";
-    protected static final String CENSUS_VILLAGE = "Village_ID";
-    protected static final String NON_CENSUS_VILLAGE = "SVID";
+    private static final String STATE = "StateID";
+    private static final String DISTRICT = "District_ID";
+    private static final String TALUKA = "Taluka_ID";
+    private static final String HEALTH_BLOCK = "HealthBlock_ID";
+    private static final String PHC = "PHC_ID";
+    private static final String SUBCENTRE = "SubCentre_ID";
+    private static final String CENSUS_VILLAGE = "Village_ID";
+    private static final String NON_CENSUS_VILLAGE = "SVID";
 
-    private GetInstanceByString<DateTime> getDateByString = new GetInstanceByString<DateTime>() {
+    private MctsBeneficiaryUtils() {
+    }
+
+    public static final GetInstanceByString<DateTime> DATE_BY_STRING = new GetInstanceByString<DateTime>() {
         @Override
         public DateTime retrieve(String value) {
             if (value == null) {
@@ -59,12 +62,19 @@ public abstract class BaseMctsBeneficiaryService {
         }
     };
 
-    public GetInstanceByString<DateTime> getDateProcessor() {
-        return getDateByString;
-    }
+    public static final GetInstanceByString<Long> MSISDN_BY_STRING = new GetInstanceByString<Long>() {
+        @Override
+        public Long retrieve(String value) {
+            if (value.length() < 10) {
+                throw new NumberFormatException("Beneficiary MSISDN too short, must be at least 10 digits");
+            }
+            String msisdn = value.substring(value.length() - 10);
 
+            return Long.parseLong(msisdn);
+        }
+    };
 
-    protected void setLocationFields(Map<String, Object> locations, MctsBeneficiary beneficiary) throws InvalidLocationException {
+    public static void setLocationFields(Map<String, Object> locations, MctsBeneficiary beneficiary) throws InvalidLocationException {
 
         if (locations.get(STATE) == null && locations.get(DISTRICT) == null) {
             throw new InvalidLocationException("Missing mandatory state and district fields");
@@ -87,16 +97,16 @@ public abstract class BaseMctsBeneficiaryService {
         beneficiary.setVillage((Village) locations.get(CENSUS_VILLAGE + NON_CENSUS_VILLAGE));
     }
 
-    protected String createErrorMessage(String message, int rowNumber) {
+    public static String createErrorMessage(String message, int rowNumber) {
         return String.format("CSV instance error [row: %d]: %s", rowNumber, message);
     }
 
-    protected String createErrorMessage(Set<ConstraintViolation<?>> violations, int rowNumber) {
+    public static String createErrorMessage(Set<ConstraintViolation<?>> violations, int rowNumber) {
         return String.format("CSV instance error [row: %d]: validation failed for instance of type %s, violations: %s",
                 rowNumber, MctsBeneficiary.class.getName(), ConstraintViolationUtils.toString(violations));
     }
 
-    protected void verify(boolean condition, String message, String... args) {
+    public static void verify(boolean condition, String message, String... args) {
         if (!condition) {
             throw new CsvImportDataException(String.format(message, args));
         }
