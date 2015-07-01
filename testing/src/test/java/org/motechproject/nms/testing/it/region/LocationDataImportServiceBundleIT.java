@@ -327,7 +327,8 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
 
 
     /*
-    * To verify taluka location data is rejected when mandatory parameter name is missing.
+    * To verify error message is correct when a column is invalid.
+    * Fixes: https://applab.atlassian.net/browse/NMS-213
     */
     @Test
     public void verifyErrorMessageHasCorrectColumnNumber() throws Exception {
