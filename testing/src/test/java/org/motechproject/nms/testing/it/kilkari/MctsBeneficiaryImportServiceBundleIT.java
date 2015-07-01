@@ -492,7 +492,6 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
      * https://applab.atlassian.net/browse/NMS-206
      */
     @Test
-    @Ignore
     public void verifyFT288_1() throws Exception {
     	
     	//DOB is missing
@@ -514,7 +513,6 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
      * https://applab.atlassian.net/browse/NMS-206
      */
     @Test
-    @Ignore
     public void verifyFT288_2() throws Exception {
     	
     	//LMP is missing
