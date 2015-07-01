@@ -85,6 +85,20 @@ public class CsvInstanceImporter<T> implements Closeable {
         }
     }
 
+    public int getColumnNumber(String columnName) {
+        int columnNumber = 0;
+
+        for (String column : columnNames) {
+            columnNumber += 1;
+
+            if (column.equals(columnName)) {
+                return columnNumber;
+            }
+        }
+
+        return -1;
+    }
+
     public boolean isOpen() {
         return csvReader != null;
     }
@@ -122,6 +136,7 @@ public class CsvInstanceImporter<T> implements Closeable {
 
         for (Map.Entry<String, CellProcessor> processorEntry : processorMapping.entrySet()) {
             String columnName = processorEntry.getKey();
+            csvContext.setColumnNumber(getColumnNumber(columnName));
             CellProcessor processor = processorEntry.getValue();
             if (processor != null) {
                 String cellValue = cells.get(columnName);
