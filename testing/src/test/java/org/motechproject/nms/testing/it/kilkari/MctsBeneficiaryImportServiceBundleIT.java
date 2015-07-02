@@ -605,8 +605,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
      * 
      * https://applab.atlassian.net/browse/NMS-208
      */
-    @Test(expected = CsvImportDataException.class)
-    @Ignore
+    @Test
     public void verifyFT286() throws Exception {
     	State state31 = createState(31L, "State 31");
     	stateDataService.create(state31);
@@ -616,6 +615,16 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         //attempt to create subscriber and subscription with wrong state-district combination. it should be rejected
         Reader reader = createChildDataReaderWithHeaders("31\t3\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t\t9439986187\t" + dobString);
         mctsBeneficiaryImportService.importChildData(reader);
+        
+        //subscriber should not be created.
+        Subscriber subscriber = subscriberDataService.findByCallingNumber(9439986187L);
+        assertNull(subscriber);
+        
+        List<SubscriptionError> susbErrors = subscriptionErrorDataService.findByContactNumber(9439986187L);
+        SubscriptionError susbError = susbErrors.iterator().next();
+        
+        //rejected entry should be nms_subscription_errors with error 'INVALID_LOCATION'.
+        assertSubscriptionError(susbError, SubscriptionPackType.CHILD, SubscriptionRejectionReason.INVALID_LOCATION);
     }
     
         
