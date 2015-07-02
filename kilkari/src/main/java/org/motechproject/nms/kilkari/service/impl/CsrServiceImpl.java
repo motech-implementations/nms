@@ -122,6 +122,8 @@ public class CsrServiceImpl implements CsrService {
     private void completeSubscriptionIfNeeded(Subscription subscription, CallSummaryRecord record,
                                               CallRetry callRetry) {
 
+        resetWelcomeFlagInSubscription(subscription);
+
         if (!subscription.isLastPackMessage(record.getContentFileName())) {
             // This subscription has not completed, do nothing
             return;
@@ -175,6 +177,7 @@ public class CsrServiceImpl implements CsrService {
             return;
         }
 
+        
         // We've already rescheduled this call, let's see if it needs to be re-rescheduled
 
         if ((subscription.getSubscriptionPack().retryCount() == 1) ||
@@ -282,6 +285,7 @@ public class CsrServiceImpl implements CsrService {
         CallRetry callRetry = callRetryDataService.findBySubscriptionId(subscriptionId);
         Subscription subscription = subscriptionDataService.findBySubscriptionId(subscriptionId);
 
+
         if (csr.getFinalStatus() == FinalCallStatus.SUCCESS) {
             completeSubscriptionIfNeeded(subscription, record, callRetry);
         }
@@ -292,6 +296,14 @@ public class CsrServiceImpl implements CsrService {
 
         if (csr.getFinalStatus() == FinalCallStatus.REJECTED) {
             deactivateSubscription(subscription, callRetry);
+        }
+    }
+
+    private void resetWelcomeFlagInSubscription(Subscription subscription) {
+
+        if (subscription.getNeedsWelcomeMessage() == true) {
+            subscription.setNeedsWelcomeMessage(false);
+            subscriptionDataService.update(subscription);
         }
     }
 }
