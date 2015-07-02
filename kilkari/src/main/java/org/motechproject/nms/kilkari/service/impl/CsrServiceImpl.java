@@ -193,7 +193,6 @@ public class CsrServiceImpl implements CsrService {
                 subscriptionDataService.update(subscription);
             }
 
-            resetWelcomeFlagInSubscription(subscription);
 
             callRetryDataService.delete(callRetry);
 
