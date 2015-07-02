@@ -6,6 +6,7 @@ import org.motechproject.alerts.domain.AlertType;
 import org.motechproject.nms.csv.exception.CsvImportException;
 import org.motechproject.nms.csv.service.CsvAuditService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
+import org.motechproject.nms.kilkari.service.MctsBeneficiaryUpdateService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +31,7 @@ public class MctsBeneficiaryImportController {
 
     private AlertService alertService;
     private MctsBeneficiaryImportService mctsBeneficiaryImportService;
+    private MctsBeneficiaryUpdateService mctsBeneficiaryUpdateService;
     private CsvAuditService csvAuditService;
 
     @Autowired
@@ -40,6 +42,11 @@ public class MctsBeneficiaryImportController {
     @Autowired
     public void setMctsBeneficiaryImportService(MctsBeneficiaryImportService mctsBeneficiaryImportService) {
         this.mctsBeneficiaryImportService = mctsBeneficiaryImportService;
+    }
+
+    @Autowired
+    public void setMctsBeneficiaryUpdateService(MctsBeneficiaryUpdateService mctsBeneficiaryUpdateService) {
+        this.mctsBeneficiaryUpdateService = mctsBeneficiaryUpdateService;
     }
 
     @Autowired
@@ -79,6 +86,24 @@ public class MctsBeneficiaryImportController {
             throw e;
         } catch (Exception e) {
             logError(csvFile.getName(), "/kilkari/child/import", e);
+            throw new CsvImportException("An error occurred during CSV import", e);
+        }
+    }
+
+    @RequestMapping(value = "/beneficiary/update", method = RequestMethod.POST)
+    @ResponseStatus(HttpStatus.OK)
+    public void updateBeneficiaryData(@RequestParam MultipartFile csvFile) {
+
+        try {
+            try (InputStream in = csvFile.getInputStream()) {
+                mctsBeneficiaryUpdateService.updateBeneficiaryData(new InputStreamReader(in));
+                csvAuditService.auditSuccess(csvFile.getName(), "/kilkari/beneficiary/update");
+            }
+        } catch (CsvImportException e) {
+            logError(csvFile.getName(), "/kilkari/beneficiary/update", e);
+            throw e;
+        } catch (Exception e) {
+            logError(csvFile.getName(), "/kilkari/beneficiary/update", e);
             throw new CsvImportException("An error occurred during CSV import", e);
         }
     }

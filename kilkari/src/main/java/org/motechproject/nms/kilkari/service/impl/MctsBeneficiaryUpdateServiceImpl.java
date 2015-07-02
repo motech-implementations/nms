@@ -77,7 +77,7 @@ public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateSe
 
 
     @Override
-    public void updateBeneficiary(Reader reader) throws IOException {
+    public void updateBeneficiaryData(Reader reader) throws IOException {
         BufferedReader bufferedReader = new BufferedReader(reader);
 
         CsvMapImporter csvImporter = new CsvImporterBuilder()

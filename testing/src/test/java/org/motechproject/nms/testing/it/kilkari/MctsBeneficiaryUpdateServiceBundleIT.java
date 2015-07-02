@@ -1,7 +1,6 @@
 package org.motechproject.nms.testing.it.kilkari;
 
 import org.joda.time.DateTime;
-import org.joda.time.LocalDate;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -173,7 +172,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         subscriberDataService.update(subscription.getSubscriber());
 
         Reader reader = createUpdateReaderWithHeaders("1," + mctsId + ",,,,,,,,,,,,," + newMsisdn);
-        mctsBeneficiaryUpdateService.updateBeneficiary(reader);
+        mctsBeneficiaryUpdateService.updateBeneficiaryData(reader);
 
         Subscriber oldSubscriber = subscriberDataService.findByCallingNumber(oldMsisdn);
         assertNull(oldSubscriber.getChild());
@@ -204,7 +203,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         assertEquals(2, subscriberDataService.findByCallingNumber(oldMsisdn).getActiveAndPendingSubscriptions().size());
 
         Reader reader = createUpdateReaderWithHeaders("1," + motherId + ",,,,,,,,,,,,," + newMsisdn);
-        mctsBeneficiaryUpdateService.updateBeneficiary(reader);
+        mctsBeneficiaryUpdateService.updateBeneficiaryData(reader);
 
         Subscriber pregnancySubscriber = subscriberDataService.findByCallingNumber(newMsisdn);
         Subscriber childSubscriber = subscriberDataService.findByCallingNumber(oldMsisdn);
@@ -240,7 +239,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
 
         // try to set the second child's MSISDN to the same number as the first child's MSISDN
         Reader reader = createUpdateReaderWithHeaders("1," + secondChildId + ",,,,,,,,,,,,," + firstMsisdn);
-        mctsBeneficiaryUpdateService.updateBeneficiary(reader);
+        mctsBeneficiaryUpdateService.updateBeneficiaryData(reader);
 
         List<SubscriptionError> errors = subscriptionErrorDataService.findByContactNumber(firstMsisdn);
         assertEquals(1, errors.size());
@@ -264,7 +263,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         subscriberDataService.update(subscriber);
 
         Reader reader = createUpdateReaderWithHeaders("1," + childId + ",," + getDateString(updatedDOB) + ",,,,,,,,,,,");
-        mctsBeneficiaryUpdateService.updateBeneficiary(reader);
+        mctsBeneficiaryUpdateService.updateBeneficiaryData(reader);
 
         Subscriber updatedSubscriber = subscriberDataService.findByCallingNumber(msisdn);
         assertEquals(getDateString(updatedDOB), getDateString(updatedSubscriber.getDateOfBirth()));
@@ -291,7 +290,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         subscriberDataService.update(subscriber);
 
         Reader reader = createUpdateReaderWithHeaders("1," + motherId + ",,," + getDateString(updatedLMP) + ",,,,,,,,,,");
-        mctsBeneficiaryUpdateService.updateBeneficiary(reader);
+        mctsBeneficiaryUpdateService.updateBeneficiaryData(reader);
 
         Subscriber updatedSubscriber = subscriberDataService.findByCallingNumber(msisdn);
         assertEquals(getDateString(updatedLMP), getDateString(updatedSubscriber.getLastMenstrualPeriod()));
@@ -326,7 +325,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
 
         // now, via CSV update, change the LMP to a valid subscription date; subscription should get reactivated
         Reader reader = createUpdateReaderWithHeaders("1," + motherId + ",,," + getDateString(updatedLMP) + ",,,,,,,,,,");
-        mctsBeneficiaryUpdateService.updateBeneficiary(reader);
+        mctsBeneficiaryUpdateService.updateBeneficiaryData(reader);
 
         Subscriber updatedSubscriber = subscriberDataService.findByCallingNumber(msisdn);
         assertEquals(getDateString(updatedLMP), getDateString(updatedSubscriber.getLastMenstrualPeriod()));
@@ -359,7 +358,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
 
         // now, via CSV update, change the DOB to a past subscription date; subscription should be marked completed
         Reader reader = createUpdateReaderWithHeaders("1," + childId + ",," + getDateString(updatedDOB) + ",,,,,,,,,,,");
-        mctsBeneficiaryUpdateService.updateBeneficiary(reader);
+        mctsBeneficiaryUpdateService.updateBeneficiaryData(reader);
 
         Subscriber updatedSubscriber = subscriberDataService.findByCallingNumber(msisdn);
         assertEquals(getDateString(updatedDOB), getDateString(updatedSubscriber.getDateOfBirth()));
@@ -385,7 +384,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         subscriberDataService.update(subscriber);
 
         Reader reader = createUpdateReaderWithHeaders("1," + childId + ",,,,21,3,0026,453,,,,,,");
-        mctsBeneficiaryUpdateService.updateBeneficiary(reader);
+        mctsBeneficiaryUpdateService.updateBeneficiaryData(reader);
 
         MctsChild updatedChild = mctsChildDataService.findByBeneficiaryId(childId);
         assertEquals(21L, (long) updatedChild.getState().getCode());
@@ -411,13 +410,13 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         subscriberDataService.update(subscriber);
 
         Reader reader = createUpdateReaderWithHeaders("1," + childId + ",,,,21,3,0026,453,,,,,,");
-        mctsBeneficiaryUpdateService.updateBeneficiary(reader);
+        mctsBeneficiaryUpdateService.updateBeneficiaryData(reader);
     }
 
     @Test
     @Ignore
     public void testUpdateBeneficiariesFromFile() throws Exception {
-        mctsBeneficiaryUpdateService.updateBeneficiary(read("csv/mcts_beneficiary_update.csv"));
+        mctsBeneficiaryUpdateService.updateBeneficiaryData(read("csv/mcts_beneficiary_update.csv"));
     }
 
     private Reader createUpdateReaderWithHeaders(String... lines) {

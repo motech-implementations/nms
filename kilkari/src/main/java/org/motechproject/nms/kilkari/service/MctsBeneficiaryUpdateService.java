@@ -8,6 +8,6 @@ import java.io.Reader;
  */
 public interface MctsBeneficiaryUpdateService {
 
-    void updateBeneficiary(Reader reader) throws IOException;
+    void updateBeneficiaryData(Reader reader) throws IOException;
 
 }
