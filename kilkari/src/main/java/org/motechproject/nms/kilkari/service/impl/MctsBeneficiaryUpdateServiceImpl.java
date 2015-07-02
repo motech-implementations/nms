@@ -1,10 +1,10 @@
 package org.motechproject.nms.kilkari.service.impl;
 
 import org.joda.time.DateTime;
+import org.motechproject.mds.service.MotechDataService;
 import org.motechproject.nms.csv.exception.CsvImportDataException;
 import org.motechproject.nms.csv.utils.CsvImporterBuilder;
 import org.motechproject.nms.csv.utils.CsvMapImporter;
-import org.motechproject.nms.csv.utils.GetInstanceByLong;
 import org.motechproject.nms.csv.utils.GetLong;
 import org.motechproject.nms.csv.utils.GetString;
 import org.motechproject.nms.kilkari.domain.MctsBeneficiary;
@@ -18,9 +18,7 @@ import org.motechproject.nms.kilkari.repository.MctsChildDataService;
 import org.motechproject.nms.kilkari.repository.MctsMotherDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
-import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.exception.InvalidLocationException;
-import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.LocationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +41,6 @@ import java.util.Map;
 @Service("mctsBeneficiaryUpdateService")
 public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateService {
 
-    private StateDataService stateDataService;
     private SubscriberService subscriberService;
     private SubscriptionErrorDataService subscriptionErrorDataService;
     private LocationService locationService;
@@ -67,12 +64,11 @@ public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateSe
     private static final Logger LOGGER = LoggerFactory.getLogger(MctsBeneficiaryUpdateServiceImpl.class);
 
     @Autowired
-    public MctsBeneficiaryUpdateServiceImpl(StateDataService stateDataService, SubscriberService subscriberService,
+    public MctsBeneficiaryUpdateServiceImpl(SubscriberService subscriberService,
                                             SubscriptionErrorDataService subscriptionErrorDataService,
                                             LocationService locationService, MctsMotherDataService mctsMotherDataService,
                                             MctsChildDataService mctsChildDataService) {
         this.subscriberService = subscriberService;
-        this.stateDataService = stateDataService;
         this.subscriptionErrorDataService = subscriptionErrorDataService;
         this.locationService = locationService;
         this.mctsMotherDataService = mctsMotherDataService;
@@ -137,13 +133,16 @@ public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateSe
         Subscriber subscriber = subscriberService.getSubscriberByBeneficiary(beneficiary);
         SubscriptionPackType packType;
         DateTime newReferenceDate;
+        MotechDataService beneficiaryDataService;
 
         if (beneficiary instanceof MctsMother) {
             packType = SubscriptionPackType.PREGNANCY;
             newReferenceDate = (DateTime) record.get(LMP);
+            beneficiaryDataService = mctsMotherDataService;
         } else {
             packType = SubscriptionPackType.CHILD;
             newReferenceDate = (DateTime) record.get(DOB);
+            beneficiaryDataService = mctsChildDataService;
         }
 
         // Second, update the beneficiary's location if new location fields are provided
@@ -152,6 +151,7 @@ public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateSe
             // validate and set location
             try {
                 MctsBeneficiaryUtils.setLocationFields(locationService.getLocations(record), beneficiary);
+                beneficiaryDataService.update(beneficiary);
             } catch (InvalidLocationException le) {
                 LOGGER.error(le.toString());
 
@@ -197,16 +197,7 @@ public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateSe
         mapping.put(STATE_MCTS_ID, new Optional(new GetString()));
         mapping.put(DOB, new Optional(MctsBeneficiaryUtils.DATE_BY_STRING));
         mapping.put(LMP, new Optional(MctsBeneficiaryUtils.DATE_BY_STRING));
-
-        mapping.put(STATE, new Optional(new GetInstanceByLong<State>() {
-            @Override
-            public State retrieve(Long value) {
-                State state = stateDataService.findByCode(value);
-                MctsBeneficiaryUtils.verify(null != state, "State does not exist");
-                return state;
-            }
-        }));
-
+        mapping.put(STATE, new Optional(new GetLong()));
         mapping.put(DISTRICT, new Optional(new GetLong()));
         mapping.put(TALUKA, new Optional(new GetString()));
         mapping.put(HEALTH_BLOCK, new Optional(new GetLong()));

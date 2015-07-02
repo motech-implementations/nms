@@ -222,10 +222,10 @@ public class Subscription {
     }
 
     /**
-     * Helper method which determines the subscription status based on its start date, subscription pack length
-     * and current status (deactivated subscriptions remains deactivated)
-     * @param subscription subscription for which the status has to be determined
-     * @param today today's, date
+     * Helper method that determines the subscription status based on its start date, subscription pack length
+     * and current status (deactivated subscriptions remain deactivated)
+     * @param subscription subscription for which the status is to be determined
+     * @param today today's date
      * @return status determined for the provided subscription
      */
     public static SubscriptionStatus getStatus(Subscription subscription, DateTime today) {

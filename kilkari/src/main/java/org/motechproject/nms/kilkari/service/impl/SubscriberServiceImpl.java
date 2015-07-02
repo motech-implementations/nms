@@ -19,7 +19,9 @@ import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
+import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Language;
+import org.motechproject.nms.region.repository.DistrictDataService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,17 +42,20 @@ public class SubscriberServiceImpl implements SubscriberService {
     private SubscriptionDataService subscriptionDataService;
     private SubscriptionErrorDataService subscriptionErrorDataService;
     private SubscriptionPackDataService subscriptionPackDataService;
+    private DistrictDataService districtDataService;
 
     @Autowired
     public SubscriberServiceImpl(SubscriberDataService subscriberDataService, SubscriptionService subscriptionService,
                                  SubscriptionDataService subscriptionDataService,
                                  SubscriptionErrorDataService subscriptionErrorDataService,
-                                 SubscriptionPackDataService subscriptionPackDataService) {
+                                 SubscriptionPackDataService subscriptionPackDataService,
+                                 DistrictDataService districtDataService) {
         this.subscriberDataService = subscriberDataService;
         this.subscriptionService = subscriptionService;
         this.subscriptionDataService = subscriptionDataService;
         this.subscriptionErrorDataService = subscriptionErrorDataService;
         this.subscriptionPackDataService = subscriptionPackDataService;
+        this.districtDataService = districtDataService;
     }
 
     @Override
@@ -162,7 +167,8 @@ public class SubscriberServiceImpl implements SubscriberService {
     @Override
     public Subscription updateOrCreateMctsSubscriber(MctsBeneficiary beneficiary, Long msisdn, DateTime referenceDate,
                                                      SubscriptionPackType packType) {
-        Language language = beneficiary.getDistrict().getLanguage();
+        District district = beneficiary.getDistrict();
+        Language language = (Language) districtDataService.getDetachedField(district, "language");
         Subscriber subscriber = getSubscriber(msisdn);
 
         SubscriptionPack pack = subscriptionPackDataService.byType(packType);
