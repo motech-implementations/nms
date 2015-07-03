@@ -1113,6 +1113,30 @@ public class CsrServiceBundleIT extends BasePaxIT {
         assertNull(retry);
     }
 
+
+    @Test
+    public void verifyNMS215() {
+
+        String timestamp = DateTime.now().toString(TIME_FORMATTER);
+
+        CsrHelper helper = new CsrHelper(timestamp, subscriptionService, subscriptionPackDataService,
+                subscriberDataService, languageDataService, circleDataService, stateDataService,
+                districtDataService, districtService);
+
+        helper.makeRecords(1, 0, 0, 0);
+
+        for (CallSummaryRecordDto record : helper.getRecords()) {
+            Map<String, Object> eventParams = new HashMap<>();
+            eventParams.put(CSR_PARAM_KEY, record);
+            MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
+            csrService.processCallSummaryRecord(motechEvent);
+        }
+
+        List<Subscription> subscriptions = subscriptionDataService.retrieveAll();
+        assertEquals(1, subscriptions.size());
+        assertEquals(false,subscriptions.get(0).getNeedsWelcomeMessage());
+    }
+
     //todo: verify multiple days' worth of summary record aggregation
     //todo: verify more stuff I can't think of now
 }
