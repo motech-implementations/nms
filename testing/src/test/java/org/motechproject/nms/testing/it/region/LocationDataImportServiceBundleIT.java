@@ -272,6 +272,24 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
     }
 
     /*
+    * Verify state upload is rejected when name is not provided
+     */
+    @Test(expected = CsvImportDataException.class)
+    public void stateUploadNoName() throws Exception {
+        Reader reader = createReaderWithHeaders(stateHeader, ",1234");
+        stateImportService.importData(reader);
+    }
+
+    /*
+    * Verify state upload is rejected when code is not provided
+     */
+    @Test(expected = CsvImportDataException.class)
+    public void stateUploadNoCode() throws Exception {
+        Reader reader = createReaderWithHeaders(stateHeader, "Bihar,");
+        stateImportService.importData(reader);
+    }
+
+    /*
     * To verify district location data is rejected when mandatory parameter code is missing.
     */
     @Test(expected = CsvImportDataException.class)

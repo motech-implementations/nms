@@ -12,6 +12,7 @@ import org.motechproject.nms.region.csv.HealthFacilityImportService;
 import org.motechproject.nms.region.csv.HealthSubFacilityImportService;
 import org.motechproject.nms.region.csv.LocationDataImportService;
 import org.motechproject.nms.region.csv.NonCensusVillageImportService;
+import org.motechproject.nms.region.csv.StateImportService;
 import org.motechproject.nms.region.csv.TalukaImportService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +39,7 @@ public class LocationDataImportController {
 
     private AlertService alertService;
 
+    private StateImportService stateImportService;
     private DistrictImportService districtImportService;
     private TalukaImportService talukaImportService;
     private NonCensusVillageImportService nonCensusVillageImportService;
@@ -93,6 +95,11 @@ public class LocationDataImportController {
     }
 
     @Autowired
+    public void setStateImportService(StateImportService stateImportService) {
+        this.stateImportService = stateImportService;
+    }
+
+    @Autowired
     public void setDistrictImportService(DistrictImportService districtImportService) {
         this.districtImportService = districtImportService;
     }
@@ -135,6 +142,7 @@ public class LocationDataImportController {
     private Map<String, LocationDataImportService> getLocationDataImportServiceMapping() {
         if (null == locationDataImportServiceMapping) {
             locationDataImportServiceMapping = new HashMap<>();
+            locationDataImportServiceMapping.put("state", stateImportService);
             locationDataImportServiceMapping.put("district", districtImportService);
             locationDataImportServiceMapping.put("taluka", talukaImportService);
             locationDataImportServiceMapping.put("nonCensusVillage", nonCensusVillageImportService);
