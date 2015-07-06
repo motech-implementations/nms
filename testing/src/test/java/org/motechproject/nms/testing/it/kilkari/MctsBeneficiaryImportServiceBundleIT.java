@@ -9,7 +9,6 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.motechproject.nms.csv.exception.CsvImportDataException;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
@@ -605,17 +604,21 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
      * 
      * https://applab.atlassian.net/browse/NMS-208
      */
-    @Test(expected = CsvImportDataException.class)
-    @Ignore
+    @Test
     public void verifyFT286() throws Exception {
     	State state31 = createState(31L, "State 31");
     	stateDataService.create(state31);
     	DateTime dob = DateTime.now();
         String dobString = getDateString(dob);
-        
+
         //attempt to create subscriber and subscription with wrong state-district combination. it should be rejected
         Reader reader = createChildDataReaderWithHeaders("31\t3\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t\t9439986187\t" + dobString);
         mctsBeneficiaryImportService.importChildData(reader);
+
+        List<SubscriptionError> subscriptionErrors = subscriptionErrorDataService.findByContactNumber(9439986187L);
+
+        assertEquals(1, subscriptionErrors.size());
+        assertEquals("<District_ID - 3 : Invalid location>", subscriptionErrors.get(0).getRejectionMessage());
     }
     
         
