@@ -1196,61 +1196,6 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     }
 
 
-    /**
-     * To verify that Save Inbox call Details API request fails if specified subscription doesn't exist for beneficiary.
-     */
-    @Test
-    //TODO: https://applab.atlassian.net/browse/NMS-178
-    @Ignore
-    public void verifyFT185() throws IOException, InterruptedException {
-        // subscribed caller with deactivated subscription i.e no active and
-        // pending subscriptions
-        Subscriber subscriber = subscriberDataService.create(new Subscriber(
-                3000000000L));
-        Subscription subscription1 = subscriptionService.createSubscription(
-                subscriber.getCallingNumber(), rh.hindiLanguage(), sh.childPack(),
-                SubscriptionOrigin.IVR);
-        // deactivate subscription
-        subscriptionService.deactivateSubscription(subscription1,
-                DeactivationReason.DEACTIVATED_BY_USER);
-        HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
-                3000000000L, // callingNumber
-                "A", // operator
-                "AP", // circle
-                123456789012345L, // callId
-                123L, // callStartTime
-                456L, // callEndTime
-                123, // callDurationInPulses
-                1, // callStatus
-                1, // callDisconnectReason
-                new HashSet<>(Arrays.asList(
-                        new CallDataRequest(subscription1.getSubscriptionId(), // subscriptionId
-                                // refer
-                                // deactivated
-                                // subscription
-                                "48WeeksPack", // subscriptionPack
-                                "123", // inboxWeekId
-                                "foo", // contentFileName
-                                123L, // startTime
-                                456L), // endTime
-                        new CallDataRequest(
-                                "ae7681ae-1f3c-4dba-365d-4b26e19f4335", // subscriptionId
-                                // not
-                                // exist
-                                "72WeeksPack", // subscriptionPack
-                                "123", // inboxWeekId
-                                "foo", // contentFileName
-                                123L, // startTime
-                                456L) // endTime
-                )))); // content
-        String expectedJsonResponse = createFailureResponseJson("<subscriptionId: Invalid><content: Invalid>");
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
-                HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
-
-    }
-
-
     /*
      * To verify the behavior of Get Inbox Details API if provided beneficiary's callId is not valid: more than 15 digits.
      */
