@@ -1353,7 +1353,7 @@ public class UserControllerBundleIT extends BasePaxIT {
      * not deployed in provided Subscriber's state.
      */
     @Test
-    // TODO: https://applab.atlassian.net/browse/NMS-181
+    // https://applab.atlassian.net/browse/NMS-181
     public void verifyFT16() throws IOException,
             InterruptedException {
         createKilkariUndeployTestData();
