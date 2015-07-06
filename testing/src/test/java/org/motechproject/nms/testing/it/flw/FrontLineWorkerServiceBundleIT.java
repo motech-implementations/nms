@@ -200,6 +200,7 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
 
         assertEquals(FrontLineWorkerStatus.ANONYMOUS, flw.getStatus());
 
+        flw.setState(sampleState);
         flw.setDistrict(district);
         flw.setName("Frank Huster");
         flw.setLanguage(language);

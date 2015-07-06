@@ -172,8 +172,27 @@ public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
     }
 
     @Override
-    public FrontLineWorker getByMctsFlwId(String mctsFlwId) {
-        return frontLineWorkerDataService.findByMctsFlwId(mctsFlwId);
+    public FrontLineWorker getByMctsFlwIdAndState(final String mctsFlwId, final State state) {
+        if (mctsFlwId == null || state == null) {
+            LOGGER.error(String.format("Attempt to look up FLW by a null mctsFlwId (%s) or state (%s)",
+                    mctsFlwId, state == null ? "null" : state.getName()));
+            return null;
+        }
+
+        @SuppressWarnings("unchecked")
+        QueryExecution<FrontLineWorker> queryExecution = new QueryExecution<FrontLineWorker>() {
+            @Override
+            public FrontLineWorker execute(Query query, InstanceSecurityRestriction restriction) {
+                query.setFilter("mctsFlwId == _mctsFlwId && state == _state");
+                query.declareParameters("String _mctsFlwId, org.motechproject.nms.region.domain.State _state");
+                query.setClass(FrontLineWorker.class);
+                query.setUnique(true);
+
+                return (FrontLineWorker) query.execute(mctsFlwId, state);
+            }
+        };
+
+        return frontLineWorkerDataService.executeQuery(queryExecution);
     }
 
     @Override

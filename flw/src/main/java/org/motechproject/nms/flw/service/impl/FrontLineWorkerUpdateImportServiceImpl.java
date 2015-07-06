@@ -4,6 +4,7 @@ import org.motechproject.nms.csv.exception.CsvImportDataException;
 import org.motechproject.nms.csv.utils.ConstraintViolationUtils;
 import org.motechproject.nms.csv.utils.CsvImporterBuilder;
 import org.motechproject.nms.csv.utils.CsvMapImporter;
+import org.motechproject.nms.csv.utils.GetInstanceByLong;
 import org.motechproject.nms.csv.utils.GetInstanceByString;
 import org.motechproject.nms.csv.utils.GetLong;
 import org.motechproject.nms.csv.utils.GetString;
@@ -11,6 +12,8 @@ import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.flw.service.FrontLineWorkerUpdateImportService;
 import org.motechproject.nms.region.domain.Language;
+import org.motechproject.nms.region.domain.State;
+import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.LanguageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -33,12 +36,14 @@ public class FrontLineWorkerUpdateImportServiceImpl implements FrontLineWorkerUp
 
     public static final String NMS_FLW_ID = "NMS FLW-ID";
     public static final String MCTS_FLW_ID = "MCTS FLW-ID";
+    public static final String STATE = "STATE";
     public static final String MSISDN = "MSISDN";
     public static final String LANGUAGE_CODE = "LANGUAGE CODE";
     public static final String NEW_MSISDN = "NEW MSISDN";
 
     private FrontLineWorkerService frontLineWorkerService;
     private LanguageService languageService;
+    private StateDataService stateDataService;
 
     /*
         Expected file format:
@@ -140,6 +145,7 @@ public class FrontLineWorkerUpdateImportServiceImpl implements FrontLineWorkerUp
 
         String nmsFlWId = (String) record.get(NMS_FLW_ID);
         String mctsFlwId = (String) record.get(MCTS_FLW_ID);
+        State state = (State) record.get(STATE);
         Long msisdn = (Long) record.get(MSISDN);
 
         if (nmsFlWId != null) {
@@ -147,7 +153,7 @@ public class FrontLineWorkerUpdateImportServiceImpl implements FrontLineWorkerUp
         }
 
         if (flw == null && mctsFlwId != null) {
-            flw = frontLineWorkerService.getByMctsFlwId(mctsFlwId);
+            flw = frontLineWorkerService.getByMctsFlwIdAndState(mctsFlwId, state);
         }
 
         if (flw == null && msisdn != null) {
@@ -163,6 +169,12 @@ public class FrontLineWorkerUpdateImportServiceImpl implements FrontLineWorkerUp
         mapping.put(NMS_FLW_ID, new Optional(new GetString()));
         mapping.put(MCTS_FLW_ID, new Optional(new GetString()));
         mapping.put(MSISDN, new Optional(new GetLong()));
+        mapping.put(STATE, new GetInstanceByLong<State>() {
+            @Override
+            public State retrieve(Long value) {
+                return stateDataService.findByCode(value);
+            }
+        });
 
         return mapping;
     }
@@ -210,5 +222,10 @@ public class FrontLineWorkerUpdateImportServiceImpl implements FrontLineWorkerUp
     @Autowired
     public void setLanguageService(LanguageService languageService) {
         this.languageService = languageService;
+    }
+
+    @Autowired
+    public void setStateDataService(StateDataService stateDataService) {
+        this.stateDataService = stateDataService;
     }
 }

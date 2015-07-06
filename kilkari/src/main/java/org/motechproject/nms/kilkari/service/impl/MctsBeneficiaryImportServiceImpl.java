@@ -335,7 +335,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         beneficiary.setDistrict((District) locations.get(DISTRICT));
         beneficiary.setTaluka((Taluka) locations.get(TALUKA));
         beneficiary.setHealthBlock((HealthBlock) locations.get(HEALTH_BLOCK));
-        beneficiary.setPrimaryHealthCenter((HealthFacility) locations.get(PHC));
+        beneficiary.setHealthFacility((HealthFacility) locations.get(PHC));
         beneficiary.setHealthSubFacility((HealthSubFacility) locations.get(SUBCENTRE));
         beneficiary.setVillage((Village) locations.get(CENSUS_VILLAGE + NON_CENSUS_VILAGE));
     }
