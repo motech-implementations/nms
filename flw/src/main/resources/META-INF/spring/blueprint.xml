@@ -79,4 +79,8 @@
                     interface="org.motechproject.scheduler.service.MotechSchedulerService" />
 
     <osgi:reference id="alertsService" interface="org.motechproject.alerts.contract.AlertService" />
+
+    <!-- CSV Audit Service -->
+    <osgi:reference id="csvAuditService" interface="org.motechproject.nms.csv.service.CsvAuditService" />
+
 </beans>

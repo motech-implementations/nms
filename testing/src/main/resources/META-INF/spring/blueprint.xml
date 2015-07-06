@@ -67,6 +67,9 @@
 
     <osgi:reference id="42" interface="org.motechproject.alerts.contract.AlertsDataService" />
 
+    <osgi:reference id="43" interface="org.motechproject.nms.csv.repository.CsvAuditRecordDataService" />
+    <osgi:reference id="44" interface="org.motechproject.nms.csv.service.CsvAuditService" />
+
     <osgi:reference id="transactionManager" interface="org.springframework.transaction.PlatformTransactionManager"/>
     <osgi:reference id="eventRelay" interface="org.motechproject.event.listener.EventRelay"/>
 

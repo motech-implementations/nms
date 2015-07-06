@@ -712,7 +712,6 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
      * https://applab.atlassian.net/browse/NMS-207
      */
     @Test
-    @Ignore
     public void verifyFT322() throws Exception {
         // import mother
         DateTime lmp = DateTime.now().minusDays(100);
@@ -744,11 +743,11 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         assertEquals(2, subscriptions.size());
         assertNotNull(childSubscription);
         assertNotNull(pregnancySubscription);
-        
+
         // import child with same MSISDN and above MotherID --> child should be updated and mother be deactivated
         reader = createChildDataReaderWithHeaders("21\t3\t\t\t\t\t9876543210\tBaby1 of Shanti Ekka\t1234567890\t9439986187\t" + dobString);
         mctsBeneficiaryImportService.importChildData(reader);
-        
+
         subscriber = subscriberDataService.findByCallingNumber(9439986187L);
         subscriptions = subscriber.getActiveAndPendingSubscriptions();
         childSubscription = subscriptionService.getActiveSubscription(subscriber, SubscriptionPackType.CHILD);

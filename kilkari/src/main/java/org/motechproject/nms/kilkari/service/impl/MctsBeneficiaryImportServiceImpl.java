@@ -272,7 +272,8 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             return subscriptionService.createSubscription(msisdn, language, pack, SubscriptionOrigin.MCTS_IMPORT);
         }
 
-        if (subscriptionService.getActiveSubscription(subscriber, pack.getType()) != null) {
+        Subscription subscription = subscriptionService.getActiveSubscription(subscriber, pack.getType());
+        if (subscription != null) {
             // subscriber already has an active subscription to this pack
 
             MctsBeneficiary existingBeneficiary = (pack.getType() == SubscriptionPackType.PREGNANCY) ? subscriber.getMother() :
@@ -294,7 +295,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                 subscriberService.update(subscriber);
             }
 
-            return null;
+            return subscription;
         }
 
         // subscriber exists, but doesn't have a subscription to this pack

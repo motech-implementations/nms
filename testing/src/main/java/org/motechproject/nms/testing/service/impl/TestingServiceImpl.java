@@ -3,6 +3,7 @@ package org.motechproject.nms.testing.service.impl;
 import org.joda.time.DateTime;
 import org.joda.time.Weeks;
 import org.motechproject.alerts.contract.AlertsDataService;
+import org.motechproject.nms.csv.repository.CsvAuditRecordDataService;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.repository.CallContentDataService;
@@ -142,6 +143,12 @@ public class TestingServiceImpl implements TestingService {
     @Autowired
     private LanguageDataService languageDataService;
 
+    /**
+     * CSV
+     */
+    @Autowired
+    private CsvAuditRecordDataService csvAuditRecordDataService;
+
 
     /**
      * MOTECH Alerts
@@ -167,7 +174,7 @@ public class TestingServiceImpl implements TestingService {
 
 
     @Override
-    public void clearDatabase() {
+    public void clearDatabase() { //NOPMD NcssMethodCount
 
         if (!Boolean.parseBoolean(settingsFacade.getProperty(TESTING_ENVIRONMENT))) {
             throw new IllegalStateException("calling clearDatabase() in a production environment is forbidden!");
@@ -258,6 +265,12 @@ public class TestingServiceImpl implements TestingService {
          * Alerts
          */
         alertsDataService.deleteAll();
+
+
+        /**
+         * CSV
+         */
+        csvAuditRecordDataService.deleteAll();
     }
 
 }

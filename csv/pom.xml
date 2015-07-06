@@ -66,11 +66,18 @@
                         <Resource-Path>csv/resources</Resource-Path>
                         <Context-Path>csv</Context-Path>
                         <Export-Package>
+                            org.motechproject.nms.csv.service;version=${project.version},
                             org.motechproject.nms.csv.utils;version=${project.version},
+                            org.motechproject.nms.csv.domain;version=${project.version},
+                            org.motechproject.nms.csv.repository;version=${project.version},
                             org.motechproject.nms.csv.exception;version=${project.version}
                         </Export-Package>
                         <Import-Package>
                             org.motechproject.osgi.web,
+                            org.aopalliance.aop,
+                            org.springframework.aop,
+                            org.springframework.aop.framework,
+                            org.springframework.web.multipart.commons,
                             *
                         </Import-Package>
                     </instructions>

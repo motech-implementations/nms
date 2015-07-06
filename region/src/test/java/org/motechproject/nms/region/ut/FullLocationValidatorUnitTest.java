@@ -31,7 +31,6 @@ public class FullLocationValidatorUnitTest {
         validator = factory.getValidator();
     }
 
-    // TODO: Add unit tests
     // Test No location
     @Test
     public void testNoLocation() {
