@@ -471,7 +471,6 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
      * https://applab.atlassian.net/browse/NMS-206
      */
     @Test
-    @Ignore
     public void verifyFT288_1() throws Exception {
     	
     	//DOB is missing
@@ -489,7 +488,6 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
      * https://applab.atlassian.net/browse/NMS-206
      */
     @Test
-    @Ignore
     public void verifyFT288_2() throws Exception {
     	
     	//LMP is missing
@@ -586,11 +584,11 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     	stateDataService.create(state31);
     	DateTime dob = DateTime.now();
         String dobString = getDateString(dob);
-        
+
         //attempt to create subscriber and subscription with wrong state-district combination. it should be rejected
         Reader reader = createChildDataReaderWithHeaders("31\t3\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t\t9439986187\t" + dobString);
         mctsBeneficiaryImportService.importChildData(reader);
-        
+
         //subscriber should not be created and rejected entry should be in nms_subscription_errors with reason 'INVALID_LOCATION'.
         assertNoSubscriber(9439986187L);
         assertSubscriptionError(9439986187L, SubscriptionPackType.CHILD, SubscriptionRejectionReason.INVALID_LOCATION);

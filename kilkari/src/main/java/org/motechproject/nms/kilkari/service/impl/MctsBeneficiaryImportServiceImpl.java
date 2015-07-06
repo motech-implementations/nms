@@ -377,7 +377,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         });
         mapping.put(BENEFICIARY_NAME, new GetString());
         mapping.put(MSISDN, new GetLong());
-        mapping.put(LMP, new GetInstanceByString<DateTime>() {
+        mapping.put(LMP, new Optional(new GetInstanceByString<DateTime>() {
             @Override
             public DateTime retrieve(String value) {
                 if (value == null) {
@@ -400,7 +400,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
                 return lmp;
             }
-        });
+        }));
 
         // TODO: Any other fields needed for mothers? e.g. Abortion, etc.
 
@@ -431,7 +431,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             }
         }));
         mapping.put(MSISDN, new GetLong());
-        mapping.put(DOB, new GetInstanceByString<DateTime>() {
+        mapping.put(DOB, new Optional(new GetInstanceByString<DateTime>() {
             @Override
             public DateTime retrieve(String value) {
                 if (value == null) {
@@ -454,7 +454,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
                 return dob;
             }
-        });
+        }));
 
         return mapping;
 
