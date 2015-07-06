@@ -9,7 +9,6 @@ import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.joda.time.DateTime;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.api.web.contract.BadRequest;
@@ -1197,22 +1196,19 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
 
     /**
-     * To verify that Save Inbox call Details API request fails if specified subscription doesn't exist for beneficiary.
+     * To verify that Save Inbox call Details API request succeeds if specified subscription doesn't exist for
+     * beneficiary.
      */
     @Test
-    //TODO: https://applab.atlassian.net/browse/NMS-178
-    @Ignore
+    //https://applab.atlassian.net/browse/NMS-178
     public void verifyFT185() throws IOException, InterruptedException {
         // subscribed caller with deactivated subscription i.e no active and
         // pending subscriptions
-        Subscriber subscriber = subscriberDataService.create(new Subscriber(
-                3000000000L));
-        Subscription subscription1 = subscriptionService.createSubscription(
-                subscriber.getCallingNumber(), rh.hindiLanguage(), sh.childPack(),
-                SubscriptionOrigin.IVR);
+        Subscriber subscriber = subscriberDataService.create(new Subscriber(3000000000L));
+        Subscription subscription1 = subscriptionService.createSubscription(subscriber.getCallingNumber(),
+                rh.hindiLanguage(), sh.childPack(), SubscriptionOrigin.IVR);
         // deactivate subscription
-        subscriptionService.deactivateSubscription(subscription1,
-                DeactivationReason.DEACTIVATED_BY_USER);
+        subscriptionService.deactivateSubscription(subscription1, DeactivationReason.DEACTIVATED_BY_USER);
         HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
                 3000000000L, // callingNumber
                 "A", // operator
@@ -1243,11 +1239,9 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                                 123L, // startTime
                                 456L) // endTime
                 )))); // content
-        String expectedJsonResponse = createFailureResponseJson("<subscriptionId: Invalid><content: Invalid>");
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
-                HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
 
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
     }
 
 
@@ -1255,19 +1249,13 @@ public class KilkariControllerBundleIT extends BasePaxIT {
      * To verify the behavior of Get Inbox Details API if provided beneficiary's callId is not valid: more than 15 digits.
      */
     @Test
-    //TODO: https://applab.atlassian.net/browse/NMS-186
-    @Ignore
     public void verifyFT85() throws IOException, InterruptedException {
 
         // callingNumber alphanumeric
-        HttpGet httpGet = createHttpGet(true, "12345DF7890", true,
-                "123456789012345");
-        String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
+        HttpGet httpGet = createHttpGet(true, "12345DF7890", true, "123456789012345");
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
-        assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response.getEntity()))  );
-
     }
 
     /**
@@ -1316,12 +1304,10 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
 
     /**
-     * To verify that Save Inbox call Details API request should succeed with content provided for only 1 subscription
-     * Pack and place holder for second Pack also present with no details.
+     * To verify that Save Inbox call Details API request should succeed with content provided for only 1
+     * subscription pack
      */
     @Test
-    //todo: https://applab.atlassian.net/browse/NMS-182
-    @Ignore
     public void verifyFT186() throws IOException, InterruptedException {
         Subscriber subscriber = subscriberDataService.create(new Subscriber(3000000000L));
         Subscription subscription = subscriptionService.createSubscription(subscriber.getCallingNumber(),
@@ -1344,10 +1330,11 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                                 "123", // inboxWeekId
                                 "foo1.wav", // contentFileName
                                 123L, // startTime
-                                456L), null)))); // place holder for pack2
+                                456L)))));
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+
         // assert inboxCallDetailRecord
         InboxCallDetailRecord inboxCallDetailRecord = inboxCallDetailsDataService
                 .retrieve("callingNumber", 3000000000L);
@@ -1358,18 +1345,52 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertTrue(123 == inboxCallDetailRecord.getCallDurationInPulses());
         assertTrue(1 == inboxCallDetailRecord.getCallStatus());
         assertTrue(1 == inboxCallDetailRecord.getCallDisconnectReason());
-        assertTrue(123L == inboxCallDetailRecord.getCallStartTime().getMillis());
-        assertTrue(456L == inboxCallDetailRecord.getCallEndTime().getMillis());
+        assertEquals(new DateTime(123000L), inboxCallDetailRecord.getCallStartTime());
+        assertEquals(new DateTime(456000L), inboxCallDetailRecord.getCallEndTime());
 
         // assert inboxCallData for 48WeeksPack
-        InboxCallData inboxCallData48Pack = inboxCallDataDataService.retrieve(
-                "contentFileName", "foo1.wav");
+        InboxCallData inboxCallData48Pack = inboxCallDataDataService.retrieve("contentFileName", "foo1.wav");
         assertEquals("foo1.wav", inboxCallData48Pack.getContentFileName());
-        assertTrue(456L == inboxCallData48Pack.getEndTime().getMillis());
+        assertEquals(new DateTime(456000L), inboxCallData48Pack.getEndTime());
         assertEquals("123", inboxCallData48Pack.getInboxWeekId());
-        assertTrue(123L == inboxCallData48Pack.getStartTime().getMillis());
+        assertEquals(new DateTime(123000L), inboxCallData48Pack.getStartTime());
         assertEquals(subscription.getSubscriptionId(), inboxCallData48Pack.getSubscriptionId());
         assertEquals("48WeeksPack", inboxCallData48Pack.getSubscriptionPack());
+    }
+
+
+    /**
+     * To verify that Save Inbox call Details API request should gracefully fail with content provided for 2
+     * subscription packs with one valid and one null
+     */
+    @Test
+    public void verifyFT186_2() throws IOException, InterruptedException {
+        Subscriber subscriber = subscriberDataService.create(new Subscriber(3000000000L));
+        Subscription subscription = subscriptionService.createSubscription(subscriber.getCallingNumber(),
+                rh.hindiLanguage(), sh.childPack(), SubscriptionOrigin.IVR);
+        subscriptionService.createSubscription(subscriber.getCallingNumber(), rh.hindiLanguage(),
+                sh.pregnancyPack(), SubscriptionOrigin.IVR);
+        HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
+                3000000000L, // callingNumber
+                "A", // operator
+                "AP", // circle
+                123456789012345L, // callId
+                123L, // callStartTime
+                456L, // callEndTime
+                123, // callDurationInPulses
+                1, // callStatus
+                1, // callDisconnectReason
+                new HashSet<>(Arrays.asList(
+                        new CallDataRequest(subscription.getSubscriptionId(), // subscriptionId
+                                "48WeeksPack", // subscriptionPack
+                                "123", // inboxWeekId
+                                "foo1.wav", // contentFileName
+                                123L, // startTime
+                                456L),
+                        null)))); // place holder for pack2
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
     }
 
 
@@ -1701,8 +1722,6 @@ public class KilkariControllerBundleIT extends BasePaxIT {
      * To verify the behavior of Save Inbox call Details API if provided
      * beneficiary's callId is not valid : Alphanumeric value.
      */
-    // TODO JIRA issue https://applab.atlassian.net/browse/NMS-187
-    @Ignore
     @Test
     public void verifyFT29() throws IOException, InterruptedException {
         // callId alpha numeric
@@ -1717,24 +1736,16 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 "1" // callDisconnectReason
         );
 
-        String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
-
-        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
-                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
-        assertEquals(expectedJsonResponse,
-                EntityUtils.toString(response.getEntity()));
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
-                .getStatusCode());
-
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
     }
+
     /**
      * To check anonymous user is able to access Kilkari with multiple states in
      * user's circle, given that service is deployed in at least one of these
      * states
      */
     @Test
-    // TODO: https://applab.atlassian.net/browse/NMS-196
-    @Ignore
     public void verifyFT124() throws IOException, InterruptedException {
         // setup state1 data
         Language language1 = new Language("Ur", "urdu");
@@ -1987,8 +1998,6 @@ public class KilkariControllerBundleIT extends BasePaxIT {
      * To verify the behavior of Get Subscriber Details API if a mandatory
      * parameter : operator is missing from the API request.
      */
-    // TODO : JIRA issue https://applab.atlassian.net/browse/NMS-192
-    @Ignore
     @Test
     public void verifyFT13() throws IOException, InterruptedException {
         /**
@@ -2002,8 +2011,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 "123456789012345" // callId more than 15 digits
         );
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
     }
 
     /**
@@ -2143,25 +2152,18 @@ public class KilkariControllerBundleIT extends BasePaxIT {
      * To verify the behavior of Deactivate Subscription Request API if provided
      * beneficiary's callId is not valid : Alphanumeric value.
      */
-    // TODO JIRA issue https://applab.atlassian.net/browse/NMS-187
-    @Ignore
     @Test
     public void verifyFT100() throws IOException, InterruptedException {
         Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
-        Subscription subscription = subscriber.getActiveAndPendingSubscriptions()
-                .iterator().next();
+        Subscription subscription = subscriber.getActiveAndPendingSubscriptions().iterator().next();
         String subscriptionId = subscription.getSubscriptionId();
         // callId alphanumeric
         HttpDeleteWithBody httpDelete = createDeactivateSubscriptionHttpDelete(
                 "1000000000", "A", "AP", "12345RF89012345", subscriptionId);
-        String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
 
-        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
-                httpDelete, ADMIN_USERNAME, ADMIN_PASSWORD);
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
-                .getStatusCode());
-        assertEquals(expectedJsonResponse,
-                EntityUtils.toString(response.getEntity()));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpDelete, ADMIN_USERNAME,
+                ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
     }
 
 
@@ -2216,26 +2218,19 @@ public class KilkariControllerBundleIT extends BasePaxIT {
      * To verify the behavior of Deactivate Subscription Request API if provided
      * Subscriber's callingNumber is not valid : Alphanumeric value.
      */
-    // TODO JIRA issue https://applab.atlassian.net/browse/NMS-187
-    @Ignore
     @Test
     public void verifyFT97() throws IOException, InterruptedException {
         Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
-        Subscription subscription = subscriber.getActiveAndPendingSubscriptions()
-                .iterator().next();
+        Subscription subscription = subscriber.getActiveAndPendingSubscriptions().iterator().next();
         String subscriptionId = subscription.getSubscriptionId();
-        String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
 
         // callingNumber alphanumeric
         HttpDeleteWithBody httpDelete = createDeactivateSubscriptionHttpDelete(
                 "1234DE678901", "A", "AP", "123456789012345", subscriptionId);
 
-        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
-                httpDelete, ADMIN_USERNAME, ADMIN_PASSWORD);
-        assertEquals(expectedJsonResponse,
-                EntityUtils.toString(response.getEntity()));
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
-                .getStatusCode());
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpDelete, ADMIN_USERNAME,
+                ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
     }
 
     //To verify the behavior of  Deactivate Subscription Request API  if a mandatory parameter :
@@ -2411,20 +2406,13 @@ public class KilkariControllerBundleIT extends BasePaxIT {
      * To verify the behavior of Create Subscription Request API if provided
      * beneficiary's callId is not valid : Alphanumeric value.
      */
-    // TODO JIRA issue https://applab.atlassian.net/browse/NMS-197
-    @Ignore
     @Test
     public void verifyFT63() throws IOException, InterruptedException {
         // callId alphanumeric
-        HttpPost httpPost = createSubscriptionHttpPost("1234567890", "A", "AP",
-                "12345678AR12545", "10", "childPack");
-        String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
-        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
-                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
-                .getStatusCode());
-        assertEquals(expectedJsonResponse,
-                EntityUtils.toString(response.getEntity()));
+        HttpPost httpPost = createSubscriptionHttpPost("1234567890", "A", "AP", "12345678AR12545", "10",
+                "childPack");
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
     }
 
 
@@ -2433,8 +2421,6 @@ public class KilkariControllerBundleIT extends BasePaxIT {
      * beneficiary's callStartTime is not valid : not in epoch format :
      * 7/5/2015.
      */
-    // TODO JIRA issue https://applab.atlassian.net/browse/NMS-199
-    @Ignore
     @Test
     public void verifyFT30() throws IOException, InterruptedException {
         // Invalid callStartTime not in Epoch format
@@ -2448,21 +2434,14 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 "1", // callStatus
                 "1" // callDisconnectReason
         );
-        String expectedJsonResponse = createFailureResponseJson("<callStartTime: Invalid>");
-        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
-                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
-        assertEquals(expectedJsonResponse,
-                EntityUtils.toString(response.getEntity()));
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
-                .getStatusCode());
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
     }
 
     /**
      * To verify the behavior of Save Inbox call Details API if provided
      * beneficiary's callEndTime is not valid : not in epoch format : 7/5/2015.
      */
-    // TODO JIRA issue https://applab.atlassian.net/browse/NMS-199
-    @Ignore
     @Test
     public void verifyFT31() throws IOException, InterruptedException {
         // Invalid callEndTime not in Epoch format
@@ -2476,13 +2455,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 "1", // callStatus
                 "1" // callDisconnectReason
         );
-        String expectedJsonResponse = createFailureResponseJson("<callEndTime: Invalid>");
-        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
-                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
-        assertEquals(expectedJsonResponse,
-                EntityUtils.toString(response.getEntity()));
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
-                .getStatusCode());
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
     }
 
 
@@ -2595,8 +2569,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
      * To verify the behavior of Save Inbox call Details API if provided
      * beneficiary's startTime is not valid : not in epoch format : 7/5/2015.
      */
-    // TODO JIRA issue https://applab.atlassian.net/browse/NMS-199
-    @Ignore
+    // JIRA issue https://applab.atlassian.net/browse/NMS-199
     @Test
     public void verifyFT37() throws IOException, InterruptedException {
         // Invalid content startTime: not in Epoch format
@@ -2617,21 +2590,15 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 "7/5/15", // startTime not in epoch format
                 "456" // endTime
         );
-        String expectedJsonResponse = createFailureResponseJson("<startTime: Invalid>");
-        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
-                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
-        assertEquals(expectedJsonResponse,
-                EntityUtils.toString(response.getEntity()));
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
-                .getStatusCode());
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
     }
 
     /**
      * To verify the behavior of Save Inbox call Details API if provided
      * beneficiary's endTime is not valid : not in epoch format : 7/5/2015.
      */
-    // TODO JIRA issue https://applab.atlassian.net/browse/NMS-199
-    @Ignore
+    // JIRA issue https://applab.atlassian.net/browse/NMS-199
     @Test
     public void verifyFT38() throws IOException, InterruptedException {
         // Invalid content endTime: not in Epoch format
@@ -2652,21 +2619,15 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 "454", // startTime
                 "7/5/15" // endTime not in epoch format
         );
-        String expectedJsonResponse = createFailureResponseJson("<endTime: Invalid>");
-        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
-                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
-        assertEquals(expectedJsonResponse,
-                EntityUtils.toString(response.getEntity()));
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
-                .getStatusCode());
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
     }
 
     /**
      * To verify that Save Inbox call Details API request fails if the provided
      * parameter value of callingNumber is : blank value.
      */
-    // TODO JIRA issue https://applab.atlassian.net/browse/NMS-198
-    @Ignore
+    // JIRA issue https://applab.atlassian.net/browse/NMS-198
     @Test
     public void verifyFT54_72() throws IOException, InterruptedException {
         // Blank callingNumber
@@ -2681,14 +2642,9 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 "1", // callStatus
                 "1" // callDisconnectReason
         );
-        String expectedJsonResponse = createFailureResponseJson("<callingNumber: Not Present>");
 
-        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
-                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
-                .getStatusCode());
-        assertEquals(expectedJsonResponse,
-                EntityUtils.toString(response.getEntity()));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
 
         httpPost = createInboxCallDetailsRequestHttpPost(" ", // callingNumber
                 // blank(single space)
@@ -2702,12 +2658,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 "1" // callDisconnectReason
         );
 
-        response = SimpleHttpClient.httpRequestAndResponse(httpPost,
-                ADMIN_USERNAME, ADMIN_PASSWORD);
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
-                .getStatusCode());
-        assertEquals(expectedJsonResponse,
-                EntityUtils.toString(response.getEntity()));
+        response = SimpleHttpClient.httpRequestAndResponse(httpPost,ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
     }
 
     /**
@@ -2751,8 +2703,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
      * To verify that Save Inbox call Details API request fails if the provided
      * parameter value of callDisconnectReason is : empty value.
      */
-    // TODO JIRA issue https://applab.atlassian.net/browse/NMS-198
-    @Ignore
+    // JIRA issue https://applab.atlassian.net/browse/NMS-198
     @Test
     public void verifyFT56() throws IOException, InterruptedException {
         // Blank callDisconnectReason
@@ -2766,14 +2717,9 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 "1", // callStatus
                 "" // callDisconnectReason blank
         );
-        String expectedJsonResponse = createFailureResponseJson("<callDisconnectReason: Not Present>");
 
-        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
-                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
-                .getStatusCode());
-        assertEquals(expectedJsonResponse,
-                EntityUtils.toString(response.getEntity()));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
 
         httpPost = createInboxCallDetailsRequestHttpPost("1234567890", "A", // operator
                 "AP", // circle
@@ -2784,49 +2730,35 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 "1", // callStatus
                 " " // callDisconnectReason blank(single space)
         );
-        expectedJsonResponse = createFailureResponseJson("<callDisconnectReason: Not Present>");
 
-        response = SimpleHttpClient.httpRequestAndResponse(httpPost,
-                ADMIN_USERNAME, ADMIN_PASSWORD);
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
-                .getStatusCode());
-        assertEquals(expectedJsonResponse,
-                EntityUtils.toString(response.getEntity()));
+        response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
     }
 
     /**
      * test DeactivateSubscription API with Blank Params
      *
      */
-    // TODO :JIRA issue: https://applab.atlassian.net/browse/NMS-193
-    @Ignore
+    // JIRA issue: https://applab.atlassian.net/browse/NMS-193
     @Test
     public void verifyFT105() throws IOException, InterruptedException {
 
         Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
-        Subscription subscription = subscriber.getActiveAndPendingSubscriptions()
-                .iterator().next();
+        Subscription subscription = subscriber.getActiveAndPendingSubscriptions().iterator().next();
         String subscriptionId = subscription.getSubscriptionId();
 
         // callingNumber blank
-        HttpDeleteWithBody httpDelete = createDeactivateSubscriptionHttpDelete(
-                "", "A", "AP", "123456789012345", subscriptionId);
-        String expectedJsonResponse = createFailureResponseJson("<callingNumber: Not Present>");
+        HttpDeleteWithBody httpDelete = createDeactivateSubscriptionHttpDelete("", "A", "AP", "123456789012345",
+                subscriptionId);
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpDelete, ADMIN_USERNAME, ADMIN_PASSWORD);
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
-        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
 
         // callingNumber blank
-        httpDelete = createDeactivateSubscriptionHttpDelete(" ", "A", "AP",
-                "123456789012345", subscriptionId);
-        response = SimpleHttpClient.httpRequestAndResponse(httpDelete,
-                ADMIN_USERNAME, ADMIN_PASSWORD);
+        httpDelete = createDeactivateSubscriptionHttpDelete(" ", "A", "AP", "123456789012345", subscriptionId);
+        response = SimpleHttpClient.httpRequestAndResponse(httpDelete, ADMIN_USERNAME, ADMIN_PASSWORD);
 
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
-                .getStatusCode());
-        assertEquals(expectedJsonResponse,
-                EntityUtils.toString(response.getEntity()));
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
     }
 
     /**
@@ -2983,8 +2915,6 @@ public class KilkariControllerBundleIT extends BasePaxIT {
      * To verify the behavior of Save Inbox call Details API if provided
      * beneficiary's callDurationInPulses is not valid : Alphanumeric value.
      */
-    // TODO JIRA issue https://applab.atlassian.net/browse/NMS-187
-    @Ignore
     @Test
     public void verifyFT32() throws IOException, InterruptedException {
         // Invalid callDurationInPulses: AlphaNumeric value
@@ -2998,22 +2928,15 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 "1", // callStatus
                 "1" // callDisconnectReason
         );
-        String expectedJsonResponse = createFailureResponseJson("<callDurationInPulses: Invalid>");
 
-        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
-                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
-                .getStatusCode());
-        assertEquals(expectedJsonResponse,
-                EntityUtils.toString(response.getEntity()));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
     }
 
     /**
      * To verify the behavior of Save Inbox call Details API if provided
      * beneficiary's callStatus is not valid : Alphanumeric value.
      */
-    // TODO JIRA issue https://applab.atlassian.net/browse/NMS-187
-    @Ignore
     @Test
     public void verifyFT33() throws IOException, InterruptedException {
         // Invalid callStatus: AlphaNumeric value
@@ -3027,22 +2950,15 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 "1A", // callStatus alphanumeric
                 "1" // callDisconnectReason
         );
-        String expectedJsonResponse = createFailureResponseJson("<callStatus: Invalid>");
 
-        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
-                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
-                .getStatusCode());
-        assertEquals(expectedJsonResponse,
-                EntityUtils.toString(response.getEntity()));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
     }
 
     /**
      * To verify the behavior of Save Inbox call Details API if provided
      * beneficiary's callDisconnectReason is not valid : Alphanumeric value.
      */
-    // TODO JIRA issue https://applab.atlassian.net/browse/NMS-187
-    @Ignore
     @Test
     public void verifyFT34() throws IOException, InterruptedException {
         // Invalid callDisconnectReason: AlphaNumeric value
@@ -3056,14 +2972,9 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 "1", // callStatus
                 "1A" // callDisconnectReason alphanumeric
         );
-        String expectedJsonResponse = createFailureResponseJson("<callDisconnectReason: Invalid>");
 
-        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
-                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
-                .getStatusCode());
-        assertEquals(expectedJsonResponse,
-                EntityUtils.toString(response.getEntity()));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
     }
 
     /**
@@ -3111,8 +3022,6 @@ public class KilkariControllerBundleIT extends BasePaxIT {
      * To verify the behavior of Get Subscriber Details API if provided
      * beneficiary's callId is not valid : Alphanumeric value.
      */
-    // TODO: JIRA issue https://applab.atlassian.net/browse/NMS-184
-    @Ignore
     @Test
     public void verifyFT11() throws IOException, InterruptedException {
         HttpGet httpGet = createGetSubscriberDetailsRequest("1234567890", // callingNumber
@@ -3120,21 +3029,15 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 "AP", // circle
                 "123456789A12345" // callId alpha numeric
         );
-        String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
-        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
-                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
-                .getStatusCode());
-        assertEquals(expectedJsonResponse,
-                EntityUtils.toString(response.getEntity()));
 
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
     }
 
     /**
      * To verify the behavior of Save Inbox call Details API if a mandatory
      * parameter : subscriptionId is missing from the API request.
      */
-    // TODO JIRA issue https://applab.atlassian.net/browse/NMS-185
     @Test
     public void verifyFT48() throws IOException, InterruptedException {
         // Missing subscriptionPack
@@ -3715,21 +3618,14 @@ public class KilkariControllerBundleIT extends BasePaxIT {
      * To verify the behavior of Get Inbox Details API if provided beneficiary's
      * callId is not valid : Alphanumeric value.
      */
-    // TODO JIRA issue https://applab.atlassian.net/browse/NMS-186
-    @Ignore
     @Test
     public void verifyFT88() throws IOException, InterruptedException {
         // CallId alphanumeric
-        HttpGet httpGet = createHttpGet(true, "1234567890", true,
-                "12345678GT12345");
+        HttpGet httpGet = createHttpGet(true, "1234567890", true, "12345678GT12345");
         String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
 
-        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
-                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
-                .getStatusCode());
-        assertEquals(expectedJsonResponse,
-                EntityUtils.toString(response.getEntity()));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
     }
 
     /**
@@ -3774,20 +3670,14 @@ public class KilkariControllerBundleIT extends BasePaxIT {
      * To verify the behavior of Create Subscription Request API if provided
      * Subscriber's callingNumber is not valid : Alphanumeric value.
      */
-    // TODO JIRA issue https://applab.atlassian.net/browse/NMS-197
-    @Ignore
     @Test
     public void verifyFT60() throws IOException, InterruptedException {
         // Calling Number alphanumeric
-        HttpPost httpPost = createSubscriptionHttpPost("12345AD890", "A", "AP",
-                "123456789012545", "10", "childPack");
-        String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
-        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
-                httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
-                .getStatusCode());
-        assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response
-                .getEntity())));
+        HttpPost httpPost = createSubscriptionHttpPost("12345AD890", "A", "AP", "123456789012545", "10",
+                "childPack");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
     }
 
 
@@ -3849,9 +3739,6 @@ public class KilkariControllerBundleIT extends BasePaxIT {
      * NMS_FT_26 To check response of SaveInboxCallDetails API if
      * callingNumber provided in the request is in invalid format
      */
-
-    //TODO: https://applab.atlassian.net/browse/NMS-187
-    @Ignore
     @Test
     public void verifyFT26() throws IOException, InterruptedException {
 
@@ -3868,11 +3755,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 "1" // callDisconnectReason
         );
 
-        String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
-
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
-                HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
     }
 
 
@@ -3933,9 +3817,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
      * Get Subscriber Details API
      */
 
-    //TODO : https://applab.atlassian.net/browse/NMS-187
     @Test
-    @Ignore
     public void verifyFT8() throws IOException, InterruptedException {
 
 
@@ -3946,11 +3828,9 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 "AP", // circle
                 "123456789012345" // callId
         );
-        String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet,
-                HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
     }
 
 
@@ -4051,43 +3931,6 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 pregnancyPackJsonPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
-    /**
-     * To verify the behavior of Get Inbox Details API if the service is not
-     * deployed in provided Subscriber's state.
-     **/
-    @Test
-    // Similar to FT_16
-    // TODO: https://applab.atlassian.net/browse/NMS-181
-    @Ignore
-    public void verifyFT91() throws IOException, InterruptedException {
-        // Service is deployed for delhi circle in setup data
-        // create subscriber (with language and circle)for which service is not
-        // deployed
-        rh.mysuruDistrict();
-        rh.karnatakaCircle();
-
-        Subscriber mctsSubscriber = new Subscriber(9999911122L,
-                rh.kannadaLanguage(), rh.karnatakaCircle());
-
-        // create new subscription for pregnancy pack in Active state
-        mctsSubscriber.setDateOfBirth(null);
-        mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(90));
-        subscriberDataService.update(mctsSubscriber);
-        subscriptionService.createSubscription(9999911122L,
-                rh.kannadaLanguage(), sh.pregnancyPack(),
-                SubscriptionOrigin.MCTS_IMPORT);
-
-        HttpGet httpGet = createHttpGet(true, "9999911122", true,
-                "123456789012345");
-        String expectedJsonResponse = createFailureResponseJson("<KILKARI: Not Deployed In State>");
-
-        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
-                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
-        assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, response.getStatusLine()
-                .getStatusCode());
-        assertEquals(expectedJsonResponse,
-                EntityUtils.toString(response.getEntity()));
-    }
 
     /**
      * To check NMS is able to make available a single message of current week
