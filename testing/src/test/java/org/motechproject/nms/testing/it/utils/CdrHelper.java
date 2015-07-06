@@ -371,6 +371,9 @@ public class CdrHelper {
         BufferedWriter writer = new BufferedWriter(new FileWriter(file));
 
         int remainingInvalidLines = numInvalidLines;
+
+        writer.write(writeHeader());
+        writer.write("\n");
         for(CallDetailRecordDto cdr : cdrs) {
             writer.write(csvLineFromCdr(cdr));
             if (remainingInvalidLines > 0) {
@@ -382,6 +385,13 @@ public class CdrHelper {
 
         writer.close();
         return file;
+    }
+
+    public static String writeHeader() {
+        String header = "RequestId,Msisdn,CallId,AttemptNo,CallStartTime,CallAnswerTime,CallEndTime," +
+                "CallDurationInPulse,CallStatus,LanguageLocationId,ContentFile,MsgPlayStartTime,MsgPlayEndTime," +
+                "CircleId,OperatorId,Priority,CallDisconnectReason,WeekId";
+        return header;
     }
 
 
