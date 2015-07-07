@@ -63,6 +63,9 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     private static final String LMP = "LMP_Date";
     private static final String DOB = "Birthdate";
     private static final String MOTHER_ID = "Mother_ID";
+    private static final String MOTHER_DOB = "Birthdate";
+    private static final String ABORTION = "Abortion";
+    private static final String STILLBIRTH = "Outcome_Nos";
     private static final String STATE = "StateID";
     private static final String DISTRICT = "District_ID";
     private static final String TALUKA = "Taluka_ID";
@@ -153,6 +156,9 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         String name = (String) record.get(BENEFICIARY_NAME);
         Long msisdn = (Long) record.get(MSISDN);
         DateTime lmp = (DateTime) record.get(LMP);
+        DateTime motherDOB = (DateTime) record.get(MOTHER_DOB);
+        Boolean abortion = (Boolean) record.get(ABORTION);
+        Boolean stillBirth = (Boolean) record.get(STILLBIRTH);
 
         // validate and set location
         try {
@@ -168,10 +174,21 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             return;
         }
 
-        // TODO: more data validation specified in #111
         mother.setName(name);
+        mother.setDateOfBirth(motherDOB);
 
-        subscriberService.updateOrCreateMctsSubscriber(mother, msisdn, lmp, SubscriptionPackType.PREGNANCY);
+        Subscription subscription = subscriberService.updateOrCreateMctsSubscriber(mother, msisdn, lmp,
+                SubscriptionPackType.PREGNANCY);
+
+        if (abortion != null) {
+            if (abortion) {
+                subscriptionService.deactivateSubscription(subscription, DeactivationReason.MISCARRIAGE_OR_ABORTION);
+            }
+        } else if (stillBirth != null) {
+            if (stillBirth) {
+                subscriptionService.deactivateSubscription(subscription, DeactivationReason.STILL_BIRTH);
+            }
+        }
     }
 
     private void importChildRecord(Map<String, Object> record) {
@@ -194,7 +211,6 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         if (!validateDOB(dob, msisdn)) {
             return;
         }
-        // TODO: more data validation specified in #111
 
         child.setName(name);
         child.setMother(mother);
@@ -280,8 +296,20 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         mapping.put(BENEFICIARY_NAME, new GetString());
         mapping.put(MSISDN, MctsBeneficiaryUtils.MSISDN_BY_STRING);
         mapping.put(LMP, MctsBeneficiaryUtils.DATE_BY_STRING);
-
-        // TODO: Any other fields needed for mothers? e.g. Abortion, etc.
+        mapping.put(MOTHER_DOB, new Optional(MctsBeneficiaryUtils.DATE_BY_STRING));
+        mapping.put(ABORTION, new Optional(new GetInstanceByString<Boolean>() {
+             @Override
+             public Boolean retrieve(String value) {
+                 return !"None".equals(value.trim()); // "None" indicates that there was no miscarriage or abortion
+             }
+        }));
+        mapping.put(STILLBIRTH, new Optional(new GetInstanceByString<Boolean>() {
+            @Override
+            public Boolean retrieve(String value) {
+                return "0".equals(value.trim()); // This column indicates the number of live births that resulted from this pregnancy.
+                                                 // 0 implies stillbirth, other values (including blank) do not.
+            }
+        }));
 
         return mapping;
     }

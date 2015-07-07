@@ -155,12 +155,9 @@ public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateSe
             } catch (InvalidLocationException le) {
                 LOGGER.error(le.toString());
 
-                subscriptionErrorDataService.create(new SubscriptionError(
-                        (subscriber == null) ? newMsisdn : subscriber.getCallingNumber(),
-                        SubscriptionRejectionReason.INVALID_LOCATION,
-                        SubscriptionPackType.CHILD,
-                        le.getMessage()));
-                return;
+               // TODO: How do we log this failed update? SubscriptionError doesn't seem like the right mechanism.
+
+               return;
             }
         }
 
