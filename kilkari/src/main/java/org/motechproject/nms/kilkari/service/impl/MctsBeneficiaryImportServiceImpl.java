@@ -254,7 +254,6 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         if (dob == null) {
             subscriptionErrorDataService.create(
                     new SubscriptionError(msisdn, SubscriptionRejectionReason.MISSING_DOB, SubscriptionPackType.CHILD));
-
             return false;
         }
         if (!childPack.isReferenceDateValidForPack(dob)) {
@@ -295,7 +294,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         });
         mapping.put(BENEFICIARY_NAME, new GetString());
         mapping.put(MSISDN, MctsBeneficiaryUtils.MSISDN_BY_STRING);
-        mapping.put(LMP, MctsBeneficiaryUtils.DATE_BY_STRING);
+        mapping.put(LMP, new Optional(MctsBeneficiaryUtils.DATE_BY_STRING));
         mapping.put(MOTHER_DOB, new Optional(MctsBeneficiaryUtils.DATE_BY_STRING));
         mapping.put(ABORTION, new Optional(new GetInstanceByString<Boolean>() {
              @Override
@@ -338,7 +337,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             }
         }));
         mapping.put(MSISDN, MctsBeneficiaryUtils.MSISDN_BY_STRING);
-        mapping.put(DOB, MctsBeneficiaryUtils.DATE_BY_STRING);
+        mapping.put(DOB, new Optional(MctsBeneficiaryUtils.DATE_BY_STRING));
 
         return mapping;
     }

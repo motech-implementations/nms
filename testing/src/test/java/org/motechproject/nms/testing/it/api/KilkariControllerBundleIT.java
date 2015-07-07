@@ -1196,61 +1196,6 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     }
 
 
-    /**
-     * To verify that Save Inbox call Details API request fails if specified subscription doesn't exist for beneficiary.
-     */
-    @Test
-    //TODO: https://applab.atlassian.net/browse/NMS-178
-    @Ignore
-    public void verifyFT185() throws IOException, InterruptedException {
-        // subscribed caller with deactivated subscription i.e no active and
-        // pending subscriptions
-        Subscriber subscriber = subscriberDataService.create(new Subscriber(
-                3000000000L));
-        Subscription subscription1 = subscriptionService.createSubscription(
-                subscriber.getCallingNumber(), rh.hindiLanguage(), sh.childPack(),
-                SubscriptionOrigin.IVR);
-        // deactivate subscription
-        subscriptionService.deactivateSubscription(subscription1,
-                DeactivationReason.DEACTIVATED_BY_USER);
-        HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
-                3000000000L, // callingNumber
-                "A", // operator
-                "AP", // circle
-                123456789012345L, // callId
-                123L, // callStartTime
-                456L, // callEndTime
-                123, // callDurationInPulses
-                1, // callStatus
-                1, // callDisconnectReason
-                new HashSet<>(Arrays.asList(
-                        new CallDataRequest(subscription1.getSubscriptionId(), // subscriptionId
-                                // refer
-                                // deactivated
-                                // subscription
-                                "48WeeksPack", // subscriptionPack
-                                "123", // inboxWeekId
-                                "foo", // contentFileName
-                                123L, // startTime
-                                456L), // endTime
-                        new CallDataRequest(
-                                "ae7681ae-1f3c-4dba-365d-4b26e19f4335", // subscriptionId
-                                // not
-                                // exist
-                                "72WeeksPack", // subscriptionPack
-                                "123", // inboxWeekId
-                                "foo", // contentFileName
-                                123L, // startTime
-                                456L) // endTime
-                )))); // content
-        String expectedJsonResponse = createFailureResponseJson("<subscriptionId: Invalid><content: Invalid>");
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
-                HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
-                ADMIN_USERNAME, ADMIN_PASSWORD));
-
-    }
-
-
     /*
      * To verify the behavior of Get Inbox Details API if provided beneficiary's callId is not valid: more than 15 digits.
      */
@@ -3135,7 +3080,6 @@ public class KilkariControllerBundleIT extends BasePaxIT {
      * parameter : subscriptionId is missing from the API request.
      */
     // TODO JIRA issue https://applab.atlassian.net/browse/NMS-185
-    @Ignore
     @Test
     public void verifyFT48() throws IOException, InterruptedException {
         // Missing subscriptionPack
@@ -3164,7 +3108,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                                 123L, // startTime
                                 456L // endTime
                         ))))); // content
-        String expectedJsonResponse = createFailureResponseJson("<subscriptionId: Not Present>");
+        String expectedJsonResponse = createFailureResponseJson("<subscriptionId: Not Present><content: Invalid>");
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
                 httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
@@ -3179,7 +3123,6 @@ public class KilkariControllerBundleIT extends BasePaxIT {
      * parameter : subscritpionPack is missing from the API request.
      */
     // TODO JIRA issue https://applab.atlassian.net/browse/NMS-185
-    @Ignore
     @Test
     public void verifyFT49() throws IOException, InterruptedException {
         // Missing subscriptionPack
@@ -3208,7 +3151,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                         123L, // startTime
                         456L // endTime
                 ))))); // content
-        String expectedJsonResponse = createFailureResponseJson("<subscriptionPack: Not Present>");
+        String expectedJsonResponse = createFailureResponseJson("<subscriptionPack: Invalid><content: Invalid>");
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
                 httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
@@ -3223,7 +3166,6 @@ public class KilkariControllerBundleIT extends BasePaxIT {
      * parameter : inboxWeekId is missing from the API request.
      */
     // TODO JIRA issue https://applab.atlassian.net/browse/NMS-185
-    @Ignore
     @Test
     public void verifyFT50() throws IOException, InterruptedException {
         // Missing inboxWeekId
@@ -3252,7 +3194,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                         123L, // startTime
                         456L // endTime
                 ))))); // content
-        String expectedJsonResponse = createFailureResponseJson("<inboxWeekId: Not Present>");
+        String expectedJsonResponse = createFailureResponseJson("<inboxWeekId: Not Present><content: Invalid>");
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
                 httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
@@ -3267,7 +3209,6 @@ public class KilkariControllerBundleIT extends BasePaxIT {
      * parameter : contentFileName is missing from the API request.
      */
     // TODO JIRA issue https://applab.atlassian.net/browse/NMS-185
-    @Ignore
     @Test
     public void verifyFT51() throws IOException, InterruptedException {
         // Missing contentFileName
@@ -3289,14 +3230,14 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                         123L, // startTime
                         456L // endTime
                 ), new CallDataRequest(
-                        "00000000-0000-0000-0000-00005000000", // subscriptionId
+                        "00000000-0000-0000-0000-000000000000", // subscriptionId
                         "72WeeksPack", // subscriptionPack
                         "123", // inboxWeekId
                         "foo", // contentFileName
                         123L, // startTime
                         456L // endTime
                 ))))); // content
-        String expectedJsonResponse = createFailureResponseJson("<contentFileName: Not Present>");
+        String expectedJsonResponse = createFailureResponseJson("<contentFileName: Not Present><content: Invalid>");
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
                 httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
@@ -3311,7 +3252,6 @@ public class KilkariControllerBundleIT extends BasePaxIT {
      * parameter : startTime is missing from the API request.
      */
     // TODO JIRA issue https://applab.atlassian.net/browse/NMS-185
-    @Ignore
     @Test
     public void verifyFT52() throws IOException, InterruptedException {
         // Missing startTime
@@ -3341,7 +3281,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                         456L // endTime
                 ))))); // content
 
-        String expectedJsonResponse = createFailureResponseJson("<startTime: Not Present>");
+        String expectedJsonResponse = createFailureResponseJson("<startTime: Not Present><content: Invalid>");
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
                 httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
@@ -3356,7 +3296,6 @@ public class KilkariControllerBundleIT extends BasePaxIT {
      * parameter : endTime is missing from the API request.
      */
     // TODO JIRA issue https://applab.atlassian.net/browse/NMS-185
-    @Ignore
     @Test
     public void verifyFT53() throws IOException, InterruptedException {
         // Missing endTime
@@ -3385,7 +3324,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                         123L, // startTime
                         456L // endTime
                 ))))); // content
-        String expectedJsonResponse = createFailureResponseJson("<endTime: Not Present>");
+        String expectedJsonResponse = createFailureResponseJson("<endTime: Not Present><content: Invalid>");
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
                 httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);

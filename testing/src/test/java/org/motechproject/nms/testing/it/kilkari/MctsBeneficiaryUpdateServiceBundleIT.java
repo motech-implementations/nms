@@ -59,7 +59,7 @@ import static org.motechproject.nms.testing.it.utils.RegionHelper.createDistrict
 import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthBlock;
 import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthFacility;
 import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthFacilityType;
-import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthSubFacilityType;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthSubFacility;
 import static org.motechproject.nms.testing.it.utils.RegionHelper.createState;
 import static org.motechproject.nms.testing.it.utils.RegionHelper.createTaluka;
 import static org.motechproject.nms.testing.it.utils.RegionHelper.createVillage;
@@ -154,16 +154,16 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         HealthFacility healthFacility114 = createHealthFacility(healthBlock153, 114L, "CHC Tileibani", facilityType114);
         healthBlock153.getHealthFacilities().add(healthFacility114);
 
-        HealthSubFacility subFacilityType7389 = createHealthSubFacilityType("Babuniktimal", 7389L, healthFacility41);
+        HealthSubFacility subFacilityType7389 = createHealthSubFacility("Babuniktimal", 7389L, healthFacility41);
         healthFacility41.getHealthSubFacilities().add(subFacilityType7389);
 
-        HealthSubFacility subFacilityType7393 = createHealthSubFacilityType("Jarabaga", 7393L, healthFacility41);
+        HealthSubFacility subFacilityType7393 = createHealthSubFacility("Jarabaga", 7393L, healthFacility41);
         healthFacility41.getHealthSubFacilities().add(subFacilityType7393);
 
-        HealthSubFacility subFacilityType2104 = createHealthSubFacilityType("Chupacabra", 2104L, healthFacility635);
+        HealthSubFacility subFacilityType2104 = createHealthSubFacility("Chupacabra", 2104L, healthFacility635);
         healthFacility635.getHealthSubFacilities().add(subFacilityType2104);
 
-        HealthSubFacility subFacilityType342 = createHealthSubFacilityType("El Dorado", 342L, healthFacility114);
+        HealthSubFacility subFacilityType342 = createHealthSubFacility("El Dorado", 342L, healthFacility114);
         healthFacility114.getHealthSubFacilities().add(subFacilityType342);
 
         Village village10004693 = createVillage(taluka24, 10004693L, 0, "Khairdihi");
@@ -281,7 +281,9 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         Subscriber subscriber = subscriberDataService.findByCallingNumber(msisdn);
         subscriber.setDateOfBirth(originalDOB);
         MctsChild child = new MctsChild(childId);
-        child.setDistrict(stateDataService.findByCode(21L).getDistricts().get(0));
+        State state = stateDataService.findByCode(21L);
+        child.setState(state);
+        child.setDistrict(state.getDistricts().get(0));
         subscriber.setChild(child);
         subscriberDataService.update(subscriber);
 
@@ -308,7 +310,9 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         Subscriber subscriber = subscriberDataService.findByCallingNumber(msisdn);
         subscriber.setLastMenstrualPeriod(originalLMP);
         MctsMother mother = new MctsMother(motherId);
-        mother.setDistrict(stateDataService.findByCode(21L).getDistricts().get(0));
+        State state = stateDataService.findByCode(21L);
+        mother.setState(state);
+        mother.setDistrict(state.getDistricts().get(0));
         subscriber.setMother(mother);
         subscriberDataService.update(subscriber);
 
@@ -335,7 +339,9 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         Subscriber subscriber = subscriberDataService.findByCallingNumber(msisdn);
         subscriber.setLastMenstrualPeriod(originalLMP);
         MctsMother mother = new MctsMother(motherId);
-        mother.setDistrict(stateDataService.findByCode(21L).getDistricts().get(0));
+        State state = stateDataService.findByCode(21L);
+        mother.setState(state);
+        mother.setDistrict(state.getDistricts().get(0));
         subscriber.setMother(mother);
         subscriberDataService.update(subscriber);
 

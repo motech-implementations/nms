@@ -4,8 +4,17 @@ import org.joda.time.DateTime;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.domain.MdsEntity;
+import org.motechproject.nms.flw.domain.validation.ValidFrontLineWorker;
 import org.motechproject.nms.region.domain.District;
+import org.motechproject.nms.region.domain.FullLocation;
+import org.motechproject.nms.region.domain.HealthBlock;
+import org.motechproject.nms.region.domain.HealthFacility;
+import org.motechproject.nms.region.domain.HealthSubFacility;
 import org.motechproject.nms.region.domain.Language;
+import org.motechproject.nms.region.domain.State;
+import org.motechproject.nms.region.domain.Taluka;
+import org.motechproject.nms.region.domain.Village;
+import org.motechproject.nms.region.domain.validation.ValidFullLocation;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Index;
@@ -14,9 +23,11 @@ import javax.jdo.annotations.Unique;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 
+@ValidFullLocation
+@ValidFrontLineWorker
 @Entity(tableName = "nms_front_line_workers")
 @Index(name = "status_invalidationDate_composit_idx", members = { "status", "invalidationDate" })
-public class FrontLineWorker extends MdsEntity {
+public class FrontLineWorker extends MdsEntity implements FullLocation {
 
     @Field
     private String flwId;
@@ -45,7 +56,31 @@ public class FrontLineWorker extends MdsEntity {
 
     @Field
     @Persistent(defaultFetchGroup = "true")
+    private State state;
+
+    @Field
+    @Persistent(defaultFetchGroup = "true")
     private District district;
+
+    @Field
+    @Persistent(defaultFetchGroup = "true")
+    private Taluka taluka;
+
+    @Field
+    @Persistent(defaultFetchGroup = "true")
+    private Village village;
+
+    @Field
+    @Persistent(defaultFetchGroup = "true")
+    private HealthBlock healthBlock;
+
+    @Field
+    @Persistent(defaultFetchGroup = "true")
+    private HealthFacility healthFacility;
+
+    @Field
+    @Persistent(defaultFetchGroup = "true")
+    private HealthSubFacility healthSubFacility;
 
     public FrontLineWorker(Long contactNumber) {
         this.contactNumber = contactNumber;
@@ -118,12 +153,74 @@ public class FrontLineWorker extends MdsEntity {
         this.language = language;
     }
 
+    @Override
+    public State getState() {
+        return state;
+    }
+
+    @Override
+    public void setState(State state) {
+        this.state = state;
+    }
+
+    @Override
     public District getDistrict() {
         return district;
     }
 
+    @Override
     public void setDistrict(District district) {
         this.district = district;
+    }
+
+    @Override
+    public Taluka getTaluka() {
+        return taluka;
+    }
+
+    @Override
+    public void setTaluka(Taluka taluka) {
+        this.taluka = taluka;
+    }
+
+    @Override
+    public Village getVillage() {
+        return village;
+    }
+
+    @Override
+    public void setVillage(Village village) {
+        this.village = village;
+    }
+
+    @Override
+    public HealthBlock getHealthBlock() {
+        return healthBlock;
+    }
+
+    @Override
+    public void setHealthBlock(HealthBlock healthBlock) {
+        this.healthBlock = healthBlock;
+    }
+
+    @Override
+    public HealthFacility getHealthFacility() {
+        return healthFacility;
+    }
+
+    @Override
+    public void setHealthFacility(HealthFacility healthFacility) {
+        this.healthFacility = healthFacility;
+    }
+
+    @Override
+    public HealthSubFacility getHealthSubFacility() {
+        return healthSubFacility;
+    }
+
+    @Override
+    public void setHealthSubFacility(HealthSubFacility healthSubFacility) {
+        this.healthSubFacility = healthSubFacility;
     }
 
     @Override //NO CHECKSTYLE CyclomaticComplexity

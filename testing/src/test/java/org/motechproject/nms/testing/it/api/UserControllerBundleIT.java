@@ -282,6 +282,9 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         State whitelistState = new State("WhitelistState", 1l);
         whitelistState.getDistricts().add(district);
+
+        district.setState(whitelistState);
+
         stateDataService.create(whitelistState);
 
         deployedServiceDataService.create(new DeployedService(whitelistState, Service.MOBILE_ACADEMY));
@@ -293,6 +296,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         whitelistEntryDataService.create(entry);
 
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111l);
+        flw.setState(whitelistState);
         flw.setDistrict(district);
         frontLineWorkerService.add(flw);
     }
@@ -547,6 +551,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         stateDataService.create(state);
 
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
+        flw.setState(state);
         flw.setDistrict(district);
         frontLineWorkerService.add(flw);
     }
@@ -1348,7 +1353,7 @@ public class UserControllerBundleIT extends BasePaxIT {
      * not deployed in provided Subscriber's state.
      */
     @Test
-    // TODO: https://applab.atlassian.net/browse/NMS-181
+    // https://applab.atlassian.net/browse/NMS-181
     public void verifyFT16() throws IOException,
             InterruptedException {
         createKilkariUndeployTestData();

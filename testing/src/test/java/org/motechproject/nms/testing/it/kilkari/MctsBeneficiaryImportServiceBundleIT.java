@@ -8,10 +8,8 @@ import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.DateTimeFormatterBuilder;
 import org.joda.time.format.DateTimeParser;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.motechproject.nms.csv.exception.CsvImportDataException;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
@@ -64,11 +62,10 @@ import static org.motechproject.nms.testing.it.utils.RegionHelper.createDistrict
 import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthBlock;
 import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthFacility;
 import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthFacilityType;
-import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthSubFacilityType;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthSubFacility;
 import static org.motechproject.nms.testing.it.utils.RegionHelper.createState;
 import static org.motechproject.nms.testing.it.utils.RegionHelper.createTaluka;
 import static org.motechproject.nms.testing.it.utils.RegionHelper.createVillage;
-
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerSuite.class)
@@ -151,16 +148,16 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         HealthFacility healthFacility114 = createHealthFacility(healthBlock153, 114L, "CHC Tileibani", facilityType114);
         healthBlock153.getHealthFacilities().add(healthFacility114);
 
-        HealthSubFacility subFacilityType7389 = createHealthSubFacilityType("Babuniktimal", 7389L, healthFacility41);
+        HealthSubFacility subFacilityType7389 = createHealthSubFacility("Babuniktimal", 7389L, healthFacility41);
         healthFacility41.getHealthSubFacilities().add(subFacilityType7389);
 
-        HealthSubFacility subFacilityType7393 = createHealthSubFacilityType("Jarabaga", 7393L, healthFacility41);
+        HealthSubFacility subFacilityType7393 = createHealthSubFacility("Jarabaga", 7393L, healthFacility41);
         healthFacility41.getHealthSubFacilities().add(subFacilityType7393);
 
-        HealthSubFacility subFacilityType2104 = createHealthSubFacilityType("Chupacabra", 2104L, healthFacility635);
+        HealthSubFacility subFacilityType2104 = createHealthSubFacility("Chupacabra", 2104L, healthFacility635);
         healthFacility635.getHealthSubFacilities().add(subFacilityType2104);
 
-        HealthSubFacility subFacilityType342 = createHealthSubFacilityType("El Dorado", 342L, healthFacility114);
+        HealthSubFacility subFacilityType342 = createHealthSubFacility("El Dorado", 342L, healthFacility114);
         healthFacility114.getHealthSubFacilities().add(subFacilityType342);
 
         Village village10004693 = createVillage(taluka24, 10004693L, 0, "Khairdihi");
@@ -373,9 +370,9 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         State expectedState = stateDataService.findByCode(21L);
         District expectedDistrict = districtService.findByStateAndCode(expectedState, 3L);
 
-        Subscriber subscriber1 = subscriberDataService.findByCallingNumber(9439986187L);
-        assertMother(subscriber1, "210302604211400029", getDateTime("22/11/2014"), "Shanti Ekka", expectedState,
-                expectedDistrict);
+//        Subscriber subscriber1 = subscriberDataService.findByCallingNumber(9439986187L);
+//        assertMother(subscriber1, "210302604211400029", getDateTime("22/11/2014"), "Shanti Ekka", expectedState,
+//                expectedDistrict);
 
         Subscriber subscriber2 = subscriberDataService.findByCallingNumber(7894221701L);
         assertMother(subscriber2, "210302604611400023", getDateTime("15/6/2014"), "Damayanti Khadia", expectedState,
@@ -477,13 +474,9 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
                 lmpString + "\t\t");
         mctsBeneficiaryImportService.importMotherData(reader);
 
-        Subscriber subscriber = subscriberDataService.findByCallingNumber(9439986187L);
-        assertNull(subscriber);
-        
-        List<SubscriptionError> susbErrors = subscriptionErrorDataService.findByContactNumber(9439986187L);
-        SubscriptionError susbError = susbErrors.iterator().next();
-        
-        assertSubscriptionError(susbError, SubscriptionPackType.PREGNANCY, SubscriptionRejectionReason.INVALID_LMP);
+        //subscriber should not be created and rejected entry should be in nms_subscription_errors with reason 'INVALID_LMP'.
+        assertNoSubscriber(9439986187L);
+        assertSubscriptionError(9439986187L, SubscriptionPackType.PREGNANCY, SubscriptionRejectionReason.INVALID_LMP);
     }
 
 	/*
@@ -496,13 +489,9 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         Reader reader = createChildDataReaderWithHeaders("21\t3\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t\t9439986187\t" + dobString);
         mctsBeneficiaryImportService.importChildData(reader);
 
-        Subscriber subscriber = subscriberDataService.findByCallingNumber(9439986187L);
-        assertNull(subscriber);
-        
-        List<SubscriptionError> susbErrors = subscriptionErrorDataService.findByContactNumber(9439986187L);
-        SubscriptionError susbError = susbErrors.iterator().next();
-        
-        assertSubscriptionError(susbError, SubscriptionPackType.CHILD, SubscriptionRejectionReason.INVALID_DOB);
+        //subscriber should not be created and rejected entry should be in nms_subscription_errors with reason 'INVALID_DOB'.
+        assertNoSubscriber(9439986187L);
+        assertSubscriptionError(9439986187L, SubscriptionPackType.CHILD, SubscriptionRejectionReason.INVALID_DOB);
     }
     
     /*
@@ -510,19 +499,15 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT284() throws Exception {
-        DateTime lmp = DateTime.now().minusDays(7*72+90);
+        DateTime lmp = DateTime.now().minusDays(7 * 72 + 90);
         String lmpString = getDateString(lmp);
         Reader reader = createMotherDataReaderWithHeaders("21\t3\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t\t" +
                 lmpString + "\t\t");
         mctsBeneficiaryImportService.importMotherData(reader);
-
-        Subscriber subscriber = subscriberDataService.findByCallingNumber(9439986187L);
-        assertNull(subscriber);
         
-        List<SubscriptionError> susbErrors = subscriptionErrorDataService.findByContactNumber(9439986187L);
-        SubscriptionError susbError = susbErrors.iterator().next();
-        
-        assertSubscriptionError(susbError, SubscriptionPackType.PREGNANCY, SubscriptionRejectionReason.INVALID_LMP);
+        //subscriber should not be created and rejected entry should be in nms_subscription_errors with reason 'INVALID_LMP'.
+        assertNoSubscriber(9439986187L);
+        assertSubscriptionError(9439986187L, SubscriptionPackType.PREGNANCY, SubscriptionRejectionReason.INVALID_LMP);
     }
     
     /*
@@ -534,14 +519,10 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         String dobString = getDateString(dob);
         Reader reader = createChildDataReaderWithHeaders("21\t3\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t\t9439986187\t" + dobString);
         mctsBeneficiaryImportService.importChildData(reader);
-
-        Subscriber subscriber = subscriberDataService.findByCallingNumber(9439986187L);
-        assertNull(subscriber);
         
-        List<SubscriptionError> susbErrors = subscriptionErrorDataService.findByContactNumber(9439986187L);
-        SubscriptionError susbError = susbErrors.iterator().next();
-        
-        assertSubscriptionError(susbError, SubscriptionPackType.CHILD, SubscriptionRejectionReason.INVALID_DOB);
+        //subscriber should not be created and rejected entry should be in nms_subscription_errors with reason 'INVALID_DOB'.
+        assertNoSubscriber(9439986187L);
+        assertSubscriptionError(9439986187L, SubscriptionPackType.CHILD, SubscriptionRejectionReason.INVALID_DOB);
     }
     
     /*
@@ -561,14 +542,9 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         // attempt to create subscriber with same msisdn but different mcts.
         reader = createChildDataReaderWithHeaders("21\t3\t\t\t\t\t1234567891\tBaby1 of Lilima Kua\t\t9439986187\t" + dobString);
         mctsBeneficiaryImportService.importChildData(reader);
-        
-        Subscriber subscriber = subscriberDataService.findByCallingNumber(9439986187L);
-        assertNotNull(subscriber);
-        
-        List<SubscriptionError> susbErrors = subscriptionErrorDataService.findByContactNumber(9439986187L);
-        SubscriptionError susbError = susbErrors.iterator().next();
-        
-        assertSubscriptionError(susbError, SubscriptionPackType.CHILD, SubscriptionRejectionReason.ALREADY_SUBSCRIBED);
+      
+        //rejected entry should be in nms_subscription_errors with reason 'ALREADY_SUBSCRIBED'.
+        assertSubscriptionError(9439986187L, SubscriptionPackType.CHILD, SubscriptionRejectionReason.ALREADY_SUBSCRIBED);
     }
     
     /*
@@ -577,20 +553,15 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
      * https://applab.atlassian.net/browse/NMS-206
      */
     @Test
-    @Ignore
     public void verifyFT288_1() throws Exception {
     	
     	//DOB is missing
     	Reader reader = createChildDataReaderWithHeaders("21\t3\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t\t9439986187\t");
         mctsBeneficiaryImportService.importChildData(reader);
-
-        Subscriber subscriber = subscriberDataService.findByCallingNumber(9439986187L);
-        assertNull(subscriber);
         
-        List<SubscriptionError> susbErrors = subscriptionErrorDataService.findByContactNumber(9439986187L);
-        SubscriptionError susbError = susbErrors.iterator().next();
-        
-        assertSubscriptionError(susbError, SubscriptionPackType.CHILD, SubscriptionRejectionReason.MISSING_DOB);
+        //subscriber should not be created and rejected entry should be in nms_subscription_errors with reason 'MISSING_DOB'.
+        assertNoSubscriber(9439986187L);
+        assertSubscriptionError(9439986187L, SubscriptionPackType.CHILD, SubscriptionRejectionReason.MISSING_DOB);
     }
     
     /**
@@ -599,24 +570,23 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
      * https://applab.atlassian.net/browse/NMS-206
      */
     @Test
-    @Ignore
     public void verifyFT288_2() throws Exception {
     	
     	//LMP is missing
     	Reader reader = createMotherDataReaderWithHeaders("21\t3\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t\t\t\t");
         mctsBeneficiaryImportService.importMotherData(reader);
-
-        Subscriber subscriber = subscriberDataService.findByCallingNumber(9439986187L);
-        assertNull(subscriber);
         
-        List<SubscriptionError> subsErrors = subscriptionErrorDataService.findByContactNumber(9439986187L);
-        SubscriptionError subsError = subsErrors.iterator().next();
-        
-        assertSubscriptionError(subsError, SubscriptionPackType.PREGNANCY, SubscriptionRejectionReason.MISSING_LMP);
+        //subscriber should not be created and rejected entry should be in nms_subscription_errors with reason 'MISSING_LMP'.
+        assertNoSubscriber(9439986187L);
+        assertSubscriptionError(9439986187L, SubscriptionPackType.PREGNANCY, SubscriptionRejectionReason.MISSING_LMP);
     }
     
-    private void assertSubscriptionError(SubscriptionError susbError, SubscriptionPackType packType, 
+    private void assertSubscriptionError(Long callingNumber, SubscriptionPackType packType, 
     		SubscriptionRejectionReason rejectionReason) {
+    	
+    	List<SubscriptionError> susbErrors = subscriptionErrorDataService.findByContactNumber(callingNumber);
+        SubscriptionError susbError = susbErrors.iterator().next();
+    	
 		assertNotNull(susbError);
         assertEquals(packType, susbError.getPackType());
         assertEquals(rejectionReason, susbError.getRejectionReason());
@@ -693,17 +663,20 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
      * 
      * https://applab.atlassian.net/browse/NMS-208
      */
-    @Test(expected = CsvImportDataException.class)
-    @Ignore
+    @Test
     public void verifyFT286() throws Exception {
     	State state31 = createState(31L, "State 31");
     	stateDataService.create(state31);
     	DateTime dob = DateTime.now();
         String dobString = getDateString(dob);
-        
+
         //attempt to create subscriber and subscription with wrong state-district combination. it should be rejected
         Reader reader = createChildDataReaderWithHeaders("31\t3\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t\t9439986187\t" + dobString);
         mctsBeneficiaryImportService.importChildData(reader);
+
+        //subscriber should not be created and rejected entry should be in nms_subscription_errors with reason 'INVALID_LOCATION'.
+        assertNoSubscriber(9439986187L);
+        assertSubscriptionError(9439986187L, SubscriptionPackType.CHILD, SubscriptionRejectionReason.INVALID_LOCATION);
     }
     
         
@@ -881,5 +854,10 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         assertEquals(90, Days.daysBetween(newLmp.toLocalDate(), subscription.getStartDate().toLocalDate()).getDays());
         assertEquals(subscription.getStatus(), SubscriptionStatus.ACTIVE);
     }
+    
+    private void assertNoSubscriber(long callingNumber) {
+		Subscriber subscriber = subscriberDataService.findByCallingNumber(callingNumber);
+        assertNull(subscriber);
+	}	
     
 }
