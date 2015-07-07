@@ -210,7 +210,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
         HttpPost request = RequestBuilder.createPostRequest(endpoint, smsStatusRequest);
         assertTrue(SimpleHttpClient.execHttpRequest(request, HttpStatus.SC_BAD_REQUEST, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
     }
-
+    
     /**
      * setup MA course structure from nmsCourse.json file.
      */
