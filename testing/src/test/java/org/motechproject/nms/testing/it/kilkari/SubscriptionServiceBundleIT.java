@@ -918,8 +918,6 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     /*
 	 * To verify that MSISDN greater than 10 digit should be accepted during 
 	 * MCTS upload. subscriber should be created with last 10 digits of MSISDN.
-	 * 
-	 * https://applab.atlassian.net/browse/NMS-202
 	 */
     @Test
     public void verifyFT182() {
@@ -937,9 +935,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     
     /*
      * To verify that user's subscription should create in pending state
-     *
      */
-
     @Test
     public void verifyFT153() {
 
