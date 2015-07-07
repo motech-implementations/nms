@@ -141,4 +141,31 @@ public final class CsvHelper {
 
         return cdr;
     }
+
+    /**
+     * Validate Header coming in CDR file from IMI
+     *
+     * @param line a CSV line from a CDR Detail File from IMI
+     *
+     */
+    public static void validateCdrHeader(String line) {
+
+        String header = "RequestId,Msisdn,CallId,AttemptNo,CallStartTime,CallAnswerTime,CallEndTime," +
+                "CallDurationInPulse,CallStatus,LanguageLocationId,ContentFile,MsgPlayStartTime,MsgPlayEndTime," +
+                "CircleId,OperatorId,Priority,CallDisconnectReason,WeekId";
+
+        String[] fields = line.split(",");
+
+        if (fields.length != FieldName.FIELD_COUNT.ordinal()) {
+            throw new IllegalArgumentException(String.format(
+                    "Invalid field count, expecting %d but received %d", FieldName.FIELD_COUNT.ordinal(),
+                    fields.length));
+        }
+        if (!(header.equalsIgnoreCase(line))) {
+            throw new IllegalArgumentException(String.format("Header in the file is not correct"));
+        }
+    }
+
+
+
 }
