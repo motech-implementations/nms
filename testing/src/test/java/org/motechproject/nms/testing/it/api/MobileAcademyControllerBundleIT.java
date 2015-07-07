@@ -1,19 +1,41 @@
 package org.motechproject.nms.testing.it.api;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.inject.Inject;
+
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.util.EntityUtils;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.json.JSONObject;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.api.web.BaseController;
+import org.motechproject.nms.api.web.contract.mobileAcademy.CourseResponse;
 import org.motechproject.nms.api.web.contract.mobileAcademy.SaveBookmarkRequest;
 import org.motechproject.nms.api.web.contract.mobileAcademy.SmsStatusRequest;
 import org.motechproject.nms.api.web.contract.mobileAcademy.sms.RequestData;
+import org.motechproject.nms.mobileacademy.domain.NmsCourse;
+import org.motechproject.nms.mobileacademy.dto.MaCourse;
+import org.motechproject.nms.mobileacademy.repository.NmsCourseDataService;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
 import org.motechproject.nms.testing.it.api.utils.RequestBuilder;
+import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.motechproject.testing.osgi.http.SimpleHttpClient;
@@ -22,15 +44,6 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
-
-import javax.inject.Inject;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Integration tests for mobile academy controller
@@ -42,6 +55,20 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
 
     @Inject
     MobileAcademyService mobileAcademyService;
+
+    @Inject
+    TestingService testingService;
+
+    @Inject
+    private NmsCourseDataService nmsCourseDataService;
+
+    private static final String COURSE_NAME = "MobileAcademyCourse";
+
+    @Before
+    public void setupTestData() {
+        testingService.clearDatabase();
+        nmsCourseDataService.deleteAll();
+    }
 
     @Test
     public void testBookmarkBadCallingNumber() throws IOException, InterruptedException {
@@ -135,7 +162,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testGetCourseValid() throws IOException, InterruptedException {
-
+        setupMaCourse();
         String endpoint = String.format("http://localhost:%d/api/mobileacademy/course",
                 TestContext.getJettyPort());
         HttpGet request = RequestBuilder.createGetRequest(endpoint);
@@ -156,6 +183,126 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
         smsStatusRequest.setRequestData(new RequestData());
         HttpPost request = RequestBuilder.createPostRequest(endpoint, smsStatusRequest);
         assertTrue(SimpleHttpClient.execHttpRequest(request, HttpStatus.SC_BAD_REQUEST, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
+    }
+
+    /**
+     * setup MA course structure from nmsCourse.json file.
+     */
+    private JSONObject setupMaCourse() throws IOException {
+        MaCourse course = new MaCourse();
+        String jsonText = IOUtils
+                .toString(getFileInputStream("nmsCourse.json"));
+        JSONObject jo = new JSONObject(jsonText);
+        course.setName(jo.get("name").toString());
+        course.setContent(jo.get("chapters").toString());
+        nmsCourseDataService.create(new NmsCourse(course.getName(), course
+                .getContent()));
+        return jo;
+    }
+
+    private InputStream getFileInputStream(String fileName) {
+        try {
+            return new FileInputStream(new File(Thread.currentThread()
+                    .getContextClassLoader().getResource(fileName).getPath()));
+        } catch (IOException io) {
+            return null;
+        }
+    }
+
+    /**
+     * To verify Get MA Course Version API is not returning course version when
+     * MA course structure doesn't exist.
+     */
+    @Test
+    public void verifyFT400() throws IOException, InterruptedException {
+        String endpoint = String.format(
+                "http://localhost:%d/api/mobileacademy/courseVersion",
+                TestContext.getJettyPort());
+        HttpGet request = RequestBuilder.createGetRequest(endpoint);
+        HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(
+                request, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD);
+
+        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, httpResponse
+                .getStatusLine().getStatusCode());
+    }
+
+    /**
+     * To verify Get MA Course Version API is returning correct course version
+     * when MA course structure exist .
+     */
+    @Test
+    public void verifyFT401() throws IOException, InterruptedException {
+        setupMaCourse();
+
+        String endpoint = String.format(
+                "http://localhost:%d/api/mobileacademy/courseVersion",
+                TestContext.getJettyPort());
+        HttpGet request = RequestBuilder.createGetRequest(endpoint);
+        HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(
+                request, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD);
+
+        NmsCourse course = nmsCourseDataService.getCourseByName(COURSE_NAME);
+        String expectedJsonResponse = "{\"courseVersion\":"
+                + course.getModificationDate().getMillis() + "}";
+
+        assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(httpResponse.getEntity()));
+
+    }
+
+    /**
+     * To verify Get MA Course API is not returning course structure when MA
+     * course structure doesn't exist.
+     */
+    @Test
+    public void verifyFT402() throws IOException, InterruptedException {
+        String endpoint = String.format(
+                "http://localhost:%d/api/mobileacademy/course",
+                TestContext.getJettyPort());
+        HttpGet request = RequestBuilder.createGetRequest(endpoint);
+        HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(
+                request, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD);
+
+        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, httpResponse
+                .getStatusLine().getStatusCode());
+    }
+
+    /**
+     * To verify Get MA Course API is returning correct course structure when MA
+     * course structure exist.
+     */
+    @Test
+    public void verifyFT403() throws IOException, InterruptedException {
+        JSONObject jo = setupMaCourse();
+
+        String endpoint = String.format(
+                "http://localhost:%d/api/mobileacademy/course",
+                TestContext.getJettyPort());
+        HttpGet request = RequestBuilder.createGetRequest(endpoint);
+        HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(
+                request, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD);
+
+        NmsCourse course = nmsCourseDataService.getCourseByName(COURSE_NAME);
+        CourseResponse courseResponseDTO = new CourseResponse();
+        courseResponseDTO.setName(jo.get("name").toString());
+        courseResponseDTO.setCourseVersion(course.getModificationDate()
+                .getMillis());
+        courseResponseDTO.setChapters(jo.get("chapters").toString());
+
+        ObjectMapper mapper = new ObjectMapper();
+        String expectedJsonResponse = mapper
+                .writeValueAsString(courseResponseDTO);
+
+        assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(httpResponse.getEntity()));
     }
 
 }
