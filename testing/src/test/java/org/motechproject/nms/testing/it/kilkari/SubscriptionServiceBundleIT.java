@@ -612,9 +612,9 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         Subscription subscription = mctsSubscriber.getSubscriptions().iterator().next();
 
-        // initially, the welcome message should be played
+        // initially, the welcome message should be played (welcome message and week 1 message are the same)
         SubscriptionPackMessage message = subscription.nextScheduledMessage(now);
-        assertEquals("welcome", message.getWeekId());
+        assertEquals("w1_1", message.getWeekId());
 
         subscription.setNeedsWelcomeMessage(false);
         subscriptionDataService.update(subscription);
