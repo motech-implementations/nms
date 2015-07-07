@@ -299,7 +299,9 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         mapping.put(ABORTION, new Optional(new GetInstanceByString<Boolean>() {
              @Override
              public Boolean retrieve(String value) {
-                 return !"None".equals(value.trim()); // "None" indicates that there was no miscarriage or abortion
+                 String trimmedValue = value.trim();
+                 return "Spontaneous".equals(trimmedValue) || "MTP<12 Weeks".equals(trimmedValue) ||
+                         "MTP>12 Weeks".equals(trimmedValue);
              }
         }));
         mapping.put(STILLBIRTH, new Optional(new GetInstanceByString<Boolean>() {

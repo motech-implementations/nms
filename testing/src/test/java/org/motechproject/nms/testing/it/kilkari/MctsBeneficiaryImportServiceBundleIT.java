@@ -364,25 +364,6 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     }
 
     @Test
-    public void testImportMotherDataFromSampleFile() throws Exception {
-        mctsBeneficiaryImportService.importMotherData(read("csv/mother.txt"));
-
-        State expectedState = stateDataService.findByCode(21L);
-        District expectedDistrict = districtService.findByStateAndCode(expectedState, 3L);
-
-//        Subscriber subscriber1 = subscriberDataService.findByCallingNumber(9439986187L);
-//        assertMother(subscriber1, "210302604211400029", getDateTime("22/11/2014"), "Shanti Ekka", expectedState,
-//                expectedDistrict);
-
-        Subscriber subscriber2 = subscriberDataService.findByCallingNumber(7894221701L);
-        assertMother(subscriber2, "210302604611400023", getDateTime("15/6/2014"), "Damayanti Khadia", expectedState,
-                expectedDistrict);
-
-        // although our MCTS data file contains 10 mothers, we only create 3 subscribers due to duplicate phone numbers
-        assertEquals(3, subscriberDataService.count());
-    }
-
-    @Test
     public void testImportChildDataFromSampleFile() throws Exception {
         mctsBeneficiaryImportService.importChildData(read("csv/child.txt"));
 
@@ -515,7 +496,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT285() throws Exception {
-    	DateTime dob = DateTime.now().minusDays(7*48);
+    	DateTime dob = DateTime.now().minusDays(7 * 48);
         String dobString = getDateString(dob);
         Reader reader = createChildDataReaderWithHeaders("21\t3\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t\t9439986187\t" + dobString);
         mctsBeneficiaryImportService.importChildData(reader);
@@ -854,7 +835,26 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         assertEquals(90, Days.daysBetween(newLmp.toLocalDate(), subscription.getStartDate().toLocalDate()).getDays());
         assertEquals(subscription.getStatus(), SubscriptionStatus.ACTIVE);
     }
-    
+
+    @Test
+    public void testImportMotherDataFromSampleFile() throws Exception {
+        mctsBeneficiaryImportService.importMotherData(read("csv/mother.txt"));
+
+        State expectedState = stateDataService.findByCode(21L);
+        District expectedDistrict = districtService.findByStateAndCode(expectedState, 3L);
+
+        Subscriber subscriber1 = subscriberDataService.findByCallingNumber(9439986187L);
+        assertMother(subscriber1, "210302604211400029", getDateTime("22/11/2014"), "Shanti Ekka", expectedState,
+                expectedDistrict);
+
+        Subscriber subscriber2 = subscriberDataService.findByCallingNumber(7894221701L);
+        assertMother(subscriber2, "210302604611400023", getDateTime("15/6/2014"), "Damayanti Khadia", expectedState,
+                expectedDistrict);
+
+        // although our MCTS data file contains 10 mothers, we only create 3 subscribers due to duplicate phone numbers
+        assertEquals(3, subscriberDataService.count());
+    }
+
     private void assertNoSubscriber(long callingNumber) {
 		Subscriber subscriber = subscriberDataService.findByCallingNumber(callingNumber);
         assertNull(subscriber);

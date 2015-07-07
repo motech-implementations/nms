@@ -184,7 +184,7 @@ public class SubscriberServiceImpl implements SubscriberService {
             return subscriptionService.createSubscription(msisdn, language, pack, SubscriptionOrigin.MCTS_IMPORT);
         }
 
-        Subscription subscription = subscriptionService.getActiveSubscription(subscriber, pack.getType());
+        Subscription subscription = subscriptionService.getActiveSubscription(subscriber, packType);
         if (subscription != null) {
             // subscriber already has an active subscription to this pack
 
