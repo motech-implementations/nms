@@ -315,15 +315,10 @@ public class CdrFileServiceImpl implements CdrFileService {
             try {
 
                 line = reader.readLine();
+                CsvHelper.validateCdrHeader(line);
 
                 while ((line = reader.readLine()) != null) {
                     try {
-                        if(line.contains("RequestId")){
-
-                            CsvHelper.validateCdrHeader(line);
-
-                        }else {
-
 
                             // Parse the CSV line into a CDR
                             // This should not trow an IllegalArgumentException since we verified this in phase 1
@@ -346,7 +341,7 @@ public class CdrFileServiceImpl implements CdrFileService {
                             CallSummaryRecordDto csr = new CallSummaryRecordDto();
                             aggregateDetailRecord(cdr, csr);
                             csrValidatorService.validateSummaryRecord(csr);
-                        }
+
 
                     } catch (IllegalArgumentException e) {
                         errors.add(String.format("Line %d: %s", lineNumber, e.getMessage()));
@@ -398,17 +393,11 @@ public class CdrFileServiceImpl implements CdrFileService {
             CallSummaryRecordDto csr = null;
 
             try {
-
+                line = reader.readLine();
+                CsvHelper.validateCdrHeader(line);
 
                 while ((line = reader.readLine()) != null) {
                     try {
-
-                        if(line.contains("RequestId")) {
-
-                            CsvHelper.validateCdrHeader(line);
-
-                        }else {
-
 
                             // Parse the CSV line into a CDR
                             // This will trow IllegalArgumentException if the CSV is malformed
@@ -428,7 +417,6 @@ public class CdrFileServiceImpl implements CdrFileService {
                             }
 
                             aggregateDetailRecord(cdr, csr);
-                        }
 
                     } catch (IllegalArgumentException e) {
                         errors.add(String.format("Line %d: %s", lineNumber, e.getMessage()));
