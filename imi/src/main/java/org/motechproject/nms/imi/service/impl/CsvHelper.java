@@ -11,6 +11,10 @@ import org.motechproject.nms.props.domain.StatusCode;
  */
 public final class CsvHelper {
 
+    public static final String CDR_HEADER = "RequestId,Msisdn,CallId,AttemptNo,CallStartTime,CallAnswerTime," +
+            "CallEndTime,CallDurationInPulse,CallStatus,LanguageLocationId,ContentFile,MsgPlayStartTime," +
+            "MsgPlayEndTime,CircleId,OperatorId,Priority,CallDisconnectReason,WeekId";
+
     private static final long MIN_MSISDN = 1000000000L;
     private static final long MAX_MSISDN = 9999999999L;
 
@@ -141,4 +145,20 @@ public final class CsvHelper {
 
         return cdr;
     }
+
+    /**
+     * Validate Header coming in CDR file from IMI
+     *
+     * @param line a CSV line from a CDR Detail File from IMI
+     *
+     */
+    public static void validateCdrHeader(String line) {
+
+        if (!(CDR_HEADER.equalsIgnoreCase(line))) {
+            throw new IllegalArgumentException("Invalid CDR header");
+        }
+    }
+
+
+
 }
