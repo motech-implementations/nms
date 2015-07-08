@@ -1,18 +1,5 @@
 package org.motechproject.nms.testing.it.api;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.inject.Inject;
-
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
@@ -46,6 +33,16 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
+
+import javax.inject.Inject;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Integration tests for mobile academy controller
@@ -218,23 +215,13 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
      */
     private JSONObject setupMaCourse() throws IOException {
         MaCourse course = new MaCourse();
-        String jsonText = IOUtils
-                .toString(getFileInputStream("nmsCourse.json"));
+        String jsonText = IOUtils.toString(new InputStreamReader(getClass().getClassLoader().
+                getResourceAsStream("nmsCourse.json")));
         JSONObject jo = new JSONObject(jsonText);
         course.setName(jo.get("name").toString());
         course.setContent(jo.get("chapters").toString());
-        nmsCourseDataService.create(new NmsCourse(course.getName(), course
-                .getContent()));
+        nmsCourseDataService.create(new NmsCourse(course.getName(), course.getContent()));
         return jo;
-    }
-
-    private InputStream getFileInputStream(String fileName) {
-        try {
-            return new FileInputStream(new File(Thread.currentThread()
-                    .getContextClassLoader().getResource(fileName).getPath()));
-        } catch (IOException io) {
-            return null;
-        }
     }
 
     /**
@@ -243,24 +230,20 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT400() throws IOException, InterruptedException {
-        String endpoint = String.format(
-                "http://localhost:%d/api/mobileacademy/courseVersion",
-                TestContext.getJettyPort());
+        String endpoint = String.format("http://localhost:%d/api/mobileacademy/courseVersion", TestContext
+                .getJettyPort());
         HttpGet request = RequestBuilder.createGetRequest(endpoint);
-        HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(
-                request, RequestBuilder.ADMIN_USERNAME,
-                RequestBuilder.ADMIN_PASSWORD);
+        HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(request, RequestBuilder
+                .ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
 
-        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, httpResponse
-                .getStatusLine().getStatusCode());
+        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, httpResponse.getStatusLine().getStatusCode());
     }
 
     /**
      * To verify Get MA Course Version API is returning correct course version
      * when MA course structure exist .
      */
-    // TODO https://applab.atlassian.net/browse/NMS-226
-    @Ignore
+    // https://applab.atlassian.net/browse/NMS-226
     @Test
     public void verifyFT401() throws IOException, InterruptedException {
         setupMaCourse();
@@ -307,8 +290,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
      * To verify Get MA Course API is returning correct course structure when MA
      * course structure exist.
      */
-    // TODO https://applab.atlassian.net/browse/NMS-227
-    @Ignore
+    // https://applab.atlassian.net/browse/NMS-227
     @Test
     public void verifyFT403() throws IOException, InterruptedException {
         JSONObject jo = setupMaCourse();
@@ -375,7 +357,6 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
      * score details.
      */
     // TODO JIRA issue: https://applab.atlassian.net/browse/NMS-224
-    @Ignore
     @Test
     public void verifyFT404() throws IOException, InterruptedException {
         bookmarkService.deleteAllBookmarksForUser("1234567890");
