@@ -664,4 +664,3 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
                 .getEntity())));
     }
 }
-
