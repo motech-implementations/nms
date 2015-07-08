@@ -58,8 +58,10 @@ public final class MobileAcademyConverter {
      */
     public static GetBookmarkResponse convertBookmarkDto(MaBookmark bookmark) {
         GetBookmarkResponse response = new GetBookmarkResponse();
-        response.setBookmark(bookmark.getBookmark());
-        response.setScoresByChapter(bookmark.getScoresByChapter());
+        if (bookmark != null) {
+            response.setBookmark(bookmark.getBookmark());
+            response.setScoresByChapter(bookmark.getScoresByChapter());
+        }
         return response;
     }
 
