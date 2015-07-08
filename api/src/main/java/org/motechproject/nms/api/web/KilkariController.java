@@ -138,6 +138,10 @@ public class KilkariController extends BaseController {
         int failureReasonsLength = failureReasons.length();
         Set<String> subscriptionPacks = new HashSet<>();
         for (CallDataRequest data : content) {
+            if (data == null) {
+                failureReasons.append(String.format(INVALID, "content"));
+                continue;
+            }
             validateFieldExactLength(failureReasons, "subscriptionId", data.getSubscriptionId(), SUBSCRIPTION_ID_LENGTH);
             subscriptionPacks.add(data.getSubscriptionPack());
             validateFieldString(failureReasons, "inboxWeekId", data.getInboxWeekId());
