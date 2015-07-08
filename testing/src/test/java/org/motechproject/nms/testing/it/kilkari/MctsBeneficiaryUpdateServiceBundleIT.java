@@ -402,7 +402,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
 
         MctsChild child = new MctsChild(childId);
         child.setState(stateDataService.findByCode(21L));
-        child.setDistrict(child.getState().getDistricts().get(0));
+        child.setDistrict(districtService.findByStateAndCode(child.getState() , 2L));
         makeMctsSubscription(child, DateTime.now().minusDays(100), SubscriptionPackType.CHILD, msisdn);
 
         Reader reader = createUpdateReaderWithHeaders("1," + childId + ",,,,21,3,0026,453,,,,,,");
