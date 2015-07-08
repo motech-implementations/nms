@@ -873,7 +873,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         
         //attempt to create mother data with abortion value 'MTP<12 Weeks'
         Reader reader = createMotherDataReaderWithHeaders("21\t3\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t\t" +
-                lmpString + "\tMTP<12 Weeks\t");
+                lmpString + "\tMTP<12 Weeks\t\t");
         mctsBeneficiaryImportService.importMotherData(reader);
         Subscriber subscriber = subscriberDataService.findByCallingNumber(9439986187L);
         assertNotNull(subscriber);
@@ -894,7 +894,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         
         //attempt to create mother data with abortion value 'Spontaneous'
         Reader reader = createMotherDataReaderWithHeaders("21\t3\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t\t" +
-                lmpString + "\tSpontaneous\t");
+                lmpString + "\tSpontaneous\t\t");
         mctsBeneficiaryImportService.importMotherData(reader);
         Subscriber subscriber = subscriberDataService.findByCallingNumber(9439986187L);
         assertNotNull(subscriber);
@@ -915,7 +915,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         
         //attempt to create mother data with abortion value 'MTP>12 Weeks'
         Reader reader = createMotherDataReaderWithHeaders("21\t3\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t\t" +
-                lmpString + "\tMTP>12 Weeks\t");
+                lmpString + "\tMTP>12 Weeks\t\t");
         mctsBeneficiaryImportService.importMotherData(reader);
         Subscriber subscriber = subscriberDataService.findByCallingNumber(9439986187L);
         assertNotNull(subscriber);
@@ -935,7 +935,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         
         //attempt to create mother data with Outcome_Nos value '0'
         Reader reader = createMotherDataReaderWithHeaders("21\t3\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t\t" +
-                lmpString + "\t\t0");
+                lmpString + "\t\t0\t");
         mctsBeneficiaryImportService.importMotherData(reader);
         Subscriber subscriber = subscriberDataService.findByCallingNumber(9439986187L);
         assertNotNull(subscriber);
@@ -957,7 +957,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         String lmpString = getDateString(lmp);
         //state id is missing
         Reader reader = createMotherDataReaderWithHeaders("\t3\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t\t" +
-                lmpString + "\t\t");
+                lmpString + "\t\t\t");
         mctsBeneficiaryImportService.importChildData(reader);
         
         assertNoSubscriber(9439986187L);
@@ -976,7 +976,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         String lmpString = getDateString(lmp);
         //district id is missing
         Reader reader = createMotherDataReaderWithHeaders("21\t\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t\t" +
-                lmpString + "\t\t");
+                lmpString + "\t\t\t");
         mctsBeneficiaryImportService.importChildData(reader);
         
         assertNoSubscriber(9439986187L);
@@ -992,7 +992,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         String lmpString = getDateString(lmp);
         //state id with invalid value
         Reader reader = createMotherDataReaderWithHeaders("31\t3\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t\t" +
-                lmpString + "\t\t");
+                lmpString + "\t\t\t");
         mctsBeneficiaryImportService.importChildData(reader);
         
         assertNoSubscriber(9439986187L);
@@ -1007,7 +1007,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     	DateTime lmp = DateTime.now().minusDays(30);
         String lmpString = getDateString(lmp);
         Reader reader = createMotherDataReaderWithHeaders("21\t6\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t\t" +
-                lmpString + "\t\t");
+                lmpString + "\t\t\t");
         //district id with invalid value
         mctsBeneficiaryImportService.importChildData(reader);
         
@@ -1026,7 +1026,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     	DateTime dob = DateTime.now();
         String dobString = getDateString(dob);
         //state id is missing.
-        Reader reader = createChildDataReaderWithHeaders("\t3\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t\t9439986187\t" + dobString);
+        Reader reader = createChildDataReaderWithHeaders("\t3\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t\t9439986187\t\t" + dobString);
         mctsBeneficiaryImportService.importChildData(reader);
         
         //subscriber should not be created and rejected entry should be in nms_subscription_errors with reason 'INVALID_DOB'.
@@ -1045,7 +1045,8 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     	DateTime dob = DateTime.now();
         String dobString = getDateString(dob);
         //district id is missing
-        Reader reader = createChildDataReaderWithHeaders("21\t\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t\t9439986187\t" + dobString);
+        Reader reader = createChildDataReaderWithHeaders("21\t\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t\t9439986187\t"
+                + dobString + "\t");
         mctsBeneficiaryImportService.importChildData(reader);
         
         //subscriber should not be created and rejected entry should be in nms_subscription_errors with reason 'INVALID_DOB'.
@@ -1061,7 +1062,8 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     	DateTime dob = DateTime.now();
         String dobString = getDateString(dob);
         //state id with invalid value
-        Reader reader = createChildDataReaderWithHeaders("31\t3\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t\t9439986187\t" + dobString);
+        Reader reader = createChildDataReaderWithHeaders("31\t3\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t\t9439986187\t"
+                + dobString + "\t");
         mctsBeneficiaryImportService.importChildData(reader);
         
         //subscriber should not be created and rejected entry should be in nms_subscription_errors with reason 'INVALID_DOB'.
@@ -1077,7 +1079,8 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     	DateTime dob = DateTime.now();
         String dobString = getDateString(dob);
         //district id with invalid value
-        Reader reader = createChildDataReaderWithHeaders("21\t6\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t\t9439986187\t" + dobString);
+        Reader reader = createChildDataReaderWithHeaders("21\t6\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t\t9439986187\t"
+                + dobString + "\t");
         mctsBeneficiaryImportService.importChildData(reader);
         
         //subscriber should not be created and rejected entry should be in nms_subscription_errors with reason 'INVALID_DOB'.
