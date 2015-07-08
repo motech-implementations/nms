@@ -4,6 +4,7 @@ import org.joda.time.DateTime;
 import org.joda.time.Days;
 import org.motechproject.nms.kilkari.domain.InboxCallDetailRecord;
 import org.motechproject.nms.kilkari.domain.Subscription;
+import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
@@ -81,7 +82,18 @@ public class InboxServiceImpl implements InboxService {
             }
         }
 
-        return subscription.getSubscriptionPack().getMessages().get(messageIndex);
+        SubscriptionPackMessage smp = subscription.getSubscriptionPack().getMessages().get(messageIndex);
+
+        if ((subscription.getOrigin() == SubscriptionOrigin.MCTS_IMPORT) &&
+                subscription.getNeedsWelcomeMessage()) {
+            // Subscriber has been subscribed via MCTS and may not know what Kilkari is; play welcome message this week
+            smp.setMessageFileName(SubscriptionPackMessage.getWelcomeMessage().getMessageFileName());
+
+            // TODO: Should we set needs welcome message false here?
+            subscription.setNeedsWelcomeMessage(false);
+        }
+
+        return smp;
     }
 
 }
