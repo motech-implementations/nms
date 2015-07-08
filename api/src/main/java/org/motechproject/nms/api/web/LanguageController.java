@@ -95,8 +95,6 @@ public class LanguageController extends BaseController {
             throw new NotAuthorizedException(String.format(NOT_AUTHORIZED, CALLING_NUMBER));
         }
 
-
-
         // MOTECH-1667 added to get an upsert method included
         if (flw.getId() == null) {
             frontLineWorkerService.add(flw);

@@ -161,7 +161,11 @@ public class UserController extends BaseController {
     private UserResponse getKilkariResponseUser(Long callingNumber, Circle circle) {
         KilkariUserResponse user = new KilkariUserResponse();
         Set<String> packs = new HashSet<>();
-        State state = null;
+
+        State state = getStateFromCircle(circle);
+        if (!serviceDeployedInUserState(Service.KILKARI, state)) {
+            throw new NotDeployedException(String.format(NOT_DEPLOYED, Service.KILKARI));
+        }
 
         Subscriber subscriber = subscriberService.getSubscriber(callingNumber);
 
@@ -178,12 +182,6 @@ public class UserController extends BaseController {
             if (subscriberLanguage != null) {
                 user.setLanguageLocationCode(subscriberLanguage.getCode());
             }
-
-            state = getStateFromCircle(circle);
-
-            if (!serviceDeployedInUserState(Service.KILKARI, state)) {
-                throw new NotDeployedException(String.format(NOT_DEPLOYED, Service.KILKARI));
-            }
         }
         user.setSubscriptionPackList(packs);
 
@@ -198,7 +196,11 @@ public class UserController extends BaseController {
         ServiceUsage serviceUsage = new ServiceUsage(null, service, 0, 0, 0, DateTime.now());
         FrontLineWorker flw = frontLineWorkerService.getByContactNumber(callingNumber);
 
-        State state = null;
+        State state = getStateForFrontLineWorker(flw, circle);
+        if (!serviceDeployedInUserState(service, state)) {
+            throw new NotDeployedException(String.format(NOT_DEPLOYED, service));
+        }
+
         if (null != flw) {
             Language language = flw.getLanguage();
             if (null != language) {
@@ -207,17 +209,9 @@ public class UserController extends BaseController {
 
             serviceUsage = serviceUsageService.getCurrentMonthlyUsageForFLWAndService(flw, service);
 
-            state = getStateForFrontLineWorker(flw, circle);
-
-            if (!serviceDeployedInUserState(service, state)) {
-                throw new NotDeployedException(String.format(NOT_DEPLOYED, service));
-            }
-
             if (!frontLineWorkerAuthorizedForAccess(flw, state)) {
                 throw new NotAuthorizedException(String.format(NOT_AUTHORIZED, CALLING_NUMBER));
             }
-
-
         }
 
         ServiceUsageCap serviceUsageCap = serviceUsageCapService.getServiceUsageCap(state, service);
