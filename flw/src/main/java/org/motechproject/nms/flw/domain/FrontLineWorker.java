@@ -3,8 +3,11 @@ package org.motechproject.nms.flw.domain;
 import org.joda.time.DateTime;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
+import org.motechproject.mds.annotations.InstanceLifecycleListeners;
 import org.motechproject.mds.domain.MdsEntity;
 import org.motechproject.nms.flw.domain.validation.ValidFrontLineWorker;
+import org.motechproject.nms.tracking.annotation.TrackClass;
+import org.motechproject.nms.tracking.annotation.TrackField;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.FullLocation;
 import org.motechproject.nms.region.domain.HealthBlock;
@@ -27,6 +30,8 @@ import javax.validation.constraints.Min;
 @ValidFrontLineWorker
 @Entity(tableName = "nms_front_line_workers")
 @Index(name = "status_invalidationDate_composit_idx", members = { "status", "invalidationDate" })
+@TrackClass
+@InstanceLifecycleListeners
 public class FrontLineWorker extends MdsEntity implements FullLocation {
 
     @Field
@@ -95,6 +100,7 @@ public class FrontLineWorker extends MdsEntity implements FullLocation {
         return flwId;
     }
 
+    @TrackField
     public void setFlwId(String flwId) {
         this.flwId = flwId;
     }
@@ -103,6 +109,7 @@ public class FrontLineWorker extends MdsEntity implements FullLocation {
         return mctsFlwId;
     }
 
+    @TrackField
     public void setMctsFlwId(String mctsFlwId) {
         this.mctsFlwId = mctsFlwId;
     }
@@ -111,6 +118,7 @@ public class FrontLineWorker extends MdsEntity implements FullLocation {
         return contactNumber;
     }
 
+    @TrackField
     public void setContactNumber(Long contactNumber) {
         this.contactNumber = contactNumber;
     }
@@ -119,6 +127,7 @@ public class FrontLineWorker extends MdsEntity implements FullLocation {
         return name;
     }
 
+    @TrackField
     public void setName(String name) {
         this.name = name;
     }
@@ -127,6 +136,7 @@ public class FrontLineWorker extends MdsEntity implements FullLocation {
         return status;
     }
 
+    @TrackField
     public void setStatus(FrontLineWorkerStatus status) {
         this.status = status;
 
@@ -141,6 +151,7 @@ public class FrontLineWorker extends MdsEntity implements FullLocation {
         return invalidationDate;
     }
 
+    @TrackField
     public void setInvalidationDate(DateTime invalidationDate) {
         this.invalidationDate = invalidationDate;
     }
@@ -149,6 +160,7 @@ public class FrontLineWorker extends MdsEntity implements FullLocation {
         return language;
     }
 
+    @TrackField
     public void setLanguage(Language language) {
         this.language = language;
     }
@@ -169,6 +181,7 @@ public class FrontLineWorker extends MdsEntity implements FullLocation {
     }
 
     @Override
+    @TrackField
     public void setDistrict(District district) {
         this.district = district;
     }
