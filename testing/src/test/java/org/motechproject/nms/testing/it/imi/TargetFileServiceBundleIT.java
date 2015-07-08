@@ -404,7 +404,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         String checksum = ChecksumHelper.checksum(targetFile);
         assertEquals((int)tfn.getRecordsCount(), recordCount);
         assertEquals(tfn.getChecksum(), checksum);
-        assertTrue("welcome.wav".equals(contents.get(0)));
+        assertTrue("w1_1.wav".equals(contents.get(0)));
     }
 
     /*
@@ -442,12 +442,10 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         String checksum = ChecksumHelper.checksum(targetFile);
         assertEquals((int)tfn.getRecordsCount(), recordCount);
         assertEquals(tfn.getChecksum(), checksum);
-        assertTrue("welcome.wav".equals(contents.get(0)));
+        assertTrue("w1_1.wav".equals(contents.get(0)));
 
     }
     //todo: test success notification is sent to the IVR system
-
-
 
 
     @Test
