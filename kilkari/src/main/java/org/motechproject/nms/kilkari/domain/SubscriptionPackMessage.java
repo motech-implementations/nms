@@ -63,6 +63,6 @@ public class SubscriptionPackMessage {
 
     @Ignore
     public static SubscriptionPackMessage getWelcomeMessage() {
-        return new SubscriptionPackMessage(0, "welcome", "welcome.wav", TWO_MINUTES);
+        return new SubscriptionPackMessage(0, "w1_1", "w1_1.wav", TWO_MINUTES);
     }
 }

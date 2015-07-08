@@ -612,9 +612,9 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         Subscription subscription = mctsSubscriber.getSubscriptions().iterator().next();
 
-        // initially, the welcome message should be played
+        // initially, the welcome message should be played (welcome message and week 1 message are the same)
         SubscriptionPackMessage message = subscription.nextScheduledMessage(now);
-        assertEquals("welcome", message.getWeekId());
+        assertEquals("w1_1", message.getWeekId());
 
         subscription.setNeedsWelcomeMessage(false);
         subscriptionDataService.update(subscription);
@@ -918,8 +918,6 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     /*
 	 * To verify that MSISDN greater than 10 digit should be accepted during 
 	 * MCTS upload. subscriber should be created with last 10 digits of MSISDN.
-	 * 
-	 * https://applab.atlassian.net/browse/NMS-202
 	 */
     @Test
     public void verifyFT182() {
@@ -937,9 +935,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     
     /*
      * To verify that user's subscription should create in pending state
-     *
      */
-
     @Test
     public void verifyFT153() {
 

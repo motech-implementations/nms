@@ -281,9 +281,8 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         Subscriber subscriber = subscriberDataService.findByCallingNumber(msisdn);
         subscriber.setDateOfBirth(originalDOB);
         MctsChild child = new MctsChild(childId);
-        State state = stateDataService.findByCode(21L);
-        child.setState(state);
-        child.setDistrict(state.getDistricts().get(0));
+        child.setState(stateDataService.findByCode(21L));
+        child.setDistrict(districtService.findByStateAndCode(child.getState(), 3L));
         subscriber.setChild(child);
         subscriberDataService.update(subscriber);
 
@@ -310,9 +309,8 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         Subscriber subscriber = subscriberDataService.findByCallingNumber(msisdn);
         subscriber.setLastMenstrualPeriod(originalLMP);
         MctsMother mother = new MctsMother(motherId);
-        State state = stateDataService.findByCode(21L);
-        mother.setState(state);
-        mother.setDistrict(state.getDistricts().get(0));
+        mother.setState(stateDataService.findByCode(21L));
+        mother.setDistrict(districtService.findByStateAndCode(mother.getState(), 3L));
         subscriber.setMother(mother);
         subscriberDataService.update(subscriber);
 
@@ -339,9 +337,8 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         Subscriber subscriber = subscriberDataService.findByCallingNumber(msisdn);
         subscriber.setLastMenstrualPeriod(originalLMP);
         MctsMother mother = new MctsMother(motherId);
-        State state = stateDataService.findByCode(21L);
-        mother.setState(state);
-        mother.setDistrict(state.getDistricts().get(0));
+        mother.setState(stateDataService.findByCode(21L));
+        mother.setDistrict(districtService.findByStateAndCode(mother.getState(), 3L));
         subscriber.setMother(mother);
         subscriberDataService.update(subscriber);
 
@@ -374,7 +371,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
 
         MctsChild child = new MctsChild(childId);
         child.setState(stateDataService.findByCode(21L));
-        child.setDistrict(stateDataService.findByCode(21L).getDistricts().get(0));
+        child.setDistrict(districtService.findByStateAndCode(child.getState(), 3L));
         makeMctsSubscription(child, originalDOB, SubscriptionPackType.CHILD, msisdn);
 
         // verify that the subscription is active
@@ -402,7 +399,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
 
         MctsChild child = new MctsChild(childId);
         child.setState(stateDataService.findByCode(21L));
-        child.setDistrict(child.getState().getDistricts().get(0));
+        child.setDistrict(districtService.findByStateAndCode(child.getState(), 2L));
         makeMctsSubscription(child, DateTime.now().minusDays(100), SubscriptionPackType.CHILD, msisdn);
 
         Reader reader = createUpdateReaderWithHeaders("1," + childId + ",,,,21,3,0026,453,,,,,,");
@@ -424,27 +421,27 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         String child1id = "1234567890";
         MctsChild child1 = new MctsChild(child1id);
         child1.setState(stateDataService.findByCode(21L));
-        child1.setDistrict(child1.getState().getDistricts().get(0));
+        child1.setDistrict(districtService.findByStateAndCode(child1.getState(), 3L));
         Long child1msisdn = subscriptionHelper.makeNumber();
         makeMctsSubscription(child1, DateTime.now().minusDays(100), SubscriptionPackType.CHILD, child1msisdn);
 
         String mother2id = "1234567899";
         MctsMother mother2 = new MctsMother(mother2id);
         mother2.setState(stateDataService.findByCode(21L));
-        mother2.setDistrict(mother2.getState().getDistricts().get(0));
+        mother2.setDistrict(districtService.findByStateAndCode(mother2.getState(), 3L));
         Long mother2msisdn = subscriptionHelper.makeNumber();
         makeMctsSubscription(mother2, DateTime.now().minusDays(100), SubscriptionPackType.PREGNANCY, mother2msisdn);
 
         String mother3id = "9876543210";
         MctsMother mother3 = new MctsMother(mother3id);
         mother3.setState(stateDataService.findByCode(21L));
-        mother3.setDistrict(mother3.getState().getDistricts().get(0));
+        mother3.setDistrict(districtService.findByStateAndCode(mother3.getState(), 3L));
         makeMctsSubscription(mother3, DateTime.now().minusDays(100), SubscriptionPackType.PREGNANCY, subscriptionHelper.makeNumber());
 
         Long child4msisdn = subscriptionHelper.makeNumber();
         MctsChild child4 = new MctsChild("9876543211");
         child4.setState(stateDataService.findByCode(21L));
-        child4.setDistrict(child4.getState().getDistricts().get(0));
+        child4.setDistrict(districtService.findByStateAndCode(child4.getState(), 3L));
         makeMctsSubscription(child4, DateTime.now().minusDays(100), SubscriptionPackType.CHILD, child4msisdn);
 
         // ----Update all 4 via CSV:----

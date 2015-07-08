@@ -79,8 +79,6 @@ public class LanguageControllerBundleIT extends BasePaxIT {
     }
 
 
-
-
     private void createCircleWithLanguage() {
 
         Language language = new Language("99", "Papiamento");

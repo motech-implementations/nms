@@ -65,7 +65,7 @@ public class SortHelper {
      * file
      */
     void sort(String file) throws ExecException {
-        String command = String.format("%s -t , -k 1,1 -k 4,4n -o %s %s", getSortBinary(),
+        String command = String.format("%s -t , -k 1,1r -k 4,4n -o %s %s", getSortBinary(),
                 localSortedCdrFile(file), localCdrFile(file));
         ExecHelper execHelper = new ExecHelper();
         execHelper.exec(command, getSortTimeout());

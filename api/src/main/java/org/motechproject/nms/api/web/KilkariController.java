@@ -40,7 +40,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -138,6 +137,10 @@ public class KilkariController extends BaseController {
         int failureReasonsLength = failureReasons.length();
         Set<String> subscriptionPacks = new HashSet<>();
         for (CallDataRequest data : content) {
+            if (data == null) {
+                failureReasons.append(String.format(INVALID, "content"));
+                continue;
+            }
             validateFieldExactLength(failureReasons, "subscriptionId", data.getSubscriptionId(), SUBSCRIPTION_ID_LENGTH);
             subscriptionPacks.add(data.getSubscriptionPack());
             validateFieldString(failureReasons, "inboxWeekId", data.getInboxWeekId());
@@ -276,25 +279,15 @@ public class KilkariController extends BaseController {
 
     private State getSingleStateFromCircleAndLanguage(Circle circle, Language language) {
 
-
-
         Set<State> stateSet = languageService.getAllStatesForLanguage(language);
 
         if (stateSet.size() == 1) {
             return stateSet.iterator().next();
         }
 
-        if (circle != null) {
-
-        List<State> stateList = circle.getStates();
-            if (stateList.size() == 1) {
-            return stateList.get(0);
-            }
-
-        }
-
-        return null;
+        return getStateFromCircle(circle);
     }
+
     /**
      * 4.2.4
      * Deactivate Subscription
