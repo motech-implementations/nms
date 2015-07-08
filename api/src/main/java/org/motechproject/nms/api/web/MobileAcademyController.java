@@ -127,6 +127,7 @@ public class MobileAcademyController extends BaseController {
             value = "/bookmarkWithScore",
             method = RequestMethod.GET,
             headers = { "Content-type=application/json" })
+    @ResponseBody
     public GetBookmarkResponse getBookmarkWithScore(@RequestParam Long callingNumber,
                                                  @RequestParam Long callId) {
 
