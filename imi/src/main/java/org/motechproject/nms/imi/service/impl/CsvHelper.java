@@ -11,6 +11,10 @@ import org.motechproject.nms.props.domain.StatusCode;
  */
 public final class CsvHelper {
 
+    public static final String CDR_HEADER = "RequestId,Msisdn,CallId,AttemptNo,CallStartTime,CallAnswerTime," +
+            "CallEndTime,CallDurationInPulse,CallStatus,LanguageLocationId,ContentFile,MsgPlayStartTime," +
+            "MsgPlayEndTime,CircleId,OperatorId,Priority,CallDisconnectReason,WeekId";
+
     private static final long MIN_MSISDN = 1000000000L;
     private static final long MAX_MSISDN = 9999999999L;
 
@@ -150,19 +154,8 @@ public final class CsvHelper {
      */
     public static void validateCdrHeader(String line) {
 
-        String header = "RequestId,Msisdn,CallId,AttemptNo,CallStartTime,CallAnswerTime,CallEndTime," +
-                "CallDurationInPulse,CallStatus,LanguageLocationId,ContentFile,MsgPlayStartTime,MsgPlayEndTime," +
-                "CircleId,OperatorId,Priority,CallDisconnectReason,WeekId";
-
-        String[] fields = line.split(",");
-
-        if (fields.length != FieldName.FIELD_COUNT.ordinal()) {
-            throw new IllegalArgumentException(String.format(
-                    "Invalid field count, expecting %d but received %d", FieldName.FIELD_COUNT.ordinal(),
-                    fields.length));
-        }
-        if (!(header.equalsIgnoreCase(line))) {
-            throw new IllegalArgumentException(String.format("Header in the file is not correct"));
+        if (!(CDR_HEADER.equalsIgnoreCase(line))) {
+            throw new IllegalArgumentException("Invalid CDR header");
         }
     }
 

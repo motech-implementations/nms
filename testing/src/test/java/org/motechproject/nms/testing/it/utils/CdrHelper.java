@@ -7,6 +7,7 @@ import org.motechproject.nms.imi.domain.FileAuditRecord;
 import org.motechproject.nms.imi.domain.FileType;
 import org.motechproject.nms.imi.repository.FileAuditRecordDataService;
 import org.motechproject.nms.imi.service.SettingsService;
+import org.motechproject.nms.imi.service.impl.CsvHelper;
 import org.motechproject.nms.imi.web.contract.FileInfo;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
@@ -372,7 +373,7 @@ public class CdrHelper {
 
         int remainingInvalidLines = numInvalidLines;
 
-        writer.write(writeHeader());
+        writer.write(CsvHelper.CDR_HEADER);
         writer.write("\n");
         for(CallDetailRecordDto cdr : cdrs) {
             writer.write(csvLineFromCdr(cdr));
@@ -386,14 +387,6 @@ public class CdrHelper {
         writer.close();
         return file;
     }
-
-    public static String writeHeader() {
-        String header = "RequestId,Msisdn,CallId,AttemptNo,CallStartTime,CallAnswerTime,CallEndTime," +
-                "CallDurationInPulse,CallStatus,LanguageLocationId,ContentFile,MsgPlayStartTime,MsgPlayEndTime," +
-                "CircleId,OperatorId,Priority,CallDisconnectReason,WeekId";
-        return header;
-    }
-
 
     public File makeLocalCdrFile() throws IOException {
         return doMakeCdrFile(localDir(), 0);
