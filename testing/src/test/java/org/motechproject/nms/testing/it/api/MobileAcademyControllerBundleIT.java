@@ -69,6 +69,8 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
 
     private static final String COURSE_NAME = "MobileAcademyCourse";
 
+    public static final int MILLISECONDS_PER_SECOND = 1000;
+
     @Before
     public void setupTestData() {
         testingService.clearDatabase();
@@ -257,6 +259,8 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
      * To verify Get MA Course Version API is returning correct course version
      * when MA course structure exist .
      */
+    // TODO https://applab.atlassian.net/browse/NMS-226
+    @Ignore
     @Test
     public void verifyFT401() throws IOException, InterruptedException {
         setupMaCourse();
@@ -271,7 +275,8 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
 
         NmsCourse course = nmsCourseDataService.getCourseByName(COURSE_NAME);
         String expectedJsonResponse = "{\"courseVersion\":"
-                + course.getModificationDate().getMillis() + "}";
+                + course.getModificationDate().getMillis()
+                / MILLISECONDS_PER_SECOND + "}";
 
         assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
                 .getStatusCode());
@@ -302,6 +307,8 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
      * To verify Get MA Course API is returning correct course structure when MA
      * course structure exist.
      */
+    // TODO https://applab.atlassian.net/browse/NMS-227
+    @Ignore
     @Test
     public void verifyFT403() throws IOException, InterruptedException {
         JSONObject jo = setupMaCourse();
@@ -318,7 +325,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
         CourseResponse courseResponseDTO = new CourseResponse();
         courseResponseDTO.setName(jo.get("name").toString());
         courseResponseDTO.setCourseVersion(course.getModificationDate()
-                .getMillis());
+                .getMillis() / MILLISECONDS_PER_SECOND);
         courseResponseDTO.setChapters(jo.get("chapters").toString());
 
         ObjectMapper mapper = new ObjectMapper();
