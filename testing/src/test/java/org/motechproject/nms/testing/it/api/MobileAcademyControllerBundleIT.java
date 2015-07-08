@@ -244,8 +244,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
      * To verify Get MA Course Version API is returning correct course version
      * when MA course structure exist .
      */
-    // TODO https://applab.atlassian.net/browse/NMS-226
-    @Ignore
+    // https://applab.atlassian.net/browse/NMS-226
     @Test
     public void verifyFT401() throws IOException, InterruptedException {
         setupMaCourse();
@@ -292,8 +291,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
      * To verify Get MA Course API is returning correct course structure when MA
      * course structure exist.
      */
-    // TODO https://applab.atlassian.net/browse/NMS-227
-    @Ignore
+    // https://applab.atlassian.net/browse/NMS-227
     @Test
     public void verifyFT403() throws IOException, InterruptedException {
         JSONObject jo = setupMaCourse();
