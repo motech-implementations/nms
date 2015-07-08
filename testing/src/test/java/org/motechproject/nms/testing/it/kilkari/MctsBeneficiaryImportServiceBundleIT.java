@@ -8,6 +8,7 @@ import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.DateTimeFormatterBuilder;
 import org.joda.time.format.DateTimeParser;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
@@ -47,6 +48,7 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
+
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
@@ -855,5 +857,228 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
 		Subscriber subscriber = subscriberDataService.findByCallingNumber(callingNumber);
         assertNull(subscriber);
 	}	
+    
+    /*
+     * To verify pregnancyPack is marked deactivated with reason abortion via CSV. 
+     * checked with abortion value 'MTP<12 Weeks'
+     */
+    @Test
+    public void verifyFT313_1() throws Exception {
+        DateTime lmp = DateTime.now().minusDays(30);
+        String lmpString = getDateString(lmp);
+        
+        //attempt to create mother data with abortion value 'MTP<12 Weeks'
+        Reader reader = createMotherDataReaderWithHeaders("21\t3\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t\t" +
+                lmpString + "\tMTP<12 Weeks\t");
+        mctsBeneficiaryImportService.importMotherData(reader);
+        Subscriber subscriber = subscriberDataService.findByCallingNumber(9439986187L);
+        assertNotNull(subscriber);
+        Subscription subscription = subscriber.getSubscriptions().iterator().next();
+        assertNotNull(subscription);
+        assertEquals(subscription.getStatus(), SubscriptionStatus.DEACTIVATED);
+        assertEquals(subscription.getDeactivationReason(), DeactivationReason.MISCARRIAGE_OR_ABORTION);
+    }
+    
+    /*
+     * To verify pregnancyPack is marked deactivated with reason abortion via CSV.
+     * checked with abortion value 'Spontaneous'
+     */
+    @Test
+    public void verifyFT313_2() throws Exception {
+        DateTime lmp = DateTime.now().minusDays(30);
+        String lmpString = getDateString(lmp);
+        
+        //attempt to create mother data with abortion value 'Spontaneous'
+        Reader reader = createMotherDataReaderWithHeaders("21\t3\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t\t" +
+                lmpString + "\tSpontaneous\t");
+        mctsBeneficiaryImportService.importMotherData(reader);
+        Subscriber subscriber = subscriberDataService.findByCallingNumber(9439986187L);
+        assertNotNull(subscriber);
+        Subscription subscription = subscriber.getSubscriptions().iterator().next();
+        assertNotNull(subscription);
+        assertEquals(subscription.getStatus(), SubscriptionStatus.DEACTIVATED);
+        assertEquals(subscription.getDeactivationReason(), DeactivationReason.MISCARRIAGE_OR_ABORTION);
+    }
+    
+    /*
+     * To verify pregnancyPack is marked deactivated with reason abortion via CSV. 
+     * with abortion value 'MTP>12 Weeks'
+     */
+    @Test
+    public void verifyFT313_3() throws Exception {
+        DateTime lmp = DateTime.now().minusDays(30);
+        String lmpString = getDateString(lmp);
+        
+        //attempt to create mother data with abortion value 'MTP>12 Weeks'
+        Reader reader = createMotherDataReaderWithHeaders("21\t3\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t\t" +
+                lmpString + "\tMTP>12 Weeks\t");
+        mctsBeneficiaryImportService.importMotherData(reader);
+        Subscriber subscriber = subscriberDataService.findByCallingNumber(9439986187L);
+        assertNotNull(subscriber);
+        Subscription subscription = subscriber.getSubscriptions().iterator().next();
+        assertNotNull(subscription);
+        assertEquals(subscription.getStatus(), SubscriptionStatus.DEACTIVATED);
+        assertEquals(subscription.getDeactivationReason(), DeactivationReason.MISCARRIAGE_OR_ABORTION);
+    }
+    
+    /*
+     * To verify pregnancyPack is marked deactivated with reason still birth via CSV. 
+     */
+    @Test
+    public void verifyFT315() throws Exception {
+        DateTime lmp = DateTime.now().minusDays(30);
+        String lmpString = getDateString(lmp);
+        
+        //attempt to create mother data with Outcome_Nos value '0'
+        Reader reader = createMotherDataReaderWithHeaders("21\t3\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t\t" +
+                lmpString + "\t\t0");
+        mctsBeneficiaryImportService.importMotherData(reader);
+        Subscriber subscriber = subscriberDataService.findByCallingNumber(9439986187L);
+        assertNotNull(subscriber);
+        Subscription subscription = subscriber.getSubscriptions().iterator().next();
+        assertNotNull(subscription);
+        assertEquals(subscription.getStatus(), SubscriptionStatus.DEACTIVATED);
+        assertEquals(subscription.getDeactivationReason(), DeactivationReason.STILL_BIRTH);
+    }
+    
+    /*
+     * To verify mother MCTS upload is rejected when mandatory parameter state is missing. 
+     * 
+     * https://applab.atlassian.net/browse/NMS-228
+     */
+    @Test
+    @Ignore
+    public void verifyFT524() throws Exception {
+    	DateTime lmp = DateTime.now().minusDays(30);
+        String lmpString = getDateString(lmp);
+        //state id is missing
+        Reader reader = createMotherDataReaderWithHeaders("\t3\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t\t" +
+                lmpString + "\t\t");
+        mctsBeneficiaryImportService.importChildData(reader);
+        
+        assertNoSubscriber(9439986187L);
+        assertSubscriptionError(9439986187L, SubscriptionPackType.CHILD, SubscriptionRejectionReason.INVALID_LOCATION);
+    }
+    
+    /*
+     * To verify mother MCTS upload is rejected when mandatory parameter district is missing. 
+     * 
+     * https://applab.atlassian.net/browse/NMS-228
+     */
+    @Test
+    @Ignore
+    public void verifyFT525() throws Exception {
+    	DateTime lmp = DateTime.now().minusDays(30);
+        String lmpString = getDateString(lmp);
+        //district id is missing
+        Reader reader = createMotherDataReaderWithHeaders("21\t\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t\t" +
+                lmpString + "\t\t");
+        mctsBeneficiaryImportService.importChildData(reader);
+        
+        assertNoSubscriber(9439986187L);
+        assertSubscriptionError(9439986187L, SubscriptionPackType.CHILD, SubscriptionRejectionReason.INVALID_LOCATION);
+    }
+    
+    /*
+     * To verify mother MCTS upload is rejected when mandatory parameter state is having invalid value. 
+     */
+    @Test
+    public void verifyFT526() throws Exception {
+    	DateTime lmp = DateTime.now().minusDays(30);
+        String lmpString = getDateString(lmp);
+        //state id with invalid value
+        Reader reader = createMotherDataReaderWithHeaders("31\t3\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t\t" +
+                lmpString + "\t\t");
+        mctsBeneficiaryImportService.importChildData(reader);
+        
+        assertNoSubscriber(9439986187L);
+        assertSubscriptionError(9439986187L, SubscriptionPackType.CHILD, SubscriptionRejectionReason.INVALID_LOCATION);
+    }
+    
+    /*
+     * To verify mother MCTS upload is rejected when mandatory parameter state is having invalid value. 
+     */
+    @Test
+    public void verifyFT527() throws Exception {
+    	DateTime lmp = DateTime.now().minusDays(30);
+        String lmpString = getDateString(lmp);
+        Reader reader = createMotherDataReaderWithHeaders("21\t6\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t\t" +
+                lmpString + "\t\t");
+        //district id with invalid value
+        mctsBeneficiaryImportService.importChildData(reader);
+        
+        assertNoSubscriber(9439986187L);
+        assertSubscriptionError(9439986187L, SubscriptionPackType.CHILD, SubscriptionRejectionReason.INVALID_LOCATION);
+    }
+    
+    /*
+     * To verify child MCTS upload is rejected when mandatory parameter state is missing.
+     * 
+     * https://applab.atlassian.net/browse/NMS-228
+     */
+    @Ignore
+    @Test
+    public void verifyFT528() throws Exception {
+    	DateTime dob = DateTime.now();
+        String dobString = getDateString(dob);
+        //state id is missing.
+        Reader reader = createChildDataReaderWithHeaders("\t3\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t\t9439986187\t" + dobString);
+        mctsBeneficiaryImportService.importChildData(reader);
+        
+        //subscriber should not be created and rejected entry should be in nms_subscription_errors with reason 'INVALID_DOB'.
+        assertNoSubscriber(9439986187L);
+        assertSubscriptionError(9439986187L, SubscriptionPackType.CHILD, SubscriptionRejectionReason.INVALID_LOCATION);
+    }
+    
+    /*
+     * To verify child MCTS upload is rejected when mandatory parameter district is missing. 
+     * 
+     * https://applab.atlassian.net/browse/NMS-228
+     */
+    @Ignore
+    @Test
+    public void verifyFT529() throws Exception {
+    	DateTime dob = DateTime.now();
+        String dobString = getDateString(dob);
+        //district id is missing
+        Reader reader = createChildDataReaderWithHeaders("21\t\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t\t9439986187\t" + dobString);
+        mctsBeneficiaryImportService.importChildData(reader);
+        
+        //subscriber should not be created and rejected entry should be in nms_subscription_errors with reason 'INVALID_DOB'.
+        assertNoSubscriber(9439986187L);
+        assertSubscriptionError(9439986187L, SubscriptionPackType.CHILD, SubscriptionRejectionReason.INVALID_LOCATION);
+    }
+    
+    /*
+     * To verify child MCTS upload is rejected when mandatory parameter state is having invalid value. 
+     */
+    @Test
+    public void verifyFT530() throws Exception {
+    	DateTime dob = DateTime.now();
+        String dobString = getDateString(dob);
+        //state id with invalid value
+        Reader reader = createChildDataReaderWithHeaders("31\t3\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t\t9439986187\t" + dobString);
+        mctsBeneficiaryImportService.importChildData(reader);
+        
+        //subscriber should not be created and rejected entry should be in nms_subscription_errors with reason 'INVALID_DOB'.
+        assertNoSubscriber(9439986187L);
+        assertSubscriptionError(9439986187L, SubscriptionPackType.CHILD, SubscriptionRejectionReason.INVALID_LOCATION);
+    }
+    
+    /*
+     * To verify child MCTS upload is rejected when mandatory parameter district is having invalid value. 
+     */
+    @Test
+    public void verifyFT531() throws Exception {
+    	DateTime dob = DateTime.now();
+        String dobString = getDateString(dob);
+        //district id with invalid value
+        Reader reader = createChildDataReaderWithHeaders("21\t6\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t\t9439986187\t" + dobString);
+        mctsBeneficiaryImportService.importChildData(reader);
+        
+        //subscriber should not be created and rejected entry should be in nms_subscription_errors with reason 'INVALID_DOB'.
+        assertNoSubscriber(9439986187L);
+        assertSubscriptionError(9439986187L, SubscriptionPackType.CHILD, SubscriptionRejectionReason.INVALID_LOCATION);
+    }
     
 }
