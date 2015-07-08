@@ -42,6 +42,7 @@ import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -371,7 +372,9 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
                 RequestBuilder.ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, response.getStatusLine()
                 .getStatusCode());
-        assertTrue("{}".equals(EntityUtils.toString(response.getEntity())));
+        String responseJson = EntityUtils.toString(response.getEntity());
+        assertNotNull(responseJson);
+        assertTrue("{\"bookmark\":null,\"scoresByChapter\":null}".equals(responseJson));
     }
 
     /**
