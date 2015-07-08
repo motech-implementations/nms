@@ -529,9 +529,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     }
     
     /*
-     * To verify MCTS upload is rejected when MCTS doesn’t contain DOB. 
-     * 
-     * https://applab.atlassian.net/browse/NMS-206
+     * To verify MCTS upload is rejected when MCTS doesn’t contain DOB.
      */
     @Test
     public void verifyFT288_1() throws Exception {
@@ -547,8 +545,6 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     
     /**
      * To verify MCTS upload is rejected when MCTS doesn’t contain LMP. 
-     * 
-     * https://applab.atlassian.net/browse/NMS-206
      */
     @Test
     public void verifyFT288_2() throws Exception {
