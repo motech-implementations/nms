@@ -144,4 +144,5 @@ public interface SubscriptionService {
      */
     @InstanceLifecycleListener(InstanceLifecycleListenerType.PRE_DELETE)
     void deletePreconditionCheck(Subscription subscription);
+
 }

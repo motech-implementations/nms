@@ -1,8 +1,12 @@
 package org.motechproject.nms.kilkari.service;
 
+import org.joda.time.DateTime;
 import org.motechproject.mds.annotations.InstanceLifecycleListener;
 import org.motechproject.mds.domain.InstanceLifecycleListenerType;
+import org.motechproject.nms.kilkari.domain.MctsBeneficiary;
 import org.motechproject.nms.kilkari.domain.Subscriber;
+import org.motechproject.nms.kilkari.domain.Subscription;
+import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 
 /**
  * Service interface for managing Kilkari subscribers
@@ -11,10 +15,17 @@ public interface SubscriberService {
 
     /**
      * Get the Kilkari subscriber with the specified MSISDN.
-     * @param callingNumber MSISDN of the subscriber to create
-     * @return The created subscriber.
+     * @param callingNumber MSISDN of the subscriber to retrieve
+     * @return The subscriber.
      */
     Subscriber getSubscriber(long callingNumber);
+
+    /**
+     * Get the Kilkari subscriber corresponding to the specified MCTS beneficiary.
+     * @param beneficiary The MCTS beneficiary.
+     * @return The subscriber who has a Mother or Child field with the specified ID.
+     */
+    Subscriber getSubscriberByBeneficiary(final MctsBeneficiary beneficiary);
 
     /**
      * Create a new Kilkari subscriber in the database.
@@ -30,6 +41,18 @@ public interface SubscriberService {
     void update(Subscriber subscriber);
 
     /**
+     * Update MSISDN for subscriber. If the new MSISDN is already in use by a different MCTS beneficiary for the same
+     * subscription pack, the update will be rejected.
+     * @param subscriber Existing subscriber object
+     * @param beneficiary The MCTS beneficary (mother or child) to update
+     * @param newMsisdn The new MSISDN for the subscriber
+     */
+    void updateMsisdnForSubscriber(Subscriber subscriber, MctsBeneficiary beneficiary, Long newMsisdn);
+
+    Subscription updateOrCreateMctsSubscriber(MctsBeneficiary beneficiary, Long msisdn, DateTime referenceDate,
+                                              SubscriptionPackType packType);
+
+    /**
      * Lifecycle listener that verifies a subscriber can only be deleted if all of their subscriptions have
      * been closed at least 6 weeks
      *
@@ -37,4 +60,5 @@ public interface SubscriberService {
      */
     @InstanceLifecycleListener(InstanceLifecycleListenerType.PRE_DELETE)
     void deleteAllowed(Subscriber subscriber);
+
 }
