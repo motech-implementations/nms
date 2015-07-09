@@ -1169,4 +1169,46 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         assertSubscriptionError(9439986187L, SubscriptionPackType.CHILD, SubscriptionRejectionReason.INVALID_LOCATION);
     }
     
+    /*
+     * To verify pregnancyPack is marked deactivated with reason mother death via CSV. 
+     */
+    @Test
+    public void verifyFT314() throws Exception {
+        DateTime lmp = DateTime.now().minusDays(30);
+        String lmpString = getDateString(lmp);
+        
+        //attempt to create mother data with entry_type value '9'
+        Reader reader = createMotherDataReaderWithHeaders("21\t3\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t\t" +
+                lmpString + "\t\t\t9");
+        mctsBeneficiaryImportService.importMotherData(reader);
+        
+        Subscriber subscriber = subscriberDataService.findByCallingNumber(9439986187L);
+        assertNotNull(subscriber);
+        Subscription subscription = subscriber.getSubscriptions().iterator().next();
+        assertNotNull(subscription);
+        assertEquals(subscription.getStatus(), SubscriptionStatus.DEACTIVATED);
+        assertEquals(subscription.getDeactivationReason(), DeactivationReason.MATERNAL_DEATH);
+    }
+    
+    /*
+     * To verify child pack is marked deactivated with reason child death via CSV. 
+     */
+    @Test
+    public void verifyFT316() throws Exception {
+        DateTime dob = DateTime.now();
+        String dobString = getDateString(dob);
+        
+        //attempt to create child data with entry_type '9'
+        Reader reader = createChildDataReaderWithHeaders("21\t3\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t\t9439986187\t"
+                + dobString + "\t9");
+        mctsBeneficiaryImportService.importChildData(reader);
+        
+        Subscriber subscriber = subscriberDataService.findByCallingNumber(9439986187L);
+        assertNotNull(subscriber);
+        Subscription subscription = subscriber.getSubscriptions().iterator().next();
+        assertNotNull(subscription);
+        assertEquals(subscription.getStatus(), SubscriptionStatus.DEACTIVATED);
+        assertEquals(subscription.getDeactivationReason(), DeactivationReason.CHILD_DEATH);
+    }
+    
 }
