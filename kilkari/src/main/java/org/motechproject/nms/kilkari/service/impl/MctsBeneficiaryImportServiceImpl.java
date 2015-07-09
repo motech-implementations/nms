@@ -18,11 +18,11 @@ import org.motechproject.nms.kilkari.domain.SubscriptionError;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.domain.SubscriptionRejectionReason;
-import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.motechproject.nms.kilkari.repository.MctsChildDataService;
 import org.motechproject.nms.kilkari.repository.MctsMotherDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
+import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.region.exception.InvalidLocationException;
@@ -278,8 +278,8 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
     private Map<String, CellProcessor> getBeneficiaryLocationMapping() {
         Map<String, CellProcessor> mapping = new HashMap<>();
-        mapping.put(STATE, new GetLong());
-        mapping.put(DISTRICT, new GetLong());
+        mapping.put(STATE, new Optional(new GetLong()));
+        mapping.put(DISTRICT, new Optional(new GetLong()));
         mapping.put(TALUKA, new Optional(new GetString()));
         mapping.put(HEALTH_BLOCK, new Optional(new GetLong()));
         mapping.put(PHC, new Optional(new GetLong()));

@@ -57,7 +57,6 @@ import java.util.Set;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 import static org.motechproject.nms.testing.it.utils.RegionHelper.createDistrict;
 import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthBlock;
 import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthFacility;
@@ -633,7 +632,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         assertNoSubscriber(9439986187L);
         assertSubscriptionError(9439986187L, SubscriptionPackType.PREGNANCY, SubscriptionRejectionReason.MISSING_LMP);
     }
-    
+
     private void assertSubscriptionError(Long callingNumber, SubscriptionPackType packType, 
     		SubscriptionRejectionReason rejectionReason) {
     	
@@ -732,8 +731,36 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         assertNoSubscriber(9439986187L);
         assertSubscriptionError(9439986187L, SubscriptionPackType.CHILD, SubscriptionRejectionReason.INVALID_LOCATION);
     }
-    
-        
+
+    @Test
+    public void verifyRejectedWithNoState() throws Exception {
+        State state31 = createState(31L, "State 31");
+        stateDataService.create(state31);
+        DateTime dob = DateTime.now();
+        String dobString = getDateString(dob);
+
+        Reader reader = createChildDataReaderWithHeaders("\t3\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t\t9439986187\t" + dobString + "\t");
+        mctsBeneficiaryImportService.importChildData(reader);
+
+        //subscriber should not be created and rejected entry should be in nms_subscription_errors with reason 'INVALID_LOCATION'.
+        assertNoSubscriber(9439986187L);
+        assertSubscriptionError(9439986187L, SubscriptionPackType.CHILD, SubscriptionRejectionReason.INVALID_LOCATION);
+    }
+
+    @Test
+    public void verifyRejectedWithNoDistrict() throws Exception {
+        State state31 = createState(31L, "State 31");
+        stateDataService.create(state31);
+        DateTime dob = DateTime.now();
+        String dobString = getDateString(dob);
+
+        Reader reader = createChildDataReaderWithHeaders("31\t\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t\t9439986187\t" + dobString + "\t");
+        mctsBeneficiaryImportService.importChildData(reader);
+
+        //subscriber should not be created and rejected entry should be in nms_subscription_errors with reason 'INVALID_LOCATION'.
+        assertNoSubscriber(9439986187L);
+        assertSubscriptionError(9439986187L, SubscriptionPackType.CHILD, SubscriptionRejectionReason.INVALID_LOCATION);
+    }
     /*
      * To verify DOB is changed successfully via CSV when subscription 
      * already exists for childPack having status as "Deactivated"

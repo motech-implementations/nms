@@ -13,10 +13,10 @@ import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.SubscriptionError;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.domain.SubscriptionRejectionReason;
-import org.motechproject.nms.kilkari.service.MctsBeneficiaryUpdateService;
 import org.motechproject.nms.kilkari.repository.MctsChildDataService;
 import org.motechproject.nms.kilkari.repository.MctsMotherDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
+import org.motechproject.nms.kilkari.service.MctsBeneficiaryUpdateService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.region.exception.InvalidLocationException;
 import org.motechproject.nms.region.service.LocationService;
@@ -194,13 +194,13 @@ public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateSe
         mapping.put(STATE_MCTS_ID, new Optional(new GetString()));
         mapping.put(DOB, new Optional(MctsBeneficiaryUtils.DATE_BY_STRING));
         mapping.put(LMP, new Optional(MctsBeneficiaryUtils.DATE_BY_STRING));
+        mapping.put(PHC, new Optional(new GetLong()));
+        mapping.put(SUBCENTRE, new Optional(new GetLong()));
+        mapping.put(CENSUS_VILLAGE, new Optional(new GetLong()));
         mapping.put(STATE, new Optional(new GetLong()));
         mapping.put(DISTRICT, new Optional(new GetLong()));
         mapping.put(TALUKA, new Optional(new GetString()));
         mapping.put(HEALTH_BLOCK, new Optional(new GetLong()));
-        mapping.put(PHC, new Optional(new GetLong()));
-        mapping.put(SUBCENTRE, new Optional(new GetLong()));
-        mapping.put(CENSUS_VILLAGE, new Optional(new GetLong()));
 
         mapping.put(MSISDN, new Optional(MctsBeneficiaryUtils.MSISDN_BY_STRING));
 
