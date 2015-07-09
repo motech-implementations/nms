@@ -308,7 +308,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         subscriberDataService.create(subscriber1);
         Subscription subscription = subscriptionService.createSubscription(1111111111L, rh.hindiLanguage(),
                 sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
-        subscription.setNeedsWelcomeMessage(false);
+        subscription.setNeedsWelcomeMessageViaObd(false);
         subscriptionDataService.update(subscription);
 
         List<String> contents = new ArrayList<>();
@@ -350,7 +350,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         subscriberDataService.create(subscriber1);
         Subscription subscription = subscriptionService.createSubscription(1111111111L, rh.hindiLanguage(),
                 sh.childPack(), SubscriptionOrigin.MCTS_IMPORT);
-        subscription.setNeedsWelcomeMessage(false);
+        subscription.setNeedsWelcomeMessageViaObd(false);
         subscriptionDataService.update(subscription);
 
         List<String> contents = new ArrayList<>();

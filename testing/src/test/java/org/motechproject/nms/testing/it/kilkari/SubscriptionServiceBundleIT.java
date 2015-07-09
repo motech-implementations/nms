@@ -616,7 +616,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         SubscriptionPackMessage message = subscription.nextScheduledMessage(now);
         assertEquals("w1_1", message.getWeekId());
 
-        subscription.setNeedsWelcomeMessage(false);
+        subscription.setNeedsWelcomeMessageViaObd(false);
         subscriptionDataService.update(subscription);
 
         message = subscription.nextScheduledMessage(now.plusDays(8)); //one week and a day
@@ -638,7 +638,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
 
         Subscription subscription = mctsSubscriber.getSubscriptions().iterator().next();
-        subscription.setNeedsWelcomeMessage(false);
+        subscription.setNeedsWelcomeMessageViaObd(false);
         subscriptionDataService.update(subscription);
 
         // should throw IllegalStateException

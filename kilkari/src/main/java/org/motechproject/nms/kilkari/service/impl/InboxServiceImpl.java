@@ -4,6 +4,7 @@ import org.joda.time.DateTime;
 import org.joda.time.Days;
 import org.motechproject.nms.kilkari.domain.InboxCallDetailRecord;
 import org.motechproject.nms.kilkari.domain.Subscription;
+import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
@@ -34,9 +35,8 @@ public class InboxServiceImpl implements InboxService {
         return (long) inboxCallDetailRecordDataService.getDetachedField(newRecord, "id");
     }
 
-    @Override
+    @Override //NO CHECKSTYLE CyclomaticComplexity
     public SubscriptionPackMessage getInboxMessage(Subscription subscription) throws NoInboxForSubscriptionException {
-
         if ((subscription.getStartDate() == null) || (subscription.getStatus() == SubscriptionStatus.DEACTIVATED)) {
             // there is no inbox for this subscription, throw
             throw new NoInboxForSubscriptionException(String.format("No inbox exists for subscription %s",
@@ -81,7 +81,15 @@ public class InboxServiceImpl implements InboxService {
             }
         }
 
-        return subscription.getSubscriptionPack().getMessages().get(messageIndex);
+        SubscriptionPackMessage spm = subscription.getSubscriptionPack().getMessages().get(messageIndex);
+
+        if ((subscription.getOrigin() == SubscriptionOrigin.MCTS_IMPORT) &&
+                subscription.needsWelcomeMessageViaInbox()) {
+            // Subscriber has been subscribed via MCTS and may not know what Kilkari is; play welcome message this week
+            spm.setMessageFileName(SubscriptionPackMessage.getWelcomeMessage().getMessageFileName());
+        }
+
+        return spm;
     }
 
 }
