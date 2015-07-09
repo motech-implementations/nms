@@ -26,6 +26,7 @@ import org.motechproject.nms.imi.web.contract.FileProcessedStatusRequest;
 import org.motechproject.nms.kilkari.domain.CallRetry;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
+import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
 import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
@@ -56,7 +57,6 @@ public class TargetFileServiceImpl implements TargetFileService {
     private static final String MAX_QUERY_BLOCK = "imi.max_query_block";
     private static final String TARGET_FILE_SEC_INTERVAL = "imi.target_file_sec_interval";
     private static final String TARGET_FILE_NOTIFICATION_URL = "imi.target_file_notification_url";
-    private static final String TARGET_FILE_IMI_SERVICE_ID = "imi.target_file_imi_service_id";
     private static final String TARGET_FILE_CALL_FLOW_URL = "imi.target_file_call_flow_url";
     private static final String NORMAL_PRIORITY = "0";
 
@@ -320,8 +320,8 @@ public class TargetFileServiceImpl implements TargetFileService {
     }
 
 
-    private int generateFreshCalls(DateTime timestamp, int maxQueryBlock, String imiServiceId,
-                                   String callFlowUrl, OutputStreamWriter writer) throws IOException {
+    private int generateFreshCalls(DateTime timestamp, int maxQueryBlock, String callFlowUrl,
+                                   OutputStreamWriter writer) throws IOException {
 
         DayOfTheWeek dow = DayOfTheWeek.fromDateTime(timestamp);
         int recordCount = 0;
@@ -347,7 +347,7 @@ public class TargetFileServiceImpl implements TargetFileService {
 
                 writeSubscriptionRow(
                         requestId.toString(),
-                        imiServiceId,
+                        ImiServiceId.imiValue(subscription.getOrigin() == SubscriptionOrigin.MCTS_IMPORT ? ImiServiceId.CHECK_DND : ImiServiceId.DO_NOT_CHECK_DND),
                         subscriber.getCallingNumber().toString(),
                         NORMAL_PRIORITY, //todo: how do we choose a priority?
                         callFlowUrl,
@@ -368,8 +368,8 @@ public class TargetFileServiceImpl implements TargetFileService {
         return recordCount;
     }
 
-    private int generateRetryCalls(DateTime timestamp, int maxQueryBlock, String imiServiceId,
-                                   String callFlowUrl, OutputStreamWriter writer) throws IOException {
+    private int generateRetryCalls(DateTime timestamp, int maxQueryBlock, String callFlowUrl,
+                                   OutputStreamWriter writer) throws IOException {
 
         DayOfTheWeek dow = DayOfTheWeek.fromDateTime(timestamp);
         int recordCount = 0;
@@ -383,11 +383,19 @@ public class TargetFileServiceImpl implements TargetFileService {
             for (CallRetry callRetry : callRetries) {
                 RequestId requestId = new RequestId(callRetry.getSubscriptionId(),
                         TIME_FORMATTER.print(timestamp));
-                //todo: look into priorities...
-                writeSubscriptionRow(requestId.toString(), imiServiceId, callRetry.getMsisdn().toString(),
-                        NORMAL_PRIORITY, callFlowUrl, callRetry.getContentFileName(), callRetry.getWeekId(),
-                        callRetry.getLanguageLocationCode(), callRetry.getCircle(),
-                        callRetry.getSubscriptionOrigin().getCode(), writer);
+
+                writeSubscriptionRow(
+                        requestId.toString(),
+                        ImiServiceId.imiValue(callRetry.getSubscriptionOrigin() == SubscriptionOrigin.MCTS_IMPORT ? ImiServiceId.CHECK_DND : ImiServiceId.DO_NOT_CHECK_DND),
+                        callRetry.getMsisdn().toString(),
+                        NORMAL_PRIORITY, //todo: look into priorities...
+                        callFlowUrl,
+                        callRetry.getContentFileName(),
+                        callRetry.getWeekId(),
+                        callRetry.getLanguageLocationCode(),
+                        callRetry.getCircle(),
+                        callRetry.getSubscriptionOrigin().getCode(),
+                        writer);
             }
 
             page++;
@@ -420,7 +428,6 @@ public class TargetFileServiceImpl implements TargetFileService {
             OutputStreamWriter writer = new OutputStreamWriter(fos)) {
 
             int maxQueryBlock = Integer.parseInt(settingsFacade.getProperty(MAX_QUERY_BLOCK));
-            String imiServiceId = settingsFacade.getProperty(TARGET_FILE_IMI_SERVICE_ID);
             String callFlowUrl = settingsFacade.getProperty(TARGET_FILE_CALL_FLOW_URL);
             if (callFlowUrl == null) {
                 //it's ok to have an empty call flow url - the spec says the default call flow will be used
@@ -434,10 +441,10 @@ public class TargetFileServiceImpl implements TargetFileService {
             writeHeader(writer);
 
             //Fresh calls
-            recordCount = generateFreshCalls(today, maxQueryBlock, imiServiceId, callFlowUrl, writer);
+            recordCount = generateFreshCalls(today, maxQueryBlock, callFlowUrl, writer);
 
             //Retry calls
-            recordCount += generateRetryCalls(today, maxQueryBlock, imiServiceId, callFlowUrl, writer);
+            recordCount += generateRetryCalls(today, maxQueryBlock, callFlowUrl, writer);
 
             LOGGER.debug("Created targetFile with {} record{}", recordCount, recordCount == 1 ? "" : "s");
 
