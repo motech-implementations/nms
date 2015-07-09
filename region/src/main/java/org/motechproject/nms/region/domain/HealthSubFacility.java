@@ -1,5 +1,6 @@
 package org.motechproject.nms.region.domain;
 
+import org.codehaus.jackson.annotate.JsonBackReference;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.domain.MdsEntity;
@@ -33,6 +34,7 @@ public class HealthSubFacility extends MdsEntity {
     @Field
     @Column(allowsNull = "false")
     @NotNull
+    @JsonBackReference
     private HealthFacility healthFacility;
 
     public HealthSubFacility() {

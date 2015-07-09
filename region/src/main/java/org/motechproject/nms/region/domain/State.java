@@ -1,5 +1,6 @@
 package org.motechproject.nms.region.domain;
 
+import org.codehaus.jackson.annotate.JsonManagedReference;
 import org.motechproject.mds.annotations.Cascade;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
@@ -34,6 +35,7 @@ public class State extends MdsEntity {
     @Field
     @Cascade(delete = true)
     @Persistent(mappedBy = "state", defaultFetchGroup = "true")
+    @JsonManagedReference
     private List<District> districts;
 
     @Field
@@ -41,6 +43,7 @@ public class State extends MdsEntity {
     @Persistent(table = "nms_states_join_circles", mappedBy = "states", defaultFetchGroup = "true")
     @Join(column = "state_id")
     @Element(column = "circle_id")
+    @JsonManagedReference
     private List<Circle> circles;
 
     public State() {

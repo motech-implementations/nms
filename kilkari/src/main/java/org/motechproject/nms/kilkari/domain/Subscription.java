@@ -1,5 +1,6 @@
 package org.motechproject.nms.kilkari.domain;
 
+import org.codehaus.jackson.annotate.JsonBackReference;
 import org.joda.time.DateTime;
 import org.joda.time.Days;
 import org.motechproject.mds.annotations.Entity;
@@ -33,6 +34,7 @@ public class Subscription {
     @Field
     @Column(allowsNull = "false")
     @NotNull
+    @JsonBackReference
     private Subscriber subscriber;
 
     @Field

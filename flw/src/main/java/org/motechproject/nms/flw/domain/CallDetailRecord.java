@@ -1,5 +1,6 @@
 package org.motechproject.nms.flw.domain;
 
+import org.codehaus.jackson.annotate.JsonManagedReference;
 import org.joda.time.DateTime;
 import org.motechproject.mds.annotations.Cascade;
 import org.motechproject.mds.annotations.Entity;
@@ -72,6 +73,7 @@ public class CallDetailRecord {
     @Persistent(mappedBy = "callDetailRecord")
     @Cascade(delete = true)
     @Order(extensions = @Extension(vendorName = "datanucleus", key = "list-ordering", value = "id ASC"))
+    @JsonManagedReference
     private List<CallContent> content;
 
     public FrontLineWorker getFrontLineWorker() {
