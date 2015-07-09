@@ -24,7 +24,6 @@ import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
-import org.motechproject.nms.imi.service.impl.ImiServiceId;
 import org.motechproject.nms.props.domain.RequestId;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
@@ -227,14 +226,15 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
                 RequestId requestId = RequestId.fromString(fields[0]);
                 if (requestId.getSubscriptionId().equals(subscription7.getSubscriptionId())) {
                     foundSubscription7 = true;
-                    assertEquals(ImiServiceId.NO_NOT_CHECK_DND_STRINGVAL, fields[1]);
+                    assertEquals(targetFileService.serviceIdFromOrigin(true, SubscriptionOrigin.IVR), fields[1]);
                 }
                 if (requestId.getSubscriptionId().equals(subscription4.getSubscriptionId())) {
                     foundSubscription4 = true;
                 }
                 if (requestId.getSubscriptionId().equals(subscription1.getSubscriptionId())) {
                     foundSubscription1 = true;
-                    assertEquals(ImiServiceId.CHECK_DND_STRINGVAL, fields[1]);
+                    assertEquals(targetFileService.serviceIdFromOrigin(true, SubscriptionOrigin.MCTS_IMPORT),
+                            fields[1]);
                 }
                 recordCount++;
             }
