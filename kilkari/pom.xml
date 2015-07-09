@@ -57,6 +57,11 @@
             <artifactId>csv</artifactId>
             <version>${project.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>commons-fileupload</groupId>
+            <artifactId>commons-fileupload</artifactId>
+        </dependency>
     </dependencies>
 
     <repositories>
@@ -103,6 +108,8 @@
                             org.springframework.aop.framework,
                             org.springframework.transaction,
                             org.motechproject.nms.region.repository,
+                            org.apache.commons.fileupload,
+                            org.springframework.web.multipart.commons,
                             *
                         </Import-Package>
                     </instructions>
