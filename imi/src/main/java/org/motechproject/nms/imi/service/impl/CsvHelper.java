@@ -78,8 +78,16 @@ public final class CsvHelper {
 
 
     private static Integer calculateMsgPlayDuration(String msgPlayStartTime, String msgPlayEndTime) {
-        Long start = longFromString("MsgPlayStartTime", msgPlayStartTime);
-        Long end = longFromString("MsgPlayEndTime", msgPlayEndTime);
+        Long start;
+        Long end;
+
+        try {
+            start = longFromString("MsgPlayStartTime", msgPlayStartTime);
+            end = longFromString("MsgPlayEndTime", msgPlayEndTime);
+        } catch (IllegalArgumentException e) {
+            // MsgPlayStart is optional, so if either is missing return the play time as 0
+            return 0;
+        }
 
         if (end < start) {
             throw new IllegalArgumentException("MsgPlayEndTime cannot be before MsgPlayStartTime");
