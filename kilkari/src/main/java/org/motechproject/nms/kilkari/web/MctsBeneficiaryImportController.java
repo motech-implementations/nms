@@ -61,13 +61,13 @@ public class MctsBeneficiaryImportController {
         try {
             try (InputStream in = csvFile.getInputStream()) {
                 mctsBeneficiaryImportService.importMotherData(new InputStreamReader(in));
-                csvAuditService.auditSuccess(csvFile.getName(), "/kilkari/mother/import");
+                csvAuditService.auditSuccess(csvFile.getOriginalFilename(), "/kilkari/mother/import");
             }
         } catch (CsvImportException e) {
-            logError(csvFile.getName(), "/kilkari/mother/import", e);
+            logError(csvFile.getOriginalFilename(), "/kilkari/mother/import", e);
             throw e;
         } catch (Exception e) {
-            logError(csvFile.getName(), "/kilkari/mother/import", e);
+            logError(csvFile.getOriginalFilename(), "/kilkari/mother/import", e);
             throw new CsvImportException("An error occurred during CSV import", e);
         }
     }
@@ -79,13 +79,13 @@ public class MctsBeneficiaryImportController {
         try {
             try (InputStream in = csvFile.getInputStream()) {
                 mctsBeneficiaryImportService.importChildData(new InputStreamReader(in));
-                csvAuditService.auditSuccess(csvFile.getName(), "/kilkari/child/import");
+                csvAuditService.auditSuccess(csvFile.getOriginalFilename(), "/kilkari/child/import");
             }
         } catch (CsvImportException e) {
-            logError(csvFile.getName(), "/kilkari/child/import", e);
+            logError(csvFile.getOriginalFilename(), "/kilkari/child/import", e);
             throw e;
         } catch (Exception e) {
-            logError(csvFile.getName(), "/kilkari/child/import", e);
+            logError(csvFile.getOriginalFilename(), "/kilkari/child/import", e);
             throw new CsvImportException("An error occurred during CSV import", e);
         }
     }
@@ -97,13 +97,13 @@ public class MctsBeneficiaryImportController {
         try {
             try (InputStream in = csvFile.getInputStream()) {
                 mctsBeneficiaryUpdateService.updateBeneficiaryData(new InputStreamReader(in));
-                csvAuditService.auditSuccess(csvFile.getName(), "/kilkari/beneficiary/update");
+                csvAuditService.auditSuccess(csvFile.getOriginalFilename(), "/kilkari/beneficiary/update");
             }
         } catch (CsvImportException e) {
-            logError(csvFile.getName(), "/kilkari/beneficiary/update", e);
+            logError(csvFile.getOriginalFilename(), "/kilkari/beneficiary/update", e);
             throw e;
         } catch (Exception e) {
-            logError(csvFile.getName(), "/kilkari/beneficiary/update", e);
+            logError(csvFile.getOriginalFilename(), "/kilkari/beneficiary/update", e);
             throw new CsvImportException("An error occurred during CSV import", e);
         }
     }
