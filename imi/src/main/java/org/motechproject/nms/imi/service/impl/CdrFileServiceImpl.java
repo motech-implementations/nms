@@ -240,7 +240,7 @@ public class CdrFileServiceImpl implements CdrFileService {
                     try {
                         // Parse the CSV line into a CDR (which we actually discard in this phase)
                         // This will trow IllegalArgumentException if the CSV is malformed
-                        CsvHelper.csvLineToCdr(line);
+                        CsvHelper.csvLineToCdrDto(line);
 
                     } catch (IllegalArgumentException e) {
                         errors.add(String.format("Line %d: %s", lineNumber, e.getMessage()));
@@ -322,7 +322,7 @@ public class CdrFileServiceImpl implements CdrFileService {
 
                             // Parse the CSV line into a CDR
                             // This should not trow an IllegalArgumentException since we verified this in phase 1
-                            CallDetailRecordDto cdr = CsvHelper.csvLineToCdr(line);
+                            CallDetailRecordDto cdr = CsvHelper.csvLineToCdrDto(line);
 
                             if (!currentRequestId.equals(cdr.getRequestId().toString())) {
                                 currentRequestId = cdr.getRequestId().toString();
@@ -370,6 +370,7 @@ public class CdrFileServiceImpl implements CdrFileService {
 
     /**
      * Send aggregated detail records for processing as CallSummaryRecordDto in MOTECH events
+     * Additionally stores a copy of the provided CDR in the CallDetailRecord table, for reporting
      *
      * NOTE: only exposed here for ITs
      *
@@ -401,7 +402,7 @@ public class CdrFileServiceImpl implements CdrFileService {
 
                             // Parse the CSV line into a CDR
                             // This will trow IllegalArgumentException if the CSV is malformed
-                            CallDetailRecordDto cdr = CsvHelper.csvLineToCdr(line);
+                            CallDetailRecordDto cdr = CsvHelper.csvLineToCdrDto(line);
 
                             if (!currentRequestId.equals(cdr.getRequestId().toString())) {
                                 // Send last CSR, if any, for processing
