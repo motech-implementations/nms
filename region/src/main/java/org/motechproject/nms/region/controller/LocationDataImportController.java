@@ -60,18 +60,18 @@ public class LocationDataImportController {
                 LocationDataImportService importService = getLocationDataImportServiceMapping().get(location);
                 if (null != importService) {
                     importService.importData(new InputStreamReader(in));
-                    csvAuditService.auditSuccess(csvFile.getName(), endpoint);
+                    csvAuditService.auditSuccess(csvFile.getOriginalFilename(), endpoint);
                 } else {
                     String error = String.format("Location type '%s' not supported", location);
-                    csvAuditService.auditFailure(csvFile.getName(), endpoint, error);
+                    csvAuditService.auditFailure(csvFile.getOriginalFilename(), endpoint, error);
                     throw new IllegalArgumentException(error);
                 }
             }
         } catch (CsvImportException e) {
-            logError(csvFile.getName(), endpoint, location, e);
+            logError(csvFile.getOriginalFilename(), endpoint, location, e);
             throw e;
         } catch (Exception e) {
-            logError(csvFile.getName(), endpoint, location, e);
+            logError(csvFile.getOriginalFilename(), endpoint, location, e);
             throw new CsvImportException("An error occurred during CSV import", e);
         }
     }
