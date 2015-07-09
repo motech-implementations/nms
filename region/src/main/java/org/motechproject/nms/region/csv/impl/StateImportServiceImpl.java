@@ -21,9 +21,25 @@ public class StateImportServiceImpl extends BaseLocationImportService<State> imp
     public static final String STATE_CODE_FIELD = "code";
     public static final String NAME_FIELD = "name";
 
+    private StateDataService stateDataService;
+
     @Autowired
     public StateImportServiceImpl(StateDataService stateDataService) {
-        super(State.class, stateDataService);
+        super(State.class);
+        this.stateDataService = stateDataService;
+    }
+
+    @Override
+    protected void createOrUpdateInstance(State instance) {
+        State existing = stateDataService.findByCode(instance.getCode());
+
+        if (existing != null) {
+            existing.setName(instance.getName());
+
+            stateDataService.update(existing);
+        } else {
+            stateDataService.create(instance);
+        }
     }
 
     @Override
