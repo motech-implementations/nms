@@ -22,7 +22,7 @@ public class Subscription {
     private static final int WEEKDAY2 = 1;
     private static final int WEEKDAY5 = 4;
     private static final int WEEKDAY6 = 5;
-
+    private static final int WEEKDAY7 = 6;
 
     @Field
     @Unique
@@ -51,10 +51,14 @@ public class Subscription {
     private SubscriptionOrigin origin;
 
     @Field
-    private DateTime startDate;
+    private DateTime startDate; // the date from which the weekly message should be calculated (DOB or LMP+90 days)
 
     @Field
-    private DateTime endDate;
+    private DateTime endDate; // the date that the subscription is completed or deactivated
+
+    @Field
+    private DateTime activationDate; // the date on which the subscription is activated -- may be different from the
+                                     // start date, e.g. if a child subscription is created 5 weeks after the DOB
 
     @Field
     private DayOfTheWeek startDayOfTheWeek;
@@ -63,7 +67,7 @@ public class Subscription {
     private DeactivationReason deactivationReason;
 
     @Field
-    private boolean needsWelcomeMessage;
+    private boolean needsWelcomeMessageViaObd;
 
     public Subscription(Subscriber subscriber, SubscriptionPack subscriptionPack, SubscriptionOrigin origin) {
         this.subscriptionId = UUID.randomUUID().toString();
@@ -71,7 +75,7 @@ public class Subscription {
         this.subscriptionPack = subscriptionPack;
         this.origin = origin;
         if (origin == SubscriptionOrigin.MCTS_IMPORT) {
-            needsWelcomeMessage = true;
+            needsWelcomeMessageViaObd = true;
         }
     }
 
@@ -96,6 +100,11 @@ public class Subscription {
     public SubscriptionStatus getStatus() { return status; }
 
     public void setStatus(SubscriptionStatus status) {
+        if ((status == SubscriptionStatus.ACTIVE) && (this.status != SubscriptionStatus.ACTIVE)) {
+            // subscription is being activated
+            this.activationDate = DateTime.now();
+        }
+
         this.status = status;
 
         if (this.status == SubscriptionStatus.DEACTIVATED || this.status == SubscriptionStatus.COMPLETED) {
@@ -124,6 +133,14 @@ public class Subscription {
         this.endDate = endDate;
     }
 
+    public DateTime getActivationDate() {
+        return endDate;
+    }
+
+    public void setActivationDate(DateTime activationDate) {
+        this.activationDate = activationDate;
+    }
+
     public DayOfTheWeek getStartDayOfTheWeek() {
         return startDayOfTheWeek;
     }
@@ -134,13 +151,29 @@ public class Subscription {
         this.deactivationReason = deactivationReason;
     }
 
-    public boolean getNeedsWelcomeMessage() {
-        return needsWelcomeMessage;
+    public boolean getNeedsWelcomeMessageViaObd() {
+        return needsWelcomeMessageViaObd;
     }
 
-    public void setNeedsWelcomeMessage(boolean needsWelcomeMessage) {
-        this.needsWelcomeMessage = needsWelcomeMessage;
+    public void setNeedsWelcomeMessageViaObd(boolean needsWelcomeMessageViaObd) {
+        this.needsWelcomeMessageViaObd = needsWelcomeMessageViaObd;
     }
+
+    public boolean needsWelcomeMessageViaInbox() {
+        int daysSinceStart = Days.daysBetween(startDate, activationDate).getDays();
+
+        if (subscriptionPack.getMessagesPerWeek() == 1) {
+            if ((daysSinceStart >= WEEKDAY1) && (daysSinceStart <= WEEKDAY7)) {
+                return true;
+            }
+        } else { // messages per week == 2
+            if ((daysSinceStart >= WEEKDAY1) && (daysSinceStart < WEEKDAY5)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     /**
      * Helper method to be called by the OBD processCallSummaryRecord when selecting a message to play for a subscription
@@ -151,7 +184,7 @@ public class Subscription {
         if (status != SubscriptionStatus.ACTIVE) {
             throw new IllegalStateException(String.format("Subscription with ID %s is not active", subscriptionId));
         }
-        if ((origin == SubscriptionOrigin.MCTS_IMPORT) && needsWelcomeMessage) {
+        if ((origin == SubscriptionOrigin.MCTS_IMPORT) && needsWelcomeMessageViaObd) {
             // Subscriber has been subscribed via MCTS and may not know what Kilkari is; play welcome message this week
             return SubscriptionPackMessage.getWelcomeMessage();
         }

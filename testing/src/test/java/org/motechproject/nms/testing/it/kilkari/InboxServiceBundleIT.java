@@ -363,8 +363,8 @@ public class InboxServiceBundleIT extends BasePaxIT {
  		subscriber.setDateOfBirth(now.minusDays(4));
  		subscriberService.create(subscriber);
 
- 		Subscription childSubscription = subscriptionService.createSubscription(subscriber.getCallingNumber(), rh.hindiLanguage(), sh.childPack(), 
- 				SubscriptionOrigin.MCTS_IMPORT);
+ 		Subscription childSubscription = subscriptionService.createSubscription(subscriber.getCallingNumber(), rh.hindiLanguage(), sh.childPack(),
+				SubscriptionOrigin.MCTS_IMPORT);
  		assertEquals(1, childSubscription.getSubscriptionPack().getMessagesPerWeek());
  		SubscriptionPackMessage packMessage = inboxService.getInboxMessage(childSubscription);
  		assertEquals("w1_1", packMessage.getWeekId());
@@ -413,5 +413,41 @@ public class InboxServiceBundleIT extends BasePaxIT {
  		assertEquals("w1_1.wav", packMessage.getMessageFileName());
 
  	}
+
+	@Test
+	public void testInboxPlaysWelcomeMessageAfterActivation() throws Exception {
+		DateTime now = DateTime.now();
+
+		// Configuration for second msg of the week
+		Subscriber subscriber = new Subscriber(1000000002L, rh.hindiLanguage());
+		subscriber.setLastMenstrualPeriod(now.minusDays(108));
+		subscriberService.create(subscriber);
+
+		subscriptionService.createSubscription(subscriber.getCallingNumber(), rh.hindiLanguage(),
+				sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
+
+		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber());
+		Set<Subscription> subscriptions = subscriber.getAllSubscriptions();
+		Subscription subscription = subscriptions.iterator().next();
+		SubscriptionPackMessage msg = inboxService.getInboxMessage(subscription);
+
+		// second msg of 3rd week should be in inbox
+		assertEquals(msg.getWeekId(), "w3_2");
+		assertEquals(msg.getMessageFileName(), "w3_2.wav");
+
+		// Configuration for first msg of the week
+		subscriber.setLastMenstrualPeriod(DateTime.now().minusDays(104));
+		subscriberService.update(subscriber);
+
+		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber());
+		subscriptions = subscriber.getAllSubscriptions();
+		subscription = subscriptions.iterator().next();
+		msg = inboxService.getInboxMessage(subscription);
+
+		// welcome msg should be in inbox
+		assertEquals(msg.getWeekId(), "w1_1");
+		assertEquals(msg.getMessageFileName(), "w1_1.wav");
+
+	}
 
 }

@@ -35,9 +35,8 @@ public class InboxServiceImpl implements InboxService {
         return (long) inboxCallDetailRecordDataService.getDetachedField(newRecord, "id");
     }
 
-    @Override
+    @Override //NO CHECKSTYLE CyclomaticComplexity
     public SubscriptionPackMessage getInboxMessage(Subscription subscription) throws NoInboxForSubscriptionException {
-
         if ((subscription.getStartDate() == null) || (subscription.getStatus() == SubscriptionStatus.DEACTIVATED)) {
             // there is no inbox for this subscription, throw
             throw new NoInboxForSubscriptionException(String.format("No inbox exists for subscription %s",
@@ -82,18 +81,15 @@ public class InboxServiceImpl implements InboxService {
             }
         }
 
-        SubscriptionPackMessage smp = subscription.getSubscriptionPack().getMessages().get(messageIndex);
+        SubscriptionPackMessage spm = subscription.getSubscriptionPack().getMessages().get(messageIndex);
 
         if ((subscription.getOrigin() == SubscriptionOrigin.MCTS_IMPORT) &&
-                subscription.getNeedsWelcomeMessage()) {
+                subscription.needsWelcomeMessageViaInbox()) {
             // Subscriber has been subscribed via MCTS and may not know what Kilkari is; play welcome message this week
-            smp.setMessageFileName(SubscriptionPackMessage.getWelcomeMessage().getMessageFileName());
-
-            // TODO: Should we set needs welcome message false here?
-            subscription.setNeedsWelcomeMessage(false);
+            spm.setMessageFileName(SubscriptionPackMessage.getWelcomeMessage().getMessageFileName());
         }
 
-        return smp;
+        return spm;
     }
 
 }

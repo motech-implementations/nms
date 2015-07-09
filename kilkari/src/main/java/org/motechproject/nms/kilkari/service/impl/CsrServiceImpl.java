@@ -301,8 +301,8 @@ public class CsrServiceImpl implements CsrService {
 
     private void resetWelcomeFlagInSubscription(Subscription subscription) {
 
-        if (subscription.getNeedsWelcomeMessage() == true) {
-            subscription.setNeedsWelcomeMessage(false);
+        if (subscription.getNeedsWelcomeMessageViaObd() == true) {
+            subscription.setNeedsWelcomeMessageViaObd(false);
             subscriptionDataService.update(subscription);
         }
     }

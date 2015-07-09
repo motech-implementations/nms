@@ -1134,7 +1134,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
         List<Subscription> subscriptions = subscriptionDataService.retrieveAll();
         assertEquals(1, subscriptions.size());
-        assertEquals(false,subscriptions.get(0).getNeedsWelcomeMessage());
+        assertEquals(false,subscriptions.get(0).getNeedsWelcomeMessageViaObd());
     }
 
     //todo: verify multiple days' worth of summary record aggregation
