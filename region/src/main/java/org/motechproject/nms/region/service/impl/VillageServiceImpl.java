@@ -20,12 +20,13 @@ public class VillageServiceImpl implements VillageService {
 
     @Override
     public Village findByTalukaAndVcodeAndSvid(final Taluka taluka, final long vcode, final long svid) {
+        if (taluka == null) { return null; }
 
         SqlQueryExecution<Village> queryExecution = new SqlQueryExecution<Village>() {
 
             @Override
             public String getSqlQuery() {
-                return "select *  from nms_villages where taluka_id_oid = ? and vcode = ? and svid = ?";
+                return "select * from nms_villages where taluka_id_oid = ? and vcode = ? and svid = ?";
             }
 
             @Override
@@ -43,5 +44,15 @@ public class VillageServiceImpl implements VillageService {
         };
 
         return dataService.executeSQLQuery(queryExecution);
+    }
+
+    @Override
+    public void create(Village village) {
+        dataService.create(village);
+    }
+
+    @Override
+    public void update(Village village) {
+        dataService.update(village);
     }
 }

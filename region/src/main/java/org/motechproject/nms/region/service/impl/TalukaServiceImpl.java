@@ -19,12 +19,13 @@ public class TalukaServiceImpl implements TalukaService {
 
     @Override
     public Taluka findByDistrictAndCode(final District district, final String code) {
+        if (district == null) { return null; }
 
         SqlQueryExecution<Taluka> queryExecution = new SqlQueryExecution<Taluka>() {
 
             @Override
             public String getSqlQuery() {
-                return "select *  from nms_talukas where district_id_oid = ? and code = ?";
+                return "select * from nms_talukas where district_id_oid = ? and code = ?";
             }
 
             @Override
@@ -42,5 +43,15 @@ public class TalukaServiceImpl implements TalukaService {
         };
 
         return dataService.executeSQLQuery(queryExecution);
+    }
+
+    @Override
+    public void create(Taluka taluka) {
+        dataService.create(taluka);
+    }
+
+    @Override
+    public void update(Taluka taluka) {
+        dataService.update(taluka);
     }
 }

@@ -5,4 +5,6 @@ import org.motechproject.nms.region.domain.HealthFacility;
 
 public interface HealthFacilityService {
     HealthFacility findByHealthBlockAndCode(HealthBlock healthBlock, Long code);
+    void create(HealthFacility healthFacility);
+    void update(HealthFacility healthFacility);
 }

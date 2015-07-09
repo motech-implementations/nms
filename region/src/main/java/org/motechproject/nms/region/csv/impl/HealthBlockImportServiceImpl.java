@@ -5,9 +5,9 @@ import org.motechproject.nms.csv.utils.GetString;
 import org.motechproject.nms.csv.utils.Store;
 import org.motechproject.nms.region.csv.HealthBlockImportService;
 import org.motechproject.nms.region.domain.HealthBlock;
-import org.motechproject.nms.region.repository.HealthBlockDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
+import org.motechproject.nms.region.service.HealthBlockService;
 import org.motechproject.nms.region.service.TalukaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -35,19 +35,36 @@ public class HealthBlockImportServiceImpl extends BaseLocationImportService<Heal
     public static final String HQ_FIELD = "hq";
     public static final String TALUKA_FIELD = "taluka";
 
+    private HealthBlockService healthBlockService;
     private DistrictService districtService;
     private StateDataService stateDataService;
     private TalukaService talukaService;
 
     @Autowired
-    public HealthBlockImportServiceImpl(HealthBlockDataService healthBlockDataService,
+    public HealthBlockImportServiceImpl(HealthBlockService healthBlockService,
                                         TalukaService talukaService,
                                         DistrictService districtService,
                                         StateDataService stateDataService) {
-        super(HealthBlock.class, healthBlockDataService);
+        super(HealthBlock.class);
+        this.healthBlockService = healthBlockService;
         this.talukaService = talukaService;
         this.districtService = districtService;
         this.stateDataService = stateDataService;
+    }
+
+    @Override
+    protected void createOrUpdateInstance(HealthBlock instance) {
+        HealthBlock existing = healthBlockService.findByTalukaAndCode(instance.getTaluka(), instance.getCode());
+
+        if (existing != null) {
+            existing.setName(instance.getName());
+            existing.setRegionalName(instance.getRegionalName());
+            existing.setHq(instance.getHq());
+
+            healthBlockService.update(existing);
+        } else {
+            healthBlockService.create(instance);
+        }
     }
 
     @Override

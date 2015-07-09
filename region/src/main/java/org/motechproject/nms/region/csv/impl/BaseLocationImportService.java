@@ -1,7 +1,6 @@
 package org.motechproject.nms.region.csv.impl;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.motechproject.mds.service.MotechDataService;
 import org.motechproject.nms.csv.exception.CsvImportDataException;
 import org.motechproject.nms.csv.utils.ConstraintViolationUtils;
 import org.motechproject.nms.csv.utils.CsvImporterBuilder;
@@ -37,11 +36,9 @@ public abstract class BaseLocationImportService<T> {
     public static final String HEALTH_BLOCK = "healthBlock";
 
     private Class<T> type;
-    private MotechDataService<T> dataService;
 
-    public BaseLocationImportService(Class<T> type, MotechDataService<T> dataService) {
+    public BaseLocationImportService(Class<T> type) {
         this.type = type;
-        this.dataService = dataService;
     }
 
     @Transactional
@@ -53,7 +50,7 @@ public abstract class BaseLocationImportService<T> {
         try {
             T instance;
             while (null != (instance = csvImporter.read())) {
-                dataService.create(instance);
+                createOrUpdateInstance(instance);
             }
         } catch (ConstraintViolationException e) {
             throw new CsvImportDataException(createErrorMessage(e.getConstraintViolations(),
@@ -135,6 +132,7 @@ public abstract class BaseLocationImportService<T> {
         };
     }
 
+    protected abstract void createOrUpdateInstance(T instance);
 
     protected abstract Map<String, CellProcessor> getProcessorMapping();
 
