@@ -1,5 +1,6 @@
 package org.motechproject.nms.kilkari.domain;
 
+import org.codehaus.jackson.annotate.JsonManagedReference;
 import org.joda.time.DateTime;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
@@ -47,6 +48,7 @@ public class Subscriber extends MdsEntity {
     //TODO: making this a bi-directional relationship until MOTECH-1638 is fixed. See #31.
     @Field
     @Persistent(mappedBy = "subscriber", defaultFetchGroup = "true")
+    @JsonManagedReference
     private Set<Subscription> subscriptions;
 
     @Field

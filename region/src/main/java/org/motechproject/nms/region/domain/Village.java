@@ -1,5 +1,6 @@
 package org.motechproject.nms.region.domain;
 
+import org.codehaus.jackson.annotate.JsonBackReference;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.annotations.Ignore;
@@ -60,6 +61,7 @@ public class Village extends MdsEntity {
     @Field
     @Column(allowsNull = "false")
     @NotNull
+    @JsonBackReference
     private Taluka taluka;
 
     public Village() {

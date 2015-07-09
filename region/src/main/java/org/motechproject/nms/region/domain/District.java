@@ -1,5 +1,7 @@
 package org.motechproject.nms.region.domain;
 
+import org.codehaus.jackson.annotate.JsonBackReference;
+import org.codehaus.jackson.annotate.JsonManagedReference;
 import org.motechproject.mds.annotations.Cascade;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
@@ -41,11 +43,13 @@ public class District extends MdsEntity {
     @Persistent(defaultFetchGroup = "true")
     @Column(allowsNull = "false")
     @NotNull
+    @JsonBackReference
     private State state;
 
     @Field
     @Cascade(delete = true)
     @Persistent(mappedBy = "district", defaultFetchGroup = "true")
+    @JsonManagedReference
     private List<Taluka> talukas;
 
     @Field
