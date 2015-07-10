@@ -84,7 +84,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                 if (fqr.size() == 1) {
                     return (Subscriber) fqr.get(0);
                 }
-                throw new IllegalStateException("More than one row returned!");
+                throw new IllegalStateException(String.format("More than one row returned for beneficiary %s", id));
             }
         };
 
@@ -173,7 +173,7 @@ public class SubscriberServiceImpl implements SubscriberService {
 
         SubscriptionPack pack = subscriptionPackDataService.byType(packType);
 
-        // TODO: Handle the case in which the MCTS beneficiary already exists but with a different phone number
+        // TODO: #455 Handle the case in which the MCTS beneficiary already exists but with a different phone number
 
         if (subscriber == null) {
             // there's no subscriber with this MSISDN, create one
