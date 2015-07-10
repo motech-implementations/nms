@@ -168,7 +168,7 @@ public class SubscriberServiceImpl implements SubscriberService {
     }
 
     private Circle circleFromDistrict(District district) {
-        State state = district.getState();
+        State state = (State) districtDataService.getDetachedField(district, "state");
         List<Circle> circleList = state.getCircles();
 
         if (circleList.size() == 1) {
