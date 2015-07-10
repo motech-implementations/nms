@@ -1,12 +1,23 @@
 package org.motechproject.nms.testing.it.api;
 
-import com.google.common.base.Joiner;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+
+import javax.inject.Inject;
+
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.motechproject.nms.flw.domain.CallContent;
 import org.motechproject.nms.flw.domain.CallDetailRecord;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.repository.CallDetailRecordDataService;
@@ -22,15 +33,7 @@ import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
-import javax.inject.Inject;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import com.google.common.base.Joiner;
 
 
 
@@ -40,6 +43,8 @@ import static org.junit.Assert.assertTrue;
 public class CallDetailsControllerBundleIT extends BasePaxIT {
     private static final String ADMIN_USERNAME = "motech";
     private static final String ADMIN_PASSWORD = "motech";
+
+    private static final int MILLISECONDS_PER_SECOND = 1000;
 
     @Inject
     CallDetailRecordService callDetailRecordService;
@@ -52,6 +57,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
 
     @Inject
     TestingService testingService;
+
 
     @Before
     public void clearDatabase() {
@@ -266,6 +272,10 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
                 "frontLineWorker")).getId());
     }
 
+    /**
+     * verifyFT470 To save the call details of the user using Save Call Details
+     * API
+     */
     @Test
     public void testCallDetailsValidMobileAcademy() throws IOException, InterruptedException {
 
@@ -288,7 +298,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
                 /* startTime */ true, 1200000000l,
                 /* endTime */ true, 1222222221l,
                 /* completionFlag */ true, true,
-                /* correctAnswerEntered */ true, true));
+        /* correctAnswerEntered */true, false));
         HttpPost httpPost = createCallDetailsPost("mobileacademy",
                 /* callingNumber */ true, 9810320300l,
                 /* callId */ true, 234000011111111l,
@@ -297,29 +307,51 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
                 /* callStartTime */ true, 1422879843l,
                 /* callEndTime */ true, 1422879903l,
                 /* callDurationInPulses */ true, 60,
-                /* endOfUsagePromptCounter */ true, 0,
+        /* endOfUsagePromptCounter */true, 1,
                 /* welcomeMessagePromptFlag */ false, null,
                 /* callStatus */ true, 1,
-                /* callDisconnectReason */ true, 1,
+        /* callDisconnectReason */true, 2,
                 /* content */ true, Joiner.on(",").join(array));
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK, ADMIN_USERNAME, ADMIN_PASSWORD));
 
         CallDetailRecord cdr = callDetailRecordService.getByCallingNumber(9810320300l);
-
+        // assert call detail record
         assertNotNull(cdr);
+        assertEquals(9810320300l, cdr.getCallingNumber());
         assertEquals(234000011111111l, cdr.getCallId());
-        assertNull(cdr.getWelcomePrompt());
+        assertEquals("A", cdr.getOperator());
+        assertEquals("AP", cdr.getCircle());
+        assertEquals(1422879843l, cdr.getCallStartTime().getMillis() / MILLISECONDS_PER_SECOND);
+        assertEquals(1422879903l, cdr.getCallEndTime().getMillis() / MILLISECONDS_PER_SECOND);
+        assertEquals(60, cdr.getCallDurationInPulses());
+        assertEquals(1, cdr.getEndOfUsagePromptCounter());
+        assertEquals(1, cdr.getFinalCallStatus().getValue());
+        assertEquals(2, cdr.getCallDisconnectReason().getValue());
         assertEquals(2, cdr.getContent().size());
-        assertEquals("Chapter-01lesson-04", cdr.getContent().get(0).getContentName());
-        assertNull(cdr.getContent().get(0).getMobileKunjiCardCode());
-        assertEquals("chapter-01question-01", cdr.getContent().get(1).getContentName());
-        assertNull(cdr.getContent().get(1).getMobileKunjiCardCode());
+
+        // assert content data record
+        CallContent cc = cdr.getContent().get(1);
+        assertEquals("question", cc.getType());
+        assertEquals("chapter-01question-01", cc.getContentName());
+        assertEquals("ch1_q1.wav", cc.getContentFile());
+        assertEquals(1200000000l, cc.getStartTime().getMillis() / MILLISECONDS_PER_SECOND);
+        assertEquals(1222222221l, cc.getEndTime().getMillis() / MILLISECONDS_PER_SECOND);
+        assertEquals(true, cc.getCompletionFlag());
+
+        // TODO correctAnswerEntered field assertion
+
+        assertNull(cdr.getWelcomePrompt());
+        assertNull(cc.getMobileKunjiCardCode());
 
         assertEquals(flw.getId(), ((FrontLineWorker) callDetailRecordDataService.getDetachedField(cdr,
                 "frontLineWorker")).getId());
     }
 
+    /**
+     * verifyFT471 To check that call details of user is saved successfully
+     * using Save Call Details API when optional parameter "content" is missing.
+     */
     @Test
     public void testCallDetailsValidNoContent() throws IOException, InterruptedException {
 
@@ -344,10 +376,21 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
 
         CallDetailRecord cdr = callDetailRecordService.getByCallingNumber(9810320300l);
 
+        // assert call detail record
         assertNotNull(cdr);
+        assertEquals(9810320300l, cdr.getCallingNumber());
         assertEquals(234000011111111l, cdr.getCallId());
+        assertEquals("A", cdr.getOperator());
+        assertEquals("AP", cdr.getCircle());
+        assertEquals(1422879843l, cdr.getCallStartTime().getMillis() / MILLISECONDS_PER_SECOND);
+        assertEquals(1422879903l, cdr.getCallEndTime().getMillis() / MILLISECONDS_PER_SECOND);
+        assertEquals(60, cdr.getCallDurationInPulses());
+        assertEquals(0, cdr.getEndOfUsagePromptCounter());
+        assertEquals(1, cdr.getFinalCallStatus().getValue());
+        assertEquals(1, cdr.getCallDisconnectReason().getValue());
+
+        // assert content
         assertEquals(0, cdr.getContent().size());
-        assertEquals(flw.getId(), cdr.getFrontLineWorker().getId());
     }
 
     /*****************************************************************************************************************
@@ -581,9 +624,162 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
                 /* callStatus */ true, 1,
                 /* callDisconnectReason */ true, 1,
                 /* content */ false, null);
-
+        
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
                 "{\"failureReason\":\"<callId: Invalid>\"}",
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    /**
+     * To verify that Save Call Details executed successfully when mandatory
+     * parameter "Circle" is missing
+     */
+    @Test
+    public void verifyFT474() throws IOException, InterruptedException {
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 9810320300L);
+        frontLineWorkerService.add(flw);
+        HttpPost httpPost = createCallDetailsPost("mobileacademy",
+        /* callingNumber */true, 9810320300l,
+        /* callId */true, 123456789012345l,
+        /* operator */true, "A",
+        /* circle */false,null,
+        /* callStartTime */true, 1422879843l,
+        /* callEndTime */true, 1422879903l,
+        /* callDurationInPulses */true, 60,
+        /* endOfUsagePromptCounter */true, 2,
+        /* welcomeMessagePromptFlag */false, null,
+        /* callStatus */true, 1,
+        /* callDisconnectReason */true, 1,
+        /* content */false, null);
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+
+        CallDetailRecord cdr = callDetailRecordService
+                .getByCallingNumber(9810320300l);
+        // assert call detail record
+        assertNotNull(cdr);
+        assertEquals(9810320300l, cdr.getCallingNumber());
+        assertEquals(123456789012345l, cdr.getCallId());
+        assertEquals(null, cdr.getCircle());
+    }
+
+    /**
+     * To verify that Save Call Details executed successfully when mandatory
+     * parameter "Operator" is missing
+     */
+    @Test
+    public void verifyFT475() throws IOException, InterruptedException {
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 9810320300L);
+        frontLineWorkerService.add(flw);
+        HttpPost httpPost = createCallDetailsPost("mobileacademy",
+        /* callingNumber */true, 9810320300l,
+        /* callId */true, 123456789012345l,
+        /* operator */false, null,
+        /* circle */true, "AP",
+        /* callStartTime */true, 1422879843l,
+        /* callEndTime */true, 1422879903l,
+        /* callDurationInPulses */true, 60,
+        /* endOfUsagePromptCounter */true, 3,
+        /* welcomeMessagePromptFlag */false, null,
+        /* callStatus */true, 1,
+        /* callDisconnectReason */true, 1,
+        /* content */false, null);
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+        CallDetailRecord cdr = callDetailRecordService
+                .getByCallingNumber(9810320300l);
+        // assert call detail record
+        assertNotNull(cdr);
+        assertEquals(9810320300l, cdr.getCallingNumber());
+        assertEquals(123456789012345l, cdr.getCallId());
+        assertEquals(null, cdr.getOperator());
+    }
+
+    /**
+     * To verify that Save Call Details API if rejected when mandatory parameter
+     * "CallId" is having invalid value i.e. "CallId" is having value greater
+     * than 15 digit
+     */
+    @Test
+    public void verifyFT491() throws IOException, InterruptedException {
+        HttpPost httpPost = createCallDetailsPost("mobileacademy",
+        /* callingNumber */true, 9810320300l,
+        /* callId */true, 1234567890123456l,
+        /* operator */true, "A",
+        /* circle */true, "AP",
+        /* callStartTime */true, 1422879843l,
+        /* callEndTime */true, 1422879903l,
+        /* callDurationInPulses */true, 60,
+        /* endOfUsagePromptCounter */true, 0,
+        /* welcomeMessagePromptFlag */false, null,
+        /* callStatus */true, 1,
+        /* callDisconnectReason */true, 1,
+        /* content */false, null);
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
+                HttpStatus.SC_BAD_REQUEST,
+                "{\"failureReason\":\"<callId: Invalid>\"}", ADMIN_USERNAME,
+                ADMIN_PASSWORD));
+    }
+
+    /**
+     * To verify that Save Call Details API if rejected when mandatory parameter
+     * "CallStatus" is having invalid value.
+     */
+    @Test
+    public void verifyFT499() throws IOException, InterruptedException {
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright",
+                9810320300L);
+        frontLineWorkerService.add(flw);
+        HttpPost httpPost = createCallDetailsPost("mobileacademy",
+        /* callingNumber */true, 9810320300l,
+        /* callId */true, 234000011111111l,
+        /* operator */true, "A",
+        /* circle */true, "AP",
+        /* callStartTime */true, 1422879843l,
+        /* callEndTime */true, 1422879903l,
+        /* callDurationInPulses */true, 60,
+        /* endOfUsagePromptCounter */true, 0,
+        /* welcomeMessagePromptFlag */false, null,
+        /* callStatus */true, 4,
+        /* callDisconnectReason */true, 1,
+        /* content */false, null);
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
+                HttpStatus.SC_BAD_REQUEST,
+                "{\"failureReason\":\"4 is an invalid FinalCallStatus\"}",
+                ADMIN_USERNAME,
+                ADMIN_PASSWORD));
+    }
+
+    /**
+     * To verify that Save Call Details API if rejected when mandatory parameter
+     * "CallDisconnectReason" is having invalid value.
+     */
+    @Test
+    public void verifyFT500() throws IOException, InterruptedException {
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright",
+                9810320300L);
+        frontLineWorkerService.add(flw);
+        HttpPost httpPost = createCallDetailsPost("mobileacademy",
+        /* callingNumber */true, 9810320300l,
+        /* callId */true, 234000011111111l,
+        /* operator */true, "A",
+        /* circle */true, "AP",
+        /* callStartTime */true, 1422879843l,
+        /* callEndTime */true, 1422879903l,
+        /* callDurationInPulses */true, 60,
+        /* endOfUsagePromptCounter */true, 0,
+        /* welcomeMessagePromptFlag */false, null,
+        /* callStatus */true, 3,
+        /* callDisconnectReason */true, 7,
+        /* content */false, null);
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
+                HttpStatus.SC_BAD_REQUEST,
+                "{\"failureReason\":\"7 is an invalid CallDisconnectReason\"}",
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
@@ -664,6 +860,146 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
                 "{\"failureReason\":\"<completionFlag: Not Present><completionFlag: Not Present>\"}",
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    /**
+     * To verify that Save Call Details API if rejected when mandatory parameter
+     * "CallData>>ContentName" is missing
+     */
+    @Test
+    public void verifyFT483() throws IOException, InterruptedException {
+        ArrayList<String> array = new ArrayList<>();
+        array.add(createContentJson(/* type */true, "question",
+        /* mkCardCode */false, null,
+        /* contentName */false, null,
+        /* contentFile */true, "ch1_q1.wav",
+        /* startTime */true, 1200000000l,
+        /* endTime */true, 1222222221l,
+        /* completionFlag */true, true,
+        /* correctAnswerEntered */true, true));
+        HttpPost httpPost = createCallDetailsPost("mobileacademy",
+        /* callingNumber */true, 9810320300l,
+        /* callId */true, 234000011111111l,
+        /* operator */true, "A",
+        /* circle */true, "AP",
+        /* callStartTime */true, 1422879843l,
+        /* callEndTime */true, 1422879903l,
+        /* callDurationInPulses */true, 60,
+        /* endOfUsagePromptCounter */true, 0,
+        /* welcomeMessagePromptFlag */false, null,
+        /* callStatus */true, 1,
+        /* callDisconnectReason */true, 1,
+        /* content */true, Joiner.on(",").join(array));
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
+                HttpStatus.SC_BAD_REQUEST,
+                "{\"failureReason\":\"<contentName: Not Present>\"}", ADMIN_USERNAME,
+                ADMIN_PASSWORD));
+    }
+
+    /**
+     * To verify that Save Call Details API if rejected when mandatory parameter
+     * "CallData>>ContentFile" is missing
+     */
+    @Test
+    public void verifyFT484() throws IOException, InterruptedException {
+        ArrayList<String> array = new ArrayList<>();
+        array.add(createContentJson(/* type */true, "question",
+        /* mkCardCode */false, null,
+        /* contentName */true, "Chapter-01lesson-04",
+        /* contentFile */false, null,
+        /* startTime */true, 1200000000l,
+        /* endTime */true, 1222222221l,
+        /* completionFlag */true, true,
+        /* correctAnswerEntered */true, true));
+        HttpPost httpPost = createCallDetailsPost("mobileacademy",
+        /* callingNumber */true, 9810320300l,
+        /* callId */true, 234000011111111l,
+        /* operator */true, "A",
+        /* circle */true, "AP",
+        /* callStartTime */true, 1422879843l,
+        /* callEndTime */true, 1422879903l,
+        /* callDurationInPulses */true, 60,
+        /* endOfUsagePromptCounter */true, 0,
+        /* welcomeMessagePromptFlag */false, null,
+        /* callStatus */true, 1,
+        /* callDisconnectReason */true, 1,
+        /* content */true, Joiner.on(",").join(array));
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
+                HttpStatus.SC_BAD_REQUEST,
+                "{\"failureReason\":\"<contentFile: Not Present>\"}",
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    /**
+     * To verify that Save Call Details API if rejected when mandatory parameter
+     * "CallData>>StartTime" is missing
+     */
+    @Test
+    public void verifyFT485() throws IOException, InterruptedException {
+        ArrayList<String> array = new ArrayList<>();
+        array.add(createContentJson(/* type */true, "question",
+        /* mkCardCode */false, null,
+        /* contentName */true, "Chapter-01lesson-04",
+        /* contentFile */true, "ch1_q1.wav",
+        /* startTime */false, null,
+        /* endTime */true, 1222222221l,
+        /* completionFlag */true, true,
+        /* correctAnswerEntered */true, true));
+        HttpPost httpPost = createCallDetailsPost("mobileacademy",
+        /* callingNumber */true, 9810320300l,
+        /* callId */true, 234000011111111l,
+        /* operator */true, "A",
+        /* circle */true, "AP",
+        /* callStartTime */true, 1422879843l,
+        /* callEndTime */true, 1422879903l,
+        /* callDurationInPulses */true, 60,
+        /* endOfUsagePromptCounter */true, 0,
+        /* welcomeMessagePromptFlag */false, null,
+        /* callStatus */true, 1,
+        /* callDisconnectReason */true, 1,
+        /* content */true, Joiner.on(",").join(array));
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
+                HttpStatus.SC_BAD_REQUEST,
+                "{\"failureReason\":\"<startTime: Not Present>\"}",
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    /**
+     * To verify that Save Call Details API if rejected when mandatory parameter
+     * "CallData>>EndTime" is missing
+     */
+    @Test
+    public void verifyFT486() throws IOException, InterruptedException {
+        ArrayList<String> array = new ArrayList<>();
+        array.add(createContentJson(/* type */true, "question",
+        /* mkCardCode */false, null,
+        /* contentName */true, "Chapter-01lesson-04",
+        /* contentFile */true, "ch1_q1.wav",
+        /* startTime */true, 1200000000l,
+        /* endTime */false, null,
+        /* completionFlag */true, true,
+        /* correctAnswerEntered */true, true));
+        HttpPost httpPost = createCallDetailsPost("mobileacademy",
+        /* callingNumber */true, 9810320300l,
+        /* callId */true, 234000011111111l,
+        /* operator */true, "A",
+        /* circle */true, "AP",
+        /* callStartTime */true, 1422879843l,
+        /* callEndTime */true, 1422879903l,
+        /* callDurationInPulses */true, 60,
+        /* endOfUsagePromptCounter */true, 0,
+        /* welcomeMessagePromptFlag */false, null,
+        /* callStatus */true, 1,
+        /* callDisconnectReason */true, 1,
+        /* content */true, Joiner.on(",").join(array));
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
+                HttpStatus.SC_BAD_REQUEST,
+                "{\"failureReason\":\"<endTime: Not Present>\"}",
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
