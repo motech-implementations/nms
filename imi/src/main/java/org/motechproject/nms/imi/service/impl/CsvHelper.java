@@ -1,6 +1,7 @@
 package org.motechproject.nms.imi.service.impl;
 
 import org.joda.time.DateTime;
+import org.motechproject.nms.imi.domain.CallDetailRecord;
 import org.motechproject.nms.kilkari.dto.CallDetailRecordDto;
 import org.motechproject.nms.props.domain.CallDisconnectReason;
 import org.motechproject.nms.props.domain.RequestId;
@@ -110,7 +111,7 @@ public final class CsvHelper {
      * @param line a CSV line from a CDR Detail File from IMI
      * @return a CallDetailRecordDto
      */
-    public static CallDetailRecordDto csvLineToCdr(String line) {
+    public static CallDetailRecordDto csvLineToCdrDto(String line) {
         CallDetailRecordDto cdr = new CallDetailRecordDto();
         String[] fields = line.split(",");
 
@@ -149,6 +150,51 @@ public final class CsvHelper {
         cdr.setCallDisconnectReason(CallDisconnectReason.fromInt(integerFromString("CallDisconnectReason",
                 fields[FieldName.CALL_DISCONNECT_REASON.ordinal()])));
 
+        cdr.setWeekId(fields[FieldName.WEEK_ID.ordinal()]);
+
+        return cdr;
+    }
+
+
+    /**
+     * Map all IMI CDRDetail fields to a CallDetailRecord - to store for reporting
+     *
+     * All errors will throw an IllegalArgumentException
+     *
+     * @param line a CSV line from a CDR Detail File from IMI
+     * @return a CallDetailRecord
+     */
+    public static CallDetailRecord csvLineToCdr(String line) {
+        CallDetailRecord cdr = new CallDetailRecord();
+        String[] fields = line.split(",");
+
+        if (fields.length != FieldName.FIELD_COUNT.ordinal()) {
+            throw new IllegalArgumentException(String.format(
+                    "Invalid field count, expecting %d but received %d", FieldName.FIELD_COUNT.ordinal(),
+                    fields.length));
+        }
+
+        /*
+         * See API 4.4.3 - CDR Detail File Format
+         */
+
+        cdr.setRequestId(fields[FieldName.REQUEST_ID.ordinal()]);
+        cdr.setMsisdn(fields[FieldName.MSISDN.ordinal()]);
+        cdr.setCallId(fields[FieldName.CALL_ID.ordinal()]);
+        cdr.setAttemptNo(fields[FieldName.ATTEMPT_NO.ordinal()]);
+        cdr.setCallStartTime(fields[FieldName.CALL_START_TIME.ordinal()]);
+        cdr.setCallAnswerTime(fields[FieldName.CALL_ANSWER_TIME.ordinal()]);
+        cdr.setCallEndTime(fields[FieldName.CALL_END_TIME.ordinal()]);
+        cdr.setCallDurationInPulse(fields[FieldName.CALL_DURATION_IN_PULSE.ordinal()]);
+        cdr.setCallStatus(fields[FieldName.CALL_STATUS.ordinal()]);
+        cdr.setLanguageLocationId(fields[FieldName.LANGUAGE_LOCATION_ID.ordinal()]);
+        cdr.setContentFile(fields[FieldName.CONTENT_FILE.ordinal()]);
+        cdr.setMsgPlayStartTime(fields[FieldName.MSG_PLAY_START_TIME.ordinal()]);
+        cdr.setMsgPlayEndTime(fields[FieldName.MSG_PLAY_END_TIME.ordinal()]);
+        cdr.setCircleId(fields[FieldName.CIRCLE_ID.ordinal()]);
+        cdr.setOperatorId(fields[FieldName.OPERATOR_ID.ordinal()]);
+        cdr.setPriority(fields[FieldName.PRIORITY.ordinal()]);
+        cdr.setCallDisconnectReason(fields[FieldName.CALL_DISCONNECT_REASON.ordinal()]);
         cdr.setWeekId(fields[FieldName.WEEK_ID.ordinal()]);
 
         return cdr;

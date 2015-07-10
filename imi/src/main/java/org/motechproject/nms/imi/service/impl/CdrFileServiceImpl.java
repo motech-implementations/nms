@@ -16,6 +16,7 @@ import org.motechproject.nms.imi.domain.FileType;
 import org.motechproject.nms.imi.exception.ExecException;
 import org.motechproject.nms.imi.exception.InternalException;
 import org.motechproject.nms.imi.exception.InvalidCdrFileException;
+import org.motechproject.nms.imi.repository.CallDetailRecordDataService;
 import org.motechproject.nms.imi.repository.FileAuditRecordDataService;
 import org.motechproject.nms.imi.service.CdrFileService;
 import org.motechproject.nms.imi.service.CsrValidatorService;
@@ -68,17 +69,20 @@ public class CdrFileServiceImpl implements CdrFileService {
     private FileAuditRecordDataService fileAuditRecordDataService;
     private AlertService alertService;
     private CsrValidatorService csrValidatorService;
+    private CallDetailRecordDataService callDetailRecordDataService;
 
 
     @Autowired
     public CdrFileServiceImpl(@Qualifier("imiSettings") SettingsFacade settingsFacade, EventRelay eventRelay,
                               FileAuditRecordDataService fileAuditRecordDataService, AlertService alertService,
-                              CsrValidatorService csrValidatorService) {
+                              CsrValidatorService csrValidatorService,
+                              CallDetailRecordDataService callDetailRecordDataService) {
         this.settingsFacade = settingsFacade;
         this.eventRelay = eventRelay;
         this.fileAuditRecordDataService = fileAuditRecordDataService;
         this.alertService = alertService;
         this.csrValidatorService = csrValidatorService;
+        this.callDetailRecordDataService = callDetailRecordDataService;
     }
 
 
@@ -240,7 +244,7 @@ public class CdrFileServiceImpl implements CdrFileService {
                     try {
                         // Parse the CSV line into a CDR (which we actually discard in this phase)
                         // This will trow IllegalArgumentException if the CSV is malformed
-                        CsvHelper.csvLineToCdr(line);
+                        CsvHelper.csvLineToCdrDto(line);
 
                     } catch (IllegalArgumentException e) {
                         errors.add(String.format("Line %d: %s", lineNumber, e.getMessage()));
@@ -322,7 +326,7 @@ public class CdrFileServiceImpl implements CdrFileService {
 
                             // Parse the CSV line into a CDR
                             // This should not trow an IllegalArgumentException since we verified this in phase 1
-                            CallDetailRecordDto cdr = CsvHelper.csvLineToCdr(line);
+                            CallDetailRecordDto cdr = CsvHelper.csvLineToCdrDto(line);
 
                             if (!currentRequestId.equals(cdr.getRequestId().toString())) {
                                 currentRequestId = cdr.getRequestId().toString();
@@ -370,6 +374,7 @@ public class CdrFileServiceImpl implements CdrFileService {
 
     /**
      * Send aggregated detail records for processing as CallSummaryRecordDto in MOTECH events
+     * Additionally stores a copy of the provided CDR in the CallDetailRecord table, for reporting
      *
      * NOTE: only exposed here for ITs
      *
@@ -398,25 +403,27 @@ public class CdrFileServiceImpl implements CdrFileService {
 
                 while ((line = reader.readLine()) != null) {
                     try {
+                        // Parse the CSV line into a CDR
+                        // This will trow IllegalArgumentException if the CSV is malformed
+                        CallDetailRecordDto cdr = CsvHelper.csvLineToCdrDto(line);
 
-                            // Parse the CSV line into a CDR
-                            // This will trow IllegalArgumentException if the CSV is malformed
-                            CallDetailRecordDto cdr = CsvHelper.csvLineToCdr(line);
-
-                            if (!currentRequestId.equals(cdr.getRequestId().toString())) {
-                                // Send last CSR, if any, for processing
-                                if (csr != null) {
-                                    sendProcessSummaryRecordEvent(csr);
-                                    csr = null; //todo: does that help the GC?
-                                }
-
-                                currentRequestId = cdr.getRequestId().toString();
-
-                                // Start aggregating a new CSR
-                                csr = new CallSummaryRecordDto();
+                        if (!currentRequestId.equals(cdr.getRequestId().toString())) {
+                            // Send last CSR, if any, for processing
+                            if (csr != null) {
+                                sendProcessSummaryRecordEvent(csr);
+                                csr = null; //todo: does that help the GC?
                             }
 
-                            aggregateDetailRecord(cdr, csr);
+                            currentRequestId = cdr.getRequestId().toString();
+
+                            // Start aggregating a new CSR
+                            csr = new CallSummaryRecordDto();
+                        }
+
+                        aggregateDetailRecord(cdr, csr);
+
+                        // Save a copy of the CDR into CallDetailRecord for reporting
+                        callDetailRecordDataService.create(CsvHelper.csvLineToCdr(line));
 
                     } catch (IllegalArgumentException e) {
                         errors.add(String.format("Line %d: %s", lineNumber, e.getMessage()));
