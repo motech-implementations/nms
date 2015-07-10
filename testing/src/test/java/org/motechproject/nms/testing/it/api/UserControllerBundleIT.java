@@ -1,5 +1,20 @@
 package org.motechproject.nms.testing.it.api;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+import javax.inject.Inject;
+
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -17,15 +32,18 @@ import org.motechproject.nms.api.web.contract.FlwUserResponse;
 import org.motechproject.nms.api.web.contract.UserLanguageRequest;
 import org.motechproject.nms.api.web.contract.kilkari.KilkariUserResponse;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
+import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.domain.ServiceUsage;
 import org.motechproject.nms.flw.domain.ServiceUsageCap;
 import org.motechproject.nms.flw.domain.WhitelistEntry;
 import org.motechproject.nms.flw.domain.WhitelistState;
+import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.flw.repository.ServiceUsageCapDataService;
 import org.motechproject.nms.flw.repository.ServiceUsageDataService;
 import org.motechproject.nms.flw.repository.WhitelistEntryDataService;
 import org.motechproject.nms.flw.repository.WhitelistStateDataService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
+import org.motechproject.nms.flw.service.WhitelistService;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
@@ -47,6 +65,7 @@ import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.NationalDefaultLanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
+import org.motechproject.nms.testing.it.api.utils.RequestBuilder;
 import org.motechproject.nms.testing.it.utils.RegionHelper;
 import org.motechproject.nms.testing.it.utils.SubscriptionHelper;
 import org.motechproject.nms.testing.service.TestingService;
@@ -60,20 +79,6 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionCallbackWithoutResult;
-
-import javax.inject.Inject;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.regex.Pattern;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 
 /**
@@ -119,7 +124,19 @@ public class UserControllerBundleIT extends BasePaxIT {
     @Inject
     TestingService testingService;
 
+    @Inject
+    FrontLineWorkerDataService frontLineWorkerDataService;
 
+    @Inject
+    WhitelistService whitelistService;
+
+    public static final Long WHITELIST_CONTACT_NUMBER = 1111111111l;
+    public static final Long NOT_WHITELIST_CONTACT_NUMBER = 9000000000l;
+    public Subscriber whitelistSubscriber;
+    public Subscriber notWhiteListSubscriber;
+
+    private State whitelistState;
+    private State nonWhitelistState;
 
     private RegionHelper rh;
     private SubscriptionHelper sh;
@@ -1479,5 +1496,538 @@ public class UserControllerBundleIT extends BasePaxIT {
                 EntityUtils.toString(response.getEntity()));
     }
 
-    
+    private void setupWhiteListData() {
+
+	rh = new RegionHelper(languageDataService, circleDataService,
+		stateDataService, districtDataService, districtService);
+	rh.newDelhiDistrict();
+	rh.bangaloreDistrict();
+
+	whitelistState = rh.delhiState();
+	stateDataService.create(whitelistState);
+
+	whitelistStateDataService.create(new WhitelistState(whitelistState));
+
+	nonWhitelistState = rh.karnatakaState();
+	stateDataService.create(nonWhitelistState);
+    }
+
+    HttpGet createHttpGetUserDetails(Service serviceType, String callingNo,
+	    String operator, String circle, String callId) {
+	StringBuilder sb = new StringBuilder();
+	String endpoint = "";
+	if (serviceType == Service.MOBILE_ACADEMY) {
+	    endpoint = String.format(
+		    "http://localhost:%d/api/mobileacademy/user",
+		    TestContext.getJettyPort());
+	} else if (serviceType == Service.MOBILE_KUNJI) {
+	    endpoint = String.format(
+		    "http://localhost:%d/api/mobilekunji/user",
+		    TestContext.getJettyPort());
+	}
+	sb.append(endpoint);
+	String seperator = "?";
+	if (callingNo != null) {
+	    sb.append(seperator);
+	    sb.append("callingNumber=");
+	    sb.append(callingNo);
+	    seperator = "";
+	}
+	if (operator != null) {
+	    if (seperator.equals("")) {
+		sb.append("&");
+	    } else {
+		sb.append(seperator);
+	    }
+	    sb.append("operator=");
+	    sb.append(operator);
+	}
+	if (circle != null) {
+	    if (seperator.equals("")) {
+		sb.append("&");
+	    } else {
+		sb.append(seperator);
+	    }
+	    sb.append("circle=");
+	    sb.append(circle);
+	}
+	if (callId != null) {
+	    if (seperator.equals("")) {
+		sb.append("&");
+	    } else {
+		sb.append(seperator);
+	    }
+	    sb.append("callId=");
+	    sb.append(callId);
+	}
+	// System.out.println("Request url:" + sb.toString());
+	return RequestBuilder.createGetRequest(sb.toString());
+    }
+
+    HttpPost createHttpPostSetLanguageLocationCode(Service serviceType,
+	    long callingNumber, long callId, String languageLocationCode)
+	    throws IOException {
+	String endpoint = "";
+	if (serviceType == Service.MOBILE_ACADEMY) {
+	    endpoint = String
+		    .format("http://localhost:%d/api/mobileacademy/languageLocationCode",
+			    TestContext.getJettyPort());
+	} else if (serviceType == Service.MOBILE_KUNJI) {
+	    endpoint = String.format(
+		    "http://localhost:%d/api/mobilekunji/languageLocationCode",
+		    TestContext.getJettyPort());
+	}
+
+	return RequestBuilder.createPostRequest(endpoint,
+		new UserLanguageRequest(callingNumber, callId,
+			languageLocationCode));
+    }
+
+    /**
+     * To verify Active/Inactive User should be able to access MK Service
+     * content, if user's callingNumber is in whitelist and whitelist is set to
+     * Enabled for user's state.
+     */
+    @Test
+    public void verifyFT340() throws InterruptedException, IOException {
+	setupWhiteListData();
+
+	// create a FLW with whitelist number and whitelist state
+	FrontLineWorker whitelistWorker = new FrontLineWorker("Test",
+		WHITELIST_CONTACT_NUMBER);
+	whitelistWorker.setState(whitelistState);
+	whitelistWorker.setDistrict(rh.newDelhiDistrict());
+	whitelistWorker.setLanguage(rh.hindiLanguage());
+	frontLineWorkerService.add(whitelistWorker);
+
+	// assert user's status
+	whitelistWorker = frontLineWorkerService
+		.getByContactNumber(WHITELIST_CONTACT_NUMBER);
+	assertEquals(FrontLineWorkerStatus.INACTIVE,
+		whitelistWorker.getStatus());
+
+	// Deploy the service in user's state
+	deployedServiceDataService.create(new DeployedService(whitelistState,
+		Service.MOBILE_KUNJI));
+
+	// Create the whitelist number entry in whitelist table
+	WhitelistEntry entry = new WhitelistEntry(WHITELIST_CONTACT_NUMBER,
+		whitelistState);
+	whitelistEntryDataService.create(entry);
+
+	// Check the response
+	HttpGet request = createHttpGetUserDetails(Service.MOBILE_KUNJI,
+		String.valueOf(WHITELIST_CONTACT_NUMBER), "A", rh.delhiCircle()
+			.getName(), "123456789012345");
+	HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(
+		request, RequestBuilder.ADMIN_USERNAME,
+		RequestBuilder.ADMIN_PASSWORD);
+	assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
+		.getStatusCode());
+
+	// Update user's status to active
+	whitelistWorker = frontLineWorkerService
+		.getByContactNumber(WHITELIST_CONTACT_NUMBER);
+	whitelistWorker.setStatus(FrontLineWorkerStatus.ACTIVE);
+	frontLineWorkerService.update(whitelistWorker);
+
+	// assert user's status
+	whitelistWorker = frontLineWorkerService
+		.getByContactNumber(WHITELIST_CONTACT_NUMBER);
+	assertEquals(FrontLineWorkerStatus.ACTIVE, whitelistWorker.getStatus());
+
+	// Check the response
+	request = createHttpGetUserDetails(Service.MOBILE_KUNJI,
+		String.valueOf(WHITELIST_CONTACT_NUMBER), "A", rh.delhiCircle()
+			.getName(), "123456789012345");
+	httpResponse = SimpleHttpClient.httpRequestAndResponse(request,
+		RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
+	assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
+		.getStatusCode());
+    }
+
+    /**
+     * To verify Active/Inactive User shouldn't be able to access MK Service
+     * content, if user's callingNumber is not in whitelist and whitelist is set
+     * to Enabled for user's state.
+     */
+    @Test
+    public void verifyFT342() throws InterruptedException, IOException {
+	setupWhiteListData();
+
+	// create a FLW with non-whitelist number and whitelist state
+	FrontLineWorker notWhitelistWorker = new FrontLineWorker("Test",
+		NOT_WHITELIST_CONTACT_NUMBER);
+	notWhitelistWorker.setState(whitelistState);
+	notWhitelistWorker.setDistrict(rh.newDelhiDistrict());
+	notWhitelistWorker.setLanguage(rh.hindiLanguage());
+	frontLineWorkerService.add(notWhitelistWorker);
+
+	// assert user's status
+	notWhitelistWorker = frontLineWorkerService
+		.getByContactNumber(NOT_WHITELIST_CONTACT_NUMBER);
+	assertEquals(FrontLineWorkerStatus.INACTIVE,
+		notWhitelistWorker.getStatus());
+
+	// Deploy the service in user's state
+	deployedServiceDataService.create(new DeployedService(whitelistState,
+		Service.MOBILE_KUNJI));
+
+	// Check the response
+	HttpGet request = createHttpGetUserDetails(Service.MOBILE_KUNJI,
+		String.valueOf(NOT_WHITELIST_CONTACT_NUMBER), "A", rh
+			.delhiCircle().getName(), "123456789012345");
+	HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(
+		request, RequestBuilder.ADMIN_USERNAME,
+		RequestBuilder.ADMIN_PASSWORD);
+	assertEquals(HttpStatus.SC_FORBIDDEN, httpResponse.getStatusLine()
+		.getStatusCode());
+
+	// Update user's status
+	notWhitelistWorker = frontLineWorkerService
+		.getByContactNumber(NOT_WHITELIST_CONTACT_NUMBER);
+	notWhitelistWorker.setStatus(FrontLineWorkerStatus.ACTIVE);
+	frontLineWorkerService.update(notWhitelistWorker);
+
+	// assert user's status
+	notWhitelistWorker = frontLineWorkerService
+		.getByContactNumber(NOT_WHITELIST_CONTACT_NUMBER);
+	assertEquals(FrontLineWorkerStatus.ACTIVE,
+		notWhitelistWorker.getStatus());
+
+	// Check the response
+	request = createHttpGetUserDetails(Service.MOBILE_KUNJI,
+		String.valueOf(NOT_WHITELIST_CONTACT_NUMBER), "A", rh
+			.delhiCircle().getName(), "123456789012345");
+	httpResponse = SimpleHttpClient.httpRequestAndResponse(request,
+		RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
+	assertEquals(HttpStatus.SC_FORBIDDEN, httpResponse.getStatusLine()
+		.getStatusCode());
+    }
+
+    /**
+     * To verify Active/Inactive User should be able to access MK Service
+     * content, if user's callingNumber is in whitelist and whitelist is set to
+     * disabled for user's state.
+     */
+    @Test
+    public void verifyFT344() throws InterruptedException, IOException {
+	setupWhiteListData();
+	// user's number in whitelist, but state not whitelisted
+	FrontLineWorker whitelistWorker = new FrontLineWorker("Test",
+		WHITELIST_CONTACT_NUMBER);
+	whitelistWorker.setDistrict(rh.bangaloreDistrict());
+	whitelistWorker.setLanguage(rh.kannadaLanguage());
+	whitelistWorker.setState(nonWhitelistState);
+	frontLineWorkerService.add(whitelistWorker);
+
+	// assert user's status
+	whitelistWorker = frontLineWorkerService
+		.getByContactNumber(WHITELIST_CONTACT_NUMBER);
+	assertEquals(FrontLineWorkerStatus.INACTIVE,
+		whitelistWorker.getStatus());
+
+	// create user's number in whitelist entry table
+	whitelistEntryDataService.create(new WhitelistEntry(
+		WHITELIST_CONTACT_NUMBER, nonWhitelistState));
+
+	// service deployed in user's state
+	deployedServiceDataService.create(new DeployedService(
+		nonWhitelistState, Service.MOBILE_KUNJI));
+
+	// Check the response
+	HttpGet request = createHttpGetUserDetails(Service.MOBILE_KUNJI,
+		String.valueOf(WHITELIST_CONTACT_NUMBER), "A", rh
+			.karnatakaCircle().getName(), "123456789012345");
+
+	HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(
+		request, RequestBuilder.ADMIN_USERNAME,
+		RequestBuilder.ADMIN_PASSWORD);
+	assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
+		.getStatusCode());
+
+	// Update user's status
+	whitelistWorker = frontLineWorkerService
+		.getByContactNumber(WHITELIST_CONTACT_NUMBER);
+	whitelistWorker.setStatus(FrontLineWorkerStatus.ACTIVE);
+	frontLineWorkerService.update(whitelistWorker);
+
+	// assert user's status
+	whitelistWorker = frontLineWorkerService
+		.getByContactNumber(WHITELIST_CONTACT_NUMBER);
+	assertEquals(FrontLineWorkerStatus.ACTIVE, whitelistWorker.getStatus());
+
+	// Check the response
+	request = createHttpGetUserDetails(Service.MOBILE_KUNJI,
+		String.valueOf(WHITELIST_CONTACT_NUMBER), "A", rh
+			.karnatakaCircle().getName(), "123456789012345");
+
+	httpResponse = SimpleHttpClient.httpRequestAndResponse(request,
+		RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
+	assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
+		.getStatusCode());
+    }
+
+    /**
+     * To verify Active User should be able to access MA Service content, if
+     * user's callingNumber is in whitelist and whitelist is set to Enabled for
+     * user's state.
+     */
+    @Test
+    public void verifyFT439() throws InterruptedException, IOException {
+	setupWhiteListData();
+
+	// create a FLW with whitelist number and whitelist state
+	FrontLineWorker whitelistWorker = new FrontLineWorker("Test",
+		WHITELIST_CONTACT_NUMBER);
+	whitelistWorker.setState(whitelistState);
+	whitelistWorker.setDistrict(rh.newDelhiDistrict());
+	whitelistWorker.setLanguage(rh.hindiLanguage());
+	frontLineWorkerService.add(whitelistWorker);
+
+	// Update user's status to active
+	whitelistWorker = frontLineWorkerService
+		.getByContactNumber(WHITELIST_CONTACT_NUMBER);
+	whitelistWorker.setStatus(FrontLineWorkerStatus.ACTIVE);
+	frontLineWorkerService.update(whitelistWorker);
+
+	// assert user's status
+	whitelistWorker = frontLineWorkerService
+		.getByContactNumber(WHITELIST_CONTACT_NUMBER);
+	assertEquals(FrontLineWorkerStatus.ACTIVE, whitelistWorker.getStatus());
+
+	// Deploy the service in user's state
+	deployedServiceDataService.create(new DeployedService(whitelistState,
+		Service.MOBILE_ACADEMY));
+
+	// Create the whitelist number entry in whitelist table
+	WhitelistEntry entry = new WhitelistEntry(WHITELIST_CONTACT_NUMBER,
+		whitelistState);
+	whitelistEntryDataService.create(entry);
+
+	// Check the response
+	HttpGet request = createHttpGetUserDetails(Service.MOBILE_ACADEMY,
+		String.valueOf(WHITELIST_CONTACT_NUMBER), "A", rh.delhiCircle()
+			.getName(), "123456789012345");
+	HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(
+		request, RequestBuilder.ADMIN_USERNAME,
+		RequestBuilder.ADMIN_PASSWORD);
+	assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
+		.getStatusCode());
+    }
+
+    /**
+     * To verify Inactive User, should be able to access MA Service content, if
+     * user's callingNumber is in whitelist and whitelist is set to Enabled for
+     * user's state.
+     */
+    @Test
+    public void verifyFT440() throws InterruptedException, IOException {
+	setupWhiteListData();
+
+	// create a FLW with whitelist number and whitelist state
+	FrontLineWorker whitelistWorker = new FrontLineWorker("Test",
+		WHITELIST_CONTACT_NUMBER);
+	whitelistWorker.setStatus(FrontLineWorkerStatus.INACTIVE);
+	whitelistWorker.setState(whitelistState);
+	whitelistWorker.setDistrict(rh.newDelhiDistrict());
+	whitelistWorker.setLanguage(rh.hindiLanguage());
+	frontLineWorkerService.add(whitelistWorker);
+
+	// assert user's status
+	whitelistWorker = frontLineWorkerService
+		.getByContactNumber(WHITELIST_CONTACT_NUMBER);
+	assertEquals(FrontLineWorkerStatus.INACTIVE,
+		whitelistWorker.getStatus());
+
+	// Deploy the service in user's state
+	deployedServiceDataService.create(new DeployedService(whitelistState,
+		Service.MOBILE_ACADEMY));
+
+	// Create the whitelist number entry in whitelist table
+	WhitelistEntry entry = new WhitelistEntry(WHITELIST_CONTACT_NUMBER,
+		whitelistState);
+	whitelistEntryDataService.create(entry);
+
+	// Check the response
+	HttpGet getRequest = createHttpGetUserDetails(Service.MOBILE_ACADEMY,
+		String.valueOf(WHITELIST_CONTACT_NUMBER), "A", rh.delhiCircle()
+			.getName(), "123456789012345");
+	HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(
+		getRequest, RequestBuilder.ADMIN_USERNAME,
+		RequestBuilder.ADMIN_PASSWORD);
+	assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
+		.getStatusCode());
+    }
+
+    /**
+     * To verify Active User shouldn't be able to access MA Service content, if
+     * user's callingNumber is not is whitelist and whitelist is set to Enabled
+     * for user's state.
+     */
+    @Test
+    public void verifyFT443() throws InterruptedException, IOException {
+	setupWhiteListData();
+
+	// create a FLW with non-whitelist number and whitelist state
+	FrontLineWorker notWhitelistWorker = new FrontLineWorker("Test",
+		NOT_WHITELIST_CONTACT_NUMBER);
+	notWhitelistWorker.setState(whitelistState);
+	notWhitelistWorker.setDistrict(rh.newDelhiDistrict());
+	notWhitelistWorker.setLanguage(rh.hindiLanguage());
+	frontLineWorkerService.add(notWhitelistWorker);
+
+	// Update user's status
+	notWhitelistWorker = frontLineWorkerService
+		.getByContactNumber(NOT_WHITELIST_CONTACT_NUMBER);
+	notWhitelistWorker.setStatus(FrontLineWorkerStatus.ACTIVE);
+	frontLineWorkerService.update(notWhitelistWorker);
+
+	// assert user's status
+	notWhitelistWorker = frontLineWorkerService
+		.getByContactNumber(NOT_WHITELIST_CONTACT_NUMBER);
+	assertEquals(FrontLineWorkerStatus.ACTIVE,
+		notWhitelistWorker.getStatus());
+
+	// Deploy the service in user's state
+	deployedServiceDataService.create(new DeployedService(whitelistState,
+		Service.MOBILE_ACADEMY));
+
+	// Check the response
+	HttpGet request = createHttpGetUserDetails(Service.MOBILE_ACADEMY,
+		String.valueOf(NOT_WHITELIST_CONTACT_NUMBER), "A", rh
+			.delhiCircle().getName(), "123456789012345");
+	HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(
+		request, RequestBuilder.ADMIN_USERNAME,
+		RequestBuilder.ADMIN_PASSWORD);
+	assertEquals(HttpStatus.SC_FORBIDDEN, httpResponse.getStatusLine()
+		.getStatusCode());
+    }
+
+    /**
+     * To verify Inactive User shouldn't be able to access MA Service content,
+     * if user's callingNumber is not in whitelist and whitelist is set to
+     * Enabled for user's state.
+     */
+    @Test
+    public void verifyFT444() throws InterruptedException, IOException {
+	setupWhiteListData();
+
+	// create a FLW with non-whitelist number and whitelist state
+	FrontLineWorker notWhitelistWorker = new FrontLineWorker("Test",
+		NOT_WHITELIST_CONTACT_NUMBER);
+	notWhitelistWorker.setState(whitelistState);
+	notWhitelistWorker.setDistrict(rh.newDelhiDistrict());
+	notWhitelistWorker.setLanguage(rh.hindiLanguage());
+	frontLineWorkerService.add(notWhitelistWorker);
+
+	// assert user's status
+	notWhitelistWorker = frontLineWorkerService
+		.getByContactNumber(NOT_WHITELIST_CONTACT_NUMBER);
+	assertEquals(FrontLineWorkerStatus.INACTIVE,
+		notWhitelistWorker.getStatus());
+
+	// Deploy the service in user's state
+	deployedServiceDataService.create(new DeployedService(whitelistState,
+		Service.MOBILE_ACADEMY));
+
+	// Check the response
+	HttpGet request = createHttpGetUserDetails(Service.MOBILE_ACADEMY,
+		String.valueOf(NOT_WHITELIST_CONTACT_NUMBER), "A", rh
+			.delhiCircle().getName(), "123456789012345");
+	HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(
+		request, RequestBuilder.ADMIN_USERNAME,
+		RequestBuilder.ADMIN_PASSWORD);
+	assertEquals(HttpStatus.SC_FORBIDDEN, httpResponse.getStatusLine()
+		.getStatusCode());
+    }
+
+    /**
+     * To verify Active User should be able to access MA Service content, if
+     * user's callingNumber is in whitelist and whitelist is set to disabled for
+     * user's state.
+     */
+    @Test
+    public void verifyFT447() throws InterruptedException, IOException {
+	setupWhiteListData();
+	// user's no in whitelist, but state not whitelisted
+	FrontLineWorker whitelistWorker = new FrontLineWorker("Test",
+		WHITELIST_CONTACT_NUMBER);
+	whitelistWorker.setDistrict(rh.bangaloreDistrict());
+	whitelistWorker.setLanguage(rh.kannadaLanguage());
+	whitelistWorker.setState(nonWhitelistState);
+	frontLineWorkerService.add(whitelistWorker);
+
+	// Update user's status to active
+	whitelistWorker = frontLineWorkerService
+		.getByContactNumber(WHITELIST_CONTACT_NUMBER);
+	whitelistWorker.setStatus(FrontLineWorkerStatus.ACTIVE);
+	frontLineWorkerService.update(whitelistWorker);
+
+	// assert user's status
+	whitelistWorker = frontLineWorkerService
+		.getByContactNumber(WHITELIST_CONTACT_NUMBER);
+	assertEquals(FrontLineWorkerStatus.ACTIVE, whitelistWorker.getStatus());
+
+	// create user's number in whitelist entry table
+	whitelistEntryDataService.create(new WhitelistEntry(
+		WHITELIST_CONTACT_NUMBER, nonWhitelistState));
+
+	// service deployed in user's state
+	deployedServiceDataService.create(new DeployedService(
+		nonWhitelistState, Service.MOBILE_ACADEMY));
+
+	// Check the response
+	HttpGet request = createHttpGetUserDetails(Service.MOBILE_ACADEMY,
+		String.valueOf(WHITELIST_CONTACT_NUMBER), "A", rh
+			.karnatakaCircle().getName(), "123456789012345");
+
+	HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(
+		request, RequestBuilder.ADMIN_USERNAME,
+		RequestBuilder.ADMIN_PASSWORD);
+	assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
+		.getStatusCode());
+    }
+
+    /**
+     * To verify Inactive User should be able to access MA Service content, if
+     * user's callingNumber is in whitelist and whitelist is set to disabled for
+     * user's state.
+     */
+    @Test
+    public void verifyFT448() throws InterruptedException, IOException {
+	setupWhiteListData();
+	// user's no in whitelist, but state not whitelisted
+	FrontLineWorker whitelistWorker = new FrontLineWorker("Test",
+		WHITELIST_CONTACT_NUMBER);
+	whitelistWorker.setDistrict(rh.bangaloreDistrict());
+	whitelistWorker.setLanguage(rh.kannadaLanguage());
+	whitelistWorker.setState(nonWhitelistState);
+	frontLineWorkerService.add(whitelistWorker);
+
+	// assert user's status
+	whitelistWorker = frontLineWorkerService
+		.getByContactNumber(WHITELIST_CONTACT_NUMBER);
+	assertEquals(FrontLineWorkerStatus.INACTIVE,
+		whitelistWorker.getStatus());
+
+	// create user's number in whitelist entry table
+	whitelistEntryDataService.create(new WhitelistEntry(
+		WHITELIST_CONTACT_NUMBER, nonWhitelistState));
+
+	// service deployed in user's state
+	deployedServiceDataService.create(new DeployedService(
+		nonWhitelistState, Service.MOBILE_ACADEMY));
+
+	// Check the response
+	HttpGet request = createHttpGetUserDetails(Service.MOBILE_ACADEMY,
+		String.valueOf(WHITELIST_CONTACT_NUMBER), "A", rh
+			.karnatakaCircle().getName(), "123456789012345");
+
+	HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(
+		request, RequestBuilder.ADMIN_USERNAME,
+		RequestBuilder.ADMIN_PASSWORD);
+	assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
+		.getStatusCode());
+    }
 }
