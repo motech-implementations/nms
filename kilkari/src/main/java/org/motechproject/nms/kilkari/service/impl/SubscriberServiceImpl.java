@@ -115,7 +115,9 @@ public class SubscriberServiceImpl implements SubscriberService {
 
             if (subscription.getSubscriptionPack().getType() == SubscriptionPackType.PREGNANCY) {
 
-                subscriptionService.updateStartDate(subscription, subscriber.getLastMenstrualPeriod());
+                if (subscriber.getLastMenstrualPeriod() != null) { // Subscribers via IVR will not have LMP
+                    subscriptionService.updateStartDate(subscription, subscriber.getLastMenstrualPeriod());
+                }
 
             } else if (subscription.getSubscriptionPack().getType() == SubscriptionPackType.CHILD) {
 
