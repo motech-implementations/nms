@@ -246,7 +246,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
 
         //here, verify we logged the incoming CDRs in the CallDetailRecord table
         List<CallDetailRecord> cdrs = callDetailRecordDataService.retrieveAll();
-        assertEquals(3, cdrs.size());
+        assertEquals(6, cdrs.size());
     }
 
 
