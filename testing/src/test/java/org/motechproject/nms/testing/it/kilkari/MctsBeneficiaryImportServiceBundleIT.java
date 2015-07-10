@@ -1055,11 +1055,8 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     
     /*
      * To verify mother MCTS upload is rejected when mandatory parameter state is missing. 
-     * 
-     * https://applab.atlassian.net/browse/NMS-228
      */
     @Test
-    @Ignore
     public void verifyFT524() throws Exception {
     	DateTime lmp = DateTime.now().minusDays(30);
         String lmpString = getDateString(lmp);
@@ -1074,11 +1071,8 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     
     /*
      * To verify mother MCTS upload is rejected when mandatory parameter district is missing. 
-     * 
-     * https://applab.atlassian.net/browse/NMS-228
      */
     @Test
-    @Ignore
     public void verifyFT525() throws Exception {
     	DateTime lmp = DateTime.now().minusDays(30);
         String lmpString = getDateString(lmp);
@@ -1125,10 +1119,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     
     /*
      * To verify child MCTS upload is rejected when mandatory parameter state is missing.
-     * 
-     * https://applab.atlassian.net/browse/NMS-228
      */
-    @Ignore
     @Test
     public void verifyFT528() throws Exception {
     	DateTime dob = DateTime.now();
@@ -1144,10 +1135,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     
     /*
      * To verify child MCTS upload is rejected when mandatory parameter district is missing. 
-     * 
-     * https://applab.atlassian.net/browse/NMS-228
      */
-    @Ignore
     @Test
     public void verifyFT529() throws Exception {
     	DateTime dob = DateTime.now();
