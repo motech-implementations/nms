@@ -24,6 +24,7 @@ import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
+import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.HealthBlock;
 import org.motechproject.nms.region.domain.HealthFacility;
@@ -45,6 +46,8 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.TransactionCallbackWithoutResult;
 
 import javax.inject.Inject;
 import java.io.InputStreamReader;
@@ -110,8 +113,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
     private void createLocationData() {
         // specific locations from the mother and child data files:
-
-        State state21 = createState(21L, "State 21");
+        final State state21 = createState(21L, "State 21");
         District district2 = createDistrict(state21, 2L, "Jharsuguda");
         District district3 = createDistrict(state21, 3L, "Sambalpur");
         District district4 = createDistrict(state21, 4L, "Debagarh");
@@ -173,6 +175,19 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         taluka46.getVillages().add(village3089);
 
         stateDataService.create(state21);
+
+        final Circle circle = new Circle();
+        circle.setName("Square");
+        circleDataService.create(circle);
+
+        circleDataService.doInTransaction(new TransactionCallbackWithoutResult() {
+            @Override
+            protected void doInTransactionWithoutResult(TransactionStatus transactionStatus) {
+                circle.getStates().add(state21);
+                state21.getCircles().add(circle);
+                circleDataService.update(circle);
+            }
+        });
     }
 
     @Test
@@ -189,6 +204,8 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         assertEquals("Shanti Ekka", subscriber.getMother().getName());
         Subscription subscription = subscriber.getActiveAndPendingSubscriptions().iterator().next();
         assertEquals(SubscriptionOrigin.MCTS_IMPORT, subscription.getOrigin());
+        assertNotNull(subscriber.getCircle());
+        assertEquals("Square", subscriber.getCircle().getName());
     }
 
     @Test
@@ -256,6 +273,8 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         Subscription subscription = subscriber.getActiveAndPendingSubscriptions().iterator().next();
         assertEquals(SubscriptionOrigin.MCTS_IMPORT, subscription.getOrigin());
         assertEquals(SubscriptionPackType.CHILD, subscription.getSubscriptionPack().getType());
+        assertNotNull(subscriber.getCircle());
+        assertEquals("Square", subscriber.getCircle().getName());
     }
 
     @Test
