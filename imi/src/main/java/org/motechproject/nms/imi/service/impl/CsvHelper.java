@@ -130,8 +130,13 @@ public final class CsvHelper {
 
         cdr.setMsisdn(msisdnFromString(fields[FieldName.MSISDN.ordinal()]));
 
-        cdr.setCallAnswerTime(new DateTime(longFromString("CallAnswerTime",
-                fields[FieldName.CALL_ANSWER_TIME.ordinal()])));
+        try {
+            cdr.setCallAnswerTime(new DateTime(longFromString("CallAnswerTime",
+                    fields[FieldName.CALL_ANSWER_TIME.ordinal()])));
+        } catch (IllegalArgumentException e) {
+            // CallAnswerTime is an optional parameter
+            cdr.setCallAnswerTime(null);
+        }
 
         cdr.setMsgPlayDuration(calculateMsgPlayDuration(fields[FieldName.MSG_PLAY_START_TIME.ordinal()],
                 fields[FieldName.MSG_PLAY_END_TIME.ordinal()]));
