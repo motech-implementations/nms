@@ -61,11 +61,7 @@ public final class CsvHelper {
     private static Long longOrNullFromString(String which, String s) {
         if (which == null || which.isEmpty()) { return null; }
 
-        try {
-            return Long.parseLong(s);
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException(String.format("%s must be an integer", which), e);
-        }
+        return longFromString(which, s);
     }
 
 
