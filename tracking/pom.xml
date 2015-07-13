@@ -9,70 +9,28 @@
         <relativePath>../</relativePath>
     </parent>
 
-    <artifactId>flw</artifactId>
+    <artifactId>tracking</artifactId>
     <version>0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
-    <name>FLW module</name>
+    <name>Tracking Module</name>
 
     <properties>
         <modules.root.dir>${basedir}/..</modules.root.dir>
     </properties>
 
     <dependencies>
-
         <dependency>
             <groupId>org.motechproject</groupId>
             <artifactId>motech-platform-osgi-extender-fragment</artifactId>
             <version>${motech.version}</version>
         </dependency>
 
-        <dependency>
-            <groupId>org.motechproject.nms</groupId>
-            <artifactId>region</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.motechproject.nms</groupId>
-            <artifactId>props</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.motechproject.nms</groupId>
-            <artifactId>csv</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.motechproject.nms</groupId>
-            <artifactId>tracking</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
+        <!-- OSGi IT -->
         <dependency>
             <groupId>org.motechproject</groupId>
-            <artifactId>motech-platform-commons-api</artifactId>
+            <artifactId>motech-pax-it</artifactId>
             <version>${motech.version}</version>
-        </dependency>
-
-        <!-- Scheduler -->
-        <dependency>
-            <groupId>org.motechproject</groupId>
-            <artifactId>motech-scheduler</artifactId>
-            <version>${motech.version}</version>
-        </dependency>
-
-        <!-- Event relay -->
-        <dependency>
-            <groupId>org.motechproject</groupId>
-            <artifactId>motech-platform-event</artifactId>
-            <version>${motech.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>commons-fileupload</groupId>
-            <artifactId>commons-fileupload</artifactId>
+            <scope>test</scope>
         </dependency>
 
     </dependencies>
@@ -105,22 +63,18 @@
                 <configuration>
                     <instructions>
                         <Blueprint-Enabled>true</Blueprint-Enabled>
-                        <Resource-Path>flw/resources</Resource-Path>
-                        <Context-Path>flw</Context-Path>
+                        <Resource-Path>tracking/resources</Resource-Path>
+                        <Context-Path>tracking</Context-Path>
                         <Export-Package>
-                            org.motechproject.nms.flw.service;version=${project.version},
-                            org.motechproject.nms.flw.repository;version=${project.version},
-                            org.motechproject.nms.flw.domain;version=${project.version}
+                            org.motechproject.nms.tracking.annotation;version=${project.version},
+                            org.motechproject.nms.tracking.aspect;version=${project.version},
+                            org.motechproject.nms.tracking.domain;version=${project.version},
+                            org.motechproject.nms.tracking.exception;version=${project.version},
+                            org.motechproject.nms.tracking.repository;version=${project.version},
+                            org.motechproject.nms.tracking.service;version=${project.version},
+                            org.motechproject.nms.tracking.utils;version=${project.version}
                         </Export-Package>
                         <Import-Package>
-                            org.motechproject.osgi.web,
-                            org.motechproject.nms.tracking.aspect,
-                            org.aopalliance.aop,
-                            org.springframework.aop,
-                            org.springframework.aop.framework,
-                            org.springframework.transaction,
-                            org.apache.commons.fileupload,
-                            org.springframework.web.multipart.commons,
                             *
                         </Import-Package>
                     </instructions>
@@ -179,15 +133,8 @@
                 <configuration>
                     <source>1.7</source>
                     <target>1.7</target>
-                    <aspectLibraries>
-                        <dependency>
-                            <groupId>org.motechproject.nms</groupId>
-                            <artifactId>tracking</artifactId>
-                        </dependency>
-                    </aspectLibraries>
                 </configuration>
             </plugin>
-
         </plugins>
     </build>
 </project>
