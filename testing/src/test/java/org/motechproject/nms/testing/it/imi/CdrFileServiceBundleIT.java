@@ -10,7 +10,9 @@ import org.motechproject.alerts.contract.AlertCriteria;
 import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.alerts.domain.Alert;
 import org.motechproject.event.MotechEvent;
+import org.motechproject.nms.imi.domain.CallDetailRecord;
 import org.motechproject.nms.imi.exception.InvalidCdrFileException;
+import org.motechproject.nms.imi.repository.CallDetailRecordDataService;
 import org.motechproject.nms.imi.repository.FileAuditRecordDataService;
 import org.motechproject.nms.imi.service.CdrFileService;
 import org.motechproject.nms.imi.service.SettingsService;
@@ -83,6 +85,8 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
     FileAuditRecordDataService fileAuditRecordDataService;
     @Inject
     CallRetryDataService callRetryDataService;
+    @Inject
+    CallDetailRecordDataService callDetailRecordDataService;
 
 
     @Inject
@@ -209,7 +213,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
                 subscriptionPackDataService, languageDataService, circleDataService, stateDataService,
                 districtDataService, fileAuditRecordDataService, districtService);
 
-        helper.makeCdrs(1,1,1,1);
+        helper.makeCdrs(3,1,1,1);
         helper.makeRemoteCdrFile();
         helper.makeLocalCdrFile();
         Map<String, Object> eventParams = new HashMap<>();
@@ -230,7 +234,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
             //Now verify that we should be rescheduling one call (the failed one)
             if (callRetryDataService.count() == 1) {
                 getLogger().debug("Found retry record in {} ms", System.currentTimeMillis() - start);
-                return;
+                break;
             }
 
             Thread.sleep(100L);
@@ -240,6 +244,9 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
             }
         }
 
+        //here, verify we logged the incoming CDRs in the CallDetailRecord table
+        List<CallDetailRecord> cdrs = callDetailRecordDataService.retrieveAll();
+        assertEquals(6, cdrs.size());
     }
 
 
