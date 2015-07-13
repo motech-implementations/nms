@@ -30,6 +30,13 @@
             <artifactId>region</artifactId>
             <version>${project.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.motechproject.nms</groupId>
+            <artifactId>tracking</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
     </dependencies>
 
     <repositories>
@@ -69,6 +76,7 @@
                         </Export-Package>
                         <Import-Package>
                         	org.motechproject.osgi.web,
+                            org.motechproject.nms.tracking.aspect,
                             *
                         </Import-Package>
                     </instructions>
@@ -98,6 +106,41 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>aspectj-maven-plugin</artifactId>
+                <version>1.4</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.aspectj</groupId>
+                        <artifactId>aspectjrt</artifactId>
+                        <version>1.7.0</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.aspectj</groupId>
+                        <artifactId>aspectjtools</artifactId>
+                        <version>1.7.0</version>
+                    </dependency>
+                </dependencies>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>compile</goal>
+                            <goal>test-compile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <source>1.7</source>
+                    <target>1.7</target>
+                    <aspectLibraries>
+                        <dependency>
+                            <groupId>org.motechproject.nms</groupId>
+                            <artifactId>tracking</artifactId>
+                        </dependency>
+                    </aspectLibraries>
+                </configuration>
             </plugin>
         </plugins>
     </build>
