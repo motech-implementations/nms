@@ -1235,8 +1235,8 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     }
     
     /*
-     * To verify mother record gets created when child record exist with status as deactivated.
-     * 
+     * To verify pregnancy record gets created when child record exist with status as deactivated.
+     *
      * https://applab.atlassian.net/browse/NMS-234
      */
     @Test
@@ -1269,6 +1269,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
                 lmpString + "\t\t\t");
         mctsBeneficiaryImportService.importMotherData(reader);
 
+        //pregnancy record should be activated.
         subscriber = subscriberDataService.findByCallingNumber(9439986187L);
         assertEquals(1, subscriber.getActiveAndPendingSubscriptions().size());
         assertEquals(2, subscriber.getAllSubscriptions().size());
