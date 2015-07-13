@@ -8,6 +8,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.regex.Pattern;
 
 import javax.inject.Inject;
 
@@ -15,6 +16,7 @@ import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.flw.domain.CallContent;
@@ -64,6 +66,9 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         testingService.clearDatabase();
     }
 
+    /**
+     * method to pass all values as per data type mentioned in API
+     */
     private String createCallDetailsJson(boolean includeCallingNumber, Long callingNumber,
                                          boolean includeCallId, Long callId,
                                          boolean includeOperator, String operator,
@@ -133,6 +138,83 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         return contentTemplate.toString();
     }
 
+    /**
+     * overloaded method to pass all values as String data type i.e in double
+     * quotes ""
+     */
+    private String createCallDetailsJson(boolean includeCallingNumber,
+            String callingNumber, boolean includeCallId, String callId,
+            boolean includeOperator, String operator, boolean includeCircle,
+            String circle, boolean includeCallStartTime, String callStartTime,
+            boolean includeCallEndTime, String callEndTime,
+            boolean includeCallDurationInPulses, String callDurationInPulses,
+            boolean includeEndOfUsagePromptCounter,
+            String endOfUsagePromptCounter,
+            boolean includeWelcomeMessagePromptFlag,
+            String welcomeMessagePromptFlag, boolean includeCallStatus,
+            String callStatus, boolean includeCallDisconnectReason,
+            String callDisconnectReason, boolean includeContet, String content) {
+        StringBuffer contentTemplate = new StringBuffer("{");
+        ArrayList<String> array = new ArrayList<>();
+
+        if (includeCallingNumber) {
+            array.add(String.format("\"callingNumber\": \"%s\"", callingNumber));
+        }
+
+        if (includeCallId) {
+            array.add(String.format("\"callId\": \"%s\"", callId));
+        }
+
+        if (includeOperator) {
+            array.add(String.format("\"operator\": \"%s\"", operator));
+        }
+
+        if (includeCircle) {
+            array.add(String.format("\"circle\": \"%s\"", circle));
+        }
+
+        if (includeCallStartTime) {
+            array.add(String.format("\"callStartTime\": \"%s\"", callStartTime));
+        }
+
+        if (includeCallEndTime) {
+            array.add(String.format("\"callEndTime\": \"%s\"", callEndTime));
+        }
+
+        if (includeCallDurationInPulses) {
+            array.add(String.format("\"callDurationInPulses\": \"%s\"",
+                    callDurationInPulses));
+        }
+
+        if (includeEndOfUsagePromptCounter) {
+            array.add(String.format("\"endOfUsagePromptCounter\": \"%s\"",
+                    endOfUsagePromptCounter));
+        }
+
+        if (includeWelcomeMessagePromptFlag) {
+            array.add(String.format("\"welcomeMessagePromptFlag\": \"%s\"",
+                    welcomeMessagePromptFlag));
+        }
+
+        if (includeCallStatus) {
+            array.add(String.format("\"callStatus\": \"%s\"", callStatus));
+        }
+
+        if (includeCallDisconnectReason) {
+            array.add(String.format("\"callDisconnectReason\": \"%s\"",
+                    callDisconnectReason));
+        }
+
+        if (includeContet) {
+            array.add(String.format("\"content\": [%s]", content));
+        }
+
+        contentTemplate.append(Joiner.on(",").join(array));
+        contentTemplate.append("}");
+
+        return contentTemplate.toString();
+    }
+
     private HttpPost createCallDetailsPost(String serviceName,
                                    boolean includeCallingNumber, Long callingNumber,
                                    boolean includeCallId, Long callId,
@@ -164,7 +246,50 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         httpPost.addHeader("content-type", "application/json");
         return httpPost;
     }
+
+    /**
+     * overloaded method to pass all values as String type
+     */
+    private HttpPost createCallDetailsPost(String serviceName,
+            boolean includeCallingNumber, String callingNumber,
+            boolean includeCallId, String callId, boolean includeOperator,
+            String operator, boolean includeCircle, String circle,
+            boolean includeCallStartTime, String callStartTime,
+            boolean includeCallEndTime, String callEndTime,
+            boolean includeCallDurationInPulses, String callDurationInPulses,
+            boolean includeEndOfUsagePromptCounter,
+            String endOfUsagePromptCounter,
+            boolean includeWelcomeMessagePromptFlag,
+            String welcomeMessagePromptFlag, boolean includeCallStatus,
+            String callStatus, boolean includeCallDisconnectReason,
+            String callDisconnectReason, boolean includeContet, String content) {
+        HttpPost httpPost = new HttpPost(String.format(
+                "http://localhost:%d/api/%s/callDetails",
+                TestContext.getJettyPort(), serviceName));
+        String callDetailsJson = createCallDetailsJson(includeCallingNumber,
+                callingNumber, includeCallId, callId, includeOperator,
+                operator, includeCircle, circle, includeCallStartTime,
+                callStartTime, includeCallEndTime, callEndTime,
+                includeCallDurationInPulses, callDurationInPulses,
+                includeEndOfUsagePromptCounter, endOfUsagePromptCounter,
+                includeWelcomeMessagePromptFlag, welcomeMessagePromptFlag,
+                includeCallStatus, callStatus, includeCallDisconnectReason,
+                callDisconnectReason, includeContet, content);
+        StringEntity params;
+        try {
+            params = new StringEntity(callDetailsJson);
+        } catch (UnsupportedEncodingException e) {
+            throw new IllegalStateException(
+                    "We're no expecting this kind of exception in ITs!", e);
+        }
+        httpPost.setEntity(params);
+        httpPost.addHeader("content-type", "application/json");
+        return httpPost;
+    }
     
+    /**
+     * method to pass all values as per data type mentioned in API
+     */
     private String createContentJson(boolean includeType, String type,
                                      boolean includeMkCardCode, String mkCardCode,
                                      boolean includeContentName, String contentName,
@@ -213,6 +338,62 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
 
         return contentTemplate.toString();
     }
+
+    /**
+     * overloaded method to pass all values as String type
+     */
+    private String createContentJson(boolean includeType, String type,
+            boolean includeMkCardCode, String mkCardCode,
+            boolean includeContentName, String contentName,
+            boolean includeContentFileName, String contentFileName,
+            boolean includeStartTime, String startTime, boolean includeEndTime,
+            String endTime, boolean includeCompletionFlag,
+            String completionFlag, boolean includeCorrectAnswerEntered,
+            String correctAnswerEntered) {
+        StringBuffer contentTemplate = new StringBuffer("{");
+        ArrayList<String> array = new ArrayList<>();
+
+        if (includeType) {
+            array.add(String.format("\"type\": \"%s\"", type));
+        }
+
+        if (includeMkCardCode) {
+            array.add(String.format("\"mkCardCode\": \"%s\"", mkCardCode));
+        }
+
+        if (includeContentName) {
+            array.add(String.format("\"contentName\": \"%s\"", contentName));
+        }
+
+        if (includeContentFileName) {
+            array.add(String.format("\"contentFileName\": \"%s\"",
+                    contentFileName));
+        }
+
+        if (includeStartTime) {
+            array.add(String.format("\"startTime\":  \"%s\"", startTime));
+        }
+
+        if (includeEndTime) {
+            array.add(String.format("\"endTime\":  \"%s\"", endTime));
+        }
+
+        if (includeCompletionFlag) {
+            array.add(String.format("\"completionFlag\":  \"%s\"",
+                    completionFlag));
+        }
+
+        if (includeCorrectAnswerEntered) {
+            array.add(String.format("\"correctAnswerEntered\":  \"%s\"",
+                    correctAnswerEntered));
+        }
+
+        contentTemplate.append(Joiner.on(",").join(array));
+        contentTemplate.append("}");
+
+        return contentTemplate.toString();
+    }
+
 
     @Test
     public void testCallDetailsValidMobileKunji() throws IOException, InterruptedException {
@@ -783,6 +964,142 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
+    /**
+     * To verify that Save Call Details API if rejected when mandatory parameter
+     * "CallStartTime" is having invalid format.
+     */
+    @Test
+    public void verifyFT494() throws IOException,
+            InterruptedException {
+
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright",
+                9810320300L);
+        frontLineWorkerService.add(flw);
+
+        HttpPost httpPost = createCallDetailsPost("mobileacademy",
+        /* callingNumber */true, "9810320300",
+        /* callId */true, "234000011111111",
+        /* operator */true, "A",
+        /* circle */true, "AP",
+        /* callStartTime */true, "142287984ss",// Invalid
+        /* callEndTime */true, "1422879903",
+        /* callDurationInPulses */true, "60",
+        /* endOfUsagePromptCounter */true, "0",
+        /* welcomeMessagePromptFlag */false, null,
+        /* callStatus */true, "1",
+        /* callDisconnectReason */true, "1",
+        /* content */false, null);
+
+        Pattern expectedJsonResponse = Pattern
+                .compile(".*callStartTime.*");
+        
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
+                expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
+
+    }
+
+    /**
+     * To verify that Save Call Details API if rejected when mandatory parameter
+     * "CallEndTime" is having invalid format.
+     */
+    @Test
+    public void verifyFT495() throws IOException,
+            InterruptedException {
+
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright",
+                9810320300L);
+        frontLineWorkerService.add(flw);
+
+        HttpPost httpPost = createCallDetailsPost("mobileacademy",
+        /* callingNumber */true, "9810320300",
+        /* callId */true, "234000011111111",
+        /* operator */true, "A",
+        /* circle */true, "AP",
+        /* callStartTime */true, "142287984",
+        /* callEndTime */true, "1422879903sasa",//Invalid
+        /* callDurationInPulses */true, "60",
+        /* endOfUsagePromptCounter */true, "0",
+        /* welcomeMessagePromptFlag */false, null,
+        /* callStatus */true, "1",
+        /* callDisconnectReason */true, "1",
+        /* content */false, null);
+
+        Pattern expectedJsonResponse = Pattern
+                .compile(".*callEndTime.*");
+        
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
+                expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
+
+    }
+    
+    /**
+     * To verify that Save Call Details API if rejected when mandatory parameter
+     * "CallDurationPulses" is having invalid format.
+     */
+    @Test
+     public void verifyFT496() throws IOException,
+             InterruptedException {
+
+         FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright",
+                 9810320300L);
+         frontLineWorkerService.add(flw);
+
+         HttpPost httpPost = createCallDetailsPost("mobileacademy",
+         /* callingNumber */true, "9810320300",
+         /* callId */true, "234000011111111",
+         /* operator */true, "A",
+         /* circle */true, "AP",
+         /* callStartTime */true, "142287984",
+        /* callEndTime */true, "1422879903",
+        /* callDurationInPulses */true, "a6",// Invalid
+         /* endOfUsagePromptCounter */true, "0",
+         /* welcomeMessagePromptFlag */false, null,
+         /* callStatus */true, "1",
+         /* callDisconnectReason */true, "1",
+         /* content */false, null);
+
+         Pattern expectedJsonResponse = Pattern
+                .compile(".*callDurationInPulses.*");
+         
+         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
+                 expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
+
+     }
+    
+    /**
+     * To verify that Save Call Details API if rejected when mandatory parameter
+     * "EndOfUsagePrompt" is having invalid format.
+     */
+    @Test
+     public void verifyFT497() throws IOException,
+             InterruptedException {
+
+         FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright",
+                 9810320300L);
+         frontLineWorkerService.add(flw);
+
+         HttpPost httpPost = createCallDetailsPost("mobileacademy",
+         /* callingNumber */true, "9810320300",
+         /* callId */true, "234000011111111",
+         /* operator */true, "A",
+         /* circle */true, "AP",
+         /* callStartTime */true, "142287984",
+        /* callEndTime */true, "1422879903",
+        /* callDurationInPulses */true, "60",
+        /* endOfUsagePromptCounter */true, "a",// Invalid
+         /* welcomeMessagePromptFlag */false, null,
+         /* callStatus */true, "1",
+         /* callDisconnectReason */true, "1",
+         /* content */false, null);
+
+         Pattern expectedJsonResponse = Pattern
+                .compile(".*endOfUsagePromptCounter.*");
+         
+         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
+                 expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
+
+     }
+
     /*****************************************************************************************************************
      Test the existence and validity of elements specific to MA
      content.type, content.completionFlag
@@ -1000,6 +1317,164 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
                 HttpStatus.SC_BAD_REQUEST,
                 "{\"failureReason\":\"<endTime: Not Present>\"}",
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    /**
+     * To verify that Save Call Details API if rejected when mandatory parameter
+     * "CallData>>StartTime" is having invalid format.
+     */
+    @Test
+    public void verifyFT503() throws InterruptedException, IOException {
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright",
+                9810320300L);
+        frontLineWorkerService.add(flw);
+
+        ArrayList<String> array = new ArrayList<>();
+        array.add(createContentJson(/* type */true, "question",
+        /* mkCardCode */false, null,
+        /* contentName */true, "chapter-01question-01",
+        /* contentFile */true, "ch1_q1.wav",
+        /* startTime */true, "1200000000ss",// invalid
+        /* endTime */true, "1222222221",
+        /* completionFlag */true, "true",
+        /* correctAnswerEntered */true, "false"));
+        HttpPost httpPost = createCallDetailsPost("mobileacademy",
+        /* callingNumber */true, 9810320300l,
+        /* callId */true, 234000011111111l,
+        /* operator */true, "A",
+        /* circle */true, "AP",
+        /* callStartTime */true, 1422879843l,
+        /* callEndTime */true, 1422879903l,
+        /* callDurationInPulses */true, 60,
+        /* endOfUsagePromptCounter */true, 1,
+        /* welcomeMessagePromptFlag */false, null,
+        /* callStatus */true, 1,
+        /* callDisconnectReason */true, 2,
+        /* content */true, Joiner.on(",").join(array));
+
+        Pattern expectedJsonResponse = Pattern.compile(".*startTime.*");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
+                HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+    
+    /**
+     * To verify that Save Call Details API if rejected when mandatory parameter
+     * "CallData>>EndTime" is having invalid format.
+     */
+    @Test
+    public void verifyFT504() throws InterruptedException, IOException {
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright",
+                9810320300L);
+        frontLineWorkerService.add(flw);
+
+        ArrayList<String> array = new ArrayList<>();
+        array.add(createContentJson(/* type */true, "question",
+        /* mkCardCode */false, null,
+        /* contentName */true, "chapter-01question-01",
+        /* contentFile */true, "ch1_q1.wav",
+        /* startTime */true, "1200000000",
+        /* endTime */true, "122ss2222221",// Invalid
+        /* completionFlag */true, "true",
+        /* correctAnswerEntered */true, "false"));
+        HttpPost httpPost = createCallDetailsPost("mobileacademy",
+        /* callingNumber */true, 9810320300l,
+        /* callId */true, 234000011111111l,
+        /* operator */true, "A",
+        /* circle */true, "AP",
+        /* callStartTime */true, 1422879843l,
+        /* callEndTime */true, 1422879903l,
+        /* callDurationInPulses */true, 60,
+        /* endOfUsagePromptCounter */true, 1,
+        /* welcomeMessagePromptFlag */false, null,
+        /* callStatus */true, 1,
+        /* callDisconnectReason */true, 2,
+        /* content */true, Joiner.on(",").join(array));
+
+        Pattern expectedJsonResponse = Pattern.compile(".*endTime.*");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
+                HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+    
+    /**
+     * To verify that Save Call Details API if rejected when mandatory parameter
+     * "CallData>>type" is having invalid format.
+     */
+    // TODO https://applab.atlassian.net/browse/NMS-232
+    @Ignore
+    @Test
+    public void verifyFT505() throws InterruptedException, IOException {
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright",
+                9810320300L);
+        frontLineWorkerService.add(flw);
+
+        ArrayList<String> array = new ArrayList<>();
+        array.add(createContentJson(/* type */true, "bookmark",// Type can be "lesson", "chapter", "question"
+        /* mkCardCode */false, null,
+        /* contentName */true, "chapter-01question-01",
+        /* contentFile */true, "ch1_q1.wav",
+        /* startTime */true, "1200000000",
+        /* endTime */true, "1222222221",
+        /* completionFlag */true, "true",
+        /* correctAnswerEntered */true, "false"));
+        HttpPost httpPost = createCallDetailsPost("mobileacademy",
+        /* callingNumber */true, 9810320300l,
+        /* callId */true, 234000011111111l,
+        /* operator */true, "A",
+        /* circle */true, "AP",
+        /* callStartTime */true, 1422879843l,
+        /* callEndTime */true, 1422879903l,
+        /* callDurationInPulses */true, 60,
+        /* endOfUsagePromptCounter */true, 1,
+        /* welcomeMessagePromptFlag */false, null,
+        /* callStatus */true, 1,
+        /* callDisconnectReason */true, 2,
+        /* content */true, Joiner.on(",").join(array));
+
+        Pattern expectedJsonResponse = Pattern.compile(".*type.*");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
+                HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+    
+    /**
+     * To verify that Save Call Details API if rejected when mandatory parameter
+     * callData>> completionFlag" is having invalid format.
+     */
+    @Test
+    public void verifyFT506() throws InterruptedException, IOException {
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright",
+                9810320300L);
+        frontLineWorkerService.add(flw);
+
+        ArrayList<String> array = new ArrayList<>();
+        array.add(createContentJson(/* type */true, "question",
+        /* mkCardCode */false, null,
+        /* contentName */true, "chapter-01question-01",
+        /* contentFile */true, "ch1_q1.wav",
+        /* startTime */true, "1200000000",
+        /* endTime */true, "1222222221",
+        /* completionFlag */true, "t1",// Invalid
+        /* correctAnswerEntered */true, "false"));
+        HttpPost httpPost = createCallDetailsPost("mobileacademy",
+        /* callingNumber */true, 9810320300l,
+        /* callId */true, 234000011111111l,
+        /* operator */true, "A",
+        /* circle */true, "AP",
+        /* callStartTime */true, 1422879843l,
+        /* callEndTime */true, 1422879903l,
+        /* callDurationInPulses */true, 60,
+        /* endOfUsagePromptCounter */true, 1,
+        /* welcomeMessagePromptFlag */false, null,
+        /* callStatus */true, 1,
+        /* callDisconnectReason */true, 2,
+        /* content */true, Joiner.on(",").join(array));
+
+        Pattern expectedJsonResponse = Pattern.compile(".*completionFlag.*");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
+                HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
