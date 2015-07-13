@@ -359,37 +359,45 @@ public class TargetFileServiceImpl implements TargetFileService {
             List<Subscription> subscriptions = subscriptionService.findActiveSubscriptionsForDay(dow, page,
                     maxQueryBlock);
             numBlockRecord = subscriptions.size();
-
+            int messageWriteCount = 0;
             for (Subscription subscription : subscriptions) {
+
 
                 Subscriber subscriber = subscription.getSubscriber();
 
                 RequestId requestId = new RequestId(subscription.getSubscriptionId(),
                         TIME_FORMATTER.print(timestamp));
-                SubscriptionPackMessage msg = subscription.nextScheduledMessage(timestamp);
 
-                //todo: don't understand why subscriber.getLanguage() doesn't work here...
-                // it's not working because of https://applab.atlassian.net/browse/MOTECH-1678
-                Language language = (Language) subscriberDataService.getDetachedField(subscriber, "language");
-                Circle circle = (Circle) subscriberDataService.getDetachedField(subscriber, "circle");
+                try {
+                    SubscriptionPackMessage msg = subscription.nextScheduledMessage(timestamp);
 
-                writeSubscriptionRow(
-                        requestId.toString(),
-                        serviceIdFromOrigin(true, subscription.getOrigin()),
-                        subscriber.getCallingNumber().toString(),
-                        NORMAL_PRIORITY, //todo: how do we choose a priority?
-                        callFlowUrl,
-                        msg.getMessageFileName(),
-                        msg.getWeekId(),
-                        // we are happy with empty language and circle since they are optional
-                        language == null ? "" : language.getCode(),
-                        circle == null ? "" : circle.getName(),
-                        subscription.getOrigin().getCode(),
-                        writer);
+                    //todo: don't understand why subscriber.getLanguage() doesn't work here...
+                    // it's not working because of https://applab.atlassian.net/browse/MOTECH-1678
+                    Language language = (Language) subscriberDataService.getDetachedField(subscriber, "language");
+                    Circle circle = (Circle) subscriberDataService.getDetachedField(subscriber, "circle");
+
+                    writeSubscriptionRow(
+                            requestId.toString(),
+                            serviceIdFromOrigin(true, subscription.getOrigin()),
+                            subscriber.getCallingNumber().toString(),
+                            NORMAL_PRIORITY, //todo: how do we choose a priority?
+                            callFlowUrl,
+                            msg.getMessageFileName(),
+                            msg.getWeekId(),
+                            // we are happy with empty language and circle since they are optional
+                            language == null ? "" : language.getCode(),
+                            circle == null ? "" : circle.getName(),
+                            subscription.getOrigin().getCode(),
+                            writer);
+                    messageWriteCount += 1;
+
+                } catch (IllegalStateException se) {
+                    LOGGER.error(se.toString());
+                }
             }
 
             page++;
-            recordCount += numBlockRecord;
+            recordCount += messageWriteCount;
 
         } while (numBlockRecord > 0);
 
