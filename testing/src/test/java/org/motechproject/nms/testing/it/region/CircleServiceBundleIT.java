@@ -1,6 +1,5 @@
 package org.motechproject.nms.testing.it.region;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.region.domain.Circle;
@@ -214,7 +213,6 @@ public class CircleServiceBundleIT extends BasePaxIT {
     }
 
     @Test
-    @Ignore
     public void testCircleMultipleStates() throws Exception {
         setupData();
 
@@ -240,7 +238,7 @@ public class CircleServiceBundleIT extends BasePaxIT {
         assertEquals("Circle 2", circle.getName());
     }
 
-    @Ignore
+    @Test
     public void testMultipleCirclesSingleState() throws Exception {
         setupData();
 
