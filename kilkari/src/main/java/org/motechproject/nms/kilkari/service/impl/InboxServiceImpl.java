@@ -61,24 +61,18 @@ public class InboxServiceImpl implements InboxService {
                 throw new NoInboxForSubscriptionException(String.format("No inbox exists for subscription %s",
                         subscription.getSubscriptionId()));
             }
-            messageIndex = subscription.getSubscriptionPack().getMessages().size() - 1;
+            currentWeek = pack.getWeeks();
+            messageIndex = (pack.getMessagesPerWeek() == 1) ? 1 : 2;
         } else if (subscription.getSubscriptionPack().getMessagesPerWeek() == 1) {
+
             messageIndex = 1;
-        } else { // messagesPerWeek == 2
+        } else {
 
+            // messagesPerWeek == 2
             // day of and next 3 days, so if day of week is Monday: Mon, Tue, Wed, Thu
-            if (daysIntoWeek >= 0 && daysIntoWeek < 4) {
-
-                // use this week's first message
-                messageIndex = 1;
-
             // remaining days, so if day of week is Monday: Fri, Sat, Sun
-            } else {
+            messageIndex = (daysIntoWeek >= 0 && daysIntoWeek < 4) ? 1 : 2;
 
-                // use this week's second message
-                messageIndex = 2;
-
-            }
         }
 
         SubscriptionPackMessage spm = subscription.getMessageByWeekAndMessageId(currentWeek, messageIndex);
