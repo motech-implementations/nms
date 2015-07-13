@@ -297,8 +297,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 subscription.setStartDate(subscriber.getDateOfBirth());
                 subscription.setStatus(Subscription.getStatus(subscription, DateTime.now()));
             }
-        } else if (subscriber.getLastMenstrualPeriod() != null && subscriber.getDateOfBirth() == null &&
-                pack.getType() == SubscriptionPackType.PREGNANCY) {
+        } else if (subscriber.getLastMenstrualPeriod() != null && pack.getType() == SubscriptionPackType.PREGNANCY) {
             // LMP is present and DOB is not
             if (getActiveSubscription(subscriber, SubscriptionPackType.PREGNANCY) != null) {
                 // reject the subscription if it already exists

@@ -1251,4 +1251,46 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         assertEquals(subscription.getDeactivationReason(), DeactivationReason.CHILD_DEATH);
     }
     
+    /*
+     * To verify pregnancy record gets created when child record exist with status as deactivated.
+     *
+     * https://applab.atlassian.net/browse/NMS-234
+     */
+    @Test
+    public void testCreateMotherSubscriptionWhenDeactivatedChildSubscriptionExists() throws Exception {
+        // import child
+        DateTime dob = DateTime.now().minusDays(100);
+        String dobString = getDateString(dob);
+        Reader reader = createChildDataReaderWithHeaders("21\t3\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t\t9439986187\t"
+                + dobString + "\t");
+        mctsBeneficiaryImportService.importChildData(reader);
+
+        Subscriber subscriber = subscriberDataService.findByCallingNumber(9439986187L);
+        Set<Subscription> subscriptions = subscriber.getAllSubscriptions();
+        assertEquals(1, subscriptions.size());
+        Subscription subscription = subscriptions.iterator().next();
+        assertEquals(SubscriptionStatus.ACTIVE, subscription.getStatus());
+
+        //Deactivate child subscription
+        subscriptionService.deactivateSubscription(subscription, DeactivationReason.CHILD_DEATH);
+        subscriber = subscriberDataService.findByCallingNumber(9439986187L);
+        subscriptions = subscriber.getAllSubscriptions();
+        subscription = subscriptions.iterator().next();
+        assertEquals(SubscriptionStatus.DEACTIVATED, subscription.getStatus());
+        assertEquals(DeactivationReason.CHILD_DEATH, subscription.getDeactivationReason());
+        
+        // import mother
+        DateTime lmp = DateTime.now().minusDays(100);
+        String lmpString = getDateString(lmp);
+        reader = createMotherDataReaderWithHeaders("21\t3\t\t\t\t\t1234567891\tShanti Ekka\t9439986187\t\t" +
+                lmpString + "\t\t\t");
+        mctsBeneficiaryImportService.importMotherData(reader);
+
+        //pregnancy record should be activated.
+        subscriber = subscriberDataService.findByCallingNumber(9439986187L);
+        assertEquals(1, subscriber.getActiveAndPendingSubscriptions().size());
+        assertEquals(2, subscriber.getAllSubscriptions().size());
+        
+    }
+    
 }
