@@ -15,9 +15,6 @@ public class SubscriptionPackMessage {
     private static final int TWO_MINUTES = 120;
 
     @Field
-    private int week;
-
-    @Field
     private String weekId;
 
     @Field
@@ -26,19 +23,10 @@ public class SubscriptionPackMessage {
     @Field
     private int duration; //In seconds
 
-    public SubscriptionPackMessage(int week, String weekId, String messageFileName, int duration) {
-        this.week = week;
+    public SubscriptionPackMessage(String weekId, String messageFileName, int duration) {
         this.weekId = weekId;
         this.messageFileName = messageFileName;
         this.duration = duration;
-    }
-
-    public int getWeek() {
-        return week;
-    }
-
-    public void setWeek(int week) {
-        this.week = week;
     }
 
     public String getWeekId() { return weekId; }
@@ -63,6 +51,6 @@ public class SubscriptionPackMessage {
 
     @Ignore
     public static SubscriptionPackMessage getWelcomeMessage() {
-        return new SubscriptionPackMessage(0, "w1_1", "w1_1.wav", TWO_MINUTES);
+        return new SubscriptionPackMessage("w1_1", "w1_1.wav", TWO_MINUTES);
     }
 }

@@ -1,5 +1,6 @@
 package org.motechproject.nms.kilkari.service.impl;
 
+import org.apache.commons.collections.ListUtils;
 import org.joda.time.DateTime;
 import org.joda.time.Weeks;
 import org.joda.time.format.DateTimeFormat;
@@ -432,8 +433,11 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
 
     public List<Subscription> findActiveSubscriptionsForDay(DayOfTheWeek dayOfTheWeek, int page, int pageSize) {
-        return subscriptionDataService.findByStatusAndStartDayOfWeek(SubscriptionStatus.ACTIVE, dayOfTheWeek,
+        List<Subscription> firstDay = subscriptionDataService.findByStatusAndFirstMessageDayOfWeek(SubscriptionStatus.ACTIVE, dayOfTheWeek,
                 new QueryParams(page, pageSize));
+        List<Subscription> secondDay = subscriptionDataService.findByStatusAndSecondMessageDayOfWeek(SubscriptionStatus.ACTIVE, dayOfTheWeek,
+                new QueryParams(page, pageSize));
+        return ListUtils.union(firstDay, secondDay);
     }
 
     public List<Subscription> findPendingSubscriptionsFromDate(DateTime startDate, int page, int pageSize) {
