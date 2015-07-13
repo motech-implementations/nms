@@ -35,7 +35,18 @@ public class TrackChangesAspect {
 
     @After("staticinitialization(@org.motechproject.nms.tracking.annotation.TrackClass *)")
     public void registerJdoLifecycleListeners(JoinPoint.StaticPart staticPart) {
-        trackChangesService.registerLifecycleListeners(staticPart.getSignature().getDeclaringType());
+        if (null != trackChangesService) {
+            try {
+                trackChangesService.registerLifecycleListeners(staticPart.getSignature().getDeclaringType());
+            } catch (Exception e) {
+                // log and rethrow static block exceptions
+                LOGGER.error("Failed to register change listeners", e);
+                throw e;
+            }
+        } else {
+            LOGGER.warn("The %s service is missing. This aspect either failed to initialize as a bean " +
+                    "or is used outside the application context", TrackChangesService.class.getSimpleName());
+        }
     }
 
     @Before("execution(* set*(*)) && @annotation(org.motechproject.nms.tracking.annotation.TrackField)")
