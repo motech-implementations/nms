@@ -8,7 +8,6 @@ import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.DateTimeFormatterBuilder;
 import org.joda.time.format.DateTimeParser;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
@@ -48,7 +47,6 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
-
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
@@ -1054,12 +1052,11 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     }
     
     /*
-     * To verify mother MCTS upload is rejected when mandatory parameter state is missing. 
-     * 
+     * To verify mother MCTS upload is rejected when mandatory parameter state is missing.
+     *
      * https://applab.atlassian.net/browse/NMS-228
      */
     @Test
-    @Ignore
     public void verifyFT524() throws Exception {
     	DateTime lmp = DateTime.now().minusDays(30);
         String lmpString = getDateString(lmp);
@@ -1074,11 +1071,10 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     
     /*
      * To verify mother MCTS upload is rejected when mandatory parameter district is missing. 
-     * 
+     *
      * https://applab.atlassian.net/browse/NMS-228
      */
     @Test
-    @Ignore
     public void verifyFT525() throws Exception {
     	DateTime lmp = DateTime.now().minusDays(30);
         String lmpString = getDateString(lmp);
@@ -1125,10 +1121,9 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     
     /*
      * To verify child MCTS upload is rejected when mandatory parameter state is missing.
-     * 
+     *
      * https://applab.atlassian.net/browse/NMS-228
      */
-    @Ignore
     @Test
     public void verifyFT528() throws Exception {
     	DateTime dob = DateTime.now();
@@ -1144,10 +1139,9 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     
     /*
      * To verify child MCTS upload is rejected when mandatory parameter district is missing. 
-     * 
+     *
      * https://applab.atlassian.net/browse/NMS-228
      */
-    @Ignore
     @Test
     public void verifyFT529() throws Exception {
     	DateTime dob = DateTime.now();

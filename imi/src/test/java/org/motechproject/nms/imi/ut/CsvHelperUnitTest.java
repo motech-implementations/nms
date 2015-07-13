@@ -16,25 +16,25 @@ public class CsvHelperUnitTest {
 
     @Test(expected=IllegalArgumentException.class)
     public void testTooFewFields() {
-        CallDetailRecordDto cdr = CsvHelper.csvLineToCdr("a,b");
+        CallDetailRecordDto cdr = CsvHelper.csvLineToCdrDto("a,b");
         assertNotNull(cdr);
     }
 
     @Test(expected=IllegalArgumentException.class)
     public void testTooManyFields() {
-        CallDetailRecordDto cdr = CsvHelper.csvLineToCdr("a,b,c,d,e,f,g,h,i,j,k,l,m,o,p,q,r,s,t");
+        CallDetailRecordDto cdr = CsvHelper.csvLineToCdrDto("a,b,c,d,e,f,g,h,i,j,k,l,m,o,p,q,r,s,t");
         assertNotNull(cdr);
     }
 
     @Test(expected=IllegalArgumentException.class)
     public void testInvalidFields() {
-        CallDetailRecordDto cdr = CsvHelper.csvLineToCdr("a,b,c,d,e,f,g,h,i,j,k,l,m,o,p,q,r");
+        CallDetailRecordDto cdr = CsvHelper.csvLineToCdrDto("a,b,c,d,e,f,g,h,i,j,k,l,m,o,p,q,r");
         assertNotNull(cdr);
     }
 
     @Test(expected=IllegalArgumentException.class)
     public void testInvalidTimes() {
-        CallDetailRecordDto cdr = CsvHelper.csvLineToCdr("20150513184533:58747ffc-6b7c-4abb-91d3-f099aa1bf5a3," +
+        CallDetailRecordDto cdr = CsvHelper.csvLineToCdrDto("20150513184533:58747ffc-6b7c-4abb-91d3-f099aa1bf5a3," +
                 "1111111111,c,d,e,123456,g,h,1001,j,k,456,123,o,p,q,3,s");
         assertNotNull(cdr);
     }
@@ -54,7 +54,7 @@ public class CsvHelperUnitTest {
         expectedCdr.setCallDisconnectReason(CallDisconnectReason.CONTENT_NOT_FOUND);
         expectedCdr.setWeekId("s");
 
-        CallDetailRecordDto cdr = CsvHelper.csvLineToCdr("20150513184533:58747ffc-6b7c-4abb-91d3-f099aa1bf5a3," +
+        CallDetailRecordDto cdr = CsvHelper.csvLineToCdrDto("20150513184533:58747ffc-6b7c-4abb-91d3-f099aa1bf5a3," +
                 "1111111111,c,d,e,123456,g,h,1001,j,k,123,456,o,p,q,3,s");
         assertEquals(expectedCdr, cdr);
     }
