@@ -23,7 +23,6 @@ import javax.inject.Inject;
 
 import org.joda.time.DateTime;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.kilkari.domain.MctsBeneficiary;
@@ -548,7 +547,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         assertNotNull(subscriber);
         assertNotEquals(subscriber.getChild().getDistrict().getCode(), new Long(7));
         
-        List<SubscriptionError> susbErrors = subscriptionErrorDataService.findByContactNumber(msisdn);
+        List<SubscriptionError> susbErrors = subscriptionErrorDataService.findByBeneficiaryId(childId);
         SubscriptionError susbError = susbErrors.iterator().next();
     	assertNotNull(susbError);
         assertEquals(SubscriptionRejectionReason.INVALID_LOCATION, susbError.getRejectionReason());

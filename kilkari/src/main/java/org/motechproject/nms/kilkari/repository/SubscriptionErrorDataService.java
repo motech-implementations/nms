@@ -11,4 +11,7 @@ import java.util.List;
 public interface SubscriptionErrorDataService extends MotechDataService<SubscriptionError> {
     @Lookup
     List<SubscriptionError> findByContactNumber(@LookupField(name = "contactNumber") Long contactNumber);
+    
+    @Lookup
+    List<SubscriptionError> findByBeneficiaryId(@LookupField(name = "beneficiaryId") String beneficiaryId);
 }
