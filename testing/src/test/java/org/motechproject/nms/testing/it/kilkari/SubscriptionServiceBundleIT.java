@@ -619,10 +619,10 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         subscription.setNeedsWelcomeMessageViaObd(false);
         subscriptionDataService.update(subscription);
 
-        message = subscription.nextScheduledMessage(now.plusDays(8)); //one week and a day
+        message = subscription.nextScheduledMessage(now.plusDays(7)); //one week
         assertEquals("w2_1", message.getWeekId());
 
-        message = subscription.nextScheduledMessage(now.plusDays(75));
+        message = subscription.nextScheduledMessage(now.plusDays(74));
         assertEquals("w11_2", message.getWeekId());
     }
 

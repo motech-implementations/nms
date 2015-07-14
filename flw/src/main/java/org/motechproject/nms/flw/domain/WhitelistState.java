@@ -2,8 +2,11 @@ package org.motechproject.nms.flw.domain;
 
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
+import org.motechproject.mds.annotations.InstanceLifecycleListeners;
 import org.motechproject.mds.domain.MdsEntity;
 import org.motechproject.nms.region.domain.State;
+import org.motechproject.nms.tracking.annotation.TrackClass;
+import org.motechproject.nms.tracking.annotation.TrackField;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Unique;
@@ -13,6 +16,8 @@ import javax.validation.constraints.NotNull;
  * A state that has the whitelist enabled will appear in this table
  */
 @Entity(tableName = "nms_whitelisted_states")
+@TrackClass
+@InstanceLifecycleListeners
 public class WhitelistState extends MdsEntity {
     @Field
     @NotNull
@@ -28,6 +33,7 @@ public class WhitelistState extends MdsEntity {
         return state;
     }
 
+    @TrackField
     public void setState(State state) {
         this.state = state;
     }

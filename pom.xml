@@ -716,6 +716,7 @@
     </dependencyManagement>
 
     <modules>
+        <module>tracking</module>
         <module>csv</module>
         <module>mobile-academy</module>
         <module>kilkari</module>

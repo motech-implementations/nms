@@ -58,13 +58,19 @@ public final class CsvHelper {
     }
 
 
+    private static Long longOrNullFromString(String which, String s) {
+        if (which == null || which.isEmpty()) { return null; }
+
+        return longFromString(which, s);
+    }
+
+
     private static long longFromString(String which, String s) {
         try {
             return Long.parseLong(s);
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException(String.format("%s must be an integer", which), e);
         }
-
     }
 
 
@@ -74,7 +80,6 @@ public final class CsvHelper {
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException(String.format("%s must be an integer", which), e);
         }
-
     }
 
 
@@ -130,8 +135,8 @@ public final class CsvHelper {
 
         cdr.setMsisdn(msisdnFromString(fields[FieldName.MSISDN.ordinal()]));
 
-        cdr.setCallAnswerTime(new DateTime(longFromString("CallAnswerTime",
-                fields[FieldName.CALL_ANSWER_TIME.ordinal()])));
+        cdr.setCallAnswerTime(new DateTime(longOrNullFromString("CallAnswerTime",
+                    fields[FieldName.CALL_ANSWER_TIME.ordinal()])));
 
         cdr.setMsgPlayDuration(calculateMsgPlayDuration(fields[FieldName.MSG_PLAY_START_TIME.ordinal()],
                 fields[FieldName.MSG_PLAY_END_TIME.ordinal()]));

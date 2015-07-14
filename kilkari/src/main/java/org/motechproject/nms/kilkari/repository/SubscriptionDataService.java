@@ -17,9 +17,15 @@ public interface SubscriptionDataService extends MotechDataService<Subscription>
     Subscription findBySubscriptionId(@LookupField(name = "subscriptionId") String subscriptionId);
 
     @Lookup
-    List<Subscription> findByStatusAndStartDayOfWeek(
+    List<Subscription> findByStatusAndFirstMessageDayOfWeek(
             @LookupField(name = "status") SubscriptionStatus status,
-            @LookupField(name = "startDayOfTheWeek") DayOfTheWeek startDayOfTheWeek,
+            @LookupField(name = "firstMessageDayOfWeek") DayOfTheWeek startDayOfTheWeek,
+            QueryParams queryParams);
+
+    @Lookup
+    List<Subscription> findByStatusAndSecondMessageDayOfWeek(
+            @LookupField(name = "status") SubscriptionStatus status,
+            @LookupField(name = "secondMessageDayOfWeek") DayOfTheWeek startDayOfTheWeek,
             QueryParams queryParams);
 
     @Lookup
