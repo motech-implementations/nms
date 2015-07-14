@@ -1958,4 +1958,70 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
                 .getStatusCode());
     }
+
+    /**
+     * This case has been added to test the functionality mentioned in
+     * NMS.GEN.FLW.008.
+     * 
+     * The NMS system shall provide means to mark an FLW as invalid using CSV
+     * upload. Once an FLW is marked invalid, any incoming call with MSISDN that
+     * is same as that of invalid FLW shall be treated as that of an anonymous
+     * caller.
+     */
+    // TODO JIRA issue: https://applab.atlassian.net/browse/NMS-236
+    @Ignore
+    @Test
+    public void verifyStatusChangeFromInvalidToAnonymous()
+            throws InterruptedException, IOException {
+        setupWhiteListData();
+        // user's no in whitelist, but state not whitelisted
+        FrontLineWorker whitelistWorker = new FrontLineWorker("Test",
+                WHITELIST_CONTACT_NUMBER);
+        whitelistWorker.setDistrict(rh.newDelhiDistrict());
+        whitelistWorker.setLanguage(rh.hindiLanguage());
+        whitelistWorker.setState(whitelistState);
+        frontLineWorkerService.add(whitelistWorker);
+
+        // assert user's status
+        whitelistWorker = frontLineWorkerService
+                .getByContactNumber(WHITELIST_CONTACT_NUMBER);
+        assertEquals(FrontLineWorkerStatus.INACTIVE,
+                whitelistWorker.getStatus());
+
+        // Update user's status to active
+        whitelistWorker = frontLineWorkerService
+                .getByContactNumber(WHITELIST_CONTACT_NUMBER);
+        whitelistWorker.setStatus(FrontLineWorkerStatus.INVALID);
+        frontLineWorkerService.update(whitelistWorker);
+
+        // assert user's status
+        whitelistWorker = frontLineWorkerService
+                .getByContactNumber(WHITELIST_CONTACT_NUMBER);
+        assertEquals(FrontLineWorkerStatus.INVALID, whitelistWorker.getStatus());
+
+        // create user's number in whitelist entry table
+        whitelistEntryDataService.create(new WhitelistEntry(
+                WHITELIST_CONTACT_NUMBER, whitelistState));
+
+        // service deployed in user's state
+        deployedServiceDataService.create(new DeployedService(whitelistState,
+                Service.MOBILE_ACADEMY));
+
+        // Check the response
+        HttpGet request = createHttpGet(true, "mobileacademy", true,
+                String.valueOf(WHITELIST_CONTACT_NUMBER), true, "A", true, rh
+                        .delhiCircle().getName(), true, "123456789012345");
+        HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(
+                request, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
+                .getStatusCode());
+
+        // assert user's status, On issuing the getUserDetails API to a invalid
+        // user, its status should get changed to anonymous
+        whitelistWorker = frontLineWorkerService
+                .getByContactNumber(WHITELIST_CONTACT_NUMBER);
+        assertEquals(FrontLineWorkerStatus.ANONYMOUS,
+                whitelistWorker.getStatus());
+    }
 }
