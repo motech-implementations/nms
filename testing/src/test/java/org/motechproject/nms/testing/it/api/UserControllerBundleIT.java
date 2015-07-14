@@ -2417,4 +2417,126 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, response.getStatusLine().getStatusCode());
         assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
+
+    /**
+     * To get the details of the Anonymous user using get user details API when
+     * circle sent in request is not mapped to any languageLocation.
+     */
+    @Test
+    public void verifyFT453() throws IOException, InterruptedException {
+        // create languages
+        rh.hindiLanguage();
+        rh.kannadaLanguage();
+
+        // set national default language
+        nationalDefaultLanguageDataService.create(new NationalDefaultLanguage(
+                rh.hindiLanguage()));
+        // create circle not mapped to any language
+        Circle circle = RegionHelper.createCircle("BH");
+
+        HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
+                true, "1200000000", // callingNumber
+                true, "OP", // operator
+                true, circle.getName(),// circle
+                true, "123456789012345" // callId
+        );
+
+        String expectedJsonResponse = createFlwUserResponseJson(
+                rh.hindiLanguage().getCode(),  //defaultLanguageLocationCode=national
+                null,  //locationCode
+                Arrays.asList(rh.hindiLanguage().getCode(), rh.kannadaLanguage().getCode()), // allowedLanguageLocationCodes
+                0L,    //currentUsageInPulses
+                0L,    //endOfUsagePromptCounter
+                false, //welcomePromptFlag
+                -1,  //maxAllowedUsageInPulses
+                2      //maxAllowedEndOfUsagePrompt
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * To verify that getuserdetails API is rejected when mandatory parameter
+     * callingNumber is missing.
+     */
+    @Test
+    public void verifyFT456() throws IOException, InterruptedException {
+        HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
+                false, null, // callingNumber missing
+                true, "OP", // operator
+                true, rh.delhiCircle().getName(),// circle
+                true, "123456789012345" // callId
+        );
+        String expectedJsonResponse = createFailureResponseJson("<callingNumber: Not Present>");
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * To verify that getuserdetails API is rejected when mandatory parameter
+     * callId is missing.
+     */
+    @Test
+    public void verifyFT457() throws IOException, InterruptedException {
+        HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
+                true, "1200000000", // callingNumber
+                true, "OP", // operator
+                true, rh.delhiCircle().getName(),// circle
+                false, null // callId Missing
+        );
+        String expectedJsonResponse = createFailureResponseJson("<callId: Not Present>");
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * To verify that getuserdetails API is rejected when mandatory parameter
+     * callingNumber is having invalid value
+     */
+    @Test
+    public void verifyFT458() throws IOException, InterruptedException {
+        HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
+                true, "123456789", // callingNumber Invalid
+                true, "OP", // operator
+                true, rh.delhiCircle().getName(),// circle
+                true, "123456789012345" // callId
+        );
+        String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * To verify that getuserdetails API is rejected when mandatory parameter
+     * callId is having invalid value
+     */
+    @Test
+    public void verifyFT460() throws IOException, InterruptedException {
+        HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
+                true, "1234567890", // callingNumber Invalid
+                true, "OP", // operator
+                true, rh.delhiCircle().getName(),// circle
+                true, "1234567890123456" // callId
+        );
+        String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
 }
