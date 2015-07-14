@@ -529,7 +529,6 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
      * https://applab.atlassian.net/browse/NMS-231
      */
     @Test
-    @Ignore
     public void verifyFT325() throws Exception {
         createLocationData();
 
