@@ -43,6 +43,7 @@ import org.motechproject.nms.flw.repository.ServiceUsageDataService;
 import org.motechproject.nms.flw.repository.WhitelistEntryDataService;
 import org.motechproject.nms.flw.repository.WhitelistStateDataService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
+import org.motechproject.nms.flw.service.ServiceUsageService;
 import org.motechproject.nms.flw.service.WhitelistService;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.domain.Subscriber;
@@ -129,6 +130,9 @@ public class UserControllerBundleIT extends BasePaxIT {
 
     @Inject
     WhitelistService whitelistService;
+
+    @Inject
+    ServiceUsageService serviceUsageService;
 
     public static final Long WHITELIST_CONTACT_NUMBER = 1111111111l;
     public static final Long NOT_WHITELIST_CONTACT_NUMBER = 9000000000l;
@@ -1957,5 +1961,395 @@ public class UserControllerBundleIT extends BasePaxIT {
                 RequestBuilder.ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
                 .getStatusCode());
+    }
+
+    /**
+     * To verify that MK service  shall be allowed when cappingType
+     * is set to "State Capping" having usage pluses remaining.
+     */
+    @Test
+    public void verifyFT329() throws IOException, InterruptedException {
+        State s = rh.delhiState();
+        rh.delhiCircle();
+
+        deployedServiceDataService.create(new DeployedService(rh.delhiState(), Service.MOBILE_KUNJI));
+
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
+        flw.setLanguage(rh.hindiLanguage());
+        frontLineWorkerService.add(flw);
+
+        ServiceUsageCap serviceUsageCap = new ServiceUsageCap(s, Service.MOBILE_KUNJI, 3600);
+        serviceUsageCapDataService.create(serviceUsageCap);
+
+        ServiceUsage serviceUsage = new ServiceUsage(flw, Service.MOBILE_KUNJI, 1, 0, 0, DateTime.now());
+        serviceUsageDataService.create(serviceUsage);
+
+        HttpGet httpGet = createHttpGet(
+                true, "mobilekunji",    //service
+                true, "1111111111",     //callingNumber
+                true, "OP",             //operator
+                true, rh.delhiCircle().getName(),//circle
+                true, "123456789012345" //callId
+        );
+
+        String expectedJsonResponse = createFlwUserResponseJson(
+                rh.hindiLanguage().getCode(),  //defaultLanguageLocationCode
+                rh.hindiLanguage().getCode(),  //locationCode
+                new ArrayList<String>(), // allowedLanguageLocationCodes
+                1L,    //currentUsageInPulses
+                0L,    //endOfUsagePromptCounter
+                false, //welcomePromptFlag
+                3600,  //maxAllowedUsageInPulses
+                2      //maxAllowedEndOfUsagePrompt
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * To verify that MK service  shall allow unlimited usage when cappingType is set to "No Capping"  for
+     * user who has not listened  welcome message completely.
+     */
+    @Test
+    public void verifyFT332() throws IOException, InterruptedException {
+        rh.newDelhiDistrict();
+        rh.southDelhiDistrict();
+        rh.delhiCircle();
+
+        deployedServiceDataService.create(new DeployedService(rh.delhiState(), Service.MOBILE_KUNJI));
+
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
+        flw.setLanguage(rh.hindiLanguage());
+        frontLineWorkerService.add(flw);
+
+        HttpGet httpGet = createHttpGet(
+                true, "mobilekunji",    //service
+                true, "1111111111",     //callingNumber
+                true, "OP",             //operator
+                true, rh.delhiCircle().getName(),             //circle
+                true, "123456789012345" //callId
+        );
+
+        String expectedJsonResponse = createFlwUserResponseJson(
+                rh.hindiLanguage().getCode(),  //defaultLanguageLocationCode
+                rh.hindiLanguage().getCode(),  //locationCode
+                new ArrayList<String>(), // allowedLanguageLocationCodes
+                0L,    //currentUsageInPulses
+                0L,    //endOfUsagePromptCounter
+                false,  //welcomePromptFlag
+                -1,  //maxAllowedUsageInPulses
+                2      //maxAllowedEndOfUsagePrompt
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * To verify that MK service  shall allow unlimited usage when cappingType is set to "No Capping"  for
+     * user who has listened  welcome message completely earlier.
+     */
+    @Test
+    public void verifyFT333() throws IOException, InterruptedException {
+        rh.newDelhiDistrict();
+        rh.southDelhiDistrict();
+        rh.delhiCircle();
+
+        deployedServiceDataService.create(new DeployedService(rh.delhiState(), Service.MOBILE_KUNJI));
+
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
+        flw.setLanguage(rh.hindiLanguage());
+        frontLineWorkerService.add(flw);
+
+        ServiceUsage serviceUsage = new ServiceUsage(flw, Service.MOBILE_KUNJI, 1, 1, 1, DateTime.now());
+        serviceUsageDataService.create(serviceUsage);
+
+        HttpGet httpGet = createHttpGet(
+                true, "mobilekunji",    //service
+                true, "1111111111",     //callingNumber
+                true, "OP",             //operator
+                true, rh.delhiCircle().getName(),             //circle
+                true, "123456789012345" //callId
+        );
+
+        String expectedJsonResponse = createFlwUserResponseJson(
+                rh.hindiLanguage().getCode(),  //defaultLanguageLocationCode
+                rh.hindiLanguage().getCode(),  //locationCode
+                new ArrayList<String>(), // allowedLanguageLocationCodes
+                1L,    //currentUsageInPulses
+                1L,    //endOfUsagePromptCounter
+                true,  //welcomePromptFlag
+                -1,  //maxAllowedUsageInPulses
+                2      //maxAllowedEndOfUsagePrompt
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * To verify that Anonymous user belongs to circle having one state should  be able to listen MK content and
+     * service deployment status is set to deploy in that particular state.
+     */
+    @Test
+    public void verifyFT334() throws IOException, InterruptedException {
+        rh.delhiCircle();
+
+        deployedServiceDataService.create(new DeployedService(rh.delhiState(), Service.MOBILE_KUNJI));
+
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
+        flw.setLanguage(rh.hindiLanguage());
+        frontLineWorkerService.add(flw);
+
+        HttpGet httpGet = createHttpGet(
+                true, "mobilekunji",    //service
+                true, "1111111111",     //callingNumber
+                true, "OP",             //operator
+                true, rh.delhiCircle().getName(),             //circle
+                true, "123456789012345" //callId
+        );
+
+        String expectedJsonResponse = createFlwUserResponseJson(
+                rh.hindiLanguage().getCode(),  //defaultLanguageLocationCode
+                rh.hindiLanguage().getCode(),  //locationCode
+                new ArrayList<String>(), // allowedLanguageLocationCodes
+                0L,    //currentUsageInPulses
+                0L,    //endOfUsagePromptCounter
+                false,  //welcomePromptFlag
+                -1,  //maxAllowedUsageInPulses
+                2      //maxAllowedEndOfUsagePrompt
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * To verify that Anonymous user belongs to a circle having multiple states should  be able to listen
+     * MK content and  service deploy status is set to deploy in that particular state.
+     */
+    @Test
+    public void verifyFT335() throws IOException, InterruptedException {
+        //circle having multiple states
+        Circle c = rh.delhiCircle();
+        State s = new State("other", 123L);
+        c.getStates().add(s);
+        circleDataService.update(c);
+
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
+        flw.setLanguage(rh.hindiLanguage());
+        frontLineWorkerService.add(flw);
+
+        HttpGet httpGet = createHttpGet(
+                true, "mobilekunji",    //service
+                true, "1111111111",     //callingNumber
+                true, "OP",             //operator
+                true, rh.delhiCircle().getName(),             //circle
+                true, "123456789012345" //callId
+        );
+
+        String expectedJsonResponse = createFlwUserResponseJson(
+                rh.hindiLanguage().getCode(),  //defaultLanguageLocationCode
+                rh.hindiLanguage().getCode(),  //locationCode
+                new ArrayList<String>(), // allowedLanguageLocationCodes
+                0L,    //currentUsageInPulses
+                0L,    //endOfUsagePromptCounter
+                false,  //welcomePromptFlag
+                -1,  //maxAllowedUsageInPulses
+                2      //maxAllowedEndOfUsagePrompt
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * To verify that Inactive user should  be able to listen MK content if service
+     * deploy status is set to deploy in a particular state.
+     */
+    @Test
+    public void verifyFT336_1() throws IOException, InterruptedException {
+        rh.delhiCircle();
+
+        deployedServiceDataService.create(new DeployedService(rh.delhiState(), Service.MOBILE_KUNJI));
+
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
+        flw.setLanguage(rh.hindiLanguage());
+        flw.setStatus(FrontLineWorkerStatus.INACTIVE);
+        frontLineWorkerService.add(flw);
+
+        HttpGet httpGet = createHttpGet(
+                true, "mobilekunji",    //service
+                true, "1111111111",     //callingNumber
+                true, "OP",             //operator
+                true, rh.delhiCircle().getName(),             //circle
+                true, "123456789012345" //callId
+        );
+
+        String expectedJsonResponse = createFlwUserResponseJson(
+                rh.hindiLanguage().getCode(),  //defaultLanguageLocationCode
+                rh.hindiLanguage().getCode(),  //locationCode
+                new ArrayList<String>(), // allowedLanguageLocationCodes
+                0L,    //currentUsageInPulses
+                0L,    //endOfUsagePromptCounter
+                false,  //welcomePromptFlag
+                -1,  //maxAllowedUsageInPulses
+                2      //maxAllowedEndOfUsagePrompt
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * To verify that Active user should  be able to listen MK content if service
+     * deploy status is set to deploy in a particular state.
+     */
+    @Test
+    public void verifyFT336_2() throws IOException, InterruptedException {
+        rh.delhiCircle();
+
+        deployedServiceDataService.create(new DeployedService(rh.delhiState(), Service.MOBILE_KUNJI));
+
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
+        flw.setLanguage(rh.hindiLanguage());
+        flw.setStatus(FrontLineWorkerStatus.ACTIVE);
+        frontLineWorkerService.add(flw);
+
+        HttpGet httpGet = createHttpGet(
+                true, "mobilekunji",    //service
+                true, "1111111111",     //callingNumber
+                true, "OP",             //operator
+                true, rh.delhiCircle().getName(),             //circle
+                true, "123456789012345" //callId
+        );
+
+        String expectedJsonResponse = createFlwUserResponseJson(
+                rh.hindiLanguage().getCode(),  //defaultLanguageLocationCode
+                rh.hindiLanguage().getCode(),  //locationCode
+                new ArrayList<String>(), // allowedLanguageLocationCodes
+                0L,    //currentUsageInPulses
+                0L,    //endOfUsagePromptCounter
+                false,  //welcomePromptFlag
+                -1,  //maxAllowedUsageInPulses
+                2      //maxAllowedEndOfUsagePrompt
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * To verify that Anonymous user belonging to circle having one state should not be able to listen MK
+     * content if service deploy status is set to not deploy in a particular state.
+     */
+    @Test
+    public void verifyFT337() throws IOException, InterruptedException {
+        rh.delhiCircle();
+
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
+        flw.setLanguage(rh.hindiLanguage());
+        frontLineWorkerService.add(flw);
+
+        HttpGet httpGet = createHttpGet(
+                true, "mobilekunji",    //service
+                true, "1111111111",     //callingNumber
+                true, "OP",             //operator
+                true, rh.delhiCircle().getName(),             //circle
+                true, "123456789012345" //callId
+        );
+
+        String expectedJsonResponse = "{\"failureReason\":\"<MOBILE_KUNJI: Not Deployed In State>\"}";
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * To verify that Anonymous user belonging to circle having multiple state should not  be able to
+     * listen MK content if service deploy status is set to not deploy in a particular state.
+     */
+    @Test
+    public void verifyFT338() throws IOException, InterruptedException {
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
+        flw.setLanguage(rh.hindiLanguage());
+        frontLineWorkerService.add(flw);
+
+        createCircleWithLanguage();
+
+        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(1111111111L, 123456789012345L,
+                rh.kannadaLanguage().getCode()));
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+
+        String expectedJsonResponse = "{\"failureReason\":\"<MOBILE_KUNJI: Not Deployed In State>\"}";
+
+        assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * To verify that Inactive user should not  be able to listen MK content if service
+     * deploy status is set to not deploy in a particular state.
+     */
+    @Test
+    public void verifyFT339_1() throws IOException, InterruptedException {
+        rh.delhiCircle();
+
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
+        flw.setLanguage(rh.hindiLanguage());
+        flw.setStatus(FrontLineWorkerStatus.INACTIVE);
+        frontLineWorkerService.add(flw);
+
+        HttpGet httpGet = createHttpGet(
+                true, "mobilekunji",    //service
+                true, "1111111111",     //callingNumber
+                true, "OP",             //operator
+                true, rh.delhiCircle().getName(),             //circle
+                true, "123456789012345" //callId
+        );
+
+        String expectedJsonResponse = "{\"failureReason\":\"<MOBILE_KUNJI: Not Deployed In State>\"}";
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * To verify that Active user should not  be able to listen MK content if service
+     * deploy status is set to not deploy in a particular state.
+     */
+    @Test
+    public void verifyFT339_2() throws IOException, InterruptedException {
+        rh.delhiCircle();
+
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
+        flw.setLanguage(rh.hindiLanguage());
+        flw.setStatus(FrontLineWorkerStatus.ACTIVE);
+        frontLineWorkerService.add(flw);
+
+        HttpGet httpGet = createHttpGet(
+                true, "mobilekunji",    //service
+                true, "1111111111",     //callingNumber
+                true, "OP",             //operator
+                true, rh.delhiCircle().getName(),             //circle
+                true, "123456789012345" //callId
+        );
+
+        String expectedJsonResponse = "{\"failureReason\":\"<MOBILE_KUNJI: Not Deployed In State>\"}";
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 }
