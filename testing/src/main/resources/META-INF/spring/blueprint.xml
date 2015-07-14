@@ -72,6 +72,10 @@
     <osgi:reference id="43" interface="org.motechproject.nms.csv.repository.CsvAuditRecordDataService" />
     <osgi:reference id="44" interface="org.motechproject.nms.csv.service.CsvAuditService" />
 
+    <osgi:reference id="45" interface="org.motechproject.nms.tracking.repository.ChangeLogDataService" />
+
+    <osgi:reference id="tracking1" interface="org.motechproject.nms.testing.tracking.repository.TrackedEntityDataService" />
+
     <osgi:reference id="transactionManager" interface="org.springframework.transaction.PlatformTransactionManager"/>
     <osgi:reference id="eventRelay" interface="org.motechproject.event.listener.EventRelay"/>
 

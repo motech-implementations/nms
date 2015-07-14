@@ -197,12 +197,12 @@ public class SubscriptionHelper {
 	private List<SubscriptionPackMessage> genratePackMessageList(int packWeeks, int messagesPerWeek) {
 		List<SubscriptionPackMessage> messages = new ArrayList<>();
         for (int week = 1; week <= packWeeks; week++) {
-            messages.add(new SubscriptionPackMessage(week, String.format("w%s_1", week),
+            messages.add(new SubscriptionPackMessage(String.format("w%s_1", week),
                     String.format("w%s_1.wav", week),
                     TWO_MINUTES - TEN_SECS + (int) (Math.random() * 2 * TEN_SECS)));
 
             if (messagesPerWeek == 2) {
-                messages.add(new SubscriptionPackMessage(week, String.format("w%s_2", week),
+                messages.add(new SubscriptionPackMessage(String.format("w%s_2", week),
                         String.format("w%s_2.wav", week),
                         TWO_MINUTES - TEN_SECS + (int) (Math.random() * 2 * TEN_SECS)));
             }
