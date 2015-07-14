@@ -1,5 +1,16 @@
 package org.motechproject.nms.testing.it.api;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.inject.Inject;
+
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
@@ -33,17 +44,6 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
-
-import javax.inject.Inject;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.HashMap;
-import java.util.Map;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Integration tests for mobile academy controller
@@ -345,6 +345,8 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
         // bookmark in the system for the user
         HttpGet getRequest = createHttpGetBookmarkWithScore("1234567890",
                 "123456789012345");
+
+        // TODO: these headers will be removed once bug NMS-223 is fixed.
         getRequest.setHeader("Content-type", "application/json");
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
                 getRequest, RequestBuilder.ADMIN_USERNAME,
