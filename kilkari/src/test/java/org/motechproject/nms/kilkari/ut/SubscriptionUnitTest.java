@@ -45,7 +45,7 @@ public class SubscriptionUnitTest {
         DayOfTheWeek startDayOfTheWeek = DayOfTheWeek.fromInt(startDate.getDayOfWeek());
         subscription.setStartDate(startDate);
 
-        assertEquals(startDayOfTheWeek, subscription.getStartDayOfTheWeek());
+        assertEquals(startDayOfTheWeek, subscription.getFirstMessageDayOfWeek());
     }
 
 
@@ -53,11 +53,11 @@ public class SubscriptionUnitTest {
                                         int messagesPerWeek) {
         List<SubscriptionPackMessage> messages = new ArrayList<>();
         for (int week = 1; week <= weeks; week++) {
-            messages.add(new SubscriptionPackMessage(week, String.format("w%s_1", week),
+            messages.add(new SubscriptionPackMessage(String.format("w%s_1", week),
                     String.format("w%s_1.wav", week), 120));
 
             if (messagesPerWeek == 2) {
-                messages.add(new SubscriptionPackMessage(week, String.format("w%s_2", week),
+                messages.add(new SubscriptionPackMessage(String.format("w%s_2", week),
                         String.format("w%s_2.wav", week), 120));
             }
         }
@@ -96,12 +96,22 @@ public class SubscriptionUnitTest {
 
         //day of
         assertEquals("w1_1.wav", s.nextScheduledMessage(DateTime.now()).getMessageFileName());
+    }
+
+    @Test (expected = IllegalStateException.class)
+    public void verifyNextScheduledMessageException() {
+        Subscription s = new Subscription(
+                new Subscriber(1111111111L),
+                createSubscriptionPack("pack", SubscriptionPackType.CHILD, 10, 1),
+                SubscriptionOrigin.IVR);
+        s.setStatus(SubscriptionStatus.ACTIVE);
+        s.setStartDate(DateTime.now());
+
+        //day of
+        assertEquals("w1_1.wav", s.nextScheduledMessage(DateTime.now()).getMessageFileName());
 
         //+3 days
         assertEquals("w1_1.wav", s.nextScheduledMessage(DateTime.now().plusDays(3)).getMessageFileName());
-
-        //+9 days
-        assertEquals("w2_1.wav", s.nextScheduledMessage(DateTime.now().plusDays(9)).getMessageFileName());
     }
 
 
@@ -120,17 +130,17 @@ public class SubscriptionUnitTest {
     }
 
 
-    @Test (expected = IllegalStateException.class)
-    public void verifyNextScheduledMessageFailureTooLate() {
+    @Test
+    public void verifyNextScheduledSecondMessage() {
         Subscription subscription = new Subscription(
                 new Subscriber(1111111111L),
-                createSubscriptionPack("pack", SubscriptionPackType.CHILD, 10, 1),
+                createSubscriptionPack("pack", SubscriptionPackType.PREGNANCY, 10, 2),
                 SubscriptionOrigin.IVR);
         subscription.setStatus(SubscriptionStatus.ACTIVE);
 
         subscription.setStartDate(DateTime.now());
 
         SubscriptionPackMessage msg = subscription.nextScheduledMessage(DateTime.now().plusDays(4));
-        msg.getMessageFileName();
+        assertEquals("w1_2.wav", msg.getMessageFileName());
     }
 }

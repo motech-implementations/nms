@@ -24,6 +24,7 @@ import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
+import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.HealthBlock;
 import org.motechproject.nms.region.domain.HealthFacility;
@@ -45,6 +46,8 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.TransactionCallbackWithoutResult;
 
 import javax.inject.Inject;
 import java.io.InputStreamReader;
@@ -110,8 +113,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
     private void createLocationData() {
         // specific locations from the mother and child data files:
-
-        State state21 = createState(21L, "State 21");
+        final State state21 = createState(21L, "State 21");
         District district2 = createDistrict(state21, 2L, "Jharsuguda");
         District district3 = createDistrict(state21, 3L, "Sambalpur");
         District district4 = createDistrict(state21, 4L, "Debagarh");
@@ -173,6 +175,19 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         taluka46.getVillages().add(village3089);
 
         stateDataService.create(state21);
+
+        final Circle circle = new Circle();
+        circle.setName("Square");
+        circleDataService.create(circle);
+
+        circleDataService.doInTransaction(new TransactionCallbackWithoutResult() {
+            @Override
+            protected void doInTransactionWithoutResult(TransactionStatus transactionStatus) {
+                circle.getStates().add(state21);
+                state21.getCircles().add(circle);
+                circleDataService.update(circle);
+            }
+        });
     }
 
     @Test
@@ -189,6 +204,8 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         assertEquals("Shanti Ekka", subscriber.getMother().getName());
         Subscription subscription = subscriber.getActiveAndPendingSubscriptions().iterator().next();
         assertEquals(SubscriptionOrigin.MCTS_IMPORT, subscription.getOrigin());
+        assertNotNull(subscriber.getCircle());
+        assertEquals("Square", subscriber.getCircle().getName());
     }
 
     @Test
@@ -256,6 +273,8 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         Subscription subscription = subscriber.getActiveAndPendingSubscriptions().iterator().next();
         assertEquals(SubscriptionOrigin.MCTS_IMPORT, subscription.getOrigin());
         assertEquals(SubscriptionPackType.CHILD, subscription.getSubscriptionPack().getType());
+        assertNotNull(subscriber.getCircle());
+        assertEquals("Square", subscriber.getCircle().getName());
     }
 
     @Test
@@ -1230,6 +1249,48 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         assertNotNull(subscription);
         assertEquals(subscription.getStatus(), SubscriptionStatus.DEACTIVATED);
         assertEquals(subscription.getDeactivationReason(), DeactivationReason.CHILD_DEATH);
+    }
+    
+    /*
+     * To verify pregnancy record gets created when child record exist with status as deactivated.
+     *
+     * https://applab.atlassian.net/browse/NMS-234
+     */
+    @Test
+    public void testCreateMotherSubscriptionWhenDeactivatedChildSubscriptionExists() throws Exception {
+        // import child
+        DateTime dob = DateTime.now().minusDays(100);
+        String dobString = getDateString(dob);
+        Reader reader = createChildDataReaderWithHeaders("21\t3\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t\t9439986187\t"
+                + dobString + "\t");
+        mctsBeneficiaryImportService.importChildData(reader);
+
+        Subscriber subscriber = subscriberDataService.findByCallingNumber(9439986187L);
+        Set<Subscription> subscriptions = subscriber.getAllSubscriptions();
+        assertEquals(1, subscriptions.size());
+        Subscription subscription = subscriptions.iterator().next();
+        assertEquals(SubscriptionStatus.ACTIVE, subscription.getStatus());
+
+        //Deactivate child subscription
+        subscriptionService.deactivateSubscription(subscription, DeactivationReason.CHILD_DEATH);
+        subscriber = subscriberDataService.findByCallingNumber(9439986187L);
+        subscriptions = subscriber.getAllSubscriptions();
+        subscription = subscriptions.iterator().next();
+        assertEquals(SubscriptionStatus.DEACTIVATED, subscription.getStatus());
+        assertEquals(DeactivationReason.CHILD_DEATH, subscription.getDeactivationReason());
+        
+        // import mother
+        DateTime lmp = DateTime.now().minusDays(100);
+        String lmpString = getDateString(lmp);
+        reader = createMotherDataReaderWithHeaders("21\t3\t\t\t\t\t1234567891\tShanti Ekka\t9439986187\t\t" +
+                lmpString + "\t\t\t");
+        mctsBeneficiaryImportService.importMotherData(reader);
+
+        //pregnancy record should be activated.
+        subscriber = subscriberDataService.findByCallingNumber(9439986187L);
+        assertEquals(1, subscriber.getActiveAndPendingSubscriptions().size());
+        assertEquals(2, subscriber.getAllSubscriptions().size());
+        
     }
     
 }

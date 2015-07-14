@@ -1,5 +1,6 @@
 package org.motechproject.nms.kilkari.service.impl;
 
+import org.apache.commons.collections.ListUtils;
 import org.joda.time.DateTime;
 import org.joda.time.Weeks;
 import org.joda.time.format.DateTimeFormat;
@@ -297,8 +298,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 subscription.setStartDate(subscriber.getDateOfBirth());
                 subscription.setStatus(Subscription.getStatus(subscription, DateTime.now()));
             }
-        } else if (subscriber.getLastMenstrualPeriod() != null && subscriber.getDateOfBirth() == null &&
-                pack.getType() == SubscriptionPackType.PREGNANCY) {
+        } else if (subscriber.getLastMenstrualPeriod() != null && pack.getType() == SubscriptionPackType.PREGNANCY) {
             // LMP is present and DOB is not
             if (getActiveSubscription(subscriber, SubscriptionPackType.PREGNANCY) != null) {
                 // reject the subscription if it already exists
@@ -432,8 +432,11 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
 
     public List<Subscription> findActiveSubscriptionsForDay(DayOfTheWeek dayOfTheWeek, int page, int pageSize) {
-        return subscriptionDataService.findByStatusAndStartDayOfWeek(SubscriptionStatus.ACTIVE, dayOfTheWeek,
+        List<Subscription> firstDay = subscriptionDataService.findByStatusAndFirstMessageDayOfWeek(SubscriptionStatus.ACTIVE, dayOfTheWeek,
                 new QueryParams(page, pageSize));
+        List<Subscription> secondDay = subscriptionDataService.findByStatusAndSecondMessageDayOfWeek(SubscriptionStatus.ACTIVE, dayOfTheWeek,
+                new QueryParams(page, pageSize));
+        return ListUtils.union(firstDay, secondDay);
     }
 
     public List<Subscription> findPendingSubscriptionsFromDate(DateTime startDate, int page, int pageSize) {

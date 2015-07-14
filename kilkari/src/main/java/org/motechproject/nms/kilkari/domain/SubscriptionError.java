@@ -13,6 +13,9 @@ public class SubscriptionError {
     private long contactNumber;
 
     @Field
+    private String beneficiaryId;
+
+    @Field
     private SubscriptionRejectionReason rejectionReason;
 
     @Field
@@ -34,12 +37,28 @@ public class SubscriptionError {
         this.rejectionMessage = rejectionMessage;
     }
 
+    public SubscriptionError(String beneficiaryId, SubscriptionRejectionReason rejectionReason,
+                             SubscriptionPackType packType, String rejectionMessage) {
+        this.beneficiaryId = beneficiaryId;
+        this.rejectionReason = rejectionReason;
+        this.packType = packType;
+        this.rejectionMessage = rejectionMessage;
+    }
+
     public long getContactNumber() {
         return contactNumber;
     }
 
     public void setContactNumber(long contactNumber) {
         this.contactNumber = contactNumber;
+    }
+
+    public String getBeneficiaryId() {
+        return beneficiaryId;
+    }
+
+    public void setBeneficiaryId(String beneficiaryId) {
+        this.beneficiaryId = beneficiaryId;
     }
 
     public SubscriptionRejectionReason getRejectionReason() {
