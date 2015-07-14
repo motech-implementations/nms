@@ -454,8 +454,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
     }
 
     /**
-     * verifyFT470 To save the call details of the user using Save Call Details
-     * API
+     * verifyFT470, verifyFT489
      */
     @Test
     public void testCallDetailsValidMobileAcademy() throws IOException, InterruptedException {
@@ -471,7 +470,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
                 /* startTime */ true, 1200000000l,
                 /* endTime */ true, 1222222221l,
                 /* completionFlag */ true, true,
-                /* correctAnswerEntered */ true, true));
+                /* correctAnswerEntered */false, null));
         array.add(createContentJson(/* type */ true, "question",
                 /* mkCardCode */ false, null,
                 /* contentName */ true, "chapter-01question-01",
@@ -520,7 +519,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         assertEquals(1222222221l, cc.getEndTime().getMillis() / MILLISECONDS_PER_SECOND);
         assertEquals(true, cc.getCompletionFlag());
 
-        // TODO correctAnswerEntered field assertion
+        // TODO correctAnswerEntered assertion
 
         assertNull(cdr.getWelcomePrompt());
         assertNull(cc.getMobileKunjiCardCode());
@@ -1475,6 +1474,127 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         Pattern expectedJsonResponse = Pattern.compile(".*completionFlag.*");
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
                 HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    /**
+     * To verify that Save Call Details API if rejected when mandatory parameter
+     * callData>>correctAnswerEntered" is having invalid format.
+     */
+    @Test
+    public void verifyFT507() throws InterruptedException, IOException {
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright",
+                9810320300L);
+        frontLineWorkerService.add(flw);
+
+        ArrayList<String> array = new ArrayList<>();
+        array.add(createContentJson(/* type */true, "question",
+        /* mkCardCode */false, null,
+        /* contentName */true, "chapter-01question-01",
+        /* contentFile */true, "ch1_q1.wav",
+        /* startTime */true, "1200000000",
+        /* endTime */true, "1222222221",
+        /* completionFlag */true, "true",
+        /* correctAnswerEntered */true, "10"));//Invalid
+        HttpPost httpPost = createCallDetailsPost("mobileacademy",
+        /* callingNumber */true, 9810320300l,
+        /* callId */true, 234000011111111l,
+        /* operator */true, "A",
+        /* circle */true, "AP",
+        /* callStartTime */true, 1422879843l,
+        /* callEndTime */true, 1422879903l,
+        /* callDurationInPulses */true, 60,
+        /* endOfUsagePromptCounter */true, 1,
+        /* welcomeMessagePromptFlag */false, null,
+        /* callStatus */true, 1,
+        /* callDisconnectReason */true, 2,
+        /* content */true, Joiner.on(",").join(array));
+
+        Pattern expectedJsonResponse = Pattern.compile(".*correctAnswerEntered.*");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
+                HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    /**
+     * To verify that Save Call Details API if rejected when mandatory parameter
+     * "CallData>>ContentName" is having invalid value.
+     */
+    // TODO https://applab.atlassian.net/browse/NMS-235
+    @Ignore
+    @Test
+    public void verifyFT501() throws InterruptedException, IOException {
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright",
+                9810320300L);
+        frontLineWorkerService.add(flw);
+
+        ArrayList<String> array = new ArrayList<>();
+        array.add(createContentJson(/* type */true, "question",
+        /* mkCardCode */false, null,
+        /* contentName */true, "",// Blank Value
+        /* contentFile */true, "ch1_q1.wav",
+        /* startTime */true, 1200000000l,
+        /* endTime */true, 1222222221l,
+        /* completionFlag */true, true,
+        /* correctAnswerEntered */true, false));
+        HttpPost httpPost = createCallDetailsPost("mobileacademy",
+        /* callingNumber */true, 9810320300l,
+        /* callId */true, 234000011111111l,
+        /* operator */true, "A",
+        /* circle */true, "AP",
+        /* callStartTime */true, 1422879843l,
+        /* callEndTime */true, 1422879903l,
+        /* callDurationInPulses */true, 60,
+        /* endOfUsagePromptCounter */true, 1,
+        /* welcomeMessagePromptFlag */false, null,
+        /* callStatus */true, 1,
+        /* callDisconnectReason */true, 2,
+        /* content */true, Joiner.on(",").join(array));
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
+                HttpStatus.SC_BAD_REQUEST,
+                "{\"failureReason\":\"<contentName: Invalid>\"}",
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+    
+    /**
+     * To verify that Save Call Details API if rejected when mandatory parameter
+     * "CallData>>ContentFile" is having invalid value.
+     */
+    // TODO https://applab.atlassian.net/browse/NMS-235
+    @Ignore
+    @Test
+    public void verifyFT502() throws InterruptedException, IOException {
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright",
+                9810320300L);
+        frontLineWorkerService.add(flw);
+
+        ArrayList<String> array = new ArrayList<>();
+        array.add(createContentJson(/* type */true, "question",
+        /* mkCardCode */false, null,
+        /* contentName */true, "chapter-01question-01",
+        /* contentFile */true, "",// Blank Value
+        /* startTime */true, 1200000000l,
+        /* endTime */true, 1222222221l,
+        /* completionFlag */true, true,
+        /* correctAnswerEntered */true, false));
+        HttpPost httpPost = createCallDetailsPost("mobileacademy",
+        /* callingNumber */true, 9810320300l,
+        /* callId */true, 234000011111111l,
+        /* operator */true, "A",
+        /* circle */true, "AP",
+        /* callStartTime */true, 1422879843l,
+        /* callEndTime */true, 1422879903l,
+        /* callDurationInPulses */true, 60,
+        /* endOfUsagePromptCounter */true, 1,
+        /* welcomeMessagePromptFlag */false, null,
+        /* callStatus */true, 1,
+        /* callDisconnectReason */true, 2,
+        /* content */true, Joiner.on(",").join(array));
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
+                HttpStatus.SC_BAD_REQUEST,
+                "{\"failureReason\":\"<contentFileName: Invalid>\"}",
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
