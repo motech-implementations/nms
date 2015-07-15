@@ -44,13 +44,13 @@ public class CircleImportServiceImpl implements CircleImportService {
         Map<String, Object> record;
         while (null != (record = csvImporter.read())) {
             try {
-                String circleName = (String)record.get(CIRCLE_NAME);
+                String circleName = (String) record.get(CIRCLE_NAME);
                 if (circleName == null) {
                     throw new CsvImportDataException(String.format("CSV import error, circle missing on line %s",
                                                                    csvImporter.getRowNumber()));
                 }
 
-                String stateName = (String)record.get(STATE_NAME);
+                String stateName = (String) record.get(STATE_NAME);
                 if (stateName == null) {
                     throw new CsvImportDataException(String.format("CSV import error, state missing on line %s",
                             csvImporter.getRowNumber()));
