@@ -1295,6 +1295,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         circleDataService.update(c);
 
         deployedServiceDataService.create(new DeployedService(rh.karnatakaState(), Service.KILKARI));
+        deployedServiceDataService.create(new DeployedService(rh.karnatakaState(), Service.MOBILE_ACADEMY));
     }
 
 
@@ -2538,5 +2539,200 @@ public class UserControllerBundleIT extends BasePaxIT {
                 .getStatusCode());
         assertEquals(expectedJsonResponse,
                 EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * To get the details of the Anonymous user using get user details API when
+     * circle sent in request is mapped to multiple languageLocationCodes
+     */
+    @Test
+    public void verifyFT454() throws IOException, InterruptedException {
+        // create KARNATAKA circle with two languages i.e TAMIL, KANNADA and set
+        // KANNADA as default
+        createCircleWithMultipleLanguages();
+
+        // set national default language
+        nationalDefaultLanguageDataService.create(new NationalDefaultLanguage(
+                rh.hindiLanguage()));
+
+        HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
+                true, "1200000000", // callingNumber
+                true, "OP", // operator
+                true, rh.karnatakaCircle().getName(),// circle
+                true, "123456789012345" // callId
+        );
+
+        String expectedJsonResponse = createFlwUserResponseJson(rh
+                .kannadaLanguage().getCode(), // defaultLanguageLocationCode=circle default
+                null, // locationCode
+                Arrays.asList(rh.kannadaLanguage().getCode(), rh
+                        .tamilLanguage().getCode()), // allowedLanguageLocationCodes
+                0L, // currentUsageInPulses
+                0L, // endOfUsagePromptCounter
+                false, // welcomePromptFlag
+                -1, // maxAllowedUsageInPulses
+                2 // maxAllowedEndOfUsagePrompt
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * To get the details of the Anonymous user using get user details API when
+     * circle and operator are missing
+     */
+    @Test
+    public void verifyFT455() throws IOException, InterruptedException {
+        rh.kannadaLanguage();
+        rh.tamilLanguage();
+        rh.hindiLanguage();
+        // set national default language
+        nationalDefaultLanguageDataService.create(new NationalDefaultLanguage(
+                rh.hindiLanguage()));
+
+        HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
+                true, "1200000000", // callingNumber
+                false, null, // operator
+                false, null,// circle
+                true, "123456789012345" // callId
+        );
+
+        String expectedJsonResponse = createFlwUserResponseJson(rh
+                .hindiLanguage().getCode(), // defaultLanguageLocationCode=national default
+                null, // locationCode
+                Arrays.asList(rh.kannadaLanguage().getCode(),rh.tamilLanguage().getCode(), rh
+                        .hindiLanguage().getCode()), // allowedLanguageLocationCodes
+                0L, // currentUsageInPulses
+                0L, // endOfUsagePromptCounter
+                false, // welcomePromptFlag
+                -1, // maxAllowedUsageInPulses
+                2 // maxAllowedEndOfUsagePrompt
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * To get the details of the inactive user using get user details API when
+     * languageLocation code is retrieved based on state and district. FLW must
+     * exist in system with status as Inactive
+     */
+    @Test
+    public void verifyFT461() throws IOException, InterruptedException {
+        // create Invalid FLW record
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright",
+                1200000001l);
+        flw.setLanguage(rh.tamilLanguage());
+        flw.setDistrict(rh.bangaloreDistrict());
+        flw.setState(rh.karnatakaState());
+        frontLineWorkerService.add(flw);
+
+        // assert for FLW status
+        flw = frontLineWorkerService
+                .getByContactNumber(1200000001l);
+        assertTrue(FrontLineWorkerStatus.INACTIVE == flw.getStatus());
+        
+        Circle circle = rh.karnatakaCircle();
+        circle.setDefaultLanguage(rh.kannadaLanguage());
+        circleDataService.update(circle);
+        
+        deployedServiceDataService.create(new
+        DeployedService(rh.karnatakaState(), Service.MOBILE_ACADEMY));
+
+        HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
+                true, "1200000001", // callingNumber
+                true, "OP", // operator
+                true, circle.getName(),// circle
+                true, "123456789012345" // callId
+        );
+
+        String expectedJsonResponse = createFlwUserResponseJson(rh
+                .kannadaLanguage().getCode(), // defaultLanguageLocationCode=circle default
+                rh.tamilLanguage().getCode(), // locationCode
+                null, // allowedLanguageLocationCodes
+                0L, // currentUsageInPulses
+                0L, // endOfUsagePromptCounter
+                false, // welcomePromptFlag
+                -1, // maxAllowedUsageInPulses
+                2 // maxAllowedEndOfUsagePrompt
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+        // TODO FLW delete
+        flw.setStatus(FrontLineWorkerStatus.INVALID);
+        flw.setInvalidationDate(DateTime.now().minusDays(50));
+        frontLineWorkerService.update(flw);
+    }
+
+    /**
+     * To get the details of the active user using get user details API when
+     * languageLocation code is retrieved based on state and district. FLW must
+     * exist in system with status as active.
+     */
+    @Test
+    public void verifyFT462() throws IOException, InterruptedException {
+        // create anonymous FLW record
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright",
+                1200000001l);
+        frontLineWorkerService.add(flw);
+
+        // update FLW status to ACTIVE
+        flw = frontLineWorkerService.getByContactNumber(1200000001l);
+        flw.setLanguage(rh.tamilLanguage());
+        flw.setDistrict(rh.bangaloreDistrict());
+        flw.setState(rh.karnatakaState());
+        frontLineWorkerService.update(flw);
+
+        // assert for FLW status
+        flw = frontLineWorkerService.getByContactNumber(1200000001l);
+        assertTrue(FrontLineWorkerStatus.ACTIVE == flw.getStatus());
+
+        Circle circle = rh.karnatakaCircle();
+        circle.setDefaultLanguage(rh.kannadaLanguage());
+        circleDataService.update(circle);
+
+        deployedServiceDataService.create(new DeployedService(rh
+                .karnatakaState(), Service.MOBILE_ACADEMY));
+
+        HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
+                true, "1200000001", // callingNumber
+                true, "OP", // operator
+                true, circle.getName(),// circle
+                true, "123456789012345" // callId
+        );
+
+        String expectedJsonResponse = createFlwUserResponseJson(rh
+                .kannadaLanguage().getCode(), // defaultLanguageLocationCode=circle
+                                              // default
+                rh.tamilLanguage().getCode(), // locationCode
+                null, // allowedLanguageLocationCodes
+                0L, // currentUsageInPulses
+                0L, // endOfUsagePromptCounter
+                false, // welcomePromptFlag
+                -1, // maxAllowedUsageInPulses
+                2 // maxAllowedEndOfUsagePrompt
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+        // TODO FLW delete
+        flw.setStatus(FrontLineWorkerStatus.INVALID);
+        flw.setInvalidationDate(DateTime.now().minusDays(50));
+        frontLineWorkerService.update(flw);
     }
 }
