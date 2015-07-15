@@ -126,6 +126,7 @@ public class MobileAcademyController extends BaseController {
     @RequestMapping(
             value = "/bookmarkWithScore",
             method = RequestMethod.GET)
+    @ResponseBody
     public GetBookmarkResponse getBookmarkWithScore(@RequestParam Long callingNumber,
                                                  @RequestParam Long callId) {
 
