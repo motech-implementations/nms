@@ -76,6 +76,16 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
     }
 
     @Test
+    public void testGetBookmarkEmpty() throws IOException, InterruptedException {
+        String endpoint = String.format("http://localhost:%d/api/mobileacademy/bookmarkWithScore?callingNumber=1234567890&callId=123456789012345",
+                TestContext.getJettyPort());
+        HttpGet request = RequestBuilder.createGetRequest(endpoint);
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(request, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
+        assertNotNull(response);
+        assertEquals(200, response.getStatusLine().getStatusCode());
+    }
+
+    @Test
     public void testSetValidBookmark() throws IOException, InterruptedException {
 
         String endpoint = String.format("http://localhost:%d/api/mobileacademy/bookmarkWithScore",
