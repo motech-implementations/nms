@@ -62,6 +62,7 @@ public final class CsvHelper {
         if (s == null || s.isEmpty()) { return null; }
 
         return longFromString(which, s);
+    }
 
 
     private static long longFromString(String which, String s) {
