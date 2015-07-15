@@ -358,8 +358,10 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
      * score details.
      */
     // TODO JIRA issue: https://applab.atlassian.net/browse/NMS-224
+    @Ignore
     @Test
     public void verifyFT404() throws IOException, InterruptedException {
+
         bookmarkService.deleteAllBookmarksForUser("1234567890");
 
         // Blank bookmark should come as request response, As there is no any
@@ -367,8 +369,6 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
         HttpGet getRequest = createHttpGetBookmarkWithScore("1234567890",
                 "123456789012345");
 
-        // TODO: these headers will be removed once bug NMS-223 is fixed.
-        getRequest.setHeader("Content-type", "application/json");
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
                 getRequest, RequestBuilder.ADMIN_USERNAME,
                 RequestBuilder.ADMIN_PASSWORD);
@@ -388,6 +388,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
     @Test
     public void verifyFT532() throws IOException, InterruptedException {
         // create bookmark for the user
+
         String endpoint = String.format(
                 "http://localhost:%d/api/mobileacademy/bookmarkWithScore",
                 TestContext.getJettyPort());
@@ -422,6 +423,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT409() throws IOException, InterruptedException {
+
         String endpoint = String.format(
                 "http://localhost:%d/api/mobileacademy/bookmarkWithScore",
                 TestContext.getJettyPort());
@@ -448,6 +450,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
     @Test
     public void verifyFT410() throws IOException, InterruptedException {
         // Request without callingNumber and Bookmark
+
         String endpoint = String.format(
                 "http://localhost:%d/api/mobileacademy/bookmarkWithScore",
                 TestContext.getJettyPort());
@@ -469,6 +472,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
     @Ignore
     public void verifyFT411() throws IOException, InterruptedException {
         // callingNumber missing in the request body
+
         String endpoint = String.format(
                 "http://localhost:%d/api/mobileacademy/bookmarkWithScore",
                 TestContext.getJettyPort());
@@ -501,6 +505,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
     @Ignore
     public void verifyFT412() throws IOException, InterruptedException {
         // callId missing in the request body
+
         String endpoint = String.format(
                 "http://localhost:%d/api/mobileacademy/bookmarkWithScore",
                 TestContext.getJettyPort());
@@ -533,6 +538,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
     @Ignore
     public void verifyFT413() throws IOException, InterruptedException {
         // callId more than 15 digit
+
         String endpoint = String.format(
                 "http://localhost:%d/api/mobileacademy/bookmarkWithScore",
                 TestContext.getJettyPort());
@@ -564,6 +570,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
     @Test
     public void verifyFT414() throws IOException, InterruptedException {
         // callingNumber less than 10 digit
+
         String endpoint = String.format(
                 "http://localhost:%d/api/mobileacademy/bookmarkWithScore",
                 TestContext.getJettyPort());
@@ -607,6 +614,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
     @Ignore
     public void verifyFT415() throws IOException, InterruptedException {
         // Invalid scores should not be accepted
+
         String endpoint = String.format(
                 "http://localhost:%d/api/mobileacademy/bookmarkWithScore",
                 TestContext.getJettyPort());
