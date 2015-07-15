@@ -59,7 +59,7 @@ public final class CsvHelper {
 
 
     private static Long longOrNullFromString(String which, String s) {
-        if (which == null || which.isEmpty()) { return null; }
+        if (s == null || s.isEmpty()) { return null; }
 
         return longFromString(which, s);
     }
@@ -135,8 +135,13 @@ public final class CsvHelper {
 
         cdr.setMsisdn(msisdnFromString(fields[FieldName.MSISDN.ordinal()]));
 
-        cdr.setCallAnswerTime(new DateTime(longOrNullFromString("CallAnswerTime",
-                    fields[FieldName.CALL_ANSWER_TIME.ordinal()])));
+        Long callAnswerTime = longOrNullFromString("CallAnswerTime",
+                                                   fields[FieldName.CALL_ANSWER_TIME.ordinal()]);
+        if (callAnswerTime != null) {
+            cdr.setCallAnswerTime(new DateTime(callAnswerTime));
+        } else {
+            cdr.setCallAnswerTime(null);
+        }
 
         cdr.setMsgPlayDuration(calculateMsgPlayDuration(fields[FieldName.MSG_PLAY_START_TIME.ordinal()],
                 fields[FieldName.MSG_PLAY_END_TIME.ordinal()]));
