@@ -13,8 +13,10 @@ import java.util.regex.Pattern;
 import javax.inject.Inject;
 
 import org.apache.commons.httpclient.HttpStatus;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.util.EntityUtils;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -395,6 +397,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
     }
 
 
+    // verifyFT366
     @Test
     public void testCallDetailsValidMobileKunji() throws IOException, InterruptedException {
 
@@ -1653,6 +1656,979 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
+    /**
+     * To check that call details of user is saved successfully using Save Call
+     * Details API when optional parameter "content" is missing.
+     */
+    @Test
+    public void verifyFT367() throws IOException, InterruptedException {
+
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 9810320300L);
+        frontLineWorkerService.add(flw);
+
+        HttpPost httpPost = createCallDetailsPost("mobilekunji",
+                /* callingNumber */ true, 9810320300l,
+                /* callId */ true, 234000011111111l,
+                /* operator */ true, "A",
+                /* circle */ true, "AP",
+                /* callStartTime */ true, 1422879843l,
+                /* callEndTime */ true, 1422879903l,
+                /* callDurationInPulses */ true, 60,
+                /* endOfUsagePromptCounter */ true, 0,
+                /* welcomeMessagePromptFlag */ true, true,
+                /* callStatus */ true, 1,
+                /* callDisconnectReason */ true, 1,
+                /* content */ false, null);
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK, ADMIN_USERNAME, ADMIN_PASSWORD));
+
+        CallDetailRecord cdr = callDetailRecordService.getByCallingNumber(9810320300l);
+
+        // assert call detail record
+        assertNotNull(cdr);
+        assertEquals(9810320300l, cdr.getCallingNumber());
+        assertEquals(234000011111111l, cdr.getCallId());
+        assertEquals("A", cdr.getOperator());
+        assertEquals("AP", cdr.getCircle());
+        assertEquals(1422879843l, cdr.getCallStartTime().getMillis() / MILLISECONDS_PER_SECOND);
+        assertEquals(1422879903l, cdr.getCallEndTime().getMillis() / MILLISECONDS_PER_SECOND);
+        assertEquals(60, cdr.getCallDurationInPulses());
+        assertEquals(0, cdr.getEndOfUsagePromptCounter());
+        assertEquals(1, cdr.getFinalCallStatus().getValue());
+        assertEquals(1, cdr.getCallDisconnectReason().getValue());
+
+        // assert content
+        assertEquals(0, cdr.getContent().size());
+    }
+
+    /**
+     * To verify that Save Call Details API if rejected when mandatory parameter "CallingNumber" is missing
+     */
+    @Test
+    public void verifyFT368() throws IOException, InterruptedException {
+
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 9810320300L);
+        frontLineWorkerService.add(flw);
+
+        HttpPost httpPost = createCallDetailsPost("mobilekunji",
+                /* callingNumber */ false, null,
+                /* callId */ true, 234000011111111l,
+                /* operator */ true, "A",
+                /* circle */ true, "AP",
+                /* callStartTime */ true, 1422879843l,
+                /* callEndTime */ true, 1422879903l,
+                /* callDurationInPulses */ true, 60,
+                /* endOfUsagePromptCounter */ true, 0,
+                /* welcomeMessagePromptFlag */ true, true,
+                /* callStatus */ true, 1,
+                /* callDisconnectReason */ true, 1,
+                /* content */ false, null);
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
+                "{\"failureReason\":\"<callingNumber: Not Present>\"}",
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    /**
+     * To verify that Save Call Details API if rejected when mandatory parameter "CallId" is missing
+     */
+    @Test
+    public void verifyFT369() throws IOException, InterruptedException {
+
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 9810320300L);
+        frontLineWorkerService.add(flw);
+
+        HttpPost httpPost = createCallDetailsPost("mobilekunji",
+                /* callingNumber */ true, 1234567890L,
+                /* callId */ false, null,
+                /* operator */ true, "A",
+                /* circle */ true, "AP",
+                /* callStartTime */ true, 1422879843l,
+                /* callEndTime */ true, 1422879903l,
+                /* callDurationInPulses */ true, 60,
+                /* endOfUsagePromptCounter */ true, 0,
+                /* welcomeMessagePromptFlag */ true, true,
+                /* callStatus */ true, 1,
+                /* callDisconnectReason */ true, 1,
+                /* content */ false, null);
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
+                "{\"failureReason\":\"<callId: Not Present>\"}",
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    /**
+     * To verify that Save Call Details API if rejected when mandatory parameter "CallStartTime" is missing
+     */
+    @Test
+    public void verifyFT372() throws IOException, InterruptedException {
+
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 9810320300L);
+        frontLineWorkerService.add(flw);
+
+        HttpPost httpPost = createCallDetailsPost("mobilekunji",
+                /* callingNumber */ true, 1234567890L,
+                /* callId */ true, 234000011111111l,
+                /* operator */ true, "A",
+                /* circle */ false, null,
+                /* callStartTime */ false, null,
+                /* callEndTime */ true, 1422879903l,
+                /* callDurationInPulses */ true, 60,
+                /* endOfUsagePromptCounter */ true, 0,
+                /* welcomeMessagePromptFlag */ true, true,
+                /* callStatus */ true, 1,
+                /* callDisconnectReason */ true, 1,
+                /* content */ false, null);
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
+                "{\"failureReason\":\"<callStartTime: Not Present>\"}",
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    /**
+     * To verify that Save Call Details API if rejected when mandatory parameter "CallEndTime" is missing
+     */
+    @Test
+    public void verifyFT373() throws IOException, InterruptedException {
+
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 9810320300L);
+        frontLineWorkerService.add(flw);
+
+        HttpPost httpPost = createCallDetailsPost("mobilekunji",
+                /* callingNumber */ true, 1234567890L,
+                /* callId */ true, 234000011111111l,
+                /* operator */ true, "A",
+                /* circle */ true, "AP",
+                /* callStartTime */ true, 1422879843l,
+                /* callEndTime */ false, null,
+                /* callDurationInPulses */ true, 60,
+                /* endOfUsagePromptCounter */ true, 0,
+                /* welcomeMessagePromptFlag */ true, true,
+                /* callStatus */ true, 1,
+                /* callDisconnectReason */ true, 1,
+                /* content */ false, null);
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
+                "{\"failureReason\":\"<callEndTime: Not Present>\"}",
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    /**
+     * To verify that Save Call Details API if rejected when mandatory parameter "CallDurationPulses" is missing
+     */
+    @Test
+    public void verifyFT374() throws IOException, InterruptedException {
+
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 9810320300L);
+        frontLineWorkerService.add(flw);
+
+        HttpPost httpPost = createCallDetailsPost("mobilekunji",
+                /* callingNumber */ true, 1234567890L,
+                /* callId */ true, 234000011111111l,
+                /* operator */ true, "A",
+                /* circle */ true, "AP",
+                /* callStartTime */ true, 1422879843l,
+                /* callEndTime */ true, 1422879903l,
+                /* callDurationInPulses */ false, null,
+                /* endOfUsagePromptCounter */ true, 0,
+                /* welcomeMessagePromptFlag */ true, true,
+                /* callStatus */ true, 1,
+                /* callDisconnectReason */ true, 1,
+                /* content */ false, null);
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
+                "{\"failureReason\":\"<callDurationInPulses: Not Present>\"}",
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    /**
+     * To verify that Save Call Details API if rejected when mandatory parameter "EndOfUsagePrompt" is missing
+     */
+    @Test
+    public void verifyFT375() throws IOException, InterruptedException {
+
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 9810320300L);
+        frontLineWorkerService.add(flw);
+
+        HttpPost httpPost = createCallDetailsPost("mobilekunji",
+                /* callingNumber */ true, 1234567890L,
+                /* callId */ true, 234000011111111l,
+                /* operator */ true, "A",
+                /* circle */ true, "AP",
+                /* callStartTime */ true, 1422879843l,
+                /* callEndTime */ true, 1422879903l,
+                /* callDurationInPulses */ true, 60,
+                /* endOfUsagePromptCounter */ false, null,
+                /* welcomeMessagePromptFlag */ true, true,
+                /* callStatus */ true, 1,
+                /* callDisconnectReason */ true, 1,
+                /* content */ false, null);
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
+                "{\"failureReason\":\"<endOfUsagePromptCount: Not Present>\"}",
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    /**
+     * To verify that Save Call Details API if rejected when mandatory parameter "WelcomeMessageFlag" is missing
+     */
+    @Test
+    public void verifyFT376() throws IOException, InterruptedException {
+
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 9810320300L);
+        frontLineWorkerService.add(flw);
+
+        HttpPost httpPost = createCallDetailsPost("mobilekunji",
+                /* callingNumber */ true, 1234567890L,
+                /* callId */ true, 234000011111111l,
+                /* operator */ true, "A",
+                /* circle */ true, "AP",
+                /* callStartTime */ true, 1422879843l,
+                /* callEndTime */ true, 1422879903l,
+                /* callDurationInPulses */ true, 60,
+                /* endOfUsagePromptCounter */ true, 0,
+                /* welcomeMessagePromptFlag */ false, null,
+                /* callStatus */ true, 1,
+                /* callDisconnectReason */ true, 1,
+                /* content */ false, null);
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
+                "{\"failureReason\":\"<welcomeMessagePromptFlag: Not Present>\"}",
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    /**
+     * To verify that Save Call Details API if rejected when mandatory parameter "CallStatus" is missing
+     */
+    @Test
+    public void verifyFT377() throws IOException, InterruptedException {
+
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 9810320300L);
+        frontLineWorkerService.add(flw);
+
+        HttpPost httpPost = createCallDetailsPost("mobilekunji",
+                /* callingNumber */ true, 1234567890L,
+                /* callId */ true, 234000011111111l,
+                /* operator */ true, "A",
+                /* circle */ true, "AP",
+                /* callStartTime */ true, 1422879843l,
+                /* callEndTime */ true, 1422879903l,
+                /* callDurationInPulses */ true, 60,
+                /* endOfUsagePromptCounter */ true, 0,
+                /* welcomeMessagePromptFlag */ true, true,
+                /* callStatus */ false, null,
+                /* callDisconnectReason */ true, 1,
+                /* content */ false, null);
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
+                "{\"failureReason\":\"<callStatus: Not Present>\"}",
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    /**
+     * To verify that Save Call Details API if rejected when mandatory parameter "CallDisconnectReason" is missing
+     */
+    @Test
+    public void verifyFT378() throws IOException, InterruptedException {
+
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 9810320300L);
+        frontLineWorkerService.add(flw);
+
+        HttpPost httpPost = createCallDetailsPost("mobilekunji",
+                /* callingNumber */ true, 1234567890L,
+                /* callId */ true, 234000011111111l,
+                /* operator */ true, "A",
+                /* circle */ true, "AP",
+                /* callStartTime */ true, 1422879843l,
+                /* callEndTime */ true, 1422879903l,
+                /* callDurationInPulses */ true, 60,
+                /* endOfUsagePromptCounter */ true, 0,
+                /* welcomeMessagePromptFlag */ true, true,
+                /* callStatus */ true, 1,
+                /* callDisconnectReason */ false, null,
+                /* content */ false, null);
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
+                "{\"failureReason\":\"<callDisconnectReason: Not Present>\"}",
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    /**
+     * To verify that Save Call Details API if rejected when mandatory parameter "CallData>>ContentName" is missing
+     */
+    @Test
+    public void verifyFT379() throws IOException, InterruptedException {
+
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 9810320300L);
+        frontLineWorkerService.add(flw);
+
+        ArrayList<String> array = new ArrayList<>();
+        array.add(createContentJson(false, null,                   // type
+                true, "a",                     // mkCardCode
+                false, null,           // contentName
+                true, "Yellowfever.wav",       // contentFile
+                true, 1200000000l,             // startTime
+                true, 1222222221l,             // endTime
+                false, null,                   // completionFlag
+                false, null));                 // correctAnswerEntered
+
+
+        HttpPost httpPost = createCallDetailsPost("mobilekunji",
+                /* callingNumber */ true, 1234567890L,
+                /* callId */ true, 234000011111111l,
+                /* operator */ true, "A",
+                /* circle */ true, "AP",
+                /* callStartTime */ true, 1422879843l,
+                /* callEndTime */ true, 1422879903l,
+                /* callDurationInPulses */ true, 60,
+                /* endOfUsagePromptCounter */ true, 0,
+                /* welcomeMessagePromptFlag */ true, true,
+                /* callStatus */ true, 1,
+                /* callDisconnectReason */ true, 1,
+                /* content */ true, Joiner.on(",").join(array));
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
+                "{\"failureReason\":\"<contentName: Not Present>\"}",
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    /**
+     * To verify that Save Call Details API if rejected when mandatory parameter "CallData>>ContentFile" is missing
+     */
+    @Test
+    public void verifyFT380() throws IOException, InterruptedException {
+
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 9810320300L);
+        frontLineWorkerService.add(flw);
+
+        ArrayList<String> array = new ArrayList<>();
+        array.add(createContentJson(false, null,                   // type
+                true, "a",                     // mkCardCode
+                true, "YellowFever",           // contentName
+                false, null,       // contentFile
+                true, 1200000000l,             // startTime
+                true, 1222222221l,             // endTime
+                false, null,                   // completionFlag
+                false, null));                 // correctAnswerEntered
+
+
+        HttpPost httpPost = createCallDetailsPost("mobilekunji",
+                /* callingNumber */ true, 1234567890L,
+                /* callId */ true, 234000011111111l,
+                /* operator */ true, "A",
+                /* circle */ true, "AP",
+                /* callStartTime */ true, 1422879843l,
+                /* callEndTime */ true, 1422879903l,
+                /* callDurationInPulses */ true, 60,
+                /* endOfUsagePromptCounter */ true, 0,
+                /* welcomeMessagePromptFlag */ true, true,
+                /* callStatus */ true, 1,
+                /* callDisconnectReason */ true, 1,
+                /* content */ true, Joiner.on(",").join(array));
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
+                "{\"failureReason\":\"<contentFile: Not Present>\"}",
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    /**
+     * To verify that Save Call Details API if rejected when mandatory parameter "CallData>>StartTime" is missing
+     */
+    @Test
+    public void verifyFT381() throws IOException, InterruptedException {
+
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 9810320300L);
+        frontLineWorkerService.add(flw);
+
+        ArrayList<String> array = new ArrayList<>();
+        array.add(createContentJson(false, null,                   // type
+                true, "a",                     // mkCardCode
+                true, "YellowFever",           // contentName
+                true, "YellowFever.wav",       // contentFile
+                false, null,             // startTime
+                true, 1222222221l,             // endTime
+                false, null,                   // completionFlag
+                false, null));                 // correctAnswerEntered
+
+
+        HttpPost httpPost = createCallDetailsPost("mobilekunji",
+                /* callingNumber */ true, 1234567890L,
+                /* callId */ true, 234000011111111l,
+                /* operator */ true, "A",
+                /* circle */ true, "AP",
+                /* callStartTime */ true, 1422879843l,
+                /* callEndTime */ true, 1422879903l,
+                /* callDurationInPulses */ true, 60,
+                /* endOfUsagePromptCounter */ true, 0,
+                /* welcomeMessagePromptFlag */ true, true,
+                /* callStatus */ true, 1,
+                /* callDisconnectReason */ true, 1,
+                /* content */ true, Joiner.on(",").join(array));
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
+                "{\"failureReason\":\"<startTime: Not Present>\"}",
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    /**
+     * To verify that Save Call Details API if rejected when mandatory parameter "CallData>>EndTime" is missing
+     */
+    @Test
+    public void verifyFT382() throws IOException, InterruptedException {
+
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 9810320300L);
+        frontLineWorkerService.add(flw);
+
+        ArrayList<String> array = new ArrayList<>();
+        array.add(createContentJson(false, null,                   // type
+                true, "a",                     // mkCardCode
+                true, "YellowFever",           // contentName
+                true, "YellowFever.wav",       // contentFile
+                true, 1222222220l,             // startTime
+                false, null,             // endTime
+                false, null,                   // completionFlag
+                false, null));                 // correctAnswerEntered
+
+
+        HttpPost httpPost = createCallDetailsPost("mobilekunji",
+                /* callingNumber */ true, 1234567890L,
+                /* callId */ true, 234000011111111l,
+                /* operator */ true, "A",
+                /* circle */ true, "AP",
+                /* callStartTime */ true, 1422879843l,
+                /* callEndTime */ true, 1422879903l,
+                /* callDurationInPulses */ true, 60,
+                /* endOfUsagePromptCounter */ true, 0,
+                /* welcomeMessagePromptFlag */ true, true,
+                /* callStatus */ true, 1,
+                /* callDisconnectReason */ true, 1,
+                /* content */ true, Joiner.on(",").join(array));
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
+                "{\"failureReason\":\"<endTime: Not Present>\"}",
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    /**
+     * To verify that Save Call Details API if rejected when mandatory parameter "CallData>>MKCardCode" is missing
+     */
+    @Test
+    public void verifyFT383() throws IOException, InterruptedException {
+
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 9810320300L);
+        frontLineWorkerService.add(flw);
+
+        ArrayList<String> array = new ArrayList<>();
+        array.add(createContentJson(false, null,                   // type
+                false, null,                     // mkCardCode
+                true, "YellowFever",           // contentName
+                true, "YellowFever.wav",       // contentFile
+                true, 1222222220l,             // startTime
+                true, 1222222221l,             // endTime
+                false, null,                   // completionFlag
+                false, null));                 // correctAnswerEntered
+
+
+        HttpPost httpPost = createCallDetailsPost("mobilekunji",
+                /* callingNumber */ true, 1234567890L,
+                /* callId */ true, 234000011111111l,
+                /* operator */ true, "A",
+                /* circle */ true, "AP",
+                /* callStartTime */ true, 1422879843l,
+                /* callEndTime */ true, 1422879903l,
+                /* callDurationInPulses */ true, 60,
+                /* endOfUsagePromptCounter */ true, 0,
+                /* welcomeMessagePromptFlag */ true, true,
+                /* callStatus */ true, 1,
+                /* callDisconnectReason */ true, 1,
+                /* content */ true, Joiner.on(",").join(array));
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
+                "{\"failureReason\":\"<mkCardCode: Not Present>\"}",
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    /**
+     * To verify that Save Call Details API if rejected when mandatory parameter
+     * "CallingNumber" is having invalid value.
+     */
+    @Test
+    public void verifyFT384() throws IOException, InterruptedException {
+
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 9810320300L);
+        frontLineWorkerService.add(flw);
+
+        HttpPost httpPost = createCallDetailsPost("mobilekunji",
+                /* callingNumber */ true, 12356789L,
+                /* callId */ true, 234000011111111l,
+                /* operator */ true, "A",
+                /* circle */ true, "AP",
+                /* callStartTime */ true, 1422879843l,
+                /* callEndTime */ true, 1422879903l,
+                /* callDurationInPulses */ true, 60,
+                /* endOfUsagePromptCounter */ true, 0,
+                /* welcomeMessagePromptFlag */ true, true,
+                /* callStatus */ true, 1,
+                /* callDisconnectReason */ true, 1,
+                /* content */ false, null);
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
+                "{\"failureReason\":\"<callingNumber: Invalid>\"}",
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    /**
+     * To verify that Save Call Details API if rejected when mandatory parameter
+     * "CallId" is having invalid value
+     */
+    @Test
+    public void verifyFT385() throws IOException, InterruptedException {
+
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 9810320300L);
+        frontLineWorkerService.add(flw);
+
+        HttpPost httpPost = createCallDetailsPost("mobilekunji",
+                /* callingNumber */ true, 1234567890L,
+                /* callId */ true, 234000011111111111l,
+                /* operator */ true, "A",
+                /* circle */ true, "AP",
+                /* callStartTime */ true, 1422879843l,
+                /* callEndTime */ true, 1422879903l,
+                /* callDurationInPulses */ true, 60,
+                /* endOfUsagePromptCounter */ true, 0,
+                /* welcomeMessagePromptFlag */ true, true,
+                /* callStatus */ true, 1,
+                /* callDisconnectReason */ true, 1,
+                /* content */ false, null);
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
+                "{\"failureReason\":\"<callId: Invalid>\"}",
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    /**
+     * To verify that Save Call Details API if rejected when mandatory parameter
+     * "CallStartTime" is having invalid format.
+     */
+    @Test
+    public void verifyFT388() throws IOException,
+            InterruptedException {
+
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright",
+                9810320300L);
+        frontLineWorkerService.add(flw);
+
+        HttpPost httpPost = createCallDetailsPost("mobilekunji",
+        /* callingNumber */true, "9810320300",
+        /* callId */true, "234000011111111",
+        /* operator */true, "A",
+        /* circle */true, "AP",
+        /* callStartTime */true, "142287984ss",// Invalid
+        /* callEndTime */true, "1422879903",
+        /* callDurationInPulses */true, "60",
+        /* endOfUsagePromptCounter */true, "0",
+        /* welcomeMessagePromptFlag */true, "true",
+        /* callStatus */true, "1",
+        /* callDisconnectReason */true, "1",
+        /* content */false, null);
+
+        Pattern expectedJsonResponse = Pattern
+                .compile(".*callStartTime.*");
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
+                expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
+
+    }
+
+    /**
+     * To verify that Save Call Details API if rejected when mandatory parameter
+     * "CallEndTime" is having invalid format.
+     */
+    @Test
+    public void verifyFT389() throws IOException,
+            InterruptedException {
+
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright",
+                9810320300L);
+        frontLineWorkerService.add(flw);
+
+        HttpPost httpPost = createCallDetailsPost("mobilekunji",
+        /* callingNumber */true, "9810320300",
+        /* callId */true, "234000011111111",
+        /* operator */true, "A",
+        /* circle */true, "AP",
+        /* callStartTime */true, "142287984",
+        /* callEndTime */true, "1422879903sasa",//Invalid
+        /* callDurationInPulses */true, "60",
+        /* endOfUsagePromptCounter */true, "0",
+        /* welcomeMessagePromptFlag */true, "true",
+        /* callStatus */true, "1",
+        /* callDisconnectReason */true, "1",
+        /* content */false, null);
+
+        Pattern expectedJsonResponse = Pattern
+                .compile(".*callEndTime.*");
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
+                expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    /**
+     * To verify that Save Call Details API if rejected when mandatory parameter
+     * "CallDurationPulses" is having invalid format.
+     */
+    @Test
+    public void verifyFT390() throws IOException,
+            InterruptedException {
+
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright",
+                9810320300L);
+        frontLineWorkerService.add(flw);
+
+        HttpPost httpPost = createCallDetailsPost("mobilekunji",
+         /* callingNumber */true, "9810320300",
+         /* callId */true, "234000011111111",
+         /* operator */true, "A",
+         /* circle */true, "AP",
+         /* callStartTime */true, "142287984",
+        /* callEndTime */true, "1422879903",
+        /* callDurationInPulses */true, "a6",// Invalid
+         /* endOfUsagePromptCounter */true, "0",
+         /* welcomeMessagePromptFlag */true, "true",
+         /* callStatus */true, "1",
+         /* callDisconnectReason */true, "1",
+         /* content */false, null);
+
+        Pattern expectedJsonResponse = Pattern
+                .compile(".*callDurationInPulses.*");
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
+                expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
+
+    }
+
+    /**
+     * To verify that Save Call Details API if rejected when mandatory parameter
+     * "EndOfUsagePrompt" is having invalid format.
+     */
+    @Test
+    public void verifyFT391() throws IOException,
+            InterruptedException {
+
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright",
+                9810320300L);
+        frontLineWorkerService.add(flw);
+
+        HttpPost httpPost = createCallDetailsPost("mobilekunji",
+         /* callingNumber */true, "9810320300",
+         /* callId */true, "234000011111111",
+         /* operator */true, "A",
+         /* circle */true, "AP",
+         /* callStartTime */true, "142287984",
+        /* callEndTime */true, "1422879903",
+        /* callDurationInPulses */true, "60",
+        /* endOfUsagePromptCounter */true, "a",// Invalid
+         /* welcomeMessagePromptFlag */true, "true",
+         /* callStatus */true, "1",
+         /* callDisconnectReason */true, "1",
+         /* content */false, null);
+
+        Pattern expectedJsonResponse = Pattern
+                .compile(".*endOfUsagePromptCounter.*");
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
+                expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
+
+    }
+
+    /**
+     * To verify that Save Call Details API if rejected when mandatory parameter
+     * "WelcomeMessageFlag" is having invalid value.
+     */
+    @Test
+    public void verifyFT392() throws IOException, InterruptedException {
+
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 9810320300L);
+        frontLineWorkerService.add(flw);
+
+        HttpPost httpPost = createCallDetailsPost("mobilekunji",
+         /* callingNumber */true, "9810320300",
+         /* callId */true, "234000011111111",
+         /* operator */true, "A",
+         /* circle */true, "AP",
+         /* callStartTime */true, "142287984",
+        /* callEndTime */true, "1422879903",
+        /* callDurationInPulses */true, "60",
+        /* endOfUsagePromptCounter */true, "0",// Invalid
+         /* welcomeMessagePromptFlag */true, "abc",
+         /* callStatus */true, "1",
+         /* callDisconnectReason */true, "1",
+         /* content */false, null);
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+
+    }
+
+    /**
+     * To verify that Save Call Details API if rejected when mandatory parameter
+     * "CallStatus" is having invalid value.
+     */
+    @Test
+    public void verifyFT393() throws IOException, InterruptedException {
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright",
+                9810320300L);
+        frontLineWorkerService.add(flw);
+        HttpPost httpPost = createCallDetailsPost("mobilekunji",
+        /* callingNumber */true, 9810320300l,
+        /* callId */true, 234000011111111l,
+        /* operator */true, "A",
+        /* circle */true, "AP",
+        /* callStartTime */true, 1422879843l,
+        /* callEndTime */true, 1422879903l,
+        /* callDurationInPulses */true, 60,
+        /* endOfUsagePromptCounter */true, 0,
+        /* welcomeMessagePromptFlag */true, true,
+        /* callStatus */true, 4,
+        /* callDisconnectReason */true, 1,
+        /* content */false, null);
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
+                HttpStatus.SC_BAD_REQUEST,
+                "{\"failureReason\":\"4 is an invalid FinalCallStatus\"}",
+                ADMIN_USERNAME,
+                ADMIN_PASSWORD));
+    }
+
+    /**
+     * To verify that Save Call Details API if rejected when mandatory parameter
+     * "CallDisconnectReason" is having invalid value.
+     */
+    @Test
+    public void verifyFT394() throws IOException, InterruptedException {
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright",
+                9810320300L);
+        frontLineWorkerService.add(flw);
+        HttpPost httpPost = createCallDetailsPost("mobilekunji",
+        /* callingNumber */true, 9810320300l,
+        /* callId */true, 234000011111111l,
+        /* operator */true, "A",
+        /* circle */true, "AP",
+        /* callStartTime */true, 1422879843l,
+        /* callEndTime */true, 1422879903l,
+        /* callDurationInPulses */true, 60,
+        /* endOfUsagePromptCounter */true, 0,
+        /* welcomeMessagePromptFlag */true, true,
+        /* callStatus */true, 3,
+        /* callDisconnectReason */true, 7,
+        /* content */false, null);
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
+                HttpStatus.SC_BAD_REQUEST,
+                "{\"failureReason\":\"7 is an invalid CallDisconnectReason\"}",
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    /**
+     * To verify that Save Call Details API if rejected when mandatory parameter
+     * "CallData>>ContentName" is having invalid value.
+     */
+    // TODO https://applab.atlassian.net/browse/NMS-235
+    @Ignore
+    @Test
+    public void verifyFT395() throws InterruptedException, IOException {
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright",
+                9810320300L);
+        frontLineWorkerService.add(flw);
+
+        ArrayList<String> array = new ArrayList<>();
+        array.add(createContentJson(/* type */true, "question",
+        /* mkCardCode */true, "a",
+        /* contentName */true, "",// Blank Value
+        /* contentFile */true, "YellowFever.wav",
+        /* startTime */true, 1200000000l,
+        /* endTime */true, 1222222221l,
+        /* completionFlag */true, true,
+        /* correctAnswerEntered */true, false));
+        HttpPost httpPost = createCallDetailsPost("mobilekunji",
+        /* callingNumber */true, 9810320300l,
+        /* callId */true, 234000011111111l,
+        /* operator */true, "A",
+        /* circle */true, "AP",
+        /* callStartTime */true, 1422879843l,
+        /* callEndTime */true, 1422879903l,
+        /* callDurationInPulses */true, 60,
+        /* endOfUsagePromptCounter */true, 1,
+        /* welcomeMessagePromptFlag */true, true,
+        /* callStatus */true, 1,
+        /* callDisconnectReason */true, 2,
+        /* content */true, Joiner.on(",").join(array));
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
+                HttpStatus.SC_BAD_REQUEST,
+                "{\"failureReason\":\"<contentName: Invalid>\"}",
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    /**
+     * To verify that Save Call Details API if rejected when mandatory parameter
+     * "CallData>>ContentFile" is having invalid value.
+     */
+    // TODO https://applab.atlassian.net/browse/NMS-235
+    @Ignore
+    @Test
+    public void verifyFT396() throws InterruptedException, IOException {
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright",
+                9810320300L);
+        frontLineWorkerService.add(flw);
+
+        ArrayList<String> array = new ArrayList<>();
+        array.add(createContentJson(/* type */true, "question",
+        /* mkCardCode */true, "a",
+        /* contentName */true, "YellowFever",
+        /* contentFile */true, "",// Blank Value
+        /* startTime */true, 1200000000l,
+        /* endTime */true, 1222222221l,
+        /* completionFlag */true, true,
+        /* correctAnswerEntered */true, false));
+        HttpPost httpPost = createCallDetailsPost("mobilekunji",
+        /* callingNumber */true, 9810320300l,
+        /* callId */true, 234000011111111l,
+        /* operator */true, "A",
+        /* circle */true, "AP",
+        /* callStartTime */true, 1422879843l,
+        /* callEndTime */true, 1422879903l,
+        /* callDurationInPulses */true, 60,
+        /* endOfUsagePromptCounter */true, 1,
+        /* welcomeMessagePromptFlag */true, true,
+        /* callStatus */true, 1,
+        /* callDisconnectReason */true, 2,
+        /* content */true, Joiner.on(",").join(array));
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
+                HttpStatus.SC_BAD_REQUEST,
+                "{\"failureReason\":\"<contentFileName: Invalid>\"}",
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    /**
+     * To verify that Save Call Details API if rejected when mandatory parameter
+     * "CallData>>StartTime" is having invalid format.
+     */
+    @Test
+    public void verifyFT397() throws InterruptedException, IOException {
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright",
+                9810320300L);
+        frontLineWorkerService.add(flw);
+
+        ArrayList<String> array = new ArrayList<>();
+        array.add(createContentJson(/* type */true, "question",
+        /* mkCardCode */true, "a",
+        /* contentName */true, "chapter-01question-01",
+        /* contentFile */true, "ch1_q1.wav",
+        /* startTime */true, "1200000000ss",// invalid
+        /* endTime */true, "1222222221",
+        /* completionFlag */true, "true",
+        /* correctAnswerEntered */true, "false"));
+        HttpPost httpPost = createCallDetailsPost("mobilekunji",
+        /* callingNumber */true, 9810320300l,
+        /* callId */true, 234000011111111l,
+        /* operator */true, "A",
+        /* circle */true, "AP",
+        /* callStartTime */true, 1422879843l,
+        /* callEndTime */true, 1422879903l,
+        /* callDurationInPulses */true, 60,
+        /* endOfUsagePromptCounter */true, 1,
+        /* welcomeMessagePromptFlag */true, true,
+        /* callStatus */true, 1,
+        /* callDisconnectReason */true, 2,
+        /* content */true, Joiner.on(",").join(array));
+
+        Pattern expectedJsonResponse = Pattern.compile(".*startTime.*");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
+                HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    /**
+     * To verify that Save Call Details API if rejected when mandatory parameter
+     * "CallData>>EndTime" is having invalid format.
+     */
+    @Test
+    public void verifyFT398() throws InterruptedException, IOException {
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright",
+                9810320300L);
+        frontLineWorkerService.add(flw);
+
+        ArrayList<String> array = new ArrayList<>();
+        array.add(createContentJson(/* type */true, "question",
+        /* mkCardCode */true, "a",
+        /* contentName */true, "chapter-01question-01",
+        /* contentFile */true, "ch1_q1.wav",
+        /* startTime */true, "1200000000",
+        /* endTime */true, "122ss2222221",// Invalid
+        /* completionFlag */true, "true",
+        /* correctAnswerEntered */true, "false"));
+        HttpPost httpPost = createCallDetailsPost("mobilekunji",
+        /* callingNumber */true, 9810320300l,
+        /* callId */true, 234000011111111l,
+        /* operator */true, "A",
+        /* circle */true, "AP",
+        /* callStartTime */true, 1422879843l,
+        /* callEndTime */true, 1422879903l,
+        /* callDurationInPulses */true, 60,
+        /* endOfUsagePromptCounter */true, 1,
+        /* welcomeMessagePromptFlag */true, true,
+        /* callStatus */true, 1,
+        /* callDisconnectReason */true, 2,
+        /* content */true, Joiner.on(",").join(array));
+
+        Pattern expectedJsonResponse = Pattern.compile(".*endTime.*");
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
+                HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    /**
+     * To verify that Save Call Details API if rejected when mandatory parameter
+     * "CallData>>MKCardCode" is having invalid format.
+     */
+    // TODO : https://applab.atlassian.net/browse/NMS-237
+    @Ignore
+    @Test
+    public void verifyFT399() throws InterruptedException, IOException {
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright",
+                9810320300L);
+        frontLineWorkerService.add(flw);
+
+        ArrayList<String> array = new ArrayList<>();
+        array.add(createContentJson(/* type */true, "question",
+        /* mkCardCode */true, "", // Blank Value
+        /* contentName */true, "YellowFever",
+        /* contentFile */true, "YellowFever.wav",
+        /* startTime */true, 1200000000l,
+        /* endTime */true, 1222222221l,
+        /* completionFlag */true, true,
+        /* correctAnswerEntered */true, false));
+        HttpPost httpPost = createCallDetailsPost("mobilekunji",
+        /* callingNumber */true, 9810320300l,
+        /* callId */true, 234000011111111l,
+        /* operator */true, "A",
+        /* circle */true, "AP",
+        /* callStartTime */true, 1422879843l,
+        /* callEndTime */true, 1422879903l,
+        /* callDurationInPulses */true, 60,
+        /* endOfUsagePromptCounter */true, 1,
+        /* welcomeMessagePromptFlag */true, true,
+        /* callStatus */true, 1,
+        /* callDisconnectReason */true, 2,
+        /* content */true, Joiner.on(",").join(array));
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
+                HttpStatus.SC_BAD_REQUEST,
+                "{\"failureReason\":\"<contentName: Invalid>\"}",
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
     // Test with no content
     // Test with empty content
     // Test witn invalid callingNumber
