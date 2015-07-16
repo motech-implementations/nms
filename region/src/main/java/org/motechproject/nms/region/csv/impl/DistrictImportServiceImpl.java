@@ -4,8 +4,8 @@ import org.motechproject.nms.csv.utils.GetLong;
 import org.motechproject.nms.csv.utils.GetString;
 import org.motechproject.nms.region.csv.DistrictImportService;
 import org.motechproject.nms.region.domain.District;
-import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.service.DistrictService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.supercsv.cellprocessor.ift.CellProcessor;
@@ -26,12 +26,28 @@ public class DistrictImportServiceImpl extends BaseLocationImportService<Distric
     public static final String NAME_FIELD = "name";
     public static final String STATE_FIELD = "state";
 
+    private DistrictService districtService;
     private StateDataService stateDataService;
 
     @Autowired
-    public DistrictImportServiceImpl(DistrictDataService districtDataService, StateDataService stateDataService) {
-        super(District.class, districtDataService);
+    public DistrictImportServiceImpl(DistrictService districtService, StateDataService stateDataService) {
+        super(District.class);
         this.stateDataService = stateDataService;
+        this.districtService = districtService;
+    }
+
+    @Override
+    protected void createOrUpdateInstance(District instance) {
+        District existing = districtService.findByStateAndCode(instance.getState(), instance.getCode());
+
+        if (existing != null) {
+            existing.setName(instance.getName());
+            existing.setRegionalName(instance.getRegionalName());
+
+            districtService.update(existing);
+        } else {
+            districtService.create(instance);
+        }
     }
 
     @Override

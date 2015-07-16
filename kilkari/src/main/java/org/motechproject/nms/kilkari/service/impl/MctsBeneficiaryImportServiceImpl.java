@@ -18,11 +18,11 @@ import org.motechproject.nms.kilkari.domain.SubscriptionError;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.domain.SubscriptionRejectionReason;
-import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.motechproject.nms.kilkari.repository.MctsChildDataService;
 import org.motechproject.nms.kilkari.repository.MctsMotherDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
+import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.region.exception.InvalidLocationException;
@@ -66,6 +66,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     private static final String MOTHER_DOB = "Birthdate";
     private static final String ABORTION = "Abortion";
     private static final String STILLBIRTH = "Outcome_Nos";
+    private static final String DEATH = "Entry_Type";
     private static final String STATE = "StateID";
     private static final String DISTRICT = "District_ID";
     private static final String TALUKA = "Taluka_ID";
@@ -159,6 +160,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         DateTime motherDOB = (DateTime) record.get(MOTHER_DOB);
         Boolean abortion = (Boolean) record.get(ABORTION);
         Boolean stillBirth = (Boolean) record.get(STILLBIRTH);
+        Boolean death = (Boolean) record.get(DEATH);
 
         // validate and set location
         try {
@@ -180,15 +182,18 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         Subscription subscription = subscriberService.updateOrCreateMctsSubscriber(mother, msisdn, lmp,
                 SubscriptionPackType.PREGNANCY);
 
-        if (abortion != null) {
-            if (abortion) {
-                subscriptionService.deactivateSubscription(subscription, DeactivationReason.MISCARRIAGE_OR_ABORTION);
-            }
-        } else if (stillBirth != null) {
-            if (stillBirth) {
-                subscriptionService.deactivateSubscription(subscription, DeactivationReason.STILL_BIRTH);
-            }
+        if ((abortion != null) && abortion) {
+            subscriptionService.deactivateSubscription(subscription, DeactivationReason.MISCARRIAGE_OR_ABORTION);
+            return;
         }
+        if ((stillBirth != null) && stillBirth) {
+            subscriptionService.deactivateSubscription(subscription, DeactivationReason.STILL_BIRTH);
+            return;
+        }
+        if ((death != null) && death) {
+            subscriptionService.deactivateSubscription(subscription, DeactivationReason.MATERNAL_DEATH);
+        }
+
     }
 
     private void importChildRecord(Map<String, Object> record) {
@@ -197,6 +202,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         Long msisdn = (Long) record.get(MSISDN);
         MctsMother mother = (MctsMother) record.get(MOTHER_ID);
         DateTime dob = (DateTime) record.get(DOB);
+        Boolean death = (Boolean) record.get(DEATH);
 
         // validate and set location
         try {
@@ -233,6 +239,11 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
             }
         }
+
+        if ((death != null) && death) {
+            subscriptionService.deactivateSubscription(childSubscription, DeactivationReason.CHILD_DEATH);
+        }
+
     }
 
     private boolean validateLMP(DateTime lmp, Long msisdn) {
@@ -267,8 +278,8 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
     private Map<String, CellProcessor> getBeneficiaryLocationMapping() {
         Map<String, CellProcessor> mapping = new HashMap<>();
-        mapping.put(STATE, new GetLong());
-        mapping.put(DISTRICT, new GetLong());
+        mapping.put(STATE, new Optional(new GetLong()));
+        mapping.put(DISTRICT, new Optional(new GetLong()));
         mapping.put(TALUKA, new Optional(new GetString()));
         mapping.put(HEALTH_BLOCK, new Optional(new GetLong()));
         mapping.put(PHC, new Optional(new GetLong()));
@@ -301,7 +312,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
              public Boolean retrieve(String value) {
                  String trimmedValue = value.trim();
                  return "Spontaneous".equals(trimmedValue) || "MTP<12 Weeks".equals(trimmedValue) ||
-                         "MTP>12 Weeks".equals(trimmedValue);
+                         "MTP>12 Weeks".equals(trimmedValue); // "None" or blank indicates no abortion/miscarriage
              }
         }));
         mapping.put(STILLBIRTH, new Optional(new GetInstanceByString<Boolean>() {
@@ -309,6 +320,12 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             public Boolean retrieve(String value) {
                 return "0".equals(value.trim()); // This column indicates the number of live births that resulted from this pregnancy.
                                                  // 0 implies stillbirth, other values (including blank) do not.
+            }
+        }));
+        mapping.put(DEATH, new Optional(new GetInstanceByString<Boolean>() {
+            @Override
+            public Boolean retrieve(String value) {
+                return "9".equals(value.trim()); // 9 indicates beneficiary death; other values do not
             }
         }));
 
@@ -340,6 +357,12 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         }));
         mapping.put(MSISDN, MctsBeneficiaryUtils.MSISDN_BY_STRING);
         mapping.put(DOB, new Optional(MctsBeneficiaryUtils.DATE_BY_STRING));
+        mapping.put(DEATH, new Optional(new GetInstanceByString<Boolean>() {
+            @Override
+            public Boolean retrieve(String value) {
+                return "9".equals(value.trim()); // 9 indicates beneficiary death; other values do not
+            }
+        }));
 
         return mapping;
     }

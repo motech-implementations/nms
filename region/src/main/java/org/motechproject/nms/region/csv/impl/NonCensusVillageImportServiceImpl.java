@@ -6,9 +6,9 @@ import org.motechproject.nms.csv.utils.Store;
 import org.motechproject.nms.region.csv.NonCensusVillageImportService;
 import org.motechproject.nms.region.domain.Village;
 import org.motechproject.nms.region.repository.StateDataService;
-import org.motechproject.nms.region.repository.VillageDataService;
 import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.region.service.TalukaService;
+import org.motechproject.nms.region.service.VillageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.supercsv.cellprocessor.Optional;
@@ -36,19 +36,36 @@ public class NonCensusVillageImportServiceImpl extends BaseLocationImportService
     public static final String TALUKA_FIELD = "taluka";
     public static final String VILLAGE_CODE_FIELD = "vcode";
 
+    private VillageService villageService;
     private DistrictService districtService;
     private StateDataService stateDataService;
     private TalukaService talukaService;
 
     @Autowired
-    public NonCensusVillageImportServiceImpl(VillageDataService villageDataService,
+    public NonCensusVillageImportServiceImpl(VillageService villageService,
                                              TalukaService talukaService,
                                              DistrictService districtService,
                                              StateDataService stateDataService) {
-        super(Village.class, villageDataService);
+        super(Village.class);
+        this.villageService = villageService;
         this.talukaService = talukaService;
         this.districtService = districtService;
         this.stateDataService = stateDataService;
+    }
+
+    @Override
+    protected void createOrUpdateInstance(Village instance) {
+        Village existing = villageService.findByTalukaAndVcodeAndSvid(instance.getTaluka(), instance.getVcode(),
+                                                                      instance.getSvid());
+
+        if (existing != null) {
+            existing.setName(instance.getName());
+            existing.setRegionalName(instance.getRegionalName());
+
+            villageService.update(existing);
+        } else {
+            villageService.create(instance);
+        }
     }
 
     @Override

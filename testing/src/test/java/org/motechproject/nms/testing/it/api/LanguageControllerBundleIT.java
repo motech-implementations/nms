@@ -25,8 +25,11 @@ import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.props.domain.DeployedService;
 import org.motechproject.nms.props.domain.Service;
 import org.motechproject.nms.props.repository.DeployedServiceDataService;
+import org.motechproject.nms.region.domain.Circle;
+import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Language;
 import org.motechproject.nms.region.domain.NationalDefaultLanguage;
+import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
@@ -84,7 +87,6 @@ public class LanguageControllerBundleIT extends BasePaxIT {
 
     private RegionHelper rh;
 
-
     @Before
     public void setupTestData() {
 
@@ -94,6 +96,7 @@ public class LanguageControllerBundleIT extends BasePaxIT {
                 stateDataService, districtDataService, districtService);
         rh.newDelhiDistrict();
         rh.delhiCircle();
+
 
         // All 3 services deployed in DELHI
         deployedServiceDataService.create(new DeployedService(rh.delhiState(), Service.KILKARI));

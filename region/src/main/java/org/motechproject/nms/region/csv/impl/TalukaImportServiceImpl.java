@@ -6,8 +6,8 @@ import org.motechproject.nms.csv.utils.Store;
 import org.motechproject.nms.region.csv.TalukaImportService;
 import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.repository.StateDataService;
-import org.motechproject.nms.region.repository.TalukaDataService;
 import org.motechproject.nms.region.service.DistrictService;
+import org.motechproject.nms.region.service.TalukaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.supercsv.cellprocessor.ift.CellProcessor;
@@ -33,15 +33,32 @@ public class TalukaImportServiceImpl extends BaseLocationImportService<Taluka>
     public static final String NAME_FIELD = "name";
     public static final String DISTRICT_FIELD = "district";
 
+    private TalukaService talukaService;
     private DistrictService districtService;
     private StateDataService stateDataService;
 
     @Autowired
-    public TalukaImportServiceImpl(TalukaDataService talukaDataService, DistrictService districtService,
-                                   StateDataService stateDataService) {
-        super(Taluka.class, talukaDataService);
+    public TalukaImportServiceImpl(DistrictService districtService, StateDataService stateDataService,
+                                   TalukaService talukaService) {
+        super(Taluka.class);
         this.districtService = districtService;
         this.stateDataService = stateDataService;
+        this.talukaService = talukaService;
+    }
+
+    @Override
+    protected void createOrUpdateInstance(Taluka instance) {
+        Taluka existing = talukaService.findByDistrictAndCode(instance.getDistrict(), instance.getCode());
+
+        if (existing != null) {
+            existing.setIdentity(instance.getIdentity());
+            existing.setRegionalName(instance.getRegionalName());
+            existing.setName(instance.getName());
+
+            talukaService.update(existing);
+        } else {
+            talukaService.create(instance);
+        }
     }
 
     @Override

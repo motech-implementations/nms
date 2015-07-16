@@ -24,6 +24,7 @@
     <osgi:reference id="7" interface="org.motechproject.nms.flw.repository.WhitelistStateDataService" />
 
     <osgi:reference id="8" interface="org.motechproject.nms.imi.repository.FileAuditRecordDataService" />
+    <osgi:reference id="46" interface="org.motechproject.nms.imi.repository.CallDetailRecordDataService" />
 
     <osgi:reference id="9" interface="org.motechproject.nms.kilkari.repository.CallRetryDataService" />
     <osgi:reference id="10" interface="org.motechproject.nms.kilkari.repository.CallSummaryRecordDataService" />
@@ -40,7 +41,7 @@
     <osgi:reference id="19" interface="org.motechproject.nms.kilkari.repository.MctsMotherDataService" />
     <osgi:reference id="20" interface="org.motechproject.nms.kilkari.repository.MctsChildDataService" />
     <osgi:reference id="21" interface="org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService" />
-    <osgi:reference id="43" interface="org.motechproject.nms.kilkari.service.MctsBeneficiaryUpdateService" />
+    <osgi:reference id="45" interface="org.motechproject.nms.kilkari.service.MctsBeneficiaryUpdateService" />
 
     <osgi:reference id="22" interface="org.motechproject.nms.mobileacademy.repository.CompletionRecordDataService" />
     <osgi:reference id="23" interface="org.motechproject.nms.mobileacademy.repository.NmsCourseDataService" />
@@ -70,6 +71,10 @@
 
     <osgi:reference id="43" interface="org.motechproject.nms.csv.repository.CsvAuditRecordDataService" />
     <osgi:reference id="44" interface="org.motechproject.nms.csv.service.CsvAuditService" />
+
+    <osgi:reference id="45" interface="org.motechproject.nms.tracking.repository.ChangeLogDataService" />
+
+    <osgi:reference id="tracking1" interface="org.motechproject.nms.testing.tracking.repository.TrackedEntityDataService" />
 
     <osgi:reference id="transactionManager" interface="org.springframework.transaction.PlatformTransactionManager"/>
     <osgi:reference id="eventRelay" interface="org.motechproject.event.listener.EventRelay"/>

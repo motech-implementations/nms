@@ -49,6 +49,14 @@ public interface SubscriberService {
      */
     void updateMsisdnForSubscriber(Subscriber subscriber, MctsBeneficiary beneficiary, Long newMsisdn);
 
+    /**
+     * Update or create MCTS subscriber and subscription based on data provided by MCTS.
+     * @param beneficiary The MCTS beneficiary whose information has been imported from MCTS
+     * @param msisdn The MSISDN for the subscriber
+     * @param referenceDate The reference data (LMP/DOB) for the beneficiary's subscription
+     * @param packType The type of subscription (pregnancy/child)
+     * @return New or updated subscription
+     */
     Subscription updateOrCreateMctsSubscriber(MctsBeneficiary beneficiary, Long msisdn, DateTime referenceDate,
                                               SubscriptionPackType packType);
 

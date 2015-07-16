@@ -1,6 +1,7 @@
 package org.motechproject.nms.imi.service.impl;
 
 import org.joda.time.DateTime;
+import org.motechproject.nms.imi.domain.CallDetailRecord;
 import org.motechproject.nms.kilkari.dto.CallDetailRecordDto;
 import org.motechproject.nms.props.domain.CallDisconnectReason;
 import org.motechproject.nms.props.domain.RequestId;
@@ -10,6 +11,10 @@ import org.motechproject.nms.props.domain.StatusCode;
  * Helper class to parse a CSV line to a CallSummaryRecord (and vice versa, for use in ITs)
  */
 public final class CsvHelper {
+
+    public static final String CDR_HEADER = "RequestId,Msisdn,CallId,AttemptNo,CallStartTime,CallAnswerTime," +
+            "CallEndTime,CallDurationInPulse,CallStatus,LanguageLocationId,ContentFile,MsgPlayStartTime," +
+            "MsgPlayEndTime,CircleId,OperatorId,Priority,CallDisconnectReason,WeekId";
 
     private static final long MIN_MSISDN = 1000000000L;
     private static final long MAX_MSISDN = 9999999999L;
@@ -53,13 +58,19 @@ public final class CsvHelper {
     }
 
 
+    private static Long longOrNullFromString(String which, String s) {
+        if (s == null || s.isEmpty()) { return null; }
+
+        return longFromString(which, s);
+    }
+
+
     private static long longFromString(String which, String s) {
         try {
             return Long.parseLong(s);
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException(String.format("%s must be an integer", which), e);
         }
-
     }
 
 
@@ -69,13 +80,20 @@ public final class CsvHelper {
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException(String.format("%s must be an integer", which), e);
         }
-
     }
 
 
     private static Integer calculateMsgPlayDuration(String msgPlayStartTime, String msgPlayEndTime) {
-        Long start = longFromString("MsgPlayStartTime", msgPlayStartTime);
-        Long end = longFromString("MsgPlayEndTime", msgPlayEndTime);
+        Long start;
+        Long end;
+
+        try {
+            start = longFromString("MsgPlayStartTime", msgPlayStartTime);
+            end = longFromString("MsgPlayEndTime", msgPlayEndTime);
+        } catch (IllegalArgumentException e) {
+            // MsgPlayStart is optional, so if either is missing return the play time as 0
+            return 0;
+        }
 
         if (end < start) {
             throw new IllegalArgumentException("MsgPlayEndTime cannot be before MsgPlayStartTime");
@@ -98,7 +116,7 @@ public final class CsvHelper {
      * @param line a CSV line from a CDR Detail File from IMI
      * @return a CallDetailRecordDto
      */
-    public static CallDetailRecordDto csvLineToCdr(String line) {
+    public static CallDetailRecordDto csvLineToCdrDto(String line) {
         CallDetailRecordDto cdr = new CallDetailRecordDto();
         String[] fields = line.split(",");
 
@@ -117,8 +135,13 @@ public final class CsvHelper {
 
         cdr.setMsisdn(msisdnFromString(fields[FieldName.MSISDN.ordinal()]));
 
-        cdr.setCallAnswerTime(new DateTime(longFromString("CallAnswerTime",
-                fields[FieldName.CALL_ANSWER_TIME.ordinal()])));
+        Long callAnswerTime = longOrNullFromString("CallAnswerTime",
+                                                   fields[FieldName.CALL_ANSWER_TIME.ordinal()]);
+        if (callAnswerTime != null) {
+            cdr.setCallAnswerTime(new DateTime(callAnswerTime));
+        } else {
+            cdr.setCallAnswerTime(null);
+        }
 
         cdr.setMsgPlayDuration(calculateMsgPlayDuration(fields[FieldName.MSG_PLAY_START_TIME.ordinal()],
                 fields[FieldName.MSG_PLAY_END_TIME.ordinal()]));
@@ -141,4 +164,65 @@ public final class CsvHelper {
 
         return cdr;
     }
+
+
+    /**
+     * Map all IMI CDRDetail fields to a CallDetailRecord - to store for reporting
+     *
+     * All errors will throw an IllegalArgumentException
+     *
+     * @param line a CSV line from a CDR Detail File from IMI
+     * @return a CallDetailRecord
+     */
+    public static CallDetailRecord csvLineToCdr(String line) {
+        CallDetailRecord cdr = new CallDetailRecord();
+        String[] fields = line.split(",");
+
+        if (fields.length != FieldName.FIELD_COUNT.ordinal()) {
+            throw new IllegalArgumentException(String.format(
+                    "Invalid field count, expecting %d but received %d", FieldName.FIELD_COUNT.ordinal(),
+                    fields.length));
+        }
+
+        /*
+         * See API 4.4.3 - CDR Detail File Format
+         */
+
+        cdr.setRequestId(fields[FieldName.REQUEST_ID.ordinal()]);
+        cdr.setMsisdn(fields[FieldName.MSISDN.ordinal()]);
+        cdr.setCallId(fields[FieldName.CALL_ID.ordinal()]);
+        cdr.setAttemptNo(fields[FieldName.ATTEMPT_NO.ordinal()]);
+        cdr.setCallStartTime(fields[FieldName.CALL_START_TIME.ordinal()]);
+        cdr.setCallAnswerTime(fields[FieldName.CALL_ANSWER_TIME.ordinal()]);
+        cdr.setCallEndTime(fields[FieldName.CALL_END_TIME.ordinal()]);
+        cdr.setCallDurationInPulse(fields[FieldName.CALL_DURATION_IN_PULSE.ordinal()]);
+        cdr.setCallStatus(fields[FieldName.CALL_STATUS.ordinal()]);
+        cdr.setLanguageLocationId(fields[FieldName.LANGUAGE_LOCATION_ID.ordinal()]);
+        cdr.setContentFile(fields[FieldName.CONTENT_FILE.ordinal()]);
+        cdr.setMsgPlayStartTime(fields[FieldName.MSG_PLAY_START_TIME.ordinal()]);
+        cdr.setMsgPlayEndTime(fields[FieldName.MSG_PLAY_END_TIME.ordinal()]);
+        cdr.setCircleId(fields[FieldName.CIRCLE_ID.ordinal()]);
+        cdr.setOperatorId(fields[FieldName.OPERATOR_ID.ordinal()]);
+        cdr.setPriority(fields[FieldName.PRIORITY.ordinal()]);
+        cdr.setCallDisconnectReason(fields[FieldName.CALL_DISCONNECT_REASON.ordinal()]);
+        cdr.setWeekId(fields[FieldName.WEEK_ID.ordinal()]);
+
+        return cdr;
+    }
+
+    /**
+     * Validate Header coming in CDR file from IMI
+     *
+     * @param line a CSV line from a CDR Detail File from IMI
+     *
+     */
+    public static void validateCdrHeader(String line) {
+
+        if (!(CDR_HEADER.equalsIgnoreCase(line))) {
+            throw new IllegalArgumentException("Invalid CDR header");
+        }
+    }
+
+
+
 }

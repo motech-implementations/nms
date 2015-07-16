@@ -1,5 +1,6 @@
 package org.motechproject.nms.flw.domain;
 
+import org.codehaus.jackson.annotate.JsonBackReference;
 import org.joda.time.DateTime;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
@@ -11,6 +12,7 @@ public class CallContent {
     private Long id; //NOPMD UnusedPrivateField
 
     @Field
+    @JsonBackReference
     private CallDetailRecord callDetailRecord;
 
     @Field

@@ -123,6 +123,10 @@ public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
 
     @Override
     public State getState(FrontLineWorker frontLineWorker) {
+        if (frontLineWorker == null) {
+            return null;
+        }
+
         State state = null;
         District district = frontLineWorker.getDistrict();
 

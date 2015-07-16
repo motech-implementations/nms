@@ -26,6 +26,7 @@ import org.motechproject.nms.imi.web.contract.FileProcessedStatusRequest;
 import org.motechproject.nms.kilkari.domain.CallRetry;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
+import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
 import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
@@ -56,9 +57,12 @@ public class TargetFileServiceImpl implements TargetFileService {
     private static final String MAX_QUERY_BLOCK = "imi.max_query_block";
     private static final String TARGET_FILE_SEC_INTERVAL = "imi.target_file_sec_interval";
     private static final String TARGET_FILE_NOTIFICATION_URL = "imi.target_file_notification_url";
-    private static final String TARGET_FILE_IMI_SERVICE_ID = "imi.target_file_imi_service_id";
     private static final String TARGET_FILE_CALL_FLOW_URL = "imi.target_file_call_flow_url";
     private static final String NORMAL_PRIORITY = "0";
+    private static final String IMI_FRESH_CHECK_DND = "imi.fresh_check_dnd";
+    private static final String IMI_FRESH_NO_CHECK_DND = "imi.fresh_no_check_dnd";
+    private static final String IMI_RETRY_CHECK_DND = "imi.retry_check_dnd";
+    private static final String IMI_RETRY_NO_CHECK_DND = "imi.retry_no_check_dnd";
 
     private static final String GENERATE_TARGET_FILE_EVENT = "nms.obd.generate_target_file";
 
@@ -71,6 +75,11 @@ public class TargetFileServiceImpl implements TargetFileService {
     private SubscriberDataService subscriberDataService;
     private CallRetryDataService callRetryDataService;
     private FileAuditRecordDataService fileAuditRecordDataService;
+
+    private static String freshCheckDND = null;
+    private static String freshNoCheckDND = null;
+    private static String retryCheckDND = null;
+    private static String retryNoCheckDND = null;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TargetFileServiceImpl.class);
 
@@ -128,6 +137,25 @@ public class TargetFileServiceImpl implements TargetFileService {
         this.fileAuditRecordDataService = fileAuditRecordDataService;
 
         scheduleTargetFileGeneration();
+
+        freshCheckDND = settingsFacade.getProperty(IMI_FRESH_CHECK_DND);
+        freshNoCheckDND = settingsFacade.getProperty(IMI_FRESH_NO_CHECK_DND);
+        retryCheckDND = settingsFacade.getProperty(IMI_RETRY_CHECK_DND);
+        retryNoCheckDND = settingsFacade.getProperty(IMI_RETRY_NO_CHECK_DND);
+    }
+
+
+    public String serviceIdFromOrigin(boolean freshCall, SubscriptionOrigin origin) {
+
+        if (origin == SubscriptionOrigin.MCTS_IMPORT) {
+            return freshCall ? freshCheckDND : retryCheckDND;
+        }
+
+        if (origin == SubscriptionOrigin.IVR) {
+            return freshCall ? freshNoCheckDND : retryNoCheckDND;
+        }
+
+        throw new IllegalStateException("Unexpected SubscriptionOrigin value");
     }
 
 
@@ -320,8 +348,8 @@ public class TargetFileServiceImpl implements TargetFileService {
     }
 
 
-    private int generateFreshCalls(DateTime timestamp, int maxQueryBlock, String imiServiceId,
-                                   String callFlowUrl, OutputStreamWriter writer) throws IOException {
+    private int generateFreshCalls(DateTime timestamp, int maxQueryBlock, String callFlowUrl,
+                                   OutputStreamWriter writer) throws IOException {
 
         DayOfTheWeek dow = DayOfTheWeek.fromDateTime(timestamp);
         int recordCount = 0;
@@ -331,45 +359,53 @@ public class TargetFileServiceImpl implements TargetFileService {
             List<Subscription> subscriptions = subscriptionService.findActiveSubscriptionsForDay(dow, page,
                     maxQueryBlock);
             numBlockRecord = subscriptions.size();
-
+            int messageWriteCount = 0;
             for (Subscription subscription : subscriptions) {
+
 
                 Subscriber subscriber = subscription.getSubscriber();
 
                 RequestId requestId = new RequestId(subscription.getSubscriptionId(),
                         TIME_FORMATTER.print(timestamp));
-                SubscriptionPackMessage msg = subscription.nextScheduledMessage(timestamp);
 
-                //todo: don't understand why subscriber.getLanguage() doesn't work here...
-                // it's not working because of https://applab.atlassian.net/browse/MOTECH-1678
-                Language language = (Language) subscriberDataService.getDetachedField(subscriber, "language");
-                Circle circle = (Circle) subscriberDataService.getDetachedField(subscriber, "circle");
+                try {
+                    SubscriptionPackMessage msg = subscription.nextScheduledMessage(timestamp);
 
-                writeSubscriptionRow(
-                        requestId.toString(),
-                        imiServiceId,
-                        subscriber.getCallingNumber().toString(),
-                        NORMAL_PRIORITY, //todo: how do we choose a priority?
-                        callFlowUrl,
-                        msg.getMessageFileName(),
-                        msg.getWeekId(),
-                        // we are happy with empty language and circle since they are optional
-                        language == null ? "" : language.getCode(),
-                        circle == null ? "" : circle.getName(),
-                        subscription.getOrigin().getCode(),
-                        writer);
+                    //todo: don't understand why subscriber.getLanguage() doesn't work here...
+                    // it's not working because of https://applab.atlassian.net/browse/MOTECH-1678
+                    Language language = (Language) subscriberDataService.getDetachedField(subscriber, "language");
+                    Circle circle = (Circle) subscriberDataService.getDetachedField(subscriber, "circle");
+
+                    writeSubscriptionRow(
+                            requestId.toString(),
+                            serviceIdFromOrigin(true, subscription.getOrigin()),
+                            subscriber.getCallingNumber().toString(),
+                            NORMAL_PRIORITY, //todo: how do we choose a priority?
+                            callFlowUrl,
+                            msg.getMessageFileName(),
+                            msg.getWeekId(),
+                            // we are happy with empty language and circle since they are optional
+                            language == null ? "" : language.getCode(),
+                            circle == null ? "" : circle.getName(),
+                            subscription.getOrigin().getCode(),
+                            writer);
+                    messageWriteCount += 1;
+
+                } catch (IllegalStateException se) {
+                    LOGGER.error(se.toString());
+                }
             }
 
             page++;
-            recordCount += numBlockRecord;
+            recordCount += messageWriteCount;
 
         } while (numBlockRecord > 0);
 
         return recordCount;
     }
 
-    private int generateRetryCalls(DateTime timestamp, int maxQueryBlock, String imiServiceId,
-                                   String callFlowUrl, OutputStreamWriter writer) throws IOException {
+    private int generateRetryCalls(DateTime timestamp, int maxQueryBlock, String callFlowUrl,
+                                   OutputStreamWriter writer) throws IOException {
 
         DayOfTheWeek dow = DayOfTheWeek.fromDateTime(timestamp);
         int recordCount = 0;
@@ -383,11 +419,19 @@ public class TargetFileServiceImpl implements TargetFileService {
             for (CallRetry callRetry : callRetries) {
                 RequestId requestId = new RequestId(callRetry.getSubscriptionId(),
                         TIME_FORMATTER.print(timestamp));
-                //todo: look into priorities...
-                writeSubscriptionRow(requestId.toString(), imiServiceId, callRetry.getMsisdn().toString(),
-                        NORMAL_PRIORITY, callFlowUrl, callRetry.getContentFileName(), callRetry.getWeekId(),
-                        callRetry.getLanguageLocationCode(), callRetry.getCircle(),
-                        callRetry.getSubscriptionOrigin().getCode(), writer);
+
+                writeSubscriptionRow(
+                        requestId.toString(),
+                        serviceIdFromOrigin(false, callRetry.getSubscriptionOrigin()),
+                        callRetry.getMsisdn().toString(),
+                        NORMAL_PRIORITY, //todo: look into priorities...
+                        callFlowUrl,
+                        callRetry.getContentFileName(),
+                        callRetry.getWeekId(),
+                        callRetry.getLanguageLocationCode(),
+                        callRetry.getCircle(),
+                        callRetry.getSubscriptionOrigin().getCode(),
+                        writer);
             }
 
             page++;
@@ -420,7 +464,6 @@ public class TargetFileServiceImpl implements TargetFileService {
             OutputStreamWriter writer = new OutputStreamWriter(fos)) {
 
             int maxQueryBlock = Integer.parseInt(settingsFacade.getProperty(MAX_QUERY_BLOCK));
-            String imiServiceId = settingsFacade.getProperty(TARGET_FILE_IMI_SERVICE_ID);
             String callFlowUrl = settingsFacade.getProperty(TARGET_FILE_CALL_FLOW_URL);
             if (callFlowUrl == null) {
                 //it's ok to have an empty call flow url - the spec says the default call flow will be used
@@ -434,10 +477,10 @@ public class TargetFileServiceImpl implements TargetFileService {
             writeHeader(writer);
 
             //Fresh calls
-            recordCount = generateFreshCalls(today, maxQueryBlock, imiServiceId, callFlowUrl, writer);
+            recordCount = generateFreshCalls(today, maxQueryBlock, callFlowUrl, writer);
 
             //Retry calls
-            recordCount += generateRetryCalls(today, maxQueryBlock, imiServiceId, callFlowUrl, writer);
+            recordCount += generateRetryCalls(today, maxQueryBlock, callFlowUrl, writer);
 
             LOGGER.debug("Created targetFile with {} record{}", recordCount, recordCount == 1 ? "" : "s");
 

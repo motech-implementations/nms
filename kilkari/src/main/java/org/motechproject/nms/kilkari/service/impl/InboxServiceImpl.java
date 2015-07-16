@@ -4,6 +4,7 @@ import org.joda.time.DateTime;
 import org.joda.time.Days;
 import org.motechproject.nms.kilkari.domain.InboxCallDetailRecord;
 import org.motechproject.nms.kilkari.domain.Subscription;
+import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
@@ -34,9 +35,8 @@ public class InboxServiceImpl implements InboxService {
         return (long) inboxCallDetailRecordDataService.getDetachedField(newRecord, "id");
     }
 
-    @Override
+    @Override //NO CHECKSTYLE CyclomaticComplexity
     public SubscriptionPackMessage getInboxMessage(Subscription subscription) throws NoInboxForSubscriptionException {
-
         if ((subscription.getStartDate() == null) || (subscription.getStatus() == SubscriptionStatus.DEACTIVATED)) {
             // there is no inbox for this subscription, throw
             throw new NoInboxForSubscriptionException(String.format("No inbox exists for subscription %s",
@@ -61,27 +61,29 @@ public class InboxServiceImpl implements InboxService {
                 throw new NoInboxForSubscriptionException(String.format("No inbox exists for subscription %s",
                         subscription.getSubscriptionId()));
             }
-            messageIndex = subscription.getSubscriptionPack().getMessages().size() - 1;
+            currentWeek = pack.getWeeks();
+            messageIndex = (pack.getMessagesPerWeek() == 1) ? 1 : 2;
         } else if (subscription.getSubscriptionPack().getMessagesPerWeek() == 1) {
-            messageIndex = currentWeek - 1;
-        } else { // messagesPerWeek == 2
 
+            messageIndex = 1;
+        } else {
+
+            // messagesPerWeek == 2
             // day of and next 3 days, so if day of week is Monday: Mon, Tue, Wed, Thu
-            if (daysIntoWeek >= 0 && daysIntoWeek < 4) {
-
-                // use this week's first message
-                messageIndex = 2 * (currentWeek - 1);
-
             // remaining days, so if day of week is Monday: Fri, Sat, Sun
-            } else {
+            messageIndex = (daysIntoWeek >= 0 && daysIntoWeek < 4) ? 1 : 2;
 
-                // use this week's second message
-                messageIndex = 2 * (currentWeek - 1) + 1;
-
-            }
         }
 
-        return subscription.getSubscriptionPack().getMessages().get(messageIndex);
+        SubscriptionPackMessage spm = subscription.getMessageByWeekAndMessageId(currentWeek, messageIndex);
+
+        if ((subscription.getOrigin() == SubscriptionOrigin.MCTS_IMPORT) &&
+                subscription.needsWelcomeMessageViaInbox()) {
+            // Subscriber has been subscribed via MCTS and may not know what Kilkari is; play welcome message this week
+            spm.setMessageFileName(SubscriptionPackMessage.getWelcomeMessage().getMessageFileName());
+        }
+
+        return spm;
     }
 
 }

@@ -1,5 +1,6 @@
 package org.motechproject.nms.kilkari.domain;
 
+import org.codehaus.jackson.annotate.JsonBackReference;
 import org.joda.time.DateTime;
 import org.joda.time.Days;
 import org.motechproject.mds.annotations.Entity;
@@ -19,10 +20,9 @@ public class Subscription {
 
     private static final int DAYS_IN_WEEK = 7;
     private static final int WEEKDAY1 = 0;
-    private static final int WEEKDAY2 = 1;
     private static final int WEEKDAY5 = 4;
-    private static final int WEEKDAY6 = 5;
-
+    private static final int WEEKDAY7 = 6;
+    private static final String WEEK_ID_FORMAT = "w%d_%d";
 
     @Field
     @Unique
@@ -33,6 +33,7 @@ public class Subscription {
     @Field
     @Column(allowsNull = "false")
     @NotNull
+    @JsonBackReference
     private Subscriber subscriber;
 
     @Field
@@ -51,19 +52,26 @@ public class Subscription {
     private SubscriptionOrigin origin;
 
     @Field
-    private DateTime startDate;
+    private DateTime startDate; // the date from which the weekly message should be calculated (DOB or LMP+90 days)
 
     @Field
-    private DateTime endDate;
+    private DateTime endDate; // the date that the subscription is completed or deactivated
 
     @Field
-    private DayOfTheWeek startDayOfTheWeek;
+    private DateTime activationDate; // the date on which the subscription is activated -- may be different from the
+                                     // start date, e.g. if a child subscription is created 5 weeks after the DOB
+
+    @Field
+    private DayOfTheWeek firstMessageDayOfWeek;
+
+    @Field
+    private DayOfTheWeek secondMessageDayOfWeek;
 
     @Field
     private DeactivationReason deactivationReason;
 
     @Field
-    private boolean needsWelcomeMessage;
+    private boolean needsWelcomeMessageViaObd;
 
     public Subscription(Subscriber subscriber, SubscriptionPack subscriptionPack, SubscriptionOrigin origin) {
         this.subscriptionId = UUID.randomUUID().toString();
@@ -71,7 +79,7 @@ public class Subscription {
         this.subscriptionPack = subscriptionPack;
         this.origin = origin;
         if (origin == SubscriptionOrigin.MCTS_IMPORT) {
-            needsWelcomeMessage = true;
+            needsWelcomeMessageViaObd = true;
         }
     }
 
@@ -96,6 +104,11 @@ public class Subscription {
     public SubscriptionStatus getStatus() { return status; }
 
     public void setStatus(SubscriptionStatus status) {
+        if ((status == SubscriptionStatus.ACTIVE) && (this.status != SubscriptionStatus.ACTIVE)) {
+            // subscription is being activated
+            this.activationDate = DateTime.now();
+        }
+
         this.status = status;
 
         if (this.status == SubscriptionStatus.DEACTIVATED || this.status == SubscriptionStatus.COMPLETED) {
@@ -113,7 +126,11 @@ public class Subscription {
 
     public void setStartDate(DateTime startDate) {
         this.startDate = startDate;
-        this.startDayOfTheWeek = DayOfTheWeek.fromInt(startDate.getDayOfWeek());
+        this.firstMessageDayOfWeek = DayOfTheWeek.fromInt(startDate.getDayOfWeek());
+
+        if (subscriptionPack.getMessagesPerWeek() == 2) {
+            this.secondMessageDayOfWeek = DayOfTheWeek.fromDateTime(startDate.plusDays(4));
+        }
     }
 
     public DateTime getEndDate() {
@@ -124,8 +141,20 @@ public class Subscription {
         this.endDate = endDate;
     }
 
-    public DayOfTheWeek getStartDayOfTheWeek() {
-        return startDayOfTheWeek;
+    public DateTime getActivationDate() {
+        return endDate;
+    }
+
+    public void setActivationDate(DateTime activationDate) {
+        this.activationDate = activationDate;
+    }
+
+    public DayOfTheWeek getFirstMessageDayOfWeek() {
+        return firstMessageDayOfWeek;
+    }
+
+    public DayOfTheWeek getSecondMessageDayOfWeek() {
+        return secondMessageDayOfWeek;
     }
 
     public DeactivationReason getDeactivationReason() { return deactivationReason; }
@@ -134,16 +163,32 @@ public class Subscription {
         this.deactivationReason = deactivationReason;
     }
 
-    public boolean getNeedsWelcomeMessage() {
-        return needsWelcomeMessage;
+    public boolean getNeedsWelcomeMessageViaObd() {
+        return needsWelcomeMessageViaObd;
     }
 
-    public void setNeedsWelcomeMessage(boolean needsWelcomeMessage) {
-        this.needsWelcomeMessage = needsWelcomeMessage;
+    public void setNeedsWelcomeMessageViaObd(boolean needsWelcomeMessageViaObd) {
+        this.needsWelcomeMessageViaObd = needsWelcomeMessageViaObd;
     }
+
+    public boolean needsWelcomeMessageViaInbox() {
+        int daysSinceStart = Days.daysBetween(startDate, activationDate).getDays();
+
+        if (subscriptionPack.getMessagesPerWeek() == 1) {
+            if ((daysSinceStart >= WEEKDAY1) && (daysSinceStart <= WEEKDAY7)) {
+                return true;
+            }
+        } else { // messages per week == 2
+            if ((daysSinceStart >= WEEKDAY1) && (daysSinceStart < WEEKDAY5)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     /**
-     * Helper method to be called by the OBD processCallSummaryRecord when selecting a message to play for a subscription
+     * Helper for TargetFile generation to pick next message for subscription
      * @param date The date on which the message will be played
      * @return SubscriptionPackMessage with the details of the message to play
      */
@@ -151,45 +196,52 @@ public class Subscription {
         if (status != SubscriptionStatus.ACTIVE) {
             throw new IllegalStateException(String.format("Subscription with ID %s is not active", subscriptionId));
         }
-        if ((origin == SubscriptionOrigin.MCTS_IMPORT) && needsWelcomeMessage) {
+        if ((origin == SubscriptionOrigin.MCTS_IMPORT) && needsWelcomeMessageViaObd) {
             // Subscriber has been subscribed via MCTS and may not know what Kilkari is; play welcome message this week
             return SubscriptionPackMessage.getWelcomeMessage();
         }
 
         int daysIntoPack = Days.daysBetween(startDate, date).getDays();
-        if (daysIntoPack > 0 && date.isBefore(startDate)) {
+        if (daysIntoPack < 0) {
             // there is no message due
             throw new IllegalStateException(
-                    String.format("Subscription with ID %s is not due for any scheduled message", subscriptionId));
+                    String.format("Subscription with ID %s is not due for any scheduled message. Start date in the future", subscriptionId));
         }
-        int messageIndex = -1;
+
+        if (!DayOfTheWeek.fromDateTime(date).equals(firstMessageDayOfWeek) && !DayOfTheWeek.fromDateTime(date).equals(secondMessageDayOfWeek)) {
+            // bad call, no message scheduled for the day
+            throw new IllegalStateException(String.format("Subscription with ID %s is not due for any scheduled message for given date", subscriptionId));
+        }
+
         int currentWeek = daysIntoPack / DAYS_IN_WEEK + 1;
-        int daysIntoWeek = daysIntoPack % DAYS_IN_WEEK; //zero-based, 0 is the first day, 6 is the last
 
         if (subscriptionPack.getMessagesPerWeek() == 1) {
-            //valid days for 1 msg/week are WEEKDAY1 to WEEKDAY4 (fresh + 3 retries)
-            if (daysIntoWeek >= WEEKDAY1 && daysIntoWeek < WEEKDAY5) {
-                // return this week's only message
-                messageIndex = currentWeek - 1;
-            }
-        } else { // messages per week == 2
-            //valid days for 2 msg/week are WEEKDAY1-WEEKDAY2 & WEEKDAY5, WEEKDAY6 (fresh + 1 retry)
-            if (daysIntoWeek == WEEKDAY1 || daysIntoWeek == WEEKDAY2) {
+            return getMessageByWeekAndMessageId(currentWeek, 1);
+        } else {
+            // messages per week == 2
+            if (DayOfTheWeek.fromDateTime(date).equals(firstMessageDayOfWeek)) {
                 // use this week's first message
-                messageIndex = 2 * (currentWeek - 1);
-            } else if (daysIntoWeek == WEEKDAY5 || daysIntoWeek == WEEKDAY6) {
+                return getMessageByWeekAndMessageId(currentWeek, 1);
+            } else {
                 // use this week's second message
-                messageIndex = 2 * (currentWeek - 1) + 1;
+                return getMessageByWeekAndMessageId(currentWeek, 2);
+            }
+        }
+    }
+
+    public SubscriptionPackMessage getMessageByWeekAndMessageId(int week, int message) {
+
+        String weekId = String.format(WEEK_ID_FORMAT, week, message);
+        // TODO: This is inefficient but don't want to deal with performance yet. Worst case, we will iterate
+        // over 72x2 messages every time. Ideally, we would do a select using lambdaj and the likes
+        for (SubscriptionPackMessage currentMessage : subscriptionPack.getMessages()) {
+            if (currentMessage.getWeekId().equals(weekId)) {
+                return currentMessage;
             }
         }
 
-        if (messageIndex == -1) {
-            // there is no message due
-            throw new IllegalStateException(
-                    String.format("Subscription with ID %s is not due for any scheduled message", subscriptionId));
-        }
-
-        return subscriptionPack.getMessages().get(messageIndex);
+        throw new IllegalStateException(String.format(
+                "Subscription with ID %s has no message in pack for given week and day. Check deployment", subscriptionId));
     }
 
     /**

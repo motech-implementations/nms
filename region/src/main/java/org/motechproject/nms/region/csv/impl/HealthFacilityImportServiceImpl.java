@@ -7,11 +7,11 @@ import org.motechproject.nms.csv.utils.Store;
 import org.motechproject.nms.region.csv.HealthFacilityImportService;
 import org.motechproject.nms.region.domain.HealthFacility;
 import org.motechproject.nms.region.domain.HealthFacilityType;
-import org.motechproject.nms.region.repository.HealthFacilityDataService;
 import org.motechproject.nms.region.repository.HealthFacilityTypeDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.region.service.HealthBlockService;
+import org.motechproject.nms.region.service.HealthFacilityService;
 import org.motechproject.nms.region.service.TalukaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,7 +22,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Service("healthFacilityImportService")
-public class HealthFacilityImportServiceImpl extends BaseLocationImportService<HealthFacility> implements HealthFacilityImportService {
+public class HealthFacilityImportServiceImpl extends BaseLocationImportService<HealthFacility>
+        implements HealthFacilityImportService {
 
     public static final String PID = "PID";
     public static final String REGIONAL_NAME = "Name_G";
@@ -39,6 +40,7 @@ public class HealthFacilityImportServiceImpl extends BaseLocationImportService<H
     public static final String BID_FIELD = "healthBlock";
     public static final String FACILITY_TYPE_FIELD = "healthFacilityType";
 
+    private HealthFacilityService healthFacilityService;
     private HealthFacilityTypeDataService healthFacilityTypeService;
     private HealthBlockService healthBlockService;
     private DistrictService districtService;
@@ -46,18 +48,35 @@ public class HealthFacilityImportServiceImpl extends BaseLocationImportService<H
     private TalukaService talukaService;
 
     @Autowired
-    public HealthFacilityImportServiceImpl(HealthFacilityDataService healthFacilityDataService,
+    public HealthFacilityImportServiceImpl(HealthFacilityService healthFacilityService,
                                            HealthFacilityTypeDataService healthFacilityTypeService,
                                            HealthBlockService healthBlockService,
                                            DistrictService districtService,
                                            StateDataService stateDataService,
                                            TalukaService talukaService) {
-        super(HealthFacility.class, healthFacilityDataService);
+        super(HealthFacility.class);
+        this.healthFacilityService = healthFacilityService;
         this.healthFacilityTypeService = healthFacilityTypeService;
         this.healthBlockService = healthBlockService;
         this.districtService = districtService;
         this.stateDataService = stateDataService;
         this.talukaService = talukaService;
+    }
+
+    @Override
+    protected void createOrUpdateInstance(HealthFacility instance) {
+        HealthFacility existing = healthFacilityService.findByHealthBlockAndCode(instance.getHealthBlock(),
+                                                                                 instance.getCode());
+
+        if (existing != null) {
+            existing.setName(instance.getName());
+            existing.setRegionalName(instance.getRegionalName());
+            existing.setHealthFacilityType(instance.getHealthFacilityType());
+
+            healthFacilityService.update(existing);
+        } else {
+            healthFacilityService.create(instance);
+        }
     }
 
     @Override

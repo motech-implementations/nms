@@ -606,6 +606,26 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, response.getStatusLine().getStatusCode());
     }
 
+    // Request undeployed service by flw location
+    @Test
+    public void testKilkariUndeployedServiceByCircleLocation() throws IOException, InterruptedException {
+        createFlwWithNoLocationNoLanguageNoDeployedServices();
+
+        HttpGet httpGet = createHttpGet(
+                true, "kilkari",    //service
+                true, "1111111111",     //callingNumber
+                true, "OP",             //operator
+                true, rh.delhiCircle().getName(),//circle
+                true, "123456789012345" //callId
+        );
+
+        String expectedJsonResponse = createFailureResponseJson("<KILKARI: Not Deployed In State>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
+        assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, response.getStatusLine().getStatusCode());
+    }
+
     @Test
     public void testKilkariUserRequestNoLanguage() throws IOException, InterruptedException {
 

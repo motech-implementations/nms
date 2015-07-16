@@ -1,6 +1,7 @@
 package org.motechproject.nms.testing.it.imi;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -23,6 +24,7 @@ import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
+import org.motechproject.nms.props.domain.RequestId;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
@@ -130,8 +132,8 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         Subscriber subscriber1 = new Subscriber(1111111111L, rh.hindiLanguage(), rh.delhiCircle());
         subscriber1.setLastMenstrualPeriod(DateTime.now().minusDays(90)); // startDate will be today
         subscriberDataService.create(subscriber1);
-        subscriptionService.createSubscription(1111111111L, rh.hindiLanguage(), sh.pregnancyPack(),
-                SubscriptionOrigin.MCTS_IMPORT);
+        Subscription subscription1 = subscriptionService.createSubscription(1111111111L, rh.hindiLanguage(),
+                sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
 
         // Should not be picked up because it's been deactivated
         Subscriber subscriber2 = new Subscriber(2222222222L, rh.kannadaLanguage(), rh.karnatakaCircle());
@@ -171,6 +173,20 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         subscription6.setStatus(SubscriptionStatus.PENDING_ACTIVATION);
         subscriptionDataService.update(subscription6);
 
+        //Set the clock one day back;
+        DateTimeUtils.setCurrentMillisFixed(DateTime.now().minusDays(1).getMillis());
+
+        //Should be picked up because IVR subscriptions all start today + 1 day
+        Subscriber subscriber7 = new Subscriber(7777777777L, rh.kannadaLanguage(), rh.karnatakaCircle());
+        subscriberDataService.create(subscriber7);
+        Subscription subscription7 = subscriptionService.createSubscription(7777777777L, rh.kannadaLanguage(),
+                sh.childPack(), SubscriptionOrigin.IVR);
+
+        //Set the clock back to normal
+        DateTimeUtils.setCurrentMillisSystem();
+
+
+
         // Should not be picked up because it's not for today
         callRetryDataService.create(new CallRetry("11111111-1111-1111-1111-111111111111", 3333333333L,
                 DayOfTheWeek.today().nextDay(), CallStage.RETRY_1, "w1_m1.wav", "w1_1",
@@ -187,22 +203,45 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         // Should pickup subscription4 and set its status to ACTIVE
         // Should not pickup subscription5 because its start DOW doesn't match today's DOW but should set its status to ACTIVE
         // Should not pickup subscription6 because it's for tomorrow
-        assertEquals(2, (int) tfn.getRecordsCount());
+        // Should pickup subscription7
+        assertEquals(3, (int) tfn.getRecordsCount());
 
         //read the file to get record count
         File targetDir = new File(settingsService.getSettingsFacade().getProperty("imi.local_obd_dir"));
         File targetFile = new File(targetDir, tfn.getFileName());
         int recordCount = 0;
-        boolean header = true;
+        boolean foundSubscription1 = false;
+        boolean foundSubscription4 = false;
+        boolean foundSubscription7 = false;
         try (InputStream is = Files.newInputStream(targetFile.toPath());
              BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
-            while ((reader.readLine()) != null) {
-                if (header) {
-                    header = false;
-                    continue;
+
+            // skip the header
+            reader.readLine();
+
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] fields = line.split(",");
+
+                RequestId requestId = RequestId.fromString(fields[0]);
+                if (requestId.getSubscriptionId().equals(subscription7.getSubscriptionId())) {
+                    foundSubscription7 = true;
+                    assertEquals(targetFileService.serviceIdFromOrigin(true, SubscriptionOrigin.IVR), fields[1]);
+                }
+                if (requestId.getSubscriptionId().equals(subscription4.getSubscriptionId())) {
+                    foundSubscription4 = true;
+                }
+                if (requestId.getSubscriptionId().equals(subscription1.getSubscriptionId())) {
+                    foundSubscription1 = true;
+                    assertEquals(targetFileService.serviceIdFromOrigin(true, SubscriptionOrigin.MCTS_IMPORT),
+                            fields[1]);
                 }
                 recordCount++;
             }
+
+            assertTrue(foundSubscription1);
+            assertTrue(foundSubscription4);
+            assertTrue(foundSubscription7);
         }
 
         String checksum = ChecksumHelper.checksum(targetFile);
@@ -269,7 +308,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         subscriberDataService.create(subscriber1);
         Subscription subscription = subscriptionService.createSubscription(1111111111L, rh.hindiLanguage(),
                 sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
-        subscription.setNeedsWelcomeMessage(false);
+        subscription.setNeedsWelcomeMessageViaObd(false);
         subscriptionDataService.update(subscription);
 
         List<String> contents = new ArrayList<>();
@@ -311,7 +350,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         subscriberDataService.create(subscriber1);
         Subscription subscription = subscriptionService.createSubscription(1111111111L, rh.hindiLanguage(),
                 sh.childPack(), SubscriptionOrigin.MCTS_IMPORT);
-        subscription.setNeedsWelcomeMessage(false);
+        subscription.setNeedsWelcomeMessageViaObd(false);
         subscriptionDataService.update(subscription);
 
         List<String> contents = new ArrayList<>();
@@ -404,7 +443,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         String checksum = ChecksumHelper.checksum(targetFile);
         assertEquals((int)tfn.getRecordsCount(), recordCount);
         assertEquals(tfn.getChecksum(), checksum);
-        assertTrue("welcome.wav".equals(contents.get(0)));
+        assertTrue("w1_1.wav".equals(contents.get(0)));
     }
 
     /*
@@ -442,12 +481,10 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         String checksum = ChecksumHelper.checksum(targetFile);
         assertEquals((int)tfn.getRecordsCount(), recordCount);
         assertEquals(tfn.getChecksum(), checksum);
-        assertTrue("welcome.wav".equals(contents.get(0)));
+        assertTrue("w1_1.wav".equals(contents.get(0)));
 
     }
     //todo: test success notification is sent to the IVR system
-
-
 
 
     @Test

@@ -19,8 +19,10 @@ import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
+import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Language;
+import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -28,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.jdo.Query;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 
@@ -84,7 +87,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                 if (fqr.size() == 1) {
                     return (Subscriber) fqr.get(0);
                 }
-                throw new IllegalStateException("More than one row returned!");
+                throw new IllegalStateException(String.format("More than one row returned for beneficiary %s", id));
             }
         };
 
@@ -115,7 +118,9 @@ public class SubscriberServiceImpl implements SubscriberService {
 
             if (subscription.getSubscriptionPack().getType() == SubscriptionPackType.PREGNANCY) {
 
-                subscriptionService.updateStartDate(subscription, subscriber.getLastMenstrualPeriod());
+                if (subscriber.getLastMenstrualPeriod() != null) { // Subscribers via IVR will not have LMP
+                    subscriptionService.updateStartDate(subscription, subscriber.getLastMenstrualPeriod());
+                }
 
             } else if (subscription.getSubscriptionPack().getType() == SubscriptionPackType.CHILD) {
 
@@ -164,16 +169,28 @@ public class SubscriberServiceImpl implements SubscriberService {
         subscriptionDataService.update(subscription);
     }
 
+    private Circle circleFromDistrict(District district) {
+        State state = (State) districtDataService.getDetachedField(district, "state");
+        List<Circle> circleList = state.getCircles();
+
+        if (circleList.size() == 1) {
+            return circleList.get(0);
+        }
+
+        return null;
+    }
+
     @Override
     public Subscription updateOrCreateMctsSubscriber(MctsBeneficiary beneficiary, Long msisdn, DateTime referenceDate,
                                                      SubscriptionPackType packType) {
         District district = beneficiary.getDistrict();
+        Circle circle = circleFromDistrict(district);
         Language language = (Language) districtDataService.getDetachedField(district, "language");
         Subscriber subscriber = getSubscriber(msisdn);
 
         SubscriptionPack pack = subscriptionPackDataService.byType(packType);
 
-        // TODO: Handle the case in which the MCTS beneficiary already exists but with a different phone number
+        // TODO: #455 Handle the case in which the MCTS beneficiary already exists but with a different phone number
 
         if (subscriber == null) {
             // there's no subscriber with this MSISDN, create one
@@ -181,7 +198,7 @@ public class SubscriberServiceImpl implements SubscriberService {
             subscriber = new Subscriber(msisdn, language);
             subscriber = setSubscriberFields(subscriber, beneficiary, referenceDate, packType);
             create(subscriber);
-            return subscriptionService.createSubscription(msisdn, language, pack, SubscriptionOrigin.MCTS_IMPORT);
+            return subscriptionService.createSubscription(msisdn, language, circle, pack, SubscriptionOrigin.MCTS_IMPORT);
         }
 
         Subscription subscription = subscriptionService.getActiveSubscription(subscriber, packType);
@@ -215,7 +232,7 @@ public class SubscriberServiceImpl implements SubscriberService {
         // subscriber exists, but doesn't have a subscription to this pack
         subscriber = setSubscriberFields(subscriber, beneficiary, referenceDate, packType);
         update(subscriber);
-        return subscriptionService.createSubscription(msisdn, language, pack, SubscriptionOrigin.MCTS_IMPORT);
+        return subscriptionService.createSubscription(msisdn, language, circle, pack, SubscriptionOrigin.MCTS_IMPORT);
     }
 
 

@@ -16,6 +16,7 @@ import org.motechproject.nms.imi.domain.FileType;
 import org.motechproject.nms.imi.exception.ExecException;
 import org.motechproject.nms.imi.exception.InternalException;
 import org.motechproject.nms.imi.exception.InvalidCdrFileException;
+import org.motechproject.nms.imi.repository.CallDetailRecordDataService;
 import org.motechproject.nms.imi.repository.FileAuditRecordDataService;
 import org.motechproject.nms.imi.service.CdrFileService;
 import org.motechproject.nms.imi.service.CsrValidatorService;
@@ -68,17 +69,20 @@ public class CdrFileServiceImpl implements CdrFileService {
     private FileAuditRecordDataService fileAuditRecordDataService;
     private AlertService alertService;
     private CsrValidatorService csrValidatorService;
+    private CallDetailRecordDataService callDetailRecordDataService;
 
 
     @Autowired
     public CdrFileServiceImpl(@Qualifier("imiSettings") SettingsFacade settingsFacade, EventRelay eventRelay,
                               FileAuditRecordDataService fileAuditRecordDataService, AlertService alertService,
-                              CsrValidatorService csrValidatorService) {
+                              CsrValidatorService csrValidatorService,
+                              CallDetailRecordDataService callDetailRecordDataService) {
         this.settingsFacade = settingsFacade;
         this.eventRelay = eventRelay;
         this.fileAuditRecordDataService = fileAuditRecordDataService;
         this.alertService = alertService;
         this.csrValidatorService = csrValidatorService;
+        this.callDetailRecordDataService = callDetailRecordDataService;
     }
 
 
@@ -230,49 +234,63 @@ public class CdrFileServiceImpl implements CdrFileService {
              BufferedReader reader = new BufferedReader(isr)) {
 
             String line;
-            while ((line = reader.readLine()) != null) {
-                try {
+            try {
 
-                    // Parse the CSV line into a CDR (which we actually discard in this phase)
-                    // This will trow IllegalArgumentException if the CSV is malformed
-                    CsvHelper.csvLineToCdr(line);
-                } catch (IllegalArgumentException e) {
-                    errors.add(String.format("Line %d: %s", lineNumber, e.getMessage()));
-                    errorCount++;
+                line = reader.readLine();
+                CsvHelper.validateCdrHeader(line);
+
+                while ((line = reader.readLine()) != null) {
+
+                    try {
+                        // Parse the CSV line into a CDR (which we actually discard in this phase)
+                        // This will trow IllegalArgumentException if the CSV is malformed
+                        CsvHelper.csvLineToCdrDto(line);
+
+                    } catch (IllegalArgumentException e) {
+                        errors.add(String.format("Line %d: %s", lineNumber, e.getMessage()));
+                        errorCount++;
+                    }
+                    if (errorCount >= maxErrorCount) {
+                        errors.add(String.format("The maximum number of allowed errors of %d has been reached, " +
+                                "ending file verification.", maxErrorCount));
+                        return errors;
+                    }
+
+                    lineNumber++;
+
+
                 }
-                if (errorCount >= maxErrorCount) {
-                    errors.add(String.format("The maximum number of allowed errors of %d has been reached, " +
-                            "ending file verification.", maxErrorCount));
-                    return errors;
-                }
-                lineNumber++;
+                reader.close();
+                isr.close();
+                fis.close();
+
+                thisChecksum = ChecksumHelper.checksum(file);
+
+            }catch (IllegalArgumentException e) {
+                String error = String.format("Unable to read header %s: %s", fileName, e.getMessage());
+                errors.add(error);
             }
 
-            reader.close();
-            isr.close();
-            fis.close();
 
-            thisChecksum = ChecksumHelper.checksum(file);
+            if (!thisChecksum.equals(fileInfo.getChecksum())) {
+                String error = String.format("Checksum mismatch, provided checksum: %s, calculated checksum: %s",
+                        fileInfo.getChecksum(), thisChecksum);
+                errors.add(error);
+            }
 
-        } catch (IOException e) {
-            String error = String.format("Unable to read %s: %s", fileName, e.getMessage());
-            errors.add(error);
-        }
+            if (lineNumber - 1 != fileInfo.getRecordsCount()) {
+                String error = String.format("Record count mismatch, provided count: %d, actual count: %d",
+                        fileInfo.getRecordsCount(), lineNumber - 1);
+                errors.add(error);
+            }
 
-        if (!thisChecksum.equals(fileInfo.getChecksum())) {
-            String error = String.format("Checksum mismatch, provided checksum: %s, calculated checksum: %s",
-                    fileInfo.getChecksum(), thisChecksum);
-            errors.add(error);
-        }
-
-        if (lineNumber - 1 != fileInfo.getRecordsCount()) {
-            String error = String.format("Record count mismatch, provided count: %d, actual count: %d",
-                    fileInfo.getRecordsCount(), lineNumber - 1);
-            errors.add(error);
-        }
-
+        }catch (IOException e) {
+                String error = String.format("Unable to read %s: %s", fileName, e.getMessage());
+                errors.add(error);
+            }
         return errors;
     }
+
 
 
     /**
@@ -297,40 +315,52 @@ public class CdrFileServiceImpl implements CdrFileService {
 
             String line;
             String currentRequestId = "";
-            while ((line = reader.readLine()) != null) {
-                try {
 
-                    // Parse the CSV line into a CDR
-                    // This should not trow an IllegalArgumentException since we verified this in phase 1
-                    CallDetailRecordDto cdr = CsvHelper.csvLineToCdr(line);
+            try {
 
-                    if (!currentRequestId.equals(cdr.getRequestId().toString())) {
-                        currentRequestId = cdr.getRequestId().toString();
+                line = reader.readLine();
+                CsvHelper.validateCdrHeader(line);
 
-                        // Check for sort order, in reality we don't care about the ascending or descending
-                        // thing, what's important is that all the CDRs for one call are grouped.
-                        if (requestIds.contains(currentRequestId)) {
-                            // An identical requestId was found, that means this file isn't sorted
-                            errors.add(String.format("%s is not sorted properly!", fileName));
-                            reportAuditAndThrow(fileName, errors);
-                        }
-                        requestIds.add(currentRequestId);
+                while ((line = reader.readLine()) != null) {
+                    try {
 
-                        // Start aggregating a new CSR
+                            // Parse the CSV line into a CDR
+                            // This should not trow an IllegalArgumentException since we verified this in phase 1
+                            CallDetailRecordDto cdr = CsvHelper.csvLineToCdrDto(line);
+
+                            if (!currentRequestId.equals(cdr.getRequestId().toString())) {
+                                currentRequestId = cdr.getRequestId().toString();
+
+                                // Check for sort order, in reality we don't care about the ascending or descending
+                                // thing, what's important is that all the CDRs for one call are grouped.
+                                if (requestIds.contains(currentRequestId)) {
+                                    // An identical requestId was found, that means this file isn't sorted
+                                    errors.add(String.format("%s is not sorted properly!", fileName));
+                                    reportAuditAndThrow(fileName, errors);
+                                }
+                                requestIds.add(currentRequestId);
+
+                                // Start aggregating a new CSR
+                            }
+                            CallSummaryRecordDto csr = new CallSummaryRecordDto();
+                            aggregateDetailRecord(cdr, csr);
+                            csrValidatorService.validateSummaryRecord(csr);
+
+
+                    } catch (IllegalArgumentException e) {
+                        errors.add(String.format("Line %d: %s", lineNumber, e.getMessage()));
+                        errorCount++;
                     }
-                    CallSummaryRecordDto csr = new CallSummaryRecordDto();
-                    aggregateDetailRecord(cdr, csr);
-                    csrValidatorService.validateSummaryRecord(csr);
-                } catch (IllegalArgumentException e) {
-                    errors.add(String.format("Line %d: %s", lineNumber, e.getMessage()));
-                    errorCount++;
+                    if (errorCount >= maxErrorCount) {
+                        errors.add(String.format("The maximum number of allowed errors of %d has been reached, " +
+                                "ending file verification.", maxErrorCount));
+                        return errors;
+                    }
+                    lineNumber++;
                 }
-                if (errorCount >= maxErrorCount) {
-                    errors.add(String.format("The maximum number of allowed errors of %d has been reached, " +
-                            "ending file verification.", maxErrorCount));
-                    return errors;
-                }
-                lineNumber++;
+            }catch(IllegalArgumentException e) {
+                String error = String.format("Unable to read  header %s: %s", fileName, e.getMessage());
+                errors.add(error);
             }
 
         } catch (IOException e) {
@@ -344,6 +374,7 @@ public class CdrFileServiceImpl implements CdrFileService {
 
     /**
      * Send aggregated detail records for processing as CallSummaryRecordDto in MOTECH events
+     * Additionally stores a copy of the provided CDR in the CallDetailRecord table, for reporting
      *
      * NOTE: only exposed here for ITs
      *
@@ -365,38 +396,51 @@ public class CdrFileServiceImpl implements CdrFileService {
             String line;
             String currentRequestId = "";
             CallSummaryRecordDto csr = null;
-            while ((line = reader.readLine()) != null) {
-                try {
 
-                    // Parse the CSV line into a CDR
-                    // This will trow IllegalArgumentException if the CSV is malformed
-                    CallDetailRecordDto cdr = CsvHelper.csvLineToCdr(line);
+            try {
+                line = reader.readLine();
+                CsvHelper.validateCdrHeader(line);
 
-                    if (!currentRequestId.equals(cdr.getRequestId().toString())) {
-                        // Send last CSR, if any, for processing
-                        if (csr != null) {
-                            sendProcessSummaryRecordEvent(csr);
-                            csr = null; //todo: does that help the GC?
+                while ((line = reader.readLine()) != null) {
+                    try {
+                        // Parse the CSV line into a CDR
+                        // This will trow IllegalArgumentException if the CSV is malformed
+                        CallDetailRecordDto cdr = CsvHelper.csvLineToCdrDto(line);
+
+                        if (!currentRequestId.equals(cdr.getRequestId().toString())) {
+                            // Send last CSR, if any, for processing
+                            if (csr != null) {
+                                sendProcessSummaryRecordEvent(csr);
+                                csr = null; //todo: does that help the GC?
+                            }
+
+                            currentRequestId = cdr.getRequestId().toString();
+
+                            // Start aggregating a new CSR
+                            csr = new CallSummaryRecordDto();
                         }
 
-                        currentRequestId = cdr.getRequestId().toString();
+                        aggregateDetailRecord(cdr, csr);
 
-                        // Start aggregating a new CSR
-                        csr = new CallSummaryRecordDto();
+                        // Save a copy of the CDR into CallDetailRecord for reporting
+                        callDetailRecordDataService.create(CsvHelper.csvLineToCdr(line));
+
+                    } catch (IllegalArgumentException e) {
+                        errors.add(String.format("Line %d: %s", lineNumber, e.getMessage()));
+                        errorCount++;
                     }
+                    if (errorCount >= maxErrorCount) {
+                        errors.add(String.format("The maximum number of allowed errors of %d has been reached, " +
+                                "ending file verification.", maxErrorCount));
+                        return errors;
+                    }
+                    lineNumber++;
 
-                    aggregateDetailRecord(cdr, csr);
 
-                } catch (IllegalArgumentException e) {
-                    errors.add(String.format("Line %d: %s", lineNumber, e.getMessage()));
-                    errorCount++;
                 }
-                if (errorCount >= maxErrorCount) {
-                    errors.add(String.format("The maximum number of allowed errors of %d has been reached, " +
-                            "ending file verification.", maxErrorCount));
-                    return errors;
-                }
-                lineNumber++;
+            }catch (IllegalArgumentException e) {
+                String error = String.format("Unable to read  header %s: %s", fileName, e.getMessage());
+                errors.add(error);
             }
             sendProcessSummaryRecordEvent(csr);
 

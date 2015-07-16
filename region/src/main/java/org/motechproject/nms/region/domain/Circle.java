@@ -1,5 +1,6 @@
 package org.motechproject.nms.region.domain;
 
+import org.codehaus.jackson.annotate.JsonBackReference;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.domain.MdsEntity;
@@ -15,6 +16,7 @@ public class Circle extends MdsEntity {
     private String name;
 
     @Field
+    @JsonBackReference
     private List<State> states;
 
     @Field

@@ -50,12 +50,13 @@ public class DistrictServiceImpl implements DistrictService {
 
     @Override
     public District findByStateAndCode(final State state, final Long code) {
+        if (state == null) { return null; }
 
         SqlQueryExecution<District> queryExecution = new SqlQueryExecution<District>() {
 
             @Override
             public String getSqlQuery() {
-                return "select *  from nms_districts where state_id_oid = ? and code = ?";
+                return "select * from nms_districts where state_id_oid = ? and code = ?";
             }
 
             @Override
@@ -78,12 +79,13 @@ public class DistrictServiceImpl implements DistrictService {
 
     @Override
     public District findByStateAndName(final State state, final String name) {
+        if (state == null) { return null; }
 
         SqlQueryExecution<District> queryExecution = new SqlQueryExecution<District>() {
 
             @Override
             public String getSqlQuery() {
-                return "select *  from nms_districts where state_id_oid = ? and name = ?";
+                return "select * from nms_districts where state_id_oid = ? and name = ?";
             }
 
             @Override
@@ -102,6 +104,16 @@ public class DistrictServiceImpl implements DistrictService {
 
         return districtDataService.executeSQLQuery(queryExecution);
 
+    }
+
+    @Override
+    public void create(District district) {
+        districtDataService.create(district);
+    }
+
+    @Override
+    public void update(District district) {
+        districtDataService.update(district);
     }
 
 }

@@ -1,5 +1,7 @@
 package org.motechproject.nms.region.domain;
 
+import org.codehaus.jackson.annotate.JsonBackReference;
+import org.codehaus.jackson.annotate.JsonManagedReference;
 import org.motechproject.mds.annotations.Cascade;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
@@ -46,11 +48,13 @@ public class HealthBlock extends MdsEntity {
     @Field
     @Column(allowsNull = "false")
     @NotNull
+    @JsonBackReference
     private Taluka taluka;
 
     @Field
     @Cascade(delete = true)
     @Persistent(mappedBy = "healthBlock", defaultFetchGroup = "true")
+    @JsonManagedReference
     private List<HealthFacility> healthFacilities;
 
     public HealthBlock() {

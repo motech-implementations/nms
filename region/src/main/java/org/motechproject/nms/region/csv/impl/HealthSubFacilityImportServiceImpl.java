@@ -5,11 +5,11 @@ import org.motechproject.nms.csv.utils.GetString;
 import org.motechproject.nms.csv.utils.Store;
 import org.motechproject.nms.region.csv.HealthSubFacilityImportService;
 import org.motechproject.nms.region.domain.HealthSubFacility;
-import org.motechproject.nms.region.repository.HealthSubFacilityDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.region.service.HealthBlockService;
 import org.motechproject.nms.region.service.HealthFacilityService;
+import org.motechproject.nms.region.service.HealthSubFacilityService;
 import org.motechproject.nms.region.service.TalukaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -37,6 +37,7 @@ public class HealthSubFacilityImportServiceImpl extends BaseLocationImportServic
     public static final String NAME_FIELD = "name";
     public static final String PID_FIELD = "healthFacility";
 
+    private HealthSubFacilityService healthSubFacilityService;
     private HealthBlockService healthBlockService;
     private DistrictService districtService;
     private StateDataService stateDataService;
@@ -45,18 +46,34 @@ public class HealthSubFacilityImportServiceImpl extends BaseLocationImportServic
 
     @Autowired
     public HealthSubFacilityImportServiceImpl(
-            HealthSubFacilityDataService healthSubFacilityDataService,
+            HealthSubFacilityService healthSubFacilityService,
             HealthFacilityService healthFacilityService,
             HealthBlockService healthBlockService,
             DistrictService districtService,
             StateDataService stateDataService,
             TalukaService talukaService) {
-        super(HealthSubFacility.class, healthSubFacilityDataService);
+        super(HealthSubFacility.class);
+        this.healthSubFacilityService = healthSubFacilityService;
         this.healthFacilityService = healthFacilityService;
         this.healthBlockService = healthBlockService;
         this.districtService = districtService;
         this.stateDataService = stateDataService;
         this.talukaService = talukaService;
+    }
+
+    @Override
+    protected void createOrUpdateInstance(HealthSubFacility instance) {
+        HealthSubFacility existing = healthSubFacilityService.findByHealthFacilityAndCode(instance.getHealthFacility(),
+                                                                                          instance.getCode());
+
+        if (existing != null) {
+            existing.setName(instance.getName());
+            existing.setRegionalName(instance.getRegionalName());
+
+            healthSubFacilityService.update(existing);
+        } else {
+            healthSubFacilityService.create(instance);
+        }
     }
 
     @Override

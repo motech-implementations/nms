@@ -125,8 +125,8 @@ public class MobileAcademyController extends BaseController {
      */
     @RequestMapping(
             value = "/bookmarkWithScore",
-            method = RequestMethod.GET,
-            headers = { "Content-type=application/json" })
+            method = RequestMethod.GET)
+    @ResponseBody
     public GetBookmarkResponse getBookmarkWithScore(@RequestParam Long callingNumber,
                                                  @RequestParam Long callId) {
 
@@ -160,7 +160,8 @@ public class MobileAcademyController extends BaseController {
         if (callingNumber == null || callingNumber < SMALLEST_10_DIGIT_NUMBER || callingNumber > LARGEST_10_DIGIT_NUMBER) {
             throw new IllegalArgumentException(String.format(INVALID, "callingNumber"));
         }
-        if (bookmarkRequest.getCallId() == null || bookmarkRequest.getCallId() < SMALLEST_15_DIGIT_NUMBER) {
+        Long callId = bookmarkRequest.getCallId();
+        if (callId == null || callId < SMALLEST_15_DIGIT_NUMBER || callId > LARGEST_15_DIGIT_NUMBER) {
             throw new IllegalArgumentException(String.format(INVALID, "callId"));
         }
 

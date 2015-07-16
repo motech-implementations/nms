@@ -612,17 +612,17 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         Subscription subscription = mctsSubscriber.getSubscriptions().iterator().next();
 
-        // initially, the welcome message should be played
+        // initially, the welcome message should be played (welcome message and week 1 message are the same)
         SubscriptionPackMessage message = subscription.nextScheduledMessage(now);
-        assertEquals("welcome", message.getWeekId());
+        assertEquals("w1_1", message.getWeekId());
 
-        subscription.setNeedsWelcomeMessage(false);
+        subscription.setNeedsWelcomeMessageViaObd(false);
         subscriptionDataService.update(subscription);
 
-        message = subscription.nextScheduledMessage(now.plusDays(8)); //one week and a day
+        message = subscription.nextScheduledMessage(now.plusDays(7)); //one week
         assertEquals("w2_1", message.getWeekId());
 
-        message = subscription.nextScheduledMessage(now.plusDays(75));
+        message = subscription.nextScheduledMessage(now.plusDays(74));
         assertEquals("w11_2", message.getWeekId());
     }
 
@@ -638,7 +638,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
 
         Subscription subscription = mctsSubscriber.getSubscriptions().iterator().next();
-        subscription.setNeedsWelcomeMessage(false);
+        subscription.setNeedsWelcomeMessageViaObd(false);
         subscriptionDataService.update(subscription);
 
         // should throw IllegalStateException
@@ -918,8 +918,6 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     /*
 	 * To verify that MSISDN greater than 10 digit should be accepted during 
 	 * MCTS upload. subscriber should be created with last 10 digits of MSISDN.
-	 * 
-	 * https://applab.atlassian.net/browse/NMS-202
 	 */
     @Test
     public void verifyFT182() {
@@ -937,9 +935,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     
     /*
      * To verify that user's subscription should create in pending state
-     *
      */
-
     @Test
     public void verifyFT153() {
 

@@ -19,12 +19,13 @@ public class HealthBlockServiceImpl implements HealthBlockService {
 
     @Override
     public HealthBlock findByTalukaAndCode(final Taluka taluka, final Long code) {
+        if (taluka == null) { return null; }
 
         SqlQueryExecution<HealthBlock> queryExecution = new SqlQueryExecution<HealthBlock>() {
 
             @Override
             public String getSqlQuery() {
-                return "select *  from nms_health_blocks where taluka_id_oid = ? and code = ?";
+                return "select * from nms_health_blocks where taluka_id_oid = ? and code = ?";
             }
 
             @Override
@@ -42,5 +43,15 @@ public class HealthBlockServiceImpl implements HealthBlockService {
         };
 
         return healthBlockDataService.executeSQLQuery(queryExecution);
+    }
+
+    @Override
+    public void create(HealthBlock healthBlock) {
+        healthBlockDataService.create(healthBlock);
+    }
+
+    @Override
+    public void update(HealthBlock healthBlock) {
+        healthBlockDataService.update(healthBlock);
     }
 }

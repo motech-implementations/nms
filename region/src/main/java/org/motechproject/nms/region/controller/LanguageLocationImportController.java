@@ -36,13 +36,13 @@ public class LanguageLocationImportController {
         try {
             try (InputStream in = csvFile.getInputStream()) {
                 languageLocationImportService.importData(new InputStreamReader(in));
-                csvAuditService.auditSuccess(csvFile.getName(), "/region/languageLocationCode/import");
+                csvAuditService.auditSuccess(csvFile.getOriginalFilename(), "/region/languageLocationCode/import");
             }
         } catch (CsvImportException e) {
-            logError(csvFile.getName(), "/region/languageLocationCode/import", e);
+            logError(csvFile.getOriginalFilename(), "/region/languageLocationCode/import", e);
             throw e;
         } catch (Exception e) {
-            logError(csvFile.getName(), "/region/languageLocationCode/import", e);
+            logError(csvFile.getOriginalFilename(), "/region/languageLocationCode/import", e);
             throw new CsvImportException("An error occurred during CSV import", e);
         }
     }

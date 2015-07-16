@@ -7,7 +7,6 @@ import org.motechproject.nms.csv.repository.CsvAuditRecordDataService;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.repository.CallContentDataService;
-import org.motechproject.nms.flw.repository.CallDetailRecordDataService;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.flw.repository.ServiceUsageCapDataService;
 import org.motechproject.nms.flw.repository.ServiceUsageDataService;
@@ -59,7 +58,7 @@ public class TestingServiceImpl implements TestingService {
     @Autowired
     private CallContentDataService callContentDataService;
     @Autowired
-    private CallDetailRecordDataService callDetailRecordDataService;
+    private org.motechproject.nms.flw.repository.CallDetailRecordDataService  flwCallDetailRecordDataService;
     @Autowired
     private FrontLineWorkerDataService frontLineWorkerDataService;
     @Autowired
@@ -76,6 +75,8 @@ public class TestingServiceImpl implements TestingService {
      */
     @Autowired
     private FileAuditRecordDataService fileAuditRecordDataService;
+    @Autowired
+    private org.motechproject.nms.imi.repository.CallDetailRecordDataService imiCallDetailRecordDataService;
 
     /**
      * Kilkari
@@ -184,7 +185,7 @@ public class TestingServiceImpl implements TestingService {
          * FLW
          */
         callContentDataService.deleteAll();
-        callDetailRecordDataService.deleteAll();
+        flwCallDetailRecordDataService.deleteAll();
         int weeks = Integer.parseInt(settingsFacade.getProperty(WEEKS_TO_KEEP_INVALID_FLWS));
         DateTime now = DateTime.now();
         for (FrontLineWorker flw: frontLineWorkerDataService.retrieveAll()) {
@@ -207,6 +208,7 @@ public class TestingServiceImpl implements TestingService {
          * IMI
          */
         fileAuditRecordDataService.deleteAll();
+        imiCallDetailRecordDataService.deleteAll();
 
 
         /**

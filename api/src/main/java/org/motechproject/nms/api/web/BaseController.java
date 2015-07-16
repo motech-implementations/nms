@@ -196,7 +196,7 @@ public class BaseController {
     }
 
     protected DateTime epochToDateTime(long epoch) {
-        return new DateTime(epoch*1000); // epoch time sent by IVR is in secs
+        return new DateTime(epoch * 1000); // epoch time sent by IVR is in secs
     }
 
     protected State getStateForFrontLineWorker(FrontLineWorker flw, Circle circle) {
@@ -208,9 +208,6 @@ public class BaseController {
 
         return state;
     }
-
-
-
 
     protected State getStateFromCircle(Circle circle) {
 
@@ -231,7 +228,6 @@ public class BaseController {
     protected boolean frontLineWorkerAuthorizedForAccess(FrontLineWorker flw, State state) {
         return whitelistService.numberWhitelistedForState(state, flw.getContactNumber());
     }
-
 
     protected boolean serviceDeployedInUserState(Service service, State state) {
         // If I don't have a state for the FLW let them continue further

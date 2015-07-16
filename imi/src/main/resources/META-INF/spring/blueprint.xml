@@ -26,6 +26,9 @@
     <osgi:reference id="fileAuditRecordDataService"
                     interface="org.motechproject.nms.imi.repository.FileAuditRecordDataService" />
 
+    <osgi:reference id="callDetailRecordDataService"
+                    interface="org.motechproject.nms.imi.repository.CallDetailRecordDataService" />
+
     <osgi:reference id="languageService"
                     interface="org.motechproject.nms.region.service.LanguageService" />
 

@@ -19,6 +19,7 @@ public class HealthSubFacilityServiceImpl implements HealthSubFacilityService {
 
     @Override
     public HealthSubFacility findByHealthFacilityAndCode(final HealthFacility healthFacility, final Long code) {
+        if (healthFacility == null) { return null; }
 
         SqlQueryExecution<HealthSubFacility> queryExecution = new SqlQueryExecution<HealthSubFacility>() {
 
@@ -42,5 +43,15 @@ public class HealthSubFacilityServiceImpl implements HealthSubFacilityService {
         };
 
         return dataService.executeSQLQuery(queryExecution);
+    }
+
+    @Override
+    public void create(HealthSubFacility healthSubFacility) {
+        dataService.create(healthSubFacility);
+    }
+
+    @Override
+    public void update(HealthSubFacility healthSubFacility) {
+        dataService.update(healthSubFacility);
     }
 }
