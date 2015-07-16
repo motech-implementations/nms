@@ -14,7 +14,6 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.api.web.contract.UserLanguageRequest;
@@ -27,9 +26,11 @@ import org.motechproject.nms.props.domain.DeployedService;
 import org.motechproject.nms.props.domain.Service;
 import org.motechproject.nms.props.repository.DeployedServiceDataService;
 import org.motechproject.nms.region.domain.Language;
+import org.motechproject.nms.region.domain.NationalDefaultLanguage;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
+import org.motechproject.nms.region.repository.NationalDefaultLanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.testing.it.utils.RegionHelper;
@@ -76,6 +77,9 @@ public class LanguageControllerBundleIT extends BasePaxIT {
 
     @Inject
     DistrictService districtService;
+    
+    @Inject
+    NationalDefaultLanguageDataService nationalDefaultLanguageDataService;
 
     private RegionHelper rh;
 
@@ -192,25 +196,27 @@ public class LanguageControllerBundleIT extends BasePaxIT {
     @Test
     public void testSetLanguageMissingLanguageLocationCode() throws IOException, InterruptedException {
         HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/languageLocationCode", TestContext.getJettyPort()));
-        StringEntity params = new StringEntity("{\"callingNumber\":abcdef,\"callId\":123456789012345}");
+        StringEntity params = new StringEntity("{\"callingNumber\":1111111111,\"callId\":123456789012345}");
         httpPost.setEntity(params);
 
         httpPost.addHeader("content-type", "application/json");
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, ADMIN_USERNAME,
-                ADMIN_PASSWORD));
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, 
+        		"{\"failureReason\":\"<languageLocationCode: Not Present>\"}",
+        		ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     @Test
     public void testSetLanguageInvalidLanguageLocationCode() throws IOException, InterruptedException {
         HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/languageLocationCode", TestContext.getJettyPort()));
-        StringEntity params = new StringEntity("{\"callingNumber\":abcdef,\"callId\":123456789012345,\"languageLocationCode\":\"AA\"}");
+        StringEntity params = new StringEntity("{\"callingNumber\":1111111111,\"callId\":123456789012345,\"languageLocationCode\":\"AA\"}");
         httpPost.setEntity(params);
 
         httpPost.addHeader("content-type", "application/json");
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, ADMIN_USERNAME,
-                ADMIN_PASSWORD));
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_NOT_FOUND,
+        		"{\"failureReason\":\"<languageLocationCode: Not Found>\"}",
+        		ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
     @Test
@@ -430,8 +436,6 @@ public class LanguageControllerBundleIT extends BasePaxIT {
      * Language Location Code value languageLocationCode value that doesn’t
      * exist in NMS DB.
      */
-    // TODO JIRA https://applab.atlassian.net/browse/NMS-225
-    @Ignore
     @Test
     public void verifyFT469() throws IOException, InterruptedException {
         HttpPost httpPost = new HttpPost(String.format(
@@ -443,8 +447,44 @@ public class LanguageControllerBundleIT extends BasePaxIT {
         httpPost.addHeader("content-type", "application/json");
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
-                HttpStatus.SC_BAD_REQUEST,
-                "{\"failureReason\":\"<languageLocationCode: Invalid>\"}",
+                HttpStatus.SC_NOT_FOUND,
+                "{\"failureReason\":\"<languageLocationCode: Not Found>\"}",
                 ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+    
+    private void createFlwWithStatusAnonymous(){
+    	Language language = new Language("99", "Papiamento");
+        languageDataService.create(language);
+        
+    	// create anonymous FLW record
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
+        frontLineWorkerService.add(flw);
+        
+        ServiceUsageCap serviceUsageCap = new ServiceUsageCap(null, Service.MOBILE_KUNJI, 3600);
+        serviceUsageCapDataService.create(serviceUsageCap);
+        
+        nationalDefaultLanguageDataService.create(new NationalDefaultLanguage(language));
+        
+    }
+    
+    /*
+     * To set the LanguageLocationCode of the anonymous user using languageLocationCode API.
+     */
+    @Test
+    public void verifyFT359() throws IOException, InterruptedException{
+    	createFlwWithStatusAnonymous();
+    	HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/languageLocationCode", TestContext.getJettyPort()));
+        StringEntity params = new StringEntity("{\"callingNumber\":1111111111,\"callId\":123456789012345,\"languageLocationCode\":99}");
+        httpPost.setEntity(params);
+
+        httpPost.addHeader("content-type", "application/json");
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK));
+
+        FrontLineWorker flw = frontLineWorkerService.getByContactNumber(1111111111l);
+        Language language = flw.getLanguage();
+        assertNotNull(language);
+        assertEquals(FrontLineWorkerStatus.ANONYMOUS, flw.getStatus());
+        assertEquals("FLW Language Code", "99", language.getCode());
     }
 }
