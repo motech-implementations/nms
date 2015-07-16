@@ -12,6 +12,11 @@
     <mvc:annotation-driven />
 
     <bean id="maSettings" class="org.motechproject.server.config.SettingsFacade" autowire="byType">
+        <property name="configFiles">
+        <list>
+            <value>classpath:mobile-academy.properties</value>
+        </list>
+        </property>
         <property name="rawConfigFiles">
             <list>
                 <value>classpath:nmsCourse.json</value>

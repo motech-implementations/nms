@@ -37,6 +37,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import javax.jdo.Query;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -432,11 +433,72 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
 
     public List<Subscription> findActiveSubscriptionsForDay(DayOfTheWeek dayOfTheWeek, int page, int pageSize) {
-        List<Subscription> firstDay = subscriptionDataService.findByStatusAndFirstMessageDayOfWeek(SubscriptionStatus.ACTIVE, dayOfTheWeek,
-                new QueryParams(page, pageSize));
-        List<Subscription> secondDay = subscriptionDataService.findByStatusAndSecondMessageDayOfWeek(SubscriptionStatus.ACTIVE, dayOfTheWeek,
-                new QueryParams(page, pageSize));
-        return ListUtils.union(firstDay, secondDay);
+        List<Subscription> subscriptions = Collections.emptyList();
+        List<SubscriptionPack> subscriptionPacks = getSubscriptionPacks();
+
+        for (SubscriptionPack subscriptionPack : subscriptionPacks) {
+            List<Subscription> packSubscriptions;
+            List<Subscription> firstDay;
+            List<Subscription> secondDay = Collections.emptyList();
+
+            firstDay = findByStatusAndFirstMessageDayOfWeekAndPack(SubscriptionStatus.ACTIVE, dayOfTheWeek,
+                                                                   subscriptionPack, page, pageSize);
+            if (subscriptionPack.getMessagesPerWeek() == 2) {
+                secondDay = findByStatusAndSecondMessageDayOfWeekAndPack(SubscriptionStatus.ACTIVE, dayOfTheWeek,
+                                                                         subscriptionPack, page, pageSize);
+            }
+
+            packSubscriptions = ListUtils.union(firstDay, secondDay);
+            subscriptions = ListUtils.union(subscriptions, packSubscriptions);
+        }
+
+        return subscriptions;
+    }
+
+    @Override
+    public List<Subscription> findByStatusAndFirstMessageDayOfWeekAndPack(final SubscriptionStatus status,
+                                                                          final DayOfTheWeek firstMessageDayOfWeek,
+                                                                          final SubscriptionPack subscriptionPack,
+                                                                          final int page, final int pageSize) {
+        @SuppressWarnings("unchecked")
+        QueryExecution<List<Subscription>> queryExecution = new QueryExecution<List<Subscription>>() {
+            @Override
+            public List<Subscription> execute(Query query, InstanceSecurityRestriction restriction) {
+
+                query.setFilter("status == s && firstMessageDayOfWeek == msgDayOfWeek && subscriptionPack == sp");
+                query.declareParameters("org.motechproject.nms.kilkari.domain.SubscriptionStatus s, " +
+                                        "org.motechproject.nms.props.domain.DayOfTheWeek msgDayOfWeek, " +
+                                        "org.motechproject.nms.kilkari.domain.SubscriptionPack sp");
+                query.setRange(((page - 1) * pageSize), (page * pageSize) - 1);
+
+                return (List<Subscription>) query.executeWithArray(status, firstMessageDayOfWeek, subscriptionPack);
+            }
+        };
+
+        return subscriptionDataService.executeQuery(queryExecution);
+    }
+
+    @Override
+    public List<Subscription> findByStatusAndSecondMessageDayOfWeekAndPack(final SubscriptionStatus status,
+                                                                           final DayOfTheWeek secondMessageDayOfWeek,
+                                                                           final SubscriptionPack subscriptionPack,
+                                                                           final int page, final int pageSize) {
+        @SuppressWarnings("unchecked")
+        QueryExecution<List<Subscription>> queryExecution = new QueryExecution<List<Subscription>>() {
+            @Override
+            public List<Subscription> execute(Query query, InstanceSecurityRestriction restriction) {
+
+                query.setFilter("status == s && secondMessageDayOfWeek == msgDayOfWeek && subscriptionPack == sp");
+                query.declareParameters("org.motechproject.nms.kilkari.domain.SubscriptionStatus s, " +
+                        "org.motechproject.nms.props.domain.DayOfTheWeek msgDayOfWeek, " +
+                        "org.motechproject.nms.kilkari.domain.SubscriptionPack sp");
+                query.setRange(((page - 1) * pageSize), (page * pageSize) - 1);
+
+                return (List<Subscription>) query.executeWithArray(status, secondMessageDayOfWeek, subscriptionPack);
+            }
+        };
+
+        return subscriptionDataService.executeQuery(queryExecution);
     }
 
     public List<Subscription> findPendingSubscriptionsFromDate(DateTime startDate, int page, int pageSize) {

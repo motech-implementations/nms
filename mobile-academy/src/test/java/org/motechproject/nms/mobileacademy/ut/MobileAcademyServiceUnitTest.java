@@ -24,6 +24,8 @@ import org.motechproject.nms.mobileacademy.repository.NmsCourseDataService;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
 import org.motechproject.nms.mobileacademy.service.impl.CourseNotificationServiceImpl;
 import org.motechproject.nms.mobileacademy.service.impl.MobileAcademyServiceImpl;
+import org.motechproject.scheduler.contract.RepeatingSchedulableJob;
+import org.motechproject.scheduler.service.MotechSchedulerService;
 import org.motechproject.server.config.SettingsFacade;
 
 import javax.validation.ConstraintViolation;
@@ -86,6 +88,9 @@ public class MobileAcademyServiceUnitTest {
     @Mock
     private AlertService alertService;
 
+    @Mock
+    private MotechSchedulerService schedulerService;
+
     private Validator validator;
 
     @Before
@@ -96,7 +101,7 @@ public class MobileAcademyServiceUnitTest {
         mobileAcademyService = new MobileAcademyServiceImpl(bookmarkService, activityService, nmsCourseDataService,
                 completionRecordDataService, eventRelay, settingsFacade, alertService);
         courseNotificationService = new CourseNotificationServiceImpl(completionRecordDataService,
-                smsNotificationService);
+                smsNotificationService, settingsFacade, schedulerService);
         validator = Validation.buildDefaultValidatorFactory().getValidator();
         when(activityService.createActivity(any(ActivityRecord.class))).thenReturn(new ActivityRecord());
     }
@@ -214,11 +219,67 @@ public class MobileAcademyServiceUnitTest {
         event.getParameters().put("address", "tel: 9876543210");
         event.getParameters().put("deliveryStatus", "DeliveredToTerminal");
         CompletionRecord cr = new CompletionRecord(9876543210L, 34, true, 1);
+        cr.setModificationDate(DateTime.now());
         assertNull(cr.getLastDeliveryStatus());
 
         when(completionRecordDataService.findRecordByCallingNumber(anyLong())).thenReturn(cr);
+        when(settingsFacade.getProperty(anyString())).thenReturn("1");
         courseNotificationService.updateSmsStatus(event);
         assertTrue(cr.getLastDeliveryStatus().equals("DeliveredToTerminal"));
+    }
+
+    @Test
+    public void testStatusUpdateNotificationRetry() {
+        MotechEvent event = new MotechEvent();
+        event.getParameters().put("address", "tel: 9876543210");
+        event.getParameters().put("deliveryStatus", "DeliveryImpossible");
+        CompletionRecord cr = new CompletionRecord(9876543210L, 34, true, 1);
+        cr.setModificationDate(DateTime.now().minusDays(1));
+        assertNull(cr.getLastDeliveryStatus());
+        assertEquals(0, cr.getNotificationRetryCount());
+
+        when(completionRecordDataService.findRecordByCallingNumber(anyLong())).thenReturn(cr);
+        when(settingsFacade.getProperty(anyString())).thenReturn("1");
+        doNothing().when(schedulerService).safeScheduleRepeatingJob(any(RepeatingSchedulableJob.class));
+        courseNotificationService.updateSmsStatus(event);
+        assertTrue(cr.getLastDeliveryStatus().equals("DeliveryImpossible"));
+        assertEquals(1, cr.getNotificationRetryCount());
+    }
+
+    @Test
+    public void testStatusUpdateNotificationMaxNoRetry() {
+        MotechEvent event = new MotechEvent();
+        event.getParameters().put("address", "tel: 9876543210");
+        event.getParameters().put("deliveryStatus", "DeliveryImpossible");
+        CompletionRecord cr = new CompletionRecord(9876543210L, 34, true, 1, 1);
+        cr.setModificationDate(DateTime.now().minusDays(1));
+        assertNull(cr.getLastDeliveryStatus());
+        assertEquals(1, cr.getNotificationRetryCount());
+
+        when(completionRecordDataService.findRecordByCallingNumber(anyLong())).thenReturn(cr);
+        when(settingsFacade.getProperty(anyString())).thenReturn("1");
+        doNothing().when(schedulerService).safeScheduleRepeatingJob(any(RepeatingSchedulableJob.class));
+        courseNotificationService.updateSmsStatus(event);
+        assertTrue(cr.getLastDeliveryStatus().equals("DeliveryImpossible"));
+        assertEquals(1, cr.getNotificationRetryCount());
+    }
+
+    @Test
+    public void testStatusUpdateNotificationScheduler() {
+        MotechEvent event = new MotechEvent();
+        event.getParameters().put("address", "tel: 9876543210");
+        event.getParameters().put("deliveryStatus", "DeliveryImpossible");
+        CompletionRecord cr = new CompletionRecord(9876543210L, 34, true, 1);
+        cr.setModificationDate(DateTime.now());
+        assertNull(cr.getLastDeliveryStatus());
+        assertEquals(0, cr.getNotificationRetryCount());
+
+        when(completionRecordDataService.findRecordByCallingNumber(anyLong())).thenReturn(cr);
+        when(settingsFacade.getProperty(anyString())).thenReturn("1");
+        doNothing().when(schedulerService).safeScheduleRepeatingJob(any(RepeatingSchedulableJob.class));
+        courseNotificationService.updateSmsStatus(event);
+        assertTrue(cr.getLastDeliveryStatus().equals("DeliveryImpossible"));
+        assertEquals(0, cr.getNotificationRetryCount());
     }
 
     @Test(expected = CourseNotCompletedException.class)
