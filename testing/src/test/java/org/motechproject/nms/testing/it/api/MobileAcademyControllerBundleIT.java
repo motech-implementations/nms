@@ -54,12 +54,23 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
     }
 
     @Test
-    public void testBookmarkBadCallId() throws IOException, InterruptedException {
+    public void testBookmarkBadCallIdSmallest() throws IOException, InterruptedException {
 
         String endpoint = String.format("http://localhost:%d/api/mobileacademy/bookmarkWithScore",
                 TestContext.getJettyPort());
         SaveBookmarkRequest bookmarkRequest = new SaveBookmarkRequest();
         bookmarkRequest.setCallId(BaseController.SMALLEST_15_DIGIT_NUMBER - 1);
+        HttpPost request = RequestBuilder.createPostRequest(endpoint, bookmarkRequest);
+        assertTrue(SimpleHttpClient.execHttpRequest(request, HttpStatus.SC_BAD_REQUEST, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
+    }
+
+    @Test
+    public void testBookmarkBadCallIdLargest() throws IOException, InterruptedException {
+
+        String endpoint = String.format("http://localhost:%d/api/mobileacademy/bookmarkWithScore",
+                TestContext.getJettyPort());
+        SaveBookmarkRequest bookmarkRequest = new SaveBookmarkRequest();
+        bookmarkRequest.setCallId(BaseController.LARGEST_15_DIGIT_NUMBER + 1);
         HttpPost request = RequestBuilder.createPostRequest(endpoint, bookmarkRequest);
         assertTrue(SimpleHttpClient.execHttpRequest(request, HttpStatus.SC_BAD_REQUEST, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
     }
@@ -73,6 +84,16 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
         bookmark.setCallingNumber(BaseController.SMALLEST_10_DIGIT_NUMBER);
         HttpPost request = RequestBuilder.createPostRequest(endpoint, bookmark);
         assertTrue(SimpleHttpClient.execHttpRequest(request, HttpStatus.SC_BAD_REQUEST, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
+    }
+
+    @Test
+    public void testGetBookmarkEmpty() throws IOException, InterruptedException {
+        String endpoint = String.format("http://localhost:%d/api/mobileacademy/bookmarkWithScore?callingNumber=1234567890&callId=123456789012345",
+                TestContext.getJettyPort());
+        HttpGet request = RequestBuilder.createGetRequest(endpoint);
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(request, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
+        assertNotNull(response);
+        assertEquals(200, response.getStatusLine().getStatusCode());
     }
 
     @Test
