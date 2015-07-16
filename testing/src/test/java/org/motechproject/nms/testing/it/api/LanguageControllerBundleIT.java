@@ -1,13 +1,5 @@
 package org.motechproject.nms.testing.it.api;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.io.IOException;
-
-import javax.inject.Inject;
-
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -25,11 +17,8 @@ import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.props.domain.DeployedService;
 import org.motechproject.nms.props.domain.Service;
 import org.motechproject.nms.props.repository.DeployedServiceDataService;
-import org.motechproject.nms.region.domain.Circle;
-import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Language;
 import org.motechproject.nms.region.domain.NationalDefaultLanguage;
-import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
@@ -46,6 +35,13 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
+
+import javax.inject.Inject;
+import java.io.IOException;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerSuite.class)
@@ -84,8 +80,12 @@ public class LanguageControllerBundleIT extends BasePaxIT {
     @Inject
     NationalDefaultLanguageDataService nationalDefaultLanguageDataService;
 
-
     private RegionHelper rh;
+
+    @Before
+    public void clearDatabase() {
+        testingService.clearDatabase();
+    }
 
     @Before
     public void setupTestData() {
@@ -96,7 +96,6 @@ public class LanguageControllerBundleIT extends BasePaxIT {
                 stateDataService, districtDataService, districtService);
         rh.newDelhiDistrict();
         rh.delhiCircle();
-
 
         // All 3 services deployed in DELHI
         deployedServiceDataService.create(new DeployedService(rh.delhiState(), Service.KILKARI));
@@ -281,6 +280,7 @@ public class LanguageControllerBundleIT extends BasePaxIT {
         StringEntity params = new StringEntity(
                 "{\"callingNumber\":1111111111,\"callId\":123456789012345,\"languageLocationCode\":\""
                         + rh.hindiLanguage().getCode() + "\"}");
+
         httpPost.setEntity(params);
 
         httpPost.addHeader("content-type", "application/json");

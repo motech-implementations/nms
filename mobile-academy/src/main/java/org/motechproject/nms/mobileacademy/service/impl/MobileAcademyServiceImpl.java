@@ -58,6 +58,8 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
 
     private static final int PASS_SCORE = 22;
 
+    private static final int MILLIS_PER_SEC = 1000;
+
     /**
      * Bookmark service to get and set bookmarks
      */
@@ -148,7 +150,7 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
             throw new IllegalStateException("No course bootstrapped. Check deployment");
         }
 
-        return course.getModificationDate().getMillis();
+        return course.getModificationDate().getMillis() / MILLIS_PER_SEC; //Unix epoch is represented in seconds
     }
 
     @Override
@@ -397,7 +399,7 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
 
         MaCourse courseDto = new MaCourse();
         courseDto.setName(course.getName());
-        courseDto.setVersion(course.getModificationDate().getMillis());
+        courseDto.setVersion(course.getModificationDate().getMillis()/MILLIS_PER_SEC);
         courseDto.setContent(course.getContent());
         return courseDto;
     }
