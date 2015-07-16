@@ -2,8 +2,10 @@ package org.motechproject.nms.testing.it.api;
 
 import com.google.common.base.Joiner;
 import org.apache.commons.httpclient.HttpStatus;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.util.EntityUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -720,6 +722,36 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
                 "{\"failureReason\":\"<mkCardCode: Not Present>\"}",
                 ADMIN_USERNAME, ADMIN_PASSWORD));
+    }
+
+    @Test
+    public void testCallDetailsContentEmptyMkCardNumber() throws IOException, InterruptedException {
+        ArrayList<String> array = new ArrayList<>();
+        array.add(createContentJson(/* type */ false, null,
+                /* mkCardCode */ true, "",
+                /* contentName */ true, "Chapter-01lesson-04",
+                /* contentFile */ true, "ch1_l4.wav",
+                /* startTime */ true, 1200000000l,
+                /* endTime */ true, 1222222221l,
+                /* completionFlag */ false, null,
+                /* correctAnswerEntered */ false, null));
+        HttpPost httpPost = createCallDetailsPost("mobilekunji",
+                /* callingNumber */ true, 9810320300l,
+                /* callId */ true, 234000011111111l,
+                /* operator */ true, "A",
+                /* circle */ true, "AP",
+                /* callStartTime */ true, 1422879843l,
+                /* callEndTime */ true, 1422879903l,
+                /* callDurationInPulses */ true, 60,
+                /* endOfUsagePromptCounter */ true, 0,
+                /* welcomeMessagePromptFlag */ true, false,
+                /* callStatus */ true, 1,
+                /* callDisconnectReason */ true, 1,
+                /* content */ true, Joiner.on(",").join(array));
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+        assertEquals("{\"failureReason\":\"<mkCardCode: Not Present>\"}", EntityUtils.toString(response.getEntity()));
     }
 
     // Test with no content
