@@ -125,7 +125,7 @@ public class Subscription {
     public DateTime getStartDate() { return startDate; }
 
     public void setStartDate(DateTime startDate) {
-        this.startDate = startDate;
+        this.startDate = startDate.withTimeAtStartOfDay();
         this.firstMessageDayOfWeek = DayOfTheWeek.fromInt(startDate.getDayOfWeek());
 
         if (subscriptionPack.getMessagesPerWeek() == 2) {
@@ -290,7 +290,7 @@ public class Subscription {
 
             if (today.isBefore(startDate)) {
                 return SubscriptionStatus.PENDING_ACTIVATION;
-            } else if (today.isAfter(startDate) && today.isBefore(completionDate)) {
+            } else if (today.isEqual(startDate) || (today.isAfter(startDate) && today.isBefore(completionDate)) ) {
                 return SubscriptionStatus.ACTIVE;
             } else {
                 return SubscriptionStatus.COMPLETED;
