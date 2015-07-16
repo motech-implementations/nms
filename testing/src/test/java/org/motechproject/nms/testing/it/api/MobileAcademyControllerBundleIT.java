@@ -33,7 +33,6 @@ import org.motechproject.nms.api.web.contract.mobileAcademy.sms.RequestData;
 import org.motechproject.nms.mobileacademy.domain.NmsCourse;
 import org.motechproject.nms.mobileacademy.dto.MaCourse;
 import org.motechproject.nms.mobileacademy.repository.NmsCourseDataService;
-import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
 import org.motechproject.nms.testing.it.api.utils.RequestBuilder;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
@@ -52,9 +51,6 @@ import org.ops4j.pax.exam.spi.reactors.PerSuite;
 @ExamReactorStrategy(PerSuite.class)
 @ExamFactory(MotechNativeTestContainerFactory.class)
 public class MobileAcademyControllerBundleIT extends BasePaxIT {
-
-    @Inject
-    MobileAcademyService mobileAcademyService;
 
     @Inject
     TestingService testingService;
@@ -672,3 +668,4 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
                 .getEntity())));
     }
 }
+
