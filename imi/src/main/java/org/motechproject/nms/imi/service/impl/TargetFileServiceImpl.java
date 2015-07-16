@@ -77,10 +77,10 @@ public class TargetFileServiceImpl implements TargetFileService {
     private CallRetryDataService callRetryDataService;
     private FileAuditRecordDataService fileAuditRecordDataService;
 
-    private static String freshCheckDND = null;
-    private static String freshNoCheckDND = null;
-    private static String retryCheckDND = null;
-    private static String retryNoCheckDND = null;
+    private static String freshCheckDND;
+    private static String freshNoCheckDND;
+    private static String retryCheckDND;
+    private static String retryNoCheckDND;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TargetFileServiceImpl.class);
 

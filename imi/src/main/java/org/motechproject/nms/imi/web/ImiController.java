@@ -178,7 +178,7 @@ public class ImiController {
 
         // This checks the file, checksum, record count & csv lines, then sends an event to proceed to phase 2 of the
         // CDR processing task also handled by the IMI module: processDetailFile
-        cdrFileService.verifyDetailFileChecksumAndCount(request.getCdrDetail());
+        cdrFileService.verifyDetailFileChecksumAndCount(request);
     }
 
 

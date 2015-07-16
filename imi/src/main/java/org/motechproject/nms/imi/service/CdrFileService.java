@@ -1,6 +1,7 @@
 package org.motechproject.nms.imi.service;
 
 import org.motechproject.event.MotechEvent;
+import org.motechproject.nms.imi.web.contract.CdrFileNotificationRequest;
 import org.motechproject.nms.imi.web.contract.FileInfo;
 
 import java.io.File;
@@ -22,21 +23,10 @@ public interface CdrFileService {
      * Verifies the checksum & record count provided in fileInfo match the checksum & record count of file
      * also verifies all csv rows are valid.
      *
-     * @param file          file to process
      * @param fileInfo      file information provided about the file (ie: expected checksum & recordCount)
      *
      */
-    List<String> verifyChecksumAndCountAndCsv(File file, FileInfo fileInfo);
-
-
-    /**
-     * Verifies all entities referenced in the detail exist in the database and verify the file is sorted
-     *
-     * @param file      file to process
-
-     * @return          a list of errors (failure) or an empty list (success)
-     */
-    List<String> verifyDetailFileEntitiesAndSortOrder(File file);
+    List<String> verifyChecksumAndCountAndCsv(FileInfo fileInfo, Boolean isDetailFile);
 
 
     /**
@@ -44,17 +34,28 @@ public interface CdrFileService {
      *
      * NOTE: only exposed here for ITs
      *
-     * @param file          file to process
+     * @param file      file to process
      * @return          a list of errors (failure) or an empty list (success)
      */
     List<String> sendAggregatedRecords(File file);
 
 
     /**
+     * Send summary records for processing as CallSummaryRecordDto in MOTECH events
+     *
+     * NOTE: only exposed here for ITs
+     *
+     * @param file      file to process
+     * @return          a list of errors (failure) or an empty list (success)
+     */
+    List<String> sendSummaryRecords(File file);
+
+
+    /**
      * Verify file exists, verify checksum & record count match. Then sends event to proceed to CDR processing
      * phase 2
      */
-    void verifyDetailFileChecksumAndCount(FileInfo fileInfo);
+    void verifyDetailFileChecksumAndCount(CdrFileNotificationRequest request);
 
 
     /**
