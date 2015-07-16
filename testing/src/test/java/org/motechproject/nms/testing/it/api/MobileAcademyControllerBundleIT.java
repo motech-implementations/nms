@@ -1,16 +1,5 @@
 package org.motechproject.nms.testing.it.api;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.inject.Inject;
-
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
@@ -45,6 +34,16 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
+
+import javax.inject.Inject;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Integration tests for mobile academy controller
@@ -382,7 +381,6 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
      * parameter CallingNumber is missing
      */
     // TODO JIRA issue: https://applab.atlassian.net/browse/NMS-238
-    @Ignore
     @Test
     public void verifyFT405() throws IOException, InterruptedException {
         HttpGet request = createHttpGetBookmarkWithScore(null,
@@ -395,8 +393,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
                 .getStatusCode());
 
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Not Present>");
-        assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response
-                .getEntity())));
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
     /**
@@ -404,7 +401,6 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
      * parameter CallId is missing.
      */
     // TODO JIRA issue: https://applab.atlassian.net/browse/NMS-238
-    @Ignore
     @Test
     public void verifyFT406() throws IOException, InterruptedException {
         HttpGet request = createHttpGetBookmarkWithScore("1234567890", null);
@@ -416,8 +412,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
                 .getStatusCode());
 
         String expectedJsonResponse = createFailureResponseJson("<callId: Not Present>");
-        assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response
-                .getEntity())));
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
     /**
@@ -425,7 +420,6 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
      * parameter CallingNumber is having invalid value.
      */
     // TODO JIRA issue: https://applab.atlassian.net/browse/NMS-239
-    @Ignore
     @Test
     public void verifyFT407() throws IOException, InterruptedException {
         // 11 digit callingNumber
@@ -469,7 +463,6 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
      * parameter CallId is having invalid value.
      */
     // TODO JIRA issue: https://applab.atlassian.net/browse/NMS-239
-    @Ignore
     @Test
     public void verifyFT408() throws IOException, InterruptedException {
         // callId more than 15 digit
@@ -548,7 +541,6 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
      * parameter "callingNumber" is missing.
      */
     // TODO NMS-219
-    @Ignore
     @Test
     public void verifyFT411() throws IOException, InterruptedException {
         // callingNumber missing in the request body
@@ -581,7 +573,6 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
      * parameter "callId" is missing.
      */
     // TODO NMS-219
-    @Ignore
     @Test
     public void verifyFT412() throws IOException, InterruptedException {
         // callId missing in the request body

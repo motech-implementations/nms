@@ -128,8 +128,8 @@ public class MobileAcademyController extends BaseController {
             value = "/bookmarkWithScore",
             method = RequestMethod.GET)
     @ResponseBody
-    public GetBookmarkResponse getBookmarkWithScore(@RequestParam Long callingNumber,
-                                                 @RequestParam Long callId) {
+    public GetBookmarkResponse getBookmarkWithScore(@RequestParam(required = false) Long callingNumber,
+                                                    @RequestParam(required = false) Long callId) {
 
         log("/mobileacademy/bookmarkWithScore (GET)", String.format("callingNumber=%s, callId=%s",
                 LogHelper.obscure(callingNumber), callId));
