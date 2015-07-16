@@ -309,7 +309,7 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
         CompletionRecord cr = completionRecordDataService.findRecordByCallingNumber(callingNumber);
 
         if (cr == null) {
-            cr = new CompletionRecord(callingNumber, totalScore, false, 1);
+            cr = new CompletionRecord(callingNumber, totalScore);
             completionRecordDataService.create(cr);
         } else {
             LOGGER.debug("Found existing completion record, updating it");
