@@ -86,7 +86,6 @@ public class LanguageControllerBundleIT extends BasePaxIT {
     public void clearDatabase() {
         testingService.clearDatabase();
     }
-    
 
     @Before
     public void setupTestData() {
