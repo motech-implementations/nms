@@ -29,6 +29,9 @@
     <osgi:reference id="callDetailRecordDataService"
                     interface="org.motechproject.nms.imi.repository.CallDetailRecordDataService" />
 
+    <osgi:reference id="callSummaryRecordDataService"
+                    interface="org.motechproject.nms.imi.repository.CallSummaryRecordDataService" />
+
     <osgi:reference id="languageService"
                     interface="org.motechproject.nms.region.service.LanguageService" />
 

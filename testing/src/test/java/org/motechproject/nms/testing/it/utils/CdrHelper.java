@@ -7,7 +7,6 @@ import org.motechproject.nms.imi.domain.FileAuditRecord;
 import org.motechproject.nms.imi.domain.FileType;
 import org.motechproject.nms.imi.repository.FileAuditRecordDataService;
 import org.motechproject.nms.imi.service.SettingsService;
-import org.motechproject.nms.imi.service.impl.CsvHelper;
 import org.motechproject.nms.imi.web.contract.FileInfo;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
@@ -373,7 +372,7 @@ public class CdrHelper {
 
         int remainingInvalidLines = numInvalidLines;
 
-        writer.write(CsvHelper.CDR_HEADER);
+        writer.write(org.motechproject.nms.imi.service.impl.CdrHelper.CDR_HEADER);
         writer.write("\n");
         for(CallDetailRecordDto cdr : cdrs) {
             writer.write(csvLineFromCdr(cdr));

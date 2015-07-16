@@ -8,9 +8,9 @@ import org.motechproject.nms.props.domain.RequestId;
 import org.motechproject.nms.props.domain.StatusCode;
 
 /**
- * Helper class to parse a CSV line to a CallSummaryRecord (and vice versa, for use in ITs)
+ * Helper class to parse a CDR CSV line to a CallDetailRecordDTO or a CallDetailRecord
  */
-public final class CsvHelper {
+public final class CdrHelper {
 
     public static final String CDR_HEADER = "RequestId,Msisdn,CallId,AttemptNo,CallStartTime,CallAnswerTime," +
             "CallEndTime,CallDurationInPulse,CallStatus,LanguageLocationId,ContentFile,MsgPlayStartTime," +
@@ -42,7 +42,7 @@ public final class CsvHelper {
     }
 
 
-    private CsvHelper() { }
+    private CdrHelper() { }
 
 
     private static long msisdnFromString(String msisdn) {
@@ -171,7 +171,7 @@ public final class CsvHelper {
      *
      * All errors will throw an IllegalArgumentException
      *
-     * @param line a CSV line from a CDR Detail File from IMI
+     * @param line a CSV line from a CDR Detail File
      * @return a CallDetailRecord
      */
     public static CallDetailRecord csvLineToCdr(String line) {
@@ -189,7 +189,7 @@ public final class CsvHelper {
          */
 
         cdr.setRequestId(fields[FieldName.REQUEST_ID.ordinal()]);
-        cdr.setMsisdn(fields[FieldName.MSISDN.ordinal()]);
+        cdr.setMsisdn(msisdnFromString(fields[FieldName.MSISDN.ordinal()]));
         cdr.setCallId(fields[FieldName.CALL_ID.ordinal()]);
         cdr.setAttemptNo(fields[FieldName.ATTEMPT_NO.ordinal()]);
         cdr.setCallStartTime(fields[FieldName.CALL_START_TIME.ordinal()]);
@@ -213,16 +213,14 @@ public final class CsvHelper {
     /**
      * Validate Header coming in CDR file from IMI
      *
-     * @param line a CSV line from a CDR Detail File from IMI
+     * @param line a CSV line from a CDR Detail File
      *
      */
-    public static void validateCdrHeader(String line) {
+    public static void validateHeader(String line) {
 
         if (!(CDR_HEADER.equalsIgnoreCase(line))) {
             throw new IllegalArgumentException("Invalid CDR header");
         }
     }
-
-
 
 }

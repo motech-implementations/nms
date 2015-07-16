@@ -1,5 +1,6 @@
 package org.motechproject.nms.imi.service.impl;
 
+import org.motechproject.nms.imi.domain.CallSummaryRecord;
 import org.motechproject.nms.imi.exception.InvalidCsrException;
 import org.motechproject.nms.imi.service.CsrValidatorService;
 import org.motechproject.nms.kilkari.domain.Subscription;
@@ -7,6 +8,7 @@ import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
 import org.motechproject.nms.kilkari.dto.CallSummaryRecordDto;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
+import org.motechproject.nms.props.domain.RequestId;
 import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.Language;
 import org.motechproject.nms.region.service.CircleService;
@@ -123,6 +125,24 @@ public class CsrValidatorServiceImpl implements CsrValidatorService {
         if (sub == null) {
             throw new InvalidCsrException(String.format("Subscription %s does not exist in the database",
                     record.getRequestId().getSubscriptionId()));
+        }
+
+        String pack = sub.getSubscriptionPack().getName();
+        validateWeekId(pack, record.getWeekId());
+        validateContentFileName(pack, record.getContentFileName());
+        validateCircle(record.getCircle());
+        validateLanguageLocationCode(record.getLanguageLocationCode());
+    }
+
+
+    //todo: IT
+    @Override
+    public void validateSummaryRecord(CallSummaryRecord record) {
+        RequestId requestId = RequestId.fromString(record.getRequestId());
+        Subscription sub = subscriptionService.getSubscription(requestId.getSubscriptionId());
+        if (sub == null) {
+            throw new InvalidCsrException(String.format("Subscription %s does not exist in the database",
+                    requestId.getSubscriptionId()));
         }
 
         String pack = sub.getSubscriptionPack().getName();
