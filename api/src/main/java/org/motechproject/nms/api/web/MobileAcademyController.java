@@ -134,6 +134,17 @@ public class MobileAcademyController extends BaseController {
         log("/mobileacademy/bookmarkWithScore (GET)", String.format("callingNumber=%s, callId=%s",
                 LogHelper.obscure(callingNumber), callId));
 
+        StringBuilder errors = new StringBuilder();
+        validateField10Digits(errors, "callingNumber", callingNumber);
+        if (errors.length() != 0) {
+            throw new IllegalArgumentException(errors.toString());
+        }
+
+        validateField15Digits(errors, "callId", callId);
+        if (errors.length() != 0) {
+            throw new IllegalArgumentException(errors.toString());
+        }
+
         MaBookmark bookmark = mobileAcademyService.getBookmark(callingNumber, callId);
         return MobileAcademyConverter.convertBookmarkDto(bookmark);
     }
@@ -157,13 +168,15 @@ public class MobileAcademyController extends BaseController {
             throw new IllegalArgumentException(String.format(INVALID, "bookmarkRequest"));
         }
 
-        Long callingNumber = bookmarkRequest.getCallingNumber();
-        if (callingNumber == null || callingNumber < SMALLEST_10_DIGIT_NUMBER || callingNumber > LARGEST_10_DIGIT_NUMBER) {
-            throw new IllegalArgumentException(String.format(INVALID, "callingNumber"));
+        StringBuilder errors = new StringBuilder();
+        validateField10Digits(errors, "callingNumber", bookmarkRequest.getCallingNumber());
+        if (errors.length() != 0) {
+            throw new IllegalArgumentException(errors.toString());
         }
-        Long callId = bookmarkRequest.getCallId();
-        if (callId == null || callId < SMALLEST_15_DIGIT_NUMBER || callId > LARGEST_15_DIGIT_NUMBER) {
-            throw new IllegalArgumentException(String.format(INVALID, "callId"));
+
+        validateField15Digits(errors, "callId", bookmarkRequest.getCallId());
+        if (errors.length() != 0) {
+            throw new IllegalArgumentException(errors.toString());
         }
 
         MaBookmark bookmark = MobileAcademyConverter.convertSaveBookmarkRequest(bookmarkRequest);
@@ -216,7 +229,6 @@ public class MobileAcademyController extends BaseController {
         }
 
         // done with validation
-
         try {
             mobileAcademyService.triggerCompletionNotification(callingNumber);
         } catch (CourseNotCompletedException cnc) {

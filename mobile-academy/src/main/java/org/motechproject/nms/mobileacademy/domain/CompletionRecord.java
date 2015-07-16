@@ -2,6 +2,7 @@ package org.motechproject.nms.mobileacademy.domain;
 
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
+import org.motechproject.mds.domain.MdsEntity;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Unique;
@@ -12,7 +13,7 @@ import javax.validation.constraints.Min;
  * Tracks the completion record for a given calling number
  */
 @Entity(tableName = "nms_ma_completion_records")
-public class CompletionRecord {
+public class CompletionRecord extends MdsEntity {
 
     @Field
     @Min(value = 1000000000L, message = "callingNumber must be 10 digits")
@@ -33,18 +34,26 @@ public class CompletionRecord {
     @Field
     private String lastDeliveryStatus;
 
+    /**
+     * Note, this is the number of additional times to try on top of the original send notification request
+     */
+    @Field
+    private int notificationRetryCount;
+
     public CompletionRecord(long callingNumber, int score) {
-        this.callingNumber = callingNumber;
-        this.score = score;
-        sentNotification = false;
-        completionCount = 1;
+        this(callingNumber, score, false, 1);
     }
 
     public CompletionRecord(long callingNumber, int score, boolean sentNotification, int completionCount) {
+        this(callingNumber, score, sentNotification, completionCount, 0);
+    }
+
+    public CompletionRecord(long callingNumber, int score, boolean sentNotification, int completionCount, int notificationRetryCount) {
         this.callingNumber = callingNumber;
         this.score = score;
         this.sentNotification = sentNotification;
         this.completionCount = completionCount;
+        this.notificationRetryCount = notificationRetryCount;
     }
 
     public long getCallingNumber() {
@@ -85,5 +94,13 @@ public class CompletionRecord {
 
     public void setLastDeliveryStatus(String lastDeliveryStatus) {
         this.lastDeliveryStatus = lastDeliveryStatus;
+    }
+
+    public int getNotificationRetryCount() {
+        return notificationRetryCount;
+    }
+
+    public void setNotificationRetryCount(int notificationRetryCount) {
+        this.notificationRetryCount = notificationRetryCount;
     }
 }
