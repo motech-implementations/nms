@@ -3236,5 +3236,508 @@ public class UserControllerBundleIT extends BasePaxIT {
                 EntityUtils.toString(response.getEntity()));
         
     }
- 
+
+    /**
+     * To verify that Anonymous user belonging to a circle having single state
+     * should be able to listen MA content if service deploy status is set to
+     * deploy in a particular state.
+     */
+    @Test
+    public void verifyFT428() throws IOException, InterruptedException {
+
+        rh.newDelhiDistrict();
+        rh.delhiCircle();
+        deployedServiceDataService.create(new DeployedService(rh.delhiState(),
+                Service.MOBILE_ACADEMY));
+
+        // invoke get user detail API
+        HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
+                true, "1200000000", // callingNumber
+                true, "OP", // operator
+                true, rh.delhiCircle().getName(),// circle
+                true, "123456789012345" // callId
+        );
+
+        String expectedJsonResponse = createFlwUserResponseJson(rh
+                .hindiLanguage().getCode(), // defaultLanguageLocationCode=circle
+                                            // default
+                null, // locationCode
+                Arrays.asList(rh.hindiLanguage().getCode()), // allowedLanguageLocationCodes
+                0L, // currentUsageInPulses
+                0L, // endOfUsagePromptCounter
+                false, // welcomePromptFlag
+                -1, // maxAllowedUsageInPulses
+                2 // maxAllowedEndOfUsagePrompt
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+
+        // Invoke set LLC API
+        HttpPost httpPost = new HttpPost(String.format(
+                "http://localhost:%d/api/mobileacademy/languageLocationCode",
+                TestContext.getJettyPort()));
+        StringEntity params = new StringEntity(
+                "{\"callingNumber\":1200000000,\"callId\":123456789012345,\"languageLocationCode\":\""
+                        + rh.hindiLanguage().getCode() + "\"}");
+        httpPost.setEntity(params);
+        httpPost.addHeader("content-type", "application/json");
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK));
+        FrontLineWorker flw = frontLineWorkerService
+                .getByContactNumber(1200000000l);
+        assertEquals(FrontLineWorkerStatus.ANONYMOUS, flw.getStatus());
+        assertEquals(rh.hindiLanguage().getCode(), flw.getLanguage().getCode());
+    }
+
+    /**
+     * To verify that Anonymous user belongs to circle having one state
+     * shouldn't be able to listen MA content when service deploy status is set
+     * to not deploy in that particular state.
+     */
+    @Test
+    public void verifyFT437() throws IOException, InterruptedException {
+
+        rh.newDelhiDistrict();
+        rh.delhiCircle();
+        // service not deployed in delhi state
+
+        // invoke get user detail API
+        HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
+                true, "1200000000", // callingNumber
+                true, "OP", // operator
+                true, rh.delhiCircle().getName(),// circle
+                true, "123456789012345" // callId
+        );
+
+        String expectedJsonResponse = createFailureResponseJson("<MOBILE_ACADEMY: Not Deployed In State>");
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+        assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, response.getStatusLine()
+                .getStatusCode());
+    }
+
+    /**
+     * To verify that Anonymous user belongs to a circle having multiple states
+     * should be able to listen MA content when service deployment status is set
+     * to deploy in that particular state.
+     */
+    @Test
+    public void verifyFT429() throws IOException, InterruptedException {
+        // setup delhi circle with two states delhi and karnataka
+
+        rh.newDelhiDistrict();
+        Circle c = rh.delhiCircle();
+        rh.bangaloreDistrict();
+        c.getStates().add(rh.karnatakaState());
+        circleDataService.update(c);
+        // service deployed only in delhi state
+        deployedServiceDataService.create(new DeployedService(rh.delhiState(),
+                Service.MOBILE_ACADEMY));
+
+        // invoke get user detail API
+        HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
+                true, "1200000000", // callingNumber
+                true, "OP", // operator
+                true, rh.delhiCircle().getName(),// circle
+                true, "123456789012345" // callId
+        );
+
+        String expectedJsonResponse = createFlwUserResponseJson(rh
+                .hindiLanguage().getCode(), // defaultLanguageLocationCode=circle
+                                            // default
+                null, // locationCode
+                Arrays.asList(rh.hindiLanguage().getCode(), rh.tamilLanguage()
+                        .getCode()), // allowedLanguageLocationCodes
+                0L, // currentUsageInPulses
+                0L, // endOfUsagePromptCounter
+                false, // welcomePromptFlag
+                -1, // maxAllowedUsageInPulses
+                2 // maxAllowedEndOfUsagePrompt
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+
+        // Invoke set LLC API
+        HttpPost httpPost = new HttpPost(String.format(
+                "http://localhost:%d/api/mobileacademy/languageLocationCode",
+                TestContext.getJettyPort()));
+        StringEntity params = new StringEntity(
+                "{\"callingNumber\":1200000000,\"callId\":123456789012345,\"languageLocationCode\":\""
+                        + rh.hindiLanguage().getCode() + "\"}");
+        httpPost.setEntity(params);
+        httpPost.addHeader("content-type", "application/json");
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK));
+        FrontLineWorker flw = frontLineWorkerService
+                .getByContactNumber(1200000000l);
+        assertEquals(FrontLineWorkerStatus.ANONYMOUS, flw.getStatus());
+        assertEquals(rh.hindiLanguage().getCode(), flw.getLanguage().getCode());
+    }
+
+    /**
+     * To verify that Anonymous user belongs to a circle having multiple states
+     * shouldn't be able to listen MA content when service deploy status is set
+     * to not deploy in that particular state.
+     */
+    @Test
+    public void verifyFT438() throws IOException, InterruptedException {
+        // setup delhi circle with two states delhi and karnataka
+
+        rh.newDelhiDistrict();
+        Circle c = rh.delhiCircle();
+        rh.bangaloreDistrict();
+        c.getStates().add(rh.karnatakaState());
+        circleDataService.update(c);
+        // service deployed only in delhi state
+        deployedServiceDataService.create(new DeployedService(rh.delhiState(),
+                Service.MOBILE_ACADEMY));
+
+        // invoke get user detail API
+        HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
+                true, "1200000000", // callingNumber
+                true, "OP", // operator
+                true, rh.delhiCircle().getName(),// circle
+                true, "123456789012345" // callId
+        );
+
+        String expectedJsonResponse = createFlwUserResponseJson(rh
+                .hindiLanguage().getCode(), // defaultLanguageLocationCode=circle
+                                            // default
+                null, // locationCode
+                Arrays.asList(rh.hindiLanguage().getCode(), rh.tamilLanguage()
+                        .getCode()), // allowedLanguageLocationCodes
+                0L, // currentUsageInPulses
+                0L, // endOfUsagePromptCounter
+                false, // welcomePromptFlag
+                -1, // maxAllowedUsageInPulses
+                2 // maxAllowedEndOfUsagePrompt
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+
+        // Invoke set LLC API
+        // Set LLC for which service is not deployed i.e karnataka
+        HttpPost httpPost = new HttpPost(String.format(
+                "http://localhost:%d/api/mobileacademy/languageLocationCode",
+                TestContext.getJettyPort()));
+        StringEntity params = new StringEntity(
+                "{\"callingNumber\":1200000000,\"callId\":123456789012345,\"languageLocationCode\":\""
+                        + rh.tamilLanguage().getCode() + "\"}");
+        httpPost.setEntity(params);
+        httpPost.addHeader("content-type", "application/json");
+
+        expectedJsonResponse = createFailureResponseJson("<MOBILE_ACADEMY: Not Deployed In State>");
+        response = SimpleHttpClient.httpRequestAndResponse(httpPost,
+                ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+        assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, response.getStatusLine()
+                .getStatusCode());
+    }
+
+    /**
+     * To verify that Anonymous user should not be able to listen MA content if
+     * service deploy status is set to not deploy in a particular state.
+     */
+    @Test
+    public void verifyFT433() throws IOException, InterruptedException {
+        // setup karnataka state for which service is not deployed
+        rh.bangaloreDistrict();
+
+        // invoke get user detail API without circle and operator
+        HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
+                true, "1200000000", // callingNumber
+                false, null, // operator
+                false, null,// circle
+                true, "123456789012345" // callId
+        );
+
+        String expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
+                null, // locationCode
+                Arrays.asList(rh.tamilLanguage().getCode()), // allowedLanguageLocationCodes
+                0L, // currentUsageInPulses
+                0L, // endOfUsagePromptCounter
+                false, // welcomePromptFlag
+                -1, // maxAllowedUsageInPulses
+                2 // maxAllowedEndOfUsagePrompt
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+
+        // Invoke set LLC API
+        // Set LLC as per allowedLanguageLocationCodes response field
+        HttpPost httpPost = new HttpPost(String.format(
+                "http://localhost:%d/api/mobileacademy/languageLocationCode",
+                TestContext.getJettyPort()));
+        StringEntity params = new StringEntity(
+                "{\"callingNumber\":1200000000,\"callId\":123456789012345,\"languageLocationCode\":\""
+                        + rh.tamilLanguage().getCode() + "\"}");
+        httpPost.setEntity(params);
+        httpPost.addHeader("content-type", "application/json");
+
+        expectedJsonResponse = createFailureResponseJson("<MOBILE_ACADEMY: Not Deployed In State>");
+        response = SimpleHttpClient.httpRequestAndResponse(httpPost,
+                ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+        assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, response.getStatusLine()
+                .getStatusCode());
+    }
+
+    /**
+     * To verify that Active user should be able to listen MA content if service
+     * deploy status is set to deploy in a particular state.
+     */
+    @Test
+    public void verifyFT430() throws IOException, InterruptedException {
+        // add FLW with active status
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright",
+                1200000000l);
+        flw.setLanguage(rh.tamilLanguage());
+        flw.setDistrict(rh.bangaloreDistrict());
+        flw.setState(rh.karnatakaState());
+        flw.setStatus(FrontLineWorkerStatus.ACTIVE);
+        frontLineWorkerDataService.create(flw);
+
+        // service deployed in Karnataka State
+        deployedServiceDataService.create(new DeployedService(rh
+                .karnatakaState(), Service.MOBILE_ACADEMY));
+
+        // invoke get user detail API
+        HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
+                true, "1200000000", // callingNumber
+                false, null, // operator
+                false, null,// circle
+                true, "123456789012345" // callId
+        );
+
+        String expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
+                rh.tamilLanguage().getCode(), // locationCode
+                null, // allowedLanguageLocationCodes
+                0L, // currentUsageInPulses
+                0L, // endOfUsagePromptCounter
+                false, // welcomePromptFlag
+                -1, // maxAllowedUsageInPulses
+                2 // maxAllowedEndOfUsagePrompt
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * To verify that Inactive user should be able to listen MA content if
+     * service deploy status is set to deploy in a particular state.
+     */
+    @Test
+    public void verifyFT431() throws IOException, InterruptedException {
+        // add FLW with In active status
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright",
+                1200000000l);
+        flw.setLanguage(rh.tamilLanguage());
+        flw.setDistrict(rh.bangaloreDistrict());
+        flw.setState(rh.karnatakaState());
+        flw.setStatus(FrontLineWorkerStatus.INACTIVE);
+        frontLineWorkerDataService.create(flw);
+
+        // service deployed in Karnataka State
+        deployedServiceDataService.create(new DeployedService(rh
+                .karnatakaState(), Service.MOBILE_ACADEMY));
+
+        // invoke get user detail API
+        HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
+                true, "1200000000", // callingNumber
+                false, null, // operator
+                false, null,// circle
+                true, "123456789012345" // callId
+        );
+
+        String expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
+                rh.tamilLanguage().getCode(), // locationCode
+                null, // allowedLanguageLocationCodes
+                0L, // currentUsageInPulses
+                0L, // endOfUsagePromptCounter
+                false, // welcomePromptFlag
+                -1, // maxAllowedUsageInPulses
+                2 // maxAllowedEndOfUsagePrompt
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * To verify that Invalid user should be able to listen MA content if
+     * service deploy status is set to deploy in a particular state.
+     */
+    @Test
+    public void verifyFT432() throws IOException, InterruptedException {
+        // add FLW with Invalid status
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright",
+                1200000000l);
+        flw.setLanguage(rh.tamilLanguage());
+        flw.setDistrict(rh.bangaloreDistrict());
+        flw.setState(rh.karnatakaState());
+        flw.setStatus(FrontLineWorkerStatus.INVALID);
+        flw.setInvalidationDate(DateTime.now().minusDays(50));
+        frontLineWorkerDataService.create(flw);
+
+        // service deployed in Karnataka State
+        deployedServiceDataService.create(new DeployedService(rh
+                .karnatakaState(), Service.MOBILE_ACADEMY));
+
+        // invoke get user detail API
+        HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
+                true, "1200000000", // callingNumber
+                false, null, // operator
+                false, null,// circle
+                true, "123456789012345" // callId
+        );
+
+        String expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
+                rh.tamilLanguage().getCode(), // locationCode
+                null, // allowedLanguageLocationCodes
+                0L, // currentUsageInPulses
+                0L, // endOfUsagePromptCounter
+                false, // welcomePromptFlag
+                -1, // maxAllowedUsageInPulses
+                2 // maxAllowedEndOfUsagePrompt
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * To verify that Active user should not be able to listen MA content if
+     * service deploy status is set to not deploy in a particular state.
+     */
+    @Test
+    public void verifyFT434() throws IOException, InterruptedException {
+        // add FLW with active status
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright",
+                1200000000l);
+        flw.setLanguage(rh.tamilLanguage());
+        flw.setDistrict(rh.bangaloreDistrict());
+        flw.setState(rh.karnatakaState());
+        flw.setStatus(FrontLineWorkerStatus.ACTIVE);
+        frontLineWorkerDataService.create(flw);
+
+        // service not deployed in Karnataka State
+
+        // invoke get user detail API
+        HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
+                true, "1200000000", // callingNumber
+                false, null, // operator
+                false, null,// circle
+                true, "123456789012345" // callId
+        );
+
+        String expectedJsonResponse = createFailureResponseJson("<MOBILE_ACADEMY: Not Deployed In State>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * To verify that Inactive user should not be able to listen MA content if
+     * service deploy status is set to not deploy in a particular state.
+     */
+    @Test
+    public void verifyFT435() throws IOException, InterruptedException {
+        // add FLW with In active status
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright",
+                1200000000l);
+        flw.setLanguage(rh.tamilLanguage());
+        flw.setDistrict(rh.bangaloreDistrict());
+        flw.setState(rh.karnatakaState());
+        flw.setStatus(FrontLineWorkerStatus.INACTIVE);
+        frontLineWorkerDataService.create(flw);
+
+        // service not deployed in Karnataka State
+
+        // invoke get user detail API
+        HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
+                true, "1200000000", // callingNumber
+                false, null, // operator
+                false, null,// circle
+                true, "123456789012345" // callId
+        );
+
+        String expectedJsonResponse = createFailureResponseJson("<MOBILE_ACADEMY: Not Deployed In State>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * To verify that Invalid user should not be able to listen MA content if
+     * service deploy status is set to not deploy in a particular state.
+     */
+    @Test
+    public void verifyFT436() throws IOException, InterruptedException {
+        // add FLW with Invalid status
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright",
+                1200000000l);
+        flw.setLanguage(rh.tamilLanguage());
+        flw.setDistrict(rh.bangaloreDistrict());
+        flw.setState(rh.karnatakaState());
+        flw.setStatus(FrontLineWorkerStatus.INVALID);
+        flw.setInvalidationDate(DateTime.now().minusDays(50));
+        frontLineWorkerDataService.create(flw);
+
+        // service not deployed in Karnataka State
+
+        // invoke get user detail API
+        HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
+                true, "1200000000", // callingNumber
+                false, null, // operator
+                false, null,// circle
+                true, "123456789012345" // callId
+        );
+
+        String expectedJsonResponse = createFailureResponseJson("<MOBILE_ACADEMY: Not Deployed In State>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
 }
