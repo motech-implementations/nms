@@ -1,3 +1,4 @@
+
 package org.motechproject.nms.api.web;
 
 import org.motechproject.event.MotechEvent;
@@ -126,11 +127,23 @@ public class MobileAcademyController extends BaseController {
     @RequestMapping(
             value = "/bookmarkWithScore",
             method = RequestMethod.GET)
-    public GetBookmarkResponse getBookmarkWithScore(@RequestParam Long callingNumber,
-                                                 @RequestParam Long callId) {
+    @ResponseBody
+    public GetBookmarkResponse getBookmarkWithScore(@RequestParam(required = false) Long callingNumber,
+                                                    @RequestParam(required = false) Long callId) {
 
         log("/mobileacademy/bookmarkWithScore (GET)", String.format("callingNumber=%s, callId=%s",
                 LogHelper.obscure(callingNumber), callId));
+
+        StringBuilder errors = new StringBuilder();
+        validateField10Digits(errors, "callingNumber", callingNumber);
+        if (errors.length() != 0) {
+            throw new IllegalArgumentException(errors.toString());
+        }
+
+        validateField15Digits(errors, "callId", callId);
+        if (errors.length() != 0) {
+            throw new IllegalArgumentException(errors.toString());
+        }
 
         MaBookmark bookmark = mobileAcademyService.getBookmark(callingNumber, callId);
         return MobileAcademyConverter.convertBookmarkDto(bookmark);
@@ -155,12 +168,15 @@ public class MobileAcademyController extends BaseController {
             throw new IllegalArgumentException(String.format(INVALID, "bookmarkRequest"));
         }
 
-        Long callingNumber = bookmarkRequest.getCallingNumber();
-        if (callingNumber == null || callingNumber < SMALLEST_10_DIGIT_NUMBER || callingNumber > LARGEST_10_DIGIT_NUMBER) {
-            throw new IllegalArgumentException(String.format(INVALID, "callingNumber"));
+        StringBuilder errors = new StringBuilder();
+        validateField10Digits(errors, "callingNumber", bookmarkRequest.getCallingNumber());
+        if (errors.length() != 0) {
+            throw new IllegalArgumentException(errors.toString());
         }
-        if (bookmarkRequest.getCallId() == null || bookmarkRequest.getCallId() < SMALLEST_15_DIGIT_NUMBER) {
-            throw new IllegalArgumentException(String.format(INVALID, "callId"));
+
+        validateField15Digits(errors, "callId", bookmarkRequest.getCallId());
+        if (errors.length() != 0) {
+            throw new IllegalArgumentException(errors.toString());
         }
 
         MaBookmark bookmark = MobileAcademyConverter.convertSaveBookmarkRequest(bookmarkRequest);
@@ -213,7 +229,6 @@ public class MobileAcademyController extends BaseController {
         }
 
         // done with validation
-
         try {
             mobileAcademyService.triggerCompletionNotification(callingNumber);
         } catch (CourseNotCompletedException cnc) {

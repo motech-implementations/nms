@@ -1,5 +1,26 @@
 package org.motechproject.nms.testing.it.kilkari;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createDistrict;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthBlock;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthFacility;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthFacilityType;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthSubFacility;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createState;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createTaluka;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createVillage;
+
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.StringReader;
+import java.util.Arrays;
+import java.util.List;
+
+import javax.inject.Inject;
+
 import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Test;
@@ -12,6 +33,7 @@ import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionError;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
+import org.motechproject.nms.kilkari.domain.SubscriptionRejectionReason;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.repository.MctsChildDataService;
 import org.motechproject.nms.kilkari.repository.MctsMotherDataService;
@@ -43,26 +65,6 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
-
-import javax.inject.Inject;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.StringReader;
-import java.util.Arrays;
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.motechproject.nms.testing.it.utils.RegionHelper.createDistrict;
-import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthBlock;
-import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthFacility;
-import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthFacilityType;
-import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthSubFacility;
-import static org.motechproject.nms.testing.it.utils.RegionHelper.createState;
-import static org.motechproject.nms.testing.it.utils.RegionHelper.createTaluka;
-import static org.motechproject.nms.testing.it.utils.RegionHelper.createVillage;
 
 
 @RunWith(PaxExam.class)
@@ -518,5 +520,36 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
     private String getDateString(DateTime date) {
         return date.toString("dd-MM-yyyy");
     }
+    
+    /*
+     * To verify that NMS is not able to change the location of 
+     * beneficiary using MCTS ID when location information is wrong.
+     * 
+     * https://applab.atlassian.net/browse/NMS-231
+     */
+    @Test
+    public void verifyFT325() throws Exception {
+        createLocationData();
 
+        Long msisdn = subscriptionHelper.makeNumber();
+        String childId = "0123456789";
+
+        MctsChild child = new MctsChild(childId);
+        child.setState(stateDataService.findByCode(21L));
+        child.setDistrict(districtService.findByStateAndCode(child.getState(), 2L));
+        makeMctsSubscription(child, DateTime.now().minusDays(100), SubscriptionPackType.CHILD, msisdn);
+
+        //district provided in request doesn't exist in nms-db
+        Reader reader = createUpdateReaderWithHeaders("1," + childId + ",,,,21,8,0026,453,,,,,,");
+        mctsBeneficiaryUpdateService.updateBeneficiaryData(reader);
+
+        Subscriber subscriber = subscriberDataService.findByCallingNumber(msisdn);
+        assertNotNull(subscriber);
+        assertNotEquals(subscriber.getChild().getDistrict().getCode(), new Long(7));
+        
+        List<SubscriptionError> susbErrors = subscriptionErrorDataService.findByBeneficiaryId(childId);
+        SubscriptionError susbError = susbErrors.iterator().next();
+    	assertNotNull(susbError);
+        assertEquals(SubscriptionRejectionReason.INVALID_LOCATION, susbError.getRejectionReason());
+    }
 }
