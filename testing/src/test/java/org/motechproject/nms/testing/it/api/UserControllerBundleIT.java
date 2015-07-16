@@ -66,6 +66,7 @@ import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.NationalDefaultLanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
+import org.motechproject.nms.region.service.LanguageService;
 import org.motechproject.nms.testing.it.api.utils.RequestBuilder;
 import org.motechproject.nms.testing.it.utils.RegionHelper;
 import org.motechproject.nms.testing.it.utils.SubscriptionHelper;
@@ -124,6 +125,8 @@ public class UserControllerBundleIT extends BasePaxIT {
     NationalDefaultLanguageDataService nationalDefaultLanguageDataService;
     @Inject
     TestingService testingService;
+    @Inject
+    LanguageService languageService;
 
     @Inject
     FrontLineWorkerDataService frontLineWorkerDataService;
@@ -1796,6 +1799,63 @@ public class UserControllerBundleIT extends BasePaxIT {
     }
 
     /**
+     * To verify anonymous User belongs to a circle that has multiple states,
+     * should be able to access MA Service content, if user's callingNumber is
+     * in whitelist and whitelist is set to Enabled for user's state.
+     */
+    @Test
+    public void verifyFT441() throws InterruptedException, IOException {
+        setupWhiteListData();
+
+        // Delhi circle has a state already, add one more
+        Circle delhiCircle = rh.delhiCircle();
+        State s = new State();
+        s.setName("New State in delhi");
+        s.setCode(7L);
+        stateDataService.create(s);
+        delhiCircle.getStates().add(s);
+        circleDataService.update(delhiCircle);
+
+        // Create the whitelist number entry in whitelist table
+        WhitelistEntry entry = new WhitelistEntry(WHITELIST_CONTACT_NUMBER,
+                whitelistState);
+        whitelistEntryDataService.create(entry);
+
+        // Deploy the service in user's state
+        deployedServiceDataService.create(new DeployedService(whitelistState,
+                Service.MOBILE_ACADEMY));
+
+        // Check the response
+        HttpGet request = createHttpGet(true, "mobileacademy", true,
+                String.valueOf(WHITELIST_CONTACT_NUMBER), false, "", false, "",
+                true, "123456789012345");
+        HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(
+                request, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
+                .getStatusCode());
+
+        Set<State> states = languageService.getAllStatesForLanguage(rh
+                .hindiLanguage());
+        assertEquals(1, states.size());
+
+        // create set Language location code request and check the response
+        HttpPost postRequest = createHttpPost("mobileacademy",
+                new UserLanguageRequest(WHITELIST_CONTACT_NUMBER,
+                        123456789012345l, rh.hindiLanguage().getCode()));
+        httpResponse = SimpleHttpClient.httpRequestAndResponse(postRequest,
+                RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
+                .getStatusCode());
+
+        // assert user's status
+        FrontLineWorker whitelistWorker = frontLineWorkerService
+                .getByContactNumber(WHITELIST_CONTACT_NUMBER);
+        assertEquals(FrontLineWorkerStatus.ANONYMOUS,
+                whitelistWorker.getStatus());
+    }
+
+    /**
      * To verify Active User shouldn't be able to access MA Service content, if
      * user's callingNumber is not is whitelist and whitelist is set to Enabled
      * for user's state.
@@ -1873,6 +1933,53 @@ public class UserControllerBundleIT extends BasePaxIT {
         HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(
                 request, RequestBuilder.ADMIN_USERNAME,
                 RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_FORBIDDEN, httpResponse.getStatusLine()
+                .getStatusCode());
+    }
+    
+    /**
+     * To verify anonymous User belongs to a circle that has multiple states,
+     * shouldn't be able to access MA Service content, if user's callingNumber
+     * is not in whitelist and whitelist is set to Enabled for user's state.
+     */
+    @Test
+    public void verifyFT445() throws InterruptedException, IOException {
+        setupWhiteListData();
+
+        // Delhi circle has a state already, add one more
+        Circle delhiCircle = rh.delhiCircle();
+        State s = new State();
+        s.setName("New State in delhi");
+        s.setCode(7L);
+        stateDataService.create(s);
+        delhiCircle.getStates().add(s);
+        circleDataService.update(delhiCircle);
+
+        // Deploy the service in user's state
+        deployedServiceDataService.create(new DeployedService(whitelistState,
+                Service.MOBILE_ACADEMY));
+
+        // Check the response
+        HttpGet request = createHttpGet(true, "mobileacademy", true,
+                String.valueOf(NOT_WHITELIST_CONTACT_NUMBER), false, "", false,
+                "",
+                true, "123456789012345");
+        HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(
+                request, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
+                .getStatusCode());
+
+        Set<State> states = languageService.getAllStatesForLanguage(rh
+                .hindiLanguage());
+        assertEquals(1, states.size());
+
+        // create set Language location code request and check the response
+        HttpPost postRequest = createHttpPost("mobileacademy",
+                new UserLanguageRequest(NOT_WHITELIST_CONTACT_NUMBER,
+                        123456789012345l, rh.hindiLanguage().getCode()));
+        httpResponse = SimpleHttpClient.httpRequestAndResponse(postRequest,
+                RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_FORBIDDEN, httpResponse.getStatusLine()
                 .getStatusCode());
     }
@@ -1963,6 +2070,64 @@ public class UserControllerBundleIT extends BasePaxIT {
                 RequestBuilder.ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
                 .getStatusCode());
+    }
+
+    /**
+     * To verify anonymous User belongs to a circle that has multiple states,
+     * should be able to access MA Service content, if user's callingNumber is
+     * in whitelist and whitelist is set to disabled for user's state.
+     */
+    @Test
+    public void verifyFT449() throws InterruptedException, IOException {
+        setupWhiteListData();
+
+        // Delhi circle has a state already, add one more
+
+        Circle karnatakaCircle = rh.karnatakaCircle();
+        State s = new State();
+        s.setName("New State in Karnataka");
+        s.setCode(7L);
+        stateDataService.create(s);
+        karnatakaCircle.getStates().add(s);
+        circleDataService.update(karnatakaCircle);
+
+        // Create the whitelist number entry in whitelist table
+        WhitelistEntry entry = new WhitelistEntry(WHITELIST_CONTACT_NUMBER,
+                whitelistState);
+        whitelistEntryDataService.create(entry);
+
+        // Deploy the service in user's state
+        deployedServiceDataService.create(new DeployedService(
+                nonWhitelistState, Service.MOBILE_ACADEMY));
+
+        // Check the response
+        HttpGet request = createHttpGet(true, "mobileacademy", true,
+                String.valueOf(WHITELIST_CONTACT_NUMBER), false, "", false, "",
+                true, "123456789012345");
+        HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(
+                request, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
+                .getStatusCode());
+
+        Set<State> states = languageService.getAllStatesForLanguage(rh
+                .tamilLanguage());
+        assertEquals(1, states.size());
+
+        // create set Language location code request and check the response
+        HttpPost postRequest = createHttpPost("mobileacademy",
+                new UserLanguageRequest(WHITELIST_CONTACT_NUMBER,
+                        123456789012345l, rh.tamilLanguage().getCode()));
+        httpResponse = SimpleHttpClient.httpRequestAndResponse(postRequest,
+                RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
+                .getStatusCode());
+
+        // assert user's status
+        FrontLineWorker whitelistWorker = frontLineWorkerService
+                .getByContactNumber(WHITELIST_CONTACT_NUMBER);
+        assertEquals(FrontLineWorkerStatus.ANONYMOUS,
+                whitelistWorker.getStatus());
     }
 
     /**
