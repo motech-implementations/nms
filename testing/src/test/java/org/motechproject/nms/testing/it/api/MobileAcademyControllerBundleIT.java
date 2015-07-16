@@ -30,8 +30,10 @@ import org.motechproject.nms.api.web.contract.mobileAcademy.CourseResponse;
 import org.motechproject.nms.api.web.contract.mobileAcademy.SaveBookmarkRequest;
 import org.motechproject.nms.api.web.contract.mobileAcademy.SmsStatusRequest;
 import org.motechproject.nms.api.web.contract.mobileAcademy.sms.RequestData;
+import org.motechproject.nms.mobileacademy.domain.CompletionRecord;
 import org.motechproject.nms.mobileacademy.domain.NmsCourse;
 import org.motechproject.nms.mobileacademy.dto.MaCourse;
+import org.motechproject.nms.mobileacademy.repository.CompletionRecordDataService;
 import org.motechproject.nms.mobileacademy.repository.NmsCourseDataService;
 import org.motechproject.nms.testing.it.api.utils.RequestBuilder;
 import org.motechproject.nms.testing.service.TestingService;
@@ -57,6 +59,9 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
 
     @Inject
     private BookmarkService bookmarkService;
+
+    @Inject
+    private CompletionRecordDataService completionRecordDataService;
 
     @Inject
     private NmsCourseDataService nmsCourseDataService;
@@ -353,11 +358,8 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
      * To verify Get Bookmark with Score API is returning correct bookmark and
      * score details.
      */
-    // TODO JIRA issue: https://applab.atlassian.net/browse/NMS-224
-    @Ignore
     @Test
     public void verifyFT404() throws IOException, InterruptedException {
-
         bookmarkService.deleteAllBookmarksForUser("1234567890");
 
         // Blank bookmark should come as request response, As there is no any
@@ -376,41 +378,123 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
     }
 
     /**
-     * To verify Get Bookmark with Score API is returning correct bookmark and
-     * score details.
+     * To verify Get Bookmark with Score API is rejected when mandatory
+     * parameter CallingNumber is missing
      */
-    // TODO JIRA issue: https://applab.atlassian.net/browse/NMS-223
+    // TODO JIRA issue: https://applab.atlassian.net/browse/NMS-238
     @Ignore
     @Test
-    public void verifyFT532() throws IOException, InterruptedException {
-        // create bookmark for the user
-
-        String endpoint = String.format(
-                "http://localhost:%d/api/mobileacademy/bookmarkWithScore",
-                TestContext.getJettyPort());
-        SaveBookmarkRequest bookmarkRequest = new SaveBookmarkRequest();
-        bookmarkRequest.setCallId(123456789012345l);
-        bookmarkRequest.setCallingNumber(1234567890l);
-        bookmarkRequest.setBookmark("Chapter01_Lesson01");
-        Map<String, Integer> scoreMap = new HashMap<String, Integer>();
-        scoreMap.put("1", 2);
-        bookmarkRequest.setScoresByChapter(scoreMap);
-        HttpPost postRequest = RequestBuilder.createPostRequest(endpoint,
-                bookmarkRequest);
-        SimpleHttpClient.httpRequestAndResponse(postRequest,
-                RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
-
-        // fetch bookmark for the same user
-        HttpGet getRequest = createHttpGetBookmarkWithScore("1234567890",
+    public void verifyFT405() throws IOException, InterruptedException {
+        HttpGet request = createHttpGetBookmarkWithScore(null,
                 "123456789012345");
+
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
-                getRequest, RequestBuilder.ADMIN_USERNAME,
+                request, RequestBuilder.ADMIN_USERNAME,
                 RequestBuilder.ADMIN_PASSWORD);
-        assertEquals(HttpStatus.SC_OK, response.getStatusLine()
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
                 .getStatusCode());
-        assertTrue("{\"bookmark\":\"Chapter01_Lesson01\",\"scoresByChapter\":{\"1\":2}}"
-                .equals(EntityUtils.toString(response
+
+        String expectedJsonResponse = createFailureResponseJson("<callingNumber: Not Present>");
+        assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response
                 .getEntity())));
+    }
+
+    /**
+     * To verify Get Bookmark with Score API is rejected when mandatory
+     * parameter CallId is missing.
+     */
+    // TODO JIRA issue: https://applab.atlassian.net/browse/NMS-238
+    @Ignore
+    @Test
+    public void verifyFT406() throws IOException, InterruptedException {
+        HttpGet request = createHttpGetBookmarkWithScore("1234567890", null);
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                request, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+
+        String expectedJsonResponse = createFailureResponseJson("<callId: Not Present>");
+        assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response
+                .getEntity())));
+    }
+
+    /**
+     * To verify Get Bookmark with Score API is rejected when mandatory
+     * parameter CallingNumber is having invalid value.
+     */
+    // TODO JIRA issue: https://applab.atlassian.net/browse/NMS-239
+    @Ignore
+    @Test
+    public void verifyFT407() throws IOException, InterruptedException {
+        // 11 digit callingNumber
+        HttpGet request = createHttpGetBookmarkWithScore("12345678901",
+                "123456789012345");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                request, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+
+        String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
+        assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response
+                .getEntity())));
+
+        // 9 digit callingNumber
+        request = createHttpGetBookmarkWithScore("123456789", "123456789012345");
+
+        request.setHeader("Content-type", "application/json");
+        response = SimpleHttpClient.httpRequestAndResponse(request,
+                RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response
+                .getEntity())));
+
+        // Alphanumeric callingNumber
+        request = createHttpGetBookmarkWithScore("123456A789",
+                "123456789012345");
+
+        request.setHeader("Content-type", "application/json");
+        response = SimpleHttpClient.httpRequestAndResponse(request,
+                RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+    }
+
+    /**
+     * To verify Get Bookmark with Score API is rejected when mandatory
+     * parameter CallId is having invalid value.
+     */
+    // TODO JIRA issue: https://applab.atlassian.net/browse/NMS-239
+    @Ignore
+    @Test
+    public void verifyFT408() throws IOException, InterruptedException {
+        // callId more than 15 digit
+        HttpGet request = createHttpGetBookmarkWithScore("1234567890",
+                "1234567890123456");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                request, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+
+        String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
+        assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response
+                .getEntity())));
+
+        // callId alphanumeric
+        request = createHttpGetBookmarkWithScore("1234567890",
+                "12345678901234A");
+
+        request.setHeader("Content-type", "application/json");
+        response = SimpleHttpClient.httpRequestAndResponse(request,
+                RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
     }
 
     /**
@@ -463,9 +547,9 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
      * To verify Save bookmark with score API is rejected when mandatory
      * parameter "callingNumber" is missing.
      */
-    // TODO JIRA issue: https://applab.atlassian.net/browse/NMS-219
-    @Test
+    // TODO NMS-219
     @Ignore
+    @Test
     public void verifyFT411() throws IOException, InterruptedException {
         // callingNumber missing in the request body
 
@@ -496,9 +580,9 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
      * To verify Save bookmark with score API is rejected when mandatory
      * parameter "callId" is missing.
      */
-    // TODO JIRA issue: https://applab.atlassian.net/browse/NMS-219
-    @Test
+    // TODO NMS-219
     @Ignore
+    @Test
     public void verifyFT412() throws IOException, InterruptedException {
         // callId missing in the request body
 
@@ -529,12 +613,9 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
      * To verify Save bookmark with score API is rejected when mandatory
      * parameter "callId" is having invalid value.
      */
-    // TODO JIRA issue: https://applab.atlassian.net/browse/NMS-220
     @Test
-    @Ignore
     public void verifyFT413() throws IOException, InterruptedException {
         // callId more than 15 digit
-
         String endpoint = String.format(
                 "http://localhost:%d/api/mobileacademy/bookmarkWithScore",
                 TestContext.getJettyPort());
@@ -555,6 +636,16 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
                 .getStatusCode());
         String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
+        assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response
+                .getEntity())));
+
+        // callId less than 15 digit
+        bookmarkRequest.setCallId(12345678901234l);
+        request = RequestBuilder.createPostRequest(endpoint, bookmarkRequest);
+        response = SimpleHttpClient.httpRequestAndResponse(request,
+                RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
         assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response
                 .getEntity())));
     }
@@ -606,8 +697,8 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
      * scoresByChapter is having value greater than 4.
      */
     // TODO JIRA issue: https://applab.atlassian.net/browse/NMS-221
-    @Test
     @Ignore
+    @Test
     public void verifyFT415() throws IOException, InterruptedException {
         // Invalid scores should not be accepted
 
@@ -615,7 +706,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
                 "http://localhost:%d/api/mobileacademy/bookmarkWithScore",
                 TestContext.getJettyPort());
         SaveBookmarkRequest bookmarkRequest = new SaveBookmarkRequest();
-        bookmarkRequest.setCallingNumber(123456789l);
+        bookmarkRequest.setCallingNumber(1234567890l);
         bookmarkRequest.setCallId(123456789012345l);
         bookmarkRequest.setBookmark("Chapter01_Lesson01");
         Map<String, Integer> scoreMap = new HashMap<String, Integer>();
@@ -643,12 +734,12 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
     @Test
     @Ignore
     public void verifyFT416() throws IOException, InterruptedException {
-        // Requets with invalid bookmark value
+        // Request with invalid bookmark value
         String endpoint = String.format(
                 "http://localhost:%d/api/mobileacademy/bookmarkWithScore",
                 TestContext.getJettyPort());
         SaveBookmarkRequest bookmarkRequest = new SaveBookmarkRequest();
-        bookmarkRequest.setCallingNumber(123456789l);
+        bookmarkRequest.setCallingNumber(1234567890l);
         bookmarkRequest.setCallId(123456789012345l);
         bookmarkRequest.setBookmark("Abc_Abc"); // Invalid bookmark
         Map<String, Integer> scoreMap = new HashMap<String, Integer>();
@@ -666,6 +757,260 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
         String expectedJsonResponse = createFailureResponseJson("<bookmark: Invalid>");
         assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response
                 .getEntity())));
+    }
+
+    /**
+     * To verify that any re-attempt of the quiz by user shall lead to
+     * overwriting of the previous score(lower) with new higher score.
+     */
+    @Test
+    public void verifyFT417() throws IOException, InterruptedException {
+        String endpoint = String.format(
+                "http://localhost:%d/api/mobileacademy/bookmarkWithScore",
+                TestContext.getJettyPort());
+        SaveBookmarkRequest bookmarkRequest = new SaveBookmarkRequest();
+
+        // save bookamark first
+        bookmarkRequest.setCallingNumber(1234567890l);
+        bookmarkRequest.setCallId(123456789012345l);
+        bookmarkRequest.setBookmark("Chapter03_Lesson01");
+        Map<String, Integer> scoreMap = new HashMap<String, Integer>();
+        scoreMap.put("1", 2);
+        scoreMap.put("2", 1);
+        scoreMap.put("3", 0);
+        bookmarkRequest.setScoresByChapter(scoreMap);
+        HttpPost postRequest = RequestBuilder.createPostRequest(endpoint,
+                bookmarkRequest);
+        assertTrue(SimpleHttpClient.execHttpRequest(postRequest,
+                HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD));
+
+        // assert if bookmark has been saved
+        HttpGet getRequest = createHttpGetBookmarkWithScore("1234567890",
+                "123456789012345");
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                getRequest, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine()
+                .getStatusCode());
+        String expectedJsonResponse = "{\"bookmark\":\"Chapter03_Lesson01\",\"scoresByChapter\":{\"3\":0,\"2\":1,\"1\":2}}";
+        assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response
+                .getEntity())));
+
+        // save new scores
+        scoreMap.put("3", 3);
+        bookmarkRequest.setScoresByChapter(scoreMap);
+        postRequest = RequestBuilder.createPostRequest(endpoint,
+                bookmarkRequest);
+        assertTrue(SimpleHttpClient.execHttpRequest(postRequest,
+                HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD));
+
+        // assert if the new score has been saved
+        response = SimpleHttpClient.httpRequestAndResponse(getRequest,
+                RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        expectedJsonResponse = "{\"bookmark\":\"Chapter03_Lesson01\",\"scoresByChapter\":{\"3\":3,\"2\":1,\"1\":2}}";
+        String actualResponse = EntityUtils.toString(response.getEntity());
+        System.out.println(actualResponse);
+        assertTrue(expectedJsonResponse.equals(actualResponse));
+    }
+
+    /**
+     * To verify that any re-attempt of the quiz by user shall lead to
+     * overwriting of the previous score(higher) with new lower score.
+     */
+    @Test
+    public void verifyFT418() throws IOException, InterruptedException {
+        String endpoint = String.format(
+                "http://localhost:%d/api/mobileacademy/bookmarkWithScore",
+                TestContext.getJettyPort());
+        SaveBookmarkRequest bookmarkRequest = new SaveBookmarkRequest();
+
+        // save bookamark first
+        bookmarkRequest.setCallingNumber(1234567890l);
+        bookmarkRequest.setCallId(123456789012345l);
+        bookmarkRequest.setBookmark("Chapter03_Lesson01");
+        Map<String, Integer> scoreMap = new HashMap<String, Integer>();
+        scoreMap.put("1", 2);
+        scoreMap.put("2", 1);
+        scoreMap.put("3", 4);
+        bookmarkRequest.setScoresByChapter(scoreMap);
+        HttpPost postRequest = RequestBuilder.createPostRequest(endpoint,
+                bookmarkRequest);
+        assertTrue(SimpleHttpClient.execHttpRequest(postRequest,
+                HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD));
+
+        // assert if bookmark has been saved
+        HttpGet getRequest = createHttpGetBookmarkWithScore("1234567890",
+                "123456789012345");
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                getRequest, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        String expectedJsonResponse = "{\"bookmark\":\"Chapter03_Lesson01\",\"scoresByChapter\":{\"3\":4,\"2\":1,\"1\":2}}";
+        assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response
+                .getEntity())));
+
+        // save new scores(Lower)
+        scoreMap.put("3", 3);
+        bookmarkRequest.setScoresByChapter(scoreMap);
+        postRequest = RequestBuilder.createPostRequest(endpoint,
+                bookmarkRequest);
+        assertTrue(SimpleHttpClient.execHttpRequest(postRequest,
+                HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD));
+
+        // assert if the new score has been saved
+        response = SimpleHttpClient.httpRequestAndResponse(getRequest,
+                RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        expectedJsonResponse = "{\"bookmark\":\"Chapter03_Lesson01\",\"scoresByChapter\":{\"3\":3,\"2\":1,\"1\":2}}";
+        assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response
+                .getEntity())));
+    }
+
+    /**
+     * To verify that any re-attempt of the quiz by user shall lead to no change
+     * in score when same score is attained in the re-attempt.
+     */
+    @Test
+    public void verifyFT419() throws IOException, InterruptedException {
+
+        String endpoint = String.format(
+                "http://localhost:%d/api/mobileacademy/bookmarkWithScore",
+                TestContext.getJettyPort());
+        SaveBookmarkRequest bookmarkRequest = new SaveBookmarkRequest();
+
+        // save bookamark first
+        bookmarkRequest.setCallingNumber(1234567890l);
+        bookmarkRequest.setCallId(123456789012345l);
+        bookmarkRequest.setBookmark("Chapter03_Lesson01");
+        Map<String, Integer> scoreMap = new HashMap<String, Integer>();
+        scoreMap.put("1", 2);
+        scoreMap.put("2", 1);
+        scoreMap.put("3", 4);
+        bookmarkRequest.setScoresByChapter(scoreMap);
+        HttpPost postRequest = RequestBuilder.createPostRequest(endpoint,
+                bookmarkRequest);
+        assertTrue(SimpleHttpClient.execHttpRequest(postRequest,
+                HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD));
+
+        // assert if bookmark has been saved
+        HttpGet getRequest = createHttpGetBookmarkWithScore("1234567890",
+                "123456789012345");
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                getRequest, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        String expectedJsonResponse = "{\"bookmark\":\"Chapter03_Lesson01\",\"scoresByChapter\":{\"3\":4,\"2\":1,\"1\":2}}";
+        assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response
+                .getEntity())));
+
+        // save new scores(Lower)
+        scoreMap.put("3", 4);
+        bookmarkRequest.setScoresByChapter(scoreMap);
+        postRequest = RequestBuilder.createPostRequest(endpoint,
+                bookmarkRequest);
+        assertTrue(SimpleHttpClient.execHttpRequest(postRequest,
+                HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD));
+
+        // assert if the new score has been saved
+        response = SimpleHttpClient.httpRequestAndResponse(getRequest,
+                RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response
+                .getEntity())));
+    }
+
+    /**
+     * To verify course is marked completed when user has listened all the
+     * chapters,attempted all the quiz and total score should be greater than
+     * 50%(i.e 22)
+     */
+    // TODO JIRA issue: https://applab.atlassian.net/browse/NMS-240
+    @Ignore
+    @Test
+    public void verifyFT508() throws IOException, InterruptedException {
+        String endpoint = String.format(
+                "http://localhost:%d/api/mobileacademy/bookmarkWithScore",
+                TestContext.getJettyPort());
+        SaveBookmarkRequest bookmarkRequest = new SaveBookmarkRequest();
+
+        // save bookamark first
+        bookmarkRequest.setCallingNumber(1234567890l);
+        bookmarkRequest.setCallId(123456789012345l);
+        bookmarkRequest.setBookmark("COURSE_COMPLETED");
+        Map<String, Integer> scoreMap = new HashMap<String, Integer>();
+        scoreMap.put("1", 2);
+        scoreMap.put("2", 1);
+        scoreMap.put("3", 4);
+        scoreMap.put("4", 2);
+        scoreMap.put("5", 1);
+        scoreMap.put("6", 4);
+        scoreMap.put("7", 2);
+        scoreMap.put("8", 1);
+        scoreMap.put("9", 4);
+        scoreMap.put("10", 1);
+        scoreMap.put("11", 4);
+        bookmarkRequest.setScoresByChapter(scoreMap);
+        HttpPost postRequest = RequestBuilder.createPostRequest(endpoint,
+                bookmarkRequest);
+        assertTrue(SimpleHttpClient.execHttpRequest(postRequest,
+                HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD));
+
+        CompletionRecord cr = completionRecordDataService
+                .findRecordByCallingNumber(1234567890l);
+        assertNotNull(cr);
+        assertEquals(cr.getCompletionCount(), 1);
+
+        // assert if bookmark has been reset
+        HttpGet getRequest = createHttpGetBookmarkWithScore("1234567890",
+                "123456789012345");
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                getRequest, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        String expectedJsonResponse = "{\"bookmark\":null,\"scoresByChapter\":null}";
+        assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response
+                .getEntity())));
+    }
+
+    /**
+     * To verify Get Bookmark with Score API is returning correct bookmark and
+     * score details.
+     */
+    @Test
+    public void verifyFT532() throws IOException, InterruptedException {
+        // create bookmark for the user
+        String endpoint = String.format(
+                "http://localhost:%d/api/mobileacademy/bookmarkWithScore",
+                TestContext.getJettyPort());
+        SaveBookmarkRequest bookmarkRequest = new SaveBookmarkRequest();
+        bookmarkRequest.setCallId(123456789012345l);
+        bookmarkRequest.setCallingNumber(1234567890l);
+        bookmarkRequest.setBookmark("Chapter01_Lesson01");
+        Map<String, Integer> scoreMap = new HashMap<String, Integer>();
+        scoreMap.put("1", 2);
+        bookmarkRequest.setScoresByChapter(scoreMap);
+        HttpPost postRequest = RequestBuilder.createPostRequest(endpoint,
+                bookmarkRequest);
+        SimpleHttpClient.httpRequestAndResponse(postRequest,
+                RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
+
+        // fetch bookmark for the same user
+        HttpGet getRequest = createHttpGetBookmarkWithScore("1234567890",
+                "123456789012345");
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                getRequest, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertTrue("{\"bookmark\":\"Chapter01_Lesson01\",\"scoresByChapter\":{\"1\":2}}"
+                .equals(EntityUtils.toString(response.getEntity())));
     }
 }
 
