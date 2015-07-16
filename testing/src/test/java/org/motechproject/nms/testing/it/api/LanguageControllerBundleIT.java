@@ -1,19 +1,12 @@
 package org.motechproject.nms.testing.it.api;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.io.IOException;
-
-import javax.inject.Inject;
-
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.api.web.contract.UserLanguageRequest;
@@ -26,7 +19,6 @@ import org.motechproject.nms.props.domain.DeployedService;
 import org.motechproject.nms.props.domain.Service;
 import org.motechproject.nms.props.repository.DeployedServiceDataService;
 import org.motechproject.nms.region.domain.Language;
-import org.motechproject.nms.region.domain.NationalDefaultLanguage;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
@@ -43,6 +35,13 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
+
+import javax.inject.Inject;
+import java.io.IOException;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerSuite.class)
@@ -82,7 +81,6 @@ public class LanguageControllerBundleIT extends BasePaxIT {
     NationalDefaultLanguageDataService nationalDefaultLanguageDataService;
 
     private RegionHelper rh;
-
 
     @Before
     public void clearDatabase() {
@@ -283,6 +281,7 @@ public class LanguageControllerBundleIT extends BasePaxIT {
         StringEntity params = new StringEntity(
                 "{\"callingNumber\":1111111111,\"callId\":123456789012345,\"languageLocationCode\":\""
                         + rh.hindiLanguage().getCode() + "\"}");
+
         httpPost.setEntity(params);
 
         httpPost.addHeader("content-type", "application/json");
@@ -436,6 +435,8 @@ public class LanguageControllerBundleIT extends BasePaxIT {
      * Language Location Code value languageLocationCode value that doesn’t
      * exist in NMS DB.
      */
+    // TODO JIRA https://applab.atlassian.net/browse/NMS-225
+    @Ignore
     @Test
     public void verifyFT469() throws IOException, InterruptedException {
         HttpPost httpPost = new HttpPost(String.format(
@@ -447,44 +448,8 @@ public class LanguageControllerBundleIT extends BasePaxIT {
         httpPost.addHeader("content-type", "application/json");
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
-                HttpStatus.SC_NOT_FOUND,
-                "{\"failureReason\":\"<languageLocationCode: Not Found>\"}",
+                HttpStatus.SC_BAD_REQUEST,
+                "{\"failureReason\":\"<languageLocationCode: Invalid>\"}",
                 ADMIN_USERNAME, ADMIN_PASSWORD));
-    }
-    
-    private void createFlwWithStatusAnonymous(){
-    	Language language = new Language("99", "Papiamento");
-        languageDataService.create(language);
-        
-    	// create anonymous FLW record
-        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
-        frontLineWorkerService.add(flw);
-        
-        ServiceUsageCap serviceUsageCap = new ServiceUsageCap(null, Service.MOBILE_KUNJI, 3600);
-        serviceUsageCapDataService.create(serviceUsageCap);
-        
-        nationalDefaultLanguageDataService.create(new NationalDefaultLanguage(language));
-        
-    }
-    
-    /*
-     * To set the LanguageLocationCode of the anonymous user using languageLocationCode API.
-     */
-    @Test
-    public void verifyFT359() throws IOException, InterruptedException{
-    	createFlwWithStatusAnonymous();
-    	HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/languageLocationCode", TestContext.getJettyPort()));
-        StringEntity params = new StringEntity("{\"callingNumber\":1111111111,\"callId\":123456789012345,\"languageLocationCode\":99}");
-        httpPost.setEntity(params);
-
-        httpPost.addHeader("content-type", "application/json");
-
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK));
-
-        FrontLineWorker flw = frontLineWorkerService.getByContactNumber(1111111111l);
-        Language language = flw.getLanguage();
-        assertNotNull(language);
-        assertEquals(FrontLineWorkerStatus.ANONYMOUS, flw.getStatus());
-        assertEquals("FLW Language Code", "99", language.getCode());
     }
 }
