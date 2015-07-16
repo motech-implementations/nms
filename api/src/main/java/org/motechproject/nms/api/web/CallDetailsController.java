@@ -215,7 +215,7 @@ public class CallDetailsController extends BaseController {
 
         // MK elements (mkCardCode)
         if (service == Service.MOBILE_KUNJI) {
-            if (null == callContentRequest.getMkCardCode()) {
+            if (null == callContentRequest.getMkCardCode() || callContentRequest.getMkCardCode().isEmpty()) {
                 failureReasons.append(String.format(NOT_PRESENT, "mkCardCode"));
             }
         }
