@@ -127,10 +127,7 @@ public class Subscription {
     public void setStartDate(DateTime startDate) {
         this.startDate = startDate.withTimeAtStartOfDay();
         this.firstMessageDayOfWeek = DayOfTheWeek.fromInt(startDate.getDayOfWeek());
-
-        if (subscriptionPack.getMessagesPerWeek() == 2) {
-            this.secondMessageDayOfWeek = DayOfTheWeek.fromDateTime(startDate.plusDays(4));
-        }
+        this.secondMessageDayOfWeek = DayOfTheWeek.fromDateTime(startDate.plusDays(4));
     }
 
     public DateTime getEndDate() {
