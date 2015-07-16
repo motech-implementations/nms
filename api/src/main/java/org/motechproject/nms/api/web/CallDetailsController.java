@@ -193,7 +193,7 @@ public class CallDetailsController extends BaseController {
         return failureReasons.toString();
     }
 
-    private String validateCallContentRequest(Service service, CallContentRequest callContentRequest) {
+    private String validateCallContentRequest(Service service, CallContentRequest callContentRequest) { // NO CHECKSTYLE Cyclomatic Complexity
         StringBuilder failureReasons = new StringBuilder();
 
         // Common elements (contentName, contentFile, startTime, endTime)
