@@ -225,16 +225,6 @@ public class UserControllerBundleIT extends BasePaxIT {
         ServiceUsageCap serviceUsageCap = new ServiceUsageCap(null, Service.MOBILE_KUNJI, 3600);
         serviceUsageCapDataService.create(serviceUsageCap);
     }
-    
-    private void createCircleWithNoLanguage(){
-    	Circle circle = new Circle("AA");
-        circle.setDefaultLanguage(rh.hindiLanguage());
-        circleDataService.create(circle);
-        
-        ServiceUsageCap serviceUsageCap = new ServiceUsageCap(null, Service.MOBILE_KUNJI, 3600);
-        serviceUsageCapDataService.create(serviceUsageCap);
-        
-    }
 
     private void createFlwWithLanguageServiceUsageAndCappedService() {
 
@@ -2747,6 +2737,16 @@ public class UserControllerBundleIT extends BasePaxIT {
         frontLineWorkerService.update(flw);
     }
     
+    private void createCircleWithNoLanguage(){
+    	Circle circle = new Circle("AA");
+        circle.setDefaultLanguage(rh.hindiLanguage());
+        circleDataService.create(circle);
+        
+        ServiceUsageCap serviceUsageCap = new ServiceUsageCap(null, Service.MOBILE_KUNJI, 3600);
+        serviceUsageCapDataService.create(serviceUsageCap);
+        
+    }
+    
     private void createFlwWithStatusActive(){
     	// create anonymous FLW record
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
@@ -3071,6 +3071,5 @@ public class UserControllerBundleIT extends BasePaxIT {
                 EntityUtils.toString(response.getEntity()));
         
     }
-    
     
 }
