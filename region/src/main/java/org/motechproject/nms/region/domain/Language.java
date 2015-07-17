@@ -2,7 +2,10 @@ package org.motechproject.nms.region.domain;
 
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
+import org.motechproject.mds.annotations.InstanceLifecycleListeners;
 import org.motechproject.mds.domain.MdsEntity;
+import org.motechproject.nms.tracking.annotation.TrackClass;
+import org.motechproject.nms.tracking.annotation.TrackFields;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Unique;
@@ -12,6 +15,9 @@ import javax.validation.constraints.NotNull;
  * Represents... yep that's right. The languages that are supported by the system.
  */
 @Entity(tableName = "nms_languages")
+@TrackClass
+@TrackFields
+@InstanceLifecycleListeners
 public class Language extends MdsEntity {
 
     @Field

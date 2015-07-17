@@ -5,7 +5,10 @@ import org.codehaus.jackson.annotate.JsonManagedReference;
 import org.motechproject.mds.annotations.Cascade;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
+import org.motechproject.mds.annotations.InstanceLifecycleListeners;
 import org.motechproject.mds.domain.MdsEntity;
+import org.motechproject.nms.tracking.annotation.TrackClass;
+import org.motechproject.nms.tracking.annotation.TrackField;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Persistent;
@@ -20,23 +23,28 @@ import java.util.List;
  */
 @Entity(maxFetchDepth = -1, tableName = "nms_districts")
 @Unique(name = "UNIQUE_STATE_CODE", members = { "state", "code" })
+@TrackClass
+@InstanceLifecycleListeners
 public class District extends MdsEntity {
 
     @Field
     @Column(allowsNull = "false", length = 100)
     @NotNull
     @Size(min = 1, max = 100)
+    @TrackField
     private String name;
 
     @Field
     @Column(allowsNull = "false", length = 100)
     @NotNull
     @Size(min = 1, max = 100)
+    @TrackField
     private String regionalName;
 
     @Field
     @Column(allowsNull = "false")
     @NotNull
+    @TrackField
     private Long code;
 
     @Field
@@ -44,6 +52,7 @@ public class District extends MdsEntity {
     @Column(allowsNull = "false")
     @NotNull
     @JsonBackReference
+    @TrackField
     private State state;
 
     @Field
@@ -54,6 +63,7 @@ public class District extends MdsEntity {
 
     @Field
     @Persistent(defaultFetchGroup = "true")
+    @TrackField
     private Language language;
 
     public District() {
