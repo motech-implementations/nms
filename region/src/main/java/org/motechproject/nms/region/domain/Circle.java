@@ -3,16 +3,22 @@ package org.motechproject.nms.region.domain;
 import org.codehaus.jackson.annotate.JsonBackReference;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
+import org.motechproject.mds.annotations.InstanceLifecycleListeners;
 import org.motechproject.mds.domain.MdsEntity;
+import org.motechproject.nms.tracking.annotation.TrackClass;
+import org.motechproject.nms.tracking.annotation.TrackField;
 
 import javax.jdo.annotations.Unique;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity(tableName = "nms_circles")
+@TrackClass
+@InstanceLifecycleListeners
 public class Circle extends MdsEntity {
     @Field
     @Unique
+    @TrackField
     private String name;
 
     @Field
@@ -20,6 +26,7 @@ public class Circle extends MdsEntity {
     private List<State> states;
 
     @Field
+    @TrackField
     private Language defaultLanguage;
 
     public Circle() {

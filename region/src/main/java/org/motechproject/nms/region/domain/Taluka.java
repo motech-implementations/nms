@@ -5,7 +5,10 @@ import org.codehaus.jackson.annotate.JsonManagedReference;
 import org.motechproject.mds.annotations.Cascade;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
+import org.motechproject.mds.annotations.InstanceLifecycleListeners;
 import org.motechproject.mds.domain.MdsEntity;
+import org.motechproject.nms.tracking.annotation.TrackClass;
+import org.motechproject.nms.tracking.annotation.TrackField;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Persistent;
@@ -17,24 +20,29 @@ import java.util.List;
 
 @Entity(tableName = "nms_talukas")
 @Unique(name = "UNIQUE_DISTRICT_CODE", members = { "district", "code" })
+@TrackClass
+@InstanceLifecycleListeners
 public class Taluka extends MdsEntity {
 
     @Field
     @Column(allowsNull = "false", length = 100)
     @NotNull
     @Size(min = 1, max = 100)
+    @TrackField
     private String name;
 
     @Field
     @Column(allowsNull = "false", length = 100)
     @NotNull
     @Size(min = 1, max = 100)
+    @TrackField
     private String regionalName;
 
     @Field
     @Column(allowsNull = "false", length = 7)
     @NotNull
     @Size(min = 1, max = 7)
+    @TrackField
     // File from MoH shows a 50 char string in taluka file, but a 7 char string in village.
     // Sample data shows string (i.e. '0005')
     // Email thread says number.   grrrr
@@ -43,12 +51,14 @@ public class Taluka extends MdsEntity {
     @Field
     @Column(allowsNull = "false")
     @NotNull
+    @TrackField
     private Integer identity;
 
     @Field
     @Column(allowsNull = "false")
     @NotNull
     @JsonBackReference
+    @TrackField
     private District district;
 
     @Field

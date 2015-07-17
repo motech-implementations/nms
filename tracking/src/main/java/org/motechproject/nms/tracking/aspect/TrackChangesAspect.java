@@ -5,7 +5,6 @@ import org.aspectj.lang.annotation.After;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.DeclareMixin;
-import org.motechproject.mds.util.MemberUtil;
 import org.motechproject.mds.util.PropertyUtil;
 import org.motechproject.nms.tracking.annotation.TrackClass;
 import org.motechproject.nms.tracking.exception.TrackChangesException;
@@ -49,12 +48,15 @@ public class TrackChangesAspect {
         }
     }
 
-    @Before("execution(* set*(*)) && @annotation(org.motechproject.nms.tracking.annotation.TrackField)")
+
+    @Before("within(@org.motechproject.nms.tracking.annotation.TrackClass *) && " +
+        "(set(@org.motechproject.nms.tracking.annotation.TrackField * *) || " +
+        "(set(* *) && within(@org.motechproject.nms.tracking.annotation.TrackFields *)))")
     public void before(JoinPoint joinPoint) {
         Object target = joinPoint.getTarget();
         if (target instanceof TrackChanges) {
             try {
-                trackChange(joinPoint, target);
+                trackChange(joinPoint, ((TrackChanges) target));
             } catch (TrackChangesException e) {
                 LOGGER.error("Unable to track field changes", e);
             }
@@ -63,9 +65,9 @@ public class TrackChangesAspect {
         }
     }
 
-    private void trackChange(JoinPoint joinPoint, Object target) throws TrackChangesException {
+    private void trackChange(JoinPoint joinPoint, TrackChanges target) throws TrackChangesException {
         String propertyName = getPropertyName(joinPoint);
-        Map<String, Change> changes = ((TrackChanges) target).changes();
+        Map<String, Change> changes = target.changes();
         Change change = changes.get(propertyName);
         if (change == null) {
             trackNewChange(joinPoint, propertyName, changes);
@@ -104,8 +106,7 @@ public class TrackChangesAspect {
     }
 
     private String getPropertyName(JoinPoint joinPoint) {
-        String setterName = joinPoint.getSignature().getName();
-        return MemberUtil.getFieldNameFromGetterSetterName(setterName);
+        return joinPoint.getSignature().getName();
     }
 
     private Object getNewValue(JoinPoint joinPoint) throws TrackChangesException {

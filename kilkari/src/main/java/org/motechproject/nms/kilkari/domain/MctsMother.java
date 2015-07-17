@@ -3,13 +3,13 @@ package org.motechproject.nms.kilkari.domain;
 import org.joda.time.DateTime;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
-
 import org.motechproject.mds.annotations.InstanceLifecycleListeners;
 import org.motechproject.nms.tracking.annotation.TrackClass;
-import org.motechproject.nms.tracking.annotation.TrackField;
+import org.motechproject.nms.tracking.annotation.TrackFields;
 
 @Entity(tableName = "nms_mcts_mothers")
 @TrackClass
+@TrackFields
 @InstanceLifecycleListeners
 public class MctsMother extends MctsBeneficiary {
 
@@ -24,7 +24,6 @@ public class MctsMother extends MctsBeneficiary {
         return dateOfBirth;
     }
 
-    @TrackField
     public void setDateOfBirth(DateTime dateOfBirth) {
         this.dateOfBirth = dateOfBirth;
     }
