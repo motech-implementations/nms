@@ -1588,6 +1588,63 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
                 .getStatusCode());
     }
+    
+    /**
+     * To verify anonymous User belongs to a circle that has multiple states,
+     * should be able to access MK Service content, if user's callingNumber is
+     * in whitelist and whitelist is set to Enabled for user's state
+     */
+    @Test
+    public void verifyFT341() throws InterruptedException, IOException {
+        setupWhiteListData();
+
+        // Delhi circle has a state already, add one more
+        Circle delhiCircle = rh.delhiCircle();
+        State s = new State();
+        s.setName("New State in delhi");
+        s.setCode(7L);
+        stateDataService.create(s);
+        delhiCircle.getStates().add(s);
+        circleDataService.update(delhiCircle);
+
+        // Create the whitelist number entry in whitelist table
+        WhitelistEntry entry = new WhitelistEntry(WHITELIST_CONTACT_NUMBER,
+                whitelistState);
+        whitelistEntryDataService.create(entry);
+
+        // Deploy the service in user's state
+        deployedServiceDataService.create(new DeployedService(whitelistState,
+                Service.MOBILE_KUNJI));
+
+        // Check the response
+        HttpGet request = createHttpGet(true, "mobilekunji", true,
+                String.valueOf(WHITELIST_CONTACT_NUMBER), false, "", false, "",
+                true, "123456789012345");
+        HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(
+                request, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
+                .getStatusCode());
+
+        Set<State> states = languageService.getAllStatesForLanguage(rh
+                .hindiLanguage());
+        assertEquals(1, states.size());
+
+        // create set Language location code request and check the response
+        HttpPost postRequest = createHttpPost("mobilekunji",
+                new UserLanguageRequest(WHITELIST_CONTACT_NUMBER,
+                        123456789012345l, rh.hindiLanguage().getCode()));
+        httpResponse = SimpleHttpClient.httpRequestAndResponse(postRequest,
+                RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
+                .getStatusCode());
+
+        // assert user's status
+        FrontLineWorker whitelistWorker = frontLineWorkerService
+                .getByContactNumber(WHITELIST_CONTACT_NUMBER);
+        assertEquals(FrontLineWorkerStatus.ANONYMOUS,
+                whitelistWorker.getStatus());
+    }
 
     /**
      * To verify Active/Inactive User shouldn't be able to access MK Service
@@ -1644,6 +1701,52 @@ public class UserControllerBundleIT extends BasePaxIT {
                 String.valueOf(NOT_WHITELIST_CONTACT_NUMBER), true, "A", true,
                 rh.delhiCircle().getName(), true, "123456789012345");
         httpResponse = SimpleHttpClient.httpRequestAndResponse(request,
+                RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_FORBIDDEN, httpResponse.getStatusLine()
+                .getStatusCode());
+    }
+
+    /**
+     * To verify anonymous User belongs to a circle that has multiple states,
+     * shouldn't be able to access MK Service content, if user's callingNumber
+     * is not in whitelist and whitelist is set to Enabled for user's state.
+     */
+    @Test
+    public void verifyFT343() throws InterruptedException, IOException {
+        setupWhiteListData();
+
+        // Delhi circle has a state already, add one more
+        Circle delhiCircle = rh.delhiCircle();
+        State s = new State();
+        s.setName("New State in delhi");
+        s.setCode(7L);
+        stateDataService.create(s);
+        delhiCircle.getStates().add(s);
+        circleDataService.update(delhiCircle);
+
+        // Deploy the service in user's state
+        deployedServiceDataService.create(new DeployedService(whitelistState,
+                Service.MOBILE_KUNJI));
+
+        // Check the response
+        HttpGet request = createHttpGet(true, "mobilekunji", true,
+                String.valueOf(NOT_WHITELIST_CONTACT_NUMBER), false, "", false,
+                "", true, "123456789012345");
+        HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(
+                request, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
+                .getStatusCode());
+
+        Set<State> states = languageService.getAllStatesForLanguage(rh
+                .hindiLanguage());
+        assertEquals(1, states.size());
+
+        // create set Language location code request and check the response
+        HttpPost postRequest = createHttpPost("mobilekunji",
+                new UserLanguageRequest(NOT_WHITELIST_CONTACT_NUMBER,
+                        123456789012345l, rh.hindiLanguage().getCode()));
+        httpResponse = SimpleHttpClient.httpRequestAndResponse(postRequest,
                 RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_FORBIDDEN, httpResponse.getStatusLine()
                 .getStatusCode());
@@ -1708,6 +1811,99 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         httpResponse = SimpleHttpClient.httpRequestAndResponse(request,
                 RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
+                .getStatusCode());
+    }
+
+    /**
+     * To verify anonymous User belongs to a circle that has multiple states,
+     * should be able to access MK Service content, if user's callingNumber is
+     * in whitelist and whitelist is set to disabled for user's state.
+     */
+    @Test
+    public void verifyFT345() throws InterruptedException, IOException {
+        setupWhiteListData();
+
+        // karnataka circle has a state already, add one more
+
+        Circle karnatakaCircle = rh.karnatakaCircle();
+        State s = new State();
+        s.setName("New State in Karnataka");
+        s.setCode(7L);
+        stateDataService.create(s);
+        karnatakaCircle.getStates().add(s);
+        circleDataService.update(karnatakaCircle);
+
+        // Create the whitelist number entry in whitelist table
+        WhitelistEntry entry = new WhitelistEntry(WHITELIST_CONTACT_NUMBER,
+                whitelistState);
+        whitelistEntryDataService.create(entry);
+
+        // Deploy the service in user's state
+        deployedServiceDataService.create(new DeployedService(
+                nonWhitelistState, Service.MOBILE_KUNJI));
+
+        // Check the response
+        HttpGet request = createHttpGet(true, "mobilekunji", true,
+                String.valueOf(WHITELIST_CONTACT_NUMBER), false, "", false, "",
+                true, "123456789012345");
+        HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(
+                request, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
+                .getStatusCode());
+
+        Set<State> states = languageService.getAllStatesForLanguage(rh
+                .tamilLanguage());
+        assertEquals(1, states.size());
+
+        // create set Language location code request and check the response
+        HttpPost postRequest = createHttpPost("mobilekunji",
+                new UserLanguageRequest(WHITELIST_CONTACT_NUMBER,
+                        123456789012345l, rh.tamilLanguage().getCode()));
+        httpResponse = SimpleHttpClient.httpRequestAndResponse(postRequest,
+                RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
+                .getStatusCode());
+
+        // assert user's status
+        FrontLineWorker whitelistWorker = frontLineWorkerService
+                .getByContactNumber(WHITELIST_CONTACT_NUMBER);
+        assertEquals(FrontLineWorkerStatus.ANONYMOUS,
+                whitelistWorker.getStatus());
+    }
+
+    /**
+     * To verify anonymous User belongs to a circle that has single state,
+     * should be able to access MK Service content, if user's callingNumber is
+     * in whitelist and whitelist is set to Enabled for user's state.
+     */
+    @Test
+    public void verifyFT346() throws InterruptedException, IOException {
+        setupWhiteListData();
+
+        Circle delhiCircle = circleDataService.findByName(rh.delhiCircle()
+                .getName());
+        assertNotNull(delhiCircle);
+        assertNotNull(delhiCircle.getStates());
+        assertEquals(delhiCircle.getStates().size(), 1);
+
+        // Create the whitelist number entry in whitelist table
+        WhitelistEntry entry = new WhitelistEntry(WHITELIST_CONTACT_NUMBER,
+                whitelistState);
+        whitelistEntryDataService.create(entry);
+
+        // Deploy the service in user's state
+        deployedServiceDataService.create(new DeployedService(whitelistState,
+                Service.MOBILE_KUNJI));
+
+        // Check the response
+        HttpGet request = createHttpGet(true, "mobilekunji", true,
+                String.valueOf(WHITELIST_CONTACT_NUMBER), false, "", true, rh
+                        .delhiCircle().getName(), true, "123456789012345");
+        HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(
+                request, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
                 .getStatusCode());
     }
@@ -2087,7 +2283,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     public void verifyFT449() throws InterruptedException, IOException {
         setupWhiteListData();
 
-        // Delhi circle has a state already, add one more
+        // karnataka circle has a state already, add one more
 
         Circle karnatakaCircle = rh.karnatakaCircle();
         State s = new State();
@@ -2137,13 +2333,47 @@ public class UserControllerBundleIT extends BasePaxIT {
     }
 
     /**
-    * This case has been added to test the functionality mentioned in
-    * NMS.GEN.FLW.008.
-    * The NMS system shall provide means to mark an FLW as invalid using CSV
-    * upload. Once an FLW is marked invalid, any incoming call with MSISDN that
-    * is same as that of invalid FLW shall be treated as that of an anonymous
-    * caller.
-    */
+     * To verify anonymous User belongs to a circle that has single state,
+     * should be able to access MA Service content, if user's callingNumber is
+     * in whitelist and whitelist is set to Enabled for user's state.
+     */
+    @Test
+    public void verifyFT451() throws InterruptedException, IOException {
+        setupWhiteListData();
+
+        Circle delhiCircle = circleDataService.findByName(rh.delhiCircle()
+                .getName());
+        assertNotNull(delhiCircle);
+        assertNotNull(delhiCircle.getStates());
+        assertEquals(delhiCircle.getStates().size(), 1);
+
+        // Create the whitelist number entry in whitelist table
+        WhitelistEntry entry = new WhitelistEntry(WHITELIST_CONTACT_NUMBER,
+                whitelistState);
+        whitelistEntryDataService.create(entry);
+
+        // Deploy the service in user's state
+        deployedServiceDataService.create(new DeployedService(whitelistState,
+                Service.MOBILE_ACADEMY));
+
+        // Check the response
+        HttpGet request = createHttpGet(true, "mobileacademy", true,
+                String.valueOf(WHITELIST_CONTACT_NUMBER), false, "", true, rh
+                        .delhiCircle().getName(), true, "123456789012345");
+        HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(
+                request, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
+                .getStatusCode());
+    }
+
+    /**
+     * This case has been added to test the functionality mentioned in
+     * NMS.GEN.FLW.008. The NMS system shall provide means to mark an FLW as
+     * invalid using CSV upload. Once an FLW is marked invalid, any incoming
+     * call with MSISDN that is same as that of invalid FLW shall be treated as
+     * that of an anonymous caller.
+     */
     // TODO JIRA issue: https://applab.atlassian.net/browse/NMS-236
     @Ignore
     @Test
