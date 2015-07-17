@@ -547,7 +547,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         Subscription subscription = mctsSubscriber.getSubscriptions().iterator().next();
 
-        assertEquals(now.minusDays(14), subscription.getStartDate());
+        assertEquals(now.minusDays(14).withTimeAtStartOfDay(), subscription.getStartDate());
         assert(subscription.getStatus() == SubscriptionStatus.ACTIVE);
 
         mctsSubscriber.setDateOfBirth(now.minusDays(100));
@@ -556,7 +556,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         subscription = mctsSubscriber.getSubscriptions().iterator().next();
 
-        assertEquals(now.minusDays(100), subscription.getStartDate());
+        assertEquals(now.minusDays(100).withTimeAtStartOfDay(), subscription.getStartDate());
         assert(subscription.getStatus() == SubscriptionStatus.ACTIVE);
     }
 
@@ -576,7 +576,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         Subscription subscription = mctsSubscriber.getSubscriptions().iterator().next();
 
-        assertEquals(now.minusDays(90), subscription.getStartDate());
+        assertEquals(now.minusDays(90).withTimeAtStartOfDay(), subscription.getStartDate());
         assert(subscription.getStatus() == SubscriptionStatus.ACTIVE);
 
         mctsSubscriber.setLastMenstrualPeriod(now.minusDays(270));
@@ -585,7 +585,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         subscription = mctsSubscriber.getSubscriptions().iterator().next();
 
-        assertEquals(now.minusDays(180), subscription.getStartDate());
+        assertEquals(now.minusDays(180).withTimeAtStartOfDay(), subscription.getStartDate());
         assert(subscription.getStatus() == SubscriptionStatus.ACTIVE);
 
         mctsSubscriber.setLastMenstrualPeriod(now.minusDays(1000));
@@ -594,7 +594,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
         subscription = mctsSubscriber.getSubscriptions().iterator().next();
 
-        assertEquals(now.minusDays(910), subscription.getStartDate());
+        assertEquals(now.minusDays(910).withTimeAtStartOfDay(), subscription.getStartDate());
         assert(subscription.getStatus() == SubscriptionStatus.COMPLETED);
     }
 
