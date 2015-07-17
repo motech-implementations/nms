@@ -31,6 +31,7 @@ import org.motechproject.nms.api.web.contract.BadRequest;
 import org.motechproject.nms.api.web.contract.FlwUserResponse;
 import org.motechproject.nms.api.web.contract.UserLanguageRequest;
 import org.motechproject.nms.api.web.contract.kilkari.KilkariUserResponse;
+import org.motechproject.nms.flw.domain.CallDetailRecord;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.domain.ServiceUsage;
@@ -42,6 +43,7 @@ import org.motechproject.nms.flw.repository.ServiceUsageCapDataService;
 import org.motechproject.nms.flw.repository.ServiceUsageDataService;
 import org.motechproject.nms.flw.repository.WhitelistEntryDataService;
 import org.motechproject.nms.flw.repository.WhitelistStateDataService;
+import org.motechproject.nms.flw.service.CallDetailRecordService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.flw.service.ServiceUsageService;
 import org.motechproject.nms.flw.service.WhitelistService;
@@ -68,6 +70,7 @@ import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.region.service.LanguageService;
 import org.motechproject.nms.testing.it.api.utils.RequestBuilder;
+import org.motechproject.nms.testing.it.utils.ApiRequestHelper;
 import org.motechproject.nms.testing.it.utils.RegionHelper;
 import org.motechproject.nms.testing.it.utils.SubscriptionHelper;
 import org.motechproject.nms.testing.service.TestingService;
@@ -136,6 +139,9 @@ public class UserControllerBundleIT extends BasePaxIT {
 
     @Inject
     ServiceUsageService serviceUsageService;
+
+    @Inject
+    CallDetailRecordService callDetailRecordService;
 
     public static final Long WHITELIST_CONTACT_NUMBER = 1111111111l;
     public static final Long NOT_WHITELIST_CONTACT_NUMBER = 9000000000l;
@@ -3748,20 +3754,20 @@ public class UserControllerBundleIT extends BasePaxIT {
     @Test
     public void verifyFT421() throws IOException, InterruptedException {
         rh.newDelhiDistrict();
-        
-        //National Capping
+
+        // National Capping
         ServiceUsageCap serviceUsageCap = new ServiceUsageCap(null,
                 Service.MOBILE_ACADEMY, 5000);
         serviceUsageCapDataService.create(serviceUsageCap);
-        
-        //FLW usage
+
+        // FLW usage
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright",
                 1200000000l);
         frontLineWorkerService.add(flw);
-        ServiceUsage serviceUsage = new ServiceUsage(flw, Service.MOBILE_ACADEMY,
-                80, 1, 0, DateTime.now());
+        ServiceUsage serviceUsage = new ServiceUsage(flw,
+                Service.MOBILE_ACADEMY, 80, 1, 0, DateTime.now());
         serviceUsageDataService.create(serviceUsage);
-        
+
         // invoke get user detail API
         HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
                 true, "1200000000", // callingNumber
@@ -3782,6 +3788,157 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
                 httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * To verify that MA service is accessible usage when cappingType is set to
+     * "State Capping" having usage pulses remaining.
+     */
+    @Test
+    public void verifyFT423() throws IOException, InterruptedException {
+        rh.newDelhiDistrict();
+        deployedServiceDataService.create(new DeployedService(rh
+                .delhiState(), Service.MOBILE_ACADEMY));
+        
+        // State Capping
+        ServiceUsageCap stateUsageCap = new ServiceUsageCap(rh.delhiState(),
+                Service.MOBILE_ACADEMY, 6000);
+        serviceUsageCapDataService.create(stateUsageCap);
+        
+        //national capping
+        ServiceUsageCap nationalUsageCap = new ServiceUsageCap(null,
+                Service.MOBILE_ACADEMY, 5000);
+        serviceUsageCapDataService.create(nationalUsageCap);
+
+        // FLW usage
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright",
+                1200000000l);
+        flw.setLanguage(rh.hindiLanguage());
+        frontLineWorkerService.add(flw);
+        ServiceUsage serviceUsage = new ServiceUsage(flw,
+                Service.MOBILE_ACADEMY, 80, 1, 0, DateTime.now());
+        serviceUsageDataService.create(serviceUsage);
+
+        // invoke get user detail API
+        HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
+                true, "1200000000", // callingNumber
+                false, null, // operator
+                false, null,// circle
+                true, "123456789012345" // callId
+        );
+
+        String expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
+                rh.hindiLanguage().getCode(), // locationCode
+                null, // allowedLanguageLocationCodes
+                80L, // currentUsageInPulses
+                1L, // endOfUsagePromptCounter
+                false, // welcomePromptFlag
+                6000, // maxAllowedUsageInPulses=State cap
+                2 // maxAllowedEndOfUsagePrompt
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * To verify that MA service shall maintain the pulses consumed by FLW for
+     * MA usage.
+     */
+    // TODO https://applab.atlassian.net/browse/NMS-241
+    @Ignore
+    @Test
+    public void verifyFT523() throws IOException, InterruptedException {
+        rh.newDelhiDistrict();
+        rh.delhiCircle();
+        deployedServiceDataService.create(new DeployedService(rh.delhiState(),
+                Service.MOBILE_ACADEMY));
+        
+        // Create FLW with no usage
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright",
+                1200000000l);
+        flw.setLanguage(rh.hindiLanguage());
+        frontLineWorkerService.add(flw);
+        
+        // invoke get user detail API
+        HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
+                true, "1200000000", // callingNumber
+                false, null, // operator
+                false, null,// circle
+                true, "123456789012345" // callId
+        );
+
+        String expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
+                rh.hindiLanguage().getCode(), // locationCode
+                null, // allowedLanguageLocationCodes
+                0L, // currentUsageInPulses
+                0L, // endOfUsagePromptCounter
+                false, // welcomePromptFlag
+                -1, // maxAllowedUsageInPulses=No capping
+                2 // maxAllowedEndOfUsagePrompt
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+
+        // Invoke Save call Detail
+
+        HttpPost httpPost = ApiRequestHelper.createCallDetailsPost(
+                "mobileacademy",
+        /* callingNumber */true, 1200000000l,
+        /* callId */true, 234000011111111l,
+        /* operator */false, null,
+        /* circle */false, null,
+        /* callStartTime */true, 1422879843l,
+        /* callEndTime */true, 1422879903l,
+        /* callDurationInPulses */true, 60,
+        /* endOfUsagePromptCounter */true, 1,
+        /* welcomeMessagePromptFlag */false, null,
+        /* callStatus */true, 1,
+        /* callDisconnectReason */true, 2,
+        /* content */false, null);
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+
+        CallDetailRecord cdr = callDetailRecordService
+                .getByCallingNumber(1200000000l);
+
+        // assert call detail record
+        assertNotNull(cdr);
+        assertEquals(1200000000l, cdr.getCallingNumber());
+        assertEquals(60, cdr.getCallDurationInPulses());
+        assertEquals(1, cdr.getEndOfUsagePromptCounter());
+
+        // invoke get user detail API To check updated usage and prompt
+        httpGet = createHttpGet(true, "mobileacademy", // service
+                true, "1200000000", // callingNumber
+                false, null, // operator
+                false, null,// circle
+                true, "123456789012346" // callId
+        );
+
+        expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
+                rh.hindiLanguage().getCode(), // locationCode
+                null, // allowedLanguageLocationCodes
+                60L, // currentUsageInPulses=updated
+                1L, // endOfUsagePromptCounter=updated
+                false, // welcomePromptFlag
+                -1, // maxAllowedUsageInPulses=No capping
+                2 // maxAllowedEndOfUsagePrompt
+        );
+
+        response = SimpleHttpClient.httpRequestAndResponse(httpGet,
+                ADMIN_USERNAME, ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
         assertEquals(expectedJsonResponse,
                 EntityUtils.toString(response.getEntity()));
