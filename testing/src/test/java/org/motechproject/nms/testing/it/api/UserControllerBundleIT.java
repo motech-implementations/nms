@@ -3740,4 +3740,51 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(expectedJsonResponse,
                 EntityUtils.toString(response.getEntity()));
     }
+
+    /**
+     * To verify that MA service is accessible usage when cappingType is set to
+     * "National Capping" having usage pulses remaining.
+     */
+    @Test
+    public void verifyFT421() throws IOException, InterruptedException {
+        rh.newDelhiDistrict();
+        
+        //National Capping
+        ServiceUsageCap serviceUsageCap = new ServiceUsageCap(null,
+                Service.MOBILE_ACADEMY, 5000);
+        serviceUsageCapDataService.create(serviceUsageCap);
+        
+        //FLW usage
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright",
+                1200000000l);
+        frontLineWorkerService.add(flw);
+        ServiceUsage serviceUsage = new ServiceUsage(flw, Service.MOBILE_ACADEMY,
+                80, 1, 0, DateTime.now());
+        serviceUsageDataService.create(serviceUsage);
+        
+        // invoke get user detail API
+        HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
+                true, "1200000000", // callingNumber
+                false, null, // operator
+                false, null,// circle
+                true, "123456789012345" // callId
+        );
+
+        String expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
+                null, // locationCode
+                Arrays.asList(rh.hindiLanguage().getCode()), // allowedLanguageLocationCodes
+                80L, // currentUsageInPulses
+                1L, // endOfUsagePromptCounter
+                false, // welcomePromptFlag
+                5000, // maxAllowedUsageInPulses=National cap
+                2 // maxAllowedEndOfUsagePrompt
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
+
 }
