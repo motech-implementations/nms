@@ -67,6 +67,8 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
 
     private static final String COURSE_NAME = "MobileAcademyCourse";
 
+    private static final String FINAL_BOOKMARK = "COURSE_COMPLETED";
+
     public static final int MILLISECONDS_PER_SECOND = 1000;
 
     @Before
@@ -154,7 +156,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
             scores.put(String.valueOf(i), 4);
         }
         bookmark.setScoresByChapter(scores);
-        bookmark.setBookmark("Chapter11_Quiz");
+        bookmark.setBookmark(FINAL_BOOKMARK);
         HttpPost request = RequestBuilder.createPostRequest(endpoint, bookmark);
         assertTrue(SimpleHttpClient.execHttpRequest(request, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
 
@@ -688,7 +690,6 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
      * scoresByChapter is having value greater than 4.
      */
     // TODO JIRA issue: https://applab.atlassian.net/browse/NMS-221
-    @Ignore
     @Test
     public void verifyFT415() throws IOException, InterruptedException {
         // Invalid scores should not be accepted
@@ -923,7 +924,6 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
      * 50%(i.e 22)
      */
     // TODO JIRA issue: https://applab.atlassian.net/browse/NMS-240
-    @Ignore
     @Test
     public void verifyFT508() throws IOException, InterruptedException {
         String endpoint = String.format(

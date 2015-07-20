@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * BaseController
@@ -237,6 +238,17 @@ public class BaseController {
         }
 
         return propertyService.isServiceDeployedInState(service, state);
+    }
+
+    protected  boolean validateMAScores(Map<String, Integer> scores) {
+        if (scores != null) {
+            for (Integer currentScore : scores.values()) {
+                if (currentScore < 0 || currentScore > 4) {
+                    throw new IllegalArgumentException(String.format(INVALID, "scoresByChapter"));
+                }
+            }
+        }
+        return true;
     }
 
     @ExceptionHandler(NotAuthorizedException.class)
