@@ -203,8 +203,8 @@ public class CallDetailsController extends BaseController {
     private String validateCallDetailsMobileAcademyElements(CallDetailRecordRequest callDetailRecordRequest) {
         StringBuilder failureReasons = new StringBuilder();
 
-
-
+        // validate content type. No validation on correctAnswered because a disconnect during question
+        // might be null
         for (CallContentRequest callContentRequest : callDetailRecordRequest.getContent()) {
             String contentType = callContentRequest.getType();
             if (contentType != null &&
