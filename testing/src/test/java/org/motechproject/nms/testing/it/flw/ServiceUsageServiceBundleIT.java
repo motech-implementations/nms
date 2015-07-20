@@ -135,7 +135,7 @@ public class ServiceUsageServiceBundleIT extends BasePaxIT {
         assertEquals(Service.MOBILE_ACADEMY, serviceUsage.getService());
         assertEquals(2, serviceUsage.getUsageInPulses());
         assertEquals(1, serviceUsage.getEndOfUsage());
-        assertEquals(1, serviceUsage.getWelcomePrompt());
+        assertEquals(true, serviceUsage.getWelcomePrompt());
 
         callDetailRecordDataService.delete(lastMonth);
         callDetailRecordDataService.delete(differentService);
@@ -166,7 +166,7 @@ public class ServiceUsageServiceBundleIT extends BasePaxIT {
         assertEquals(Service.MOBILE_ACADEMY, serviceUsage.getService());
         assertEquals(0, serviceUsage.getUsageInPulses());
         assertEquals(0, serviceUsage.getEndOfUsage());
-        assertEquals(0, serviceUsage.getWelcomePrompt());
+        assertEquals(false, serviceUsage.getWelcomePrompt());
 
         callDetailRecordDataService.deleteAll();
 
