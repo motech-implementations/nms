@@ -2518,11 +2518,13 @@ public class UserControllerBundleIT extends BasePaxIT {
     }
 
     /**
-     * To verify that MK service  shall be allowed when cappingType
-     * is set to "State Capping" having usage pluses remaining.
+     * To verify that MK service shall be allowed when cappingType is set to
+     * "State Capping" having usage pluses remaining.
+     * <p>
+     * To verify that MK maxallowedUsageInPulses counter is set successfully.
      */
     @Test
-    public void verifyFT329() throws IOException, InterruptedException {
+    public void verifyFT329_427() throws IOException, InterruptedException {
         State s = rh.delhiState();
         rh.delhiCircle();
 
@@ -2532,7 +2534,9 @@ public class UserControllerBundleIT extends BasePaxIT {
         flw.setLanguage(rh.hindiLanguage());
         frontLineWorkerService.add(flw);
 
-        ServiceUsageCap serviceUsageCap = new ServiceUsageCap(s, Service.MOBILE_KUNJI, 3600);
+        // Set maxallowedUsageInPulses to 3800
+        ServiceUsageCap serviceUsageCap = new ServiceUsageCap(s,
+                Service.MOBILE_KUNJI, 3800);
         serviceUsageCapDataService.create(serviceUsageCap);
 
         ServiceUsage serviceUsage = new ServiceUsage(flw, Service.MOBILE_KUNJI, 1, 0, 0, DateTime.now());
@@ -2553,7 +2557,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 1L,    //currentUsageInPulses
                 0L,    //endOfUsagePromptCounter
                 false, //welcomePromptFlag
-                3600,  //maxAllowedUsageInPulses
+                3800, // maxAllowedUsageInPulses
                 2      //maxAllowedEndOfUsagePrompt
         );
 
@@ -4066,12 +4070,14 @@ public class UserControllerBundleIT extends BasePaxIT {
     /**
      * To verify that MA service is accessible usage when cappingType is set to
      * "National Capping" having usage pulses remaining.
+     * <p>
+     * To verify that MA maxallowedUsageInPulses counter is set successfully.
      */
     @Test
-    public void verifyFT421() throws IOException, InterruptedException {
+    public void verifyFT421_480() throws IOException, InterruptedException {
         rh.newDelhiDistrict();
 
-        // National Capping
+        // National Capping set maxallowedUsageInPulses
         ServiceUsageCap serviceUsageCap = new ServiceUsageCap(null,
                 Service.MOBILE_ACADEMY, 5000);
         serviceUsageCapDataService.create(serviceUsageCap);
@@ -4248,6 +4254,81 @@ public class UserControllerBundleIT extends BasePaxIT {
                 null, // allowedLanguageLocationCodes
                 60L, // currentUsageInPulses=updated
                 1L, // endOfUsagePromptCounter=updated
+                false, // welcomePromptFlag
+                -1, // maxAllowedUsageInPulses=No capping
+                2 // maxAllowedEndOfUsagePrompt
+        );
+
+        response = SimpleHttpClient.httpRequestAndResponse(httpGet,
+                ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
+    
+    /**
+     * To verify that current usage pulses is resetted after the end of month.
+     */
+    @Test
+    public void verifyFT498() throws IOException, InterruptedException {
+        rh.newDelhiDistrict();
+        rh.delhiCircle();
+        deployedServiceDataService.create(new DeployedService(rh.delhiState(),
+                Service.MOBILE_ACADEMY));
+        
+        // FLW usage
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright",
+                1200000000l);
+        flw.setLanguage(rh.hindiLanguage());
+        frontLineWorkerService.add(flw);
+        ServiceUsage serviceUsage = new ServiceUsage(flw,
+                Service.MOBILE_ACADEMY, 80, 1, 0, DateTime.now()
+                        .withDayOfMonth(1).withTimeAtStartOfDay());
+        serviceUsage = serviceUsageDataService.create(serviceUsage);
+        
+        // invoke get user detail API
+        HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
+                true, "1200000000", // callingNumber
+                false, null, // operator
+                false, null,// circle
+                true, "123456789012345" // callId
+        );
+
+        String expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
+                rh.hindiLanguage().getCode(), // locationCode
+                null, // allowedLanguageLocationCodes
+                80L, // currentUsageInPulses
+                1L, // endOfUsagePromptCounter
+                false, // welcomePromptFlag
+                -1, // maxAllowedUsageInPulses=No capping
+                2 // maxAllowedEndOfUsagePrompt
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+
+        // Update FLW usage to previous month last day time such that it is resetted now
+
+        serviceUsage.setTimestamp(DateTime.now().withDayOfMonth(1)
+                .withTimeAtStartOfDay().minusMinutes(1));
+        serviceUsageDataService.update(serviceUsage);
+
+        // invoke get user detail API To check updated usage and prompt
+        httpGet = createHttpGet(true, "mobileacademy", // service
+                true, "1200000000", // callingNumber
+                false, null, // operator
+                false, null,// circle
+                true, "123456789012346" // callId
+        );
+
+        expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
+                rh.hindiLanguage().getCode(), // locationCode
+                null, // allowedLanguageLocationCodes
+                0L, // currentUsageInPulses=updated
+                0L, // endOfUsagePromptCounter=updated
                 false, // welcomePromptFlag
                 -1, // maxAllowedUsageInPulses=No capping
                 2 // maxAllowedEndOfUsagePrompt
