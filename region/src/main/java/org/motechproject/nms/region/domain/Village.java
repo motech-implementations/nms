@@ -4,8 +4,11 @@ import org.codehaus.jackson.annotate.JsonBackReference;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.annotations.Ignore;
+import org.motechproject.mds.annotations.InstanceLifecycleListeners;
 import org.motechproject.mds.domain.MdsEntity;
 import org.motechproject.nms.region.domain.validation.ValidVillage;
+import org.motechproject.nms.tracking.annotation.TrackClass;
+import org.motechproject.nms.tracking.annotation.TrackFields;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Unique;
@@ -31,6 +34,9 @@ import javax.validation.constraints.Size;
 @ValidVillage
 @Entity(tableName = "nms_villages")
 @Unique(name = "UNIQUE_TALUKA_VCODE_SVID", members = { "taluka", "vcode", "svid" })
+@TrackClass
+@TrackFields
+@InstanceLifecycleListeners
 public class Village extends MdsEntity {
 
     @Field
@@ -63,11 +69,6 @@ public class Village extends MdsEntity {
     @NotNull
     @JsonBackReference
     private Taluka taluka;
-
-    public Village() {
-        vcode = 0L;
-        svid = 0L;
-    }
 
     public String getName() {
         return name;
