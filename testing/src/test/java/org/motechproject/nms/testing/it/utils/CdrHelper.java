@@ -17,6 +17,7 @@ import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.domain.CallDisconnectReason;
+import org.motechproject.nms.props.domain.FinalCallStatus;
 import org.motechproject.nms.props.domain.RequestId;
 import org.motechproject.nms.props.domain.StatusCode;
 import org.motechproject.nms.region.repository.CircleDataService;
@@ -27,13 +28,19 @@ import org.motechproject.nms.region.service.DistrictService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -50,19 +57,29 @@ public class CdrHelper {
     public static final String LOCAL_CDR_DIR_PROP = "imi.local_cdr_dir";
     public static final String REMOTE_CDR_DIR_PROP = "imi.remote_cdr_dir";
 
+    private static final String OBD_FILE_PARAM_KEY = "obdFile";
+    private static final String CSR_FILE_PARAM_KEY = "csrFile";
+    private static final String CSR_CHECKSUM_PARAM_KEY = "csrChecksum";
+    private static final String CSR_COUNT_PARAM_KEY = "csrCount";
+    private static final String CDR_FILE_PARAM_KEY = "cdrFile";
+    private static final String CDR_CHECKSUM_PARAM_KEY = "cdrChecksum";
+    private static final String CDR_COUNT_PARAM_KEY = "cdrCount";
+
     private final String TEST_OBD_TIMESTAMP;
     private final String TEST_OBD_FILENAME;
     private final String TEST_CDR_DETAIL_FILENAME;
     private final String TEST_CDR_SUMMARY_FILENAME;
     private static final int CHILD_PACK_WEEKS = 48;
+    private static final int NORMAL_PRIORITY = 0;
 
     private SettingsService settingsService;
     private FileAuditRecordDataService fileAuditRecordDataService;
     private SubscriptionHelper sh;
     private RegionHelper rh;
 
-    private List<CallDetailRecordDto> cdrs;
-    private List<CallSummaryRecord> csrs;
+    private List<CallDetailRecordDto> cdrs = new ArrayList<>();
+
+    private List<CallSummaryRecord> csrs = new ArrayList<>();
 
 
     public CdrHelper(
@@ -237,6 +254,12 @@ public class CdrHelper {
             csr.setStatusCode(StatusCode.OBD_FAILED_NOATTEMPT.getValue());
             csr.setContentFileName(sh.childPack().getMessages().get(5).getMessageFileName());
             csr.setWeekId("w5_1");
+            csr.setPriority(NORMAL_PRIORITY);
+            csr.setFinalStatus(FinalCallStatus.FAILED.getValue());
+            csr.setAttempts(1);
+            csr.setCallFlowUrl("url");
+            csr.setCli("cli");
+            csr.setServiceId("id");
             csrs.add(csr);
         }
     }
@@ -508,8 +531,39 @@ public class CdrHelper {
     }
 
 
+    private int recordCount(File file) throws FileNotFoundException, IOException {
+
+        int recordCount = 0;
+        FileInputStream fis = new FileInputStream(file);
+        InputStreamReader isr = new InputStreamReader(fis);
+        BufferedReader reader = new BufferedReader(isr);
+
+        // skip header
+        reader.readLine();
+
+        while (reader.readLine() != null) {
+            recordCount++;
+        }
+        reader.close();
+        isr.close();
+        fis.close();
+
+        return recordCount;
+    }
+
+
     public String cdrLocalChecksum() throws IOException, NoSuchAlgorithmException {
         return ChecksumHelper.checksum(new File(localDir(), cdr()));
+    }
+
+
+    public int cdrRemoteRecordCount() throws IOException, FileNotFoundException {
+        return recordCount(new File(remoteDir(), cdr()));
+    }
+
+
+    public int csrRemoteRecordCount() throws IOException, FileNotFoundException {
+        return recordCount(new File(remoteDir(), csr()));
     }
 
 
@@ -528,4 +582,35 @@ public class CdrHelper {
         FileInfo csrFileInfo = new FileInfo(csr(), csrLocalChecksum(), csrCount());
         return new CdrFileNotificationRequest(obd(), csrFileInfo, cdrFileInfo);
     }
+
+
+    public static CdrFileNotificationRequest requestFromParams(Map<String, Object> params) {
+        return new CdrFileNotificationRequest(
+                (String) params.get(OBD_FILE_PARAM_KEY),
+                new FileInfo(
+                        (String) params.get(CSR_FILE_PARAM_KEY),
+                        (String) params.get(CSR_CHECKSUM_PARAM_KEY),
+                        (int) params.get(CSR_COUNT_PARAM_KEY)
+                ),
+                new FileInfo(
+                        (String) params.get(CDR_FILE_PARAM_KEY),
+                        (String) params.get(CDR_CHECKSUM_PARAM_KEY),
+                        (int) params.get(CDR_COUNT_PARAM_KEY)
+                )
+        );
+    }
+
+
+    public Map<String, Object> cdrFileNotificationParams() throws IOException, NoSuchAlgorithmException{
+        Map<String, Object> params = new HashMap<>();
+        params.put(OBD_FILE_PARAM_KEY, obd());
+        params.put(CSR_FILE_PARAM_KEY, csr());
+        params.put(CSR_CHECKSUM_PARAM_KEY, csrLocalChecksum());
+        params.put(CSR_COUNT_PARAM_KEY, csrCount());
+        params.put(CDR_FILE_PARAM_KEY, cdr());
+        params.put(CDR_CHECKSUM_PARAM_KEY, cdrLocalChecksum());
+        params.put(CDR_COUNT_PARAM_KEY, cdrCount());
+        return params;
+    }
+
 }

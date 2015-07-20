@@ -187,6 +187,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
 
         helper.makeCdrs(1, 1, 1, 1);
         helper.makeLocalCdrFile(2);
+        helper.makeLocalCsrFile();
         try {
             cdrFileService.verifyDetailFileChecksumAndCount(helper.cdrFileNotificationRequest());
         } catch (InvalidCdrFileException e) {
@@ -204,6 +205,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
 
         helper.makeCdrs(5, 0, 0, 0);
         helper.makeLocalCdrFile(5);
+        helper.makeLocalCsrFile();
         try {
             cdrFileService.verifyDetailFileChecksumAndCount(helper.cdrFileNotificationRequest());
         } catch (InvalidCdrFileException e) {
@@ -229,14 +231,15 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         helper.makeLocalCdrFile();
         Map<String, Object> eventParams = new HashMap<>();
         eventParams.put(FILE_NOTIFICATION_REQUEST_PARAM_KEY, helper.cdrFileNotificationRequest());
-        MotechEvent motechEvent = new MotechEvent(PROCESS_FILES_SUBJECT, eventParams);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_FILES_SUBJECT, helper.cdrFileNotificationParams());
         List<String> errors = cdrFileService.processDetailFile(motechEvent);
         assertEquals(0, errors.size());
 
         // This is going to try to send the file processed notification back to IMI, but will fail since we
         // didn't setup a server
-        AlertCriteria criteria = new AlertCriteria().byExternalId(helper.cdrFileNotificationRequest()
-                .getCdrDetail().getCdrFile());
+        AlertCriteria criteria = new AlertCriteria().byExternalId(
+                helper.cdrFileNotificationRequest().getFileName()
+        );
         List<Alert> alerts = alertService.search(criteria);
         assertEquals(4, alerts.size()); //three warnings plus one error
 

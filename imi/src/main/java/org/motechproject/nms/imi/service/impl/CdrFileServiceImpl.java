@@ -61,7 +61,13 @@ public class CdrFileServiceImpl implements CdrFileService {
     private static final String PROCESS_SUMMARY_RECORD_SUBJECT = "nms.imi.kk.process_summary_record";
     private static final String CSR_PARAM_KEY = "csr";
     private static final String PROCESS_FILES_SUBJECT = "nms.imi.kk.process_files";
-    private static final String FILE_NOTIFICATION_REQUEST_PARAM_KEY = "request";
+    private static final String OBD_FILE_PARAM_KEY = "obdFile";
+    private static final String CSR_FILE_PARAM_KEY = "csrFile";
+    private static final String CSR_CHECKSUM_PARAM_KEY = "csrChecksum";
+    private static final String CSR_COUNT_PARAM_KEY = "csrCount";
+    private static final String CDR_FILE_PARAM_KEY = "cdrFile";
+    private static final String CDR_CHECKSUM_PARAM_KEY = "cdrChecksum";
+    private static final String CDR_COUNT_PARAM_KEY = "cdrCount";
     private static final String SORTED_SUFFIX = ".sorted";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CdrFileServiceImpl.class);
@@ -539,10 +545,38 @@ public class CdrFileServiceImpl implements CdrFileService {
     }
 
 
+    private CdrFileNotificationRequest requestFromParams(Map<String, Object> params) {
+        return new CdrFileNotificationRequest(
+            (String) params.get(OBD_FILE_PARAM_KEY),
+            new FileInfo(
+                    (String) params.get(CSR_FILE_PARAM_KEY),
+                    (String) params.get(CSR_CHECKSUM_PARAM_KEY),
+                    (int) params.get(CSR_COUNT_PARAM_KEY)
+            ),
+        new FileInfo(
+                (String) params.get(CDR_FILE_PARAM_KEY),
+                (String) params.get(CDR_CHECKSUM_PARAM_KEY),
+                (int) params.get(CDR_COUNT_PARAM_KEY)
+            )
+        );
+    }
+
+
+    private  Map<String, Object> paramsFromRequest(CdrFileNotificationRequest request) {
+        Map<String, Object> params = new HashMap<>();
+        params.put(OBD_FILE_PARAM_KEY, request.getFileName());
+        params.put(CSR_FILE_PARAM_KEY, request.getCdrSummary().getCdrFile());
+        params.put(CSR_CHECKSUM_PARAM_KEY, request.getCdrSummary().getChecksum());
+        params.put(CSR_COUNT_PARAM_KEY, request.getCdrSummary().getRecordsCount());
+        params.put(CDR_FILE_PARAM_KEY, request.getCdrDetail().getCdrFile());
+        params.put(CDR_CHECKSUM_PARAM_KEY, request.getCdrDetail().getChecksum());
+        params.put(CDR_COUNT_PARAM_KEY, request.getCdrDetail().getRecordsCount());
+        return params;
+    }
+
+
     private void sendProcessFilesEvent(CdrFileNotificationRequest request) {
-        Map<String, Object> eventParams = new HashMap<>();
-        eventParams.put(FILE_NOTIFICATION_REQUEST_PARAM_KEY, request);
-        MotechEvent motechEvent = new MotechEvent(PROCESS_FILES_SUBJECT, eventParams);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_FILES_SUBJECT, paramsFromRequest(request));
         eventRelay.sendEventMessage(motechEvent);
     }
 
@@ -584,8 +618,7 @@ public class CdrFileServiceImpl implements CdrFileService {
     @Override
     @MotechListener(subjects = { PROCESS_FILES_SUBJECT })
     public List<String> processDetailFile(MotechEvent event) {
-        CdrFileNotificationRequest request = (CdrFileNotificationRequest) event.getParameters()
-                .get(FILE_NOTIFICATION_REQUEST_PARAM_KEY);
+        CdrFileNotificationRequest request = requestFromParams(event.getParameters());
 
         //
         // Detail File
