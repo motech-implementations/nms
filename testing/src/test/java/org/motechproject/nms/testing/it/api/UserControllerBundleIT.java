@@ -1,20 +1,5 @@
 package org.motechproject.nms.testing.it.api;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.regex.Pattern;
-
-import javax.inject.Inject;
-
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -34,13 +19,12 @@ import org.motechproject.nms.api.web.contract.kilkari.KilkariUserResponse;
 import org.motechproject.nms.flw.domain.CallDetailRecord;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
-import org.motechproject.nms.flw.domain.ServiceUsage;
 import org.motechproject.nms.flw.domain.ServiceUsageCap;
 import org.motechproject.nms.flw.domain.WhitelistEntry;
 import org.motechproject.nms.flw.domain.WhitelistState;
+import org.motechproject.nms.flw.repository.CallDetailRecordDataService;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.flw.repository.ServiceUsageCapDataService;
-import org.motechproject.nms.flw.repository.ServiceUsageDataService;
 import org.motechproject.nms.flw.repository.WhitelistEntryDataService;
 import org.motechproject.nms.flw.repository.WhitelistStateDataService;
 import org.motechproject.nms.flw.service.CallDetailRecordService;
@@ -85,6 +69,20 @@ import org.ops4j.pax.exam.spi.reactors.PerSuite;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionCallbackWithoutResult;
 
+import javax.inject.Inject;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 
 /**
  * Verify that User API is present and functional.
@@ -105,7 +103,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     @Inject
     FrontLineWorkerService frontLineWorkerService;
     @Inject
-    ServiceUsageDataService serviceUsageDataService;
+    CallDetailRecordDataService callDetailRecordDataService;
     @Inject
     ServiceUsageCapDataService serviceUsageCapDataService;
     @Inject
@@ -145,8 +143,6 @@ public class UserControllerBundleIT extends BasePaxIT {
 
     public static final Long WHITELIST_CONTACT_NUMBER = 1111111111l;
     public static final Long NOT_WHITELIST_CONTACT_NUMBER = 9000000000l;
-    public Subscriber whitelistSubscriber;
-    public Subscriber notWhiteListSubscriber;
 
     private State whitelistState;
     private State nonWhitelistState;
@@ -251,8 +247,15 @@ public class UserControllerBundleIT extends BasePaxIT {
         serviceUsageCapDataService.create(serviceUsageCap);
 
         // A service record without endOfService and WelcomePrompt played
-        ServiceUsage serviceUsage = new ServiceUsage(flw, Service.MOBILE_KUNJI, 1, 0, 0, DateTime.now());
-        serviceUsageDataService.create(serviceUsage);
+        CallDetailRecord cdr = new CallDetailRecord();
+        cdr.setFrontLineWorker(flw);
+        cdr.setCallingNumber(1111111111l);
+        cdr.setService(Service.MOBILE_KUNJI);
+        cdr.setCallDurationInPulses(1);
+        cdr.setEndOfUsagePromptCounter(0);
+        cdr.setWelcomePrompt(false);
+        cdr.setCallStartTime(DateTime.now());
+        callDetailRecordDataService.create(cdr);
     }
 
     private void createFlwWithLanguageFullServiceUsageAndCappedService() {
@@ -271,8 +274,15 @@ public class UserControllerBundleIT extends BasePaxIT {
         ServiceUsageCap serviceUsageCap = new ServiceUsageCap(null, Service.MOBILE_KUNJI, 3600);
         serviceUsageCapDataService.create(serviceUsageCap);
 
-        ServiceUsage serviceUsage = new ServiceUsage(flw, Service.MOBILE_KUNJI, 1, 1, 1, DateTime.now());
-        serviceUsageDataService.create(serviceUsage);
+        CallDetailRecord cdr = new CallDetailRecord();
+        cdr.setFrontLineWorker(flw);
+        cdr.setCallingNumber(1111111111l);
+        cdr.setService(Service.MOBILE_KUNJI);
+        cdr.setCallDurationInPulses(1);
+        cdr.setEndOfUsagePromptCounter(1);
+        cdr.setWelcomePrompt(true);
+        cdr.setCallStartTime(DateTime.now());
+        callDetailRecordDataService.create(cdr);
     }
 
     private void createFlwWithLanguageFullUsageOfBothServiceUncapped() {
@@ -290,12 +300,26 @@ public class UserControllerBundleIT extends BasePaxIT {
         flw.setLanguage(rh.hindiLanguage());
         frontLineWorkerService.add(flw);
 
-        ServiceUsage serviceUsage = new ServiceUsage(flw, Service.MOBILE_KUNJI, 1, 1, 1, DateTime.now());
-        serviceUsageDataService.create(serviceUsage);
+        CallDetailRecord cdr = new CallDetailRecord();
+        cdr.setFrontLineWorker(flw);
+        cdr.setCallingNumber(1111111111l);
+        cdr.setService(Service.MOBILE_KUNJI);
+        cdr.setCallDurationInPulses(1);
+        cdr.setEndOfUsagePromptCounter(1);
+        cdr.setWelcomePrompt(true);
+        cdr.setCallStartTime(DateTime.now());
+        callDetailRecordDataService.create(cdr);
 
         // Academy doesn't have a welcome prompt
-        serviceUsage = new ServiceUsage(flw, Service.MOBILE_ACADEMY, 1, 1, 0, DateTime.now());
-        serviceUsageDataService.create(serviceUsage);
+        cdr = new CallDetailRecord();
+        cdr.setCallingNumber(1111111111l);
+        cdr.setFrontLineWorker(flw);
+        cdr.setService(Service.MOBILE_ACADEMY);
+        cdr.setCallDurationInPulses(1);
+        cdr.setEndOfUsagePromptCounter(1);
+        cdr.setWelcomePrompt(false);
+        cdr.setCallStartTime(DateTime.now());
+        callDetailRecordDataService.create(cdr);
 
         ServiceUsageCap serviceUsageCap = new ServiceUsageCap(null, Service.MOBILE_KUNJI, 10);
         serviceUsageCapDataService.create(serviceUsageCap);
@@ -1280,7 +1304,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 rh.hindiLanguage().getCode(), // locationCode
                 null, // allowedLanguageLocationCodes
                 // subscriptionPackList
-                new HashSet<>(Arrays.asList(sh.pregnancyPack().getName()))
+                new HashSet<>(Collections.singletonList(sh.pregnancyPack().getName()))
         );
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
@@ -1329,7 +1353,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         String expectedJsonResponse = createKilkariUserResponseJson(
                 rh.hindiLanguage().getCode(), // defaultLanguageLocationCode
                 null, // locationCode
-                Arrays.asList(rh.hindiLanguage().getCode()), // allowedLanguageLocationCodes
+                Collections.singletonList(rh.hindiLanguage().getCode()), // allowedLanguageLocationCodes
                 new HashSet<String>() // subscriptionPackList
         );
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
@@ -1358,7 +1382,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         String expectedJsonResponse = createKilkariUserResponseJson(
                 rh.hindiLanguage().getCode(), // defaultLanguageLocationCode
                 null, // locationCode
-                Arrays.asList(rh.hindiLanguage().getCode()), // allowedLanguageLocationCodes
+                Collections.singletonList(rh.hindiLanguage().getCode()), // allowedLanguageLocationCodes
                 new HashSet<String>() // subscriptionPackList
         );
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
@@ -2539,8 +2563,15 @@ public class UserControllerBundleIT extends BasePaxIT {
                 Service.MOBILE_KUNJI, 3800);
         serviceUsageCapDataService.create(serviceUsageCap);
 
-        ServiceUsage serviceUsage = new ServiceUsage(flw, Service.MOBILE_KUNJI, 1, 0, 0, DateTime.now());
-        serviceUsageDataService.create(serviceUsage);
+        CallDetailRecord cdr = new CallDetailRecord();
+        cdr.setFrontLineWorker(flw);
+        cdr.setCallingNumber(1111111111l);
+        cdr.setService(Service.MOBILE_KUNJI);
+        cdr.setCallDurationInPulses(1);
+        cdr.setEndOfUsagePromptCounter(0);
+        cdr.setWelcomePrompt(false);
+        cdr.setCallStartTime(DateTime.now());
+        callDetailRecordDataService.create(cdr);
 
         HttpGet httpGet = createHttpGet(
                 true, "mobilekunji",    //service
@@ -2622,8 +2653,15 @@ public class UserControllerBundleIT extends BasePaxIT {
         flw.setLanguage(rh.hindiLanguage());
         frontLineWorkerService.add(flw);
 
-        ServiceUsage serviceUsage = new ServiceUsage(flw, Service.MOBILE_KUNJI, 1, 1, 1, DateTime.now());
-        serviceUsageDataService.create(serviceUsage);
+        CallDetailRecord cdr = new CallDetailRecord();
+        cdr.setFrontLineWorker(flw);
+        cdr.setCallingNumber(1111111111l);
+        cdr.setService(Service.MOBILE_KUNJI);
+        cdr.setCallDurationInPulses(1);
+        cdr.setEndOfUsagePromptCounter(1);
+        cdr.setWelcomePrompt(true);
+        cdr.setCallStartTime(DateTime.now());
+        callDetailRecordDataService.create(cdr);
 
         HttpGet httpGet = createHttpGet(
                 true, "mobilekunji",    //service
@@ -3588,7 +3626,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 .hindiLanguage().getCode(), // defaultLanguageLocationCode=circle
                                             // default
                 null, // locationCode
-                Arrays.asList(rh.hindiLanguage().getCode()), // allowedLanguageLocationCodes
+                Collections.singletonList(rh.hindiLanguage().getCode()), // allowedLanguageLocationCodes
                 0L, // currentUsageInPulses
                 0L, // endOfUsagePromptCounter
                 false, // welcomePromptFlag
@@ -3794,7 +3832,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         String expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
                 null, // locationCode
-                Arrays.asList(rh.tamilLanguage().getCode()), // allowedLanguageLocationCodes
+                Collections.singletonList(rh.tamilLanguage().getCode()), // allowedLanguageLocationCodes
                 0L, // currentUsageInPulses
                 0L, // endOfUsagePromptCounter
                 false, // welcomePromptFlag
@@ -4086,9 +4124,15 @@ public class UserControllerBundleIT extends BasePaxIT {
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright",
                 1200000000l);
         frontLineWorkerService.add(flw);
-        ServiceUsage serviceUsage = new ServiceUsage(flw,
-                Service.MOBILE_ACADEMY, 80, 1, 0, DateTime.now());
-        serviceUsageDataService.create(serviceUsage);
+        CallDetailRecord cdr = new CallDetailRecord();
+        cdr.setFrontLineWorker(flw);
+        cdr.setCallingNumber(1111111111l);
+        cdr.setService(Service.MOBILE_ACADEMY);
+        cdr.setCallDurationInPulses(80);
+        cdr.setEndOfUsagePromptCounter(1);
+        cdr.setWelcomePrompt(false);
+        cdr.setCallStartTime(DateTime.now());
+        callDetailRecordDataService.create(cdr);
 
         // invoke get user detail API
         HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
@@ -4100,7 +4144,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         String expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
                 null, // locationCode
-                Arrays.asList(rh.hindiLanguage().getCode()), // allowedLanguageLocationCodes
+                Collections.singletonList(rh.hindiLanguage().getCode()), // allowedLanguageLocationCodes
                 80L, // currentUsageInPulses
                 1L, // endOfUsagePromptCounter
                 false, // welcomePromptFlag
@@ -4140,9 +4184,16 @@ public class UserControllerBundleIT extends BasePaxIT {
                 1200000000l);
         flw.setLanguage(rh.hindiLanguage());
         frontLineWorkerService.add(flw);
-        ServiceUsage serviceUsage = new ServiceUsage(flw,
-                Service.MOBILE_ACADEMY, 80, 1, 0, DateTime.now());
-        serviceUsageDataService.create(serviceUsage);
+
+        CallDetailRecord cdr = new CallDetailRecord();
+        cdr.setFrontLineWorker(flw);
+        cdr.setCallingNumber(1111111111l);
+        cdr.setService(Service.MOBILE_ACADEMY);
+        cdr.setCallDurationInPulses(80);
+        cdr.setEndOfUsagePromptCounter(1);
+        cdr.setWelcomePrompt(false);
+        cdr.setCallStartTime(DateTime.now());
+        callDetailRecordDataService.create(cdr);
 
         // invoke get user detail API
         HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
@@ -4174,7 +4225,6 @@ public class UserControllerBundleIT extends BasePaxIT {
      * MA usage.
      */
     // TODO https://applab.atlassian.net/browse/NMS-241
-    @Ignore
     @Test
     public void verifyFT523() throws IOException, InterruptedException {
         rh.newDelhiDistrict();
@@ -4220,8 +4270,11 @@ public class UserControllerBundleIT extends BasePaxIT {
         /* callId */true, 234000011111111l,
         /* operator */false, null,
         /* circle */false, null,
-        /* callStartTime */true, 1422879843l,
-        /* callEndTime */true, 1422879903l,
+
+        // This test will fail if run within 5 minutes of midnight on the first of the month.  I'm ok with that.
+        /* callStartTime */true, (DateTime.now().minusMinutes(5).getMillis() / 1000),
+        /* callEndTime */true, (DateTime.now().getMillis() / 1000),
+
         /* callDurationInPulses */true, 60,
         /* endOfUsagePromptCounter */true, 1,
         /* welcomeMessagePromptFlag */false, null,
@@ -4281,11 +4334,17 @@ public class UserControllerBundleIT extends BasePaxIT {
                 1200000000l);
         flw.setLanguage(rh.hindiLanguage());
         frontLineWorkerService.add(flw);
-        ServiceUsage serviceUsage = new ServiceUsage(flw,
-                Service.MOBILE_ACADEMY, 80, 1, 0, DateTime.now()
-                        .withDayOfMonth(1).withTimeAtStartOfDay());
-        serviceUsage = serviceUsageDataService.create(serviceUsage);
-        
+
+        CallDetailRecord cdr = new CallDetailRecord();
+        cdr.setFrontLineWorker(flw);
+        cdr.setCallingNumber(1111111111l);
+        cdr.setService(Service.MOBILE_ACADEMY);
+        cdr.setCallDurationInPulses(80);
+        cdr.setEndOfUsagePromptCounter(1);
+        cdr.setWelcomePrompt(false);
+        cdr.setCallStartTime(DateTime.now().withDayOfMonth(1).withTimeAtStartOfDay());
+        callDetailRecordDataService.create(cdr);
+
         // invoke get user detail API
         HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
                 true, "1200000000", // callingNumber
@@ -4312,9 +4371,8 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         // Update FLW usage to previous month last day time such that it is resetted now
 
-        serviceUsage.setTimestamp(DateTime.now().withDayOfMonth(1)
-                .withTimeAtStartOfDay().minusMinutes(1));
-        serviceUsageDataService.update(serviceUsage);
+        cdr.setCallStartTime(DateTime.now().withDayOfMonth(1).withTimeAtStartOfDay().minusMinutes(1));
+        callDetailRecordDataService.update(cdr);
 
         // invoke get user detail API To check updated usage and prompt
         httpGet = createHttpGet(true, "mobileacademy", // service

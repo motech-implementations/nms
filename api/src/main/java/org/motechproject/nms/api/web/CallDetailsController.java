@@ -110,6 +110,7 @@ public class CallDetailsController extends BaseController {
     private void createCallDetailRecord(FrontLineWorker flw, CallDetailRecordRequest callDetailRecordRequest,
                                         Service service) {
         CallDetailRecord cdr = new CallDetailRecord();
+        cdr.setService(service);
         cdr.setFrontLineWorker(flw);
         cdr.setCallingNumber(callDetailRecordRequest.getCallingNumber());
         cdr.setCallId(callDetailRecordRequest.getCallId());

@@ -42,9 +42,6 @@
     <osgi:reference id="frontLineWorkerDataService"
                     interface="org.motechproject.nms.flw.repository.FrontLineWorkerDataService" />
 
-    <osgi:reference id="serviceUsageDataService"
-                    interface="org.motechproject.nms.flw.repository.ServiceUsageDataService" />
-
     <osgi:reference id="serviceUsageCapDataService"
                     interface="org.motechproject.nms.flw.repository.ServiceUsageCapDataService" />
 
