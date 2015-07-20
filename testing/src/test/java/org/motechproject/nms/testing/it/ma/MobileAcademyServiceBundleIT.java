@@ -70,6 +70,8 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
 
     private static final String VALID_COURSE_NAME = "MobileAcademyCourse";
 
+    private static final String FINAL_BOOKMARK = "COURSE_COMPLETED";
+
 
     @Before
     public void setupMobileAcademy() {
@@ -204,7 +206,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         List<Bookmark> added = bookmarkDataService.findBookmarksForUser("9876543210");
         assertTrue(added.size() == 1);
 
-        bookmark.setBookmark("Chapter11_Quiz");
+        bookmark.setBookmark(FINAL_BOOKMARK);
         Map<String, Integer> scores = new HashMap<>();
         for (int i = 1; i < 12; i++) {
             scores.put(String.valueOf(i), ((int) (Math.random() * 100)) % 5);
@@ -223,7 +225,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         List<Bookmark> added = bookmarkDataService.findBookmarksForUser("9876543210");
         assertTrue(added.size() == 1);
 
-        bookmark.setBookmark("Chapter11_Quiz");
+        bookmark.setBookmark(FINAL_BOOKMARK);
         Map<String, Integer> scores = new HashMap<>();
         for (int i = 1; i < 12; i++) {
             scores.put(String.valueOf(i), ((int) (Math.random() * 100)) % 5);
@@ -244,7 +246,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         List<Bookmark> added = bookmarkDataService.findBookmarksForUser("9987654321");
         assertTrue(added.size() == 1);
 
-        bookmark.setBookmark("Chapter11_Quiz");
+        bookmark.setBookmark(FINAL_BOOKMARK);
         Map<String, Integer> scores = new HashMap<>();
         for (int i = 1; i < 12; i++) {
             scores.put(String.valueOf(i), 1);
@@ -268,7 +270,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         List<Bookmark> added = bookmarkDataService.findBookmarksForUser("9987654321");
         assertTrue(added.size() == 1);
 
-        bookmark.setBookmark("Chapter11_Quiz");
+        bookmark.setBookmark(FINAL_BOOKMARK);
         Map<String, Integer> scores = new HashMap<>();
         for (int i = 1; i < 12; i++) {
             scores.put(String.valueOf(i), 4);
@@ -292,7 +294,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         List<Bookmark> added = bookmarkDataService.findBookmarksForUser(String.valueOf(callingNumber));
         assertTrue(added.size() == 1);
 
-        bookmark.setBookmark("Chapter11_Quiz");
+        bookmark.setBookmark(FINAL_BOOKMARK);
         Map<String, Integer> scores = new HashMap<>();
         for (int i = 1; i < 12; i++) {
             scores.put(String.valueOf(i), 3);
@@ -314,7 +316,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         List<Bookmark> added = bookmarkDataService.findBookmarksForUser(String.valueOf(callingNumber));
         assertTrue(added.size() == 1);
 
-        bookmark.setBookmark("Chapter11_Quiz");
+        bookmark.setBookmark(FINAL_BOOKMARK);
         Map<String, Integer> scores = new HashMap<>();
         for (int i = 1; i < 12; i++) {
             scores.put(String.valueOf(i), 1);

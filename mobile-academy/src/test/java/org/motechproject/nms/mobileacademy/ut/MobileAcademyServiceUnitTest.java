@@ -159,7 +159,7 @@ public class MobileAcademyServiceUnitTest {
         for (int i = 1; i < 12; i++) {
             scores.put(String.valueOf(i), ((int) (Math.random() * 100)) % 5);
         }
-        MaBookmark mab = new MaBookmark(1234567890L, 123456789011121L, "Chapter11_Quiz", scores);
+        MaBookmark mab = new MaBookmark(1234567890L, 123456789011121L, "COURSE_COMPLETED", scores);
         doNothing().when(eventRelay).sendEventMessage(any(MotechEvent.class));
 
         CompletionRecord cr = new CompletionRecord(1234567890L, 22, false, 1);
@@ -173,7 +173,7 @@ public class MobileAcademyServiceUnitTest {
         for (int i = 1; i < 12; i++) {
             scores.put(String.valueOf(i), 0);
         }
-        MaBookmark mab = new MaBookmark(1234567890L, 123456789011121L, "Chapter11_Quiz", scores);
+        MaBookmark mab = new MaBookmark(1234567890L, 123456789011121L, "COURSE_COMPLETED", scores);
         doNothing().when(eventRelay).sendEventMessage(any(MotechEvent.class));
         mobileAcademyService.setBookmark(mab);
     }
@@ -188,13 +188,14 @@ public class MobileAcademyServiceUnitTest {
 
         Map<String, Object> progress = new HashMap<>();
         progress.put("scoresByChapter", scores);
-        Bookmark newBookmark = new Bookmark("55", "getBookmarkTest", "Chapter11", "Quiz", progress);
+        progress.put("bookmark", "COURSE_COMPLETED");
+        Bookmark newBookmark = new Bookmark("55", "getBookmarkTest", null, null, progress);
         when(bookmarkService.getLatestBookmarkByUserId(anyString()))
                 .thenReturn(newBookmark);
 
-        MaBookmark retreived = mobileAcademyService.getBookmark(55L, 56L);
-        assertNull(retreived.getBookmark());
-        assertNull(retreived.getScoresByChapter());
+        MaBookmark retrieved = mobileAcademyService.getBookmark(55L, 56L);
+        assertNull(retrieved.getBookmark());
+        assertNull(retrieved.getScoresByChapter());
     }
 
     @Test

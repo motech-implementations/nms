@@ -44,11 +44,13 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
 
     private static final String COURSE_NAME = "MobileAcademyCourse";
 
-    private static final String FINAL_BOOKMARK = "Chapter11_Quiz";
+    private static final String FINAL_BOOKMARK = "COURSE_COMPLETED";
 
     private static final String COURSE_COMPLETED = "nms.ma.course.completed";
 
     private static final String SCORES_KEY = "scoresByChapter";
+
+    private static final String BOOKMARK_KEY = "bookmark";
 
     private static final String NOT_COMPLETE = "<%s: Course not complete>";
 
@@ -242,9 +244,9 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
             toBookmark.getProgress().put(SCORES_KEY, fromBookmark.getScoresByChapter());
         }
 
-        if (fromBookmark.getBookmark() != null) {
-            toBookmark.setChapterIdentifier(fromBookmark.getBookmark().split("_")[0]);
-            toBookmark.setLessonIdentifier(fromBookmark.getBookmark().split("_")[1]);
+        String bookmark = fromBookmark.getBookmark();
+        if (bookmark != null) {
+            toBookmark.getProgress().put(BOOKMARK_KEY, bookmark);
         }
 
         return toBookmark;
@@ -256,19 +258,18 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
         MaBookmark toReturn = new MaBookmark();
         toReturn.setCallingNumber(Long.parseLong(fromBookmark.getExternalId()));
 
-        String bookmark = fromBookmark.getChapterIdentifier() + "_" + fromBookmark.getLessonIdentifier();
-        Map<String, Integer> scores = getScores(fromBookmark);
-
         // default behavior to map the data
-        toReturn.setBookmark(bookmark);
-        toReturn.setScoresByChapter(scores);
+        if (fromBookmark.getProgress() != null) {
+            Object bookmark = fromBookmark.getProgress().get(BOOKMARK_KEY);
+            toReturn.setBookmark(bookmark == null ? null : bookmark.toString());
+            toReturn.setScoresByChapter((Map<String, Integer>) fromBookmark.getProgress().get(SCORES_KEY));
+        }
 
         // if the bookmark is final, reset it
-        if (bookmark.equals(FINAL_BOOKMARK)) {
+        if (toReturn.getBookmark() != null && toReturn.getBookmark().equals(FINAL_BOOKMARK)) {
             LOGGER.debug("We need to reset bookmark to new state.");
-            fromBookmark.setChapterIdentifier(null);
-            fromBookmark.setLessonIdentifier(null);
             fromBookmark.getProgress().remove(SCORES_KEY);
+            fromBookmark.getProgress().remove(BOOKMARK_KEY);
             bookmarkService.updateBookmark(fromBookmark);
 
             toReturn.setScoresByChapter(null);
@@ -276,21 +277,6 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
         }
 
         return toReturn;
-    }
-
-    /**
-     * Given a bookmark, get the scores map for it
-     * @param bookmark bookmark object
-     * @return map of course-score from the bookmark
-     * @throws ClassCastException
-     */
-    private Map<String, Integer> getScores(Bookmark bookmark) {
-
-        if (bookmark != null && bookmark.getProgress() != null) {
-            return (Map<String, Integer>) bookmark.getProgress().get(SCORES_KEY);
-        }
-
-        return null;
     }
 
     /**

@@ -164,23 +164,29 @@ public class MobileAcademyController extends BaseController {
 
         log("/mobileacademy/bookmarkWithScore (POST)", LogHelper.nullOrString(bookmarkRequest));
 
+        // validate bookmark
         if (bookmarkRequest == null) {
             throw new IllegalArgumentException(String.format(INVALID, "bookmarkRequest"));
         }
 
+        // validate calling number
         StringBuilder errors = new StringBuilder();
         validateField10Digits(errors, "callingNumber", bookmarkRequest.getCallingNumber());
         if (errors.length() != 0) {
             throw new IllegalArgumentException(errors.toString());
         }
 
+        // validate call id
         validateField15Digits(errors, "callId", bookmarkRequest.getCallId());
         if (errors.length() != 0) {
             throw new IllegalArgumentException(errors.toString());
         }
 
-        MaBookmark bookmark = MobileAcademyConverter.convertSaveBookmarkRequest(bookmarkRequest);
-        mobileAcademyService.setBookmark(bookmark);
+        // validate scores
+        if (validateMAScores(bookmarkRequest.getScoresByChapter())) {
+            MaBookmark bookmark = MobileAcademyConverter.convertSaveBookmarkRequest(bookmarkRequest);
+            mobileAcademyService.setBookmark(bookmark);
+        }
     }
 
     /**
