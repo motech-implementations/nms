@@ -1,0 +1,62 @@
+[
+  {
+    "active": true,
+    "pattern": "/**/update/**",
+    "supportedSchemes": [
+      "NO_SECURITY"
+    ],
+    "protocol": "HTTP",
+    "priority": 2,
+    "rest": true,
+    "origin": "all",
+    "version": "all",
+    "methodsRequired": [
+      "POST"
+    ]
+  },
+  {
+    "active": true,
+    "pattern": "/**/import/**",
+    "supportedSchemes": [
+      "NO_SECURITY"
+    ],
+    "protocol": "HTTP",
+    "priority": 2,
+    "rest": true,
+    "origin": "all",
+    "version": "all",
+    "methodsRequired": [
+      "POST"
+    ]
+  },
+  {
+    "active": true,
+    "pattern": "/**/update/**",
+    "supportedSchemes": [
+      "NO_SECURITY"
+    ],
+    "protocol": "HTTPS",
+    "priority": 2,
+    "rest": true,
+    "origin": "all",
+    "version": "all",
+    "methodsRequired": [
+      "POST"
+    ]
+  },
+  {
+    "active": true,
+    "pattern": "/**/import/**",
+    "supportedSchemes": [
+      "NO_SECURITY"
+    ],
+    "protocol": "HTTPS",
+    "priority": 2,
+    "rest": true,
+    "origin": "all",
+    "version": "all",
+    "methodsRequired": [
+      "POST"
+    ]
+  }
+  ]
