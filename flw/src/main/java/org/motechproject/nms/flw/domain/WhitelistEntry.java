@@ -5,7 +5,7 @@ import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.annotations.InstanceLifecycleListeners;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.tracking.annotation.TrackClass;
-import org.motechproject.nms.tracking.annotation.TrackField;
+import org.motechproject.nms.tracking.annotation.TrackFields;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Unique;
@@ -14,6 +14,7 @@ import javax.validation.constraints.NotNull;
 @Entity(tableName = "nms_whitelist_entries")
 @Unique(name = "UNIQUE_STATE_CONTACT_NUMBER_COMPOSITE_IDX", members = { "state", "contactNumber" })
 @TrackClass
+@TrackFields
 @InstanceLifecycleListeners
 public class WhitelistEntry {
     public static final int FIELD_SIZE_10 = 10;
@@ -36,7 +37,6 @@ public class WhitelistEntry {
         return state;
     }
 
-    @TrackField
     public void setState(State state) {
         this.state = state;
     }
@@ -45,7 +45,6 @@ public class WhitelistEntry {
         return contactNumber;
     }
 
-    @TrackField
     public void setContactNumber(Long contactNumber) {
         this.contactNumber = contactNumber;
     }

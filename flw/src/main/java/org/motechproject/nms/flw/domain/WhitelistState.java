@@ -6,7 +6,7 @@ import org.motechproject.mds.annotations.InstanceLifecycleListeners;
 import org.motechproject.mds.domain.MdsEntity;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.tracking.annotation.TrackClass;
-import org.motechproject.nms.tracking.annotation.TrackField;
+import org.motechproject.nms.tracking.annotation.TrackFields;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Unique;
@@ -17,6 +17,7 @@ import javax.validation.constraints.NotNull;
  */
 @Entity(tableName = "nms_whitelisted_states")
 @TrackClass
+@TrackFields
 @InstanceLifecycleListeners
 public class WhitelistState extends MdsEntity {
     @Field
@@ -33,7 +34,6 @@ public class WhitelistState extends MdsEntity {
         return state;
     }
 
-    @TrackField
     public void setState(State state) {
         this.state = state;
     }

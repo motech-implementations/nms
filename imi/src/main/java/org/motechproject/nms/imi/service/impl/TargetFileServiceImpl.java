@@ -67,6 +67,7 @@ public class TargetFileServiceImpl implements TargetFileService {
     private static final String GENERATE_TARGET_FILE_EVENT = "nms.obd.generate_target_file";
 
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormat.forPattern("yyyyMMddHHmmss");
+    private static final String DEFAULT_CIRCLE = "99";  // https://applab.atlassian.net/browse/NIP-64
 
     private SettingsFacade settingsFacade;
     private MotechSchedulerService schedulerService;
@@ -334,7 +335,11 @@ public class TargetFileServiceImpl implements TargetFileService {
          *
          * Circle of the beneficiary.
          */
-        writer.write(circle);
+        if (circle != null && !circle.isEmpty()) {
+            writer.write(circle);
+        } else {
+            writer.write(DEFAULT_CIRCLE);
+        }
         writer.write(",");
 
         /*

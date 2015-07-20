@@ -5,7 +5,10 @@ import org.codehaus.jackson.annotate.JsonManagedReference;
 import org.motechproject.mds.annotations.Cascade;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
+import org.motechproject.mds.annotations.InstanceLifecycleListeners;
 import org.motechproject.mds.domain.MdsEntity;
+import org.motechproject.nms.tracking.annotation.TrackClass;
+import org.motechproject.nms.tracking.annotation.TrackField;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Persistent;
@@ -20,35 +23,42 @@ import java.util.List;
  */
 @Entity(tableName = "nms_health_blocks")
 @Unique(name = "UNIQUE_TALUKA_CODE", members = { "taluka", "code" })
+@TrackClass
+@InstanceLifecycleListeners
 public class HealthBlock extends MdsEntity {
 
     @Field
     @Column(allowsNull = "false", length = 35)
     @NotNull
     @Size(min = 1, max = 35)
+    @TrackField
     private String name;
 
     @Field
     @Column(allowsNull = "false", length = 50)
     @NotNull
     @Size(min = 1, max = 50)
+    @TrackField
     private String regionalName;
 
     @Field
     @Column(allowsNull = "false", length = 50)
     @NotNull
     @Size(min = 1, max = 50)
+    @TrackField
     private String hq;
 
     @Field
     @Column(allowsNull = "false")
     @NotNull
+    @TrackField
     private Long code;
 
     @Field
     @Column(allowsNull = "false")
     @NotNull
     @JsonBackReference
+    @TrackField
     private Taluka taluka;
 
     @Field

@@ -93,11 +93,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
             }
         } catch (ConstraintViolationException e) {
             throw new CsvImportDataException(createErrorMessage(e.getConstraintViolations(), csvImporter.getRowNumber()), e);
-        } catch (InvalidLocationException e) {
-            throw new CsvImportDataException(createErrorMessage(e.getMessage(), csvImporter.getRowNumber()), e);
-        } catch (CsvImportDataException e) {
-            throw new CsvImportDataException(createErrorMessage(e.getMessage(), csvImporter.getRowNumber()), e);
-        } catch (JDODataStoreException e) {
+        } catch (InvalidLocationException | CsvImportDataException | JDODataStoreException e) {
             throw new CsvImportDataException(createErrorMessage(e.getMessage(), csvImporter.getRowNumber()), e);
         }
     }
@@ -122,7 +118,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
         String mctsFlwId = (String) record.get(ID);
         Long msisdn = (Long) record.get(CONTACT_NO);
 
-        if (flw == null && mctsFlwId != null) {
+        if (mctsFlwId != null) {
             flw = frontLineWorkerService.getByMctsFlwIdAndState(mctsFlwId, state);
         }
 

@@ -4,6 +4,8 @@ import org.joda.time.DateTime;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 
+import javax.jdo.annotations.Column;
+
 @Entity
 public class ChangeLog {
 
@@ -17,6 +19,7 @@ public class ChangeLog {
     private DateTime timestamp;
 
     @Field(required = true)
+    @Column(length = 4096)
     private String change;
 
     public ChangeLog() {
