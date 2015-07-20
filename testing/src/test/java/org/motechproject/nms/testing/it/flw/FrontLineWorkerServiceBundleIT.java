@@ -11,7 +11,6 @@ import org.motechproject.mds.ex.JdoListenerInvocationException;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
-import org.motechproject.nms.flw.repository.ServiceUsageDataService;
 import org.motechproject.nms.flw.repository.WhitelistEntryDataService;
 import org.motechproject.nms.flw.repository.WhitelistStateDataService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
@@ -55,8 +54,6 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
     FrontLineWorkerDataService frontLineWorkerDataService;
     @Inject
     FrontLineWorkerService frontLineWorkerService;
-    @Inject
-    ServiceUsageDataService serviceUsageDataService;
     @Inject
     ServiceUsageService serviceUsageService;
     @Inject

@@ -19,7 +19,6 @@ import org.motechproject.nms.api.web.contract.kilkari.InboxSubscriptionDetailRes
 import org.motechproject.nms.api.web.contract.kilkari.SubscriptionRequest;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.flw.repository.ServiceUsageCapDataService;
-import org.motechproject.nms.flw.repository.ServiceUsageDataService;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.domain.InboxCallData;
 import org.motechproject.nms.kilkari.domain.InboxCallDetailRecord;
@@ -97,8 +96,6 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     SubscriptionDataService subscriptionDataService;
     @Inject
     FrontLineWorkerDataService frontLineWorkerDataService;
-    @Inject
-    ServiceUsageDataService serviceUsageDataService;
     @Inject
     ServiceUsageCapDataService serviceUsageCapDataService;
     @Inject

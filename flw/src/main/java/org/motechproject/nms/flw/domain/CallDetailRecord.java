@@ -15,6 +15,7 @@ import javax.jdo.annotations.Order;
 import javax.jdo.annotations.Persistent;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
 import java.util.Collections;
 import java.util.List;
 
@@ -28,6 +29,8 @@ public class CallDetailRecord {
     private FrontLineWorker frontLineWorker;
 
     @Field
+    @NotNull
+    @Column(allowsNull = "false")
     private Service service;
 
     @Field

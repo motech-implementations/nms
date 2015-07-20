@@ -19,7 +19,6 @@
     <osgi:reference id="2" interface="org.motechproject.nms.flw.repository.CallDetailRecordDataService" />
     <osgi:reference id="3" interface="org.motechproject.nms.flw.repository.FrontLineWorkerDataService" />
     <osgi:reference id="4" interface="org.motechproject.nms.flw.repository.ServiceUsageCapDataService" />
-    <osgi:reference id="5" interface="org.motechproject.nms.flw.repository.ServiceUsageDataService" />
     <osgi:reference id="6" interface="org.motechproject.nms.flw.repository.WhitelistEntryDataService" />
     <osgi:reference id="7" interface="org.motechproject.nms.flw.repository.WhitelistStateDataService" />
 
