@@ -27,6 +27,9 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 public class CallDetailsController extends BaseController {
 
     public static final int MILLISECONDS_PER_SECOND = 1000;
+    private static final String QUESTION_TYPE = "question";
+    private static final String LESSON_TYPE = "lesson";
+    private static final String CHAPTER_TYPE = "chapter";
 
     @Autowired
     private CallDetailRecordService callDetailRecordService;
@@ -76,6 +79,9 @@ public class CallDetailsController extends BaseController {
 
         if (MOBILE_ACADEMY.equals(serviceName)) {
             service = Service.MOBILE_ACADEMY;
+
+            // Verify MA elements
+            failureReasons.append(validateCallDetailsMobileAcademyElements(callDetailRecordRequest));
         }
 
         if (MOBILE_KUNJI.equals(serviceName)) {
@@ -143,6 +149,7 @@ public class CallDetailsController extends BaseController {
 
             if (service == Service.MOBILE_ACADEMY) {
                 content.setType(callContentRequest.getType());
+                content.setCorrectAnswerEntered(callContentRequest.isCorrectAnswerEntered()); // this could be null, if not question
                 content.setCompletionFlag(callContentRequest.getCompletionFlag());
             }
 
@@ -187,8 +194,26 @@ public class CallDetailsController extends BaseController {
     private String validateCallDetailsMobileKunjiElements(CallDetailRecordRequest callDetailRecordRequest) {
         StringBuilder failureReasons = new StringBuilder();
 
-        if (null == callDetailRecordRequest.getWelcomeMessagePromptFlag()) {
+        if (callDetailRecordRequest.getWelcomeMessagePromptFlag() == null) {
             failureReasons.append(String.format(NOT_PRESENT, "welcomeMessagePromptFlag"));
+        }
+
+        return failureReasons.toString();
+    }
+
+    private String validateCallDetailsMobileAcademyElements(CallDetailRecordRequest callDetailRecordRequest) {
+        StringBuilder failureReasons = new StringBuilder();
+
+        // validate content type. No validation on correctAnswered because a disconnect during question
+        // might be null
+        for (CallContentRequest callContentRequest : callDetailRecordRequest.getContent()) {
+            String contentType = callContentRequest.getType();
+            if (contentType != null &&
+                !contentType.equals(QUESTION_TYPE) &&
+                !contentType.equals(CHAPTER_TYPE) &&
+                !contentType.equals(LESSON_TYPE)) {
+                    failureReasons.append(String.format(INVALID, "CallContent_type"));
+            }
         }
 
         return failureReasons.toString();

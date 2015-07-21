@@ -36,6 +36,9 @@ public class CallContent {
     @Field
     private Boolean completionFlag;
 
+    @Field
+    private Boolean correctAnswerEntered;
+
     public CallDetailRecord getCallDetailRecord() {
         return callDetailRecord;
     }
@@ -98,5 +101,13 @@ public class CallContent {
 
     public void setCompletionFlag(Boolean completionFlag) {
         this.completionFlag = completionFlag;
+    }
+
+    public Boolean getCorrectAnswerEntered() {
+        return correctAnswerEntered;
+    }
+
+    public void setCorrectAnswerEntered(Boolean correctAnswerEntered) {
+        this.correctAnswerEntered = correctAnswerEntered;
     }
 }

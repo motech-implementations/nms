@@ -6,6 +6,7 @@ import org.motechproject.alerts.domain.AlertType;
 import org.motechproject.nms.csv.exception.CsvImportException;
 import org.motechproject.nms.csv.service.CsvAuditService;
 import org.motechproject.nms.region.csv.CensusVillageImportService;
+import org.motechproject.nms.region.csv.CircleImportService;
 import org.motechproject.nms.region.csv.DistrictImportService;
 import org.motechproject.nms.region.csv.HealthBlockImportService;
 import org.motechproject.nms.region.csv.HealthFacilityImportService;
@@ -39,6 +40,7 @@ public class LocationDataImportController {
 
     private AlertService alertService;
 
+    private CircleImportService circleImportService;
     private StateImportService stateImportService;
     private DistrictImportService districtImportService;
     private TalukaImportService talukaImportService;
@@ -135,6 +137,11 @@ public class LocationDataImportController {
     }
 
     @Autowired
+    public void setCircleImportService(CircleImportService circleImportService) {
+        this.circleImportService = circleImportService;
+    }
+
+    @Autowired
     public void setCsvAuditService(CsvAuditService csvAuditService) {
         this.csvAuditService = csvAuditService;
     }
@@ -142,6 +149,7 @@ public class LocationDataImportController {
     private Map<String, LocationDataImportService> getLocationDataImportServiceMapping() {
         if (null == locationDataImportServiceMapping) {
             locationDataImportServiceMapping = new HashMap<>();
+            locationDataImportServiceMapping.put("circle", circleImportService);
             locationDataImportServiceMapping.put("state", stateImportService);
             locationDataImportServiceMapping.put("district", districtImportService);
             locationDataImportServiceMapping.put("taluka", talukaImportService);
