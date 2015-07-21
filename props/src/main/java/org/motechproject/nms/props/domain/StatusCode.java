@@ -32,6 +32,8 @@ public enum StatusCode {
     /**
      * Determines if an IMI failure code would be sent through a CSR
      *
+     * see https://applab.atlassian.net/browse/NIP-53?focusedCommentId=65208&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-65208
+     *
      * @param value the failure code
      * @return true if this failure would be sent in a CSR, false otherwise
      */
