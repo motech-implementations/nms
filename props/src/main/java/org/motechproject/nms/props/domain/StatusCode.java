@@ -28,4 +28,22 @@ public enum StatusCode {
         }
         throw new IllegalArgumentException(String.format("%d is an invalid StatusCode", i));
     }
+
+    /**
+     * Determines if an IMI failure code would be sent through a CSR
+     *
+     * @param value the failure code
+     * @return true if this failure would be sent in a CSR, false otherwise
+     */
+    public static boolean summaryOnlyFailure(int value) {
+        switch (fromInt(value)) {
+            case OBD_DNIS_IN_DND:
+            case OBD_FAILED_OTHERS:
+            case OBD_FAILED_NOATTEMPT:
+                return true;
+
+            default:
+                return false;
+        }
+    }
 }
