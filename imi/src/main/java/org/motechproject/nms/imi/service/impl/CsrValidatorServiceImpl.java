@@ -41,7 +41,6 @@ public class CsrValidatorServiceImpl implements CsrValidatorService {
         this.circleService = circleService;
     }
 
-
     private void loadPacks() {
         weekIds = new HashMap<>();
         contentFileNames = new HashMap<>();

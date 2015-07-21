@@ -6,4 +6,5 @@ public interface TrackChanges {
 
     Map<String, Change> changes();
 
+    Map<String, CollectionChange> collectionChanges();
 }

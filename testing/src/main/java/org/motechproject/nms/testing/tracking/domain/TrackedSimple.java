@@ -9,7 +9,7 @@ import org.motechproject.nms.tracking.annotation.TrackField;
 @Entity
 @TrackClass
 @InstanceLifecycleListeners
-public class TrackedEntity {
+public class TrackedSimple {
 
     @Field
     private Long id;
@@ -23,7 +23,7 @@ public class TrackedEntity {
 
     @Field
     @TrackField
-    private TrackedEntity instance;
+    private TrackedSimple instance;
 
     public Long getId() {
         return id;
@@ -49,11 +49,11 @@ public class TrackedEntity {
         this.string = string;
     }
 
-    public TrackedEntity getInstance() {
+    public TrackedSimple getInstance() {
         return instance;
     }
 
-    public void setInstance(TrackedEntity instance) {
+    public void setInstance(TrackedSimple instance) {
         this.instance = instance;
     }
 }
