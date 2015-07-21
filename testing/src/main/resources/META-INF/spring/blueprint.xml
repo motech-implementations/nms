@@ -24,6 +24,7 @@
 
     <osgi:reference id="8" interface="org.motechproject.nms.imi.repository.FileAuditRecordDataService" />
     <osgi:reference id="46" interface="org.motechproject.nms.imi.repository.CallDetailRecordDataService" />
+    <osgi:reference id="47" interface="org.motechproject.nms.imi.repository.CallSummaryRecordDataService" />
 
     <osgi:reference id="9" interface="org.motechproject.nms.kilkari.repository.CallRetryDataService" />
     <osgi:reference id="10" interface="org.motechproject.nms.kilkari.repository.CallSummaryRecordDataService" />
@@ -71,7 +72,7 @@
     <osgi:reference id="43" interface="org.motechproject.nms.csv.repository.CsvAuditRecordDataService" />
     <osgi:reference id="44" interface="org.motechproject.nms.csv.service.CsvAuditService" />
 
-    <osgi:reference id="45" interface="org.motechproject.nms.tracking.repository.ChangeLogDataService" />
+    <osgi:reference id="48" interface="org.motechproject.nms.tracking.repository.ChangeLogDataService" />
 
     <osgi:reference id="tracking1" interface="org.motechproject.nms.testing.tracking.repository.TrackedEntityDataService" />
 

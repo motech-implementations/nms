@@ -142,8 +142,8 @@ public class ImiControllerCdrBundleIT extends BasePaxIT {
         FileInfo cdrSummary;
         FileInfo cdrDetail;
         if (useValidTargetFile && useValidSummaryFile && useValidDetailFile) {
-            cdrSummary = new FileInfo(summaryFile, helper.csrRemoteChecksum(), 0);
-            cdrDetail = new FileInfo(detailFile, helper.cdrRemoteChecksum(), 1);
+            cdrSummary = new FileInfo(summaryFile, helper.csrRemoteChecksum(), helper.csrRemoteRecordCount());
+            cdrDetail = new FileInfo(detailFile, helper.cdrRemoteChecksum(), helper.cdrRemoteRecordCount());
         } else {
             cdrSummary = new FileInfo(summaryFile, "", 0);
             cdrDetail = new FileInfo(detailFile, "", 0);
@@ -183,6 +183,8 @@ public class ImiControllerCdrBundleIT extends BasePaxIT {
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ImiTestHelper.ADMIN_USERNAME,
                 ImiTestHelper.ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_ACCEPTED, response.getStatusLine().getStatusCode());
+        assertEquals("", EntityUtils.toString(response.getEntity()));
+
     }
 
 
@@ -223,7 +225,7 @@ public class ImiControllerCdrBundleIT extends BasePaxIT {
     * To check cdrFileNotification API is rejected in case mandatory parameter filename is missing.
     */
     @Test
-    public void verifyFT201() throws IOException, InterruptedException, NoSuchAlgorithmException{
+    public void verifyFT201() throws IOException, InterruptedException, NoSuchAlgorithmException {
         getLogger().debug("cdrFileNotificationAPIRejectedIfOBDFileMissing()");
 
         helper.makeCdrs(1,0,0,0);

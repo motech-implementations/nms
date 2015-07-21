@@ -16,7 +16,9 @@ import org.motechproject.nms.imi.repository.CallDetailRecordDataService;
 import org.motechproject.nms.imi.repository.FileAuditRecordDataService;
 import org.motechproject.nms.imi.service.CdrFileService;
 import org.motechproject.nms.imi.service.SettingsService;
+import org.motechproject.nms.imi.web.contract.CdrFileNotificationRequest;
 import org.motechproject.nms.imi.web.contract.FileInfo;
+import org.motechproject.nms.kilkari.domain.CallRetry;
 import org.motechproject.nms.kilkari.dto.CallDetailRecordDto;
 import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
@@ -37,6 +39,7 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
+import javax.xml.rpc.Call;
 import java.io.File;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
@@ -52,8 +55,8 @@ import static org.junit.Assert.assertTrue;
 @ExamFactory(MotechNativeTestContainerFactory.class)
 public class CdrFileServiceBundleIT extends BasePaxIT {
 
-    private static final String PROCESS_DETAIL_FILE_SUBJECT = "nms.imi.kk.process_detail_file";
-    private static final String FILE_INFO_PARAM_KEY = "fileInfo";
+    private static final String PROCESS_FILES_SUBJECT = "nms.imi.kk.process_files";
+    private static final String FILE_NOTIFICATION_REQUEST_PARAM_KEY = "request";
     private static final long MAX_MILLISECOND_WAIT = 2000L;
 
     private static final String INITIAL_RETRY_DELAY = "imi.initial_retry_delay";
@@ -145,8 +148,9 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
 
         helper.makeCdrs(1,1,1,1);
         helper.makeLocalCdrFile();
-        FileInfo fileInfo = new FileInfo(helper.cdr(), helper.cdrLocalChecksum(), helper.cdrCount());
-        cdrFileService.verifyDetailFileChecksumAndCount(fileInfo);
+        helper.makeCsrs(1);
+        helper.makeLocalCsrFile(0);
+        cdrFileService.verifyDetailFileChecksumAndCount(helper.cdrFileNotificationRequest());
     }
 
     @Rule
@@ -161,10 +165,18 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
 
         helper.makeCdrs(1, 1, 1, 1);
         helper.makeLocalCdrFile();
-        FileInfo fileInfo = new FileInfo(helper.cdr(), "invalid checksum", helper.cdrCount());
+        helper.makeCsrs(1);
+        helper.makeLocalCsrFile();
+        FileInfo cdrFileInfo = new FileInfo(helper.cdr(), "invalid checksum", helper.cdrCount());
+        FileInfo csrFileInfo = new FileInfo(helper.csr(), helper.csrLocalChecksum(), helper.csrCount());
 
         exception.expect(IllegalStateException.class);
-        cdrFileService.verifyDetailFileChecksumAndCount(fileInfo);
+        CdrFileNotificationRequest request = new CdrFileNotificationRequest(
+                helper.obd(),
+                csrFileInfo,
+                cdrFileInfo
+        );
+        cdrFileService.verifyDetailFileChecksumAndCount(request);
     }
 
 
@@ -177,9 +189,9 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
 
         helper.makeCdrs(1, 1, 1, 1);
         helper.makeLocalCdrFile(2);
-        FileInfo fileInfo = new FileInfo(helper.cdr(), helper.cdrLocalChecksum(), helper.cdrCount());
+        helper.makeLocalCsrFile();
         try {
-            cdrFileService.verifyDetailFileChecksumAndCount(fileInfo);
+            cdrFileService.verifyDetailFileChecksumAndCount(helper.cdrFileNotificationRequest());
         } catch (InvalidCdrFileException e) {
             assertEquals(2, e.getMessages().size());
         }
@@ -195,9 +207,9 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
 
         helper.makeCdrs(5, 0, 0, 0);
         helper.makeLocalCdrFile(5);
-        FileInfo fileInfo = new FileInfo(helper.cdr(), helper.cdrLocalChecksum(), helper.cdrCount());
+        helper.makeLocalCsrFile();
         try {
-            cdrFileService.verifyDetailFileChecksumAndCount(fileInfo);
+            cdrFileService.verifyDetailFileChecksumAndCount(helper.cdrFileNotificationRequest());
         } catch (InvalidCdrFileException e) {
             List<String> errors = e.getMessages();
             assertEquals(4, errors.size());
@@ -213,26 +225,31 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
                 subscriptionPackDataService, languageDataService, circleDataService, stateDataService,
                 districtDataService, fileAuditRecordDataService, districtService);
 
+        helper.makeCsrs(1);
+        helper.makeRemoteCsrFile();
+        helper.makeLocalCsrFile();
         helper.makeCdrs(3,1,1,1);
         helper.makeRemoteCdrFile();
         helper.makeLocalCdrFile();
         Map<String, Object> eventParams = new HashMap<>();
-        eventParams.put(FILE_INFO_PARAM_KEY, helper.cdrLocalFileInfo());
-        MotechEvent motechEvent = new MotechEvent(PROCESS_DETAIL_FILE_SUBJECT, eventParams);
+        eventParams.put(FILE_NOTIFICATION_REQUEST_PARAM_KEY, helper.cdrFileNotificationRequest());
+        MotechEvent motechEvent = new MotechEvent(PROCESS_FILES_SUBJECT, helper.cdrFileNotificationParams());
         List<String> errors = cdrFileService.processDetailFile(motechEvent);
         assertEquals(0, errors.size());
 
         // This is going to try to send the file processed notification back to IMI, but will fail since we
         // didn't setup a server
-        AlertCriteria criteria = new AlertCriteria().byExternalId(helper.cdrLocalFileInfo().getCdrFile());
+        AlertCriteria criteria = new AlertCriteria().byExternalId(
+                helper.cdrFileNotificationRequest().getFileName()
+        );
         List<Alert> alerts = alertService.search(criteria);
         assertEquals(4, alerts.size()); //three warnings plus one error
 
-        // Fancy code that waits for all 4 CDRs to be processed
+        // Fancy code that waits for all 4 CDRs and 1 CSR to be processed
         long start = System.currentTimeMillis();
         while (true) {
-            //Now verify that we should be rescheduling one call (the failed one)
-            if (callRetryDataService.count() == 1) {
+            //Now verify that we should be rescheduling two calls (1 CDR and 1 CSR)
+            if (callRetryDataService.count() == 2) {
                 getLogger().debug("Found retry record in {} ms", System.currentTimeMillis() - start);
                 break;
             }
@@ -244,9 +261,16 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
             }
         }
 
-        //here, verify we logged the incoming CDRs in the CallDetailRecord table
-        List<CallDetailRecord> cdrs = callDetailRecordDataService.retrieveAll();
-        assertEquals(6, cdrs.size());
+        // Verify we have both a failed CDR (weekId="w5_1") and a failed CSR (weekId="w7_1")
+        List<CallRetry> retries = callRetryDataService.retrieveAll();
+        assertTrue(
+                (retries.get(0).getWeekId().equals("w5_1") && retries.get(1).getWeekId().equals("w7_1"))
+                ||
+                (retries.get(1).getWeekId().equals("w5_1") && retries.get(0).getWeekId().equals("w7_1"))
+        );
+
+        // Verify we logged the incoming CDRs in the CallDetailRecord table
+        assertEquals(6, callDetailRecordDataService.count());
     }
 
 

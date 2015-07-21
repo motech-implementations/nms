@@ -2,7 +2,7 @@ package org.motechproject.nms.imi.ut;
 
 import org.joda.time.DateTime;
 import org.junit.Test;
-import org.motechproject.nms.imi.service.impl.CsvHelper;
+import org.motechproject.nms.imi.service.impl.CdrHelper;
 import org.motechproject.nms.kilkari.dto.CallDetailRecordDto;
 import org.motechproject.nms.props.domain.CallDisconnectReason;
 import org.motechproject.nms.props.domain.RequestId;
@@ -11,30 +11,30 @@ import org.motechproject.nms.props.domain.StatusCode;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-public class CsvHelperUnitTest {
+public class CdrHelperUnitTest {
 
 
     @Test(expected=IllegalArgumentException.class)
     public void testTooFewFields() {
-        CallDetailRecordDto cdr = CsvHelper.csvLineToCdrDto("a,b");
+        CallDetailRecordDto cdr = CdrHelper.csvLineToCdrDto("a,b");
         assertNotNull(cdr);
     }
 
     @Test(expected=IllegalArgumentException.class)
     public void testTooManyFields() {
-        CallDetailRecordDto cdr = CsvHelper.csvLineToCdrDto("a,b,c,d,e,f,g,h,i,j,k,l,m,o,p,q,r,s,t");
+        CallDetailRecordDto cdr = CdrHelper.csvLineToCdrDto("a,b,c,d,e,f,g,h,i,j,k,l,m,o,p,q,r,s,t");
         assertNotNull(cdr);
     }
 
     @Test(expected=IllegalArgumentException.class)
     public void testInvalidFields() {
-        CallDetailRecordDto cdr = CsvHelper.csvLineToCdrDto("a,b,c,d,e,f,g,h,i,j,k,l,m,o,p,q,r");
+        CallDetailRecordDto cdr = CdrHelper.csvLineToCdrDto("a,b,c,d,e,f,g,h,i,j,k,l,m,o,p,q,r");
         assertNotNull(cdr);
     }
 
     @Test(expected=IllegalArgumentException.class)
     public void testInvalidTimes() {
-        CallDetailRecordDto cdr = CsvHelper.csvLineToCdrDto("20150513184533:58747ffc-6b7c-4abb-91d3-f099aa1bf5a3," +
+        CallDetailRecordDto cdr = CdrHelper.csvLineToCdrDto("20150513184533:58747ffc-6b7c-4abb-91d3-f099aa1bf5a3," +
                 "1111111111,c,d,e,123456,g,h,1001,j,k,456,123,o,p,q,3,s");
         assertNotNull(cdr);
     }
@@ -54,7 +54,7 @@ public class CsvHelperUnitTest {
         expectedCdr.setCallDisconnectReason(CallDisconnectReason.CONTENT_NOT_FOUND);
         expectedCdr.setWeekId("s");
 
-        CallDetailRecordDto cdr = CsvHelper.csvLineToCdrDto("20150513184533:58747ffc-6b7c-4abb-91d3-f099aa1bf5a3," +
+        CallDetailRecordDto cdr = CdrHelper.csvLineToCdrDto("20150513184533:58747ffc-6b7c-4abb-91d3-f099aa1bf5a3," +
                 "1111111111,c,d,e,123456,g,h,1001,j,k,123,456,o,p,q,3,s");
         assertEquals(expectedCdr, cdr);
     }

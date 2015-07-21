@@ -3,6 +3,9 @@ package org.motechproject.nms.imi.domain;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 
+/**
+ * See NMS API - 4.4.3 CDR Detail File Format
+ */
 @Entity(tableName = "nms_imi_cdrs")
 public class CallDetailRecord {
 
@@ -10,7 +13,7 @@ public class CallDetailRecord {
     private String requestId;
 
     @Field
-    private String msisdn;
+    private Long msisdn;
 
     @Field
     private String callId;
@@ -68,11 +71,11 @@ public class CallDetailRecord {
         this.requestId = requestId;
     }
 
-    public String getMsisdn() {
+    public Long getMsisdn() {
         return msisdn;
     }
 
-    public void setMsisdn(String msisdn) {
+    public void setMsisdn(Long msisdn) {
         this.msisdn = msisdn;
     }
 

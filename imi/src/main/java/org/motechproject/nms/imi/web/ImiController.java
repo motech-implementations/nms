@@ -156,7 +156,7 @@ public class ImiController {
         verifyFileExistsInAuditRecord(request.getFileName());
 
 
-        // Copy the file from the IMI network share (imi.remote_cdr_dir) into local cdr dir (imi.local_cdr_dir)
+        // Copy the detail file from the IMI share (imi.remote_cdr_dir) into local cdr dir (imi.local_cdr_dir)
         ScpHelper scpHelper = new ScpHelper(settingsFacade);
         String fileName = request.getCdrDetail().getCdrFile();
         try {
@@ -176,9 +176,28 @@ public class ImiController {
             throw new IllegalArgumentException(e.getMessage(), e);
         }
 
+        // Copy the summary file from the IMI share (imi.remote_cdr_dir) into local cdr dir (imi.local_cdr_dir)
+        fileName = request.getCdrSummary().getCdrFile();
+        try {
+            scpHelper.scpCdrFromRemote(fileName);
+        } catch (ExecException e) {
+            String error = String.format("Error copying CSR file %s: %s", fileName, e.getMessage());
+            LOGGER.error(error);
+            fileAuditRecordDataService.create(new FileAuditRecord(
+                    FileType.CDR_SUMMARY_FILE,
+                    fileName,
+                    false,
+                    error,
+                    null,
+                    null
+            ));
+            //todo: send alert
+            throw new IllegalArgumentException(e.getMessage(), e);
+        }
+
         // This checks the file, checksum, record count & csv lines, then sends an event to proceed to phase 2 of the
         // CDR processing task also handled by the IMI module: processDetailFile
-        cdrFileService.verifyDetailFileChecksumAndCount(request.getCdrDetail());
+        cdrFileService.verifyDetailFileChecksumAndCount(request);
     }
 
 
