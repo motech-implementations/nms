@@ -1,7 +1,9 @@
 package org.motechproject.nms.testing.it.api;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
@@ -675,11 +677,9 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
      * To verify Save bookmark with score API is rejected when parameter
      * scoresByChapter is having value greater than 4.
      */
-    // TODO JIRA issue: https://applab.atlassian.net/browse/NMS-221
     @Test
     public void verifyFT415() throws IOException, InterruptedException {
         // Invalid scores should not be accepted
-
         String endpoint = String.format(
                 "http://localhost:%d/api/mobileacademy/bookmarkWithScore",
                 TestContext.getJettyPort());
@@ -700,6 +700,20 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
                 .getStatusCode());
         String expectedJsonResponse = createFailureResponseJson("<scoresByChapter: Invalid>");
+        assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response
+                .getEntity())));
+        
+        
+        scoreMap.put("1", -2); // invalid negative score
+        scoreMap.put("2", 2);
+        bookmarkRequest.setScoresByChapter(scoreMap);
+        request = RequestBuilder.createPostRequest(endpoint,
+                bookmarkRequest);
+        response = SimpleHttpClient.httpRequestAndResponse(
+                request, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
         assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response
                 .getEntity())));
     }
@@ -905,11 +919,64 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
     }
 
     /**
+     * To verify course counter is incremented when course is re-attempted.
+     */
+    @Test
+    public void verifyFT420() throws IOException, InterruptedException {
+        String endpoint = String.format(
+                "http://localhost:%d/api/mobileacademy/bookmarkWithScore",
+                TestContext.getJettyPort());
+        SaveBookmarkRequest bookmarkRequest = new SaveBookmarkRequest();
+
+        // save bookamark first
+        bookmarkRequest.setCallingNumber(1234567890l);
+        bookmarkRequest.setCallId(123456789012345l);
+        bookmarkRequest.setBookmark("COURSE_COMPLETED");
+        Map<String, Integer> scoreMap = new HashMap<String, Integer>();
+        scoreMap.put("1", 2);
+        scoreMap.put("2", 1);
+        scoreMap.put("3", 4);
+        scoreMap.put("4", 2);
+        scoreMap.put("5", 1);
+        scoreMap.put("6", 4);
+        scoreMap.put("7", 2);
+        scoreMap.put("8", 1);
+        scoreMap.put("9", 4);
+        scoreMap.put("10", 1);
+        scoreMap.put("11", 4);
+        bookmarkRequest.setScoresByChapter(scoreMap);
+        HttpPost postRequest = RequestBuilder.createPostRequest(endpoint,
+                bookmarkRequest);
+        assertTrue(SimpleHttpClient.execHttpRequest(postRequest,
+                HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD));
+
+        CompletionRecord cr = completionRecordDataService
+                .findRecordByCallingNumber(1234567890l);
+        assertNotNull(cr);
+        assertEquals(cr.getCompletionCount(), 1);
+
+        // reattempt course with slightly different passing scores(more than 22)
+        scoreMap.put("6", 2);
+        scoreMap.put("7", 4);
+        scoreMap.put("8", 4);
+        bookmarkRequest.setScoresByChapter(scoreMap);
+        postRequest = RequestBuilder.createPostRequest(endpoint,
+                bookmarkRequest);
+        assertTrue(SimpleHttpClient.execHttpRequest(postRequest,
+                HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD));
+
+        cr = completionRecordDataService.findRecordByCallingNumber(1234567890l);
+        assertNotNull(cr);
+        assertEquals(cr.getCompletionCount(), 2);
+    }
+
+    /**
      * To verify course is marked completed when user has listened all the
      * chapters,attempted all the quiz and total score should be greater than
      * 50%(i.e 22)
      */
-    // TODO JIRA issue: https://applab.atlassian.net/browse/NMS-240
     @Test
     public void verifyFT508() throws IOException, InterruptedException {
         String endpoint = String.format(
@@ -955,6 +1022,83 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
         String expectedJsonResponse = "{\"bookmark\":null,\"scoresByChapter\":null}";
         assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response
                 .getEntity())));
+    }
+
+    /**
+     * To verify course is not marked completed when user has listened all the
+     * chapters,attempted all the quiz and but total score is less than 50%(i.e
+     * 22)
+     */
+    @Test
+    public void verifyFT509() throws IOException, InterruptedException {
+        String endpoint = String.format(
+                "http://localhost:%d/api/mobileacademy/bookmarkWithScore",
+                TestContext.getJettyPort());
+        SaveBookmarkRequest bookmarkRequest = new SaveBookmarkRequest();
+
+        // save bookmark first
+        bookmarkRequest.setCallingNumber(1234567890l);
+        bookmarkRequest.setCallId(123456789012345l);
+        bookmarkRequest.setBookmark("COURSE_COMPLETED");
+        Map<String, Integer> scoreMap = new HashMap<String, Integer>();
+        scoreMap.put("1", 2);
+        scoreMap.put("2", 1);
+        scoreMap.put("3", 2);
+        scoreMap.put("4", 2);
+        scoreMap.put("5", 1);
+        scoreMap.put("6", 2);
+        scoreMap.put("7", 2);
+        scoreMap.put("8", 1);
+        scoreMap.put("9", 2);
+        scoreMap.put("10", 1);
+        scoreMap.put("11", 2);
+        // Total score less than 22
+        bookmarkRequest.setScoresByChapter(scoreMap);
+        HttpPost postRequest = RequestBuilder.createPostRequest(endpoint,
+                bookmarkRequest);
+        assertTrue(SimpleHttpClient.execHttpRequest(postRequest,
+                HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD));
+
+        CompletionRecord cr = completionRecordDataService
+                .findRecordByCallingNumber(1234567890l);
+        assertNull(cr);
+    }
+
+    /**
+     * To verify course is not marked completed when user has not listened all
+     * the chapters, not attempted all the quiz.
+     */
+    @Test
+    public void verifyFT510() throws IOException, InterruptedException {
+        String endpoint = String.format(
+                "http://localhost:%d/api/mobileacademy/bookmarkWithScore",
+                TestContext.getJettyPort());
+        SaveBookmarkRequest bookmarkRequest = new SaveBookmarkRequest();
+
+        // save bookmark first
+        bookmarkRequest.setCallingNumber(1234567890l);
+        bookmarkRequest.setCallId(123456789012345l);
+        bookmarkRequest.setBookmark("COURSE_COMPLETED");
+        Map<String, Integer> scoreMap = new HashMap<String, Integer>();
+        scoreMap.put("1", 4);
+        scoreMap.put("2", 4);
+        scoreMap.put("3", 4);
+        scoreMap.put("5", 1);
+        scoreMap.put("6", 4);
+        scoreMap.put("7", 4);
+        scoreMap.put("9", 2);
+        // All the quizes not attempted
+        bookmarkRequest.setScoresByChapter(scoreMap);
+        HttpPost postRequest = RequestBuilder.createPostRequest(endpoint,
+                bookmarkRequest);
+        assertTrue(SimpleHttpClient.execHttpRequest(postRequest,
+                HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD));
+
+        CompletionRecord cr = completionRecordDataService
+                .findRecordByCallingNumber(1234567890l);
+        assertNull(cr);
     }
 
     /**
