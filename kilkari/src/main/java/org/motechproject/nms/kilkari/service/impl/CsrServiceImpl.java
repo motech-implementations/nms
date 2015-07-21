@@ -303,10 +303,12 @@ public class CsrServiceImpl implements CsrService {
                 break;
 
             default:
-                throw new IllegalStateException(String.format("Invalid FinalCallStatus: %s", csrDto.getFinalStatus()));
+                String error = String.format("Invalid FinalCallStatus: %s", csrDto.getFinalStatus());
+                LOGGER.error(error);
+                alertService.create(PROCESS_SUMMARY_RECORD_SUBJECT, error, error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
         }
-
     }
+
 
     private void resetWelcomeFlagInSubscription(Subscription subscription) {
 

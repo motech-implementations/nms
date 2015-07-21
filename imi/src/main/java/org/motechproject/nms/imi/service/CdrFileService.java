@@ -24,6 +24,7 @@ public interface CdrFileService {
      * also verifies all csv rows are valid.
      *
      * @param fileInfo      file information provided about the file (ie: expected checksum & recordCount)
+     * @param isDetailFile  true: processes a CDR file, otherwise processes a CSR file
      *
      */
     List<String> verifyChecksumAndCountAndCsv(FileInfo fileInfo, Boolean isDetailFile);
