@@ -719,39 +719,6 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
     }
 
     /**
-     * To verify Save bookmark with score API is rejected when parameter
-     * "bookmark" is having invalid value.
-     */
-    // TODO JIRA issue: https://applab.atlassian.net/browse/NMS-222
-    @Test
-    @Ignore
-    public void verifyFT416() throws IOException, InterruptedException {
-        // Request with invalid bookmark value
-        String endpoint = String.format(
-                "http://localhost:%d/api/mobileacademy/bookmarkWithScore",
-                TestContext.getJettyPort());
-        SaveBookmarkRequest bookmarkRequest = new SaveBookmarkRequest();
-        bookmarkRequest.setCallingNumber(1234567890l);
-        bookmarkRequest.setCallId(123456789012345l);
-        bookmarkRequest.setBookmark("Abc_Abc"); // Invalid bookmark
-        Map<String, Integer> scoreMap = new HashMap<String, Integer>();
-        scoreMap.put("1", 2);
-        scoreMap.put("2", 3);
-        scoreMap.put("3", 3);
-        bookmarkRequest.setScoresByChapter(scoreMap);
-        HttpPost request = RequestBuilder.createPostRequest(endpoint,
-                bookmarkRequest);
-        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
-                request, RequestBuilder.ADMIN_USERNAME,
-                RequestBuilder.ADMIN_PASSWORD);
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
-                .getStatusCode());
-        String expectedJsonResponse = createFailureResponseJson("<bookmark: Invalid>");
-        assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response
-                .getEntity())));
-    }
-
-    /**
      * To verify that any re-attempt of the quiz by user shall lead to
      * overwriting of the previous score(lower) with new higher score.
      */
