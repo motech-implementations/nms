@@ -3,7 +3,10 @@ package org.motechproject.nms.region.domain;
 import org.codehaus.jackson.annotate.JsonBackReference;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
+import org.motechproject.mds.annotations.InstanceLifecycleListeners;
 import org.motechproject.mds.domain.MdsEntity;
+import org.motechproject.nms.tracking.annotation.TrackClass;
+import org.motechproject.nms.tracking.annotation.TrackFields;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Unique;
@@ -12,6 +15,9 @@ import javax.validation.constraints.Size;
 
 @Entity(tableName = "nms_health_sub_facilities")
 @Unique(name = "UNIQUE_HEALTH_FACILITY_CODE", members = { "healthFacility", "code" })
+@TrackClass
+@TrackFields
+@InstanceLifecycleListeners
 public class HealthSubFacility extends MdsEntity {
 
     @Field

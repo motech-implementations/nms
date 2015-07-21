@@ -13,7 +13,7 @@ import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.domain.Village;
 import org.motechproject.nms.region.domain.validation.ValidFullLocation;
 import org.motechproject.nms.tracking.annotation.TrackClass;
-import org.motechproject.nms.tracking.annotation.TrackField;
+import org.motechproject.nms.tracking.annotation.TrackFields;
 
 import javax.jdo.annotations.Unique;
 import javax.validation.constraints.NotNull;
@@ -24,6 +24,7 @@ import javax.validation.constraints.NotNull;
 @ValidFullLocation
 @Entity(tableName = "nms_mcts_beneficiaries")
 @TrackClass
+@TrackFields
 public abstract class MctsBeneficiary extends MdsEntity implements FullLocation {
 
     // 18-digit IDs are used for most states but not all, so a strict length constraint cannot be set for this column
@@ -72,7 +73,6 @@ public abstract class MctsBeneficiary extends MdsEntity implements FullLocation 
         return beneficiaryId;
     }
 
-    @TrackField
     public void setBeneficiaryId(String beneficiaryId) {
         this.beneficiaryId = beneficiaryId;
     }
@@ -81,7 +81,6 @@ public abstract class MctsBeneficiary extends MdsEntity implements FullLocation 
         return name;
     }
 
-    @TrackField
     public void setName(String name) {
         this.name = name;
     }
@@ -92,7 +91,6 @@ public abstract class MctsBeneficiary extends MdsEntity implements FullLocation 
     }
 
     @Override
-    @TrackField
     public void setState(State state) {
         this.state = state;
     }
@@ -103,7 +101,6 @@ public abstract class MctsBeneficiary extends MdsEntity implements FullLocation 
     }
 
     @Override
-    @TrackField
     public void setDistrict(District district) {
         this.district = district;
     }
@@ -114,7 +111,6 @@ public abstract class MctsBeneficiary extends MdsEntity implements FullLocation 
     }
 
     @Override
-    @TrackField
     public void setTaluka(Taluka taluka) {
         this.taluka = taluka;
     }
@@ -125,7 +121,6 @@ public abstract class MctsBeneficiary extends MdsEntity implements FullLocation 
     }
 
     @Override
-    @TrackField
     public void setHealthBlock(HealthBlock healthBlock) {
         this.healthBlock = healthBlock;
     }
@@ -136,7 +131,6 @@ public abstract class MctsBeneficiary extends MdsEntity implements FullLocation 
     }
 
     @Override
-    @TrackField
     public void setHealthFacility(HealthFacility primaryHealthCenter) {
         this.primaryHealthCenter = primaryHealthCenter;
     }
@@ -147,7 +141,6 @@ public abstract class MctsBeneficiary extends MdsEntity implements FullLocation 
     }
 
     @Override
-    @TrackField
     public void setHealthSubFacility(HealthSubFacility healthSubFacility) {
         this.healthSubFacility = healthSubFacility;
     }
@@ -158,7 +151,6 @@ public abstract class MctsBeneficiary extends MdsEntity implements FullLocation 
     }
 
     @Override
-    @TrackField
     public void setVillage(Village village) {
         this.village = village;
     }

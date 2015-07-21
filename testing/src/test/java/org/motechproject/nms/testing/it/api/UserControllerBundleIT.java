@@ -1,20 +1,5 @@
 package org.motechproject.nms.testing.it.api;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.regex.Pattern;
-
-import javax.inject.Inject;
-
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -31,17 +16,18 @@ import org.motechproject.nms.api.web.contract.BadRequest;
 import org.motechproject.nms.api.web.contract.FlwUserResponse;
 import org.motechproject.nms.api.web.contract.UserLanguageRequest;
 import org.motechproject.nms.api.web.contract.kilkari.KilkariUserResponse;
+import org.motechproject.nms.flw.domain.CallDetailRecord;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
-import org.motechproject.nms.flw.domain.ServiceUsage;
 import org.motechproject.nms.flw.domain.ServiceUsageCap;
 import org.motechproject.nms.flw.domain.WhitelistEntry;
 import org.motechproject.nms.flw.domain.WhitelistState;
+import org.motechproject.nms.flw.repository.CallDetailRecordDataService;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.flw.repository.ServiceUsageCapDataService;
-import org.motechproject.nms.flw.repository.ServiceUsageDataService;
 import org.motechproject.nms.flw.repository.WhitelistEntryDataService;
 import org.motechproject.nms.flw.repository.WhitelistStateDataService;
+import org.motechproject.nms.flw.service.CallDetailRecordService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.flw.service.ServiceUsageService;
 import org.motechproject.nms.flw.service.WhitelistService;
@@ -66,7 +52,9 @@ import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.NationalDefaultLanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
+import org.motechproject.nms.region.service.LanguageService;
 import org.motechproject.nms.testing.it.api.utils.RequestBuilder;
+import org.motechproject.nms.testing.it.utils.ApiRequestHelper;
 import org.motechproject.nms.testing.it.utils.RegionHelper;
 import org.motechproject.nms.testing.it.utils.SubscriptionHelper;
 import org.motechproject.nms.testing.service.TestingService;
@@ -80,6 +68,20 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionCallbackWithoutResult;
+
+import javax.inject.Inject;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 
 /**
@@ -101,7 +103,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     @Inject
     FrontLineWorkerService frontLineWorkerService;
     @Inject
-    ServiceUsageDataService serviceUsageDataService;
+    CallDetailRecordDataService callDetailRecordDataService;
     @Inject
     ServiceUsageCapDataService serviceUsageCapDataService;
     @Inject
@@ -124,6 +126,8 @@ public class UserControllerBundleIT extends BasePaxIT {
     NationalDefaultLanguageDataService nationalDefaultLanguageDataService;
     @Inject
     TestingService testingService;
+    @Inject
+    LanguageService languageService;
 
     @Inject
     FrontLineWorkerDataService frontLineWorkerDataService;
@@ -134,10 +138,11 @@ public class UserControllerBundleIT extends BasePaxIT {
     @Inject
     ServiceUsageService serviceUsageService;
 
+    @Inject
+    CallDetailRecordService callDetailRecordService;
+
     public static final Long WHITELIST_CONTACT_NUMBER = 1111111111l;
     public static final Long NOT_WHITELIST_CONTACT_NUMBER = 9000000000l;
-    public Subscriber whitelistSubscriber;
-    public Subscriber notWhiteListSubscriber;
 
     private State whitelistState;
     private State nonWhitelistState;
@@ -242,8 +247,15 @@ public class UserControllerBundleIT extends BasePaxIT {
         serviceUsageCapDataService.create(serviceUsageCap);
 
         // A service record without endOfService and WelcomePrompt played
-        ServiceUsage serviceUsage = new ServiceUsage(flw, Service.MOBILE_KUNJI, 1, 0, 0, DateTime.now());
-        serviceUsageDataService.create(serviceUsage);
+        CallDetailRecord cdr = new CallDetailRecord();
+        cdr.setFrontLineWorker(flw);
+        cdr.setCallingNumber(1111111111l);
+        cdr.setService(Service.MOBILE_KUNJI);
+        cdr.setCallDurationInPulses(1);
+        cdr.setEndOfUsagePromptCounter(0);
+        cdr.setWelcomePrompt(false);
+        cdr.setCallStartTime(DateTime.now());
+        callDetailRecordDataService.create(cdr);
     }
 
     private void createFlwWithLanguageFullServiceUsageAndCappedService() {
@@ -262,8 +274,15 @@ public class UserControllerBundleIT extends BasePaxIT {
         ServiceUsageCap serviceUsageCap = new ServiceUsageCap(null, Service.MOBILE_KUNJI, 3600);
         serviceUsageCapDataService.create(serviceUsageCap);
 
-        ServiceUsage serviceUsage = new ServiceUsage(flw, Service.MOBILE_KUNJI, 1, 1, 1, DateTime.now());
-        serviceUsageDataService.create(serviceUsage);
+        CallDetailRecord cdr = new CallDetailRecord();
+        cdr.setFrontLineWorker(flw);
+        cdr.setCallingNumber(1111111111l);
+        cdr.setService(Service.MOBILE_KUNJI);
+        cdr.setCallDurationInPulses(1);
+        cdr.setEndOfUsagePromptCounter(1);
+        cdr.setWelcomePrompt(true);
+        cdr.setCallStartTime(DateTime.now());
+        callDetailRecordDataService.create(cdr);
     }
 
     private void createFlwWithLanguageFullUsageOfBothServiceUncapped() {
@@ -281,12 +300,26 @@ public class UserControllerBundleIT extends BasePaxIT {
         flw.setLanguage(rh.hindiLanguage());
         frontLineWorkerService.add(flw);
 
-        ServiceUsage serviceUsage = new ServiceUsage(flw, Service.MOBILE_KUNJI, 1, 1, 1, DateTime.now());
-        serviceUsageDataService.create(serviceUsage);
+        CallDetailRecord cdr = new CallDetailRecord();
+        cdr.setFrontLineWorker(flw);
+        cdr.setCallingNumber(1111111111l);
+        cdr.setService(Service.MOBILE_KUNJI);
+        cdr.setCallDurationInPulses(1);
+        cdr.setEndOfUsagePromptCounter(1);
+        cdr.setWelcomePrompt(true);
+        cdr.setCallStartTime(DateTime.now());
+        callDetailRecordDataService.create(cdr);
 
         // Academy doesn't have a welcome prompt
-        serviceUsage = new ServiceUsage(flw, Service.MOBILE_ACADEMY, 1, 1, 0, DateTime.now());
-        serviceUsageDataService.create(serviceUsage);
+        cdr = new CallDetailRecord();
+        cdr.setCallingNumber(1111111111l);
+        cdr.setFrontLineWorker(flw);
+        cdr.setService(Service.MOBILE_ACADEMY);
+        cdr.setCallDurationInPulses(1);
+        cdr.setEndOfUsagePromptCounter(1);
+        cdr.setWelcomePrompt(false);
+        cdr.setCallStartTime(DateTime.now());
+        callDetailRecordDataService.create(cdr);
 
         ServiceUsageCap serviceUsageCap = new ServiceUsageCap(null, Service.MOBILE_KUNJI, 10);
         serviceUsageCapDataService.create(serviceUsageCap);
@@ -1271,7 +1304,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 rh.hindiLanguage().getCode(), // locationCode
                 null, // allowedLanguageLocationCodes
                 // subscriptionPackList
-                new HashSet<>(Arrays.asList(sh.pregnancyPack().getName()))
+                new HashSet<>(Collections.singletonList(sh.pregnancyPack().getName()))
         );
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
@@ -1295,6 +1328,8 @@ public class UserControllerBundleIT extends BasePaxIT {
         circleDataService.update(c);
 
         deployedServiceDataService.create(new DeployedService(rh.karnatakaState(), Service.KILKARI));
+        deployedServiceDataService.create(new DeployedService(rh.karnatakaState(), Service.MOBILE_ACADEMY));
+        deployedServiceDataService.create(new DeployedService(rh.karnatakaState(), Service.MOBILE_KUNJI));
     }
 
 
@@ -1318,7 +1353,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         String expectedJsonResponse = createKilkariUserResponseJson(
                 rh.hindiLanguage().getCode(), // defaultLanguageLocationCode
                 null, // locationCode
-                Arrays.asList(rh.hindiLanguage().getCode()), // allowedLanguageLocationCodes
+                Collections.singletonList(rh.hindiLanguage().getCode()), // allowedLanguageLocationCodes
                 new HashSet<String>() // subscriptionPackList
         );
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
@@ -1347,7 +1382,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         String expectedJsonResponse = createKilkariUserResponseJson(
                 rh.hindiLanguage().getCode(), // defaultLanguageLocationCode
                 null, // locationCode
-                Arrays.asList(rh.hindiLanguage().getCode()), // allowedLanguageLocationCodes
+                Collections.singletonList(rh.hindiLanguage().getCode()), // allowedLanguageLocationCodes
                 new HashSet<String>() // subscriptionPackList
         );
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
@@ -1577,6 +1612,63 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
                 .getStatusCode());
     }
+    
+    /**
+     * To verify anonymous User belongs to a circle that has multiple states,
+     * should be able to access MK Service content, if user's callingNumber is
+     * in whitelist and whitelist is set to Enabled for user's state
+     */
+    @Test
+    public void verifyFT341() throws InterruptedException, IOException {
+        setupWhiteListData();
+
+        // Delhi circle has a state already, add one more
+        Circle delhiCircle = rh.delhiCircle();
+        State s = new State();
+        s.setName("New State in delhi");
+        s.setCode(7L);
+        stateDataService.create(s);
+        delhiCircle.getStates().add(s);
+        circleDataService.update(delhiCircle);
+
+        // Create the whitelist number entry in whitelist table
+        WhitelistEntry entry = new WhitelistEntry(WHITELIST_CONTACT_NUMBER,
+                whitelistState);
+        whitelistEntryDataService.create(entry);
+
+        // Deploy the service in user's state
+        deployedServiceDataService.create(new DeployedService(whitelistState,
+                Service.MOBILE_KUNJI));
+
+        // Check the response
+        HttpGet request = createHttpGet(true, "mobilekunji", true,
+                String.valueOf(WHITELIST_CONTACT_NUMBER), false, "", false, "",
+                true, "123456789012345");
+        HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(
+                request, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
+                .getStatusCode());
+
+        Set<State> states = languageService.getAllStatesForLanguage(rh
+                .hindiLanguage());
+        assertEquals(1, states.size());
+
+        // create set Language location code request and check the response
+        HttpPost postRequest = createHttpPost("mobilekunji",
+                new UserLanguageRequest(WHITELIST_CONTACT_NUMBER,
+                        123456789012345l, rh.hindiLanguage().getCode()));
+        httpResponse = SimpleHttpClient.httpRequestAndResponse(postRequest,
+                RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
+                .getStatusCode());
+
+        // assert user's status
+        FrontLineWorker whitelistWorker = frontLineWorkerService
+                .getByContactNumber(WHITELIST_CONTACT_NUMBER);
+        assertEquals(FrontLineWorkerStatus.ANONYMOUS,
+                whitelistWorker.getStatus());
+    }
 
     /**
      * To verify Active/Inactive User shouldn't be able to access MK Service
@@ -1633,6 +1725,52 @@ public class UserControllerBundleIT extends BasePaxIT {
                 String.valueOf(NOT_WHITELIST_CONTACT_NUMBER), true, "A", true,
                 rh.delhiCircle().getName(), true, "123456789012345");
         httpResponse = SimpleHttpClient.httpRequestAndResponse(request,
+                RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_FORBIDDEN, httpResponse.getStatusLine()
+                .getStatusCode());
+    }
+
+    /**
+     * To verify anonymous User belongs to a circle that has multiple states,
+     * shouldn't be able to access MK Service content, if user's callingNumber
+     * is not in whitelist and whitelist is set to Enabled for user's state.
+     */
+    @Test
+    public void verifyFT343() throws InterruptedException, IOException {
+        setupWhiteListData();
+
+        // Delhi circle has a state already, add one more
+        Circle delhiCircle = rh.delhiCircle();
+        State s = new State();
+        s.setName("New State in delhi");
+        s.setCode(7L);
+        stateDataService.create(s);
+        delhiCircle.getStates().add(s);
+        circleDataService.update(delhiCircle);
+
+        // Deploy the service in user's state
+        deployedServiceDataService.create(new DeployedService(whitelistState,
+                Service.MOBILE_KUNJI));
+
+        // Check the response
+        HttpGet request = createHttpGet(true, "mobilekunji", true,
+                String.valueOf(NOT_WHITELIST_CONTACT_NUMBER), false, "", false,
+                "", true, "123456789012345");
+        HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(
+                request, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
+                .getStatusCode());
+
+        Set<State> states = languageService.getAllStatesForLanguage(rh
+                .hindiLanguage());
+        assertEquals(1, states.size());
+
+        // create set Language location code request and check the response
+        HttpPost postRequest = createHttpPost("mobilekunji",
+                new UserLanguageRequest(NOT_WHITELIST_CONTACT_NUMBER,
+                        123456789012345l, rh.hindiLanguage().getCode()));
+        httpResponse = SimpleHttpClient.httpRequestAndResponse(postRequest,
                 RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_FORBIDDEN, httpResponse.getStatusLine()
                 .getStatusCode());
@@ -1698,6 +1836,142 @@ public class UserControllerBundleIT extends BasePaxIT {
         httpResponse = SimpleHttpClient.httpRequestAndResponse(request,
                 RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
+                .getStatusCode());
+    }
+
+    /**
+     * To verify anonymous User belongs to a circle that has multiple states,
+     * should be able to access MK Service content, if user's callingNumber is
+     * in whitelist and whitelist is set to disabled for user's state.
+     */
+    @Test
+    public void verifyFT345() throws InterruptedException, IOException {
+        setupWhiteListData();
+
+        // karnataka circle has a state already, add one more
+
+        Circle karnatakaCircle = rh.karnatakaCircle();
+        State s = new State();
+        s.setName("New State in Karnataka");
+        s.setCode(7L);
+        stateDataService.create(s);
+        karnatakaCircle.getStates().add(s);
+        circleDataService.update(karnatakaCircle);
+
+        // Create the whitelist number entry in whitelist table
+        WhitelistEntry entry = new WhitelistEntry(WHITELIST_CONTACT_NUMBER,
+                whitelistState);
+        whitelistEntryDataService.create(entry);
+
+        // Deploy the service in user's state
+        deployedServiceDataService.create(new DeployedService(
+                nonWhitelistState, Service.MOBILE_KUNJI));
+
+        // Check the response
+        HttpGet request = createHttpGet(true, "mobilekunji", true,
+                String.valueOf(WHITELIST_CONTACT_NUMBER), false, "", false, "",
+                true, "123456789012345");
+        HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(
+                request, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
+                .getStatusCode());
+
+        Set<State> states = languageService.getAllStatesForLanguage(rh
+                .tamilLanguage());
+        assertEquals(1, states.size());
+
+        // create set Language location code request and check the response
+        HttpPost postRequest = createHttpPost("mobilekunji",
+                new UserLanguageRequest(WHITELIST_CONTACT_NUMBER,
+                        123456789012345l, rh.tamilLanguage().getCode()));
+        httpResponse = SimpleHttpClient.httpRequestAndResponse(postRequest,
+                RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
+                .getStatusCode());
+
+        // assert user's status
+        FrontLineWorker whitelistWorker = frontLineWorkerService
+                .getByContactNumber(WHITELIST_CONTACT_NUMBER);
+        assertEquals(FrontLineWorkerStatus.ANONYMOUS,
+                whitelistWorker.getStatus());
+    }
+
+    /**
+     * To verify anonymous User belongs to a circle that has single state,
+     * should be able to access MK Service content, if user's callingNumber is
+     * in whitelist and whitelist is set to Enabled for user's state.
+     */
+    @Test
+    public void verifyFT346() throws InterruptedException, IOException {
+        setupWhiteListData();
+
+        Circle delhiCircle = circleDataService.findByName(rh.delhiCircle()
+                .getName());
+        assertNotNull(delhiCircle);
+        assertNotNull(delhiCircle.getStates());
+        assertEquals(delhiCircle.getStates().size(), 1);
+
+        // Create the whitelist number entry in whitelist table
+        WhitelistEntry entry = new WhitelistEntry(WHITELIST_CONTACT_NUMBER,
+                whitelistState);
+        whitelistEntryDataService.create(entry);
+
+        // Deploy the service in user's state
+        deployedServiceDataService.create(new DeployedService(whitelistState,
+                Service.MOBILE_KUNJI));
+
+        // Check the response
+        HttpGet request = createHttpGet(true, "mobilekunji", true,
+                String.valueOf(WHITELIST_CONTACT_NUMBER), false, "", true, rh
+                        .delhiCircle().getName(), true, "123456789012345");
+        HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(
+                request, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
+                .getStatusCode());
+    }
+
+    /**
+     * To verify anonymous User belongs to a circle that has single state,
+     * shouldn't be able to access MK Service content, if user's callingNumber
+     * is not in whitelist and whitelist is set to Enabled for user's state.
+     */
+    @Test
+    public void verifyFT347() throws InterruptedException, IOException {
+        setupWhiteListData();
+
+        Circle delhiCircle = circleDataService.findByName(rh.delhiCircle()
+                .getName());
+        assertNotNull(delhiCircle);
+        assertNotNull(delhiCircle.getStates());
+        assertEquals(delhiCircle.getStates().size(), 1);
+
+        // Deploy the service in user's state
+        deployedServiceDataService.create(new DeployedService(whitelistState,
+                Service.MOBILE_KUNJI));
+
+        // Check the response
+        HttpGet request = createHttpGet(true, "mobilekunji", true,
+                String.valueOf(NOT_WHITELIST_CONTACT_NUMBER), false, "", true,
+                rh.delhiCircle().getName(), true, "123456789012345");
+        HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(
+                request, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
+                .getStatusCode());
+
+        Set<State> states = languageService.getAllStatesForLanguage(rh
+                .hindiLanguage());
+        assertEquals(1, states.size());
+
+        // create set Language location code request and check the response
+        HttpPost postRequest = createHttpPost("mobilekunji",
+                new UserLanguageRequest(NOT_WHITELIST_CONTACT_NUMBER,
+                        123456789012345l, rh.hindiLanguage().getCode()));
+        httpResponse = SimpleHttpClient.httpRequestAndResponse(postRequest,
+                RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_FORBIDDEN, httpResponse.getStatusLine()
                 .getStatusCode());
     }
 
@@ -1794,6 +2068,63 @@ public class UserControllerBundleIT extends BasePaxIT {
     }
 
     /**
+     * To verify anonymous User belongs to a circle that has multiple states,
+     * should be able to access MA Service content, if user's callingNumber is
+     * in whitelist and whitelist is set to Enabled for user's state.
+     */
+    @Test
+    public void verifyFT441() throws InterruptedException, IOException {
+        setupWhiteListData();
+
+        // Delhi circle has a state already, add one more
+        Circle delhiCircle = rh.delhiCircle();
+        State s = new State();
+        s.setName("New State in delhi");
+        s.setCode(7L);
+        stateDataService.create(s);
+        delhiCircle.getStates().add(s);
+        circleDataService.update(delhiCircle);
+
+        // Create the whitelist number entry in whitelist table
+        WhitelistEntry entry = new WhitelistEntry(WHITELIST_CONTACT_NUMBER,
+                whitelistState);
+        whitelistEntryDataService.create(entry);
+
+        // Deploy the service in user's state
+        deployedServiceDataService.create(new DeployedService(whitelistState,
+                Service.MOBILE_ACADEMY));
+
+        // Check the response
+        HttpGet request = createHttpGet(true, "mobileacademy", true,
+                String.valueOf(WHITELIST_CONTACT_NUMBER), false, "", false, "",
+                true, "123456789012345");
+        HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(
+                request, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
+                .getStatusCode());
+
+        Set<State> states = languageService.getAllStatesForLanguage(rh
+                .hindiLanguage());
+        assertEquals(1, states.size());
+
+        // create set Language location code request and check the response
+        HttpPost postRequest = createHttpPost("mobileacademy",
+                new UserLanguageRequest(WHITELIST_CONTACT_NUMBER,
+                        123456789012345l, rh.hindiLanguage().getCode()));
+        httpResponse = SimpleHttpClient.httpRequestAndResponse(postRequest,
+                RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
+                .getStatusCode());
+
+        // assert user's status
+        FrontLineWorker whitelistWorker = frontLineWorkerService
+                .getByContactNumber(WHITELIST_CONTACT_NUMBER);
+        assertEquals(FrontLineWorkerStatus.ANONYMOUS,
+                whitelistWorker.getStatus());
+    }
+
+    /**
      * To verify Active User shouldn't be able to access MA Service content, if
      * user's callingNumber is not is whitelist and whitelist is set to Enabled
      * for user's state.
@@ -1871,6 +2202,53 @@ public class UserControllerBundleIT extends BasePaxIT {
         HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(
                 request, RequestBuilder.ADMIN_USERNAME,
                 RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_FORBIDDEN, httpResponse.getStatusLine()
+                .getStatusCode());
+    }
+    
+    /**
+     * To verify anonymous User belongs to a circle that has multiple states,
+     * shouldn't be able to access MA Service content, if user's callingNumber
+     * is not in whitelist and whitelist is set to Enabled for user's state.
+     */
+    @Test
+    public void verifyFT445() throws InterruptedException, IOException {
+        setupWhiteListData();
+
+        // Delhi circle has a state already, add one more
+        Circle delhiCircle = rh.delhiCircle();
+        State s = new State();
+        s.setName("New State in delhi");
+        s.setCode(7L);
+        stateDataService.create(s);
+        delhiCircle.getStates().add(s);
+        circleDataService.update(delhiCircle);
+
+        // Deploy the service in user's state
+        deployedServiceDataService.create(new DeployedService(whitelistState,
+                Service.MOBILE_ACADEMY));
+
+        // Check the response
+        HttpGet request = createHttpGet(true, "mobileacademy", true,
+                String.valueOf(NOT_WHITELIST_CONTACT_NUMBER), false, "", false,
+                "",
+                true, "123456789012345");
+        HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(
+                request, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
+                .getStatusCode());
+
+        Set<State> states = languageService.getAllStatesForLanguage(rh
+                .hindiLanguage());
+        assertEquals(1, states.size());
+
+        // create set Language location code request and check the response
+        HttpPost postRequest = createHttpPost("mobileacademy",
+                new UserLanguageRequest(NOT_WHITELIST_CONTACT_NUMBER,
+                        123456789012345l, rh.hindiLanguage().getCode()));
+        httpResponse = SimpleHttpClient.httpRequestAndResponse(postRequest,
+                RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_FORBIDDEN, httpResponse.getStatusLine()
                 .getStatusCode());
     }
@@ -1964,13 +2342,148 @@ public class UserControllerBundleIT extends BasePaxIT {
     }
 
     /**
-    * This case has been added to test the functionality mentioned in
-    * NMS.GEN.FLW.008.
-    * The NMS system shall provide means to mark an FLW as invalid using CSV
-    * upload. Once an FLW is marked invalid, any incoming call with MSISDN that
-    * is same as that of invalid FLW shall be treated as that of an anonymous
-    * caller.
-    */
+     * To verify anonymous User belongs to a circle that has multiple states,
+     * should be able to access MA Service content, if user's callingNumber is
+     * in whitelist and whitelist is set to disabled for user's state.
+     */
+    @Test
+    public void verifyFT449() throws InterruptedException, IOException {
+        setupWhiteListData();
+
+        // karnataka circle has a state already, add one more
+
+        Circle karnatakaCircle = rh.karnatakaCircle();
+        State s = new State();
+        s.setName("New State in Karnataka");
+        s.setCode(7L);
+        stateDataService.create(s);
+        karnatakaCircle.getStates().add(s);
+        circleDataService.update(karnatakaCircle);
+
+        // Create the whitelist number entry in whitelist table
+        WhitelistEntry entry = new WhitelistEntry(WHITELIST_CONTACT_NUMBER,
+                whitelistState);
+        whitelistEntryDataService.create(entry);
+
+        // Deploy the service in user's state
+        deployedServiceDataService.create(new DeployedService(
+                nonWhitelistState, Service.MOBILE_ACADEMY));
+
+        // Check the response
+        HttpGet request = createHttpGet(true, "mobileacademy", true,
+                String.valueOf(WHITELIST_CONTACT_NUMBER), false, "", false, "",
+                true, "123456789012345");
+        HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(
+                request, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
+                .getStatusCode());
+
+        Set<State> states = languageService.getAllStatesForLanguage(rh
+                .tamilLanguage());
+        assertEquals(1, states.size());
+
+        // create set Language location code request and check the response
+        HttpPost postRequest = createHttpPost("mobileacademy",
+                new UserLanguageRequest(WHITELIST_CONTACT_NUMBER,
+                        123456789012345l, rh.tamilLanguage().getCode()));
+        httpResponse = SimpleHttpClient.httpRequestAndResponse(postRequest,
+                RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
+                .getStatusCode());
+
+        // assert user's status
+        FrontLineWorker whitelistWorker = frontLineWorkerService
+                .getByContactNumber(WHITELIST_CONTACT_NUMBER);
+        assertEquals(FrontLineWorkerStatus.ANONYMOUS,
+                whitelistWorker.getStatus());
+    }
+
+    /**
+     * To verify anonymous User belongs to a circle that has single state,
+     * should be able to access MA Service content, if user's callingNumber is
+     * in whitelist and whitelist is set to Enabled for user's state.
+     */
+    @Test
+    public void verifyFT451() throws InterruptedException, IOException {
+        setupWhiteListData();
+
+        Circle delhiCircle = circleDataService.findByName(rh.delhiCircle()
+                .getName());
+        assertNotNull(delhiCircle);
+        assertNotNull(delhiCircle.getStates());
+        assertEquals(delhiCircle.getStates().size(), 1);
+
+        // Create the whitelist number entry in whitelist table
+        WhitelistEntry entry = new WhitelistEntry(WHITELIST_CONTACT_NUMBER,
+                whitelistState);
+        whitelistEntryDataService.create(entry);
+
+        // Deploy the service in user's state
+        deployedServiceDataService.create(new DeployedService(whitelistState,
+                Service.MOBILE_ACADEMY));
+
+        // Check the response
+        HttpGet request = createHttpGet(true, "mobileacademy", true,
+                String.valueOf(WHITELIST_CONTACT_NUMBER), false, "", true, rh
+                        .delhiCircle().getName(), true, "123456789012345");
+        HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(
+                request, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
+                .getStatusCode());
+    }
+
+    /**
+     * To verify anonymous User belongs to a circle that has single state,
+     * shouldn't be able to access MA Service content, if user's callingNumber
+     * is not in whitelist and whitelist is set to Enabled for user's state.
+     */
+    @Test
+    public void verifyFT452() throws InterruptedException, IOException {
+        setupWhiteListData();
+
+        Circle delhiCircle = circleDataService.findByName(rh.delhiCircle()
+                .getName());
+        assertNotNull(delhiCircle);
+        assertNotNull(delhiCircle.getStates());
+        assertEquals(delhiCircle.getStates().size(), 1);
+
+        // Deploy the service in user's state
+        deployedServiceDataService.create(new DeployedService(whitelistState,
+                Service.MOBILE_ACADEMY));
+
+        // Check the response
+        HttpGet request = createHttpGet(true, "mobileacademy", true,
+                String.valueOf(NOT_WHITELIST_CONTACT_NUMBER), false, "", true,
+                rh.delhiCircle().getName(), true, "123456789012345");
+        HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(
+                request, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
+                .getStatusCode());
+
+        Set<State> states = languageService.getAllStatesForLanguage(rh
+                .hindiLanguage());
+        assertEquals(1, states.size());
+
+        // create set Language location code request and check the response
+        HttpPost postRequest = createHttpPost("mobileacademy",
+                new UserLanguageRequest(NOT_WHITELIST_CONTACT_NUMBER,
+                        123456789012345l, rh.hindiLanguage().getCode()));
+        httpResponse = SimpleHttpClient.httpRequestAndResponse(postRequest,
+                RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_FORBIDDEN, httpResponse.getStatusLine()
+                .getStatusCode());
+    }
+
+    /**
+     * This case has been added to test the functionality mentioned in
+     * NMS.GEN.FLW.008. The NMS system shall provide means to mark an FLW as
+     * invalid using CSV upload. Once an FLW is marked invalid, any incoming
+     * call with MSISDN that is same as that of invalid FLW shall be treated as
+     * that of an anonymous caller.
+     */
     // TODO JIRA issue: https://applab.atlassian.net/browse/NMS-236
     @Ignore
     @Test
@@ -2029,11 +2542,13 @@ public class UserControllerBundleIT extends BasePaxIT {
     }
 
     /**
-     * To verify that MK service  shall be allowed when cappingType
-     * is set to "State Capping" having usage pluses remaining.
+     * To verify that MK service shall be allowed when cappingType is set to
+     * "State Capping" having usage pluses remaining.
+     * <p>
+     * To verify that MK maxallowedUsageInPulses counter is set successfully.
      */
     @Test
-    public void verifyFT329() throws IOException, InterruptedException {
+    public void verifyFT329_427() throws IOException, InterruptedException {
         State s = rh.delhiState();
         rh.delhiCircle();
 
@@ -2043,11 +2558,20 @@ public class UserControllerBundleIT extends BasePaxIT {
         flw.setLanguage(rh.hindiLanguage());
         frontLineWorkerService.add(flw);
 
-        ServiceUsageCap serviceUsageCap = new ServiceUsageCap(s, Service.MOBILE_KUNJI, 3600);
+        // Set maxallowedUsageInPulses to 3800
+        ServiceUsageCap serviceUsageCap = new ServiceUsageCap(s,
+                Service.MOBILE_KUNJI, 3800);
         serviceUsageCapDataService.create(serviceUsageCap);
 
-        ServiceUsage serviceUsage = new ServiceUsage(flw, Service.MOBILE_KUNJI, 1, 0, 0, DateTime.now());
-        serviceUsageDataService.create(serviceUsage);
+        CallDetailRecord cdr = new CallDetailRecord();
+        cdr.setFrontLineWorker(flw);
+        cdr.setCallingNumber(1111111111l);
+        cdr.setService(Service.MOBILE_KUNJI);
+        cdr.setCallDurationInPulses(1);
+        cdr.setEndOfUsagePromptCounter(0);
+        cdr.setWelcomePrompt(false);
+        cdr.setCallStartTime(DateTime.now());
+        callDetailRecordDataService.create(cdr);
 
         HttpGet httpGet = createHttpGet(
                 true, "mobilekunji",    //service
@@ -2064,7 +2588,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 1L,    //currentUsageInPulses
                 0L,    //endOfUsagePromptCounter
                 false, //welcomePromptFlag
-                3600,  //maxAllowedUsageInPulses
+                3800, // maxAllowedUsageInPulses
                 2      //maxAllowedEndOfUsagePrompt
         );
 
@@ -2129,8 +2653,15 @@ public class UserControllerBundleIT extends BasePaxIT {
         flw.setLanguage(rh.hindiLanguage());
         frontLineWorkerService.add(flw);
 
-        ServiceUsage serviceUsage = new ServiceUsage(flw, Service.MOBILE_KUNJI, 1, 1, 1, DateTime.now());
-        serviceUsageDataService.create(serviceUsage);
+        CallDetailRecord cdr = new CallDetailRecord();
+        cdr.setFrontLineWorker(flw);
+        cdr.setCallingNumber(1111111111l);
+        cdr.setService(Service.MOBILE_KUNJI);
+        cdr.setCallDurationInPulses(1);
+        cdr.setEndOfUsagePromptCounter(1);
+        cdr.setWelcomePrompt(true);
+        cdr.setCallStartTime(DateTime.now());
+        callDetailRecordDataService.create(cdr);
 
         HttpGet httpGet = createHttpGet(
                 true, "mobilekunji",    //service
@@ -2539,4 +3070,1333 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(expectedJsonResponse,
                 EntityUtils.toString(response.getEntity()));
     }
+
+    /**
+     * To get the details of the Anonymous user using get user details API when
+     * circle sent in request is mapped to multiple languageLocationCodes
+     */
+    @Test
+    public void verifyFT454() throws IOException, InterruptedException {
+        // create KARNATAKA circle with two languages i.e TAMIL, KANNADA and set
+        // KANNADA as default
+        createCircleWithMultipleLanguages();
+
+        // set national default language
+        nationalDefaultLanguageDataService.create(new NationalDefaultLanguage(
+                rh.hindiLanguage()));
+
+        HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
+                true, "1200000000", // callingNumber
+                true, "OP", // operator
+                true, rh.karnatakaCircle().getName(),// circle
+                true, "123456789012345" // callId
+        );
+
+        String expectedJsonResponse = createFlwUserResponseJson(rh
+                .kannadaLanguage().getCode(), // defaultLanguageLocationCode=circle default
+                null, // locationCode
+                Arrays.asList(rh.kannadaLanguage().getCode(), rh
+                        .tamilLanguage().getCode()), // allowedLanguageLocationCodes
+                0L, // currentUsageInPulses
+                0L, // endOfUsagePromptCounter
+                false, // welcomePromptFlag
+                -1, // maxAllowedUsageInPulses
+                2 // maxAllowedEndOfUsagePrompt
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * To get the details of the Anonymous user using get user details API when
+     * circle and operator are missing
+     */
+    @Test
+    public void verifyFT455() throws IOException, InterruptedException {
+        rh.kannadaLanguage();
+        rh.tamilLanguage();
+        rh.hindiLanguage();
+        // set national default language
+        nationalDefaultLanguageDataService.create(new NationalDefaultLanguage(
+                rh.hindiLanguage()));
+
+        HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
+                true, "1200000000", // callingNumber
+                false, null, // operator
+                false, null,// circle
+                true, "123456789012345" // callId
+        );
+
+        String expectedJsonResponse = createFlwUserResponseJson(rh
+                .hindiLanguage().getCode(), // defaultLanguageLocationCode=national default
+                null, // locationCode
+                Arrays.asList(rh.kannadaLanguage().getCode(),rh.tamilLanguage().getCode(), rh
+                        .hindiLanguage().getCode()), // allowedLanguageLocationCodes
+                0L, // currentUsageInPulses
+                0L, // endOfUsagePromptCounter
+                false, // welcomePromptFlag
+                -1, // maxAllowedUsageInPulses
+                2 // maxAllowedEndOfUsagePrompt
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * To get the details of the inactive user using get user details API when
+     * languageLocation code is retrieved based on state and district. FLW must
+     * exist in system with status as Inactive
+     */
+    @Test
+    public void verifyFT461() throws IOException, InterruptedException {
+        // create Invalid FLW record
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright",
+                1200000001l);
+        flw.setLanguage(rh.tamilLanguage());
+        flw.setDistrict(rh.bangaloreDistrict());
+        flw.setState(rh.karnatakaState());
+        frontLineWorkerService.add(flw);
+
+        // assert for FLW status
+        flw = frontLineWorkerService
+                .getByContactNumber(1200000001l);
+        assertTrue(FrontLineWorkerStatus.INACTIVE == flw.getStatus());
+        
+        Circle circle = rh.karnatakaCircle();
+        circle.setDefaultLanguage(rh.kannadaLanguage());
+        circleDataService.update(circle);
+        
+        deployedServiceDataService.create(new
+        DeployedService(rh.karnatakaState(), Service.MOBILE_ACADEMY));
+
+        HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
+                true, "1200000001", // callingNumber
+                true, "OP", // operator
+                true, circle.getName(),// circle
+                true, "123456789012345" // callId
+        );
+
+        String expectedJsonResponse = createFlwUserResponseJson(rh
+                .kannadaLanguage().getCode(), // defaultLanguageLocationCode=circle default
+                rh.tamilLanguage().getCode(), // locationCode
+                null, // allowedLanguageLocationCodes
+                0L, // currentUsageInPulses
+                0L, // endOfUsagePromptCounter
+                false, // welcomePromptFlag
+                -1, // maxAllowedUsageInPulses
+                2 // maxAllowedEndOfUsagePrompt
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+        // TODO FLW delete
+        flw.setStatus(FrontLineWorkerStatus.INVALID);
+        flw.setInvalidationDate(DateTime.now().minusDays(50));
+        frontLineWorkerService.update(flw);
+    }
+
+    /**
+     * To get the details of the active user using get user details API when
+     * languageLocation code is retrieved based on state and district. FLW must
+     * exist in system with status as active.
+     */
+    @Test
+    public void verifyFT462() throws IOException, InterruptedException {
+        // create anonymous FLW record
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright",
+                1200000001l);
+        frontLineWorkerService.add(flw);
+
+        // update FLW status to ACTIVE
+        flw = frontLineWorkerService.getByContactNumber(1200000001l);
+        flw.setLanguage(rh.tamilLanguage());
+        flw.setDistrict(rh.bangaloreDistrict());
+        flw.setState(rh.karnatakaState());
+        frontLineWorkerService.update(flw);
+
+        // assert for FLW status
+        flw = frontLineWorkerService.getByContactNumber(1200000001l);
+        assertTrue(FrontLineWorkerStatus.ACTIVE == flw.getStatus());
+
+        Circle circle = rh.karnatakaCircle();
+        circle.setDefaultLanguage(rh.kannadaLanguage());
+        circleDataService.update(circle);
+
+        deployedServiceDataService.create(new DeployedService(rh
+                .karnatakaState(), Service.MOBILE_ACADEMY));
+
+        HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
+                true, "1200000001", // callingNumber
+                true, "OP", // operator
+                true, circle.getName(),// circle
+                true, "123456789012345" // callId
+        );
+
+        String expectedJsonResponse = createFlwUserResponseJson(rh
+                .kannadaLanguage().getCode(), // defaultLanguageLocationCode=circle
+                                              // default
+                rh.tamilLanguage().getCode(), // locationCode
+                null, // allowedLanguageLocationCodes
+                0L, // currentUsageInPulses
+                0L, // endOfUsagePromptCounter
+                false, // welcomePromptFlag
+                -1, // maxAllowedUsageInPulses
+                2 // maxAllowedEndOfUsagePrompt
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+        // TODO FLW delete
+        flw.setStatus(FrontLineWorkerStatus.INVALID);
+        flw.setInvalidationDate(DateTime.now().minusDays(50));
+        frontLineWorkerService.update(flw);
+    }
+    
+    private void createCircleWithNoLanguage(){
+    	Circle circle = new Circle("AA");
+        circle.setDefaultLanguage(rh.hindiLanguage());
+        circleDataService.create(circle);
+        
+        ServiceUsageCap serviceUsageCap = new ServiceUsageCap(null, Service.MOBILE_KUNJI, 3600);
+        serviceUsageCapDataService.create(serviceUsageCap);
+        
+    }
+    
+    private void createFlwWithStatusActive(){
+    	// create anonymous FLW record
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
+        frontLineWorkerService.add(flw);
+
+        // update FLW status to ACTIVE
+        flw = frontLineWorkerService.getByContactNumber(1111111111L);
+        flw.setLanguage(rh.tamilLanguage());
+        flw.setDistrict(rh.bangaloreDistrict());
+        flw.setState(rh.karnatakaState());
+        frontLineWorkerService.update(flw);
+
+        Circle circle = rh.karnatakaCircle();
+        circle.setDefaultLanguage(rh.kannadaLanguage());
+        circleDataService.update(circle);
+
+        deployedServiceDataService.create(new DeployedService(rh
+                .karnatakaState(), Service.MOBILE_KUNJI));
+    }
+    
+    private void createFlwWithStatusInactive(){
+    	// create Invalid FLW record
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
+        flw.setLanguage(rh.tamilLanguage());
+        flw.setDistrict(rh.bangaloreDistrict());
+        flw.setState(rh.karnatakaState());
+        frontLineWorkerService.add(flw);
+
+        Circle circle = rh.karnatakaCircle();
+        circle.setDefaultLanguage(rh.kannadaLanguage());
+        circleDataService.update(circle);
+        
+        deployedServiceDataService.create(new
+        DeployedService(rh.karnatakaState(), Service.MOBILE_KUNJI));
+    }
+    
+    /*
+     * To get the details of the Anonymous user using getuserdetails API 
+     * when circle sent in request is not mapped to any languageLocation.
+     */
+    @Test
+    public void verifyFT349() throws IOException, InterruptedException {
+        createCircleWithNoLanguage();
+
+        HttpGet httpGet = createHttpGet(
+                true, "mobilekunji",    //service
+                true, "1111111112",     //callingNumber
+                true, "OP",             //operator
+                true, "AA",             //circle
+                true, "123456789012345" //callId
+        );
+
+        String expectedJsonResponse = createFlwUserResponseJson(
+                rh.hindiLanguage().getCode(),  //defaultLanguageLocationCode
+                null,  //locationCode
+                new ArrayList<String>(), // allowedLanguageLocationCodes
+                0L,    //currentUsageInPulses
+                0L,    //endOfUsagePromptCounter
+                false, //welcomePromptFlag
+                3600,  //maxAllowedUsageInPulses
+                2      //maxAllowedEndOfUsagePrompt
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
+    }
+    
+    /*
+     * To get the details of the Anonymous user using getuserdetails API 
+     * when circle sent in request is mapped to multiple languageLocationCodes
+     */
+    @Test
+    public void verifyFT350() throws IOException, InterruptedException {
+        createCircleWithMultipleLanguages();
+
+        HttpGet httpGet = createHttpGet(
+                true, "mobilekunji",    //service
+                true, "1200000000",     //callingNumber
+                true, "OP",             //operator
+                true, "KA",             //circle
+                true, "123456789012345" //callId
+        );
+
+        String expectedJsonResponse = createFlwUserResponseJson(
+        		rh.kannadaLanguage().getCode(),  //defaultLanguageLocationCode
+                null,  //locationCode
+                Arrays.asList(rh.kannadaLanguage().getCode(), rh.tamilLanguage().getCode()), // allowedLanguageLocationCodes
+                0L,    //currentUsageInPulses
+                0L,    //endOfUsagePromptCounter
+                false, //welcomePromptFlag
+                -1,  //maxAllowedUsageInPulses
+                2      //maxAllowedEndOfUsagePrompt
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
+    }
+    
+    /*
+     * To get the details of the Anonymous user using getuserdetails API 
+     * when circle and operator are missing.
+     */
+    @Test
+    public void verifyFT351() throws IOException, InterruptedException {
+    	//Used this method to set up mobile_kunji environment 
+    	createCircleWithLanguage();
+    	
+        HttpGet httpGet = createHttpGet(
+                true, "mobilekunji",      //service
+                true, "1111111112",       //callingNumber
+                false, null,              //operator
+                false, null,			  //circle
+                true, "123456789012345"   //callId
+        );
+
+        String expectedJsonResponse = createFlwUserResponseJson(
+        		rh.hindiLanguage().getCode(),  //defaultLanguageLocationCode
+                null,  //locationCode
+                Arrays.asList(rh.hindiLanguage().getCode(), rh.kannadaLanguage().getCode(), rh.tamilLanguage().getCode()), // allowedLanguageLocationCodes
+                0L,    //currentUsageInPulses
+                0L,    //endOfUsagePromptCounter
+                false, //welcomePromptFlag
+                -1,  //maxAllowedUsageInPulses
+                2      //maxAllowedEndOfUsagePrompt
+        );
+        
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
+
+    }
+    
+    /*
+     * To verify that getuserdetails API is rejected when mandatory parameter 
+     * callingNumber is missing.
+     */
+    @Test
+    public void verifyFT352() throws IOException, InterruptedException {
+        HttpGet httpGet = createHttpGet(
+                true, "mobilekunji",    //service
+                false, null,            //callingNumber
+                true, "OP",             //operator
+                true, "AA",             //circle
+                true, "123456789012345" //callId
+        );
+
+        String expectedJsonResponse = createFailureResponseJson("<callingNumber: Not Present>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
+    }
+    
+    /*
+     * To verify that getuserdetails API is rejected when mandatory parameter callId is missing.
+     */
+    @Test
+    public void verifyFT353() throws IOException, InterruptedException {
+    	//Used this method to set up mobile_kunji environment
+    	createCircleWithLanguage();
+    	
+        HttpGet httpGet = createHttpGet(
+                true, "mobilekunji",    //service
+                true, "1111111111", //callingNumber
+                true, "OP",         //operator
+                true, "AA",         //circle
+                false, null         //callId
+        );
+
+        String expectedJsonResponse = createFailureResponseJson("<callId: Not Present>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
+    }
+    
+    /*
+     * To verify that getuserdetails API is rejected when mandatory parameter 
+     * callingNumber is having invalid value
+     */
+    @Test
+    public void verifyFT354() throws IOException, InterruptedException {
+        HttpGet httpGet = createHttpGet(
+                true, "mobilekunji",    //service
+                true, "1111111",       //callingNumber
+                true, "OP",             //operator
+                true, "AA",             //circle
+                true, "123456789012345" //callId
+        );
+
+        String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
+    }
+    
+    /*
+     * To verify that getuserdetails API is rejected when optional parameter circle is having invalid value
+     */
+    @Test
+    public void verifyFT355() throws IOException, InterruptedException {
+    	//Used this method to set up mobile_kunji environment
+    	createCircleWithLanguage();
+
+        HttpGet httpGet = createHttpGet(
+                true, "mobilekunji",    //service
+                true, "1111111111",     //callingNumber
+                true, "OP",             //operator
+                true, "Invalid",       //circle
+                true, "123456789012345" //callId
+        );
+
+        String expectedJsonResponse = createFlwUserResponseJson(
+                rh.hindiLanguage().getCode(),  //defaultLanguageLocationCode
+                null,  //locationCode
+                Arrays.asList(rh.hindiLanguage().getCode(), rh.kannadaLanguage().getCode()), // allowedLanguageLocationCodes
+                0L,    //currentUsageInPulses
+                0L,    //endOfUsagePromptCounter
+                false, //welcomePromptFlag
+                -1,  //maxAllowedUsageInPulses
+                2      //maxAllowedEndOfUsagePrompt
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
+    }
+    
+    /*
+     * To verify that getuserdetails API is rejected when mandatory parameter 
+     * callId is having invalid value
+     */
+    @Test
+    public void verifyFT356() throws IOException, InterruptedException {
+    	//Used this method to set up mobile_kunji environment
+    	createCircleWithLanguage();
+
+        HttpGet httpGet = createHttpGet(
+                true, "mobilekunji",    //service
+                true, "1111111111",     //callingNumber
+                true, "OP",             //operator
+                true, "AP",       		//circle
+                true, "22222222222222222" //callId
+        );
+
+        
+        String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
+    }
+    
+    /*
+     * To get the details of the inactive user using getuserdetails API 
+     * when languageLocation code is retrieved based on state and district.
+     */
+    @Test
+    public void verifyFT357() throws IOException, InterruptedException {
+    	createFlwWithStatusInactive();
+
+        HttpGet httpGet = createHttpGet(true, "mobilekunji", // service
+                true, "1111111111", // callingNumber
+                true, "OP", // operator
+                true, "KA",// circle
+                true, "123456789012345" // callId
+        );
+
+        String expectedJsonResponse = createFlwUserResponseJson(rh
+                .kannadaLanguage().getCode(), // defaultLanguageLocationCode=circle default
+                rh.tamilLanguage().getCode(), // locationCode
+                null, // allowedLanguageLocationCodes
+                0L, // currentUsageInPulses
+                0L, // endOfUsagePromptCounter
+                false, // welcomePromptFlag
+                -1, // maxAllowedUsageInPulses
+                2 // maxAllowedEndOfUsagePrompt
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+
+    }
+    
+    /*
+     * To get the details of the active user using getuserdetails API 
+     * when languageLocation code is retrieved based on state and district.
+     */
+    @Test
+    public void verifyFT358() throws IOException, InterruptedException {
+    	createFlwWithStatusActive();
+    	
+        HttpGet httpGet = createHttpGet(true, "mobilekunji", // service
+                true, "1111111111", // callingNumber
+                true, "OP", // operator
+                true, "KA",// circle
+                true, "123456789012345" // callId
+        );
+
+        String expectedJsonResponse = createFlwUserResponseJson(rh
+                .kannadaLanguage().getCode(), // defaultLanguageLocationCode=circle
+                                              // default
+                rh.tamilLanguage().getCode(), // locationCode
+                null, // allowedLanguageLocationCodes
+                0L, // currentUsageInPulses
+                0L, // endOfUsagePromptCounter
+                false, // welcomePromptFlag
+                -1, // maxAllowedUsageInPulses
+                2 // maxAllowedEndOfUsagePrompt
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+        
+    }
+
+    /**
+     * To verify that Anonymous user belonging to a circle having single state
+     * should be able to listen MA content if service deploy status is set to
+     * deploy in a particular state.
+     */
+    @Test
+    public void verifyFT428() throws IOException, InterruptedException {
+
+        rh.newDelhiDistrict();
+        rh.delhiCircle();
+        deployedServiceDataService.create(new DeployedService(rh.delhiState(),
+                Service.MOBILE_ACADEMY));
+
+        // invoke get user detail API
+        HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
+                true, "1200000000", // callingNumber
+                true, "OP", // operator
+                true, rh.delhiCircle().getName(),// circle
+                true, "123456789012345" // callId
+        );
+
+        String expectedJsonResponse = createFlwUserResponseJson(rh
+                .hindiLanguage().getCode(), // defaultLanguageLocationCode=circle
+                                            // default
+                null, // locationCode
+                Collections.singletonList(rh.hindiLanguage().getCode()), // allowedLanguageLocationCodes
+                0L, // currentUsageInPulses
+                0L, // endOfUsagePromptCounter
+                false, // welcomePromptFlag
+                -1, // maxAllowedUsageInPulses
+                2 // maxAllowedEndOfUsagePrompt
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+
+        // Invoke set LLC API
+        HttpPost httpPost = new HttpPost(String.format(
+                "http://localhost:%d/api/mobileacademy/languageLocationCode",
+                TestContext.getJettyPort()));
+        StringEntity params = new StringEntity(
+                "{\"callingNumber\":1200000000,\"callId\":123456789012345,\"languageLocationCode\":\""
+                        + rh.hindiLanguage().getCode() + "\"}");
+        httpPost.setEntity(params);
+        httpPost.addHeader("content-type", "application/json");
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK));
+        FrontLineWorker flw = frontLineWorkerService
+                .getByContactNumber(1200000000l);
+        assertEquals(FrontLineWorkerStatus.ANONYMOUS, flw.getStatus());
+        assertEquals(rh.hindiLanguage().getCode(), flw.getLanguage().getCode());
+    }
+
+    /**
+     * To verify that Anonymous user belongs to circle having one state
+     * shouldn't be able to listen MA content when service deploy status is set
+     * to not deploy in that particular state.
+     */
+    @Test
+    public void verifyFT437() throws IOException, InterruptedException {
+
+        rh.newDelhiDistrict();
+        rh.delhiCircle();
+        // service not deployed in delhi state
+
+        // invoke get user detail API
+        HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
+                true, "1200000000", // callingNumber
+                true, "OP", // operator
+                true, rh.delhiCircle().getName(),// circle
+                true, "123456789012345" // callId
+        );
+
+        String expectedJsonResponse = createFailureResponseJson("<MOBILE_ACADEMY: Not Deployed In State>");
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+        assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, response.getStatusLine()
+                .getStatusCode());
+    }
+
+    /**
+     * To verify that Anonymous user belongs to a circle having multiple states
+     * should be able to listen MA content when service deployment status is set
+     * to deploy in that particular state.
+     */
+    @Test
+    public void verifyFT429() throws IOException, InterruptedException {
+        // setup delhi circle with two states delhi and karnataka
+
+        rh.newDelhiDistrict();
+        Circle c = rh.delhiCircle();
+        rh.bangaloreDistrict();
+        c.getStates().add(rh.karnatakaState());
+        circleDataService.update(c);
+        // service deployed only in delhi state
+        deployedServiceDataService.create(new DeployedService(rh.delhiState(),
+                Service.MOBILE_ACADEMY));
+
+        // invoke get user detail API
+        HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
+                true, "1200000000", // callingNumber
+                true, "OP", // operator
+                true, rh.delhiCircle().getName(),// circle
+                true, "123456789012345" // callId
+        );
+
+        String expectedJsonResponse = createFlwUserResponseJson(rh
+                .hindiLanguage().getCode(), // defaultLanguageLocationCode=circle
+                                            // default
+                null, // locationCode
+                Arrays.asList(rh.hindiLanguage().getCode(), rh.tamilLanguage()
+                        .getCode()), // allowedLanguageLocationCodes
+                0L, // currentUsageInPulses
+                0L, // endOfUsagePromptCounter
+                false, // welcomePromptFlag
+                -1, // maxAllowedUsageInPulses
+                2 // maxAllowedEndOfUsagePrompt
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+
+        // Invoke set LLC API
+        HttpPost httpPost = new HttpPost(String.format(
+                "http://localhost:%d/api/mobileacademy/languageLocationCode",
+                TestContext.getJettyPort()));
+        StringEntity params = new StringEntity(
+                "{\"callingNumber\":1200000000,\"callId\":123456789012345,\"languageLocationCode\":\""
+                        + rh.hindiLanguage().getCode() + "\"}");
+        httpPost.setEntity(params);
+        httpPost.addHeader("content-type", "application/json");
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK));
+        FrontLineWorker flw = frontLineWorkerService
+                .getByContactNumber(1200000000l);
+        assertEquals(FrontLineWorkerStatus.ANONYMOUS, flw.getStatus());
+        assertEquals(rh.hindiLanguage().getCode(), flw.getLanguage().getCode());
+    }
+
+    /**
+     * To verify that Anonymous user belongs to a circle having multiple states
+     * shouldn't be able to listen MA content when service deploy status is set
+     * to not deploy in that particular state.
+     */
+    @Test
+    public void verifyFT438() throws IOException, InterruptedException {
+        // setup delhi circle with two states delhi and karnataka
+
+        rh.newDelhiDistrict();
+        Circle c = rh.delhiCircle();
+        rh.bangaloreDistrict();
+        c.getStates().add(rh.karnatakaState());
+        circleDataService.update(c);
+        // service deployed only in delhi state
+        deployedServiceDataService.create(new DeployedService(rh.delhiState(),
+                Service.MOBILE_ACADEMY));
+
+        // invoke get user detail API
+        HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
+                true, "1200000000", // callingNumber
+                true, "OP", // operator
+                true, rh.delhiCircle().getName(),// circle
+                true, "123456789012345" // callId
+        );
+
+        String expectedJsonResponse = createFlwUserResponseJson(rh
+                .hindiLanguage().getCode(), // defaultLanguageLocationCode=circle
+                                            // default
+                null, // locationCode
+                Arrays.asList(rh.hindiLanguage().getCode(), rh.tamilLanguage()
+                        .getCode()), // allowedLanguageLocationCodes
+                0L, // currentUsageInPulses
+                0L, // endOfUsagePromptCounter
+                false, // welcomePromptFlag
+                -1, // maxAllowedUsageInPulses
+                2 // maxAllowedEndOfUsagePrompt
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+
+        // Invoke set LLC API
+        // Set LLC for which service is not deployed i.e karnataka
+        HttpPost httpPost = new HttpPost(String.format(
+                "http://localhost:%d/api/mobileacademy/languageLocationCode",
+                TestContext.getJettyPort()));
+        StringEntity params = new StringEntity(
+                "{\"callingNumber\":1200000000,\"callId\":123456789012345,\"languageLocationCode\":\""
+                        + rh.tamilLanguage().getCode() + "\"}");
+        httpPost.setEntity(params);
+        httpPost.addHeader("content-type", "application/json");
+
+        expectedJsonResponse = createFailureResponseJson("<MOBILE_ACADEMY: Not Deployed In State>");
+        response = SimpleHttpClient.httpRequestAndResponse(httpPost,
+                ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+        assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, response.getStatusLine()
+                .getStatusCode());
+    }
+
+    /**
+     * To verify that Anonymous user should not be able to listen MA content if
+     * service deploy status is set to not deploy in a particular state.
+     */
+    @Test
+    public void verifyFT433() throws IOException, InterruptedException {
+        // setup karnataka state for which service is not deployed
+        rh.bangaloreDistrict();
+
+        // invoke get user detail API without circle and operator
+        HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
+                true, "1200000000", // callingNumber
+                false, null, // operator
+                false, null,// circle
+                true, "123456789012345" // callId
+        );
+
+        String expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
+                null, // locationCode
+                Collections.singletonList(rh.tamilLanguage().getCode()), // allowedLanguageLocationCodes
+                0L, // currentUsageInPulses
+                0L, // endOfUsagePromptCounter
+                false, // welcomePromptFlag
+                -1, // maxAllowedUsageInPulses
+                2 // maxAllowedEndOfUsagePrompt
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+
+        // Invoke set LLC API
+        // Set LLC as per allowedLanguageLocationCodes response field
+        HttpPost httpPost = new HttpPost(String.format(
+                "http://localhost:%d/api/mobileacademy/languageLocationCode",
+                TestContext.getJettyPort()));
+        StringEntity params = new StringEntity(
+                "{\"callingNumber\":1200000000,\"callId\":123456789012345,\"languageLocationCode\":\""
+                        + rh.tamilLanguage().getCode() + "\"}");
+        httpPost.setEntity(params);
+        httpPost.addHeader("content-type", "application/json");
+
+        expectedJsonResponse = createFailureResponseJson("<MOBILE_ACADEMY: Not Deployed In State>");
+        response = SimpleHttpClient.httpRequestAndResponse(httpPost,
+                ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+        assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, response.getStatusLine()
+                .getStatusCode());
+    }
+
+    /**
+     * To verify that Active user should be able to listen MA content if service
+     * deploy status is set to deploy in a particular state.
+     */
+    @Test
+    public void verifyFT430() throws IOException, InterruptedException {
+        // add FLW with active status
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright",
+                1200000000l);
+        flw.setLanguage(rh.tamilLanguage());
+        flw.setDistrict(rh.bangaloreDistrict());
+        flw.setState(rh.karnatakaState());
+        flw.setStatus(FrontLineWorkerStatus.ACTIVE);
+        frontLineWorkerDataService.create(flw);
+
+        // service deployed in Karnataka State
+        deployedServiceDataService.create(new DeployedService(rh
+                .karnatakaState(), Service.MOBILE_ACADEMY));
+
+        // invoke get user detail API
+        HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
+                true, "1200000000", // callingNumber
+                false, null, // operator
+                false, null,// circle
+                true, "123456789012345" // callId
+        );
+
+        String expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
+                rh.tamilLanguage().getCode(), // locationCode
+                null, // allowedLanguageLocationCodes
+                0L, // currentUsageInPulses
+                0L, // endOfUsagePromptCounter
+                false, // welcomePromptFlag
+                -1, // maxAllowedUsageInPulses
+                2 // maxAllowedEndOfUsagePrompt
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * To verify that Inactive user should be able to listen MA content if
+     * service deploy status is set to deploy in a particular state.
+     */
+    @Test
+    public void verifyFT431() throws IOException, InterruptedException {
+        // add FLW with In active status
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright",
+                1200000000l);
+        flw.setLanguage(rh.tamilLanguage());
+        flw.setDistrict(rh.bangaloreDistrict());
+        flw.setState(rh.karnatakaState());
+        flw.setStatus(FrontLineWorkerStatus.INACTIVE);
+        frontLineWorkerDataService.create(flw);
+
+        // service deployed in Karnataka State
+        deployedServiceDataService.create(new DeployedService(rh
+                .karnatakaState(), Service.MOBILE_ACADEMY));
+
+        // invoke get user detail API
+        HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
+                true, "1200000000", // callingNumber
+                false, null, // operator
+                false, null,// circle
+                true, "123456789012345" // callId
+        );
+
+        String expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
+                rh.tamilLanguage().getCode(), // locationCode
+                null, // allowedLanguageLocationCodes
+                0L, // currentUsageInPulses
+                0L, // endOfUsagePromptCounter
+                false, // welcomePromptFlag
+                -1, // maxAllowedUsageInPulses
+                2 // maxAllowedEndOfUsagePrompt
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * To verify that Invalid user should be able to listen MA content if
+     * service deploy status is set to deploy in a particular state.
+     */
+    @Test
+    public void verifyFT432() throws IOException, InterruptedException {
+        // add FLW with Invalid status
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright",
+                1200000000l);
+        flw.setLanguage(rh.tamilLanguage());
+        flw.setDistrict(rh.bangaloreDistrict());
+        flw.setState(rh.karnatakaState());
+        flw.setStatus(FrontLineWorkerStatus.INVALID);
+        flw.setInvalidationDate(DateTime.now().minusDays(50));
+        frontLineWorkerDataService.create(flw);
+
+        // service deployed in Karnataka State
+        deployedServiceDataService.create(new DeployedService(rh
+                .karnatakaState(), Service.MOBILE_ACADEMY));
+
+        // invoke get user detail API
+        HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
+                true, "1200000000", // callingNumber
+                false, null, // operator
+                false, null,// circle
+                true, "123456789012345" // callId
+        );
+
+        String expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
+                rh.tamilLanguage().getCode(), // locationCode
+                null, // allowedLanguageLocationCodes
+                0L, // currentUsageInPulses
+                0L, // endOfUsagePromptCounter
+                false, // welcomePromptFlag
+                -1, // maxAllowedUsageInPulses
+                2 // maxAllowedEndOfUsagePrompt
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * To verify that Active user should not be able to listen MA content if
+     * service deploy status is set to not deploy in a particular state.
+     */
+    @Test
+    public void verifyFT434() throws IOException, InterruptedException {
+        // add FLW with active status
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright",
+                1200000000l);
+        flw.setLanguage(rh.tamilLanguage());
+        flw.setDistrict(rh.bangaloreDistrict());
+        flw.setState(rh.karnatakaState());
+        flw.setStatus(FrontLineWorkerStatus.ACTIVE);
+        frontLineWorkerDataService.create(flw);
+
+        // service not deployed in Karnataka State
+
+        // invoke get user detail API
+        HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
+                true, "1200000000", // callingNumber
+                false, null, // operator
+                false, null,// circle
+                true, "123456789012345" // callId
+        );
+
+        String expectedJsonResponse = createFailureResponseJson("<MOBILE_ACADEMY: Not Deployed In State>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * To verify that Inactive user should not be able to listen MA content if
+     * service deploy status is set to not deploy in a particular state.
+     */
+    @Test
+    public void verifyFT435() throws IOException, InterruptedException {
+        // add FLW with In active status
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright",
+                1200000000l);
+        flw.setLanguage(rh.tamilLanguage());
+        flw.setDistrict(rh.bangaloreDistrict());
+        flw.setState(rh.karnatakaState());
+        flw.setStatus(FrontLineWorkerStatus.INACTIVE);
+        frontLineWorkerDataService.create(flw);
+
+        // service not deployed in Karnataka State
+
+        // invoke get user detail API
+        HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
+                true, "1200000000", // callingNumber
+                false, null, // operator
+                false, null,// circle
+                true, "123456789012345" // callId
+        );
+
+        String expectedJsonResponse = createFailureResponseJson("<MOBILE_ACADEMY: Not Deployed In State>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * To verify that Invalid user should not be able to listen MA content if
+     * service deploy status is set to not deploy in a particular state.
+     */
+    @Test
+    public void verifyFT436() throws IOException, InterruptedException {
+        // add FLW with Invalid status
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright",
+                1200000000l);
+        flw.setLanguage(rh.tamilLanguage());
+        flw.setDistrict(rh.bangaloreDistrict());
+        flw.setState(rh.karnatakaState());
+        flw.setStatus(FrontLineWorkerStatus.INVALID);
+        flw.setInvalidationDate(DateTime.now().minusDays(50));
+        frontLineWorkerDataService.create(flw);
+
+        // service not deployed in Karnataka State
+
+        // invoke get user detail API
+        HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
+                true, "1200000000", // callingNumber
+                false, null, // operator
+                false, null,// circle
+                true, "123456789012345" // callId
+        );
+
+        String expectedJsonResponse = createFailureResponseJson("<MOBILE_ACADEMY: Not Deployed In State>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * To verify that MA service is accessible usage when cappingType is set to
+     * "National Capping" having usage pulses remaining.
+     * <p>
+     * To verify that MA maxallowedUsageInPulses counter is set successfully.
+     */
+    @Test
+    public void verifyFT421_480() throws IOException, InterruptedException {
+        rh.newDelhiDistrict();
+
+        // National Capping set maxallowedUsageInPulses
+        ServiceUsageCap serviceUsageCap = new ServiceUsageCap(null,
+                Service.MOBILE_ACADEMY, 5000);
+        serviceUsageCapDataService.create(serviceUsageCap);
+
+        // FLW usage
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright",
+                1200000000l);
+        frontLineWorkerService.add(flw);
+        CallDetailRecord cdr = new CallDetailRecord();
+        cdr.setFrontLineWorker(flw);
+        cdr.setCallingNumber(1111111111l);
+        cdr.setService(Service.MOBILE_ACADEMY);
+        cdr.setCallDurationInPulses(80);
+        cdr.setEndOfUsagePromptCounter(1);
+        cdr.setWelcomePrompt(false);
+        cdr.setCallStartTime(DateTime.now());
+        callDetailRecordDataService.create(cdr);
+
+        // invoke get user detail API
+        HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
+                true, "1200000000", // callingNumber
+                false, null, // operator
+                false, null,// circle
+                true, "123456789012345" // callId
+        );
+
+        String expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
+                null, // locationCode
+                Collections.singletonList(rh.hindiLanguage().getCode()), // allowedLanguageLocationCodes
+                80L, // currentUsageInPulses
+                1L, // endOfUsagePromptCounter
+                false, // welcomePromptFlag
+                5000, // maxAllowedUsageInPulses=National cap
+                2 // maxAllowedEndOfUsagePrompt
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * To verify that MA service is accessible usage when cappingType is set to
+     * "State Capping" having usage pulses remaining.
+     */
+    @Test
+    public void verifyFT423() throws IOException, InterruptedException {
+        rh.newDelhiDistrict();
+        deployedServiceDataService.create(new DeployedService(rh
+                .delhiState(), Service.MOBILE_ACADEMY));
+        
+        // State Capping
+        ServiceUsageCap stateUsageCap = new ServiceUsageCap(rh.delhiState(),
+                Service.MOBILE_ACADEMY, 6000);
+        serviceUsageCapDataService.create(stateUsageCap);
+        
+        //national capping
+        ServiceUsageCap nationalUsageCap = new ServiceUsageCap(null,
+                Service.MOBILE_ACADEMY, 5000);
+        serviceUsageCapDataService.create(nationalUsageCap);
+
+        // FLW usage
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright",
+                1200000000l);
+        flw.setLanguage(rh.hindiLanguage());
+        frontLineWorkerService.add(flw);
+
+        CallDetailRecord cdr = new CallDetailRecord();
+        cdr.setFrontLineWorker(flw);
+        cdr.setCallingNumber(1111111111l);
+        cdr.setService(Service.MOBILE_ACADEMY);
+        cdr.setCallDurationInPulses(80);
+        cdr.setEndOfUsagePromptCounter(1);
+        cdr.setWelcomePrompt(false);
+        cdr.setCallStartTime(DateTime.now());
+        callDetailRecordDataService.create(cdr);
+
+        // invoke get user detail API
+        HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
+                true, "1200000000", // callingNumber
+                false, null, // operator
+                false, null,// circle
+                true, "123456789012345" // callId
+        );
+
+        String expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
+                rh.hindiLanguage().getCode(), // locationCode
+                null, // allowedLanguageLocationCodes
+                80L, // currentUsageInPulses
+                1L, // endOfUsagePromptCounter
+                false, // welcomePromptFlag
+                6000, // maxAllowedUsageInPulses=State cap
+                2 // maxAllowedEndOfUsagePrompt
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * To verify that MA service shall maintain the pulses consumed by FLW for
+     * MA usage.
+     */
+    // TODO https://applab.atlassian.net/browse/NMS-241
+    @Test
+    public void verifyFT523() throws IOException, InterruptedException {
+        rh.newDelhiDistrict();
+        rh.delhiCircle();
+        deployedServiceDataService.create(new DeployedService(rh.delhiState(),
+                Service.MOBILE_ACADEMY));
+        
+        // Create FLW with no usage
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright",
+                1200000000l);
+        flw.setLanguage(rh.hindiLanguage());
+        frontLineWorkerService.add(flw);
+        
+        // invoke get user detail API
+        HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
+                true, "1200000000", // callingNumber
+                false, null, // operator
+                false, null,// circle
+                true, "123456789012345" // callId
+        );
+
+        String expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
+                rh.hindiLanguage().getCode(), // locationCode
+                null, // allowedLanguageLocationCodes
+                0L, // currentUsageInPulses
+                0L, // endOfUsagePromptCounter
+                false, // welcomePromptFlag
+                -1, // maxAllowedUsageInPulses=No capping
+                2 // maxAllowedEndOfUsagePrompt
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+
+        // Invoke Save call Detail
+
+        HttpPost httpPost = ApiRequestHelper.createCallDetailsPost(
+                "mobileacademy",
+        /* callingNumber */true, 1200000000l,
+        /* callId */true, 234000011111111l,
+        /* operator */false, null,
+        /* circle */false, null,
+
+        // This test will fail if run within 5 minutes of midnight on the first of the month.  I'm ok with that.
+        /* callStartTime */true, (DateTime.now().minusMinutes(5).getMillis() / 1000),
+        /* callEndTime */true, (DateTime.now().getMillis() / 1000),
+
+        /* callDurationInPulses */true, 60,
+        /* endOfUsagePromptCounter */true, 1,
+        /* welcomeMessagePromptFlag */false, null,
+        /* callStatus */true, 1,
+        /* callDisconnectReason */true, 2,
+        /* content */false, null);
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK,
+                ADMIN_USERNAME, ADMIN_PASSWORD));
+
+        CallDetailRecord cdr = callDetailRecordService
+                .getByCallingNumber(1200000000l);
+
+        // assert call detail record
+        assertNotNull(cdr);
+        assertEquals(1200000000l, cdr.getCallingNumber());
+        assertEquals(60, cdr.getCallDurationInPulses());
+        assertEquals(1, cdr.getEndOfUsagePromptCounter());
+
+        // invoke get user detail API To check updated usage and prompt
+        httpGet = createHttpGet(true, "mobileacademy", // service
+                true, "1200000000", // callingNumber
+                false, null, // operator
+                false, null,// circle
+                true, "123456789012346" // callId
+        );
+
+        expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
+                rh.hindiLanguage().getCode(), // locationCode
+                null, // allowedLanguageLocationCodes
+                60L, // currentUsageInPulses=updated
+                1L, // endOfUsagePromptCounter=updated
+                false, // welcomePromptFlag
+                -1, // maxAllowedUsageInPulses=No capping
+                2 // maxAllowedEndOfUsagePrompt
+        );
+
+        response = SimpleHttpClient.httpRequestAndResponse(httpGet,
+                ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
+    
+    /**
+     * To verify that current usage pulses is resetted after the end of month.
+     */
+    @Test
+    public void verifyFT498() throws IOException, InterruptedException {
+        rh.newDelhiDistrict();
+        rh.delhiCircle();
+        deployedServiceDataService.create(new DeployedService(rh.delhiState(),
+                Service.MOBILE_ACADEMY));
+        
+        // FLW usage
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright",
+                1200000000l);
+        flw.setLanguage(rh.hindiLanguage());
+        frontLineWorkerService.add(flw);
+
+        CallDetailRecord cdr = new CallDetailRecord();
+        cdr.setFrontLineWorker(flw);
+        cdr.setCallingNumber(1111111111l);
+        cdr.setService(Service.MOBILE_ACADEMY);
+        cdr.setCallDurationInPulses(80);
+        cdr.setEndOfUsagePromptCounter(1);
+        cdr.setWelcomePrompt(false);
+        cdr.setCallStartTime(DateTime.now().withDayOfMonth(1).withTimeAtStartOfDay());
+        callDetailRecordDataService.create(cdr);
+
+        // invoke get user detail API
+        HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
+                true, "1200000000", // callingNumber
+                false, null, // operator
+                false, null,// circle
+                true, "123456789012345" // callId
+        );
+
+        String expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
+                rh.hindiLanguage().getCode(), // locationCode
+                null, // allowedLanguageLocationCodes
+                80L, // currentUsageInPulses
+                1L, // endOfUsagePromptCounter
+                false, // welcomePromptFlag
+                -1, // maxAllowedUsageInPulses=No capping
+                2 // maxAllowedEndOfUsagePrompt
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+
+        // Update FLW usage to previous month last day time such that it is resetted now
+
+        cdr.setCallStartTime(DateTime.now().withDayOfMonth(1).withTimeAtStartOfDay().minusMinutes(1));
+        callDetailRecordDataService.update(cdr);
+
+        // invoke get user detail API To check updated usage and prompt
+        httpGet = createHttpGet(true, "mobileacademy", // service
+                true, "1200000000", // callingNumber
+                false, null, // operator
+                false, null,// circle
+                true, "123456789012346" // callId
+        );
+
+        expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
+                rh.hindiLanguage().getCode(), // locationCode
+                null, // allowedLanguageLocationCodes
+                0L, // currentUsageInPulses=updated
+                0L, // endOfUsagePromptCounter=updated
+                false, // welcomePromptFlag
+                -1, // maxAllowedUsageInPulses=No capping
+                2 // maxAllowedEndOfUsagePrompt
+        );
+
+        response = SimpleHttpClient.httpRequestAndResponse(httpGet,
+                ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
+
 }

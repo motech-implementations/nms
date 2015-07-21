@@ -10,6 +10,7 @@ import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
+import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
 import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.Language;
@@ -118,6 +119,36 @@ public interface SubscriptionService {
      * @return The list of subscriptions due for a message
      */
     List<Subscription> findActiveSubscriptionsForDay(DayOfTheWeek dayOfTheWeek, int page, int pageSize);
+
+    /**
+     * Get the list of subscriptions in a specific subscription pack, in the given status with a first message
+     * to be sent on the given day.
+     * @param status
+     * @param firstMessageDayOfWeek
+     * @param subscriptionPack
+     * @param page
+     * @param pageSize
+     * @return The list of subscriptions
+     */
+    List<Subscription> findByStatusAndFirstMessageDayOfWeekAndPack(SubscriptionStatus status,
+                                                                   DayOfTheWeek firstMessageDayOfWeek,
+                                                                   SubscriptionPack subscriptionPack,
+                                                                   int page, int pageSize);
+
+    /**
+     * Get the list of subscriptions in a specific subscription pack, in a given status with a second message
+     * to be sent on the given day.
+     * @param status
+     * @param secondMessageDayOfWeek
+     * @param subscriptionPack
+     * @param page
+     * @param pageSize
+     * @return The list of subscriptions
+     */
+    List<Subscription> findByStatusAndSecondMessageDayOfWeekAndPack(SubscriptionStatus status,
+                                                                    DayOfTheWeek secondMessageDayOfWeek,
+                                                                    SubscriptionPack subscriptionPack,
+                                                                    int page, int pageSize);
 
     /**
      * Get the list of pending subscriptions that starts after the specified date.

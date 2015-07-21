@@ -3,11 +3,12 @@ package org.motechproject.nms.testing.it.flw;
 import org.joda.time.DateTime;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.motechproject.nms.flw.domain.CallDetailRecord;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.domain.ServiceUsage;
+import org.motechproject.nms.flw.repository.CallDetailRecordDataService;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
-import org.motechproject.nms.flw.repository.ServiceUsageDataService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.flw.service.ServiceUsageService;
 import org.motechproject.nms.props.domain.Service;
@@ -39,13 +40,13 @@ public class ServiceUsageServiceBundleIT extends BasePaxIT {
     FrontLineWorkerService frontLineWorkerService;
 
     @Inject
-    ServiceUsageDataService serviceUsageDataService;
-
-    @Inject
     ServiceUsageService serviceUsageService;
 
     @Inject
     TestingService testingService;
+
+    @Inject
+    CallDetailRecordDataService callDetailRecordDataService;
 
     private void setupData() {
         testingService.clearDatabase();
@@ -57,7 +58,7 @@ public class ServiceUsageServiceBundleIT extends BasePaxIT {
             frontLineWorkerDataService.update(flw);
         }
 
-        serviceUsageDataService.deleteAll();
+        callDetailRecordDataService.deleteAll();
         frontLineWorkerDataService.deleteAll();
     }
 
@@ -75,24 +76,58 @@ public class ServiceUsageServiceBundleIT extends BasePaxIT {
         FrontLineWorker flwIgnored = new FrontLineWorker("Ignored Worker", 2222222222L);
         frontLineWorkerService.add(flwIgnored);
 
-        // A usage record mcifrom last month that should be ignored
-        ServiceUsage lastMonth = new ServiceUsage(flw, Service.MOBILE_ACADEMY, 1, 1, 1, DateTime.now().minusMonths(2));
-        serviceUsageDataService.create(lastMonth);
+        CallDetailRecord lastMonth = new CallDetailRecord();
+        lastMonth.setFrontLineWorker(flw);
+        lastMonth.setCallingNumber(1111111111l);
+        lastMonth.setService(Service.MOBILE_ACADEMY);
+        lastMonth.setCallDurationInPulses(1);
+        lastMonth.setEndOfUsagePromptCounter(1);
+        lastMonth.setWelcomePrompt(true);
+        lastMonth.setCallStartTime(DateTime.now().minusMonths(2));
+        callDetailRecordDataService.create(lastMonth);
 
         // A usage record for a different service that should be ignored
-        ServiceUsage differentService = new ServiceUsage(flw, Service.MOBILE_KUNJI, 1, 1, 1, DateTime.now());
-        serviceUsageDataService.create(differentService);
+        CallDetailRecord differentService = new CallDetailRecord();
+        differentService.setFrontLineWorker(flw);
+        differentService.setCallingNumber(1111111111l);
+        differentService.setService(Service.MOBILE_KUNJI);
+        differentService.setCallDurationInPulses(1);
+        differentService.setEndOfUsagePromptCounter(1);
+        differentService.setWelcomePrompt(true);
+        differentService.setCallStartTime(DateTime.now());
+        callDetailRecordDataService.create(differentService);
 
         // A usage record for a different FLW that should be ignored
-        ServiceUsage differentFLW = new ServiceUsage(flwIgnored, Service.MOBILE_ACADEMY, 1, 1, 1, DateTime.now());
-        serviceUsageDataService.create(differentFLW);
+        CallDetailRecord differentFLW = new CallDetailRecord();
+        differentFLW.setFrontLineWorker(flwIgnored);
+        differentFLW.setCallingNumber(1111111111l);
+        differentFLW.setService(Service.MOBILE_KUNJI);
+        differentFLW.setCallDurationInPulses(1);
+        differentFLW.setEndOfUsagePromptCounter(1);
+        differentFLW.setWelcomePrompt(true);
+        differentFLW.setCallStartTime(DateTime.now());
+        callDetailRecordDataService.create(differentFLW);
 
         // Two valid records that should get aggregated
-        ServiceUsage recordOne = new ServiceUsage(flw, Service.MOBILE_ACADEMY, 1, 0, 1, DateTime.now());
-        serviceUsageDataService.create(recordOne);
+        CallDetailRecord recordOne = new CallDetailRecord();
+        recordOne.setFrontLineWorker(flw);
+        recordOne.setCallingNumber(1111111111l);
+        recordOne.setService(Service.MOBILE_ACADEMY);
+        recordOne.setCallDurationInPulses(1);
+        recordOne.setEndOfUsagePromptCounter(0);
+        recordOne.setWelcomePrompt(true);
+        recordOne.setCallStartTime(DateTime.now());
+        callDetailRecordDataService.create(recordOne);
 
-        ServiceUsage recordTwo = new ServiceUsage(flw, Service.MOBILE_ACADEMY, 1, 1, 0, DateTime.now());
-        serviceUsageDataService.create(recordTwo);
+        CallDetailRecord recordTwo = new CallDetailRecord();
+        recordTwo.setFrontLineWorker(flw);
+        recordTwo.setCallingNumber(1111111111l);
+        recordTwo.setService(Service.MOBILE_ACADEMY);
+        recordTwo.setCallDurationInPulses(1);
+        recordTwo.setEndOfUsagePromptCounter(1);
+        recordTwo.setWelcomePrompt(false);
+        recordTwo.setCallStartTime(DateTime.now());
+        callDetailRecordDataService.create(recordTwo);
 
         ServiceUsage serviceUsage = serviceUsageService.getCurrentMonthlyUsageForFLWAndService(flw, Service.MOBILE_ACADEMY);
 
@@ -100,13 +135,13 @@ public class ServiceUsageServiceBundleIT extends BasePaxIT {
         assertEquals(Service.MOBILE_ACADEMY, serviceUsage.getService());
         assertEquals(2, serviceUsage.getUsageInPulses());
         assertEquals(1, serviceUsage.getEndOfUsage());
-        assertEquals(1, serviceUsage.getWelcomePrompt());
+        assertEquals(true, serviceUsage.getWelcomePrompt());
 
-        serviceUsageDataService.delete(lastMonth);
-        serviceUsageDataService.delete(differentService);
-        serviceUsageDataService.delete(differentFLW);
-        serviceUsageDataService.delete(recordOne);
-        serviceUsageDataService.delete(recordTwo);
+        callDetailRecordDataService.delete(lastMonth);
+        callDetailRecordDataService.delete(differentService);
+        callDetailRecordDataService.delete(differentFLW);
+        callDetailRecordDataService.delete(recordOne);
+        callDetailRecordDataService.delete(recordTwo);
 
         flw.setStatus(FrontLineWorkerStatus.INVALID);
         flw.setInvalidationDate(new DateTime().withDate(2011, 8, 1));
@@ -131,9 +166,9 @@ public class ServiceUsageServiceBundleIT extends BasePaxIT {
         assertEquals(Service.MOBILE_ACADEMY, serviceUsage.getService());
         assertEquals(0, serviceUsage.getUsageInPulses());
         assertEquals(0, serviceUsage.getEndOfUsage());
-        assertEquals(0, serviceUsage.getWelcomePrompt());
+        assertEquals(false, serviceUsage.getWelcomePrompt());
 
-        serviceUsageDataService.delete(serviceUsage);
+        callDetailRecordDataService.deleteAll();
 
         flw.setStatus(FrontLineWorkerStatus.INVALID);
         flw.setInvalidationDate(new DateTime().withDate(2011, 8, 1));

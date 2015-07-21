@@ -1,5 +1,7 @@
 package org.motechproject.nms.testing.it.ma;
 
+import org.apache.commons.io.IOUtils;
+import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -24,6 +26,11 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -70,10 +77,12 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         completionRecordDataService.deleteAll();
         activityDataService.deleteAll();
         bookmarkDataService.deleteAll();
+        nmsCourseDataService.deleteAll();
     }
 
     @Test
-    public void testSetCourseNoUpdate() {
+    public void testSetCourseNoUpdate() throws IOException {
+        setupMaCourse();
 
         NmsCourse originalCourse = nmsCourseDataService.getCourseByName(VALID_COURSE_NAME);
         MaCourse copyCourse = new MaCourse(originalCourse.getName(), originalCourse.getModificationDate().getMillis(), originalCourse.getContent());
@@ -85,8 +94,8 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     }
 
     @Test
-    public void testSetCourseUpdate() {
-
+    public void testSetCourseUpdate() throws IOException {
+        setupMaCourse();
         NmsCourse originalCourse = nmsCourseDataService.getCourseByName(VALID_COURSE_NAME);
         String courseContent = originalCourse.getContent();
         MaCourse copyCourse = new MaCourse(originalCourse.getName(), originalCourse.getModificationDate().getMillis(), originalCourse.getContent() + "foo");
@@ -100,8 +109,8 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     }
 
     @Test
-    public void testNoCoursePresent() {
-
+    public void testNoCoursePresent() throws IOException {
+        setupMaCourse();
         NmsCourse originalCourse = nmsCourseDataService.getCourseByName(VALID_COURSE_NAME);
         nmsCourseDataService.delete(originalCourse);
         assertNull(nmsCourseDataService.getCourseByName(VALID_COURSE_NAME));
@@ -121,14 +130,14 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     }
 
     @Test
-    public void testGetCourse() {
-
+    public void testGetCourse() throws IOException {
+        setupMaCourse();
         assertNotNull(maService.getCourse());
     }
 
     @Test
-    public void testGetCourseVersion() {
-
+    public void testGetCourseVersion() throws IOException {
+        setupMaCourse();
         assertNotNull(maService.getCourseVersion());
         assertTrue(maService.getCourseVersion() > 0);
     }
@@ -346,6 +355,30 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         completionRecordDataService.create(cr);
         courseNotificationService.sendSmsNotification(event);
         // TODO: cannot check the notification status yet since we don't have a real IMI url to hit
+    }
+
+    /**
+     * setup MA course structure from nmsCourse.json file.
+     */
+    private JSONObject setupMaCourse() throws IOException {
+        MaCourse course = new MaCourse();
+        String jsonText = IOUtils
+                .toString(getFileInputStream("nmsCourse.json"));
+        JSONObject jo = new JSONObject(jsonText);
+        course.setName(jo.get("name").toString());
+        course.setContent(jo.get("chapters").toString());
+        nmsCourseDataService.create(new NmsCourse(course.getName(), course
+                .getContent()));
+        return jo;
+    }
+
+    private InputStream getFileInputStream(String fileName) {
+        try {
+            return new FileInputStream(new File(Thread.currentThread()
+                    .getContextClassLoader().getResource(fileName).getPath()));
+        } catch (IOException io) {
+            return null;
+        }
     }
 
 }

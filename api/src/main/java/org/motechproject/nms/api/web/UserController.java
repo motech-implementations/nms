@@ -1,6 +1,5 @@
 package org.motechproject.nms.api.web;
 
-import org.joda.time.DateTime;
 import org.motechproject.nms.api.web.contract.FlwUserResponse;
 import org.motechproject.nms.api.web.contract.LogHelper;
 import org.motechproject.nms.api.web.contract.UserResponse;
@@ -193,7 +192,7 @@ public class UserController extends BaseController {
 
         Service service = getServiceFromName(serviceName);
 
-        ServiceUsage serviceUsage = new ServiceUsage(null, service, 0, 0, 0, DateTime.now());
+        ServiceUsage serviceUsage = new ServiceUsage(null, service, 0, 0, false);
         FrontLineWorker flw = frontLineWorkerService.getByContactNumber(callingNumber);
 
         State state = getStateForFrontLineWorker(flw, circle);
@@ -218,7 +217,7 @@ public class UserController extends BaseController {
 
         user.setCurrentUsageInPulses(serviceUsage.getUsageInPulses());
         user.setEndOfUsagePromptCounter(serviceUsage.getEndOfUsage());
-        user.setWelcomePromptFlag(serviceUsage.getWelcomePrompt() > 0);
+        user.setWelcomePromptFlag(serviceUsage.getWelcomePrompt());
 
         user.setMaxAllowedUsageInPulses(serviceUsageCap.getMaxUsageInPulses());
 

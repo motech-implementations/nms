@@ -7,9 +7,9 @@ import org.motechproject.nms.csv.repository.CsvAuditRecordDataService;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.repository.CallContentDataService;
+import org.motechproject.nms.flw.repository.CallDetailRecordDataService;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.flw.repository.ServiceUsageCapDataService;
-import org.motechproject.nms.flw.repository.ServiceUsageDataService;
 import org.motechproject.nms.flw.repository.WhitelistEntryDataService;
 import org.motechproject.nms.flw.repository.WhitelistStateDataService;
 import org.motechproject.nms.imi.repository.FileAuditRecordDataService;
@@ -64,11 +64,11 @@ public class TestingServiceImpl implements TestingService {
     @Autowired
     private ServiceUsageCapDataService serviceUsageCapDataService;
     @Autowired
-    private ServiceUsageDataService serviceUsageDataService;
-    @Autowired
     private WhitelistEntryDataService whitelistEntryDataService;
     @Autowired
     private WhitelistStateDataService whitelistStateDataService;
+    @Autowired
+    private CallDetailRecordDataService callDetailRecordDataService;
 
     /**
      * IMI
@@ -198,7 +198,7 @@ public class TestingServiceImpl implements TestingService {
             }
         }
         serviceUsageCapDataService.deleteAll();
-        serviceUsageDataService.deleteAll();
+        callDetailRecordDataService.deleteAll();
         frontLineWorkerDataService.deleteAll();
         whitelistEntryDataService.deleteAll();
         whitelistStateDataService.deleteAll();

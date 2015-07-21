@@ -1,40 +1,27 @@
 package org.motechproject.nms.flw.domain;
 
-import org.joda.time.DateTime;
-import org.motechproject.mds.annotations.Entity;
-import org.motechproject.mds.annotations.Field;
 import org.motechproject.nms.props.domain.Service;
 
-@Entity(tableName = "nms_service_usage")
 public class ServiceUsage {
 
-    @Field
     private FrontLineWorker frontLineWorker;
 
-    @Field
     private Service service;
 
-    @Field
     private int usageInPulses;
 
-    @Field
     private int endOfUsage;
 
-    @Field
-    private int welcomePrompt;
-
-    @Field
-    private DateTime timestamp;
+    private boolean welcomePrompt;
 
 
     public ServiceUsage(FrontLineWorker frontLineWorker, Service service, int usageInPulses, int endOfUsage,
-                        int welcomePrompt, DateTime timestamp) {
+                        boolean welcomePrompt) {
         this.frontLineWorker = frontLineWorker;
         this.service = service;
         this.usageInPulses = usageInPulses;
         this.endOfUsage = endOfUsage;
         this.welcomePrompt = welcomePrompt;
-        this.timestamp = timestamp;
     }
 
     public FrontLineWorker getFrontLineWorker() {
@@ -69,19 +56,11 @@ public class ServiceUsage {
         this.endOfUsage = endOfUsage;
     }
 
-    public int getWelcomePrompt() {
+    public boolean getWelcomePrompt() {
         return welcomePrompt;
     }
 
-    public void setWelcomePrompt(int welcomePrompt) {
+    public void setWelcomePrompt(boolean welcomePrompt) {
         this.welcomePrompt = welcomePrompt;
-    }
-
-    public DateTime getTimestamp() {
-        return timestamp;
-    }
-
-    public void setTimestamp(DateTime timestamp) {
-        this.timestamp = timestamp;
     }
 }

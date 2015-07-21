@@ -110,6 +110,7 @@ public class CallDetailsController extends BaseController {
     private void createCallDetailRecord(FrontLineWorker flw, CallDetailRecordRequest callDetailRecordRequest,
                                         Service service) {
         CallDetailRecord cdr = new CallDetailRecord();
+        cdr.setService(service);
         cdr.setFrontLineWorker(flw);
         cdr.setCallingNumber(callDetailRecordRequest.getCallingNumber());
         cdr.setCallId(callDetailRecordRequest.getCallId());
@@ -193,7 +194,7 @@ public class CallDetailsController extends BaseController {
         return failureReasons.toString();
     }
 
-    private String validateCallContentRequest(Service service, CallContentRequest callContentRequest) {
+    private String validateCallContentRequest(Service service, CallContentRequest callContentRequest) { // NO CHECKSTYLE Cyclomatic Complexity
         StringBuilder failureReasons = new StringBuilder();
 
         // Common elements (contentName, contentFile, startTime, endTime)
@@ -215,7 +216,7 @@ public class CallDetailsController extends BaseController {
 
         // MK elements (mkCardCode)
         if (service == Service.MOBILE_KUNJI) {
-            if (null == callContentRequest.getMkCardCode()) {
+            if (null == callContentRequest.getMkCardCode() || callContentRequest.getMkCardCode().isEmpty()) {
                 failureReasons.append(String.format(NOT_PRESENT, "mkCardCode"));
             }
         }

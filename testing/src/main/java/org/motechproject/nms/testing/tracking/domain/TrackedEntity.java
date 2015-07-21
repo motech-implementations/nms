@@ -18,9 +18,11 @@ public class TrackedEntity {
     private Integer integer;
 
     @Field
+    @TrackField
     private String string;
 
     @Field
+    @TrackField
     private TrackedEntity instance;
 
     public Long getId() {
@@ -43,7 +45,6 @@ public class TrackedEntity {
         return string;
     }
 
-    @TrackField
     public void setString(String string) {
         this.string = string;
     }
@@ -52,7 +53,6 @@ public class TrackedEntity {
         return instance;
     }
 
-    @TrackField
     public void setInstance(TrackedEntity instance) {
         this.instance = instance;
     }
