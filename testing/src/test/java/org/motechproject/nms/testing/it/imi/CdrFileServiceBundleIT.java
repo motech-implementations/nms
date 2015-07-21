@@ -18,6 +18,7 @@ import org.motechproject.nms.imi.service.CdrFileService;
 import org.motechproject.nms.imi.service.SettingsService;
 import org.motechproject.nms.imi.web.contract.CdrFileNotificationRequest;
 import org.motechproject.nms.imi.web.contract.FileInfo;
+import org.motechproject.nms.kilkari.domain.CallRetry;
 import org.motechproject.nms.kilkari.dto.CallDetailRecordDto;
 import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
@@ -38,6 +39,7 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
+import javax.xml.rpc.Call;
 import java.io.File;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
@@ -243,11 +245,11 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         List<Alert> alerts = alertService.search(criteria);
         assertEquals(4, alerts.size()); //three warnings plus one error
 
-        // Fancy code that waits for all 4 CDRs to be processed
+        // Fancy code that waits for all 4 CDRs and 1 CSR to be processed
         long start = System.currentTimeMillis();
         while (true) {
-            //Now verify that we should be rescheduling one call (the failed one)
-            if (callRetryDataService.count() == 1) {
+            //Now verify that we should be rescheduling two calls (1 CDR and 1 CSR)
+            if (callRetryDataService.count() == 2) {
                 getLogger().debug("Found retry record in {} ms", System.currentTimeMillis() - start);
                 break;
             }
@@ -259,9 +261,16 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
             }
         }
 
-        //here, verify we logged the incoming CDRs in the CallDetailRecord table
-        List<CallDetailRecord> cdrs = callDetailRecordDataService.retrieveAll();
-        assertEquals(6, cdrs.size());
+        // Verify we have both a failed CDR (weekId="w5_1") and a failed CSR (weekId="w7_1")
+        List<CallRetry> retries = callRetryDataService.retrieveAll();
+        assertTrue(
+                (retries.get(0).getWeekId().equals("w5_1") && retries.get(1).getWeekId().equals("w7_1"))
+                ||
+                (retries.get(1).getWeekId().equals("w5_1") && retries.get(0).getWeekId().equals("w7_1"))
+        );
+
+        // Verify we logged the incoming CDRs in the CallDetailRecord table
+        assertEquals(6, callDetailRecordDataService.count());
     }
 
 

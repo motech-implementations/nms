@@ -28,6 +28,7 @@ import org.motechproject.nms.imi.web.contract.FileInfo;
 import org.motechproject.nms.kilkari.dto.CallDetailRecordDto;
 import org.motechproject.nms.kilkari.dto.CallSummaryRecordDto;
 import org.motechproject.nms.props.domain.FinalCallStatus;
+import org.motechproject.nms.props.domain.StatusCode;
 import org.motechproject.server.config.SettingsFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -516,8 +517,13 @@ public class CdrFileServiceImpl implements CdrFileService {
                         CallSummaryRecord csr = CsrHelper.csvLineToCsr(line);
                         callSummaryRecordDataService.create(csr);
 
-                        CallSummaryRecordDto csrDto = csr.toDto();
-                        sendProcessSummaryRecordEvent(csrDto);
+                        // We only want to send summary records which contain information not in detail records
+                        if (StatusCode.summaryOnlyFailure(csr.getStatusCode())) {
+                            CallSummaryRecordDto dto = csr.toDto();
+                            // Mark the CSR as FAILED (even thought it might have been REJECTED) so it's always retried
+                            dto.setFinalStatus(FinalCallStatus.FAILED);
+                            sendProcessSummaryRecordEvent(dto);
+                        }
 
                     } catch (IllegalArgumentException e) {
                         errors.add(String.format(LINE_NUMBER_FMT, lineNumber, e.getMessage()));
@@ -697,8 +703,6 @@ public class CdrFileServiceImpl implements CdrFileService {
             reportAuditAndPost(request.getCdrSummary().getCdrFile(), errors);
             return errors;
         }
-
-
 
 
         // We processed as much as we can, let IMI know before distributing the work to phase 3

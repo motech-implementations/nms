@@ -206,9 +206,9 @@ public class CdrHelper {
             Subscription sub = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(30));
             CallDetailRecordDto cdr = makeCdrDto(sub);
             cdr.setStatusCode(StatusCode.OBD_SUCCESS_CALL_CONNECTED);
-            cdr.setContentFile(sh.childPack().getMessages().get(5).getMessageFileName());
+            cdr.setContentFile(sh.childPack().getMessages().get(4).getMessageFileName());
             cdr.setCallDisconnectReason(CallDisconnectReason.NORMAL_DROP);
-            cdr.setWeekId("w5_1");
+            cdr.setWeekId("w4_1");
             cdrs.add(cdr);
         }
 
@@ -237,9 +237,9 @@ public class CdrHelper {
             Subscription sub = sh.mksub(SubscriptionOrigin.IVR, DateTime.now().minusDays(30));
             CallDetailRecordDto cdr = makeCdrDto(sub);
             cdr.setStatusCode(StatusCode.OBD_SUCCESS_CALL_CONNECTED);
-            cdr.setContentFile(sh.childPack().getMessages().get(5).getMessageFileName());
+            cdr.setContentFile(sh.childPack().getMessages().get(6).getMessageFileName());
             cdr.setCallDisconnectReason(CallDisconnectReason.NORMAL_DROP);
-            cdr.setWeekId("w5_1");
+            cdr.setWeekId("w6_1");
             cdrs.add(cdr);
         }
     }
@@ -252,8 +252,8 @@ public class CdrHelper {
             Subscription sub = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(30));
             CallSummaryRecord csr = makeCsr(sub);
             csr.setStatusCode(StatusCode.OBD_FAILED_NOATTEMPT.getValue());
-            csr.setContentFileName(sh.childPack().getMessages().get(5).getMessageFileName());
-            csr.setWeekId("w5_1");
+            csr.setContentFileName(sh.childPack().getMessages().get(7).getMessageFileName());
+            csr.setWeekId("w7_1");
             csr.setPriority(NORMAL_PRIORITY);
             csr.setFinalStatus(FinalCallStatus.FAILED.getValue());
             csr.setAttempts(1);
