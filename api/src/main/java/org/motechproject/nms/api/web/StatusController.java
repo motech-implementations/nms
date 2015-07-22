@@ -22,7 +22,7 @@ public class StatusController {
         if (alerts.size() == 0) {
             return "OK";
         }
-        return String.format("%d ALERTS", alerts.size());
+        return String.format("%d ALERT%s", alerts.size(), alerts.size() == 1 ? "" : "S");
     }
 
 

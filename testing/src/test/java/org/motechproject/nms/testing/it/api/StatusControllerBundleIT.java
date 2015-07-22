@@ -9,6 +9,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.alerts.contract.AlertsDataService;
+import org.motechproject.alerts.domain.AlertStatus;
+import org.motechproject.alerts.domain.AlertType;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
@@ -20,7 +22,6 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
-
 import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
@@ -49,11 +50,19 @@ public class StatusControllerBundleIT extends BasePaxIT {
 
     @Test
     public void verifyNoAlerts() throws InterruptedException, IOException{
-        // invoke get user detail API
         HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/status", TestContext.getJettyPort()));
-
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, USER, PASS);
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
         assertEquals("OK", EntityUtils.toString(response.getEntity()));
+    }
+
+    @Test
+    public void verifyAlerts() throws InterruptedException, IOException{
+        alertService.create("foo1", "bar1", "baz1", AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+        alertService.create("foo2", "bar2", "baz2", AlertType.HIGH, AlertStatus.NEW, 0, null);
+        HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/status", TestContext.getJettyPort()));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, USER, PASS);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals("2 ALERTS", EntityUtils.toString(response.getEntity()));
     }
 }

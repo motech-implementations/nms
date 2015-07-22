@@ -43,4 +43,6 @@
 
     <osgi:reference id="eventRelay" interface="org.motechproject.event.listener.EventRelay"/>
 
+    <osgi:reference id="alertsService" interface="org.motechproject.alerts.contract.AlertService" />
+
 </beans>

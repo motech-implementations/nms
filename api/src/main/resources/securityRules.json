@@ -16,7 +16,7 @@
   },
   {
     "active": true,
-    "pattern": "/**/status/**",
+    "pattern": "/**/status",
     "supportedSchemes": [
       "NO_SECURITY"
     ],
