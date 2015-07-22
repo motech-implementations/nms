@@ -22,7 +22,6 @@ import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackMessageDataService;
 import org.motechproject.nms.kilkari.service.CsrService;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
-import org.motechproject.nms.props.domain.FinalCallStatus;
 import org.motechproject.nms.props.domain.StatusCode;
 import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.Language;
@@ -87,9 +86,13 @@ public class CsrServiceImpl implements CsrService {
 
 
     //todo: IT
-    private int calculatePercentPlayed(String contentFileName, int duration) {
+    private int calculatePercentPlayed(String contentFileName, Integer duration) {
 
-       //refresh Cache if empty
+        if (duration == null) {
+            return 0;
+        }
+
+        //refresh cache if empty
         if (messageDurationCache.size() == 0) {
             buildMessageDurationCache();
         }
@@ -278,26 +281,34 @@ public class CsrServiceImpl implements CsrService {
     @MotechListener(subjects = { PROCESS_SUMMARY_RECORD_SUBJECT })
     public void processCallSummaryRecord(MotechEvent event) {
 
-        CallSummaryRecordDto csr = (CallSummaryRecordDto) event.getParameters().get(CSR_PARAM_KEY);
-        String subscriptionId = csr.getRequestId().getSubscriptionId();
-        CallSummaryRecord record = aggregateSummaryRecord(csr);
+        CallSummaryRecordDto csrDto = (CallSummaryRecordDto) event.getParameters().get(CSR_PARAM_KEY);
+        String subscriptionId = csrDto.getRequestId().getSubscriptionId();
+        CallSummaryRecord csr = aggregateSummaryRecord(csrDto);
 
         CallRetry callRetry = callRetryDataService.findBySubscriptionId(subscriptionId);
         Subscription subscription = subscriptionDataService.findBySubscriptionId(subscriptionId);
 
 
-        if (csr.getFinalStatus() == FinalCallStatus.SUCCESS) {
-            completeSubscriptionIfNeeded(subscription, record, callRetry);
-        }
+        switch (csrDto.getFinalStatus()) {
+            case SUCCESS:
+                completeSubscriptionIfNeeded(subscription, csr, callRetry);
+                break;
 
-        if (csr.getFinalStatus() == FinalCallStatus.FAILED) {
-            rescheduleCall(subscription, record, callRetry);
-        }
+            case FAILED:
+                rescheduleCall(subscription, csr, callRetry);
+                break;
 
-        if (csr.getFinalStatus() == FinalCallStatus.REJECTED) {
-            deactivateSubscription(subscription, callRetry);
+            case REJECTED:
+                deactivateSubscription(subscription, callRetry);
+                break;
+
+            default:
+                String error = String.format("Invalid FinalCallStatus: %s", csrDto.getFinalStatus());
+                LOGGER.error(error);
+                alertService.create(PROCESS_SUMMARY_RECORD_SUBJECT, error, error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
         }
     }
+
 
     private void resetWelcomeFlagInSubscription(Subscription subscription) {
 

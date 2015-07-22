@@ -173,8 +173,8 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         subscription6.setStatus(SubscriptionStatus.PENDING_ACTIVATION);
         subscriptionDataService.update(subscription6);
 
-        //Set the clock one day back;
-        DateTimeUtils.setCurrentMillisFixed(DateTime.now().minusDays(1).getMillis());
+        //Set the clock one day (and a bit more) back;
+        DateTimeUtils.setCurrentMillisFixed(DateTime.now().minusDays(1).minusHours(1).getMillis());
 
         //Should be picked up because IVR subscriptions all start today + 1 day
         Subscriber subscriber7 = new Subscriber(7777777777L, rh.kannadaLanguage(), rh.karnatakaCircle());
