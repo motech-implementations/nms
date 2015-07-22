@@ -4353,6 +4353,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     
     /**
      * To verify that current usage pulses is resetted after the end of month.
+     * For national capping
      */
     @Test
     public void verifyFT498() throws IOException, InterruptedException {
@@ -4361,6 +4362,11 @@ public class UserControllerBundleIT extends BasePaxIT {
         deployedServiceDataService.create(new DeployedService(rh.delhiState(),
                 Service.MOBILE_ACADEMY));
         
+        // national capping
+        ServiceUsageCap nationalUsageCap = new ServiceUsageCap(null,
+                Service.MOBILE_ACADEMY, 500);
+        serviceUsageCapDataService.create(nationalUsageCap);
+
         // FLW usage
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright",
                 1200000000l);
@@ -4391,7 +4397,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 80L, // currentUsageInPulses
                 1L, // endOfUsagePromptCounter
                 false, // welcomePromptFlag
-                -1, // maxAllowedUsageInPulses=No capping
+                500, // maxAllowedUsageInPulses=National capping
                 2 // maxAllowedEndOfUsagePrompt
         );
 
@@ -4420,7 +4426,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 0L, // currentUsageInPulses=updated
                 0L, // endOfUsagePromptCounter=updated
                 false, // welcomePromptFlag
-                -1, // maxAllowedUsageInPulses=No capping
+                500, // maxAllowedUsageInPulses=National capping
                 2 // maxAllowedEndOfUsagePrompt
         );
 
@@ -5026,4 +5032,99 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(expectedJsonResponse,
                 EntityUtils.toString(response.getEntity()));
     }
+
+    /**
+     * To verify that current usage pulses is resetted after the end of month.
+     * For state capping.
+     */
+    @Test
+    public void verifyFT534() throws IOException, InterruptedException {
+        rh.newDelhiDistrict();
+        rh.delhiCircle();
+        deployedServiceDataService.create(new DeployedService(rh.delhiState(),
+                Service.MOBILE_ACADEMY));
+
+        // national capping
+        ServiceUsageCap nationalUsageCap = new ServiceUsageCap(null,
+                Service.MOBILE_ACADEMY, 500);
+        serviceUsageCapDataService.create(nationalUsageCap);
+
+        // State capping
+        ServiceUsageCap stateUsageCap = new ServiceUsageCap(rh.delhiState(),
+                Service.MOBILE_ACADEMY, 250);
+        serviceUsageCapDataService.create(stateUsageCap);
+
+        // FLW usage
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright",
+                1200000000l);
+        flw.setLanguage(rh.hindiLanguage());
+        frontLineWorkerService.add(flw);
+
+        CallDetailRecord cdr = new CallDetailRecord();
+        cdr.setFrontLineWorker(flw);
+        cdr.setCallingNumber(1111111111l);
+        cdr.setService(Service.MOBILE_ACADEMY);
+        cdr.setCallDurationInPulses(80);
+        cdr.setEndOfUsagePromptCounter(1);
+        cdr.setWelcomePrompt(false);
+        cdr.setCallStartTime(DateTime.now().withDayOfMonth(1)
+                .withTimeAtStartOfDay());
+        callDetailRecordDataService.create(cdr);
+
+        // invoke get user detail API
+        HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
+                true, "1200000000", // callingNumber
+                false, null, // operator
+                false, null,// circle
+                true, "123456789012345" // callId
+        );
+
+        String expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
+                rh.hindiLanguage().getCode(), // locationCode
+                null, // allowedLanguageLocationCodes
+                80L, // currentUsageInPulses
+                1L, // endOfUsagePromptCounter
+                false, // welcomePromptFlag
+                250, // maxAllowedUsageInPulses=State capping
+                2 // maxAllowedEndOfUsagePrompt
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+
+        // Update FLW usage to previous month last day time such that it is
+        // resetted now
+
+        cdr.setCallStartTime(DateTime.now().withDayOfMonth(1)
+                .withTimeAtStartOfDay().minusMinutes(1));
+        callDetailRecordDataService.update(cdr);
+
+        // invoke get user detail API To check updated usage and prompt
+        httpGet = createHttpGet(true, "mobileacademy", // service
+                true, "1200000000", // callingNumber
+                false, null, // operator
+                false, null,// circle
+                true, "123456789012346" // callId
+        );
+
+        expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
+                rh.hindiLanguage().getCode(), // locationCode
+                null, // allowedLanguageLocationCodes
+                0L, // currentUsageInPulses=updated
+                0L, // endOfUsagePromptCounter=updated
+                false, // welcomePromptFlag
+                250, // maxAllowedUsageInPulses=State capping
+                2 // maxAllowedEndOfUsagePrompt
+        );
+
+        response = SimpleHttpClient.httpRequestAndResponse(httpGet,
+                ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
+
 }
