@@ -27,6 +27,8 @@ import org.motechproject.nms.mobileacademy.service.impl.MobileAcademyServiceImpl
 import org.motechproject.scheduler.contract.RepeatingSchedulableJob;
 import org.motechproject.scheduler.service.MotechSchedulerService;
 import org.motechproject.server.config.SettingsFacade;
+import org.springframework.transaction.support.TransactionSynchronizationAdapter;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
@@ -90,6 +92,9 @@ public class MobileAcademyServiceUnitTest {
 
     @Mock
     private MotechSchedulerService schedulerService;
+
+    @Mock
+    private TransactionSynchronizationManager transactionSynchronizationManager;
 
     private Validator validator;
 

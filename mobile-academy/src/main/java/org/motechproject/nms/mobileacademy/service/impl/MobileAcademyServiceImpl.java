@@ -29,6 +29,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionSynchronizationAdapter;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.io.InputStream;
 import java.util.HashMap;
@@ -207,7 +209,7 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
     @Override
     public void triggerCompletionNotification(Long callingNumber) {
 
-        CompletionRecord cr = completionRecordDataService.findRecordByCallingNumber(callingNumber);
+        final CompletionRecord cr = completionRecordDataService.findRecordByCallingNumber(callingNumber);
 
         // No completion record found, fail notification
         if (cr == null) {
@@ -221,6 +223,20 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
             cr.setSentNotification(false);
             completionRecordDataService.update(cr);
         }
+
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {
+            @Override
+            public void afterCommit() {
+                sendEvent(cr.getCallingNumber());
+            }
+        });
+    }
+
+    /**
+     * Send event to notify
+     * @param callingNumber calling number to notify
+     */
+    private void sendEvent(Long callingNumber) {
 
         Map<String, Object> eventParams = new HashMap<>();
         eventParams.put("callingNumber", callingNumber);
@@ -297,6 +313,7 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
         CompletionRecord cr = completionRecordDataService.findRecordByCallingNumber(callingNumber);
 
         if (cr == null) {
+            LOGGER.debug("No existing completion record. Creating new record");
             cr = new CompletionRecord(callingNumber, totalScore);
             completionRecordDataService.create(cr);
         } else {
