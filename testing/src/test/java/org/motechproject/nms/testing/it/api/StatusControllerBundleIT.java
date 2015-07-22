@@ -59,10 +59,10 @@ public class StatusControllerBundleIT extends BasePaxIT {
     @Test
     public void verifyAlerts() throws InterruptedException, IOException{
         alertService.create("foo1", "bar1", "baz1", AlertType.CRITICAL, AlertStatus.NEW, 0, null);
-        alertService.create("foo2", "bar2", "baz2", AlertType.HIGH, AlertStatus.NEW, 0, null);
+        alertService.create("foo2", "bar2", "baz2", AlertType.HIGH, AlertStatus.READ, 0, null);
         HttpGet httpGet = new HttpGet(String.format("http://localhost:%d/api/status", TestContext.getJettyPort()));
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, USER, PASS);
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
-        assertEquals("2 ALERTS", EntityUtils.toString(response.getEntity()));
+        assertEquals("1 NEW ALERT AND 1 READ ALERT", EntityUtils.toString(response.getEntity()));
     }
 }
