@@ -8,24 +8,39 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Pattern;
 
 import javax.inject.Inject;
 
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.util.EntityUtils;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.motechproject.nms.api.web.contract.FlwUserResponse;
 import org.motechproject.nms.flw.domain.CallContent;
 import org.motechproject.nms.flw.domain.CallDetailRecord;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.repository.CallDetailRecordDataService;
 import org.motechproject.nms.flw.service.CallDetailRecordService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
+import org.motechproject.nms.props.domain.DeployedService;
+import org.motechproject.nms.props.domain.Service;
+import org.motechproject.nms.props.repository.DeployedServiceDataService;
+import org.motechproject.nms.region.repository.CircleDataService;
+import org.motechproject.nms.region.repository.DistrictDataService;
+import org.motechproject.nms.region.repository.LanguageDataService;
+import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.service.DistrictService;
+import org.motechproject.nms.testing.it.utils.RegionHelper;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
@@ -61,10 +76,28 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
     @Inject
     TestingService testingService;
 
+    @Inject
+    DeployedServiceDataService deployedServiceDataService;
+
+    @Inject
+    LanguageDataService languageDataService;
+    @Inject
+    CircleDataService circleDataService;
+    @Inject
+    StateDataService stateDataService;
+    @Inject
+    DistrictDataService districtDataService;
+    @Inject
+    DistrictService districtService;
+
+    private RegionHelper rh;
+
 
     @Before
     public void clearDatabase() {
         testingService.clearDatabase();
+        rh = new RegionHelper(languageDataService, circleDataService, stateDataService, districtDataService,
+                districtService);
     }
 
     /**
@@ -395,6 +428,39 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         return contentTemplate.toString();
     }
 
+    private String createFlwUserResponseJson(String defaultLanguageLocationCode, String locationCode,
+                                             List<String> allowedLanguageLocations,
+                                             Long currentUsageInPulses, Long endOfUsagePromptCounter,
+                                             Boolean welcomePromptFlag, Integer maxAllowedUsageInPulses,
+                                             Integer maxAllowedEndOfUsagePrompt) throws IOException {
+        FlwUserResponse userResponse = new FlwUserResponse();
+        if (defaultLanguageLocationCode != null) {
+            userResponse.setDefaultLanguageLocationCode(defaultLanguageLocationCode);
+        }
+        if (locationCode != null) {
+            userResponse.setLanguageLocationCode(locationCode);
+        }
+        if (allowedLanguageLocations != null) {
+            userResponse.setAllowedLanguageLocationCodes(allowedLanguageLocations);
+        }
+        if (currentUsageInPulses != null) {
+            userResponse.setCurrentUsageInPulses(currentUsageInPulses);
+        }
+        if (endOfUsagePromptCounter != null) {
+            userResponse.setEndOfUsagePromptCounter(endOfUsagePromptCounter);
+        }
+        if (welcomePromptFlag != null) {
+            userResponse.setWelcomePromptFlag(welcomePromptFlag);
+        }
+        if (maxAllowedUsageInPulses != null) {
+            userResponse.setMaxAllowedUsageInPulses(maxAllowedUsageInPulses);
+        }
+        if (maxAllowedEndOfUsagePrompt != null) {
+            userResponse.setMaxAllowedEndOfUsagePrompt(maxAllowedEndOfUsagePrompt);
+        }
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.writeValueAsString(userResponse);
+    }
 
     // verifyFT366
     @Test
@@ -1451,88 +1517,6 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
-    /**
-     * To verify that Save Call Details API if rejected when mandatory parameter
-     * "CallData>>ContentName" is having invalid value.
-     */
-    // TODO https://applab.atlassian.net/browse/NMS-235
-    @Ignore
-    @Test
-    public void verifyFT501() throws InterruptedException, IOException {
-        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright",
-                9810320300L);
-        frontLineWorkerService.add(flw);
-
-        ArrayList<String> array = new ArrayList<>();
-        array.add(createContentJson(/* type */true, "question",
-        /* mkCardCode */false, null,
-        /* contentName */true, "",// Blank Value
-        /* contentFile */true, "ch1_q1.wav",
-        /* startTime */true, 1200000000l,
-        /* endTime */true, 1222222221l,
-        /* completionFlag */true, true,
-        /* correctAnswerEntered */true, false));
-        HttpPost httpPost = createCallDetailsPost("mobileacademy",
-        /* callingNumber */true, 9810320300l,
-        /* callId */true, 234000011111111l,
-        /* operator */true, "A",
-        /* circle */true, "AP",
-        /* callStartTime */true, 1422879843l,
-        /* callEndTime */true, 1422879903l,
-        /* callDurationInPulses */true, 60,
-        /* endOfUsagePromptCounter */true, 1,
-        /* welcomeMessagePromptFlag */false, null,
-        /* callStatus */true, 1,
-        /* callDisconnectReason */true, 2,
-        /* content */true, Joiner.on(",").join(array));
-
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
-                HttpStatus.SC_BAD_REQUEST,
-                "{\"failureReason\":\"<contentName: Invalid>\"}",
-                ADMIN_USERNAME, ADMIN_PASSWORD));
-    }
-    
-    /**
-     * To verify that Save Call Details API if rejected when mandatory parameter
-     * "CallData>>ContentFile" is having invalid value.
-     */
-    // TODO https://applab.atlassian.net/browse/NMS-235
-    @Ignore
-    @Test
-    public void verifyFT502() throws InterruptedException, IOException {
-        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright",
-                9810320300L);
-        frontLineWorkerService.add(flw);
-
-        ArrayList<String> array = new ArrayList<>();
-        array.add(createContentJson(/* type */true, "question",
-        /* mkCardCode */false, null,
-        /* contentName */true, "chapter-01question-01",
-        /* contentFile */true, "",// Blank Value
-        /* startTime */true, 1200000000l,
-        /* endTime */true, 1222222221l,
-        /* completionFlag */true, true,
-        /* correctAnswerEntered */true, false));
-        HttpPost httpPost = createCallDetailsPost("mobileacademy",
-        /* callingNumber */true, 9810320300l,
-        /* callId */true, 234000011111111l,
-        /* operator */true, "A",
-        /* circle */true, "AP",
-        /* callStartTime */true, 1422879843l,
-        /* callEndTime */true, 1422879903l,
-        /* callDurationInPulses */true, 60,
-        /* endOfUsagePromptCounter */true, 1,
-        /* welcomeMessagePromptFlag */false, null,
-        /* callStatus */true, 1,
-        /* callDisconnectReason */true, 2,
-        /* content */true, Joiner.on(",").join(array));
-
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
-                HttpStatus.SC_BAD_REQUEST,
-                "{\"failureReason\":\"<contentFileName: Invalid>\"}",
-                ADMIN_USERNAME, ADMIN_PASSWORD));
-    }
-
     /*****************************************************************************************************************
      Test the existence and validity of elements specific to MK
      welcomeMessagePromptFlag, content.mkCardCode
@@ -2363,88 +2347,6 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
 
     /**
      * To verify that Save Call Details API if rejected when mandatory parameter
-     * "CallData>>ContentName" is having invalid value.
-     */
-    // TODO https://applab.atlassian.net/browse/NMS-235
-    @Ignore
-    @Test
-    public void verifyFT395() throws InterruptedException, IOException {
-        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright",
-                9810320300L);
-        frontLineWorkerService.add(flw);
-
-        ArrayList<String> array = new ArrayList<>();
-        array.add(createContentJson(/* type */true, "question",
-        /* mkCardCode */true, "a",
-        /* contentName */true, "",// Blank Value
-        /* contentFile */true, "YellowFever.wav",
-        /* startTime */true, 1200000000l,
-        /* endTime */true, 1222222221l,
-        /* completionFlag */true, true,
-        /* correctAnswerEntered */true, false));
-        HttpPost httpPost = createCallDetailsPost("mobilekunji",
-        /* callingNumber */true, 9810320300l,
-        /* callId */true, 234000011111111l,
-        /* operator */true, "A",
-        /* circle */true, "AP",
-        /* callStartTime */true, 1422879843l,
-        /* callEndTime */true, 1422879903l,
-        /* callDurationInPulses */true, 60,
-        /* endOfUsagePromptCounter */true, 1,
-        /* welcomeMessagePromptFlag */true, true,
-        /* callStatus */true, 1,
-        /* callDisconnectReason */true, 2,
-        /* content */true, Joiner.on(",").join(array));
-
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
-                HttpStatus.SC_BAD_REQUEST,
-                "{\"failureReason\":\"<contentName: Invalid>\"}",
-                ADMIN_USERNAME, ADMIN_PASSWORD));
-    }
-
-    /**
-     * To verify that Save Call Details API if rejected when mandatory parameter
-     * "CallData>>ContentFile" is having invalid value.
-     */
-    // TODO https://applab.atlassian.net/browse/NMS-235
-    @Ignore
-    @Test
-    public void verifyFT396() throws InterruptedException, IOException {
-        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright",
-                9810320300L);
-        frontLineWorkerService.add(flw);
-
-        ArrayList<String> array = new ArrayList<>();
-        array.add(createContentJson(/* type */true, "question",
-        /* mkCardCode */true, "a",
-        /* contentName */true, "YellowFever",
-        /* contentFile */true, "",// Blank Value
-        /* startTime */true, 1200000000l,
-        /* endTime */true, 1222222221l,
-        /* completionFlag */true, true,
-        /* correctAnswerEntered */true, false));
-        HttpPost httpPost = createCallDetailsPost("mobilekunji",
-        /* callingNumber */true, 9810320300l,
-        /* callId */true, 234000011111111l,
-        /* operator */true, "A",
-        /* circle */true, "AP",
-        /* callStartTime */true, 1422879843l,
-        /* callEndTime */true, 1422879903l,
-        /* callDurationInPulses */true, 60,
-        /* endOfUsagePromptCounter */true, 1,
-        /* welcomeMessagePromptFlag */true, true,
-        /* callStatus */true, 1,
-        /* callDisconnectReason */true, 2,
-        /* content */true, Joiner.on(",").join(array));
-
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
-                HttpStatus.SC_BAD_REQUEST,
-                "{\"failureReason\":\"<contentFileName: Invalid>\"}",
-                ADMIN_USERNAME, ADMIN_PASSWORD));
-    }
-
-    /**
-     * To verify that Save Call Details API if rejected when mandatory parameter
      * "CallData>>StartTime" is having invalid format.
      */
     @Test
@@ -2522,44 +2424,99 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
     }
 
     /**
-     * To verify that Save Call Details API if rejected when mandatory parameter
-     * "CallData>>MKCardCode" is having invalid format.
+     * To verify that current usage pulses is resetted after the end of month.
      */
-    // TODO : https://applab.atlassian.net/browse/NMS-237
-    @Ignore
     @Test
-    public void verifyFT399() throws InterruptedException, IOException {
-        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright",
-                9810320300L);
+    public void verifyFT522() throws IOException, InterruptedException {
+        rh.newDelhiDistrict();
+        rh.delhiCircle();
+        deployedServiceDataService.create(new DeployedService(rh.delhiState(),
+                Service.MOBILE_KUNJI));
+
+        // FLW usage
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1200000000l);
+        flw.setLanguage(rh.hindiLanguage());
         frontLineWorkerService.add(flw);
 
-        ArrayList<String> array = new ArrayList<>();
-        array.add(createContentJson(/* type */true, "question",
-        /* mkCardCode */true, "", // Blank Value
-        /* contentName */true, "YellowFever",
-        /* contentFile */true, "YellowFever.wav",
-        /* startTime */true, 1200000000l,
-        /* endTime */true, 1222222221l,
-        /* completionFlag */true, true,
-        /* correctAnswerEntered */true, false));
-        HttpPost httpPost = createCallDetailsPost("mobilekunji",
-        /* callingNumber */true, 9810320300l,
-        /* callId */true, 234000011111111l,
-        /* operator */true, "A",
-        /* circle */true, "AP",
-        /* callStartTime */true, 1422879843l,
-        /* callEndTime */true, 1422879903l,
-        /* callDurationInPulses */true, 60,
-        /* endOfUsagePromptCounter */true, 1,
-        /* welcomeMessagePromptFlag */true, true,
-        /* callStatus */true, 1,
-        /* callDisconnectReason */true, 2,
-        /* content */true, Joiner.on(",").join(array));
+        // invoke get user detail API
+        StringBuilder sb = new StringBuilder(String.format("http://localhost:%d/api/", TestContext.getJettyPort()));
+        String sep = "";
+        sb.append(String.format("%s/", "mobilekunji"));
+        sb.append("user?");
+        sb.append(String.format("callingNumber=%s", "1200000000"));
+        sep = "&";
+        sb.append(String.format("%scallId=%s", sep, "123456789012345"));
+        HttpGet httpGet = new HttpGet(sb.toString());
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost,
-                HttpStatus.SC_BAD_REQUEST,
-                "{\"failureReason\":\"<contentName: Invalid>\"}",
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        String expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
+                rh.hindiLanguage().getCode(), // locationCode
+                null, // allowedLanguageLocationCodes
+                0L, // currentUsageInPulses
+                0L, // endOfUsagePromptCounter
+                false, // welcomePromptFlag
+                -1, // maxAllowedUsageInPulses=No capping
+                2 // maxAllowedEndOfUsagePrompt
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+
+
+        ArrayList<String> array = new ArrayList<>();
+        array.add(createContentJson(false, null,                   // type
+                true, "a",                     // mkCardCode
+                true, "YellowFever",           // contentName
+                true, "Yellowfever.wav",       // contentFile
+                true, 1200000000l,             // startTime
+                true, 1222222221l,             // endTime
+                false, null,                   // completionFlag
+                false, null));                 // correctAnswerEntered
+
+        HttpPost httpPost = createCallDetailsPost("mobilekunji",
+                true, 1200000000l,       // callingNumber
+                true, 123456789012345l,  // callId
+                true, "A",               // operator
+                true, "AP",              // circle
+                true, DateTime.now().getMillis()/1000,       // callStartTime
+                true, 1422879903l,       // callEndTime
+                true, 60,                // callDurationInPulses
+                true, 0,                 // endOfUsagePromptCounter
+                true, true,              // welcomeMessagePromptFlag
+                true, 1,                 // callStatus
+                true, 1,                 // callDisconnectReason
+                true, Joiner.on(",").join(array));          // content
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK, ADMIN_USERNAME, ADMIN_PASSWORD));
+
+
+        // invoke get user detail API
+        sb = new StringBuilder(String.format("http://localhost:%d/api/", TestContext.getJettyPort()));
+        sep = "";
+        sb.append(String.format("%s/", "mobilekunji"));
+        sb.append("user?");
+        sb.append(String.format("callingNumber=%s", "1200000000"));
+        sep = "&";
+        sb.append(String.format("%scallId=%s", sep, "123456789012345"));
+        httpGet = new HttpGet(sb.toString());
+
+        expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
+                rh.hindiLanguage().getCode(), // locationCode
+                null, // allowedLanguageLocationCodes
+                60L, // currentUsageInPulses
+                0L, // endOfUsagePromptCounter
+                true, // welcomePromptFlag
+                -1, // maxAllowedUsageInPulses=No capping
+                2 // maxAllowedEndOfUsagePrompt
+        );
+
+        response = SimpleHttpClient.httpRequestAndResponse(httpGet,
+                ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
     }
     // Test with no content
     // Test with empty content
