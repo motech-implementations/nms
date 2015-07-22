@@ -2731,28 +2731,27 @@ public class UserControllerBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT335() throws IOException, InterruptedException {
-        //circle having multiple states
-        Circle c = rh.delhiCircle();
-        State s = new State("other", 123L);
-        c.getStates().add(s);
-        circleDataService.update(c);
-
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
-        flw.setLanguage(rh.hindiLanguage());
         frontLineWorkerService.add(flw);
+
+        createCircleWithLanguage();
 
         HttpGet httpGet = createHttpGet(
                 true, "mobilekunji",    //service
                 true, "1111111111",     //callingNumber
                 true, "OP",             //operator
-                true, rh.delhiCircle().getName(),             //circle
+                true, "AA",             //circle
                 true, "123456789012345" //callId
         );
 
+        List<String> allowedLLCCodes = new ArrayList<>();
+        allowedLLCCodes.add(rh.hindiLanguage().getCode());
+        allowedLLCCodes.add(rh.kannadaLanguage().getCode());
+
         String expectedJsonResponse = createFlwUserResponseJson(
                 rh.hindiLanguage().getCode(),  //defaultLanguageLocationCode
-                rh.hindiLanguage().getCode(),  //locationCode
-                new ArrayList<String>(), // allowedLanguageLocationCodes
+                null,  //locationCode
+                allowedLLCCodes, // allowedLanguageLocationCodes
                 0L,    //currentUsageInPulses
                 0L,    //endOfUsagePromptCounter
                 false,  //welcomePromptFlag
@@ -2763,6 +2762,13 @@ public class UserControllerBundleIT extends BasePaxIT {
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
         assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
+
+        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(1111111111L, 123456789012345L,
+                rh.hindiLanguage().getCode()));
+
+        response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
     }
 
     /**
@@ -2877,17 +2883,43 @@ public class UserControllerBundleIT extends BasePaxIT {
     @Test
     public void verifyFT338() throws IOException, InterruptedException {
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
-        flw.setLanguage(rh.hindiLanguage());
         frontLineWorkerService.add(flw);
 
         createCircleWithLanguage();
 
+        HttpGet httpGet = createHttpGet(
+                true, "mobilekunji",    //service
+                true, "1111111111",     //callingNumber
+                true, "OP",             //operator
+                true, "AA",             //circle
+                true, "123456789012345" //callId
+        );
+
+        List<String> allowedLLCCodes = new ArrayList<>();
+        allowedLLCCodes.add(rh.hindiLanguage().getCode());
+        allowedLLCCodes.add(rh.kannadaLanguage().getCode());
+
+        String expectedJsonResponse = createFlwUserResponseJson(
+            rh.hindiLanguage().getCode(),  //defaultLanguageLocationCode
+            null,  //locationCode
+            allowedLLCCodes, // allowedLanguageLocationCodes
+            0L,    //currentUsageInPulses
+            0L,    //endOfUsagePromptCounter
+            false,  //welcomePromptFlag
+            -1,  //maxAllowedUsageInPulses
+            2      //maxAllowedEndOfUsagePrompt
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
+
         HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(1111111111L, 123456789012345L,
                 rh.kannadaLanguage().getCode()));
 
-        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
 
-        String expectedJsonResponse = "{\"failureReason\":\"<MOBILE_KUNJI: Not Deployed In State>\"}";
+        expectedJsonResponse = "{\"failureReason\":\"<MOBILE_KUNJI: Not Deployed In State>\"}";
 
         assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, response.getStatusLine().getStatusCode());
         assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
