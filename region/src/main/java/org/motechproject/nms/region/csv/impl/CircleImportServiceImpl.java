@@ -58,7 +58,7 @@ public class CircleImportServiceImpl implements CircleImportService {
 
                 State state = stateDataService.findByName(stateName);
                 if (state == null) {
-                    throw new CsvImportDataException(String.format("CSV import error, no state with code %s " +
+                    throw new CsvImportDataException(String.format("CSV import error, no state with name %s " +
                                     "on line %s", stateName, csvImporter.getRowNumber()));
                 }
 

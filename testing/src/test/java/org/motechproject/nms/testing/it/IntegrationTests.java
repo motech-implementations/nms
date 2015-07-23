@@ -30,6 +30,9 @@ import org.motechproject.nms.testing.it.region.LanguageLocationCodesImportServic
 import org.motechproject.nms.testing.it.region.LocationDataImportServiceBundleIT;
 import org.motechproject.nms.testing.it.region.LocationServiceBundleIT;
 import org.motechproject.nms.testing.it.region.NationalDefaultLanguageLocationBundleIT;
+import org.motechproject.nms.testing.it.tracking.TrackChangesBundleIT;
+import org.motechproject.nms.testing.it.tracking.TrackManyToManyChangesBundleIT;
+import org.motechproject.nms.testing.it.tracking.TrackOneToManyChangesBundleIT;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
@@ -89,6 +92,13 @@ import org.motechproject.nms.testing.it.region.NationalDefaultLanguageLocationBu
     NationalDefaultLanguageLocationBundleIT.class,
     LocationDataImportServiceBundleIT.class,
     LanguageLocationCodesImportServiceBundleIT.class,
+
+    /**
+     * Tracking
+     */
+    TrackChangesBundleIT.class,
+    TrackOneToManyChangesBundleIT.class,
+    TrackManyToManyChangesBundleIT.class,
 })
 public class IntegrationTests {
 }

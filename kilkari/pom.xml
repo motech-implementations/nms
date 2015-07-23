@@ -110,6 +110,7 @@
                         <Import-Package>
                             org.motechproject.osgi.web,
                             org.motechproject.nms.tracking.aspect,
+                            org.aspectj.runtime.internal,
                             org.aopalliance.aop,
                             org.springframework.aop,
                             org.springframework.aop.framework,
