@@ -1443,7 +1443,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
 
         ObjectMapper mapper = new ObjectMapper();
-        FlwUserResponse actual = mapper.readValue(EntityUtils.toString(response.getEntity()), FlwUserResponse.class);
+        KilkariUserResponse actual = mapper.readValue(EntityUtils.toString(response.getEntity()), KilkariUserResponse.class);
         assertEquals(expectedResponse, actual);
     }
 
