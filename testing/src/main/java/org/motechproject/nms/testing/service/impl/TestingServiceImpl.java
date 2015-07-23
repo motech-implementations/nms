@@ -42,8 +42,6 @@ import org.motechproject.nms.region.repository.TalukaDataService;
 import org.motechproject.nms.region.repository.VillageDataService;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.server.config.SettingsFacade;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -53,7 +51,6 @@ public class TestingServiceImpl implements TestingService {
 
     private static final String TESTING_ENVIRONMENT = "testing.environment";
     private static final String WEEKS_TO_KEEP_INVALID_FLWS = "flw.weeks_to_keep_invalid_flws";
-    private static final Logger LOGGER = LoggerFactory.getLogger(TestingServiceImpl.class);
 
     /**
      * FLW
@@ -206,13 +203,11 @@ public class TestingServiceImpl implements TestingService {
         whitelistEntryDataService.deleteAll();
         whitelistStateDataService.deleteAll();
 
-
         /**
          * IMI
          */
         fileAuditRecordDataService.deleteAll();
         imiCallDetailRecordDataService.deleteAll();
-
 
         /**
          * Kilkari
@@ -241,15 +236,12 @@ public class TestingServiceImpl implements TestingService {
         /**
          * Mobile Academy
          */
-        LOGGER.debug("Clearing completion records for MA");
         completionRecordDataService.deleteAll();
-
 
         /**
          * Props
          */
         deployedServiceDataService.deleteAll();
-
 
         /**
          * Region
@@ -266,12 +258,10 @@ public class TestingServiceImpl implements TestingService {
         talukaDataService.deleteAll();
         villageDataService.deleteAll();
 
-
         /**
          * Alerts
          */
         alertsDataService.deleteAll();
-
 
         /**
          * CSV

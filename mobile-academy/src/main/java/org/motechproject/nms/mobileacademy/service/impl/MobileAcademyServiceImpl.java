@@ -224,12 +224,19 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
             completionRecordDataService.update(cr);
         }
 
-        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {
-            @Override
-            public void afterCommit() {
-                sendEvent(cr.getCallingNumber());
-            }
-        });
+        // If this is running inside a transaction (which it probably always will), then send the event after
+        // the db commit. Else, most likely in a test, send it right away
+        // https://github.com/motech-implementations/mim/issues/518
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {
+                @Override
+                public void afterCommit() {
+                    sendEvent(cr.getCallingNumber());
+                }
+            });
+        } else {
+            sendEvent(cr.getCallingNumber());
+        }
     }
 
     /**
@@ -402,7 +409,7 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
 
         MaCourse courseDto = new MaCourse();
         courseDto.setName(course.getName());
-        courseDto.setVersion(course.getModificationDate().getMillis()/MILLIS_PER_SEC);
+        courseDto.setVersion(course.getModificationDate().getMillis() / MILLIS_PER_SEC);
         courseDto.setContent(course.getContent());
         return courseDto;
     }

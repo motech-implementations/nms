@@ -65,7 +65,7 @@ public class CourseNotificationServiceImpl implements CourseNotificationService 
         this.schedulerService = schedulerService;
     }
 
-    @MotechListener(subjects = { COURSE_COMPLETED_SUBJECT } )
+    @MotechListener(subjects = { COURSE_COMPLETED_SUBJECT })
     public void sendSmsNotification(MotechEvent event) {
 
         LOGGER.debug("Handling course completion notification event");
