@@ -17,6 +17,7 @@ import org.motechproject.nms.testing.it.imi.CdrFileServiceBundleIT;
 import org.motechproject.nms.testing.it.imi.CsrValidatorServiceBundleIT;
 import org.motechproject.nms.testing.it.imi.ImiControllerCdrBundleIT;
 import org.motechproject.nms.testing.it.imi.ImiControllerObdBundleIT;
+import org.motechproject.nms.testing.it.imi.ImiSMSNotificationServiceBundleIT;
 import org.motechproject.nms.testing.it.imi.TargetFileServiceBundleIT;
 import org.motechproject.nms.testing.it.kilkari.CsrServiceBundleIT;
 import org.motechproject.nms.testing.it.kilkari.MctsBeneficiaryImportServiceBundleIT;
@@ -64,6 +65,7 @@ import org.motechproject.nms.testing.it.tracking.TrackOneToManyChangesBundleIT;
     TargetFileServiceBundleIT.class,
     CdrFileServiceBundleIT.class,
     CsrValidatorServiceBundleIT.class,
+    // ImiSMSNotificationServiceBundleIT.class, // Not enabling all the time because mocky.io might be unreliable
 
     /**
      * Kilkari
