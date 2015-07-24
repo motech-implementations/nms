@@ -145,7 +145,7 @@ public class FrontLineWorker extends MdsEntity implements FullLocation {
             // Kanchan Saxena <kanchan.saxena@aricent.com> with the agreement to null msisdn when an FLW is
             // moved to invalid.  This way if a user with the same number calls they will be handled as
             // anonymous.  The handling for this was unclear in the SRS
-            setContactNumber(null);
+//            setContactNumber(null);
         } else {
             setInvalidationDate(null);
         }
