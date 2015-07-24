@@ -1,18 +1,6 @@
 package org.motechproject.nms.testing.it.api;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Pattern;
-
-import javax.inject.Inject;
-
+import com.google.common.base.Joiner;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -51,9 +39,18 @@ import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
-import com.google.common.base.Joiner;
+import javax.inject.Inject;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.TreeSet;
+import java.util.regex.Pattern;
 
-
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerSuite.class)
@@ -441,7 +438,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
             userResponse.setLanguageLocationCode(locationCode);
         }
         if (allowedLanguageLocations != null) {
-            userResponse.setAllowedLanguageLocationCodes(allowedLanguageLocations);
+            userResponse.setAllowedLanguageLocationCodes(new TreeSet<String>(allowedLanguageLocations));
         }
         if (currentUsageInPulses != null) {
             userResponse.setCurrentUsageInPulses(currentUsageInPulses);
