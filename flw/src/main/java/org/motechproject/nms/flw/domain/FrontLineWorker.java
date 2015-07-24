@@ -138,14 +138,6 @@ public class FrontLineWorker extends MdsEntity implements FullLocation {
 
         if (this.status == FrontLineWorkerStatus.INVALID) {
             setInvalidationDate(new DateTime());
-
-            // From ticket: https://applab.atlassian.net/browse/NMS-236
-            // there was a discussion on mail with Robert LaRubbio <rlarubbio@grameenfoundation.org>
-            // Abhishek Srivastava <Abhishek.Srivastava@aricent.com, Pankaj Nagpal <pnagpal@grameenfoundation.in>
-            // Kanchan Saxena <kanchan.saxena@aricent.com> with the agreement to null msisdn when an FLW is
-            // moved to invalid.  This way if a user with the same number calls they will be handled as
-            // anonymous.  The handling for this was unclear in the SRS
-//            setContactNumber(null);
         } else {
             setInvalidationDate(null);
         }
