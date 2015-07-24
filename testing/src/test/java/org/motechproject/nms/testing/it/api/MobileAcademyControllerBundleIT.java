@@ -1,7 +1,6 @@
 package org.motechproject.nms.testing.it.api;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -31,7 +30,9 @@ import org.motechproject.nms.api.web.contract.BadRequest;
 import org.motechproject.nms.api.web.contract.mobileAcademy.CourseResponse;
 import org.motechproject.nms.api.web.contract.mobileAcademy.SaveBookmarkRequest;
 import org.motechproject.nms.api.web.contract.mobileAcademy.SmsStatusRequest;
+import org.motechproject.nms.api.web.contract.mobileAcademy.sms.DeliveryStatus;
 import org.motechproject.nms.api.web.contract.mobileAcademy.sms.RequestData;
+import org.motechproject.nms.imi.service.SettingsService;
 import org.motechproject.nms.mobileacademy.domain.CompletionRecord;
 import org.motechproject.nms.mobileacademy.domain.NmsCourse;
 import org.motechproject.nms.mobileacademy.dto.MaCourse;
@@ -39,6 +40,7 @@ import org.motechproject.nms.mobileacademy.repository.CompletionRecordDataServic
 import org.motechproject.nms.mobileacademy.repository.NmsCourseDataService;
 import org.motechproject.nms.testing.it.api.utils.RequestBuilder;
 import org.motechproject.nms.testing.service.TestingService;
+import org.motechproject.server.config.SettingsFacade;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.motechproject.testing.osgi.http.SimpleHttpClient;
@@ -67,6 +69,9 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
 
     @Inject
     private NmsCourseDataService nmsCourseDataService;
+    
+    @Inject
+    private SettingsService settingsService;
 
     private static final String COURSE_NAME = "MobileAcademyCourse";
 
@@ -1066,6 +1071,58 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
         CompletionRecord cr = completionRecordDataService
                 .findRecordByCallingNumber(1234567890l);
         assertNull(cr);
+    }
+
+    /**
+     * To verify that MA service shall Manually trigger course completion SMS in
+     * case FLW has accidentally deleted the SMS.
+     */
+    @Test
+    public void verifyFT521() throws IOException, InterruptedException {
+        SettingsFacade settingsFacade = settingsService.getSettingsFacade();
+        String SMS_NOTIFICATION_URL = "imi.sms.notification.url";
+        String oldUrl = settingsFacade.getProperty(SMS_NOTIFICATION_URL);    
+        String newUrl = String.format(
+                "http://localhost:%d/testing/sendSMS200",
+                TestContext.getJettyPort());
+        settingsFacade.setProperty(SMS_NOTIFICATION_URL, newUrl);    
+        
+        String endpoint = String.format(
+                "http://localhost:%d/api/mobileacademy/bookmarkWithScore",
+                TestContext.getJettyPort());
+        SaveBookmarkRequest bookmarkRequest = new SaveBookmarkRequest();
+
+        // save bookmark first
+        bookmarkRequest.setCallingNumber(1234567890l);
+        bookmarkRequest.setCallId(123456789012345l);
+        bookmarkRequest.setBookmark("COURSE_COMPLETED");
+        Map<String, Integer> scoreMap = new HashMap<String, Integer>();
+        scoreMap.put("1", 2);
+        scoreMap.put("2", 1);
+        scoreMap.put("3", 4);
+        scoreMap.put("4", 2);
+        scoreMap.put("5", 1);
+        scoreMap.put("6", 4);
+        scoreMap.put("7", 2);
+        scoreMap.put("8", 1);
+        scoreMap.put("9", 4);
+        scoreMap.put("10", 1);
+        scoreMap.put("11", 4);
+        bookmarkRequest.setScoresByChapter(scoreMap);
+        HttpPost postRequest = RequestBuilder.createPostRequest(endpoint,
+                bookmarkRequest);
+        assertTrue(SimpleHttpClient.execHttpRequest(postRequest,
+                HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD));
+
+        CompletionRecord cr = completionRecordDataService
+                .findRecordByCallingNumber(1234567890l);
+        assertNotNull(cr);
+        assertEquals(cr.getCompletionCount(), 1);
+        assertEquals(cr.getLastDeliveryStatus(),
+                DeliveryStatus.DeliveredToTerminal);
+
+        settingsFacade.setProperty(SMS_NOTIFICATION_URL, oldUrl);
     }
 
     /**
