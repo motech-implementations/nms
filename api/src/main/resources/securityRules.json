@@ -8,7 +8,7 @@
     "protocol": "HTTP",
     "priority": 2,
     "rest": true,
-    "origin": "all",
+    "origin": "SYSTEM_MODULE_API",
     "version": "all",
     "methodsRequired": [
       "ANY"
@@ -23,7 +23,7 @@
     "protocol": "HTTP",
     "priority": 2,
     "rest": true,
-    "origin": "all",
+    "origin": "SYSTEM_MODULE_API",
     "version": "all",
     "methodsRequired": [
       "ANY"
@@ -38,7 +38,7 @@
     "protocol": "HTTP",
     "priority": 2,
     "rest": true,
-    "origin": "all",
+    "origin": "SYSTEM_MODULE_API",
     "version": "all",
     "methodsRequired": [
       "ANY"
@@ -54,7 +54,7 @@
     "protocol": "HTTPS",
     "priority": 2,
     "rest": true,
-    "origin": "all",
+    "origin": "SYSTEM_MODULE_API",
     "version": "all",
     "methodsRequired": [
       "ANY"
@@ -69,7 +69,7 @@
     "protocol": "HTTPS",
     "priority": 2,
     "rest": true,
-    "origin": "all",
+    "origin": "SYSTEM_MODULE_API",
     "version": "all",
     "methodsRequired": [
       "ANY"
@@ -84,7 +84,7 @@
     "protocol": "HTTPS",
     "priority": 2,
     "rest": true,
-    "origin": "all",
+    "origin": "SYSTEM_MODULE_API",
     "version": "all",
     "methodsRequired": [
       "ANY"
