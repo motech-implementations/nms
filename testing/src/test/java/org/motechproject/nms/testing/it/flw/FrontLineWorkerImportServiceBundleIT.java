@@ -1,10 +1,12 @@
 package org.motechproject.nms.testing.it.flw;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.csv.exception.CsvImportDataException;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
+import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.flw.service.FrontLineWorkerImportService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
@@ -233,12 +235,19 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         frontLineWorkerImportService.importData(reader);
     }
 
+    /**
+     * VerifyFT513  verify that status of flw must be set to "inactive" when the flw data is imported into
+     * the NMS DB and the user has not yet called
+     */
+    @Ignore
+    // Todo :https://applab.atlassian.net/browse/NMS-247
     @Test
     public void testImportFromSampleDataFile() throws Exception {
         frontLineWorkerImportService.importData(read("csv/anm-asha.txt"));
 
         FrontLineWorker flw1 = frontLineWorkerDataService.findByContactNumber(9999999996L);
         assertFLW(flw1, "72185", 9999999996L, "Bishnu Priya Behera", "Koraput", null);
+        assertEquals(FrontLineWorkerStatus.INACTIVE, flw1.getStatus());
     }
 
     private void assertFLW(FrontLineWorker flw, String mctsFlwId, long contactNumber, String name, String districtName, String languageLocationCode) {

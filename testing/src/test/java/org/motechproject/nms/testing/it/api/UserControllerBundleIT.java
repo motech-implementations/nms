@@ -1,5 +1,6 @@
 package org.motechproject.nms.testing.it.api;
 
+import com.google.common.collect.Sets;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -483,7 +484,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         return httpPost;
     }
 
-    private String createKilkariUserResponseJson(String defaultLanguageLocationCode, String locationCode,
+    private KilkariUserResponse createKilkariUserResponse(String defaultLanguageLocationCode, String locationCode,
                                                  List<String> allowedLanguageLocations,
                                                  Set<String> subscriptionPackList) throws IOException {
         KilkariUserResponse kilkariUserResponse = new KilkariUserResponse();
@@ -494,20 +495,31 @@ public class UserControllerBundleIT extends BasePaxIT {
             kilkariUserResponse.setLanguageLocationCode(locationCode);
         }
         if (allowedLanguageLocations != null) {
-            kilkariUserResponse.setAllowedLanguageLocationCodes(allowedLanguageLocations);
+            kilkariUserResponse.setAllowedLanguageLocationCodes(Sets.newTreeSet(allowedLanguageLocations));
         }
         if (subscriptionPackList != null) {
             kilkariUserResponse.setSubscriptionPackList(subscriptionPackList);
         }
+
+        return kilkariUserResponse;
+    }
+
+    private String createKilkariUserResponseJson(String defaultLanguageLocationCode, String locationCode,
+                                                 List<String> allowedLanguageLocations,
+                                                 Set<String> subscriptionPackList) throws IOException {
+        KilkariUserResponse kilkariUserResponse;
+        kilkariUserResponse = createKilkariUserResponse(defaultLanguageLocationCode, locationCode,
+                allowedLanguageLocations, subscriptionPackList);
+
         ObjectMapper mapper = new ObjectMapper();
         return mapper.writeValueAsString(kilkariUserResponse);
     }
 
-    private String createFlwUserResponseJson(String defaultLanguageLocationCode, String locationCode,
-                                             List<String> allowedLanguageLocations,
-                                             Long currentUsageInPulses, Long endOfUsagePromptCounter,
-                                             Boolean welcomePromptFlag, Integer maxAllowedUsageInPulses,
-                                             Integer maxAllowedEndOfUsagePrompt) throws IOException {
+    private FlwUserResponse createFlwUserResponse(String defaultLanguageLocationCode, String locationCode,
+                                                  List<String> allowedLanguageLocations,
+                                                  Long currentUsageInPulses, Long endOfUsagePromptCounter,
+                                                  Boolean welcomePromptFlag, Integer maxAllowedUsageInPulses,
+                                                  Integer maxAllowedEndOfUsagePrompt) throws IOException {
         FlwUserResponse userResponse = new FlwUserResponse();
         if (defaultLanguageLocationCode != null) {
             userResponse.setDefaultLanguageLocationCode(defaultLanguageLocationCode);
@@ -516,7 +528,7 @@ public class UserControllerBundleIT extends BasePaxIT {
             userResponse.setLanguageLocationCode(locationCode);
         }
         if (allowedLanguageLocations != null) {
-            userResponse.setAllowedLanguageLocationCodes(allowedLanguageLocations);
+            userResponse.setAllowedLanguageLocationCodes(Sets.newTreeSet(allowedLanguageLocations));
         }
         if (currentUsageInPulses != null) {
             userResponse.setCurrentUsageInPulses(currentUsageInPulses);
@@ -533,6 +545,19 @@ public class UserControllerBundleIT extends BasePaxIT {
         if (maxAllowedEndOfUsagePrompt != null) {
             userResponse.setMaxAllowedEndOfUsagePrompt(maxAllowedEndOfUsagePrompt);
         }
+
+        return userResponse;
+    }
+
+    private String createFlwUserResponseJson(String defaultLanguageLocationCode, String locationCode,
+                                             List<String> allowedLanguageLocations,
+                                             Long currentUsageInPulses, Long endOfUsagePromptCounter,
+                                             Boolean welcomePromptFlag, Integer maxAllowedUsageInPulses,
+                                             Integer maxAllowedEndOfUsagePrompt) throws IOException {
+        FlwUserResponse userResponse = createFlwUserResponse(defaultLanguageLocationCode, locationCode,
+                                                             allowedLanguageLocations, currentUsageInPulses,
+                endOfUsagePromptCounter, welcomePromptFlag, maxAllowedUsageInPulses, maxAllowedEndOfUsagePrompt);
+
         ObjectMapper mapper = new ObjectMapper();
         return mapper.writeValueAsString(userResponse);
     }
@@ -1319,9 +1344,9 @@ public class UserControllerBundleIT extends BasePaxIT {
 
     private void createCircleWithMultipleLanguages() {
 
+        rh.bangaloreDistrict();
         rh.karnatakaState();
         rh.mysuruDistrict();
-        rh.bangaloreDistrict();
 
         Circle c = rh.karnatakaCircle();
         c.setDefaultLanguage(rh.kannadaLanguage());
@@ -1407,7 +1432,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "123456789012345" // callId
         );
         // defaultLanguageLocationCode== circle default language location
-        String expectedJsonResponse = createKilkariUserResponseJson(
+        KilkariUserResponse expectedResponse = createKilkariUserResponse(
                 rh.kannadaLanguage().getCode(), // defaultLanguageLocationCode
                 null, // locationCode
                 // allowedLanguageLocationCodes
@@ -1416,10 +1441,10 @@ public class UserControllerBundleIT extends BasePaxIT {
         );
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
-        String jsonResponse = EntityUtils.toString(response.getEntity());
-        getLogger().debug("expectedJsonResponse: {}", expectedJsonResponse);
-        getLogger().debug("        jsonResponse: {}", jsonResponse);
-        assertEquals(expectedJsonResponse, jsonResponse);
+
+        ObjectMapper mapper = new ObjectMapper();
+        KilkariUserResponse actual = mapper.readValue(EntityUtils.toString(response.getEntity()), KilkariUserResponse.class);
+        assertEquals(expectedResponse, actual);
     }
 
 
@@ -3124,8 +3149,8 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "123456789012345" // callId
         );
 
-        String expectedJsonResponse = createFlwUserResponseJson(rh
-                .kannadaLanguage().getCode(), // defaultLanguageLocationCode=circle default
+        FlwUserResponse expectedResponse = createFlwUserResponse(rh
+                        .kannadaLanguage().getCode(), // defaultLanguageLocationCode=circle default
                 null, // locationCode
                 Arrays.asList(rh.kannadaLanguage().getCode(), rh
                         .tamilLanguage().getCode()), // allowedLanguageLocationCodes
@@ -3139,8 +3164,11 @@ public class UserControllerBundleIT extends BasePaxIT {
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
                 httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
-        assertEquals(expectedJsonResponse,
-                EntityUtils.toString(response.getEntity()));
+
+        ObjectMapper mapper = new ObjectMapper();
+        FlwUserResponse actual = mapper.readValue(EntityUtils
+                .toString(response.getEntity()), FlwUserResponse.class);
+        assertEquals(expectedResponse, actual);
     }
 
     /**
@@ -3163,10 +3191,10 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "123456789012345" // callId
         );
 
-        String expectedJsonResponse = createFlwUserResponseJson(rh
-                .hindiLanguage().getCode(), // defaultLanguageLocationCode=national default
+        FlwUserResponse expectedResponse = createFlwUserResponse(rh
+                        .hindiLanguage().getCode(), // defaultLanguageLocationCode=national default
                 null, // locationCode
-                Arrays.asList(rh.kannadaLanguage().getCode(),rh.tamilLanguage().getCode(), rh
+                Arrays.asList(rh.kannadaLanguage().getCode(), rh.tamilLanguage().getCode(), rh
                         .hindiLanguage().getCode()), // allowedLanguageLocationCodes
                 0L, // currentUsageInPulses
                 0L, // endOfUsagePromptCounter
@@ -3178,8 +3206,11 @@ public class UserControllerBundleIT extends BasePaxIT {
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
                 httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
-        assertEquals(expectedJsonResponse,
-                EntityUtils.toString(response.getEntity()));
+
+        ObjectMapper mapper = new ObjectMapper();
+        FlwUserResponse actual = mapper.readValue(EntityUtils
+                .toString(response.getEntity()), FlwUserResponse.class);
+        assertEquals(expectedResponse, actual);
     }
 
     /**
@@ -3392,8 +3423,8 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "123456789012345" //callId
         );
 
-        String expectedJsonResponse = createFlwUserResponseJson(
-        		rh.kannadaLanguage().getCode(),  //defaultLanguageLocationCode
+        FlwUserResponse expectedResponse = createFlwUserResponse(
+                rh.kannadaLanguage().getCode(),  //defaultLanguageLocationCode
                 null,  //locationCode
                 Arrays.asList(rh.kannadaLanguage().getCode(), rh.tamilLanguage().getCode()), // allowedLanguageLocationCodes
                 0L,    //currentUsageInPulses
@@ -3405,7 +3436,10 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
-        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
+
+        ObjectMapper mapper = new ObjectMapper();
+        FlwUserResponse actual = mapper.readValue(EntityUtils.toString(response.getEntity()), FlwUserResponse.class);
+        assertEquals(expectedResponse, actual);
     }
     
     /*
@@ -3425,10 +3459,11 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "123456789012345"   //callId
         );
 
-        String expectedJsonResponse = createFlwUserResponseJson(
-        		rh.hindiLanguage().getCode(),  //defaultLanguageLocationCode
+        FlwUserResponse expectedResponse = createFlwUserResponse(
+                rh.hindiLanguage().getCode(),  //defaultLanguageLocationCode
                 null,  //locationCode
-                Arrays.asList(rh.hindiLanguage().getCode(), rh.kannadaLanguage().getCode(), rh.tamilLanguage().getCode()), // allowedLanguageLocationCodes
+                Arrays.asList(rh.hindiLanguage().getCode(), rh.kannadaLanguage().getCode(), rh.tamilLanguage()
+                        .getCode()), // allowedLanguageLocationCodes
                 0L,    //currentUsageInPulses
                 0L,    //endOfUsagePromptCounter
                 false, //welcomePromptFlag
@@ -3438,8 +3473,11 @@ public class UserControllerBundleIT extends BasePaxIT {
         
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
-        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
 
+        ObjectMapper mapper = new ObjectMapper();
+        FlwUserResponse actual = mapper.readValue(EntityUtils
+                .toString(response.getEntity()), FlwUserResponse.class);
+        assertEquals(expectedResponse, actual);
     }
     
     /*
@@ -3744,9 +3782,9 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "123456789012345" // callId
         );
 
-        String expectedJsonResponse = createFlwUserResponseJson(rh
-                .hindiLanguage().getCode(), // defaultLanguageLocationCode=circle
-                                            // default
+        FlwUserResponse expectedResponse = createFlwUserResponse(rh
+                        .hindiLanguage().getCode(), // defaultLanguageLocationCode=circle
+                // default
                 null, // locationCode
                 Arrays.asList(rh.hindiLanguage().getCode(), rh.tamilLanguage()
                         .getCode()), // allowedLanguageLocationCodes
@@ -3760,8 +3798,11 @@ public class UserControllerBundleIT extends BasePaxIT {
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
                 httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
-        assertEquals(expectedJsonResponse,
-                EntityUtils.toString(response.getEntity()));
+
+        ObjectMapper mapper = new ObjectMapper();
+        FlwUserResponse actual = mapper.readValue(EntityUtils
+                .toString(response.getEntity()), FlwUserResponse.class);
+        assertEquals(expectedResponse, actual);
 
         // Invoke set LLC API
         HttpPost httpPost = new HttpPost(String.format(
@@ -3806,9 +3847,9 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "123456789012345" // callId
         );
 
-        String expectedJsonResponse = createFlwUserResponseJson(rh
-                .hindiLanguage().getCode(), // defaultLanguageLocationCode=circle
-                                            // default
+        FlwUserResponse expectedResponse = createFlwUserResponse(rh
+                        .hindiLanguage().getCode(), // defaultLanguageLocationCode=circle
+                // default
                 null, // locationCode
                 Arrays.asList(rh.hindiLanguage().getCode(), rh.tamilLanguage()
                         .getCode()), // allowedLanguageLocationCodes
@@ -3822,8 +3863,11 @@ public class UserControllerBundleIT extends BasePaxIT {
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
                 httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
-        assertEquals(expectedJsonResponse,
-                EntityUtils.toString(response.getEntity()));
+
+        ObjectMapper mapper = new ObjectMapper();
+        FlwUserResponse actual = mapper.readValue(EntityUtils
+                .toString(response.getEntity()), FlwUserResponse.class);
+        assertEquals(expectedResponse, actual);
 
         // Invoke set LLC API
         // Set LLC for which service is not deployed i.e karnataka
@@ -3836,7 +3880,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         httpPost.setEntity(params);
         httpPost.addHeader("content-type", "application/json");
 
-        expectedJsonResponse = createFailureResponseJson("<MOBILE_ACADEMY: Not Deployed In State>");
+        String expectedJsonResponse = createFailureResponseJson("<MOBILE_ACADEMY: Not Deployed In State>");
         response = SimpleHttpClient.httpRequestAndResponse(httpPost,
                 ADMIN_USERNAME, ADMIN_PASSWORD);
         assertEquals(expectedJsonResponse,
