@@ -14,9 +14,11 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.api.web.contract.FlwUserResponse;
+import org.motechproject.nms.api.web.contract.UserLanguageRequest;
 import org.motechproject.nms.flw.domain.CallContent;
 import org.motechproject.nms.flw.domain.CallDetailRecord;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
+import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.repository.CallDetailRecordDataService;
 import org.motechproject.nms.flw.service.CallDetailRecordService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
@@ -2515,6 +2517,82 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         assertEquals(expectedJsonResponse,
                 EntityUtils.toString(response.getEntity()));
     }
+
+    /**
+     * To verift that status of flw must be set to "Active" when user call first time and
+     * its information exists in NMS DB and status as "Inactive"
+     */
+    @Test
+    public void verifyFT512() throws IOException, InterruptedException {
+        rh.delhiState();
+        rh.newDelhiDistrict();
+        rh.delhiCircle();
+        deployedServiceDataService.create(new DeployedService(rh.delhiState(),
+                Service.MOBILE_KUNJI));
+
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 1200000001L);
+        flw.setLanguage(rh.hindiLanguage());
+        flw.setDistrict(rh.newDelhiDistrict());
+        flw.setState(rh.delhiState());
+        flw.setStatus(FrontLineWorkerStatus.INACTIVE);
+        frontLineWorkerService.add(flw);
+
+        // invoke get user detail API
+        StringBuilder sb = new StringBuilder(String.format("http://localhost:%d/api/", TestContext.getJettyPort()));
+        String sep = "";
+        sb.append(String.format("%s/", "mobilekunji"));
+        sb.append("user?");
+        sb.append(String.format("callingNumber=%s", "1200000001"));
+        sep = "&";
+        sb.append(String.format("%scallId=%s", sep, "123456789012345"));
+        HttpGet httpGet = new HttpGet(sb.toString());
+
+        String expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
+                rh.hindiLanguage().getCode(), // locationCode
+                new ArrayList<String>(), // allowedLanguageLocationCodes
+                0L, // currentUsageInPulses=updated
+                0L, // endOfUsagePromptCounter=updated
+                false, // welcomePromptFlag
+                -1, // maxAllowedUsageInPulses=State capping
+                2 // maxAllowedEndOfUsagePrompt
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet,
+                ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+
+        ArrayList<String> array = new ArrayList<>();
+        array.add(createContentJson(false, null,                   // type
+                true, "a",                     // mkCardCode
+                true, "YellowFever",           // contentName
+                true, "Yellowfever.wav",       // contentFile
+                true, 1200000000l,             // startTime
+                true, 1222222221l,             // endTime
+                false, null,                   // completionFlag
+                false, null));                 // correctAnswerEntered
+
+        HttpPost httpPost = createCallDetailsPost("mobilekunji",
+                true, 1200000001l,       // callingNumber
+                true, 123456789012345l,  // callId
+                true, "A",               // operator
+                true, "AP",              // circle
+                true, DateTime.now().getMillis()/1000,       // callStartTime
+                true, 1422879903l,       // callEndTime
+                true, 60,                // callDurationInPulses
+                true, 0,                 // endOfUsagePromptCounter
+                true, true,              // welcomeMessagePromptFlag
+                true, 1,                 // callStatus
+                true, 1,                 // callDisconnectReason
+                true, Joiner.on(",").join(array));          // content
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK, ADMIN_USERNAME, ADMIN_PASSWORD));
+
+        flw = frontLineWorkerService.getByContactNumber(1200000001l);
+        assertEquals(FrontLineWorkerStatus.ACTIVE, flw.getStatus());
+    }
+
     // Test with no content
     // Test with empty content
     // Test witn invalid callingNumber
