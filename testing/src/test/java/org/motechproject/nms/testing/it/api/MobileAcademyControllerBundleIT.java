@@ -6,7 +6,9 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -30,7 +32,6 @@ import org.motechproject.nms.api.web.contract.BadRequest;
 import org.motechproject.nms.api.web.contract.mobileAcademy.CourseResponse;
 import org.motechproject.nms.api.web.contract.mobileAcademy.SaveBookmarkRequest;
 import org.motechproject.nms.api.web.contract.mobileAcademy.SmsStatusRequest;
-import org.motechproject.nms.api.web.contract.mobileAcademy.sms.DeliveryStatus;
 import org.motechproject.nms.api.web.contract.mobileAcademy.sms.RequestData;
 import org.motechproject.nms.imi.service.SettingsService;
 import org.motechproject.nms.mobileacademy.domain.CompletionRecord;
@@ -1080,6 +1081,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
     @Test
     public void verifyFT521() throws IOException, InterruptedException {
         SettingsFacade settingsFacade = settingsService.getSettingsFacade();
+
         String SMS_NOTIFICATION_URL = "imi.sms.notification.url";
         String oldUrl = settingsFacade.getProperty(SMS_NOTIFICATION_URL);    
         String newUrl = String.format(
@@ -1115,12 +1117,31 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
                 HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME,
                 RequestBuilder.ADMIN_PASSWORD));
 
+        Thread.currentThread().sleep(5000);
+
         CompletionRecord cr = completionRecordDataService
                 .findRecordByCallingNumber(1234567890l);
         assertNotNull(cr);
-        assertEquals(cr.getCompletionCount(), 1);
-        assertEquals(cr.getLastDeliveryStatus(),
-                DeliveryStatus.DeliveredToTerminal);
+        assertEquals(true, cr.isSentNotification());
+
+        cr.setSentNotification(false);
+        completionRecordDataService.update(cr);
+
+        // Manually trigger course completion SMS via exposed URL
+
+        endpoint = String.format(
+                "http://localhost:%d/api/mobileacademy/notify",
+                TestContext.getJettyPort());
+        postRequest = RequestBuilder.createPostRequest(endpoint, 1234567890l);
+        assertTrue(SimpleHttpClient.execHttpRequest(postRequest,
+                HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD));
+
+        Thread.currentThread().sleep(5000);
+
+        cr = completionRecordDataService.findRecordByCallingNumber(1234567890l);
+        assertNotNull(cr);
+        assertEquals(true, cr.isSentNotification());
 
         settingsFacade.setProperty(SMS_NOTIFICATION_URL, oldUrl);
     }
