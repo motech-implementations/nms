@@ -7,7 +7,7 @@ import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.annotations.InstanceLifecycleListeners;
 import org.motechproject.mds.domain.MdsEntity;
 import org.motechproject.nms.tracking.annotation.TrackClass;
-import org.motechproject.nms.tracking.annotation.TrackField;
+import org.motechproject.nms.tracking.annotation.TrackFields;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Element;
@@ -23,20 +23,19 @@ import java.util.List;
  */
 @Entity(tableName = "nms_states")
 @TrackClass
+@TrackFields
 @InstanceLifecycleListeners
 public class State extends MdsEntity {
 
     @Field
     @Column(allowsNull = "false")
     @NotNull
-    @TrackField
     private String name;
 
     @Field
     @Unique
     @Column(allowsNull = "false")
     @NotNull
-    @TrackField
     private Long code;
 
     @Field

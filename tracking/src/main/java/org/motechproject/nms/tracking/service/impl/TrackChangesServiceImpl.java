@@ -12,6 +12,7 @@ import org.motechproject.nms.tracking.exception.TrackChangesException;
 import org.motechproject.nms.tracking.repository.ChangeLogDataService;
 import org.motechproject.nms.tracking.service.TrackChangesService;
 import org.motechproject.nms.tracking.utils.Change;
+import org.motechproject.nms.tracking.utils.CollectionChange;
 import org.motechproject.nms.tracking.utils.TrackChanges;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -60,7 +62,7 @@ public class TrackChangesServiceImpl implements TrackChangesService {
     public void preStore(Object target) {
         if (target instanceof TrackChanges && isEntityInstance(target)) {
             try {
-                storeChangeLog(target);
+                storeChangeLog((TrackChanges) target);
             } catch (TrackChangesException e) {
                 LOGGER.error("Unable to store change log", e);
             }
@@ -82,14 +84,19 @@ public class TrackChangesServiceImpl implements TrackChangesService {
         }
     }
 
-    private void storeChangeLog(Object target) throws TrackChangesException {
-        Map<String, Change> changes = ((TrackChanges) target).changes();
-        if (!changes.isEmpty()) {
+    private void storeChangeLog(TrackChanges target) throws TrackChangesException {
+        Map<String, Change> changes = target.changes();
+        Map<String, CollectionChange> collectionChanges = target.collectionChanges();
+        boolean actualChange = Change.isActualChange(changes.values());
+        boolean actualCollectionChange = CollectionChange.isActualCollectionChange(collectionChanges.values());
+        if (actualChange || actualCollectionChange) {
             String entityName = getEntityName(target);
             Long instanceId = getInstanceId(target);
-            String change = getChange(changes);
+            String change = getChange(changes, collectionChanges, actualChange, actualCollectionChange);
             ChangeLog changeLog = new ChangeLog(entityName, instanceId, DateTime.now(), change);
             changeLogDataService.create(changeLog);
+            changes.clear();
+            collectionChanges.clear();
         }
     }
 
@@ -114,8 +121,22 @@ public class TrackChangesServiceImpl implements TrackChangesService {
         }
     }
 
-    private String getChange(Map<String, Change> changes) throws TrackChangesException {
+    private String getChange(Map<String, Change> changes, Map<String, CollectionChange> collectionChanges,
+                             boolean actualChange, boolean actualCollectionChange) throws TrackChangesException {
         StringBuilder builder = new StringBuilder();
+        if (actualChange) {
+            buildChanges(changes, builder);
+        }
+        if (actualChange && actualCollectionChange) {
+            builder.append(",");
+        }
+        if (actualCollectionChange) {
+            buildCollectionChanges(collectionChanges, builder);
+        }
+        return builder.toString();
+    }
+
+    private void buildChanges(Map<String, Change> changes, StringBuilder builder) throws TrackChangesException {
         for (Iterator<Map.Entry<String, Change>> iterator = changes.entrySet().iterator(); iterator.hasNext(); ) {
             Map.Entry<String, Change> changeEntry = iterator.next();
             String propertyName = changeEntry.getKey();
@@ -130,7 +151,56 @@ public class TrackChangesServiceImpl implements TrackChangesService {
                 builder.append(",");
             }
         }
-        return builder.toString();
+    }
+
+    private void buildCollectionChanges(Map<String, CollectionChange> collectionChanges, StringBuilder builder) throws TrackChangesException {
+        for (Iterator<Map.Entry<String, CollectionChange>> iterator = collectionChanges.entrySet().iterator(); iterator.hasNext(); ) {
+            Map.Entry<String, CollectionChange> collectionChangeEntry = iterator.next();
+            buildCollectionChange(builder, collectionChangeEntry);
+            if (iterator.hasNext()) {
+                builder.append(",");
+            }
+        }
+    }
+
+    private void buildCollectionChange(StringBuilder builder, Map.Entry<String, CollectionChange> collectionChangeEntry) throws TrackChangesException {
+        String propertyName = collectionChangeEntry.getKey();
+        CollectionChange collectionChange = collectionChangeEntry.getValue();
+        builder.append(propertyName).append("(");
+        buildCollectionAdded(collectionChange.getAdded(), builder);
+        if (!collectionChange.getAdded().isEmpty() && !collectionChange.getRemoved().isEmpty()) {
+            builder.append(", ");
+        }
+        buildCollectionRemoved(collectionChange.getRemoved(), builder);
+        builder.append(")");
+    }
+
+    private void buildCollectionAdded(Collection<Object> collectionAdded, StringBuilder builder) throws TrackChangesException {
+        if (!collectionAdded.isEmpty()) {
+            builder.append("added[");
+            for (Iterator<Object> iterator = collectionAdded.iterator(); iterator.hasNext(); ) {
+                Object added = iterator.next();
+                builder.append(formatPropertyValue(added));
+                if (iterator.hasNext()) {
+                    builder.append(",");
+                }
+            }
+            builder.append("]");
+        }
+    }
+
+    private void buildCollectionRemoved(Collection<Object> collectionRemoved, StringBuilder builder) throws TrackChangesException {
+        if (!collectionRemoved.isEmpty()) {
+            builder.append("removed[");
+            for (Iterator<Object> iterator = collectionRemoved.iterator(); iterator.hasNext(); ) {
+                Object removed = iterator.next();
+                builder.append(formatPropertyValue(removed));
+                if (iterator.hasNext()) {
+                    builder.append(",");
+                }
+            }
+            builder.append("]");
+        }
     }
 
     private String formatPropertyValue(Object value) throws TrackChangesException {

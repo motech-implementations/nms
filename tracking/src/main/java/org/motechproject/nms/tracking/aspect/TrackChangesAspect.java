@@ -1,15 +1,17 @@
 package org.motechproject.nms.tracking.aspect;
 
 import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.After;
+import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.DeclareMixin;
+import org.aspectj.lang.annotation.Pointcut;
 import org.motechproject.mds.util.PropertyUtil;
-import org.motechproject.nms.tracking.annotation.TrackClass;
 import org.motechproject.nms.tracking.exception.TrackChangesException;
 import org.motechproject.nms.tracking.service.TrackChangesService;
-import org.motechproject.nms.tracking.utils.Change;
+import org.motechproject.nms.tracking.utils.TrackChangeUtils;
 import org.motechproject.nms.tracking.utils.TrackChanges;
 import org.motechproject.nms.tracking.utils.TrackChangesImpl;
 import org.slf4j.Logger;
@@ -17,8 +19,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.Map;
-import java.util.Objects;
+import java.util.Collection;
 
 @Aspect
 public class TrackChangesAspect {
@@ -32,7 +33,34 @@ public class TrackChangesAspect {
         return new TrackChangesImpl();
     }
 
-    @After("staticinitialization(@org.motechproject.nms.tracking.annotation.TrackClass *)")
+    @Pointcut("staticinitialization(@org.motechproject.nms.tracking.annotation.TrackClass *)")
+    public void trackedClassInit() {}
+
+    @Pointcut("within(@org.motechproject.nms.tracking.annotation.TrackClass *)")
+    public void withinTrackClass() {}
+
+    @Pointcut("within(@org.motechproject.nms.tracking.annotation.TrackFields *)")
+    public void withinTrackFields() {}
+
+    @Pointcut("set(@org.motechproject.nms.tracking.annotation.TrackField * *)")
+    public void trackedFieldWithAnnotationSetter() {}
+
+    @Pointcut("set(* *) && withinTrackFields()")
+    public void trackedFieldWithinAnnotationSetter() {}
+
+    @Pointcut("trackedFieldWithAnnotationSetter() || trackedFieldWithinAnnotationSetter()")
+    public void trackedFieldSetter() {}
+
+    @Pointcut("get(@org.motechproject.nms.tracking.annotation.TrackField java.util.Collection+ *)")
+    public void trackedCollectionFieldWithAnnotationGetter() {}
+
+    @Pointcut("get(java.util.Collection+ *) && withinTrackFields()")
+    public void trackedCollectionFieldWithinAnnotationGetter() {}
+
+    @Pointcut("trackedCollectionFieldWithAnnotationGetter() || trackedCollectionFieldWithinAnnotationGetter()")
+    public void trackedCollectionFieldGetter() {}
+
+    @After("trackedClassInit()")
     public void registerJdoLifecycleListeners(JoinPoint.StaticPart staticPart) {
         if (null != trackChangesService) {
             try {
@@ -48,65 +76,33 @@ public class TrackChangesAspect {
         }
     }
 
-
-    @Before("within(@org.motechproject.nms.tracking.annotation.TrackClass *) && " +
-        "(set(@org.motechproject.nms.tracking.annotation.TrackField * *) || " +
-        "(set(* *) && within(@org.motechproject.nms.tracking.annotation.TrackFields *)))")
-    public void before(JoinPoint joinPoint) {
-        Object target = joinPoint.getTarget();
-        if (target instanceof TrackChanges) {
-            try {
-                trackChange(joinPoint, ((TrackChanges) target));
-            } catch (TrackChangesException e) {
-                LOGGER.error("Unable to track field changes", e);
-            }
-        } else {
-            LOGGER.warn("Tracked field should be in a class annotated with {}", TrackClass.class.getName());
-        }
-    }
-
-    private void trackChange(JoinPoint joinPoint, TrackChanges target) throws TrackChangesException {
-        String propertyName = getPropertyName(joinPoint);
-        Map<String, Change> changes = target.changes();
-        Change change = changes.get(propertyName);
-        if (change == null) {
-            trackNewChange(joinPoint, propertyName, changes);
-        } else {
-            trackExistingChange(joinPoint, propertyName, changes, change);
-        }
-    }
-
-    private void trackNewChange(JoinPoint joinPoint, String propertyName, Map<String, Change> changes)
-            throws TrackChangesException {
-        Object oldValue = getOldValue(joinPoint.getTarget(), propertyName);
-        Object newValue = getNewValue(joinPoint);
-        if (!Objects.equals(oldValue, newValue)) {
-            Change change = new Change(oldValue, newValue);
-            changes.put(propertyName, change);
-        }
-    }
-
-    private void trackExistingChange(JoinPoint joinPoint, String propertyName, Map<String, Change> changes, Change change)
-            throws TrackChangesException {
-        Object oldValue = change.getOldValue();
-        Object newValue = getNewValue(joinPoint);
-        if (!Objects.equals(oldValue, newValue)) {
-            change.setNewValue(newValue);
-        } else {
-            changes.remove(propertyName);
-        }
-    }
-
-    private Object getOldValue(Object target, String propertyName) throws TrackChangesException {
+    @Before("withinTrackClass() && trackedFieldSetter()")
+    public void beforeTrackedFieldSetter(JoinPoint joinPoint) {
         try {
-            return PropertyUtil.getProperty(target, propertyName);
+            TrackChanges target = (TrackChanges) joinPoint.getTarget();
+            String property = getProperty(joinPoint);
+            Object oldValue = getOldValue(joinPoint);
+            Object newValue = getNewValue(joinPoint);
+            TrackChangeUtils.trackChange(target, property, oldValue, newValue);
+        } catch (TrackChangesException e) {
+            LOGGER.error("Unable to track field changes", e);
+        }
+    }
+
+    @Around("withinTrackClass() && trackedCollectionFieldGetter()")
+    public Collection aroundTrackedCollectionFieldGetter(ProceedingJoinPoint joinPoint) throws Throwable { //NO CHECKSTYLE Throwing 'Throwable' is not allowed.
+        TrackChanges target = (TrackChanges) joinPoint.getTarget();
+        String property = getProperty(joinPoint);
+        Collection collection = (Collection) joinPoint.proceed();
+        return TrackChangeUtils.decorateTrackedCollection(target, property, collection);
+    }
+
+    private Object getOldValue(JoinPoint joinPoint) throws TrackChangesException {
+        try {
+            return PropertyUtil.getProperty(joinPoint.getTarget(), getProperty(joinPoint));
         } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
             throw new TrackChangesException("Unable to retrieve old value", e);
         }
-    }
-
-    private String getPropertyName(JoinPoint joinPoint) {
-        return joinPoint.getSignature().getName();
     }
 
     private Object getNewValue(JoinPoint joinPoint) throws TrackChangesException {
@@ -115,6 +111,10 @@ public class TrackChangesAspect {
         } else {
             throw new TrackChangesException("Unable to retrieve new value");
         }
+    }
+
+    private String getProperty(JoinPoint joinPoint) {
+        return joinPoint.getSignature().getName();
     }
 
     @Autowired

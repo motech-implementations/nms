@@ -77,6 +77,7 @@
                         <Import-Package>
                         	org.motechproject.osgi.web,
                             org.motechproject.nms.tracking.aspect,
+                            org.aspectj.runtime.internal,
                             *
                         </Import-Package>
                     </instructions>

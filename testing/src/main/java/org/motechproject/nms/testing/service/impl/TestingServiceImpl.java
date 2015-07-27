@@ -203,13 +203,11 @@ public class TestingServiceImpl implements TestingService {
         whitelistEntryDataService.deleteAll();
         whitelistStateDataService.deleteAll();
 
-
         /**
          * IMI
          */
         fileAuditRecordDataService.deleteAll();
         imiCallDetailRecordDataService.deleteAll();
-
 
         /**
          * Kilkari
@@ -240,12 +238,10 @@ public class TestingServiceImpl implements TestingService {
          */
         completionRecordDataService.deleteAll();
 
-
         /**
          * Props
          */
         deployedServiceDataService.deleteAll();
-
 
         /**
          * Region
@@ -262,12 +258,10 @@ public class TestingServiceImpl implements TestingService {
         talukaDataService.deleteAll();
         villageDataService.deleteAll();
 
-
         /**
          * Alerts
          */
         alertsDataService.deleteAll();
-
 
         /**
          * CSV

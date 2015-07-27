@@ -1,12 +1,11 @@
 package org.motechproject.nms.tracking.utils;
 
+import java.util.Collection;
+
 public class Change {
 
     private Object oldValue;
     private Object newValue;
-
-    public Change() {
-    }
 
     public Change(Object oldValue, Object newValue) {
         this.oldValue = oldValue;
@@ -27,5 +26,9 @@ public class Change {
 
     public void setNewValue(Object newValue) {
         this.newValue = newValue;
+    }
+
+    public static boolean isActualChange(Collection<Change> changes) {
+        return !changes.isEmpty();
     }
 }
