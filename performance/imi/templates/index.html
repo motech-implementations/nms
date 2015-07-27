@@ -1,0 +1,11 @@
+{% extends "layout.html" %}
+{% block title %}Home{% endblock %}
+{% block body %}
+<ul class="items">
+    {% for key, value in stats.iteritems() %}
+        <li class="item">
+            <span class="key">{{ key }}</span><span class="sep">:</span><span class="value">{{ value }}</span>
+        </li>
+    {% endfor %}
+</ul>
+{% endblock %}
