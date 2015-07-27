@@ -66,4 +66,45 @@ public class FlwUserResponse extends UserResponse {
     public void setMaxAllowedEndOfUsagePrompt(int maxAllowedEndOfUsagePrompt) {
         this.maxAllowedEndOfUsagePrompt = maxAllowedEndOfUsagePrompt;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+
+        FlwUserResponse that = (FlwUserResponse) o;
+
+        if (currentUsageInPulses != that.currentUsageInPulses) {
+            return false;
+        }
+        if (endOfUsagePromptCounter != that.endOfUsagePromptCounter) {
+            return false;
+        }
+        if (welcomePromptFlag != that.welcomePromptFlag) {
+            return false;
+        }
+        if (maxAllowedUsageInPulses != that.maxAllowedUsageInPulses) {
+            return false;
+        }
+        return maxAllowedEndOfUsagePrompt == that.maxAllowedEndOfUsagePrompt;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (int) (currentUsageInPulses ^ (currentUsageInPulses >>> 32));
+        result = 31 * result + (int) (endOfUsagePromptCounter ^ (endOfUsagePromptCounter >>> 32));
+        result = 31 * result + (welcomePromptFlag ? 1 : 0);
+        result = 31 * result + maxAllowedUsageInPulses;
+        result = 31 * result + maxAllowedEndOfUsagePrompt;
+        return result;
+    }
 }

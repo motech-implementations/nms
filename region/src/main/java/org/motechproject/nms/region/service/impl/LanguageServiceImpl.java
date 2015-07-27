@@ -1,5 +1,6 @@
 package org.motechproject.nms.region.service.impl;
 
+import com.google.common.collect.Sets;
 import org.motechproject.mds.query.SqlQueryExecution;
 import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.District;
@@ -14,7 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.jdo.Query;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -47,7 +47,7 @@ public class LanguageServiceImpl implements LanguageService {
 
 
     @Override
-    public List<Language> getAllForCircle(final Circle circle) {
+    public Set<Language> getAllForCircle(final Circle circle) {
 
         SqlQueryExecution<List<Language>> queryExecution = new SqlQueryExecution<List<Language>>() {
 
@@ -69,10 +69,10 @@ public class LanguageServiceImpl implements LanguageService {
             }
         };
 
-        List<Language> languages = languageDataService.executeSQLQuery(queryExecution);
+        Set<Language> languages = Sets.newHashSet(languageDataService.executeSQLQuery(queryExecution));
 
         if (languages == null) {
-            languages = new ArrayList<>();
+            languages = new HashSet<>();
         }
 
         return languages;
@@ -80,11 +80,11 @@ public class LanguageServiceImpl implements LanguageService {
 
 
     @Override
-    public List<Language> getAll() {
-        List<Language> languages = languageDataService.retrieveAll();
+    public Set<Language> getAll() {
+        Set<Language> languages = new HashSet<>(languageDataService.retrieveAll());
 
         if (languages == null) {
-            languages = new ArrayList<>();
+            languages = new HashSet<>();
         }
 
         return languages;

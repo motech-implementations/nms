@@ -30,9 +30,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 
@@ -137,7 +135,7 @@ public class UserController extends BaseController {
 
         // If the user does not have a language location code we want to return the allowed language location
         // codes for the provided circle, or all if no circle was provided
-        List<Language> languages = new ArrayList<>();
+        Set<Language> languages = new HashSet<>();
         if (user.getLanguageLocationCode() == null && circleObj != null) {
             languages = languageService.getAllForCircle(circleObj);
         }
@@ -147,7 +145,7 @@ public class UserController extends BaseController {
         }
 
         if (languages.size() > 0) {
-            List<String> allowedLanguageLocations = new ArrayList<>();
+            Set<String> allowedLanguageLocations = new HashSet<>();
             for (Language language : languages) {
                 allowedLanguageLocations.add(language.getCode());
             }
@@ -221,7 +219,6 @@ public class UserController extends BaseController {
 
         user.setMaxAllowedUsageInPulses(serviceUsageCap.getMaxUsageInPulses());
 
-        // TODO: #38 During configuration sprint this value needs to be de-hardcoded
         user.setMaxAllowedEndOfUsagePrompt(2);
 
         return user;

@@ -8,7 +8,7 @@ import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.annotations.InstanceLifecycleListeners;
 import org.motechproject.mds.domain.MdsEntity;
 import org.motechproject.nms.tracking.annotation.TrackClass;
-import org.motechproject.nms.tracking.annotation.TrackField;
+import org.motechproject.nms.tracking.annotation.TrackFields;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Persistent;
@@ -22,6 +22,7 @@ import java.util.List;
 @Entity(maxFetchDepth = -1, tableName = "nms_health_facilities")
 @Unique(name = "UNIQUE_HEALTH_BLOCK_CODE", members = { "healthBlock", "code" })
 @TrackClass
+@TrackFields
 @InstanceLifecycleListeners
 public class HealthFacility extends MdsEntity {
 
@@ -29,33 +30,28 @@ public class HealthFacility extends MdsEntity {
     @Column(allowsNull = "false", length = 50)
     @NotNull
     @Size(min = 1, max = 50)
-    @TrackField
     private String name;
 
     @Field
     @Column(allowsNull = "false", length = 50)
     @NotNull
     @Size(min = 1, max = 50)
-    @TrackField
     private String regionalName;
 
     @Field
     @Column(allowsNull = "false")
     @NotNull
-    @TrackField
     private Long code;
 
     @Field
     @Column(allowsNull = "false")
     @NotNull
-    @TrackField
     private HealthFacilityType healthFacilityType;
 
     @Field
     @Column(allowsNull = "false")
     @NotNull
     @JsonBackReference
-    @TrackField
     private HealthBlock healthBlock;
 
     @Field
