@@ -51,8 +51,10 @@ public class BaseController {
     public static final long LARGEST_10_DIGIT_NUMBER  = 9999999999L;
     public static final long SMALLEST_15_DIGIT_NUMBER = 100000000000000L;
     public static final long LARGEST_15_DIGIT_NUMBER  = 999999999999999L;
+    public static final long MILLIS = 1000;
     public static final int MAX_LENGTH_255 = 255;
-
+    public static final int MA_MIN_SCORE = 0;
+    public static final int MA_MAX_SCORE = 4;
     public static final String CALLING_NUMBER = "callingNumber";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BaseController.class);
@@ -197,7 +199,7 @@ public class BaseController {
     }
 
     protected DateTime epochToDateTime(long epoch) {
-        return new DateTime(epoch * 1000); // epoch time sent by IVR is in secs
+        return new DateTime(epoch * MILLIS); // epoch time sent by IVR is in secs
     }
 
     protected State getStateForFrontLineWorker(FrontLineWorker flw, Circle circle) {
@@ -243,7 +245,7 @@ public class BaseController {
     protected  boolean validateMAScores(Map<String, Integer> scores) {
         if (scores != null) {
             for (Integer currentScore : scores.values()) {
-                if (currentScore < 0 || currentScore > 4) {
+                if (currentScore < MA_MIN_SCORE || currentScore > MA_MAX_SCORE) {
                     throw new IllegalArgumentException(String.format(INVALID, "scoresByChapter"));
                 }
             }
