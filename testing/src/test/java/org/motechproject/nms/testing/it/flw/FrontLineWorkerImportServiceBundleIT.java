@@ -211,6 +211,10 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         frontLineWorkerImportService.importData(reader);
     }
 
+    /**
+     * VerifyFT513  verify that status of flw must be set to "inactive" when the flw data is imported into
+     * the NMS DB and the user has not yet called
+     */
     @Test
     public void testImportWhenDistrictLanguageLocationPresent() throws Exception {
         Reader reader = createReaderWithHeaders("#0\t1234567890\tFLW 0\t11");
@@ -218,6 +222,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
 
         FrontLineWorker flw = frontLineWorkerDataService.findByContactNumber(1234567890L);
         assertFLW(flw, "#0", 1234567890L, "FLW 0", "District 11", "L1");
+        assertEquals(FrontLineWorkerStatus.INACTIVE, flw.getStatus());
     }
 
     @Test
@@ -235,21 +240,6 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         frontLineWorkerImportService.importData(reader);
     }
 
-    /**
-     * VerifyFT513  verify that status of flw must be set to "inactive" when the flw data is imported into
-     * the NMS DB and the user has not yet called
-     */
-    @Ignore
-    // Todo :https://applab.atlassian.net/browse/NMS-247
-    @Test
-    public void testImportFromSampleDataFile() throws Exception {
-        frontLineWorkerImportService.importData(read("csv/anm-asha.txt"));
-
-        FrontLineWorker flw1 = frontLineWorkerDataService.findByContactNumber(9999999996L);
-        assertFLW(flw1, "72185", 9999999996L, "Bishnu Priya Behera", "Koraput", null);
-        assertEquals(FrontLineWorkerStatus.INACTIVE, flw1.getStatus());
-    }
-
     private void assertFLW(FrontLineWorker flw, String mctsFlwId, long contactNumber, String name, String districtName, String languageLocationCode) {
         assertNotNull(flw);
         assertEquals(mctsFlwId, flw.getMctsFlwId());
@@ -257,6 +247,14 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         assertEquals(name, flw.getName());
         assertEquals(districtName, null != flw.getDistrict() ? flw.getDistrict().getName() : null);
         assertEquals(languageLocationCode, null != flw.getLanguage() ? flw.getLanguage().getCode() : null);
+    }
+
+    @Test
+    public void testImportFromSampleDataFile() throws Exception {
+        frontLineWorkerImportService.importData(read("csv/anm-asha.txt"));
+
+        FrontLineWorker flw1 = frontLineWorkerDataService.findByContactNumber(9999999996L);
+        assertFLW(flw1, "72185", 9999999996L, "Bishnu Priya Behera", "Koraput", null);
     }
 
     private Reader createReaderWithHeaders(String... lines) {
