@@ -1,5 +1,6 @@
 package org.motechproject.nms.imi.service.impl;
 
+import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
@@ -71,7 +72,7 @@ public class SmsNotificationServiceImpl implements SmsNotificationService {
         }
 
         ExponentialRetrySender sender = new ExponentialRetrySender(settingsFacade, alertService);
-        sender.sendNotificationRequest(httpPost, ALERT_ID, ALERT_NAME);
+        sender.sendNotificationRequest(httpPost, HttpStatus.SC_CREATED, ALERT_ID, ALERT_NAME);
         return true;
     }
 
