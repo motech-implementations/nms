@@ -455,6 +455,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         return subscriptions;
     }
 
+    //todo: IT to make sure chunking works!
+
     @Override
     public List<Subscription> findByStatusAndFirstMessageDayOfWeekAndPack(final SubscriptionStatus status,
                                                                           final DayOfTheWeek firstMessageDayOfWeek,
@@ -469,7 +471,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 query.declareParameters("org.motechproject.nms.kilkari.domain.SubscriptionStatus s, " +
                                         "org.motechproject.nms.props.domain.DayOfTheWeek msgDayOfWeek, " +
                                         "org.motechproject.nms.kilkari.domain.SubscriptionPack sp");
-                query.setRange(((page - 1) * pageSize), (page * pageSize) - 1);
+                query.setRange(((page - 1) * pageSize), (page * pageSize) );
 
                 return (List<Subscription>) query.executeWithArray(status, firstMessageDayOfWeek, subscriptionPack);
             }
@@ -477,6 +479,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
         return subscriptionDataService.executeQuery(queryExecution);
     }
+
+    //todo: IT to make sure chunking works!
 
     @Override
     public List<Subscription> findByStatusAndSecondMessageDayOfWeekAndPack(final SubscriptionStatus status,
@@ -492,7 +496,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 query.declareParameters("org.motechproject.nms.kilkari.domain.SubscriptionStatus s, " +
                         "org.motechproject.nms.props.domain.DayOfTheWeek msgDayOfWeek, " +
                         "org.motechproject.nms.kilkari.domain.SubscriptionPack sp");
-                query.setRange(((page - 1) * pageSize), (page * pageSize) - 1);
+                query.setRange(((page - 1) * pageSize), (page * pageSize));
 
                 return (List<Subscription>) query.executeWithArray(status, secondMessageDayOfWeek, subscriptionPack);
             }
