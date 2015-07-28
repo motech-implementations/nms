@@ -1,23 +1,29 @@
 package org.motechproject.nms.testing.it.imi;
 
-import static org.junit.Assert.assertTrue;
-
-import javax.inject.Inject;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.motechproject.alerts.contract.AlertCriteria;
+import org.motechproject.alerts.contract.AlertService;
+import org.motechproject.alerts.domain.Alert;
 import org.motechproject.nms.imi.service.SettingsService;
 import org.motechproject.nms.imi.service.SmsNotificationService;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.server.config.SettingsFacade;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
+import org.motechproject.testing.utils.TestContext;
 import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
+
+import javax.inject.Inject;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerSuite.class)
@@ -32,6 +38,9 @@ public class ImiSMSNotificationServiceBundleIT extends BasePaxIT {
 
     @Inject
     SmsNotificationService smsNotificationService;
+
+    @Inject
+    AlertService alertService;
 
     @Inject
     TestingService testingService;
@@ -55,40 +64,20 @@ public class ImiSMSNotificationServiceBundleIT extends BasePaxIT {
     }
 
     @Test
-    public void verifySmsThreadNotBlocking() {
+    public void verifyNIP47() {
         // linking with an API which always returns 202
-        settingsFacade.setProperty(SMS_NOTIFICATION_URL,
-                "http://www.mocky.io/v2/55acd492052573e005262f0f");
+
+        AlertCriteria alertCriteria = new AlertCriteria();
+
+        String newUrl = String.format(
+                               "http://localhost:%d/testing/sendSMS202NIP47",
+                                TestContext.getJettyPort());
+        settingsFacade.setProperty(SMS_NOTIFICATION_URL, newUrl);
         assertTrue(smsNotificationService.sendSms(1234567890l));
+        List<Alert> alert = alertService.search(alertCriteria.byExternalId("SmsNotification"));
+        assertEquals(0,alert.size());
+
     }
 
-    @Test
-    public void verifyNonBlockingWithout202Response() {
-        // linking with an API which always returns 400
-        settingsFacade.setProperty(SMS_NOTIFICATION_URL,
-                "http://www.mocky.io/v2/55af66c9e37b45d902e77b50");
-        assertTrue(smsNotificationService.sendSms(1234567890l));
-    }
 
-    @Test
-    public void testSmsWithIncreamentedRetryCounts() {
-        // linking with an API which always returns 400
-        settingsFacade.setProperty(SMS_NOTIFICATION_URL,
-                "http://www.mocky.io/v2/55af66c9e37b45d902e77b50");
-        // retry count to 20
-        settingsFacade.setProperty(MAX_NOTIFICATION_RETRY_COUNT,
-                "20");
-        assertTrue(smsNotificationService.sendSms(1234567890l));
-    }
-
-    @Test
-    public void testSmsWithTimeoutApi() {
-        // linking with a fake API to check timeout
-        settingsFacade.setProperty(SMS_NOTIFICATION_URL,
-                "fakeAPI");
-        // retry count to 10
-        settingsFacade.setProperty(MAX_NOTIFICATION_RETRY_COUNT,
-                "10");
-        assertTrue(smsNotificationService.sendSms(1234567890l));
-    }
 }
