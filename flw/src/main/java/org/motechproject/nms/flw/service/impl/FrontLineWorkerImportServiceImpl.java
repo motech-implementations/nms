@@ -8,6 +8,7 @@ import org.motechproject.nms.csv.utils.CsvMapImporter;
 import org.motechproject.nms.csv.utils.GetLong;
 import org.motechproject.nms.csv.utils.GetString;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
+import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.service.FrontLineWorkerImportService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.region.domain.District;
@@ -158,7 +159,10 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
             throws InvalidLocationException {
         Long contactNumber = (Long) record.get(CONTACT_NO);
 
-        return processInstance(new FrontLineWorker(contactNumber), record, location);
+        FrontLineWorker flw = new FrontLineWorker(contactNumber);
+        flw.setStatus(FrontLineWorkerStatus.INACTIVE);
+
+        return processInstance(flw, record, location);
     }
 
     private FrontLineWorker processInstance(FrontLineWorker flw, Map<String, Object> record,

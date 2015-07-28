@@ -8,6 +8,8 @@ import javax.validation.constraints.Pattern;
  */
 public class DeliveryInfo {
 
+    private static final int MASK_LENGTH = 3;
+
     @Pattern(message = "Invalid address format", regexp = "tel: \\d{10}$")
     private String address;
 
@@ -34,7 +36,7 @@ public class DeliveryInfo {
     }
 
     private static String obscure(String a) {
-        return "tel: *******" + a.substring(a.length() - 3);
+        return "tel: *******" + a.substring(a.length() - MASK_LENGTH);
     }
 
     @Override
