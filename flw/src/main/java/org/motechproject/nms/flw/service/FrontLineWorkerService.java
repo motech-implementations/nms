@@ -2,7 +2,7 @@ package org.motechproject.nms.flw.service;
 
 import org.motechproject.event.MotechEvent;
 import org.motechproject.mds.annotations.InstanceLifecycleListener;
-import org.motechproject.mds.domain.InstanceLifecycleListenerType;
+import org.motechproject.mds.annotations.InstanceLifecycleListenerType;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.region.domain.State;
 
