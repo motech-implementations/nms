@@ -41,8 +41,11 @@ public class ExponentialRetrySender {
         this.alertService = alertService;
     }
 
-
     public void sendNotificationRequest(HttpPost httpPost, String id, String name) {
+        sendNotificationRequest(httpPost, HttpStatus.SC_ACCEPTED, id, name);
+    }
+
+    public void sendNotificationRequest(HttpPost httpPost, int expectedStatus, String id, String name) {
         LOGGER.debug("Sending {}", httpPost);
 
         int retryDelay;
@@ -67,10 +70,10 @@ public class ExponentialRetrySender {
                 HttpClient httpClient = HttpClients.createDefault();
                 HttpResponse response = httpClient.execute(httpPost);
                 int responseCode = response.getStatusLine().getStatusCode();
-                if (responseCode == HttpStatus.SC_ACCEPTED) {
+                if (responseCode == expectedStatus) {
                     return;
                 } else {
-                    error = String.format("Expecting HTTP 202 response but received HTTP %d: %s",
+                    error = String.format("Expecting HTTP %d response but received HTTP %d: %s", expectedStatus,
                             responseCode, EntityUtils.toString(response.getEntity()));
                     LOGGER.warn(error);
                     alertService.create(id, name, error, AlertType.MEDIUM, AlertStatus.NEW, 0, null);
