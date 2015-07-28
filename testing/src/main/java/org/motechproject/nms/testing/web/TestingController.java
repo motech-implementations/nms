@@ -39,19 +39,4 @@ public class TestingController {
     public String sendSMS200(@RequestBody String template) {
         return "OK";
     }
-
-    /*
-     * @RequestMapping(value = "/sendSMS200")
-     * 
-     * @ResponseBody public String sendSMS200Get() {
-     * 
-     * Map<String, Object> eventParams = new HashMap<>();
-     * eventParams.put("address", "tel: 1234567890");
-     * eventParams.put("deliveryStatus",
-     * DeliveryStatus.DeliveredToTerminal.toString()); MotechEvent motechEvent =
-     * new MotechEvent("nms.ma.sms.deliveryStatus", eventParams);
-     * eventRelay.sendEventMessage(motechEvent);
-     * 
-     * return "OK"; }
-     */
 }
