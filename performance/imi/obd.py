@@ -6,15 +6,16 @@ import os
 from flask import Flask, render_template, request, flash, send_from_directory
 import argparse
 import csv
+from random import randint
 
 
 app = Flask(__name__)
-app.secret_key = 'utvsm9blavlu+1o18d0n9_xe5$&^ulw6d82gr*q&t&azwe-gf$'
 
 
 @app.route('/favicon.ico')
 def favicon():
-    return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
+    return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico',
+                               mimetype='image/vnd.microsoft.icon')
 
 
 @app.route('/')
@@ -30,8 +31,8 @@ def home():
 @app.route('/obd', methods=['POST'])
 def obd():
 
-    errors = []
     required_fields = []
+    errors = []
 
     targetFileNotification = request.get_json()
 
@@ -52,9 +53,10 @@ def obd():
     if len(errors) > 0:
         return render_template('400.html', errors=errors), 400
 
+    resp = ''
     file_name = targetFileNotification['fileName']
     if os.path.isfile(obd_file(file_name)):
-        read_obd_file(file_name)
+        resp = read_obd_file(file_name)
     else:
         print "{} is not a file".format(obd_file(file_name))
         errors.append("Invalid file: {}".format(file_name))
@@ -62,7 +64,7 @@ def obd():
     if len(errors) > 0:
         return render_template('400.html', errors=errors), 400
 
-    return render_template('resp.html', stats={})
+    return render_template('resp.html', resp=resp)
 
 
 def obd_file(name):
@@ -83,30 +85,78 @@ def csr_file(name):
 #
 # pretend call - write to CDR and CSR
 #
-def mock_call(row, cdrwriter, csrwriter):
-    print "calling {}".format(row)
+def mock_call(obd, cdrwriter, csrwriter):
+    global args
 
-    #todo: really dumb right now but planning on doing something better...
-    cdrwriter.writerow(row)
-    csrwriter.writerow(row)
+    print "calling {}".format(obd)
+
+    cdr_lines = 0
+
+    # first some retries
+    if randint(0, 100) <= args.retry:
+        for i in range(0, randint(0, args.maxretries)):
+            cdrwriter.writerow(["{} - retry {}".format(obd['subscription_id'], i)])
+            cdr_lines += 1
+
+    # and then ultimately, succeed or fail...
+    if randint(0, 100) > args.failure:
+        cdrwriter.writerow(["{} - success".format(obd['subscription_id'])])
+        csrwriter.writerow(["{} - success".format(obd['subscription_id'])])
+    else:
+        cdrwriter.writerow(["{} - failure".format(obd['subscription_id'])])
+        csrwriter.writerow(["{} - failure".format(obd['subscription_id'])])
+
+    return cdr_lines + 1
+
+
+def parse_obd_row(row):
+    d = {}
+    request_id = row[0]
+    d['timestamp'] = request_id[:14]
+    d['subscription_id'] = request_id[15:]
+    d['service_id'] = row[1]
+    d['msisdn'] = row[2]
+    d['cli'] = row[3]
+    d['priority'] = row[4]
+    d['call_flow_url'] = row[5]
+    d['content_file_name'] = row[6]
+    d['week_id'] = row[7]
+    d['language_location_code'] = row[8]
+    d['circle'] = row[9]
+    d['subsrciption_origin'] = row[10]
+    return d
+
+
+def expected_obd_header():
+    return ['RequestId', 'ServiceId', 'Msisdn', 'Cli', 'Priority', 'CallFlowURL', 'ContentFileName', 'WeekId',
+            'LanguageLocationCode', 'Circle', 'SubscriptionOrigin']
 
 
 def read_obd_file(name):
 
-    # create CDR file
-    # create CSR file
+    cdr_lines = 0
+    csr_lines = 0
 
     try:
+
+        print "OBD: {}".format(obd_file(name))
 
         # iterate over OBD file
         with open(obd_file(name), 'r') as obdfile, \
                 open(cdr_file(name), 'w') as cdrfile, \
                 open(csr_file(name), 'w') as csrfile:
+
             reader = csv.reader(obdfile)
             cdrwriter = csv.writer(cdrfile)
             csrwriter = csv.writer(csrfile)
+
+            if reader.next() != expected_obd_header():
+                raise ImportError("Invalid header")
+
             for row in reader:
-                mock_call(row, cdrwriter, csrwriter)
+                cdr_lines += mock_call(parse_obd_row(row), cdrwriter, csrwriter)
+                csr_lines += 1
+
 
         # send obdFileProcessedStatusNotification request to MOTECH after OBD file was 'checked'
 
@@ -121,7 +171,11 @@ def read_obd_file(name):
         #todo
 
     except Exception as e:
-        print "Exception! {}".format(e.message)
+        print "### EXCEPTION\n{}\n### EXCEPTION".format(e.message)
+        return "### EXCEPTION: {}".format(e.message)
+
+    return "{} ({})\n{} ({})".format(cdr_file(name), cdr_lines, csr_file(name), csr_lines)
+
 
 
 if __name__ == '__main__':
@@ -129,9 +183,15 @@ if __name__ == '__main__':
     parser.add_argument("-s", "--server", help="MOTECH URL", default="http://localhost:8080/motech-platform-server")
     parser.add_argument("-o", "--obdfiles", help="location of the OBD files", default="obd-files-remote")
     parser.add_argument("-c", "--cdrfiles", help="location of the CDR files", default="cdr-files-remote")
+    parser.add_argument("-f", "--failure", help="call failure percentage (0-100)", type=int, choices=range(0,101),
+                        default=30, metavar="[0-100]")
+    parser.add_argument("-m", "--maxretries", help="maximum number of times a call is retried", type=int, default=3)
+    parser.add_argument("-r", "--retry", help="retry percentage (0-100)", type=int, choices=range(0,101),
+                        default=50, metavar="[0-100]")
     args = parser.parse_args()
 
     #debug
     print "args={}".format(args)
 
+    app.secret_key = 'utvsm9blavlu+1o18d0n9_xe5$&^ulw6d82gr*q&t&azwe-gf$'
     app.run(host='0.0.0.0')
