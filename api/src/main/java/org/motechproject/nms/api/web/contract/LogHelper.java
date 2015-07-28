@@ -3,6 +3,7 @@ package org.motechproject.nms.api.web.contract;
 import org.apache.commons.lang3.StringUtils;
 
 public final class LogHelper {
+    private static final int MASK_LENGTH = 3;
     private LogHelper() { }
 
     public static String nullOrString(Object o) {
@@ -19,8 +20,8 @@ public final class LogHelper {
         }
         String s = callingNumber.toString();
         int l = s.length();
-        if (s.length() > 3) {
-            s = StringUtils.repeat('*', l - 3) + s.substring(l - 3);
+        if (s.length() > MASK_LENGTH) {
+            s = StringUtils.repeat('*', l - MASK_LENGTH) + s.substring(l - MASK_LENGTH);
         }
         return s;
     }
