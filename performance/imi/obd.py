@@ -82,6 +82,42 @@ def csr_file(name):
     return os.path.join(homeDir, args.cdrfiles, "cdrSummary_{}".format(name))
 
 
+def make_call_id():
+    return "CID-{:10d}".format(randint(0, 9999999999))
+
+
+def write_cdr_row(obd, writer, call_id, attempt, successful):
+    cdr = {
+        'RequestId': obd['request_id'],
+        'Msisdn': obd['msisdn'],
+        'CallId': call_id,
+        'AttemptNo': attempt,
+        'CallStartTime': "",
+        'CallAnswerTime': "",
+        'CallEndTime': "",
+        'CallDurationInPulses': "",
+        'CallStatus': "",
+        'LanguageLocationId': "",
+        'ContentFile': ""
+    }
+    writer.writerow(cdr)
+
+
+def obd_header():
+    return ['RequestId', 'ServiceId', 'Msisdn', 'Cli', 'Priority', 'CallFlowURL', 'ContentFileName', 'WeekId',
+            'LanguageLocationCode', 'Circle', 'SubscriptionOrigin']
+
+
+def cdr_header():
+    return ['RequestId', 'Msisdn', 'CallId', 'AttemptNo', 'CallStartTime', 'CallAnswerTime', 'CallEndTime',
+            'CallDurationInPulses', 'CallStatus', 'LanguageLocationId', 'ContentFile']
+
+
+def csr_header():
+    return ['RequestId', 'ServiceId', 'Msisdn', 'Cli', 'Priority', 'CallFlowURL', 'ContentFileName', 'WeekId',
+            'LanguageLocationCode', 'Circle', 'FinalStatus', 'StatusCode', 'Attempts']
+
+
 #
 # pretend call - write to CDR and CSR
 #
@@ -92,14 +128,20 @@ def mock_call(obd, cdrwriter, csrwriter):
 
     cdr_lines = 0
 
+    call_id = make_call_id()
+
+    attempt = 0
+
     # first some retries
     if randint(0, 100) <= args.retry:
         for i in range(0, randint(0, args.maxretries)):
-            cdrwriter.writerow(["{} - retry {}".format(obd['subscription_id'], i)])
+            attempt += 1
+            write_cdr_row(obd, cdrwriter, call_id, attempt, False)
             cdr_lines += 1
 
     # and then ultimately, succeed or fail...
     if randint(0, 100) > args.failure:
+
         cdrwriter.writerow(["{} - success".format(obd['subscription_id'])])
         csrwriter.writerow(["{} - success".format(obd['subscription_id'])])
     else:
@@ -111,9 +153,7 @@ def mock_call(obd, cdrwriter, csrwriter):
 
 def parse_obd_row(row):
     d = {}
-    request_id = row[0]
-    d['timestamp'] = request_id[:14]
-    d['subscription_id'] = request_id[15:]
+    d['request_id'] = row[0]
     d['service_id'] = row[1]
     d['msisdn'] = row[2]
     d['cli'] = row[3]
@@ -125,11 +165,6 @@ def parse_obd_row(row):
     d['circle'] = row[9]
     d['subsrciption_origin'] = row[10]
     return d
-
-
-def expected_obd_header():
-    return ['RequestId', 'ServiceId', 'Msisdn', 'Cli', 'Priority', 'CallFlowURL', 'ContentFileName', 'WeekId',
-            'LanguageLocationCode', 'Circle', 'SubscriptionOrigin']
 
 
 def read_obd_file(name):
@@ -147,10 +182,14 @@ def read_obd_file(name):
                 open(csr_file(name), 'w') as csrfile:
 
             reader = csv.reader(obdfile)
-            cdrwriter = csv.writer(cdrfile)
-            csrwriter = csv.writer(csrfile)
 
-            if reader.next() != expected_obd_header():
+            cdrwriter = csv.writer(cdrfile)
+            cdrwriter.writerow(cdr_header())
+
+            csrwriter = csv.writer(csrfile)
+            csrwriter.writerow(csr_header())
+
+            if reader.next() != obd_header():
                 raise ImportError("Invalid header")
 
             for row in reader:
