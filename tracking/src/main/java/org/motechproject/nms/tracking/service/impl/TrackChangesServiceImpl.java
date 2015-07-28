@@ -1,7 +1,7 @@
 package org.motechproject.nms.tracking.service.impl;
 
 import org.joda.time.DateTime;
-import org.motechproject.mds.domain.InstanceLifecycleListenerType;
+import org.motechproject.mds.annotations.InstanceLifecycleListenerType;
 import org.motechproject.mds.listener.MotechLifecycleListener;
 import org.motechproject.mds.service.EntityService;
 import org.motechproject.mds.service.JdoListenerRegistryService;
