@@ -201,6 +201,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
 
     // This test should load the FLW with MSISDN 1234567890 however that FLW already has a different MCTS ID
     // assigned to them.  This should result in an exception
+    //NMS_FT_538
     @Test(expected = CsvImportDataException.class)
     public void testImportByMSISDNConflictWithMCTSId() throws Exception {
         FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 1234567890L);
@@ -234,9 +235,67 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         assertFLW(flw, "#0", 1234567890L, "FLW 0", "District 12", null);
     }
 
+    /**
+     * NMS_FT_541: To verify FLW upload is rejected when mandatory parameter district is missing.
+     */
     @Test(expected = CsvImportDataException.class)
     public void testImportWhenDistrictNotPresent() throws Exception {
         Reader reader = createReaderWithHeaders("#0\t1234567890\tFLW 0\t");
+        frontLineWorkerImportService.importData(reader);
+    }
+
+    @Test
+    public void testImportFromSampleDataFile() throws Exception {
+        frontLineWorkerImportService.importData(read("csv/anm-asha.txt"));
+
+        FrontLineWorker flw1 = frontLineWorkerDataService.findByContactNumber(9999999996L);
+        assertFLW(flw1, "72185", 9999999996L, "Bishnu Priya Behera", "Koraput", null);
+    }
+
+    /**
+     * To verify FLW record is uploaded successfully when all mandatory parameters are present.
+     */
+    @Test
+    public void verifyFT535() throws Exception {
+        Reader reader = createReaderWithHeaders("#0\t1234567890\tFLW 0\t11");
+        frontLineWorkerImportService.importData(reader);
+        FrontLineWorker flw1 = frontLineWorkerDataService.findByContactNumber(1234567890L);
+        assertFLW(flw1, "#0", 1234567890L, "FLW 0", "District 11", "L1");
+        assertEquals("State{name='State 1', code=1}", flw1.getState().toString());
+        assertEquals(FrontLineWorkerStatus.INACTIVE, flw1.getStatus());
+    }
+
+    /**
+     * To verify FLW status must be updated successfully from Anonymous to Active.
+     */
+    @Test
+    public void verifyFT536() throws Exception {
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 1234567890L);
+        flw.setMctsFlwId("#0");
+        frontLineWorkerService.add(flw);
+        Reader reader = createReaderWithHeaders("#0\t1234567890\tFLW 0\t11");
+        frontLineWorkerImportService.importData(reader);
+        FrontLineWorker flw1 = frontLineWorkerDataService.findByContactNumber(1234567890L);
+        assertFLW(flw1, "#0", 1234567890L, "FLW 0", "District 11", "L1");
+        assertEquals("State{name='State 1', code=1}", flw1.getState().toString());
+        assertEquals(FrontLineWorkerStatus.ACTIVE, flw1.getStatus());
+    }
+
+    /**
+     * To verify FLW upload is rejected when mandatory parameter MSISDN is missing.
+     */
+    @Test(expected = CsvImportDataException.class)
+    public void verifyFT537() throws Exception {
+        Reader reader = createReaderWithHeaders("#0\t\tFLW 0\t11");
+        frontLineWorkerImportService.importData(reader);
+    }
+
+    /**
+     * To verify FLW upload is rejected when mandatory parameter state is missing.
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void verifyFT540() throws Exception {
+        Reader reader = createReaderWithHeadersWithNoState("#1\1234567890t\tFLW 0\t11");
         frontLineWorkerImportService.importData(reader);
     }
 
@@ -249,18 +308,22 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         assertEquals(languageLocationCode, null != flw.getLanguage() ? flw.getLanguage().getCode() : null);
     }
 
-    @Test
-    public void testImportFromSampleDataFile() throws Exception {
-        frontLineWorkerImportService.importData(read("csv/anm-asha.txt"));
-
-        FrontLineWorker flw1 = frontLineWorkerDataService.findByContactNumber(9999999996L);
-        assertFLW(flw1, "72185", 9999999996L, "Bishnu Priya Behera", "Koraput", null);
-    }
-
     private Reader createReaderWithHeaders(String... lines) {
         StringBuilder builder = new StringBuilder();
         builder.append("\n");
         builder.append("State Name : State 1").append("\n");
+        builder.append("\n");
+        builder.append("ID\tContact_No\tName\tDistrict_ID").append("\n");
+        for (String line : lines) {
+            builder.append(line).append("\n");
+        }
+        return new StringReader(builder.toString());
+    }
+    
+    private Reader createReaderWithHeadersWithNoState(String... lines) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("\n");
+        builder.append("State Name :").append("\n");
         builder.append("\n");
         builder.append("ID\tContact_No\tName\tDistrict_ID").append("\n");
         for (String line : lines) {
