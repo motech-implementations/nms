@@ -51,7 +51,7 @@ public class CallDetailsController extends BaseController {
      * /api/mobilekunji/callDetails
      *
      */
-    @RequestMapping(value = "/{serviceName}/callDetails",
+    @RequestMapping(value = "/{serviceName}/callDetails", // NO CHECKSTYLE Cyclomatic Complexity
             method = RequestMethod.POST,
             headers = { "Content-type=application/json" })
     @ResponseStatus(HttpStatus.OK)
@@ -106,11 +106,21 @@ public class CallDetailsController extends BaseController {
 
         createCallDetailRecord(flw, callDetailRecordRequest, service);
 
-        // if this is the FLW's first time calling the service, set her status to ACTIVE
-        if (flw.getStatus() == FrontLineWorkerStatus.INACTIVE) {
+        // if this is the FLW's first time calling the service, set her status to ACTIVE based on NMS.GEN.FLW.003
+        if (flw.getStatus() == FrontLineWorkerStatus.INACTIVE &&
+                validateFlwNameAndNumber(flw) &&
+                validateFlwLocation(flw)) {
             flw.setStatus(FrontLineWorkerStatus.ACTIVE);
             frontLineWorkerService.update(flw);
         }
+    }
+
+    private boolean validateFlwLocation(FrontLineWorker flw) {
+        return flw.getState() != null && flw.getDistrict() != null;
+    }
+
+    private boolean validateFlwNameAndNumber(FrontLineWorker flw) {
+        return flw.getName() != null && flw.getContactNumber() != null;
     }
 
     private void createCallDetailRecord(FrontLineWorker flw, CallDetailRecordRequest callDetailRecordRequest,

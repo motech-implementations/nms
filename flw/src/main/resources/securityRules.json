@@ -8,7 +8,7 @@
     "protocol": "HTTP",
     "priority": 2,
     "rest": true,
-    "origin": "all",
+    "origin": "SYSTEM_MODULE_FLW",
     "version": "all",
     "methodsRequired": [
       "POST"
@@ -23,7 +23,7 @@
     "protocol": "HTTP",
     "priority": 2,
     "rest": true,
-    "origin": "all",
+    "origin": "SYSTEM_MODULE_FLW",
     "version": "all",
     "methodsRequired": [
       "POST"
@@ -38,7 +38,7 @@
     "protocol": "HTTPS",
     "priority": 2,
     "rest": true,
-    "origin": "all",
+    "origin": "SYSTEM_MODULE_FLW",
     "version": "all",
     "methodsRequired": [
       "POST"
@@ -53,7 +53,7 @@
     "protocol": "HTTPS",
     "priority": 2,
     "rest": true,
-    "origin": "all",
+    "origin": "SYSTEM_MODULE_FLW",
     "version": "all",
     "methodsRequired": [
       "POST"

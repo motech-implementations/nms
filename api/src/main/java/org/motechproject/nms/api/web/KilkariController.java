@@ -27,6 +27,8 @@ import org.motechproject.nms.region.domain.Language;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.service.CircleService;
 import org.motechproject.nms.region.service.LanguageService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -73,6 +75,8 @@ public class KilkariController extends BaseController {
     @Autowired
     private PropertyService propertyService;
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(KilkariController.class);
+
     /**
      * 4.2.2 Get Inbox Details API
      * IVR shall invoke this API to get the Inbox details of the beneficiary identified by ‘callingNumber’.
@@ -117,6 +121,7 @@ public class KilkariController extends BaseController {
 
             } catch (NoInboxForSubscriptionException e) {
                 // there's no inbox, don't add anything to the list
+                LOGGER.debug(String.format("Found no inbox for subscription: %s", subscription.getSubscriptionId()));
             }
         }
 

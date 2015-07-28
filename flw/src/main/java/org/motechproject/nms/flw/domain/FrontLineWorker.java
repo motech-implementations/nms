@@ -259,7 +259,7 @@ public class FrontLineWorker extends MdsEntity implements FullLocation {
     @Override
     public int hashCode() {
         int result = (getId() != null ? getId().hashCode() : 0);
-        result = 31 * result + contactNumber.hashCode();
+        result = 31 * result + (contactNumber != null ? contactNumber.hashCode() : 0);
         result = 31 * result + (name != null ? name.hashCode() : 0);
         result = 31 * result + (language != null ? language.hashCode() : 0);
         result = 31 * result + (district != null ? district.hashCode() : 0);
