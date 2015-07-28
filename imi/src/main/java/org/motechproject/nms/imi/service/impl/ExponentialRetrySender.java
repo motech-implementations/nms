@@ -1,6 +1,5 @@
 package org.motechproject.nms.imi.service.impl;
 
-import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
@@ -41,10 +40,13 @@ public class ExponentialRetrySender {
         this.alertService = alertService;
     }
 
-    public void sendNotificationRequest(HttpPost httpPost, String id, String name) {
-        sendNotificationRequest(httpPost, HttpStatus.SC_ACCEPTED, id, name);
-    }
-
+    /**
+     * Request (POST) handler with exponential retry
+     * @param httpPost http POST request
+     * @param expectedStatus expected status for the response
+     * @param id alert id to use for failure
+     * @param name alert name to use for failure
+     */
     public void sendNotificationRequest(HttpPost httpPost, int expectedStatus, String id, String name) {
         LOGGER.debug("Sending {}", httpPost);
 
