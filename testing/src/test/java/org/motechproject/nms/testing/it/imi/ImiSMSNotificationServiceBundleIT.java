@@ -5,7 +5,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.alerts.contract.AlertCriteria;
-import org.motechproject.alerts.contract.AlertService;
+import org.motechproject.alerts.contract.AlertsDataService;
 import org.motechproject.alerts.domain.Alert;
 import org.motechproject.nms.imi.service.SettingsService;
 import org.motechproject.nms.imi.service.SmsNotificationService;
@@ -40,7 +40,7 @@ public class ImiSMSNotificationServiceBundleIT extends BasePaxIT {
     SmsNotificationService smsNotificationService;
 
     @Inject
-    AlertService alertService;
+    AlertsDataService alertsDataService;
 
     @Inject
     TestingService testingService;
@@ -74,7 +74,7 @@ public class ImiSMSNotificationServiceBundleIT extends BasePaxIT {
                                 TestContext.getJettyPort());
         settingsFacade.setProperty(SMS_NOTIFICATION_URL, newUrl);
         assertTrue(smsNotificationService.sendSms(1234567890l));
-        List<Alert> alert = alertService.search(alertCriteria.byExternalId("SmsNotification"));
+        List<Alert> alert = alertsDataService.findByExternalId("SmsNotification");
         assertEquals(0,alert.size());
 
     }
