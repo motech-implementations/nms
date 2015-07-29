@@ -296,14 +296,10 @@ public class LanguageLocationCodesImportServiceBundleIT extends BasePaxIT {
     }
 
     /**
-     * 518: To verify LLC is set successfully for all the districts in a state.
-     * <p>
-     * 519: To verify that multiple states can be mapped to one circle.
-     * <p>
-     * 520: To verify that one state can be mapped to more than one circle.
+     * To verify LLC is set successfully for all the districts in a state.
      */
     @Test
-    public void verifyFT518_FT519_FT520() throws InterruptedException,
+    public void verifyFT518() throws InterruptedException,
             IOException {
         HttpResponse response = null;
         // Import state
@@ -344,17 +340,6 @@ public class LanguageLocationCodesImportServiceBundleIT extends BasePaxIT {
         assertNull(aligarhDistrict.getLanguage());
         assertNull(noidaDistrict.getLanguage());
         assertNull(northDistrict.getLanguage());
-
-        // 519 DELHI-NCR circle have two states
-        Circle circle = circleDataService.findByName("DELHI-NCR");
-        assertTrue(circle.getStates().size() > 1);
-        assertTrue(circle.getStates().contains(delhiState));
-        assertTrue(circle.getStates().contains(upState));
-
-        // 520 UP state mapped to two circles
-        assertTrue(upState.getCircles().size() > 1);
-        assertTrue(upState.getCircles().contains(ncrCircle));
-        assertTrue(upState.getCircles().contains(upWestCircle));
         
         //import LLC data
         response = importCsvFileForLocationData(null, "llc_data_ft_518.csv");
@@ -381,5 +366,68 @@ public class LanguageLocationCodesImportServiceBundleIT extends BasePaxIT {
         assertEquals("HINDI", noidaDistrict.getLanguage().getName());
         assertEquals("ENGLISH", northDistrict.getLanguage().getName());
         
+    }
+
+    /**
+     * To verify that multiple states can be mapped to one circle.
+     */
+    @Test
+    public void verifyFT519() throws InterruptedException, IOException {
+        HttpResponse response = null;
+        // Import state
+        response = importCsvFileForLocationData("state", "state_ft_518.csv");
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+
+        // Import circle
+        response = importCsvFileForLocationData("circle", "circle_ft_518.csv");
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+
+        Circle ncrCircle = circleDataService.findByName("DELHI-NCR");
+        Circle upWestCircle = circleDataService.findByName("UP-WEST");
+
+        State upState = stateDataService.findByName("UTTAR PRADESH");
+        State delhiState = stateDataService.findByName("DELHI");
+
+        assertNotNull(ncrCircle);
+        assertNotNull(upWestCircle);
+        assertNotNull(upState);
+        assertNotNull(delhiState);
+
+        // DELHI-NCR circle have two states
+        Circle circle = circleDataService.findByName("DELHI-NCR");
+        assertTrue(circle.getStates().size() > 1);
+        assertTrue(circle.getStates().contains(delhiState));
+        assertTrue(circle.getStates().contains(upState));
+    }
+
+    /**
+     * To verify that one state can be mapped to more than one circle.
+     */
+    @Test
+    public void verifyFT520() throws InterruptedException, IOException {
+        HttpResponse response = null;
+        // Import state
+        response = importCsvFileForLocationData("state", "state_ft_518.csv");
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+
+        // Import circle
+        response = importCsvFileForLocationData("circle", "circle_ft_518.csv");
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+
+        Circle ncrCircle = circleDataService.findByName("DELHI-NCR");
+        Circle upWestCircle = circleDataService.findByName("UP-WEST");
+
+        State upState = stateDataService.findByName("UTTAR PRADESH");
+        State delhiState = stateDataService.findByName("DELHI");
+
+        assertNotNull(ncrCircle);
+        assertNotNull(upWestCircle);
+        assertNotNull(upState);
+        assertNotNull(delhiState);
+
+        // UP state mapped to two circles
+        assertTrue(upState.getCircles().size() > 1);
+        assertTrue(upState.getCircles().contains(ncrCircle));
+        assertTrue(upState.getCircles().contains(upWestCircle));
     }
 }
