@@ -295,7 +295,54 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
      */
     @Test(expected = IllegalArgumentException.class)
     public void verifyFT540() throws Exception {
-        Reader reader = createReaderWithHeadersWithNoState("#1\1234567890t\tFLW 0\t11");
+        Reader reader = createReaderWithHeadersWithNoState("#1\t1234567890\tFLW 0\t11");
+        frontLineWorkerImportService.importData(reader);
+    }
+
+    /**
+     * To verify FLW upload is rejected when mandatory parameter name is missing.
+     */
+    @Test(expected = CsvImportDataException.class)
+    public void verifyFT542() throws Exception {
+        Reader reader = createReaderWithHeaders("#1\t1234567890\t\t11");
+        frontLineWorkerImportService.importData(reader);
+    }
+
+    /**
+     * To verify FLW upload is rejected when mandatory parameter MSISDN is having invalid value
+     */
+    @Test(expected = CsvImportDataException.class)
+    public void verifyFT543() throws Exception {
+        Reader reader = createReaderWithHeaders("#1\t123456789\tFLW 1\t11");
+        frontLineWorkerImportService.importData(reader);
+    }
+
+    /**
+     * To verify FLW upload is rejected when mandatory parameter MSISDN is having invalid value
+     */
+    @Test(expected = CsvImportDataException.class)
+    public void verifyFT544() throws Exception {
+        Reader reader = createReaderWithHeadersWithInvalidState("#1\t1234567890\tFLW 1\t11");
+        frontLineWorkerImportService.importData(reader);
+    }
+
+    /**
+     * To verify FLW upload is rejected when mandatory parameter District is having invalid value
+     */
+    @Test(expected = CsvImportDataException.class)
+    public void verifyFT545() throws Exception {
+        Reader reader = createReaderWithHeaders("#1\t1234567890\tFLW 1\t111");
+        frontLineWorkerImportService.importData(reader);
+    }
+
+    /**
+     * To verify FLW upload is rejected when combination of state and District is invalid.
+     */
+    @Test(expected = CsvImportDataException.class)
+    public void verifyFT546() throws Exception {
+        State state2 = createState(2L, "State 2");
+        createDistrict(state2, 22L, "District 22");
+        Reader reader = createReaderWithHeaders("#1\t1234567890\tFLW 1\t22");
         frontLineWorkerImportService.importData(reader);
     }
 
@@ -324,6 +371,18 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         StringBuilder builder = new StringBuilder();
         builder.append("\n");
         builder.append("State Name :").append("\n");
+        builder.append("\n");
+        builder.append("ID\tContact_No\tName\tDistrict_ID").append("\n");
+        for (String line : lines) {
+            builder.append(line).append("\n");
+        }
+        return new StringReader(builder.toString());
+    }
+
+    private Reader createReaderWithHeadersWithInvalidState(String... lines) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("\n");
+        builder.append("State Name : State 2").append("\n");
         builder.append("\n");
         builder.append("ID\tContact_No\tName\tDistrict_ID").append("\n");
         for (String line : lines) {
