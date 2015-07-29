@@ -1,9 +1,20 @@
 package org.motechproject.nms.testing.it.flw;
 
+import org.apache.commons.httpclient.HttpStatus;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.mime.HttpMultipartMode;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.entity.mime.content.ContentBody;
+import org.apache.http.entity.mime.content.FileBody;
+import org.apache.http.entity.mime.content.StringBody;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.csv.exception.CsvImportDataException;
+import org.motechproject.nms.csv.repository.CsvAuditRecordDataService;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
@@ -13,23 +24,32 @@ import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
+import org.motechproject.nms.testing.it.api.utils.RequestBuilder;
 import org.motechproject.nms.testing.it.utils.RegionHelper;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
+import org.motechproject.testing.osgi.http.SimpleHttpClient;
+import org.motechproject.testing.utils.TestContext;
 import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
+import javax.validation.constraints.AssertTrue;
+
+import java.io.File;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
+import java.io.UnsupportedEncodingException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerSuite.class)
@@ -54,6 +74,8 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
     TestingService testingService;
     @Inject
     FrontLineWorkerUpdateImportService frontLineWorkerUpdateImportService;
+    @Inject
+    CsvAuditRecordDataService csvAuditRecordDataService;
 
 
     private RegionHelper rh;
@@ -114,12 +136,15 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
         frontLineWorkerUpdateImportService.importLanguageData(reader);
     }
 
+    // NMS_FT_553
     // Test when only MCTS Id found and FLW not in database
     @Test(expected = CsvImportDataException.class)
     public void testImportWhenMCTSIdProvidedButNotInDatabase() throws Exception {
         Reader reader = createLanguageReaderWithHeaders(",210302604211400029,,hi,1");
         frontLineWorkerUpdateImportService.importLanguageData(reader);
     }
+
+    // NMS_FT_554
     // Test when only MSISDN found and FLW not in database
     @Test(expected = CsvImportDataException.class)
     public void testImportWhenMSISDProvidedButNotInDatabase() throws Exception {
@@ -410,6 +435,7 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
         assertNull(flw);
     }
 
+    // NMS_FT_557
     // Test new MSISDN not a valid number
     @Test(expected = CsvImportDataException.class)
     public void testMsisdnImportWhenMSISDNProvidedButNotValid() throws Exception {
@@ -417,6 +443,7 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
         frontLineWorkerUpdateImportService.importMSISDNData(reader);
     }
 
+    // NMS_FT_557
     // Test new MSISDN less than 10 digits
     @Test(expected = CsvImportDataException.class)
     public void testMsisdnImportWhenMSISDNProvidedButTooShort() throws Exception {
@@ -424,6 +451,7 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
         frontLineWorkerUpdateImportService.importMSISDNData(reader);
     }
 
+    // NMS_FT_556
     // Test new MSISDN associated with existing FLW
     @Test(expected = CsvImportDataException.class)
     public void testMsisdnImportWhenMSISDNProvidedButAlreadyInUse() throws Exception {
@@ -457,5 +485,144 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
 
     private Reader read(String resource) {
         return new InputStreamReader(getClass().getClassLoader().getResourceAsStream(resource));
+    }
+
+    /**
+     * Method used to import CSV File For updating FLW Data. option can be
+     * "msisdn" or "language"
+     */
+    private HttpResponse importCsvFileForFLWUpdate(String option,
+            String fileName)
+            throws InterruptedException, IOException {
+        HttpPost httpPost = new HttpPost(String.format(
+                "http://localhost:%d/flw/update/%s",
+                TestContext.getJettyPort(), option));
+
+        MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+        builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
+        builder.addPart(
+                "csvFile",
+                new FileBody(new File(String.format(
+                        "src/test/resources/csv/%s", fileName))));
+        httpPost.setEntity(builder.build());
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD);
+        return response;
+    }
+
+    /**
+     * To verify language is updated successfully when MCTS FLW ID is provided.
+     */
+    @Test
+    public void verifyFT550() throws InterruptedException, IOException {
+        FrontLineWorker flw = new FrontLineWorker(1000000000L);
+        flw.setFlwId("72185");
+        flw.setMctsFlwId("210302604211400029");
+        flw.setLanguage(rh.kannadaLanguage());
+        flw.setState(rh.delhiState());
+        flw.setDistrict(rh.newDelhiDistrict());
+        frontLineWorkerService.add(flw);
+
+        assertEquals(
+                HttpStatus.SC_OK,
+                importCsvFileForFLWUpdate("language",
+                        "flw_language_update_only_flwId.csv").getStatusLine()
+                        .getStatusCode());
+
+        flw = frontLineWorkerService.getByFlwId("72185");
+        assertEquals(rh.hindiLanguage(), flw.getLanguage());
+
+        assertEquals(1, csvAuditRecordDataService.count());
+        assertEquals("Success", csvAuditRecordDataService.retrieveAll().get(0)
+                .getOutcome());
+    }
+
+    /**
+     * To verify language is updated successfully when MSISDN is provided.
+     */
+    @Test
+    public void verifyFT551() throws InterruptedException, IOException {
+        FrontLineWorker flw = new FrontLineWorker(1000000000L);
+        flw.setFlwId("72185");
+        flw.setMctsFlwId("210302604211400029");
+        flw.setLanguage(rh.kannadaLanguage());
+        flw.setState(rh.delhiState());
+        flw.setDistrict(rh.newDelhiDistrict());
+        frontLineWorkerService.add(flw);
+
+        assertEquals(
+                HttpStatus.SC_OK,
+                importCsvFileForFLWUpdate("language",
+                        "flw_language_update_only_MSISDN.csv").getStatusLine()
+                        .getStatusCode());
+
+        flw = frontLineWorkerService.getByFlwId("72185");
+        assertEquals(rh.hindiLanguage(), flw.getLanguage());
+
+        assertEquals(1, csvAuditRecordDataService.count());
+        assertEquals("Success", csvAuditRecordDataService.retrieveAll().get(0)
+                .getOutcome());
+    }
+
+    /**
+     * To verify language updated is getting rejected when language provided is
+     * having invalid value.
+     */
+    // TODO JIRA issue https://applab.atlassian.net/browse/NMS-252
+    @Ignore
+    @Test
+    public void verifyFT552() throws InterruptedException, IOException {
+        FrontLineWorker flw = new FrontLineWorker(1000000000L);
+        flw.setFlwId("72185");
+        flw.setMctsFlwId("210302604211400029");
+        flw.setLanguage(rh.kannadaLanguage());
+        flw.setState(rh.delhiState());
+        flw.setDistrict(rh.newDelhiDistrict());
+        frontLineWorkerService.add(flw);
+
+        assertEquals(
+                HttpStatus.SC_BAD_REQUEST,
+                importCsvFileForFLWUpdate("language",
+                        "flw_language_update_lang_error.csv").getStatusLine()
+                        .getStatusCode());
+
+        flw = frontLineWorkerService.getByFlwId("72185");
+        assertEquals(rh.kannadaLanguage(), flw.getLanguage());
+
+        assertEquals(1, csvAuditRecordDataService.count());
+        assertTrue(csvAuditRecordDataService.retrieveAll().get(0).getOutcome()
+                .contains("Failure"));
+    }
+
+    /**
+     * To verify MSISDN is updated successfully when MCTS FLW ID is provided.
+     */
+    @Test
+    public void verifyFT555() throws InterruptedException, IOException {
+        FrontLineWorker flw = new FrontLineWorker(1000000000L);
+        flw.setFlwId("72185");
+        flw.setMctsFlwId("210302604211400029");
+        flw.setLanguage(rh.kannadaLanguage());
+        flw.setState(rh.delhiState());
+        flw.setDistrict(rh.newDelhiDistrict());
+        frontLineWorkerService.add(flw);
+
+        assertEquals(
+                HttpStatus.SC_OK,
+                importCsvFileForFLWUpdate("msisdn",
+                        "flw_msisdn_update_only_flwId.csv").getStatusLine()
+                        .getStatusCode());
+
+        flw = frontLineWorkerService.getByContactNumber(9439986187L);
+        assertNotNull(flw);
+
+        flw = frontLineWorkerService.getByContactNumber(1000000000L);
+        assertNull(flw);
+
+        assertEquals(1, csvAuditRecordDataService.count());
+        assertEquals("Success", csvAuditRecordDataService.retrieveAll().get(0)
+                .getOutcome());
     }
 }
