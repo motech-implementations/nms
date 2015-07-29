@@ -2,7 +2,7 @@ package org.motechproject.nms.kilkari.service;
 
 import org.joda.time.DateTime;
 import org.motechproject.mds.annotations.InstanceLifecycleListener;
-import org.motechproject.mds.domain.InstanceLifecycleListenerType;
+import org.motechproject.mds.annotations.InstanceLifecycleListenerType;
 import org.motechproject.nms.kilkari.domain.MctsBeneficiary;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
