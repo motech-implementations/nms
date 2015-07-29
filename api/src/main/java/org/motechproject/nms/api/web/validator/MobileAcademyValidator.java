@@ -4,10 +4,12 @@ import org.motechproject.nms.api.web.contract.mobileAcademy.CourseResponse;
 import org.motechproject.nms.api.web.contract.mobileAcademy.SmsStatusRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import javax.validation.Validator;
+
 import java.util.Set;
 
 
@@ -18,7 +20,8 @@ public final class MobileAcademyValidator {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MobileAcademyValidator.class);
 
-    private static final Validator VALIDATOR = Validation.buildDefaultValidatorFactory().getValidator();
+    @Qualifier("validator")
+    private static final Validator VALIDATOR = Validation.buildDefaultValidatorFactory().usingContext().getValidator();
 
     /**
      * Private constructor for static validation helpers
