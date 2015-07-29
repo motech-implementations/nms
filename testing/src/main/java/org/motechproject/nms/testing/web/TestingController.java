@@ -33,10 +33,13 @@ public class TestingController {
         return String.format("Sent MOTECH event: %s with empty params: %s", subject, eventParams.toString());
     }
 
-    @RequestMapping(value = "/sendSMS200", method = RequestMethod.POST, headers = { "Content-type=application/json" })
+    /**
+     * API used by NMS to send SMS for testing purpose only.
+     */
+    @RequestMapping(value = "/sendSMS/outbound", method = RequestMethod.POST, headers = { "Content-type=application/json" })
     @ResponseStatus(HttpStatus.ACCEPTED)
     @ResponseBody
-    public String sendSMS200(@RequestBody String template) {
+    public String sendSMSOutbound(@RequestBody String template) {
         return "OK";
     }
 }

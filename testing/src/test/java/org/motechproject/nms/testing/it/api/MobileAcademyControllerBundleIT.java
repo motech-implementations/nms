@@ -1158,7 +1158,8 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
 
         String SMS_NOTIFICATION_URL = "imi.sms.notification.url";
         String oldUrl = settingsFacade.getProperty(SMS_NOTIFICATION_URL);
-        String newUrl = String.format("http://localhost:%d/testing/sendSMS200",
+        String newUrl = String.format(
+                "http://localhost:%d/testing/sendSMS/outbound",
                 TestContext.getJettyPort());
         settingsFacade.setProperty(SMS_NOTIFICATION_URL, newUrl);
 
@@ -1271,7 +1272,8 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
 
         String SMS_NOTIFICATION_URL = "imi.sms.notification.url";
         String oldUrl = settingsFacade.getProperty(SMS_NOTIFICATION_URL);
-        String newUrl = String.format("http://localhost:%d/testing/sendSMS200",
+        String newUrl = String.format(
+                "http://localhost:%d/testing/sendSMS/outbound",
                 TestContext.getJettyPort());
         settingsFacade.setProperty(SMS_NOTIFICATION_URL, newUrl);
 
