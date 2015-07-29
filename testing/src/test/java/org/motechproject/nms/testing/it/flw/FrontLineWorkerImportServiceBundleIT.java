@@ -1,10 +1,17 @@
 package org.motechproject.nms.testing.it.flw;
 
+import org.apache.commons.httpclient.HttpStatus;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.mime.HttpMultipartMode;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.entity.mime.content.FileBody;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.motechproject.nms.csv.domain.CsvAuditRecord;
 import org.motechproject.nms.csv.exception.CsvImportDataException;
+import org.motechproject.nms.csv.repository.CsvAuditRecordDataService;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
@@ -24,18 +31,19 @@ import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.testing.it.api.utils.RequestBuilder;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
+import org.motechproject.testing.osgi.http.SimpleHttpClient;
+import org.motechproject.testing.utils.TestContext;
 import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.StringReader;
+import java.io.*;
 import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
@@ -74,6 +82,10 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     @Inject
     FrontLineWorkerImportService frontLineWorkerImportService;
 
+    @Inject
+    private CsvAuditRecordDataService csvAuditRecordDataService;
+
+    public static final String SUCCESS = "Success";
     @Before
     public void setUp() {
         testingService.clearDatabase();
@@ -257,12 +269,17 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT535() throws Exception {
-        Reader reader = createReaderWithHeaders("#0\t1234567890\tFLW 0\t11");
-        frontLineWorkerImportService.importData(reader);
-        FrontLineWorker flw1 = frontLineWorkerDataService.findByContactNumber(1234567890L);
-        assertFLW(flw1, "#0", 1234567890L, "FLW 0", "District 11", "L1");
+        importCsvFileForFLW("flw.txt");
+        FrontLineWorker flw1 = frontLineWorkerDataService.findByContactNumber(1234567899L);
+        assertFLW(flw1, "1", 1234567899L, "Aisha Bibi", "District 11", "L1");
         assertEquals("State{name='State 1', code=1}", flw1.getState().toString());
         assertEquals(FrontLineWorkerStatus.INACTIVE, flw1.getStatus());
+        // Assert audit trail log
+        CsvAuditRecord csvAuditRecord = csvAuditRecordDataService.retrieveAll()
+                .get(0);
+        assertEquals("/flw/import", csvAuditRecord.getEndpoint());
+        assertEquals(SUCCESS, csvAuditRecord.getOutcome());
+        assertEquals("flw.txt", csvAuditRecord.getFile());
     }
 
     /**
@@ -302,10 +319,15 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     /**
      * To verify FLW upload is rejected when mandatory parameter name is missing.
      */
-    @Test(expected = CsvImportDataException.class)
+    @Test
     public void verifyFT542() throws Exception {
-        Reader reader = createReaderWithHeaders("#1\t1234567890\t\t11");
-        frontLineWorkerImportService.importData(reader);
+            importCsvFileForFLW("flw_name_missing.txt");
+            // Assert audit trail log
+            CsvAuditRecord csvAuditRecord = csvAuditRecordDataService.retrieveAll()
+                    .get(0);
+            assertEquals("/flw/import", csvAuditRecord.getEndpoint());
+            assertEquals("Failure: The number of columns to be processed (3) must match the number of CellProcessors (4): check that the number of CellProcessors you have defined matches the expected number of columns being read/written", csvAuditRecord.getOutcome());
+            assertEquals("flw_name_missing.txt", csvAuditRecord.getFile());
     }
 
     /**
@@ -393,6 +415,20 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
 
     private Reader read(String resource) {
         return new InputStreamReader(getClass().getClassLoader().getResourceAsStream(resource));
+    }
+
+    /**
+     * Method used to import CSV File For FLW Data
+     */
+    private void importCsvFileForFLW(String fileName) throws InterruptedException, IOException {
+        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/flw/import", TestContext.getJettyPort()));
+        FileBody fileBody = new FileBody(new File(String.format("src/test/resources/csv/%s", fileName)));
+        MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+        builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
+        builder.addPart("csvFile", fileBody);
+        httpPost.setEntity(builder.build());
+        SimpleHttpClient.httpRequestAndResponse(httpPost, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD);
     }
 
 }
