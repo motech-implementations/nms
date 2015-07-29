@@ -1,5 +1,19 @@
 package org.motechproject.nms.testing.it.api;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.StringWriter;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.inject.Inject;
+
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
@@ -19,6 +33,7 @@ import org.motechproject.nms.api.web.contract.mobileAcademy.CourseResponse;
 import org.motechproject.nms.api.web.contract.mobileAcademy.SaveBookmarkRequest;
 import org.motechproject.nms.api.web.contract.mobileAcademy.SmsStatusRequest;
 import org.motechproject.nms.api.web.contract.mobileAcademy.sms.RequestData;
+import org.motechproject.nms.imi.service.SettingsService;
 import org.motechproject.nms.mobileacademy.domain.CompletionRecord;
 import org.motechproject.nms.mobileacademy.domain.NmsCourse;
 import org.motechproject.nms.mobileacademy.dto.MaCourse;
@@ -26,6 +41,7 @@ import org.motechproject.nms.mobileacademy.repository.CompletionRecordDataServic
 import org.motechproject.nms.mobileacademy.repository.NmsCourseDataService;
 import org.motechproject.nms.testing.it.api.utils.RequestBuilder;
 import org.motechproject.nms.testing.service.TestingService;
+import org.motechproject.server.config.SettingsFacade;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.motechproject.testing.osgi.http.SimpleHttpClient;
@@ -34,16 +50,6 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
-
-import javax.inject.Inject;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.HashMap;
-import java.util.Map;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Integration tests for mobile academy controller
@@ -64,6 +70,9 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
 
     @Inject
     private NmsCourseDataService nmsCourseDataService;
+    
+    @Inject
+    private SettingsService settingsService;
 
     private static final String COURSE_NAME = "MobileAcademyCourse";
 
@@ -363,8 +372,6 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
     public void verifyFT404() throws IOException, InterruptedException {
         bookmarkService.deleteAllBookmarksForUser("1234567890");
 
-        // Blank bookmark should come as request response, As there is no any
-        // bookmark in the system for the user
         HttpGet getRequest = createHttpGetBookmarkWithScore("1234567890",
                 "123456789012345");
 
@@ -382,7 +389,6 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
      * To verify Get Bookmark with Score API is rejected when mandatory
      * parameter CallingNumber is missing
      */
-    // TODO JIRA issue: https://applab.atlassian.net/browse/NMS-238
     @Test
     public void verifyFT405() throws IOException, InterruptedException {
         HttpGet request = createHttpGetBookmarkWithScore(null,
@@ -402,7 +408,6 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
      * To verify Get Bookmark with Score API is rejected when mandatory
      * parameter CallId is missing.
      */
-    // TODO JIRA issue: https://applab.atlassian.net/browse/NMS-238
     @Test
     public void verifyFT406() throws IOException, InterruptedException {
         HttpGet request = createHttpGetBookmarkWithScore("1234567890", null);
@@ -421,7 +426,6 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
      * To verify Get Bookmark with Score API is rejected when mandatory
      * parameter CallingNumber is having invalid value.
      */
-    // TODO JIRA issue: https://applab.atlassian.net/browse/NMS-239
     @Test
     public void verifyFT407() throws IOException, InterruptedException {
         // 11 digit callingNumber
@@ -464,7 +468,6 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
      * To verify Get Bookmark with Score API is rejected when mandatory
      * parameter CallId is having invalid value.
      */
-    // TODO JIRA issue: https://applab.atlassian.net/browse/NMS-239
     @Test
     public void verifyFT408() throws IOException, InterruptedException {
         // callId more than 15 digit
@@ -498,7 +501,6 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT409() throws IOException, InterruptedException {
-
         String endpoint = String.format(
                 "http://localhost:%d/api/mobileacademy/bookmarkWithScore",
                 TestContext.getJettyPort());
@@ -524,8 +526,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT410() throws IOException, InterruptedException {
-        // Request without callingNumber and Bookmark
-
+        // Request without score and Bookmark
         String endpoint = String.format(
                 "http://localhost:%d/api/mobileacademy/bookmarkWithScore",
                 TestContext.getJettyPort());
@@ -542,7 +543,6 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
      * To verify Save bookmark with score API is rejected when mandatory
      * parameter "callingNumber" is missing.
      */
-    // TODO NMS-219
     @Test
     public void verifyFT411() throws IOException, InterruptedException {
         // callingNumber missing in the request body
@@ -555,8 +555,6 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
         bookmarkRequest.setBookmark("Chapter01_Lesson01");
         Map<String, Integer> scoreMap = new HashMap<String, Integer>();
         scoreMap.put("1", 2);
-        scoreMap.put("2", 0);
-        scoreMap.put("3", 3);
         bookmarkRequest.setScoresByChapter(scoreMap);
         HttpPost request = RequestBuilder.createPostRequest(endpoint,
                 bookmarkRequest);
@@ -574,11 +572,9 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
      * To verify Save bookmark with score API is rejected when mandatory
      * parameter "callId" is missing.
      */
-    // TODO NMS-219
     @Test
     public void verifyFT412() throws IOException, InterruptedException {
         // callId missing in the request body
-
         String endpoint = String.format(
                 "http://localhost:%d/api/mobileacademy/bookmarkWithScore",
                 TestContext.getJettyPort());
@@ -618,8 +614,6 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
         bookmarkRequest.setBookmark("Chapter01_Lesson01");
         Map<String, Integer> scoreMap = new HashMap<String, Integer>();
         scoreMap.put("1", 2);
-        scoreMap.put("2", 0);
-        scoreMap.put("3", 3);
         bookmarkRequest.setScoresByChapter(scoreMap);
         HttpPost request = RequestBuilder.createPostRequest(endpoint,
                 bookmarkRequest);
@@ -689,11 +683,9 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
      * To verify Save bookmark with score API is rejected when parameter
      * scoresByChapter is having value greater than 4.
      */
-    // TODO JIRA issue: https://applab.atlassian.net/browse/NMS-221
     @Test
     public void verifyFT415() throws IOException, InterruptedException {
         // Invalid scores should not be accepted
-
         String endpoint = String.format(
                 "http://localhost:%d/api/mobileacademy/bookmarkWithScore",
                 TestContext.getJettyPort());
@@ -716,37 +708,18 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
         String expectedJsonResponse = createFailureResponseJson("<scoresByChapter: Invalid>");
         assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response
                 .getEntity())));
-    }
-
-    /**
-     * To verify Save bookmark with score API is rejected when parameter
-     * "bookmark" is having invalid value.
-     */
-    // TODO JIRA issue: https://applab.atlassian.net/browse/NMS-222
-    @Test
-    @Ignore
-    public void verifyFT416() throws IOException, InterruptedException {
-        // Request with invalid bookmark value
-        String endpoint = String.format(
-                "http://localhost:%d/api/mobileacademy/bookmarkWithScore",
-                TestContext.getJettyPort());
-        SaveBookmarkRequest bookmarkRequest = new SaveBookmarkRequest();
-        bookmarkRequest.setCallingNumber(1234567890l);
-        bookmarkRequest.setCallId(123456789012345l);
-        bookmarkRequest.setBookmark("Abc_Abc"); // Invalid bookmark
-        Map<String, Integer> scoreMap = new HashMap<String, Integer>();
-        scoreMap.put("1", 2);
-        scoreMap.put("2", 3);
-        scoreMap.put("3", 3);
+        
+        
+        scoreMap.put("1", -2); // invalid negative score
+        scoreMap.put("2", 2);
         bookmarkRequest.setScoresByChapter(scoreMap);
-        HttpPost request = RequestBuilder.createPostRequest(endpoint,
+        request = RequestBuilder.createPostRequest(endpoint,
                 bookmarkRequest);
-        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+        response = SimpleHttpClient.httpRequestAndResponse(
                 request, RequestBuilder.ADMIN_USERNAME,
                 RequestBuilder.ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
                 .getStatusCode());
-        String expectedJsonResponse = createFailureResponseJson("<bookmark: Invalid>");
         assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response
                 .getEntity())));
     }
@@ -919,11 +892,64 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
     }
 
     /**
+     * To verify course counter is incremented when course is re-attempted.
+     */
+    @Test
+    public void verifyFT420() throws IOException, InterruptedException {
+        String endpoint = String.format(
+                "http://localhost:%d/api/mobileacademy/bookmarkWithScore",
+                TestContext.getJettyPort());
+        SaveBookmarkRequest bookmarkRequest = new SaveBookmarkRequest();
+
+        // save bookamark first
+        bookmarkRequest.setCallingNumber(1234567890l);
+        bookmarkRequest.setCallId(123456789012345l);
+        bookmarkRequest.setBookmark("COURSE_COMPLETED");
+        Map<String, Integer> scoreMap = new HashMap<String, Integer>();
+        scoreMap.put("1", 2);
+        scoreMap.put("2", 1);
+        scoreMap.put("3", 4);
+        scoreMap.put("4", 2);
+        scoreMap.put("5", 1);
+        scoreMap.put("6", 4);
+        scoreMap.put("7", 2);
+        scoreMap.put("8", 1);
+        scoreMap.put("9", 4);
+        scoreMap.put("10", 1);
+        scoreMap.put("11", 4);
+        bookmarkRequest.setScoresByChapter(scoreMap);
+        HttpPost postRequest = RequestBuilder.createPostRequest(endpoint,
+                bookmarkRequest);
+        assertTrue(SimpleHttpClient.execHttpRequest(postRequest,
+                HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD));
+
+        CompletionRecord cr = completionRecordDataService
+                .findRecordByCallingNumber(1234567890l);
+        assertNotNull(cr);
+        assertEquals(cr.getCompletionCount(), 1);
+
+        // reattempt course with slightly different passing scores(more than 22)
+        scoreMap.put("6", 2);
+        scoreMap.put("7", 4);
+        scoreMap.put("8", 4);
+        bookmarkRequest.setScoresByChapter(scoreMap);
+        postRequest = RequestBuilder.createPostRequest(endpoint,
+                bookmarkRequest);
+        assertTrue(SimpleHttpClient.execHttpRequest(postRequest,
+                HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD));
+
+        cr = completionRecordDataService.findRecordByCallingNumber(1234567890l);
+        assertNotNull(cr);
+        assertEquals(cr.getCompletionCount(), 2);
+    }
+
+    /**
      * To verify course is marked completed when user has listened all the
      * chapters,attempted all the quiz and total score should be greater than
      * 50%(i.e 22)
      */
-    // TODO JIRA issue: https://applab.atlassian.net/browse/NMS-240
     @Test
     public void verifyFT508() throws IOException, InterruptedException {
         String endpoint = String.format(
@@ -969,6 +995,155 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
         String expectedJsonResponse = "{\"bookmark\":null,\"scoresByChapter\":null}";
         assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response
                 .getEntity())));
+    }
+
+    /**
+     * To verify course is not marked completed when user has listened all the
+     * chapters,attempted all the quiz and but total score is less than 50%(i.e
+     * 22)
+     */
+    @Test
+    public void verifyFT509() throws IOException, InterruptedException {
+        String endpoint = String.format(
+                "http://localhost:%d/api/mobileacademy/bookmarkWithScore",
+                TestContext.getJettyPort());
+        SaveBookmarkRequest bookmarkRequest = new SaveBookmarkRequest();
+
+        // save bookmark first
+        bookmarkRequest.setCallingNumber(1234567890l);
+        bookmarkRequest.setCallId(123456789012345l);
+        bookmarkRequest.setBookmark("COURSE_COMPLETED");
+        Map<String, Integer> scoreMap = new HashMap<String, Integer>();
+        scoreMap.put("1", 2);
+        scoreMap.put("2", 1);
+        scoreMap.put("3", 2);
+        scoreMap.put("4", 2);
+        scoreMap.put("5", 1);
+        scoreMap.put("6", 2);
+        scoreMap.put("7", 2);
+        scoreMap.put("8", 1);
+        scoreMap.put("9", 2);
+        scoreMap.put("10", 1);
+        scoreMap.put("11", 2);
+        // Total score less than 22
+        bookmarkRequest.setScoresByChapter(scoreMap);
+        HttpPost postRequest = RequestBuilder.createPostRequest(endpoint,
+                bookmarkRequest);
+        assertTrue(SimpleHttpClient.execHttpRequest(postRequest,
+                HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD));
+
+        CompletionRecord cr = completionRecordDataService
+                .findRecordByCallingNumber(1234567890l);
+        assertNull(cr);
+    }
+
+    /**
+     * To verify course is not marked completed when user has not listened all
+     * the chapters, not attempted all the quiz.
+     */
+    @Test
+    public void verifyFT510() throws IOException, InterruptedException {
+        String endpoint = String.format(
+                "http://localhost:%d/api/mobileacademy/bookmarkWithScore",
+                TestContext.getJettyPort());
+        SaveBookmarkRequest bookmarkRequest = new SaveBookmarkRequest();
+
+        // save bookmark first
+        bookmarkRequest.setCallingNumber(1234567890l);
+        bookmarkRequest.setCallId(123456789012345l);
+        bookmarkRequest.setBookmark("COURSE_COMPLETED");
+        Map<String, Integer> scoreMap = new HashMap<String, Integer>();
+        scoreMap.put("1", 4);
+        scoreMap.put("2", 4);
+        scoreMap.put("3", 4);
+        scoreMap.put("5", 1);
+        scoreMap.put("6", 4);
+        scoreMap.put("7", 4);
+        scoreMap.put("9", 2);
+        // All the quizes not attempted
+        bookmarkRequest.setScoresByChapter(scoreMap);
+        HttpPost postRequest = RequestBuilder.createPostRequest(endpoint,
+                bookmarkRequest);
+        assertTrue(SimpleHttpClient.execHttpRequest(postRequest,
+                HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD));
+
+        CompletionRecord cr = completionRecordDataService
+                .findRecordByCallingNumber(1234567890l);
+        assertNull(cr);
+    }
+
+    /**
+     * To verify that MA service shall Manually trigger course completion SMS in
+     * case FLW has accidentally deleted the SMS.
+     */
+    @Test
+    public void verifyFT521() throws IOException, InterruptedException {
+        SettingsFacade settingsFacade = settingsService.getSettingsFacade();
+
+        String SMS_NOTIFICATION_URL = "imi.sms.notification.url";
+        String oldUrl = settingsFacade.getProperty(SMS_NOTIFICATION_URL);    
+        String newUrl = String.format(
+                "http://localhost:%d/testing/sendSMS200",
+                TestContext.getJettyPort());
+        settingsFacade.setProperty(SMS_NOTIFICATION_URL, newUrl);    
+        
+        String endpoint = String.format(
+                "http://localhost:%d/api/mobileacademy/bookmarkWithScore",
+                TestContext.getJettyPort());
+        SaveBookmarkRequest bookmarkRequest = new SaveBookmarkRequest();
+
+        // save bookmark first
+        bookmarkRequest.setCallingNumber(1234567890l);
+        bookmarkRequest.setCallId(123456789012345l);
+        bookmarkRequest.setBookmark("COURSE_COMPLETED");
+        Map<String, Integer> scoreMap = new HashMap<String, Integer>();
+        scoreMap.put("1", 2);
+        scoreMap.put("2", 1);
+        scoreMap.put("3", 4);
+        scoreMap.put("4", 2);
+        scoreMap.put("5", 1);
+        scoreMap.put("6", 4);
+        scoreMap.put("7", 2);
+        scoreMap.put("8", 1);
+        scoreMap.put("9", 4);
+        scoreMap.put("10", 1);
+        scoreMap.put("11", 4);
+        bookmarkRequest.setScoresByChapter(scoreMap);
+        HttpPost postRequest = RequestBuilder.createPostRequest(endpoint,
+                bookmarkRequest);
+        assertTrue(SimpleHttpClient.execHttpRequest(postRequest,
+                HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD));
+
+        Thread.currentThread().sleep(5000);
+
+        CompletionRecord cr = completionRecordDataService
+                .findRecordByCallingNumber(1234567890l);
+        assertNotNull(cr);
+        assertEquals(true, cr.isSentNotification());
+
+        cr.setSentNotification(false);
+        completionRecordDataService.update(cr);
+
+        // Manually trigger course completion SMS via exposed URL
+
+        endpoint = String.format(
+                "http://localhost:%d/api/mobileacademy/notify",
+                TestContext.getJettyPort());
+        postRequest = RequestBuilder.createPostRequest(endpoint, 1234567890l);
+        assertTrue(SimpleHttpClient.execHttpRequest(postRequest,
+                HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD));
+
+        Thread.currentThread().sleep(5000);
+
+        cr = completionRecordDataService.findRecordByCallingNumber(1234567890l);
+        assertNotNull(cr);
+        assertEquals(true, cr.isSentNotification());
+
+        settingsFacade.setProperty(SMS_NOTIFICATION_URL, oldUrl);
     }
 
     /**

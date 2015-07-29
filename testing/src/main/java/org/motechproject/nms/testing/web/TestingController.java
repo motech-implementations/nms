@@ -1,16 +1,20 @@
 package org.motechproject.nms.testing.web;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.EventRelay;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-
-import java.util.HashMap;
-import java.util.Map;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 @Controller
 public class TestingController {
@@ -29,4 +33,10 @@ public class TestingController {
         return String.format("Sent MOTECH event: %s with empty params: %s", subject, eventParams.toString());
     }
 
+    @RequestMapping(value = "/sendSMS200", method = RequestMethod.POST, headers = { "Content-type=application/json" })
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    @ResponseBody
+    public String sendSMS200(@RequestBody String template) {
+        return "OK";
+    }
 }
