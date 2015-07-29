@@ -1261,5 +1261,77 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
         settingsFacade.setProperty(SMS_NOTIFICATION_URL, oldUrl);
     }
 
+    /**
+     * To verify that MA service shall Manually trigger course completion SMS in
+     * case FLW has accidentally deleted the SMS.
+     */
+    @Test
+    public void verifyFT521() throws IOException, InterruptedException {
+        SettingsFacade settingsFacade = settingsService.getSettingsFacade();
+
+        String SMS_NOTIFICATION_URL = "imi.sms.notification.url";
+        String oldUrl = settingsFacade.getProperty(SMS_NOTIFICATION_URL);
+        String newUrl = String.format("http://localhost:%d/testing/sendSMS200",
+                TestContext.getJettyPort());
+        settingsFacade.setProperty(SMS_NOTIFICATION_URL, newUrl);
+
+        String endpoint = String.format(
+                "http://localhost:%d/api/mobileacademy/bookmarkWithScore",
+                TestContext.getJettyPort());
+        SaveBookmarkRequest bookmarkRequest = new SaveBookmarkRequest();
+
+        // save bookmark first
+        bookmarkRequest.setCallingNumber(1234567890l);
+        bookmarkRequest.setCallId(123456789012345l);
+        bookmarkRequest.setBookmark("COURSE_COMPLETED");
+        Map<String, Integer> scoreMap = new HashMap<String, Integer>();
+        scoreMap.put("1", 2);
+        scoreMap.put("2", 1);
+        scoreMap.put("3", 4);
+        scoreMap.put("4", 2);
+        scoreMap.put("5", 1);
+        scoreMap.put("6", 4);
+        scoreMap.put("7", 2);
+        scoreMap.put("8", 1);
+        scoreMap.put("9", 4);
+        scoreMap.put("10", 1);
+        scoreMap.put("11", 4);
+        bookmarkRequest.setScoresByChapter(scoreMap);
+        HttpPost postRequest = RequestBuilder.createPostRequest(endpoint,
+                bookmarkRequest);
+        assertTrue(SimpleHttpClient.execHttpRequest(postRequest,
+                HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD));
+
+        Thread.currentThread().sleep(5000);
+
+        CompletionRecord cr = completionRecordDataService
+                .findRecordByCallingNumber(1234567890l);
+        assertNotNull(cr);
+        assertEquals(true, cr.isSentNotification());
+
+        // Reset sent notification flag to false
+        cr.setSentNotification(false);
+        completionRecordDataService.update(cr);
+
+        // Manually trigger course completion SMS via exposed URL
+
+        endpoint = String.format(
+                "http://localhost:%d/api/mobileacademy/notify",
+                TestContext.getJettyPort());
+        postRequest = RequestBuilder.createPostRequest(endpoint, 1234567890l);
+        assertTrue(SimpleHttpClient.execHttpRequest(postRequest,
+                HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD));
+
+        Thread.currentThread().sleep(5000);
+
+        cr = completionRecordDataService.findRecordByCallingNumber(1234567890l);
+        assertNotNull(cr);
+        assertEquals(true, cr.isSentNotification());
+
+        settingsFacade.setProperty(SMS_NOTIFICATION_URL, oldUrl);
+    }
+
 }
 
