@@ -19,6 +19,8 @@ import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.testing.it.api.utils.RequestBuilder;
 import org.motechproject.nms.testing.service.TestingService;
+import org.motechproject.nms.tracking.domain.ChangeLog;
+import org.motechproject.nms.tracking.repository.ChangeLogDataService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.motechproject.testing.osgi.http.SimpleHttpClient;
@@ -29,14 +31,17 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 
@@ -68,6 +73,9 @@ public class CircleImportServiceBundleIT extends BasePaxIT {
     public static final String SUCCESS = "Success";
 
     public static final String FAILURE = "Failure: ";
+
+    @Inject
+    private ChangeLogDataService changeLogDataService;
 
     @Before
     public void setUp() {
@@ -187,7 +195,8 @@ public class CircleImportServiceBundleIT extends BasePaxIT {
     /**
      * Method used to import CSV File For Location Data
      */
-    private void importCsvFileForLocationData(String location, String fileName)
+    private HttpResponse importCsvFileForLocationData(String location,
+            String fileName)
             throws InterruptedException, IOException {
         HttpPost httpPost = new HttpPost(String.format(
                 "http://localhost:%d/region/data/import/%s",
@@ -202,7 +211,7 @@ public class CircleImportServiceBundleIT extends BasePaxIT {
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
                 httpPost, RequestBuilder.ADMIN_USERNAME,
                 RequestBuilder.ADMIN_PASSWORD);
-        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        return response;
     }
 
     /**
@@ -211,7 +220,10 @@ public class CircleImportServiceBundleIT extends BasePaxIT {
     // TODO https://applab.atlassian.net/browse/NMS-242
     @Test
     public void verifyFT262() throws InterruptedException, IOException {
-        importCsvFileForLocationData("circle", "circles.csv");
+        changeLogDataService.deleteAll();
+        HttpResponse response = importCsvFileForLocationData("circle",
+                "circles.csv");
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
         // assert circle data
         Circle circle = circleDataService.findByName("Gujarat & Daman & Diu");
         assertNotNull(circle);
@@ -219,11 +231,55 @@ public class CircleImportServiceBundleIT extends BasePaxIT {
         assertTrue(circle.getStates().contains(Gujarat));
         assertTrue(circle.getStates().contains(Daman));
         assertTrue(circle.getStates().contains(Dadra));
+
+        assertNotNull(circleDataService.findByName("Uttar Pradesh(East)"));
+        assertNotNull(circleDataService
+                .findByName("Uttar Pradesh(West) & Uttarakhand"));
         // Assert audit trail log
         CsvAuditRecord csvAuditRecord = csvAuditRecordDataService.retrieveAll()
                 .get(0);
         assertEquals("region/data/import/circle", csvAuditRecord.getEndpoint());
         assertEquals(SUCCESS, csvAuditRecord.getOutcome());
         assertEquals("circles.csv", csvAuditRecord.getFile());
+
+        // assert location history
+        boolean locationHistoryAssert = false;
+        List<ChangeLog> changeLogs = changeLogDataService
+                .findByEntityNameAndInstanceId(circle.getClass().getName(),
+                        circle.getId());
+        for (ChangeLog changeLog : changeLogs) {
+            if (changeLog.getChange().contains(
+                    "name(null, Gujarat & Daman & Diu)")) {
+                locationHistoryAssert = true;
+                break;
+            }
+        }
+
+        assertTrue(locationHistoryAssert);
+    }
+
+    /**
+     * To verify circle location data is rejected when mandatory parameter
+     * circle name is missing.
+     */
+    @Test
+    public void verifyFT264() throws InterruptedException, IOException {
+        changeLogDataService.deleteAll();
+        HttpResponse response = importCsvFileForLocationData("circle",
+                "circle_ft_264.csv");
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        // assert circle data
+        assertNull(circleDataService.findByName("Gujarat & Daman & Diu"));
+        assertNull(circleDataService.findByName("Uttar Pradesh(East)"));
+        assertNull(circleDataService
+                .findByName("Uttar Pradesh(West) & Uttarakhand"));
+
+        // Assert audit trail log
+        CsvAuditRecord csvAuditRecord = csvAuditRecordDataService.retrieveAll()
+                .get(0);
+        assertEquals("region/data/import/circle", csvAuditRecord.getEndpoint());
+        assertTrue(csvAuditRecord.getOutcome().contains(FAILURE));
+        assertEquals("circle_ft_264.csv", csvAuditRecord.getFile());
     }
 }
