@@ -12,6 +12,7 @@ import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.service.CallContentService;
 import org.motechproject.nms.flw.service.CallDetailRecordService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
+import org.motechproject.nms.props.domain.FinalCallStatus;
 import org.motechproject.nms.props.domain.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -136,7 +137,7 @@ public class CallDetailsController extends BaseController {
         cdr.setCallEndTime(new DateTime(callDetailRecordRequest.getCallEndTime() * MILLISECONDS_PER_SECOND));
         cdr.setCallDurationInPulses(callDetailRecordRequest.getCallDurationInPulses());
         cdr.setEndOfUsagePromptCounter(callDetailRecordRequest.getEndOfUsagePromptCounter());
-        cdr.setCallStatus(callDetailRecordRequest.getCallStatus());
+        cdr.setFinalCallStatus(FinalCallStatus.fromInt(callDetailRecordRequest.getCallStatus()));
         cdr.setCallDisconnectReason(callDetailRecordRequest.getCallDisconnectReason());
 
         if (service == Service.MOBILE_KUNJI) {
