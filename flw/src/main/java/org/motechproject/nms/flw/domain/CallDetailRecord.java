@@ -5,7 +5,6 @@ import org.joda.time.DateTime;
 import org.motechproject.mds.annotations.Cascade;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
-import org.motechproject.mds.annotations.Ignore;
 import org.motechproject.nms.props.domain.CallDisconnectReason;
 import org.motechproject.nms.props.domain.FinalCallStatus;
 import org.motechproject.nms.props.domain.Service;
@@ -174,12 +173,6 @@ public class CallDetailRecord {
 
     public void setFinalCallStatus(FinalCallStatus finalCallStatus) {
         this.finalCallStatus = finalCallStatus;
-    }
-
-    @Ignore
-    public void setCallStatus(int i) {
-
-        this.finalCallStatus = FinalCallStatus.fromInt(i);
     }
 
     public CallDisconnectReason getCallDisconnectReason() {
