@@ -207,7 +207,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testSmsStatusInvalidFormat() throws IOException, InterruptedException {
-        String endpoint = String.format("http://localhost:%d/api/mobileacademy/smsdeliverystatus",
+        String endpoint = String.format("http://localhost:%d/api/mobileacademy/sms/status/imi",
                 TestContext.getJettyPort());
         SmsStatusRequest smsStatusRequest = new SmsStatusRequest();
         smsStatusRequest.setRequestData(new RequestData());
@@ -1006,7 +1006,11 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
                 .equals(EntityUtils.toString(response.getEntity())));
     }
 
+    @Ignore
     @Test
+    /**
+     * Testing sms status updates. See https://applab.atlassian.net/browse/NMS-250
+     */
     public void verifyFT564() throws IOException, InterruptedException {
         // create completion record for msisdn 1234567890l
         CompletionRecord cr = new CompletionRecord(1234567890l, 25, true, 1, 0);

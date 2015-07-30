@@ -190,17 +190,18 @@ public class MobileAcademyController extends BaseController {
     }
 
     /**
-     * Save sms
+     * Save sms status. The request mapping value is not ideal here but updating it since it would cost
+     * more effort to do a CR with IMI at this point
      * @param smsDeliveryStatus sms delivery details
      * @return OK or exception
      */
     @RequestMapping(
-            value = "/smsdeliverystatus",
+            value = "/sms/status/imi",
             method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
     public void saveSmsStatus(@RequestBody SmsStatusRequest smsDeliveryStatus) {
 
-        log("/mobileacademy/smsdeliverystatus (POST)", LogHelper.nullOrString(smsDeliveryStatus));
+        log("/mobileacademy/sms/status/imi (POST)", LogHelper.nullOrString(smsDeliveryStatus));
 
         String errors = MobileAcademyValidator.validateSmsStatus(smsDeliveryStatus);
 
