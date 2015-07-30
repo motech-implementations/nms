@@ -6,7 +6,9 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.FileBody;
+import org.joda.time.DateTime;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.csv.domain.CsvAuditRecord;
@@ -43,8 +45,10 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
+
 import java.io.*;
 import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -431,4 +435,47 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
                 RequestBuilder.ADMIN_PASSWORD);
     }
 
+    /**
+     * To verify location is updated successfully when MSISDN is provided.
+     */
+    // TODO JIRA issue: https://applab.atlassian.net/browse/NMS-253
+    @Ignore
+    @Test
+    public void verifyFT559() throws InterruptedException, IOException {
+        State state = stateDataService.findByName("State 1");
+        District district1 = state.getDistricts().get(0);
+        District district2 = state.getDistricts().get(1);
+        Language language1 = languageDataService.findByCode("L1");
+        assertEquals("District 11", district1.getName());
+        assertEquals("District 12", district2.getName());
+
+        FrontLineWorker flw = new FrontLineWorker("Test MSISDN", 1234567890L);
+        flw.setMctsFlwId("#0");
+        flw.setState(state);
+        flw.setDistrict(district1);
+        flw.setLanguage(language1);
+        frontLineWorkerService.add(flw);
+
+        importCsvFileForFLW("flw_location_update_msisdn.txt");
+
+        flw = frontLineWorkerService.getByContactNumber(1234567890L);
+
+        // deleting the FLW to avoid conflicts at later stage
+        flw.setStatus(FrontLineWorkerStatus.INVALID);
+        flw.setInvalidationDate(DateTime.now().minusYears(1));
+        frontLineWorkerService.update(flw);
+        frontLineWorkerService.delete(flw);
+
+        assertFLW(flw, "#0", 1234567890L, "Test MSISDN", "District 12",
+                language1.getName());
+
+        List<CsvAuditRecord> auditRecords = csvAuditRecordDataService
+                .retrieveAll();
+        assertNotNull(auditRecords);
+        assertEquals(1, auditRecords.size());
+
+        CsvAuditRecord auditRecord = auditRecords.get(0);
+        assertEquals("Success", auditRecord.getOutcome());
+        assertEquals("flw_location_update_msisdn.txt", auditRecord.getFile());
+    }
 }
