@@ -22,6 +22,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.json.JSONObject;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -87,10 +88,24 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
     @Inject
     private AlertService alertService;
 
+    private static final String SMS_NOTIFICATION_URL = "imi.sms.notification.url";
+
+    private SettingsFacade settingsFacade;
+
+    String oldSmsEndpoint;
+
     @Before
     public void setupTestData() {
         testingService.clearDatabase();
         nmsCourseDataService.deleteAll();
+
+        settingsFacade = settingsService.getSettingsFacade();
+        oldSmsEndpoint = settingsFacade.getProperty(SMS_NOTIFICATION_URL);
+    }
+
+    @After
+    public void restore() {
+        settingsFacade.setProperty(SMS_NOTIFICATION_URL, oldSmsEndpoint);
     }
 
     @Test
@@ -1154,16 +1169,12 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT562() throws IOException, InterruptedException {
-        SettingsFacade settingsFacade = settingsService.getSettingsFacade();
-
-        String SMS_NOTIFICATION_URL = "imi.sms.notification.url";
-        String oldUrl = settingsFacade.getProperty(SMS_NOTIFICATION_URL);
-        String newUrl = String.format(
+        String newSmsEndPoint = String.format(
                 "http://localhost:%d/testing/sendSMS/outbound",
                 TestContext.getJettyPort());
-        settingsFacade.setProperty(SMS_NOTIFICATION_URL, newUrl);
+        settingsFacade.setProperty(SMS_NOTIFICATION_URL, newSmsEndPoint);
 
-        String endpoint = String.format(
+        String bookmarkEndPoint = String.format(
                 "http://localhost:%d/api/mobileacademy/bookmarkWithScore",
                 TestContext.getJettyPort());
         SaveBookmarkRequest bookmarkRequest = new SaveBookmarkRequest();
@@ -1185,20 +1196,18 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
         scoreMap.put("10", 1);
         scoreMap.put("11", 4);
         bookmarkRequest.setScoresByChapter(scoreMap);
-        HttpPost postRequest = RequestBuilder.createPostRequest(endpoint,
+        HttpPost postRequest = RequestBuilder.createPostRequest(bookmarkEndPoint,
                 bookmarkRequest);
         assertTrue(SimpleHttpClient.execHttpRequest(postRequest,
                 HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME,
                 RequestBuilder.ADMIN_PASSWORD));
 
-        Thread.currentThread().sleep(5000);
+        Thread.sleep(5000);
 
         CompletionRecord cr = completionRecordDataService
                 .findRecordByCallingNumber(1234567890l);
         assertNotNull(cr);
         assertEquals(true, cr.isSentNotification());
-
-        settingsFacade.setProperty(SMS_NOTIFICATION_URL, oldUrl);
     }
 
     /**
@@ -1206,17 +1215,13 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT563() throws IOException, InterruptedException {
-        SettingsFacade settingsFacade = settingsService.getSettingsFacade();
-
-        String SMS_NOTIFICATION_URL = "imi.sms.notification.url";
-        String oldUrl = settingsFacade.getProperty(SMS_NOTIFICATION_URL);
 
         // Set Invalid IMI URL so that it 'll retry to send SMS
-        String newUrl = String.format("http://localhost:%d/testing/invalid",
+        String newSmsEndPoint = String.format("http://localhost:%d/testing/invalid",
                 TestContext.getJettyPort());
-        settingsFacade.setProperty(SMS_NOTIFICATION_URL, newUrl);
+        settingsFacade.setProperty(SMS_NOTIFICATION_URL, newSmsEndPoint);
 
-        String endpoint = String.format(
+        String bookmarkEndPoint = String.format(
                 "http://localhost:%d/api/mobileacademy/bookmarkWithScore",
                 TestContext.getJettyPort());
         SaveBookmarkRequest bookmarkRequest = new SaveBookmarkRequest();
@@ -1238,13 +1243,13 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
         scoreMap.put("10", 1);
         scoreMap.put("11", 4);
         bookmarkRequest.setScoresByChapter(scoreMap);
-        HttpPost postRequest = RequestBuilder.createPostRequest(endpoint,
+        HttpPost postRequest = RequestBuilder.createPostRequest(bookmarkEndPoint,
                 bookmarkRequest);
         assertTrue(SimpleHttpClient.execHttpRequest(postRequest,
                 HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME,
                 RequestBuilder.ADMIN_PASSWORD));
 
-        Thread.currentThread().sleep(10000);
+        Thread.sleep(10000);
 
         CompletionRecord cr = completionRecordDataService
                 .findRecordByCallingNumber(1234567890l);
@@ -1259,7 +1264,6 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
         assertTrue(maxRetryCount >= 1);
         // +1 for first attempt
         assertTrue(retryAlerts.size() == maxRetryCount + 1);
-        settingsFacade.setProperty(SMS_NOTIFICATION_URL, oldUrl);
     }
 
     /**
@@ -1268,16 +1272,12 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT521() throws IOException, InterruptedException {
-        SettingsFacade settingsFacade = settingsService.getSettingsFacade();
-
-        String SMS_NOTIFICATION_URL = "imi.sms.notification.url";
-        String oldUrl = settingsFacade.getProperty(SMS_NOTIFICATION_URL);
-        String newUrl = String.format(
+        String newSmsEndPoint = String.format(
                 "http://localhost:%d/testing/sendSMS/outbound",
                 TestContext.getJettyPort());
-        settingsFacade.setProperty(SMS_NOTIFICATION_URL, newUrl);
+        settingsFacade.setProperty(SMS_NOTIFICATION_URL, newSmsEndPoint);
 
-        String endpoint = String.format(
+        String bookmarkEndPoint = String.format(
                 "http://localhost:%d/api/mobileacademy/bookmarkWithScore",
                 TestContext.getJettyPort());
         SaveBookmarkRequest bookmarkRequest = new SaveBookmarkRequest();
@@ -1299,13 +1299,13 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
         scoreMap.put("10", 1);
         scoreMap.put("11", 4);
         bookmarkRequest.setScoresByChapter(scoreMap);
-        HttpPost postRequest = RequestBuilder.createPostRequest(endpoint,
+        HttpPost postRequest = RequestBuilder.createPostRequest(bookmarkEndPoint,
                 bookmarkRequest);
         assertTrue(SimpleHttpClient.execHttpRequest(postRequest,
                 HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME,
                 RequestBuilder.ADMIN_PASSWORD));
 
-        Thread.currentThread().sleep(5000);
+        Thread.sleep(5000);
 
         CompletionRecord cr = completionRecordDataService
                 .findRecordByCallingNumber(1234567890l);
@@ -1318,21 +1318,19 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
 
         // Manually trigger course completion SMS via exposed URL
 
-        endpoint = String.format(
+        bookmarkEndPoint = String.format(
                 "http://localhost:%d/api/mobileacademy/notify",
                 TestContext.getJettyPort());
-        postRequest = RequestBuilder.createPostRequest(endpoint, 1234567890l);
+        postRequest = RequestBuilder.createPostRequest(bookmarkEndPoint, 1234567890l);
         assertTrue(SimpleHttpClient.execHttpRequest(postRequest,
                 HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME,
                 RequestBuilder.ADMIN_PASSWORD));
 
-        Thread.currentThread().sleep(5000);
+        Thread.sleep(5000);
 
         cr = completionRecordDataService.findRecordByCallingNumber(1234567890l);
         assertNotNull(cr);
         assertEquals(true, cr.isSentNotification());
-
-        settingsFacade.setProperty(SMS_NOTIFICATION_URL, oldUrl);
     }
 
 }
