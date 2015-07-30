@@ -2,6 +2,7 @@ package org.motechproject.nms.imi.service.impl;
 
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -547,7 +548,7 @@ public class TargetFileServiceImpl implements TargetFileService {
                     e.getMessage()), e);
         }
 
-        sender.sendNotificationRequest(httpPost, tfn.getFileName(), "targetFile Notification Request");
+        sender.sendNotificationRequest(httpPost, HttpStatus.SC_ACCEPTED, tfn.getFileName(), "targetFile Notification Request");
     }
 
 
