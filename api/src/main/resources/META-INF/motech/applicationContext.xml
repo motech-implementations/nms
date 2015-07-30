@@ -20,6 +20,4 @@
         </constructor-arg>
     </bean>
 
-    <bean id="validator" class="org.hibernate.validator.HibernateValidator" />
-
 </beans>
