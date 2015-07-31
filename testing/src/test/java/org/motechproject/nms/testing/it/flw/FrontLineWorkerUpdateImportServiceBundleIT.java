@@ -3,14 +3,10 @@ package org.motechproject.nms.testing.it.flw;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
-import org.apache.http.entity.mime.content.ContentBody;
 import org.apache.http.entity.mime.content.FileBody;
-import org.apache.http.entity.mime.content.StringBody;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.csv.exception.CsvImportDataException;
@@ -37,14 +33,11 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
-import javax.validation.constraints.AssertTrue;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
-import java.io.UnsupportedEncodingException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -571,7 +564,6 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
      * having invalid value.
      */
     // TODO JIRA issue https://applab.atlassian.net/browse/NMS-252
-    @Ignore
     @Test
     public void verifyFT552() throws InterruptedException, IOException {
         FrontLineWorker flw = new FrontLineWorker(1000000000L);
