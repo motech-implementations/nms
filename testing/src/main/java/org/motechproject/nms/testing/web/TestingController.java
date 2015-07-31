@@ -37,7 +37,7 @@ public class TestingController {
      * API used by NMS to send SMS for testing purpose only.
      */
     @RequestMapping(value = "/sendSMS/outbound", method = RequestMethod.POST, headers = { "Content-type=application/json" })
-    @ResponseStatus(HttpStatus.ACCEPTED)
+    @ResponseStatus(HttpStatus.CREATED)
     @ResponseBody
     public String sendSMSOutbound(@RequestBody String template) {
         return "OK";

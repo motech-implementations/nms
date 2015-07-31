@@ -69,7 +69,7 @@ public class ImiSMSNotificationServiceBundleIT extends BasePaxIT {
     @Test
     public void verifyNIP47() {
 
-        // linking with an API which always returns 202
+        // linking with an API which always returns 201
         String newUrl = String.format(
                 "http://localhost:%d/testing/sendSMS/outbound",
                 TestContext.getJettyPort());

@@ -234,9 +234,8 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
     }
 
     @Test
-    @Ignore
     public void testSmsStatusInvalidFormat() throws IOException, InterruptedException {
-        String endpoint = String.format("http://localhost:%d/api/mobileacademy/smsdeliverystatus",
+        String endpoint = String.format("http://localhost:%d/api/mobileacademy/sms/status/imi",
                 TestContext.getJettyPort());
         SmsStatusRequest smsStatusRequest = new SmsStatusRequest();
         smsStatusRequest.setRequestData(new RequestData());
@@ -1130,11 +1129,8 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
     }
 
     /**
-     * To check delivery notification API is successful when optional parameter
-     * call data is missing.
+     * To check delivery notification API is successful when optional parameter call data is missing.
      */
-    // TODO https://applab.atlassian.net/browse/NMS-250
-    @Ignore
     @Test
     public void verifyFT564() throws IOException, InterruptedException {
         // create completion record for msisdn 1234567890l
@@ -1144,23 +1140,24 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
 
         // invoke delivery notification API
         String endpoint = String.format(
-                "http://localhost:%d/api/mobileacademy/smsdeliverystatus",
-                TestContext.getJettyPort());
+                "http://localhost:%d/api/mobileacademy/sms/status/imi",
+        TestContext.getJettyPort());
         HttpPost postRequest = new HttpPost(endpoint);
         postRequest.setHeader("Content-type", "application/json");
         String inputJson = "{\"requestData\": {\"deliveryInfoNotification\": {\"clientCorrelator\": \"abc100\""
-                + ",\"deliveryInfo\": {\"address\": \"tel: 1234567890\",\"deliveryStatus\": \"DeliveredToNetwork\"}}}}";
+        + ",\"deliveryInfo\": {\"address\": \"tel: 1234567890\",\"deliveryStatus\": \"DeliveredToNetwork\"}}}}";
         postRequest.setEntity(new StringEntity(inputJson));
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
-                postRequest, RequestBuilder.ADMIN_USERNAME,
-                RequestBuilder.ADMIN_PASSWORD);
+                postRequest, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+
+        // As event handler update in separate thread
+        Thread.sleep(10000);
 
         // assert completion record
         cr = completionRecordDataService.findRecordByCallingNumber(1234567890l);
-        assertEquals(DeliveryStatus.DeliveredToNetwork.toString(),
-                cr.getLastDeliveryStatus());
+        assertEquals(DeliveryStatus.DeliveredToNetwork.toString(), cr.getLastDeliveryStatus());
 
     }
 
@@ -1331,6 +1328,164 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
         cr = completionRecordDataService.findRecordByCallingNumber(1234567890l);
         assertNotNull(cr);
         assertEquals(true, cr.isSentNotification());
+    }
+
+    /**
+     * To check delivery notification API is rejected when mandatory parameter
+     * client correlator is missing..
+     */
+    @Test
+    public void verifyFT565() throws IOException, InterruptedException {
+        // create completion record for msisdn 1234567890l
+        CompletionRecord cr = new CompletionRecord(1234567890l, 25, true, 1, 0);
+        cr = completionRecordDataService.create(cr);
+        assertNull(cr.getLastDeliveryStatus());
+
+        // invoke delivery notification API
+        String endpoint = String.format(
+                "http://localhost:%d/api/mobileacademy/sms/status/imi",
+                TestContext.getJettyPort());
+        HttpPost postRequest = new HttpPost(endpoint);
+        postRequest.setHeader("Content-type", "application/json");
+        String inputJson = "{\"requestData\": {\"deliveryInfoNotification\": {\"deliveryInfo\": {\"address\": \"tel: 1234567890\",\"deliveryStatus\": \"DeliveredToNetwork\"}}}}";
+        postRequest.setEntity(new StringEntity(inputJson));
+
+        String expectedJsonResponse = createFailureResponseJson("<ClientCorrelator: Invalid>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                postRequest, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * To check delivery notification API is rejected when mandatory parameter
+     * client address is missing..
+     */
+    // TODO https://applab.atlassian.net/browse/NMS-254
+    @Ignore
+    @Test
+    public void verifyFT566() throws IOException, InterruptedException {
+        // create completion record for msisdn 1234567890l
+        CompletionRecord cr = new CompletionRecord(1234567890l, 25, true, 1, 0);
+        cr = completionRecordDataService.create(cr);
+        assertNull(cr.getLastDeliveryStatus());
+
+        // invoke delivery notification API
+        String endpoint = String.format(
+                "http://localhost:%d/api/mobileacademy/sms/status/imi",
+                TestContext.getJettyPort());
+        HttpPost postRequest = new HttpPost(endpoint);
+        postRequest.setHeader("Content-type", "application/json");
+        String inputJson = "{\"requestData\": {\"deliveryInfoNotification\": {\"clientCorrelator\": \"abc100\""
+                + ",\"deliveryInfo\": {\"deliveryStatus\": \"DeliveredToNetwork\"}}}}";
+        postRequest.setEntity(new StringEntity(inputJson));
+        //String expectedJsonResponse = createFailureResponseJson("<Address: Invalid>");
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                postRequest, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+     // assertEquals(expectedJsonResponse,EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * To check delivery notification API is rejected when mandatory parameter
+     * delivery status is missing.
+     */
+    @Test
+    public void verifyFT567() throws IOException, InterruptedException {
+        // create completion record for msisdn 1234567890l
+        CompletionRecord cr = new CompletionRecord(1234567890l, 25, true, 1, 0);
+        cr = completionRecordDataService.create(cr);
+        assertNull(cr.getLastDeliveryStatus());
+
+        // invoke delivery notification API
+        String endpoint = String.format(
+                "http://localhost:%d/api/mobileacademy/sms/status/imi",
+                TestContext.getJettyPort());
+        HttpPost postRequest = new HttpPost(endpoint);
+        postRequest.setHeader("Content-type", "application/json");
+        String inputJson = "{\"requestData\": {\"deliveryInfoNotification\": {\"clientCorrelator\": \"abc100\""
+                + ",\"deliveryInfo\": {\"address\": \"tel: 1234567890\"}}}}";
+        postRequest.setEntity(new StringEntity(inputJson));
+
+        String expectedJsonResponse = createFailureResponseJson("<DeliveryStatus: Invalid>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                postRequest, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * To check delivery notification API is rejected when mandatory parameter
+     * address is having invalid value.i.e less than 10 digit
+     */
+    @Test
+    public void verifyFT568() throws IOException, InterruptedException {
+        // create completion record for msisdn 1234567890l
+        CompletionRecord cr = new CompletionRecord(1234567890l, 25, true, 1, 0);
+        cr = completionRecordDataService.create(cr);
+        assertNull(cr.getLastDeliveryStatus());
+
+        // invoke delivery notification API
+        String endpoint = String.format(
+                "http://localhost:%d/api/mobileacademy/sms/status/imi",
+                TestContext.getJettyPort());
+        HttpPost postRequest = new HttpPost(endpoint);
+        postRequest.setHeader("Content-type", "application/json");
+        String inputJson = "{\"requestData\": {\"deliveryInfoNotification\": {\"clientCorrelator\": \"abc100\""
+                + ",\"deliveryInfo\": {\"address\": \"tel: 123456789\",\"deliveryStatus\": \"DeliveredToNetwork\"}}}}";
+        postRequest.setEntity(new StringEntity(inputJson));
+
+        String expectedJsonResponse = createFailureResponseJson("<Address: Invalid>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                postRequest, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * To check delivery notification API is rejected when mandatory parameter
+     * delivery status is having invalid value.
+     */
+    @Test
+    public void verifyFT569() throws IOException, InterruptedException {
+        // create completion record for msisdn 1234567890l
+        CompletionRecord cr = new CompletionRecord(1234567890l, 25, true, 1, 0);
+        cr = completionRecordDataService.create(cr);
+        assertNull(cr.getLastDeliveryStatus());
+
+        // invoke delivery notification API
+        String endpoint = String.format(
+                "http://localhost:%d/api/mobileacademy/sms/status/imi",
+                TestContext.getJettyPort());
+        HttpPost postRequest = new HttpPost(endpoint);
+        postRequest.setHeader("Content-type", "application/json");
+        String inputJson = "{\"requestData\": {\"deliveryInfoNotification\": {\"clientCorrelator\": \"abc100\""
+                + ",\"deliveryInfo\": {\"address\": \"tel: 1234567890\",\"deliveryStatus\": \"InvalidStatus\"}}}}";
+        postRequest.setEntity(new StringEntity(inputJson));
+
+        // String expectedJsonResponse =
+        // createFailureResponseJson("<DeliveryStatus: Invalid>");
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                postRequest, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+        // assertEquals(expectedJsonResponse,EntityUtils.toString(response.getEntity()));
     }
 
 }
