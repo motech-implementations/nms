@@ -542,6 +542,7 @@ public class TargetFileServiceImpl implements TargetFileService {
         try {
             String requestJson = mapper.writeValueAsString(tfn);
             httpPost.setHeader("Content-type", "application/json");
+            httpPost.setHeader("Accept", "application/json");
             httpPost.setEntity(new StringEntity(requestJson));
         } catch (IOException e) {
             throw new InternalException(String.format("Unable to create targetFile notification request: %s",

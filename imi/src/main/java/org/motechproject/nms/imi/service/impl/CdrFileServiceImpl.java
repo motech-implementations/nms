@@ -139,6 +139,7 @@ public class CdrFileServiceImpl implements CdrFileService {
         try {
             String requestJson = mapper.writeValueAsString(cfpn);
             httpPost.setHeader("Content-type", "application/json");
+            httpPost.setHeader("Accept", "application/json");
             httpPost.setEntity(new StringEntity(requestJson));
         } catch (IOException e) {
             throw new InternalException(String.format("Unable to create cdrFile notification request: %s",
