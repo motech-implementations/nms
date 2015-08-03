@@ -13,6 +13,7 @@ import org.motechproject.event.MotechEvent;
 import org.motechproject.nms.imi.domain.CallDetailRecord;
 import org.motechproject.nms.imi.exception.InvalidCdrFileException;
 import org.motechproject.nms.imi.repository.CallDetailRecordDataService;
+import org.motechproject.nms.imi.repository.CallSummaryRecordDataService;
 import org.motechproject.nms.imi.repository.FileAuditRecordDataService;
 import org.motechproject.nms.imi.service.CdrFileService;
 import org.motechproject.nms.imi.service.SettingsService;
@@ -90,10 +91,13 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
     CallRetryDataService callRetryDataService;
     @Inject
     CallDetailRecordDataService callDetailRecordDataService;
+    @Inject
+    CallSummaryRecordDataService callSummaryRecordDataService;
 
 
     @Inject
     TestingService testingService;
+
 
     @Before
     public void cleanupDatabase() {
@@ -107,6 +111,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
     private String remoteObdDirBackup;
     private String initialRetryDelay;
     private String maxErrorCountBackup;
+
 
     @Before
     public void setupSettings() {
@@ -153,8 +158,10 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         cdrFileService.verifyDetailFileChecksumAndCount(helper.cdrFileNotificationRequest());
     }
 
+
     @Rule
     public ExpectedException exception = ExpectedException.none();
+
 
     @Test
     public void testChecksumError() throws IOException, NoSuchAlgorithmException {
@@ -245,21 +252,19 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         List<Alert> alerts = alertService.search(criteria);
         assertEquals(4, alerts.size()); //three warnings plus one error
 
-        // Fancy code that waits for all 4 CDRs and 1 CSR to be processed
+        // Fancy code that waits for all 4 (acceptable) CDRs and 1 CSR to be processed
         long start = System.currentTimeMillis();
-        while (true) {
-            //Now verify that we should be rescheduling two calls (1 CDR and 1 CSR)
-            if (callRetryDataService.count() == 2) {
-                getLogger().debug("Found retry record in {} ms", System.currentTimeMillis() - start);
-                break;
-            }
+        while (callDetailRecordDataService.count() < 6 && callSummaryRecordDataService.count() < 1) {
 
             Thread.sleep(100L);
 
             if (System.currentTimeMillis() - start > MAX_MILLISECOND_WAIT) {
-                assertTrue("Timeout while waiting for CSR processing", false);
+                assertTrue("Timeout while waiting for CSR & CDR processing", false);
             }
         }
+
+        // Now verify that we should be rescheduling two calls (1 CDR and 1 CSR)
+        assertEquals(2, callRetryDataService.count());
 
         // Verify we have both a failed CDR (weekId="w5_1") and a failed CSR (weekId="w7_1")
         List<CallRetry> retries = callRetryDataService.retrieveAll();
@@ -268,9 +273,6 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
                 ||
                 (retries.get(1).getWeekId().equals("w5_1") && retries.get(0).getWeekId().equals("w7_1"))
         );
-
-        // Verify we logged the incoming CDRs in the CallDetailRecord table
-        assertEquals(6, callDetailRecordDataService.count());
     }
 
 
