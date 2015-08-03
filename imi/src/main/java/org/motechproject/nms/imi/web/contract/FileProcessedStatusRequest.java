@@ -12,6 +12,7 @@ import org.motechproject.nms.imi.domain.FileProcessedStatus;
 public class FileProcessedStatusRequest {
     private FileProcessedStatus fileProcessedStatus;
     private String fileName;
+    private String failureReason;
 
     public FileProcessedStatusRequest() {
     }
@@ -31,11 +32,20 @@ public class FileProcessedStatusRequest {
 
     public void setFileName(String fileName) { this.fileName = fileName; }
 
+    public String getFailureReason() {
+        return failureReason;
+    }
+
+    public void setFailureReason(String failureReason) {
+        this.failureReason = failureReason;
+    }
+
     @Override
     public String toString() {
         return "FileProcessedStatusRequest{" +
                 "fileProcessedStatus=" + fileProcessedStatus +
                 ", fileName='" + fileName + '\'' +
+                ", failureReason='" + failureReason + '\'' +
                 '}';
     }
 }
