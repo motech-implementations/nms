@@ -1,14 +1,17 @@
 package org.motechproject.nms.testing.it.flw;
 
 import org.apache.commons.httpclient.HttpStatus;
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.FileBody;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.motechproject.nms.csv.domain.CsvAuditRecord;
 import org.motechproject.nms.csv.exception.CsvImportDataException;
 import org.motechproject.nms.csv.repository.CsvAuditRecordDataService;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
@@ -33,6 +36,7 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -72,7 +76,6 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
 
 
     private RegionHelper rh;
-    private String resource;
 
 
     @Before
@@ -487,10 +490,17 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
     private HttpResponse importCsvFileForFLWUpdate(String option,
             String fileName)
             throws InterruptedException, IOException {
-        HttpPost httpPost = new HttpPost(String.format(
-                "http://localhost:%d/flw/update/%s",
-                TestContext.getJettyPort(), option));
-
+        HttpPost httpPost;
+        if (StringUtils.isBlank(option)) {
+            // update using import
+            httpPost = new HttpPost(String.format(
+                    "http://localhost:%d/flw/import",
+                    TestContext.getJettyPort()));
+        } else {
+            httpPost = new HttpPost(String.format(
+                    "http://localhost:%d/flw/update/%s",
+                    TestContext.getJettyPort(), option));
+        }
         MultipartEntityBuilder builder = MultipartEntityBuilder.create();
         builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
         builder.addPart(
@@ -617,4 +627,100 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
         assertEquals("Success", csvAuditRecordDataService.retrieveAll().get(0)
                 .getOutcome());
     }
+
+    /*
+     * To verify location is updated successfully when MCTS FLW ID is provided.
+     */
+    // TODO https://applab.atlassian.net/browse/NMS-255
+    @Ignore
+    @Test
+    public void verifyFT558() throws InterruptedException, IOException {
+        // create FLW record having state as "Delhi" and district as "new delhi district"
+        FrontLineWorker flw = new FrontLineWorker("Aisha Bibi", 1234567899L);
+        flw.setMctsFlwId("10");
+        flw.setState(rh.delhiState());
+        flw.setDistrict(rh.newDelhiDistrict());
+        flw.setLanguage(rh.hindiLanguage());
+        frontLineWorkerService.add(flw);
+
+        // update FLW district to "southDelhiDistrict"
+        rh.southDelhiDistrict();
+
+        HttpResponse response = importCsvFileForFLWUpdate(null,
+                "flw_FT_558.txt");
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine()
+                .getStatusCode());
+
+        flw = frontLineWorkerService.getByContactNumber(1234567899L);
+        assertEquals(rh.southDelhiDistrict().getCode(), flw.getDistrict()
+                .getCode());
+        assertEquals(rh.delhiState().getCode(), flw.getState().getCode());
+
+        // Language should not be updated
+        assertEquals(rh.hindiLanguage().getCode(), flw.getLanguage().getCode());
+
+        // Assert audit trail log
+        CsvAuditRecord csvAuditRecord = csvAuditRecordDataService.retrieveAll()
+                .get(0);
+        assertEquals("/flw/import", csvAuditRecord.getEndpoint());
+        assertTrue(csvAuditRecord.getOutcome().contains("Success"));
+        assertEquals("flw_FT_558.txt", csvAuditRecord.getFile());
+    }
+
+    /*
+     * To verify location update is rejected when state provided is having
+     * invalid value.
+     */
+    @Test
+    public void verifyFT560() throws InterruptedException, IOException {
+        // create FLW record
+        FrontLineWorker flw = new FrontLineWorker("Aisha Bibi", 1234567899L);
+        flw.setMctsFlwId("10");
+        flw.setState(rh.delhiState());
+        flw.setDistrict(rh.newDelhiDistrict());
+        flw.setLanguage(rh.hindiLanguage());
+        frontLineWorkerService.add(flw);
+
+        // update state to "State 10" which doesn't exist in DB
+        HttpResponse response = importCsvFileForFLWUpdate(null,
+                "flw_FT_560.txt");
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+
+        // Assert audit trail log
+        CsvAuditRecord csvAuditRecord = csvAuditRecordDataService.retrieveAll()
+                .get(0);
+        assertEquals("/flw/import", csvAuditRecord.getEndpoint());
+        assertTrue(csvAuditRecord.getOutcome().contains("Failure: "));
+        assertEquals("flw_FT_560.txt", csvAuditRecord.getFile());
+    }
+
+    /*
+     * To verify location update is rejected when District provided is having
+     * invalid value.
+     */
+    @Test
+    public void verifyFT561() throws InterruptedException, IOException {
+        // create FLW record
+        FrontLineWorker flw = new FrontLineWorker("Aisha Bibi", 1234567899L);
+        flw.setMctsFlwId("10");
+        flw.setState(rh.delhiState());
+        flw.setDistrict(rh.newDelhiDistrict());
+        flw.setLanguage(rh.hindiLanguage());
+        frontLineWorkerService.add(flw);
+
+        // update FLW district to a value which doesn't exist in DB
+        HttpResponse response = importCsvFileForFLWUpdate(null,
+                "flw_FT_561.txt");
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
+                .getStatusCode());
+
+        // Assert audit trail log
+        CsvAuditRecord csvAuditRecord = csvAuditRecordDataService.retrieveAll()
+                .get(0);
+        assertEquals("/flw/import", csvAuditRecord.getEndpoint());
+        assertTrue(csvAuditRecord.getOutcome().contains("Failure: "));
+        assertEquals("flw_FT_561.txt", csvAuditRecord.getFile());
+    }
+
 }
