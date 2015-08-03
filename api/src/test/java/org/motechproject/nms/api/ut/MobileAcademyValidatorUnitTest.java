@@ -46,7 +46,7 @@ public class MobileAcademyValidatorUnitTest {
         status.getRequestData().getDeliveryInfoNotification().setClientCorrelator(null);
         String errors = MobileAcademyValidator.validateSmsStatus(status);
         assertNotNull(errors);
-        assertTrue(errors.contains("clientCorrelator"));
+        assertTrue(errors.contains("ClientCorrelator"));
     }
 
     @Test
@@ -56,27 +56,27 @@ public class MobileAcademyValidatorUnitTest {
         status.getRequestData().getDeliveryInfoNotification().getDeliveryInfo().setDeliveryStatus(null);
         String errors = MobileAcademyValidator.validateSmsStatus(status);
         assertNotNull(errors);
-        assertTrue(errors.contains("deliveryStatus"));
+        assertTrue(errors.contains("DeliveryStatus"));
     }
 
     @Test
     public void TestSmsStatusAddressFormatInvalid() {
 
         SmsStatusRequest status = GenerateValidSmsStatus();
-        status.getRequestData().getDeliveryInfoNotification().getDeliveryInfo().setAddress("9876543210");
+        status.getRequestData().getDeliveryInfoNotification().getDeliveryInfo().setAddress("987654321");
         String errors = MobileAcademyValidator.validateSmsStatus(status);
         assertNotNull(errors);
-        assertTrue(errors.contains("address"));
+        assertTrue(errors.contains("Address"));
     }
 
     @Test
-    public void TestSmsStatusAddressFormatNull() {
+    public void TestSmsStatusAddressValidNull() {
 
         SmsStatusRequest status = GenerateValidSmsStatus();
-        status.getRequestData().getDeliveryInfoNotification().getDeliveryInfo().setAddress("9876543210");
+        status.getRequestData().getDeliveryInfoNotification().getDeliveryInfo().setAddress(null);
         String errors = MobileAcademyValidator.validateSmsStatus(status);
         assertNotNull(errors);
-        assertTrue(errors.contains("address"));
+        assertTrue(errors.contains("Address"));
     }
 
     private SmsStatusRequest GenerateValidSmsStatus() {

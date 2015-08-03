@@ -1,5 +1,6 @@
 package org.motechproject.nms.imi.service.impl;
 
+import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
@@ -138,13 +139,14 @@ public class CdrFileServiceImpl implements CdrFileService {
         try {
             String requestJson = mapper.writeValueAsString(cfpn);
             httpPost.setHeader("Content-type", "application/json");
+            httpPost.setHeader("Accept", "application/json");
             httpPost.setEntity(new StringEntity(requestJson));
         } catch (IOException e) {
             throw new InternalException(String.format("Unable to create cdrFile notification request: %s",
                     e.getMessage()), e);
         }
 
-        sender.sendNotificationRequest(httpPost, cfpn.getFileName(), "cdrFile Notification Request");
+        sender.sendNotificationRequest(httpPost, HttpStatus.SC_ACCEPTED, cfpn.getFileName(), "cdrFile Notification Request");
     }
 
 
