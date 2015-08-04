@@ -3,6 +3,7 @@ package org.motechproject.nms.flw.web;
 import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.alerts.domain.AlertStatus;
 import org.motechproject.alerts.domain.AlertType;
+import org.motechproject.nms.csv.exception.CsvImportDataException;
 import org.motechproject.nms.csv.exception.CsvImportException;
 import org.motechproject.nms.csv.service.CsvAuditService;
 import org.motechproject.nms.flw.service.FrontLineWorkerImportService;
@@ -12,9 +13,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -31,6 +34,13 @@ public class FrontLineWorkerImportController {
     private FrontLineWorkerUpdateImportService flwUpdateImportService;
     private CsvAuditService csvAuditService;
 
+    @ExceptionHandler(CsvImportDataException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseBody
+    public String handleException(CsvImportDataException e) {
+        return e.getMessage();
+    }
+
     @RequestMapping(value = "/update/language", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
     public void updateFrontLineWorkersLanguage(@RequestParam MultipartFile csvFile) {
@@ -39,7 +49,7 @@ public class FrontLineWorkerImportController {
                 flwUpdateImportService.importLanguageData(new InputStreamReader(in));
                 csvAuditService.auditSuccess(csvFile.getOriginalFilename(), "/flw/update/language");
             }
-        } catch (CsvImportException e) {
+        } catch (CsvImportDataException e) {
             logError(csvFile.getOriginalFilename(), "/flw/update/language", e, "front_line_workers_language_import_error",
                     "Front line workers language import error");
             throw e;
@@ -58,7 +68,7 @@ public class FrontLineWorkerImportController {
                 flwUpdateImportService.importMSISDNData(new InputStreamReader(in));
                 csvAuditService.auditSuccess(csvFile.getOriginalFilename(), "/flw/update/msisdn");
             }
-        } catch (CsvImportException e) {
+        } catch (CsvImportDataException e) {
             logError(csvFile.getOriginalFilename(), "/flw/update/msisdn", e, "front_line_workers_msisdn_import_error",
                     "Front line workers msisdn import error");
             throw e;
@@ -77,7 +87,7 @@ public class FrontLineWorkerImportController {
                 frontLineWorkerImportService.importData(new InputStreamReader(in));
                 csvAuditService.auditSuccess(csvFile.getOriginalFilename(), "/flw/import");
             }
-        } catch (CsvImportException e) {
+        } catch (CsvImportDataException e) {
             logError(csvFile.getOriginalFilename(), "/flw/import", e, "front_line_workers_import_error",
                     "Front line workers import error");
             throw e;

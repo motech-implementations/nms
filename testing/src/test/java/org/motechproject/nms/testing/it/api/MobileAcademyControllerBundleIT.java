@@ -5,6 +5,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.json.JSONObject;
@@ -18,6 +19,7 @@ import org.motechproject.nms.api.web.contract.BadRequest;
 import org.motechproject.nms.api.web.contract.mobileAcademy.CourseResponse;
 import org.motechproject.nms.api.web.contract.mobileAcademy.SaveBookmarkRequest;
 import org.motechproject.nms.api.web.contract.mobileAcademy.SmsStatusRequest;
+import org.motechproject.nms.api.web.contract.mobileAcademy.sms.DeliveryStatus;
 import org.motechproject.nms.api.web.contract.mobileAcademy.sms.RequestData;
 import org.motechproject.nms.mobileacademy.domain.CompletionRecord;
 import org.motechproject.nms.mobileacademy.domain.NmsCourse;
@@ -43,6 +45,7 @@ import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -203,9 +206,8 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
     }
 
     @Test
-    @Ignore
     public void testSmsStatusInvalidFormat() throws IOException, InterruptedException {
-        String endpoint = String.format("http://localhost:%d/api/mobileacademy/smsdeliverystatus",
+        String endpoint = String.format("http://localhost:%d/api/mobileacademy/sms/status/imi",
                 TestContext.getJettyPort());
         SmsStatusRequest smsStatusRequest = new SmsStatusRequest();
         smsStatusRequest.setRequestData(new RequestData());
@@ -1002,6 +1004,34 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
         assertTrue("{\"bookmark\":\"Chapter01_Lesson01\",\"scoresByChapter\":{\"1\":2}}"
                 .equals(EntityUtils.toString(response.getEntity())));
+    }
+
+    @Ignore
+    @Test
+    /**
+     * Testing sms status updates. See https://applab.atlassian.net/browse/NMS-250
+     */
+    public void verifyFT564() throws IOException, InterruptedException {
+        // create completion record for msisdn 1234567890l
+        CompletionRecord cr = new CompletionRecord(1234567890l, 25, true, 1, 0);
+        cr = completionRecordDataService.create(cr);
+        assertNull(cr.getLastDeliveryStatus());
+        // invoke delivery notification API
+        String endpoint = String.format(
+        "http://localhost:%d/api/mobileacademy/smsdeliverystatus",
+        TestContext.getJettyPort());
+        HttpPost postRequest = new HttpPost(endpoint);
+        postRequest.setHeader("Content-type", "application/json");
+        String inputJson = "{\"requestData\": {\"deliveryInfoNotification\": {\"clientCorrelator\": \"abc100\""
+        + ",\"deliveryInfo\": {\"address\": \"tel: 1234567890\",\"deliveryStatus\": \"DeliveredToNetwork\"}}}}";
+        postRequest.setEntity(new StringEntity(inputJson));
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                postRequest, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        // assert completion record
+        cr = completionRecordDataService.findRecordByCallingNumber(1234567890l);
+        assertEquals(DeliveryStatus.DeliveredToNetwork.toString(), cr.getLastDeliveryStatus());
     }
 }
 

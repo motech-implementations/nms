@@ -1,10 +1,19 @@
 package org.motechproject.nms.testing.it.flw;
 
+import org.apache.commons.httpclient.HttpStatus;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.mime.HttpMultipartMode;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.entity.mime.content.FileBody;
+import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.motechproject.nms.csv.domain.CsvAuditRecord;
 import org.motechproject.nms.csv.exception.CsvImportDataException;
+import org.motechproject.nms.csv.repository.CsvAuditRecordDataService;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
@@ -24,19 +33,22 @@ import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.testing.it.api.utils.RequestBuilder;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
+import org.motechproject.testing.osgi.http.SimpleHttpClient;
+import org.motechproject.testing.utils.TestContext;
 import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.StringReader;
+
+import java.io.*;
 import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -74,6 +86,10 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     @Inject
     FrontLineWorkerImportService frontLineWorkerImportService;
 
+    @Inject
+    private CsvAuditRecordDataService csvAuditRecordDataService;
+
+    public static final String SUCCESS = "Success";
     @Before
     public void setUp() {
         testingService.clearDatabase();
@@ -201,6 +217,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
 
     // This test should load the FLW with MSISDN 1234567890 however that FLW already has a different MCTS ID
     // assigned to them.  This should result in an exception
+    //NMS_FT_538
     @Test(expected = CsvImportDataException.class)
     public void testImportByMSISDNConflictWithMCTSId() throws Exception {
         FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 1234567890L);
@@ -211,6 +228,10 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         frontLineWorkerImportService.importData(reader);
     }
 
+    /**
+     * VerifyFT513  verify that status of flw must be set to "inactive" when the flw data is imported into
+     * the NMS DB and the user has not yet called
+     */
     @Test
     public void testImportWhenDistrictLanguageLocationPresent() throws Exception {
         Reader reader = createReaderWithHeaders("#0\t1234567890\tFLW 0\t11");
@@ -218,6 +239,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
 
         FrontLineWorker flw = frontLineWorkerDataService.findByContactNumber(1234567890L);
         assertFLW(flw, "#0", 1234567890L, "FLW 0", "District 11", "L1");
+        assertEquals(FrontLineWorkerStatus.INACTIVE, flw.getStatus());
     }
 
     @Test
@@ -229,25 +251,125 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         assertFLW(flw, "#0", 1234567890L, "FLW 0", "District 12", null);
     }
 
+    /**
+     * NMS_FT_541: To verify FLW upload is rejected when mandatory parameter district is missing.
+     */
     @Test(expected = CsvImportDataException.class)
     public void testImportWhenDistrictNotPresent() throws Exception {
         Reader reader = createReaderWithHeaders("#0\t1234567890\tFLW 0\t");
         frontLineWorkerImportService.importData(reader);
     }
 
-    /**
-     * VerifyFT513  verify that status of flw must be set to "inactive" when the flw data is imported into
-     * the NMS DB and the user has not yet called
-     */
-    @Ignore
-    // Todo :https://applab.atlassian.net/browse/NMS-247
     @Test
     public void testImportFromSampleDataFile() throws Exception {
         frontLineWorkerImportService.importData(read("csv/anm-asha.txt"));
 
         FrontLineWorker flw1 = frontLineWorkerDataService.findByContactNumber(9999999996L);
         assertFLW(flw1, "72185", 9999999996L, "Bishnu Priya Behera", "Koraput", null);
+    }
+
+    /**
+     * To verify FLW record is uploaded successfully when all mandatory parameters are present.
+     */
+    @Test
+    public void verifyFT535() throws Exception {
+        importCsvFileForFLW("flw.txt");
+        FrontLineWorker flw1 = frontLineWorkerDataService.findByContactNumber(1234567899L);
+        assertFLW(flw1, "1", 1234567899L, "Aisha Bibi", "District 11", "L1");
+        assertEquals("State{name='State 1', code=1}", flw1.getState().toString());
         assertEquals(FrontLineWorkerStatus.INACTIVE, flw1.getStatus());
+        // Assert audit trail log
+        CsvAuditRecord csvAuditRecord = csvAuditRecordDataService.retrieveAll()
+                .get(0);
+        assertEquals("/flw/import", csvAuditRecord.getEndpoint());
+        assertEquals(SUCCESS, csvAuditRecord.getOutcome());
+        assertEquals("flw.txt", csvAuditRecord.getFile());
+    }
+
+    /**
+     * To verify FLW status must be updated successfully from Anonymous to Active.
+     */
+    @Test
+    public void verifyFT536() throws Exception {
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 1234567890L);
+        flw.setMctsFlwId("#0");
+        frontLineWorkerService.add(flw);
+        Reader reader = createReaderWithHeaders("#0\t1234567890\tFLW 0\t11");
+        frontLineWorkerImportService.importData(reader);
+        FrontLineWorker flw1 = frontLineWorkerDataService.findByContactNumber(1234567890L);
+        assertFLW(flw1, "#0", 1234567890L, "FLW 0", "District 11", "L1");
+        assertEquals("State{name='State 1', code=1}", flw1.getState().toString());
+        assertEquals(FrontLineWorkerStatus.ACTIVE, flw1.getStatus());
+    }
+
+    /**
+     * To verify FLW upload is rejected when mandatory parameter MSISDN is missing.
+     */
+    @Test(expected = CsvImportDataException.class)
+    public void verifyFT537() throws Exception {
+        Reader reader = createReaderWithHeaders("#0\t\tFLW 0\t11");
+        frontLineWorkerImportService.importData(reader);
+    }
+
+    /**
+     * To verify FLW upload is rejected when mandatory parameter state is missing.
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void verifyFT540() throws Exception {
+        Reader reader = createReaderWithHeadersWithNoState("#1\t1234567890\tFLW 0\t11");
+        frontLineWorkerImportService.importData(reader);
+    }
+
+    /**
+     * To verify FLW upload is rejected when mandatory parameter name is missing.
+     */
+    @Test
+    public void verifyFT542() throws Exception {
+            importCsvFileForFLW("flw_name_missing.txt");
+            // Assert audit trail log
+            CsvAuditRecord csvAuditRecord = csvAuditRecordDataService.retrieveAll()
+                    .get(0);
+            assertEquals("/flw/import", csvAuditRecord.getEndpoint());
+            assertEquals("Failure: The number of columns to be processed (3) must match the number of CellProcessors (4): check that the number of CellProcessors you have defined matches the expected number of columns being read/written", csvAuditRecord.getOutcome());
+            assertEquals("flw_name_missing.txt", csvAuditRecord.getFile());
+    }
+
+    /**
+     * To verify FLW upload is rejected when mandatory parameter MSISDN is having invalid value
+     */
+    @Test(expected = CsvImportDataException.class)
+    public void verifyFT543() throws Exception {
+        Reader reader = createReaderWithHeaders("#1\t123456789\tFLW 1\t11");
+        frontLineWorkerImportService.importData(reader);
+    }
+
+    /**
+     * To verify FLW upload is rejected when mandatory parameter MSISDN is having invalid value
+     */
+    @Test(expected = CsvImportDataException.class)
+    public void verifyFT544() throws Exception {
+        Reader reader = createReaderWithHeadersWithInvalidState("#1\t1234567890\tFLW 1\t11");
+        frontLineWorkerImportService.importData(reader);
+    }
+
+    /**
+     * To verify FLW upload is rejected when mandatory parameter District is having invalid value
+     */
+    @Test(expected = CsvImportDataException.class)
+    public void verifyFT545() throws Exception {
+        Reader reader = createReaderWithHeaders("#1\t1234567890\tFLW 1\t111");
+        frontLineWorkerImportService.importData(reader);
+    }
+
+    /**
+     * To verify FLW upload is rejected when combination of state and District is invalid.
+     */
+    @Test(expected = CsvImportDataException.class)
+    public void verifyFT546() throws Exception {
+        State state2 = createState(2L, "State 2");
+        createDistrict(state2, 22L, "District 22");
+        Reader reader = createReaderWithHeaders("#1\t1234567890\tFLW 1\t22");
+        frontLineWorkerImportService.importData(reader);
     }
 
     private void assertFLW(FrontLineWorker flw, String mctsFlwId, long contactNumber, String name, String districtName, String languageLocationCode) {
@@ -270,9 +392,90 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         }
         return new StringReader(builder.toString());
     }
+    
+    private Reader createReaderWithHeadersWithNoState(String... lines) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("\n");
+        builder.append("State Name :").append("\n");
+        builder.append("\n");
+        builder.append("ID\tContact_No\tName\tDistrict_ID").append("\n");
+        for (String line : lines) {
+            builder.append(line).append("\n");
+        }
+        return new StringReader(builder.toString());
+    }
+
+    private Reader createReaderWithHeadersWithInvalidState(String... lines) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("\n");
+        builder.append("State Name : State 2").append("\n");
+        builder.append("\n");
+        builder.append("ID\tContact_No\tName\tDistrict_ID").append("\n");
+        for (String line : lines) {
+            builder.append(line).append("\n");
+        }
+        return new StringReader(builder.toString());
+    }
 
     private Reader read(String resource) {
         return new InputStreamReader(getClass().getClassLoader().getResourceAsStream(resource));
     }
 
+    /**
+     * Method used to import CSV File For FLW Data
+     */
+    private void importCsvFileForFLW(String fileName) throws InterruptedException, IOException {
+        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/flw/import", TestContext.getJettyPort()));
+        FileBody fileBody = new FileBody(new File(String.format("src/test/resources/csv/%s", fileName)));
+        MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+        builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
+        builder.addPart("csvFile", fileBody);
+        httpPost.setEntity(builder.build());
+        SimpleHttpClient.httpRequestAndResponse(httpPost, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD);
+    }
+
+    /**
+     * To verify location is updated successfully when MSISDN is provided.
+     */
+    // TODO JIRA issue: https://applab.atlassian.net/browse/NMS-253
+    @Ignore
+    @Test
+    public void verifyFT559() throws InterruptedException, IOException {
+        State state = stateDataService.findByName("State 1");
+        District district1 = state.getDistricts().get(0);
+        District district2 = state.getDistricts().get(1);
+        Language language1 = languageDataService.findByCode("L1");
+        assertEquals("District 11", district1.getName());
+        assertEquals("District 12", district2.getName());
+
+        FrontLineWorker flw = new FrontLineWorker("Test MSISDN", 1234567890L);
+        flw.setMctsFlwId("#0");
+        flw.setState(state);
+        flw.setDistrict(district1);
+        flw.setLanguage(language1);
+        frontLineWorkerService.add(flw);
+
+        importCsvFileForFLW("flw_location_update_msisdn.txt");
+
+        flw = frontLineWorkerService.getByContactNumber(1234567890L);
+
+        // deleting the FLW to avoid conflicts at later stage
+        flw.setStatus(FrontLineWorkerStatus.INVALID);
+        flw.setInvalidationDate(DateTime.now().minusYears(1));
+        frontLineWorkerService.update(flw);
+        frontLineWorkerService.delete(flw);
+
+        assertFLW(flw, "#0", 1234567890L, "Test MSISDN", "District 12",
+                language1.getName());
+
+        List<CsvAuditRecord> auditRecords = csvAuditRecordDataService
+                .retrieveAll();
+        assertNotNull(auditRecords);
+        assertEquals(1, auditRecords.size());
+
+        CsvAuditRecord auditRecord = auditRecords.get(0);
+        assertEquals("Success", auditRecord.getOutcome());
+        assertEquals("flw_location_update_msisdn.txt", auditRecord.getFile());
+    }
 }
