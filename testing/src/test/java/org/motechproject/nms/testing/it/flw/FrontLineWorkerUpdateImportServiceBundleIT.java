@@ -8,7 +8,6 @@ import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.FileBody;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.csv.domain.CsvAuditRecord;
@@ -36,7 +35,6 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -632,7 +630,6 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
      * To verify location is updated successfully when MCTS FLW ID is provided.
      */
     // TODO https://applab.atlassian.net/browse/NMS-255
-    @Ignore
     @Test
     public void verifyFT558() throws InterruptedException, IOException {
         // create FLW record having state as "Delhi" and district as "new delhi district"
