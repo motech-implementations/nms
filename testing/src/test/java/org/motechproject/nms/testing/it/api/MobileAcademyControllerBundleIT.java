@@ -1366,7 +1366,6 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
      * client address is missing..
      */
     // TODO https://applab.atlassian.net/browse/NMS-254
-    @Ignore
     @Test
     public void verifyFT566() throws IOException, InterruptedException {
         // create completion record for msisdn 1234567890l
@@ -1383,13 +1382,14 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
         String inputJson = "{\"requestData\": {\"deliveryInfoNotification\": {\"clientCorrelator\": \"abc100\""
                 + ",\"deliveryInfo\": {\"deliveryStatus\": \"DeliveredToNetwork\"}}}}";
         postRequest.setEntity(new StringEntity(inputJson));
-        //String expectedJsonResponse = createFailureResponseJson("<Address: Invalid>");
+        String expectedJsonResponse = createFailureResponseJson("<Address: Invalid>");
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
                 postRequest, RequestBuilder.ADMIN_USERNAME,
                 RequestBuilder.ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine()
                 .getStatusCode());
-     // assertEquals(expectedJsonResponse,EntityUtils.toString(response.getEntity()));
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
     }
 
     /**
