@@ -5171,4 +5171,52 @@ public class UserControllerBundleIT extends BasePaxIT {
                 EntityUtils.toString(response.getEntity()));
     }
 
+    /**
+     * To verify that status of flw must be set to "Anonymous" when user call first time
+     * and its information does not exist in NMS DB.
+     */
+    @Test
+    public void verifyFT511() throws IOException, InterruptedException {
+        rh.newDelhiDistrict();
+        rh.delhiCircle();
+        deployedServiceDataService.create(new DeployedService(rh.delhiState(),
+                Service.MOBILE_KUNJI));
+
+        // invoke get user detail API To check updated usage and prompt
+        HttpGet httpGet = createHttpGet(true, "mobilekunji", // service
+                true, "1200000000", // callingNumber
+                false, null, // operator
+                true, rh.delhiCircle().getName(),// circle
+                true, "123456789012346" // callId
+        );
+        List<String> allowedLLCCodes = new ArrayList<>();
+        allowedLLCCodes.add(rh.hindiLanguage().getCode());
+
+        String expectedJsonResponse = createFlwUserResponseJson(rh.hindiLanguage().getCode(), // defaultLanguageLocationCode
+                null, // locationCode
+                allowedLLCCodes, // allowedLanguageLocationCodes
+                0L, // currentUsageInPulses=updated
+                0L, // endOfUsagePromptCounter=updated
+                false, // welcomePromptFlag
+                -1, // maxAllowedUsageInPulses=State capping
+                2 // maxAllowedEndOfUsagePrompt
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet,
+                ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+
+        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(1200000000L, 123456789012346L,
+                rh.hindiLanguage().getCode()));
+
+        response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+
+        FrontLineWorker flw = frontLineWorkerService.getByContactNumber(1200000000l);
+        assertEquals(FrontLineWorkerStatus.ANONYMOUS, flw.getStatus());
+    }
+
 }

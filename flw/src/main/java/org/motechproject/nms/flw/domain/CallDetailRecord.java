@@ -175,11 +175,6 @@ public class CallDetailRecord {
         this.finalCallStatus = finalCallStatus;
     }
 
-    public void setCallStatus(int i) {
-
-        this.finalCallStatus = FinalCallStatus.fromInt(i);
-    }
-
     public CallDisconnectReason getCallDisconnectReason() {
         return callDisconnectReason;
     }

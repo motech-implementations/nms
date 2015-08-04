@@ -542,6 +542,7 @@ public class TargetFileServiceImpl implements TargetFileService {
         try {
             String requestJson = mapper.writeValueAsString(tfn);
             httpPost.setHeader("Content-type", "application/json");
+            httpPost.setHeader("Accept", "application/json");
             httpPost.setEntity(new StringEntity(requestJson));
         } catch (IOException e) {
             throw new InternalException(String.format("Unable to create targetFile notification request: %s",
@@ -564,7 +565,8 @@ public class TargetFileServiceImpl implements TargetFileService {
             try {
                 scpHelper.scpObdToRemote(tfn.getFileName());
             } catch (ExecException e) {
-                String error = String.format("Error copying CDR file %s: %s", tfn.getFileName(), e.getMessage());
+                String error = String.format("Error copying target file %s: %s", tfn.getFileName(),
+                        e.getMessage());
                 LOGGER.error(error);
                 fileAuditRecordDataService.create(new FileAuditRecord(
                         FileType.TARGET_FILE,
@@ -574,7 +576,7 @@ public class TargetFileServiceImpl implements TargetFileService {
                         null,
                         null
                 ));
-                //todo: send alert
+                alert(tfn.getFileName(), "targetFileName", error);
                 return;
             }
 
@@ -602,7 +604,8 @@ public class TargetFileServiceImpl implements TargetFileService {
         if (request.getFileProcessedStatus() != FileProcessedStatus.FILE_PROCESSED_SUCCESSFULLY) {
             LOGGER.error(request.toString());
             //todo: IT check if alert was created
-            alert(request.getFileName(), "targetFileName", "Target File Processing Error");
+            alert(request.getFileName(), "targetFileName",
+                    String.format("Target File Processing Error: %s", request.getFailureReason()));
         }
     }
 }
