@@ -178,7 +178,9 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
 
         setFrontLineWorkerLocation(flw, location);
 
-        flw.setLanguage(flw.getDistrict().getLanguage());
+        if (flw.getLanguage() == null) {
+            flw.setLanguage(flw.getDistrict().getLanguage());
+        }
 
         return flw;
     }

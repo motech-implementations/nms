@@ -36,13 +36,13 @@ public class DeliveryInfo {
     }
 
     private static String obscure(String a) {
-        return "tel: *******" + a.substring(a.length() - MASK_LENGTH);
+        return a == null ? "null" : "tel: *******" + a.substring(a.length() - MASK_LENGTH);
     }
 
     @Override
     public String toString() {
         return "DeliveryInfo{" +
-                "address='" + obscure(address) + '\'' +
+                "address='" +  obscure(address) + '\'' +
                 ", deliveryStatus=" + deliveryStatus +
                 '}';
     }
