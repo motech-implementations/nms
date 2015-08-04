@@ -146,7 +146,7 @@ public class CdrFileServiceImpl implements CdrFileService {
                     e.getMessage()), e);
         }
 
-        sender.sendNotificationRequest(httpPost, HttpStatus.SC_ACCEPTED, cfpn.getFileName(), "cdrFile Notification Request");
+        sender.sendNotificationRequest(httpPost, HttpStatus.SC_OK, cfpn.getFileName(), "cdrFile Notification Request");
     }
 
 
