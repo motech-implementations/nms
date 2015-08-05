@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.regex.Pattern;
 
 /**
@@ -45,6 +46,7 @@ public class ImiController {
     public static final String IVR_INTERACTION_LOG = "IVR INTERACTION: %s";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ImiController.class);
+    public static final String LOG_RESPONSE_FORMAT = "RESPONSE: %s";
 
     private SettingsFacade settingsFacade;
     private CdrFileService cdrFileService;
@@ -138,7 +140,7 @@ public class ImiController {
     @ResponseStatus(HttpStatus.ACCEPTED)
     public void notifyNewCdrFile(@RequestBody CdrFileNotificationRequest request) {
 
-        log("cdrFileNotification", request.toString());
+        log("REQUEST: /cdrFileNotification (POST)", request.toString());
 
         StringBuilder failureReasons = new StringBuilder();
         validateTargetFileName(failureReasons, request.getFileName());
@@ -214,7 +216,7 @@ public class ImiController {
     @ResponseStatus(HttpStatus.OK)
     public void notifyFileProcessedStatus(@RequestBody FileProcessedStatusRequest request) {
 
-        log("obdFileProcessedStatusNotification", request.toString());
+        log("REQUEST: /obdFileProcessedStatusNotification (POST)", request.toString());
 
         StringBuilder failureReasons = new StringBuilder();
 
@@ -237,7 +239,8 @@ public class ImiController {
     @ExceptionHandler({ NotFoundException.class })
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ResponseBody
-    public BadRequest handleException(NotFoundException e) {
+    public BadRequest handleException(NotFoundException e, HttpServletRequest request) {
+        log(String.format(LOG_RESPONSE_FORMAT, request.getRequestURI()), e.getMessage());
         return new BadRequest(e.getMessage());
     }
 
@@ -245,7 +248,8 @@ public class ImiController {
     @ExceptionHandler({ RuntimeException.class })
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ResponseBody
-    public BadRequest handleException(RuntimeException e) {
+    public BadRequest handleException(RuntimeException e, HttpServletRequest request) {
+        log(String.format(LOG_RESPONSE_FORMAT, request.getRequestURI()), e.getMessage());
         return new BadRequest(e.getMessage());
     }
 
@@ -256,7 +260,8 @@ public class ImiController {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     @ResponseBody
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public BadRequest handleException(HttpMessageNotReadableException e) {
+    public BadRequest handleException(HttpMessageNotReadableException e, HttpServletRequest request) {
+        log(String.format(LOG_RESPONSE_FORMAT, request.getRequestURI()), e.getMessage());
         if (e.getLocalizedMessage().contains(INVALID_STATUS_ENUM)) {
             return new BadRequest("<fileProcessedStatus: Invalid Value>");
         }
@@ -273,7 +278,8 @@ public class ImiController {
     @ExceptionHandler(InvalidCdrFileException.class)
     @ResponseBody
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public AggregateBadRequest handleException(InvalidCdrFileException e) {
+    public AggregateBadRequest handleException(InvalidCdrFileException e, HttpServletRequest request) {
+        log(String.format(LOG_RESPONSE_FORMAT, request.getRequestURI()), e.getMessage());
         return new AggregateBadRequest(e.getMessages());
     }
 
@@ -284,7 +290,8 @@ public class ImiController {
     @ExceptionHandler(Exception.class)
     @ResponseBody
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public BadRequest handleException(Exception e) {
+    public BadRequest handleException(Exception e, HttpServletRequest request) {
+        log(String.format(LOG_RESPONSE_FORMAT, request.getRequestURI()), e.getMessage());
         return new BadRequest(e.getMessage());
     }
 }

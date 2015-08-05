@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Map;
 
@@ -58,6 +59,7 @@ public class BaseController {
     public static final String CALLING_NUMBER = "callingNumber";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BaseController.class);
+    public static final String LOG_RESPONSE_FORMAT = "RESPONSE: %s";
 
     @Autowired
     private WhitelistService whitelistService;
@@ -256,21 +258,24 @@ public class BaseController {
     @ExceptionHandler(NotAuthorizedException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
     @ResponseBody
-    public BadRequest handleException(NotAuthorizedException e) {
+    public BadRequest handleException(NotAuthorizedException e, HttpServletRequest request) {
+        log(String.format(LOG_RESPONSE_FORMAT, request.getRequestURI()), e.getMessage());
         return new BadRequest(e.getMessage());
     }
 
     @ExceptionHandler(NotDeployedException.class)
     @ResponseStatus(HttpStatus.NOT_IMPLEMENTED)
     @ResponseBody
-    public BadRequest handleException(NotDeployedException e) {
+    public BadRequest handleException(NotDeployedException e, HttpServletRequest request) {
+        log(String.format(LOG_RESPONSE_FORMAT, request.getRequestURI()), e.getMessage());
         return new BadRequest(e.getMessage());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ResponseBody
-    public BadRequest handleException(IllegalArgumentException e) {
+    public BadRequest handleException(IllegalArgumentException e, HttpServletRequest request) {
+        log(String.format(LOG_RESPONSE_FORMAT, request.getRequestURI()), e.getMessage());
         return new BadRequest(e.getMessage());
     }
 
@@ -278,7 +283,8 @@ public class BaseController {
     @ExceptionHandler(NotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ResponseBody
-    public BadRequest handleException(NotFoundException e) {
+    public BadRequest handleException(NotFoundException e, HttpServletRequest request) {
+        log(String.format(LOG_RESPONSE_FORMAT, request.getRequestURI()), e.getMessage());
         return new BadRequest(e.getMessage());
     }
 
@@ -286,7 +292,8 @@ public class BaseController {
     @ExceptionHandler(NullPointerException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ResponseBody
-    public BadRequest handleException(NullPointerException e) {
+    public BadRequest handleException(NullPointerException e, HttpServletRequest request) {
+        log(String.format(LOG_RESPONSE_FORMAT, request.getRequestURI()), e.getMessage());
         LOGGER.error("Internal Server Error", e);
         return new BadRequest(e.getMessage());
     }
@@ -298,7 +305,8 @@ public class BaseController {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     @ResponseBody
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public BadRequest handleException(HttpMessageNotReadableException e) {
+    public BadRequest handleException(HttpMessageNotReadableException e, HttpServletRequest request) {
+        log(String.format(LOG_RESPONSE_FORMAT, request.getRequestURI()), e.getMessage());
         return new BadRequest(e.getMessage());
     }
 

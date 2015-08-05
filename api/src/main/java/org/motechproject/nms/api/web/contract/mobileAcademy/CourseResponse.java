@@ -47,4 +47,12 @@ public class CourseResponse {
     public void setChapters(Object chapters) {
         this.chapters = chapters;
     }
+
+    @Override
+    public String toString() {
+        return "CourseResponse{" +
+                "name='" + name + '\'' +
+                ", courseVersion=" + courseVersion +
+                '}';
+    }
 }

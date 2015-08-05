@@ -88,7 +88,7 @@ public class KilkariController extends BaseController {
     public InboxResponse getInboxDetails(@RequestParam(required = false) Long callingNumber,
                                          @RequestParam(required = false) Long callId) {
 
-        log("/kilkari/inbox", String.format("callingNumber=%s, callId=%s",
+        log("REQUEST: /kilkari/inbox", String.format("callingNumber=%s, callId=%s",
                 LogHelper.obscure(callingNumber), callId));
 
         StringBuilder failureReasons = validate(callingNumber, callId);
@@ -125,7 +125,9 @@ public class KilkariController extends BaseController {
             }
         }
 
-        return new InboxResponse(subscriptionDetails);
+        InboxResponse ret = new InboxResponse(subscriptionDetails);
+        log("RESPONSE: /kilkari/inbox", String.format("callId=%s, %s", callId, ret.toString()));
+        return ret;
     }
 
     private void validateSaveInboxCallDetailsContent(StringBuilder failureReasons,
@@ -195,7 +197,7 @@ public class KilkariController extends BaseController {
     @Transactional
     public void saveInboxCallDetails(@RequestBody InboxCallDetailsRequest request) {
 
-        log("/kilkari/inboxCallDetails", LogHelper.nullOrString(request));
+        log("REQUEST: /kilkari/inboxCallDetails (POST)", LogHelper.nullOrString(request));
 
         StringBuilder failureReasons = validateSaveInboxCallDetails(request);
         if (failureReasons.length() > 0) {
@@ -243,7 +245,7 @@ public class KilkariController extends BaseController {
     @Transactional
     public void createSubscription(@RequestBody SubscriptionRequest subscriptionRequest) {
 
-        log("/kilkari/subscription (POST)", LogHelper.nullOrString(subscriptionRequest));
+        log("REQUEST: /kilkari/subscription (POST)", LogHelper.nullOrString(subscriptionRequest));
 
         StringBuilder failureReasons = validate(subscriptionRequest.getCallingNumber(),
                                                 subscriptionRequest.getCallId(),
@@ -306,7 +308,7 @@ public class KilkariController extends BaseController {
     @Transactional
     public void deactivateSubscription(@RequestBody SubscriptionRequest subscriptionRequest) {
 
-        log("/kilkari/subscription (DELETE)", LogHelper.nullOrString(subscriptionRequest));
+        log("REQUEST: /kilkari/subscription (DELETE)", LogHelper.nullOrString(subscriptionRequest));
 
         StringBuilder failureReasons = validate(subscriptionRequest.getCallingNumber(),
                 subscriptionRequest.getCallId(), subscriptionRequest.getOperator(),

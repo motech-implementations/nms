@@ -26,4 +26,11 @@ public class KilkariUserResponse extends UserResponse {
     public void setSubscriptionPackList(Set<String> subscriptionPackList) {
         this.subscriptionPackList = subscriptionPackList;
     }
+
+    @Override
+    public String toString() {
+        return "KilkariUserResponse{" +
+                "subscriptionPackList=" + subscriptionPackList +
+                "} " + super.toString();
+    }
 }
