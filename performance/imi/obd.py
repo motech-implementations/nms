@@ -10,6 +10,7 @@ from random import randint, choice
 import urllib2
 import json
 import time
+import datetime
 import subprocess
 
 
@@ -34,11 +35,25 @@ ATTEMPT_NO = 'AttemptNo'
 CALL_START_TIME = 'CallStartTime'
 CALL_ANSWER_TIME = 'CallAnswerTime'
 CALL_END_TIME = 'CallEndTime'
-CALL_DURATION_IN_PULSES = 'CallDurationInPulses'
+CALL_DURATION_IN_PULSE = 'CallDurationInPulse'
 CALL_STATUS = 'CallStatus'
 STATUS_CODE = 'StatusCode'
 FINAL_STATUS = 'FinalStatus'
 ATTEMPTS = 'Attempts'
+MSG_PLAY_START_TIME = 'MsgPlayStartTime'
+MSG_PLAY_END_TIME = 'MsgPlayEndTime'
+CIRCLE_ID = 'CircleId'
+OPERATOR_ID = 'OperatorId'
+CALL_DISCONNECT_REASON = 'CallDisconnectReason'
+
+
+#
+# Final Status Codes
+#
+
+FS_SUCCESS = 1
+FS_FAILED = 2
+FS_REJECTED = 3
 
 
 app = Flask(__name__)
@@ -126,57 +141,71 @@ def make_call_id():
     return "CID-{:10d}".format(randint(0, 9999999999))
 
 
-# OBD_SUCCESS_CALL_CONNECTED(1001),
-call_status_success = [1001]
-
-# OBD_FAILED_NOATTEMPT(2000),
-# OBD_FAILED_BUSY(2001),
-# OBD_FAILED_NOANSWER(2002),
-# OBD_FAILED_SWITCHEDOFF(2003),
-# OBD_FAILED_INVALIDNUMBER(2004),
-# OBD_FAILED_OTHERS(2005),
-call_status_failure = [2000, 2001, 2002, 2003, 2004, 2005]
-
-# OBD_DNIS_IN_DND(3001);
-call_status_reject = [3001]
+def success_call_status():
+    # OBD_SUCCESS_CALL_CONNECTED(1001),
+    return choice([1001])
 
 
-def make_call_status(successful):
+def failure_call_status():
+    # OBD_FAILED_NOATTEMPT(2000),
+    # OBD_FAILED_BUSY(2001),
+    # OBD_FAILED_NOANSWER(2002),
+    # OBD_FAILED_SWITCHEDOFF(2003),
+    # OBD_FAILED_INVALIDNUMBER(2004),
+    # OBD_FAILED_OTHERS(2005),
+    return choice([2000, 2001, 2002, 2003, 2004, 2005])
 
-    if successful:
-        return choice(call_status_success)
 
-    return choice(call_status_failure)
+def success_call_disconnect():
+    # Normal Drop: 1
+    return choice([1])
+
+
+def failure_call_disconnect():
+    # VXML Runtime exception: 2
+    # Content Not found: 3
+    # Usage Cap exceeded: 4
+    # Error in the API: 5
+    # System Error: 6
+    return choice([2, 3, 4, 5, 6])
+
+
+def operator():
+    return choice(['D', 'A', 'B', 'L', 'C', 'H', 'I', 'M', 'R', 'E', 'S', 'Y', 'P', 'W', 'T', 'U', 'V'])
+
+
+def some_time_today():
+    today = datetime.datetime.now() - datetime.timedelta(hours = choice(range(10)), minutes = choice(range(50)))
+    epoch = datetime.datetime(1970,1,1)
+    return (today - epoch).total_seconds()
 
 
 def write_cdr_row(obd, writer, call_id, attempt, successful):
 
     if successful:
-        call_status = choice(call_status_success)
+        call_status = success_call_status()
         call_start_time = 123
         call_answer_time = 234
         call_end_time = 456
         call_duration = 10
+        msg_play_start_time = some_time_today()
+        msg_play_end_time = msg_play_start_time + call_duration # assuming that duration is in seconds
+        call_disconnect_reason = success_call_disconnect()
+
     else:
-        call_status = choice(call_status_failure)
+        call_status = failure_call_status()
         call_start_time = 123
         call_answer_time = ""
         call_end_time = ""
         call_duration = ""
+        msg_play_start_time = ""
+        msg_play_end_time = ""
+        call_disconnect_reason = failure_call_disconnect()
 
-    # cdr = {
-    #     'RequestId': obd['request_id'],
-    #     'Msisdn': obd['msisdn'],
-    #     'CallId': call_id,
-    #     'AttemptNo': attempt,
-    #     'CallStartTime': call_start_time,
-    #     'CallAnswerTime': call_answer_time,
-    #     'CallEndTime': call_end_time,
-    #     'CallDurationInPulses': call_duration,
-    #     'CallStatus': call_status,
-    #     'LanguageLocationId': "",
-    #     'ContentFile': ""
-    # }
+    # REQUEST_ID, MSISDN, CALL_ID, ATTEMPT_NO, CALL_START_TIME, CALL_ANSWER_TIME, CALL_END_TIME,
+    # CALL_DURATION_IN_PULSE, CALL_STATUS, LANGUAGE_LOCATION_ID, CONTENT_FILE, MSG_PLAY_START_TIME, MSG_PLAY_END_TIME,
+    # CIRCLE_ID, OPERATOR_ID, PRIORITY, CALL_DISCONNECT_REASON, WEEK_ID
+
     writer.writerow([
         # RequestId
         obd[REQUEST_ID],
@@ -192,14 +221,63 @@ def write_cdr_row(obd, writer, call_id, attempt, successful):
         call_answer_time,
         # CallEndTime
         call_end_time,
-        # CallDurationInPulses
+        # CallDurationInPulse
         call_duration,
         # CallStatus
         call_status,
         # LanguageLocationId
         obd[LANGUAGE_LOCATION_CODE],
         # ContentFile
-        obd[CONTENT_FILE]
+        obd[CONTENT_FILE],
+        # MSG_PLAY_START_TIME
+        msg_play_start_time,
+        # MSG_PLAY_END_TIME,
+        msg_play_end_time,
+        # CIRCLE_ID
+        obd[CIRCLE],
+        # OPERATOR_ID
+        operator(),
+        # PRIORITY
+        obd[PRIORITY],
+        # CALL_DISCONNECT_REASON
+        call_disconnect_reason,
+        # WEEK_ID
+        obd[WEEK_ID]
+    ])
+
+
+def write_csr_row(obd, writer, attempts, successful):
+
+    # REQUEST_ID, SERVICE_ID, MSISDN, CLI, PRIORITY, CALL_FLOW_URL, CONTENT_FILE_NAME, WEEK_ID, LANGUAGE_LOCATION_CODE,
+    # CIRCLE, FINAL_STATUS, STATUS_CODE, ATTEMPTS
+
+    writer.writerow([
+        # RequestId
+        obd[REQUEST_ID],
+        # ServiceId
+        obd[SERVICE_ID],
+        # Msisdn
+        obd[MSISDN],
+        # Cli
+        obd[CLI],
+        # Priority
+        obd[PRIORITY],
+        # CallFlowURL
+        obd[CALL_FLOW_URL],
+        # ContentFileName
+        obd[CONTENT_FILE],
+        # WeekId
+        obd[WEEK_ID],
+        # LanguageLocationCode
+        obd[LANGUAGE_LOCATION_CODE],
+        # Circle
+        obd[CIRCLE],
+        # FinalStatus
+        FS_SUCCESS if successful else FS_FAILED,
+        # StatusCode
+        success_call_status() if successful else failure_call_status(),
+        # Attempts
+        attempts
     ])
 
 
@@ -210,7 +288,8 @@ def obd_header():
 
 def cdr_header():
     return [REQUEST_ID, MSISDN, CALL_ID, ATTEMPT_NO, CALL_START_TIME, CALL_ANSWER_TIME, CALL_END_TIME,
-            CALL_DURATION_IN_PULSES, CALL_STATUS, LANGUAGE_LOCATION_ID, CONTENT_FILE]
+            CALL_DURATION_IN_PULSE, CALL_STATUS, LANGUAGE_LOCATION_ID, CONTENT_FILE, MSG_PLAY_START_TIME,
+            MSG_PLAY_END_TIME, CIRCLE_ID, OPERATOR_ID, PRIORITY, CALL_DISCONNECT_REASON, WEEK_ID]
 
 
 def csr_header():
@@ -242,7 +321,7 @@ def mock_call(obd, cdr_writer, csr_writer):
     # and then ultimately, succeed or fail...
     success = randint(0, 100) > args.failure
     write_cdr_row(obd, cdr_writer, call_id, attempt + 1, success)
-    csr_writer.writerow(["{}".format(obd[REQUEST_ID])])
+    write_csr_row(obd, csr_writer, attempt + 1, success)
 
     return cdr_lines + 1
 
@@ -272,12 +351,8 @@ def cdr_file_notification_url():
 
 
 def checksum(file):
-    #return subprocess.check_output(["echo", "foobar"])
-    return "checksum123"
-
-
-def record_count(file):
-    return 123
+    s = subprocess.check_output(["/usr/bin/md5sum", file])
+    return s.split(" ")[0]
 
 
 def read_obd_file(name):
@@ -312,13 +387,16 @@ def read_obd_file(name):
 
         # send obdFileProcessedStatusNotification request to MOTECH after OBD file was 'checked'
 
-        print "sending POST request: {}".format(obd_file_processed_url())
 
         headers = {'Content-Type': 'application/json'}
-        request = urllib2.Request(obd_file_processed_url(), headers=headers)
         data = {u'fileProcessedStatus': 8000, u'fileName': name}
+        json_string = json.dumps(data)
+        request = urllib2.Request(obd_file_processed_url(), headers=headers, data=json_string)
+
+        print "POST requ: {}".format(obd_file_processed_url())
+        print "POST data: {}".format(json_string)
         response = urllib2.urlopen(request, json.dumps(data))
-        print "{} POST response: {}".format(obd_file_processed_url(), response)
+        print "POST resp: {}".format(response)
 
         # wait (to mock how long it takes to call everybody) before sending the next request
 
@@ -326,28 +404,29 @@ def read_obd_file(name):
 
         # send cdrFileNotification request to MOTECH when entire OBD file was 'called'
 
-        print "sending POST request: {}".format(cdr_file_notification_url())
-
         data = {
             u'fileName': name,
             u'cdrDetail': {
                 u'cdrFile': cdr_file(name),
                 u'checksum': checksum(cdr_file_path(name)),
-                u'recordsCount': record_count(cdr_file_path(name))
+                u'recordsCount': cdr_lines
             },
             u'cdrSummary': {
                 u'cdrFile': csr_file(name),
                 u'checksum': checksum(csr_file_path(name)),
-                u'recordsCount': record_count(cdr_file_path(name))
+                u'recordsCount': csr_lines
             }
         }
         json_string = json.dumps(data)
         request = urllib2.Request(cdr_file_notification_url(), headers=headers, data=json_string)
+
+        print "POST requ: {}".format(cdr_file_notification_url())
+        print "POST data: {}".format(json_string)
         response = urllib2.urlopen(request)
-        print "{} POST response: {}".format(cdr_file_notification_url(), response)
+        print "POST resp: {}".format(response)
 
     except Exception as e:
-        error = "### EXCEPTION: {} ###".format(e.message)
+        error = "### EXCEPTION: {} ###".format(e)
         print error
         return error
 
