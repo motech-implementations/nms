@@ -321,7 +321,8 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
         frontLineWorkerService.add(flw);
         flw = frontLineWorkerService.getByContactNumber(2111111111L);
         flw.setStatus(FrontLineWorkerStatus.INVALID);
-        flw.setInvalidationDate(DateTime.now().minusWeeks(7));
+        // set invalid date to 2 years back
+        flw.setInvalidationDate(DateTime.now().minusYears(2));
         frontLineWorkerService.update(flw);
 
         // call purge event
