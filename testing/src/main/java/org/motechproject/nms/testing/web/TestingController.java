@@ -2,6 +2,7 @@ package org.motechproject.nms.testing.web;
 
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.EventRelay;
+import org.motechproject.nms.testing.service.TestingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +19,10 @@ public class TestingController {
     @Autowired
     private EventRelay eventRelay;
 
+    @Autowired
+    private TestingService testingService;
+
+
     @RequestMapping(value = "/sendEvent")
     @ResponseBody
     @Transactional
@@ -27,6 +32,13 @@ public class TestingController {
         MotechEvent motechEvent = new MotechEvent(subject, eventParams);
         eventRelay.sendEventMessage(motechEvent);
         return String.format("Sent MOTECH event: %s with empty params: %s", subject, eventParams.toString());
+    }
+
+    @RequestMapping(value = "/clearDatabase")
+    @ResponseBody
+    public String clearDatabase() {
+        testingService.clearDatabase();
+        return "OK";
     }
 
 }
