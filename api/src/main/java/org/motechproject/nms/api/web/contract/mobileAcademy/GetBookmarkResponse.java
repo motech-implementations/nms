@@ -31,4 +31,12 @@ public class GetBookmarkResponse {
     public void setScoresByChapter(Map<String, Integer> scoresByChapter) {
         this.scoresByChapter = scoresByChapter;
     }
+
+    @Override
+    public String toString() {
+        return "GetBookmarkResponse{" +
+                "bookmark='" + bookmark + '\'' +
+                ", scoresByChapter=" + scoresByChapter +
+                '}';
+    }
 }

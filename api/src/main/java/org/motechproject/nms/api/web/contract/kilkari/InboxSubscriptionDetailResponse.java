@@ -40,4 +40,14 @@ public class InboxSubscriptionDetailResponse {
     public String getContentFileName() { return contentFileName; }
 
     public void setContentFileName(String contentFileName) { this.contentFileName = contentFileName; }
+
+    @Override
+    public String toString() {
+        return "InboxSubscriptionDetailResponse{" +
+                "subscriptionId='" + subscriptionId + '\'' +
+                ", subscriptionPack='" + subscriptionPack + '\'' +
+                ", inboxWeekId='" + inboxWeekId + '\'' +
+                ", contentFileName='" + contentFileName + '\'' +
+                '}';
+    }
 }

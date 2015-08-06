@@ -80,7 +80,7 @@ public class UserController extends BaseController {
                              @RequestParam(required = false) String circle,
                              @RequestParam(required = false) Long callId) {
 
-        log(String.format("/%s/user", serviceName), String.format(
+        log(String.format("REQUEST: /%s/user", serviceName), String.format(
                 "callingNumber=%s, callId=%s, operator=%s, callId=%s",
                 LogHelper.obscure(callingNumber), operator, circle, callId));
 
@@ -152,6 +152,7 @@ public class UserController extends BaseController {
             user.setAllowedLanguageLocationCodes(allowedLanguageLocations);
         }
 
+        log(String.format("RESPONSE: /%s/user", serviceName), String.format("callId=%s, %s", callId, user.toString()));
         return user;
     }
 
