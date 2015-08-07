@@ -1,11 +1,9 @@
 package org.motechproject.nms.testing.service.impl;
 
-import org.joda.time.DateTime;
-import org.joda.time.Weeks;
 import org.motechproject.alerts.contract.AlertsDataService;
+import org.motechproject.mds.query.SqlQueryExecution;
 import org.motechproject.nms.csv.repository.CsvAuditRecordDataService;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
-import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.repository.CallContentDataService;
 import org.motechproject.nms.flw.repository.CallDetailRecordDataService;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
@@ -14,7 +12,6 @@ import org.motechproject.nms.flw.repository.WhitelistEntryDataService;
 import org.motechproject.nms.flw.repository.WhitelistStateDataService;
 import org.motechproject.nms.imi.repository.FileAuditRecordDataService;
 import org.motechproject.nms.kilkari.domain.Subscription;
-import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.CallSummaryRecordDataService;
 import org.motechproject.nms.kilkari.repository.InboxCallDataDataService;
@@ -42,15 +39,22 @@ import org.motechproject.nms.region.repository.TalukaDataService;
 import org.motechproject.nms.region.repository.VillageDataService;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.server.config.SettingsFacade;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+
+import javax.jdo.Query;
+import java.util.List;
 
 @Service("testingService")
 public class TestingServiceImpl implements TestingService {
 
     private static final String TESTING_ENVIRONMENT = "testing.environment";
-    private static final String WEEKS_TO_KEEP_INVALID_FLWS = "flw.weeks_to_keep_invalid_flws";
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(TestingServiceImpl.class);
+
 
     /**
      * FLW
@@ -177,6 +181,8 @@ public class TestingServiceImpl implements TestingService {
     @Override
     public void clearDatabase() { //NOPMD NcssMethodCount
 
+        LOGGER.debug("clearDatabase()");
+
         if (!Boolean.parseBoolean(settingsFacade.getProperty(TESTING_ENVIRONMENT))) {
             throw new IllegalStateException("calling clearDatabase() in a production environment is forbidden!");
         }
@@ -184,88 +190,137 @@ public class TestingServiceImpl implements TestingService {
         /**
          * FLW
          */
+        LOGGER.debug("callContentDataService().deleteAll()");
         callContentDataService.deleteAll();
+        LOGGER.debug("flwCallDetailRecordDataService().deleteAll()");
         flwCallDetailRecordDataService.deleteAll();
-        int weeks = Integer.parseInt(settingsFacade.getProperty(WEEKS_TO_KEEP_INVALID_FLWS));
-        DateTime now = DateTime.now();
-        for (FrontLineWorker flw: frontLineWorkerDataService.retrieveAll()) {
-            if ((flw.getStatus() != FrontLineWorkerStatus.INVALID) ||
-                    (flw.getInvalidationDate() == null) ||
-                    (Math.abs(Weeks.weeksBetween(now, flw.getInvalidationDate()).getWeeks()) < weeks)) {
-                flw.setStatus(FrontLineWorkerStatus.INVALID);
-                flw.setInvalidationDate(DateTime.now().minusYears(1));
-                frontLineWorkerDataService.update(flw);
+
+        LOGGER.debug("frontLineWorkerDataService preparing...");
+        SqlQueryExecution<List<FrontLineWorker>> flwQueryExecution = new SqlQueryExecution<List<FrontLineWorker>>() {
+
+            @Override
+            public String getSqlQuery() {
+                return "update nms_front_line_workers set status='INVALID', invalidationDate=null";
             }
-        }
+
+            @Override
+            public List<FrontLineWorker> execute(Query query) {
+                query.execute();
+                return null;
+            }
+        };
+        frontLineWorkerDataService.executeSQLQuery(flwQueryExecution);
+
+
+        LOGGER.debug("serviceUsageCapDataService().deleteAll()");
         serviceUsageCapDataService.deleteAll();
+        LOGGER.debug("callDetailRecordDataService().deleteAll()");
         callDetailRecordDataService.deleteAll();
+        LOGGER.debug("frontLineWorkerDataService().deleteAll()");
         frontLineWorkerDataService.deleteAll();
+        LOGGER.debug("whitelistEntryDataService().deleteAll()");
         whitelistEntryDataService.deleteAll();
+        LOGGER.debug("whitelistStateDataService().deleteAll()");
         whitelistStateDataService.deleteAll();
 
         /**
          * IMI
          */
+        LOGGER.debug("fileAuditRecordDataService().deleteAll()");
         fileAuditRecordDataService.deleteAll();
+        LOGGER.debug("imiCallDetailRecordDataService().deleteAll()");
         imiCallDetailRecordDataService.deleteAll();
 
         /**
          * Kilkari
          */
-        for (Subscription subscription: subscriptionDataService.retrieveAll()) {
-            try {
-                subscriptionService.deletePreconditionCheck(subscription);
-            } catch (IllegalStateException e) {
-                subscription.setStatus(SubscriptionStatus.COMPLETED);
-                subscription.setEndDate(DateTime.now().minusYears(1));
-                subscriptionDataService.update(subscription);
+        LOGGER.debug("subscriptionDataService preparing...");
+        SqlQueryExecution<List<Subscription>> subscriptionQueryExecution = new SqlQueryExecution<List<Subscription>>() {
+
+            @Override
+            public String getSqlQuery() {
+                return "update nms_subscriptions set status='COMPLETED', endDate=\" 1970/1/1\"";
             }
-        }
+
+            @Override
+            public List<Subscription> execute(Query query) {
+                query.execute();
+                return null;
+            }
+        };
+        subscriptionDataService.executeSQLQuery(subscriptionQueryExecution);
+
+        LOGGER.debug("callRetryDataService().deleteAll()");
         callRetryDataService.deleteAll();
+        LOGGER.debug("callSummaryRecordDataService().deleteAll()");
         callSummaryRecordDataService.deleteAll();
+        LOGGER.debug("inboxCallDetailRecordDataService().deleteAll()");
         inboxCallDetailRecordDataService.deleteAll();
+        LOGGER.debug("inboxCallDataDataService().deleteAll()");
         inboxCallDataDataService.deleteAll();
+        LOGGER.debug("subscriberDataService().deleteAll()");
         subscriberDataService.deleteAll();
+        LOGGER.debug("subscriptionService().deleteAll()");
         subscriptionService.deleteAll();
+        LOGGER.debug("subscriptionPackDataService().deleteAll()");
         subscriptionPackDataService.deleteAll();
+        LOGGER.debug("subscriptionPackMessageDataService().deleteAll()");
         subscriptionPackMessageDataService.deleteAll();
+        LOGGER.debug("subscriptionErrorDataService().deleteAll()");
         subscriptionErrorDataService.deleteAll();
+        LOGGER.debug("callContentDataService().deleteAll()");
         mctsChildDataService.deleteAll();
+        LOGGER.debug("mctsMotherDataService().deleteAll()");
         mctsMotherDataService.deleteAll();
 
         /**
          * Mobile Academy
          */
+        LOGGER.debug("completionRecordDataService().deleteAll()");
         completionRecordDataService.deleteAll();
 
         /**
          * Props
          */
+        LOGGER.debug("deployedServiceDataService().deleteAll()");
         deployedServiceDataService.deleteAll();
 
         /**
          * Region
          */
+        LOGGER.debug("circleDataService().deleteAll()");
         circleDataService.deleteAll();
+        LOGGER.debug("districtDataService().deleteAll()");
         districtDataService.deleteAll();
+        LOGGER.debug("healthBlockDataService().deleteAll()");
         healthBlockDataService.deleteAll();
+        LOGGER.debug("healthFacilityDataService().deleteAll()");
         healthFacilityDataService.deleteAll();
+        LOGGER.debug("healthFacilityTypeDataService().deleteAll()");
         healthFacilityTypeDataService.deleteAll();
+        LOGGER.debug("healthSubFacilityDataService().deleteAll()");
         healthSubFacilityDataService.deleteAll();
+        LOGGER.debug("nationalDefaultLanguageLocationDataService().deleteAll()");
         nationalDefaultLanguageLocationDataService.deleteAll();
+        LOGGER.debug("languageDataService().deleteAll()");
         languageDataService.deleteAll();
+        LOGGER.debug("stateDataService().deleteAll()");
         stateDataService.deleteAll();
+        LOGGER.debug("talukaDataService().deleteAll()");
         talukaDataService.deleteAll();
+        LOGGER.debug("villageDataService().deleteAll()");
         villageDataService.deleteAll();
 
         /**
          * Alerts
          */
+        LOGGER.debug("alertsDataService().deleteAll()");
         alertsDataService.deleteAll();
 
         /**
          * CSV
          */
+        LOGGER.debug("csvAuditRecordDataService().deleteAll()");
         csvAuditRecordDataService.deleteAll();
     }
 

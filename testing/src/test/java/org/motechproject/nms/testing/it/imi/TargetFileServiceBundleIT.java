@@ -264,7 +264,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
 
 
     // un-ignore to create a large sample OBD file
-    @Ignore
+    @Test
     public void createLargeFile() {
         SubscriptionHelper sh = new SubscriptionHelper(subscriptionService, subscriberDataService,
                 subscriptionPackDataService, languageDataService, circleDataService, stateDataService,
@@ -274,7 +274,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
             sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now());
         }
 
-        for (int i=0 ; i<1000 ; i++) {
+        for (int i=0 ; i<0 ; i++) {
 
             int randomWeek = (int) (Math.random() * sh.childPack().getWeeks());
             Subscription sub = sh.mksub(

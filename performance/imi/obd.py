@@ -75,6 +75,15 @@ def home():
     return render_template('index.html', stats=stats)
 
 
+@app.route('/cdr', methods=['POST'])
+def handle_cdr():
+
+    print "/cdr"
+    print "request = {}".format(request.get_json())
+
+    return render_template('resp.html', resp="OK")
+
+
 @app.route('/obd', methods=['POST'])
 def handle_obd():
 
@@ -84,7 +93,7 @@ def handle_obd():
     targetFileNotification = request.get_json()
 
     print "/obd"
-    print "targetFileNotification = {}".format(targetFileNotification)
+    print "request = {}".format(targetFileNotification)
 
     if 'fileName' not in targetFileNotification:
         required_fields.append("fileName")
@@ -141,37 +150,32 @@ def make_call_id():
     return "CID-{:10d}".format(randint(0, 9999999999))
 
 
-def success_call_status():
-    # OBD_SUCCESS_CALL_CONNECTED(1001),
-    return choice([1001])
+# OBD_SUCCESS_CALL_CONNECTED(1001),
+successful_call_statuses = [1001]
 
 
-def failure_call_status():
-    # OBD_FAILED_NOATTEMPT(2000),
-    # OBD_FAILED_BUSY(2001),
-    # OBD_FAILED_NOANSWER(2002),
-    # OBD_FAILED_SWITCHEDOFF(2003),
-    # OBD_FAILED_INVALIDNUMBER(2004),
-    # OBD_FAILED_OTHERS(2005),
-    return choice([2000, 2001, 2002, 2003, 2004, 2005])
+# OBD_FAILED_NOATTEMPT(2000),
+# OBD_FAILED_BUSY(2001),
+# OBD_FAILED_NOANSWER(2002),
+# OBD_FAILED_SWITCHEDOFF(2003),
+# OBD_FAILED_INVALIDNUMBER(2004),
+# OBD_FAILED_OTHERS(2005),
+failed_call_statuses = [2000, 2001, 2002, 2003, 2004, 2005]
 
 
-def success_call_disconnect():
-    # Normal Drop: 1
-    return choice([1])
+# Normal Drop: 1
+successful_disconnect_statuses = [1]
 
 
-def failure_call_disconnect():
-    # VXML Runtime exception: 2
-    # Content Not found: 3
-    # Usage Cap exceeded: 4
-    # Error in the API: 5
-    # System Error: 6
-    return choice([2, 3, 4, 5, 6])
+# VXML Runtime exception: 2
+# Content Not found: 3
+# Usage Cap exceeded: 4
+# Error in the API: 5
+# System Error: 6
+failed_disconnect_statuses = [2, 3, 4, 5, 6]
 
 
-def operator():
-    return choice(['D', 'A', 'B', 'L', 'C', 'H', 'I', 'M', 'R', 'E', 'S', 'Y', 'P', 'W', 'T', 'U', 'V'])
+operators = ['D', 'A', 'B', 'L', 'C', 'H', 'I', 'M', 'R', 'E', 'S', 'Y', 'P', 'W', 'T', 'U', 'V']
 
 
 def some_time_today():
@@ -180,27 +184,12 @@ def some_time_today():
     return (today - epoch).total_seconds()
 
 
-def write_cdr_row(obd, writer, call_id, attempt, successful):
+def write_cdr_row(obd, writer, call_id, attempt, status, start_time, answer_time, end_time, duration, operator):
 
-    if successful:
-        call_status = success_call_status()
-        call_start_time = 123
-        call_answer_time = 234
-        call_end_time = 456
-        call_duration = 10
-        msg_play_start_time = some_time_today()
-        msg_play_end_time = msg_play_start_time + call_duration # assuming that duration is in seconds
-        call_disconnect_reason = success_call_disconnect()
-
-    else:
-        call_status = failure_call_status()
-        call_start_time = 123
-        call_answer_time = ""
-        call_end_time = ""
-        call_duration = ""
-        msg_play_start_time = ""
-        msg_play_end_time = ""
-        call_disconnect_reason = failure_call_disconnect()
+    msg_play_start_time = some_time_today()
+    msg_play_end_time = msg_play_start_time + duration # assuming that duration is in seconds
+    call_disconnect_reason = choice(successful_disconnect_statuses) if status in successful_call_statuses \
+        else choice(failed_disconnect_statuses)
 
     # REQUEST_ID, MSISDN, CALL_ID, ATTEMPT_NO, CALL_START_TIME, CALL_ANSWER_TIME, CALL_END_TIME,
     # CALL_DURATION_IN_PULSE, CALL_STATUS, LANGUAGE_LOCATION_ID, CONTENT_FILE, MSG_PLAY_START_TIME, MSG_PLAY_END_TIME,
@@ -216,15 +205,15 @@ def write_cdr_row(obd, writer, call_id, attempt, successful):
         # AttemptNo
         attempt,
         # CallStartTime
-        call_start_time,
+        start_time,
         # CallAnswerTime
-        call_answer_time,
+        answer_time,
         # CallEndTime
-        call_end_time,
+        end_time,
         # CallDurationInPulse
-        call_duration,
+        duration,
         # CallStatus
-        call_status,
+        status,
         # LanguageLocationId
         obd[LANGUAGE_LOCATION_CODE],
         # ContentFile
@@ -236,7 +225,7 @@ def write_cdr_row(obd, writer, call_id, attempt, successful):
         # CIRCLE_ID
         obd[CIRCLE],
         # OPERATOR_ID
-        operator(),
+        operator,
         # PRIORITY
         obd[PRIORITY],
         # CALL_DISCONNECT_REASON
@@ -246,7 +235,7 @@ def write_cdr_row(obd, writer, call_id, attempt, successful):
     ])
 
 
-def write_csr_row(obd, writer, attempts, successful):
+def write_csr_row(obd, writer, attempts, status):
 
     # REQUEST_ID, SERVICE_ID, MSISDN, CLI, PRIORITY, CALL_FLOW_URL, CONTENT_FILE_NAME, WEEK_ID, LANGUAGE_LOCATION_CODE,
     # CIRCLE, FINAL_STATUS, STATUS_CODE, ATTEMPTS
@@ -273,9 +262,9 @@ def write_csr_row(obd, writer, attempts, successful):
         # Circle
         obd[CIRCLE],
         # FinalStatus
-        FS_SUCCESS if successful else FS_FAILED,
+        FS_SUCCESS if status in successful_call_statuses else FS_FAILED,
         # StatusCode
-        success_call_status() if successful else failure_call_status(),
+        status,
         # Attempts
         attempts
     ])
@@ -311,17 +300,23 @@ def mock_call(obd, cdr_writer, csr_writer):
 
     attempt = 0
 
+
     # first some retries
     if randint(0, 100) <= args.retry:
+
+        status = choice(failed_call_statuses)
+        operator = choice(operators)
         for i in range(0, randint(0, args.maxretries)):
             attempt += 1
-            write_cdr_row(obd, cdr_writer, call_id, attempt, False)
+            write_cdr_row(obd, cdr_writer, call_id, attempt, status, 123, 234, 345, 10, operator)
             cdr_lines += 1
 
+
     # and then ultimately, succeed or fail...
-    success = randint(0, 100) > args.failure
-    write_cdr_row(obd, cdr_writer, call_id, attempt + 1, success)
-    write_csr_row(obd, csr_writer, attempt + 1, success)
+    if randint(0, 100) > args.failure:
+        status = choice(failed_call_statuses)
+    write_cdr_row(obd, cdr_writer, call_id, attempt, status, 123, 234, 345, 10, operator)
+    write_csr_row(obd, csr_writer, attempt + 1, status)
 
     return cdr_lines + 1
 
@@ -396,7 +391,7 @@ def read_obd_file(name):
         print "POST requ: {}".format(obd_file_processed_url())
         print "POST data: {}".format(json_string)
         response = urllib2.urlopen(request, json.dumps(data))
-        print "POST resp: {}".format(response)
+        print "POST resp: HTTP {} - {}".format(response.code, response.msg)
 
         # wait (to mock how long it takes to call everybody) before sending the next request
 
@@ -423,7 +418,7 @@ def read_obd_file(name):
         print "POST requ: {}".format(cdr_file_notification_url())
         print "POST data: {}".format(json_string)
         response = urllib2.urlopen(request)
-        print "POST resp: {}".format(response)
+        print "POST resp: HTTP {} - {}".format(response.code, response.msg)
 
     except Exception as e:
         error = "### EXCEPTION: {} ###".format(e)
