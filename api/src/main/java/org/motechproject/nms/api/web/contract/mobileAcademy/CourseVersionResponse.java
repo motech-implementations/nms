@@ -22,4 +22,11 @@ public class CourseVersionResponse {
     public void setCourseVersion(Long courseVersion) {
         this.courseVersion = courseVersion;
     }
+
+    @Override
+    public String toString() {
+        return "CourseVersionResponse{" +
+                "courseVersion=" + courseVersion +
+                '}';
+    }
 }

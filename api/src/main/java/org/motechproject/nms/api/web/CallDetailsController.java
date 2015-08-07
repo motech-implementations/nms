@@ -60,7 +60,7 @@ public class CallDetailsController extends BaseController {
     public void saveCallDetails(@PathVariable String serviceName,
                                 @RequestBody CallDetailRecordRequest callDetailRecordRequest) {
 
-        log(String.format("/%s/callDetails", serviceName), LogHelper.nullOrString(callDetailRecordRequest));
+        log(String.format("REQUEST: /%s/callDetails (POST)", serviceName), LogHelper.nullOrString(callDetailRecordRequest));
 
         Service service = null;
         StringBuilder failureReasons;

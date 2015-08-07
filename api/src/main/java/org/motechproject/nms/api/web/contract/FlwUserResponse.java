@@ -68,6 +68,17 @@ public class FlwUserResponse extends UserResponse {
     }
 
     @Override
+    public String toString() {
+        return "FlwUserResponse{" +
+                "currentUsageInPulses=" + currentUsageInPulses +
+                ", endOfUsagePromptCounter=" + endOfUsagePromptCounter +
+                ", welcomePromptFlag=" + welcomePromptFlag +
+                ", maxAllowedUsageInPulses=" + maxAllowedUsageInPulses +
+                ", maxAllowedEndOfUsagePrompt=" + maxAllowedEndOfUsagePrompt +
+                "} " + super.toString();
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;
