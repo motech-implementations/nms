@@ -6,4 +6,6 @@ package org.motechproject.nms.testing.service;
 public interface TestingService {
 
     void clearDatabase();
+
+    void createSubscriptionPacks();
 }

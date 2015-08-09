@@ -12,6 +12,9 @@ import org.motechproject.nms.flw.repository.WhitelistEntryDataService;
 import org.motechproject.nms.flw.repository.WhitelistStateDataService;
 import org.motechproject.nms.imi.repository.FileAuditRecordDataService;
 import org.motechproject.nms.kilkari.domain.Subscription;
+import org.motechproject.nms.kilkari.domain.SubscriptionPack;
+import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
+import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.CallSummaryRecordDataService;
 import org.motechproject.nms.kilkari.repository.InboxCallDataDataService;
@@ -46,14 +49,21 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import javax.jdo.Query;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service("testingService")
 public class TestingServiceImpl implements TestingService {
 
     private static final String TESTING_ENVIRONMENT = "testing.environment";
+    private static final int PREGNANCY_PACK_WEEKS = 72;
+    private static final int CHILD_PACK_WEEKS = 48;
+    private static final int TWO_MINUTES = 120;
+    private static final int TEN_SECS = 10;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TestingServiceImpl.class);
+    public static final String CHILD_PACK = "childPack";
+    public static final String PREGNANCY_PACK = "pregnancyPack";
 
 
     /**
@@ -324,5 +334,71 @@ public class TestingServiceImpl implements TestingService {
         csvAuditRecordDataService.deleteAll();
     }
 
+
+    public SubscriptionPack childPack() {
+        if (subscriptionPackDataService.byName(CHILD_PACK) == null) {
+            createSubscriptionPack(CHILD_PACK, SubscriptionPackType.CHILD, CHILD_PACK_WEEKS, 1);
+        }
+        return subscriptionService.getSubscriptionPack(CHILD_PACK);
+    }
+
+    public SubscriptionPack pregnancyPack() {
+        if (subscriptionPackDataService.byName(PREGNANCY_PACK) == null) {
+            createSubscriptionPack(PREGNANCY_PACK, SubscriptionPackType.PREGNANCY, PREGNANCY_PACK_WEEKS, 2);
+        }
+        return subscriptionService.getSubscriptionPack(PREGNANCY_PACK);
+    }
+
+
+    private void createSubscriptionPack(String name, SubscriptionPackType type, int weeks,
+                                        int messagesPerWeek) {
+        List<SubscriptionPackMessage> messages = genratePackMessageList(weeks, messagesPerWeek);
+        subscriptionPackDataService.create(new SubscriptionPack(name, type, weeks, messagesPerWeek, messages));
+    }
+
+    private List<SubscriptionPackMessage> genratePackMessageList(int packWeeks, int messagesPerWeek) {
+        List<SubscriptionPackMessage> messages = new ArrayList<>();
+        for (int week = 1; week <= packWeeks; week++) {
+            messages.add(new SubscriptionPackMessage(String.format("w%s_1", week),
+                    String.format("w%s_1.wav", week),
+                    TWO_MINUTES - TEN_SECS + (int) (Math.random() * 2 * TEN_SECS)));
+
+            if (messagesPerWeek == 2) {
+                messages.add(new SubscriptionPackMessage(String.format("w%s_2", week),
+                        String.format("w%s_2.wav", week),
+                        TWO_MINUTES - TEN_SECS + (int) (Math.random() * 2 * TEN_SECS)));
+            }
+        }
+        return messages;
+    }
+
+    @Override
+    public void createSubscriptionPacks() {
+
+        LOGGER.debug("createSubscriptionPacks()");
+
+        if (!Boolean.parseBoolean(settingsFacade.getProperty(TESTING_ENVIRONMENT))) {
+            throw new IllegalStateException("calling createSubscriptionPacks() in a production environment is forbidden!");
+        }
+
+        subscriptionPackDataService.create(
+            new SubscriptionPack(
+                    CHILD_PACK,
+                SubscriptionPackType.CHILD,
+                CHILD_PACK_WEEKS,
+                1,
+                genratePackMessageList(CHILD_PACK_WEEKS, 1)
+            )
+        );
+        subscriptionPackDataService.create(
+                new SubscriptionPack(
+                        PREGNANCY_PACK,
+                        SubscriptionPackType.PREGNANCY,
+                        PREGNANCY_PACK_WEEKS,
+                        2,
+                        genratePackMessageList(PREGNANCY_PACK_WEEKS, 2)
+                )
+        );
+    }
 }
 

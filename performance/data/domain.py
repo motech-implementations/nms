@@ -9,6 +9,53 @@ def data_file(name):
     return os.path.join(this_dir, "files", name)
 
 
+def clear_database():
+    url = "{}/module/testing/clearDatabase".format(args.server)
+
+    if args.verbose:
+        print "GET url      = {}".format(url)
+
+    response = unirest.post(url=url)
+
+    if args.verbose:
+        print "response code = {}".format(response.code)
+
+    if args.debug:
+        print "response body = {}".format(response.body)
+
+    if response.code != 200:
+        print "### ERROR ###"
+        print "Expecting HTTP 200 but received {}".format(response.code)
+        sys.exit(1)
+
+
+def import_domain_data(url_part, file):
+    url = "{}/module/region/{}".format(args.server, url_part)
+    params = {"parameter": "value", "csvFile": open(data_file(file))}
+
+    if args.verbose:
+        print "POST url      = {}".format(url)
+        print "POST params   = {}".format(params)
+
+    response = unirest.post(url=url, params=params)
+
+    if args.verbose:
+        print "response code = {}".format(response.code)
+
+    if args.debug:
+        print "response body = {}".format(response.body)
+
+    if response.code != 200:
+        print "Expected HTTP 200 but received {}".format(response.code)
+        sys.exit(1)
+
+
+def import_region_domain_data(what):
+    url_part = "data/import/{}".format(what)
+    file = "{}.csv".format(what)
+    import_domain_data(url_part, file)
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-s", "--server", help="MOTECH URL", default="http://localhost:8080/motech-platform-server")
@@ -21,49 +68,19 @@ if __name__ == '__main__':
         print "verbose mode\nargs={}".format(args)
 
     #
+    # http defaults
+    #
+    unirest.timeout(30)
+    unirest.default_header("Accept", "application/json")
+
+    #
     # Clear the database?
     #
     if args.cleardb:
-        url = "{}/module/testing/clearDatabase".format(args.server)
+        clear_database()
 
-        if args.verbose:
-            print "GET url      = {}".format(url)
+    import_region_domain_data("state")
+    import_region_domain_data("circle")
+    import_region_domain_data("district")
 
-        response = unirest.post(url=url)
-
-        if args.verbose:
-            print "response code = {}".format(response.code)
-
-        if args.debug:
-            print "response body = {}".format(response.body)
-
-        if response.code != 200:
-            print "### ERROR ###"
-            print "Expecting HTTP 200 but received {}".format(response.code)
-            sys.exit(1)
-
-    #
-    # States
-    #
-    url = "{}/module/region/data/import/state".format(args.server)
-    headers = headers={"Accept": "application/json"}
-    params = {"parameter": "value", "csvFile": open(data_file("state.csv"))}
-
-    if args.verbose:
-        print "POST url      = {}".format(url)
-        print "POST headers  = {}".format(headers)
-        print "POST params   = {}".format(params)
-
-    response = unirest.post(url=url, headers=headers, params=params)
-
-    if args.verbose:
-        print "response code = {}".format(response.code)
-
-    if args.debug:
-        print "response body = {}".format(response.body)
-
-    if response.code == 200:
-        sys.exit()
-
-    print "Expected HTTP 200 but received {}".format(response.code)
-    sys.exit(1)
+    import_domain_data("languageLocationCode/import", "language_location_code.csv")

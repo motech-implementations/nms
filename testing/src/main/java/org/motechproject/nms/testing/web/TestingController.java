@@ -34,6 +34,7 @@ public class TestingController {
         return String.format("Sent MOTECH event: %s with empty params: %s", subject, eventParams.toString());
     }
 
+
     @RequestMapping(value = "/clearDatabase")
     @ResponseBody
     public String clearDatabase() {
@@ -41,4 +42,11 @@ public class TestingController {
         return "OK";
     }
 
+
+    @RequestMapping(value = "/createSubscriptionPacks")
+    @ResponseBody
+    public String createSubscriptionPacks() {
+        testingService.createSubscriptionPacks();
+        return "OK";
+    }
 }
