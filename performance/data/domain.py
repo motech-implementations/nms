@@ -28,6 +28,24 @@ def clear_database():
         print "Expecting HTTP 200 but received {}".format(response.code)
         sys.exit(1)
 
+    url = "{}/module/testing/createSubscriptionPacks".format(args.server)
+
+    if args.verbose:
+        print "GET url      = {}".format(url)
+
+    response = unirest.post(url=url)
+
+    if args.verbose:
+        print "response code = {}".format(response.code)
+
+    if args.debug:
+        print "response body = {}".format(response.body)
+
+    if response.code != 200:
+        print "### ERROR ###"
+        print "Expecting HTTP 200 but received {}".format(response.code)
+        sys.exit(1)
+
 
 def import_domain_data(url_part, file):
     url = "{}/module/region/{}".format(args.server, url_part)
