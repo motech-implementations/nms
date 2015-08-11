@@ -71,6 +71,8 @@ public class TestingServiceImpl implements TestingService {
     private static final int CHILD_PACK_WEEKS = 48;
     private static final int TWO_MINUTES = 120;
     private static final int TEN_SECS = 10;
+    private static final long MIN_ID_NO = 100000000000000000L;
+    private static final long MAX_ID_NO = 999999999999999999L;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TestingServiceImpl.class);
     public static final String CHILD_PACK = "childPack";
@@ -467,6 +469,19 @@ public class TestingServiceImpl implements TestingService {
     }
 
 
+    private Long randomIdNo() {
+        Random r = new Random();
+        long max = MAX_ID_NO - MIN_ID_NO + 1;
+        long bits;
+        long val;
+        do {
+            bits = (r.nextLong() << 1) >>> 1;
+            val = bits % max;
+        } while (bits - val + (max - 1) < 0L);
+        return MIN_ID_NO + val;
+    }
+
+
     @Override
     public String createMctsMoms(int count) throws IOException {
 
@@ -513,6 +528,30 @@ public class TestingServiceImpl implements TestingService {
             String districtName = districtNames.get(districtId);
             writer.write(districtName);
             writer.write("\t");
+
+            //Taluka_ID, Taluka_Name, HealthBlock_ID, HealthBlock_Name, PHC_ID, PHC_Name, SubCentre_ID, SubCentre_Name,
+            //Village_ID, Village_Name, Yr, GP_Village, Address,
+            writer.write("\t\t\t\t\t\t\t\t\t\t\t\t\t");
+
+            //ID_No
+            String idNo = randomIdNo().toString();
+            writer.write(idNo);
+            writer.write("\t");
+
+/*
+        BENEFICIARY_ID
+        BENEFICIARY_NAME
+        MSISDN
+        LMP
+        MOTHER_DOB
+        ABORTION
+        STILLBIRTH
+        DEATH
+ */
+
+
+
+
 
             writer.newLine();
         }
