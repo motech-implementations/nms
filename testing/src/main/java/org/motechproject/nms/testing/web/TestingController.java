@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -47,6 +48,14 @@ public class TestingController {
     @ResponseBody
     public String createSubscriptionPacks() {
         testingService.createSubscriptionPacks();
+        return "OK";
+    }
+
+
+    @RequestMapping(value = "/createMctsMoms")
+    @ResponseBody
+    public String createMctsMoms(@RequestParam(required = true) int count) throws IOException {
+        testingService.createMctsMoms(count);
         return "OK";
     }
 }
