@@ -31,6 +31,7 @@ import static org.junit.Assert.assertNotNull;
 @ExamFactory(value = MotechNativeTestContainerFactory.class)
 public class BundleIT extends BasePaxIT {
 
+    public static final int TEST_COUNT = 1000;
     @Inject
     TestingService testingService;
 
@@ -53,7 +54,7 @@ public class BundleIT extends BasePaxIT {
     }
 
 
-    private void createMinimalLocationData() {
+    private void createLocationData() {
         Language language = new Language("HI", "Hindi");
         if (languageDataService.countForFilters(new Filters(new Filter("code", "HI"))) == 0) {
             languageDataService.create(language);
@@ -79,8 +80,26 @@ public class BundleIT extends BasePaxIT {
 
     @Test
     public void testTheRealDeal() throws IOException {
-        createMinimalLocationData();
-        String file = testingService.createMctsMoms(1);
+        testingService.clearDatabase();
+        testingService.createSubscriptionPacks();
+        createLocationData();
+        long start = System.currentTimeMillis();
+        String file = testingService.createMctsMoms(TEST_COUNT);
+        long stop = System.currentTimeMillis();
+        getLogger().debug(String.format(
+                "Created %d MCTS Mothers in %fs @ %fmom/s",
+                TEST_COUNT,
+                ((stop - start) * 1.0) / (TEST_COUNT * 1.0),
+                (TEST_COUNT * 1000.0) / ((stop - start) * 1.0)
+        ));
+        start = System.currentTimeMillis();
         mctsBeneficiaryImportService.importMotherData(new InputStreamReader(new FileInputStream(file)));
+        stop = System.currentTimeMillis();
+        getLogger().debug(String.format(
+                "Imported %d MCTS Mothers in %fs @ %fmom/s",
+                TEST_COUNT,
+                ((stop - start) * 1.0) / (TEST_COUNT * 1.0),
+                (TEST_COUNT * 1000.0) / ((stop - start) * 1.0)
+        ));
     }
 }
