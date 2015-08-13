@@ -84,7 +84,7 @@ public class BundleIT extends BasePaxIT {
         testingService.createSubscriptionPacks();
         createLocationData();
         long start = System.currentTimeMillis();
-        String file = testingService.createMctsMoms(TEST_COUNT);
+        String file = testingService.createMctsMoms(TEST_COUNT).split("\t")[0];
         long stop = System.currentTimeMillis();
         getLogger().debug(String.format(
                 "Created %d MCTS Mothers in %fs @ %fmom/s",

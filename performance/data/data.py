@@ -9,11 +9,12 @@ def data_file(name):
     return os.path.join(this_dir, "files", name)
 
 
-def exec_http_command(url):
+def exec_http_get(url, params=None):
     if args.verbose:
         print "GET url      = {}".format(url)
+        print "GET params   = {}".format(params)
 
-    response = unirest.post(url=url)
+    response = unirest.post(url=url, params=params)
 
     if args.verbose:
         print "response code = {}".format(response.code)
@@ -25,14 +26,6 @@ def exec_http_command(url):
         print "### ERROR ###"
         print "Expecting HTTP 200 but received {}".format(response.code)
         sys.exit(1)
-
-
-def clear_database():
-    exec_http_command("{}/module/testing/clearDatabase".format(args.server))
-
-
-def create_subscription_packs():
-    exec_http_command("{}/module/testing/createSubscriptionPacks".format(args.server))
 
 
 def import_domain_data(url_part, file):
@@ -81,20 +74,20 @@ if __name__ == '__main__':
     #
     # http defaults
     #
-    unirest.timeout(30)
+    unirest.timeout(300)
     unirest.default_header("Accept", "application/json")
 
     #
     # Clear the database?
     #
     if args.cleardb:
-        clear_database()
+        exec_http_get("{}/module/testing/clearDatabase".format(args.server))
 
     #
     # Create domain data?
     #
     if args.domain:
-        create_subscription_packs()
+        exec_http_get("{}/module/testing/createSubscriptionPacks".format(args.server))
         import_region_domain_data("state")
         import_region_domain_data("circle")
         import_region_domain_data("district")
@@ -103,17 +96,4 @@ if __name__ == '__main__':
     #
     # Create a MCTS mother file
     #
-    header = ['StateID', 'District_ID', 'District_Name', 'Taluka_ID', 'Taluka_Name', 'HealthBlock_ID',
-              'HealthBlock_Name', 'PHC_ID', 'PHC_Name', 'SubCentre_ID', 'SubCentre_Name', 'Village_ID', 'Village_Name',
-              'Yr', 'GP_Village', 'Address', 'ID_No', 'Name', 'Husband_Name', 'PhoneNo_Of_Whom', 'Whom_PhoneNo',
-              'Birthdate', 'JSY_Beneficiary', 'Caste', 'SubCentre_Name1', 'ANM_Name', 'ANM_Phone', 'ASHA_Name',
-              'ASHA_Phone', 'Delivery_Lnk_Facility', 'Facility_Name', 'LMP_Date', 'ANC1_Date', 'ANC2_Date', 'ANC3_Date',
-              'ANC4_Date', 'TT1_Date', 'TT2_Date', 'TTBooster_Date', 'IFA100_Given_Date', 'Anemia', 'ANC_Complication',
-              'RTI_STI', 'Dly_Date', 'Dly_Place_Home_Type', 'Dly_Place_Public', 'Dly_Place_Private', 'Dly_Type',
-              'Dly_Complication', 'Discharge_Date', 'JSY_Paid_Date', 'Abortion', 'PNC_Home_Visit', 'PNC_Complication',
-              'PPC_Method', 'PNC_Checkup', 'Outcome_Nos', 'Child1_Name', 'Child1_Sex', 'Child1_Wt',
-              'Child1_Brestfeeding', 'Child2_Name', 'Child2_Sex', 'Child2_Wt', 'Child2_Brestfeeding', 'Child3_Name',
-              'Child3_Sex', 'Child3_Wt', 'Child3_Brestfeeding', 'Child4_Name', 'Child4_Sex', 'Child4_Wt',
-              'Child4_Brestfeeding', 'Age', 'MTHR_REG_DATE', 'LastUpdateDate', 'Remarks', 'ANM_ID', 'ASHA_ID',
-              'Call_Ans', 'NoCall_Reason', 'NoPhone_Reason', 'Created_By', 'Updated_By', 'Aadhar_No', 'BPL_APL', 'EID',
-              'EIDTime', 'Entry_Type']
+    exec_http_get("{}/module/testing/createMctsMoms".format(args.server), {'count': args.mctsmoms})

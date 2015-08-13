@@ -473,7 +473,12 @@ public class TestingServiceImpl implements TestingService {
                 throw new IllegalStateException("There are no District entities in the database!");
             }
         }
-        return districts.get(state).get(random.nextInt(districts.get(state).size()));
+        if (districts.containsKey(state)) {
+            List<Long> stateDistricts = districts.get(state);
+            int index = random.nextInt(stateDistricts.size());
+            return stateDistricts.get(index);
+        }
+        throw new IllegalStateException(String.format("No districts for state %d", state));
     }
 
 
@@ -748,7 +753,7 @@ public class TestingServiceImpl implements TestingService {
         }
         writer.close();
 
-        return file.getAbsolutePath();
+        return String.format("%s\t%d", file.getAbsolutePath(), count);
     }
 }
 

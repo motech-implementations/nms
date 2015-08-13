@@ -55,7 +55,6 @@ public class TestingController {
     @RequestMapping(value = "/createMctsMoms")
     @ResponseBody
     public String createMctsMoms(@RequestParam(required = true) int count) throws IOException {
-        testingService.createMctsMoms(count);
-        return "OK";
+        return testingService.createMctsMoms(count);
     }
 }
