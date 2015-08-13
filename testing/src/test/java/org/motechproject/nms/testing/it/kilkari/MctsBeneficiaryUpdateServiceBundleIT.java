@@ -288,9 +288,11 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         subscriber.setChild(child);
         subscriberDataService.update(subscriber);
 
+        // this updates the db with the new data (DOB)
         Reader reader = createUpdateReaderWithHeaders("1," + childId + ",," + getDateString(updatedDOB) + ",,,,,,,,,,,");
         mctsBeneficiaryUpdateService.updateBeneficiaryData(reader);
 
+        // This query should return the updated subscriber information (but it doesn't...causing the assert to fail)
         Subscriber updatedSubscriber = subscriberDataService.findByCallingNumber(msisdn);
         assertEquals(getDateString(updatedDOB), getDateString(updatedSubscriber.getDateOfBirth()));
         Subscription updatedSubscription = updatedSubscriber.getActiveAndPendingSubscriptions().iterator().next();

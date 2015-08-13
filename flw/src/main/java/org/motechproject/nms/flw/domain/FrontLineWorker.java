@@ -261,8 +261,6 @@ public class FrontLineWorker extends MdsEntity implements FullLocation {
         int result = (getId() != null ? getId().hashCode() : 0);
         result = 31 * result + (contactNumber != null ? contactNumber.hashCode() : 0);
         result = 31 * result + (name != null ? name.hashCode() : 0);
-        result = 31 * result + (language != null ? language.hashCode() : 0);
-        result = 31 * result + (district != null ? district.hashCode() : 0);
         return result;
     }
 
@@ -270,8 +268,8 @@ public class FrontLineWorker extends MdsEntity implements FullLocation {
     public String toString() {
         return "FrontLineWorker{" +
                 "id=" + getId() +
-                ", language=" + language +
-                ", district=" + district +
+                ", contactNumber=" + contactNumber +
+                ", name=" + name +
                 '}';
     }
 }

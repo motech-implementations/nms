@@ -21,6 +21,7 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Set;
@@ -88,11 +89,11 @@ public class LanguageServiceBundleIT extends BasePaxIT {
 
         Circle circle = new Circle("AA");
         circle.setDefaultLanguage(ta);
-        circle.setStates(Collections.singletonList(state));
+        circle.setStates(new ArrayList<>(Collections.singletonList(state)));
         circleDataService.create(circle);
 
-        state.setCircles(Collections.singletonList(circle));
-        state.getDistricts().addAll(Arrays.asList(district, district2, district3));
+        state.setCircles(new ArrayList<>(Collections.singletonList(circle)));
+        state.getDistricts().addAll(new ArrayList<>(Arrays.asList(district, district2, district3)));
         stateDataService.update(state);
     }
 
