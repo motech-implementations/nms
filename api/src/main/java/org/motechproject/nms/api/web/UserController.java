@@ -12,6 +12,8 @@ import org.motechproject.nms.flw.domain.ServiceUsageCap;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.flw.service.ServiceUsageCapService;
 import org.motechproject.nms.flw.service.ServiceUsageService;
+import org.motechproject.nms.kilkari.domain.MctsChild;
+import org.motechproject.nms.kilkari.domain.MctsMother;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
@@ -31,6 +33,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 
@@ -116,7 +119,10 @@ public class UserController extends BaseController {
         Kilkari in the house!
          */
         if (KILKARI.equals(serviceName)) {
-            user = getKilkariResponseUser(callingNumber, circleObj);
+            if (!validateKilkariServiceAvailability(callingNumber, circleObj)) {
+                throw new NotDeployedException(String.format(NOT_DEPLOYED, Service.KILKARI));
+            }
+            user = getKilkariResponseUser(callingNumber);
         }
 
         Language defaultLanguage = null;
@@ -156,32 +162,67 @@ public class UserController extends BaseController {
         return user;
     }
 
-    private UserResponse getKilkariResponseUser(Long callingNumber, Circle circle) {
-        KilkariUserResponse user = new KilkariUserResponse();
-        Set<String> packs = new HashSet<>();
-
-        State state = getStateFromCircle(circle);
-        if (!serviceDeployedInUserState(Service.KILKARI, state)) {
-            throw new NotDeployedException(String.format(NOT_DEPLOYED, Service.KILKARI));
-        }
-
+    private boolean validateKilkariServiceAvailability(Long callingNumber, Circle circle) {
         Subscriber subscriber = subscriberService.getSubscriber(callingNumber);
 
         if (subscriber != null) {
-            Set<Subscription> subscriptions = subscriber.getSubscriptions();
-            for (Subscription subscription : subscriptions) {
-                if ((subscription.getStatus() == SubscriptionStatus.ACTIVE) ||
-                        (subscription.getStatus() == SubscriptionStatus.PENDING_ACTIVATION)) {
-                    packs.add(subscription.getSubscriptionPack().getName());
-                }
+
+            MctsMother mother = subscriber.getMother();
+            if (mother != null) {
+                return serviceDeployedInUserState(Service.KILKARI, mother.getState());
             }
 
-            Language subscriberLanguage = subscriber.getLanguage();
-            if (subscriberLanguage != null) {
-                user.setLanguageLocationCode(subscriberLanguage.getCode());
+            MctsChild child = subscriber.getChild();
+            if (child != null) {
+                return serviceDeployedInUserState(Service.KILKARI, child.getState());
+            }
+        }
+
+        // Try to validate from circle since we don't have MCTS data for state or no subscriber
+        Circle currentCircle = (subscriber != null) ? subscriber.getCircle() : circle;
+
+        if (currentCircle == null) { // No circle available
+            return true;
+        }
+
+        List<State> stateList = currentCircle.getStates();
+        if (stateList == null || stateList.isEmpty()) { // No state available
+            return true;
+        }
+
+        if (stateList.size() == 1) { // only one state available
+            return serviceDeployedInUserState(Service.KILKARI, stateList.get(0));
+        }
+
+        boolean serviceAvailable = false;
+        for (State currentState : stateList) { // multiple states, false if undeployed in all states
+            serviceAvailable = serviceDeployedInUserState(Service.KILKARI, currentState);
+        }
+        return serviceAvailable;
+    }
+
+    private UserResponse getKilkariResponseUser(Long callingNumber) {
+        Subscriber subscriber = subscriberService.getSubscriber(callingNumber);
+        if (subscriber == null) {
+            return new KilkariUserResponse();
+        }
+
+        KilkariUserResponse user = new KilkariUserResponse();
+
+        Set<String> packs = new HashSet<>();
+        Set<Subscription> subscriptions = subscriber.getSubscriptions();
+        for (Subscription subscription : subscriptions) {
+            if ((subscription.getStatus() == SubscriptionStatus.ACTIVE) ||
+                    (subscription.getStatus() == SubscriptionStatus.PENDING_ACTIVATION)) {
+                packs.add(subscription.getSubscriptionPack().getName());
             }
         }
         user.setSubscriptionPackList(packs);
+
+        Language subscriberLanguage = subscriber.getLanguage();
+        if (subscriberLanguage != null) {
+            user.setLanguageLocationCode(subscriberLanguage.getCode());
+        }
 
         return user;
     }
