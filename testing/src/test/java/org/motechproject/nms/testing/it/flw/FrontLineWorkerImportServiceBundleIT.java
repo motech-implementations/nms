@@ -1,14 +1,11 @@
 package org.motechproject.nms.testing.it.flw;
 
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.FileBody;
 import org.joda.time.DateTime;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.csv.domain.CsvAuditRecord;
@@ -45,8 +42,11 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
-
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.StringReader;
 import java.util.Arrays;
 import java.util.List;
 
@@ -439,7 +439,6 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
      * To verify location is updated successfully when MSISDN is provided.
      */
     // TODO JIRA issue: https://applab.atlassian.net/browse/NMS-253
-    @Ignore
     @Test
     public void verifyFT559() throws InterruptedException, IOException {
         State state = stateDataService.findByName("State 1");
@@ -466,11 +465,9 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         frontLineWorkerService.update(flw);
         frontLineWorkerService.delete(flw);
 
-        assertFLW(flw, "#0", 1234567890L, "Test MSISDN", "District 12",
-                language1.getName());
+        assertFLW(flw, "#0", 1234567890L, "Test MSISDN", "District 12", language1.getCode());
 
-        List<CsvAuditRecord> auditRecords = csvAuditRecordDataService
-                .retrieveAll();
+        List<CsvAuditRecord> auditRecords = csvAuditRecordDataService.retrieveAll();
         assertNotNull(auditRecords);
         assertEquals(1, auditRecords.size());
 

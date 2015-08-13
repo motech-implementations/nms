@@ -172,9 +172,17 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
         Long contactNumber = (Long) record.get(CONTACT_NO);
         String name = (String) record.get(NAME);
 
-        flw.setContactNumber(contactNumber);
-        flw.setMctsFlwId(mctsFlwId);
-        flw.setName(name);
+        if (contactNumber != null) {
+            flw.setContactNumber(contactNumber);
+        }
+
+        if (mctsFlwId != null) {
+            flw.setMctsFlwId(mctsFlwId);
+        }
+
+        if (name != null) {
+            flw.setName(name);
+        }
 
         setFrontLineWorkerLocation(flw, location);
 
