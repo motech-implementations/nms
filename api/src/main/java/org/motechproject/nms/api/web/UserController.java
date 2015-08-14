@@ -162,9 +162,10 @@ public class UserController extends BaseController {
         return user;
     }
 
-    private boolean validateKilkariServiceAvailability(Long callingNumber, Circle circle) {
+    private boolean validateKilkariServiceAvailability(Long callingNumber, Circle circle) { // NO CHECKSTYLE Cyclomatic Complexity
         Subscriber subscriber = subscriberService.getSubscriber(callingNumber);
 
+        // check for subscriber and mcts location data
         if (subscriber != null) {
 
             MctsMother mother = subscriber.getMother();
@@ -179,8 +180,8 @@ public class UserController extends BaseController {
         }
 
         // Try to validate from circle since we don't have MCTS data for state or no subscriber
-        Circle currentCircle = (subscriber != null) ? subscriber.getCircle() : circle;
-
+        Circle currentCircle = (subscriber != null && subscriber.getCircle() != null) ?
+                subscriber.getCircle() : circle;
         if (currentCircle == null) { // No circle available
             return true;
         }
@@ -196,35 +197,35 @@ public class UserController extends BaseController {
 
         boolean serviceAvailable = false;
         for (State currentState : stateList) { // multiple states, false if undeployed in all states
-            serviceAvailable = serviceDeployedInUserState(Service.KILKARI, currentState);
+            serviceAvailable |= serviceDeployedInUserState(Service.KILKARI, currentState);
         }
         return serviceAvailable;
     }
 
     private UserResponse getKilkariResponseUser(Long callingNumber) {
         Subscriber subscriber = subscriberService.getSubscriber(callingNumber);
-        if (subscriber == null) {
-            return new KilkariUserResponse();
-        }
-
-        KilkariUserResponse user = new KilkariUserResponse();
-
+        KilkariUserResponse kilkariUserResponse = new KilkariUserResponse();
         Set<String> packs = new HashSet<>();
-        Set<Subscription> subscriptions = subscriber.getSubscriptions();
-        for (Subscription subscription : subscriptions) {
-            if ((subscription.getStatus() == SubscriptionStatus.ACTIVE) ||
-                    (subscription.getStatus() == SubscriptionStatus.PENDING_ACTIVATION)) {
-                packs.add(subscription.getSubscriptionPack().getName());
+
+        if (subscriber != null) {
+
+            Set<Subscription> subscriptions = subscriber.getSubscriptions();
+            for (Subscription subscription : subscriptions) {
+                if ((subscription.getStatus() == SubscriptionStatus.ACTIVE) ||
+                        (subscription.getStatus() == SubscriptionStatus.PENDING_ACTIVATION)) {
+                    packs.add(subscription.getSubscriptionPack().getName());
+                }
+            }
+            kilkariUserResponse.setSubscriptionPackList(packs);
+
+            Language subscriberLanguage = subscriber.getLanguage();
+            if (subscriberLanguage != null) {
+                kilkariUserResponse.setLanguageLocationCode(subscriberLanguage.getCode());
             }
         }
-        user.setSubscriptionPackList(packs);
 
-        Language subscriberLanguage = subscriber.getLanguage();
-        if (subscriberLanguage != null) {
-            user.setLanguageLocationCode(subscriberLanguage.getCode());
-        }
-
-        return user;
+        kilkariUserResponse.setSubscriptionPackList(packs);
+        return kilkariUserResponse;
     }
 
     private UserResponse getFrontLineWorkerResponseUser(String serviceName, Long callingNumber, Circle circle) {
