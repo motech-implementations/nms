@@ -165,6 +165,10 @@ public class UserController extends BaseController {
     private boolean validateKilkariServiceAvailability(Long callingNumber, Circle circle) { // NO CHECKSTYLE Cyclomatic Complexity
         Subscriber subscriber = subscriberService.getSubscriber(callingNumber);
 
+        // 1. Check for existing subscriber and if mcts data is available
+        // 2. If not mcts data available, use circle information for existing subscriber
+        // 3. If existing subscriber has no circle available or is new subscriber, use circle passed from imi
+
         // check for subscriber and mcts location data
         if (subscriber != null) {
 
@@ -179,7 +183,8 @@ public class UserController extends BaseController {
             }
         }
 
-        // Try to validate from circle since we don't have MCTS data for state or no subscriber
+        // Try to validate from circle since we don't have MCTS data for state. Choose circle from subscriber or
+        // passed from IMI as last resort
         Circle currentCircle = (subscriber != null && subscriber.getCircle() != null) ?
                 subscriber.getCircle() : circle;
         if (currentCircle == null) { // No circle available
@@ -195,11 +200,12 @@ public class UserController extends BaseController {
             return serviceDeployedInUserState(Service.KILKARI, stateList.get(0));
         }
 
-        boolean serviceAvailable = false;
         for (State currentState : stateList) { // multiple states, false if undeployed in all states
-            serviceAvailable |= serviceDeployedInUserState(Service.KILKARI, currentState);
+            if (serviceDeployedInUserState(Service.KILKARI, currentState)) {
+                return true;
+            }
         }
-        return serviceAvailable;
+        return false;
     }
 
     private UserResponse getKilkariResponseUser(Long callingNumber) {
