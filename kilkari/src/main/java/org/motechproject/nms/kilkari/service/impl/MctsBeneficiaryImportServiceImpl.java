@@ -40,6 +40,7 @@ import javax.validation.ConstraintViolationException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
+import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -80,6 +81,8 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
     private SubscriptionPack pregnancyPack;
     private SubscriptionPack childPack;
+    private static final DecimalFormat FMT_DEC = new DecimalFormat("#,##0.000");
+    private static final DecimalFormat FMT_INT = new DecimalFormat("#,##0");
 
 
     @Autowired
@@ -96,6 +99,17 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         this.mctsChildDataService = mctsChildDataService;
         this.subscriberService = subscriberService;
     }
+
+
+    private void displayProgress(int count, long duration) {
+        LOGGER.debug(String.format(
+                "Imported %s MCTS Mothers in %ss @ %smom/s",
+                FMT_INT.format(count),
+                FMT_DEC.format(((duration) * 1.0) / 1000.0),
+                FMT_DEC.format((count * 1000.0) / ((duration) * 1.0))
+        ));
+    }
+
 
     /**
      * Expected file format:
@@ -119,8 +133,17 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
         try {
             Map<String, Object> record;
+            int count = 0;
+            long start = System.currentTimeMillis();
             while (null != (record = csvImporter.read())) {
                 importMotherRecord(record);
+                count++;
+                if (count % 1000 == 0) {
+                    displayProgress(count, System.currentTimeMillis() - start);
+                }
+            }
+            if (count % 1000 != 0) {
+                displayProgress(count, System.currentTimeMillis() - start);
             }
         } catch (ConstraintViolationException e) {
             throw new CsvImportDataException(String.format("MCTS mother import error, constraints violated: %s",

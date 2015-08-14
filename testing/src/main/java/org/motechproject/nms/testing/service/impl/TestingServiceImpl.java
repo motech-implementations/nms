@@ -58,6 +58,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -445,13 +446,14 @@ public class TestingServiceImpl implements TestingService {
     private Long randomStateId() {
         if (states == null) {
             states = new ArrayList<>();
-            if (stateDataService.count() > 0) {
-                for (State state : stateDataService.retrieveAll()) {
-                    states.add(state.getCode());
-                }
-            } else {
-                throw new IllegalStateException("There are no State entities in the database!");
+        }
+        if (states.size() <= 0) {
+            for (State state : stateDataService.retrieveAll()) {
+                states.add(state.getCode());
             }
+        }
+        if (states.size() <= 0) {
+            throw new IllegalStateException("There are no State entities in the database!");
         }
         return states.get(random.nextInt(states.size()));
     }
@@ -521,13 +523,13 @@ public class TestingServiceImpl implements TestingService {
     }
 
 
-    private DateTime randomBirthDate() {
+    private DateTime randomLmpDate() {
         // between 12 - 47 weeks before today
         return new DateTime().minusDays(randomInt(MIN_LMP_DAYS, MAX_LMP_DAYS));
     }
 
 
-    private DateTime randomLmpDate() {
+    private DateTime randomBirthDate() {
         DateTime today = new DateTime();
         int year = today.getYear() - randomInt(MIN_MOM_AGE, MAX_MOM_AGE);
         int day = randomInt(1, isLeapYear(year) ? 365 : 364);
@@ -753,7 +755,7 @@ public class TestingServiceImpl implements TestingService {
         }
         writer.close();
 
-        return String.format("%s\t%d", file.getAbsolutePath(), count);
+        return String.format("%s\t%s", file.getAbsolutePath(), new DecimalFormat("#,##0").format(count));
     }
 }
 

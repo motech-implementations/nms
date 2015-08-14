@@ -59,13 +59,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--server", help="MOTECH URL", default="http://localhost:8080/motech-platform-server")
     parser.add_argument("--verbose", help="verbose mode", action="store_true")
-    parser.add_argument("--domain", help="create domain data", action="store_true")
     parser.add_argument("--cleardb", help="clear database", action="store_true")
     parser.add_argument("--debug", help="debug mode, even more verbose", action="store_true")
-    parser.add_argument("--mctsmoms", help="number of MCTS mothers", type=int, default=10)
-    parser.add_argument("--mctskids", help="number of MCTS children", type=int, default=10)
-    parser.add_argument("--ivrmoms", help="number of IVR mothers", type=int, default=10)
-    parser.add_argument("--ivrkids", help="number of IVS children", type=int, default=10)
+    parser.add_argument("--mctsmoms", help="number of MCTS mothers", type=int, default=0)
     args = parser.parse_args()
 
     if args.verbose:
@@ -82,11 +78,6 @@ if __name__ == '__main__':
     #
     if args.cleardb:
         exec_http_get("{}/module/testing/clearDatabase".format(args.server))
-
-    #
-    # Create domain data?
-    #
-    if args.domain:
         exec_http_get("{}/module/testing/createSubscriptionPacks".format(args.server))
         import_region_domain_data("state")
         import_region_domain_data("circle")
@@ -94,6 +85,7 @@ if __name__ == '__main__':
         import_domain_data("languageLocationCode/import", "language_location_code.csv")
 
     #
-    # Create a MCTS mother file
+    # Create MCTS mothers file?
     #
-    exec_http_get("{}/module/testing/createMctsMoms".format(args.server), {'count': args.mctsmoms})
+    if args.mctsmoms > 0:
+        exec_http_get("{}/module/testing/createMctsMoms".format(args.server), {'count': args.mctsmoms})

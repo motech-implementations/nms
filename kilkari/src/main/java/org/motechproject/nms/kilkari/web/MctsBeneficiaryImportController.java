@@ -55,9 +55,9 @@ public class MctsBeneficiaryImportController {
     }
 
     @RequestMapping(value = "/mother/import", method = RequestMethod.POST)
-        @ResponseStatus(HttpStatus.OK)
-        public void importMotherData(@RequestParam MultipartFile csvFile) {
-
+    @ResponseStatus(HttpStatus.OK)
+    public void importMotherData(@RequestParam MultipartFile csvFile) {
+        LOGGER.debug("importMotherData() BEGIN");
         try {
             try (InputStream in = csvFile.getInputStream()) {
                 mctsBeneficiaryImportService.importMotherData(new InputStreamReader(in));
@@ -68,9 +68,10 @@ public class MctsBeneficiaryImportController {
             throw e;
         } catch (Exception e) {
             logError(csvFile.getOriginalFilename(), "/kilkari/mother/import", e);
-            throw new CsvImportException("An error occurred during CSV import", e);
         }
+        LOGGER.debug("importMotherData() END");
     }
+
 
     @RequestMapping(value = "/child/import", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
