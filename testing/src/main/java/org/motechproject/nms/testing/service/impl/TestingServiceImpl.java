@@ -244,9 +244,7 @@ public class TestingServiceImpl implements TestingService {
         /**
          * FLW
          */
-        LOGGER.debug("callContentDataService().deleteAll()");
         callContentDataService.deleteAll();
-        LOGGER.debug("flwCallDetailRecordDataService().deleteAll()");
         flwCallDetailRecordDataService.deleteAll();
         int weeks = Integer.parseInt(settingsFacade.getProperty(WEEKS_TO_KEEP_INVALID_FLWS));
         DateTime now = DateTime.now();
@@ -260,21 +258,15 @@ public class TestingServiceImpl implements TestingService {
             }
         }
         serviceUsageCapDataService.deleteAll();
-        LOGGER.debug("callDetailRecordDataService().deleteAll()");
         callDetailRecordDataService.deleteAll();
-        LOGGER.debug("frontLineWorkerDataService().deleteAll()");
         frontLineWorkerDataService.deleteAll();
-        LOGGER.debug("whitelistEntryDataService().deleteAll()");
         whitelistEntryDataService.deleteAll();
-        LOGGER.debug("whitelistStateDataService().deleteAll()");
         whitelistStateDataService.deleteAll();
 
         /**
          * IMI
          */
-        LOGGER.debug("fileAuditRecordDataService().deleteAll()");
         fileAuditRecordDataService.deleteAll();
-        LOGGER.debug("imiCallDetailRecordDataService().deleteAll()");
         imiCallDetailRecordDataService.deleteAll();
 
         /**
@@ -290,75 +282,56 @@ public class TestingServiceImpl implements TestingService {
             }
         }
         callRetryDataService.deleteAll();
-        LOGGER.debug("callSummaryRecordDataService().deleteAll()");
         callSummaryRecordDataService.deleteAll();
-        LOGGER.debug("inboxCallDetailRecordDataService().deleteAll()");
         inboxCallDetailRecordDataService.deleteAll();
-        LOGGER.debug("inboxCallDataDataService().deleteAll()");
         inboxCallDataDataService.deleteAll();
-        LOGGER.debug("subscriberDataService().deleteAll()");
         subscriberDataService.deleteAll();
-        LOGGER.debug("subscriptionService().deleteAll()");
         subscriptionService.deleteAll();
-        LOGGER.debug("subscriptionPackDataService().deleteAll()");
         subscriptionPackDataService.deleteAll();
-        LOGGER.debug("subscriptionPackMessageDataService().deleteAll()");
         subscriptionPackMessageDataService.deleteAll();
-        LOGGER.debug("subscriptionErrorDataService().deleteAll()");
+        
         subscriptionErrorDataService.deleteAll();
-        LOGGER.debug("callContentDataService().deleteAll()");
         mctsChildDataService.deleteAll();
-        LOGGER.debug("mctsMotherDataService().deleteAll()");
         mctsMotherDataService.deleteAll();
 
         /**
          * Mobile Academy
          */
-        LOGGER.debug("completionRecordDataService().deleteAll()");
+
         completionRecordDataService.deleteAll();
 
         /**
          * Props
          */
-        LOGGER.debug("deployedServiceDataService().deleteAll()");
+
         deployedServiceDataService.deleteAll();
 
         /**
          * Region
          */
-        LOGGER.debug("circleDataService().deleteAll()");
+
         circleDataService.deleteAll();
-        LOGGER.debug("districtDataService().deleteAll()");
         districtDataService.deleteAll();
-        LOGGER.debug("healthBlockDataService().deleteAll()");
         healthBlockDataService.deleteAll();
-        LOGGER.debug("healthFacilityDataService().deleteAll()");
         healthFacilityDataService.deleteAll();
-        LOGGER.debug("healthFacilityTypeDataService().deleteAll()");
         healthFacilityTypeDataService.deleteAll();
-        LOGGER.debug("healthSubFacilityDataService().deleteAll()");
         healthSubFacilityDataService.deleteAll();
-        LOGGER.debug("nationalDefaultLanguageLocationDataService().deleteAll()");
         nationalDefaultLanguageLocationDataService.deleteAll();
-        LOGGER.debug("languageDataService().deleteAll()");
         languageDataService.deleteAll();
-        LOGGER.debug("stateDataService().deleteAll()");
         stateDataService.deleteAll();
-        LOGGER.debug("talukaDataService().deleteAll()");
         talukaDataService.deleteAll();
-        LOGGER.debug("villageDataService().deleteAll()");
         villageDataService.deleteAll();
 
         /**
          * Alerts
          */
-        LOGGER.debug("alertsDataService().deleteAll()");
+
         alertsDataService.deleteAll();
 
         /**
          * CSV
          */
-        LOGGER.debug("csvAuditRecordDataService().deleteAll()");
+
         csvAuditRecordDataService.deleteAll();
     }
 

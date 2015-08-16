@@ -7,6 +7,7 @@ import org.motechproject.nms.csv.exception.CsvImportException;
 import org.motechproject.nms.csv.service.CsvAuditService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryUpdateService;
+import org.motechproject.nms.kilkari.util.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +29,7 @@ import java.io.InputStreamReader;
 public class MctsBeneficiaryImportController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MctsBeneficiaryImportController.class);
+
 
     private AlertService alertService;
     private MctsBeneficiaryImportService mctsBeneficiaryImportService;
@@ -54,10 +56,15 @@ public class MctsBeneficiaryImportController {
         this.csvAuditService = csvAuditService;
     }
 
+
+
+
     @RequestMapping(value = "/mother/import", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
     public void importMotherData(@RequestParam MultipartFile csvFile) {
+
         LOGGER.debug("importMotherData() BEGIN");
+        Timer timer = new Timer();
         try {
             try (InputStream in = csvFile.getInputStream()) {
                 mctsBeneficiaryImportService.importMotherData(new InputStreamReader(in));
@@ -68,8 +75,9 @@ public class MctsBeneficiaryImportController {
             throw e;
         } catch (Exception e) {
             logError(csvFile.getOriginalFilename(), "/kilkari/mother/import", e);
+            //todo: why are we not throwing here and throwing in importChildData below?
         }
-        LOGGER.debug("importMotherData() END");
+        LOGGER.debug("importMotherData() END ({})", timer.time());
     }
 
 
@@ -77,6 +85,8 @@ public class MctsBeneficiaryImportController {
     @ResponseStatus(HttpStatus.OK)
     public void importChildData(@RequestParam MultipartFile csvFile) {
 
+        LOGGER.debug("importChildData() BEGIN");
+        Timer timer = new Timer();
         try {
             try (InputStream in = csvFile.getInputStream()) {
                 mctsBeneficiaryImportService.importChildData(new InputStreamReader(in));
@@ -89,12 +99,15 @@ public class MctsBeneficiaryImportController {
             logError(csvFile.getOriginalFilename(), "/kilkari/child/import", e);
             throw new CsvImportException("An error occurred during CSV import", e);
         }
+        LOGGER.debug("importChildData() END ({})", timer.time());
     }
 
     @RequestMapping(value = "/beneficiary/update", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
     public void updateBeneficiaryData(@RequestParam MultipartFile csvFile) {
 
+        LOGGER.debug("updateBeneficiaryData() BEGIN");
+        Timer timer = new Timer();
         try {
             try (InputStream in = csvFile.getInputStream()) {
                 mctsBeneficiaryUpdateService.updateBeneficiaryData(new InputStreamReader(in));
@@ -107,6 +120,7 @@ public class MctsBeneficiaryImportController {
             logError(csvFile.getOriginalFilename(), "/kilkari/beneficiary/update", e);
             throw new CsvImportException("An error occurred during CSV import", e);
         }
+        LOGGER.debug("updateBeneficiaryData() END ({})", timer.time());
     }
 
     private void logError(String fileName, String endpoint, Exception exception) {

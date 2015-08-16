@@ -25,6 +25,7 @@ import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
+import org.motechproject.nms.kilkari.util.Timer;
 import org.motechproject.nms.region.exception.InvalidLocationException;
 import org.motechproject.nms.region.service.LocationService;
 import org.slf4j.Logger;
@@ -40,7 +41,6 @@ import javax.validation.ConstraintViolationException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
-import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -79,10 +79,10 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MctsBeneficiaryImportServiceImpl.class);
 
+    private static final int PROGRESS_INTERVAL = 100;
+
     private SubscriptionPack pregnancyPack;
     private SubscriptionPack childPack;
-    private static final DecimalFormat FMT_DEC = new DecimalFormat("#,##0.000");
-    private static final DecimalFormat FMT_INT = new DecimalFormat("#,##0");
 
 
     @Autowired
@@ -98,16 +98,6 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         this.mctsMotherDataService = mctsMotherDataService;
         this.mctsChildDataService = mctsChildDataService;
         this.subscriberService = subscriberService;
-    }
-
-
-    private void displayProgress(int count, long duration) {
-        LOGGER.debug(String.format(
-                "Imported %s MCTS Mothers in %ss @ %smom/s",
-                FMT_INT.format(count),
-                FMT_DEC.format(((duration) * 1.0) / 1000.0),
-                FMT_DEC.format((count * 1000.0) / ((duration) * 1.0))
-        ));
     }
 
 
@@ -134,16 +124,16 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         try {
             Map<String, Object> record;
             int count = 0;
-            long start = System.currentTimeMillis();
+            Timer timer = new Timer("mom", "moms");
             while (null != (record = csvImporter.read())) {
                 importMotherRecord(record);
                 count++;
-                if (count % 1000 == 0) {
-                    displayProgress(count, System.currentTimeMillis() - start);
+                if (count % PROGRESS_INTERVAL == 0) {
+                    LOGGER.debug("Imported {}", timer.frequency(count));
                 }
             }
-            if (count % 1000 != 0) {
-                displayProgress(count, System.currentTimeMillis() - start);
+            if (count % PROGRESS_INTERVAL != 0) {
+                LOGGER.debug("Imported {}", timer.frequency(count));
             }
         } catch (ConstraintViolationException e) {
             throw new CsvImportDataException(String.format("MCTS mother import error, constraints violated: %s",
