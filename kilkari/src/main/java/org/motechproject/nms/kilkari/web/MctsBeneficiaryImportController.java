@@ -64,10 +64,11 @@ public class MctsBeneficiaryImportController {
     public void importMotherData(@RequestParam MultipartFile csvFile) {
 
         LOGGER.debug("importMotherData() BEGIN");
-        Timer timer = new Timer();
+        Timer timer = new Timer("mom", "moms");
+        int count = 0;
         try {
             try (InputStream in = csvFile.getInputStream()) {
-                mctsBeneficiaryImportService.importMotherData(new InputStreamReader(in));
+                count = mctsBeneficiaryImportService.importMotherData(new InputStreamReader(in));
                 csvAuditService.auditSuccess(csvFile.getOriginalFilename(), "/kilkari/mother/import");
             }
         } catch (CsvImportException e) {
@@ -77,7 +78,7 @@ public class MctsBeneficiaryImportController {
             logError(csvFile.getOriginalFilename(), "/kilkari/mother/import", e);
             //todo: why are we not throwing here and throwing in importChildData below?
         }
-        LOGGER.debug("importMotherData() END ({})", timer.time());
+        LOGGER.debug("importMotherData() END ({})", count > 0 ? timer.frequency(count) : timer.time());
     }
 
 
@@ -86,10 +87,11 @@ public class MctsBeneficiaryImportController {
     public void importChildData(@RequestParam MultipartFile csvFile) {
 
         LOGGER.debug("importChildData() BEGIN");
-        Timer timer = new Timer();
+        Timer timer = new Timer("child", "children");
+        int count = 0;
         try {
             try (InputStream in = csvFile.getInputStream()) {
-                mctsBeneficiaryImportService.importChildData(new InputStreamReader(in));
+                count = mctsBeneficiaryImportService.importChildData(new InputStreamReader(in));
                 csvAuditService.auditSuccess(csvFile.getOriginalFilename(), "/kilkari/child/import");
             }
         } catch (CsvImportException e) {
@@ -99,7 +101,7 @@ public class MctsBeneficiaryImportController {
             logError(csvFile.getOriginalFilename(), "/kilkari/child/import", e);
             throw new CsvImportException("An error occurred during CSV import", e);
         }
-        LOGGER.debug("importChildData() END ({})", timer.time());
+        LOGGER.debug("importMotherData() END ({})", count > 0 ? timer.frequency(count) : timer.time());
     }
 
     @RequestMapping(value = "/beneficiary/update", method = RequestMethod.POST)

@@ -110,8 +110,9 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
      */
     @Override
     @Transactional
-    public void importMotherData(Reader reader) throws IOException {
+    public int importMotherData(Reader reader) throws IOException {
         pregnancyPack = subscriptionPackDataService.byType(SubscriptionPackType.PREGNANCY);
+        int count = 0;
 
         BufferedReader bufferedReader = new BufferedReader(reader);
         readHeader(bufferedReader); // ignoring header as all interesting data is in the tab separated rows
@@ -123,7 +124,6 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
         try {
             Map<String, Object> record;
-            int count = 0;
             Timer timer = new Timer("mom", "moms");
             while (null != (record = csvImporter.read())) {
                 importMotherRecord(record);
@@ -139,12 +139,15 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             throw new CsvImportDataException(String.format("MCTS mother import error, constraints violated: %s",
                     ConstraintViolationUtils.toString(e.getConstraintViolations())), e);
         }
+
+        return count;
     }
 
     @Override
     @Transactional
-    public void importChildData(Reader reader) throws IOException {
+    public int importChildData(Reader reader) throws IOException {
         childPack = subscriptionPackDataService.byType(SubscriptionPackType.CHILD);
+        int count = 0;
 
         BufferedReader bufferedReader = new BufferedReader(reader);
         readHeader(bufferedReader); // ignoring header as all interesting data in tab separated rows
@@ -158,11 +161,14 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             Map<String, Object> record;
             while (null != (record = csvImporter.read())) {
                 importChildRecord(record);
+                count++;
             }
         } catch (ConstraintViolationException e) {
             throw new CsvImportDataException(String.format("MCTS child import error, constraints violated: %s",
                     ConstraintViolationUtils.toString(e.getConstraintViolations())), e);
         }
+
+        return count;
     }
 
     private void importMotherRecord(Map<String, Object> record) {

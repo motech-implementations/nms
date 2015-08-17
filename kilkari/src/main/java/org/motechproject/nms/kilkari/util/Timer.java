@@ -41,7 +41,7 @@ public class Timer {
             return String.format("%dm %ss", minutes, FMT_SEC.format(seconds));
         }
 
-        return FMT_SEC.format(seconds);
+        return String.format("%ss", FMT_SEC.format(seconds));
     }
 
     public String time() {
@@ -53,12 +53,12 @@ public class Timer {
         double freq = (count * 1000.0) / ((duration) * 1.0);
 
         return String.format(
-                "%s MCTS Mothers in %s @ %smom/s",
+                "%s %s in %s at %s%s/s",
                 FMT_INT.format(count),
                 count == 1 ? obj : objs,
                 durationString(duration),
-                freq == 1.0 ? obj : objs,
-                FMT_DEC.format((count * 1000.0) / ((duration) * 1.0))
+                FMT_DEC.format((count * 1000.0) / ((duration) * 1.0)),
+                freq == 1.0 ? obj : objs
         );
     }
 }

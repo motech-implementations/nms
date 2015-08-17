@@ -31,6 +31,7 @@ import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackMessageDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
+import org.motechproject.nms.kilkari.util.Timer;
 import org.motechproject.nms.mobileacademy.repository.CompletionRecordDataService;
 import org.motechproject.nms.props.repository.DeployedServiceDataService;
 import org.motechproject.nms.region.domain.District;
@@ -77,6 +78,7 @@ public class TestingServiceImpl implements TestingService {
     private static final long MIN_ID_NO = 100000000000000000L;
     private static final long MAX_ID_NO = 999999999999999999L;
     private static final int ABORTION_PERCENT = 3;
+    private static final int PROGRESS_INTERVAL = 100;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TestingServiceImpl.class);
     public static final String CHILD_PACK = "childPack";
@@ -571,6 +573,7 @@ public class TestingServiceImpl implements TestingService {
             throw new IllegalStateException(TESTING_SERVICE_FORBIDDEN);
         }
 
+        Timer timer = new Timer("mom", "moms");
         File file = new File(getTestingDirectory(), MCTSMOMS);
         BufferedWriter writer = new BufferedWriter(new FileWriter(file));
         writer.write("###ignore this line###");
@@ -725,8 +728,16 @@ public class TestingServiceImpl implements TestingService {
             //Entry_Type
             writer.write(death);
             writer.newLine();
+
+            if (count % PROGRESS_INTERVAL == 0) {
+                LOGGER.debug("Created {}", timer.frequency(count));
+            }
         }
         writer.close();
+
+        if (count % PROGRESS_INTERVAL != 0) {
+            LOGGER.debug("Created {}", timer.frequency(count));
+        }
 
         return String.format("%s\t%s", file.getAbsolutePath(), new DecimalFormat("#,##0").format(count));
     }

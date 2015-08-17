@@ -70,14 +70,16 @@ if __name__ == '__main__':
     #
     # http defaults
     #
-    unirest.timeout(300)
+    unirest.timeout(30)
     unirest.default_header("Accept", "application/json")
 
     #
     # Clear the database?
     #
     if args.cleardb:
+        unirest.timeout(600)
         exec_http_get("{}/module/testing/clearDatabase".format(args.server))
+        unirest.timeout(30)
         exec_http_get("{}/module/testing/createSubscriptionPacks".format(args.server))
         import_region_domain_data("state")
         import_region_domain_data("circle")
