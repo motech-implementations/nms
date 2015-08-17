@@ -79,5 +79,7 @@
 
     <!-- CSV Audit Service -->
     <osgi:reference id="csvAuditService" interface="org.motechproject.nms.csv.service.CsvAuditService" />
+    
+    <osgi:service ref="flwSettingsService" interface="org.motechproject.nms.flw.service.FlwSettingsService" />
 
 </beans>

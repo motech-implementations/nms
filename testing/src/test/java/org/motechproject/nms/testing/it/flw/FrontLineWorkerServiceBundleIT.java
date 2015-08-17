@@ -1,18 +1,33 @@
 package org.motechproject.nms.testing.it.flw;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.inject.Inject;
+
 import org.joda.time.DateTime;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.motechproject.event.MotechEvent;
+import org.motechproject.event.listener.EventRelay;
 import org.motechproject.mds.ex.JdoListenerInvocationException;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.flw.repository.WhitelistEntryDataService;
 import org.motechproject.nms.flw.repository.WhitelistStateDataService;
+import org.motechproject.nms.flw.service.FlwSettingsService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.flw.service.ServiceUsageService;
 import org.motechproject.nms.region.domain.Circle;
@@ -25,21 +40,13 @@ import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.testing.service.TestingService;
+import org.motechproject.server.config.SettingsFacade;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
-
-import javax.inject.Inject;
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 
 /**
@@ -76,10 +83,33 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
 
     private State sampleState;
 
+    private static final String WEEKS_TO_KEEP_INVALID_FLWS = "flw.weeks_to_keep_invalid_flws";
+
+    private static final String FLW_PURGE_EVENT_SUBJECT = "nms.flw.purge_invalid_flw";
+
+    @Inject
+    private FlwSettingsService flwSettingsService;
+
+    private SettingsFacade settingsFacade;
+
+    @Inject
+    private EventRelay eventRelay;
+
+    String oldWeeksToKeepInvalidFLWs;
 
     @Before
     public void doTheNeedful() {
         testingService.clearDatabase();
+
+        settingsFacade = flwSettingsService.getSettingsFacade();
+        oldWeeksToKeepInvalidFLWs = settingsFacade
+                .getProperty(WEEKS_TO_KEEP_INVALID_FLWS);
+    }
+
+    @After
+    public void restore() {
+        settingsFacade.setProperty(WEEKS_TO_KEEP_INVALID_FLWS,
+                oldWeeksToKeepInvalidFLWs);
     }
 
     private void createLanguageLocationData() {
@@ -257,5 +287,58 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
         assertEquals(FrontLineWorkerStatus.INVALID, flw.getStatus());
 
         frontLineWorkerService.delete(flw);
+    }
+
+    /**
+     * To disable automatic deletion of all records of beneficiary which were
+     * marked invalid 6 weeks ago.
+     * 
+     * @throws InterruptedException
+     */
+    // TODO https://applab.atlassian.net/browse/NMS-257
+    @Test
+    public void verifyFT548() throws InterruptedException {
+        FrontLineWorker flw = new FrontLineWorker("Test Worker", 2111111111L);
+        frontLineWorkerService.add(flw);
+        flw = frontLineWorkerService.getByContactNumber(2111111111L);
+        flw.setStatus(FrontLineWorkerStatus.INVALID);
+        flw.setInvalidationDate(DateTime.now().minusWeeks(7));
+        frontLineWorkerService.update(flw);
+        
+        //call purge event
+        purgeInvalidFLWsEventInvoke();
+        Thread.sleep(10000);
+
+        // assert flW deleted
+        flw = frontLineWorkerService.getByContactNumber(2111111111L);
+        assertNull(flw);
+
+        // change configuration to disable deletion by setting weeks to large value
+
+        settingsFacade.setProperty(WEEKS_TO_KEEP_INVALID_FLWS, "1000");
+
+        flw = new FrontLineWorker("Test Worker", 2111111111L);
+        frontLineWorkerService.add(flw);
+        flw = frontLineWorkerService.getByContactNumber(2111111111L);
+        flw.setStatus(FrontLineWorkerStatus.INVALID);
+        // set invalid date to 2 years back
+        flw.setInvalidationDate(DateTime.now().minusYears(2));
+        frontLineWorkerService.update(flw);
+
+        // call purge event
+        purgeInvalidFLWsEventInvoke();
+        Thread.sleep(10000);
+
+        // assert flW not deleted
+        flw = frontLineWorkerService.getByContactNumber(2111111111L);
+        assertNotNull(flw);
+    }
+
+    @Test
+    public void purgeInvalidFLWsEventInvoke() {
+        Map<String, Object> eventParams = new HashMap<>();
+        MotechEvent motechEvent = new MotechEvent(FLW_PURGE_EVENT_SUBJECT,
+                eventParams);
+        eventRelay.sendEventMessage(motechEvent);
     }
 }
