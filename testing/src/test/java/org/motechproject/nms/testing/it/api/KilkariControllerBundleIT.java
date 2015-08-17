@@ -613,6 +613,53 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 ADMIN_PASSWORD));
     }
 
+    /*
+        Test for adding a new subscription for the same pack that has been deactivated already
+     */
+    @Test
+    public void testAddNewSubForDeactivatedSub() throws IOException, InterruptedException {
+        long callingNumber = 9999911122L;
+
+
+        // Create new subscription
+        HttpPost httpPost = createSubscriptionHttpPost(callingNumber, "childPack");
+        SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK, ADMIN_USERNAME, ADMIN_PASSWORD);
+
+        // Delete/deactivate existing subscription
+        Subscriber subscriber = subscriberService.getSubscriber(callingNumber);
+        Subscription subscription = subscriber.getActiveAndPendingSubscriptions().iterator().next();
+        String subscriptionId = subscription.getSubscriptionId();
+        int numberOfSubsBeforeDelete = subscriber.getActiveAndPendingSubscriptions().size();
+
+        SubscriptionRequest subscriptionRequest = new SubscriptionRequest(callingNumber, rh.airtelOperator(),
+                rh.delhiCircle().getName(), 123456789012545L, subscriptionId);
+        ObjectMapper mapper = new ObjectMapper();
+        String subscriptionRequestJson = mapper.writeValueAsString(subscriptionRequest);
+
+        HttpDeleteWithBody httpDelete = new HttpDeleteWithBody(String.format(
+                "http://localhost:%d/api/kilkari/subscription", TestContext.getJettyPort()));
+        httpDelete.setHeader("Content-type", "application/json");
+        httpDelete.setEntity(new StringEntity(subscriptionRequestJson));
+        assertTrue(SimpleHttpClient.execHttpRequest(httpDelete, HttpStatus.SC_OK, ADMIN_USERNAME,
+                ADMIN_PASSWORD));
+
+        subscription = subscriptionService.getSubscription(subscriptionId);
+        assertTrue(subscription.getStatus().equals(SubscriptionStatus.DEACTIVATED));
+        assertTrue(subscription.getDeactivationReason().equals(DeactivationReason.DEACTIVATED_BY_USER));
+        subscriber = subscriberService.getSubscriber(callingNumber);
+        int numberOfSubsAfterDelete = subscriber.getActiveAndPendingSubscriptions().size();
+
+        // Re-create new subscription
+        HttpPost httpPost2 = createSubscriptionHttpPost(callingNumber, "childPack");
+        SimpleHttpClient.execHttpRequest(httpPost2, HttpStatus.SC_OK, ADMIN_USERNAME, ADMIN_PASSWORD);
+        subscriber = subscriberService.getSubscriber(callingNumber);
+        int numberOfSubsAfterNewAdd = subscriber.getActiveAndPendingSubscriptions().size();
+
+        assertEquals(numberOfSubsAfterDelete, numberOfSubsBeforeDelete - 1);
+        assertEquals(numberOfSubsAfterNewAdd, numberOfSubsAfterDelete + 1);
+
+    }
+
 
     private HttpPost createInboxCallDetailsRequestHttpPost(InboxCallDetailsRequest request) throws IOException {
         HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/kilkari/inboxCallDetails",
