@@ -4,6 +4,7 @@ import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.Weeks;
 import org.motechproject.alerts.contract.AlertsDataService;
+import org.motechproject.mds.query.SqlQueryExecution;
 import org.motechproject.nms.csv.repository.CsvAuditRecordDataService;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
@@ -18,7 +19,6 @@ import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
-import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.CallSummaryRecordDataService;
 import org.motechproject.nms.kilkari.repository.InboxCallDataDataService;
@@ -31,7 +31,6 @@ import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackMessageDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
-import org.motechproject.nms.kilkari.util.Timer;
 import org.motechproject.nms.mobileacademy.repository.CompletionRecordDataService;
 import org.motechproject.nms.props.repository.DeployedServiceDataService;
 import org.motechproject.nms.region.domain.District;
@@ -48,6 +47,7 @@ import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.repository.TalukaDataService;
 import org.motechproject.nms.region.repository.VillageDataService;
 import org.motechproject.nms.testing.service.TestingService;
+import org.motechproject.nms.testing.util.Timer;
 import org.motechproject.server.config.SettingsFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,6 +55,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
+import javax.jdo.Query;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -234,10 +235,32 @@ public class TestingServiceImpl implements TestingService {
     }
 
 
+    private void deleteSubscriptions() {
+        LOGGER.debug("deleteSubscriptions");
+        SqlQueryExecution<List<Subscription>> subscriptionQueryExecution = new SqlQueryExecution<List<Subscription>>() {
+
+            @Override
+            public String getSqlQuery() {
+                return "DELETE FROM nms_subscriptions WHERE id >= 0;";
+            }
+
+            @Override
+            public List<Subscription> execute(Query query) {
+                query.execute();
+                return null;
+            }
+        };
+        subscriptionDataService.executeSQLQuery(subscriptionQueryExecution);
+
+    }
+
+
     @Override
     public void clearDatabase() { //NOPMD NcssMethodCount
 
         LOGGER.debug("clearDatabase()");
+
+        Timer timer = new Timer();
 
         if (!Boolean.parseBoolean(settingsFacade.getProperty(TESTING_ENVIRONMENT))) {
             throw new IllegalStateException(TESTING_SERVICE_FORBIDDEN);
@@ -274,15 +297,7 @@ public class TestingServiceImpl implements TestingService {
         /**
          * Kilkari
          */
-        for (Subscription subscription: subscriptionDataService.retrieveAll()) {
-            try {
-                subscriptionService.deletePreconditionCheck(subscription);
-            } catch (IllegalStateException e) {
-                subscription.setStatus(SubscriptionStatus.COMPLETED);
-                subscription.setEndDate(DateTime.now().minusYears(1));
-                subscriptionDataService.update(subscription);
-            }
-        }
+        deleteSubscriptions();
         callRetryDataService.deleteAll();
         callSummaryRecordDataService.deleteAll();
         inboxCallDetailRecordDataService.deleteAll();
@@ -335,6 +350,8 @@ public class TestingServiceImpl implements TestingService {
          */
 
         csvAuditRecordDataService.deleteAll();
+
+        LOGGER.debug("clearDatabase: {}", timer.time());
     }
 
 
@@ -383,6 +400,8 @@ public class TestingServiceImpl implements TestingService {
 
         LOGGER.debug("createSubscriptionPacks()");
 
+        Timer timer = new Timer();
+
         if (!Boolean.parseBoolean(settingsFacade.getProperty(TESTING_ENVIRONMENT))) {
             throw new IllegalStateException(TESTING_SERVICE_FORBIDDEN);
         }
@@ -405,6 +424,8 @@ public class TestingServiceImpl implements TestingService {
                         genratePackMessageList(PREGNANCY_PACK_WEEKS, 2)
                 )
         );
+
+        LOGGER.debug("createSubscriptionPacks: {}", timer.time());
     }
 
 
@@ -575,6 +596,11 @@ public class TestingServiceImpl implements TestingService {
 
         Timer timer = new Timer("mom", "moms");
         File file = new File(getTestingDirectory(), MCTSMOMS);
+        int retry = 0;
+        while (file.exists()) {
+            retry += 1;
+            file = new File(getTestingDirectory(), String.format("%s.%d", MCTSMOMS, retry));
+        }
         BufferedWriter writer = new BufferedWriter(new FileWriter(file));
         writer.write("###ignore this line###");
         writer.newLine();
@@ -729,15 +755,13 @@ public class TestingServiceImpl implements TestingService {
             writer.write(death);
             writer.newLine();
 
-            if (count % PROGRESS_INTERVAL == 0) {
-                LOGGER.debug("Created {}", timer.frequency(count));
+            if (i > 0 && i % PROGRESS_INTERVAL == 0) {
+                LOGGER.debug("Created {}", timer.frequency(i));
             }
         }
         writer.close();
 
-        if (count % PROGRESS_INTERVAL != 0) {
-            LOGGER.debug("Created {}", timer.frequency(count));
-        }
+        LOGGER.debug("Created {}", timer.frequency(count));
 
         return String.format("%s\t%s", file.getAbsolutePath(), new DecimalFormat("#,##0").format(count));
     }

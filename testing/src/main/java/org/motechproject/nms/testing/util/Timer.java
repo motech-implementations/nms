@@ -1,6 +1,7 @@
-package org.motechproject.nms.kilkari.util;
+package org.motechproject.nms.testing.util;
 
 import java.text.DecimalFormat;
+
 
 public class Timer {
     private static final DecimalFormat FMT_SEC = new DecimalFormat("#,##0.000");
@@ -15,15 +16,28 @@ public class Timer {
     private String obj;
     private String objs;
 
-    public Timer() {
+
+    private void resetTimer() {
         start = System.currentTimeMillis();
     }
+
+
+    public Timer() {
+        resetTimer();
+    }
+
 
     public Timer(String obj, String objs) {
         this();
         this.obj = obj;
         this.objs = objs;
     }
+
+
+    public void reset() {
+        resetTimer();
+    }
+
 
     private String durationString(long duration) {
         long millis = duration;
@@ -44,20 +58,22 @@ public class Timer {
         return String.format("%ss", FMT_SEC.format(seconds));
     }
 
+
     public String time() {
         return durationString(System.currentTimeMillis() - start);
     }
 
+
     public String frequency(long count) {
         long duration = System.currentTimeMillis() - start;
-        double freq = (count * MILLIS_PER_SEC) / ((duration) * 1.0);
+        double freq = (count * 1000.0) / ((duration) * 1.0);
 
         return String.format(
                 "%s %s in %s at %s%s/s",
                 FMT_INT.format(count),
                 count == 1 ? obj : objs,
                 durationString(duration),
-                FMT_DEC.format((count * MILLIS_PER_SEC) / ((duration) * 1.0)),
+                FMT_DEC.format((count * 1000.0) / ((duration) * 1.0)),
                 freq == 1.0 ? obj : objs
         );
     }

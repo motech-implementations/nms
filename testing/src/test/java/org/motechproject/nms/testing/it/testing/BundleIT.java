@@ -12,6 +12,7 @@ import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.testing.service.TestingService;
+import org.motechproject.nms.testing.util.Timer;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.ops4j.pax.exam.ExamFactory;
@@ -80,26 +81,24 @@ public class BundleIT extends BasePaxIT {
 
     @Test
     public void testTheRealDeal() throws IOException {
+        Timer timer = new Timer();
         testingService.clearDatabase();
+        getLogger().debug("clearDatabase: {}", timer.time());
+
+        timer.reset();
         testingService.createSubscriptionPacks();
+        getLogger().debug("createSubscriptionPacks: {}", timer.time());
+
+        timer.reset();
         createLocationData();
-        long start = System.currentTimeMillis();
+        getLogger().debug("createLocationData: {}", timer.time());
+
+        timer = new Timer("mom", "moms");
         String file = testingService.createMctsMoms(TEST_COUNT).split("\t")[0];
-        long stop = System.currentTimeMillis();
-        getLogger().debug(String.format(
-                "Created %d MCTS Mothers in %fs @ %fmom/s",
-                TEST_COUNT,
-                ((stop - start) * 1.0) / (TEST_COUNT * 1.0),
-                (TEST_COUNT * 1000.0) / ((stop - start) * 1.0)
-        ));
-        start = System.currentTimeMillis();
+        getLogger().debug("Created {}", timer.frequency(TEST_COUNT));
+
+        timer.reset();
         mctsBeneficiaryImportService.importMotherData(new InputStreamReader(new FileInputStream(file)));
-        stop = System.currentTimeMillis();
-        getLogger().debug(String.format(
-                "Imported %d MCTS Mothers in %fs @ %fmom/s",
-                TEST_COUNT,
-                ((stop - start) * 1.0) / (TEST_COUNT * 1.0),
-                (TEST_COUNT * 1000.0) / ((stop - start) * 1.0)
-        ));
+        getLogger().debug("Imported {}", timer.frequency(TEST_COUNT));
     }
 }
