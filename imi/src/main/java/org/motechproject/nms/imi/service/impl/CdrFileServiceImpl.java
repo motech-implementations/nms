@@ -619,18 +619,7 @@ public class CdrFileServiceImpl implements CdrFileService {
     }
 
 
-    // Phase 2: Aggregate detail records into summary records
-    //          Validate all CallSummaryRecord fields exist in the database
-    //          Validate CallSummaryFile
-    //          Stop processing if errors occurred
-    @Override
-    @MotechListener(subjects = { PROCESS_FILES_SUBJECT })
-    public List<String> processDetailFile(MotechEvent event) {
-        CdrFileNotificationRequest request = requestFromParams(event.getParameters());
-
-        //
-        // Detail File
-        //
+    private List<String> processDetailFile(CdrFileNotificationRequest request) {
 
         File cdrFile = new File(localCdrDir(), request.getCdrDetail().getCdrFile());
         String cdrFileName = cdrFile.getName();
@@ -647,9 +636,9 @@ public class CdrFileServiceImpl implements CdrFileService {
             try {
                 scpHelper.scpCdrFromRemote(cdrFileName);
             } catch (ExecException e) {
-                String error = String.format("Error copying CDR file %s: %s", cdrFileName, e.getMessage());
-                alertAndAudit(cdrFileName, error);
-                throw new IllegalArgumentException(error, e);
+                List<String> errors = new ArrayList<>();
+                errors.add(String.format("Error copying CDR file %s: %s", cdrFileName, e.getMessage()));
+                return errors;
             }
         }
 
@@ -658,9 +647,9 @@ public class CdrFileServiceImpl implements CdrFileService {
         try {
             sortHelper.sort(cdrFileName);
         } catch (ExecException e) {
-            String error = String.format("Error sorting CDR file %s: %s", cdrFileName, e.getMessage());
-            alertAndAudit(cdrFileName, error);
-            throw new IllegalArgumentException(error, e);
+            List<String> errors = new ArrayList<>();
+            errors.add(String.format("Error sorting CDR file %s: %s", cdrFileName, e.getMessage()));
+            return errors;
         }
 
         // We want to be dealing with the sorted file from now onwards
@@ -669,19 +658,14 @@ public class CdrFileServiceImpl implements CdrFileService {
         // NOTE: once sorted the checksums won't match anymore.
 
         // Second verification pass (more in detail) verify all entities & sort order
-        List<String> errors = verifyEntitiesAndSortOrder(cdrFile, true);
-        if (errors.size() > 0) {
-            reportAuditAndPost(request.getCdrDetail().getCdrFile(), errors);
-            return errors;
-        }
+        return verifyEntitiesAndSortOrder(cdrFile, true);
+    }
 
 
-        //
-        // Summary File
-        //
+    private List<String> processSummaryFile(CdrFileNotificationRequest request) {
 
         File csrFile = new File(localCdrDir(), request.getCdrSummary().getCdrFile());
-        String csrFileName = cdrFile.getName();
+        String csrFileName = csrFile.getName();
 
         // Copy summary file from IMI network share (imi.remote_cdr_dir) into local cdr dir (imi.local_cdr_dir)
 
@@ -693,19 +677,44 @@ public class CdrFileServiceImpl implements CdrFileService {
             try {
                 scpHelper.scpCdrFromRemote(csrFileName);
             } catch (ExecException e) {
-                String error = String.format("Error copying CSR file %s: %s", csrFileName, e.getMessage());
-                alertAndAudit(csrFileName, error);
-                throw new IllegalArgumentException(error, e);
+                List<String> errors = new ArrayList<>();
+                errors.add(String.format("Error copying CSR file %s: %s", csrFileName, e.getMessage()));
+                return errors;
             }
         }
 
         // Second verification pass, verify all entities
-        errors = verifyEntitiesAndSortOrder(csrFile, false);
+        return verifyEntitiesAndSortOrder(csrFile, false);
+    }
+
+
+    // Phase 2: Aggregate detail records into summary records
+    //          Validate all CallSummaryRecord fields exist in the database
+    //          Validate CallSummaryFile
+    //          Stop processing if errors occurred
+    @Override
+    @MotechListener(subjects = { PROCESS_FILES_SUBJECT })
+    public List<String> processDetailFile(MotechEvent event) {
+        CdrFileNotificationRequest request = requestFromParams(event.getParameters());
+
+        //
+        // Detail File
+        //
+        List<String> errors = processDetailFile(request);
+        if (errors.size() > 0) {
+            reportAuditAndPost(request.getCdrDetail().getCdrFile(), errors);
+            return errors;
+        }
+
+        //
+        // Summary File
+        //
+
+        errors = processSummaryFile(request);
         if (errors.size() > 0) {
             reportAuditAndPost(request.getCdrSummary().getCdrFile(), errors);
             return errors;
         }
-
 
         // We processed as much as we can, let IMI know before distributing the work to phase 3
         sendNotificationRequest(new CdrFileProcessedNotification(
@@ -718,18 +727,20 @@ public class CdrFileServiceImpl implements CdrFileService {
         // Phase 3: distribute the processing of aggregated CDRs to all nodes.
         //          copy CDRs from IMI to the database
         //          each node may generate an individual error that NMS-OPS will have to respond to.
+        File cdrFile = new File(localCdrDir(), request.getCdrDetail().getCdrFile());
         errors = sendAggregatedRecords(cdrFile);
         if (errors.size() > 0) {
             reportAuditAndPost(request.getCdrDetail().getCdrFile(), errors);
+            return errors;
         }
 
 
         // Phase 4: distribute the processing of CSRs to all nodes, make backup copy of all received CSR
+        File csrFile = new File(localCdrDir(), request.getCdrSummary().getCdrFile());
         errors = sendSummaryRecords(csrFile);
         if (errors.size() > 0) {
             reportAuditAndPost(request.getCdrSummary().getCdrFile(), errors);
         }
-
         return errors;
     }
 }
