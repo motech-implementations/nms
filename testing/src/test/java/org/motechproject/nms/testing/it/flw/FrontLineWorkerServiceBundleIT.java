@@ -298,6 +298,10 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
     // TODO https://applab.atlassian.net/browse/NMS-257
     @Test
     public void verifyFT548() throws InterruptedException {
+        Map<String, Object> eventParams = new HashMap<>();
+        MotechEvent motechEvent = new MotechEvent(FLW_PURGE_EVENT_SUBJECT,
+                eventParams);
+
         FrontLineWorker flw = new FrontLineWorker("Test Worker", 2111111111L);
         frontLineWorkerService.add(flw);
         flw = frontLineWorkerService.getByContactNumber(2111111111L);
@@ -306,17 +310,16 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
         frontLineWorkerService.update(flw);
         
         //call purge event
-        purgeInvalidFLWsEventInvoke();
-        Thread.sleep(10000);
+        frontLineWorkerService.purgeOldInvalidFLWs(motechEvent);
 
         // assert flW deleted
         flw = frontLineWorkerService.getByContactNumber(2111111111L);
         assertNull(flw);
 
         // change configuration to disable deletion by setting weeks to large value
-
         settingsFacade.setProperty(WEEKS_TO_KEEP_INVALID_FLWS, "1000");
 
+        // add new invalidated flw
         flw = new FrontLineWorker("Test Worker", 2111111111L);
         frontLineWorkerService.add(flw);
         flw = frontLineWorkerService.getByContactNumber(2111111111L);
@@ -325,20 +328,11 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
         flw.setInvalidationDate(DateTime.now().minusYears(2));
         frontLineWorkerService.update(flw);
 
-        // call purge event
-        purgeInvalidFLWsEventInvoke();
-        Thread.sleep(10000);
+        //call purge event
+        frontLineWorkerService.purgeOldInvalidFLWs(motechEvent);
 
         // assert flW not deleted
         flw = frontLineWorkerService.getByContactNumber(2111111111L);
         assertNotNull(flw);
-    }
-
-    @Test
-    public void purgeInvalidFLWsEventInvoke() {
-        Map<String, Object> eventParams = new HashMap<>();
-        MotechEvent motechEvent = new MotechEvent(FLW_PURGE_EVENT_SUBJECT,
-                eventParams);
-        eventRelay.sendEventMessage(motechEvent);
     }
 }

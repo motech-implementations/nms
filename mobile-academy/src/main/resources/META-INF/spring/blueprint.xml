@@ -32,6 +32,9 @@
     <osgi:reference id="activityService"
                     interface="org.motechproject.mtraining.service.ActivityService" />
 
+    <osgi:reference id="frontlineWorkerService"
+                    interface="org.motechproject.nms.flw.service.FrontLineWorkerService" />
+
     <osgi:reference id="eventRelay"
                     interface="org.motechproject.event.listener.EventRelay"/>
 

@@ -38,6 +38,12 @@
         </dependency>
 
         <dependency>
+            <groupId>org.motechproject.nms</groupId>
+            <artifactId>flw</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
             <groupId>org.everit.osgi.bundles</groupId>
             <artifactId>org.everit.osgi.bundles.org.json</artifactId>
             <version>1.0.0-v20140107</version>
