@@ -15,6 +15,7 @@
         <property name="configFiles">
         <list>
             <value>classpath:mobile-academy.properties</value>
+            <value>classpath:sms-content.properties</value>
         </list>
         </property>
         <property name="rawConfigFiles">
