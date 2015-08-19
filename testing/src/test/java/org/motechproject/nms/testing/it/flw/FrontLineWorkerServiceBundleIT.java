@@ -1,17 +1,5 @@
 package org.motechproject.nms.testing.it.flw;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.inject.Inject;
-
 import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.Before;
@@ -47,6 +35,17 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
+
+import javax.inject.Inject;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 
 /**
@@ -238,7 +237,7 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
 
         flw.setStatus(FrontLineWorkerStatus.INVALID);
         frontLineWorkerService.update(flw);
-        flw = frontLineWorkerService.getByContactNumber(2111111111L);
+        flw = frontLineWorkerService.getById(flw.getId());
         assertEquals(FrontLineWorkerStatus.INVALID, flw.getStatus());
     }
 
@@ -266,7 +265,7 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
         flw.setStatus(FrontLineWorkerStatus.INVALID);
         frontLineWorkerService.update(flw);
 
-        flw = frontLineWorkerService.getByContactNumber(2111111111L);
+        flw = frontLineWorkerService.getById(flw.getId());
         assertEquals(FrontLineWorkerStatus.INVALID, flw.getStatus());
 
         exception.expect(JdoListenerInvocationException.class);
@@ -283,7 +282,7 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
         flw.setInvalidationDate(new DateTime().withDate(2011, 8, 1));
         frontLineWorkerService.update(flw);
 
-        flw = frontLineWorkerService.getByContactNumber(2111111111L);
+        flw = frontLineWorkerService.getById(flw.getId());
         assertEquals(FrontLineWorkerStatus.INVALID, flw.getStatus());
 
         frontLineWorkerService.delete(flw);
@@ -318,6 +317,7 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
         settingsFacade.setProperty(WEEKS_TO_KEEP_INVALID_FLWS, "1000");
 
         flw = new FrontLineWorker("Test Worker", 2111111111L);
+        flw.setFlwId("FlwId");
         frontLineWorkerService.add(flw);
         flw = frontLineWorkerService.getByContactNumber(2111111111L);
         flw.setStatus(FrontLineWorkerStatus.INVALID);
@@ -330,7 +330,7 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
         Thread.sleep(10000);
 
         // assert flW not deleted
-        flw = frontLineWorkerService.getByContactNumber(2111111111L);
+        flw = frontLineWorkerService.getByFlwId("FlwId");
         assertNotNull(flw);
     }
 

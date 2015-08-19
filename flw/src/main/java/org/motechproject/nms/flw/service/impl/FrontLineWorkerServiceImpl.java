@@ -200,6 +200,11 @@ public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
     }
 
     @Override
+    public FrontLineWorker getById(Long id) {
+        return frontLineWorkerDataService.findById(id);
+    }
+
+    @Override
     public FrontLineWorker getByContactNumber(Long contactNumber) {
         return frontLineWorkerDataService.findByContactNumber(contactNumber);
     }
@@ -218,14 +223,15 @@ public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
     @Transactional
     public void update(FrontLineWorker record) {
 
-        FrontLineWorker retrievedFlw = frontLineWorkerDataService.findByContactNumber(record.getContactNumber());
-        FrontLineWorkerStatus oldStatus = retrievedFlw.getStatus();
-
         if (record.getStatus() == FrontLineWorkerStatus.INVALID) {
             // if the caller sets the status to INVALID, that takes precedence over any other status change
             frontLineWorkerDataService.update(record);
             return;
         }
+
+        FrontLineWorker retrievedFlw = frontLineWorkerDataService.findByContactNumber(record.getContactNumber());
+        FrontLineWorkerStatus oldStatus = retrievedFlw.getStatus();
+
         if (oldStatus == FrontLineWorkerStatus.ANONYMOUS) {
             // if the FLW was ANONYMOUS and the required fields get added, update her status to ACTIVE
 
