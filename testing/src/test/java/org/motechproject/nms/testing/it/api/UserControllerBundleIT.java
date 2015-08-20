@@ -3309,16 +3309,14 @@ public class UserControllerBundleIT extends BasePaxIT {
     @Test
     public void verifyFT461() throws IOException, InterruptedException {
         // create Invalid FLW record
-        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright",
-                1200000001l);
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1200000001l);
         flw.setLanguage(rh.tamilLanguage());
         flw.setDistrict(rh.bangaloreDistrict());
         flw.setState(rh.karnatakaState());
         frontLineWorkerService.add(flw);
 
         // assert for FLW status
-        flw = frontLineWorkerService
-                .getByContactNumber(1200000001l);
+        flw = frontLineWorkerService.getByContactNumber(1200000001l);
         assertTrue(FrontLineWorkerStatus.INACTIVE == flw.getStatus());
         
         Circle circle = rh.karnatakaCircle();
@@ -3346,15 +3344,9 @@ public class UserControllerBundleIT extends BasePaxIT {
                 2 // maxAllowedEndOfUsagePrompt
         );
 
-        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
-                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
-        assertEquals(expectedJsonResponse,
-                EntityUtils.toString(response.getEntity()));
-        // TODO FLW delete
-        flw.setStatus(FrontLineWorkerStatus.INVALID);
-        flw.setInvalidationDate(DateTime.now().minusDays(50));
-        frontLineWorkerService.update(flw);
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
     /**
@@ -3406,15 +3398,9 @@ public class UserControllerBundleIT extends BasePaxIT {
                 2 // maxAllowedEndOfUsagePrompt
         );
 
-        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
-                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
-        assertEquals(expectedJsonResponse,
-                EntityUtils.toString(response.getEntity()));
-        // TODO FLW delete
-        flw.setStatus(FrontLineWorkerStatus.INVALID);
-        flw.setInvalidationDate(DateTime.now().minusDays(50));
-        frontLineWorkerService.update(flw);
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
     
     private void createCircleWithNoLanguage(){
@@ -4121,6 +4107,9 @@ public class UserControllerBundleIT extends BasePaxIT {
     /**
      * To verify that Invalid user should be able to listen MA content if
      * service deploy status is set to deploy in a particular state.
+     *
+     * RL: Invalid users are now handled the same as anonymous
+     *     https://applab.atlassian.net/browse/NMS-236
      */
     @Test
     public void verifyFT432() throws IOException, InterruptedException {
@@ -4147,8 +4136,8 @@ public class UserControllerBundleIT extends BasePaxIT {
         );
 
         String expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
-                rh.tamilLanguage().getCode(), // locationCode
-                null, // allowedLanguageLocationCodes
+                null, // locationCode
+                Collections.singletonList(rh.tamilLanguage().getCode()), // allowedLanguageLocationCodes
                 0L, // currentUsageInPulses
                 0L, // endOfUsagePromptCounter
                 false, // welcomePromptFlag
@@ -4236,12 +4225,14 @@ public class UserControllerBundleIT extends BasePaxIT {
     /**
      * To verify that Invalid user should not be able to listen MA content if
      * service deploy status is set to not deploy in a particular state.
+     *
+     * RL: Invalid users are now treated the same as non-existent or Anonymous
+     *     https://applab.atlassian.net/browse/NMS-236
      */
     @Test
     public void verifyFT436() throws IOException, InterruptedException {
         // add FLW with Invalid status
-        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright",
-                1200000000l);
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1200000000l);
         flw.setLanguage(rh.tamilLanguage());
         flw.setDistrict(rh.bangaloreDistrict());
         flw.setState(rh.karnatakaState());
@@ -4251,7 +4242,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         // service not deployed in Karnataka State
 
-        // invoke get user detail API
+        // invoke get user detail API without circle and operator
         HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
                 true, "1200000000", // callingNumber
                 false, null, // operator
@@ -4259,14 +4250,35 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "123456789012345" // callId
         );
 
-        String expectedJsonResponse = createFailureResponseJson("<MOBILE_ACADEMY: Not Deployed In State>");
+        String expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
+                null, // locationCode
+                Collections.singletonList(rh.tamilLanguage().getCode()), // allowedLanguageLocationCodes
+                0L, // currentUsageInPulses
+                0L, // endOfUsagePromptCounter
+                false, // welcomePromptFlag
+                -1, // maxAllowedUsageInPulses
+                2 // maxAllowedEndOfUsagePrompt
+        );
 
-        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
-                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
-        assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, response.getStatusLine()
-                .getStatusCode());
-        assertEquals(expectedJsonResponse,
-                EntityUtils.toString(response.getEntity()));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
+
+        // Invoke set LLC API
+        // Set LLC as per allowedLanguageLocationCodes response field
+        HttpPost httpPost = new HttpPost(String.format(
+                "http://localhost:%d/api/mobileacademy/languageLocationCode",
+                TestContext.getJettyPort()));
+        StringEntity params = new StringEntity(
+                "{\"callingNumber\":1200000000,\"callId\":123456789012345,\"languageLocationCode\":\""
+                        + rh.tamilLanguage().getCode() + "\"}");
+        httpPost.setEntity(params);
+        httpPost.addHeader("content-type", "application/json");
+
+        expectedJsonResponse = createFailureResponseJson("<MOBILE_ACADEMY: Not Deployed In State>");
+        response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
+        assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, response.getStatusLine().getStatusCode());
     }
 
     /**
