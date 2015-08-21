@@ -13,6 +13,8 @@ import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.Language;
 import org.motechproject.nms.region.service.CircleService;
 import org.motechproject.nms.region.service.LanguageService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -33,6 +35,8 @@ public class CsrValidatorServiceImpl implements CsrValidatorService {
     private LanguageService languageService;
     private CircleService circleService;
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(CsrValidatorServiceImpl.class);
+
 
     @Autowired
     public CsrValidatorServiceImpl(SubscriptionService subscriptionService,
@@ -42,6 +46,7 @@ public class CsrValidatorServiceImpl implements CsrValidatorService {
         this.languageService = languageService;
         this.circleService = circleService;
     }
+
 
     private void loadPacks() {
         weekIds = new HashMap<>();
@@ -56,6 +61,11 @@ public class CsrValidatorServiceImpl implements CsrValidatorService {
             weekIds.put(pack.getName(), packWeekIds);
             contentFileNames.put(pack.getName(), packContentFileNames);
         }
+        if (weekIds.size() == 0) {
+            LOGGER.debug("No subscription packs in the database!");
+            weekIds = null;
+            contentFileNames = null;
+        }
     }
 
 
@@ -64,6 +74,10 @@ public class CsrValidatorServiceImpl implements CsrValidatorService {
         for (Language language : languageService.getAll()) {
             languageCodes.add(language.getCode());
         }
+        if (languageCodes.size() == 0) {
+            LOGGER.debug("No languages in the database!");
+            languageCodes = null;
+        }
     }
 
 
@@ -71,6 +85,10 @@ public class CsrValidatorServiceImpl implements CsrValidatorService {
         circles = new HashSet<String>();
         for (Circle circle : circleService.getAll()) {
             circles.add(circle.getName());
+        }
+        if (circles.size() == 0) {
+            LOGGER.debug("No circles in the database!");
+            circles = null;
         }
     }
 

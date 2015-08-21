@@ -83,7 +83,7 @@ public class MobileAcademyController extends BaseController {
     @ResponseBody
     public CourseResponse getCourse() {
 
-        log("/mobileacademy/course");
+        log("REQUEST: /mobileacademy/course");
 
         MaCourse getCourse = mobileAcademyService.getCourse();
 
@@ -94,13 +94,13 @@ public class MobileAcademyController extends BaseController {
 
         CourseResponse response = MobileAcademyConverter.convertCourseDto(getCourse);
 
-        if (response != null) {
-            return response;
-        } else {
+        if (response == null) {
             LOGGER.error("Failed dto mapping, check object mapping");
             throw new InternalError(String.format(INVALID, "CourseResponse"));
         }
 
+        log("RESPONSE: /mobileacademy/course", response.toString());
+        return response;
     }
 
     /**
@@ -113,9 +113,11 @@ public class MobileAcademyController extends BaseController {
     @ResponseBody
     public CourseVersionResponse getCourseVersion() {
 
-        log("/mobileacademy/courseVersion");
+        log("REQUEST: /mobileacademy/courseVersion");
 
-        return new CourseVersionResponse(mobileAcademyService.getCourseVersion());
+        CourseVersionResponse response = new CourseVersionResponse(mobileAcademyService.getCourseVersion());
+        log("RESPONSE: /mobileacademy/courseVersion", response.toString());
+        return response;
     }
 
     /**
@@ -131,7 +133,7 @@ public class MobileAcademyController extends BaseController {
     public GetBookmarkResponse getBookmarkWithScore(@RequestParam(required = false) Long callingNumber,
                                                     @RequestParam(required = false) Long callId) {
 
-        log("/mobileacademy/bookmarkWithScore (GET)", String.format("callingNumber=%s, callId=%s",
+        log("REQUEST: /mobileacademy/bookmarkWithScore", String.format("callingNumber=%s, callId=%s",
                 LogHelper.obscure(callingNumber), callId));
 
         StringBuilder errors = new StringBuilder();
@@ -146,7 +148,10 @@ public class MobileAcademyController extends BaseController {
         }
 
         MaBookmark bookmark = mobileAcademyService.getBookmark(callingNumber, callId);
-        return MobileAcademyConverter.convertBookmarkDto(bookmark);
+
+        GetBookmarkResponse ret = MobileAcademyConverter.convertBookmarkDto(bookmark);
+        log("RESPONSE: /mobileacademy/bookmarkWithScore", String.format("callId=%s, %s", callId, ret.toString()));
+        return ret;
     }
 
     /**
@@ -162,7 +167,7 @@ public class MobileAcademyController extends BaseController {
     @Transactional
     public void saveBookmarkWithScore(@RequestBody SaveBookmarkRequest bookmarkRequest) {
 
-        log("/mobileacademy/bookmarkWithScore (POST)", LogHelper.nullOrString(bookmarkRequest));
+        log("REQUEST: /mobileacademy/bookmarkWithScore (POST)", LogHelper.nullOrString(bookmarkRequest));
 
         // validate bookmark
         if (bookmarkRequest == null) {
@@ -201,7 +206,7 @@ public class MobileAcademyController extends BaseController {
     @ResponseStatus(HttpStatus.OK)
     public void saveSmsStatus(@RequestBody SmsStatusRequest smsDeliveryStatus) {
 
-        log("/mobileacademy/sms/status/imi (POST)", LogHelper.nullOrString(smsDeliveryStatus));
+        log("REQUEST: /mobileacademy/sms/status/imi (POST)", LogHelper.nullOrString(smsDeliveryStatus));
 
         String errors = MobileAcademyValidator.validateSmsStatus(smsDeliveryStatus);
 
@@ -227,7 +232,7 @@ public class MobileAcademyController extends BaseController {
     @ResponseStatus(HttpStatus.OK)
     public void sendNotification(@RequestBody Long callingNumber) {
 
-        log("/mobileacademy/notify", String.format("callingNumber=%s", LogHelper.obscure(callingNumber)));
+        log("REQUEST: /mobileacademy/notify (POST)", String.format("callingNumber=%s", LogHelper.obscure(callingNumber)));
 
         StringBuilder errors = new StringBuilder();
         validateField10Digits(errors, "callingNumber", callingNumber);

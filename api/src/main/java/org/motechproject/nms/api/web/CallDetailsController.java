@@ -4,7 +4,6 @@ import org.joda.time.DateTime;
 import org.motechproject.nms.api.web.contract.CallContentRequest;
 import org.motechproject.nms.api.web.contract.CallDetailRecordRequest;
 import org.motechproject.nms.api.web.contract.LogHelper;
-import org.motechproject.nms.api.web.exception.NotFoundException;
 import org.motechproject.nms.flw.domain.CallContent;
 import org.motechproject.nms.flw.domain.CallDetailRecord;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
@@ -60,7 +59,7 @@ public class CallDetailsController extends BaseController {
     public void saveCallDetails(@PathVariable String serviceName,
                                 @RequestBody CallDetailRecordRequest callDetailRecordRequest) {
 
-        log(String.format("/%s/callDetails", serviceName), LogHelper.nullOrString(callDetailRecordRequest));
+        log(String.format("REQUEST: /%s/callDetails (POST)", serviceName), LogHelper.nullOrString(callDetailRecordRequest));
 
         Service service = null;
         StringBuilder failureReasons;
@@ -102,7 +101,14 @@ public class CallDetailsController extends BaseController {
 
         FrontLineWorker flw = frontLineWorkerService.getByContactNumber(callDetailRecordRequest.getCallingNumber());
         if (null == flw) {
-            throw new NotFoundException(String.format(NOT_FOUND, "callingNumber"));
+            // If the flw doesn't exist it is possible they hung up before providing their language.  We
+            // create an anonymous stub flw here
+            flw = new FrontLineWorker(callDetailRecordRequest.getCallingNumber());
+            flw.setStatus(FrontLineWorkerStatus.ANONYMOUS);
+            frontLineWorkerService.add(flw);
+
+            // reload so the record can be linked to later.
+            flw = frontLineWorkerService.getByContactNumber(callDetailRecordRequest.getCallingNumber());
         }
 
         createCallDetailRecord(flw, callDetailRecordRequest, service);

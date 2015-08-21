@@ -41,7 +41,7 @@ public class FrontLineWorker extends MdsEntity implements FullLocation {
     @Field
     private String mctsFlwId;
 
-    @Field(required = true)
+    @Field()
     @Unique
     @Min(value = 1000000000L, message = "contactNumber must be 10 digits")
     @Max(value = 9999999999L, message = "contactNumber must be 10 digits")
@@ -138,6 +138,7 @@ public class FrontLineWorker extends MdsEntity implements FullLocation {
 
         if (this.status == FrontLineWorkerStatus.INVALID) {
             setInvalidationDate(new DateTime());
+            setContactNumber(null);
         } else {
             setInvalidationDate(null);
         }
@@ -243,7 +244,7 @@ public class FrontLineWorker extends MdsEntity implements FullLocation {
         if (!this.getId().equals(that.getId())) {
             return false;
         }
-        if (!contactNumber.equals(that.contactNumber)) {
+        if (contactNumber != null ? !contactNumber.equals(that.contactNumber) : that.contactNumber != null) {
             return false;
         }
         if (name != null ? !name.equals(that.name) : that.name != null) {
@@ -261,8 +262,6 @@ public class FrontLineWorker extends MdsEntity implements FullLocation {
         int result = (getId() != null ? getId().hashCode() : 0);
         result = 31 * result + (contactNumber != null ? contactNumber.hashCode() : 0);
         result = 31 * result + (name != null ? name.hashCode() : 0);
-        result = 31 * result + (language != null ? language.hashCode() : 0);
-        result = 31 * result + (district != null ? district.hashCode() : 0);
         return result;
     }
 
@@ -270,8 +269,8 @@ public class FrontLineWorker extends MdsEntity implements FullLocation {
     public String toString() {
         return "FrontLineWorker{" +
                 "id=" + getId() +
-                ", language=" + language +
-                ", district=" + district +
+                ", contactNumber=" + contactNumber +
+                ", name=" + name +
                 '}';
     }
 }

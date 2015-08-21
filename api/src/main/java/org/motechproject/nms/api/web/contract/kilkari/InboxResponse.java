@@ -24,4 +24,11 @@ public class InboxResponse {
     public void setInboxSubscriptionDetailList(Set<InboxSubscriptionDetailResponse> inboxSubscriptionDetailList) {
         this.inboxSubscriptionDetailList = inboxSubscriptionDetailList;
     }
+
+    @Override
+    public String toString() {
+        return "InboxResponse{" +
+                "inboxSubscriptionDetailList=" + inboxSubscriptionDetailList +
+                '}';
+    }
 }

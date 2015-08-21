@@ -1,5 +1,6 @@
 package org.motechproject.nms.kilkari.domain;
 
+import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonManagedReference;
 import org.joda.time.DateTime;
 import org.motechproject.mds.annotations.Entity;
@@ -127,6 +128,7 @@ public class Subscriber extends MdsEntity {
     }
 
     @Ignore
+    @JsonIgnore
     public Set<Subscription> getActiveAndPendingSubscriptions() {
         Set<Subscription> activeSubscriptions = new HashSet<>();
 
@@ -144,6 +146,7 @@ public class Subscriber extends MdsEntity {
     }
 
     @Ignore
+    @JsonIgnore
     public Set<Subscription> getAllSubscriptions() {
         // TODO: I have no idea why I need to do this, but returning just this.subscriptions always results in
         // an empty set. Bi-directional relationship bug?

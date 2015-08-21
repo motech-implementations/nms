@@ -14,7 +14,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.api.web.contract.FlwUserResponse;
-import org.motechproject.nms.api.web.contract.UserLanguageRequest;
 import org.motechproject.nms.flw.domain.CallContent;
 import org.motechproject.nms.flw.domain.CallDetailRecord;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
@@ -662,9 +661,10 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
                 /* callDisconnectReason */ true, 1,
                 /* content */ false, null);
 
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_NOT_FOUND,
-                "{\"failureReason\":\"<callingNumber: Not Found>\"}",
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK, ADMIN_USERNAME, ADMIN_PASSWORD));
+
+        FrontLineWorker flw = frontLineWorkerService.getByContactNumber(9810320300l);
+        assertEquals(FrontLineWorkerStatus.ANONYMOUS, flw.getStatus());
     }
 
     @Test

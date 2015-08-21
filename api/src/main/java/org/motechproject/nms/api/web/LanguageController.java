@@ -52,7 +52,7 @@ public class LanguageController extends BaseController {
                                             @RequestBody UserLanguageRequest userLanguageRequest) {
 
 
-        log(String.format("/%s/languageLocationCode", serviceName), LogHelper.nullOrString(userLanguageRequest));
+        log(String.format("REQUEST: /%s/languageLocationCode (POST)", serviceName), LogHelper.nullOrString(userLanguageRequest));
 
         Long callingNumber = userLanguageRequest.getCallingNumber();
         Long callId = userLanguageRequest.getCallId();

@@ -1,5 +1,25 @@
 package org.motechproject.nms.testing.it.region;
 
+import static org.junit.Assert.*;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createCircle;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createDistrict;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createState;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
+import java.util.Arrays;
+import java.util.Collections;
+
+import javax.inject.Inject;
+
+import org.apache.commons.httpclient.HttpStatus;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.mime.HttpMultipartMode;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.entity.mime.content.FileBody;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -16,26 +36,16 @@ import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
+import org.motechproject.nms.testing.it.api.utils.RequestBuilder;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
+import org.motechproject.testing.osgi.http.SimpleHttpClient;
+import org.motechproject.testing.utils.TestContext;
 import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
-
-import javax.inject.Inject;
-import java.io.Reader;
-import java.io.StringReader;
-import java.util.Arrays;
-import java.util.Collections;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.motechproject.nms.testing.it.utils.RegionHelper.createCircle;
-import static org.motechproject.nms.testing.it.utils.RegionHelper.createDistrict;
-import static org.motechproject.nms.testing.it.utils.RegionHelper.createState;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerSuite.class)
@@ -254,5 +264,170 @@ public class LanguageLocationCodesImportServiceBundleIT extends BasePaxIT {
         assertEquals(code, language.getCode());
         assertNotNull(language.getName());
         assertEquals(languageName, language.getName());
+    }
+
+    /**
+     * Method used to import CSV File For Location Data i.e circle, state and
+     * district & language location code
+     */
+    private HttpResponse importCsvFileForLocationData(String location,
+            String fileName)
+            throws InterruptedException, IOException {
+        HttpPost httpPost;
+        if (null==location) {
+            httpPost = new HttpPost(String.format(
+                    "http://localhost:%d/region/languageLocationCode/import",
+                    TestContext.getJettyPort()));
+        } else {
+            httpPost = new HttpPost(String.format(
+                    "http://localhost:%d/region/data/import/%s",
+                    TestContext.getJettyPort(), location));
+        }
+        FileBody fileBody = new FileBody(new File(String.format(
+                "src/test/resources/csv/%s", fileName)));
+        MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+        builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
+        builder.addPart("csvFile", fileBody);
+        httpPost.setEntity(builder.build());
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD);
+        return response;
+    }
+
+    /**
+     * To verify LLC is set successfully for all the districts in a state.
+     */
+    @Test
+    public void verifyFT518() throws InterruptedException,
+            IOException {
+        HttpResponse response = null;
+        // Import state
+        response = importCsvFileForLocationData("state",
+                "state_ft_518.csv");
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+
+        // Import district
+        response = importCsvFileForLocationData("district",
+                "district_ft_518.csv");
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+
+        // Import circle
+        response = importCsvFileForLocationData("circle", "circle_ft_518.csv");
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+
+        Circle ncrCircle = circleDataService.findByName("DELHI-NCR");
+        Circle upWestCircle = circleDataService.findByName("UP-WEST");
+
+        State upState = stateDataService.findByName("UTTAR PRADESH");
+        State delhiState = stateDataService.findByName("DELHI");
+
+        assertNotNull(ncrCircle);
+        assertNotNull(upWestCircle);
+        assertNotNull(upState);
+        assertNotNull(delhiState);
+        // assert circle for default LLC
+        assertNull(ncrCircle.getDefaultLanguage());
+        assertNull(upWestCircle.getDefaultLanguage());
+        
+        // fetch district and assert
+        District agraDistrict=districtService.findByStateAndName(upState, "AGRA");
+        District aligarhDistrict=districtService.findByStateAndName(upState, "ALIGARH");
+        District noidaDistrict=districtService.findByStateAndName(upState, "NOIDA");
+        District northDistrict=districtService.findByStateAndName(delhiState, "NORTH DISTRICT");
+        
+        assertNull(agraDistrict.getLanguage());
+        assertNull(aligarhDistrict.getLanguage());
+        assertNull(noidaDistrict.getLanguage());
+        assertNull(northDistrict.getLanguage());
+        
+        //import LLC data
+        response = importCsvFileForLocationData(null, "llc_data_ft_518.csv");
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        
+        // fetch circle and LLc data again
+        ncrCircle = circleDataService.findByName("DELHI-NCR");
+        upWestCircle = circleDataService.findByName("UP-WEST");
+
+        agraDistrict = districtService.findByStateAndName(upState, "AGRA");
+        aligarhDistrict = districtService
+                .findByStateAndName(upState, "ALIGARH");
+        noidaDistrict = districtService.findByStateAndName(upState, "NOIDA");
+        northDistrict = districtService.findByStateAndName(delhiState,
+                "NORTH DISTRICT");
+
+        // assert circle for default LLC
+        assertEquals("HINDI", upWestCircle.getDefaultLanguage().getName());
+        assertEquals("ENGLISH", ncrCircle.getDefaultLanguage().getName());
+        
+        // assert district for LLC
+        assertEquals("HINDI", agraDistrict.getLanguage().getName());
+        assertEquals("URDU", aligarhDistrict.getLanguage().getName());
+        assertEquals("HINDI", noidaDistrict.getLanguage().getName());
+        assertEquals("ENGLISH", northDistrict.getLanguage().getName());
+        
+    }
+
+    /**
+     * To verify that multiple states can be mapped to one circle.
+     */
+    @Test
+    public void verifyFT519() throws InterruptedException, IOException {
+        HttpResponse response = null;
+        // Import state
+        response = importCsvFileForLocationData("state", "state_ft_518.csv");
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+
+        // Import circle
+        response = importCsvFileForLocationData("circle", "circle_ft_518.csv");
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+
+        Circle ncrCircle = circleDataService.findByName("DELHI-NCR");
+        Circle upWestCircle = circleDataService.findByName("UP-WEST");
+
+        State upState = stateDataService.findByName("UTTAR PRADESH");
+        State delhiState = stateDataService.findByName("DELHI");
+
+        assertNotNull(ncrCircle);
+        assertNotNull(upWestCircle);
+        assertNotNull(upState);
+        assertNotNull(delhiState);
+
+        // DELHI-NCR circle have two states
+        Circle circle = circleDataService.findByName("DELHI-NCR");
+        assertTrue(circle.getStates().size() > 1);
+        assertTrue(circle.getStates().contains(delhiState));
+        assertTrue(circle.getStates().contains(upState));
+    }
+
+    /**
+     * To verify that one state can be mapped to more than one circle.
+     */
+    @Test
+    public void verifyFT520() throws InterruptedException, IOException {
+        HttpResponse response = null;
+        // Import state
+        response = importCsvFileForLocationData("state", "state_ft_518.csv");
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+
+        // Import circle
+        response = importCsvFileForLocationData("circle", "circle_ft_518.csv");
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+
+        Circle ncrCircle = circleDataService.findByName("DELHI-NCR");
+        Circle upWestCircle = circleDataService.findByName("UP-WEST");
+
+        State upState = stateDataService.findByName("UTTAR PRADESH");
+        State delhiState = stateDataService.findByName("DELHI");
+
+        assertNotNull(ncrCircle);
+        assertNotNull(upWestCircle);
+        assertNotNull(upState);
+        assertNotNull(delhiState);
+
+        // UP state mapped to two circles
+        assertTrue(upState.getCircles().size() > 1);
+        assertTrue(upState.getCircles().contains(ncrCircle));
+        assertTrue(upState.getCircles().contains(upWestCircle));
     }
 }

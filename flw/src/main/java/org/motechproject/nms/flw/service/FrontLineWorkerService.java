@@ -23,6 +23,8 @@ public interface FrontLineWorkerService {
 
     FrontLineWorker getByMctsFlwIdAndState(String mctsFlwId, State state);
 
+    FrontLineWorker getById(Long id);
+
     List<FrontLineWorker> getRecords();
 
     void update(FrontLineWorker record);

@@ -1159,7 +1159,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testSetLanguageInvalidService() throws IOException, InterruptedException {
-        HttpPost httpPost = createHttpPost("INVALID_SERVICE", new UserLanguageRequest(1111111111L, 123456789012345L,"10"));
+        HttpPost httpPost = createHttpPost("INVALID_SERVICE", new UserLanguageRequest(1111111111L, 123456789012345L, "10"));
 
         String expectedJsonResponse = createFailureResponseJson("<serviceName: Invalid>");
 
@@ -1170,7 +1170,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testSetLanguageMissingCallingNumber() throws IOException, InterruptedException {
-        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(null, 123456789012345L,"10"));
+        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(null, 123456789012345L, "10"));
 
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Not Present>");
 
@@ -1181,7 +1181,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testSetLanguageInvalidCallingNumber() throws IOException, InterruptedException {
-        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(123L, 123456789012345L,"10"));
+        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(123L, 123456789012345L, "10"));
 
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
 
@@ -1192,7 +1192,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testSetLanguageMissingCallId() throws IOException, InterruptedException {
-        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(1111111111L, null,"10"));
+        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(1111111111L, null, "10"));
 
         String expectedJsonResponse = createFailureResponseJson("<callId: Not Present>");
 
@@ -1203,7 +1203,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testSetLanguageInvalidCallId() throws IOException, InterruptedException {
-        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(1111111111L, 123L,"10"));
+        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(1111111111L, 123L, "10"));
 
         String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
 
@@ -1455,16 +1455,15 @@ public class UserControllerBundleIT extends BasePaxIT {
      */
     @Test
     // https://applab.atlassian.net/browse/NMS-181
-    public void verifyFT16() throws IOException,
-            InterruptedException {
+    public void verifyFT16() throws IOException, InterruptedException {
         createKilkariUndeployTestData();
 
-                HttpGet httpGet = createHttpGet(true, "kilkari", // service
-                true, "1000000000", // callingNumber
-                        true, "OP", // operator
-                        true, rh.delhiCircle().getName(), // circle
-                        true, "123456789012345" // callId
-                );
+        HttpGet httpGet = createHttpGet(true, "kilkari", // service
+        true, "1000000000", // callingNumber
+                true, "OP", // operator
+                true, rh.delhiCircle().getName(), // circle
+                true, "123456789012345" // callId
+        );
 
         // Should return HTTP 501 because the service is not
         // deployed for the specified state
@@ -1474,6 +1473,95 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, response.getStatusLine().getStatusCode());
 
         assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
+    }
+
+    /**
+     * Verifies that a circle with multiple states (mix of deployed & undeployed) with no mcts data for
+     * subscriber always returns true
+     * @throws IOException
+     * @throws InterruptedException
+     */
+    @Test
+    public void testCircleMixedDeployedMutipleStates() throws IOException, InterruptedException {
+
+        // create non-whitelist state
+        State nws = new State();
+        nws.setName("Non-whitelist state in delhi");
+        nws.setCode(7L);
+        stateDataService.create(nws);
+
+        // create whitelist state
+        State ws = new State();
+        ws.setName("Whitelist state in delhi");
+        ws.setCode(8L);
+        stateDataService.create(ws);
+
+        // create and update circle
+        Circle delhiCircle = circleDataService.create(new Circle("DE"));
+        delhiCircle.setStates(new ArrayList<>(Arrays.asList(nws, ws)));
+        circleDataService.update(delhiCircle);
+
+        // update deployment
+        deployedServiceDataService.create(new DeployedService(ws, Service.KILKARI));
+
+        // create subscriber
+        Subscriber subscriber1 = subscriberDataService.create(new Subscriber(1000000000L, rh.hindiLanguage()));
+        subscriptionService.createSubscription(subscriber1.getCallingNumber(), rh.hindiLanguage(), delhiCircle,
+                sh.childPack(), SubscriptionOrigin.IVR);
+
+        HttpGet httpGet = createHttpGet(true, "kilkari", // service
+                true, "1000000000", // callingNumber
+                true, "OP", // operator
+                true, delhiCircle.getName(), // circle
+                true, "123456789012345" // callId
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+    }
+
+    /**
+     * Verifies that a circle with multiple states (all undeployed) with no mcts data for
+     * subscriber always returns false
+     * @throws IOException
+     * @throws InterruptedException
+     */
+    @Test
+    public void testUndeployedCircleMutipleStates() throws IOException, InterruptedException {
+
+        // create non-whitelist state
+        State nws = new State();
+        nws.setName("Non-whitelist state in delhi");
+        nws.setCode(7L);
+        stateDataService.create(nws);
+
+        // create whitelist state
+        State ws = new State();
+        ws.setName("Whitelist state in delhi");
+        ws.setCode(8L);
+        stateDataService.create(ws);
+
+        // create and update circle
+        Circle delhiCircle = circleDataService.create(new Circle("DE"));
+        delhiCircle.setStates(new ArrayList<>(Arrays.asList(nws, ws)));
+        circleDataService.update(delhiCircle);
+
+        // no deployment whitelist created
+
+        // create subscriber
+        Subscriber subscriber1 = subscriberDataService.create(new Subscriber(1000000000L, rh.hindiLanguage()));
+        subscriptionService.createSubscription(subscriber1.getCallingNumber(), rh.hindiLanguage(), delhiCircle,
+                sh.childPack(), SubscriptionOrigin.IVR);
+
+        HttpGet httpGet = createHttpGet(true, "kilkari", // service
+                true, "1000000000", // callingNumber
+                true, "OP", // operator
+                true, delhiCircle.getName(), // circle
+                true, "123456789012345" // callId
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, response.getStatusLine().getStatusCode());
     }
 
     /**
@@ -3221,16 +3309,14 @@ public class UserControllerBundleIT extends BasePaxIT {
     @Test
     public void verifyFT461() throws IOException, InterruptedException {
         // create Invalid FLW record
-        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright",
-                1200000001l);
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1200000001l);
         flw.setLanguage(rh.tamilLanguage());
         flw.setDistrict(rh.bangaloreDistrict());
         flw.setState(rh.karnatakaState());
         frontLineWorkerService.add(flw);
 
         // assert for FLW status
-        flw = frontLineWorkerService
-                .getByContactNumber(1200000001l);
+        flw = frontLineWorkerService.getByContactNumber(1200000001l);
         assertTrue(FrontLineWorkerStatus.INACTIVE == flw.getStatus());
         
         Circle circle = rh.karnatakaCircle();
@@ -3258,15 +3344,9 @@ public class UserControllerBundleIT extends BasePaxIT {
                 2 // maxAllowedEndOfUsagePrompt
         );
 
-        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
-                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
-        assertEquals(expectedJsonResponse,
-                EntityUtils.toString(response.getEntity()));
-        // TODO FLW delete
-        flw.setStatus(FrontLineWorkerStatus.INVALID);
-        flw.setInvalidationDate(DateTime.now().minusDays(50));
-        frontLineWorkerService.update(flw);
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
     /**
@@ -3318,15 +3398,9 @@ public class UserControllerBundleIT extends BasePaxIT {
                 2 // maxAllowedEndOfUsagePrompt
         );
 
-        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
-                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
-        assertEquals(expectedJsonResponse,
-                EntityUtils.toString(response.getEntity()));
-        // TODO FLW delete
-        flw.setStatus(FrontLineWorkerStatus.INVALID);
-        flw.setInvalidationDate(DateTime.now().minusDays(50));
-        frontLineWorkerService.update(flw);
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
     
     private void createCircleWithNoLanguage(){
@@ -4033,6 +4107,9 @@ public class UserControllerBundleIT extends BasePaxIT {
     /**
      * To verify that Invalid user should be able to listen MA content if
      * service deploy status is set to deploy in a particular state.
+     *
+     * RL: Invalid users are now handled the same as anonymous
+     *     https://applab.atlassian.net/browse/NMS-236
      */
     @Test
     public void verifyFT432() throws IOException, InterruptedException {
@@ -4059,8 +4136,8 @@ public class UserControllerBundleIT extends BasePaxIT {
         );
 
         String expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
-                rh.tamilLanguage().getCode(), // locationCode
-                null, // allowedLanguageLocationCodes
+                null, // locationCode
+                Collections.singletonList(rh.tamilLanguage().getCode()), // allowedLanguageLocationCodes
                 0L, // currentUsageInPulses
                 0L, // endOfUsagePromptCounter
                 false, // welcomePromptFlag
@@ -4148,12 +4225,14 @@ public class UserControllerBundleIT extends BasePaxIT {
     /**
      * To verify that Invalid user should not be able to listen MA content if
      * service deploy status is set to not deploy in a particular state.
+     *
+     * RL: Invalid users are now treated the same as non-existent or Anonymous
+     *     https://applab.atlassian.net/browse/NMS-236
      */
     @Test
     public void verifyFT436() throws IOException, InterruptedException {
         // add FLW with Invalid status
-        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright",
-                1200000000l);
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1200000000l);
         flw.setLanguage(rh.tamilLanguage());
         flw.setDistrict(rh.bangaloreDistrict());
         flw.setState(rh.karnatakaState());
@@ -4163,7 +4242,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         // service not deployed in Karnataka State
 
-        // invoke get user detail API
+        // invoke get user detail API without circle and operator
         HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
                 true, "1200000000", // callingNumber
                 false, null, // operator
@@ -4171,14 +4250,35 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "123456789012345" // callId
         );
 
-        String expectedJsonResponse = createFailureResponseJson("<MOBILE_ACADEMY: Not Deployed In State>");
+        String expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
+                null, // locationCode
+                Collections.singletonList(rh.tamilLanguage().getCode()), // allowedLanguageLocationCodes
+                0L, // currentUsageInPulses
+                0L, // endOfUsagePromptCounter
+                false, // welcomePromptFlag
+                -1, // maxAllowedUsageInPulses
+                2 // maxAllowedEndOfUsagePrompt
+        );
 
-        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
-                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
-        assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, response.getStatusLine()
-                .getStatusCode());
-        assertEquals(expectedJsonResponse,
-                EntityUtils.toString(response.getEntity()));
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
+
+        // Invoke set LLC API
+        // Set LLC as per allowedLanguageLocationCodes response field
+        HttpPost httpPost = new HttpPost(String.format(
+                "http://localhost:%d/api/mobileacademy/languageLocationCode",
+                TestContext.getJettyPort()));
+        StringEntity params = new StringEntity(
+                "{\"callingNumber\":1200000000,\"callId\":123456789012345,\"languageLocationCode\":\""
+                        + rh.tamilLanguage().getCode() + "\"}");
+        httpPost.setEntity(params);
+        httpPost.addHeader("content-type", "application/json");
+
+        expectedJsonResponse = createFailureResponseJson("<MOBILE_ACADEMY: Not Deployed In State>");
+        response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
+        assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, response.getStatusLine().getStatusCode());
     }
 
     /**
