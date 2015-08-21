@@ -1,12 +1,5 @@
 package org.motechproject.nms.testing.it.imi;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import java.util.List;
-
-import javax.inject.Inject;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -24,6 +17,12 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
+
+import javax.inject.Inject;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerSuite.class)
@@ -65,6 +64,10 @@ public class ImiSMSNotificationServiceBundleIT extends BasePaxIT {
         settingsFacade.setProperty(SMS_NOTIFICATION_URL, oldEndpoint);
         settingsFacade.setProperty(MAX_NOTIFICATION_RETRY_COUNT, oldRetryCount);
     }
+
+    // JIRA issue : https://applab.atlassian.net/browse/NIP-47
+    // To test the fix of JIRA isssue 47
+    // To check NMS behavious after getting 201 from the IMI    
 
     @Test
     public void verifyNIP47() {
