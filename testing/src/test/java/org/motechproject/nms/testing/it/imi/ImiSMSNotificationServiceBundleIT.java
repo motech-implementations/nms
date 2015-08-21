@@ -77,7 +77,7 @@ public class ImiSMSNotificationServiceBundleIT extends BasePaxIT {
                 "http://localhost:%d/testing/sendSMS/outbound",
                 TestContext.getJettyPort());
         settingsFacade.setProperty(SMS_NOTIFICATION_URL, newUrl);
-        assertTrue(smsNotificationService.sendSms(1234567890l));
+        assertTrue(smsNotificationService.sendSms(1234567890l,"testNIP47"));
         List<Alert> alert = alertsDataService
                 .findByExternalId("SmsNotification");
         assertEquals(0, alert.size());
