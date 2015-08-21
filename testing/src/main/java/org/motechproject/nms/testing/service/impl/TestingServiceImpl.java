@@ -2,50 +2,16 @@ package org.motechproject.nms.testing.service.impl;
 
 import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
-import org.joda.time.Weeks;
-import org.motechproject.alerts.contract.AlertsDataService;
 import org.motechproject.mds.query.SqlQueryExecution;
-import org.motechproject.nms.csv.repository.CsvAuditRecordDataService;
-import org.motechproject.nms.flw.domain.FrontLineWorker;
-import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
-import org.motechproject.nms.flw.repository.CallContentDataService;
-import org.motechproject.nms.flw.repository.CallDetailRecordDataService;
-import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
-import org.motechproject.nms.flw.repository.ServiceUsageCapDataService;
-import org.motechproject.nms.flw.repository.WhitelistEntryDataService;
-import org.motechproject.nms.flw.repository.WhitelistStateDataService;
-import org.motechproject.nms.imi.repository.FileAuditRecordDataService;
-import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
-import org.motechproject.nms.kilkari.repository.CallRetryDataService;
-import org.motechproject.nms.kilkari.repository.CallSummaryRecordDataService;
-import org.motechproject.nms.kilkari.repository.InboxCallDataDataService;
-import org.motechproject.nms.kilkari.repository.InboxCallDetailRecordDataService;
-import org.motechproject.nms.kilkari.repository.MctsChildDataService;
-import org.motechproject.nms.kilkari.repository.MctsMotherDataService;
-import org.motechproject.nms.kilkari.repository.SubscriberDataService;
-import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
-import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
-import org.motechproject.nms.kilkari.repository.SubscriptionPackMessageDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
-import org.motechproject.nms.mobileacademy.repository.CompletionRecordDataService;
-import org.motechproject.nms.props.repository.DeployedServiceDataService;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.State;
-import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
-import org.motechproject.nms.region.repository.HealthBlockDataService;
-import org.motechproject.nms.region.repository.HealthFacilityDataService;
-import org.motechproject.nms.region.repository.HealthFacilityTypeDataService;
-import org.motechproject.nms.region.repository.HealthSubFacilityDataService;
-import org.motechproject.nms.region.repository.LanguageDataService;
-import org.motechproject.nms.region.repository.NationalDefaultLanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
-import org.motechproject.nms.region.repository.TalukaDataService;
-import org.motechproject.nms.region.repository.VillageDataService;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.nms.testing.util.Timer;
 import org.motechproject.server.config.SettingsFacade;
@@ -108,115 +74,126 @@ public class TestingServiceImpl implements TestingService {
     private Map<Long, List<Long>> districts;
     private Map<Long, String> districtNames;
 
-    private static final String WEEKS_TO_KEEP_INVALID_FLWS = "flw.weeks_to_keep_invalid_flws";
+
+    private static final String[] TABLES = {
+        "ALERTS_MODULE_ALERT",
+        "ALERTS_MODULE_ALERT_DATA",
+        "ALERTS_MODULE_ALERT__TRASH",
+        "ALERTS_MODULE_ALERT__TRASH_DATA",
+        "MTRAINING_MODULE_ACTIVITYRECORD",
+        "MTRAINING_MODULE_ACTIVITYRECORD__TRASH",
+        "MTRAINING_MODULE_BOOKMARK",
+        "MTRAINING_MODULE_BOOKMARK__TRASH",
+        "MTRAINING_MODULE_CHAPTER",
+        "MTRAINING_MODULE_CHAPTER__TRASH",
+        "MTRAINING_MODULE_COURSE",
+        "MTRAINING_MODULE_COURSEUNITMETADATA",
+        "MTRAINING_MODULE_COURSEUNITMETADATA__TRASH",
+        "MTRAINING_MODULE_COURSE__TRASH",
+        "MTRAINING_MODULE_LESSON",
+        "MTRAINING_MODULE_LESSON__TRASH",
+        "MTRAINING_MODULE_QUESTION",
+        "MTRAINING_MODULE_QUESTION__TRASH",
+        "MTRAINING_MODULE_QUIZ",
+        "MTRAINING_MODULE_QUIZ__TRASH",
+        "NMS_KK_SUMMARY_RECORDS_STATUSSTATS",
+        "NMS_KK_SUMMARY_RECORDS__TRASH_STATUSSTATS",
+        "nms_call_content",
+        "nms_call_content__TRASH",
+        "nms_circles",
+        "nms_circles__TRASH",
+        "nms_csv_audit_records",
+        "nms_csv_audit_records__TRASH",
+        "nms_deployed_services",
+        "nms_deployed_services__TRASH",
+        "nms_districts",
+        "nms_districts__TRASH",
+        "nms_flw_cdrs",
+        "nms_flw_cdrs__TRASH",
+        "nms_front_line_workers",
+        "nms_front_line_workers__TRASH",
+        "nms_health_blocks",
+        "nms_health_blocks__TRASH",
+        "nms_health_facilities",
+        "nms_health_facilities__TRASH",
+        "nms_health_facility_types",
+        "nms_health_facility_types__TRASH",
+        "nms_health_sub_facilities",
+        "nms_health_sub_facilities__TRASH",
+        "nms_imi_cdrs",
+        "nms_imi_cdrs__TRASH",
+        "nms_imi_csrs",
+        "nms_imi_csrs__TRASH",
+        "nms_imi_file_audit_records",
+        "nms_imi_file_audit_records__TRASH",
+        "nms_inbox_call_data",
+        "nms_inbox_call_data__TRASH",
+        "nms_inbox_call_details",
+        "nms_inbox_call_details__TRASH",
+        "nms_kk_retry_records",
+        "nms_kk_retry_records__TRASH",
+        "nms_kk_summary_records",
+        "nms_kk_summary_records__TRASH",
+        "nms_languages",
+        "nms_languages__TRASH",
+        "nms_ma_completion_records",
+        "nms_ma_completion_records__TRASH",
+        "nms_ma_course",
+        "nms_ma_course__TRASH",
+        "nms_mcts_beneficiaries__TRASH",
+        "nms_mcts_children",
+        "nms_mcts_children__TRASH",
+        "nms_mcts_mothers",
+        "nms_mcts_mothers__TRASH",
+        "nms_national_default_language",
+        "nms_national_default_language__TRASH",
+        "nms_service_usage_caps",
+        "nms_service_usage_caps__TRASH",
+        "nms_states",
+        "nms_states__TRASH",
+        "nms_states_join_circles",
+        "nms_states_join_circles__TRASH",
+        "nms_subscribers",
+        "nms_subscribers__TRASH",
+        "nms_subscription_errors",
+        "nms_subscription_errors__TRASH",
+        "nms_subscription_pack_messages",
+        "nms_subscription_pack_messages__TRASH",
+        "nms_subscription_packs",
+        "nms_subscription_packs__TRASH",
+        "nms_subscriptions",
+        "nms_subscriptions__TRASH",
+        "nms_talukas",
+        "nms_talukas__TRASH",
+        "nms_villages",
+        "nms_villages__TRASH",
+        "nms_whitelist_entries",
+        "nms_whitelist_entries__TRASH",
+        "nms_whitelisted_states",
+        "nms_whitelisted_states__TRASH",
+    };
 
     private Random random = new Random(System.currentTimeMillis());
 
 
-    /**
-     * FLW
-     */
-    @Autowired
-    private CallContentDataService callContentDataService;
-    @Autowired
-    private org.motechproject.nms.flw.repository.CallDetailRecordDataService  flwCallDetailRecordDataService;
-    @Autowired
-    private FrontLineWorkerDataService frontLineWorkerDataService;
-    @Autowired
-    private ServiceUsageCapDataService serviceUsageCapDataService;
-    @Autowired
-    private WhitelistEntryDataService whitelistEntryDataService;
-    @Autowired
-    private WhitelistStateDataService whitelistStateDataService;
-    @Autowired
-    private CallDetailRecordDataService callDetailRecordDataService;
 
-    /**
-     * IMI
-     */
-    @Autowired
-    private FileAuditRecordDataService fileAuditRecordDataService;
-    @Autowired
-    private org.motechproject.nms.imi.repository.CallDetailRecordDataService imiCallDetailRecordDataService;
 
     /**
      * Kilkari
      */
     @Autowired
-    private CallRetryDataService callRetryDataService;
-    @Autowired
-    private CallSummaryRecordDataService callSummaryRecordDataService;
-    @Autowired
-    private InboxCallDataDataService inboxCallDataDataService;
-    @Autowired
-    private InboxCallDetailRecordDataService inboxCallDetailRecordDataService;
-    @Autowired
-    private SubscriberDataService subscriberDataService;
-    @Autowired
     private SubscriptionService subscriptionService;
     @Autowired
     private SubscriptionPackDataService subscriptionPackDataService;
-    @Autowired
-    private SubscriptionPackMessageDataService subscriptionPackMessageDataService;
-    @Autowired
-    private SubscriptionDataService subscriptionDataService;
-    @Autowired
-    private SubscriptionErrorDataService subscriptionErrorDataService;
-    @Autowired
-    private MctsMotherDataService mctsMotherDataService;
-    @Autowired
-    private MctsChildDataService mctsChildDataService;
-
-    /**
-     * Mobile Academy
-     */
-    @Autowired
-    private CompletionRecordDataService completionRecordDataService;
-
-    /**
-     * Props
-     */
-    @Autowired
-    private DeployedServiceDataService deployedServiceDataService;
 
     /**
      * Region
      */
     @Autowired
-    private CircleDataService circleDataService;
-    @Autowired
     private DistrictDataService districtDataService;
     @Autowired
-    private HealthBlockDataService healthBlockDataService;
-    @Autowired
-    private HealthFacilityDataService healthFacilityDataService;
-    @Autowired
-    private HealthFacilityTypeDataService healthFacilityTypeDataService;
-    @Autowired
-    private HealthSubFacilityDataService healthSubFacilityDataService;
-    @Autowired
-    private NationalDefaultLanguageDataService nationalDefaultLanguageLocationDataService;
-    @Autowired
     private StateDataService stateDataService;
-    @Autowired
-    private TalukaDataService talukaDataService;
-    @Autowired
-    private VillageDataService villageDataService;
-    @Autowired
-    private LanguageDataService languageDataService;
 
-    /**
-     * CSV
-     */
-    @Autowired
-    private CsvAuditRecordDataService csvAuditRecordDataService;
-
-
-    /**
-     * MOTECH Alerts
-     */
-    @Autowired
-    private AlertsDataService alertsDataService;
 
     /**
      * SettingsFacade
@@ -235,121 +212,67 @@ public class TestingServiceImpl implements TestingService {
     }
 
 
-    private void deleteSubscriptions() {
-        LOGGER.debug("deleteSubscriptions");
-        SqlQueryExecution<List<Subscription>> subscriptionQueryExecution = new SqlQueryExecution<List<Subscription>>() {
+    private void truncateTable(final String table) {
+        SqlQueryExecution sqe = new SqlQueryExecution() {
 
             @Override
             public String getSqlQuery() {
-                return "DELETE FROM nms_subscriptions WHERE id >= 0;";
+                return String.format("DELETE FROM %s WHERE 1=1", table);
             }
 
             @Override
-            public List<Subscription> execute(Query query) {
+            public Object execute(Query query) {
                 query.execute();
                 return null;
             }
         };
-        subscriptionDataService.executeSQLQuery(subscriptionQueryExecution);
+        stateDataService.executeSQLQuery(sqe);
+    }
 
+
+    private void changeConstraints(final boolean disable) {
+        SqlQueryExecution sqe = new SqlQueryExecution() {
+
+            @Override
+            public String getSqlQuery() {
+                return String.format("SET FOREIGN_KEY_CHECKS = %d", disable ? 0 : 1);
+            }
+
+            @Override
+            public Object execute(Query query) {
+                query.execute();
+                return null;
+            }
+        };
+        stateDataService.executeSQLQuery(sqe);
+    }
+
+
+    private void disableConstraints() {
+        changeConstraints(true);
+    }
+
+
+    private void enableConstraints() {
+        changeConstraints(false);
     }
 
 
     @Override
-    public void clearDatabase() { //NOPMD NcssMethodCount
-
-        LOGGER.debug("clearDatabase()");
-
+    public void clearDatabase() {
         Timer timer = new Timer();
 
         if (!Boolean.parseBoolean(settingsFacade.getProperty(TESTING_ENVIRONMENT))) {
             throw new IllegalStateException(TESTING_SERVICE_FORBIDDEN);
         }
 
-        /**
-         * FLW
-         */
-        callContentDataService.deleteAll();
-        flwCallDetailRecordDataService.deleteAll();
-        int weeks = Integer.parseInt(settingsFacade.getProperty(WEEKS_TO_KEEP_INVALID_FLWS));
-        DateTime now = DateTime.now();
-        for (FrontLineWorker flw: frontLineWorkerDataService.retrieveAll()) {
-            if ((flw.getStatus() != FrontLineWorkerStatus.INVALID) ||
-                    (flw.getInvalidationDate() == null) ||
-                    (Math.abs(Weeks.weeksBetween(now, flw.getInvalidationDate()).getWeeks()) < weeks)) {
-                flw.setStatus(FrontLineWorkerStatus.INVALID);
-                flw.setInvalidationDate(DateTime.now().minusYears(1));
-                frontLineWorkerDataService.update(flw);
-            }
+        disableConstraints();
+
+        for (String table : TABLES) {
+            truncateTable(table);
         }
-        serviceUsageCapDataService.deleteAll();
-        callDetailRecordDataService.deleteAll();
-        frontLineWorkerDataService.deleteAll();
-        whitelistEntryDataService.deleteAll();
-        whitelistStateDataService.deleteAll();
 
-        /**
-         * IMI
-         */
-        fileAuditRecordDataService.deleteAll();
-        imiCallDetailRecordDataService.deleteAll();
-
-        /**
-         * Kilkari
-         */
-        deleteSubscriptions();
-        callRetryDataService.deleteAll();
-        callSummaryRecordDataService.deleteAll();
-        inboxCallDetailRecordDataService.deleteAll();
-        inboxCallDataDataService.deleteAll();
-        subscriberDataService.deleteAll();
-        subscriptionService.deleteAll();
-        subscriptionPackDataService.deleteAll();
-        subscriptionPackMessageDataService.deleteAll();
-        
-        subscriptionErrorDataService.deleteAll();
-        mctsChildDataService.deleteAll();
-        mctsMotherDataService.deleteAll();
-
-        /**
-         * Mobile Academy
-         */
-
-        completionRecordDataService.deleteAll();
-
-        /**
-         * Props
-         */
-
-        deployedServiceDataService.deleteAll();
-
-        /**
-         * Region
-         */
-
-        circleDataService.deleteAll();
-        districtDataService.deleteAll();
-        healthBlockDataService.deleteAll();
-        healthFacilityDataService.deleteAll();
-        healthFacilityTypeDataService.deleteAll();
-        healthSubFacilityDataService.deleteAll();
-        nationalDefaultLanguageLocationDataService.deleteAll();
-        languageDataService.deleteAll();
-        stateDataService.deleteAll();
-        talukaDataService.deleteAll();
-        villageDataService.deleteAll();
-
-        /**
-         * Alerts
-         */
-
-        alertsDataService.deleteAll();
-
-        /**
-         * CSV
-         */
-
-        csvAuditRecordDataService.deleteAll();
+        enableConstraints();
 
         LOGGER.debug("clearDatabase: {}", timer.time());
     }
