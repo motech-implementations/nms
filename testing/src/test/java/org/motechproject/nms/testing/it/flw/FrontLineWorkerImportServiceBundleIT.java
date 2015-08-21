@@ -372,10 +372,10 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         frontLineWorkerImportService.importData(reader);
     }
 
-    private void assertFLW(FrontLineWorker flw, String mctsFlwId, long contactNumber, String name, String districtName, String languageLocationCode) {
+    private void assertFLW(FrontLineWorker flw, String mctsFlwId, Long contactNumber, String name, String districtName, String languageLocationCode) {
         assertNotNull(flw);
         assertEquals(mctsFlwId, flw.getMctsFlwId());
-        assertEquals(contactNumber, (long) flw.getContactNumber());
+        assertEquals(contactNumber, null != flw.getContactNumber() ? (long) flw.getContactNumber() : null);
         assertEquals(name, flw.getName());
         assertEquals(districtName, null != flw.getDistrict() ? flw.getDistrict().getName() : null);
         assertEquals(languageLocationCode, null != flw.getLanguage() ? flw.getLanguage().getCode() : null);
@@ -465,7 +465,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         frontLineWorkerService.update(flw);
         frontLineWorkerService.delete(flw);
 
-        assertFLW(flw, "#0", 1234567890L, "Test MSISDN", "District 12", language1.getCode());
+        assertFLW(flw, "#0", null, "Test MSISDN", "District 12", language1.getCode());
 
         List<CsvAuditRecord> auditRecords = csvAuditRecordDataService.retrieveAll();
         assertNotNull(auditRecords);

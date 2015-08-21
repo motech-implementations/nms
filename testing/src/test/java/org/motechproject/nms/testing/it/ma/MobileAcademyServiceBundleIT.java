@@ -9,6 +9,9 @@ import org.motechproject.event.MotechEvent;
 import org.motechproject.mtraining.domain.Bookmark;
 import org.motechproject.mtraining.repository.ActivityDataService;
 import org.motechproject.mtraining.repository.BookmarkDataService;
+import org.motechproject.nms.flw.domain.FrontLineWorker;
+import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
+import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.mobileacademy.domain.CompletionRecord;
 import org.motechproject.nms.mobileacademy.domain.NmsCourse;
 import org.motechproject.nms.mobileacademy.dto.MaBookmark;
@@ -18,6 +21,15 @@ import org.motechproject.nms.mobileacademy.repository.CompletionRecordDataServic
 import org.motechproject.nms.mobileacademy.repository.NmsCourseDataService;
 import org.motechproject.nms.mobileacademy.service.CourseNotificationService;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
+import org.motechproject.nms.region.domain.Circle;
+import org.motechproject.nms.region.domain.District;
+import org.motechproject.nms.region.domain.Language;
+import org.motechproject.nms.region.domain.State;
+import org.motechproject.nms.region.repository.CircleDataService;
+import org.motechproject.nms.region.repository.LanguageDataService;
+import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.service.DistrictService;
+import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.ops4j.pax.exam.ExamFactory;
@@ -68,6 +80,24 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     @Inject
     CourseNotificationService courseNotificationService;
 
+    @Inject
+    LanguageDataService languageDataService;
+
+    @Inject
+    StateDataService stateDataService;
+
+    @Inject
+    CircleDataService circleDataService;
+
+    @Inject
+    DistrictService districtService;
+
+    @Inject
+    FrontLineWorkerService frontLineWorkerService;
+
+    @Inject
+    TestingService testingService;
+
     private static final String VALID_COURSE_NAME = "MobileAcademyCourse";
 
     private static final String FINAL_BOOKMARK = "COURSE_COMPLETED";
@@ -80,6 +110,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         activityDataService.deleteAll();
         bookmarkDataService.deleteAll();
         nmsCourseDataService.deleteAll();
+        testingService.clearDatabase();
     }
 
     @Test
@@ -349,14 +380,56 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
 
     @Test
     public void testNotification() {
+        // Setup language/location and flw for notification
+        FrontLineWorker flw = frontLineWorkerService.getByContactNumber(2111113333L);
+        if (flw != null) {
+            flw.setStatus(FrontLineWorkerStatus.INVALID);
+            frontLineWorkerService.update(flw);
+            frontLineWorkerService.delete(flw);
+        }
 
-        long callingNumber = 9876543211L;
+        createLanguageLocationData();
+        State sampleState = stateDataService.findByCode(1L);
+        Language language = languageDataService.findByCode("50");
+        flw = new FrontLineWorker("Test Worker", 2111113333L);
+        flw.setLanguage(language);
+        flw.setState(sampleState);
+        flw.setDistrict(sampleState.getDistricts().get(0));
+        frontLineWorkerService.add(flw);
+        flw = frontLineWorkerService.getByContactNumber(2111113333L);
+        assertNotNull(flw);
+
+        long callingNumber = 2111113333L;
         MotechEvent event = new MotechEvent();
         event.getParameters().put("callingNumber", callingNumber);
+        event.getParameters().put("smsContent", "FooBar");
         CompletionRecord cr = new CompletionRecord(callingNumber, 35, false, 1);
         completionRecordDataService.create(cr);
         courseNotificationService.sendSmsNotification(event);
         // TODO: cannot check the notification status yet since we don't have a real IMI url to hit
+    }
+
+    private void createLanguageLocationData() {
+        Language ta = languageDataService.findByCode("50");
+        if (ta == null) {
+            ta = languageDataService.create(new Language("50", "hin"));
+        }
+
+        State state = stateDataService.findByCode(1L);
+
+        if (state == null) {
+            District district = new District();
+            district.setName("District 1");
+            district.setRegionalName("District 1");
+            district.setLanguage(ta);
+            district.setCode(1L);
+
+            state = new State();
+            state.setName("State 1");
+            state.setCode(1L);
+            state.getDistricts().add(district);
+            stateDataService.create(state);
+        }
     }
 
     /**

@@ -58,11 +58,12 @@ public class SmsNotificationServiceImpl implements SmsNotificationService {
      * Used to initiate sms workflow with IMI
      *
      * @param callingNumber phone number to send sms to
+     * @param content sms content to send
      */
     @Override
-    public boolean sendSms(Long callingNumber) {
+    public boolean sendSms(Long callingNumber, String content) {
 
-        HttpPost httpPost = prepareSmsRequest(callingNumber);
+        HttpPost httpPost = prepareSmsRequest(callingNumber, content);
 
         if (httpPost == null) {
             LOGGER.error("Unable to build POST request for SMS notification");
@@ -76,19 +77,18 @@ public class SmsNotificationServiceImpl implements SmsNotificationService {
         return true;
     }
 
-    private HttpPost prepareSmsRequest(Long callingNumber) {
+    private HttpPost prepareSmsRequest(Long callingNumber, String content) {
 
         String senderId = settingsFacade.getProperty(SMS_SENDER_ID);
         String endpoint = settingsFacade.getProperty(SMS_NOTIFICATION_URL);
-        String messageContent = settingsFacade.getProperty(SMS_MESSAGE_CONTENT);
         String callbackEndpoint = settingsFacade.getProperty(CALLBACK_URL);
 
-        if (senderId == null || endpoint == null || messageContent == null || callbackEndpoint == null) {
+        if (senderId == null || endpoint == null || content == null || callbackEndpoint == null) {
 
             Map<String, String> alertData = new HashMap<>();
             alertData.put(SMS_SENDER_ID, senderId);
             alertData.put(SMS_NOTIFICATION_URL, endpoint);
-            alertData.put(SMS_MESSAGE_CONTENT, messageContent);
+            alertData.put(SMS_MESSAGE_CONTENT, content);
             alertData.put(CALLBACK_URL, callbackEndpoint);
 
             LOGGER.error("Unable to find sms settings. Check IMI sms gateway settings");
@@ -115,7 +115,7 @@ public class SmsNotificationServiceImpl implements SmsNotificationService {
         }
         template = template.replace("<phoneNumber>", String.valueOf(callingNumber));
         template = template.replace("<senderId>", senderId);
-        template = template.replace("<messageContent>", messageContent);
+        template = template.replace("<messageContent>", content);
         template = template.replace("<notificationUrl>", callbackEndpoint);
         template = template.replace("<correlationId>", DateTime.now().toString());
 

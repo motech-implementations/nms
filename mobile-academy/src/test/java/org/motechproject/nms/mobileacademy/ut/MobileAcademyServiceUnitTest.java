@@ -14,6 +14,8 @@ import org.motechproject.mtraining.domain.Bookmark;
 import org.motechproject.mtraining.service.ActivityService;
 import org.motechproject.mtraining.service.BookmarkService;
 import org.motechproject.mtraining.service.MTrainingService;
+import org.motechproject.nms.flw.domain.FrontLineWorker;
+import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.imi.service.SmsNotificationService;
 import org.motechproject.nms.mobileacademy.domain.CompletionRecord;
 import org.motechproject.nms.mobileacademy.domain.NmsCourse;
@@ -24,6 +26,9 @@ import org.motechproject.nms.mobileacademy.repository.NmsCourseDataService;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
 import org.motechproject.nms.mobileacademy.service.impl.CourseNotificationServiceImpl;
 import org.motechproject.nms.mobileacademy.service.impl.MobileAcademyServiceImpl;
+import org.motechproject.nms.region.domain.District;
+import org.motechproject.nms.region.domain.Language;
+import org.motechproject.nms.region.domain.State;
 import org.motechproject.scheduler.contract.RepeatingSchedulableJob;
 import org.motechproject.scheduler.service.MotechSchedulerService;
 import org.motechproject.server.config.SettingsFacade;
@@ -35,6 +40,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -68,6 +74,9 @@ public class MobileAcademyServiceUnitTest {
     private ActivityService activityService;
 
     @Mock
+    private FrontLineWorkerService frontLineWorkerService;
+
+    @Mock
     private NmsCourseDataService nmsCourseDataService;
 
     @Mock
@@ -98,10 +107,11 @@ public class MobileAcademyServiceUnitTest {
         initMocks(this);
         nmsCourseDataService.deleteAll();
         when(settingsFacade.getRawConfig("nmsCourse.json")).thenReturn(getFileInputStream("nmsCourseTest.json"));
-        mobileAcademyService = new MobileAcademyServiceImpl(bookmarkService, activityService, nmsCourseDataService,
-                completionRecordDataService, eventRelay, settingsFacade, alertService);
+        mobileAcademyService = new MobileAcademyServiceImpl(bookmarkService, activityService,
+                nmsCourseDataService, completionRecordDataService, eventRelay, settingsFacade, alertService);
         courseNotificationService = new CourseNotificationServiceImpl(completionRecordDataService,
-                smsNotificationService, settingsFacade, schedulerService);
+                smsNotificationService, settingsFacade, activityService, schedulerService, alertService,
+                frontLineWorkerService);
         validator = Validation.buildDefaultValidatorFactory().getValidator();
         when(activityService.createActivity(any(ActivityRecord.class))).thenReturn(new ActivityRecord());
     }
@@ -242,9 +252,23 @@ public class MobileAcademyServiceUnitTest {
         when(completionRecordDataService.findRecordByCallingNumber(anyLong())).thenReturn(cr);
         when(settingsFacade.getProperty(anyString())).thenReturn("1");
         doNothing().when(schedulerService).safeScheduleRepeatingJob(any(RepeatingSchedulableJob.class));
+        when(frontLineWorkerService.getByContactNumber(anyLong())).thenReturn(getFrontLineWorker());
         courseNotificationService.updateSmsStatus(event);
         assertTrue(cr.getLastDeliveryStatus().equals("DeliveryImpossible"));
         assertEquals(1, cr.getNotificationRetryCount());
+    }
+
+    private FrontLineWorker getFrontLineWorker() {
+        FrontLineWorker flw = new FrontLineWorker("Unit Test Babu", 12L);
+        State state = new State("TN", 333L);
+        District district = new District();
+        district.setState(state);
+        district.setCode(444L);
+        state.setDistricts(Arrays.asList(district));
+        flw.setState(state);
+        flw.setDistrict(district);
+        flw.setLanguage(new Language("hin", "Hindi"));
+        return flw;
     }
 
     @Test
