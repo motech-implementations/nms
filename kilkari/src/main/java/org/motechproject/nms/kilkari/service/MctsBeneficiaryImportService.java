@@ -8,7 +8,7 @@ import java.io.Reader;
  */
 public interface MctsBeneficiaryImportService {
 
-    void importMotherData(Reader reader) throws IOException;
+    int importMotherData(Reader reader) throws IOException;
 
-    void importChildData(Reader reader) throws IOException;
+    int importChildData(Reader reader) throws IOException;
 }
