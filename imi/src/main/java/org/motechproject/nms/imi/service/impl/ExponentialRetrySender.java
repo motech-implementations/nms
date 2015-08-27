@@ -3,7 +3,9 @@ package org.motechproject.nms.imi.service.impl;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.ssl.SSLContexts;
 import org.apache.http.util.EntityUtils;
 import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.alerts.domain.AlertStatus;
@@ -14,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
+import javax.net.ssl.HttpsURLConnection;
 import java.io.IOException;
 
 /**
@@ -69,7 +72,14 @@ public class ExponentialRetrySender {
 
         while (count < maxRetryCount) {
             try {
-                HttpClient httpClient = HttpClients.createDefault();
+                SSLConnectionSocketFactory f = new SSLConnectionSocketFactory(
+                                                        SSLContexts.createDefault(),
+                                                        new String[]{"TLSv1", "TLSv1.1", "TLSv1.2"},
+                                                        null,
+                                                        HttpsURLConnection.getDefaultHostnameVerifier());
+
+                HttpClient httpClient = HttpClients.custom().setSSLSocketFactory(f).build();
+
                 HttpResponse response = httpClient.execute(httpPost);
                 int responseCode = response.getStatusLine().getStatusCode();
                 if (responseCode == expectedStatus) {
