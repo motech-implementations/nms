@@ -1,19 +1,5 @@
 package org.motechproject.nms.testing.it.region;
 
-import static org.junit.Assert.*;
-import static org.motechproject.nms.testing.it.utils.RegionHelper.createCircle;
-import static org.motechproject.nms.testing.it.utils.RegionHelper.createDistrict;
-import static org.motechproject.nms.testing.it.utils.RegionHelper.createState;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.Reader;
-import java.io.StringReader;
-import java.util.Arrays;
-import java.util.Collections;
-
-import javax.inject.Inject;
-
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -46,6 +32,22 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
+
+import javax.inject.Inject;
+import java.io.File;
+import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
+import java.util.Arrays;
+import java.util.Collections;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createCircle;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createDistrict;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createState;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerSuite.class)
@@ -357,8 +359,8 @@ public class LanguageLocationCodesImportServiceBundleIT extends BasePaxIT {
                 "NORTH DISTRICT");
 
         // assert circle for default LLC
-        assertEquals("HINDI", upWestCircle.getDefaultLanguage().getName());
-        assertEquals("ENGLISH", ncrCircle.getDefaultLanguage().getName());
+        assertEquals("HINDI", ((Language)circleDataService.getDetachedField(upWestCircle, "defaultLanguage")).getName());
+        assertEquals("ENGLISH", ((Language)circleDataService.getDetachedField(ncrCircle, "defaultLanguage")).getName());
         
         // assert district for LLC
         assertEquals("HINDI", agraDistrict.getLanguage().getName());

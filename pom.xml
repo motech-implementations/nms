@@ -15,7 +15,7 @@
     <properties>
         <motech.groupId>org.motechproject</motech.groupId>
         <motech.version>0.27-SNAPSHOT</motech.version>
-        <nms.version>0.1-SNAPSHOT</nms.version>
+        <nms.version>${project.version}}</nms.version>
 
         <jasmine.server.port>8234</jasmine.server.port>
 

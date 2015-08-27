@@ -9,6 +9,7 @@
     "priority": 2,
     "rest": true,
     "origin": "NMS_MODULE_TESTING",
+    "version": "all",
     "methodsRequired": [
       "ANY"
     ]
