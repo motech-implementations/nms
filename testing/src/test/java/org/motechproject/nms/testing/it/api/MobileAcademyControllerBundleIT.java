@@ -24,7 +24,6 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.alerts.contract.AlertCriteria;
@@ -38,12 +37,22 @@ import org.motechproject.nms.api.web.contract.mobileAcademy.SaveBookmarkRequest;
 import org.motechproject.nms.api.web.contract.mobileAcademy.SmsStatusRequest;
 import org.motechproject.nms.api.web.contract.mobileAcademy.sms.DeliveryStatus;
 import org.motechproject.nms.api.web.contract.mobileAcademy.sms.RequestData;
+import org.motechproject.nms.flw.domain.FrontLineWorker;
+import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.imi.service.SettingsService;
 import org.motechproject.nms.mobileacademy.domain.CompletionRecord;
 import org.motechproject.nms.mobileacademy.domain.NmsCourse;
 import org.motechproject.nms.mobileacademy.dto.MaCourse;
 import org.motechproject.nms.mobileacademy.repository.CompletionRecordDataService;
 import org.motechproject.nms.mobileacademy.repository.NmsCourseDataService;
+import org.motechproject.nms.region.domain.Circle;
+import org.motechproject.nms.region.domain.District;
+import org.motechproject.nms.region.domain.Language;
+import org.motechproject.nms.region.domain.State;
+import org.motechproject.nms.region.repository.CircleDataService;
+import org.motechproject.nms.region.repository.LanguageDataService;
+import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.testing.it.api.utils.RequestBuilder;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.server.config.SettingsFacade;
@@ -76,9 +85,26 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
     @Inject
     private NmsCourseDataService nmsCourseDataService;
 
+    @Inject
+    private FrontLineWorkerService frontLineWorkerService;
+
+    @Inject
+    private LanguageDataService languageDataService;
+
+    @Inject
+    private StateDataService stateDataService;
+
+    @Inject
+    private CircleDataService circleDataService;
+
+    @Inject
+    private DistrictService districtService;
+
     private static final String COURSE_NAME = "MobileAcademyCourse";
 
     private static final String FINAL_BOOKMARK = "COURSE_COMPLETED";
+
+    private State sampleState;
 
     public static final int MILLISECONDS_PER_SECOND = 1000;
 
@@ -107,6 +133,27 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
     public void restore() {
         settingsFacade.setProperty(SMS_NOTIFICATION_URL, oldSmsEndpoint);
     }
+
+    private void createLanguageLocationData() {
+        Language ta = languageDataService.create(new Language("50", "tamil"));
+
+        District district = new District();
+        district.setName("District 1");
+        district.setRegionalName("District 1");
+        district.setLanguage(ta);
+        district.setCode(1L);
+
+        State state = new State();
+        state.setName("State 1");
+        state.setCode(1L);
+        state.getDistricts().add(district);
+        sampleState = stateDataService.create(state);
+
+        Circle circle = new Circle("AA");
+        circle.setDefaultLanguage(ta);
+        circleDataService.create(circle);
+    }
+
 
     @Test
     public void testBookmarkBadCallingNumber() throws IOException, InterruptedException {
@@ -1269,6 +1316,18 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT521() throws IOException, InterruptedException {
+        createLanguageLocationData();
+
+        District district = districtService.findByStateAndCode(sampleState, 1L);
+        Language language = languageDataService.findByCode("50");
+
+        FrontLineWorker flw = new FrontLineWorker("shanti", 1234567890l);
+        frontLineWorkerService.add(flw);
+        flw.setState(sampleState);
+        flw.setDistrict(district);
+        flw.setLanguage(language);
+        frontLineWorkerService.add(flw);
+
         String newSmsEndPoint = String.format(
                 "http://localhost:%d/testing/sendSMS/outbound",
                 TestContext.getJettyPort());
