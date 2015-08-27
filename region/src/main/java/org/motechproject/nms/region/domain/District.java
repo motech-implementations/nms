@@ -144,6 +144,7 @@ public class District extends MdsEntity {
         return "District{" +
                 "name='" + name + '\'' +
                 ", code=" + code +
+                ", state=" + state +
                 '}';
     }
 }

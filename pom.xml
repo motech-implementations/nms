@@ -9,13 +9,13 @@
     <name>National Motech System</name>
 
     <description>
-        MOTECH is a software system from Grameen Foundation that harnesses the ubiquity of mobile phones to deliver and receive information from patient and caregivers. This is the NMS implementation scale-up 
+        MOTECH is a software system from Grameen Foundation that harnesses the ubiquity of mobile phones to deliver and receive information from patient and caregivers. This is the NMS implementation scale-up
     </description>
 
     <properties>
         <motech.groupId>org.motechproject</motech.groupId>
         <motech.version>0.27-SNAPSHOT</motech.version>
-        <nms.version>${project.version}}</nms.version>
+        <nms.version>0.1-SNAPSHOT</nms.version>
 
         <jasmine.server.port>8234</jasmine.server.port>
 

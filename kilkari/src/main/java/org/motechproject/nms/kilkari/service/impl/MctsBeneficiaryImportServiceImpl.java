@@ -25,7 +25,6 @@ import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
-import org.motechproject.nms.kilkari.util.Timer;
 import org.motechproject.nms.region.exception.InvalidLocationException;
 import org.motechproject.nms.region.service.LocationService;
 import org.slf4j.Logger;
@@ -79,8 +78,6 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MctsBeneficiaryImportServiceImpl.class);
 
-    private static final int PROGRESS_INTERVAL = 100;
-
     private SubscriptionPack pregnancyPack;
     private SubscriptionPack childPack;
 
@@ -100,7 +97,6 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         this.subscriberService = subscriberService;
     }
 
-
     /**
      * Expected file format:
      * - any number of empty lines
@@ -110,9 +106,8 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
      */
     @Override
     @Transactional
-    public int importMotherData(Reader reader) throws IOException {
+    public void importMotherData(Reader reader) throws IOException {
         pregnancyPack = subscriptionPackDataService.byType(SubscriptionPackType.PREGNANCY);
-        int count = 0;
 
         BufferedReader bufferedReader = new BufferedReader(reader);
         readHeader(bufferedReader); // ignoring header as all interesting data is in the tab separated rows
@@ -124,30 +119,19 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
         try {
             Map<String, Object> record;
-            Timer timer = new Timer("mom", "moms");
             while (null != (record = csvImporter.read())) {
                 importMotherRecord(record);
-                count++;
-                if (count % PROGRESS_INTERVAL == 0) {
-                    LOGGER.debug("Imported {}", timer.frequency(count));
-                }
-            }
-            if (count % PROGRESS_INTERVAL != 0) {
-                LOGGER.debug("Imported {}", timer.frequency(count));
             }
         } catch (ConstraintViolationException e) {
             throw new CsvImportDataException(String.format("MCTS mother import error, constraints violated: %s",
                     ConstraintViolationUtils.toString(e.getConstraintViolations())), e);
         }
-
-        return count;
     }
 
     @Override
     @Transactional
-    public int importChildData(Reader reader) throws IOException {
+    public void importChildData(Reader reader) throws IOException {
         childPack = subscriptionPackDataService.byType(SubscriptionPackType.CHILD);
-        int count = 0;
 
         BufferedReader bufferedReader = new BufferedReader(reader);
         readHeader(bufferedReader); // ignoring header as all interesting data in tab separated rows
@@ -161,14 +145,11 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             Map<String, Object> record;
             while (null != (record = csvImporter.read())) {
                 importChildRecord(record);
-                count++;
             }
         } catch (ConstraintViolationException e) {
             throw new CsvImportDataException(String.format("MCTS child import error, constraints violated: %s",
                     ConstraintViolationUtils.toString(e.getConstraintViolations())), e);
         }
-
-        return count;
     }
 
     private void importMotherRecord(Map<String, Object> record) {
@@ -327,18 +308,18 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         mapping.put(LMP, new Optional(MctsBeneficiaryUtils.DATE_BY_STRING));
         mapping.put(MOTHER_DOB, new Optional(MctsBeneficiaryUtils.DATE_BY_STRING));
         mapping.put(ABORTION, new Optional(new GetInstanceByString<Boolean>() {
-             @Override
-             public Boolean retrieve(String value) {
-                 String trimmedValue = value.trim();
-                 return "Spontaneous".equals(trimmedValue) || "MTP<12 Weeks".equals(trimmedValue) ||
-                         "MTP>12 Weeks".equals(trimmedValue); // "None" or blank indicates no abortion/miscarriage
-             }
+            @Override
+            public Boolean retrieve(String value) {
+                String trimmedValue = value.trim();
+                return "Spontaneous".equals(trimmedValue) || "MTP<12 Weeks".equals(trimmedValue) ||
+                        "MTP>12 Weeks".equals(trimmedValue); // "None" or blank indicates no abortion/miscarriage
+            }
         }));
         mapping.put(STILLBIRTH, new Optional(new GetInstanceByString<Boolean>() {
             @Override
             public Boolean retrieve(String value) {
                 return "0".equals(value.trim()); // This column indicates the number of live births that resulted from this pregnancy.
-                                                 // 0 implies stillbirth, other values (including blank) do not.
+                // 0 implies stillbirth, other values (including blank) do not.
             }
         }));
         mapping.put(DEATH, new Optional(new GetInstanceByString<Boolean>() {

@@ -213,9 +213,6 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
         assertNull(record);
     }
 
-    /**
-     * NMS_FT_515 : To verify that status of Active flw is set to "Invalid" successfully
-     */
     @Test
     public void testFrontLineWorkerUpdate() {
         createLanguageLocationData();
@@ -337,49 +334,5 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
         // assert flW not deleted
         flw = frontLineWorkerService.getByFlwId("FlwId");
         assertNotNull(flw);
-    }
-
-    /**
-     * To verify that status of Anonymous flw is set to "Invalid" successfully
-     */
-    @Test
-    public void verifyFT514() {
-        FrontLineWorker flw = new FrontLineWorker("Test Worker", 2111111111L);
-        flw.setStatus(FrontLineWorkerStatus.ANONYMOUS);
-        frontLineWorkerService.add(flw);
-
-        flw = frontLineWorkerService.getByContactNumber(2111111111L);
-        flw.setStatus(FrontLineWorkerStatus.INVALID);
-        flw.setInvalidationDate(new DateTime().withDate(2011, 8, 1));
-        frontLineWorkerService.update(flw);
-
-        flw = frontLineWorkerService.getById(flw.getId());
-        assertEquals(FrontLineWorkerStatus.INVALID, flw.getStatus());
-        assertNull(flw.getContactNumber());
-    }
-
-    /**
-     * To verify that status of Inactive flw is set to "Invalid" successfully
-     */
-    @Test
-    public void verifyFT516() {
-        createLanguageLocationData();
-
-        District district = districtService.findByStateAndCode(sampleState, 1L);
-        Language language = languageDataService.findByCode("50");
-        FrontLineWorker flw = new FrontLineWorker("Test Worker", 2111111111L);
-        flw.setState(sampleState);
-        flw.setDistrict(district);
-        flw.setLanguage(language);
-        frontLineWorkerService.add(flw);
-
-        flw = frontLineWorkerService.getByContactNumber(2111111111L);
-        flw.setStatus(FrontLineWorkerStatus.INVALID);
-        flw.setInvalidationDate(new DateTime().withDate(2011, 8, 1));
-        frontLineWorkerService.update(flw);
-
-        flw = frontLineWorkerService.getById(flw.getId());
-        assertEquals(FrontLineWorkerStatus.INVALID, flw.getStatus());
-        assertNull(flw.getContactNumber());
     }
 }

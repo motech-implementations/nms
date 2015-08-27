@@ -248,9 +248,6 @@ public class CsrServiceImpl implements CsrService {
 
 
     private CallSummaryRecord aggregateSummaryRecord(CallSummaryRecordDto csr) {
-
-        LOGGER.debug("aggregateSummaryRecord({})", csr.getRequestId().toString());
-
         CallSummaryRecord record = csrDataService.findByRequestId(csr.getRequestId().toString());
         if (record == null) {
             record = csrDataService.create(new CallSummaryRecord(

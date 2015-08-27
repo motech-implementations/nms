@@ -31,7 +31,6 @@ import org.motechproject.nms.testing.it.region.LanguageServiceBundleIT;
 import org.motechproject.nms.testing.it.region.LocationDataImportServiceBundleIT;
 import org.motechproject.nms.testing.it.region.LocationServiceBundleIT;
 import org.motechproject.nms.testing.it.region.NationalDefaultLanguageLocationBundleIT;
-import org.motechproject.nms.testing.it.testing.BundleIT;
 import org.motechproject.nms.testing.it.tracking.TrackChangesBundleIT;
 import org.motechproject.nms.testing.it.tracking.TrackManyToManyChangesBundleIT;
 import org.motechproject.nms.testing.it.tracking.TrackOneToManyChangesBundleIT;
@@ -95,11 +94,6 @@ import org.motechproject.nms.testing.it.tracking.TrackOneToManyChangesBundleIT;
     LocationDataImportServiceBundleIT.class,
     LanguageLocationCodesImportServiceBundleIT.class,
     LanguageServiceBundleIT.class,
-
-    /**
-     * Testing
-     */
-    BundleIT.class,
 
     /**
      * Tracking
