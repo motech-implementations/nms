@@ -16,6 +16,7 @@ import org.junit.runner.RunWith;
 import org.motechproject.nms.api.web.contract.BadRequest;
 import org.motechproject.nms.api.web.contract.FlwUserResponse;
 import org.motechproject.nms.api.web.contract.UserLanguageRequest;
+import org.motechproject.nms.api.web.contract.UserResponse;
 import org.motechproject.nms.api.web.contract.kilkari.KilkariUserResponse;
 import org.motechproject.nms.flw.domain.CallDetailRecord;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
@@ -71,6 +72,7 @@ import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionCallbackWithoutResult;
 
 import javax.inject.Inject;
+import javax.validation.constraints.AssertTrue;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -3324,7 +3326,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         circleDataService.update(circle);
         
         deployedServiceDataService.create(new
-        DeployedService(rh.karnatakaState(), Service.MOBILE_ACADEMY));
+                DeployedService(rh.karnatakaState(), Service.MOBILE_ACADEMY));
 
         HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
                 true, "1200000001", // callingNumber
@@ -3692,7 +3694,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         );
 
         String expectedJsonResponse = createFlwUserResponseJson(rh
-                .kannadaLanguage().getCode(), // defaultLanguageLocationCode=circle default
+                        .kannadaLanguage().getCode(), // defaultLanguageLocationCode=circle default
                 rh.tamilLanguage().getCode(), // locationCode
                 null, // allowedLanguageLocationCodes
                 0L, // currentUsageInPulses
@@ -5317,6 +5319,33 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         FrontLineWorker flw = frontLineWorkerService.getByContactNumber(1200000000l);
         assertEquals(FrontLineWorkerStatus.ANONYMOUS, flw.getStatus());
+    }
+
+    @Test
+    public void testGetAllLanguages() throws IOException, InterruptedException {
+        rh.createIfLanguageNotExists("HIN", "Hindi");
+        rh.createIfLanguageNotExists("PUN", "Punjabi");
+        rh.createIfLanguageNotExists("BHO", "Bhojpuri");
+        rh.createIfLanguageNotExists("TAM", "Tamizh");
+        rh.createIfLanguageNotExists("MAL", "Malayalam");
+        rh.createIfLanguageNotExists("TEL", "Telugu");
+        rh.createIfLanguageNotExists("GUJ", "Gujarati");
+        rh.createIfLanguageNotExists("KAN", "Kannada");
+        rh.createIfLanguageNotExists("MAR", "Marathi");
+
+        HttpGet httpGet = createHttpGet(
+                true, "kilkari",        //service
+                true, "9899798997",    //callingNumber
+                true, "OP",             //operator
+                false, rh.delhiCircle().getName(),//circle
+                true, "123456789012345" //callId
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+
+        KilkariUserResponse userResponse = new ObjectMapper().readValue(EntityUtils.toString(response.getEntity()), KilkariUserResponse.class);
+        assertTrue(userResponse.getAllowedLanguageLocationCodes().size() > 8);
     }
 
 }
