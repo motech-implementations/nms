@@ -200,6 +200,16 @@ public class RegionHelper {
         return l;
     }
 
+    public Language createIfLanguageNotExists(String languageCode, String languageName) {
+        Language l = languageDataService.findByName(languageName);
+
+        if (l == null) {
+            l = languageDataService.create(new Language(languageCode, languageName));
+        }
+
+        return l;
+    }
+
     public String airtelOperator()
     {
         return "A";

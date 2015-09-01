@@ -217,7 +217,7 @@ public class TestingServiceImpl implements TestingService {
 
             @Override
             public String getSqlQuery() {
-                return String.format("DELETE FROM %s WHERE 1=1", table);
+                return String.format("DELETE FROM %s", table);
             }
 
             @Override
