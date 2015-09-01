@@ -100,6 +100,8 @@ public class TestingServiceImpl implements TestingService {
         "NMS_KK_SUMMARY_RECORDS__TRASH_STATUSSTATS",
         "nms_call_content",
         "nms_call_content__TRASH",
+        "nms_states_join_circles",
+        "nms_states_join_circles__TRASH",
         "nms_circles",
         "nms_circles__TRASH",
         "nms_csv_audit_records",
@@ -134,8 +136,6 @@ public class TestingServiceImpl implements TestingService {
         "nms_kk_retry_records__TRASH",
         "nms_kk_summary_records",
         "nms_kk_summary_records__TRASH",
-        "nms_languages",
-        "nms_languages__TRASH",
         "nms_ma_completion_records",
         "nms_ma_completion_records__TRASH",
         "nms_ma_course",
@@ -151,10 +151,10 @@ public class TestingServiceImpl implements TestingService {
         "nms_service_usage_caps__TRASH",
         "nms_states",
         "nms_states__TRASH",
-        "nms_states_join_circles",
-        "nms_states_join_circles__TRASH",
         "nms_subscribers",
         "nms_subscribers__TRASH",
+        "nms_languages",
+        "nms_languages__TRASH",
         "nms_subscription_errors",
         "nms_subscription_errors__TRASH",
         "nms_subscription_pack_messages",
@@ -230,34 +230,6 @@ public class TestingServiceImpl implements TestingService {
     }
 
 
-    private void changeConstraints(final boolean disable) {
-        SqlQueryExecution sqe = new SqlQueryExecution() {
-
-            @Override
-            public String getSqlQuery() {
-                return String.format("SET FOREIGN_KEY_CHECKS = %d", disable ? 0 : 1);
-            }
-
-            @Override
-            public Object execute(Query query) {
-                query.execute();
-                return null;
-            }
-        };
-        stateDataService.executeSQLQuery(sqe);
-    }
-
-
-    private void disableConstraints() {
-        changeConstraints(true);
-    }
-
-
-    private void enableConstraints() {
-        changeConstraints(false);
-    }
-
-
     @Override
     public void clearDatabase() {
         Timer timer = new Timer();
@@ -266,13 +238,9 @@ public class TestingServiceImpl implements TestingService {
             throw new IllegalStateException(TESTING_SERVICE_FORBIDDEN);
         }
 
-        disableConstraints();
-
         for (String table : TABLES) {
             truncateTable(table);
         }
-
-        enableConstraints();
 
         LOGGER.debug("clearDatabase: {}", timer.time());
     }
