@@ -3,6 +3,7 @@ package org.motechproject.nms.testing.service.impl;
 import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
 import org.motechproject.mds.query.SqlQueryExecution;
+import org.motechproject.metrics.service.Timer;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
@@ -13,7 +14,6 @@ import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.testing.service.TestingService;
-import org.motechproject.nms.testing.util.Timer;
 import org.motechproject.server.config.SettingsFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -212,6 +212,34 @@ public class TestingServiceImpl implements TestingService {
     }
 
 
+    private void changeConstraints(final boolean disable) {
+        SqlQueryExecution sqe = new SqlQueryExecution() {
+
+            @Override
+            public String getSqlQuery() {
+                return String.format("SET FOREIGN_KEY_CHECKS = %d", disable ? 0 : 1);
+            }
+
+            @Override
+            public Object execute(Query query) {
+                query.execute();
+                return null;
+            }
+        };
+        stateDataService.executeSQLQuery(sqe);
+    }
+
+
+    private void disableConstraints() {
+        changeConstraints(true);
+    }
+
+
+    private void enableConstraints() {
+        changeConstraints(false);
+    }
+
+
     private void truncateTable(final String table) {
         SqlQueryExecution sqe = new SqlQueryExecution() {
 
@@ -238,9 +266,13 @@ public class TestingServiceImpl implements TestingService {
             throw new IllegalStateException(TESTING_SERVICE_FORBIDDEN);
         }
 
+        disableConstraints();
+
         for (String table : TABLES) {
             truncateTable(table);
         }
+
+        enableConstraints();
 
         LOGGER.debug("clearDatabase: {}", timer.time());
     }

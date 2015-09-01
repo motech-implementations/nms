@@ -151,6 +151,13 @@
             <version>${motech.version}</version>
         </dependency>
 
+        <!-- Metrics -->
+        <dependency>
+            <groupId>org.motechproject</groupId>
+            <artifactId>metrics</artifactId>
+            <version>${motech.version}</version>
+        </dependency>
+
         <!-- Settings -->
         <dependency>
             <groupId>org.motechproject</groupId>
