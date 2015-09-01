@@ -5335,10 +5335,10 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         HttpGet httpGet = createHttpGet(
                 true, "kilkari",        //service
-                true, "9899798997",    //callingNumber
-                true, "OP",             //operator
-                false, rh.delhiCircle().getName(),//circle
-                true, "123456789012345" //callId
+                true, "7210501629",    //callingNumber
+                true, "9",             //operator
+                true, "99",//circle
+                true, "958090913011304" //callId
         );
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
