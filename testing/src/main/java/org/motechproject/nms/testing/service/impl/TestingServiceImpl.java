@@ -3,6 +3,7 @@ package org.motechproject.nms.testing.service.impl;
 import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
 import org.motechproject.mds.query.SqlQueryExecution;
+import org.motechproject.metrics.service.Timer;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
@@ -13,7 +14,6 @@ import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.testing.service.TestingService;
-import org.motechproject.nms.testing.util.Timer;
 import org.motechproject.server.config.SettingsFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,6 +75,9 @@ public class TestingServiceImpl implements TestingService {
     private Map<Long, String> districtNames;
 
 
+    private static final String[] QUERIES = {
+    };
+
     private static final String[] TABLES = {
         "ALERTS_MODULE_ALERT",
         "ALERTS_MODULE_ALERT_DATA",
@@ -100,6 +103,18 @@ public class TestingServiceImpl implements TestingService {
         "NMS_KK_SUMMARY_RECORDS__TRASH_STATUSSTATS",
         "nms_call_content",
         "nms_call_content__TRASH",
+        "nms_states_join_circles",
+        "nms_states_join_circles__TRASH",
+        "nms_subscription_errors",
+        "nms_subscription_errors__TRASH",
+        "nms_subscription_pack_messages",
+        "nms_subscription_pack_messages__TRASH",
+        "nms_subscriptions",
+        "nms_subscriptions__TRASH",
+        "nms_subscription_packs",
+        "nms_subscription_packs__TRASH",
+        "nms_subscribers",
+        "nms_subscribers__TRASH",
         "nms_circles",
         "nms_circles__TRASH",
         "nms_csv_audit_records",
@@ -134,8 +149,6 @@ public class TestingServiceImpl implements TestingService {
         "nms_kk_retry_records__TRASH",
         "nms_kk_summary_records",
         "nms_kk_summary_records__TRASH",
-        "nms_languages",
-        "nms_languages__TRASH",
         "nms_ma_completion_records",
         "nms_ma_completion_records__TRASH",
         "nms_ma_course",
@@ -151,18 +164,8 @@ public class TestingServiceImpl implements TestingService {
         "nms_service_usage_caps__TRASH",
         "nms_states",
         "nms_states__TRASH",
-        "nms_states_join_circles",
-        "nms_states_join_circles__TRASH",
-        "nms_subscribers",
-        "nms_subscribers__TRASH",
-        "nms_subscription_errors",
-        "nms_subscription_errors__TRASH",
-        "nms_subscription_pack_messages",
-        "nms_subscription_pack_messages__TRASH",
-        "nms_subscription_packs",
-        "nms_subscription_packs__TRASH",
-        "nms_subscriptions",
-        "nms_subscriptions__TRASH",
+        "nms_languages",
+        "nms_languages__TRASH",
         "nms_talukas",
         "nms_talukas__TRASH",
         "nms_villages",
@@ -212,24 +215,6 @@ public class TestingServiceImpl implements TestingService {
     }
 
 
-    private void truncateTable(final String table) {
-        SqlQueryExecution sqe = new SqlQueryExecution() {
-
-            @Override
-            public String getSqlQuery() {
-                return String.format("DELETE FROM %s WHERE 1=1", table);
-            }
-
-            @Override
-            public Object execute(Query query) {
-                query.execute();
-                return null;
-            }
-        };
-        stateDataService.executeSQLQuery(sqe);
-    }
-
-
     private void changeConstraints(final boolean disable) {
         SqlQueryExecution sqe = new SqlQueryExecution() {
 
@@ -258,12 +243,64 @@ public class TestingServiceImpl implements TestingService {
     }
 
 
+    private void execQuery(final String sqlQuery) {
+        SqlQueryExecution sqe = new SqlQueryExecution() {
+
+            @Override
+            public String getSqlQuery() {
+                return sqlQuery;
+            }
+
+            @Override
+            public Object execute(Query query) {
+                query.execute();
+                return null;
+            }
+        };
+        try {
+            stateDataService.executeSQLQuery(sqe);
+        } catch (Exception e) {
+            String s = String.format("Exception While executing \"%s\"", sqlQuery);
+            LOGGER.error(s);
+            throw e;
+        }
+    }
+
+
+    private void truncateTable(final String table) {
+        SqlQueryExecution sqe = new SqlQueryExecution() {
+
+            @Override
+            public String getSqlQuery() {
+                return String.format("DELETE FROM %s WHERE 1=1", table);
+            }
+
+            @Override
+            public Object execute(Query query) {
+                query.execute();
+                return null;
+            }
+        };
+        try {
+            stateDataService.executeSQLQuery(sqe);
+        } catch (Exception e) {
+            String s = String.format("Exception while deleting %s : %s", table, e.getMessage());
+            LOGGER.error(s);
+            throw e;
+        }
+    }
+
+
     @Override
     public void clearDatabase() {
         Timer timer = new Timer();
 
         if (!Boolean.parseBoolean(settingsFacade.getProperty(TESTING_ENVIRONMENT))) {
             throw new IllegalStateException(TESTING_SERVICE_FORBIDDEN);
+        }
+
+        for (String query : QUERIES) {
+            execQuery(query);
         }
 
         disableConstraints();
