@@ -272,7 +272,7 @@ public class TestingServiceImpl implements TestingService {
         for (String table : TABLES) {
             try {
                 truncateTable(table);
-            } catch (SQLIntegrityConstraintViolationException e) {
+            } catch (Exception e) {
                 throw new IllegalStateException(String.format("%s while deleting %s", e.getMessage(), table), e);
             }
         }
