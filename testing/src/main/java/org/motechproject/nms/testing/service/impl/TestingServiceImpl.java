@@ -26,6 +26,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -240,7 +241,7 @@ public class TestingServiceImpl implements TestingService {
     }
 
 
-    private void truncateTable(final String table) {
+    private void truncateTable(final String table) throws SQLIntegrityConstraintViolationException{
         SqlQueryExecution sqe = new SqlQueryExecution() {
 
             @Override
@@ -269,7 +270,11 @@ public class TestingServiceImpl implements TestingService {
         disableConstraints();
 
         for (String table : TABLES) {
-            truncateTable(table);
+            try {
+                truncateTable(table);
+            } catch (SQLIntegrityConstraintViolationException e) {
+                throw new IllegalStateException(String.format("%s while deleting %s", e.getMessage(), table), e);
+            }
         }
 
         enableConstraints();
