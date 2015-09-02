@@ -3,6 +3,7 @@ package org.motechproject.nms.imi.service.impl;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.conn.ssl.DefaultHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.ssl.SSLContexts;
@@ -16,7 +17,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
-import javax.net.ssl.HttpsURLConnection;
 import java.io.IOException;
 
 /**
@@ -76,7 +76,7 @@ public class ExponentialRetrySender {
                                                         SSLContexts.createDefault(),
                                                         new String[]{"TLSv1", "TLSv1.1", "TLSv1.2"},
                                                         null,
-                                                        HttpsURLConnection.getDefaultHostnameVerifier());
+                                                        new DefaultHostnameVerifier());
 
                 HttpClient httpClient = HttpClients.custom().setSSLSocketFactory(f).build();
 
