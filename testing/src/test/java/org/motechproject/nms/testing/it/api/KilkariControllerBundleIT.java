@@ -189,7 +189,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     @Test
     public void testInboxRequest() throws IOException, InterruptedException {
 
-        Subscriber subscriber = subscriberDataService.findByCallingNumber(1000000000L); // 1 subscription
+        Subscriber subscriber = subscriberDataService.findByNumber(1000000000L); // 1 subscription
         Subscription subscription = subscriber.getSubscriptions().iterator().next();
 
         // override the default start date (today + 1 day) in order to see a non-empty inbox
@@ -223,7 +223,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         // create subscription to child pack
         subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.childPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
-        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+        mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
 
         // due to subscription rules detailed in #157, we need to clear out the DOB and set an LMP in order to
         // create a second subscription for this MCTS subscriber
@@ -345,7 +345,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscriberDataService.update(subscriber);
         subscriptionService.createSubscription(2000000000L, rh.hindiLanguage(), sh.childPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
-        subscriber = subscriberDataService.findByCallingNumber(2000000000L);
+        subscriber = subscriberDataService.findByNumber(2000000000L);
 
         // due to subscription rules detailed in #157, we need to clear out the DOB and set an LMP in order to
         // create a second subscription for this subscriber
@@ -357,7 +357,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscriptionService.createSubscription(2000000000L, rh.hindiLanguage(), sh.pregnancyPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
 
-        subscriber = subscriberDataService.findByCallingNumber(2000000000L);
+        subscriber = subscriberDataService.findByNumber(2000000000L);
         assertEquals(2, subscriber.getActiveAndPendingSubscriptions().size());
         assertEquals(4, subscriber.getAllSubscriptions().size());
 
@@ -756,9 +756,9 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     @Test
     public void verifyFT23() throws IOException, InterruptedException {
 
-        Subscriber subscriber1 = subscriberDataService.findByCallingNumber(1000000000L);
+        Subscriber subscriber1 = subscriberDataService.findByNumber(1000000000L);
         Subscription subscription1 = subscriber1.getAllSubscriptions().iterator().next();
-        Subscriber subscriber2 = subscriberDataService.findByCallingNumber(2000000000L);
+        Subscriber subscriber2 = subscriberDataService.findByNumber(2000000000L);
         Subscription subscription2 = subscriber2.getAllSubscriptions().iterator().next();
 
         HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
@@ -926,7 +926,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 .createSubscription(9999911122L, rh.hindiLanguage(),
                         sh.childPack(),
                         SubscriptionOrigin.MCTS_IMPORT);
-        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+        mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
 
         // due to subscription rules detailed in #157, we need to clear out the
         // DOB and set an LMP in order to
@@ -981,7 +981,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 rh.hindiLanguage(),
                 sh.childPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
-        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+        mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
 
         // due to subscription rules detailed in #157, we need to clear out the DOB and set an LMP in order to
         // create a second subscription for this MCTS subscriber
@@ -1028,7 +1028,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 .createSubscription(9999911122L, rh.hindiLanguage(),
                         sh.childPack(),
                         SubscriptionOrigin.MCTS_IMPORT);
-        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+        mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
 
         // update child pack subscription to mark complete
         // setting the subscription to have ended less than a week ago -- the
@@ -1091,7 +1091,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscriptionService.updateStartDate(childPackSubscription, DateTime
                 .now().minusDays(344));
 
-        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+        mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
 
         // due to subscription rules detailed in #157, we need to clear out the
         // DOB and set an LMP in order to
@@ -1527,7 +1527,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 9999911122L, rh.hindiLanguage(), sh.pregnancyPack(1), SubscriptionOrigin.MCTS_IMPORT);
         subscriptionService.deactivateSubscription(oldSubscription, DeactivationReason.DEACTIVATED_BY_USER);
 
-        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+        mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
 
         // create new subscription for pregnancy pack in Active state such that next OBD date falls on current date
         mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(90));
@@ -1577,7 +1577,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         // update old pregnancy subscription pack to complete, setting the subscription to have ended > a week ago
         subscriptionService.updateStartDate(oldSubscription, DateTime.now().minusDays(512 + 90));
 
-        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+        mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
 
         // create new subscription to pregnancy pack in Active state such that next OBD date falls on current date
         mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(90));
@@ -1809,7 +1809,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
         Subscriber subscriber = subscriberDataService
-                .findByCallingNumber(9999911122L);
+                .findByNumber(9999911122L);
         assertNotNull(subscriber);
         assertNotNull(subscriber.getSubscriptions());
     }
@@ -1886,7 +1886,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertEquals(HttpStatus.SC_OK, response.getStatusLine()
                 .getStatusCode());
         Subscriber subscriber = subscriberDataService
-                .findByCallingNumber(9999911122L);
+                .findByNumber(9999911122L);
         assertNotNull(subscriber);
 
     }
@@ -3853,7 +3853,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 .createSubscription(9999911122L, rh.hindiLanguage(),
                         sh.childPack(), SubscriptionOrigin.MCTS_IMPORT);
 
-        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+        mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
 
         // create new subscription for pregnancy pack in Active state
         mctsSubscriber.setDateOfBirth(null);
@@ -3901,7 +3901,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 .createSubscription(9999911122L, rh.hindiLanguage(),
                         sh.childPack(), SubscriptionOrigin.MCTS_IMPORT);
 
-        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+        mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
 
         // create new subscription for pregnancy pack in Active state
         mctsSubscriber.setDateOfBirth(null);
@@ -3953,7 +3953,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscriptionService.deactivateSubscription(oldSubscription,
                 DeactivationReason.DEACTIVATED_BY_USER);
 
-        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+        mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
 
         // create new subscription for child pack in Active state such that
         // next OBD date falls on current date
@@ -4000,7 +4000,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscriptionService.updateStartDate(oldSubscription, DateTime.now()
                 .minusDays(505 + 90));
 
-        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+        mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
 
         // create new subscription for child pack in Active state such that
         // next OBD date falls on current date
@@ -4052,7 +4052,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscriptionService.deactivateSubscription(oldSubscription,
                 DeactivationReason.DEACTIVATED_BY_USER);
 
-        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+        mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
 
         // create new subscription for pregnancy pack in Active state such that
         // next OBD date falls on current date
@@ -4098,7 +4098,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscriptionService.updateStartDate(oldSubscription, DateTime.now()
                 .minusDays(344));
 
-        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+        mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
 
         // create new subscription for pregnancy pack in Active state such that
         // next OBD date falls on current date
@@ -4141,7 +4141,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscriptionService.deactivateSubscription(oldSubscription,
                 DeactivationReason.DEACTIVATED_BY_USER);
 
-        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+        mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
 
         // create new subscription for child pack in Active state such that
         // next OBD date falls on current date
@@ -4186,7 +4186,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscriptionService.updateStartDate(oldSubscription, DateTime.now()
                 .minusDays(337));
 
-        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
+        mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
 
         // create new subscription to child pack in Active state such that
         // next OBD date falls on current date

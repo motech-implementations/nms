@@ -6,6 +6,9 @@ import org.motechproject.mds.service.MotechDataService;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 
 public interface SubscriberDataService extends MotechDataService<Subscriber> {
+
+    //Bad performance: does a table scan - should only be used in ITs
+
     @Lookup
-    Subscriber findByCallingNumber(@LookupField(name = "callingNumber") Long callingNumber);
+    Subscriber findByNumber(@LookupField(name = "callingNumber") Long callingNumber);
 }

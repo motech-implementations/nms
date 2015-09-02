@@ -686,6 +686,8 @@ public class TestingServiceImpl implements TestingService {
 
         LOGGER.debug("Created {}", timer.frequency(count));
 
+        LOGGER.debug(file.getName());
+
         return String.format("%s\t%s", file.getAbsolutePath(), new DecimalFormat("#,##0").format(count));
     }
 }

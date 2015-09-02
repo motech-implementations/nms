@@ -380,7 +380,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         assertTrue("w5_1".equals(contents.get(0)));
 
         //update the date of birth of the subscriber
-        Subscriber subscriber2 = subscriberDataService.findByCallingNumber(1111111111L);
+        Subscriber subscriber2 = subscriberDataService.findByNumber(1111111111L);
         subscriber2.setDateOfBirth(DateTime.now().minusDays(21)); // weekId will be W4_1
         subscriberService.update(subscriber2);
 
