@@ -26,7 +26,6 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.sql.SQLIntegrityConstraintViolationException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -76,6 +75,9 @@ public class TestingServiceImpl implements TestingService {
     private Map<Long, String> districtNames;
 
 
+    private static final String[] QUERIES = {
+    };
+
     private static final String[] TABLES = {
         "ALERTS_MODULE_ALERT",
         "ALERTS_MODULE_ALERT_DATA",
@@ -103,6 +105,16 @@ public class TestingServiceImpl implements TestingService {
         "nms_call_content__TRASH",
         "nms_states_join_circles",
         "nms_states_join_circles__TRASH",
+        "nms_subscription_errors",
+        "nms_subscription_errors__TRASH",
+        "nms_subscription_pack_messages",
+        "nms_subscription_pack_messages__TRASH",
+        "nms_subscriptions",
+        "nms_subscriptions__TRASH",
+        "nms_subscription_packs",
+        "nms_subscription_packs__TRASH",
+        "nms_subscribers",
+        "nms_subscribers__TRASH",
         "nms_circles",
         "nms_circles__TRASH",
         "nms_csv_audit_records",
@@ -152,18 +164,8 @@ public class TestingServiceImpl implements TestingService {
         "nms_service_usage_caps__TRASH",
         "nms_states",
         "nms_states__TRASH",
-        "nms_subscribers",
-        "nms_subscribers__TRASH",
         "nms_languages",
         "nms_languages__TRASH",
-        "nms_subscription_errors",
-        "nms_subscription_errors__TRASH",
-        "nms_subscription_pack_messages",
-        "nms_subscription_pack_messages__TRASH",
-        "nms_subscription_packs",
-        "nms_subscription_packs__TRASH",
-        "nms_subscriptions",
-        "nms_subscriptions__TRASH",
         "nms_talukas",
         "nms_talukas__TRASH",
         "nms_villages",
@@ -241,7 +243,31 @@ public class TestingServiceImpl implements TestingService {
     }
 
 
-    private void truncateTable(final String table) throws SQLIntegrityConstraintViolationException{
+    private void execQuery(final String sqlQuery) {
+        SqlQueryExecution sqe = new SqlQueryExecution() {
+
+            @Override
+            public String getSqlQuery() {
+                return sqlQuery;
+            }
+
+            @Override
+            public Object execute(Query query) {
+                query.execute();
+                return null;
+            }
+        };
+        try {
+            stateDataService.executeSQLQuery(sqe);
+        } catch (Exception e) {
+            String s = String.format("Exception While executing \"%s\"", sqlQuery);
+            LOGGER.error(s);
+            throw e;
+        }
+    }
+
+
+    private void truncateTable(final String table) {
         SqlQueryExecution sqe = new SqlQueryExecution() {
 
             @Override
@@ -255,7 +281,13 @@ public class TestingServiceImpl implements TestingService {
                 return null;
             }
         };
-        stateDataService.executeSQLQuery(sqe);
+        try {
+            stateDataService.executeSQLQuery(sqe);
+        } catch (Exception e) {
+            String s = String.format("Exception while deleting %s : %s", table, e.getMessage());
+            LOGGER.error(s);
+            throw e;
+        }
     }
 
 
@@ -267,14 +299,14 @@ public class TestingServiceImpl implements TestingService {
             throw new IllegalStateException(TESTING_SERVICE_FORBIDDEN);
         }
 
+        for (String query : QUERIES) {
+            execQuery(query);
+        }
+
         disableConstraints();
 
         for (String table : TABLES) {
-            try {
-                truncateTable(table);
-            } catch (Exception e) {
-                throw new IllegalStateException(String.format("%s while deleting %s", e.getMessage(), table), e);
-            }
+            truncateTable(table);
         }
 
         enableConstraints();
