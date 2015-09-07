@@ -1028,7 +1028,6 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 .createSubscription(9999911122L, rh.hindiLanguage(),
                         sh.childPack(),
                         SubscriptionOrigin.MCTS_IMPORT);
-        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
 
         // update child pack subscription to mark complete
         // setting the subscription to have ended less than a week ago -- the
@@ -1036,6 +1035,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         // returned
         subscriptionService.updateStartDate(childPackSubscription, DateTime
                 .now().minusDays(337));
+
+        mctsSubscriber = subscriberDataService.findByCallingNumber(9999911122L);
 
         // due to subscription rules detailed in #157, we need to clear out the
         // DOB and set an LMP in order to
