@@ -104,9 +104,7 @@ public class SubscriberServiceImpl implements SubscriberService {
     @Transactional
     public void update(Subscriber subscriber) {
 
-        Subscriber retrievedSubscriber = subscriberDataService.findByCallingNumber(subscriber.getCallingNumber());
-
-        subscriberDataService.update(subscriber);
+        Subscriber retrievedSubscriber = subscriberDataService.update(subscriber);
 
         // update start dates for subscriptions if reference date (LMP/DOB) has changed
         Set<Subscription> subscriptions = retrievedSubscriber.getActiveAndPendingSubscriptions();
