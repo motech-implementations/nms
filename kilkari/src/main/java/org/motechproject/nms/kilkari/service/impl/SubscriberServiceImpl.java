@@ -210,8 +210,8 @@ public class SubscriberServiceImpl implements SubscriberService {
         District district = beneficiary.getDistrict();
         Circle circle = circleFromDistrict(district);
         Language language = (Language) districtDataService.getDetachedField(district, "language");
-        Timer timer = new Timer
         Subscriber subscriber = getSubscriber(msisdn);
+
 
         SubscriptionPack pack = subscriptionPackDataService.byType(packType);
 

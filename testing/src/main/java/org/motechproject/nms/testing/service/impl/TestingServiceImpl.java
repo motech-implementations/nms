@@ -555,8 +555,8 @@ public class TestingServiceImpl implements TestingService {
         }
 
         Timer timer = new Timer("mom", "moms");
-        File file = new File(getTestingDirectory(), MCTSMOMS);
-        int retry = 0;
+        int retry = 1;
+        File file = new File(getTestingDirectory(), String.format("%s.%d", MCTSMOMS, retry));
         while (file.exists()) {
             retry += 1;
             file = new File(getTestingDirectory(), String.format("%s.%d", MCTSMOMS, retry));
@@ -722,6 +722,11 @@ public class TestingServiceImpl implements TestingService {
         writer.close();
 
         LOGGER.debug("Created {}", timer.frequency(count));
+
+
+        Runtime runtime = Runtime.getRuntime();
+        runtime.exec(String.format("cp %s %s",
+                file.getAbsolutePath(), new File(getTestingDirectory(), MCTSMOMS).getAbsolutePath()));
 
         LOGGER.debug(file.getName());
 
