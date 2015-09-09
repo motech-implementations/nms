@@ -480,7 +480,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
         sh.mksub(SubscriptionOrigin.IVR, new DateTime(), sh.pregnancyPack().getType(), 2222222221L);
 
-        Subscriber subscriber = subscriberDataService.findByCallingNumber(2222222221L);
+        Subscriber subscriber = subscriberDataService.findByNumber(2222222221L);
         assertNotNull(subscriber);
 
         mctsBeneficiaryImportService.importMotherData(read("csv/nip94.csv"));
@@ -488,7 +488,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         State expectedState = rh.delhiState();
         District expectedDistrict = rh.newDelhiDistrict();
 
-        subscriber = subscriberDataService.findByCallingNumber(2222222221L);
+        subscriber = subscriberDataService.findByNumber(2222222221L);
         assertMother(subscriber, "11111222299999999", getDateTime("30/4/2015"), "Shanti", expectedState, expectedDistrict);
     }
 
