@@ -235,11 +235,8 @@ public class SubscriberServiceImpl implements SubscriberService {
 
             if (existingBeneficiary == null) {
                 // there's already an IVR-originated subscription for this MSISDN
-                subscriptionErrorDataService.create(
-                        new SubscriptionError(msisdn, SubscriptionRejectionReason.ALREADY_SUBSCRIBED, packType));
-
-                // TODO: Do we just reject the subscription request, or do we update the subscriber record with MCTS data?
-                // TODO: Should we change the subscription start date based on the provided LMP/DOB?
+                subscriber = setSubscriberFields(subscriber, beneficiary, referenceDate, packType);
+                update(subscriber);
 
             } else if (!existingBeneficiary.getBeneficiaryId().equals(beneficiary.getBeneficiaryId())) {
                 // if the MCTS ID doesn't match (i.e. there are two beneficiaries with the same phone number), reject the import

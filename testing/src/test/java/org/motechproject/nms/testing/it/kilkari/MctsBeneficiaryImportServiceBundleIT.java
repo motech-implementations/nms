@@ -38,6 +38,7 @@ import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
+import org.motechproject.nms.testing.it.utils.RegionHelper;
 import org.motechproject.nms.testing.it.utils.SubscriptionHelper;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
@@ -466,6 +467,29 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
         // although our MCTS data file contains 10 children, we only create 8 subscribers due to duplicate phone numbers
         assertEquals(8, subscriberDataService.count());
+    }
+
+    @Test
+    public void verifyNIP94() throws Exception {
+        RegionHelper rh = new RegionHelper(languageDataService, circleDataService, stateDataService, districtDataService,
+                districtService);
+        rh.newDelhiDistrict();
+
+        SubscriptionHelper sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
+                languageDataService, circleDataService, stateDataService, districtDataService, districtService);
+
+        sh.mksub(SubscriptionOrigin.IVR, new DateTime(), sh.pregnancyPack().getType(), 2222222221L);
+
+        Subscriber subscriber = subscriberDataService.findByNumber(2222222221L);
+        assertNotNull(subscriber);
+
+        mctsBeneficiaryImportService.importMotherData(read("csv/nip94.csv"));
+
+        State expectedState = rh.delhiState();
+        District expectedDistrict = rh.newDelhiDistrict();
+
+        subscriber = subscriberDataService.findByNumber(2222222221L);
+        assertMother(subscriber, "11111222299999999", getDateTime("30/4/2015"), "Shanti", expectedState, expectedDistrict);
     }
 
     private void assertMother(Subscriber subscriber, String motherId, DateTime lmp, String name, State state, District district) {
