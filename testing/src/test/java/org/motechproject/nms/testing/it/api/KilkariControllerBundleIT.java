@@ -82,6 +82,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     private static final String ADMIN_USERNAME = "motech";
     private static final String ADMIN_PASSWORD = "motech";
 
+    private static final String VALID_CALL_ID = "1234567890123451234512345";
+
     @Inject
     SubscriberService subscriberService;
     @Inject
@@ -404,7 +406,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 callingNumber,
                 rh.airtelOperator(),
                 rh.delhiCircle().getName(),
-                123456789012545L,
+                VALID_CALL_ID,
                 rh.hindiLanguage().getCode(),
                 subscriptionPack);
         ObjectMapper mapper = new ObjectMapper();
@@ -502,7 +504,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     @Test
     public void testCreateSubscriptionsNoLanguageInDB() throws IOException, InterruptedException {
         SubscriptionRequest subscriptionRequest = new SubscriptionRequest(9999911122L, rh.airtelOperator(),
-                rh.delhiCircle().getName(), 123456789012545L, "99", sh.childPack().getName());
+                rh.delhiCircle().getName(), VALID_CALL_ID, "99", sh.childPack().getName());
         ObjectMapper mapper = new ObjectMapper();
         String subscriptionRequestJson = mapper.writeValueAsString(subscriptionRequest);
 
@@ -525,7 +527,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 9999911122L,
                 rh.airtelOperator(),
                 rh.karnatakaCircle().getName(),
-                123456789012545L,
+                VALID_CALL_ID,
                 rh.kannadaLanguage().getCode(),
                 sh.childPack().getName());
         ObjectMapper mapper = new ObjectMapper();
@@ -550,7 +552,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         String subscriptionId = subscription.getSubscriptionId();
 
         SubscriptionRequest subscriptionRequest = new SubscriptionRequest(1000000000L, rh.airtelOperator(),
-                rh.delhiCircle().getName(), 123456789012545L, subscriptionId);
+                rh.delhiCircle().getName(), VALID_CALL_ID, subscriptionId);
         ObjectMapper mapper = new ObjectMapper();
         String subscriptionRequestJson = mapper.writeValueAsString(subscriptionRequest);
 
@@ -577,7 +579,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscriptionService.deactivateSubscription(subscription, DeactivationReason.DEACTIVATED_BY_USER);
 
         SubscriptionRequest subscriptionRequest = new SubscriptionRequest(1000000000L, rh.airtelOperator(), rh.delhiCircle().getName(),
-                123456789012545L, subscriptionId);
+                VALID_CALL_ID, subscriptionId);
         ObjectMapper mapper = new ObjectMapper();
         String subscriptionRequestJson = mapper.writeValueAsString(subscriptionRequest);
 
@@ -599,7 +601,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     public void testDeactivateSubscriptionRequestInvalidSubscription() throws IOException, InterruptedException {
 
         SubscriptionRequest subscriptionRequest = new SubscriptionRequest(1000000000L, rh.airtelOperator(), rh.delhiCircle().getName(),
-                123456789012545L, "77f13128-037e-4f98-8651-285fa618d94a");
+                VALID_CALL_ID, "77f13128-037e-4f98-8651-285fa618d94a");
         ObjectMapper mapper = new ObjectMapper();
         String subscriptionRequestJson = mapper.writeValueAsString(subscriptionRequest);
 
@@ -631,7 +633,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 1234567890L, //callingNumber
                 rh.airtelOperator(), //operator
                 rh.delhiCircle().getName(), //circle
-                123456789012345L, //callId
+                VALID_CALL_ID, //callId
                 123L, //callStartTime
                 456L, //callEndTime
                 123, //callDurationInPulses
@@ -664,7 +666,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 1234567890L, //callingNumber
                 rh.airtelOperator(), //operator
                 rh.delhiCircle().getName(), //circle
-                123456789012345L, //callId
+                VALID_CALL_ID, //callId
                 123L, //callStartTime
                 456L, //callEndTime
                 123, //callDurationInPulses
@@ -684,7 +686,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 1234567890L, //callingNumber
                 rh.airtelOperator(), //operator
                 rh.delhiCircle().getName(), //circle
-                123456789012345L, //callId
+                VALID_CALL_ID, //callId
                 123L, //callStartTime
                 456L, //callEndTime
                 123, //callDurationInPulses
@@ -724,7 +726,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 3000000000L, // callingNumber
                 "A", // operator
                 "AP", // circle
-                123456789012345L, // callId
+                VALID_CALL_ID, // callId
                 123L, // callStartTime
                 456L, // callEndTime
                 123, // callDurationInPulses
@@ -738,7 +740,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         InboxCallDetailRecord inboxCallDetailRecord = inboxCallDetailsDataService
                 .retrieve("callingNumber", 3000000000L);
         assertTrue(3000000000L == inboxCallDetailRecord.getCallingNumber());
-        assertTrue(123456789012345L == inboxCallDetailRecord.getCallId());
+        assertTrue(VALID_CALL_ID == inboxCallDetailRecord.getCallId());
         assertEquals("A", inboxCallDetailRecord.getOperator());
         assertEquals("AP", inboxCallDetailRecord.getCircle());
         assertTrue(123 == inboxCallDetailRecord.getCallDurationInPulses());
@@ -765,7 +767,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 3000000000L, // callingNumber
                 "A", // operator
                 "AP", // circle
-                123456789012345L, // callId
+                VALID_CALL_ID, // callId
                 123L, // callStartTime
                 456L, // callEndTime
                 123, // callDurationInPulses
@@ -794,7 +796,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         InboxCallDetailRecord inboxCallDetailRecord = inboxCallDetailsDataService
                 .retrieve("callingNumber", 3000000000L);
         assertTrue(3000000000L == inboxCallDetailRecord.getCallingNumber());
-        assertTrue(123456789012345L == inboxCallDetailRecord.getCallId());
+        assertTrue(VALID_CALL_ID == inboxCallDetailRecord.getCallId());
         assertEquals("A", inboxCallDetailRecord.getOperator());
         assertEquals("AP", inboxCallDetailRecord.getCircle());
         assertTrue(123 == inboxCallDetailRecord.getCallDurationInPulses());
@@ -1164,7 +1166,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 1234567890L, // callingNumber
                 "A", // operator
                 "AP", // circle
-                123456789012345L, // callId
+                VALID_CALL_ID, // callId
                 123L, // callStartTime
                 456L, // callEndTime
                 123, // callDurationInPulses
@@ -1211,7 +1213,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 3000000000L, // callingNumber
                 "A", // operator
                 "AP", // circle
-                123456789012345L, // callId
+                VALID_CALL_ID, // callId
                 123L, // callStartTime
                 456L, // callEndTime
                 123, // callDurationInPulses
@@ -1274,7 +1276,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 3000000000L, // callingNumber
                 "A", // operator
                 "AP", // circle
-                123456789012345L, // callId
+                VALID_CALL_ID, // callId
                 123L, // callStartTime
                 456L, // callEndTime
                 123, // callDurationInPulses
@@ -1316,7 +1318,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 3000000000L, // callingNumber
                 "A", // operator
                 "AP", // circle
-                123456789012345L, // callId
+                VALID_CALL_ID, // callId
                 123L, // callStartTime
                 456L, // callEndTime
                 123, // callDurationInPulses
@@ -1337,7 +1339,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         InboxCallDetailRecord inboxCallDetailRecord = inboxCallDetailsDataService
                 .retrieve("callingNumber", 3000000000L);
         assertTrue(3000000000L == inboxCallDetailRecord.getCallingNumber());
-        assertTrue(123456789012345L == inboxCallDetailRecord.getCallId());
+        assertTrue(VALID_CALL_ID == inboxCallDetailRecord.getCallId());
         assertEquals("A", inboxCallDetailRecord.getOperator());
         assertEquals("AP", inboxCallDetailRecord.getCircle());
         assertTrue(123 == inboxCallDetailRecord.getCallDurationInPulses());
@@ -1372,7 +1374,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 3000000000L, // callingNumber
                 "A", // operator
                 "AP", // circle
-                123456789012345L, // callId
+                VALID_CALL_ID, // callId
                 123L, // callStartTime
                 456L, // callEndTime
                 123, // callDurationInPulses
@@ -1672,7 +1674,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 1234567890L, // callingNumber
                 "A", // operator
                 "AP", // circle
-                12345678901234L, // callId less than 15 digit
+                VALID_CALL_ID.substring(1), // callId less than 25
                 123L, // callStartTime
                 456L, // callEndTime
                 123, // callDurationInPulses
@@ -1699,7 +1701,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 1234567890L, // callingNumber
                 "A", // operator
                 "AP", // circle
-                1234567890123456L, // callId more than 15 digit
+                VALID_CALL_ID + "12", // callId more than 15 digit
                 123L, // callStartTime
                 456L, // callEndTime
                 123, // callDurationInPulses
@@ -1795,7 +1797,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         // setup create subscription request
         SubscriptionRequest subscriptionRequest = new SubscriptionRequest(
                 9999911122L, rh.airtelOperator(), circle.getName(),
-                123456789012545L, language3.getCode(),
+                VALID_CALL_ID, language3.getCode(),
                 sh.childPack().getName());
         ObjectMapper mapper = new ObjectMapper();
         String subscriptionRequestJson = mapper
@@ -1871,7 +1873,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         // setup create subscription request
         SubscriptionRequest subscriptionRequest = new SubscriptionRequest(
                 9999911122L, rh.airtelOperator(), circle.getName(),
-                123456789012545L, language3.getCode(), sh.childPack().getName());
+                VALID_CALL_ID, language3.getCode(), sh.childPack().getName());
         ObjectMapper mapper = new ObjectMapper();
         String subscriptionRequestJson = mapper
                 .writeValueAsString(subscriptionRequest);
@@ -1903,7 +1905,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 1234567899L, // unsubscribed callingNumber
                 "A", // operator
                 "AP", // circle
-                123456789012345L, // callId
+                VALID_CALL_ID, // callId
                 123L, // callStartTime
                 456L, // callEndTime
                 123, // callDurationInPulses
@@ -1917,7 +1919,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         InboxCallDetailRecord inboxCallDetailRecord = inboxCallDetailsDataService
                 .retrieve("callingNumber", 1234567899L);
         assertTrue(1234567899L == inboxCallDetailRecord.getCallingNumber());
-        assertTrue(123456789012345L == inboxCallDetailRecord.getCallId());
+        assertTrue(VALID_CALL_ID == inboxCallDetailRecord.getCallId());
         assertEquals("A", inboxCallDetailRecord.getOperator());
         assertEquals("AP", inboxCallDetailRecord.getCircle());
         assertTrue(123 == inboxCallDetailRecord.getCallDurationInPulses());
@@ -1939,7 +1941,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 5000000000L, // callingNumber
                 "A", // operator
                 "AP", // circle
-                123456789012345L, // callId
+                VALID_CALL_ID, // callId
                 123L, // callStartTime
                 456L, // callEndTime
                 123, // callDurationInPulses
@@ -1954,8 +1956,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 .retrieve("callingNumber", 5000000000L);
         assertEquals(5000000000L,
                 (long) inboxCallDetailRecord2.getCallingNumber());
-        assertEquals(123456789012345L,
-                (long) inboxCallDetailRecord2.getCallId());
+        assertEquals(VALID_CALL_ID, inboxCallDetailRecord2.getCallId());
         assertEquals("A", inboxCallDetailRecord2.getOperator());
         assertEquals("AP", inboxCallDetailRecord2.getCircle());
         assertEquals(123,
@@ -3043,7 +3044,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 1234567890L, // callingNumber
                 "A", // operator
                 "AP", // circle
-                123456789012345L, // callId
+                VALID_CALL_ID, // callId
                 123L, // callStartTime
                 456L, // callEndTime
                 123, // callDurationInPulses
@@ -3086,7 +3087,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 1234567890L, // callingNumber
                 "A", // operator
                 "AP", // circle
-                123456789012345L, // callId
+                VALID_CALL_ID, // callId
                 123L, // callStartTime
                 456L, // callEndTime
                 123, // callDurationInPulses
@@ -3129,7 +3130,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 1234567890L, // callingNumber
                 "A", // operator
                 "AP", // circle
-                123456789012345L, // callId
+                VALID_CALL_ID, // callId
                 123L, // callStartTime
                 456L, // callEndTime
                 123, // callDurationInPulses
@@ -3172,7 +3173,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 1234567890L, // callingNumber
                 "A", // operator
                 "AP", // circle
-                123456789012345L, // callId
+                VALID_CALL_ID, // callId
                 123L, // callStartTime
                 456L, // callEndTime
                 123, // callDurationInPulses
@@ -3215,7 +3216,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 1234567890L, // callingNumber
                 "A", // operator
                 "AP", // circle
-                123456789012345L, // callId
+                VALID_CALL_ID, // callId
                 123L, // callStartTime
                 456L, // callEndTime
                 123, // callDurationInPulses
@@ -3259,7 +3260,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 1234567890L, // callingNumber
                 "A", // operator
                 "AP", // circle
-                123456789012345L, // callId
+                VALID_CALL_ID, // callId
                 123L, // callStartTime
                 456L, // callEndTime
                 123, // callDurationInPulses
@@ -3302,7 +3303,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 null, // callingNumber missing
                 "A", // operator
                 "AP", // circle
-                123456789012345L, // callId
+                VALID_CALL_ID, // callId
                 123L, // callStartTime
                 456L, // callEndTime
                 123, // callDurationInPulses
@@ -3330,7 +3331,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 1234567890L, // callingNumber
                 null, // operator missing
                 "AP", // circle
-                123456789012345L, // callId
+                VALID_CALL_ID, // callId
                 123L, // callStartTime
                 456L, // callEndTime
                 123, // callDurationInPulses
@@ -3354,7 +3355,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 1234567890L, // callingNumber
                 "A", // operator
                 null, // circle missing
-                123456789012345L, // callId
+                VALID_CALL_ID, // callId
                 123L, // callStartTime
                 456L, // callEndTime
                 123, // callDurationInPulses
@@ -3407,7 +3408,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 1234567890L, // callingNumber
                 "A", // operator
                 "AP", // circle
-                123456789012345L, // callId
+                VALID_CALL_ID, // callId
                 null, // callStartTime missing
                 456L, // callEndTime
                 123, // callDurationInPulses
@@ -3435,7 +3436,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 1234567890L, // callingNumber
                 "A", // operator
                 "AP", // circle
-                123456789012345L, // callId
+                VALID_CALL_ID, // callId
                 123L, // callStartTime
                 null, // callEndTime missing
                 123, // callDurationInPulses
@@ -3463,7 +3464,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 1234567890L, // callingNumber
                 "A", // operator
                 "AP", // circle
-                123456789012345L, // callId
+                VALID_CALL_ID, // callId
                 123L, // callStartTime
                 456L, // callEndTime
                 null, // callDurationInPulses missing
@@ -3491,7 +3492,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 1234567890L, // callingNumber
                 "A", // operator
                 "AP", // circle
-                123456789012345L, // callId
+                VALID_CALL_ID, // callId
                 123L, // callStartTime
                 456L, // callEndTime
                 123, // callDurationInPulses
@@ -3519,7 +3520,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 1234567890L, // callingNumber
                 "A", // operator
                 "AP", // circle
-                123456789012345L, // callId
+                VALID_CALL_ID, // callId
                 123L, // callStartTime
                 456L, // callEndTime
                 123, // callDurationInPulses
@@ -3691,7 +3692,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 123456789L, // callingNumber less than 10 digit
                 "A", // operator
                 "AP", // circle
-                123456789012345L, // callId
+                VALID_CALL_ID, // callId
                 123L, // callStartTime
                 456L, // callEndTime
                 123, // callDurationInPulses
@@ -3717,7 +3718,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 12345678901L, // callingNumber more than 10 digit
                 "A", // operator
                 "AP", // circle
-                123456789012345L, // callId
+                VALID_CALL_ID, // callId
                 123L, // callStartTime
                 456L, // callEndTime
                 123, // callDurationInPulses

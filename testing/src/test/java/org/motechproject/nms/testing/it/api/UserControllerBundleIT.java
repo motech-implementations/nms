@@ -1159,7 +1159,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testSetLanguageInvalidService() throws IOException, InterruptedException {
-        HttpPost httpPost = createHttpPost("INVALID_SERVICE", new UserLanguageRequest(1111111111L, 123456789012345L, "10"));
+        HttpPost httpPost = createHttpPost("INVALID_SERVICE", new UserLanguageRequest(1111111111L, "1234567890123451234512345", "10"));
 
         String expectedJsonResponse = createFailureResponseJson("<serviceName: Invalid>");
 
@@ -1170,7 +1170,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testSetLanguageMissingCallingNumber() throws IOException, InterruptedException {
-        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(null, 123456789012345L, "10"));
+        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(null, "1234567890123451234512345", "10"));
 
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Not Present>");
 
@@ -1181,7 +1181,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testSetLanguageInvalidCallingNumber() throws IOException, InterruptedException {
-        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(123L, 123456789012345L, "10"));
+        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(123L, "1234567890123451234512345", "10"));
 
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
 
@@ -1203,7 +1203,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testSetLanguageInvalidCallId() throws IOException, InterruptedException {
-        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(1111111111L, 123L, "10"));
+        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(1111111111L, "12345678901234512345", "10"));
 
         String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
 
@@ -1214,7 +1214,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testSetLanguageMissingLanguageLocationCode() throws IOException, InterruptedException {
-        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(1111111111L, 123456789012345L, null));
+        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(1111111111L, "1234567890123451234512345", null));
 
         String expectedJsonResponse = createFailureResponseJson("<languageLocationCode: Not Present>");
 
@@ -1241,7 +1241,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     public void testSetLanguageNoFLW() throws IOException, InterruptedException {
         createCircleWithLanguage();
 
-        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(1111111111L, 123456789012345L,
+        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(1111111111L, "1234567890123451234512345",
                 rh.hindiLanguage().getCode()));
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost));
@@ -1257,7 +1257,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     public void testSetLanguageLanguageNotFound() throws IOException, InterruptedException {
         createFlwCappedServiceNoUsageNoLocationNoLanguage();
 
-        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(1111111111L, 123456789012345L, "77"));
+        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(1111111111L, "1234567890123451234512345", "77"));
 
         String expectedJsonResponse = createFailureResponseJson("<languageLocationCode: Not Found>");
 
@@ -1270,7 +1270,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     public void testSetLanguageValid() throws IOException, InterruptedException {
         createFlwCappedServiceNoUsageNoLocationNoLanguage();
 
-        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(1111111111L, 123456789012345L, "99"));
+        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(1111111111L, "1234567890123451234512345", "99"));
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK));
 
@@ -1770,7 +1770,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         // create set Language location code request and check the response
         HttpPost postRequest = createHttpPost("mobilekunji",
                 new UserLanguageRequest(WHITELIST_CONTACT_NUMBER,
-                        123456789012345l, rh.hindiLanguage().getCode()));
+                        "1234567890123451234512345", rh.hindiLanguage().getCode()));
         httpResponse = SimpleHttpClient.httpRequestAndResponse(postRequest,
                 RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
@@ -1882,7 +1882,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         // create set Language location code request and check the response
         HttpPost postRequest = createHttpPost("mobilekunji",
                 new UserLanguageRequest(NOT_WHITELIST_CONTACT_NUMBER,
-                        123456789012345l, rh.hindiLanguage().getCode()));
+                        "1234567890123451234512345", rh.hindiLanguage().getCode()));
         httpResponse = SimpleHttpClient.httpRequestAndResponse(postRequest,
                 RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_FORBIDDEN, httpResponse.getStatusLine()
@@ -1997,7 +1997,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         // create set Language location code request and check the response
         HttpPost postRequest = createHttpPost("mobilekunji",
                 new UserLanguageRequest(WHITELIST_CONTACT_NUMBER,
-                        123456789012345l, rh.tamilLanguage().getCode()));
+                        "1234567890123451234512345", rh.tamilLanguage().getCode()));
         httpResponse = SimpleHttpClient.httpRequestAndResponse(postRequest,
                 RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
@@ -2081,7 +2081,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         // create set Language location code request and check the response
         HttpPost postRequest = createHttpPost("mobilekunji",
                 new UserLanguageRequest(NOT_WHITELIST_CONTACT_NUMBER,
-                        123456789012345l, rh.hindiLanguage().getCode()));
+                        "1234567890123451234512345", rh.hindiLanguage().getCode()));
         httpResponse = SimpleHttpClient.httpRequestAndResponse(postRequest,
                 RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_FORBIDDEN, httpResponse.getStatusLine()
@@ -2224,7 +2224,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         // create set Language location code request and check the response
         HttpPost postRequest = createHttpPost("mobileacademy",
                 new UserLanguageRequest(WHITELIST_CONTACT_NUMBER,
-                        123456789012345l, rh.hindiLanguage().getCode()));
+                        "1234567890123451234512345", rh.hindiLanguage().getCode()));
         httpResponse = SimpleHttpClient.httpRequestAndResponse(postRequest,
                 RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
@@ -2359,7 +2359,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         // create set Language location code request and check the response
         HttpPost postRequest = createHttpPost("mobileacademy",
                 new UserLanguageRequest(NOT_WHITELIST_CONTACT_NUMBER,
-                        123456789012345l, rh.hindiLanguage().getCode()));
+                        "1234567890123451234512345", rh.hindiLanguage().getCode()));
         httpResponse = SimpleHttpClient.httpRequestAndResponse(postRequest,
                 RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_FORBIDDEN, httpResponse.getStatusLine()
@@ -2499,7 +2499,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         // create set Language location code request and check the response
         HttpPost postRequest = createHttpPost("mobileacademy",
                 new UserLanguageRequest(WHITELIST_CONTACT_NUMBER,
-                        123456789012345l, rh.tamilLanguage().getCode()));
+                        "1234567890123451234512345", rh.tamilLanguage().getCode()));
         httpResponse = SimpleHttpClient.httpRequestAndResponse(postRequest,
                 RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
@@ -2583,7 +2583,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         // create set Language location code request and check the response
         HttpPost postRequest = createHttpPost("mobileacademy",
                 new UserLanguageRequest(NOT_WHITELIST_CONTACT_NUMBER,
-                        123456789012345l, rh.hindiLanguage().getCode()));
+                        "1234567890123451234512345", rh.hindiLanguage().getCode()));
         httpResponse = SimpleHttpClient.httpRequestAndResponse(postRequest,
                 RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_FORBIDDEN, httpResponse.getStatusLine()
@@ -2876,7 +2876,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
         assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
 
-        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(1111111111L, 123456789012345L,
+        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(1111111111L, "1234567890123451234512345",
                 rh.hindiLanguage().getCode()));
 
         response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
@@ -3027,7 +3027,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
         assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
 
-        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(1111111111L, 123456789012345L,
+        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(1111111111L, "1234567890123451234512345",
                 rh.kannadaLanguage().getCode()));
 
         response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
@@ -5308,7 +5308,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(expectedJsonResponse,
                 EntityUtils.toString(response.getEntity()));
 
-        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(1200000000L, 123456789012346L,
+        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(1200000000L, "1234567890123451234512345",
                 rh.hindiLanguage().getCode()));
 
         response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);

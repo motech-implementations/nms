@@ -312,7 +312,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
                 1111111111L,
                 "OP",
                 "AA",
-                123456789012345L,
+                "1234567890123451234512345",
                 new DateTime(123L),
                 new DateTime(456L),
                 1,

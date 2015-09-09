@@ -81,7 +81,7 @@ public class UserController extends BaseController {
                              @RequestParam(required = false) Long callingNumber,
                              @RequestParam(required = false) String operator,
                              @RequestParam(required = false) String circle,
-                             @RequestParam(required = false) Long callId) {
+                             @RequestParam(required = false) String callId) {
 
         log(String.format("REQUEST: /%s/user", serviceName), String.format(
                 "callingNumber=%s, callId=%s, operator=%s, callId=%s",

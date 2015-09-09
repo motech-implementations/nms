@@ -50,6 +50,8 @@ public class LanguageControllerBundleIT extends BasePaxIT {
     private static final String ADMIN_USERNAME = "motech";
     private static final String ADMIN_PASSWORD = "motech";
 
+    private static final String VALID_CALL_ID = "1234567890123456789012345";
+
     @Inject
     FrontLineWorkerService frontLineWorkerService;
 
@@ -147,7 +149,7 @@ public class LanguageControllerBundleIT extends BasePaxIT {
 
         UserLanguageRequest request = new UserLanguageRequest(
                 123L, //callingNumber
-                123456789012345l, //callId
+                VALID_CALL_ID, //callId
                 "123"); //languageLocationCode
         String json = new ObjectMapper().writeValueAsString(request);
         StringEntity params = new StringEntity(json);

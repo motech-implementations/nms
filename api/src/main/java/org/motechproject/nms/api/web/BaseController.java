@@ -52,6 +52,7 @@ public class BaseController {
     public static final long LARGEST_10_DIGIT_NUMBER  = 9999999999L;
     public static final long SMALLEST_15_DIGIT_NUMBER = 100000000000000L;
     public static final long LARGEST_15_DIGIT_NUMBER  = 999999999999999L;
+    public static final int CALL_ID_LENGTH = 25;
     public static final long MILLIS = 1000;
     public static final int MAX_LENGTH_255 = 255;
     public static final int MA_MIN_SCORE = 0;
@@ -131,6 +132,19 @@ public class BaseController {
         return false;
     }
 
+    protected static boolean validateCallId(StringBuilder errors, String value) {
+
+        if (!validateFieldPresent(errors, "callId", value)) {
+            return false;
+        }
+
+        if (value.length() == CALL_ID_LENGTH) {
+            return true;
+        }
+        errors.append(String.format(INVALID, "callId"));
+        return false;
+    }
+
     protected static boolean validateFieldCallStatus(StringBuilder errors, String fieldName, Integer value) {
         if (!validateFieldPresent(errors, fieldName, value)) {
             return false;
@@ -181,16 +195,16 @@ public class BaseController {
         return true;
     }
 
-    protected StringBuilder validate(Long callingNumber, Long callId) {
+    protected StringBuilder validate(Long callingNumber, String callId) {
         StringBuilder failureReasons = new StringBuilder();
 
         validateField10Digits(failureReasons, "callingNumber", callingNumber);
-        validateField15Digits(failureReasons, "callId", callId);
+        validateCallId(failureReasons, callId);
 
         return failureReasons;
     }
 
-    protected StringBuilder validate(Long callingNumber, Long callId, String operator, String circle) {
+    protected StringBuilder validate(Long callingNumber, String callId, String operator, String circle) {
         StringBuilder failureReasons = validate(callingNumber, callId);
 
         validateFieldMaxLength(failureReasons, "operator", operator, MAX_LENGTH_255);

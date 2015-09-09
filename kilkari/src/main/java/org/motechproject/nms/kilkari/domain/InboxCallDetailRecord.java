@@ -28,7 +28,7 @@ public class InboxCallDetailRecord {
     private String circle;
 
     @Field
-    private Long callId;
+    private String callId;
 
     @Field
     private DateTime callStartTime;
@@ -53,7 +53,7 @@ public class InboxCallDetailRecord {
     }
 
     public InboxCallDetailRecord(Long callingNumber, String operator, // NO CHECKSTYLE More than 7 parameters
-                                 String circle, Long callId, DateTime callStartTime, DateTime callEndTime,
+                                 String circle, String callId, DateTime callStartTime, DateTime callEndTime,
                                  Integer callDurationInPulses, Integer callStatus, Integer callDisconnectReason,
                                  Set<InboxCallData> content) {
         this.callingNumber = callingNumber;
@@ -96,11 +96,11 @@ public class InboxCallDetailRecord {
         this.circle = circle;
     }
 
-    public Long getCallId() {
+    public String getCallId() {
         return callId;
     }
 
-    public void setCallId(Long callId) {
+    public void setCallId(String callId) {
         this.callId = callId;
     }
 
