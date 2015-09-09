@@ -130,7 +130,7 @@ public class SubscriptionHelper {
     public Subscription mksub(SubscriptionOrigin origin, DateTime startDate, SubscriptionPackType packType, Long number) {
 
         Subscription subscription;
-        Subscriber subscriber = subscriberDataService.findByCallingNumber(number);
+        Subscriber subscriber = subscriberDataService.findByNumber(number);
 
         if (null == subscriber) {
             subscriber = subscriberDataService.create(new Subscriber(

@@ -40,6 +40,9 @@ import java.util.Set;
 @Service("subscriberService")
 public class SubscriberServiceImpl implements SubscriberService {
 
+    public static final String SELECT_SUBSCRIBER = "select * from nms_subscribers where callingNumber = ?";
+    public static final String MULTIPLE_SUBSCRIBERS = "More than one subscriber returned for callingNumber %s";
+
     private SubscriberDataService subscriberDataService;
     private SubscriptionService subscriptionService;
     private SubscriptionDataService subscriptionDataService;
@@ -62,8 +65,31 @@ public class SubscriberServiceImpl implements SubscriberService {
     }
 
     @Override
-    public Subscriber getSubscriber(long callingNumber) {
-        return subscriberDataService.findByCallingNumber(callingNumber);
+    public Subscriber getSubscriber(final long callingNumber) {
+
+        SqlQueryExecution<Subscriber> queryExecution = new SqlQueryExecution<Subscriber>() {
+
+            @Override
+            public String getSqlQuery() {
+                return SELECT_SUBSCRIBER;
+            }
+
+            @Override
+            public Subscriber execute(Query query) {
+                query.setClass(Subscriber.class);
+                ForwardQueryResult fqr = (ForwardQueryResult) query.execute(callingNumber);
+                if (fqr.isEmpty()) {
+                    return null;
+                }
+                if (fqr.size() == 1) {
+                    return (Subscriber) fqr.get(0);
+                }
+                throw new IllegalStateException(String.format(MULTIPLE_SUBSCRIBERS, callingNumber));
+            }
+        };
+
+        return subscriberDataService.executeSQLQuery(queryExecution);
+
     }
 
     @Override
@@ -133,7 +159,7 @@ public class SubscriberServiceImpl implements SubscriberService {
         SubscriptionPackType packType;
         packType = (beneficiary instanceof MctsChild) ? SubscriptionPackType.CHILD : SubscriptionPackType.PREGNANCY;
 
-        Subscriber subscriberWithMsisdn = subscriberDataService.findByCallingNumber(newMsisdn);
+        Subscriber subscriberWithMsisdn = getSubscriber(newMsisdn);
         if (subscriberWithMsisdn != null) {
             // this number is in use
             if (subscriptionService.getActiveSubscription(subscriberWithMsisdn, packType) != null) {
@@ -185,6 +211,7 @@ public class SubscriberServiceImpl implements SubscriberService {
         Circle circle = circleFromDistrict(district);
         Language language = (Language) districtDataService.getDetachedField(district, "language");
         Subscriber subscriber = getSubscriber(msisdn);
+
 
         SubscriptionPack pack = subscriptionPackDataService.byType(packType);
 

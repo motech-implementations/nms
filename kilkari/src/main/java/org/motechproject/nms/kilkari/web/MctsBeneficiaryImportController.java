@@ -109,7 +109,6 @@ public class MctsBeneficiaryImportController {
     public void updateBeneficiaryData(@RequestParam MultipartFile csvFile) {
 
         LOGGER.debug("updateBeneficiaryData() BEGIN");
-        Timer timer = new Timer();
         try {
             try (InputStream in = csvFile.getInputStream()) {
                 mctsBeneficiaryUpdateService.updateBeneficiaryData(new InputStreamReader(in));
@@ -122,7 +121,6 @@ public class MctsBeneficiaryImportController {
             logError(csvFile.getOriginalFilename(), "/kilkari/beneficiary/update", e);
             throw new CsvImportException("An error occurred during CSV import", e);
         }
-        LOGGER.debug("updateBeneficiaryData() END ({})", timer.time());
     }
 
     private void logError(String fileName, String endpoint, Exception exception) {
