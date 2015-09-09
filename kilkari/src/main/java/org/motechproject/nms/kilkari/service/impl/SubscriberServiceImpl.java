@@ -40,8 +40,8 @@ import java.util.Set;
 @Service("subscriberService")
 public class SubscriberServiceImpl implements SubscriberService {
 
-    public static final String SELECT_SUBSCRIBERS_BY_NUMBER = "select * from nms_subscribers where callingNumber = ?";
-    public static final String MORE_THAN_ONE_SUBSCRIBER = "More than one subscriber returned for callingNumber %s";
+    public static final String SELECT_SUBSCRIBER = "select * from nms_subscribers where callingNumber = ?";
+    public static final String MULTIPLE_SUBSCRIBERS = "More than one subscriber returned for callingNumber %s";
 
     private SubscriberDataService subscriberDataService;
     private SubscriptionService subscriptionService;
@@ -71,7 +71,7 @@ public class SubscriberServiceImpl implements SubscriberService {
 
             @Override
             public String getSqlQuery() {
-                return SELECT_SUBSCRIBERS_BY_NUMBER;
+                return SELECT_SUBSCRIBER;
             }
 
             @Override
@@ -84,7 +84,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                 if (fqr.size() == 1) {
                     return (Subscriber) fqr.get(0);
                 }
-                throw new IllegalStateException(String.format(MORE_THAN_ONE_SUBSCRIBER, callingNumber));
+                throw new IllegalStateException(String.format(MULTIPLE_SUBSCRIBERS, callingNumber));
             }
         };
 
