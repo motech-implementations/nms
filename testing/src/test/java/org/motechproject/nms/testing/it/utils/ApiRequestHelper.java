@@ -14,17 +14,17 @@ public class ApiRequestHelper {
 
     public static HttpPost createCallDetailsPost(String serviceName,
             boolean includeCallingNumber, Long callingNumber,
-            boolean includeCallId, Long callId, boolean includeOperator,
-            String operator, boolean includeCircle, String circle,
+            boolean includeCallId, String callId,
+            boolean includeOperator, String operator,
+            boolean includeCircle, String circle,
             boolean includeCallStartTime, Long callStartTime,
             boolean includeCallEndTime, Long callEndTime,
             boolean includeCallDurationInPulses, Integer callDurationInPulses,
-            boolean includeEndOfUsagePromptCounter,
-            Integer endOfUsagePromptCounter,
-            boolean includeWelcomeMessagePromptFlag,
-            Boolean welcomeMessagePromptFlag, boolean includeCallStatus,
-            Integer callStatus, boolean includeCallDisconnectReason,
-            Integer callDisconnectReason, boolean includeContet, String content) {
+            boolean includeEndOfUsagePromptCounter, Integer endOfUsagePromptCounter,
+            boolean includeWelcomeMessagePromptFlag, Boolean welcomeMessagePromptFlag,
+            boolean includeCallStatus, Integer callStatus,
+            boolean includeCallDisconnectReason, Integer callDisconnectReason,
+            boolean includeContet, String content) {
         HttpPost httpPost = new HttpPost(String.format(
                 "http://localhost:%d/api/%s/callDetails",
                 TestContext.getJettyPort(), serviceName));
@@ -50,7 +50,7 @@ public class ApiRequestHelper {
     }
 
     private static String createCallDetailsJson(boolean includeCallingNumber,
-            Long callingNumber, boolean includeCallId, Long callId,
+            Long callingNumber, boolean includeCallId, String callId,
             boolean includeOperator, String operator, boolean includeCircle,
             String circle, boolean includeCallStartTime, Long callStartTime,
             boolean includeCallEndTime, Long callEndTime,

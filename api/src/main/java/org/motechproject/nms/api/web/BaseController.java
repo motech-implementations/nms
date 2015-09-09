@@ -134,7 +134,8 @@ public class BaseController {
 
     protected static boolean validateCallId(StringBuilder errors, String value) {
 
-        if (!validateFieldPresent(errors, "callId", value)) {
+        if (value == null || value.isEmpty()) {
+            errors.append(String.format(NOT_PRESENT, "callId"));
             return false;
         }
 

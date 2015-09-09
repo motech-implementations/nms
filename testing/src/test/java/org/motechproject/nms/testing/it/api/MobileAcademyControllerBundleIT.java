@@ -74,6 +74,8 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
 
     public static final int MILLISECONDS_PER_SECOND = 1000;
 
+    public static final String VALID_CALL_ID = "1234567890123456789012345";
+
     @Before
     public void setupTestData() {
         testingService.clearDatabase();
@@ -96,7 +98,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
         String endpoint = String.format("http://localhost:%d/api/mobileacademy/bookmarkWithScore",
                 TestContext.getJettyPort());
         SaveBookmarkRequest bookmarkRequest = new SaveBookmarkRequest();
-        bookmarkRequest.setCallId(BaseController.SMALLEST_15_DIGIT_NUMBER - 1);
+        bookmarkRequest.setCallId(VALID_CALL_ID.substring(1));
         HttpPost request = RequestBuilder.createPostRequest(endpoint, bookmarkRequest);
         assertTrue(SimpleHttpClient.execHttpRequest(request, HttpStatus.SC_BAD_REQUEST, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
     }
@@ -107,7 +109,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
         String endpoint = String.format("http://localhost:%d/api/mobileacademy/bookmarkWithScore",
                 TestContext.getJettyPort());
         SaveBookmarkRequest bookmarkRequest = new SaveBookmarkRequest();
-        bookmarkRequest.setCallId(BaseController.LARGEST_15_DIGIT_NUMBER + 1);
+        bookmarkRequest.setCallId(VALID_CALL_ID + "1");
         HttpPost request = RequestBuilder.createPostRequest(endpoint, bookmarkRequest);
         assertTrue(SimpleHttpClient.execHttpRequest(request, HttpStatus.SC_BAD_REQUEST, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
     }
@@ -140,7 +142,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
                 TestContext.getJettyPort());
         SaveBookmarkRequest bookmark = new SaveBookmarkRequest();
         bookmark.setCallingNumber(BaseController.SMALLEST_10_DIGIT_NUMBER);
-        bookmark.setCallId(BaseController.SMALLEST_15_DIGIT_NUMBER);
+        bookmark.setCallId(VALID_CALL_ID);
         HttpPost request = RequestBuilder.createPostRequest(endpoint, bookmark);
         assertTrue(SimpleHttpClient.execHttpRequest(request, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
     }
@@ -152,7 +154,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
                 TestContext.getJettyPort());
         SaveBookmarkRequest bookmark = new SaveBookmarkRequest();
         bookmark.setCallingNumber(BaseController.SMALLEST_10_DIGIT_NUMBER);
-        bookmark.setCallId(BaseController.SMALLEST_15_DIGIT_NUMBER);
+        bookmark.setCallId(VALID_CALL_ID);
 
         Map<String, Integer> scores = new HashMap<>();
         for (int i = 1; i < 12; i++) {
@@ -181,7 +183,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
                 TestContext.getJettyPort());
         SaveBookmarkRequest bookmark = new SaveBookmarkRequest();
         bookmark.setCallingNumber(BaseController.SMALLEST_10_DIGIT_NUMBER);
-        bookmark.setCallId(BaseController.SMALLEST_15_DIGIT_NUMBER);
+        bookmark.setCallId(VALID_CALL_ID);
         HttpPost request = RequestBuilder.createPostRequest(endpoint, bookmark);
         assertTrue(SimpleHttpClient.execHttpRequest(request, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
 
@@ -343,8 +345,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
             } else {
                 sb.append(seperator);
             }
-            sb.append("callId=");
-            sb.append(callId);
+            sb.append(String.format("callId=%s", callId));
         }
         // System.out.println("Request url:" + sb.toString());
         return RequestBuilder.createGetRequest(sb.toString());
@@ -368,7 +369,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
         // Blank bookmark should come as request response, As there is no any
         // bookmark in the system for the user
         HttpGet getRequest = createHttpGetBookmarkWithScore("1234567890",
-                "123456789012345");
+                VALID_CALL_ID);
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
                 getRequest, RequestBuilder.ADMIN_USERNAME,
@@ -388,7 +389,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
     @Test
     public void verifyFT405() throws IOException, InterruptedException {
         HttpGet request = createHttpGetBookmarkWithScore(null,
-                "123456789012345");
+                VALID_CALL_ID);
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
                 request, RequestBuilder.ADMIN_USERNAME,
@@ -428,7 +429,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
     public void verifyFT407() throws IOException, InterruptedException {
         // 11 digit callingNumber
         HttpGet request = createHttpGetBookmarkWithScore("12345678901",
-                "123456789012345");
+                VALID_CALL_ID);
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
                 request, RequestBuilder.ADMIN_USERNAME,
@@ -441,7 +442,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
                 .getEntity())));
 
         // 9 digit callingNumber
-        request = createHttpGetBookmarkWithScore("123456789", "123456789012345");
+        request = createHttpGetBookmarkWithScore("123456789", VALID_CALL_ID);
 
         request.setHeader("Content-type", "application/json");
         response = SimpleHttpClient.httpRequestAndResponse(request,
@@ -453,7 +454,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
 
         // Alphanumeric callingNumber
         request = createHttpGetBookmarkWithScore("123456A789",
-                "123456789012345");
+                VALID_CALL_ID);
 
         request.setHeader("Content-type", "application/json");
         response = SimpleHttpClient.httpRequestAndResponse(request,
@@ -505,7 +506,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
                 "http://localhost:%d/api/mobileacademy/bookmarkWithScore",
                 TestContext.getJettyPort());
         SaveBookmarkRequest bookmarkRequest = new SaveBookmarkRequest();
-        bookmarkRequest.setCallId(123456789012345l);
+        bookmarkRequest.setCallId(VALID_CALL_ID);
         bookmarkRequest.setCallingNumber(1234567890l);
         bookmarkRequest.setBookmark("Chapter01_Lesson01");
         Map<String, Integer> scoreMap = new HashMap<String, Integer>();
@@ -532,7 +533,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
                 "http://localhost:%d/api/mobileacademy/bookmarkWithScore",
                 TestContext.getJettyPort());
         SaveBookmarkRequest bookmarkRequest = new SaveBookmarkRequest();
-        bookmarkRequest.setCallId(123456789012345l);
+        bookmarkRequest.setCallId(VALID_CALL_ID);
         bookmarkRequest.setCallingNumber(1234567890l);
         HttpPost request = RequestBuilder.createPostRequest(endpoint,
                 bookmarkRequest);
@@ -553,7 +554,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
                 "http://localhost:%d/api/mobileacademy/bookmarkWithScore",
                 TestContext.getJettyPort());
         SaveBookmarkRequest bookmarkRequest = new SaveBookmarkRequest();
-        bookmarkRequest.setCallId(123456789012345l);
+        bookmarkRequest.setCallId(VALID_CALL_ID);
         bookmarkRequest.setBookmark("Chapter01_Lesson01");
         Map<String, Integer> scoreMap = new HashMap<String, Integer>();
         scoreMap.put("1", 2);
@@ -615,7 +616,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
                 "http://localhost:%d/api/mobileacademy/bookmarkWithScore",
                 TestContext.getJettyPort());
         SaveBookmarkRequest bookmarkRequest = new SaveBookmarkRequest();
-        bookmarkRequest.setCallId(1234567890123456l);
+        bookmarkRequest.setCallId(VALID_CALL_ID);
         bookmarkRequest.setCallingNumber(1234567890l);
         bookmarkRequest.setBookmark("Chapter01_Lesson01");
         Map<String, Integer> scoreMap = new HashMap<String, Integer>();
@@ -635,7 +636,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
                 .getEntity())));
 
         // callId less than 15 digit
-        bookmarkRequest.setCallId(12345678901234l);
+        bookmarkRequest.setCallId(VALID_CALL_ID);
         request = RequestBuilder.createPostRequest(endpoint, bookmarkRequest);
         response = SimpleHttpClient.httpRequestAndResponse(request,
                 RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
@@ -658,7 +659,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
                 TestContext.getJettyPort());
         SaveBookmarkRequest bookmarkRequest = new SaveBookmarkRequest();
         bookmarkRequest.setCallingNumber(123456789l);
-        bookmarkRequest.setCallId(123456789012345l);
+        bookmarkRequest.setCallId(VALID_CALL_ID);
         bookmarkRequest.setBookmark("Chapter01_Lesson01");
         Map<String, Integer> scoreMap = new HashMap<String, Integer>();
         scoreMap.put("1", 2);
@@ -701,7 +702,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
                 TestContext.getJettyPort());
         SaveBookmarkRequest bookmarkRequest = new SaveBookmarkRequest();
         bookmarkRequest.setCallingNumber(1234567890l);
-        bookmarkRequest.setCallId(123456789012345l);
+        bookmarkRequest.setCallId(VALID_CALL_ID);
         bookmarkRequest.setBookmark("Chapter01_Lesson01");
         Map<String, Integer> scoreMap = new HashMap<String, Integer>();
         scoreMap.put("1", 2);
@@ -734,7 +735,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
                 TestContext.getJettyPort());
         SaveBookmarkRequest bookmarkRequest = new SaveBookmarkRequest();
         bookmarkRequest.setCallingNumber(1234567890l);
-        bookmarkRequest.setCallId(123456789012345l);
+        bookmarkRequest.setCallId(VALID_CALL_ID);
         bookmarkRequest.setBookmark("Abc_Abc"); // Invalid bookmark
         Map<String, Integer> scoreMap = new HashMap<String, Integer>();
         scoreMap.put("1", 2);
@@ -766,7 +767,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
 
         // save bookamark first
         bookmarkRequest.setCallingNumber(1234567890l);
-        bookmarkRequest.setCallId(123456789012345l);
+        bookmarkRequest.setCallId(VALID_CALL_ID);
         bookmarkRequest.setBookmark("Chapter03_Lesson01");
         Map<String, Integer> scoreMap = new HashMap<String, Integer>();
         scoreMap.put("1", 2);
@@ -781,7 +782,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
 
         // assert if bookmark has been saved
         HttpGet getRequest = createHttpGetBookmarkWithScore("1234567890",
-                "123456789012345");
+                VALID_CALL_ID);
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
                 getRequest, RequestBuilder.ADMIN_USERNAME,
                 RequestBuilder.ADMIN_PASSWORD);
@@ -823,7 +824,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
 
         // save bookamark first
         bookmarkRequest.setCallingNumber(1234567890l);
-        bookmarkRequest.setCallId(123456789012345l);
+        bookmarkRequest.setCallId(VALID_CALL_ID);
         bookmarkRequest.setBookmark("Chapter03_Lesson01");
         Map<String, Integer> scoreMap = new HashMap<String, Integer>();
         scoreMap.put("1", 2);
@@ -838,7 +839,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
 
         // assert if bookmark has been saved
         HttpGet getRequest = createHttpGetBookmarkWithScore("1234567890",
-                "123456789012345");
+                VALID_CALL_ID);
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
                 getRequest, RequestBuilder.ADMIN_USERNAME,
                 RequestBuilder.ADMIN_PASSWORD);
@@ -879,7 +880,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
 
         // save bookamark first
         bookmarkRequest.setCallingNumber(1234567890l);
-        bookmarkRequest.setCallId(123456789012345l);
+        bookmarkRequest.setCallId(VALID_CALL_ID);
         bookmarkRequest.setBookmark("Chapter03_Lesson01");
         Map<String, Integer> scoreMap = new HashMap<String, Integer>();
         scoreMap.put("1", 2);
@@ -894,7 +895,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
 
         // assert if bookmark has been saved
         HttpGet getRequest = createHttpGetBookmarkWithScore("1234567890",
-                "123456789012345");
+                VALID_CALL_ID);
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
                 getRequest, RequestBuilder.ADMIN_USERNAME,
                 RequestBuilder.ADMIN_PASSWORD);
@@ -935,7 +936,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
 
         // save bookamark first
         bookmarkRequest.setCallingNumber(1234567890l);
-        bookmarkRequest.setCallId(123456789012345l);
+        bookmarkRequest.setCallId(VALID_CALL_ID);
         bookmarkRequest.setBookmark("COURSE_COMPLETED");
         Map<String, Integer> scoreMap = new HashMap<String, Integer>();
         scoreMap.put("1", 2);
@@ -963,7 +964,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
 
         // assert if bookmark has been reset
         HttpGet getRequest = createHttpGetBookmarkWithScore("1234567890",
-                "123456789012345");
+                VALID_CALL_ID);
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
                 getRequest, RequestBuilder.ADMIN_USERNAME,
                 RequestBuilder.ADMIN_PASSWORD);
@@ -984,7 +985,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
                 "http://localhost:%d/api/mobileacademy/bookmarkWithScore",
                 TestContext.getJettyPort());
         SaveBookmarkRequest bookmarkRequest = new SaveBookmarkRequest();
-        bookmarkRequest.setCallId(123456789012345l);
+        bookmarkRequest.setCallId(VALID_CALL_ID);
         bookmarkRequest.setCallingNumber(1234567890l);
         bookmarkRequest.setBookmark("Chapter01_Lesson01");
         Map<String, Integer> scoreMap = new HashMap<String, Integer>();
@@ -997,7 +998,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
 
         // fetch bookmark for the same user
         HttpGet getRequest = createHttpGetBookmarkWithScore("1234567890",
-                "123456789012345");
+                VALID_CALL_ID);
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
                 getRequest, RequestBuilder.ADMIN_USERNAME,
                 RequestBuilder.ADMIN_PASSWORD);

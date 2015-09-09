@@ -94,6 +94,7 @@ import static org.junit.Assert.assertTrue;
 public class UserControllerBundleIT extends BasePaxIT {
     private static final String ADMIN_USERNAME = "motech";
     private static final String ADMIN_PASSWORD = "motech";
+    private static final String VALID_CALL_ID = "1234567890123456789012345";
 
     @Inject
     SubscriptionService subscriptionService;
@@ -604,8 +605,8 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "mobilekunji",    //service
                 true, "1111111111",     //callingNumber
                 true, "OP",             //operator
-                false, null,             //circle
-                true, "123456789012345" //callId
+                false, null,            //circle
+                true, VALID_CALL_ID     //callId
         );
 
         String expectedJsonResponse = createFailureResponseJson("<MOBILE_KUNJI: Not Deployed In State>");
@@ -644,8 +645,8 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "mobilekunji",    //service
                 true, "1111111111",     //callingNumber
                 true, "OP",             //operator
-                false, null,             //circle
-                true, "123456789012345" //callId
+                false, null,            //circle
+                true, VALID_CALL_ID     //callId
         );
 
         String expectedJsonResponse = createFailureResponseJson("<MOBILE_KUNJI: Not Deployed In State>");
@@ -671,11 +672,11 @@ public class UserControllerBundleIT extends BasePaxIT {
         createFlwWithNoLocationNoLanguageNoDeployedServices();
 
         HttpGet httpGet = createHttpGet(
-                true, "mobilekunji",    //service
-                true, "1111111111",     //callingNumber
-                true, "OP",             //operator
-                true, rh.delhiCircle().getName(),//circle
-                true, "123456789012345" //callId
+                true, "mobilekunji",                //service
+                true, "1111111111",                 //callingNumber
+                true, "OP",                         //operator
+                true, rh.delhiCircle().getName(),   //circle
+                true, VALID_CALL_ID                 //callId
         );
 
         String expectedJsonResponse = createFailureResponseJson("<MOBILE_KUNJI: Not Deployed In State>");
@@ -691,11 +692,11 @@ public class UserControllerBundleIT extends BasePaxIT {
         createFlwWithNoLocationNoLanguageNoDeployedServices();
 
         HttpGet httpGet = createHttpGet(
-                true, "kilkari",    //service
-                true, "1111111111",     //callingNumber
-                true, "OP",             //operator
-                true, rh.delhiCircle().getName(),//circle
-                true, "123456789012345" //callId
+                true, "kilkari",                    //service
+                true, "1111111111",                 //callingNumber
+                true, "OP",                         //operator
+                true, rh.delhiCircle().getName(),   //circle
+                true, VALID_CALL_ID                 //callId
         );
 
         String expectedJsonResponse = createFailureResponseJson("<KILKARI: Not Deployed In State>");
@@ -716,11 +717,11 @@ public class UserControllerBundleIT extends BasePaxIT {
         deployedServiceDataService.create(new DeployedService(rh.delhiState(), Service.KILKARI));
 
         HttpGet httpGet = createHttpGet(
-                true, "kilkari",        //service
-                true, "1000000000",     //callingNumber
-                true, "OP",             //operator
-                true, rh.delhiCircle().getName(),//circle
-                true, "123456789012345" //callId
+                true, "kilkari",                    //service
+                true, "1000000000",                 //callingNumber
+                true, "OP",                         //operator
+                true, rh.delhiCircle().getName(),   //circle
+                true, VALID_CALL_ID                 //callId
         );
 
         String expectedJsonResponse = createKilkariUserResponseJson(
@@ -740,11 +741,11 @@ public class UserControllerBundleIT extends BasePaxIT {
         createKilkariTestData();
 
         HttpGet httpGet = createHttpGet(
-                true, "kilkari",        //service
-                true, "9999999999",     //callingNumber
-                true, "OP",             //operator
-                true, rh.delhiCircle().getName(),//circle
-                true, "123456789012345" //callId
+                true, "kilkari",                    //service
+                true, "9999999999",                 //callingNumber
+                true, "OP",                         //operator
+                true, rh.delhiCircle().getName(),   //circle
+                true, VALID_CALL_ID                 //callId
         );
 
         String expectedJsonResponse = createKilkariUserResponseJson(
@@ -768,7 +769,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1111111111",     //callingNumber
                 true, "OP",             //operator
                 true, "AA",             //circle
-                true, "123456789012345" //callId
+                true, VALID_CALL_ID     //callId
         );
 
         String expectedJsonResponse = createFlwUserResponseJson(
@@ -792,11 +793,11 @@ public class UserControllerBundleIT extends BasePaxIT {
         createFlwWithLanguageServiceUsageAndCappedService();
 
         HttpGet httpGet = createHttpGet(
-                true, "mobilekunji",    //service
-                true, "1111111111",     //callingNumber
-                true, "OP",             //operator
-                true, rh.delhiCircle().getName(),//circle
-                true, "123456789012345" //callId
+                true, "mobilekunji",                //service
+                true, "1111111111",                 //callingNumber
+                true, "OP",                         //operator
+                true, rh.delhiCircle().getName(),   //circle
+                true, VALID_CALL_ID                 //callId
         );
 
         String expectedJsonResponse = createFlwUserResponseJson(
@@ -820,11 +821,11 @@ public class UserControllerBundleIT extends BasePaxIT {
         createFlwWithLanguageFullServiceUsageAndCappedService();
 
         HttpGet httpGet = createHttpGet(
-                true, "mobilekunji",    //service
-                true, "1111111111",     //callingNumber
-                true, "OP",             //operator
-                true, rh.delhiCircle().getName(),             //circle
-                true, "123456789012345" //callId
+                true, "mobilekunji",                //service
+                true, "1111111111",                 //callingNumber
+                true, "OP",                         //operator
+                true, rh.delhiCircle().getName(),   //circle
+                true, VALID_CALL_ID                 //callId
         );
 
         String expectedJsonResponse = createFlwUserResponseJson(
@@ -850,7 +851,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1111111111",     //callingNumber
                 true, "OP",             //operator
                 true, "AA",             //circle
-                true, "123456789012345" //callId
+                true, VALID_CALL_ID     //callId
         );
 
         String expectedJsonResponse = createFailureResponseJson("<serviceName: Invalid>");
@@ -867,7 +868,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 false, null,            //callingNumber
                 true, "OP",             //operator
                 true, "AA",             //circle
-                true, "123456789012345" //callId
+                true, VALID_CALL_ID     //callId
         );
 
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Not Present>");
@@ -884,7 +885,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "123",            //callingNumber
                 true, "OP",             //operator
                 true, "AA",             //circle
-                true, "123456789012345" //callId
+                true, VALID_CALL_ID     //callId
         );
 
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
@@ -901,11 +902,11 @@ public class UserControllerBundleIT extends BasePaxIT {
         createKilkariTestData();
 
         HttpGet httpGet = createHttpGet(
-                true, "kilkari",        //service
-                true, "9999999999",     //callingNumber
-                false, null,             //operator
-                true, rh.delhiCircle().getName(),//circle
-                true, "123456789012345" //callId
+                true, "kilkari",                    //service
+                true, "9999999999",                 //callingNumber
+                false, null,                        //operator
+                true, rh.delhiCircle().getName(),   //circle
+                true, VALID_CALL_ID                 //callId
         );
 
 
@@ -928,11 +929,11 @@ public class UserControllerBundleIT extends BasePaxIT {
         createCircleWithLanguage();
 
         HttpGet httpGet = createHttpGet(
-                true, "mobilekunji",        //service
+                true, "mobilekunji",    //service
                 true, "1111111111",     //callingNumber
                 true, "OP",             //operator
                 false, null,            //circle
-                true, "123456789012345" //callId
+                true, VALID_CALL_ID     //callId
         );
 
         String expectedJsonResponse = createFlwUserResponseJson(
@@ -978,7 +979,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1111111112",     //callingNumber
                 true, "OP",             //operator
                 true, "AA",             //circle
-                true, "123456789012345" //callId
+                true, VALID_CALL_ID //callId
         );
 
         String expectedJsonResponse = createFlwUserResponseJson(
@@ -1008,7 +1009,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1111111112",     //callingNumber
                 true, "OP",             //operator
                 true, "AA",             //circle
-                true, "123456789012345" //callId
+                true, VALID_CALL_ID     //callId
         );
 
         String expectedJsonResponse = createFlwUserResponseJson(
@@ -1041,8 +1042,8 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "mobilekunji",    //service
                 true, "1111111112",     //callingNumber
                 true, "OP",             //operator
-                false, "",             //circle
-                true, "123456789012345" //callId
+                false, "",              //circle
+                true, VALID_CALL_ID     //callId
         );
 
         String expectedJsonResponse = createFlwUserResponseJson(
@@ -1067,11 +1068,11 @@ public class UserControllerBundleIT extends BasePaxIT {
         createFlwWithLanguageFullUsageOfBothServiceUncapped();
 
         HttpGet httpGet = createHttpGet(
-                true, "mobileacademy",  //service
-                true, "1111111111",     //callingNumber
-                true, "OP",             //operator
-                true, rh.delhiCircle().getName(),//circle
-                true, "123456789012345" //callId
+                true, "mobileacademy",              //service
+                true, "1111111111",                 //callingNumber
+                true, "OP",                         //operator
+                true, rh.delhiCircle().getName(),   //circle
+                true, VALID_CALL_ID                 //callId
         );
 
         String expectedJsonResponse = createFlwUserResponseJson(
@@ -1096,11 +1097,11 @@ public class UserControllerBundleIT extends BasePaxIT {
         createFlwWithLanguageFullUsageOfBothServiceUncapped();
 
         HttpGet httpGet = createHttpGet(
-                true, "mobilekunji",    //service
-                true, "1111111111",     //callingNumber
-                true, "OP",             //operator
-                true, rh.delhiCircle().getName(),//circle
-                true, "123456789012345" //callId
+                true, "mobilekunji",                //service
+                true, "1111111111",                 //callingNumber
+                true, "OP",                         //operator
+                true, rh.delhiCircle().getName(),   //circle
+                true, VALID_CALL_ID                 //callId
         );
 
         String expectedJsonResponse = createFlwUserResponseJson(
@@ -1128,7 +1129,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1111111111",     //callingNumber
                 true, "OP",             //operator
                 true, "AA",             //circle
-                true, "123456789012345" //callId
+                true, VALID_CALL_ID     //callId
         );
 
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Not Authorized>");
@@ -1147,7 +1148,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1111111111",     //callingNumber
                 true, "OP",             //operator
                 true, "AA",             //circle
-                true, "123456789012345" //callId
+                true, VALID_CALL_ID     //callId
         );
 
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Not Authorized>");
@@ -1159,7 +1160,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testSetLanguageInvalidService() throws IOException, InterruptedException {
-        HttpPost httpPost = createHttpPost("INVALID_SERVICE", new UserLanguageRequest(1111111111L, "1234567890123451234512345", "10"));
+        HttpPost httpPost = createHttpPost("INVALID_SERVICE", new UserLanguageRequest(1111111111L, VALID_CALL_ID, "10"));
 
         String expectedJsonResponse = createFailureResponseJson("<serviceName: Invalid>");
 
@@ -1170,7 +1171,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testSetLanguageMissingCallingNumber() throws IOException, InterruptedException {
-        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(null, "1234567890123451234512345", "10"));
+        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(null, VALID_CALL_ID, "10"));
 
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Not Present>");
 
@@ -1181,7 +1182,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testSetLanguageInvalidCallingNumber() throws IOException, InterruptedException {
-        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(123L, "1234567890123451234512345", "10"));
+        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(123L, VALID_CALL_ID, "10"));
 
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
 
@@ -1203,7 +1204,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testSetLanguageInvalidCallId() throws IOException, InterruptedException {
-        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(1111111111L, "12345678901234512345", "10"));
+        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(1111111111L, VALID_CALL_ID.substring(1), "10"));
 
         String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
 
@@ -1214,7 +1215,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testSetLanguageMissingLanguageLocationCode() throws IOException, InterruptedException {
-        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(1111111111L, "1234567890123451234512345", null));
+        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(1111111111L, VALID_CALL_ID, null));
 
         String expectedJsonResponse = createFailureResponseJson("<languageLocationCode: Not Present>");
 
@@ -1241,7 +1242,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     public void testSetLanguageNoFLW() throws IOException, InterruptedException {
         createCircleWithLanguage();
 
-        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(1111111111L, "1234567890123451234512345",
+        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(1111111111L, VALID_CALL_ID,
                 rh.hindiLanguage().getCode()));
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost));
@@ -1257,7 +1258,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     public void testSetLanguageLanguageNotFound() throws IOException, InterruptedException {
         createFlwCappedServiceNoUsageNoLocationNoLanguage();
 
-        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(1111111111L, "1234567890123451234512345", "77"));
+        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(1111111111L, VALID_CALL_ID, "77"));
 
         String expectedJsonResponse = createFailureResponseJson("<languageLocationCode: Not Found>");
 
@@ -1270,7 +1271,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     public void testSetLanguageValid() throws IOException, InterruptedException {
         createFlwCappedServiceNoUsageNoLocationNoLanguage();
 
-        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(1111111111L, "1234567890123451234512345", "99"));
+        HttpPost httpPost = createHttpPost("mobilekunji", new UserLanguageRequest(1111111111L, VALID_CALL_ID, "99"));
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK));
 
@@ -1289,11 +1290,11 @@ public class UserControllerBundleIT extends BasePaxIT {
     public void verifyFT1() throws IOException, InterruptedException {
         createKilkariTestData();
         HttpGet httpGet = createHttpGet(
-                true, "kilkari", // service
-                true, "2000000000", // callingNumber- subscribed to both packs
-                true, "OP", // operator
-                true, rh.delhiCircle().getName(), // circle
-                true, "123456789012345" // callId
+                true, "kilkari",                    // service
+                true, "2000000000",                 // callingNumber- subscribed to both packs
+                true, "OP",                         // operator
+                true, rh.delhiCircle().getName(),   // circle
+                true, VALID_CALL_ID                 // callId
         );
 
         String expectedJsonResponse = createKilkariUserResponseJson(
@@ -1317,11 +1318,11 @@ public class UserControllerBundleIT extends BasePaxIT {
     public void verifyFT2() throws IOException, InterruptedException {
         createKilkariTestData();
         HttpGet httpGet = createHttpGet(
-                true, "kilkari", // service
-                true, "3000000000", // callingNumber- subscribed to pregnancyPack
-                true, "OP", // operator
-                true, rh.delhiCircle().getName(), // circle
-                true, "123456789012345" // callId
+                true, "kilkari",                    // service
+                true, "3000000000",                 // callingNumber- subscribed to pregnancyPack
+                true, "OP",                         // operator
+                true, rh.delhiCircle().getName(),   // circle
+                true, VALID_CALL_ID                 // callId
         );
 
         String expectedJsonResponse = createKilkariUserResponseJson(
@@ -1368,11 +1369,11 @@ public class UserControllerBundleIT extends BasePaxIT {
         createKilkariTestData();
         createNationalDefaultLanguageForKilkari();
         HttpGet httpGet = createHttpGet(
-                true, "kilkari", // service
-                true, "1000000011", // callingNumber- first time caller
-                true, "OP", // operator
-                true, rh.delhiCircle().getName(), // circle
-                true, "123456789012345" // callId
+                true, "kilkari",                    // service
+                true, "1000000011",                 // callingNumber- first time caller
+                true, "OP",                         // operator
+                true, rh.delhiCircle().getName(),   // circle
+                true, VALID_CALL_ID                 // callId
         );
         // defaultLanguageLocationCode== national default language location
         String expectedJsonResponse = createKilkariUserResponseJson(
@@ -1397,11 +1398,11 @@ public class UserControllerBundleIT extends BasePaxIT {
         createKilkariTestData();
         createNationalDefaultLanguageForKilkari();
         HttpGet httpGet = createHttpGet(
-                true, "kilkari", // service
-                true, "1000000012", // callingNumber- first time caller
-                true, "OP", // operator
-                true, "99", // Unknown circle
-                true, "123456789012345" // callId
+                true, "kilkari",        // service
+                true, "1000000012",     // callingNumber- first time caller
+                true, "OP",             // operator
+                true, "99",             // Unknown circle
+                true, VALID_CALL_ID     // callId
         );
         // defaultLanguageLocationCode== national default language location
         String expectedJsonResponse = createKilkariUserResponseJson(
@@ -1425,11 +1426,11 @@ public class UserControllerBundleIT extends BasePaxIT {
     public void verifyFT5() throws IOException, InterruptedException {
         createCircleWithMultipleLanguages();
         HttpGet httpGet = createHttpGet(
-                true, "kilkari", // service
-                true, "1000000013", // callingNumber- first time caller
-                true, "OP", // operator
-                true, rh.karnatakaCircle().getName(), // circle have multiple LLC
-                true, "123456789012345" // callId
+                true, "kilkari",                        // service
+                true, "1000000013",                     // callingNumber- first time caller
+                true, "OP",                             // operator
+                true, rh.karnatakaCircle().getName(),   // circle have multiple LLC
+                true, VALID_CALL_ID                     // callId
         );
         // defaultLanguageLocationCode== circle default language location
         KilkariUserResponse expectedResponse = createKilkariUserResponse(
@@ -1458,11 +1459,12 @@ public class UserControllerBundleIT extends BasePaxIT {
     public void verifyFT16() throws IOException, InterruptedException {
         createKilkariUndeployTestData();
 
-        HttpGet httpGet = createHttpGet(true, "kilkari", // service
-        true, "1000000000", // callingNumber
-                true, "OP", // operator
-                true, rh.delhiCircle().getName(), // circle
-                true, "123456789012345" // callId
+        HttpGet httpGet = createHttpGet(
+                true, "kilkari",                    // service
+                true, "1000000000",                 // callingNumber
+                true, "OP",                         // operator
+                true, rh.delhiCircle().getName(),   // circle
+                true, VALID_CALL_ID                 // callId
         );
 
         // Should return HTTP 501 because the service is not
@@ -1509,11 +1511,12 @@ public class UserControllerBundleIT extends BasePaxIT {
         subscriptionService.createSubscription(subscriber1.getCallingNumber(), rh.hindiLanguage(), delhiCircle,
                 sh.childPack(), SubscriptionOrigin.IVR);
 
-        HttpGet httpGet = createHttpGet(true, "kilkari", // service
-                true, "1000000000", // callingNumber
-                true, "OP", // operator
-                true, delhiCircle.getName(), // circle
-                true, "123456789012345" // callId
+        HttpGet httpGet = createHttpGet(
+                true, "kilkari",                // service
+                true, "1000000000",             // callingNumber
+                true, "OP",                     // operator
+                true, delhiCircle.getName(),    // circle
+                true, VALID_CALL_ID             // callId
         );
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
@@ -1553,11 +1556,12 @@ public class UserControllerBundleIT extends BasePaxIT {
         subscriptionService.createSubscription(subscriber1.getCallingNumber(), rh.hindiLanguage(), delhiCircle,
                 sh.childPack(), SubscriptionOrigin.IVR);
 
-        HttpGet httpGet = createHttpGet(true, "kilkari", // service
-                true, "1000000000", // callingNumber
-                true, "OP", // operator
-                true, delhiCircle.getName(), // circle
-                true, "123456789012345" // callId
+        HttpGet httpGet = createHttpGet(
+                true, "kilkari",                // service
+                true, "1000000000",             // callingNumber
+                true, "OP",                     // operator
+                true, delhiCircle.getName(),    // circle
+                true, VALID_CALL_ID             // callId
         );
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
@@ -1587,11 +1591,12 @@ public class UserControllerBundleIT extends BasePaxIT {
         Set<String> expectedPacks = new HashSet<>();
         expectedPacks.add("childPack");
 
-        HttpGet httpGet = createHttpGet(true, "kilkari", // service
-                true, "4000000000", // callingNumber
-                true, "OP", // operator
-                true, rh.delhiCircle().getName(), // circle
-                true, "123456789012345" // callId
+        HttpGet httpGet = createHttpGet(
+                true, "kilkari",                    // service
+                true, "4000000000",                 // callingNumber
+                true, "OP",                         // operator
+                true, rh.delhiCircle().getName(),   // circle
+                true, VALID_CALL_ID                 // callId
         );
 
         String expectedJsonResponse = createKilkariUserResponseJson(rh.hindiLanguage().getCode(), // defaultLanguageLocationCode
@@ -1629,11 +1634,12 @@ public class UserControllerBundleIT extends BasePaxIT {
         Set<String> expectedPacks = new HashSet<>();
         expectedPacks.add("childPack");
 
-        HttpGet httpGet = createHttpGet(true, "kilkari", // service
-                true, "5000000000", // callingNumber
-                true, "OP", // operator
-                true, rh.delhiCircle().getName(), // circle
-                true, "123456789012345" // callId
+        HttpGet httpGet = createHttpGet(
+                true, "kilkari",                    // service
+                true, "5000000000",                 // callingNumber
+                true, "OP",                         // operator
+                true, rh.delhiCircle().getName(),   // circle
+                true, VALID_CALL_ID                 // callId
         );
 
         String expectedJsonResponse = createKilkariUserResponseJson(rh.hindiLanguage().getCode(), // defaultLanguageLocationCode
@@ -1698,7 +1704,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         // Check the response
         HttpGet request = createHttpGet(true, "mobilekunji",
                 true, String.valueOf(WHITELIST_CONTACT_NUMBER), true, "A",
-                true, rh.delhiCircle().getName(), true, "123456789012345");
+                true, rh.delhiCircle().getName(), true, VALID_CALL_ID);
         HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(
                 request, RequestBuilder.ADMIN_USERNAME,
                 RequestBuilder.ADMIN_PASSWORD);
@@ -1719,7 +1725,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         // Check the response
         request = createHttpGet(true, "mobilekunji", true,
                 String.valueOf(WHITELIST_CONTACT_NUMBER), true, "A", true, rh
-                        .delhiCircle().getName(), true, "123456789012345");
+                        .delhiCircle().getName(), true, VALID_CALL_ID);
         httpResponse = SimpleHttpClient.httpRequestAndResponse(request,
                 RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
@@ -1756,7 +1762,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         // Check the response
         HttpGet request = createHttpGet(true, "mobilekunji", true,
                 String.valueOf(WHITELIST_CONTACT_NUMBER), false, "", false, "",
-                true, "123456789012345");
+                true, VALID_CALL_ID);
         HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(
                 request, RequestBuilder.ADMIN_USERNAME,
                 RequestBuilder.ADMIN_PASSWORD);
@@ -1770,7 +1776,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         // create set Language location code request and check the response
         HttpPost postRequest = createHttpPost("mobilekunji",
                 new UserLanguageRequest(WHITELIST_CONTACT_NUMBER,
-                        "1234567890123451234512345", rh.hindiLanguage().getCode()));
+                        VALID_CALL_ID, rh.hindiLanguage().getCode()));
         httpResponse = SimpleHttpClient.httpRequestAndResponse(postRequest,
                 RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
@@ -1813,7 +1819,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         // Check the response
         HttpGet request = createHttpGet(true, "mobilekunji",
                 true, String.valueOf(NOT_WHITELIST_CONTACT_NUMBER), true, "A",
-                true, rh.delhiCircle().getName(), true, "123456789012345");
+                true, rh.delhiCircle().getName(), true, VALID_CALL_ID);
 
         HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(
                 request, RequestBuilder.ADMIN_USERNAME,
@@ -1836,7 +1842,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         // Check the response
         request = createHttpGet(true, "mobilekunji", true,
                 String.valueOf(NOT_WHITELIST_CONTACT_NUMBER), true, "A", true,
-                rh.delhiCircle().getName(), true, "123456789012345");
+                rh.delhiCircle().getName(), true, VALID_CALL_ID);
         httpResponse = SimpleHttpClient.httpRequestAndResponse(request,
                 RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_FORBIDDEN, httpResponse.getStatusLine()
@@ -1868,7 +1874,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         // Check the response
         HttpGet request = createHttpGet(true, "mobilekunji", true,
                 String.valueOf(NOT_WHITELIST_CONTACT_NUMBER), false, "", false,
-                "", true, "123456789012345");
+                "", true, VALID_CALL_ID);
         HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(
                 request, RequestBuilder.ADMIN_USERNAME,
                 RequestBuilder.ADMIN_PASSWORD);
@@ -1882,7 +1888,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         // create set Language location code request and check the response
         HttpPost postRequest = createHttpPost("mobilekunji",
                 new UserLanguageRequest(NOT_WHITELIST_CONTACT_NUMBER,
-                        "1234567890123451234512345", rh.hindiLanguage().getCode()));
+                        VALID_CALL_ID, rh.hindiLanguage().getCode()));
         httpResponse = SimpleHttpClient.httpRequestAndResponse(postRequest,
                 RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_FORBIDDEN, httpResponse.getStatusLine()
@@ -1922,7 +1928,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         // Check the response
         HttpGet request = createHttpGet(true, "mobilekunji",
                 true, String.valueOf(WHITELIST_CONTACT_NUMBER), true, "A",
-                true, rh.karnatakaCircle().getName(), true, "123456789012345");
+                true, rh.karnatakaCircle().getName(), true, VALID_CALL_ID);
 
         HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(
                 request, RequestBuilder.ADMIN_USERNAME,
@@ -1944,7 +1950,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         // Check the response
         request = createHttpGet(true, "mobilekunji", true,
                 String.valueOf(WHITELIST_CONTACT_NUMBER), true, "A", true, rh
-                        .karnatakaCircle().getName(), true, "123456789012345");
+                        .karnatakaCircle().getName(), true, VALID_CALL_ID);
 
         httpResponse = SimpleHttpClient.httpRequestAndResponse(request,
                 RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
@@ -1983,7 +1989,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         // Check the response
         HttpGet request = createHttpGet(true, "mobilekunji", true,
                 String.valueOf(WHITELIST_CONTACT_NUMBER), false, "", false, "",
-                true, "123456789012345");
+                true, VALID_CALL_ID);
         HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(
                 request, RequestBuilder.ADMIN_USERNAME,
                 RequestBuilder.ADMIN_PASSWORD);
@@ -1997,7 +2003,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         // create set Language location code request and check the response
         HttpPost postRequest = createHttpPost("mobilekunji",
                 new UserLanguageRequest(WHITELIST_CONTACT_NUMBER,
-                        "1234567890123451234512345", rh.tamilLanguage().getCode()));
+                        VALID_CALL_ID, rh.tamilLanguage().getCode()));
         httpResponse = SimpleHttpClient.httpRequestAndResponse(postRequest,
                 RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
@@ -2037,7 +2043,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         // Check the response
         HttpGet request = createHttpGet(true, "mobilekunji", true,
                 String.valueOf(WHITELIST_CONTACT_NUMBER), false, "", true, rh
-                        .delhiCircle().getName(), true, "123456789012345");
+                        .delhiCircle().getName(), true, VALID_CALL_ID);
         HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(
                 request, RequestBuilder.ADMIN_USERNAME,
                 RequestBuilder.ADMIN_PASSWORD);
@@ -2067,7 +2073,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         // Check the response
         HttpGet request = createHttpGet(true, "mobilekunji", true,
                 String.valueOf(NOT_WHITELIST_CONTACT_NUMBER), false, "", true,
-                rh.delhiCircle().getName(), true, "123456789012345");
+                rh.delhiCircle().getName(), true, VALID_CALL_ID);
         HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(
                 request, RequestBuilder.ADMIN_USERNAME,
                 RequestBuilder.ADMIN_PASSWORD);
@@ -2081,7 +2087,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         // create set Language location code request and check the response
         HttpPost postRequest = createHttpPost("mobilekunji",
                 new UserLanguageRequest(NOT_WHITELIST_CONTACT_NUMBER,
-                        "1234567890123451234512345", rh.hindiLanguage().getCode()));
+                        VALID_CALL_ID, rh.hindiLanguage().getCode()));
         httpResponse = SimpleHttpClient.httpRequestAndResponse(postRequest,
                 RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_FORBIDDEN, httpResponse.getStatusLine()
@@ -2128,7 +2134,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         // Check the response
         HttpGet request = createHttpGet(true, "mobileacademy", true,
                 String.valueOf(WHITELIST_CONTACT_NUMBER), true, "A", true, rh
-                        .delhiCircle().getName(), true, "123456789012345");
+                        .delhiCircle().getName(), true, VALID_CALL_ID);
         HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(
                 request, RequestBuilder.ADMIN_USERNAME,
                 RequestBuilder.ADMIN_PASSWORD);
@@ -2172,7 +2178,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         // Check the response
         HttpGet getRequest = createHttpGet(true, "mobileacademy", true,
                 String.valueOf(WHITELIST_CONTACT_NUMBER), true, "A", true, rh
-                        .delhiCircle().getName(), true, "123456789012345");
+                        .delhiCircle().getName(), true, VALID_CALL_ID);
         HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(
                 getRequest, RequestBuilder.ADMIN_USERNAME,
                 RequestBuilder.ADMIN_PASSWORD);
@@ -2210,7 +2216,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         // Check the response
         HttpGet request = createHttpGet(true, "mobileacademy", true,
                 String.valueOf(WHITELIST_CONTACT_NUMBER), false, "", false, "",
-                true, "123456789012345");
+                true, VALID_CALL_ID);
         HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(
                 request, RequestBuilder.ADMIN_USERNAME,
                 RequestBuilder.ADMIN_PASSWORD);
@@ -2224,7 +2230,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         // create set Language location code request and check the response
         HttpPost postRequest = createHttpPost("mobileacademy",
                 new UserLanguageRequest(WHITELIST_CONTACT_NUMBER,
-                        "1234567890123451234512345", rh.hindiLanguage().getCode()));
+                        VALID_CALL_ID, rh.hindiLanguage().getCode()));
         httpResponse = SimpleHttpClient.httpRequestAndResponse(postRequest,
                 RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
@@ -2273,7 +2279,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         // Check the response
         HttpGet request = createHttpGet(true, "mobileacademy", true,
                 String.valueOf(NOT_WHITELIST_CONTACT_NUMBER), true, "A", true,
-                rh.delhiCircle().getName(), true, "123456789012345");
+                rh.delhiCircle().getName(), true, VALID_CALL_ID);
         HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(
                 request, RequestBuilder.ADMIN_USERNAME,
                 RequestBuilder.ADMIN_PASSWORD);
@@ -2311,7 +2317,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         // Check the response
         HttpGet request = createHttpGet(true, "mobileacademy", true,
                 String.valueOf(NOT_WHITELIST_CONTACT_NUMBER), true, "A", true,
-                rh.delhiCircle().getName(), true, "123456789012345");
+                rh.delhiCircle().getName(), true, VALID_CALL_ID);
         HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(
                 request, RequestBuilder.ADMIN_USERNAME,
                 RequestBuilder.ADMIN_PASSWORD);
@@ -2345,7 +2351,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         HttpGet request = createHttpGet(true, "mobileacademy", true,
                 String.valueOf(NOT_WHITELIST_CONTACT_NUMBER), false, "", false,
                 "",
-                true, "123456789012345");
+                true, VALID_CALL_ID);
         HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(
                 request, RequestBuilder.ADMIN_USERNAME,
                 RequestBuilder.ADMIN_PASSWORD);
@@ -2359,7 +2365,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         // create set Language location code request and check the response
         HttpPost postRequest = createHttpPost("mobileacademy",
                 new UserLanguageRequest(NOT_WHITELIST_CONTACT_NUMBER,
-                        "1234567890123451234512345", rh.hindiLanguage().getCode()));
+                        VALID_CALL_ID, rh.hindiLanguage().getCode()));
         httpResponse = SimpleHttpClient.httpRequestAndResponse(postRequest,
                 RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_FORBIDDEN, httpResponse.getStatusLine()
@@ -2404,7 +2410,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         // Check the response
         HttpGet request = createHttpGet(true, "mobileacademy", true,
                 String.valueOf(WHITELIST_CONTACT_NUMBER), true, "A", true, rh
-                        .karnatakaCircle().getName(), true, "123456789012345");
+                        .karnatakaCircle().getName(), true, VALID_CALL_ID);
 
         HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(
                 request, RequestBuilder.ADMIN_USERNAME,
@@ -2446,7 +2452,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         // Check the response
         HttpGet request = createHttpGet(true, "mobileacademy", true,
                 String.valueOf(WHITELIST_CONTACT_NUMBER), true, "A", true, rh
-                        .karnatakaCircle().getName(), true, "123456789012345");
+                        .karnatakaCircle().getName(), true, VALID_CALL_ID);
         HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(
                 request, RequestBuilder.ADMIN_USERNAME,
                 RequestBuilder.ADMIN_PASSWORD);
@@ -2485,7 +2491,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         // Check the response
         HttpGet request = createHttpGet(true, "mobileacademy", true,
                 String.valueOf(WHITELIST_CONTACT_NUMBER), false, "", false, "",
-                true, "123456789012345");
+                true, VALID_CALL_ID);
         HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(
                 request, RequestBuilder.ADMIN_USERNAME,
                 RequestBuilder.ADMIN_PASSWORD);
@@ -2499,7 +2505,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         // create set Language location code request and check the response
         HttpPost postRequest = createHttpPost("mobileacademy",
                 new UserLanguageRequest(WHITELIST_CONTACT_NUMBER,
-                        "1234567890123451234512345", rh.tamilLanguage().getCode()));
+                        VALID_CALL_ID, rh.tamilLanguage().getCode()));
         httpResponse = SimpleHttpClient.httpRequestAndResponse(postRequest,
                 RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
@@ -2539,7 +2545,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         // Check the response
         HttpGet request = createHttpGet(true, "mobileacademy", true,
                 String.valueOf(WHITELIST_CONTACT_NUMBER), false, "", true, rh
-                        .delhiCircle().getName(), true, "123456789012345");
+                        .delhiCircle().getName(), true, VALID_CALL_ID);
         HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(
                 request, RequestBuilder.ADMIN_USERNAME,
                 RequestBuilder.ADMIN_PASSWORD);
@@ -2569,7 +2575,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         // Check the response
         HttpGet request = createHttpGet(true, "mobileacademy", true,
                 String.valueOf(NOT_WHITELIST_CONTACT_NUMBER), false, "", true,
-                rh.delhiCircle().getName(), true, "123456789012345");
+                rh.delhiCircle().getName(), true, VALID_CALL_ID);
         HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(
                 request, RequestBuilder.ADMIN_USERNAME,
                 RequestBuilder.ADMIN_PASSWORD);
@@ -2583,7 +2589,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         // create set Language location code request and check the response
         HttpPost postRequest = createHttpPost("mobileacademy",
                 new UserLanguageRequest(NOT_WHITELIST_CONTACT_NUMBER,
-                        "1234567890123451234512345", rh.hindiLanguage().getCode()));
+                        VALID_CALL_ID, rh.hindiLanguage().getCode()));
         httpResponse = SimpleHttpClient.httpRequestAndResponse(postRequest,
                 RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_FORBIDDEN, httpResponse.getStatusLine()
@@ -2639,7 +2645,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         // Check the response
         HttpGet request = createHttpGet(true, "mobileacademy", true,
                 String.valueOf(WHITELIST_CONTACT_NUMBER), true, "A", true, rh
-                        .delhiCircle().getName(), true, "123456789012345");
+                        .delhiCircle().getName(), true, VALID_CALL_ID);
         HttpResponse httpResponse = SimpleHttpClient.httpRequestAndResponse(
                 request, RequestBuilder.ADMIN_USERNAME,
                 RequestBuilder.ADMIN_PASSWORD);
@@ -2687,11 +2693,11 @@ public class UserControllerBundleIT extends BasePaxIT {
         callDetailRecordDataService.create(cdr);
 
         HttpGet httpGet = createHttpGet(
-                true, "mobilekunji",    //service
-                true, "1111111111",     //callingNumber
-                true, "OP",             //operator
-                true, rh.delhiCircle().getName(),//circle
-                true, "123456789012345" //callId
+                true, "mobilekunji",                //service
+                true, "1111111111",                 //callingNumber
+                true, "OP",                         //operator
+                true, rh.delhiCircle().getName(),   //circle
+                true,VALID_CALL_ID                  //callId
         );
 
         String expectedJsonResponse = createFlwUserResponseJson(
@@ -2727,11 +2733,11 @@ public class UserControllerBundleIT extends BasePaxIT {
         frontLineWorkerService.add(flw);
 
         HttpGet httpGet = createHttpGet(
-                true, "mobilekunji",    //service
-                true, "1111111111",     //callingNumber
-                true, "OP",             //operator
-                true, rh.delhiCircle().getName(),             //circle
-                true, "123456789012345" //callId
+                true, "mobilekunji",                //service
+                true, "1111111111",                 //callingNumber
+                true, "OP",                         //operator
+                true, rh.delhiCircle().getName(),   //circle
+                true, VALID_CALL_ID                 //callId
         );
 
         String expectedJsonResponse = createFlwUserResponseJson(
@@ -2777,11 +2783,11 @@ public class UserControllerBundleIT extends BasePaxIT {
         callDetailRecordDataService.create(cdr);
 
         HttpGet httpGet = createHttpGet(
-                true, "mobilekunji",    //service
-                true, "1111111111",     //callingNumber
-                true, "OP",             //operator
-                true, rh.delhiCircle().getName(),             //circle
-                true, "123456789012345" //callId
+                true, "mobilekunji",                //service
+                true, "1111111111",                 //callingNumber
+                true, "OP",                         //operator
+                true, rh.delhiCircle().getName(),   //circle
+                true, VALID_CALL_ID                 //callId
         );
 
         String expectedJsonResponse = createFlwUserResponseJson(
@@ -2815,11 +2821,11 @@ public class UserControllerBundleIT extends BasePaxIT {
         frontLineWorkerService.add(flw);
 
         HttpGet httpGet = createHttpGet(
-                true, "mobilekunji",    //service
-                true, "1111111111",     //callingNumber
-                true, "OP",             //operator
-                true, rh.delhiCircle().getName(),             //circle
-                true, "123456789012345" //callId
+                true, "mobilekunji",                //service
+                true, "1111111111",                 //callingNumber
+                true, "OP",                         //operator
+                true, rh.delhiCircle().getName(),   //circle
+                true, VALID_CALL_ID                 //callId
         );
 
         String expectedJsonResponse = createFlwUserResponseJson(
@@ -2854,7 +2860,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1111111111",     //callingNumber
                 true, "OP",             //operator
                 true, "AA",             //circle
-                true, "123456789012345" //callId
+                true, VALID_CALL_ID     //callId
         );
 
         List<String> allowedLLCCodes = new ArrayList<>();
@@ -2904,7 +2910,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1111111111",     //callingNumber
                 true, "OP",             //operator
                 true, rh.delhiCircle().getName(),             //circle
-                true, "123456789012345" //callId
+                true, VALID_CALL_ID //callId
         );
 
         String expectedJsonResponse = createFlwUserResponseJson(
@@ -2943,7 +2949,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1111111111",     //callingNumber
                 true, "OP",             //operator
                 true, rh.delhiCircle().getName(),             //circle
-                true, "123456789012345" //callId
+                true, VALID_CALL_ID //callId
         );
 
         String expectedJsonResponse = createFlwUserResponseJson(
@@ -2979,7 +2985,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1111111111",     //callingNumber
                 true, "OP",             //operator
                 true, rh.delhiCircle().getName(),             //circle
-                true, "123456789012345" //callId
+                true, VALID_CALL_ID //callId
         );
 
         String expectedJsonResponse = "{\"failureReason\":\"<MOBILE_KUNJI: Not Deployed In State>\"}";
@@ -3005,7 +3011,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1111111111",     //callingNumber
                 true, "OP",             //operator
                 true, "AA",             //circle
-                true, "123456789012345" //callId
+                true, VALID_CALL_ID //callId
         );
 
         List<String> allowedLLCCodes = new ArrayList<>();
@@ -3056,7 +3062,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1111111111",     //callingNumber
                 true, "OP",             //operator
                 true, rh.delhiCircle().getName(),             //circle
-                true, "123456789012345" //callId
+                true, VALID_CALL_ID //callId
         );
 
         String expectedJsonResponse = "{\"failureReason\":\"<MOBILE_KUNJI: Not Deployed In State>\"}";
@@ -3084,7 +3090,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1111111111",     //callingNumber
                 true, "OP",             //operator
                 true, rh.delhiCircle().getName(),             //circle
-                true, "123456789012345" //callId
+                true, VALID_CALL_ID //callId
         );
 
         String expectedJsonResponse = "{\"failureReason\":\"<MOBILE_KUNJI: Not Deployed In State>\"}";
@@ -3114,7 +3120,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1200000000", // callingNumber
                 true, "OP", // operator
                 true, circle.getName(),// circle
-                true, "123456789012345" // callId
+                true, VALID_CALL_ID // callId
         );
 
         String expectedJsonResponse = createFlwUserResponseJson(
@@ -3145,7 +3151,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 false, null, // callingNumber missing
                 true, "OP", // operator
                 true, rh.delhiCircle().getName(),// circle
-                true, "123456789012345" // callId
+                true, VALID_CALL_ID // callId
         );
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Not Present>");
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
@@ -3184,7 +3190,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "123456789", // callingNumber Invalid
                 true, "OP", // operator
                 true, rh.delhiCircle().getName(),// circle
-                true, "123456789012345" // callId
+                true, VALID_CALL_ID // callId
         );
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
@@ -3234,7 +3240,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1200000000", // callingNumber
                 true, "OP", // operator
                 true, rh.karnatakaCircle().getName(),// circle
-                true, "123456789012345" // callId
+                true, VALID_CALL_ID // callId
         );
 
         FlwUserResponse expectedResponse = createFlwUserResponse(rh
@@ -3276,7 +3282,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1200000000", // callingNumber
                 false, null, // operator
                 false, null,// circle
-                true, "123456789012345" // callId
+                true, VALID_CALL_ID // callId
         );
 
         FlwUserResponse expectedResponse = createFlwUserResponse(rh
@@ -3330,7 +3336,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1200000001", // callingNumber
                 true, "OP", // operator
                 true, circle.getName(),// circle
-                true, "123456789012345" // callId
+                true, VALID_CALL_ID // callId
         );
 
         String expectedJsonResponse = createFlwUserResponseJson(rh
@@ -3383,7 +3389,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1200000001", // callingNumber
                 true, "OP", // operator
                 true, circle.getName(),// circle
-                true, "123456789012345" // callId
+                true, VALID_CALL_ID // callId
         );
 
         String expectedJsonResponse = createFlwUserResponseJson(rh
@@ -3462,7 +3468,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1111111112",     //callingNumber
                 true, "OP",             //operator
                 true, "AA",             //circle
-                true, "123456789012345" //callId
+                true, VALID_CALL_ID //callId
         );
 
         String expectedJsonResponse = createFlwUserResponseJson(
@@ -3494,7 +3500,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1200000000",     //callingNumber
                 true, "OP",             //operator
                 true, "KA",             //circle
-                true, "123456789012345" //callId
+                true, VALID_CALL_ID //callId
         );
 
         FlwUserResponse expectedResponse = createFlwUserResponse(
@@ -3530,7 +3536,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1111111112",       //callingNumber
                 false, null,              //operator
                 false, null,			  //circle
-                true, "123456789012345"   //callId
+                true, VALID_CALL_ID   //callId
         );
 
         FlwUserResponse expectedResponse = createFlwUserResponse(
@@ -3565,7 +3571,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 false, null,            //callingNumber
                 true, "OP",             //operator
                 true, "AA",             //circle
-                true, "123456789012345" //callId
+                true, VALID_CALL_ID //callId
         );
 
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Not Present>");
@@ -3609,7 +3615,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1111111",       //callingNumber
                 true, "OP",             //operator
                 true, "AA",             //circle
-                true, "123456789012345" //callId
+                true, VALID_CALL_ID //callId
         );
 
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
@@ -3632,7 +3638,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1111111111",     //callingNumber
                 true, "OP",             //operator
                 true, "Invalid",       //circle
-                true, "123456789012345" //callId
+                true, VALID_CALL_ID //callId
         );
 
         String expectedJsonResponse = createFlwUserResponseJson(
@@ -3688,7 +3694,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1111111111", // callingNumber
                 true, "OP", // operator
                 true, "KA",// circle
-                true, "123456789012345" // callId
+                true, VALID_CALL_ID // callId
         );
 
         String expectedJsonResponse = createFlwUserResponseJson(rh
@@ -3722,7 +3728,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1111111111", // callingNumber
                 true, "OP", // operator
                 true, "KA",// circle
-                true, "123456789012345" // callId
+                true, VALID_CALL_ID // callId
         );
 
         String expectedJsonResponse = createFlwUserResponseJson(rh
@@ -3763,7 +3769,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1200000000", // callingNumber
                 true, "OP", // operator
                 true, rh.delhiCircle().getName(),// circle
-                true, "123456789012345" // callId
+                true, VALID_CALL_ID // callId
         );
 
         String expectedJsonResponse = createFlwUserResponseJson(rh
@@ -3789,7 +3795,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 "http://localhost:%d/api/mobileacademy/languageLocationCode",
                 TestContext.getJettyPort()));
         StringEntity params = new StringEntity(
-                "{\"callingNumber\":1200000000,\"callId\":123456789012345,\"languageLocationCode\":\""
+                "{\"callingNumber\":1200000000,\"callId\":" + VALID_CALL_ID + ",\"languageLocationCode\":\""
                         + rh.hindiLanguage().getCode() + "\"}");
         httpPost.setEntity(params);
         httpPost.addHeader("content-type", "application/json");
@@ -3818,7 +3824,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1200000000", // callingNumber
                 true, "OP", // operator
                 true, rh.delhiCircle().getName(),// circle
-                true, "123456789012345" // callId
+                true, VALID_CALL_ID // callId
         );
 
         String expectedJsonResponse = createFailureResponseJson("<MOBILE_ACADEMY: Not Deployed In State>");
@@ -3853,7 +3859,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1200000000", // callingNumber
                 true, "OP", // operator
                 true, rh.delhiCircle().getName(),// circle
-                true, "123456789012345" // callId
+                true, VALID_CALL_ID // callId
         );
 
         FlwUserResponse expectedResponse = createFlwUserResponse(rh
@@ -3883,7 +3889,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 "http://localhost:%d/api/mobileacademy/languageLocationCode",
                 TestContext.getJettyPort()));
         StringEntity params = new StringEntity(
-                "{\"callingNumber\":1200000000,\"callId\":123456789012345,\"languageLocationCode\":\""
+                "{\"callingNumber\":1200000000,\"callId\":" + VALID_CALL_ID + ",\"languageLocationCode\":\""
                         + rh.hindiLanguage().getCode() + "\"}");
         httpPost.setEntity(params);
         httpPost.addHeader("content-type", "application/json");
@@ -3918,7 +3924,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1200000000", // callingNumber
                 true, "OP", // operator
                 true, rh.delhiCircle().getName(),// circle
-                true, "123456789012345" // callId
+                true, VALID_CALL_ID // callId
         );
 
         FlwUserResponse expectedResponse = createFlwUserResponse(rh
@@ -3949,7 +3955,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 "http://localhost:%d/api/mobileacademy/languageLocationCode",
                 TestContext.getJettyPort()));
         StringEntity params = new StringEntity(
-                "{\"callingNumber\":1200000000,\"callId\":123456789012345,\"languageLocationCode\":\""
+                "{\"callingNumber\":1200000000,\"callId\":" + VALID_CALL_ID + ",\"languageLocationCode\":\""
                         + rh.tamilLanguage().getCode() + "\"}");
         httpPost.setEntity(params);
         httpPost.addHeader("content-type", "application/json");
@@ -3977,7 +3983,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1200000000", // callingNumber
                 false, null, // operator
                 false, null,// circle
-                true, "123456789012345" // callId
+                true, VALID_CALL_ID // callId
         );
 
         String expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
@@ -4002,7 +4008,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 "http://localhost:%d/api/mobileacademy/languageLocationCode",
                 TestContext.getJettyPort()));
         StringEntity params = new StringEntity(
-                "{\"callingNumber\":1200000000,\"callId\":123456789012345,\"languageLocationCode\":\""
+                "{\"callingNumber\":1200000000,\"callId\":" + VALID_CALL_ID + ",\"languageLocationCode\":\""
                         + rh.tamilLanguage().getCode() + "\"}");
         httpPost.setEntity(params);
         httpPost.addHeader("content-type", "application/json");
@@ -4040,7 +4046,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1200000000", // callingNumber
                 false, null, // operator
                 false, null,// circle
-                true, "123456789012345" // callId
+                true, VALID_CALL_ID // callId
         );
 
         String expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
@@ -4084,7 +4090,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1200000000", // callingNumber
                 false, null, // operator
                 false, null,// circle
-                true, "123456789012345" // callId
+                true, VALID_CALL_ID // callId
         );
 
         String expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
@@ -4132,7 +4138,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1200000000", // callingNumber
                 false, null, // operator
                 false, null,// circle
-                true, "123456789012345" // callId
+                true, VALID_CALL_ID // callId
         );
 
         String expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
@@ -4174,7 +4180,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1200000000", // callingNumber
                 false, null, // operator
                 false, null,// circle
-                true, "123456789012345" // callId
+                true, VALID_CALL_ID // callId
         );
 
         String expectedJsonResponse = createFailureResponseJson("<MOBILE_ACADEMY: Not Deployed In State>");
@@ -4209,7 +4215,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1200000000", // callingNumber
                 false, null, // operator
                 false, null,// circle
-                true, "123456789012345" // callId
+                true, VALID_CALL_ID // callId
         );
 
         String expectedJsonResponse = createFailureResponseJson("<MOBILE_ACADEMY: Not Deployed In State>");
@@ -4247,7 +4253,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1200000000", // callingNumber
                 false, null, // operator
                 false, null,// circle
-                true, "123456789012345" // callId
+                true, VALID_CALL_ID // callId
         );
 
         String expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
@@ -4270,7 +4276,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 "http://localhost:%d/api/mobileacademy/languageLocationCode",
                 TestContext.getJettyPort()));
         StringEntity params = new StringEntity(
-                "{\"callingNumber\":1200000000,\"callId\":123456789012345,\"languageLocationCode\":\""
+                "{\"callingNumber\":1200000000,\"callId\":" + VALID_CALL_ID + ",\"languageLocationCode\":\""
                         + rh.tamilLanguage().getCode() + "\"}");
         httpPost.setEntity(params);
         httpPost.addHeader("content-type", "application/json");
@@ -4315,7 +4321,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1200000000", // callingNumber
                 false, null, // operator
                 false, null,// circle
-                true, "123456789012345" // callId
+                true, VALID_CALL_ID // callId
         );
 
         String expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
@@ -4376,7 +4382,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1200000000", // callingNumber
                 false, null, // operator
                 false, null,// circle
-                true, "123456789012345" // callId
+                true, VALID_CALL_ID // callId
         );
 
         String expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
@@ -4419,7 +4425,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1200000000", // callingNumber
                 false, null, // operator
                 false, null,// circle
-                true, "123456789012345" // callId
+                true, VALID_CALL_ID // callId
         );
 
         String expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
@@ -4443,7 +4449,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         HttpPost httpPost = ApiRequestHelper.createCallDetailsPost(
                 "mobileacademy",
         /* callingNumber */true, 1200000000l,
-        /* callId */true, 234000011111111l,
+        /* callId */true, VALID_CALL_ID,
         /* operator */false, null,
         /* circle */false, null,
 
@@ -4475,7 +4481,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1200000000", // callingNumber
                 false, null, // operator
                 false, null,// circle
-                true, "123456789012346" // callId
+                true, VALID_CALL_ID //callId
         );
 
         expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
@@ -4532,7 +4538,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1200000000", // callingNumber
                 false, null, // operator
                 false, null,// circle
-                true, "123456789012345" // callId
+                true, VALID_CALL_ID // callId
         );
 
         String expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
@@ -4561,7 +4567,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1200000000", // callingNumber
                 false, null, // operator
                 false, null,// circle
-                true, "123456789012346" // callId
+                true, VALID_CALL_ID //callId
         );
 
         expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
@@ -4618,7 +4624,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1200000000", // callingNumber
                 false, null, // operator
                 false, null,// circle
-                true, "123456789012345" // callId
+                true, VALID_CALL_ID // callId
         );
 
         String expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
@@ -4643,7 +4649,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         HttpPost httpPost = ApiRequestHelper.createCallDetailsPost(
                 "mobileacademy",
                 /* callingNumber */true, 1200000000l,
-                /* callId */true, 234000011111111l,
+                /* callId */true, VALID_CALL_ID,
                 /* operator */false, null,
                 /* circle */false, null,
 
@@ -4668,7 +4674,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1200000000", // callingNumber
                 false, null, // operator
                 false, null,// circle
-                true, "123456789012346" // callId
+                true, VALID_CALL_ID //callId
         );
 
         expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
@@ -4725,7 +4731,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1200000000", // callingNumber
                 false, null, // operator
                 false, null,// circle
-                true, "123456789012345" // callId
+                true, VALID_CALL_ID // callId
         );
 
         String expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
@@ -4750,7 +4756,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         HttpPost httpPost = ApiRequestHelper.createCallDetailsPost(
                 "mobileacademy",
                 /* callingNumber */true, 1200000000l,
-                /* callId */true, 234000011111111l,
+                /* callId */true, VALID_CALL_ID,
                 /* operator */false, null,
                 /* circle */false, null,
 
@@ -4775,7 +4781,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1200000000", // callingNumber
                 false, null, // operator
                 false, null,// circle
-                true, "123456789012346" // callId
+                true, VALID_CALL_ID //callId
         );
 
         expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
@@ -4831,7 +4837,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1200000000", // callingNumber
                 false, null, // operator
                 false, null,// circle
-                true, "123456789012345" // callId
+                true, VALID_CALL_ID // callId
         );
 
         String expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
@@ -4855,7 +4861,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         HttpPost httpPost = ApiRequestHelper.createCallDetailsPost(
                 "mobilekunji",
                 /* callingNumber */true, 1200000000l,
-                /* callId */true, 234000011111111l,
+                /* callId */true, VALID_CALL_ID,
                 /* operator */false, null,
                 /* circle */false, null,
 
@@ -4880,7 +4886,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1200000000", // callingNumber
                 false, null, // operator
                 false, null,// circle
-                true, "123456789012346" // callId
+                true, VALID_CALL_ID //callId
         );
 
         expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
@@ -4937,7 +4943,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1200000000", // callingNumber
                 false, null, // operator
                 false, null,// circle
-                true, "123456789012345" // callId
+                true, VALID_CALL_ID // callId
         );
 
         String expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
@@ -4962,7 +4968,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         HttpPost httpPost = ApiRequestHelper.createCallDetailsPost(
                 "mobilekunji",
                 /* callingNumber */true, 1200000000l,
-                /* callId */true, 234000011111111l,
+                /* callId */true, VALID_CALL_ID,
                 /* operator */false, null,
                 /* circle */false, null,
 
@@ -4987,7 +4993,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1200000000", // callingNumber
                 false, null, // operator
                 false, null,// circle
-                true, "123456789012346" // callId
+                true, VALID_CALL_ID //callId
         );
 
         expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
@@ -5043,7 +5049,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1200000000", // callingNumber
                 false, null, // operator
                 false, null,// circle
-                true, "123456789012345" // callId
+                true, VALID_CALL_ID // callId
         );
 
         String expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
@@ -5072,7 +5078,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1200000000", // callingNumber
                 false, null, // operator
                 false, null,// circle
-                true, "123456789012346" // callId
+                true, VALID_CALL_ID //callId
         );
 
         expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
@@ -5128,7 +5134,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1200000000", // callingNumber
                 false, null, // operator
                 false, null,// circle
-                true, "123456789012345" // callId
+                true, VALID_CALL_ID // callId
         );
 
         String expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
@@ -5157,7 +5163,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1200000000", // callingNumber
                 false, null, // operator
                 false, null,// circle
-                true, "123456789012346" // callId
+                true, VALID_CALL_ID //callId
         );
 
         expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
@@ -5220,7 +5226,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1200000000", // callingNumber
                 false, null, // operator
                 false, null,// circle
-                true, "123456789012345" // callId
+                true, VALID_CALL_ID // callId
         );
 
         String expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
@@ -5247,11 +5253,12 @@ public class UserControllerBundleIT extends BasePaxIT {
         callDetailRecordDataService.update(cdr);
 
         // invoke get user detail API To check updated usage and prompt
-        httpGet = createHttpGet(true, "mobileacademy", // service
-                true, "1200000000", // callingNumber
-                false, null, // operator
-                false, null,// circle
-                true, "123456789012346" // callId
+        httpGet = createHttpGet(
+                true, "mobileacademy",  // service
+                true, "1200000000",     // callingNumber
+                false, null,            // operator
+                false, null,            // circle
+                true, VALID_CALL_ID     //callId
         );
 
         expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
@@ -5287,7 +5294,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1200000000", // callingNumber
                 false, null, // operator
                 true, rh.delhiCircle().getName(),// circle
-                true, "123456789012346" // callId
+                true, VALID_CALL_ID //callId
         );
         List<String> allowedLLCCodes = new ArrayList<>();
         allowedLLCCodes.add(rh.hindiLanguage().getCode());

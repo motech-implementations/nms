@@ -59,6 +59,7 @@ import static org.junit.Assert.assertTrue;
 public class CallDetailsControllerBundleIT extends BasePaxIT {
     private static final String ADMIN_USERNAME = "motech";
     private static final String ADMIN_PASSWORD = "motech";
+    private static final String VALID_CALL_ID = "1234567890123456789012345";
 
     private static final int MILLISECONDS_PER_SECOND = 1000;
 
@@ -102,7 +103,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
      * method to pass all values as per data type mentioned in API
      */
     private String createCallDetailsJson(boolean includeCallingNumber, Long callingNumber,
-                                         boolean includeCallId, Long callId,
+                                         boolean includeCallId, String callId,
                                          boolean includeOperator, String operator,
                                          boolean includeCircle, String circle,
                                          boolean includeCallStartTime, Long callStartTime,
@@ -249,7 +250,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
 
     private HttpPost createCallDetailsPost(String serviceName,
                                    boolean includeCallingNumber, Long callingNumber,
-                                   boolean includeCallId, Long callId,
+                                   boolean includeCallId, String callId,
                                    boolean includeOperator, String operator,
                                    boolean includeCircle, String circle,
                                    boolean includeCallStartTime, Long callStartTime,
@@ -488,7 +489,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
 
         HttpPost httpPost = createCallDetailsPost("mobilekunji",
                 true, 9810320300l,       // callingNumber
-                true, 234000011111111l,  // callId
+                true, VALID_CALL_ID,  // callId
                 true, "A",               // operator
                 true, "AP",              // circle
                 true, 1422879843l,       // callStartTime
@@ -505,7 +506,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         CallDetailRecord cdr = callDetailRecordService.getByCallingNumber(9810320300l);
 
         assertNotNull(cdr);
-        assertEquals(234000011111111l, cdr.getCallId());
+        assertEquals(VALID_CALL_ID, cdr.getCallId());
         assertEquals(2, cdr.getContent().size());
 
         assertEquals("YellowFever", cdr.getContent().get(0).getContentName());
@@ -547,7 +548,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         /* correctAnswerEntered */true, false));
         HttpPost httpPost = createCallDetailsPost("mobileacademy",
                 /* callingNumber */ true, 9810320300l,
-                /* callId */ true, 234000011111111l,
+                /* callId */ true, VALID_CALL_ID,
                 /* operator */ true, "A",
                 /* circle */ true, "AP",
                 /* callStartTime */ true, 1422879843l,
@@ -565,7 +566,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         // assert call detail record
         assertNotNull(cdr);
         assertEquals(9810320300l, cdr.getCallingNumber());
-        assertEquals(234000011111111l, cdr.getCallId());
+        assertEquals(VALID_CALL_ID, cdr.getCallId());
         assertEquals("A", cdr.getOperator());
         assertEquals("AP", cdr.getCircle());
         assertEquals(1422879843l, cdr.getCallStartTime().getMillis() / MILLISECONDS_PER_SECOND);
@@ -606,7 +607,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
 
         HttpPost httpPost = createCallDetailsPost("mobileacademy",
                 /* callingNumber */ true, 9810320300l,
-                /* callId */ true, 234000011111111l,
+                /* callId */ true, VALID_CALL_ID,
                 /* operator */ true, "A",
                 /* circle */ true, "AP",
                 /* callStartTime */ true, 1422879843l,
@@ -625,7 +626,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         // assert call detail record
         assertNotNull(cdr);
         assertEquals(9810320300l, cdr.getCallingNumber());
-        assertEquals(234000011111111l, cdr.getCallId());
+        assertEquals(VALID_CALL_ID, cdr.getCallId());
         assertEquals("A", cdr.getOperator());
         assertEquals("AP", cdr.getCircle());
         assertEquals(1422879843l, cdr.getCallStartTime().getMillis() / MILLISECONDS_PER_SECOND);
@@ -649,7 +650,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
 
         HttpPost httpPost = createCallDetailsPost("mobileacademy",
                 /* callingNumber */ true, 9810320300l,
-                /* callId */ true, 234000011111111l,
+                /* callId */ true, VALID_CALL_ID,
                 /* operator */ true, "A",
                 /* circle */ true, "AP",
                 /* callStartTime */ true, 1422879903l,
@@ -671,7 +672,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
     public void testCallDetailsNullCallDisconnectReason() throws IOException, InterruptedException {
         HttpPost httpPost = createCallDetailsPost("mobileacademy",
                 /* callingNumber */ true, 9810320300l,
-                /* callId */ true, 234000011111111l,
+                /* callId */ true, VALID_CALL_ID,
                 /* operator */ true, "A",
                 /* circle */ true, "AP",
                 /* callStartTime */ true, 1422879903l,
@@ -692,7 +693,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
     public void testCallDetailsNullCallStatus() throws IOException, InterruptedException {
         HttpPost httpPost = createCallDetailsPost("mobileacademy",
                 /* callingNumber */ true, 9810320300l,
-                /* callId */ true, 234000011111111l,
+                /* callId */ true, VALID_CALL_ID,
                 /* operator */ true, "A",
                 /* circle */ true, "AP",
                 /* callStartTime */ true, 1422879903l,
@@ -713,7 +714,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
     public void testCallDetailsNullEndOfUsagePromptCount() throws IOException, InterruptedException {
         HttpPost httpPost = createCallDetailsPost("mobileacademy",
                 /* callingNumber */ true, 9810320300l,
-                /* callId */ true, 234000011111111l,
+                /* callId */ true, VALID_CALL_ID,
                 /* operator */ true, "A",
                 /* circle */ true, "AP",
                 /* callStartTime */ true, 1422879903l,
@@ -734,7 +735,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
     public void testCallDetailsNullCallDurationInPulses() throws IOException, InterruptedException {
         HttpPost httpPost = createCallDetailsPost("mobileacademy",
                 /* callingNumber */ true, 9810320300l,
-                /* callId */ true, 234000011111111l,
+                /* callId */ true, VALID_CALL_ID,
                 /* operator */ true, "A",
                 /* circle */ true, "AP",
                 /* callStartTime */ true, 1422879903l,
@@ -755,7 +756,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
     public void testCallDetailsNullCallEndTime() throws IOException, InterruptedException {
         HttpPost httpPost = createCallDetailsPost("mobileacademy",
                 /* callingNumber */ true, 9810320300l,
-                /* callId */ true, 234000011111111l,
+                /* callId */ true, VALID_CALL_ID,
                 /* operator */ true, "A",
                 /* circle */ true, "AP",
                 /* callStartTime */ true, 1422879903l,
@@ -776,7 +777,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
     public void testCallDetailsNullCallStartTime() throws IOException, InterruptedException {
         HttpPost httpPost = createCallDetailsPost("mobileacademy",
                 /* callingNumber */ true, 9810320300l,
-                /* callId */ true, 234000011111111l,
+                /* callId */ true, VALID_CALL_ID,
                 /* operator */ true, "A",
                 /* circle */ true, "AP",
                 /* callStartTime */ false, null,
@@ -797,7 +798,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
     public void testCallDetailsNullCallingNumber() throws IOException, InterruptedException {
         HttpPost httpPost = createCallDetailsPost("mobileacademy",
                 /* callingNumber */ false, null,
-                /* callId */ true, 234000011111111l,
+                /* callId */ true, VALID_CALL_ID,
                 /* operator */ true, "A",
                 /* circle */ true, "AP",
                 /* callStartTime */ true, 1422879843l,
@@ -818,7 +819,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
     public void testCallDetailsInvalidCallingNumber() throws IOException, InterruptedException {
         HttpPost httpPost = createCallDetailsPost("mobileacademy",
                 /* callingNumber */ true, 1l,
-                /* callId */ true, 234000011111111l,
+                /* callId */ true, VALID_CALL_ID,
                 /* operator */ true, "A",
                 /* circle */ true, "AP",
                 /* callStartTime */ true, 1422879843l,
@@ -860,7 +861,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
     public void testCallDetailsInvalidCallId() throws IOException, InterruptedException {
         HttpPost httpPost = createCallDetailsPost("mobileacademy",
                 /* callingNumber */ true, 9810320300l,
-                /* callId */ true, 1l,
+                /* callId */ true, VALID_CALL_ID.substring(1),
                 /* operator */ true, "A",
                 /* circle */ true, "AP",
                 /* callStartTime */ true, 1422879843l,
@@ -880,13 +881,14 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
     /**
      * To verify that Save Call Details API if rejected when mandatory parameter
      * "CallId" is having invalid value i.e. "CallId" is having value greater
-     * than 15 digit
+     * than 15 digit.
+     * This is a silly test since testCallDetailsInvalidCallId already covers this. sigh.
      */
     @Test
     public void verifyFT491() throws IOException, InterruptedException {
         HttpPost httpPost = createCallDetailsPost("mobileacademy",
         /* callingNumber */true, 9810320300l,
-        /* callId */true, 1234567890123456l,
+        /* callId */true, VALID_CALL_ID + "12",
         /* operator */true, "A",
         /* circle */true, "AP",
         /* callStartTime */true, 1422879843l,
@@ -915,7 +917,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         frontLineWorkerService.add(flw);
         HttpPost httpPost = createCallDetailsPost("mobileacademy",
         /* callingNumber */true, 9810320300l,
-        /* callId */true, 234000011111111l,
+        /* callId */true, VALID_CALL_ID,
         /* operator */true, "A",
         /* circle */true, "AP",
         /* callStartTime */true, 1422879843l,
@@ -945,7 +947,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         frontLineWorkerService.add(flw);
         HttpPost httpPost = createCallDetailsPost("mobileacademy",
         /* callingNumber */true, 9810320300l,
-        /* callId */true, 234000011111111l,
+        /* callId */true, VALID_CALL_ID,
         /* operator */true, "A",
         /* circle */true, "AP",
         /* callStartTime */true, 1422879843l,
@@ -1124,7 +1126,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
                 /* correctAnswerEntered */ true, true));
         HttpPost httpPost = createCallDetailsPost("mobileacademy",
                 /* callingNumber */ true, 9810320300l,
-                /* callId */ true, 234000011111111l,
+                /* callId */ true, VALID_CALL_ID,
                 /* operator */ true, "A",
                 /* circle */ true, "AP",
                 /* callStartTime */ true, 1422879843l,
@@ -1162,7 +1164,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
                 /* correctAnswerEntered */ false, null));
         HttpPost httpPost = createCallDetailsPost("mobileacademy",
                 /* callingNumber */ true, 9810320300l,
-                /* callId */ true, 234000011111111l,
+                /* callId */ true, VALID_CALL_ID,
                 /* operator */ true, "A",
                 /* circle */ true, "AP",
                 /* callStartTime */ true, 1422879843l,
@@ -1196,7 +1198,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         /* correctAnswerEntered */true, true));
         HttpPost httpPost = createCallDetailsPost("mobileacademy",
         /* callingNumber */true, 9810320300l,
-        /* callId */true, 234000011111111l,
+        /* callId */true, VALID_CALL_ID,
         /* operator */true, "A",
         /* circle */true, "AP",
         /* callStartTime */true, 1422879843l,
@@ -1231,7 +1233,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         /* correctAnswerEntered */true, true));
         HttpPost httpPost = createCallDetailsPost("mobileacademy",
         /* callingNumber */true, 9810320300l,
-        /* callId */true, 234000011111111l,
+        /* callId */true, VALID_CALL_ID,
         /* operator */true, "A",
         /* circle */true, "AP",
         /* callStartTime */true, 1422879843l,
@@ -1266,7 +1268,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         /* correctAnswerEntered */true, true));
         HttpPost httpPost = createCallDetailsPost("mobileacademy",
         /* callingNumber */true, 9810320300l,
-        /* callId */true, 234000011111111l,
+        /* callId */true, VALID_CALL_ID,
         /* operator */true, "A",
         /* circle */true, "AP",
         /* callStartTime */true, 1422879843l,
@@ -1301,7 +1303,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         /* correctAnswerEntered */true, true));
         HttpPost httpPost = createCallDetailsPost("mobileacademy",
         /* callingNumber */true, 9810320300l,
-        /* callId */true, 234000011111111l,
+        /* callId */true, VALID_CALL_ID,
         /* operator */true, "A",
         /* circle */true, "AP",
         /* callStartTime */true, 1422879843l,
@@ -1340,7 +1342,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         /* correctAnswerEntered */true, "false"));
         HttpPost httpPost = createCallDetailsPost("mobileacademy",
         /* callingNumber */true, 9810320300l,
-        /* callId */true, 234000011111111l,
+        /* callId */true, VALID_CALL_ID,
         /* operator */true, "A",
         /* circle */true, "AP",
         /* callStartTime */true, 1422879843l,
@@ -1379,7 +1381,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         /* correctAnswerEntered */true, "false"));
         HttpPost httpPost = createCallDetailsPost("mobileacademy",
         /* callingNumber */true, 9810320300l,
-        /* callId */true, 234000011111111l,
+        /* callId */true, VALID_CALL_ID,
         /* operator */true, "A",
         /* circle */true, "AP",
         /* callStartTime */true, 1422879843l,
@@ -1420,7 +1422,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         /* correctAnswerEntered */true, "false"));
         HttpPost httpPost = createCallDetailsPost("mobileacademy",
         /* callingNumber */true, 9810320300l,
-        /* callId */true, 234000011111111l,
+        /* callId */true, VALID_CALL_ID,
         /* operator */true, "A",
         /* circle */true, "AP",
         /* callStartTime */true, 1422879843l,
@@ -1459,7 +1461,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         /* correctAnswerEntered */true, "false"));
         HttpPost httpPost = createCallDetailsPost("mobileacademy",
         /* callingNumber */true, 9810320300l,
-        /* callId */true, 234000011111111l,
+        /* callId */true, VALID_CALL_ID,
         /* operator */true, "A",
         /* circle */true, "AP",
         /* callStartTime */true, 1422879843l,
@@ -1498,7 +1500,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         /* correctAnswerEntered */true, "10"));//Invalid
         HttpPost httpPost = createCallDetailsPost("mobileacademy",
         /* callingNumber */true, 9810320300l,
-        /* callId */true, 234000011111111l,
+        /* callId */true, VALID_CALL_ID,
         /* operator */true, "A",
         /* circle */true, "AP",
         /* callStartTime */true, 1422879843l,
@@ -1524,7 +1526,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
     public void testCallDetailsNullWelcomeMessagePromptFlag() throws IOException, InterruptedException {
         HttpPost httpPost = createCallDetailsPost("mobilekunji",
                 /* callingNumber */ true, 9810320300l,
-                /* callId */ true, 234000011111111l,
+                /* callId */ true, VALID_CALL_ID,
                 /* operator */ true, "A",
                 /* circle */ true, "AP",
                 /* callStartTime */ true, 1422879903l,
@@ -1554,7 +1556,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
                 /* correctAnswerEntered */ false, null));
         HttpPost httpPost = createCallDetailsPost("mobilekunji",
                 /* callingNumber */ true, 9810320300l,
-                /* callId */ true, 234000011111111l,
+                /* callId */ true, VALID_CALL_ID,
                 /* operator */ true, "A",
                 /* circle */ true, "AP",
                 /* callStartTime */ true, 1422879843l,
@@ -1583,7 +1585,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
 
         HttpPost httpPost = createCallDetailsPost("mobilekunji",
                 /* callingNumber */ true, 9810320300l,
-                /* callId */ true, 234000011111111l,
+                /* callId */ true, VALID_CALL_ID,
                 /* operator */ true, "A",
                 /* circle */ true, "AP",
                 /* callStartTime */ true, 1422879843l,
@@ -1602,7 +1604,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         // assert call detail record
         assertNotNull(cdr);
         assertEquals(9810320300l, cdr.getCallingNumber());
-        assertEquals(234000011111111l, cdr.getCallId());
+        assertEquals(VALID_CALL_ID, cdr.getCallId());
         assertEquals("A", cdr.getOperator());
         assertEquals("AP", cdr.getCircle());
         assertEquals(1422879843l, cdr.getCallStartTime().getMillis() / MILLISECONDS_PER_SECOND);
@@ -1627,7 +1629,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
 
         HttpPost httpPost = createCallDetailsPost("mobilekunji",
                 /* callingNumber */ false, null,
-                /* callId */ true, 234000011111111l,
+                /* callId */ true, VALID_CALL_ID,
                 /* operator */ true, "A",
                 /* circle */ true, "AP",
                 /* callStartTime */ true, 1422879843l,
@@ -1683,7 +1685,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
 
         HttpPost httpPost = createCallDetailsPost("mobilekunji",
                 /* callingNumber */ true, 1234567890L,
-                /* callId */ true, 234000011111111l,
+                /* callId */ true, VALID_CALL_ID,
                 /* operator */ true, "A",
                 /* circle */ false, null,
                 /* callStartTime */ false, null,
@@ -1711,7 +1713,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
 
         HttpPost httpPost = createCallDetailsPost("mobilekunji",
                 /* callingNumber */ true, 1234567890L,
-                /* callId */ true, 234000011111111l,
+                /* callId */ true, VALID_CALL_ID,
                 /* operator */ true, "A",
                 /* circle */ true, "AP",
                 /* callStartTime */ true, 1422879843l,
@@ -1739,7 +1741,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
 
         HttpPost httpPost = createCallDetailsPost("mobilekunji",
                 /* callingNumber */ true, 1234567890L,
-                /* callId */ true, 234000011111111l,
+                /* callId */ true, VALID_CALL_ID,
                 /* operator */ true, "A",
                 /* circle */ true, "AP",
                 /* callStartTime */ true, 1422879843l,
@@ -1767,7 +1769,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
 
         HttpPost httpPost = createCallDetailsPost("mobilekunji",
                 /* callingNumber */ true, 1234567890L,
-                /* callId */ true, 234000011111111l,
+                /* callId */ true, VALID_CALL_ID,
                 /* operator */ true, "A",
                 /* circle */ true, "AP",
                 /* callStartTime */ true, 1422879843l,
@@ -1795,7 +1797,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
 
         HttpPost httpPost = createCallDetailsPost("mobilekunji",
                 /* callingNumber */ true, 1234567890L,
-                /* callId */ true, 234000011111111l,
+                /* callId */ true, VALID_CALL_ID,
                 /* operator */ true, "A",
                 /* circle */ true, "AP",
                 /* callStartTime */ true, 1422879843l,
@@ -1823,7 +1825,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
 
         HttpPost httpPost = createCallDetailsPost("mobilekunji",
                 /* callingNumber */ true, 1234567890L,
-                /* callId */ true, 234000011111111l,
+                /* callId */ true, VALID_CALL_ID,
                 /* operator */ true, "A",
                 /* circle */ true, "AP",
                 /* callStartTime */ true, 1422879843l,
@@ -1851,7 +1853,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
 
         HttpPost httpPost = createCallDetailsPost("mobilekunji",
                 /* callingNumber */ true, 1234567890L,
-                /* callId */ true, 234000011111111l,
+                /* callId */ true, VALID_CALL_ID,
                 /* operator */ true, "A",
                 /* circle */ true, "AP",
                 /* callStartTime */ true, 1422879843l,
@@ -1890,7 +1892,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
 
         HttpPost httpPost = createCallDetailsPost("mobilekunji",
                 /* callingNumber */ true, 1234567890L,
-                /* callId */ true, 234000011111111l,
+                /* callId */ true, VALID_CALL_ID,
                 /* operator */ true, "A",
                 /* circle */ true, "AP",
                 /* callStartTime */ true, 1422879843l,
@@ -1929,7 +1931,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
 
         HttpPost httpPost = createCallDetailsPost("mobilekunji",
                 /* callingNumber */ true, 1234567890L,
-                /* callId */ true, 234000011111111l,
+                /* callId */ true, VALID_CALL_ID,
                 /* operator */ true, "A",
                 /* circle */ true, "AP",
                 /* callStartTime */ true, 1422879843l,
@@ -1968,7 +1970,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
 
         HttpPost httpPost = createCallDetailsPost("mobilekunji",
                 /* callingNumber */ true, 1234567890L,
-                /* callId */ true, 234000011111111l,
+                /* callId */ true, VALID_CALL_ID,
                 /* operator */ true, "A",
                 /* circle */ true, "AP",
                 /* callStartTime */ true, 1422879843l,
@@ -2007,7 +2009,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
 
         HttpPost httpPost = createCallDetailsPost("mobilekunji",
                 /* callingNumber */ true, 1234567890L,
-                /* callId */ true, 234000011111111l,
+                /* callId */ true, VALID_CALL_ID,
                 /* operator */ true, "A",
                 /* circle */ true, "AP",
                 /* callStartTime */ true, 1422879843l,
@@ -2046,7 +2048,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
 
         HttpPost httpPost = createCallDetailsPost("mobilekunji",
                 /* callingNumber */ true, 1234567890L,
-                /* callId */ true, 234000011111111l,
+                /* callId */ true, VALID_CALL_ID,
                 /* operator */ true, "A",
                 /* circle */ true, "AP",
                 /* callStartTime */ true, 1422879843l,
@@ -2075,7 +2077,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
 
         HttpPost httpPost = createCallDetailsPost("mobilekunji",
                 /* callingNumber */ true, 12356789L,
-                /* callId */ true, 234000011111111l,
+                /* callId */ true, VALID_CALL_ID,
                 /* operator */ true, "A",
                 /* circle */ true, "AP",
                 /* callStartTime */ true, 1422879843l,
@@ -2104,7 +2106,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
 
         HttpPost httpPost = createCallDetailsPost("mobilekunji",
                 /* callingNumber */ true, 1234567890L,
-                /* callId */ true, 234000011111111111l,
+                /* callId */ true, VALID_CALL_ID.substring(5),
                 /* operator */ true, "A",
                 /* circle */ true, "AP",
                 /* callStartTime */ true, 1422879843l,
@@ -2296,7 +2298,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         frontLineWorkerService.add(flw);
         HttpPost httpPost = createCallDetailsPost("mobilekunji",
         /* callingNumber */true, 9810320300l,
-        /* callId */true, 234000011111111l,
+        /* callId */true, VALID_CALL_ID,
         /* operator */true, "A",
         /* circle */true, "AP",
         /* callStartTime */true, 1422879843l,
@@ -2326,7 +2328,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         frontLineWorkerService.add(flw);
         HttpPost httpPost = createCallDetailsPost("mobilekunji",
         /* callingNumber */true, 9810320300l,
-        /* callId */true, 234000011111111l,
+        /* callId */true, VALID_CALL_ID,
         /* operator */true, "A",
         /* circle */true, "AP",
         /* callStartTime */true, 1422879843l,
@@ -2365,7 +2367,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         /* correctAnswerEntered */true, "false"));
         HttpPost httpPost = createCallDetailsPost("mobilekunji",
         /* callingNumber */true, 9810320300l,
-        /* callId */true, 234000011111111l,
+        /* callId */true, VALID_CALL_ID,
         /* operator */true, "A",
         /* circle */true, "AP",
         /* callStartTime */true, 1422879843l,
@@ -2404,7 +2406,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         /* correctAnswerEntered */true, "false"));
         HttpPost httpPost = createCallDetailsPost("mobilekunji",
         /* callingNumber */true, 9810320300l,
-        /* callId */true, 234000011111111l,
+        /* callId */true, VALID_CALL_ID,
         /* operator */true, "A",
         /* circle */true, "AP",
         /* callStartTime */true, 1422879843l,
@@ -2444,7 +2446,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         sb.append("user?");
         sb.append(String.format("callingNumber=%s", "1200000000"));
         sep = "&";
-        sb.append(String.format("%scallId=%s", sep, "123456789012345"));
+        sb.append(String.format("%scallId=%s", sep, VALID_CALL_ID));
         HttpGet httpGet = new HttpGet(sb.toString());
 
         String expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
@@ -2476,7 +2478,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
 
         HttpPost httpPost = createCallDetailsPost("mobilekunji",
                 true, 1200000000l,       // callingNumber
-                true, 123456789012345l,  // callId
+                true, VALID_CALL_ID,  // callId
                 true, "A",               // operator
                 true, "AP",              // circle
                 true, DateTime.now().getMillis()/1000,       // callStartTime
@@ -2498,7 +2500,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         sb.append("user?");
         sb.append(String.format("callingNumber=%s", "1200000000"));
         sep = "&";
-        sb.append(String.format("%scallId=%s", sep, "123456789012345"));
+        sb.append(String.format("%scallId=%s", sep, VALID_CALL_ID));
         httpGet = new HttpGet(sb.toString());
 
         expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
@@ -2544,7 +2546,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         sb.append("user?");
         sb.append(String.format("callingNumber=%s", "1200000001"));
         sep = "&";
-        sb.append(String.format("%scallId=%s", sep, "123456789012345"));
+        sb.append(String.format("%scallId=%s", sep, VALID_CALL_ID));
         HttpGet httpGet = new HttpGet(sb.toString());
 
         String expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
@@ -2575,7 +2577,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
 
         HttpPost httpPost = createCallDetailsPost("mobilekunji",
                 true, 1200000001l,       // callingNumber
-                true, 123456789012345l,  // callId
+                true, VALID_CALL_ID,  // callId
                 true, "A",               // operator
                 true, "AP",              // circle
                 true, DateTime.now().getMillis()/1000,       // callStartTime
