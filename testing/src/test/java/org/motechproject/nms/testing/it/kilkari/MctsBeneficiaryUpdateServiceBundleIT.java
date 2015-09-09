@@ -199,11 +199,11 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         Reader reader = createUpdateReaderWithHeaders("1," + mctsId + ",,,,,,,,,,,,," + newMsisdn);
         mctsBeneficiaryUpdateService.updateBeneficiaryData(reader);
 
-        Subscriber oldSubscriber = subscriberDataService.findByCallingNumber(oldMsisdn);
+        Subscriber oldSubscriber = subscriberDataService.findByNumber(oldMsisdn);
         assertNull(oldSubscriber.getChild());
         assertEquals(0, oldSubscriber.getActiveAndPendingSubscriptions().size());
 
-        Subscriber subscriber = subscriberDataService.findByCallingNumber(newMsisdn);
+        Subscriber subscriber = subscriberDataService.findByNumber(newMsisdn);
         assertNotNull(subscriber);
         assertEquals(mctsId, subscriber.getChild().getBeneficiaryId());
     }
@@ -225,13 +225,13 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         pregnancySubscription.getSubscriber().setMother(new MctsMother(motherId));
         subscriberDataService.update(pregnancySubscription.getSubscriber());
 
-        assertEquals(2, subscriberDataService.findByCallingNumber(oldMsisdn).getActiveAndPendingSubscriptions().size());
+        assertEquals(2, subscriberDataService.findByNumber(oldMsisdn).getActiveAndPendingSubscriptions().size());
 
         Reader reader = createUpdateReaderWithHeaders("1," + motherId + ",,,,,,,,,,,,," + newMsisdn);
         mctsBeneficiaryUpdateService.updateBeneficiaryData(reader);
 
-        Subscriber pregnancySubscriber = subscriberDataService.findByCallingNumber(newMsisdn);
-        Subscriber childSubscriber = subscriberDataService.findByCallingNumber(oldMsisdn);
+        Subscriber pregnancySubscriber = subscriberDataService.findByNumber(newMsisdn);
+        Subscriber childSubscriber = subscriberDataService.findByNumber(oldMsisdn);
 
         assertNotNull(pregnancySubscriber);
         assertNotNull(childSubscriber);
@@ -280,7 +280,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         DateTime updatedDOB = originalDOB.minusDays(100);
 
         subscriptionHelper.mksub(SubscriptionOrigin.MCTS_IMPORT, originalDOB, SubscriptionPackType.CHILD, msisdn);
-        Subscriber subscriber = subscriberDataService.findByCallingNumber(msisdn);
+        Subscriber subscriber = subscriberDataService.findByNumber(msisdn);
         subscriber.setDateOfBirth(originalDOB);
         MctsChild child = new MctsChild(childId);
         child.setState(stateDataService.findByCode(21L));
@@ -293,7 +293,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         mctsBeneficiaryUpdateService.updateBeneficiaryData(reader);
 
         // This query should return the updated subscriber information (but it doesn't...causing the assert to fail)
-        Subscriber updatedSubscriber = subscriberDataService.findByCallingNumber(msisdn);
+        Subscriber updatedSubscriber = subscriberDataService.findByNumber(msisdn);
         assertEquals(getDateString(updatedDOB), getDateString(updatedSubscriber.getDateOfBirth()));
         Subscription updatedSubscription = updatedSubscriber.getActiveAndPendingSubscriptions().iterator().next();
         assertEquals(getDateString(updatedDOB), getDateString(updatedSubscription.getStartDate()));
@@ -310,7 +310,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         DateTime updatedLMP = originalLMP.minusDays(200);
 
         subscriptionHelper.mksub(SubscriptionOrigin.MCTS_IMPORT, originalLMP, SubscriptionPackType.PREGNANCY, msisdn);
-        Subscriber subscriber = subscriberDataService.findByCallingNumber(msisdn);
+        Subscriber subscriber = subscriberDataService.findByNumber(msisdn);
         subscriber.setLastMenstrualPeriod(originalLMP);
         MctsMother mother = new MctsMother(motherId);
         mother.setState(stateDataService.findByCode(21L));
@@ -321,7 +321,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         Reader reader = createUpdateReaderWithHeaders("1," + motherId + ",,," + getDateString(updatedLMP) + ",,,,,,,,,,");
         mctsBeneficiaryUpdateService.updateBeneficiaryData(reader);
 
-        Subscriber updatedSubscriber = subscriberDataService.findByCallingNumber(msisdn);
+        Subscriber updatedSubscriber = subscriberDataService.findByNumber(msisdn);
         assertEquals(getDateString(updatedLMP), getDateString(updatedSubscriber.getLastMenstrualPeriod()));
         Subscription updatedSubscription = updatedSubscriber.getActiveAndPendingSubscriptions().iterator().next();
         assertEquals(getDateString(updatedLMP.plusDays(90)), getDateString(updatedSubscription.getStartDate()));
@@ -338,7 +338,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         DateTime updatedLMP = originalLMP.minusDays(100);
 
         subscriptionHelper.mksub(SubscriptionOrigin.MCTS_IMPORT, originalLMP, SubscriptionPackType.PREGNANCY, msisdn);
-        Subscriber subscriber = subscriberDataService.findByCallingNumber(msisdn);
+        Subscriber subscriber = subscriberDataService.findByNumber(msisdn);
         subscriber.setLastMenstrualPeriod(originalLMP);
         MctsMother mother = new MctsMother(motherId);
         mother.setState(stateDataService.findByCode(21L));
@@ -349,7 +349,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         // pre-date the LMP so that the subscription will be marked completed
         subscriber.setLastMenstrualPeriod(originalLMP.minusDays(600));
         subscriberService.update(subscriber);
-        subscriber = subscriberDataService.findByCallingNumber(msisdn);
+        subscriber = subscriberDataService.findByNumber(msisdn);
         Subscription subscription = subscriber.getAllSubscriptions().iterator().next();
         assertEquals(SubscriptionStatus.COMPLETED, subscription.getStatus());
 
@@ -357,7 +357,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         Reader reader = createUpdateReaderWithHeaders("1," + motherId + ",,," + getDateString(updatedLMP) + ",,,,,,,,,,");
         mctsBeneficiaryUpdateService.updateBeneficiaryData(reader);
 
-        Subscriber updatedSubscriber = subscriberDataService.findByCallingNumber(msisdn);
+        Subscriber updatedSubscriber = subscriberDataService.findByNumber(msisdn);
         assertEquals(getDateString(updatedLMP), getDateString(updatedSubscriber.getLastMenstrualPeriod()));
         Subscription updatedSubscription = updatedSubscriber.getActiveAndPendingSubscriptions().iterator().next();
         assertEquals(getDateString(updatedLMP.plusDays(90)), getDateString(updatedSubscription.getStartDate()));
@@ -379,7 +379,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         makeMctsSubscription(child, originalDOB, SubscriptionPackType.CHILD, msisdn);
 
         // verify that the subscription is active
-        Subscriber subscriber = subscriberDataService.findByCallingNumber(msisdn);
+        Subscriber subscriber = subscriberDataService.findByNumber(msisdn);
         Subscription subscription = subscriber.getAllSubscriptions().iterator().next();
         assertEquals(SubscriptionStatus.ACTIVE, subscription.getStatus());
 
@@ -387,7 +387,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         Reader reader = createUpdateReaderWithHeaders("1," + childId + ",," + getDateString(updatedDOB) + ",,,,,,,,,,,");
         mctsBeneficiaryUpdateService.updateBeneficiaryData(reader);
 
-        Subscriber updatedSubscriber = subscriberDataService.findByCallingNumber(msisdn);
+        Subscriber updatedSubscriber = subscriberDataService.findByNumber(msisdn);
         assertEquals(getDateString(updatedDOB), getDateString(updatedSubscriber.getDateOfBirth()));
         Subscription updatedSubscription = updatedSubscriber.getAllSubscriptions().iterator().next();
         assertEquals(getDateString(updatedDOB), getDateString(updatedSubscription.getStartDate()));
@@ -455,20 +455,20 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         // ----Validate updates to each:----
 
         // MSISDN update:
-        Subscriber oldSubscriber1 = subscriberDataService.findByCallingNumber(child1msisdn);
+        Subscriber oldSubscriber1 = subscriberDataService.findByNumber(child1msisdn);
         assertNull(oldSubscriber1.getChild());
         assertEquals(0, oldSubscriber1.getAllSubscriptions().size());
 
-        Subscriber subscriber1 = subscriberDataService.findByCallingNumber(9439986187L);
+        Subscriber subscriber1 = subscriberDataService.findByNumber(9439986187L);
         assertNotNull(subscriber1);
         assertEquals(child1id, subscriber1.getChild().getBeneficiaryId());
 
         // MSISDN update:
-        Subscriber oldSubscriber2 = subscriberDataService.findByCallingNumber(mother2msisdn);
+        Subscriber oldSubscriber2 = subscriberDataService.findByNumber(mother2msisdn);
         assertNull(oldSubscriber2.getMother());
         assertEquals(0, oldSubscriber2.getAllSubscriptions().size());
 
-        Subscriber subscriber2 = subscriberDataService.findByCallingNumber(9439986188L);
+        Subscriber subscriber2 = subscriberDataService.findByNumber(9439986188L);
         assertNotNull(subscriber2);
         assertEquals(mother2id, subscriber2.getMother().getBeneficiaryId());
 
@@ -481,7 +481,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
 
         // DOB update:
         String updatedDOB = "01-07-2015";
-        Subscriber subscriber4 = subscriberDataService.findByCallingNumber(child4msisdn);
+        Subscriber subscriber4 = subscriberDataService.findByNumber(child4msisdn);
         assertEquals(updatedDOB, getDateString(subscriber4.getDateOfBirth()));
         Subscription updatedSubscription = subscriber4.getActiveAndPendingSubscriptions().iterator().next();
         assertEquals(updatedDOB, getDateString(updatedSubscription.getStartDate()));
@@ -490,7 +490,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
 
     private void makeMctsSubscription(MctsBeneficiary beneficiary, DateTime startDate, SubscriptionPackType packType, Long number) {
         subscriptionHelper.mksub(SubscriptionOrigin.MCTS_IMPORT, startDate, packType, number);
-        Subscriber subscriber = subscriberDataService.findByCallingNumber(number);
+        Subscriber subscriber = subscriberDataService.findByNumber(number);
         if (packType == SubscriptionPackType.CHILD) {
             subscriber.setChild((MctsChild) beneficiary);
             subscriber.setDateOfBirth(startDate);
@@ -545,7 +545,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         Reader reader = createUpdateReaderWithHeaders("1," + childId + ",,,,21,8,0026,453,,,,,,");
         mctsBeneficiaryUpdateService.updateBeneficiaryData(reader);
 
-        Subscriber subscriber = subscriberDataService.findByCallingNumber(msisdn);
+        Subscriber subscriber = subscriberDataService.findByNumber(msisdn);
         assertNotNull(subscriber);
         assertNotEquals(subscriber.getChild().getDistrict().getCode(), new Long(7));
         

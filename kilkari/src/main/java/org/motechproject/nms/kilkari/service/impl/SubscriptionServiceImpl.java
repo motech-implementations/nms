@@ -1,6 +1,7 @@
 package org.motechproject.nms.kilkari.service.impl;
 
 import org.apache.commons.collections.ListUtils;
+import org.datanucleus.store.rdbms.query.ForwardQueryResult;
 import org.joda.time.DateTime;
 import org.joda.time.Weeks;
 import org.joda.time.format.DateTimeFormat;
@@ -9,6 +10,7 @@ import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.annotations.MotechListener;
 import org.motechproject.mds.query.QueryExecution;
 import org.motechproject.mds.query.QueryParams;
+import org.motechproject.mds.query.SqlQueryExecution;
 import org.motechproject.mds.util.InstanceSecurityRestriction;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.domain.Subscriber;
@@ -53,6 +55,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private static final String WEEKS_TO_KEEP_CLOSED_SUBSCRIPTIONS = "kilkari.weeks_to_keep_closed_subscriptions";
 
     private static final String SUBSCRIPTION_PURGE_EVENT_SUBJECT = "nms.kilkari.purge_closed_subscriptions";
+    public static final String SELECT_SUBSCRIBERS_BY_NUMBER = "select * from nms_subscribers where callingNumber = ?";
+    public static final String MORE_THAN_ONE_SUBSCRIBER = "More than one subscriber returned for callingNumber %s";
 
     private SettingsFacade settingsFacade;
     private MotechSchedulerService schedulerService;
@@ -81,6 +85,33 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         schedulePurgeOfOldSubscriptions();
     }
 
+
+    public Subscriber getSubscriber(final long callingNumber) {
+
+        SqlQueryExecution<Subscriber> queryExecution = new SqlQueryExecution<Subscriber>() {
+
+            @Override
+            public String getSqlQuery() {
+                return SELECT_SUBSCRIBERS_BY_NUMBER;
+            }
+
+            @Override
+            public Subscriber execute(Query query) {
+                query.setClass(Subscriber.class);
+                ForwardQueryResult fqr = (ForwardQueryResult) query.execute(callingNumber);
+                if (fqr.isEmpty()) {
+                    return null;
+                }
+                if (fqr.size() == 1) {
+                    return (Subscriber) fqr.get(0);
+                }
+                throw new IllegalStateException(String.format(MORE_THAN_ONE_SUBSCRIBER, callingNumber));
+            }
+        };
+
+        return subscriberDataService.executeSQLQuery(queryExecution);
+
+    }
 
     /**
      * Use the MOTECH scheduler to setup a repeating job
@@ -150,7 +181,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             subscriptionDataService.delete(subscription);
 
             // I need to load the subscriber since I deleted one of their subscription prior
-            Subscriber subscriber = subscriberDataService.findByCallingNumber(callingNumber);
+            Subscriber subscriber = getSubscriber(callingNumber);
             purgedSubscriptions++;
             if (subscriber.getSubscriptions().size() == 0) {
                 subscriberDataService.delete(subscriber);
@@ -197,7 +228,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                                            SubscriptionPack subscriptionPack, SubscriptionOrigin mode) {
 
         long number = PhoneNumberHelper.truncateLongNumber(callingNumber);
-        Subscriber subscriber = subscriberDataService.findByCallingNumber(number);
+        Subscriber subscriber = getSubscriber(number);
         Subscription subscription;
 
         if (subscriber == null) {
