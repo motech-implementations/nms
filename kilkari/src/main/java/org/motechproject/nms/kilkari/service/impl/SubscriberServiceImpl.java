@@ -128,9 +128,7 @@ public class SubscriberServiceImpl implements SubscriberService {
     @Transactional
     public void update(Subscriber subscriber) {
 
-        Subscriber retrievedSubscriber = getSubscriber(subscriber.getCallingNumber());
-
-        subscriberDataService.update(subscriber);
+        Subscriber retrievedSubscriber = subscriberDataService.update(subscriber);
 
         // update start dates for subscriptions if reference date (LMP/DOB) has changed
         Set<Subscription> subscriptions = retrievedSubscriber.getActiveAndPendingSubscriptions();
@@ -210,7 +208,6 @@ public class SubscriberServiceImpl implements SubscriberService {
         District district = beneficiary.getDistrict();
         Circle circle = circleFromDistrict(district);
         Language language = (Language) districtDataService.getDetachedField(district, "language");
-        Timer timer = new Timer
         Subscriber subscriber = getSubscriber(msisdn);
 
         SubscriptionPack pack = subscriptionPackDataService.byType(packType);
