@@ -127,7 +127,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testGetBookmarkEmpty() throws IOException, InterruptedException {
-        String endpoint = String.format("http://localhost:%d/api/mobileacademy/bookmarkWithScore?callingNumber=1234567890&callId=123456789012345",
+        String endpoint = String.format("http://localhost:%d/api/mobileacademy/bookmarkWithScore?callingNumber=1234567890&callId=1234567890123456789012345",
                 TestContext.getJettyPort());
         HttpGet request = RequestBuilder.createGetRequest(endpoint);
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(request, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
@@ -616,7 +616,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
                 "http://localhost:%d/api/mobileacademy/bookmarkWithScore",
                 TestContext.getJettyPort());
         SaveBookmarkRequest bookmarkRequest = new SaveBookmarkRequest();
-        bookmarkRequest.setCallId(VALID_CALL_ID);
+        bookmarkRequest.setCallId(VALID_CALL_ID.substring(3));
         bookmarkRequest.setCallingNumber(1234567890l);
         bookmarkRequest.setBookmark("Chapter01_Lesson01");
         Map<String, Integer> scoreMap = new HashMap<String, Integer>();
