@@ -2339,7 +2339,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
             seperator = ",";
         }
         if (callId != null) {
-            sb.append(String.format("%s\"callId\": %s", seperator, callId));
+            sb.append(String.format("%s\"callId\": \"%s\"", seperator, callId));
             seperator = ",";
         }
         if (languageLocationCode != null) {
@@ -2391,7 +2391,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     public void verifyFT62() throws IOException, InterruptedException {
         // callId more than 15 digit
         HttpPost httpPost = createSubscriptionHttpPost("1234567890", "A", "AP",
-                VALID_CALL_ID, "10", "childPack");
+                VALID_CALL_ID.concat("foo"), "10", "childPack");
         String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
                 httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
@@ -2801,7 +2801,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
             InterruptedException {
         // callingNumber missing
         HttpPost httpPost = createSubscriptionHttpPost(null, "A", "AP",
-                "123456789012545", "10", "childPack");
+                VALID_CALL_ID, "10", "childPack");
 
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Not Present>");
 
@@ -2820,7 +2820,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     @Test
     public void verifyFT66() throws IOException, InterruptedException {
         // operator missing
-        HttpPost httpPost = createSubscriptionHttpPost("1234567890", null, rh.delhiCircle().getName(), "123456789012545", rh.hindiLanguage().getCode(),
+        HttpPost httpPost = createSubscriptionHttpPost("1234567890", null, rh.delhiCircle().getName(), VALID_CALL_ID, rh.hindiLanguage().getCode(),
                 sh.childPack().getName());
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
@@ -2838,7 +2838,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     public void verifyFT67() throws IOException, InterruptedException {
         // circle missing(optional parameter)
         HttpPost httpPost = createSubscriptionHttpPost("9999911122",
-                rh.airtelOperator(), null, "123456789012545", rh
+                rh.airtelOperator(), null, VALID_CALL_ID, rh
                         .hindiLanguage().getCode(), sh.childPack().getName());
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
@@ -2879,7 +2879,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     public void verifyFT69() throws IOException, InterruptedException {
         // languageLocationCode missing
         HttpPost httpPost = createSubscriptionHttpPost("1234567890", "A", "AP",
-                "123456789012545", null, "childPack");
+                VALID_CALL_ID, null, "childPack");
         String expectedJsonResponse = createFailureResponseJson("<languageLocationCode: Not Present>");
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
@@ -2898,7 +2898,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     public void verifyFT70() throws IOException, InterruptedException {
         // subscriptionPack missing
         HttpPost httpPost = createSubscriptionHttpPost("1234567890", "A", "AP",
-                "123456789012545", "10", null);
+                VALID_CALL_ID, "10", null);
 
         String expectedJsonResponse = createFailureResponseJson("<subscriptionPack: Not Present>");
 
@@ -3672,7 +3672,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     @Test
     public void verifyFT60() throws IOException, InterruptedException {
         // Calling Number alphanumeric
-        HttpPost httpPost = createSubscriptionHttpPost("12345AD890", "A", "AP", "123456789012545", "10",
+        HttpPost httpPost = createSubscriptionHttpPost("12345AD890", "A", "AP", VALID_CALL_ID, "10",
                 "childPack");
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);

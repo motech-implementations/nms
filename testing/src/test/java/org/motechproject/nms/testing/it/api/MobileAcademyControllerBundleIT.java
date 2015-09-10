@@ -611,12 +611,12 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT413() throws IOException, InterruptedException {
-        // callId more than 15 digit
+        // callId more than 25 digit
         String endpoint = String.format(
                 "http://localhost:%d/api/mobileacademy/bookmarkWithScore",
                 TestContext.getJettyPort());
         SaveBookmarkRequest bookmarkRequest = new SaveBookmarkRequest();
-        bookmarkRequest.setCallId(VALID_CALL_ID.substring(3));
+        bookmarkRequest.setCallId(VALID_CALL_ID.concat("foo"));
         bookmarkRequest.setCallingNumber(1234567890l);
         bookmarkRequest.setBookmark("Chapter01_Lesson01");
         Map<String, Integer> scoreMap = new HashMap<String, Integer>();
@@ -636,7 +636,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
                 .getEntity())));
 
         // callId less than 15 digit
-        bookmarkRequest.setCallId(VALID_CALL_ID);
+        bookmarkRequest.setCallId(VALID_CALL_ID.substring(2));
         request = RequestBuilder.createPostRequest(endpoint, bookmarkRequest);
         response = SimpleHttpClient.httpRequestAndResponse(request,
                 RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
