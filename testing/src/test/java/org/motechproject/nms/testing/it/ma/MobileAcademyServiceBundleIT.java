@@ -409,6 +409,31 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         // TODO: cannot check the notification status yet since we don't have a real IMI url to hit
     }
 
+    @Test
+    public void testNotificationNoLocation() {
+        // Setup language/location and flw for notification
+        FrontLineWorker flw = frontLineWorkerService.getByContactNumber(2111113333L);
+        if (flw != null) {
+            flw.setStatus(FrontLineWorkerStatus.INVALID);
+            frontLineWorkerService.update(flw);
+            frontLineWorkerService.delete(flw);
+        }
+
+        flw = new FrontLineWorker("Test Worker", 2111113333L);
+        frontLineWorkerService.add(flw);
+        flw = frontLineWorkerService.getByContactNumber(2111113333L);
+        assertNotNull(flw);
+
+        long callingNumber = 2111113333L;
+        MotechEvent event = new MotechEvent();
+        event.getParameters().put("callingNumber", callingNumber);
+        event.getParameters().put("smsContent", "FooBar");
+        CompletionRecord cr = new CompletionRecord(callingNumber, 35, false, 1);
+        completionRecordDataService.create(cr);
+        courseNotificationService.sendSmsNotification(event);
+        // TODO: cannot check the notification status yet since we don't have a real IMI url to hit
+    }
+
     private void createLanguageLocationData() {
         Language ta = languageDataService.findByCode("50");
         if (ta == null) {
