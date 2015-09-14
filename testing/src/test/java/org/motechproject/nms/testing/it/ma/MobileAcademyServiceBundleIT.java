@@ -380,8 +380,10 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
 
     @Test
     public void testNotification() {
+        long callingNumber = 2111113333L;
+
         // Setup language/location and flw for notification
-        FrontLineWorker flw = frontLineWorkerService.getByContactNumber(2111113333L);
+        FrontLineWorker flw = frontLineWorkerService.getByContactNumber(callingNumber);
         if (flw != null) {
             flw.setStatus(FrontLineWorkerStatus.INVALID);
             frontLineWorkerService.update(flw);
@@ -391,15 +393,40 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         createLanguageLocationData();
         State sampleState = stateDataService.findByCode(1L);
         Language language = languageDataService.findByCode("50");
-        flw = new FrontLineWorker("Test Worker", 2111113333L);
+        flw = new FrontLineWorker("Test Worker", callingNumber);
         flw.setLanguage(language);
         flw.setState(sampleState);
         flw.setDistrict(sampleState.getDistricts().get(0));
         frontLineWorkerService.add(flw);
-        flw = frontLineWorkerService.getByContactNumber(2111113333L);
+        flw = frontLineWorkerService.getByContactNumber(callingNumber);
         assertNotNull(flw);
 
+        MotechEvent event = new MotechEvent();
+        event.getParameters().put("callingNumber", callingNumber);
+        event.getParameters().put("smsContent", "FooBar");
+        CompletionRecord cr = new CompletionRecord(callingNumber, 35, false, 1);
+        completionRecordDataService.create(cr);
+        courseNotificationService.sendSmsNotification(event);
+        // TODO: cannot check the notification status yet since we don't have a real IMI url to hit
+    }
+
+    @Test
+    public void testNotificationNoLocation() {
         long callingNumber = 2111113333L;
+
+        // Setup flw for notification (without language/location)
+        FrontLineWorker flw = frontLineWorkerService.getByContactNumber(callingNumber);
+        if (flw != null) {
+            flw.setStatus(FrontLineWorkerStatus.INVALID);
+            frontLineWorkerService.update(flw);
+            frontLineWorkerService.delete(flw);
+        }
+
+        flw = new FrontLineWorker("Test Worker", callingNumber);
+        frontLineWorkerService.add(flw);
+        flw = frontLineWorkerService.getByContactNumber(callingNumber);
+        assertNotNull(flw);
+
         MotechEvent event = new MotechEvent();
         event.getParameters().put("callingNumber", callingNumber);
         event.getParameters().put("smsContent", "FooBar");
