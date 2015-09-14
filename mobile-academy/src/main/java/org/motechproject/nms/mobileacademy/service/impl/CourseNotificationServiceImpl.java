@@ -39,7 +39,7 @@ public class CourseNotificationServiceImpl implements CourseNotificationService 
     private static final String DELIVERY_STATUS = "deliveryStatus";
     private static final String ADDRESS = "address";
     private static final String SMS_CONTENT_PREFIX = "sms.content.";
-    private static final String SMS_DEFAULT_LANGUAGE_CODE = "default";
+    private static final String SMS_DEFAULT_LANGUAGE_PROPERTY = "default";
     private static final Logger LOGGER = LoggerFactory.getLogger(CourseNotificationServiceImpl.class);
 
     /**
@@ -187,7 +187,7 @@ public class CourseNotificationServiceImpl implements CourseNotificationService 
     private String buildSmsContent(Long callingNumber) {
 
         FrontLineWorker flw = frontLineWorkerService.getByContactNumber(callingNumber);
-        String locationId = "XX"; // unknown location id
+        String locationCode = "XX"; // unknown location id
         String smsLanguage = null;
 
         if (flw == null) {
@@ -196,7 +196,7 @@ public class CourseNotificationServiceImpl implements CourseNotificationService 
 
         // Build location code
         if (flw.getState() != null && flw.getDistrict() != null) {
-            locationId = flw.getState().getCode().toString() + flw.getDistrict().getCode();
+            locationCode = flw.getState().getCode().toString() + flw.getDistrict().getCode();
         }
 
         // set sms content language
@@ -206,7 +206,7 @@ public class CourseNotificationServiceImpl implements CourseNotificationService 
             smsLanguage = flw.getDistrict().getLanguage().getCode();
         } else {
             LOGGER.debug("No language code found. Reverting to national default");
-            smsLanguage = settingsFacade.getProperty(SMS_DEFAULT_LANGUAGE_CODE);
+            smsLanguage = settingsFacade.getProperty(SMS_DEFAULT_LANGUAGE_PROPERTY);
         }
 
         // fetch sms content
@@ -217,6 +217,6 @@ public class CourseNotificationServiceImpl implements CourseNotificationService 
         }
 
         int attempts = activityService.getAllActivityForUser(callingNumber.toString()).size();
-        return smsContent + locationId + callingNumber + attempts;
+        return smsContent + locationCode + callingNumber + attempts;
     }
 }
