@@ -7,6 +7,7 @@ import org.motechproject.mds.service.EntityService;
 import org.motechproject.mds.service.JdoListenerRegistryService;
 import org.motechproject.mds.util.Constants;
 import org.motechproject.mds.util.PropertyUtil;
+import org.motechproject.metrics.service.Timer;
 import org.motechproject.nms.tracking.domain.ChangeLog;
 import org.motechproject.nms.tracking.exception.TrackChangesException;
 import org.motechproject.nms.tracking.repository.ChangeLogDataService;
@@ -137,6 +138,7 @@ public class TrackChangesServiceImpl implements TrackChangesService {
     }
 
     private void buildChanges(Map<String, Change> changes, StringBuilder builder) throws TrackChangesException {
+        Timer timer = new Timer();
         for (Iterator<Map.Entry<String, Change>> iterator = changes.entrySet().iterator(); iterator.hasNext(); ) {
             Map.Entry<String, Change> changeEntry = iterator.next();
             String propertyName = changeEntry.getKey();
@@ -151,6 +153,7 @@ public class TrackChangesServiceImpl implements TrackChangesService {
                 builder.append(",");
             }
         }
+        LOGGER.debug("buildChanges {}", timer.time());
     }
 
     private void buildCollectionChanges(Map<String, CollectionChange> collectionChanges, StringBuilder builder) throws TrackChangesException {
