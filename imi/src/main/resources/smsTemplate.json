@@ -10,7 +10,7 @@
     "clientCorrelator": "<correlationId>",
     "receiptRequest": {
       "notifyURL": "<notificationUrl>",
-      "callbackData": "$(callbackData)"
+      "callbackData": ""
     },
     "senderName": "",
     "category": ""

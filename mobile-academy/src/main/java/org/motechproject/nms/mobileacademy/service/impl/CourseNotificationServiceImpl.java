@@ -188,7 +188,7 @@ public class CourseNotificationServiceImpl implements CourseNotificationService 
 
         FrontLineWorker flw = frontLineWorkerService.getByContactNumber(callingNumber);
         String locationCode = "XX"; // unknown location id
-        String smsLanguage = null;
+        String smsLanguageProperty = null;
 
         if (flw == null) {
             throw new IllegalStateException("Unable to find flw for calling number: " + callingNumber);
@@ -201,19 +201,19 @@ public class CourseNotificationServiceImpl implements CourseNotificationService 
 
         // set sms content language
         if (flw.getLanguage() != null) {
-            smsLanguage = flw.getLanguage().getCode();
+            smsLanguageProperty = flw.getLanguage().getCode();
         } else if (flw.getDistrict() != null && flw.getDistrict().getLanguage() != null) {
-            smsLanguage = flw.getDistrict().getLanguage().getCode();
+            smsLanguageProperty = flw.getDistrict().getLanguage().getCode();
         } else {
             LOGGER.debug("No language code found. Reverting to national default");
-            smsLanguage = settingsFacade.getProperty(SMS_DEFAULT_LANGUAGE_PROPERTY);
+            smsLanguageProperty = SMS_DEFAULT_LANGUAGE_PROPERTY;
         }
 
         // fetch sms content
-        String smsContent = settingsFacade.getProperty(SMS_CONTENT_PREFIX + smsLanguage);
+        String smsContent = settingsFacade.getProperty(SMS_CONTENT_PREFIX + smsLanguageProperty);
         if (smsContent == null) {
             throw new IllegalStateException("Unable to get sms content for flw language: " +
-                    SMS_CONTENT_PREFIX + smsLanguage);
+                    SMS_CONTENT_PREFIX + smsLanguageProperty);
         }
 
         int attempts = activityService.getAllActivityForUser(callingNumber.toString()).size();
