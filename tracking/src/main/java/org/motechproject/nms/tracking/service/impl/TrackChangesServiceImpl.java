@@ -55,7 +55,7 @@ public class TrackChangesServiceImpl implements TrackChangesService {
         this.cacheService.create("entityInstance", new CacheService.Refresher() {
             @Override
             public Object get(Object key) {
-                return entityService.getEntityByClassName(key.getClass().getName()) != null;
+                return entityService.getEntityByClassName((String) key) != null;
             }
         });
     }
@@ -233,7 +233,7 @@ public class TrackChangesServiceImpl implements TrackChangesService {
         if (object == null) {
             return false;
         }
-        return (Boolean) cacheService.get("entityInstance", object);
+        return (Boolean) cacheService.get("entityInstance", object.getClass().getName());
     }
 
     private MotechLifecycleListener createListener(String className, String serviceMethod, InstanceLifecycleListenerType listenerType) {
