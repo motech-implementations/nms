@@ -733,6 +733,7 @@
         <module>props</module>
         <module>imi</module>
         <module>testing</module>
+        <module>cache</module>
     </modules>
 
     <build>
