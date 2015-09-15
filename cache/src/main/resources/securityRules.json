@@ -1,0 +1,17 @@
+[
+  {
+    "active": true,
+    "pattern": "/**/cache/**",
+    "supportedSchemes": [
+      "NO_SECURITY"
+    ],
+    "protocol": "HTTP",
+    "priority": 2,
+    "rest": true,
+    "origin": "NMS_MODULE_CACHE",
+    "version": "all",
+    "methodsRequired": [
+      "ANY"
+    ]
+  }
+]

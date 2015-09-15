@@ -17,6 +17,8 @@
 
     <osgi:reference id="entityService" interface="org.motechproject.mds.service.EntityService"/>
 
+    <osgi:reference id="cacheService" interface="org.motechproject.nms.cache.service.CacheService"/>
+
     <osgi:reference id="jdoListenerRegistryService" interface="org.motechproject.mds.service.JdoListenerRegistryService"/>
 
 </beans>

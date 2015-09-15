@@ -7,6 +7,7 @@ import org.motechproject.mds.service.EntityService;
 import org.motechproject.mds.service.JdoListenerRegistryService;
 import org.motechproject.mds.util.Constants;
 import org.motechproject.mds.util.PropertyUtil;
+import org.motechproject.nms.cache.service.CacheService;
 import org.motechproject.nms.tracking.domain.ChangeLog;
 import org.motechproject.nms.tracking.exception.TrackChangesException;
 import org.motechproject.nms.tracking.repository.ChangeLogDataService;
@@ -37,10 +38,27 @@ public class TrackChangesServiceImpl implements TrackChangesService {
     public static final String EMPTY_PACKAGE = "";
 
     private JdoListenerRegistryService jdoListenerRegistryService;
-    private EntityService entityService;
+    private CacheService cacheService;
     private ChangeLogDataService changeLogDataService;
 
     private Set<String> trackedClasses = new HashSet<>();
+
+
+    @Autowired
+    public TrackChangesServiceImpl(CacheService cacheService, final EntityService entityService,
+                                   ChangeLogDataService changeLogDataService,
+                                   JdoListenerRegistryService jdoListenerRegistryService) {
+        this.cacheService = cacheService;
+        this.changeLogDataService = changeLogDataService;
+        this.jdoListenerRegistryService = jdoListenerRegistryService;
+
+        this.cacheService.create("entityInstance", new CacheService.Refresher() {
+            @Override
+            public Object get(Object key) {
+                return entityService.getEntityByClassName((String) key) != null;
+            }
+        });
+    }
 
     @Override
     public void registerLifecycleListeners(Class<?> clazz) {
@@ -212,26 +230,14 @@ public class TrackChangesServiceImpl implements TrackChangesService {
     }
 
     private boolean isEntityInstance(Object object) {
-        return object != null && entityService.getEntityByClassName(object.getClass().getName()) != null;
+        if (object == null) {
+            return false;
+        }
+        return (Boolean) cacheService.get("entityInstance", object.getClass().getName());
     }
 
     private MotechLifecycleListener createListener(String className, String serviceMethod, InstanceLifecycleListenerType listenerType) {
         return new MotechLifecycleListener(TrackChangesServiceImpl.class, serviceMethod, className,
                 EMPTY_PACKAGE, new InstanceLifecycleListenerType[] {listenerType}, Collections.singletonList(className));
-    }
-
-    @Autowired
-    public void setJdoListenerRegistryService(JdoListenerRegistryService jdoListenerRegistryService) {
-        this.jdoListenerRegistryService = jdoListenerRegistryService;
-    }
-
-    @Autowired
-    public void setEntityService(EntityService entityService) {
-        this.entityService = entityService;
-    }
-
-    @Autowired
-    public void setChangeLogDataService(ChangeLogDataService changeLogDataService) {
-        this.changeLogDataService = changeLogDataService;
     }
 }
