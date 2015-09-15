@@ -38,7 +38,7 @@ public class TrackChangesServiceImpl implements TrackChangesService {
 
     private JdoListenerRegistryService jdoListenerRegistryService;
     private ChangeLogDataService changeLogDataService;
-    private EntityClassCache entityClassCache;
+    private EntityClassCacheImpl entityClassCache;
 
     private Set<String> trackedClasses = new HashSet<>();
 
@@ -48,7 +48,7 @@ public class TrackChangesServiceImpl implements TrackChangesService {
                                    ChangeLogDataService changeLogDataService) {
         this.jdoListenerRegistryService = jdoListenerRegistryService;
         this.changeLogDataService = changeLogDataService;
-        entityClassCache = new EntityClassCache(entityService);
+        entityClassCache = new EntityClassCacheImpl(entityService);
     }
 
     @Override
