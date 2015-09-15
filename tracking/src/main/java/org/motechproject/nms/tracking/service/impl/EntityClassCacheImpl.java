@@ -15,7 +15,6 @@ public class EntityClassCacheImpl implements EntityClassCache {
     }
 
     public boolean isEntityInstance(String className) {
-        LOGGER.debug("*** NO CACHE {} ***", className);
         return entityService.getEntityByClassName(className) != null;
     }
 }
