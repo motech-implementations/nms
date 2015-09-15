@@ -17,7 +17,6 @@ import org.motechproject.nms.tracking.utils.TrackChanges;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.InvocationTargetException;
@@ -38,10 +37,19 @@ public class TrackChangesServiceImpl implements TrackChangesService {
     public static final String EMPTY_PACKAGE = "";
 
     private JdoListenerRegistryService jdoListenerRegistryService;
-    private EntityService entityService;
     private ChangeLogDataService changeLogDataService;
+    private EntityClassCache entityClassCache;
 
     private Set<String> trackedClasses = new HashSet<>();
+
+
+    @Autowired
+    public TrackChangesServiceImpl(JdoListenerRegistryService jdoListenerRegistryService, EntityService entityService,
+                                   ChangeLogDataService changeLogDataService) {
+        this.jdoListenerRegistryService = jdoListenerRegistryService;
+        this.changeLogDataService = changeLogDataService;
+        entityClassCache = new EntityClassCache(entityService);
+    }
 
     @Override
     public void registerLifecycleListeners(Class<?> clazz) {
@@ -61,7 +69,7 @@ public class TrackChangesServiceImpl implements TrackChangesService {
 
     @Override
     public void preStore(Object target) {
-        if (target instanceof TrackChanges && isEntityInstance(target.getClass().getName())) {
+        if (target instanceof TrackChanges && entityClassCache.isEntityInstance(target.getClass().getName())) {
             try {
                 storeChangeLog((TrackChanges) target);
             } catch (TrackChangesException e) {
@@ -74,7 +82,7 @@ public class TrackChangesServiceImpl implements TrackChangesService {
 
     @Override
     public void preDelete(Object target) {
-        if (target instanceof TrackChanges && isEntityInstance(target.getClass().getName())) {
+        if (target instanceof TrackChanges && entityClassCache.isEntityInstance(target.getClass().getName())) {
             try {
                 deleteChangeLogs(target);
             } catch (TrackChangesException e) {
@@ -205,16 +213,11 @@ public class TrackChangesServiceImpl implements TrackChangesService {
     }
 
     private String formatPropertyValue(Object value) throws TrackChangesException {
-        if (value != null && isEntityInstance(value.getClass().getName())) {
+        if (value != null && entityClassCache.isEntityInstance(value.getClass().getName())) {
             return String.valueOf(getInstanceId(value));
         } else {
             return String.valueOf(value);
         }
-    }
-
-    @Cacheable("entityInstance")
-    private boolean isEntityInstance(String className) {
-        return entityService.getEntityByClassName(className) != null;
     }
 
     private MotechLifecycleListener createListener(String className, String serviceMethod, InstanceLifecycleListenerType listenerType) {
@@ -222,18 +225,4 @@ public class TrackChangesServiceImpl implements TrackChangesService {
                 EMPTY_PACKAGE, new InstanceLifecycleListenerType[] {listenerType}, Collections.singletonList(className));
     }
 
-    @Autowired
-    public void setJdoListenerRegistryService(JdoListenerRegistryService jdoListenerRegistryService) {
-        this.jdoListenerRegistryService = jdoListenerRegistryService;
-    }
-
-    @Autowired
-    public void setEntityService(EntityService entityService) {
-        this.entityService = entityService;
-    }
-
-    @Autowired
-    public void setChangeLogDataService(ChangeLogDataService changeLogDataService) {
-        this.changeLogDataService = changeLogDataService;
-    }
 }
