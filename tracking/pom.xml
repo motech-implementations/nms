@@ -75,6 +75,7 @@
                             org.motechproject.nms.tracking.utils;version=${project.version}
                         </Export-Package>
                         <Import-Package>
+                            org.springframework.cache.support.SimpleCacheManager,
                             *
                         </Import-Package>
                     </instructions>

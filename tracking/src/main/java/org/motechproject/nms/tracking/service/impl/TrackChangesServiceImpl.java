@@ -17,6 +17,7 @@ import org.motechproject.nms.tracking.utils.TrackChanges;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.InvocationTargetException;
@@ -60,7 +61,7 @@ public class TrackChangesServiceImpl implements TrackChangesService {
 
     @Override
     public void preStore(Object target) {
-        if (target instanceof TrackChanges && isEntityInstance(target)) {
+        if (target instanceof TrackChanges && isEntityInstance(target.getClass().getName())) {
             try {
                 storeChangeLog((TrackChanges) target);
             } catch (TrackChangesException e) {
@@ -73,7 +74,7 @@ public class TrackChangesServiceImpl implements TrackChangesService {
 
     @Override
     public void preDelete(Object target) {
-        if (target instanceof TrackChanges && isEntityInstance(target)) {
+        if (target instanceof TrackChanges && isEntityInstance(target.getClass().getName())) {
             try {
                 deleteChangeLogs(target);
             } catch (TrackChangesException e) {
@@ -204,15 +205,16 @@ public class TrackChangesServiceImpl implements TrackChangesService {
     }
 
     private String formatPropertyValue(Object value) throws TrackChangesException {
-        if (isEntityInstance(value)) {
+        if (value != null && isEntityInstance(value.getClass().getName())) {
             return String.valueOf(getInstanceId(value));
         } else {
             return String.valueOf(value);
         }
     }
 
-    private boolean isEntityInstance(Object object) {
-        return object != null && entityService.getEntityByClassName(object.getClass().getName()) != null;
+    @Cacheable("entityInstance")
+    private boolean isEntityInstance(String className) {
+        return entityService.getEntityByClassName(className) != null;
     }
 
     private MotechLifecycleListener createListener(String className, String serviceMethod, InstanceLifecycleListenerType listenerType) {
