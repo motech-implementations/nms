@@ -3,13 +3,13 @@ package org.motechproject.nms.tracking.service.impl;
 import org.joda.time.DateTime;
 import org.motechproject.mds.annotations.InstanceLifecycleListenerType;
 import org.motechproject.mds.listener.MotechLifecycleListener;
-import org.motechproject.mds.service.EntityService;
 import org.motechproject.mds.service.JdoListenerRegistryService;
 import org.motechproject.mds.util.Constants;
 import org.motechproject.mds.util.PropertyUtil;
 import org.motechproject.nms.tracking.domain.ChangeLog;
 import org.motechproject.nms.tracking.exception.TrackChangesException;
 import org.motechproject.nms.tracking.repository.ChangeLogDataService;
+import org.motechproject.nms.tracking.service.CacheService;
 import org.motechproject.nms.tracking.service.TrackChangesService;
 import org.motechproject.nms.tracking.utils.Change;
 import org.motechproject.nms.tracking.utils.CollectionChange;
@@ -38,17 +38,17 @@ public class TrackChangesServiceImpl implements TrackChangesService {
 
     private JdoListenerRegistryService jdoListenerRegistryService;
     private ChangeLogDataService changeLogDataService;
-    private EntityClassCacheImpl entityClassCache;
+    private CacheService cacheService;
 
     private Set<String> trackedClasses = new HashSet<>();
 
 
     @Autowired
-    public TrackChangesServiceImpl(JdoListenerRegistryService jdoListenerRegistryService, EntityService entityService,
+    public TrackChangesServiceImpl(JdoListenerRegistryService jdoListenerRegistryService, CacheService cacheService,
                                    ChangeLogDataService changeLogDataService) {
         this.jdoListenerRegistryService = jdoListenerRegistryService;
+        this.cacheService = cacheService;
         this.changeLogDataService = changeLogDataService;
-        entityClassCache = new EntityClassCacheImpl(entityService);
     }
 
     @Override
@@ -69,7 +69,7 @@ public class TrackChangesServiceImpl implements TrackChangesService {
 
     @Override
     public void preStore(Object target) {
-        if (target instanceof TrackChanges && entityClassCache.isEntityInstance(target.getClass().getName())) {
+        if (target instanceof TrackChanges && cacheService.isEntityInstance(target.getClass().getName())) {
             try {
                 storeChangeLog((TrackChanges) target);
             } catch (TrackChangesException e) {
@@ -82,7 +82,7 @@ public class TrackChangesServiceImpl implements TrackChangesService {
 
     @Override
     public void preDelete(Object target) {
-        if (target instanceof TrackChanges && entityClassCache.isEntityInstance(target.getClass().getName())) {
+        if (target instanceof TrackChanges && cacheService.isEntityInstance(target.getClass().getName())) {
             try {
                 deleteChangeLogs(target);
             } catch (TrackChangesException e) {
@@ -213,7 +213,7 @@ public class TrackChangesServiceImpl implements TrackChangesService {
     }
 
     private String formatPropertyValue(Object value) throws TrackChangesException {
-        if (value != null && entityClassCache.isEntityInstance(value.getClass().getName())) {
+        if (value != null && cacheService.isEntityInstance(value.getClass().getName())) {
             return String.valueOf(getInstanceId(value));
         } else {
             return String.valueOf(value);

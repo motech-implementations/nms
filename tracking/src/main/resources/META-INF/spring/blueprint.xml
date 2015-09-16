@@ -12,6 +12,8 @@
     <osgi:service ref="trackChangesServiceImpl"
                   interface="org.motechproject.nms.tracking.service.impl.TrackChangesServiceImpl"/>
 
+    <osgi:service ref="cacheService" interface="org.motechproject.nms.tracking.service.CacheService"/>
+
     <osgi:reference id="changeLogDataService"
                     interface="org.motechproject.nms.tracking.repository.ChangeLogDataService"/>
 
