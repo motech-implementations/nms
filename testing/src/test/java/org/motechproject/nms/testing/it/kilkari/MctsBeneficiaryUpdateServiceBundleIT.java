@@ -1,26 +1,5 @@
 package org.motechproject.nms.testing.it.kilkari;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.motechproject.nms.testing.it.utils.RegionHelper.createDistrict;
-import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthBlock;
-import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthFacility;
-import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthFacilityType;
-import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthSubFacility;
-import static org.motechproject.nms.testing.it.utils.RegionHelper.createState;
-import static org.motechproject.nms.testing.it.utils.RegionHelper.createTaluka;
-import static org.motechproject.nms.testing.it.utils.RegionHelper.createVillage;
-
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.StringReader;
-import java.util.Arrays;
-import java.util.List;
-
-import javax.inject.Inject;
-
 import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Test;
@@ -57,6 +36,7 @@ import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
+import org.motechproject.nms.region.service.StateService;
 import org.motechproject.nms.testing.it.utils.SubscriptionHelper;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
@@ -65,6 +45,26 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
+
+import javax.inject.Inject;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.StringReader;
+import java.util.Arrays;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createDistrict;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthBlock;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthFacility;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthFacilityType;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthSubFacility;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createState;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createTaluka;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createVillage;
 
 
 @RunWith(PaxExam.class)
@@ -81,6 +81,8 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
     private LanguageDataService languageDataService;
     @Inject
     private StateDataService stateDataService;
+    @Inject
+    private StateService stateService;
     @Inject
     private DistrictDataService districtDataService;
     @Inject
@@ -102,16 +104,14 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
     @Inject
     private MctsMotherDataService mctsMotherDataService;
 
-    private SubscriptionHelper subscriptionHelper;
+    private SubscriptionHelper subscriptionHelper = new SubscriptionHelper(subscriptionService, subscriberDataService,
+            subscriptionPackDataService, languageDataService, circleDataService, stateDataService, stateService,
+            districtDataService, districtService);
+
 
     @Before
     public void setUp() {
         testingService.clearDatabase();
-
-        subscriptionHelper = new SubscriptionHelper(subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService, districtService);
-
         subscriptionHelper.pregnancyPack();
         subscriptionHelper.childPack();
     }
@@ -283,7 +283,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         Subscriber subscriber = subscriberDataService.findByNumber(msisdn);
         subscriber.setDateOfBirth(originalDOB);
         MctsChild child = new MctsChild(childId);
-        child.setState(stateDataService.findByCode(21L));
+        child.setState(stateService.findByCode(21L));
         child.setDistrict(districtService.findByStateAndCode(child.getState(), 3L));
         subscriber.setChild(child);
         subscriberDataService.update(subscriber);
@@ -313,7 +313,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         Subscriber subscriber = subscriberDataService.findByNumber(msisdn);
         subscriber.setLastMenstrualPeriod(originalLMP);
         MctsMother mother = new MctsMother(motherId);
-        mother.setState(stateDataService.findByCode(21L));
+        mother.setState(stateService.findByCode(21L));
         mother.setDistrict(districtService.findByStateAndCode(mother.getState(), 3L));
         subscriber.setMother(mother);
         subscriberDataService.update(subscriber);
@@ -341,7 +341,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         Subscriber subscriber = subscriberDataService.findByNumber(msisdn);
         subscriber.setLastMenstrualPeriod(originalLMP);
         MctsMother mother = new MctsMother(motherId);
-        mother.setState(stateDataService.findByCode(21L));
+        mother.setState(stateService.findByCode(21L));
         mother.setDistrict(districtService.findByStateAndCode(mother.getState(), 3L));
         subscriber.setMother(mother);
         subscriberDataService.update(subscriber);
@@ -374,7 +374,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         DateTime updatedDOB = originalDOB.minusDays(400);
 
         MctsChild child = new MctsChild(childId);
-        child.setState(stateDataService.findByCode(21L));
+        child.setState(stateService.findByCode(21L));
         child.setDistrict(districtService.findByStateAndCode(child.getState(), 3L));
         makeMctsSubscription(child, originalDOB, SubscriptionPackType.CHILD, msisdn);
 
@@ -402,7 +402,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         String childId = "0123456789";
 
         MctsChild child = new MctsChild(childId);
-        child.setState(stateDataService.findByCode(21L));
+        child.setState(stateService.findByCode(21L));
         child.setDistrict(districtService.findByStateAndCode(child.getState(), 2L));
         makeMctsSubscription(child, DateTime.now().minusDays(100), SubscriptionPackType.CHILD, msisdn);
 
@@ -424,27 +424,27 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
 
         String child1id = "1234567890";
         MctsChild child1 = new MctsChild(child1id);
-        child1.setState(stateDataService.findByCode(21L));
+        child1.setState(stateService.findByCode(21L));
         child1.setDistrict(districtService.findByStateAndCode(child1.getState(), 3L));
         Long child1msisdn = subscriptionHelper.makeNumber();
         makeMctsSubscription(child1, DateTime.now().minusDays(100), SubscriptionPackType.CHILD, child1msisdn);
 
         String mother2id = "1234567899";
         MctsMother mother2 = new MctsMother(mother2id);
-        mother2.setState(stateDataService.findByCode(21L));
+        mother2.setState(stateService.findByCode(21L));
         mother2.setDistrict(districtService.findByStateAndCode(mother2.getState(), 3L));
         Long mother2msisdn = subscriptionHelper.makeNumber();
         makeMctsSubscription(mother2, DateTime.now().minusDays(100), SubscriptionPackType.PREGNANCY, mother2msisdn);
 
         String mother3id = "9876543210";
         MctsMother mother3 = new MctsMother(mother3id);
-        mother3.setState(stateDataService.findByCode(21L));
+        mother3.setState(stateService.findByCode(21L));
         mother3.setDistrict(districtService.findByStateAndCode(mother3.getState(), 3L));
         makeMctsSubscription(mother3, DateTime.now().minusDays(100), SubscriptionPackType.PREGNANCY, subscriptionHelper.makeNumber());
 
         Long child4msisdn = subscriptionHelper.makeNumber();
         MctsChild child4 = new MctsChild("9876543211");
-        child4.setState(stateDataService.findByCode(21L));
+        child4.setState(stateService.findByCode(21L));
         child4.setDistrict(districtService.findByStateAndCode(child4.getState(), 3L));
         makeMctsSubscription(child4, DateTime.now().minusDays(100), SubscriptionPackType.CHILD, child4msisdn);
 
@@ -537,7 +537,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         String childId = "0123456789";
 
         MctsChild child = new MctsChild(childId);
-        child.setState(stateDataService.findByCode(21L));
+        child.setState(stateService.findByCode(21L));
         child.setDistrict(districtService.findByStateAndCode(child.getState(), 2L));
         makeMctsSubscription(child, DateTime.now().minusDays(100), SubscriptionPackType.CHILD, msisdn);
 

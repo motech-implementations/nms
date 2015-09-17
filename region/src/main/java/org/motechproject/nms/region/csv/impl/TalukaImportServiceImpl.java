@@ -5,8 +5,8 @@ import org.motechproject.nms.csv.utils.GetString;
 import org.motechproject.nms.csv.utils.Store;
 import org.motechproject.nms.region.csv.TalukaImportService;
 import org.motechproject.nms.region.domain.Taluka;
-import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
+import org.motechproject.nms.region.service.StateService;
 import org.motechproject.nms.region.service.TalukaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -35,10 +35,10 @@ public class TalukaImportServiceImpl extends BaseLocationImportService<Taluka>
 
     private TalukaService talukaService;
     private DistrictService districtService;
-    private StateDataService stateDataService;
+    private StateService stateDataService;
 
     @Autowired
-    public TalukaImportServiceImpl(DistrictService districtService, StateDataService stateDataService,
+    public TalukaImportServiceImpl(DistrictService districtService, StateService stateDataService,
                                    TalukaService talukaService) {
         super(Taluka.class);
         this.districtService = districtService;

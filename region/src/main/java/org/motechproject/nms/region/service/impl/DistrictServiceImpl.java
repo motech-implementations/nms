@@ -10,6 +10,7 @@ import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.service.DistrictService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import javax.jdo.Query;
@@ -27,6 +28,7 @@ public class DistrictServiceImpl implements DistrictService {
     }
 
     @Override
+    @Cacheable("district-language")
     public Set<District> getAllForLanguage(final Language language) {
 
         QueryExecution<Set<District>> stateQueryExecution = new QueryExecution<Set<District>>() {
@@ -49,6 +51,7 @@ public class DistrictServiceImpl implements DistrictService {
     }
 
     @Override
+    @Cacheable("district-state-code")
     public District findByStateAndCode(final State state, final Long code) {
         if (state == null) { return null; }
 
@@ -78,6 +81,7 @@ public class DistrictServiceImpl implements DistrictService {
     }
 
     @Override
+    @Cacheable("district-state-name")
     public District findByStateAndName(final State state, final String name) {
         if (state == null) { return null; }
 

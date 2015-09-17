@@ -8,10 +8,10 @@ import org.motechproject.nms.region.csv.HealthFacilityImportService;
 import org.motechproject.nms.region.domain.HealthFacility;
 import org.motechproject.nms.region.domain.HealthFacilityType;
 import org.motechproject.nms.region.repository.HealthFacilityTypeDataService;
-import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.region.service.HealthBlockService;
 import org.motechproject.nms.region.service.HealthFacilityService;
+import org.motechproject.nms.region.service.StateService;
 import org.motechproject.nms.region.service.TalukaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -44,7 +44,7 @@ public class HealthFacilityImportServiceImpl extends BaseLocationImportService<H
     private HealthFacilityTypeDataService healthFacilityTypeService;
     private HealthBlockService healthBlockService;
     private DistrictService districtService;
-    private StateDataService stateDataService;
+    private StateService stateDataService;
     private TalukaService talukaService;
 
     @Autowired
@@ -52,7 +52,7 @@ public class HealthFacilityImportServiceImpl extends BaseLocationImportService<H
                                            HealthFacilityTypeDataService healthFacilityTypeService,
                                            HealthBlockService healthBlockService,
                                            DistrictService districtService,
-                                           StateDataService stateDataService,
+                                           StateService stateDataService,
                                            TalukaService talukaService) {
         super(HealthFacility.class);
         this.healthFacilityService = healthFacilityService;

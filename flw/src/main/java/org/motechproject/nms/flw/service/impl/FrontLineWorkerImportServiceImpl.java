@@ -19,8 +19,8 @@ import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.domain.Village;
 import org.motechproject.nms.region.exception.InvalidLocationException;
-import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.LocationService;
+import org.motechproject.nms.region.service.StateService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -55,7 +55,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
 
 
     private FrontLineWorkerService frontLineWorkerService;
-    private StateDataService stateDataService;
+    private StateService stateDataService;
     private LocationService locationService;
 
     /*
@@ -252,7 +252,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
     }
 
     @Autowired
-    public void setStateDataService(StateDataService stateDataService) {
+    public void setStateService(StateService stateDataService) {
         this.stateDataService = stateDataService;
     }
 

@@ -1,14 +1,5 @@
 package org.motechproject.nms.testing.it.region;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
-import java.io.File;
-import java.io.IOException;
-
-import javax.inject.Inject;
-
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -36,6 +27,7 @@ import org.motechproject.nms.region.repository.HealthSubFacilityDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.repository.TalukaDataService;
 import org.motechproject.nms.region.repository.VillageDataService;
+import org.motechproject.nms.region.service.StateService;
 import org.motechproject.nms.testing.it.api.utils.RequestBuilder;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.nms.tracking.domain.ChangeLog;
@@ -48,6 +40,14 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
+
+import javax.inject.Inject;
+import java.io.File;
+import java.io.IOException;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Integration tests for Location Data Import Controller
@@ -62,6 +62,9 @@ public class LocationDataUpdateServiceBundleIT extends BasePaxIT {
 
     @Inject
     private StateDataService stateDataService;
+
+    @Inject
+    private StateService stateService;
 
     @Inject
     private DistrictDataService districtDataService;
@@ -172,7 +175,7 @@ public class LocationDataUpdateServiceBundleIT extends BasePaxIT {
                 "state.csv");
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
 
-        State updatedState = stateDataService.findByCode(1234l);
+        State updatedState = stateService.findByCode(1234l);
         assertEquals(orginalState.getId(), updatedState.getId());// refer same
                                                                  // state
         assertEquals("Delhi", updatedState.getName());

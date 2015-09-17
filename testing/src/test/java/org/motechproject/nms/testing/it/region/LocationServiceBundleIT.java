@@ -23,6 +23,7 @@ import org.motechproject.nms.region.repository.HealthSubFacilityDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.repository.TalukaDataService;
 import org.motechproject.nms.region.repository.VillageDataService;
+import org.motechproject.nms.region.service.StateService;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
@@ -45,6 +46,9 @@ import static org.junit.Assert.assertTrue;
 public class LocationServiceBundleIT extends BasePaxIT {
     @Inject
     StateDataService stateDataService;
+
+    @Inject
+    StateService stateService;
 
     @Inject
     DistrictDataService districtDataService;
@@ -137,6 +141,16 @@ public class LocationServiceBundleIT extends BasePaxIT {
         state.setName(null);
 
         stateDataService.create(state);
+    }
+
+    @Test
+    public void verifyCache()  {
+        stateService.findByCode(1L);
+        stateService.findByCode(1L);
+        stateService.findByCode(1L);
+        stateService.findByName("State 1");
+        stateService.findByName("State 1");
+        stateService.findByName("State 1");
     }
 
     @Test(expected = ConstraintViolationException.class)
@@ -279,7 +293,7 @@ public class LocationServiceBundleIT extends BasePaxIT {
     public void testValidCreate() throws Exception {
         stateDataService.create(state);
 
-        State newState = stateDataService.findByCode(1L);
+        State newState = stateService.findByCode(1L);
         assertNotNull(newState);
         Assert.assertEquals(state, newState);
 

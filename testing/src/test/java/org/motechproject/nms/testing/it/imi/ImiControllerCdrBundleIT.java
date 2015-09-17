@@ -28,6 +28,7 @@ import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
+import org.motechproject.nms.region.service.StateService;
 import org.motechproject.nms.testing.it.utils.CdrHelper;
 import org.motechproject.nms.testing.it.utils.RegionHelper;
 import org.motechproject.nms.testing.it.utils.SubscriptionHelper;
@@ -71,6 +72,8 @@ public class ImiControllerCdrBundleIT extends BasePaxIT {
     @Inject
     StateDataService stateDataService;
     @Inject
+    StateService stateService;
+    @Inject
     DistrictDataService districtDataService;
     @Inject
     DistrictService districtService;
@@ -112,7 +115,7 @@ public class ImiControllerCdrBundleIT extends BasePaxIT {
     public void setupCdrHelper() throws IOException {
         helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
                 subscriptionPackDataService, languageDataService, circleDataService, stateDataService,
-                districtDataService, fileAuditRecordDataService, districtService);
+                stateService, districtDataService, fileAuditRecordDataService, districtService);
     }
 
 
@@ -480,10 +483,10 @@ public class ImiControllerCdrBundleIT extends BasePaxIT {
     public void verifyTargetFileNameRoundTrip() throws IOException, InterruptedException, NoSuchAlgorithmException{
 
         RegionHelper rh = new RegionHelper(languageDataService, circleDataService, stateDataService,
-                districtDataService, districtService);
+                stateService, districtDataService, districtService);
 
         SubscriptionHelper sh = new SubscriptionHelper(subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, circleDataService, stateDataService,
+                subscriptionPackDataService, languageDataService, circleDataService, stateDataService, stateService,
                 districtDataService, districtService);
 
         Subscriber subscriber1 = new Subscriber(1111111111L, rh.hindiLanguage(), rh.delhiCircle());
@@ -496,7 +499,7 @@ public class ImiControllerCdrBundleIT extends BasePaxIT {
         assertNotNull(tfn);
 
         CdrHelper cdrHelper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, circleDataService, stateDataService,
+                subscriptionPackDataService, languageDataService, circleDataService, stateDataService, stateService,
                 districtDataService, fileAuditRecordDataService, districtService, tfn.getFileName());
 
         helper.makeCdrs(1, 0, 0, 0);

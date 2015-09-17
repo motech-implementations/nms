@@ -54,6 +54,7 @@ import org.motechproject.nms.region.repository.NationalDefaultLanguageDataServic
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.region.service.LanguageService;
+import org.motechproject.nms.region.service.StateService;
 import org.motechproject.nms.testing.it.api.utils.RequestBuilder;
 import org.motechproject.nms.testing.it.utils.ApiRequestHelper;
 import org.motechproject.nms.testing.it.utils.RegionHelper;
@@ -112,6 +113,8 @@ public class UserControllerBundleIT extends BasePaxIT {
     @Inject
     StateDataService stateDataService;
     @Inject
+    StateService stateService;
+    @Inject
     WhitelistEntryDataService whitelistEntryDataService;
     @Inject
     WhitelistStateDataService whitelistStateDataService;
@@ -156,11 +159,12 @@ public class UserControllerBundleIT extends BasePaxIT {
     public void setupTestData() {
         testingService.clearDatabase();
 
-        rh = new RegionHelper(languageDataService, circleDataService, stateDataService, districtDataService,
-                districtService);
+        rh = new RegionHelper(languageDataService, circleDataService, stateDataService, stateService,
+                districtDataService, districtService);
 
         sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
-                languageDataService, circleDataService, stateDataService, districtDataService, districtService);
+                languageDataService, circleDataService, stateDataService, stateService, districtDataService,
+                districtService);
     }
 
 
@@ -1649,8 +1653,8 @@ public class UserControllerBundleIT extends BasePaxIT {
     }
 
     private void setupWhiteListData() {
-        rh = new RegionHelper(languageDataService, circleDataService,
-                stateDataService, districtDataService, districtService);
+        rh = new RegionHelper(languageDataService, circleDataService, stateDataService, stateService,
+                districtDataService, districtService);
         rh.newDelhiDistrict();
         rh.bangaloreDistrict();
 

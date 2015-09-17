@@ -30,6 +30,7 @@ import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.region.service.HealthBlockService;
 import org.motechproject.nms.region.service.HealthFacilityService;
 import org.motechproject.nms.region.service.HealthSubFacilityService;
+import org.motechproject.nms.region.service.StateService;
 import org.motechproject.nms.region.service.TalukaService;
 import org.motechproject.nms.region.service.VillageService;
 import org.motechproject.nms.testing.service.TestingService;
@@ -65,6 +66,8 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
     TestingService testingService;
     @Inject
     StateDataService stateDataService;
+    @Inject
+    StateService stateService;
     @Inject
     DistrictService districtService;
     @Inject
@@ -151,7 +154,7 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
     @Test
     public void testLocationDataImport() throws Exception {
         stateImportService.importData(read("csv/state.csv"));
-        State state = stateDataService.findByCode(1234L);
+        State state = stateService.findByCode(1234L);
         assertNotNull(state);
         assertEquals(1234L, (long) state.getCode());
         assertEquals("Delhi", state.getName());

@@ -15,8 +15,8 @@ import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
-import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
+import org.motechproject.nms.region.service.StateService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,7 +48,7 @@ public class LanguageLocationImportServiceImpl implements LanguageLocationImport
 
     private LanguageDataService languageDataService;
     private CircleDataService circleDataService;
-    private StateDataService stateDataService;
+    private StateService stateService;
     private DistrictDataService districtDataService;
     private DistrictService districtService;
 
@@ -173,7 +173,7 @@ public class LanguageLocationImportServiceImpl implements LanguageLocationImport
         mapping.put(STATE, new Optional(new GetInstanceByString<State>() {
             @Override
             public State retrieve(String value) {
-                State state = stateDataService.findByName(value);
+                State state = stateService.findByName(value);
                 verify(null != state, "State does not exist");
                 return state;
             }
@@ -200,8 +200,8 @@ public class LanguageLocationImportServiceImpl implements LanguageLocationImport
     }
 
     @Autowired
-    public void setStateDataService(StateDataService stateDataService) {
-        this.stateDataService = stateDataService;
+    public void setStateService(StateService stateService) {
+        this.stateService = stateService;
     }
 
     @Autowired

@@ -21,7 +21,6 @@ import org.motechproject.nms.mobileacademy.repository.CompletionRecordDataServic
 import org.motechproject.nms.mobileacademy.repository.NmsCourseDataService;
 import org.motechproject.nms.mobileacademy.service.CourseNotificationService;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
-import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Language;
 import org.motechproject.nms.region.domain.State;
@@ -29,6 +28,7 @@ import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
+import org.motechproject.nms.region.service.StateService;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
@@ -38,7 +38,6 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -85,6 +84,9 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
 
     @Inject
     StateDataService stateDataService;
+
+    @Inject
+    StateService stateService;
 
     @Inject
     CircleDataService circleDataService;
@@ -391,7 +393,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         }
 
         createLanguageLocationData();
-        State sampleState = stateDataService.findByCode(1L);
+        State sampleState = stateService.findByCode(1L);
         Language language = languageDataService.findByCode("50");
         flw = new FrontLineWorker("Test Worker", callingNumber);
         flw.setLanguage(language);
@@ -442,7 +444,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
             ta = languageDataService.create(new Language("50", "hin"));
         }
 
-        State state = stateDataService.findByCode(1L);
+        State state = stateService.findByCode(1L);
 
         if (state == null) {
             District district = new District();

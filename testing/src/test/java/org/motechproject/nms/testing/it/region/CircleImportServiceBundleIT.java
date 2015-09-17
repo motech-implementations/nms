@@ -17,6 +17,7 @@ import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.service.StateService;
 import org.motechproject.nms.testing.it.api.utils.RequestBuilder;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.nms.tracking.domain.ChangeLog;
@@ -31,7 +32,6 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -55,6 +55,8 @@ public class CircleImportServiceBundleIT extends BasePaxIT {
     CircleDataService circleDataService;
     @Inject
     StateDataService stateDataService;
+    @Inject
+    StateService stateService;
     @Inject
     CircleImportService circleImportService;
 
@@ -125,17 +127,17 @@ public class CircleImportServiceBundleIT extends BasePaxIT {
         assertTrue(circle.getStates().contains(Daman));
         assertTrue(circle.getStates().contains(Dadra));
 
-        state = stateDataService.findByName("Gujarat");
+        state = stateService.findByName("Gujarat");
         assertNotNull(state);
         assertEquals(1, state.getCircles().size());
         assertTrue(state.getCircles().contains(circle));
 
-        state = stateDataService.findByName("Daman & Diu");
+        state = stateService.findByName("Daman & Diu");
         assertNotNull(state);
         assertEquals(1, state.getCircles().size());
         assertTrue(state.getCircles().contains(circle));
 
-        state = stateDataService.findByName("Dadra & Nagar Haveli");
+        state = stateService.findByName("Dadra & Nagar Haveli");
         assertNotNull(state);
         assertEquals(1, state.getCircles().size());
         assertTrue(state.getCircles().contains(circle));
@@ -145,7 +147,7 @@ public class CircleImportServiceBundleIT extends BasePaxIT {
         assertEquals(1, circle.getStates().size());
         assertTrue(circle.getStates().contains(Haryana));
 
-        state = stateDataService.findByName("Haryana");
+        state = stateService.findByName("Haryana");
         assertNotNull(state);
         assertEquals(1, state.getCircles().size());
         assertTrue(state.getCircles().contains(circle));
@@ -155,7 +157,7 @@ public class CircleImportServiceBundleIT extends BasePaxIT {
         assertEquals(1, circle.getStates().size());
         assertTrue(circle.getStates().contains(Pradesh));
 
-        state = stateDataService.findByName("Uttar Pradesh");
+        state = stateService.findByName("Uttar Pradesh");
         assertNotNull(state);
         assertEquals(2, state.getCircles().size());
         assertTrue(state.getCircles().contains(circle));
@@ -166,12 +168,12 @@ public class CircleImportServiceBundleIT extends BasePaxIT {
         assertTrue(circle.getStates().contains(Pradesh));
         assertTrue(circle.getStates().contains(Uttarakhand));
 
-        state = stateDataService.findByName("Uttar Pradesh");
+        state = stateService.findByName("Uttar Pradesh");
         assertNotNull(state);
         assertEquals(2, state.getCircles().size());
         assertTrue(state.getCircles().contains(circle));
 
-        state = stateDataService.findByName("Uttarakhand");
+        state = stateService.findByName("Uttarakhand");
         assertNotNull(state);
         assertEquals(1, state.getCircles().size());
         assertTrue(state.getCircles().contains(circle));

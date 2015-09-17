@@ -38,6 +38,7 @@ import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
+import org.motechproject.nms.region.service.StateService;
 import org.motechproject.nms.testing.it.utils.RegionHelper;
 import org.motechproject.nms.testing.it.utils.SubscriptionHelper;
 import org.motechproject.nms.testing.service.TestingService;
@@ -82,6 +83,8 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     @Inject
     StateDataService stateDataService;
     @Inject
+    StateService stateService;
+    @Inject
     DistrictDataService districtDataService;
     @Inject
     DistrictService districtService;
@@ -100,16 +103,23 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     @Inject
     SubscriberService subscriberService;
 
+    SubscriptionHelper sh;
+    RegionHelper rh;
+
     @Before
     public void setUp() {
         testingService.clearDatabase();
         createLocationData();
 
-        SubscriptionHelper sh = new SubscriptionHelper(subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, circleDataService, stateDataService,
+        sh = new SubscriptionHelper(subscriptionService, subscriberDataService,
+                subscriptionPackDataService, languageDataService, circleDataService, stateDataService, stateService,
                 districtDataService, districtService);
         sh.pregnancyPack();
         sh.childPack();
+
+        rh = new RegionHelper(languageDataService, circleDataService, stateDataService, stateService,
+                districtDataService, districtService);
+
     }
 
     private void createLocationData() {
@@ -330,7 +340,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         Subscription subscription = subscriptions.iterator().next();
         assertEquals(SubscriptionStatus.ACTIVE, subscription.getStatus());
 
-        State expectedState = stateDataService.findByCode(21L);
+        State expectedState = stateService.findByCode(21L);
         District expectedDistrict = districtService.findByStateAndCode(expectedState, 3L);
 
         assertMother(subscriber, "1234567890", getDateTime(lmpString), "Shanti Ekka", expectedState, expectedDistrict);
@@ -365,7 +375,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         Subscription subscription = subscriptions.iterator().next();
         assertEquals(SubscriptionStatus.ACTIVE, subscription.getStatus());
 
-        State expectedState = stateDataService.findByCode(21L);
+        State expectedState = stateService.findByCode(21L);
         District expectedDistrict = districtService.findByStateAndCode(expectedState, 3L);
 
         assertMother(subscriber, "1234567890", getDateTime(lmpString), "Shanti Ekka", expectedState, expectedDistrict);
@@ -400,7 +410,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         Subscription subscription = subscriptions.iterator().next();
         assertEquals(SubscriptionStatus.ACTIVE, subscription.getStatus());
 
-        State expectedState = stateDataService.findByCode(21L);
+        State expectedState = stateService.findByCode(21L);
         District expectedDistrict = districtService.findByStateAndCode(expectedState, 3L);
 
         assertMother(subscriber, "1234567890", getDateTime(lmpString), "Shanti Ekka", expectedState, expectedDistrict);
@@ -435,7 +445,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         Subscription subscription = subscriptions.iterator().next();
         assertEquals(SubscriptionStatus.ACTIVE, subscription.getStatus());
 
-        State expectedState = stateDataService.findByCode(21L);
+        State expectedState = stateService.findByCode(21L);
         District expectedDistrict = districtService.findByStateAndCode(expectedState, 3L);
 
         assertChild(subscriber, "1234567890", getDateTime(dobString), "Baby1 of Lilima Kua", expectedState, expectedDistrict);
@@ -458,7 +468,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     public void testImportChildDataFromSampleFile() throws Exception {
         mctsBeneficiaryImportService.importChildData(read("csv/child.txt"));
 
-        State expectedState = stateDataService.findByCode(21L);
+        State expectedState = stateService.findByCode(21L);
         District expectedDistrict4 = districtService.findByStateAndCode(expectedState, 4L);
 
         Subscriber subscriber1 = subscriberDataService.findByNumber(9439998253L);
@@ -471,12 +481,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
     @Test
     public void verifyNIP94() throws Exception {
-        RegionHelper rh = new RegionHelper(languageDataService, circleDataService, stateDataService, districtDataService,
-                districtService);
         rh.newDelhiDistrict();
-
-        SubscriptionHelper sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
-                languageDataService, circleDataService, stateDataService, districtDataService, districtService);
 
         sh.mksub(SubscriptionOrigin.IVR, new DateTime(), sh.pregnancyPack().getType(), 2222222221L);
 
@@ -991,7 +996,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     public void testImportMotherDataFromSampleFile() throws Exception {
         mctsBeneficiaryImportService.importMotherData(read("csv/mother.txt"));
 
-        State expectedState = stateDataService.findByCode(21L);
+        State expectedState = stateService.findByCode(21L);
         District expectedDistrict = districtService.findByStateAndCode(expectedState, 3L);
 
         Subscriber subscriber1 = subscriberDataService.findByNumber(9439986187L);

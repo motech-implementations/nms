@@ -30,6 +30,7 @@ import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.service.StateService;
 import org.motechproject.nms.testing.it.api.utils.RequestBuilder;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
@@ -72,6 +73,8 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     LanguageDataService languageDataService;
     @Inject
     StateDataService stateDataService;
+    @Inject
+    StateService stateService;
     @Inject
     DistrictDataService districtDataService;
     @Inject
@@ -196,7 +199,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     // in use.  This should result in a unique constraint exception
     @Test(expected = CsvImportDataException.class)
     public void testImportMSISDNConflict() throws Exception {
-        State state = stateDataService.findByName("State 1");
+        State state = stateService.findByName("State 1");
         District district = state.getDistricts().get(0);
 
         FrontLineWorker flw = new FrontLineWorker("Existing With MSISDN", 1234567890L);
@@ -441,7 +444,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     // TODO JIRA issue: https://applab.atlassian.net/browse/NMS-253
     @Test
     public void verifyFT559() throws InterruptedException, IOException {
-        State state = stateDataService.findByName("State 1");
+        State state = stateService.findByName("State 1");
         District district1 = state.getDistricts().get(0);
         District district2 = state.getDistricts().get(1);
         Language language1 = languageDataService.findByCode("L1");

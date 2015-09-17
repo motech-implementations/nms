@@ -35,6 +35,7 @@ import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
+import org.motechproject.nms.region.service.StateService;
 import org.motechproject.nms.testing.it.utils.CsrHelper;
 import org.motechproject.nms.testing.it.utils.RegionHelper;
 import org.motechproject.nms.testing.it.utils.SubscriptionHelper;
@@ -89,6 +90,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
     @Inject
     StateDataService stateDataService;
     @Inject
+    StateService stateService;
+    @Inject
     DistrictDataService districtDataService;
     @Inject
     DistrictService districtService;
@@ -96,25 +99,21 @@ public class CsrServiceBundleIT extends BasePaxIT {
     TestingService testingService;
 
 
-    private RegionHelper rh;
-    private SubscriptionHelper sh;
+    private RegionHelper rh = new RegionHelper(languageDataService, circleDataService, stateDataService, stateService,
+            districtDataService, districtService);
+
+    private SubscriptionHelper sh = new SubscriptionHelper(subscriptionService, subscriberDataService,
+            subscriptionPackDataService, languageDataService, circleDataService, stateDataService, stateService,
+            districtDataService, districtService);
 
 
     @Before
     public void doTheNeedful() {
-
         testingService.clearDatabase();
-
-        rh = new RegionHelper(languageDataService, circleDataService, stateDataService, districtDataService,
-                districtService);
-
-        sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
-                languageDataService, circleDataService, stateDataService, districtDataService, districtService);
 
         sh.childPack();
         sh.pregnancyPack();
         csrService.buildMessageDurationCache();
-
     }
 
 
@@ -218,7 +217,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
         String timestamp = DateTime.now().toString(TIME_FORMATTER);
 
         CsrHelper helper = new CsrHelper(timestamp, subscriptionService, subscriptionPackDataService,
-                subscriberDataService, languageDataService, circleDataService, stateDataService,
+                subscriberDataService, languageDataService, circleDataService, stateDataService, stateService,
                 districtDataService, districtService);
 
         helper.makeRecords(1, 3, 0, 0);
@@ -797,10 +796,6 @@ public class CsrServiceBundleIT extends BasePaxIT {
     public void verifyFT187() {
         String timestamp = DateTime.now().toString(TIME_FORMATTER);
 
-        SubscriptionHelper sh = new SubscriptionHelper(subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, circleDataService,
-                stateDataService, districtDataService, districtService);
-
         int days = sh.childPack().getWeeks() * 7;
         Subscription sub = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(days),
                 SubscriptionPackType.CHILD);
@@ -1120,7 +1115,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
         String timestamp = DateTime.now().toString(TIME_FORMATTER);
 
         CsrHelper helper = new CsrHelper(timestamp, subscriptionService, subscriptionPackDataService,
-                subscriberDataService, languageDataService, circleDataService, stateDataService,
+                subscriberDataService, languageDataService, circleDataService, stateDataService, stateService,
                 districtDataService, districtService);
 
         helper.makeRecords(1, 0, 0, 0);

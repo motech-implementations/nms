@@ -5,8 +5,8 @@ import org.motechproject.nms.csv.utils.GetString;
 import org.motechproject.nms.csv.utils.Store;
 import org.motechproject.nms.region.csv.NonCensusVillageImportService;
 import org.motechproject.nms.region.domain.Village;
-import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
+import org.motechproject.nms.region.service.StateService;
 import org.motechproject.nms.region.service.TalukaService;
 import org.motechproject.nms.region.service.VillageService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,14 +38,14 @@ public class NonCensusVillageImportServiceImpl extends BaseLocationImportService
 
     private VillageService villageService;
     private DistrictService districtService;
-    private StateDataService stateDataService;
+    private StateService stateDataService;
     private TalukaService talukaService;
 
     @Autowired
     public NonCensusVillageImportServiceImpl(VillageService villageService,
                                              TalukaService talukaService,
                                              DistrictService districtService,
-                                             StateDataService stateDataService) {
+                                             StateService stateDataService) {
         super(Village.class);
         this.villageService = villageService;
         this.talukaService = talukaService;

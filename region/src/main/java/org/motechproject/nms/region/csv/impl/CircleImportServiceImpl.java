@@ -10,6 +10,7 @@ import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.service.StateService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,11 +28,14 @@ public class CircleImportServiceImpl implements CircleImportService {
     public static final String STATE_NAME = "State";
 
     private StateDataService stateDataService;
+    private StateService stateService;
     private CircleDataService circleDataService;
 
     @Autowired
-    public CircleImportServiceImpl(StateDataService stateDataService, CircleDataService circleDataService) {
+    public CircleImportServiceImpl(StateDataService stateDataService, StateService stateService,
+                                   CircleDataService circleDataService) {
         this.stateDataService = stateDataService;
+        this.stateService = stateService;
         this.circleDataService = circleDataService;
     }
 
@@ -56,7 +60,7 @@ public class CircleImportServiceImpl implements CircleImportService {
                             csvImporter.getRowNumber()));
                 }
 
-                State state = stateDataService.findByName(stateName);
+                State state = stateService.findByName(stateName);
                 if (state == null) {
                     throw new CsvImportDataException(String.format("CSV import error, no state with name %s " +
                                     "on line %s", stateName, csvImporter.getRowNumber()));

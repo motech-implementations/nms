@@ -22,6 +22,7 @@ import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
+import org.motechproject.nms.region.service.StateService;
 import org.motechproject.nms.testing.it.api.utils.RequestBuilder;
 import org.motechproject.nms.testing.it.utils.RegionHelper;
 import org.motechproject.nms.testing.service.TestingService;
@@ -60,6 +61,8 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
     @Inject
     StateDataService stateDataService;
     @Inject
+    StateService stateService;
+    @Inject
     LanguageDataService languageDataService;
     @Inject
     FrontLineWorkerDataService frontLineWorkerDataService;
@@ -78,8 +81,8 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
 
     @Before
     public void setUp() {
-        rh = new RegionHelper(languageDataService, circleDataService, stateDataService, districtDataService,
-                districtService);
+        rh = new RegionHelper(languageDataService, circleDataService, stateDataService, stateService,
+                districtDataService, districtService);
 
         testingService.clearDatabase();
 

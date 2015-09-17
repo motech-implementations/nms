@@ -4,7 +4,7 @@ import org.motechproject.nms.csv.utils.GetLong;
 import org.motechproject.nms.csv.utils.GetString;
 import org.motechproject.nms.region.csv.DistrictImportService;
 import org.motechproject.nms.region.domain.District;
-import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.service.StateService;
 import org.motechproject.nms.region.service.DistrictService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,10 +27,10 @@ public class DistrictImportServiceImpl extends BaseLocationImportService<Distric
     public static final String STATE_FIELD = "state";
 
     private DistrictService districtService;
-    private StateDataService stateDataService;
+    private StateService stateDataService;
 
     @Autowired
-    public DistrictImportServiceImpl(DistrictService districtService, StateDataService stateDataService) {
+    public DistrictImportServiceImpl(DistrictService districtService, StateService stateDataService) {
         super(District.class);
         this.stateDataService = stateDataService;
         this.districtService = districtService;

@@ -15,6 +15,7 @@ import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
+import org.motechproject.nms.region.service.StateService;
 
 public class RegionHelper {
     private LanguageDataService languageDataService;
@@ -22,16 +23,19 @@ public class RegionHelper {
     private DistrictDataService districtDataService;
     private DistrictService districtService;
     private StateDataService stateDataService;
+    private StateService stateService;
 
     public RegionHelper(LanguageDataService languageDataService,
                         CircleDataService circleDataService,
                         StateDataService stateDataService,
+                        StateService stateService,
                         DistrictDataService districtDataService,
                         DistrictService districtService) {
 
         this.languageDataService = languageDataService;
         this.circleDataService = circleDataService;
         this.stateDataService = stateDataService;
+        this.stateService = stateService;
         this.districtDataService = districtDataService;
         this.districtService = districtService;
     }
@@ -62,7 +66,7 @@ public class RegionHelper {
     }
 
     public State delhiState() {
-        State s = stateDataService.findByCode(1l);
+        State s = stateService.findByCode(1l);
 
         if (s == null) {
             s = new State();
@@ -76,7 +80,7 @@ public class RegionHelper {
 
 
     public State karnatakaState() {
-        State s = stateDataService.findByCode(2l);
+        State s = stateService.findByCode(2l);
 
         if (s == null) {
             s = new State();

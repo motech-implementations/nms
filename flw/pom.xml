@@ -121,6 +121,7 @@
                             org.springframework.transaction,
                             org.apache.commons.fileupload,
                             org.springframework.web.multipart.commons,
+                            org.motechproject.nms.region.repository,
                             *
                         </Import-Package>
                     </instructions>

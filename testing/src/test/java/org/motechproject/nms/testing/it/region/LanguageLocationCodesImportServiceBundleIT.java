@@ -22,6 +22,7 @@ import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
+import org.motechproject.nms.region.service.StateService;
 import org.motechproject.nms.testing.it.api.utils.RequestBuilder;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
@@ -60,6 +61,8 @@ public class LanguageLocationCodesImportServiceBundleIT extends BasePaxIT {
     LanguageDataService languageDataService;
     @Inject
     StateDataService stateDataService;
+    @Inject
+    StateService stateService;
     @Inject
     DistrictDataService districtDataService;
     @Inject
@@ -321,8 +324,8 @@ public class LanguageLocationCodesImportServiceBundleIT extends BasePaxIT {
         Circle ncrCircle = circleDataService.findByName("DELHI-NCR");
         Circle upWestCircle = circleDataService.findByName("UP-WEST");
 
-        State upState = stateDataService.findByName("UTTAR PRADESH");
-        State delhiState = stateDataService.findByName("DELHI");
+        State upState = stateService.findByName("UTTAR PRADESH");
+        State delhiState = stateService.findByName("DELHI");
 
         assertNotNull(ncrCircle);
         assertNotNull(upWestCircle);
@@ -387,8 +390,8 @@ public class LanguageLocationCodesImportServiceBundleIT extends BasePaxIT {
         Circle ncrCircle = circleDataService.findByName("DELHI-NCR");
         Circle upWestCircle = circleDataService.findByName("UP-WEST");
 
-        State upState = stateDataService.findByName("UTTAR PRADESH");
-        State delhiState = stateDataService.findByName("DELHI");
+        State upState = stateService.findByName("UTTAR PRADESH");
+        State delhiState = stateService.findByName("DELHI");
 
         assertNotNull(ncrCircle);
         assertNotNull(upWestCircle);
@@ -419,8 +422,8 @@ public class LanguageLocationCodesImportServiceBundleIT extends BasePaxIT {
         Circle ncrCircle = circleDataService.findByName("DELHI-NCR");
         Circle upWestCircle = circleDataService.findByName("UP-WEST");
 
-        State upState = stateDataService.findByName("UTTAR PRADESH");
-        State delhiState = stateDataService.findByName("DELHI");
+        State upState = stateService.findByName("UTTAR PRADESH");
+        State delhiState = stateService.findByName("DELHI");
 
         assertNotNull(ncrCircle);
         assertNotNull(upWestCircle);
