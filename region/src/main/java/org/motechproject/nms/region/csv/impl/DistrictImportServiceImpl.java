@@ -4,9 +4,10 @@ import org.motechproject.nms.csv.utils.GetLong;
 import org.motechproject.nms.csv.utils.GetString;
 import org.motechproject.nms.region.csv.DistrictImportService;
 import org.motechproject.nms.region.domain.District;
-import org.motechproject.nms.region.service.StateService;
 import org.motechproject.nms.region.service.DistrictService;
+import org.motechproject.nms.region.service.StateService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.supercsv.cellprocessor.ift.CellProcessor;
 
@@ -37,6 +38,7 @@ public class DistrictImportServiceImpl extends BaseLocationImportService<Distric
     }
 
     @Override
+    @CacheEvict({"district-state-code", "district-state-name", "district-language"})
     protected void createOrUpdateInstance(District instance) {
         District existing = districtService.findByStateAndCode(instance.getState(), instance.getCode());
 
