@@ -327,18 +327,18 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         mapping.put(LMP, new Optional(MctsBeneficiaryUtils.DATE_BY_STRING));
         mapping.put(MOTHER_DOB, new Optional(MctsBeneficiaryUtils.DATE_BY_STRING));
         mapping.put(ABORTION, new Optional(new GetInstanceByString<Boolean>() {
-             @Override
-             public Boolean retrieve(String value) {
-                 String trimmedValue = value.trim();
-                 return "Spontaneous".equals(trimmedValue) || "MTP<12 Weeks".equals(trimmedValue) ||
-                         "MTP>12 Weeks".equals(trimmedValue); // "None" or blank indicates no abortion/miscarriage
-             }
+            @Override
+            public Boolean retrieve(String value) {
+                String trimmedValue = value.trim();
+                return "Spontaneous".equals(trimmedValue) || "MTP<12 Weeks".equals(trimmedValue) ||
+                        "MTP>12 Weeks".equals(trimmedValue); // "None" or blank indicates no abortion/miscarriage
+            }
         }));
         mapping.put(STILLBIRTH, new Optional(new GetInstanceByString<Boolean>() {
             @Override
             public Boolean retrieve(String value) {
                 return "0".equals(value.trim()); // This column indicates the number of live births that resulted from this pregnancy.
-                                                 // 0 implies stillbirth, other values (including blank) do not.
+                // 0 implies stillbirth, other values (including blank) do not.
             }
         }));
         mapping.put(DEATH, new Optional(new GetInstanceByString<Boolean>() {

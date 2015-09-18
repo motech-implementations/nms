@@ -146,8 +146,8 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         //Should not be picked up because it's not for today
         Subscriber subscriber3 = new Subscriber(6666666666L, rh.kannadaLanguage(), rh.karnatakaCircle());
         subscriber3.setDateOfBirth(DateTime.now().plusDays(1)); // startDate is DOB + 1 for child packs,
-                                                    // so setting the DOB tomorrow this should be picked up
-                                                    // the day after tomorrow
+        // so setting the DOB tomorrow this should be picked up
+        // the day after tomorrow
         subscriberDataService.create(subscriber3);
         subscriptionService.createSubscription(6666666666L, rh.kannadaLanguage(), sh.childPack(),
                 SubscriptionOrigin.IVR);
