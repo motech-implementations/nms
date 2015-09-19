@@ -31,7 +31,7 @@ public class StateImportServiceImpl extends BaseLocationImportService<State> imp
     }
 
     @Override
-    @CacheEvict({"state-code", "state-name"})
+    @CacheEvict(value = {"state-code", "state-name" }, allEntries = true)
     protected void createOrUpdateInstance(State instance) {
         State existing = stateDataService.findByCode(instance.getCode());
 

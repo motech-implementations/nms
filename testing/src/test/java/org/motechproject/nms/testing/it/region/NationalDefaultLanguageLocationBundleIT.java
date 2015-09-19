@@ -10,10 +10,10 @@ import org.motechproject.nms.region.domain.Language;
 import org.motechproject.nms.region.domain.NationalDefaultLanguage;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.CircleDataService;
-import org.motechproject.nms.region.repository.DistrictDataService;
+import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.NationalDefaultLanguageDataService;
-import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.service.StateService;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
@@ -37,10 +37,10 @@ public class NationalDefaultLanguageLocationBundleIT extends BasePaxIT{
     NationalDefaultLanguageDataService nationalDefaultLanguageLocationDataService;
 
     @Inject
-    StateDataService stateDataService;
+    StateService stateService;
 
     @Inject
-    DistrictDataService districtDataService;
+    DistrictService districtService;
 
     @Inject
     CircleDataService circleDataService;
@@ -69,7 +69,7 @@ public class NationalDefaultLanguageLocationBundleIT extends BasePaxIT{
         state.setCode(1L);
         state.getDistricts().add(district);
 
-        stateDataService.create(state);
+        stateService.create(state);
 
         District district2 = new District();
         district2.setName("District 2");
@@ -81,7 +81,7 @@ public class NationalDefaultLanguageLocationBundleIT extends BasePaxIT{
         state2.setCode(2L);
         state2.getDistricts().add(district2);
 
-        stateDataService.create(state2);
+        stateService.create(state2);
 
         Language ta = languageDataService.create(new Language("50", "tamil"));
         Language hi = languageDataService.create(new Language("99", "hindi"));
@@ -91,10 +91,10 @@ public class NationalDefaultLanguageLocationBundleIT extends BasePaxIT{
         circleDataService.update(circle);
 
         district.setLanguage(ta);
-        districtDataService.update(district);
+        districtService.update(district);
 
         district2.setLanguage(hi);
-        districtDataService.update(district2);
+        districtService.update(district2);
 
         nationalDefaultLanguageLocationDataService.create(new NationalDefaultLanguage(ta));
 

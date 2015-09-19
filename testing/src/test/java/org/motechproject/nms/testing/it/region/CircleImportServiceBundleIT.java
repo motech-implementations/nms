@@ -84,12 +84,12 @@ public class CircleImportServiceBundleIT extends BasePaxIT {
 
         testingService.clearDatabase();
 
-        Gujarat = stateDataService.create(new State("Gujarat", 1L));
-        Daman = stateDataService.create(new State("Daman & Diu", 2L));
-        Dadra = stateDataService.create(new State("Dadra & Nagar Haveli", 3L));
-        Haryana = stateDataService.create(new State("Haryana", 4L));
-        Pradesh = stateDataService.create(new State("Uttar Pradesh", 5L));
-        Uttarakhand = stateDataService.create(new State("Uttarakhand", 6L));
+        Gujarat = stateService.create(new State("Gujarat", 1L));
+        Daman = stateService.create(new State("Daman & Diu", 2L));
+        Dadra = stateService.create(new State("Dadra & Nagar Haveli", 3L));
+        Haryana = stateService.create(new State("Haryana", 4L));
+        Pradesh = stateService.create(new State("Uttar Pradesh", 5L));
+        Uttarakhand = stateService.create(new State("Uttarakhand", 6L));
     }
 
     // Test missing circle name

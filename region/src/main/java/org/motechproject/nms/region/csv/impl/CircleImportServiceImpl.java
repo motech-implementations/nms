@@ -9,7 +9,6 @@ import org.motechproject.nms.region.csv.CircleImportService;
 import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.CircleDataService;
-import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.StateService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,14 +26,11 @@ public class CircleImportServiceImpl implements CircleImportService {
     public static final String CIRCLE_NAME = "Circle";
     public static final String STATE_NAME = "State";
 
-    private StateDataService stateDataService;
     private StateService stateService;
     private CircleDataService circleDataService;
 
     @Autowired
-    public CircleImportServiceImpl(StateDataService stateDataService, StateService stateService,
-                                   CircleDataService circleDataService) {
-        this.stateDataService = stateDataService;
+    public CircleImportServiceImpl(StateService stateService, CircleDataService circleDataService) {
         this.stateService = stateService;
         this.circleDataService = circleDataService;
     }
@@ -76,7 +72,7 @@ public class CircleImportServiceImpl implements CircleImportService {
                 circleDataService.update(circle);
 
                 state.getCircles().add(circle);
-                stateDataService.update(state);
+                stateService.update(state);
             } catch (ConstraintViolationException e) {
                 throw new CsvImportDataException(String.format("CSV import error, constraints violated: %s",
                         ConstraintViolationUtils.toString(e.getConstraintViolations())), e);

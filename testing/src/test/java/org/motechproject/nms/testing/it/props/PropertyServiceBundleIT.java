@@ -56,7 +56,7 @@ public class PropertyServiceBundleIT extends BasePaxIT {
         state.setName(name);
         state.setCode(code);
 
-        return stateDataService.create(state);
+        return stateService.create(state);
     }
 
     // Test a state/service that is deployed

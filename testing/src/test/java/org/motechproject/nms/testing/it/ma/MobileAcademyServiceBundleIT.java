@@ -457,7 +457,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
             state.setName("State 1");
             state.setCode(1L);
             state.getDistricts().add(district);
-            stateDataService.create(state);
+            stateService.create(state);
         }
     }
 

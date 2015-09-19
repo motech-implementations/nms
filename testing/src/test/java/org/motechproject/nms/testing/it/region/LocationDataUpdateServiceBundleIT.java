@@ -27,6 +27,7 @@ import org.motechproject.nms.region.repository.HealthSubFacilityDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.repository.TalukaDataService;
 import org.motechproject.nms.region.repository.VillageDataService;
+import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.region.service.StateService;
 import org.motechproject.nms.testing.it.api.utils.RequestBuilder;
 import org.motechproject.nms.testing.service.TestingService;
@@ -67,6 +68,9 @@ public class LocationDataUpdateServiceBundleIT extends BasePaxIT {
     private StateService stateService;
 
     @Inject
+    private DistrictService districtService;
+
+    @Inject
     private DistrictDataService districtDataService;
 
     @Inject
@@ -104,7 +108,7 @@ public class LocationDataUpdateServiceBundleIT extends BasePaxIT {
     }
 
     private State createState() {
-        State state = stateDataService.create(new State("Delhi", 1234L));
+        State state = stateService.create(new State("Delhi", 1234L));
         return state;
     }
 
@@ -125,7 +129,7 @@ public class LocationDataUpdateServiceBundleIT extends BasePaxIT {
         district.setName("district name");
         district.setState(state);
         district.setRegionalName("district regional name");
-        district = districtDataService.create(district);
+        district = districtService.create(district);
         return district;
     }
 
@@ -201,7 +205,7 @@ public class LocationDataUpdateServiceBundleIT extends BasePaxIT {
         originalDistrict.setName("bihar");
         originalDistrict.setState(state);
         originalDistrict.setRegionalName("bihar region");
-        originalDistrict = districtDataService.create(originalDistrict);
+        originalDistrict = districtService.create(originalDistrict);
         assertEquals("bihar", originalDistrict.getName());
         assertEquals("bihar region", originalDistrict.getRegionalName());
         

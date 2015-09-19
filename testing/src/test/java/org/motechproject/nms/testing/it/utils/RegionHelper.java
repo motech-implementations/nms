@@ -17,6 +17,9 @@ import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.region.service.StateService;
 
+import java.util.Arrays;
+import java.util.Collections;
+
 public class RegionHelper {
     private LanguageDataService languageDataService;
     private CircleDataService circleDataService;
@@ -47,7 +50,7 @@ public class RegionHelper {
             c = circleDataService.create(new Circle("DE"));
             c.getStates().add(delhiState());
             c.setDefaultLanguage(hindiLanguage());
-            circleDataService.update(c);
+            return circleDataService.update(c);
         }
 
         return c;
@@ -59,7 +62,7 @@ public class RegionHelper {
         if (c == null) {
             c = circleDataService.create(new Circle("KA"));
             c.getStates().add(karnatakaState());
-            circleDataService.update(c);
+            c = circleDataService.update(c);
         }
 
         return c;
@@ -72,7 +75,7 @@ public class RegionHelper {
             s = new State();
             s.setName("National Capital Territory of Delhi");
             s.setCode(1L);
-            stateDataService.create(s);
+            return stateService.create(s);
         }
 
         return s;
@@ -86,7 +89,7 @@ public class RegionHelper {
             s = new State();
             s.setName("Karnataka");
             s.setCode(2L);
-            stateDataService.create(s);
+            return stateService.create(s);
         }
 
         return s;
@@ -103,7 +106,11 @@ public class RegionHelper {
             d.setCode(1L);
             d.setState(delhiState());
             d.setLanguage(hindiLanguage());
-            districtDataService.create(d);
+            d = districtService.create(d);
+            State s = delhiState();
+            s.setDistricts(Arrays.asList(d));
+            stateService.update(s);
+
         }
 
         return d;
@@ -120,7 +127,10 @@ public class RegionHelper {
             d.setCode(5L);
             d.setState(delhiState());
             d.setLanguage(punjabiLanguage());
-            districtDataService.create(d);
+            d = districtService.create(d);
+            State s = delhiState();
+            s.setDistricts(Collections.singletonList(d));
+            stateService.update(s);
         }
 
         return d;
@@ -137,7 +147,10 @@ public class RegionHelper {
             d.setCode(4L);
             d.setState(karnatakaState());
             d.setLanguage(tamilLanguage());
-            districtDataService.create(d);
+            d = districtService.create(d);
+            State s = karnatakaState();
+            s.setDistricts(Collections.singletonList(d));
+            stateService.update(s);
         }
 
         return d;
@@ -154,7 +167,10 @@ public class RegionHelper {
             d.setCode(2L);
             d.setState(karnatakaState());
             d.setLanguage(kannadaLanguage());
-            districtDataService.create(d);
+            d = districtService.create(d);
+            State s = karnatakaState();
+            s.setDistricts(Collections.singletonList(d));
+            stateService.update(s);
         }
 
         return d;

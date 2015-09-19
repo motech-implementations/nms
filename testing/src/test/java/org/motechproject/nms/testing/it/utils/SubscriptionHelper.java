@@ -38,7 +38,7 @@ public class SubscriptionHelper {
     private SubscriptionService subscriptionService;
     private SubscriberDataService subscriberDataService;
     private SubscriptionPackDataService subscriptionPackDataService;
-    private RegionHelper regionHelper;
+    private RegionHelper rh;
 
     public SubscriptionHelper(SubscriptionService subscriptionService,
                               SubscriberDataService subscriberDataService,
@@ -54,7 +54,7 @@ public class SubscriptionHelper {
         this.subscriberDataService = subscriberDataService;
         this.subscriptionPackDataService = subscriptionPackDataService;
 
-        this.regionHelper = new RegionHelper(languageDataService, circleDataService, stateDataService, stateService,
+        rh = new RegionHelper(languageDataService, circleDataService, stateDataService, stateService,
                 districtDataService, districtService);
     }
 
@@ -135,11 +135,7 @@ public class SubscriptionHelper {
         Subscriber subscriber = subscriberDataService.findByNumber(number);
 
         if (null == subscriber) {
-            subscriber = subscriberDataService.create(new Subscriber(
-                    number,
-                    regionHelper.hindiLanguage(),
-                    regionHelper.delhiCircle()
-            ));
+            subscriber = subscriberDataService.create(new Subscriber(number, rh.hindiLanguage(), rh.delhiCircle()));
         }
 
         if (SubscriptionPackType.PREGNANCY == packType) {

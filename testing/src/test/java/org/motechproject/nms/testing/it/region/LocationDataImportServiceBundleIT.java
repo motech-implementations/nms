@@ -132,10 +132,10 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
 
         testingService.clearDatabase();
 
-        exampleState = stateDataService.create(new State("EXAMPLE STATE", 1L));
+        exampleState = stateService.create(new State("EXAMPLE STATE", 1L));
 
         exampleDistrict = createDistrict(exampleState, 2L, "EXAMPLE DISTRICT");
-        districtDataService.create(exampleDistrict);
+        districtService.create(exampleDistrict);
 
         exampleTaluka = createTaluka(exampleDistrict, "00003", "EXAMPLE TALUKA", 1);
         talukaDataService.create(exampleTaluka);

@@ -13,10 +13,9 @@ import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Language;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.CircleDataService;
-import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
+import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
-import org.motechproject.nms.region.service.StateService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,8 +47,7 @@ public class LanguageLocationImportServiceImpl implements LanguageLocationImport
 
     private LanguageDataService languageDataService;
     private CircleDataService circleDataService;
-    private StateService stateService;
-    private DistrictDataService districtDataService;
+    private StateDataService stateDataService;
     private DistrictService districtService;
 
     @Override
@@ -135,7 +133,7 @@ public class LanguageLocationImportServiceImpl implements LanguageLocationImport
 
         for (District district: districts) {
             district.setLanguage(language);
-            districtDataService.update(district);
+            districtService.update(district);
         }
 
         if (defaultForCircle) {
@@ -173,7 +171,7 @@ public class LanguageLocationImportServiceImpl implements LanguageLocationImport
         mapping.put(STATE, new Optional(new GetInstanceByString<State>() {
             @Override
             public State retrieve(String value) {
-                State state = stateService.findByName(value);
+                State state = stateDataService.findByName(value);
                 verify(null != state, "State does not exist");
                 return state;
             }
@@ -200,13 +198,8 @@ public class LanguageLocationImportServiceImpl implements LanguageLocationImport
     }
 
     @Autowired
-    public void setStateService(StateService stateService) {
-        this.stateService = stateService;
-    }
-
-    @Autowired
-    public void setDistrictDataService(DistrictDataService districtDataService) {
-        this.districtDataService = districtDataService;
+    public void setStateDataService(StateDataService stateDataService) {
+        this.stateDataService = stateDataService;
     }
 
     @Autowired

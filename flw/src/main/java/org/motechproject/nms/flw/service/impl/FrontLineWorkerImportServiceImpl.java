@@ -55,7 +55,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
 
 
     private FrontLineWorkerService frontLineWorkerService;
-    private StateService stateDataService;
+    private StateService stateService;
     private LocationService locationService;
 
     /*
@@ -104,7 +104,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
         // expect state name in the first line
         if (line.matches("^State Name : .*$")) {
             String stateName = line.substring(line.indexOf(':') + 1).trim();
-            State state = stateDataService.findByName(stateName);
+            State state = stateService.findByName(stateName);
             verify(null != state, "State does not exists");
             readLineWhileNotBlank(bufferedReader);
             return state;
@@ -252,8 +252,8 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
     }
 
     @Autowired
-    public void setStateService(StateService stateDataService) {
-        this.stateDataService = stateDataService;
+    public void setStateService(StateService stateService) {
+        this.stateService = stateService;
     }
 
     @Autowired

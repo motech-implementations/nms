@@ -99,17 +99,20 @@ public class CsrServiceBundleIT extends BasePaxIT {
     TestingService testingService;
 
 
-    private RegionHelper rh = new RegionHelper(languageDataService, circleDataService, stateDataService, stateService,
-            districtDataService, districtService);
-
-    private SubscriptionHelper sh = new SubscriptionHelper(subscriptionService, subscriberDataService,
-            subscriptionPackDataService, languageDataService, circleDataService, stateDataService, stateService,
-            districtDataService, districtService);
+    private RegionHelper rh;
+    private SubscriptionHelper sh;
 
 
     @Before
     public void doTheNeedful() {
         testingService.clearDatabase();
+
+        rh = new RegionHelper(languageDataService, circleDataService, stateDataService, stateService,
+                districtDataService, districtService);
+
+        sh = new SubscriptionHelper(subscriptionService, subscriberDataService,
+                subscriptionPackDataService, languageDataService, circleDataService, stateDataService, stateService,
+                districtDataService, districtService);
 
         sh.childPack();
         sh.pregnancyPack();

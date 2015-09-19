@@ -146,7 +146,7 @@ public class TrackChangesServiceImpl implements TrackChangesService {
     }
 
     private void buildChanges(Map<String, Change> changes, StringBuilder builder) throws TrackChangesException {
-        for (Iterator<Map.Entry<String, Change>> iterator = changes.entrySet().iterator(); iterator.hasNext(); ) {
+        for (Iterator<Map.Entry<String, Change>> iterator = changes.entrySet().iterator(); iterator.hasNext();) {
             Map.Entry<String, Change> changeEntry = iterator.next();
             String propertyName = changeEntry.getKey();
             Change change = changeEntry.getValue();
@@ -163,7 +163,7 @@ public class TrackChangesServiceImpl implements TrackChangesService {
     }
 
     private void buildCollectionChanges(Map<String, CollectionChange> collectionChanges, StringBuilder builder) throws TrackChangesException {
-        for (Iterator<Map.Entry<String, CollectionChange>> iterator = collectionChanges.entrySet().iterator(); iterator.hasNext(); ) {
+        for (Iterator<Map.Entry<String, CollectionChange>> iterator = collectionChanges.entrySet().iterator(); iterator.hasNext();) {
             Map.Entry<String, CollectionChange> collectionChangeEntry = iterator.next();
             buildCollectionChange(builder, collectionChangeEntry);
             if (iterator.hasNext()) {
@@ -187,7 +187,7 @@ public class TrackChangesServiceImpl implements TrackChangesService {
     private void buildCollectionAdded(Collection<Object> collectionAdded, StringBuilder builder) throws TrackChangesException {
         if (!collectionAdded.isEmpty()) {
             builder.append("added[");
-            for (Iterator<Object> iterator = collectionAdded.iterator(); iterator.hasNext(); ) {
+            for (Iterator<Object> iterator = collectionAdded.iterator(); iterator.hasNext();) {
                 Object added = iterator.next();
                 builder.append(formatPropertyValue(added));
                 if (iterator.hasNext()) {
@@ -201,7 +201,7 @@ public class TrackChangesServiceImpl implements TrackChangesService {
     private void buildCollectionRemoved(Collection<Object> collectionRemoved, StringBuilder builder) throws TrackChangesException {
         if (!collectionRemoved.isEmpty()) {
             builder.append("removed[");
-            for (Iterator<Object> iterator = collectionRemoved.iterator(); iterator.hasNext(); ) {
+            for (Iterator<Object> iterator = collectionRemoved.iterator(); iterator.hasNext();) {
                 Object removed = iterator.next();
                 builder.append(formatPropertyValue(removed));
                 if (iterator.hasNext()) {

@@ -38,7 +38,7 @@ public class DistrictImportServiceImpl extends BaseLocationImportService<Distric
     }
 
     @Override
-    @CacheEvict({"district-state-code", "district-state-name", "district-language"})
+    @CacheEvict(value = {"district-state-code", "district-state-name", "district-language" }, allEntries = true)
     protected void createOrUpdateInstance(District instance) {
         District existing = districtService.findByStateAndCode(instance.getState(), instance.getCode());
 

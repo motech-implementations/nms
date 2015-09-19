@@ -25,7 +25,7 @@ import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
-import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.service.StateService;
 import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.server.config.SettingsFacade;
@@ -69,7 +69,7 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
     @Inject
     LanguageDataService languageDataService;
     @Inject
-    StateDataService stateDataService;
+    StateService stateService;
     @Inject
     CircleDataService circleDataService;
     @Inject
@@ -124,7 +124,7 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
         state.setName("State 1");
         state.setCode(1L);
         state.getDistricts().add(district);
-        sampleState = stateDataService.create(state);
+        sampleState = stateService.create(state);
 
         Circle circle = new Circle("AA");
         circle.setDefaultLanguage(ta);

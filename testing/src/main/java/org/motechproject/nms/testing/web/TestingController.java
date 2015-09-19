@@ -21,7 +21,7 @@ import java.util.Map;
 public class TestingController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TestingController.class);
-    private static final String[] UNITS = new String[] { "B", "kB", "MB", "GB", "TB" };
+    private static final String[] UNITS = new String[] {"B", "kB", "MB", "GB", "TB"};
 
     private static final DecimalFormat FMT_DEC = new DecimalFormat("#,##0.000");
 

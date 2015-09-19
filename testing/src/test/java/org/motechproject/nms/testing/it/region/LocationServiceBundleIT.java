@@ -15,14 +15,13 @@ import org.motechproject.nms.region.domain.HealthSubFacility;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.domain.Village;
-import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.HealthBlockDataService;
 import org.motechproject.nms.region.repository.HealthFacilityDataService;
 import org.motechproject.nms.region.repository.HealthFacilityTypeDataService;
 import org.motechproject.nms.region.repository.HealthSubFacilityDataService;
-import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.repository.TalukaDataService;
 import org.motechproject.nms.region.repository.VillageDataService;
+import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.region.service.StateService;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
@@ -44,14 +43,12 @@ import static org.junit.Assert.assertTrue;
 @ExamReactorStrategy(PerSuite.class)
 @ExamFactory(MotechNativeTestContainerFactory.class)
 public class LocationServiceBundleIT extends BasePaxIT {
-    @Inject
-    StateDataService stateDataService;
 
     @Inject
     StateService stateService;
 
     @Inject
-    DistrictDataService districtDataService;
+    DistrictService districtService;
 
     @Inject
     TalukaDataService talukaDataService;
@@ -140,7 +137,7 @@ public class LocationServiceBundleIT extends BasePaxIT {
     public void testCreateStateNoName() throws Exception {
         state.setName(null);
 
-        stateDataService.create(state);
+        stateService.create(state);
     }
 
     @Test
@@ -157,7 +154,7 @@ public class LocationServiceBundleIT extends BasePaxIT {
     public void testCreateDistrictNoName() throws Exception {
         district.setName(null);
 
-        districtDataService.create(district);
+        districtService.create(district);
     }
 
     @Test(expected = ConstraintViolationException.class)
@@ -184,7 +181,7 @@ public class LocationServiceBundleIT extends BasePaxIT {
 
         // Village is the leaf, I have to create something connected to the object graph so I save the
         // taluka (it's parent) instead
-        stateDataService.create(state);
+        stateService.create(state);
     }
 
     @Test(expected = ConstraintViolationException.class)
@@ -214,27 +211,27 @@ public class LocationServiceBundleIT extends BasePaxIT {
 
     @Test
     public void testDistrictsWithSameCodeDifferentStates() throws Exception {
-        stateDataService.create(state);
-        districtDataService.create(district);
+        stateService.create(state);
+        districtService.create(district);
 
         State otherState = new State();
         otherState.setName("State 2");
         otherState.setCode(2L);
-        stateDataService.create(otherState);
+        stateService.create(otherState);
 
         District otherDistrict = new District();
         otherDistrict.setName("District 2");
         otherDistrict.setRegionalName("District 2");
         otherDistrict.setCode(1L);
         otherDistrict.setState(otherState);
-        districtDataService.create(otherDistrict);
+        districtService.create(otherDistrict);
     }
 
 
     @Test
     public void testDistrictsWithSameCodeSameStates() throws Exception {
-        stateDataService.create(state);
-        districtDataService.create(district);
+        stateService.create(state);
+        districtService.create(district);
 
         District otherDistrict = new District();
         otherDistrict.setName("District 2");
@@ -243,14 +240,14 @@ public class LocationServiceBundleIT extends BasePaxIT {
         otherDistrict.setState(state);
 
         exception.expect(javax.jdo.JDODataStoreException.class);
-        districtDataService.create(otherDistrict);
+        districtService.create(otherDistrict);
     }
 
 
     @Test
     public void testVillagesWithSameCodeDifferentTalukas() throws Exception {
-        stateDataService.create(state);
-        districtDataService.create(district);
+        stateService.create(state);
+        districtService.create(district);
         talukaDataService.create(taluka);
         villageDataService.create(village);
 
@@ -273,8 +270,8 @@ public class LocationServiceBundleIT extends BasePaxIT {
 
     @Test
     public void testVillagesWithSameCodeSameTalukas() throws Exception {
-        stateDataService.create(state);
-        districtDataService.create(district);
+        stateService.create(state);
+        districtService.create(district);
         talukaDataService.create(taluka);
         villageDataService.create(village);
 
@@ -291,7 +288,7 @@ public class LocationServiceBundleIT extends BasePaxIT {
     @Test
     @Ignore // TODO: Remove once https://applab.atlassian.net/browse/MOTECH-1678 is resolved
     public void testValidCreate() throws Exception {
-        stateDataService.create(state);
+        stateService.create(state);
 
         State newState = stateService.findByCode(1L);
         assertNotNull(newState);

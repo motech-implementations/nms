@@ -185,7 +185,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         Village village3089 = createVillage(taluka46, 0, 3089L, "Podapara");
         taluka46.getVillages().add(village3089);
 
-        stateDataService.create(state21);
+        stateService.create(state21);
 
         final Circle circle = new Circle();
         circle.setName("Square");
@@ -340,7 +340,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         Subscription subscription = subscriptions.iterator().next();
         assertEquals(SubscriptionStatus.ACTIVE, subscription.getStatus());
 
-        State expectedState = stateService.findByCode(21L);
+        State expectedState = stateDataService.findByCode(21L);
         District expectedDistrict = districtService.findByStateAndCode(expectedState, 3L);
 
         assertMother(subscriber, "1234567890", getDateTime(lmpString), "Shanti Ekka", expectedState, expectedDistrict);
@@ -375,7 +375,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         Subscription subscription = subscriptions.iterator().next();
         assertEquals(SubscriptionStatus.ACTIVE, subscription.getStatus());
 
-        State expectedState = stateService.findByCode(21L);
+        State expectedState = stateDataService.findByCode(21L);
         District expectedDistrict = districtService.findByStateAndCode(expectedState, 3L);
 
         assertMother(subscriber, "1234567890", getDateTime(lmpString), "Shanti Ekka", expectedState, expectedDistrict);
@@ -410,7 +410,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         Subscription subscription = subscriptions.iterator().next();
         assertEquals(SubscriptionStatus.ACTIVE, subscription.getStatus());
 
-        State expectedState = stateService.findByCode(21L);
+        State expectedState = stateDataService.findByCode(21L);
         District expectedDistrict = districtService.findByStateAndCode(expectedState, 3L);
 
         assertMother(subscriber, "1234567890", getDateTime(lmpString), "Shanti Ekka", expectedState, expectedDistrict);
@@ -445,7 +445,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         Subscription subscription = subscriptions.iterator().next();
         assertEquals(SubscriptionStatus.ACTIVE, subscription.getStatus());
 
-        State expectedState = stateService.findByCode(21L);
+        State expectedState = stateDataService.findByCode(21L);
         District expectedDistrict = districtService.findByStateAndCode(expectedState, 3L);
 
         assertChild(subscriber, "1234567890", getDateTime(dobString), "Baby1 of Lilima Kua", expectedState, expectedDistrict);
@@ -468,7 +468,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     public void testImportChildDataFromSampleFile() throws Exception {
         mctsBeneficiaryImportService.importChildData(read("csv/child.txt"));
 
-        State expectedState = stateService.findByCode(21L);
+        State expectedState = stateDataService.findByCode(21L);
         District expectedDistrict4 = districtService.findByStateAndCode(expectedState, 4L);
 
         Subscriber subscriber1 = subscriberDataService.findByNumber(9439998253L);
@@ -766,7 +766,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     @Test
     public void verifyFT286() throws Exception {
     	State state31 = createState(31L, "State 31");
-    	stateDataService.create(state31);
+    	stateService.create(state31);
     	DateTime dob = DateTime.now();
         String dobString = getDateString(dob);
 
@@ -783,7 +783,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     @Test
     public void verifyRejectedWithNoState() throws Exception {
         State state31 = createState(31L, "State 31");
-        stateDataService.create(state31);
+        stateService.create(state31);
         DateTime dob = DateTime.now();
         String dobString = getDateString(dob);
 
@@ -798,7 +798,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     @Test
     public void verifyRejectedWithNoDistrict() throws Exception {
         State state31 = createState(31L, "State 31");
-        stateDataService.create(state31);
+        stateService.create(state31);
         DateTime dob = DateTime.now();
         String dobString = getDateString(dob);
 
@@ -996,7 +996,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     public void testImportMotherDataFromSampleFile() throws Exception {
         mctsBeneficiaryImportService.importMotherData(read("csv/mother.txt"));
 
-        State expectedState = stateService.findByCode(21L);
+        State expectedState = stateDataService.findByCode(21L);
         District expectedDistrict = districtService.findByStateAndCode(expectedState, 3L);
 
         Subscriber subscriber1 = subscriberDataService.findByNumber(9439986187L);

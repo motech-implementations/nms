@@ -95,14 +95,20 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
     TestingService testingService;
 
 
-    CdrHelper helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-            subscriptionPackDataService, languageDataService, circleDataService, stateDataService, stateService,
-            districtDataService, fileAuditRecordDataService, districtService);
+    CdrHelper helper;
 
 
     @Before
     public void cleanupDatabase()  {
         testingService.clearDatabase();
+
+    }
+
+    @Before
+    public void setupHelper()  {
+        helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
+                subscriptionPackDataService, languageDataService, circleDataService, stateDataService, stateService,
+                districtDataService, fileAuditRecordDataService, districtService);
 
     }
 

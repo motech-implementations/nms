@@ -1753,7 +1753,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         state1.setCode(11L);
         state1.getDistricts().add(district1);
 
-        stateDataService.create(state1);
+        stateService.create(state1);
 
         // setup state2 data
         Language language2 = new Language("Br", "bhojpuri");
@@ -1770,7 +1770,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         state2.setCode(21L);
         state2.getDistricts().add(district2);
 
-        stateDataService.create(state2);
+        stateService.create(state2);
 
         // deployed KILKARI service for state1 only
         deployedServiceDataService.create(new DeployedService(state1,
@@ -1831,7 +1831,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         state1.setCode(11L);
         state1.getDistricts().add(district1);
 
-        stateDataService.create(state1);
+        stateService.create(state1);
 
         // setup state2 data
         Language language2 = new Language("Br", "bhojpuri");
@@ -1848,7 +1848,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         state2.setCode(21L);
         state2.getDistricts().add(district2);
 
-        stateDataService.create(state2);
+        stateService.create(state2);
 
         // Not deployed KILKARI service for state1 and state2
 

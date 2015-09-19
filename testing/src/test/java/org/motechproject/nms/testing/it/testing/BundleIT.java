@@ -12,6 +12,8 @@ import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.service.DistrictService;
+import org.motechproject.nms.region.service.StateService;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
@@ -32,7 +34,7 @@ import static org.junit.Assert.assertNotNull;
 @ExamFactory(value = MotechNativeTestContainerFactory.class)
 public class BundleIT extends BasePaxIT {
 
-    public static final int TEST_COUNT = 1000;
+    public static final int TEST_COUNT = 3;
     @Inject
     TestingService testingService;
 
@@ -43,7 +45,13 @@ public class BundleIT extends BasePaxIT {
     StateDataService stateDataService;
 
     @Inject
+    StateService stateService;
+
+    @Inject
     DistrictDataService districtDataService;
+
+    @Inject
+    DistrictService districtService;
 
     @Inject
     MctsBeneficiaryImportService mctsBeneficiaryImportService;
@@ -64,7 +72,7 @@ public class BundleIT extends BasePaxIT {
         State state = new State("Delhi", 1L);
         //the \1 is a hack - Filter should take a Long constructor
         if (stateDataService.countForFilters(new Filters(new Filter("code", "\1"))) == 0) {
-                stateDataService.create(state);
+                stateService.create(state);
         }
 
         District district = new District();
@@ -74,7 +82,7 @@ public class BundleIT extends BasePaxIT {
         district.setRegionalName("Delhi District");
         //the \2 is a hack - Filter should take a Long constructor
         if (districtDataService.countForFilters(new Filters(new Filter("code", "\2"))) == 0) {
-           districtDataService.create(district);
+           districtService.create(district);
         }
     }
 

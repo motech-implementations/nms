@@ -148,10 +148,10 @@ public class CircleServiceBundleIT extends BasePaxIT {
         state4.setName("State 4");
         state4.setCode(4L);
 
-        stateDataService.create(state1);
-        stateDataService.create(state2);
-        stateDataService.create(state3);
-        stateDataService.create(state4);
+        stateService.create(state1);
+        stateService.create(state2);
+        stateService.create(state3);
+        stateService.create(state4);
 
         final Circle circle1 = new Circle();
         circle1.setName("Circle 1");

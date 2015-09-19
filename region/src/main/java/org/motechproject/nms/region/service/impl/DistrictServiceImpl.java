@@ -9,7 +9,10 @@ import org.motechproject.nms.region.domain.Language;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.service.DistrictService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +25,8 @@ public class DistrictServiceImpl implements DistrictService {
 
     private DistrictDataService districtDataService;
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(DistrictServiceImpl.class);
+
     @Autowired
     public DistrictServiceImpl(DistrictDataService districtDataService) {
         this.districtDataService = districtDataService;
@@ -30,6 +35,8 @@ public class DistrictServiceImpl implements DistrictService {
     @Override
     @Cacheable("district-language")
     public Set<District> getAllForLanguage(final Language language) {
+
+        LOGGER.debug("*** NO CACHE getAllForLanguage({}) ***", language);
 
         QueryExecution<Set<District>> stateQueryExecution = new QueryExecution<Set<District>>() {
             @Override
@@ -53,6 +60,9 @@ public class DistrictServiceImpl implements DistrictService {
     @Override
     @Cacheable("district-state-code")
     public District findByStateAndCode(final State state, final Long code) {
+
+        LOGGER.debug("*** NO CACHE findByStateAndCode({}, {}) ***", state, code);
+
         if (state == null) { return null; }
 
         SqlQueryExecution<District> queryExecution = new SqlQueryExecution<District>() {
@@ -83,6 +93,9 @@ public class DistrictServiceImpl implements DistrictService {
     @Override
     @Cacheable("district-state-name")
     public District findByStateAndName(final State state, final String name) {
+
+        LOGGER.debug("*** NO CACHE findByStateAndName({}, {}) ***", state, name);
+
         if (state == null) { return null; }
 
         SqlQueryExecution<District> queryExecution = new SqlQueryExecution<District>() {
@@ -111,13 +124,23 @@ public class DistrictServiceImpl implements DistrictService {
     }
 
     @Override
-    public void create(District district) {
-        districtDataService.create(district);
+    @CacheEvict(value = {"district-state-name", "district-state-code", "district-language" }, allEntries = true)
+    public District create(District district) {
+        return districtDataService.create(district);
     }
 
     @Override
-    public void update(District district) {
-        districtDataService.update(district);
+    @CacheEvict(value = {"district-state-name", "district-state-code", "district-language" }, allEntries = true)
+    public District update(District district) {
+        return districtDataService.update(district);
     }
 
+    /*
+     *
+     * Only to be called by ITs
+     *
+     */
+    @Override
+    @CacheEvict(value = {"district-state-name", "district-state-code", "district-language" }, allEntries = true)
+    public void cacheEvict() { }
 }

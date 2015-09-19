@@ -21,7 +21,7 @@ public class CacheHelperImpl implements CacheHelper {
 
     @Cacheable("entity-class")
     public boolean isEntityInstance(String className) {
-        LOGGER.debug("*** NO CACHE {} ***", className);
+        LOGGER.debug("*** NO CACHE isEntityInstance({}) ***", className);
         return entityService.getEntityByClassName(className) != null;
     }
 }

@@ -188,7 +188,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
 
         state1.getDistricts().addAll(Arrays.asList(district11, district12,
                 kuraput, kandhamal, ganjam, jharsuguda, bargarh, puri));
-        stateDataService.create(state1);
+        stateService.create(state1);
 
         Circle circle1 = createCircle("Circle 1");
         circle1.getStates().addAll(Arrays.asList(state1));
@@ -199,7 +199,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     // in use.  This should result in a unique constraint exception
     @Test(expected = CsvImportDataException.class)
     public void testImportMSISDNConflict() throws Exception {
-        State state = stateService.findByName("State 1");
+        State state = stateDataService.findByName("State 1");
         District district = state.getDistricts().get(0);
 
         FrontLineWorker flw = new FrontLineWorker("Existing With MSISDN", 1234567890L);
@@ -444,7 +444,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     // TODO JIRA issue: https://applab.atlassian.net/browse/NMS-253
     @Test
     public void verifyFT559() throws InterruptedException, IOException {
-        State state = stateService.findByName("State 1");
+        State state = stateDataService.findByName("State 1");
         District district1 = state.getDistricts().get(0);
         District district2 = state.getDistricts().get(1);
         Language language1 = languageDataService.findByCode("L1");
