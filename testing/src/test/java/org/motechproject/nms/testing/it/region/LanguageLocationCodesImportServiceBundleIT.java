@@ -91,7 +91,7 @@ public class LanguageLocationCodesImportServiceBundleIT extends BasePaxIT {
         District district11 = createDistrict(state1, 11L, "District 11", null);
         District district12 = createDistrict(state1, 12L, "District 12", null);
         state1.getDistricts().addAll(Arrays.asList(district11, district12));
-        stateService.create(state1);
+        state1 = stateService.create(state1);
 
         State state2 = createState(2L, "State 2");
         District district21 = createDistrict(state2, 21L, "District 21", null);
@@ -102,7 +102,7 @@ public class LanguageLocationCodesImportServiceBundleIT extends BasePaxIT {
         District district31 = createDistrict(state3, 31L, "District 31", null);
         District district32 = createDistrict(state3, 32L, "District 32", lang1);
         state3.getDistricts().addAll(Arrays.asList(district31, district32));
-        stateService.create(state3);
+        state3 = stateService.create(state3);
 
         State state4 = createState(4L, "State 4");
         District district41 = createDistrict(state4, 41L, "District 41", lang1);

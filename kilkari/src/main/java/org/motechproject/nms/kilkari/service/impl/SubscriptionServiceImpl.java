@@ -36,9 +36,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 
 import javax.jdo.Query;
+import javax.jdo.annotations.Cacheable;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -189,10 +191,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             }
         }
 
-        LOGGER.info(String.format("Purged %s subscribers and %s subscriptions with status (%s or %s) and " +
-                        "endDate date before %s",
-                purgedSubscribers, purgedSubscriptions, SubscriptionStatus.COMPLETED,
-                SubscriptionStatus.DEACTIVATED, cutoff.toString()));
+        LOGGER.info(String.format("Purged %s subscribers and %s subscriptions with status (%s or %s) and " + "endDate date before %s", purgedSubscribers, purgedSubscriptions, SubscriptionStatus.COMPLETED, SubscriptionStatus.DEACTIVATED, cutoff.toString()));
     }
 
     @Override
@@ -423,38 +422,26 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @Override
+    @Cacheable("pack-type")
+    public SubscriptionPack getSubscriptionPack(SubscriptionPackType type) {
+        LOGGER.debug("*** NO CACHE getSubscriptionPack(type={}) ***", type);
+        return subscriptionPackDataService.byType(type);
+    }
+
+
+    @Override
+    @Cacheable("pack-name")
     public SubscriptionPack getSubscriptionPack(String name) {
+        LOGGER.debug("*** NO CACHE getSubscriptionPack(name={}) ***", name);
         return subscriptionPackDataService.byName(name);
     }
 
 
     @Override
+    @Cacheable("pack-all")
     public List<SubscriptionPack> getSubscriptionPacks() {
+        LOGGER.debug("*** NO CACHE getSubscriptionPacks() ***");
         return subscriptionPackDataService.retrieveAll();
-    }
-
-
-    /**
-     * To be used by ITs only!
-     */
-    public void deleteAll() {
-        DateTime now = DateTime.now();
-        DateTime oldEnough = now.minusWeeks(7);
-        for (Subscription sub : subscriptionDataService.retrieveAll()) {
-            boolean update = false;
-            if (sub.getStatus() == SubscriptionStatus.ACTIVE) {
-                sub.setStatus(SubscriptionStatus.COMPLETED);
-                update = true;
-            }
-            if (Math.abs(Weeks.weeksBetween(now, sub.getEndDate()).getWeeks()) < 6) {
-                sub.setEndDate(oldEnough);
-                update = true;
-            }
-            if (update) {
-                subscriptionDataService.update(sub);
-            }
-        }
-        subscriptionDataService.deleteAll();
     }
 
 
@@ -537,8 +524,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     public List<Subscription> findPendingSubscriptionsFromDate(DateTime startDate, int page, int pageSize) {
-        return subscriptionDataService.findByStatusAndStartDate(SubscriptionStatus.PENDING_ACTIVATION, startDate,
-                new QueryParams(page, pageSize));
+        return subscriptionDataService.findByStatusAndStartDate(SubscriptionStatus.PENDING_ACTIVATION, startDate, new QueryParams(page, pageSize));
     }
 
+    @CacheEvict(value = {"pack-type", "pack-name", "pack-all" }, allEntries = true)
+    public void cacheEvict(SubscriptionPack pack) { }
 }
