@@ -7,6 +7,7 @@ import org.joda.time.Weeks;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.motechproject.event.MotechEvent;
+import org.motechproject.event.listener.EventRelay;
 import org.motechproject.event.listener.annotations.MotechListener;
 import org.motechproject.mds.query.QueryExecution;
 import org.motechproject.mds.query.QueryParams;
@@ -50,6 +51,7 @@ import java.util.List;
  */
 @Service("subscriptionService")
 public class SubscriptionServiceImpl implements SubscriptionService {
+
     private static final Logger LOGGER = LoggerFactory.getLogger(SubscriptionServiceImpl.class);
 
     private static final String SUBSCRIPTION_PURGE_TIME = "kilkari.purge_closed_subscriptions_start_time";
@@ -60,6 +62,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     public static final String SELECT_SUBSCRIBERS_BY_NUMBER = "select * from nms_subscribers where callingNumber = ?";
     public static final String MORE_THAN_ONE_SUBSCRIBER = "More than one subscriber returned for callingNumber %s";
 
+    public static final String PACK_CACHE_EVICT_MESSAGE = "nms.kilkari.cache.evict.pack";
+
     private SettingsFacade settingsFacade;
     private MotechSchedulerService schedulerService;
 
@@ -69,6 +73,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private SubscriptionPackDataService subscriptionPackDataService;
     private SubscriptionDataService subscriptionDataService;
     private SubscriptionErrorDataService subscriptionErrorDataService;
+    private EventRelay eventRelay;
 
     @Autowired
     public SubscriptionServiceImpl(@Qualifier("kilkariSettings") SettingsFacade settingsFacade,
@@ -76,13 +81,15 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                                    SubscriberDataService subscriberDataService,
                                    SubscriptionPackDataService subscriptionPackDataService,
                                    SubscriptionDataService subscriptionDataService,
-                                   SubscriptionErrorDataService subscriptionErrorDataService) {
+                                   SubscriptionErrorDataService subscriptionErrorDataService,
+                                   EventRelay eventRelay) {
         this.subscriberDataService = subscriberDataService;
         this.subscriptionPackDataService = subscriptionPackDataService;
         this.subscriptionDataService = subscriptionDataService;
         this.subscriptionErrorDataService = subscriptionErrorDataService;
         this.schedulerService = schedulerService;
         this.settingsFacade = settingsFacade;
+        this.eventRelay = eventRelay;
 
         schedulePurgeOfOldSubscriptions();
     }
@@ -527,6 +534,15 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         return subscriptionDataService.findByStatusAndStartDate(SubscriptionStatus.PENDING_ACTIVATION, startDate, new QueryParams(page, pageSize));
     }
 
+    public void broadcastCacheEvictMessage(SubscriptionPack pack) {
+        LOGGER.debug("*** BROADCAST CACHE EVICT MSG ***");
+        MotechEvent motechEvent = new MotechEvent(PACK_CACHE_EVICT_MESSAGE);
+        eventRelay.sendEventMessage(motechEvent);
+    }
+
+    @MotechListener(subjects = { PACK_CACHE_EVICT_MESSAGE })
     @CacheEvict(value = {"pack-type", "pack-name", "pack-all" }, allEntries = true)
-    public void cacheEvict(SubscriptionPack pack) { }
+    public void cacheEvict(MotechEvent event) {
+        LOGGER.debug("*** RECEIVE CACHE EVICT MSG ***");
+    }
 }

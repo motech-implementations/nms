@@ -20,9 +20,7 @@
     <osgi:reference id="2" interface="org.motechproject.nms.kilkari.repository.SubscriptionPackDataService" />
     <osgi:reference id="3" interface="org.motechproject.nms.region.repository.DistrictDataService" />
     <osgi:reference id="4" interface="org.motechproject.nms.region.repository.StateDataService" />
-    <osgi:reference id="5" interface="org.motechproject.nms.region.service.StateService" />
-    <osgi:reference id="6" interface="org.motechproject.nms.region.service.DistrictService" />
-    <osgi:reference id="7" interface="org.motechproject.nms.region.service.CircleService" />
+    <osgi:reference id="5" interface="org.motechproject.nms.region.service.LanguageService" />
 
 
     <osgi:reference id="transactionManager" interface="org.springframework.transaction.PlatformTransactionManager"/>

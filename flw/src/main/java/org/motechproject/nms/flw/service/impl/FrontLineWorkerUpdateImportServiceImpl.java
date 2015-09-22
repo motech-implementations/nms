@@ -225,7 +225,7 @@ public class FrontLineWorkerUpdateImportServiceImpl implements FrontLineWorkerUp
     }
 
     @Autowired
-    public void setStateService(StateService stateDataService) {
-        this.stateService = stateDataService;
+    public void setStateService(StateService stateService) {
+        this.stateService = stateService;
     }
 }

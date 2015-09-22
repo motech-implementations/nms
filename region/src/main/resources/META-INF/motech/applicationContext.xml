@@ -39,14 +39,10 @@
     <bean id="cacheManager" class="org.springframework.cache.support.SimpleCacheManager">
         <property name="caches">
             <set>
-                <bean class="org.springframework.cache.concurrent.ConcurrentMapCacheFactoryBean" p:name="state-all" />
-                <bean class="org.springframework.cache.concurrent.ConcurrentMapCacheFactoryBean" p:name="state-name" />
-                <bean class="org.springframework.cache.concurrent.ConcurrentMapCacheFactoryBean" p:name="state-code" />
-                <bean class="org.springframework.cache.concurrent.ConcurrentMapCacheFactoryBean" p:name="district-state-code" />
-                <bean class="org.springframework.cache.concurrent.ConcurrentMapCacheFactoryBean" p:name="district-state-name" />
-                <bean class="org.springframework.cache.concurrent.ConcurrentMapCacheFactoryBean" p:name="district-language" />
-                <bean class="org.springframework.cache.concurrent.ConcurrentMapCacheFactoryBean" p:name="circle-name" />
-                <bean class="org.springframework.cache.concurrent.ConcurrentMapCacheFactoryBean" p:name="circle-all" />
+                <bean class="org.springframework.cache.concurrent.ConcurrentMapCacheFactoryBean" p:name="language-all" />
+                <bean class="org.springframework.cache.concurrent.ConcurrentMapCacheFactoryBean" p:name="language-code" />
+                <bean class="org.springframework.cache.concurrent.ConcurrentMapCacheFactoryBean" p:name="language-all-for-circle" />
+                <bean class="org.springframework.cache.concurrent.ConcurrentMapCacheFactoryBean" p:name="language-national-default" />
             </set>
         </property>
     </bean>

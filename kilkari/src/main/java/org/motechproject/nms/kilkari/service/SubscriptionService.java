@@ -179,12 +179,18 @@ public interface SubscriptionService {
     void deletePreconditionCheck(Subscription subscription);
 
     /**
-     * Lifecycle listener that evicts the subscriptionPack cache if needed
+     * Lifecycle listener that broadcasts a cache evict message for the message pack cache
      *
      * @param pack
      */
     @InstanceLifecycleListener({InstanceLifecycleListenerType.POST_CREATE, InstanceLifecycleListenerType.PRE_DELETE,
             InstanceLifecycleListenerType.PRE_STORE})
-    void cacheEvict(SubscriptionPack pack);
+    void broadcastCacheEvictMessage(SubscriptionPack pack);
 
+    /**
+     *
+     * Message pack cache evict
+     *
+     */
+    void cacheEvict(MotechEvent event);
 }

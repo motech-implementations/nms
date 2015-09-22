@@ -1,6 +1,9 @@
 package org.motechproject.nms.region.service.impl;
 
 import com.google.common.collect.Sets;
+import org.motechproject.event.MotechEvent;
+import org.motechproject.event.listener.EventRelay;
+import org.motechproject.event.listener.annotations.MotechListener;
 import org.motechproject.mds.query.SqlQueryExecution;
 import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.District;
@@ -11,28 +14,40 @@ import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.NationalDefaultLanguageDataService;
 import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.region.service.LanguageService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 
 import javax.jdo.Query;
+import javax.jdo.annotations.Cacheable;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 @Service("languageService")
 public class LanguageServiceImpl implements LanguageService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(LanguageServiceImpl.class);
+
     public static final int NATIONAL_DEFAULT_CODE = 0;
+    public static final String LANGUAGE_CACHE_EVICT_MESSAGE = "nms.region.cache.evict.language";
+
     private LanguageDataService languageDataService;
     private NationalDefaultLanguageDataService nationalDefaultLanguageDataService;
     private DistrictService districtService;
+    private EventRelay eventRelay;
+
 
     @Autowired
     public LanguageServiceImpl(LanguageDataService languageDataService,
                                NationalDefaultLanguageDataService nationalDefaultLanguageDataService,
-                               DistrictService districtService) {
+                               DistrictService districtService, EventRelay eventRelay) {
         this.languageDataService = languageDataService;
         this.nationalDefaultLanguageDataService = nationalDefaultLanguageDataService;
         this.districtService = districtService;
+        this.eventRelay = eventRelay;
     }
 
     /**
@@ -41,12 +56,14 @@ public class LanguageServiceImpl implements LanguageService {
      * @return The language Record if it exists
      */
     @Override
+    @Cacheable("language-code")
     public Language getForCode(String code) {
         return languageDataService.findByCode(code);
     }
 
 
     @Override
+    @Cacheable("language-all-for-circle")
     public Set<Language> getAllForCircle(final Circle circle) {
 
         SqlQueryExecution<List<Language>> queryExecution = new SqlQueryExecution<List<Language>>() {
@@ -80,6 +97,7 @@ public class LanguageServiceImpl implements LanguageService {
 
 
     @Override
+    @Cacheable("language-all")
     public Set<Language> getAll() {
         Set<Language> languages = new HashSet<>(languageDataService.retrieveAll());
 
@@ -91,6 +109,7 @@ public class LanguageServiceImpl implements LanguageService {
     }
 
     @Override
+    @Cacheable("language-national-default")
     public Language getNationalDefaultLanguage() {
         Language language = null;
 
@@ -115,4 +134,18 @@ public class LanguageServiceImpl implements LanguageService {
 
         return states;
     }
+
+    public void broadcastCacheEvictMessage(Language language) {
+        MotechEvent motechEvent = new MotechEvent(LANGUAGE_CACHE_EVICT_MESSAGE);
+        LOGGER.debug("*** BROADCAST CACHE EVICT MSG ***");
+        eventRelay.sendEventMessage(motechEvent);
+    }
+
+    @MotechListener(subjects = { LANGUAGE_CACHE_EVICT_MESSAGE })
+    @CacheEvict(value = {"language-code", "language-all-for-circle", "language-all", "language-national-default" },
+            allEntries = true)
+    public void cacheEvict(MotechEvent event) {
+        LOGGER.debug("*** RECEIVE CACHE EVICT MSG ***");
+    }
+
 }
