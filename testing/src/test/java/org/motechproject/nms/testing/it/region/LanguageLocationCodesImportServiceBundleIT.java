@@ -296,6 +296,8 @@ public class LanguageLocationCodesImportServiceBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT518() throws InterruptedException, IOException {
+        testingService.clearDatabase();
+
         // Import state
         HttpResponse response = importCsvFileForLocationData("state", "state_ft_518.csv");
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
