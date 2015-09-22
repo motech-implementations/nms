@@ -16,7 +16,6 @@ import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Language;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.service.LanguageService;
-import org.motechproject.nms.region.service.StateService;
 import org.motechproject.scheduler.contract.RepeatingSchedulableJob;
 import org.motechproject.scheduler.service.MotechSchedulerService;
 import org.motechproject.server.config.SettingsFacade;
@@ -49,18 +48,16 @@ public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
     private SettingsFacade settingsFacade;
     private MotechSchedulerService schedulerService;
     private LanguageService languageService;
-    private StateService stateService;
 
     @Autowired
     public FrontLineWorkerServiceImpl(@Qualifier("flwSettings") SettingsFacade settingsFacade,
                                       MotechSchedulerService schedulerService,
                                       FrontLineWorkerDataService frontLineWorkerDataService,
-                                      LanguageService languageService, StateService stateService) {
+                                      LanguageService languageService) {
         this.frontLineWorkerDataService = frontLineWorkerDataService;
         this.schedulerService = schedulerService;
         this.settingsFacade = settingsFacade;
         this.languageService = languageService;
-        this.stateService = stateService;
 
         schedulePurgeOfOldFrontLineWorkers();
     }
@@ -142,13 +139,6 @@ public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
 
             if (language != null) {
                 Set<State> states = languageService.getAllStatesForLanguage(language);
-
-                //todo remove
-                Set<Language> allLanguages = languageService.getAll();
-                LOGGER.debug("languageService.getAll() = {}", allLanguages);
-                List<State> allStates = stateService.retrieveAll();
-                LOGGER.debug("stateService.getAll() = {}", allStates);
-                //todo remove
 
                 if (states.size() == 1) {
                     state = states.iterator().next();

@@ -6,7 +6,6 @@ import org.motechproject.nms.region.csv.StateImportService;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.supercsv.cellprocessor.ift.CellProcessor;
 
@@ -31,7 +30,6 @@ public class StateImportServiceImpl extends BaseLocationImportService<State> imp
     }
 
     @Override
-    @CacheEvict(value = {"state-code", "state-name", "state-all" }, allEntries = true)
     protected void createOrUpdateInstance(State instance) {
         State existing = stateDataService.findByCode(instance.getCode());
 

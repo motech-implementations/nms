@@ -183,8 +183,8 @@ public interface SubscriptionService {
      *
      * @param pack
      */
-    @InstanceLifecycleListener({InstanceLifecycleListenerType.POST_CREATE, InstanceLifecycleListenerType.POST_DELETE,
-            InstanceLifecycleListenerType.POST_STORE})
+    @InstanceLifecycleListener({InstanceLifecycleListenerType.POST_CREATE, InstanceLifecycleListenerType.PRE_DELETE,
+            InstanceLifecycleListenerType.PRE_STORE})
     void cacheEvict(SubscriptionPack pack);
 
 }

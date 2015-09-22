@@ -9,13 +9,11 @@
 
     <import resource="classpath*:META-INF/motech/*.xml" />
 
-    <osgi:service ref="trackChangesServiceImpl"
-                  interface="org.motechproject.nms.tracking.service.impl.TrackChangesServiceImpl"/>
+    <osgi:service ref="trackChangesServiceImpl" interface="org.motechproject.nms.tracking.service.impl.TrackChangesServiceImpl"/>
 
-    <osgi:service ref="cacheHelper" interface="org.motechproject.nms.tracking.cache.CacheHelper"/>
+    <osgi:service ref="entityServiceWrapper" interface="org.motechproject.nms.tracking.service.EntityServiceWrapper"/>
 
-    <osgi:reference id="changeLogDataService"
-                    interface="org.motechproject.nms.tracking.repository.ChangeLogDataService"/>
+    <osgi:reference id="changeLogDataService" interface="org.motechproject.nms.tracking.repository.ChangeLogDataService"/>
 
     <osgi:reference id="entityService" interface="org.motechproject.mds.service.EntityService"/>
 

@@ -43,7 +43,7 @@ public class FrontLineWorkerUpdateImportServiceImpl implements FrontLineWorkerUp
 
     private FrontLineWorkerService frontLineWorkerService;
     private LanguageService languageService;
-    private StateService stateDataService;
+    private StateService stateService;
 
     /*
         Expected file format:
@@ -172,7 +172,7 @@ public class FrontLineWorkerUpdateImportServiceImpl implements FrontLineWorkerUp
         mapping.put(STATE, new GetInstanceByLong<State>() {
             @Override
             public State retrieve(Long value) {
-                return stateDataService.findByCode(value);
+                return stateService.findByCode(value);
             }
         });
 
@@ -226,6 +226,6 @@ public class FrontLineWorkerUpdateImportServiceImpl implements FrontLineWorkerUp
 
     @Autowired
     public void setStateService(StateService stateDataService) {
-        this.stateDataService = stateDataService;
+        this.stateService = stateDataService;
     }
 }

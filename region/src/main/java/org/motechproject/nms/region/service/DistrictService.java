@@ -1,5 +1,7 @@
 package org.motechproject.nms.region.service;
 
+import org.motechproject.mds.annotations.InstanceLifecycleListener;
+import org.motechproject.mds.annotations.InstanceLifecycleListenerType;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Language;
 import org.motechproject.nms.region.domain.State;
@@ -12,5 +14,12 @@ public interface DistrictService {
     District findByStateAndName(State state, String name);
     District create(District district);
     District update(District district);
-    void cacheEvict();
+
+    /**
+     * Evict the state cache if needed
+     *
+     */
+    @InstanceLifecycleListener({InstanceLifecycleListenerType.POST_CREATE, InstanceLifecycleListenerType.PRE_DELETE,
+            InstanceLifecycleListenerType.PRE_STORE})
+    void cacheEvict(District district);
 }

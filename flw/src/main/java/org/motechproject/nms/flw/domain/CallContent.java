@@ -5,6 +5,7 @@ import org.joda.time.DateTime;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 
+@SuppressWarnings("PMD.UnusedPrivateField")
 @Entity(tableName = "nms_call_content")
 public class CallContent {
 

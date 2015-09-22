@@ -45,35 +45,28 @@ public class StateServiceImpl implements StateService {
     }
 
     @Override
-    @CacheEvict(value = {"state-code", "state-name", "state-all"}, allEntries = true)
     public State create(State state) {
         return stateDataService.create(state);
     }
 
     @Override
-    @CacheEvict(value = {"state-code", "state-name", "state-all"}, allEntries = true)
     public State update(State state) {
         return stateDataService.update(state);
     }
 
     @Override
-    @CacheEvict(value = {"state-code", "state-name", "state-all"}, allEntries = true)
     public void delete(State state) {
         stateDataService.delete(state);
     }
 
     @Override
-    @CacheEvict(value = {"state-code", "state-name", "state-all"}, allEntries = true)
     public void deleteAll() {
         stateDataService.deleteAll();
     }
 
-    /*
-     *
-     * Only to be called by ITs
-     *
-     */
     @Override
     @CacheEvict(value = {"state-code", "state-name", "state-all"}, allEntries = true)
-    public void cacheEvict() { }
+    public void cacheEvict(State state) {
+        LOGGER.debug("*** CACHE EVICT state={} ***", state);
+    }
 }

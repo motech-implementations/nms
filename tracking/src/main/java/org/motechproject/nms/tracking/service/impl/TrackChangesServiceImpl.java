@@ -6,7 +6,7 @@ import org.motechproject.mds.listener.MotechLifecycleListener;
 import org.motechproject.mds.service.JdoListenerRegistryService;
 import org.motechproject.mds.util.Constants;
 import org.motechproject.mds.util.PropertyUtil;
-import org.motechproject.nms.tracking.cache.CacheHelper;
+import org.motechproject.nms.tracking.service.EntityServiceWrapper;
 import org.motechproject.nms.tracking.domain.ChangeLog;
 import org.motechproject.nms.tracking.exception.TrackChangesException;
 import org.motechproject.nms.tracking.repository.ChangeLogDataService;
@@ -38,16 +38,16 @@ public class TrackChangesServiceImpl implements TrackChangesService {
 
     private JdoListenerRegistryService jdoListenerRegistryService;
     private ChangeLogDataService changeLogDataService;
-    private CacheHelper cacheHelper;
+    private EntityServiceWrapper entityServiceWrapper;
 
     private Set<String> trackedClasses = new HashSet<>();
 
 
     @Autowired
-    public TrackChangesServiceImpl(JdoListenerRegistryService jdoListenerRegistryService, CacheHelper cacheHelper,
+    public TrackChangesServiceImpl(JdoListenerRegistryService jdoListenerRegistryService, EntityServiceWrapper entityServiceWrapper,
                                    ChangeLogDataService changeLogDataService) {
         this.jdoListenerRegistryService = jdoListenerRegistryService;
-        this.cacheHelper = cacheHelper;
+        this.entityServiceWrapper = entityServiceWrapper;
         this.changeLogDataService = changeLogDataService;
     }
 
@@ -69,7 +69,7 @@ public class TrackChangesServiceImpl implements TrackChangesService {
 
     @Override
     public void preStore(Object target) {
-        if (target instanceof TrackChanges && cacheHelper.isEntityInstance(target.getClass().getName())) {
+        if (target instanceof TrackChanges && entityServiceWrapper.isEntityInstance(target.getClass().getName())) {
             try {
                 storeChangeLog((TrackChanges) target);
             } catch (TrackChangesException e) {
@@ -82,7 +82,7 @@ public class TrackChangesServiceImpl implements TrackChangesService {
 
     @Override
     public void preDelete(Object target) {
-        if (target instanceof TrackChanges && cacheHelper.isEntityInstance(target.getClass().getName())) {
+        if (target instanceof TrackChanges && entityServiceWrapper.isEntityInstance(target.getClass().getName())) {
             try {
                 deleteChangeLogs(target);
             } catch (TrackChangesException e) {
@@ -213,7 +213,7 @@ public class TrackChangesServiceImpl implements TrackChangesService {
     }
 
     private String formatPropertyValue(Object value) throws TrackChangesException {
-        if (value != null && cacheHelper.isEntityInstance(value.getClass().getName())) {
+        if (value != null && entityServiceWrapper.isEntityInstance(value.getClass().getName())) {
             return String.valueOf(getInstanceId(value));
         } else {
             return String.valueOf(value);

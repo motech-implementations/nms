@@ -124,23 +124,18 @@ public class DistrictServiceImpl implements DistrictService {
     }
 
     @Override
-    @CacheEvict(value = {"district-state-name", "district-state-code", "district-language" }, allEntries = true)
     public District create(District district) {
         return districtDataService.create(district);
     }
 
     @Override
-    @CacheEvict(value = {"district-state-name", "district-state-code", "district-language" }, allEntries = true)
     public District update(District district) {
         return districtDataService.update(district);
     }
 
-    /*
-     *
-     * Only to be called by ITs
-     *
-     */
     @Override
     @CacheEvict(value = {"district-state-name", "district-state-code", "district-language" }, allEntries = true)
-    public void cacheEvict() { }
+    public void cacheEvict(District district) {
+        LOGGER.debug("*** CACHE EVICT district={} ***", district);
+    }
 }

@@ -13,6 +13,7 @@ import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.service.CircleService;
 import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.region.service.StateService;
 import org.motechproject.nms.testing.service.TestingService;
@@ -217,6 +218,8 @@ public class TestingServiceImpl implements TestingService {
     private StateDataService stateDataService;
     @Autowired
     private StateService stateService;
+    @Autowired
+    private CircleService circleService;
 
 
     /**
@@ -332,8 +335,9 @@ public class TestingServiceImpl implements TestingService {
 
         enableConstraints();
 
-        stateService.cacheEvict();
-        districtService.cacheEvict();
+        stateService.cacheEvict(null);
+        districtService.cacheEvict(null);
+        circleService.cacheEvict(null);
 
         LOGGER.debug("clearDatabase: {}", timer.time());
     }
