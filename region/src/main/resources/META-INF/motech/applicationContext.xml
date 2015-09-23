@@ -39,11 +39,8 @@
     <bean id="cacheManager" class="org.springframework.cache.support.SimpleCacheManager">
         <property name="caches">
             <set>
-                <bean class="org.springframework.cache.concurrent.ConcurrentMapCacheFactoryBean" p:name="language-all" />
-                <bean class="org.springframework.cache.concurrent.ConcurrentMapCacheFactoryBean" p:name="language-code" />
-                <bean class="org.springframework.cache.concurrent.ConcurrentMapCacheFactoryBean" p:name="language-name" />
-                <bean class="org.springframework.cache.concurrent.ConcurrentMapCacheFactoryBean" p:name="language-all-for-circle" />
-                <bean class="org.springframework.cache.concurrent.ConcurrentMapCacheFactoryBean" p:name="language-national-default" />
+                <bean class="org.springframework.cache.concurrent.ConcurrentMapCacheFactoryBean" p:name="language" />
+                <bean class="org.springframework.cache.concurrent.ConcurrentMapCacheFactoryBean" p:name="languages" />
             </set>
         </property>
     </bean>

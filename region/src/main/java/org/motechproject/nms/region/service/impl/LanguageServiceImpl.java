@@ -18,10 +18,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import javax.jdo.Query;
-import javax.jdo.annotations.Cacheable;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -50,13 +50,14 @@ public class LanguageServiceImpl implements LanguageService {
         this.eventRelay = eventRelay;
     }
 
+
     /**
      * Given a languageCode returns the object if one exists
      * @param code the code for the language record
      * @return The language Record if it exists
      */
     @Override
-    @Cacheable("language-code")
+    @Cacheable(value = "language", key = "#code + '-0'")
     public Language getForCode(String code) {
         return languageDataService.findByCode(code);
     }
@@ -68,14 +69,14 @@ public class LanguageServiceImpl implements LanguageService {
      * @return The language Record if it exists
      */
     @Override
-    @Cacheable("language-name")
+    @Cacheable(value = "language", key = "'0-' + #name")
     public Language getForName(String name) {
         return languageDataService.findByName(name);
     }
 
 
     @Override
-    @Cacheable("language-all-for-circle")
+    @Cacheable(value = "languages", key = "#circle")
     public Set<Language> getAllForCircle(final Circle circle) {
 
         SqlQueryExecution<List<Language>> queryExecution = new SqlQueryExecution<List<Language>>() {
@@ -109,7 +110,7 @@ public class LanguageServiceImpl implements LanguageService {
 
 
     @Override
-    @Cacheable("language-all")
+    @Cacheable(value = "languages", key = "'all-languages'")
     public Set<Language> getAll() {
         Set<Language> languages = new HashSet<>(languageDataService.retrieveAll());
 
@@ -120,8 +121,9 @@ public class LanguageServiceImpl implements LanguageService {
         return languages;
     }
 
+
     @Override
-    @Cacheable("language-national-default")
+    @Cacheable(value = "language", key = "'-'")
     public Language getNationalDefaultLanguage() {
         Language language = null;
 
@@ -135,6 +137,7 @@ public class LanguageServiceImpl implements LanguageService {
         return language;
     }
 
+
     @Override
     public Set<State> getAllStatesForLanguage(Language language) {
         Set<State> states = new HashSet<>();
@@ -147,15 +150,16 @@ public class LanguageServiceImpl implements LanguageService {
         return states;
     }
 
+
     public void broadcastCacheEvictMessage(Language language) {
         MotechEvent motechEvent = new MotechEvent(LANGUAGE_CACHE_EVICT_MESSAGE);
         LOGGER.debug("*** BROADCAST CACHE EVICT MSG ***");
         eventRelay.sendEventMessage(motechEvent);
     }
 
+
     @MotechListener(subjects = { LANGUAGE_CACHE_EVICT_MESSAGE })
-    @CacheEvict(value = {"language-code", "language-name", "language-all-for-circle", "language-all",
-            "language-national-default" }, allEntries = true)
+    @CacheEvict(value = {"language", "languages" }, allEntries = true)
     public void cacheEvict(MotechEvent event) {
         LOGGER.debug("*** RECEIVE CACHE EVICT MSG ***");
     }
