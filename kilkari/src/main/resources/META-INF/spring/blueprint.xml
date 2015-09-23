@@ -70,9 +70,6 @@
     <osgi:reference id="stateDataService"
                     interface="org.motechproject.nms.region.repository.StateDataService" />
 
-    <osgi:reference id="stateService"
-                    interface="org.motechproject.nms.region.service.StateService" />
-
     <osgi:reference id="districtDataService"
                     interface="org.motechproject.nms.region.repository.DistrictDataService" />
 

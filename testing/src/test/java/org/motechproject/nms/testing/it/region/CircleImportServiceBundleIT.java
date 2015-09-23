@@ -17,7 +17,6 @@ import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.StateDataService;
-import org.motechproject.nms.region.service.StateService;
 import org.motechproject.nms.testing.it.api.utils.RequestBuilder;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.nms.tracking.domain.ChangeLog;
@@ -32,6 +31,7 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -55,8 +55,6 @@ public class CircleImportServiceBundleIT extends BasePaxIT {
     CircleDataService circleDataService;
     @Inject
     StateDataService stateDataService;
-    @Inject
-    StateService stateService;
     @Inject
     CircleImportService circleImportService;
 
@@ -84,12 +82,12 @@ public class CircleImportServiceBundleIT extends BasePaxIT {
 
         testingService.clearDatabase();
 
-        Gujarat = stateService.create(new State("Gujarat", 1L));
-        Daman = stateService.create(new State("Daman & Diu", 2L));
-        Dadra = stateService.create(new State("Dadra & Nagar Haveli", 3L));
-        Haryana = stateService.create(new State("Haryana", 4L));
-        Pradesh = stateService.create(new State("Uttar Pradesh", 5L));
-        Uttarakhand = stateService.create(new State("Uttarakhand", 6L));
+        Gujarat = stateDataService.create(new State("Gujarat", 1L));
+        Daman = stateDataService.create(new State("Daman & Diu", 2L));
+        Dadra = stateDataService.create(new State("Dadra & Nagar Haveli", 3L));
+        Haryana = stateDataService.create(new State("Haryana", 4L));
+        Pradesh = stateDataService.create(new State("Uttar Pradesh", 5L));
+        Uttarakhand = stateDataService.create(new State("Uttarakhand", 6L));
     }
 
     // Test missing circle name
@@ -127,17 +125,17 @@ public class CircleImportServiceBundleIT extends BasePaxIT {
         assertTrue(circle.getStates().contains(Daman));
         assertTrue(circle.getStates().contains(Dadra));
 
-        state = stateService.findByName("Gujarat");
+        state = stateDataService.findByName("Gujarat");
         assertNotNull(state);
         assertEquals(1, state.getCircles().size());
         assertTrue(state.getCircles().contains(circle));
 
-        state = stateService.findByName("Daman & Diu");
+        state = stateDataService.findByName("Daman & Diu");
         assertNotNull(state);
         assertEquals(1, state.getCircles().size());
         assertTrue(state.getCircles().contains(circle));
 
-        state = stateService.findByName("Dadra & Nagar Haveli");
+        state = stateDataService.findByName("Dadra & Nagar Haveli");
         assertNotNull(state);
         assertEquals(1, state.getCircles().size());
         assertTrue(state.getCircles().contains(circle));
@@ -147,7 +145,7 @@ public class CircleImportServiceBundleIT extends BasePaxIT {
         assertEquals(1, circle.getStates().size());
         assertTrue(circle.getStates().contains(Haryana));
 
-        state = stateService.findByName("Haryana");
+        state = stateDataService.findByName("Haryana");
         assertNotNull(state);
         assertEquals(1, state.getCircles().size());
         assertTrue(state.getCircles().contains(circle));
@@ -157,7 +155,7 @@ public class CircleImportServiceBundleIT extends BasePaxIT {
         assertEquals(1, circle.getStates().size());
         assertTrue(circle.getStates().contains(Pradesh));
 
-        state = stateService.findByName("Uttar Pradesh");
+        state = stateDataService.findByName("Uttar Pradesh");
         assertNotNull(state);
         assertEquals(2, state.getCircles().size());
         assertTrue(state.getCircles().contains(circle));
@@ -168,12 +166,12 @@ public class CircleImportServiceBundleIT extends BasePaxIT {
         assertTrue(circle.getStates().contains(Pradesh));
         assertTrue(circle.getStates().contains(Uttarakhand));
 
-        state = stateService.findByName("Uttar Pradesh");
+        state = stateDataService.findByName("Uttar Pradesh");
         assertNotNull(state);
         assertEquals(2, state.getCircles().size());
         assertTrue(state.getCircles().contains(circle));
 
-        state = stateService.findByName("Uttarakhand");
+        state = stateDataService.findByName("Uttarakhand");
         assertNotNull(state);
         assertEquals(1, state.getCircles().size());
         assertTrue(state.getCircles().contains(circle));

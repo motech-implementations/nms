@@ -20,7 +20,7 @@ import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
-import org.motechproject.nms.region.service.StateService;
+import org.motechproject.nms.region.service.LanguageService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,15 +38,15 @@ public class SubscriptionHelper {
     private SubscriptionService subscriptionService;
     private SubscriberDataService subscriberDataService;
     private SubscriptionPackDataService subscriptionPackDataService;
-    private RegionHelper rh;
+    private RegionHelper regionHelper;
 
     public SubscriptionHelper(SubscriptionService subscriptionService,
                               SubscriberDataService subscriberDataService,
                               SubscriptionPackDataService subscriptionPackDataService,
                               LanguageDataService languageDataService,
+                              LanguageService languageService,
                               CircleDataService circleDataService,
                               StateDataService stateDataService,
-                              StateService stateService,
                               DistrictDataService districtDataService,
                               DistrictService districtService) {
 
@@ -54,7 +54,7 @@ public class SubscriptionHelper {
         this.subscriberDataService = subscriberDataService;
         this.subscriptionPackDataService = subscriptionPackDataService;
 
-        rh = new RegionHelper(languageDataService, circleDataService, stateDataService, stateService,
+        this.regionHelper = new RegionHelper(languageDataService, languageService, circleDataService, stateDataService,
                 districtDataService, districtService);
     }
 
@@ -135,7 +135,11 @@ public class SubscriptionHelper {
         Subscriber subscriber = subscriberDataService.findByNumber(number);
 
         if (null == subscriber) {
-            subscriber = subscriberDataService.create(new Subscriber(number, rh.hindiLanguage(), rh.delhiCircle()));
+            subscriber = subscriberDataService.create(new Subscriber(
+                    number,
+                    regionHelper.hindiLanguage(),
+                    regionHelper.delhiCircle()
+            ));
         }
 
         if (SubscriptionPackType.PREGNANCY == packType) {

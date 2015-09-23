@@ -22,7 +22,7 @@ import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
-import org.motechproject.nms.region.service.StateService;
+import org.motechproject.nms.region.service.LanguageService;
 import org.motechproject.nms.testing.it.utils.SubscriptionHelper;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
@@ -57,9 +57,9 @@ public class SubscriberServiceBundleIT extends BasePaxIT {
     @Inject
     LanguageDataService languageDataService;
     @Inject
-    StateDataService stateDataService;
+    LanguageService languageService;
     @Inject
-    StateService stateService;
+    StateDataService stateDataService;
     @Inject
     DistrictDataService districtDataService;
     @Inject
@@ -76,7 +76,7 @@ public class SubscriberServiceBundleIT extends BasePaxIT {
     @Before
     public void setupTestData() {
         sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
-                languageDataService, circleDataService, stateDataService, stateService, districtDataService,
+                languageDataService, languageService, circleDataService, stateDataService, districtDataService,
                 districtService);
 
         clearDatabase();

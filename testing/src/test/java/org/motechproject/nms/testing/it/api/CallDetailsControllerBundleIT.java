@@ -29,7 +29,7 @@ import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
-import org.motechproject.nms.region.service.StateService;
+import org.motechproject.nms.region.service.LanguageService;
 import org.motechproject.nms.testing.it.utils.RegionHelper;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
@@ -81,11 +81,11 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
     @Inject
     LanguageDataService languageDataService;
     @Inject
+    LanguageService languageService;
+    @Inject
     CircleDataService circleDataService;
     @Inject
     StateDataService stateDataService;
-    @Inject
-    StateService stateService;
     @Inject
     DistrictDataService districtDataService;
     @Inject
@@ -97,7 +97,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
     @Before
     public void clearDatabase() {
         testingService.clearDatabase();
-        rh = new RegionHelper(languageDataService, circleDataService, stateDataService, stateService,
+        rh = new RegionHelper(languageDataService, languageService, circleDataService, stateDataService,
                 districtDataService, districtService);
     }
 

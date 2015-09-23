@@ -10,8 +10,8 @@ import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
+import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.LanguageService;
-import org.motechproject.nms.region.service.StateService;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
@@ -42,7 +42,7 @@ public class LanguageServiceBundleIT extends BasePaxIT {
     LanguageService languageService;
 
     @Inject
-    StateService stateService;
+    StateDataService stateDataService;
 
     @Inject
     DistrictDataService districtDataService;
@@ -64,7 +64,7 @@ public class LanguageServiceBundleIT extends BasePaxIT {
         state.setName("State 1");
         state.setCode(1L);
 
-        stateService.create(state);
+        stateDataService.create(state);
 
         District district = new District();
         district.setName("District 1");
@@ -94,7 +94,7 @@ public class LanguageServiceBundleIT extends BasePaxIT {
 
         state.setCircles(new ArrayList<>(Collections.singletonList(circle)));
         state.getDistricts().addAll(new ArrayList<>(Arrays.asList(district, district2, district3)));
-        stateService.update(state);
+        stateDataService.update(state);
     }
 
     @Test

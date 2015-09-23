@@ -20,14 +20,13 @@ import org.motechproject.nms.props.domain.Service;
 import org.motechproject.nms.props.repository.DeployedServiceDataService;
 import org.motechproject.nms.region.domain.Language;
 import org.motechproject.nms.region.domain.NationalDefaultLanguage;
-import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.NationalDefaultLanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
-import org.motechproject.nms.region.service.StateService;
+import org.motechproject.nms.region.service.LanguageService;
 import org.motechproject.nms.testing.it.utils.RegionHelper;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
@@ -41,7 +40,6 @@ import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
 import java.io.IOException;
-import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -61,13 +59,13 @@ public class LanguageControllerBundleIT extends BasePaxIT {
     LanguageDataService languageDataService;
 
     @Inject
+    LanguageService languageService;
+
+    @Inject
     ServiceUsageCapDataService serviceUsageCapDataService;
 
     @Inject
     StateDataService stateDataService;
-
-    @Inject
-    StateService stateService;
 
     @Inject
     DeployedServiceDataService deployedServiceDataService;
@@ -89,12 +87,11 @@ public class LanguageControllerBundleIT extends BasePaxIT {
 
     private RegionHelper rh;
 
-
     @Before
     public void setupTestData() {
         testingService.clearDatabase();
 
-        rh = new RegionHelper(languageDataService, circleDataService, stateDataService, stateService,
+        rh = new RegionHelper(languageDataService, languageService, circleDataService, stateDataService,
                 districtDataService, districtService);
         rh.newDelhiDistrict();
         rh.delhiCircle();
@@ -107,9 +104,6 @@ public class LanguageControllerBundleIT extends BasePaxIT {
         // Services not deployed in KARNATAKA
         rh.bangaloreDistrict();
         rh.karnatakaCircle();
-        State karnatakaState = rh.karnatakaState();
-        karnatakaState.setDistricts(Arrays.asList(rh.bangaloreDistrict()));
-        stateService.update(karnatakaState);
     }
 
     private void createFlwCappedServiceNoUsageNoLocationNoLanguage() {

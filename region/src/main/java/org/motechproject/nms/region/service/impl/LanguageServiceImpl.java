@@ -62,6 +62,18 @@ public class LanguageServiceImpl implements LanguageService {
     }
 
 
+    /**
+     * Given a language name returns the object if one exists
+     * @param name the language name
+     * @return The language Record if it exists
+     */
+    @Override
+    @Cacheable("language-name")
+    public Language getForName(String name) {
+        return languageDataService.findByName(name);
+    }
+
+
     @Override
     @Cacheable("language-all-for-circle")
     public Set<Language> getAllForCircle(final Circle circle) {
@@ -142,8 +154,8 @@ public class LanguageServiceImpl implements LanguageService {
     }
 
     @MotechListener(subjects = { LANGUAGE_CACHE_EVICT_MESSAGE })
-    @CacheEvict(value = {"language-code", "language-all-for-circle", "language-all", "language-national-default" },
-            allEntries = true)
+    @CacheEvict(value = {"language-code", "language-name", "language-all-for-circle", "language-all",
+            "language-national-default" }, allEntries = true)
     public void cacheEvict(MotechEvent event) {
         LOGGER.debug("*** RECEIVE CACHE EVICT MSG ***");
     }

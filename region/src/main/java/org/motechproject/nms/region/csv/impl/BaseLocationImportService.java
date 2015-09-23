@@ -13,10 +13,10 @@ import org.motechproject.nms.region.domain.HealthBlock;
 import org.motechproject.nms.region.domain.HealthFacility;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.domain.Taluka;
+import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.region.service.HealthBlockService;
 import org.motechproject.nms.region.service.HealthFacilityService;
-import org.motechproject.nms.region.service.StateService;
 import org.motechproject.nms.region.service.TalukaService;
 import org.springframework.transaction.annotation.Transactional;
 import org.supercsv.cellprocessor.ift.CellProcessor;
@@ -61,11 +61,11 @@ public abstract class BaseLocationImportService<T> {
         }
     }
 
-    protected CellProcessor mapState(final StateService stateService) {
+    protected CellProcessor mapState(final StateDataService stateDataService) {
         return new GetInstanceByLong<State>() {
             @Override
             public State retrieve(Long value) {
-                return stateService.findByCode(value);
+                return stateDataService.findByCode(value);
             }
         };
     }

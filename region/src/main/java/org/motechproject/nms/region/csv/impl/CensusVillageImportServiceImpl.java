@@ -5,8 +5,8 @@ import org.motechproject.nms.csv.utils.GetString;
 import org.motechproject.nms.csv.utils.Store;
 import org.motechproject.nms.region.csv.CensusVillageImportService;
 import org.motechproject.nms.region.domain.Village;
+import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
-import org.motechproject.nms.region.service.StateService;
 import org.motechproject.nms.region.service.TalukaService;
 import org.motechproject.nms.region.service.VillageService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,19 +35,19 @@ public class CensusVillageImportServiceImpl extends BaseLocationImportService<Vi
 
     private VillageService villageService;
     private DistrictService districtService;
-    private StateService stateService;
+    private StateDataService stateDataService;
     private TalukaService talukaService;
 
     @Autowired
     public CensusVillageImportServiceImpl(VillageService villageService,
                                           TalukaService talukaService,
                                           DistrictService districtService,
-                                          StateService stateService) {
+                                          StateDataService stateDataService) {
         super(Village.class);
         this.villageService = villageService;
         this.talukaService = talukaService;
         this.districtService = districtService;
-        this.stateService = stateService;
+        this.stateDataService = stateDataService;
     }
 
     @Override
@@ -73,7 +73,7 @@ public class CensusVillageImportServiceImpl extends BaseLocationImportService<Vi
         mapping.put(VILLAGE_CODE, new GetLong());
         mapping.put(REGIONAL_NAME, new GetString());
         mapping.put(NAME, new GetString());
-        mapping.put(STATE_ID, store.store(STATE, mapState(stateService)));
+        mapping.put(STATE_ID, store.store(STATE, mapState(stateDataService)));
         mapping.put(DISTRICT_CODE, store.store(DISTRICT, mapDistrict(store, districtService)));
         mapping.put(TALUKA_CODE, mapTaluka(store, talukaService));
         return mapping;

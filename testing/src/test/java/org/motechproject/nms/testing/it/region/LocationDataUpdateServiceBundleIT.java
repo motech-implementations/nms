@@ -27,8 +27,6 @@ import org.motechproject.nms.region.repository.HealthSubFacilityDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.repository.TalukaDataService;
 import org.motechproject.nms.region.repository.VillageDataService;
-import org.motechproject.nms.region.service.DistrictService;
-import org.motechproject.nms.region.service.StateService;
 import org.motechproject.nms.testing.it.api.utils.RequestBuilder;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.nms.tracking.domain.ChangeLog;
@@ -63,12 +61,6 @@ public class LocationDataUpdateServiceBundleIT extends BasePaxIT {
 
     @Inject
     private StateDataService stateDataService;
-
-    @Inject
-    private StateService stateService;
-
-    @Inject
-    private DistrictService districtService;
 
     @Inject
     private DistrictDataService districtDataService;
@@ -108,7 +100,7 @@ public class LocationDataUpdateServiceBundleIT extends BasePaxIT {
     }
 
     private State createState() {
-        State state = stateService.create(new State("Delhi", 1234L));
+        State state = stateDataService.create(new State("Delhi", 1234L));
         return state;
     }
 
@@ -129,7 +121,7 @@ public class LocationDataUpdateServiceBundleIT extends BasePaxIT {
         district.setName("district name");
         district.setState(state);
         district.setRegionalName("district regional name");
-        district = districtService.create(district);
+        district = districtDataService.create(district);
         return district;
     }
 
@@ -179,7 +171,7 @@ public class LocationDataUpdateServiceBundleIT extends BasePaxIT {
                 "state.csv");
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
 
-        State updatedState = stateService.findByCode(1234l);
+        State updatedState = stateDataService.findByCode(1234l);
         assertEquals(orginalState.getId(), updatedState.getId());// refer same
                                                                  // state
         assertEquals("Delhi", updatedState.getName());
@@ -205,7 +197,7 @@ public class LocationDataUpdateServiceBundleIT extends BasePaxIT {
         originalDistrict.setName("bihar");
         originalDistrict.setState(state);
         originalDistrict.setRegionalName("bihar region");
-        originalDistrict = districtService.create(originalDistrict);
+        originalDistrict = districtDataService.create(originalDistrict);
         assertEquals("bihar", originalDistrict.getName());
         assertEquals("bihar region", originalDistrict.getRegionalName());
         

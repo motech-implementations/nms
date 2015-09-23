@@ -8,7 +8,7 @@ import org.motechproject.nms.flw.service.ServiceUsageCapService;
 import org.motechproject.nms.props.domain.Service;
 import org.motechproject.nms.props.repository.DeployedServiceDataService;
 import org.motechproject.nms.region.domain.State;
-import org.motechproject.nms.region.service.StateService;
+import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
@@ -36,7 +36,7 @@ public class ServiceUsageCapServiceBundleIT extends BasePaxIT {
     ServiceUsageCapService serviceUsageCapService;
 
     @Inject
-    StateService stateService;
+    StateDataService stateDataService;
 
     @Inject
     DeployedServiceDataService deployedServiceDataService;
@@ -48,7 +48,7 @@ public class ServiceUsageCapServiceBundleIT extends BasePaxIT {
         testingService.clearDatabase();
         deployedServiceDataService.deleteAll();
         serviceUsageCapDataService.deleteAll();
-        stateService.deleteAll();
+        stateDataService.deleteAll();
     }
 
     @Test
@@ -61,7 +61,7 @@ public class ServiceUsageCapServiceBundleIT extends BasePaxIT {
         setupData();
 
         State state = new State("New Jersey", 1l);
-        stateService.create(state);
+        stateDataService.create(state);
 
         ServiceUsageCap serviceUsageCap = serviceUsageCapService.getServiceUsageCap(state, Service.MOBILE_ACADEMY);
 
@@ -69,7 +69,7 @@ public class ServiceUsageCapServiceBundleIT extends BasePaxIT {
         assertEquals(null, serviceUsageCap.getService());
         assertEquals(-1, serviceUsageCap.getMaxUsageInPulses());
 
-        stateService.delete(state);
+        stateDataService.delete(state);
     }
 
     @Test
@@ -77,7 +77,7 @@ public class ServiceUsageCapServiceBundleIT extends BasePaxIT {
         setupData();
 
         State state = new State("New Jersey", 1l);
-        stateService.create(state);
+        stateDataService.create(state);
 
         ServiceUsageCap serviceUsageCap = new ServiceUsageCap(state, Service.MOBILE_ACADEMY, 100);
         serviceUsageCapDataService.create(serviceUsageCap);
@@ -89,7 +89,7 @@ public class ServiceUsageCapServiceBundleIT extends BasePaxIT {
         assertEquals(100, serviceUsageCap.getMaxUsageInPulses());
 
         serviceUsageCapDataService.delete(serviceUsageCap);
-        stateService.delete(state);
+        stateDataService.delete(state);
     }
 
     @Test
@@ -97,7 +97,7 @@ public class ServiceUsageCapServiceBundleIT extends BasePaxIT {
         setupData();
 
         State state = new State("New Jersey", 1l);
-        stateService.create(state);
+        stateDataService.create(state);
 
         ServiceUsageCap serviceUsageCap = new ServiceUsageCap(null, Service.MOBILE_ACADEMY, 100);
         serviceUsageCapDataService.create(serviceUsageCap);
@@ -109,7 +109,7 @@ public class ServiceUsageCapServiceBundleIT extends BasePaxIT {
         assertEquals(100, serviceUsageCap.getMaxUsageInPulses());
 
         serviceUsageCapDataService.delete(serviceUsageCap);
-        stateService.delete(state);
+        stateDataService.delete(state);
     }
 
     @Test
@@ -117,7 +117,7 @@ public class ServiceUsageCapServiceBundleIT extends BasePaxIT {
         setupData();
 
         State state = new State("New Jersey", 1l);
-        stateService.create(state);
+        stateDataService.create(state);
 
         ServiceUsageCap serviceUsageCapState = new ServiceUsageCap(state, Service.MOBILE_ACADEMY, 100);
         serviceUsageCapDataService.create(serviceUsageCapState);
@@ -133,7 +133,7 @@ public class ServiceUsageCapServiceBundleIT extends BasePaxIT {
 
         serviceUsageCapDataService.delete(serviceUsageCapState);
         serviceUsageCapDataService.delete(serviceUsageCapNat);
-        stateService.delete(state);
+        stateDataService.delete(state);
     }
 
     @Test
@@ -141,7 +141,7 @@ public class ServiceUsageCapServiceBundleIT extends BasePaxIT {
         setupData();
 
         State state = new State("New Jersey", 1l);
-        stateService.create(state);
+        stateDataService.create(state);
 
         ServiceUsageCap serviceUsageCap1 = new ServiceUsageCap(state, Service.MOBILE_ACADEMY, 100);
         serviceUsageCapDataService.create(serviceUsageCap1);
@@ -153,7 +153,7 @@ public class ServiceUsageCapServiceBundleIT extends BasePaxIT {
         assertEquals(-1, serviceUsageCap.getMaxUsageInPulses());
 
         serviceUsageCapDataService.delete(serviceUsageCap1);
-        stateService.delete(state);
+        stateDataService.delete(state);
     }
 
     @Test
@@ -161,7 +161,7 @@ public class ServiceUsageCapServiceBundleIT extends BasePaxIT {
         setupData();
 
         State state = new State("New Jersey", 1l);
-        stateService.create(state);
+        stateDataService.create(state);
 
         ServiceUsageCap serviceUsageCap1 = new ServiceUsageCap(state, Service.MOBILE_ACADEMY, 100);
         serviceUsageCapDataService.create(serviceUsageCap1);
@@ -173,7 +173,7 @@ public class ServiceUsageCapServiceBundleIT extends BasePaxIT {
         assertEquals(-1, serviceUsageCap.getMaxUsageInPulses());
 
         serviceUsageCapDataService.delete(serviceUsageCap1);
-        stateService.delete(state);
+        stateDataService.delete(state);
     }
 
 }

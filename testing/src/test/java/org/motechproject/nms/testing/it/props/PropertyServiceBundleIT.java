@@ -8,7 +8,6 @@ import org.motechproject.nms.props.repository.DeployedServiceDataService;
 import org.motechproject.nms.props.service.PropertyService;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.StateDataService;
-import org.motechproject.nms.region.service.StateService;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
@@ -31,9 +30,6 @@ public class PropertyServiceBundleIT extends BasePaxIT {
     StateDataService stateDataService;
 
     @Inject
-    StateService stateService;
-
-    @Inject
     DeployedServiceDataService deployedServiceDataService;
 
     @Inject
@@ -47,7 +43,7 @@ public class PropertyServiceBundleIT extends BasePaxIT {
     }
 
     private State makeState(Long code, String name) {
-        State state = stateService.findByCode(code);
+        State state = stateDataService.findByCode(code);
         if (state != null) {
             return state;
         }
@@ -56,7 +52,7 @@ public class PropertyServiceBundleIT extends BasePaxIT {
         state.setName(name);
         state.setCode(code);
 
-        return stateService.create(state);
+        return stateDataService.create(state);
     }
 
     // Test a state/service that is deployed

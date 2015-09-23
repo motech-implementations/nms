@@ -17,8 +17,6 @@ import org.motechproject.nms.api.web.contract.kilkari.InboxCallDetailsRequest;
 import org.motechproject.nms.api.web.contract.kilkari.InboxResponse;
 import org.motechproject.nms.api.web.contract.kilkari.InboxSubscriptionDetailResponse;
 import org.motechproject.nms.api.web.contract.kilkari.SubscriptionRequest;
-import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
-import org.motechproject.nms.flw.repository.ServiceUsageCapDataService;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.domain.InboxCallData;
 import org.motechproject.nms.kilkari.domain.InboxCallDetailRecord;
@@ -46,7 +44,7 @@ import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
-import org.motechproject.nms.region.service.StateService;
+import org.motechproject.nms.region.service.LanguageService;
 import org.motechproject.nms.testing.it.api.utils.HttpDeleteWithBody;
 import org.motechproject.nms.testing.it.utils.RegionHelper;
 import org.motechproject.nms.testing.it.utils.SubscriptionHelper;
@@ -96,17 +94,13 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     @Inject
     SubscriptionDataService subscriptionDataService;
     @Inject
-    FrontLineWorkerDataService frontLineWorkerDataService;
-    @Inject
-    ServiceUsageCapDataService serviceUsageCapDataService;
-    @Inject
     LanguageDataService languageDataService;
+    @Inject
+    LanguageService languageService;
     @Inject
     CircleDataService circleDataService;
     @Inject
     StateDataService stateDataService;
-    @Inject
-    StateService stateService;
     @Inject
     DistrictDataService districtDataService;
     @Inject
@@ -129,11 +123,11 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     public void setupTestData() {
         testingService.clearDatabase();
 
-        rh = new RegionHelper(languageDataService, circleDataService, stateDataService, stateService,
+        rh = new RegionHelper(languageDataService, languageService, circleDataService, stateDataService,
                 districtDataService, districtService);
 
         sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
-                languageDataService, circleDataService, stateDataService, stateService, districtDataService,
+                languageDataService, languageService, circleDataService, stateDataService, districtDataService,
                 districtService);
 
         // subscriber1 subscribed to child pack only
@@ -1554,7 +1548,6 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         // setup data to remove 2 messages per week configuration for Pregnancy pack
         testingService.clearDatabase();
 
-
         deployedServiceDataService.create(new DeployedService(rh.delhiState(), Service.KILKARI));
 
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
@@ -1753,7 +1746,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         state1.setCode(11L);
         state1.getDistricts().add(district1);
 
-        stateService.create(state1);
+        stateDataService.create(state1);
 
         // setup state2 data
         Language language2 = new Language("Br", "bhojpuri");
@@ -1770,7 +1763,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         state2.setCode(21L);
         state2.getDistricts().add(district2);
 
-        stateService.create(state2);
+        stateDataService.create(state2);
 
         // deployed KILKARI service for state1 only
         deployedServiceDataService.create(new DeployedService(state1,
@@ -1831,7 +1824,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         state1.setCode(11L);
         state1.getDistricts().add(district1);
 
-        stateService.create(state1);
+        stateDataService.create(state1);
 
         // setup state2 data
         Language language2 = new Language("Br", "bhojpuri");
@@ -1848,7 +1841,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         state2.setCode(21L);
         state2.getDistricts().add(district2);
 
-        stateService.create(state2);
+        stateDataService.create(state2);
 
         // Not deployed KILKARI service for state1 and state2
 

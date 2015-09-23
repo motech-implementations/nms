@@ -12,8 +12,6 @@ import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
-import org.motechproject.nms.region.service.DistrictService;
-import org.motechproject.nms.region.service.StateService;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
@@ -45,13 +43,7 @@ public class BundleIT extends BasePaxIT {
     StateDataService stateDataService;
 
     @Inject
-    StateService stateService;
-
-    @Inject
     DistrictDataService districtDataService;
-
-    @Inject
-    DistrictService districtService;
 
     @Inject
     MctsBeneficiaryImportService mctsBeneficiaryImportService;
@@ -72,7 +64,7 @@ public class BundleIT extends BasePaxIT {
         State state = new State("Delhi", 1L);
         //the \1 is a hack - Filter should take a Long constructor
         if (stateDataService.countForFilters(new Filters(new Filter("code", "\1"))) == 0) {
-                stateService.create(state);
+                stateDataService.create(state);
         }
 
         District district = new District();
@@ -82,7 +74,7 @@ public class BundleIT extends BasePaxIT {
         district.setRegionalName("Delhi District");
         //the \2 is a hack - Filter should take a Long constructor
         if (districtDataService.countForFilters(new Filters(new Filter("code", "\2"))) == 0) {
-           districtService.create(district);
+           districtDataService.create(district);
         }
     }
 

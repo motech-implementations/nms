@@ -13,6 +13,7 @@ import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Language;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.CircleDataService;
+import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
@@ -48,6 +49,7 @@ public class LanguageLocationImportServiceImpl implements LanguageLocationImport
     private LanguageDataService languageDataService;
     private CircleDataService circleDataService;
     private StateDataService stateDataService;
+    private DistrictDataService districtDataService;
     private DistrictService districtService;
 
     @Override
@@ -133,7 +135,7 @@ public class LanguageLocationImportServiceImpl implements LanguageLocationImport
 
         for (District district: districts) {
             district.setLanguage(language);
-            districtService.update(district);
+            districtDataService.update(district);
         }
 
         if (defaultForCircle) {
@@ -200,6 +202,11 @@ public class LanguageLocationImportServiceImpl implements LanguageLocationImport
     @Autowired
     public void setStateDataService(StateDataService stateDataService) {
         this.stateDataService = stateDataService;
+    }
+
+    @Autowired
+    public void setDistrictDataService(DistrictDataService districtDataService) {
+        this.districtDataService = districtDataService;
     }
 
     @Autowired

@@ -22,7 +22,6 @@ import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
-import org.motechproject.nms.region.service.StateService;
 import org.motechproject.nms.testing.it.api.utils.RequestBuilder;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
@@ -62,8 +61,6 @@ public class LanguageLocationCodesImportServiceBundleIT extends BasePaxIT {
     @Inject
     StateDataService stateDataService;
     @Inject
-    StateService stateService;
-    @Inject
     DistrictDataService districtDataService;
     @Inject
     DistrictService districtService;
@@ -91,24 +88,24 @@ public class LanguageLocationCodesImportServiceBundleIT extends BasePaxIT {
         District district11 = createDistrict(state1, 11L, "District 11", null);
         District district12 = createDistrict(state1, 12L, "District 12", null);
         state1.getDistricts().addAll(Arrays.asList(district11, district12));
-        state1 = stateService.create(state1);
+        stateDataService.create(state1);
 
         State state2 = createState(2L, "State 2");
         District district21 = createDistrict(state2, 21L, "District 21", null);
         state2.getDistricts().addAll(Collections.singletonList(district21));
-        districtService.create(district21);
+        districtDataService.create(district21);
 
         state3 = createState(3L, "State 3");
         District district31 = createDistrict(state3, 31L, "District 31", null);
         District district32 = createDistrict(state3, 32L, "District 32", lang1);
         state3.getDistricts().addAll(Arrays.asList(district31, district32));
-        state3 = stateService.create(state3);
+        stateDataService.create(state3);
 
         State state4 = createState(4L, "State 4");
         District district41 = createDistrict(state4, 41L, "District 41", lang1);
         District district42 = createDistrict(state4, 42L, "District 42", null);
         state4.getDistricts().addAll(Arrays.asList(district41, district42));
-        stateService.create(state4);
+        stateDataService.create(state4);
 
         Circle circle1 = createCircle("Circle 1");
         circle1.getStates().addAll(Arrays.asList(state1, state2));
@@ -275,19 +272,28 @@ public class LanguageLocationCodesImportServiceBundleIT extends BasePaxIT {
      * Method used to import CSV File For Location Data i.e circle, state and
      * district & language location code
      */
-    private HttpResponse importCsvFileForLocationData(String location, String fileName) throws InterruptedException, IOException {
+    private HttpResponse importCsvFileForLocationData(String location,
+            String fileName)
+            throws InterruptedException, IOException {
         HttpPost httpPost;
-        if (location == null) {
-            httpPost = new HttpPost(String.format("http://localhost:%d/region/languageLocationCode/import", TestContext.getJettyPort()));
+        if (null==location) {
+            httpPost = new HttpPost(String.format(
+                    "http://localhost:%d/region/languageLocationCode/import",
+                    TestContext.getJettyPort()));
         } else {
-            httpPost = new HttpPost(String.format("http://localhost:%d/region/data/import/%s", TestContext.getJettyPort(), location));
+            httpPost = new HttpPost(String.format(
+                    "http://localhost:%d/region/data/import/%s",
+                    TestContext.getJettyPort(), location));
         }
-        FileBody fileBody = new FileBody(new File(String.format("src/test/resources/csv/%s", fileName)));
+        FileBody fileBody = new FileBody(new File(String.format(
+                "src/test/resources/csv/%s", fileName)));
         MultipartEntityBuilder builder = MultipartEntityBuilder.create();
         builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
         builder.addPart("csvFile", fileBody);
         httpPost.setEntity(builder.build());
-        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpPost, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD);
         return response;
     }
 
@@ -295,15 +301,17 @@ public class LanguageLocationCodesImportServiceBundleIT extends BasePaxIT {
      * To verify LLC is set successfully for all the districts in a state.
      */
     @Test
-    public void verifyFT518() throws InterruptedException, IOException {
-        testingService.clearDatabase();
-
+    public void verifyFT518() throws InterruptedException,
+            IOException {
+        HttpResponse response = null;
         // Import state
-        HttpResponse response = importCsvFileForLocationData("state", "state_ft_518.csv");
+        response = importCsvFileForLocationData("state",
+                "state_ft_518.csv");
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
 
         // Import district
-        response = importCsvFileForLocationData("district", "district_ft_518.csv");
+        response = importCsvFileForLocationData("district",
+                "district_ft_518.csv");
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
 
         // Import circle
@@ -313,8 +321,8 @@ public class LanguageLocationCodesImportServiceBundleIT extends BasePaxIT {
         Circle ncrCircle = circleDataService.findByName("DELHI-NCR");
         Circle upWestCircle = circleDataService.findByName("UP-WEST");
 
-        State upState = stateService.findByName("UTTAR PRADESH");
-        State delhiState = stateService.findByName("DELHI");
+        State upState = stateDataService.findByName("UTTAR PRADESH");
+        State delhiState = stateDataService.findByName("DELHI");
 
         assertNotNull(ncrCircle);
         assertNotNull(upWestCircle);
@@ -325,10 +333,10 @@ public class LanguageLocationCodesImportServiceBundleIT extends BasePaxIT {
         assertNull(upWestCircle.getDefaultLanguage());
 
         // fetch district and assert
-        District agraDistrict = districtService.findByStateAndName(upState, "AGRA");
-        District aligarhDistrict = districtService.findByStateAndName(upState, "ALIGARH");
-        District noidaDistrict = districtService.findByStateAndName(upState, "NOIDA");
-        District northDistrict = districtService.findByStateAndName(delhiState, "NORTH DISTRICT");
+        District agraDistrict=districtService.findByStateAndName(upState, "AGRA");
+        District aligarhDistrict=districtService.findByStateAndName(upState, "ALIGARH");
+        District noidaDistrict=districtService.findByStateAndName(upState, "NOIDA");
+        District northDistrict=districtService.findByStateAndName(delhiState, "NORTH DISTRICT");
 
         assertNull(agraDistrict.getLanguage());
         assertNull(aligarhDistrict.getLanguage());
@@ -344,13 +352,15 @@ public class LanguageLocationCodesImportServiceBundleIT extends BasePaxIT {
         upWestCircle = circleDataService.findByName("UP-WEST");
 
         agraDistrict = districtService.findByStateAndName(upState, "AGRA");
-        aligarhDistrict = districtService.findByStateAndName(upState, "ALIGARH");
+        aligarhDistrict = districtService
+                .findByStateAndName(upState, "ALIGARH");
         noidaDistrict = districtService.findByStateAndName(upState, "NOIDA");
-        northDistrict = districtService.findByStateAndName(delhiState, "NORTH DISTRICT");
+        northDistrict = districtService.findByStateAndName(delhiState,
+                "NORTH DISTRICT");
 
         // assert circle for default LLC
-        assertEquals("HINDI", ((Language) circleDataService.getDetachedField(upWestCircle, "defaultLanguage")).getName());
-        assertEquals("ENGLISH", ((Language) circleDataService.getDetachedField(ncrCircle, "defaultLanguage")).getName());
+        assertEquals("HINDI", ((Language)circleDataService.getDetachedField(upWestCircle, "defaultLanguage")).getName());
+        assertEquals("ENGLISH", ((Language)circleDataService.getDetachedField(ncrCircle, "defaultLanguage")).getName());
 
         // assert district for LLC
         assertEquals("HINDI", agraDistrict.getLanguage().getName());
@@ -377,8 +387,8 @@ public class LanguageLocationCodesImportServiceBundleIT extends BasePaxIT {
         Circle ncrCircle = circleDataService.findByName("DELHI-NCR");
         Circle upWestCircle = circleDataService.findByName("UP-WEST");
 
-        State upState = stateService.findByName("UTTAR PRADESH");
-        State delhiState = stateService.findByName("DELHI");
+        State upState = stateDataService.findByName("UTTAR PRADESH");
+        State delhiState = stateDataService.findByName("DELHI");
 
         assertNotNull(ncrCircle);
         assertNotNull(upWestCircle);
@@ -409,8 +419,8 @@ public class LanguageLocationCodesImportServiceBundleIT extends BasePaxIT {
         Circle ncrCircle = circleDataService.findByName("DELHI-NCR");
         Circle upWestCircle = circleDataService.findByName("UP-WEST");
 
-        State upState = stateService.findByName("UTTAR PRADESH");
-        State delhiState = stateService.findByName("DELHI");
+        State upState = stateDataService.findByName("UTTAR PRADESH");
+        State delhiState = stateDataService.findByName("DELHI");
 
         assertNotNull(ncrCircle);
         assertNotNull(upWestCircle);

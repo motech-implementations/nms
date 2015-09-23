@@ -8,12 +8,12 @@ import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.domain.Village;
 import org.motechproject.nms.region.exception.InvalidLocationException;
+import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.region.service.HealthBlockService;
 import org.motechproject.nms.region.service.HealthFacilityService;
 import org.motechproject.nms.region.service.HealthSubFacilityService;
 import org.motechproject.nms.region.service.LocationService;
-import org.motechproject.nms.region.service.StateService;
 import org.motechproject.nms.region.service.TalukaService;
 import org.motechproject.nms.region.service.VillageService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,7 +38,7 @@ public class LocationServiceImpl implements LocationService {
     private static final String CENSUS_VILLAGE = "Village_ID";
     private static final String NON_CENSUS_VILLAGE = "SVID";
 
-    private StateService stateService;
+    private StateDataService stateDataService;
 
     private DistrictService districtService;
 
@@ -53,11 +53,11 @@ public class LocationServiceImpl implements LocationService {
     private HealthSubFacilityService healthSubFacilityService;
 
     @Autowired
-    public LocationServiceImpl(StateService stateService, DistrictService districtService,
+    public LocationServiceImpl(StateDataService stateDataService, DistrictService districtService,
                                TalukaService talukaService, VillageService villageService,
                                HealthBlockService healthBlockService, HealthFacilityService healthFacilityService,
                                HealthSubFacilityService healthSubFacilityService) {
-        this.stateService = stateService;
+        this.stateDataService = stateDataService;
         this.districtService = districtService;
         this.talukaService = talukaService;
         this.villageService = villageService;
@@ -76,7 +76,7 @@ public class LocationServiceImpl implements LocationService {
         if (locationMapping.get(STATE) == null || (Long) locationMapping.get(STATE) == 0) {
             return locations;
         }
-        State state = stateService.findByCode((Long) locationMapping.get(STATE));
+        State state = stateDataService.findByCode((Long) locationMapping.get(STATE));
         if (state == null) { // we are here because stateId wasn't null but fetch returned no data
             throw new InvalidLocationException(String.format(INVALID, STATE, locationMapping.get(STATE)));
         }
@@ -154,7 +154,7 @@ public class LocationServiceImpl implements LocationService {
     @Override
     public State getState(Long stateId) {
 
-        return stateService.findByCode(stateId);
+        return stateDataService.findByCode(stateId);
     }
 
     @Override

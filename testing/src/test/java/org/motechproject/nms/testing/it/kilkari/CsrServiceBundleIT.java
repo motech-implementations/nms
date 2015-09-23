@@ -7,8 +7,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.event.MotechEvent;
-import org.motechproject.event.listener.EventRelay;
-import org.motechproject.mds.config.SettingsService;
 import org.motechproject.nms.kilkari.domain.CallRetry;
 import org.motechproject.nms.kilkari.domain.CallStage;
 import org.motechproject.nms.kilkari.domain.CallSummaryRecord;
@@ -35,7 +33,7 @@ import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
-import org.motechproject.nms.region.service.StateService;
+import org.motechproject.nms.region.service.LanguageService;
 import org.motechproject.nms.testing.it.utils.CsrHelper;
 import org.motechproject.nms.testing.it.utils.RegionHelper;
 import org.motechproject.nms.testing.it.utils.SubscriptionHelper;
@@ -66,11 +64,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormat.forPattern("yyyyMMddHHmmss");
 
     @Inject
-    EventRelay eventRelay;
-    @Inject
     CsrService csrService;
-    @Inject
-    SettingsService settingsService;
     @Inject
     SubscriptionService subscriptionService;
     @Inject
@@ -82,6 +76,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
     @Inject
     LanguageDataService languageDataService;
     @Inject
+    LanguageService languageService;
+    @Inject
     CallRetryDataService callRetryDataService;
     @Inject
     CallSummaryRecordDataService csrDataService;
@@ -89,8 +85,6 @@ public class CsrServiceBundleIT extends BasePaxIT {
     CircleDataService circleDataService;
     @Inject
     StateDataService stateDataService;
-    @Inject
-    StateService stateService;
     @Inject
     DistrictDataService districtDataService;
     @Inject
@@ -105,18 +99,20 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
     @Before
     public void doTheNeedful() {
+
         testingService.clearDatabase();
 
-        rh = new RegionHelper(languageDataService, circleDataService, stateDataService, stateService,
+        rh = new RegionHelper(languageDataService, languageService, circleDataService, stateDataService,
                 districtDataService, districtService);
 
-        sh = new SubscriptionHelper(subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, circleDataService, stateDataService, stateService,
-                districtDataService, districtService);
+        sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
+                languageDataService, languageService, circleDataService, stateDataService, districtDataService,
+                districtService);
 
         sh.childPack();
         sh.pregnancyPack();
         csrService.buildMessageDurationCache();
+
     }
 
 
@@ -220,7 +216,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
         String timestamp = DateTime.now().toString(TIME_FORMATTER);
 
         CsrHelper helper = new CsrHelper(timestamp, subscriptionService, subscriptionPackDataService,
-                subscriberDataService, languageDataService, circleDataService, stateDataService, stateService,
+                subscriberDataService, languageDataService, languageService, circleDataService, stateDataService,
                 districtDataService, districtService);
 
         helper.makeRecords(1, 3, 0, 0);
@@ -1118,7 +1114,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
         String timestamp = DateTime.now().toString(TIME_FORMATTER);
 
         CsrHelper helper = new CsrHelper(timestamp, subscriptionService, subscriptionPackDataService,
-                subscriberDataService, languageDataService, circleDataService, stateDataService, stateService,
+                subscriberDataService, languageDataService, languageService, circleDataService, stateDataService,
                 districtDataService, districtService);
 
         helper.makeRecords(1, 0, 0, 0);

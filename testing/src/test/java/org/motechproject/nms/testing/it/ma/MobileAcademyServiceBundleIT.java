@@ -28,7 +28,7 @@ import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
-import org.motechproject.nms.region.service.StateService;
+import org.motechproject.nms.region.service.LanguageService;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
@@ -83,10 +83,10 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     LanguageDataService languageDataService;
 
     @Inject
-    StateDataService stateDataService;
+    LanguageService languageService;
 
     @Inject
-    StateService stateService;
+    StateDataService stateDataService;
 
     @Inject
     CircleDataService circleDataService;
@@ -393,8 +393,8 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         }
 
         createLanguageLocationData();
-        State sampleState = stateService.findByCode(1L);
-        Language language = languageDataService.findByCode("50");
+        State sampleState = stateDataService.findByCode(1L);
+        Language language = languageService.getForCode("50");
         flw = new FrontLineWorker("Test Worker", callingNumber);
         flw.setLanguage(language);
         flw.setState(sampleState);
@@ -439,12 +439,12 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     }
 
     private void createLanguageLocationData() {
-        Language ta = languageDataService.findByCode("50");
+        Language ta = languageService.getForCode("50");
         if (ta == null) {
             ta = languageDataService.create(new Language("50", "hin"));
         }
 
-        State state = stateService.findByCode(1L);
+        State state = stateDataService.findByCode(1L);
 
         if (state == null) {
             District district = new District();
@@ -457,7 +457,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
             state.setName("State 1");
             state.setCode(1L);
             state.getDistricts().add(district);
-            stateService.create(state);
+            stateDataService.create(state);
         }
     }
 

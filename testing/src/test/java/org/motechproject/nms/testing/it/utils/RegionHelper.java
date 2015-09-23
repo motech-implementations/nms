@@ -15,30 +15,27 @@ import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
-import org.motechproject.nms.region.service.StateService;
-
-import java.util.Arrays;
-import java.util.Collections;
+import org.motechproject.nms.region.service.LanguageService;
 
 public class RegionHelper {
     private LanguageDataService languageDataService;
+    private LanguageService languageService;
     private CircleDataService circleDataService;
     private DistrictDataService districtDataService;
     private DistrictService districtService;
     private StateDataService stateDataService;
-    private StateService stateService;
 
     public RegionHelper(LanguageDataService languageDataService,
+                        LanguageService languageService,
                         CircleDataService circleDataService,
                         StateDataService stateDataService,
-                        StateService stateService,
                         DistrictDataService districtDataService,
                         DistrictService districtService) {
 
         this.languageDataService = languageDataService;
+        this.languageService = languageService;
         this.circleDataService = circleDataService;
         this.stateDataService = stateDataService;
-        this.stateService = stateService;
         this.districtDataService = districtDataService;
         this.districtService = districtService;
     }
@@ -50,7 +47,7 @@ public class RegionHelper {
             c = circleDataService.create(new Circle("DE"));
             c.getStates().add(delhiState());
             c.setDefaultLanguage(hindiLanguage());
-            return circleDataService.update(c);
+            circleDataService.update(c);
         }
 
         return c;
@@ -62,20 +59,20 @@ public class RegionHelper {
         if (c == null) {
             c = circleDataService.create(new Circle("KA"));
             c.getStates().add(karnatakaState());
-            c = circleDataService.update(c);
+            circleDataService.update(c);
         }
 
         return c;
     }
 
     public State delhiState() {
-        State s = stateService.findByCode(1l);
+        State s = stateDataService.findByCode(1l);
 
         if (s == null) {
             s = new State();
             s.setName("National Capital Territory of Delhi");
             s.setCode(1L);
-            return stateService.create(s);
+            stateDataService.create(s);
         }
 
         return s;
@@ -83,13 +80,13 @@ public class RegionHelper {
 
 
     public State karnatakaState() {
-        State s = stateService.findByCode(2l);
+        State s = stateDataService.findByCode(2l);
 
         if (s == null) {
             s = new State();
             s.setName("Karnataka");
             s.setCode(2L);
-            return stateService.create(s);
+            stateDataService.create(s);
         }
 
         return s;
@@ -106,11 +103,7 @@ public class RegionHelper {
             d.setCode(1L);
             d.setState(delhiState());
             d.setLanguage(hindiLanguage());
-            d = districtService.create(d);
-            State s = delhiState();
-            s.setDistricts(Arrays.asList(d));
-            stateService.update(s);
-
+            districtDataService.create(d);
         }
 
         return d;
@@ -127,10 +120,7 @@ public class RegionHelper {
             d.setCode(5L);
             d.setState(delhiState());
             d.setLanguage(punjabiLanguage());
-            d = districtService.create(d);
-            State s = delhiState();
-            s.setDistricts(Collections.singletonList(d));
-            stateService.update(s);
+            districtDataService.create(d);
         }
 
         return d;
@@ -147,10 +137,7 @@ public class RegionHelper {
             d.setCode(4L);
             d.setState(karnatakaState());
             d.setLanguage(tamilLanguage());
-            d = districtService.create(d);
-            State s = karnatakaState();
-            s.setDistricts(Collections.singletonList(d));
-            stateService.update(s);
+            districtDataService.create(d);
         }
 
         return d;
@@ -167,10 +154,7 @@ public class RegionHelper {
             d.setCode(2L);
             d.setState(karnatakaState());
             d.setLanguage(kannadaLanguage());
-            d = districtService.create(d);
-            State s = karnatakaState();
-            s.setDistricts(Collections.singletonList(d));
-            stateService.update(s);
+            districtDataService.create(d);
         }
 
         return d;
@@ -178,7 +162,7 @@ public class RegionHelper {
 
 
     public Language tamilLanguage() {
-        Language l = languageDataService.findByName("Tamil");
+        Language l = languageService.getForName("Tamil");
 
         if (l == null) {
             l = languageDataService.create(new Language("ta", "Tamil"));
@@ -189,7 +173,7 @@ public class RegionHelper {
 
 
     public Language kannadaLanguage() {
-        Language l = languageDataService.findByName("Kannada");
+        Language l = languageService.getForName("Kannada");
 
         if (l == null) {
             l = languageDataService.create(new Language("kn", "Kannada"));
@@ -200,7 +184,7 @@ public class RegionHelper {
 
 
     public Language punjabiLanguage() {
-        Language l = languageDataService.findByName("Punjabi");
+        Language l = languageService.getForName("Punjabi");
 
         if (l == null) {
             l = languageDataService.create(new Language("pa", "Punjabi"));
@@ -211,7 +195,7 @@ public class RegionHelper {
 
 
     public Language hindiLanguage() {
-        Language l = languageDataService.findByName("Hindi");
+        Language l = languageService.getForName("Hindi");
 
         if (l == null) {
             l = languageDataService.create(new Language("hi", "Hindi"));

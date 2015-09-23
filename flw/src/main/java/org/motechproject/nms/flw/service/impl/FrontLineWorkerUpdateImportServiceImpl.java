@@ -13,8 +13,8 @@ import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.flw.service.FrontLineWorkerUpdateImportService;
 import org.motechproject.nms.region.domain.Language;
 import org.motechproject.nms.region.domain.State;
+import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.LanguageService;
-import org.motechproject.nms.region.service.StateService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,7 +43,7 @@ public class FrontLineWorkerUpdateImportServiceImpl implements FrontLineWorkerUp
 
     private FrontLineWorkerService frontLineWorkerService;
     private LanguageService languageService;
-    private StateService stateService;
+    private StateDataService stateDataService;
 
     /*
         Expected file format:
@@ -172,7 +172,7 @@ public class FrontLineWorkerUpdateImportServiceImpl implements FrontLineWorkerUp
         mapping.put(STATE, new GetInstanceByLong<State>() {
             @Override
             public State retrieve(Long value) {
-                return stateService.findByCode(value);
+                return stateDataService.findByCode(value);
             }
         });
 
@@ -225,7 +225,7 @@ public class FrontLineWorkerUpdateImportServiceImpl implements FrontLineWorkerUp
     }
 
     @Autowired
-    public void setStateService(StateService stateService) {
-        this.stateService = stateService;
+    public void setStateDataService(StateDataService stateDataService) {
+        this.stateDataService = stateDataService;
     }
 }

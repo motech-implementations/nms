@@ -38,7 +38,7 @@ import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
-import org.motechproject.nms.region.service.StateService;
+import org.motechproject.nms.region.service.LanguageService;
 import org.motechproject.nms.testing.it.utils.RegionHelper;
 import org.motechproject.nms.testing.it.utils.SubscriptionHelper;
 import org.motechproject.nms.testing.service.TestingService;
@@ -81,9 +81,9 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     @Inject
     LanguageDataService languageDataService;
     @Inject
-    StateDataService stateDataService;
+    LanguageService languageService;
     @Inject
-    StateService stateService;
+    StateDataService stateDataService;
     @Inject
     DistrictDataService districtDataService;
     @Inject
@@ -104,22 +104,18 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     SubscriberService subscriberService;
 
     SubscriptionHelper sh;
-    RegionHelper rh;
 
     @Before
     public void setUp() {
         testingService.clearDatabase();
         createLocationData();
 
-        sh = new SubscriptionHelper(subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, circleDataService, stateDataService, stateService,
-                districtDataService, districtService);
+        sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
+                languageDataService, languageService, circleDataService, stateDataService, districtDataService,
+                districtService);
+
         sh.pregnancyPack();
         sh.childPack();
-
-        rh = new RegionHelper(languageDataService, circleDataService, stateDataService, stateService,
-                districtDataService, districtService);
-
     }
 
     private void createLocationData() {
@@ -185,7 +181,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         Village village3089 = createVillage(taluka46, 0, 3089L, "Podapara");
         taluka46.getVillages().add(village3089);
 
-        stateService.create(state21);
+        stateDataService.create(state21);
 
         final Circle circle = new Circle();
         circle.setName("Square");
@@ -481,6 +477,9 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
     @Test
     public void verifyNIP94() throws Exception {
+        RegionHelper rh = new RegionHelper(languageDataService, languageService, circleDataService, stateDataService,
+                districtDataService, districtService);
+
         rh.newDelhiDistrict();
 
         sh.mksub(SubscriptionOrigin.IVR, new DateTime(), sh.pregnancyPack().getType(), 2222222221L);
@@ -766,7 +765,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     @Test
     public void verifyFT286() throws Exception {
     	State state31 = createState(31L, "State 31");
-    	stateService.create(state31);
+    	stateDataService.create(state31);
     	DateTime dob = DateTime.now();
         String dobString = getDateString(dob);
 
@@ -783,7 +782,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     @Test
     public void verifyRejectedWithNoState() throws Exception {
         State state31 = createState(31L, "State 31");
-        stateService.create(state31);
+        stateDataService.create(state31);
         DateTime dob = DateTime.now();
         String dobString = getDateString(dob);
 
@@ -798,7 +797,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     @Test
     public void verifyRejectedWithNoDistrict() throws Exception {
         State state31 = createState(31L, "State 31");
-        stateService.create(state31);
+        stateDataService.create(state31);
         DateTime dob = DateTime.now();
         String dobString = getDateString(dob);
 

@@ -21,7 +21,6 @@ import org.motechproject.nms.region.repository.HealthSubFacilityDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.repository.TalukaDataService;
 import org.motechproject.nms.region.repository.VillageDataService;
-import org.motechproject.nms.region.service.StateService;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
@@ -50,9 +49,6 @@ public class CircleServiceBundleIT extends BasePaxIT {
 
     @Inject
     StateDataService stateDataService;
-
-    @Inject
-    StateService stateService;
 
     @Inject
     DistrictDataService districtDataService;
@@ -148,10 +144,10 @@ public class CircleServiceBundleIT extends BasePaxIT {
         state4.setName("State 4");
         state4.setCode(4L);
 
-        stateService.create(state1);
-        stateService.create(state2);
-        stateService.create(state3);
-        stateService.create(state4);
+        stateDataService.create(state1);
+        stateDataService.create(state2);
+        stateDataService.create(state3);
+        stateDataService.create(state4);
 
         final Circle circle1 = new Circle();
         circle1.setName("Circle 1");
@@ -208,7 +204,7 @@ public class CircleServiceBundleIT extends BasePaxIT {
         State state = circle.getStates().iterator().next();
         assertEquals("State 1", state.getName());
 
-        state = stateService.findByCode(1L);
+        state = stateDataService.findByCode(1L);
         assertNotNull(state);
 
         assertEquals(1, state.getCircles().size());
@@ -227,7 +223,7 @@ public class CircleServiceBundleIT extends BasePaxIT {
 
         assertEquals(2, circle.getStates().size());
 
-        State state = stateService.findByCode(2L);
+        State state = stateDataService.findByCode(2L);
         assertNotNull(state);
 
         assertEquals(1, state.getCircles().size());
@@ -235,7 +231,7 @@ public class CircleServiceBundleIT extends BasePaxIT {
         circle = state.getCircles().iterator().next();
         assertEquals("Circle 2", circle.getName());
 
-        state = stateService.findByCode(3L);
+        state = stateDataService.findByCode(3L);
         assertNotNull(state);
 
         assertEquals(1, state.getCircles().size());
@@ -264,7 +260,7 @@ public class CircleServiceBundleIT extends BasePaxIT {
         state = circle.getStates().iterator().next();
         assertEquals("State 4", state.getName());
 
-        state = stateService.findByCode(4L);
+        state = stateDataService.findByCode(4L);
         assertNotNull(state);
 
         assertEquals(2, state.getCircles().size());

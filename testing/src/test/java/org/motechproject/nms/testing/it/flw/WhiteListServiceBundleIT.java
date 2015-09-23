@@ -9,7 +9,7 @@ import org.motechproject.nms.flw.repository.WhitelistEntryDataService;
 import org.motechproject.nms.flw.repository.WhitelistStateDataService;
 import org.motechproject.nms.flw.service.WhitelistService;
 import org.motechproject.nms.region.domain.State;
-import org.motechproject.nms.region.service.StateService;
+import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
@@ -43,7 +43,7 @@ public class WhiteListServiceBundleIT extends BasePaxIT {
     WhitelistStateDataService whitelistStateDataService;
 
     @Inject
-    StateService stateService;
+    StateDataService stateDataService;
 
     @Inject
     WhitelistService whitelistService;
@@ -57,15 +57,15 @@ public class WhiteListServiceBundleIT extends BasePaxIT {
         whitelistEntryDataService.deleteAll();
         serviceUsageCapDataService.deleteAll();
         whitelistStateDataService.deleteAll();
-        stateService.deleteAll();
+        stateDataService.deleteAll();
 
         whitelistState = new State("New Jersey", 1l);
-        stateService.create(whitelistState);
+        stateDataService.create(whitelistState);
 
         whitelistStateDataService.create(new WhitelistState(whitelistState));
 
         nonWhitelistState = new State("Washington", 2l);
-        stateService.create(nonWhitelistState);
+        stateDataService.create(nonWhitelistState);
 
         WhitelistEntry entry = new WhitelistEntry(WHITELIST_CONTACT_NUMBER, whitelistState);
         whitelistEntryDataService.create(entry);
@@ -153,15 +153,15 @@ public class WhiteListServiceBundleIT extends BasePaxIT {
         whitelistEntryDataService.deleteAll();
         serviceUsageCapDataService.deleteAll();
         whitelistStateDataService.deleteAll();
-        stateService.deleteAll();
+        stateDataService.deleteAll();
 
         whitelistState = new State("New Jersey", 1l);
-        stateService.create(whitelistState);
+        stateDataService.create(whitelistState);
 
         whitelistStateDataService.create(new WhitelistState(whitelistState));
 
         nonWhitelistState = new State("Washington", 2l);
-        stateService.create(nonWhitelistState);
+        stateDataService.create(nonWhitelistState);
 
         WhitelistEntry entry = new WhitelistEntry(WHITELIST_CONTACT_NUMBER, nonWhitelistState);
         whitelistEntryDataService.create(entry);

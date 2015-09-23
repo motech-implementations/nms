@@ -10,7 +10,6 @@ import java.util.List;
 
 @Service("circleService")
 public class CircleServiceImpl implements CircleService {
-
     @Autowired
     private CircleDataService circleDataService;
 
@@ -34,4 +33,5 @@ public class CircleServiceImpl implements CircleService {
     public List<Circle> getAll() {
         return circleDataService.retrieveAll();
     }
+
 }

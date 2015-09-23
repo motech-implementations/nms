@@ -78,8 +78,7 @@ public class Language extends MdsEntity {
     @Override
     public String toString() {
         return "Language{" +
-                "id=" + getId() +
-                ", code='" + code + '\'' +
+                "code='" + code + '\'' +
                 ", name='" + name + '\'' +
                 '}';
     }

@@ -27,10 +27,9 @@ import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.domain.Village;
 import org.motechproject.nms.region.repository.CircleDataService;
-import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
-import org.motechproject.nms.region.service.StateService;
+import org.motechproject.nms.region.service.LanguageService;
 import org.motechproject.nms.testing.it.api.utils.RequestBuilder;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
@@ -72,11 +71,9 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     @Inject
     LanguageDataService languageDataService;
     @Inject
+    LanguageService languageService;
+    @Inject
     StateDataService stateDataService;
-    @Inject
-    StateService stateService;
-    @Inject
-    DistrictDataService districtDataService;
     @Inject
     CircleDataService circleDataService;
     @Inject
@@ -188,7 +185,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
 
         state1.getDistricts().addAll(Arrays.asList(district11, district12,
                 kuraput, kandhamal, ganjam, jharsuguda, bargarh, puri));
-        stateService.create(state1);
+        stateDataService.create(state1);
 
         Circle circle1 = createCircle("Circle 1");
         circle1.getStates().addAll(Arrays.asList(state1));
@@ -447,7 +444,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         State state = stateDataService.findByName("State 1");
         District district1 = state.getDistricts().get(0);
         District district2 = state.getDistricts().get(1);
-        Language language1 = languageDataService.findByCode("L1");
+        Language language1 = languageService.getForCode("L1");
         assertEquals("District 11", district1.getName());
         assertEquals("District 12", district2.getName());
 

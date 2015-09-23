@@ -25,7 +25,7 @@ import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
-import org.motechproject.nms.region.service.StateService;
+import org.motechproject.nms.region.service.LanguageService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -89,19 +89,20 @@ public class CdrHelper {
             SubscriberDataService subscriberDataService,
             SubscriptionPackDataService subscriptionPackDataService,
             LanguageDataService languageDataService,
+            LanguageService languageService,
             CircleDataService circleDataService,
             StateDataService stateDataService,
-            StateService stateService,
             DistrictDataService districtDataService,
             FileAuditRecordDataService fileAuditRecordDataService,
             DistrictService districtService,
             String obdFileName
-    )  {
+    ) throws IOException {
+
         sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
-                languageDataService, circleDataService, stateDataService, stateService, districtDataService,
+                languageDataService, languageService, circleDataService, stateDataService, districtDataService,
                 districtService);
 
-        rh = new RegionHelper(languageDataService, circleDataService, stateDataService, stateService,
+        rh = new RegionHelper(languageDataService, languageService, circleDataService, stateDataService,
                 districtDataService, districtService);
 
         this.settingsService = settingsService;
@@ -122,15 +123,15 @@ public class CdrHelper {
             SubscriberDataService subscriberDataService,
             SubscriptionPackDataService subscriptionPackDataService,
             LanguageDataService languageDataService,
+            LanguageService languageService,
             CircleDataService circleDataService,
             StateDataService stateDataService,
-            StateService stateService,
             DistrictDataService districtDataService,
             FileAuditRecordDataService fileAuditRecordDataService,
             DistrictService districtService
-    )  {
+    ) throws IOException {
         this(settingsService, subscriptionService, subscriberDataService, subscriptionPackDataService,
-                languageDataService, circleDataService, stateDataService, stateService, districtDataService,
+                languageDataService, languageService, circleDataService, stateDataService, districtDataService,
                 fileAuditRecordDataService, districtService,
                 String.format(OBD_FILENAME_FORMAT, DateTime.now().toString(TIME_FORMATTER)));
     }

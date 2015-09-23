@@ -28,7 +28,7 @@ import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
-import org.motechproject.nms.region.service.StateService;
+import org.motechproject.nms.region.service.LanguageService;
 import org.motechproject.nms.testing.it.utils.CdrHelper;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
@@ -72,6 +72,8 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
     @Inject
     LanguageDataService languageDataService;
     @Inject
+    LanguageService languageService;
+    @Inject
     AlertService alertService;
     @Inject
     CdrFileService cdrFileService;
@@ -79,8 +81,6 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
     CircleDataService circleDataService;
     @Inject
     StateDataService stateDataService;
-    @Inject
-    StateService stateService;
     @Inject
     DistrictDataService districtDataService;
     @Inject
@@ -91,26 +91,18 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
     CallRetryDataService callRetryDataService;
     @Inject
     CallDetailRecordDataService callDetailRecordDataService;
+
+
     @Inject
     TestingService testingService;
 
-
     CdrHelper helper;
 
-
     @Before
-    public void cleanupDatabase()  {
+    public void cleanupDatabase() {
         testingService.clearDatabase();
-
     }
 
-    @Before
-    public void setupHelper()  {
-        helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, circleDataService, stateDataService, stateService,
-                districtDataService, fileAuditRecordDataService, districtService);
-
-    }
 
     private String localCdrDirBackup;
     private String remoteCdrDirBackup;
@@ -133,6 +125,15 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
     }
 
 
+    @Before
+    public void setupHelper() throws IOException {
+        helper = new CdrHelper(settingsService, subscriptionService, subscriberDataService,
+                subscriptionPackDataService, languageDataService, languageService, circleDataService, stateDataService,
+                districtDataService, fileAuditRecordDataService, districtService);
+
+    }
+
+
     @After
     public void restoreSettings() {
         settingsService.getSettingsFacade().setProperty(ImiTestHelper.REMOTE_OBD_DIR, remoteObdDirBackup);
@@ -152,7 +153,6 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
 
     @Test
     public void testVerify() throws IOException, NoSuchAlgorithmException {
-
 
         helper.makeCdrs(1,1,1,1);
         helper.makeLocalCdrFile();

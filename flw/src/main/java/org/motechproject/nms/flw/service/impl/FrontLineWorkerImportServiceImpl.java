@@ -19,8 +19,8 @@ import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.domain.Village;
 import org.motechproject.nms.region.exception.InvalidLocationException;
+import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.LocationService;
-import org.motechproject.nms.region.service.StateService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -55,7 +55,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
 
 
     private FrontLineWorkerService frontLineWorkerService;
-    private StateService stateService;
+    private StateDataService stateDataService;
     private LocationService locationService;
 
     /*
@@ -104,7 +104,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
         // expect state name in the first line
         if (line.matches("^State Name : .*$")) {
             String stateName = line.substring(line.indexOf(':') + 1).trim();
-            State state = stateService.findByName(stateName);
+            State state = stateDataService.findByName(stateName);
             verify(null != state, "State does not exists");
             readLineWhileNotBlank(bufferedReader);
             return state;
@@ -252,8 +252,8 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
     }
 
     @Autowired
-    public void setStateService(StateService stateService) {
-        this.stateService = stateService;
+    public void setStateDataService(StateDataService stateDataService) {
+        this.stateDataService = stateDataService;
     }
 
     @Autowired

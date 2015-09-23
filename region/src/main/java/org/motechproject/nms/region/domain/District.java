@@ -142,8 +142,7 @@ public class District extends MdsEntity {
     @Override
     public String toString() {
         return "District{" +
-                "id=" + getId() +
-                ", name='" + name + '\'' +
+                "name='" + name + '\'' +
                 ", code=" + code +
                 '}';
     }

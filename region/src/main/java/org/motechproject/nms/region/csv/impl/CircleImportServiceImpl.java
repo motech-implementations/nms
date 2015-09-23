@@ -9,7 +9,7 @@ import org.motechproject.nms.region.csv.CircleImportService;
 import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.CircleDataService;
-import org.motechproject.nms.region.service.StateService;
+import org.motechproject.nms.region.repository.StateDataService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,12 +26,12 @@ public class CircleImportServiceImpl implements CircleImportService {
     public static final String CIRCLE_NAME = "Circle";
     public static final String STATE_NAME = "State";
 
-    private StateService stateService;
+    private StateDataService stateDataService;
     private CircleDataService circleDataService;
 
     @Autowired
-    public CircleImportServiceImpl(StateService stateService, CircleDataService circleDataService) {
-        this.stateService = stateService;
+    public CircleImportServiceImpl(StateDataService stateDataService, CircleDataService circleDataService) {
+        this.stateDataService = stateDataService;
         this.circleDataService = circleDataService;
     }
 
@@ -56,7 +56,7 @@ public class CircleImportServiceImpl implements CircleImportService {
                             csvImporter.getRowNumber()));
                 }
 
-                State state = stateService.findByName(stateName);
+                State state = stateDataService.findByName(stateName);
                 if (state == null) {
                     throw new CsvImportDataException(String.format("CSV import error, no state with name %s " +
                                     "on line %s", stateName, csvImporter.getRowNumber()));
@@ -72,7 +72,7 @@ public class CircleImportServiceImpl implements CircleImportService {
                 circleDataService.update(circle);
 
                 state.getCircles().add(circle);
-                stateService.update(state);
+                stateDataService.update(state);
             } catch (ConstraintViolationException e) {
                 throw new CsvImportDataException(String.format("CSV import error, constraints violated: %s",
                         ConstraintViolationUtils.toString(e.getConstraintViolations())), e);
