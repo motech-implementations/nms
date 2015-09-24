@@ -100,5 +100,13 @@ public class BundleIT extends BasePaxIT {
         timer.reset();
         mctsBeneficiaryImportService.importMotherData(new InputStreamReader(new FileInputStream(file)));
         getLogger().debug("Imported {}", timer.frequency(TEST_COUNT));
+
+        timer = new Timer("kid", "kids");
+        file = testingService.createMctsKids(TEST_COUNT).split("\t")[0];
+        getLogger().debug("Created {}", timer.frequency(TEST_COUNT));
+
+        timer.reset();
+        mctsBeneficiaryImportService.importChildData(new InputStreamReader(new FileInputStream(file)));
+        getLogger().debug("Imported {}", timer.frequency(TEST_COUNT));
     }
 }

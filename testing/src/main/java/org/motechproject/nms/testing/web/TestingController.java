@@ -67,6 +67,13 @@ public class TestingController {
     }
 
 
+    @RequestMapping(value = "/createMctsKids")
+    @ResponseBody
+    public String createMctsKids(@RequestParam(required = true) int count) throws IOException {
+        return testingService.createMctsKids(count);
+    }
+
+
     //from http://stackoverflow.com/questions/3263892/format-file-size-as-mb-gb-etc
     private static String readableFileSize(long size) {
         if (size <= 0) { return "0"; }
