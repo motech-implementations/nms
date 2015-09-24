@@ -156,11 +156,12 @@ public class UserControllerBundleIT extends BasePaxIT {
     public void setupTestData() {
         testingService.clearDatabase();
 
-        rh = new RegionHelper(languageDataService, circleDataService, stateDataService, districtDataService,
-                districtService);
+        rh = new RegionHelper(languageDataService, languageService, circleDataService, stateDataService,
+                districtDataService, districtService);
 
         sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
-                languageDataService, circleDataService, stateDataService, districtDataService, districtService);
+                languageDataService, languageService, circleDataService, stateDataService, districtDataService,
+                districtService);
     }
 
 
@@ -1649,8 +1650,6 @@ public class UserControllerBundleIT extends BasePaxIT {
     }
 
     private void setupWhiteListData() {
-        rh = new RegionHelper(languageDataService, circleDataService,
-                stateDataService, districtDataService, districtService);
         rh.newDelhiDistrict();
         rh.bangaloreDistrict();
 

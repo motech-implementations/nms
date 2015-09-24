@@ -3,10 +3,10 @@ package org.motechproject.nms.tracking.service.impl;
 import org.joda.time.DateTime;
 import org.motechproject.mds.annotations.InstanceLifecycleListenerType;
 import org.motechproject.mds.listener.MotechLifecycleListener;
-import org.motechproject.mds.service.EntityService;
 import org.motechproject.mds.service.JdoListenerRegistryService;
 import org.motechproject.mds.util.Constants;
 import org.motechproject.mds.util.PropertyUtil;
+import org.motechproject.nms.tracking.service.EntityServiceWrapper;
 import org.motechproject.nms.tracking.domain.ChangeLog;
 import org.motechproject.nms.tracking.exception.TrackChangesException;
 import org.motechproject.nms.tracking.repository.ChangeLogDataService;
@@ -37,10 +37,19 @@ public class TrackChangesServiceImpl implements TrackChangesService {
     public static final String EMPTY_PACKAGE = "";
 
     private JdoListenerRegistryService jdoListenerRegistryService;
-    private EntityService entityService;
     private ChangeLogDataService changeLogDataService;
+    private EntityServiceWrapper entityServiceWrapper;
 
     private Set<String> trackedClasses = new HashSet<>();
+
+
+    @Autowired
+    public TrackChangesServiceImpl(JdoListenerRegistryService jdoListenerRegistryService, EntityServiceWrapper entityServiceWrapper,
+                                   ChangeLogDataService changeLogDataService) {
+        this.jdoListenerRegistryService = jdoListenerRegistryService;
+        this.entityServiceWrapper = entityServiceWrapper;
+        this.changeLogDataService = changeLogDataService;
+    }
 
     @Override
     public void registerLifecycleListeners(Class<?> clazz) {
@@ -60,7 +69,7 @@ public class TrackChangesServiceImpl implements TrackChangesService {
 
     @Override
     public void preStore(Object target) {
-        if (target instanceof TrackChanges && isEntityInstance(target)) {
+        if (target instanceof TrackChanges && entityServiceWrapper.isEntityInstance(target.getClass().getName())) {
             try {
                 storeChangeLog((TrackChanges) target);
             } catch (TrackChangesException e) {
@@ -73,7 +82,7 @@ public class TrackChangesServiceImpl implements TrackChangesService {
 
     @Override
     public void preDelete(Object target) {
-        if (target instanceof TrackChanges && isEntityInstance(target)) {
+        if (target instanceof TrackChanges && entityServiceWrapper.isEntityInstance(target.getClass().getName())) {
             try {
                 deleteChangeLogs(target);
             } catch (TrackChangesException e) {
@@ -137,7 +146,7 @@ public class TrackChangesServiceImpl implements TrackChangesService {
     }
 
     private void buildChanges(Map<String, Change> changes, StringBuilder builder) throws TrackChangesException {
-        for (Iterator<Map.Entry<String, Change>> iterator = changes.entrySet().iterator(); iterator.hasNext(); ) {
+        for (Iterator<Map.Entry<String, Change>> iterator = changes.entrySet().iterator(); iterator.hasNext();) {
             Map.Entry<String, Change> changeEntry = iterator.next();
             String propertyName = changeEntry.getKey();
             Change change = changeEntry.getValue();
@@ -154,7 +163,7 @@ public class TrackChangesServiceImpl implements TrackChangesService {
     }
 
     private void buildCollectionChanges(Map<String, CollectionChange> collectionChanges, StringBuilder builder) throws TrackChangesException {
-        for (Iterator<Map.Entry<String, CollectionChange>> iterator = collectionChanges.entrySet().iterator(); iterator.hasNext(); ) {
+        for (Iterator<Map.Entry<String, CollectionChange>> iterator = collectionChanges.entrySet().iterator(); iterator.hasNext();) {
             Map.Entry<String, CollectionChange> collectionChangeEntry = iterator.next();
             buildCollectionChange(builder, collectionChangeEntry);
             if (iterator.hasNext()) {
@@ -178,7 +187,7 @@ public class TrackChangesServiceImpl implements TrackChangesService {
     private void buildCollectionAdded(Collection<Object> collectionAdded, StringBuilder builder) throws TrackChangesException {
         if (!collectionAdded.isEmpty()) {
             builder.append("added[");
-            for (Iterator<Object> iterator = collectionAdded.iterator(); iterator.hasNext(); ) {
+            for (Iterator<Object> iterator = collectionAdded.iterator(); iterator.hasNext();) {
                 Object added = iterator.next();
                 builder.append(formatPropertyValue(added));
                 if (iterator.hasNext()) {
@@ -192,7 +201,7 @@ public class TrackChangesServiceImpl implements TrackChangesService {
     private void buildCollectionRemoved(Collection<Object> collectionRemoved, StringBuilder builder) throws TrackChangesException {
         if (!collectionRemoved.isEmpty()) {
             builder.append("removed[");
-            for (Iterator<Object> iterator = collectionRemoved.iterator(); iterator.hasNext(); ) {
+            for (Iterator<Object> iterator = collectionRemoved.iterator(); iterator.hasNext();) {
                 Object removed = iterator.next();
                 builder.append(formatPropertyValue(removed));
                 if (iterator.hasNext()) {
@@ -204,15 +213,11 @@ public class TrackChangesServiceImpl implements TrackChangesService {
     }
 
     private String formatPropertyValue(Object value) throws TrackChangesException {
-        if (isEntityInstance(value)) {
+        if (value != null && entityServiceWrapper.isEntityInstance(value.getClass().getName())) {
             return String.valueOf(getInstanceId(value));
         } else {
             return String.valueOf(value);
         }
-    }
-
-    private boolean isEntityInstance(Object object) {
-        return object != null && entityService.getEntityByClassName(object.getClass().getName()) != null;
     }
 
     private MotechLifecycleListener createListener(String className, String serviceMethod, InstanceLifecycleListenerType listenerType) {
@@ -220,18 +225,4 @@ public class TrackChangesServiceImpl implements TrackChangesService {
                 EMPTY_PACKAGE, new InstanceLifecycleListenerType[] {listenerType}, Collections.singletonList(className));
     }
 
-    @Autowired
-    public void setJdoListenerRegistryService(JdoListenerRegistryService jdoListenerRegistryService) {
-        this.jdoListenerRegistryService = jdoListenerRegistryService;
-    }
-
-    @Autowired
-    public void setEntityService(EntityService entityService) {
-        this.entityService = entityService;
-    }
-
-    @Autowired
-    public void setChangeLogDataService(ChangeLogDataService changeLogDataService) {
-        this.changeLogDataService = changeLogDataService;
-    }
 }

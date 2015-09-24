@@ -38,6 +38,7 @@ import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
+import org.motechproject.nms.region.service.LanguageService;
 import org.motechproject.nms.testing.it.utils.RegionHelper;
 import org.motechproject.nms.testing.it.utils.SubscriptionHelper;
 import org.motechproject.nms.testing.service.TestingService;
@@ -80,6 +81,8 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     @Inject
     LanguageDataService languageDataService;
     @Inject
+    LanguageService languageService;
+    @Inject
     StateDataService stateDataService;
     @Inject
     DistrictDataService districtDataService;
@@ -100,14 +103,17 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     @Inject
     SubscriberService subscriberService;
 
+    SubscriptionHelper sh;
+
     @Before
     public void setUp() {
         testingService.clearDatabase();
         createLocationData();
 
-        SubscriptionHelper sh = new SubscriptionHelper(subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, circleDataService, stateDataService,
-                districtDataService, districtService);
+        sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
+                languageDataService, languageService, circleDataService, stateDataService, districtDataService,
+                districtService);
+
         sh.pregnancyPack();
         sh.childPack();
     }
@@ -471,12 +477,10 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
     @Test
     public void verifyNIP94() throws Exception {
-        RegionHelper rh = new RegionHelper(languageDataService, circleDataService, stateDataService, districtDataService,
-                districtService);
-        rh.newDelhiDistrict();
+        RegionHelper rh = new RegionHelper(languageDataService, languageService, circleDataService, stateDataService,
+                districtDataService, districtService);
 
-        SubscriptionHelper sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
-                languageDataService, circleDataService, stateDataService, districtDataService, districtService);
+        rh.newDelhiDistrict();
 
         sh.mksub(SubscriptionOrigin.IVR, new DateTime(), sh.pregnancyPack().getType(), 2222222221L);
 

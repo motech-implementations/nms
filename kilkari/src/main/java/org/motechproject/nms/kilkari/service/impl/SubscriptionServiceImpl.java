@@ -7,6 +7,7 @@ import org.joda.time.Weeks;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.motechproject.event.MotechEvent;
+import org.motechproject.event.listener.EventRelay;
 import org.motechproject.event.listener.annotations.MotechListener;
 import org.motechproject.mds.query.QueryExecution;
 import org.motechproject.mds.query.QueryParams;
@@ -36,6 +37,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import javax.jdo.Query;
@@ -48,6 +51,7 @@ import java.util.List;
  */
 @Service("subscriptionService")
 public class SubscriptionServiceImpl implements SubscriptionService {
+
     private static final Logger LOGGER = LoggerFactory.getLogger(SubscriptionServiceImpl.class);
 
     private static final String SUBSCRIPTION_PURGE_TIME = "kilkari.purge_closed_subscriptions_start_time";
@@ -58,6 +62,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     public static final String SELECT_SUBSCRIBERS_BY_NUMBER = "select * from nms_subscribers where callingNumber = ?";
     public static final String MORE_THAN_ONE_SUBSCRIBER = "More than one subscriber returned for callingNumber %s";
 
+    public static final String PACK_CACHE_EVICT_MESSAGE = "nms.kilkari.cache.evict.pack";
+
     private SettingsFacade settingsFacade;
     private MotechSchedulerService schedulerService;
 
@@ -67,6 +73,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private SubscriptionPackDataService subscriptionPackDataService;
     private SubscriptionDataService subscriptionDataService;
     private SubscriptionErrorDataService subscriptionErrorDataService;
+    private EventRelay eventRelay;
 
     @Autowired
     public SubscriptionServiceImpl(@Qualifier("kilkariSettings") SettingsFacade settingsFacade,
@@ -74,13 +81,15 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                                    SubscriberDataService subscriberDataService,
                                    SubscriptionPackDataService subscriptionPackDataService,
                                    SubscriptionDataService subscriptionDataService,
-                                   SubscriptionErrorDataService subscriptionErrorDataService) {
+                                   SubscriptionErrorDataService subscriptionErrorDataService,
+                                   EventRelay eventRelay) {
         this.subscriberDataService = subscriberDataService;
         this.subscriptionPackDataService = subscriptionPackDataService;
         this.subscriptionDataService = subscriptionDataService;
         this.subscriptionErrorDataService = subscriptionErrorDataService;
         this.schedulerService = schedulerService;
         this.settingsFacade = settingsFacade;
+        this.eventRelay = eventRelay;
 
         schedulePurgeOfOldSubscriptions();
     }
@@ -189,10 +198,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             }
         }
 
-        LOGGER.info(String.format("Purged %s subscribers and %s subscriptions with status (%s or %s) and " +
-                        "endDate date before %s",
-                purgedSubscribers, purgedSubscriptions, SubscriptionStatus.COMPLETED,
-                SubscriptionStatus.DEACTIVATED, cutoff.toString()));
+        LOGGER.info(String.format("Purged %s subscribers and %s subscriptions with status (%s or %s) and " + "endDate date before %s", purgedSubscribers, purgedSubscriptions, SubscriptionStatus.COMPLETED, SubscriptionStatus.DEACTIVATED, cutoff.toString()));
     }
 
     @Override
@@ -423,38 +429,26 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @Override
+    @Cacheable(value = "pack", key = "'0-'.concat(#p0)")
+    public SubscriptionPack getSubscriptionPack(SubscriptionPackType type) {
+        LOGGER.debug("*** NO CACHE getSubscriptionPack(type={}) ***", type);
+        return subscriptionPackDataService.byType(type);
+    }
+
+
+    @Override
+    @Cacheable(value = "pack", key = "#p0.concat('-0')")
     public SubscriptionPack getSubscriptionPack(String name) {
+        LOGGER.debug("*** NO CACHE getSubscriptionPack(name={}) ***", name);
         return subscriptionPackDataService.byName(name);
     }
 
 
     @Override
+    @Cacheable("packs")
     public List<SubscriptionPack> getSubscriptionPacks() {
+        LOGGER.debug("*** NO CACHE getSubscriptionPacks() ***");
         return subscriptionPackDataService.retrieveAll();
-    }
-
-
-    /**
-     * To be used by ITs only!
-     */
-    public void deleteAll() {
-        DateTime now = DateTime.now();
-        DateTime oldEnough = now.minusWeeks(7);
-        for (Subscription sub : subscriptionDataService.retrieveAll()) {
-            boolean update = false;
-            if (sub.getStatus() == SubscriptionStatus.ACTIVE) {
-                sub.setStatus(SubscriptionStatus.COMPLETED);
-                update = true;
-            }
-            if (Math.abs(Weeks.weeksBetween(now, sub.getEndDate()).getWeeks()) < 6) {
-                sub.setEndDate(oldEnough);
-                update = true;
-            }
-            if (update) {
-                subscriptionDataService.update(sub);
-            }
-        }
-        subscriptionDataService.deleteAll();
     }
 
 
@@ -537,8 +531,19 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     public List<Subscription> findPendingSubscriptionsFromDate(DateTime startDate, int page, int pageSize) {
-        return subscriptionDataService.findByStatusAndStartDate(SubscriptionStatus.PENDING_ACTIVATION, startDate,
-                new QueryParams(page, pageSize));
+        return subscriptionDataService.findByStatusAndStartDate(SubscriptionStatus.PENDING_ACTIVATION, startDate, new QueryParams(page, pageSize));
     }
 
+    @CacheEvict(value = {"pack", "packs" }, allEntries = true)
+    public void broadcastCacheEvictMessage(SubscriptionPack pack) {
+        LOGGER.debug("*** BROADCAST CACHE EVICT MSG ***");
+        MotechEvent motechEvent = new MotechEvent(PACK_CACHE_EVICT_MESSAGE);
+        eventRelay.sendEventMessage(motechEvent);
+    }
+
+    @MotechListener(subjects = { PACK_CACHE_EVICT_MESSAGE })
+    @CacheEvict(value = {"pack", "packs" }, allEntries = true)
+    public void cacheEvict(MotechEvent event) {
+        LOGGER.debug("*** RECEIVE CACHE EVICT MSG ***");
+    }
 }

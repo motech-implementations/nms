@@ -35,20 +35,6 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- Scheduler -->
-        <dependency>
-            <groupId>org.motechproject</groupId>
-            <artifactId>motech-scheduler</artifactId>
-            <version>${motech.version}</version>
-        </dependency>
-
-        <!-- Event relay -->
-        <dependency>
-            <groupId>org.motechproject</groupId>
-            <artifactId>motech-platform-event</artifactId>
-            <version>${motech.version}</version>
-        </dependency>
-
         <!-- common properties -->
         <dependency>
             <groupId>org.motechproject.nms</groupId>

@@ -30,6 +30,7 @@ import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
+import org.motechproject.nms.region.service.LanguageService;
 import org.motechproject.nms.testing.it.utils.ChecksumHelper;
 import org.motechproject.nms.testing.it.utils.RegionHelper;
 import org.motechproject.nms.testing.it.utils.SubscriptionHelper;
@@ -85,6 +86,8 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
     @Inject
     LanguageDataService languageDataService;
     @Inject
+    LanguageService languageService;
+    @Inject
     CircleDataService circleDataService;
     @Inject
     StateDataService stateDataService;
@@ -111,11 +114,12 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         localObdDirBackup = ImiTestHelper.setupTestDir(settingsService, LOCAL_OBD_DIR, "obd-local-dir-it");
         remoteObdDirBackup = ImiTestHelper.setupTestDir(settingsService, REMOTE_OBD_DIR, "obd-remote-dir-it");
 
-        rh = new RegionHelper(languageDataService, circleDataService, stateDataService, districtDataService,
-                districtService);
+        rh = new RegionHelper(languageDataService, languageService, circleDataService, stateDataService,
+                districtDataService, districtService);
 
         sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
-                languageDataService, circleDataService, stateDataService, districtDataService, districtService);
+                languageDataService, languageService, circleDataService, stateDataService, districtDataService,
+                districtService);
     }
 
 
@@ -266,9 +270,6 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
     // un-ignore to create a large sample OBD file
     @Ignore
     public void createLargeFile() {
-        SubscriptionHelper sh = new SubscriptionHelper(subscriptionService, subscriberDataService,
-                subscriptionPackDataService, languageDataService, circleDataService, stateDataService,
-                districtDataService, districtService);
 
         for (int i=0 ; i<1000 ; i++) {
             sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now());

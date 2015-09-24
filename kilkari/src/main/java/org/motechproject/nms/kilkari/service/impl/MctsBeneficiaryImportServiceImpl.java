@@ -22,7 +22,6 @@ import org.motechproject.nms.kilkari.domain.SubscriptionRejectionReason;
 import org.motechproject.nms.kilkari.repository.MctsChildDataService;
 import org.motechproject.nms.kilkari.repository.MctsMotherDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
-import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
@@ -52,7 +51,6 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
     private SubscriptionService subscriptionService;
     private SubscriptionErrorDataService subscriptionErrorDataService;
-    private SubscriptionPackDataService subscriptionPackDataService;
     private LocationService locationService;
     private MctsMotherDataService mctsMotherDataService;
     private MctsChildDataService mctsChildDataService;
@@ -88,12 +86,10 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     @Autowired
     public MctsBeneficiaryImportServiceImpl(SubscriptionService subscriptionService,
                                             SubscriptionErrorDataService subscriptionErrorDataService,
-                                            SubscriptionPackDataService subscriptionPackDataService,
                                             LocationService locationService, MctsMotherDataService mctsMotherDataService,
                                             MctsChildDataService mctsChildDataService, SubscriberService subscriberService) {
         this.subscriptionService = subscriptionService;
         this.subscriptionErrorDataService = subscriptionErrorDataService;
-        this.subscriptionPackDataService = subscriptionPackDataService;
         this.locationService = locationService;
         this.mctsMotherDataService = mctsMotherDataService;
         this.mctsChildDataService = mctsChildDataService;
@@ -111,7 +107,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     @Override
     @Transactional
     public int importMotherData(Reader reader) throws IOException {
-        pregnancyPack = subscriptionPackDataService.byType(SubscriptionPackType.PREGNANCY);
+        pregnancyPack = subscriptionService.getSubscriptionPack(SubscriptionPackType.PREGNANCY);
         int count = 0;
 
         BufferedReader bufferedReader = new BufferedReader(reader);
@@ -146,7 +142,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     @Override
     @Transactional
     public int importChildData(Reader reader) throws IOException {
-        childPack = subscriptionPackDataService.byType(SubscriptionPackType.CHILD);
+        childPack = subscriptionService.getSubscriptionPack(SubscriptionPackType.CHILD);
         int count = 0;
 
         BufferedReader bufferedReader = new BufferedReader(reader);

@@ -13,6 +13,7 @@ import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.service.LanguageService;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.server.config.SettingsFacade;
 import org.slf4j.Logger;
@@ -176,6 +177,21 @@ public class TestingServiceImpl implements TestingService {
         "nms_whitelisted_states__TRASH",
     };
 
+    private static final String[] MCTS_MOM_FIELDS = {"StateID", "District_ID", "District_Name", "Taluka_ID",
+            "Taluka_Name", "HealthBlock_ID", "HealthBlock_Name", "PHC_ID", "PHC_Name", "SubCentre_ID", "SubCentre_Name",
+            "Village_ID", "Village_Name", "Yr", "GP_Village", "Address", "ID_No", "Name", "Husband_Name",
+            "PhoneNo_Of_Whom", "Whom_PhoneNo", "Birthdate", "JSY_Beneficiary", "Caste", "SubCentre_Name1", "ANM_Name",
+            "ANM_Phone", "ASHA_Name", "ASHA_Phone", "Delivery_Lnk_Facility", "Facility_Name", "LMP_Date", "ANC1_Date",
+            "ANC2_Date", "ANC3_Date", "ANC4_Date", "TT1_Date", "TT2_Date", "TTBooster_Date", "IFA100_Given_Date",
+            "Anemia", "ANC_Complication", "RTI_STI", "Dly_Date", "Dly_Place_Home_Type", "Dly_Place_Public",
+            "Dly_Place_Private", "Dly_Type", "Dly_Complication", "Discharge_Date", "JSY_Paid_Date", "Abortion",
+            "PNC_Home_Visit", "PNC_Complication", "PPC_Method", "PNC_Checkup", "Outcome_Nos", "Child1_Name",
+            "Child1_Sex", "Child1_Wt", "Child1_Brestfeeding", "Child2_Name", "Child2_Sex", "Child2_Wt",
+            "Child2_Brestfeeding", "Child3_Name", "Child3_Sex", "Child3_Wt", "Child3_Brestfeeding", "Child4_Name",
+            "Child4_Sex", "Child4_Wt", "Child4_Brestfeeding", "Age", "MTHR_REG_DATE", "LastUpdateDate", "Remarks",
+            "ANM_ID", "ASHA_ID", "Call_Ans", "NoCall_Reason", "NoPhone_Reason", "Created_By", "Updated_By",
+            "Aadhar_No", "BPL_APL", "EID", "EIDTime", "Entry_Type"};
+
     private Random random = new Random(System.currentTimeMillis());
 
 
@@ -194,6 +210,8 @@ public class TestingServiceImpl implements TestingService {
      */
     @Autowired
     private DistrictDataService districtDataService;
+    @Autowired
+    private LanguageService languageService;
     @Autowired
     private StateDataService stateDataService;
 
@@ -310,6 +328,8 @@ public class TestingServiceImpl implements TestingService {
         }
 
         enableConstraints();
+
+        languageService.cacheEvict(null);
 
         LOGGER.debug("clearDatabase: {}", timer.time());
     }
@@ -533,21 +553,6 @@ public class TestingServiceImpl implements TestingService {
     @Override
     public String createMctsMoms(int count) throws IOException { //NOPMD NcssMethodCount
 
-        String[] fields = {"StateID", "District_ID", "District_Name", "Taluka_ID", "Taluka_Name", "HealthBlock_ID",
-                "HealthBlock_Name", "PHC_ID", "PHC_Name", "SubCentre_ID", "SubCentre_Name", "Village_ID",
-                "Village_Name", "Yr", "GP_Village", "Address", "ID_No", "Name", "Husband_Name", "PhoneNo_Of_Whom",
-                "Whom_PhoneNo", "Birthdate", "JSY_Beneficiary", "Caste", "SubCentre_Name1", "ANM_Name", "ANM_Phone",
-                "ASHA_Name", "ASHA_Phone", "Delivery_Lnk_Facility", "Facility_Name", "LMP_Date", "ANC1_Date",
-                "ANC2_Date", "ANC3_Date", "ANC4_Date", "TT1_Date", "TT2_Date", "TTBooster_Date", "IFA100_Given_Date",
-                "Anemia", "ANC_Complication", "RTI_STI", "Dly_Date", "Dly_Place_Home_Type", "Dly_Place_Public",
-                "Dly_Place_Private", "Dly_Type", "Dly_Complication", "Discharge_Date", "JSY_Paid_Date", "Abortion",
-                "PNC_Home_Visit", "PNC_Complication", "PPC_Method", "PNC_Checkup", "Outcome_Nos", "Child1_Name",
-                "Child1_Sex", "Child1_Wt", "Child1_Brestfeeding", "Child2_Name", "Child2_Sex", "Child2_Wt",
-                "Child2_Brestfeeding", "Child3_Name", "Child3_Sex", "Child3_Wt", "Child3_Brestfeeding", "Child4_Name",
-                "Child4_Sex", "Child4_Wt", "Child4_Brestfeeding", "Age", "MTHR_REG_DATE", "LastUpdateDate", "Remarks",
-                "ANM_ID", "ASHA_ID", "Call_Ans", "NoCall_Reason", "NoPhone_Reason", "Created_By", "Updated_By",
-                "Aadhar_No", "BPL_APL", "EID", "EIDTime", "Entry_Type"};
-
         LOGGER.debug("createMctsMoms(count={})", count);
 
         if (!Boolean.parseBoolean(settingsFacade.getProperty(TESTING_ENVIRONMENT))) {
@@ -565,7 +570,7 @@ public class TestingServiceImpl implements TestingService {
         writer.write("###ignore this line###");
         writer.newLine();
         writer.newLine();
-        writer.write(StringUtils.join(fields, "\t"));
+        writer.write(StringUtils.join(MCTS_MOM_FIELDS, "\t"));
         writer.newLine();
         for (int i = 0; i < count; i++) {
 

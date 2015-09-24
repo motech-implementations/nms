@@ -32,7 +32,7 @@ import static org.junit.Assert.assertNotNull;
 @ExamFactory(value = MotechNativeTestContainerFactory.class)
 public class BundleIT extends BasePaxIT {
 
-    public static final int TEST_COUNT = 1000;
+    public static final int TEST_COUNT = 3;
     @Inject
     TestingService testingService;
 
