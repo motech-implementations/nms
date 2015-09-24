@@ -57,7 +57,7 @@ public class LanguageServiceImpl implements LanguageService {
      * @return The language Record if it exists
      */
     @Override
-    @Cacheable(value = "language", key = "#code + '-0'")
+    @Cacheable(value = "language", key = "#p0.concat('-0')")
     public Language getForCode(String code) {
         return languageDataService.findByCode(code);
     }
@@ -69,14 +69,14 @@ public class LanguageServiceImpl implements LanguageService {
      * @return The language Record if it exists
      */
     @Override
-    @Cacheable(value = "language", key = "'0-' + #name")
+    @Cacheable(value = "language", key = "'0-'.concat(#p0)")
     public Language getForName(String name) {
         return languageDataService.findByName(name);
     }
 
 
     @Override
-    @Cacheable(value = "languages", key = "#circle")
+    @Cacheable(value = "languages", key = "#p0")
     public Set<Language> getAllForCircle(final Circle circle) {
 
         SqlQueryExecution<List<Language>> queryExecution = new SqlQueryExecution<List<Language>>() {
@@ -123,7 +123,7 @@ public class LanguageServiceImpl implements LanguageService {
 
 
     @Override
-    @Cacheable(value = "language", key = "'-'")
+    @Cacheable(value = "language", key = "'national-default'")
     public Language getNationalDefaultLanguage() {
         Language language = null;
 
@@ -151,6 +151,7 @@ public class LanguageServiceImpl implements LanguageService {
     }
 
 
+    @CacheEvict(value = {"language", "languages" }, allEntries = true)
     public void broadcastCacheEvictMessage(Language language) {
         MotechEvent motechEvent = new MotechEvent(LANGUAGE_CACHE_EVICT_MESSAGE);
         LOGGER.debug("*** BROADCAST CACHE EVICT MSG ***");

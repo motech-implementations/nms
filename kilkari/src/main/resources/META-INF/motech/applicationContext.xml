@@ -46,9 +46,8 @@
     <bean id="cacheManager" class="org.springframework.cache.support.SimpleCacheManager">
         <property name="caches">
             <set>
-                <bean class="org.springframework.cache.concurrent.ConcurrentMapCacheFactoryBean" p:name="pack-all" />
-                <bean class="org.springframework.cache.concurrent.ConcurrentMapCacheFactoryBean" p:name="pack-name" />
-                <bean class="org.springframework.cache.concurrent.ConcurrentMapCacheFactoryBean" p:name="pack-type" />
+                <bean class="org.springframework.cache.concurrent.ConcurrentMapCacheFactoryBean" p:name="packs" />
+                <bean class="org.springframework.cache.concurrent.ConcurrentMapCacheFactoryBean" p:name="pack" />
             </set>
         </property>
     </bean>

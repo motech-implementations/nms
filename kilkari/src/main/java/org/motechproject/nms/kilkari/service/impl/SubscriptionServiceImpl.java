@@ -38,10 +38,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import javax.jdo.Query;
-import javax.jdo.annotations.Cacheable;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -429,7 +429,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @Override
-    @Cacheable("pack-type")
+    @Cacheable(value = "pack", key = "'0-'.concat(#p0)")
     public SubscriptionPack getSubscriptionPack(SubscriptionPackType type) {
         LOGGER.debug("*** NO CACHE getSubscriptionPack(type={}) ***", type);
         return subscriptionPackDataService.byType(type);
@@ -437,7 +437,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
 
     @Override
-    @Cacheable("pack-name")
+    @Cacheable(value = "pack", key = "#p0.concat('-0')")
     public SubscriptionPack getSubscriptionPack(String name) {
         LOGGER.debug("*** NO CACHE getSubscriptionPack(name={}) ***", name);
         return subscriptionPackDataService.byName(name);
@@ -445,7 +445,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
 
     @Override
-    @Cacheable("pack-all")
+    @Cacheable("packs")
     public List<SubscriptionPack> getSubscriptionPacks() {
         LOGGER.debug("*** NO CACHE getSubscriptionPacks() ***");
         return subscriptionPackDataService.retrieveAll();
@@ -534,6 +534,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         return subscriptionDataService.findByStatusAndStartDate(SubscriptionStatus.PENDING_ACTIVATION, startDate, new QueryParams(page, pageSize));
     }
 
+    @CacheEvict(value = {"pack", "packs" }, allEntries = true)
     public void broadcastCacheEvictMessage(SubscriptionPack pack) {
         LOGGER.debug("*** BROADCAST CACHE EVICT MSG ***");
         MotechEvent motechEvent = new MotechEvent(PACK_CACHE_EVICT_MESSAGE);
@@ -541,7 +542,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @MotechListener(subjects = { PACK_CACHE_EVICT_MESSAGE })
-    @CacheEvict(value = {"pack-type", "pack-name", "pack-all" }, allEntries = true)
+    @CacheEvict(value = {"pack", "packs" }, allEntries = true)
     public void cacheEvict(MotechEvent event) {
         LOGGER.debug("*** RECEIVE CACHE EVICT MSG ***");
     }
