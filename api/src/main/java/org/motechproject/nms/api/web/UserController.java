@@ -234,7 +234,7 @@ public class UserController extends BaseController {
         return kilkariUserResponse;
     }
 
-    private boolean serviceDeplyedInCircle(Service service, Circle circle) {
+    private boolean serviceDeployedInCircle(Service service, Circle circle) {
         if (circle == null) {
             return true;
         }
@@ -242,10 +242,6 @@ public class UserController extends BaseController {
         List<State> stateList = circle.getStates();
         if (stateList == null || stateList.isEmpty()) { // No state available
             return true;
-        }
-
-        if (stateList.size() == 1) { // only one state available
-            return serviceDeployedInUserState(service, stateList.get(0));
         }
 
         for (State currentState : stateList) { // multiple states, false if undeployed in all states
@@ -271,7 +267,7 @@ public class UserController extends BaseController {
         }
 
         // If we have no state for the user see if the service is deployed in at least one state in the circle
-        if (state == null && !serviceDeplyedInCircle(service, circle)) {
+        if (state == null && !serviceDeployedInCircle(service, circle)) {
             throw new NotDeployedException(String.format(NOT_DEPLOYED, service));
         }
 
