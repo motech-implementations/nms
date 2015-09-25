@@ -2,6 +2,7 @@ package org.motechproject.nms.testing.it.api;
 
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.util.EntityUtils;
@@ -9,6 +10,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.motechproject.nms.api.web.contract.FlwUserResponse;
 import org.motechproject.nms.api.web.contract.UserLanguageRequest;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
@@ -40,6 +42,10 @@ import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.TreeSet;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -113,6 +119,41 @@ public class LanguageControllerBundleIT extends BasePaxIT {
         ServiceUsageCap serviceUsageCap = new ServiceUsageCap(null, Service.MOBILE_KUNJI, 3600);
         serviceUsageCapDataService.create(serviceUsageCap);
     }
+
+    private String createFlwUserResponseJson(String defaultLanguageLocationCode, String locationCode,
+                                             List<String> allowedLanguageLocations,
+                                             Long currentUsageInPulses, Long endOfUsagePromptCounter,
+                                             Boolean welcomePromptFlag, Integer maxAllowedUsageInPulses,
+                                             Integer maxAllowedEndOfUsagePrompt) throws IOException {
+        FlwUserResponse userResponse = new FlwUserResponse();
+        if (defaultLanguageLocationCode != null) {
+            userResponse.setDefaultLanguageLocationCode(defaultLanguageLocationCode);
+        }
+        if (locationCode != null) {
+            userResponse.setLanguageLocationCode(locationCode);
+        }
+        if (allowedLanguageLocations != null) {
+            userResponse.setAllowedLanguageLocationCodes(new TreeSet<String>(allowedLanguageLocations));
+        }
+        if (currentUsageInPulses != null) {
+            userResponse.setCurrentUsageInPulses(currentUsageInPulses);
+        }
+        if (endOfUsagePromptCounter != null) {
+            userResponse.setEndOfUsagePromptCounter(endOfUsagePromptCounter);
+        }
+        if (welcomePromptFlag != null) {
+            userResponse.setWelcomePromptFlag(welcomePromptFlag);
+        }
+        if (maxAllowedUsageInPulses != null) {
+            userResponse.setMaxAllowedUsageInPulses(maxAllowedUsageInPulses);
+        }
+        if (maxAllowedEndOfUsagePrompt != null) {
+            userResponse.setMaxAllowedEndOfUsagePrompt(maxAllowedEndOfUsagePrompt);
+        }
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.writeValueAsString(userResponse);
+    }
+
 
     @Test
     public void testSetLanguageInvalidService() throws IOException, InterruptedException {
@@ -484,4 +525,57 @@ public class LanguageControllerBundleIT extends BasePaxIT {
         assertEquals(FrontLineWorkerStatus.ANONYMOUS, flw.getStatus());
         assertEquals("FLW Language Code", "99", language.getCode());
     }
+
+    @Test
+    public void verifyFT517() throws IOException, InterruptedException{
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright",
+                9810320300L);
+        frontLineWorkerService.add(flw);
+
+        flw = frontLineWorkerService.getByContactNumber(9810320300L);
+        flw.setStatus(FrontLineWorkerStatus.INVALID);
+        frontLineWorkerService.update(flw);
+        // invoke get user detail API
+        StringBuilder sb = new StringBuilder(String.format("http://localhost:%d/api/", TestContext.getJettyPort()));
+        String sep = "";
+        sb.append(String.format("%s/", "mobilekunji"));
+        sb.append("user?");
+        sb.append(String.format("callingNumber=%s", "9810320300"));
+        sep = "&";
+        sb.append(String.format("%scallId=%s", sep, "123456789012345"));
+        sep = "&";
+        sb.append(String.format("%scircle=%s", sep, rh.delhiCircle().getName()));
+        sep = "&";
+        HttpGet httpGet = new HttpGet(sb.toString());
+        List<String> allowedLLC = new ArrayList<>();
+        allowedLLC.add(rh.hindiLanguage().getCode());;
+
+        String expectedJsonResponse = createFlwUserResponseJson("hi", // defaultLanguageLocationCode
+                null, // locationCode
+                allowedLLC, // allowedLanguageLocationCodes
+                0L, // currentUsageInPulses=updated
+                0L, // endOfUsagePromptCounter=updated
+                false, // welcomePromptFlag
+                -1, // maxAllowedUsageInPulses=State capping
+                2 // maxAllowedEndOfUsagePrompt
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet,
+                ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+
+        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/languageLocationCode", TestContext.getJettyPort()));
+        StringEntity params = new StringEntity("{\"callingNumber\":9810320300,\"callId\":123456789012345,\"languageLocationCode\":\"hi\"}");
+        httpPost.setEntity(params);
+
+        httpPost.addHeader("content-type", "application/json");
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK));
+        flw = frontLineWorkerService.getByContactNumber(9810320300L);
+        assertNotNull(flw);
+
+    }
+
 }
