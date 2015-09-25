@@ -20,6 +20,7 @@ import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
+import org.motechproject.nms.region.service.LanguageService;
 import org.motechproject.nms.testing.it.utils.RegionHelper;
 import org.motechproject.nms.testing.it.utils.SubscriptionHelper;
 import org.motechproject.nms.testing.service.TestingService;
@@ -43,42 +44,45 @@ import static org.junit.Assert.assertNull;
 public class InboxServiceBundleIT extends BasePaxIT {
 
 	@Inject
-	private SubscriberService subscriberService;
+	SubscriberService subscriberService;
 	@Inject
-	private SubscriptionService subscriptionService;
+	SubscriptionService subscriptionService;
 	@Inject
-	private InboxService inboxService;
+	InboxService inboxService;
 	@Inject
-	private SubscriptionPackDataService subscriptionPackDataService;
+	SubscriptionPackDataService subscriptionPackDataService;
 	@Inject
-	private LanguageDataService languageDataService;
+	LanguageDataService languageDataService;
 	@Inject
-	private StateDataService stateDataService;
+	LanguageService languageService;
 	@Inject
-	private TestingService testingService;
+	StateDataService stateDataService;
+	@Inject
+	TestingService testingService;
     @Inject
     CircleDataService circleDataService;
 	@Inject
-	private DistrictDataService districtDataService;
+	DistrictDataService districtDataService;
 	@Inject
-	private DistrictService districtService;
+	DistrictService districtService;
     @Inject
-    private SubscriberDataService subscriberDataService;
+    SubscriberDataService subscriberDataService;
     @Inject
-    private SubscriptionPackMessageDataService subscriptionPackMessageDataService;
+    SubscriptionPackMessageDataService subscriptionPackMessageDataService;
 
-    private RegionHelper rh;
-    private SubscriptionHelper sh;
+    RegionHelper rh;
+    SubscriptionHelper sh;
 
     @Before
     public void setUp() {
 		testingService.clearDatabase();
 
-		rh = new RegionHelper(languageDataService, circleDataService, stateDataService, districtDataService,
-				districtService);
+		rh = new RegionHelper(languageDataService, languageService, circleDataService, stateDataService,
+				districtDataService, districtService);
 
         sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
-				languageDataService, circleDataService, stateDataService, districtDataService, districtService);
+				languageDataService, languageService, circleDataService, stateDataService, districtDataService,
+                districtService);
     }
 
 

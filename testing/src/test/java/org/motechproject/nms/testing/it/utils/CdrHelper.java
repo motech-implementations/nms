@@ -25,6 +25,7 @@ import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
+import org.motechproject.nms.region.service.LanguageService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -88,6 +89,7 @@ public class CdrHelper {
             SubscriberDataService subscriberDataService,
             SubscriptionPackDataService subscriptionPackDataService,
             LanguageDataService languageDataService,
+            LanguageService languageService,
             CircleDataService circleDataService,
             StateDataService stateDataService,
             DistrictDataService districtDataService,
@@ -97,10 +99,11 @@ public class CdrHelper {
     ) throws IOException {
 
         sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
-                languageDataService, circleDataService, stateDataService, districtDataService, districtService);
-
-        rh = new RegionHelper(languageDataService, circleDataService, stateDataService, districtDataService,
+                languageDataService, languageService, circleDataService, stateDataService, districtDataService,
                 districtService);
+
+        rh = new RegionHelper(languageDataService, languageService, circleDataService, stateDataService,
+                districtDataService, districtService);
 
         this.settingsService = settingsService;
         this.fileAuditRecordDataService = fileAuditRecordDataService;
@@ -120,6 +123,7 @@ public class CdrHelper {
             SubscriberDataService subscriberDataService,
             SubscriptionPackDataService subscriptionPackDataService,
             LanguageDataService languageDataService,
+            LanguageService languageService,
             CircleDataService circleDataService,
             StateDataService stateDataService,
             DistrictDataService districtDataService,
@@ -127,7 +131,7 @@ public class CdrHelper {
             DistrictService districtService
     ) throws IOException {
         this(settingsService, subscriptionService, subscriberDataService, subscriptionPackDataService,
-                languageDataService, circleDataService, stateDataService, districtDataService,
+                languageDataService, languageService, circleDataService, stateDataService, districtDataService,
                 fileAuditRecordDataService, districtService,
                 String.format(OBD_FILENAME_FORMAT, DateTime.now().toString(TIME_FORMATTER)));
     }

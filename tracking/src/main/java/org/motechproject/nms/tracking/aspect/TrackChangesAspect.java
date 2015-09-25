@@ -34,31 +34,31 @@ public class TrackChangesAspect {
     }
 
     @Pointcut("staticinitialization(@org.motechproject.nms.tracking.annotation.TrackClass *)")
-    public void trackedClassInit() {}
+    public void trackedClassInit() { }
 
     @Pointcut("within(@org.motechproject.nms.tracking.annotation.TrackClass *)")
-    public void withinTrackClass() {}
+    public void withinTrackClass() { }
 
     @Pointcut("within(@org.motechproject.nms.tracking.annotation.TrackFields *)")
-    public void withinTrackFields() {}
+    public void withinTrackFields() { }
 
     @Pointcut("set(@org.motechproject.nms.tracking.annotation.TrackField * *)")
-    public void trackedFieldWithAnnotationSetter() {}
+    public void trackedFieldWithAnnotationSetter() { }
 
     @Pointcut("set(* *) && withinTrackFields()")
-    public void trackedFieldWithinAnnotationSetter() {}
+    public void trackedFieldWithinAnnotationSetter() { }
 
     @Pointcut("trackedFieldWithAnnotationSetter() || trackedFieldWithinAnnotationSetter()")
-    public void trackedFieldSetter() {}
+    public void trackedFieldSetter() { }
 
     @Pointcut("get(@org.motechproject.nms.tracking.annotation.TrackField java.util.Collection+ *)")
-    public void trackedCollectionFieldWithAnnotationGetter() {}
+    public void trackedCollectionFieldWithAnnotationGetter() { }
 
     @Pointcut("get(java.util.Collection+ *) && withinTrackFields()")
-    public void trackedCollectionFieldWithinAnnotationGetter() {}
+    public void trackedCollectionFieldWithinAnnotationGetter() { }
 
     @Pointcut("trackedCollectionFieldWithAnnotationGetter() || trackedCollectionFieldWithinAnnotationGetter()")
-    public void trackedCollectionFieldGetter() {}
+    public void trackedCollectionFieldGetter() { }
 
     @After("trackedClassInit()")
     public void registerJdoLifecycleListeners(JoinPoint.StaticPart staticPart) {

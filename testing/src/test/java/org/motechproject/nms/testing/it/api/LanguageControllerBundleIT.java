@@ -4,6 +4,7 @@ import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Before;
 import org.junit.Test;
@@ -25,6 +26,7 @@ import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.NationalDefaultLanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
+import org.motechproject.nms.region.service.LanguageService;
 import org.motechproject.nms.testing.it.utils.RegionHelper;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
@@ -57,6 +59,9 @@ public class LanguageControllerBundleIT extends BasePaxIT {
     LanguageDataService languageDataService;
 
     @Inject
+    LanguageService languageService;
+
+    @Inject
     ServiceUsageCapDataService serviceUsageCapDataService;
 
     @Inject
@@ -83,17 +88,11 @@ public class LanguageControllerBundleIT extends BasePaxIT {
     private RegionHelper rh;
 
     @Before
-    public void clearDatabase() {
-        testingService.clearDatabase();
-    }
-
-    @Before
     public void setupTestData() {
-
         testingService.clearDatabase();
 
-        rh = new RegionHelper(languageDataService, circleDataService,
-                stateDataService, districtDataService, districtService);
+        rh = new RegionHelper(languageDataService, languageService, circleDataService, stateDataService,
+                districtDataService, districtService);
         rh.newDelhiDistrict();
         rh.delhiCircle();
 
@@ -265,11 +264,11 @@ public class LanguageControllerBundleIT extends BasePaxIT {
 
         httpPost.addHeader("content-type", "application/json");
 
-        // the MOBILE_ACADEMY service hasn't been deployed for KARNATAKA, so this
-        // request should fail
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_NOT_IMPLEMENTED,
-                "{\"failureReason\":\"<MOBILE_ACADEMY: Not Deployed In State>\"}",
-                ADMIN_USERNAME, ADMIN_PASSWORD));
+        // the MOBILE_ACADEMY service hasn't been deployed for KARNATAKA, so this request should fail
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, response.getStatusLine().getStatusCode());
+        assertEquals("{\"failureReason\":\"<MOBILE_ACADEMY: Not Deployed In State>\"}", EntityUtils.toString(response.getEntity()));
+
     }
 
     @Test

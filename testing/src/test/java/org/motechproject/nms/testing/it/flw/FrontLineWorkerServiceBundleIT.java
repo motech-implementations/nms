@@ -27,6 +27,7 @@ import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
+import org.motechproject.nms.region.service.LanguageService;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.server.config.SettingsFacade;
 import org.motechproject.testing.osgi.BasePaxIT;
@@ -68,6 +69,8 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
     DistrictService districtService;
     @Inject
     LanguageDataService languageDataService;
+    @Inject
+    LanguageService languageService;
     @Inject
     StateDataService stateDataService;
     @Inject
@@ -221,7 +224,7 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
         createLanguageLocationData();
 
         District district = districtService.findByStateAndCode(sampleState, 1L);
-        Language language = languageDataService.findByCode("50");
+        Language language = languageService.getForCode("50");
 
         FrontLineWorker flw = new FrontLineWorker("Test Worker", 2111111111L);
         frontLineWorkerService.add(flw);
@@ -366,7 +369,7 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
         createLanguageLocationData();
 
         District district = districtService.findByStateAndCode(sampleState, 1L);
-        Language language = languageDataService.findByCode("50");
+        Language language = languageService.getForCode("50");
         FrontLineWorker flw = new FrontLineWorker("Test Worker", 2111111111L);
         flw.setState(sampleState);
         flw.setDistrict(district);

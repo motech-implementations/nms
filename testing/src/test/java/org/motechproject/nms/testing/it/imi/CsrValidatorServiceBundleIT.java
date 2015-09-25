@@ -16,6 +16,7 @@ import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
+import org.motechproject.nms.region.service.LanguageService;
 import org.motechproject.nms.testing.it.utils.CsrHelper;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
@@ -46,6 +47,8 @@ public class CsrValidatorServiceBundleIT extends BasePaxIT {
     SubscriptionPackDataService subscriptionPackDataService;
     @Inject
     LanguageDataService languageDataService;
+    @Inject
+    LanguageService languageService;
     @Inject
     CircleDataService circleDataService;
     @Inject
@@ -78,7 +81,7 @@ public class CsrValidatorServiceBundleIT extends BasePaxIT {
         String timestamp = DateTime.now().toString(TIME_FORMATTER);
 
         CsrHelper helper = new CsrHelper(timestamp, subscriptionService, subscriptionPackDataService,
-                subscriberDataService, languageDataService, circleDataService, stateDataService,
+                subscriberDataService, languageDataService, languageService, circleDataService, stateDataService,
                 districtDataService, districtService);
 
         helper.makeRecords(1, 0, 0, 0);
@@ -95,7 +98,7 @@ public class CsrValidatorServiceBundleIT extends BasePaxIT {
         String timestamp = DateTime.now().toString(TIME_FORMATTER);
 
         CsrHelper helper = new CsrHelper(timestamp, subscriptionService, subscriptionPackDataService,
-                subscriberDataService, languageDataService, circleDataService, stateDataService,
+                subscriberDataService, languageDataService, languageService, circleDataService, stateDataService,
                 districtDataService, districtService);
 
         helper.makeRecords(0, 0, 0, 1);
