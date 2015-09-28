@@ -939,7 +939,8 @@ public class UserControllerBundleIT extends BasePaxIT {
         String expectedJsonResponse = createFlwUserResponseJson(
                 rh.hindiLanguage().getCode(),  //defaultLanguageLocationCode
                 null,  //locationCode
-                Arrays.asList(rh.hindiLanguage().getCode(), rh.kannadaLanguage().getCode()), // allowedLanguageLocationCodes
+                Arrays.asList(rh.hindiLanguage().getCode(), rh.kannadaLanguage()
+                        .getCode()), // allowedLanguageLocationCodes
                 0L,    //currentUsageInPulses
                 0L,    //endOfUsagePromptCounter
                 false, //welcomePromptFlag
@@ -985,7 +986,8 @@ public class UserControllerBundleIT extends BasePaxIT {
         String expectedJsonResponse = createFlwUserResponseJson(
                 rh.hindiLanguage().getCode(),  //defaultLanguageLocationCode
                 null,  //locationCode
-                Arrays.asList(rh.hindiLanguage().getCode(), rh.kannadaLanguage().getCode()), // allowedLanguageLocationCodes
+                Arrays.asList(rh.hindiLanguage().getCode(), rh.kannadaLanguage()
+                        .getCode()), // allowedLanguageLocationCodes
                 0L,    //currentUsageInPulses
                 0L,    //endOfUsagePromptCounter
                 false, //welcomePromptFlag
@@ -1049,7 +1051,8 @@ public class UserControllerBundleIT extends BasePaxIT {
         String expectedJsonResponse = createFlwUserResponseJson(
                 rh.hindiLanguage().getCode(),  //defaultLanguageLocationCode
                 null,  //locationCode
-                Arrays.asList(rh.hindiLanguage().getCode(), rh.kannadaLanguage().getCode()), // allowedLanguageLocationCodes
+                Arrays.asList(rh.hindiLanguage().getCode(), rh.kannadaLanguage()
+                        .getCode()), // allowedLanguageLocationCodes
                 0L,    //currentUsageInPulses
                 0L,    //endOfUsagePromptCounter
                 false, //welcomePromptFlag
@@ -1444,7 +1447,8 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
 
         ObjectMapper mapper = new ObjectMapper();
-        KilkariUserResponse actual = mapper.readValue(EntityUtils.toString(response.getEntity()), KilkariUserResponse.class);
+        KilkariUserResponse actual = mapper.readValue(EntityUtils
+                .toString(response.getEntity()), KilkariUserResponse.class);
         assertEquals(expectedResponse, actual);
     }
 
@@ -1595,7 +1599,8 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "123456789012345" // callId
         );
 
-        String expectedJsonResponse = createKilkariUserResponseJson(rh.hindiLanguage().getCode(), // defaultLanguageLocationCode
+        String expectedJsonResponse = createKilkariUserResponseJson(rh.hindiLanguage()
+                .getCode(), // defaultLanguageLocationCode
                 rh.hindiLanguage().getCode(), // locationCode
                 null, // allowedLanguageLocationCodes
                 expectedPacks // subscriptionPackList
@@ -3323,7 +3328,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         circleDataService.update(circle);
         
         deployedServiceDataService.create(new
-        DeployedService(rh.karnatakaState(), Service.MOBILE_ACADEMY));
+                DeployedService(rh.karnatakaState(), Service.MOBILE_ACADEMY));
 
         HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
                 true, "1200000001", // callingNumber
@@ -3511,7 +3516,8 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
 
         ObjectMapper mapper = new ObjectMapper();
-        FlwUserResponse actual = mapper.readValue(EntityUtils.toString(response.getEntity()), FlwUserResponse.class);
+        FlwUserResponse actual = mapper.readValue(EntityUtils
+                .toString(response.getEntity()), FlwUserResponse.class);
         assertEquals(expectedResponse, actual);
     }
     
@@ -3637,7 +3643,8 @@ public class UserControllerBundleIT extends BasePaxIT {
         String expectedJsonResponse = createFlwUserResponseJson(
                 rh.hindiLanguage().getCode(),  //defaultLanguageLocationCode
                 null,  //locationCode
-                Arrays.asList(rh.hindiLanguage().getCode(), rh.kannadaLanguage().getCode()), // allowedLanguageLocationCodes
+                Arrays.asList(rh.hindiLanguage().getCode(), rh.kannadaLanguage()
+                        .getCode()), // allowedLanguageLocationCodes
                 0L,    //currentUsageInPulses
                 0L,    //endOfUsagePromptCounter
                 false, //welcomePromptFlag
@@ -3691,7 +3698,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         );
 
         String expectedJsonResponse = createFlwUserResponseJson(rh
-                .kannadaLanguage().getCode(), // defaultLanguageLocationCode=circle default
+                        .kannadaLanguage().getCode(), // defaultLanguageLocationCode=circle default
                 rh.tamilLanguage().getCode(), // locationCode
                 null, // allowedLanguageLocationCodes
                 0L, // currentUsageInPulses
@@ -3954,6 +3961,52 @@ public class UserControllerBundleIT extends BasePaxIT {
         httpPost.addHeader("content-type", "application/json");
 
         String expectedJsonResponse = createFailureResponseJson("<MOBILE_ACADEMY: Not Deployed In State>");
+        response = SimpleHttpClient.httpRequestAndResponse(httpPost,
+                ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+        assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, response.getStatusLine()
+                .getStatusCode());
+    }
+
+    // Verify if a circle has multiple states and the service is not deployed in any of them than the call
+    // should be rejected
+    @Test
+    public void verifyNIP160() throws IOException, InterruptedException {
+        // setup delhi circle with two states delhi and karnataka
+
+        rh.newDelhiDistrict();
+        Circle c = rh.delhiCircle();
+        rh.bangaloreDistrict();
+        c.getStates().add(rh.karnatakaState());
+        circleDataService.update(c);
+
+        // invoke get user detail API
+        HttpGet httpGet = createHttpGet(true, "mobilekunji", // service
+                true, "1200000000", // callingNumber
+                true, "OP", // operator
+                true, rh.delhiCircle().getName(),// circle
+                true, "123456789012345" // callId
+        );
+
+        String expectedJsonResponse = createFailureResponseJson("<MOBILE_KUNJI: Not Deployed In State>");
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+        assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, response.getStatusLine().getStatusCode());
+
+        // Invoke set LLC API
+        // Set LLC for which service is not deployed i.e karnataka
+        HttpPost httpPost = new HttpPost(String.format(
+                "http://localhost:%d/api/mobilekunji/languageLocationCode",
+                TestContext.getJettyPort()));
+        StringEntity params = new StringEntity(
+                "{\"callingNumber\":1200000000,\"callId\":123456789012345,\"languageLocationCode\":\""
+                        + rh.tamilLanguage().getCode() + "\"}");
+        httpPost.setEntity(params);
+        httpPost.addHeader("content-type", "application/json");
+
         response = SimpleHttpClient.httpRequestAndResponse(httpPost,
                 ADMIN_USERNAME, ADMIN_PASSWORD);
         assertEquals(expectedJsonResponse,
