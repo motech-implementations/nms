@@ -62,6 +62,7 @@ if __name__ == '__main__':
     parser.add_argument("--cleardb", help="clear database", action="store_true")
     parser.add_argument("--debug", help="debug mode, even more verbose", action="store_true")
     parser.add_argument("--mctsmoms", help="number of MCTS mothers", type=int, default=0)
+    parser.add_argument("--mctskids", help="number of MCTS children", type=int, default=0)
     args = parser.parse_args()
 
     if args.verbose:
@@ -91,3 +92,9 @@ if __name__ == '__main__':
     #
     if args.mctsmoms > 0:
         exec_http_get("{}/module/testing/createMctsMoms".format(args.server), {'count': args.mctsmoms})
+
+    #
+    # Create MCTS children file?
+    #
+    if args.mctskids > 0:
+        exec_http_get("{}/module/testing/createMctsKids".format(args.server), {'count': args.mctskids})

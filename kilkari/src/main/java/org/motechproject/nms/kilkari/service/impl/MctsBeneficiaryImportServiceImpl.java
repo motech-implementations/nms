@@ -49,6 +49,7 @@ import java.util.Map;
 @Service("mctsBeneficiaryImportService")
 public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportService {
 
+    public static final String IMPORTED = "Imported {}";
     private SubscriptionService subscriptionService;
     private SubscriptionErrorDataService subscriptionErrorDataService;
     private LocationService locationService;
@@ -125,11 +126,11 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                 importMotherRecord(record);
                 count++;
                 if (count % PROGRESS_INTERVAL == 0) {
-                    LOGGER.debug("Imported {}", timer.frequency(count));
+                    LOGGER.debug(IMPORTED, timer.frequency(count));
                 }
             }
             if (count % PROGRESS_INTERVAL != 0) {
-                LOGGER.debug("Imported {}", timer.frequency(count));
+                LOGGER.debug(IMPORTED, timer.frequency(count));
             }
         } catch (ConstraintViolationException e) {
             throw new CsvImportDataException(String.format("MCTS mother import error, constraints violated: %s",
@@ -155,9 +156,16 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
         try {
             Map<String, Object> record;
+            Timer timer = new Timer("kid", "kids");
             while (null != (record = csvImporter.read())) {
                 importChildRecord(record);
                 count++;
+                if (count % PROGRESS_INTERVAL == 0) {
+                    LOGGER.debug(IMPORTED, timer.frequency(count));
+                }
+            }
+            if (count % PROGRESS_INTERVAL != 0) {
+                LOGGER.debug(IMPORTED, timer.frequency(count));
             }
         } catch (ConstraintViolationException e) {
             throw new CsvImportDataException(String.format("MCTS child import error, constraints violated: %s",

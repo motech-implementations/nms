@@ -12,4 +12,6 @@ public interface TestingService {
     void createSubscriptionPacks();
 
     String createMctsMoms(int count) throws IOException;
+
+    String createMctsKids(int count) throws IOException;
 }
