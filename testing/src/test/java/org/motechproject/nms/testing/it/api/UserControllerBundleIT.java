@@ -3992,7 +3992,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "1200000000", // callingNumber
                 true, "OP", // operator
                 true, rh.delhiCircle().getName(),// circle
-                true, "123456789012345" // callId
+                true, VALID_CALL_ID // callId
         );
 
         String expectedJsonResponse = createFailureResponseJson("<MOBILE_KUNJI: Not Deployed In State>");
@@ -4008,7 +4008,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 "http://localhost:%d/api/mobilekunji/languageLocationCode",
                 TestContext.getJettyPort()));
         StringEntity params = new StringEntity(
-                "{\"callingNumber\":1200000000,\"callId\":123456789012345,\"languageLocationCode\":\""
+                "{\"callingNumber\":1200000000,\"callId\":" + VALID_CALL_ID + ",\"languageLocationCode\":\""
                         + rh.tamilLanguage().getCode() + "\"}");
         httpPost.setEntity(params);
         httpPost.addHeader("content-type", "application/json");
