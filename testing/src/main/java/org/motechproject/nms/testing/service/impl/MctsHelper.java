@@ -532,9 +532,6 @@ public class MctsHelper {
         Timer timer = mom ? new Timer("mom", "moms") :  new Timer("kid", "kids");
         File file = findNewFileName(mom);
         BufferedWriter writer = new BufferedWriter(new FileWriter(file));
-        writer.write("###ignore this line###");
-        writer.newLine();
-        writer.newLine();
         writer.write(StringUtils.join(mom ? MCTS_MOM_FIELDS : MCTS_KID_FIELDS, "\t"));
         writer.newLine();
         for (int i = 0; i < count; i++) {
