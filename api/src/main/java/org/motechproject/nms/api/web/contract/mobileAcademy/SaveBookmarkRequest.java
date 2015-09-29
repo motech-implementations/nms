@@ -11,7 +11,7 @@ public class SaveBookmarkRequest {
 
     private Long callingNumber;
 
-    private Long callId;
+    private String callId;
 
     private String bookmark;
 
@@ -28,11 +28,11 @@ public class SaveBookmarkRequest {
         this.callingNumber = callingNumber;
     }
 
-    public Long getCallId() {
+    public String getCallId() {
         return callId;
     }
 
-    public void setCallId(Long callId) {
+    public void setCallId(String callId) {
         this.callId = callId;
     }
 

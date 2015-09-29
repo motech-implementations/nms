@@ -81,6 +81,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     private static final String ADMIN_USERNAME = "motech";
     private static final String ADMIN_PASSWORD = "motech";
 
+    private static final String VALID_CALL_ID = "1234567890123456789012345";
+
     @Inject
     SubscriberService subscriberService;
     @Inject
@@ -195,7 +197,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscription.setStatus(Subscription.getStatus(subscription, DateTime.now()));
         subscriptionDataService.update(subscription);
 
-        HttpGet httpGet = createHttpGet(true, "1000000000", true, "123456789012345");
+        HttpGet httpGet = createHttpGet(true, "1000000000", true, VALID_CALL_ID);
         String expectedJson = createInboxResponseJson(new HashSet<>(Arrays.asList(
                 new InboxSubscriptionDetailResponse(
                         subscription.getSubscriptionId(),
@@ -236,7 +238,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         Pattern childPackJsonPattern = Pattern.compile(".*\"subscriptionPack\":\"childPack\",\"inboxWeekId\":\"w36_1\",\"contentFileName\":\"w36_1\\.wav.*");
         Pattern pregnancyPackJsonPattern = Pattern.compile(".*\"subscriptionPack\":\"pregnancyPack\",\"inboxWeekId\":\"w2_2\",\"contentFileName\":\"w2_2\\.wav.*");
 
-        HttpGet httpGet = createHttpGet(true, "9999911122", true, "123456789012345");
+        HttpGet httpGet = createHttpGet(true, "9999911122", true, VALID_CALL_ID);
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, childPackJsonPattern, ADMIN_USERNAME,
                 ADMIN_PASSWORD));
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, pregnancyPackJsonPattern, ADMIN_USERNAME,
@@ -257,7 +259,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         Pattern expectedJsonPattern = Pattern.compile(
                 ".*\"subscriptionPack\":\"pregnancyPack\",\"inboxWeekId\":null,\"contentFileName\":null.*");
 
-        HttpGet httpGet = createHttpGet(true, "9999911122", true, "123456789012345");
+        HttpGet httpGet = createHttpGet(true, "9999911122", true, VALID_CALL_ID);
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, expectedJsonPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
@@ -273,7 +275,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
         String expectedJson = "{\"inboxSubscriptionDetailList\":[]}";
 
-        HttpGet httpGet = createHttpGet(true, "1000000000", true, "123456789012345");
+        HttpGet httpGet = createHttpGet(true, "1000000000", true, VALID_CALL_ID);
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, expectedJson, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
@@ -290,7 +292,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
         Pattern expectedJsonPattern = Pattern.compile(".*\"subscriptionPack\":\"childPack\",\"inboxWeekId\":\"w48_1\",\"contentFileName\":\"w48_1\\.wav.*");
 
-        HttpGet httpGet = createHttpGet(true, "1000000000", true, "123456789012345");
+        HttpGet httpGet = createHttpGet(true, "1000000000", true, VALID_CALL_ID);
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, expectedJsonPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
@@ -306,7 +308,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
         String expectedJson = "{\"inboxSubscriptionDetailList\":[]}";
 
-        HttpGet httpGet = createHttpGet(true, "1000000000", true, "123456789012345");
+        HttpGet httpGet = createHttpGet(true, "1000000000", true, VALID_CALL_ID);
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, expectedJson, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
 
@@ -333,7 +335,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
         // inbox request should return empty inbox
         String expectedJson = "{\"inboxSubscriptionDetailList\":[]}";
-        HttpGet httpGet = createHttpGet(true, "2000000000", true, "123456789012345");
+        HttpGet httpGet = createHttpGet(true, "2000000000", true, VALID_CALL_ID);
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, expectedJson, ADMIN_USERNAME, ADMIN_PASSWORD));
 
         // create two more subscriptions -- this time using MCTS import as subscription origin
@@ -362,7 +364,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         Pattern childPackJsonPattern = Pattern.compile(".*\"subscriptionPack\":\"childPack\",\"inboxWeekId\":\"w36_1\",\"contentFileName\":\"w36_1\\.wav.*");
         Pattern pregnancyPackJsonPattern = Pattern.compile(".*\"subscriptionPack\":\"pregnancyPack\",\"inboxWeekId\":\"w2_2\",\"contentFileName\":\"w2_2\\.wav.*");
 
-        httpGet = createHttpGet(true, "2000000000", true, "123456789012345");
+        httpGet = createHttpGet(true, "2000000000", true, VALID_CALL_ID);
 
         // inbox request should return two subscriptions
 
@@ -376,7 +378,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     @Test
     public void testInboxRequestBadSubscriber() throws IOException, InterruptedException {
 
-        HttpGet httpGet = createHttpGet(true, "3000000000", true, "123456789012345");
+        HttpGet httpGet = createHttpGet(true, "3000000000", true, VALID_CALL_ID);
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Not Found>");
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_NOT_FOUND, expectedJsonResponse,
@@ -387,7 +389,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     @Test
     public void testInboxRequestNoSubscriber() throws IOException, InterruptedException {
 
-        HttpGet httpGet = createHttpGet(false, null, true, "123456789012345");
+        HttpGet httpGet = createHttpGet(false, null, true, VALID_CALL_ID);
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Not Present>");
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
@@ -402,7 +404,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 callingNumber,
                 rh.airtelOperator(),
                 rh.delhiCircle().getName(),
-                123456789012545L,
+                VALID_CALL_ID,
                 rh.hindiLanguage().getCode(),
                 subscriptionPack);
         ObjectMapper mapper = new ObjectMapper();
@@ -500,7 +502,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     @Test
     public void testCreateSubscriptionsNoLanguageInDB() throws IOException, InterruptedException {
         SubscriptionRequest subscriptionRequest = new SubscriptionRequest(9999911122L, rh.airtelOperator(),
-                rh.delhiCircle().getName(), 123456789012545L, "99", sh.childPack().getName());
+                rh.delhiCircle().getName(), VALID_CALL_ID, "99", sh.childPack().getName());
         ObjectMapper mapper = new ObjectMapper();
         String subscriptionRequestJson = mapper.writeValueAsString(subscriptionRequest);
 
@@ -523,7 +525,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 9999911122L,
                 rh.airtelOperator(),
                 rh.karnatakaCircle().getName(),
-                123456789012545L,
+                VALID_CALL_ID,
                 rh.kannadaLanguage().getCode(),
                 sh.childPack().getName());
         ObjectMapper mapper = new ObjectMapper();
@@ -548,7 +550,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         String subscriptionId = subscription.getSubscriptionId();
 
         SubscriptionRequest subscriptionRequest = new SubscriptionRequest(1000000000L, rh.airtelOperator(),
-                rh.delhiCircle().getName(), 123456789012545L, subscriptionId);
+                rh.delhiCircle().getName(), VALID_CALL_ID, subscriptionId);
         ObjectMapper mapper = new ObjectMapper();
         String subscriptionRequestJson = mapper.writeValueAsString(subscriptionRequest);
 
@@ -575,7 +577,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscriptionService.deactivateSubscription(subscription, DeactivationReason.DEACTIVATED_BY_USER);
 
         SubscriptionRequest subscriptionRequest = new SubscriptionRequest(1000000000L, rh.airtelOperator(), rh.delhiCircle().getName(),
-                123456789012545L, subscriptionId);
+                VALID_CALL_ID, subscriptionId);
         ObjectMapper mapper = new ObjectMapper();
         String subscriptionRequestJson = mapper.writeValueAsString(subscriptionRequest);
 
@@ -597,7 +599,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     public void testDeactivateSubscriptionRequestInvalidSubscription() throws IOException, InterruptedException {
 
         SubscriptionRequest subscriptionRequest = new SubscriptionRequest(1000000000L, rh.airtelOperator(), rh.delhiCircle().getName(),
-                123456789012545L, "77f13128-037e-4f98-8651-285fa618d94a");
+                VALID_CALL_ID, "77f13128-037e-4f98-8651-285fa618d94a");
         ObjectMapper mapper = new ObjectMapper();
         String subscriptionRequestJson = mapper.writeValueAsString(subscriptionRequest);
 
@@ -629,7 +631,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 1234567890L, //callingNumber
                 rh.airtelOperator(), //operator
                 rh.delhiCircle().getName(), //circle
-                123456789012345L, //callId
+                VALID_CALL_ID, //callId
                 123L, //callStartTime
                 456L, //callEndTime
                 123, //callDurationInPulses
@@ -662,7 +664,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 1234567890L, //callingNumber
                 rh.airtelOperator(), //operator
                 rh.delhiCircle().getName(), //circle
-                123456789012345L, //callId
+                VALID_CALL_ID, //callId
                 123L, //callStartTime
                 456L, //callEndTime
                 123, //callDurationInPulses
@@ -682,7 +684,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 1234567890L, //callingNumber
                 rh.airtelOperator(), //operator
                 rh.delhiCircle().getName(), //circle
-                123456789012345L, //callId
+                VALID_CALL_ID, //callId
                 123L, //callStartTime
                 456L, //callEndTime
                 123, //callDurationInPulses
@@ -722,7 +724,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 3000000000L, // callingNumber
                 "A", // operator
                 "AP", // circle
-                123456789012345L, // callId
+                VALID_CALL_ID, // callId
                 123L, // callStartTime
                 456L, // callEndTime
                 123, // callDurationInPulses
@@ -736,7 +738,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         InboxCallDetailRecord inboxCallDetailRecord = inboxCallDetailsDataService
                 .retrieve("callingNumber", 3000000000L);
         assertTrue(3000000000L == inboxCallDetailRecord.getCallingNumber());
-        assertTrue(123456789012345L == inboxCallDetailRecord.getCallId());
+        assertTrue(VALID_CALL_ID.equals(inboxCallDetailRecord.getCallId()));
         assertEquals("A", inboxCallDetailRecord.getOperator());
         assertEquals("AP", inboxCallDetailRecord.getCircle());
         assertTrue(123 == inboxCallDetailRecord.getCallDurationInPulses());
@@ -763,7 +765,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 3000000000L, // callingNumber
                 "A", // operator
                 "AP", // circle
-                123456789012345L, // callId
+                VALID_CALL_ID, // callId
                 123L, // callStartTime
                 456L, // callEndTime
                 123, // callDurationInPulses
@@ -792,7 +794,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         InboxCallDetailRecord inboxCallDetailRecord = inboxCallDetailsDataService
                 .retrieve("callingNumber", 3000000000L);
         assertTrue(3000000000L == inboxCallDetailRecord.getCallingNumber());
-        assertTrue(123456789012345L == inboxCallDetailRecord.getCallId());
+        assertTrue(VALID_CALL_ID.equals(inboxCallDetailRecord.getCallId()));
         assertEquals("A", inboxCallDetailRecord.getOperator());
         assertEquals("AP", inboxCallDetailRecord.getCircle());
         assertTrue(123 == inboxCallDetailRecord.getCallDurationInPulses());
@@ -846,7 +848,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
 
         HttpGet httpGet = createHttpGet(true, "4000000000", true,
-                "123456789012345");
+                VALID_CALL_ID);
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
@@ -875,7 +877,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         String expectedJson = "{\"inboxSubscriptionDetailList\":[]}";
 
         HttpGet httpGet = createHttpGet(true, "4000000000", true,
-                "123456789012345");
+                VALID_CALL_ID);
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
         assertTrue(expectedJson.equals(EntityUtils.toString(response.getEntity()))  );
@@ -888,7 +890,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     @Test
     public void verifyFT92() throws IOException, InterruptedException {
 
-        HttpGet httpGet = createHttpGet(true, "", true, "123456789012345");
+        HttpGet httpGet = createHttpGet(true, "", true, VALID_CALL_ID);
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Not Present>");
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
@@ -955,7 +957,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                         + "\",\"subscriptionPack\":\"pregnancyPack\",\"inboxWeekId\":\"w72_2\",\"contentFileName\":\"w72_2.wav.*");
 
         HttpGet httpGet = createHttpGet(true, "9999911122", true,
-                "123456789012345");
+                VALID_CALL_ID);
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
                 childPackJsonPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
@@ -1004,7 +1006,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 + "\",\"subscriptionPack\":\"childPack\",\"inboxWeekId\":\"w1_1\",\"contentFileName\":\"w1_1.wav\"}]}";
 
         HttpGet httpGet = createHttpGet(true, "9999911122", true,
-                "123456789012345");
+                VALID_CALL_ID);
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
                 expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
@@ -1059,7 +1061,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                         + "\",\"subscriptionPack\":\"pregnancyPack\",\"inboxWeekId\":\"w1_1\",\"contentFileName\":\"w1_1.wav.*");
 
         HttpGet httpGet = createHttpGet(true, "9999911122", true,
-                "123456789012345");
+                VALID_CALL_ID);
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
                 childPackJsonPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
@@ -1112,7 +1114,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 + "\",\"subscriptionPack\":\"pregnancyPack\",\"inboxWeekId\":\"w1_1\",\"contentFileName\":\"w1_1.wav\"}]}";
 
         HttpGet httpGet = createHttpGet(true, "9999911122", true,
-                "123456789012345");
+                VALID_CALL_ID);
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
                 expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
@@ -1123,7 +1125,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     @Test
     public void verifyFT83() throws IOException, InterruptedException {
 
-    	HttpGet httpGet = createHttpGet(true, "123456789", true, "123456789012345");
+    	HttpGet httpGet = createHttpGet(true, "123456789", true, VALID_CALL_ID);
     	String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
@@ -1137,7 +1139,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT84() throws IOException, InterruptedException {
-        HttpGet httpGet = createHttpGet(true, "12345678901", true, "123456789012345");
+        HttpGet httpGet = createHttpGet(true, "12345678901", true, VALID_CALL_ID);
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
@@ -1162,7 +1164,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 1234567890L, // callingNumber
                 "A", // operator
                 "AP", // circle
-                123456789012345L, // callId
+                VALID_CALL_ID, // callId
                 123L, // callStartTime
                 456L, // callEndTime
                 123, // callDurationInPulses
@@ -1209,7 +1211,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 3000000000L, // callingNumber
                 "A", // operator
                 "AP", // circle
-                123456789012345L, // callId
+                VALID_CALL_ID, // callId
                 123L, // callStartTime
                 456L, // callEndTime
                 123, // callDurationInPulses
@@ -1248,7 +1250,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     public void verifyFT85() throws IOException, InterruptedException {
 
         // callingNumber alphanumeric
-        HttpGet httpGet = createHttpGet(true, "12345DF7890", true, "123456789012345");
+        HttpGet httpGet = createHttpGet(true, "12345DF7890", true, VALID_CALL_ID);
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
@@ -1272,7 +1274,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 3000000000L, // callingNumber
                 "A", // operator
                 "AP", // circle
-                123456789012345L, // callId
+                VALID_CALL_ID, // callId
                 123L, // callStartTime
                 456L, // callEndTime
                 123, // callDurationInPulses
@@ -1314,7 +1316,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 3000000000L, // callingNumber
                 "A", // operator
                 "AP", // circle
-                123456789012345L, // callId
+                VALID_CALL_ID, // callId
                 123L, // callStartTime
                 456L, // callEndTime
                 123, // callDurationInPulses
@@ -1335,7 +1337,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         InboxCallDetailRecord inboxCallDetailRecord = inboxCallDetailsDataService
                 .retrieve("callingNumber", 3000000000L);
         assertTrue(3000000000L == inboxCallDetailRecord.getCallingNumber());
-        assertTrue(123456789012345L == inboxCallDetailRecord.getCallId());
+        assertTrue(VALID_CALL_ID.equals(inboxCallDetailRecord.getCallId()));
         assertEquals("A", inboxCallDetailRecord.getOperator());
         assertEquals("AP", inboxCallDetailRecord.getCircle());
         assertTrue(123 == inboxCallDetailRecord.getCallDurationInPulses());
@@ -1370,7 +1372,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 3000000000L, // callingNumber
                 "A", // operator
                 "AP", // circle
-                123456789012345L, // callId
+                VALID_CALL_ID, // callId
                 123L, // callStartTime
                 456L, // callEndTime
                 123, // callDurationInPulses
@@ -1430,7 +1432,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 // Blank
                 "A", // operator
                 "AP", // circle
-                "123456789012345" // callId
+                VALID_CALL_ID // callId
         );
 
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Not Present>");
@@ -1449,7 +1451,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         HttpGet httpGet = createGetSubscriberDetailsRequest("1234567890", // callingNumber
                 "", // operator Blank(optional param)
                 "AP", // circle
-                "123456789012345" // callId
+                VALID_CALL_ID // callId
         );
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
@@ -1467,7 +1469,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         HttpGet httpGet = createGetSubscriberDetailsRequest("1234567890", // callingNumber
                 "A", // operator
                 "", // circle Blank (optional param)
-                "123456789012345" // callId
+                VALID_CALL_ID // callId
         );
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
@@ -1532,7 +1534,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 + newSubscription.getSubscriptionId()
                 + "\",\"subscriptionPack\":\"pregnancyPack\",\"inboxWeekId\":\"w1_1\",\"contentFileName\":\"w1_1.wav\"}]}";
 
-        HttpGet httpGet = createHttpGet(true, "9999911122", true, "123456789012345");
+        HttpGet httpGet = createHttpGet(true, "9999911122", true, VALID_CALL_ID);
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
                 expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
@@ -1576,7 +1578,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 + newSubscription.getSubscriptionId()
                 + "\",\"subscriptionPack\":\"pregnancyPack\",\"inboxWeekId\":\"w1_1\",\"contentFileName\":\"w1_1.wav\"}]}";
 
-        HttpGet httpGet = createHttpGet(true, "9999911122", true, "123456789012345");
+        HttpGet httpGet = createHttpGet(true, "9999911122", true, VALID_CALL_ID);
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
                 expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
@@ -1658,7 +1660,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 1234567890L, // callingNumber
                 "A", // operator
                 "AP", // circle
-                12345678901234L, // callId less than 15 digit
+                VALID_CALL_ID.substring(1), // callId less than 25
                 123L, // callStartTime
                 456L, // callEndTime
                 123, // callDurationInPulses
@@ -1685,7 +1687,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 1234567890L, // callingNumber
                 "A", // operator
                 "AP", // circle
-                1234567890123456L, // callId more than 15 digit
+                VALID_CALL_ID + "12", // callId more than 15 digit
                 123L, // callStartTime
                 456L, // callEndTime
                 123, // callDurationInPulses
@@ -1781,7 +1783,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         // setup create subscription request
         SubscriptionRequest subscriptionRequest = new SubscriptionRequest(
                 9999911122L, rh.airtelOperator(), circle.getName(),
-                123456789012545L, language3.getCode(),
+                VALID_CALL_ID, language3.getCode(),
                 sh.childPack().getName());
         ObjectMapper mapper = new ObjectMapper();
         String subscriptionRequestJson = mapper
@@ -1857,7 +1859,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         // setup create subscription request
         SubscriptionRequest subscriptionRequest = new SubscriptionRequest(
                 9999911122L, rh.airtelOperator(), circle.getName(),
-                123456789012545L, language3.getCode(), sh.childPack().getName());
+                VALID_CALL_ID, language3.getCode(), sh.childPack().getName());
         ObjectMapper mapper = new ObjectMapper();
         String subscriptionRequestJson = mapper
                 .writeValueAsString(subscriptionRequest);
@@ -1889,7 +1891,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 1234567899L, // unsubscribed callingNumber
                 "A", // operator
                 "AP", // circle
-                123456789012345L, // callId
+                VALID_CALL_ID, // callId
                 123L, // callStartTime
                 456L, // callEndTime
                 123, // callDurationInPulses
@@ -1903,7 +1905,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         InboxCallDetailRecord inboxCallDetailRecord = inboxCallDetailsDataService
                 .retrieve("callingNumber", 1234567899L);
         assertTrue(1234567899L == inboxCallDetailRecord.getCallingNumber());
-        assertTrue(123456789012345L == inboxCallDetailRecord.getCallId());
+        assertTrue(VALID_CALL_ID.equals(inboxCallDetailRecord.getCallId()));
         assertEquals("A", inboxCallDetailRecord.getOperator());
         assertEquals("AP", inboxCallDetailRecord.getCircle());
         assertTrue(123 == inboxCallDetailRecord.getCallDurationInPulses());
@@ -1925,7 +1927,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 5000000000L, // callingNumber
                 "A", // operator
                 "AP", // circle
-                123456789012345L, // callId
+                VALID_CALL_ID, // callId
                 123L, // callStartTime
                 456L, // callEndTime
                 123, // callDurationInPulses
@@ -1940,8 +1942,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 .retrieve("callingNumber", 5000000000L);
         assertEquals(5000000000L,
                 (long) inboxCallDetailRecord2.getCallingNumber());
-        assertEquals(123456789012345L,
-                (long) inboxCallDetailRecord2.getCallId());
+        assertEquals(VALID_CALL_ID, inboxCallDetailRecord2.getCallId());
         assertEquals("A", inboxCallDetailRecord2.getOperator());
         assertEquals("AP", inboxCallDetailRecord2.getCircle());
         assertEquals(123,
@@ -1965,7 +1966,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 // missing
                 "A", // operator
                 "AP", // circle
-                "123456789012345" // callId
+                VALID_CALL_ID // callId
         );
 
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Not Present>");
@@ -1992,7 +1993,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         HttpGet httpGet = createGetSubscriberDetailsRequest("1234567890", // callingNumber
                 null, // operator missing
                 "AP", // circle
-                "123456789012345" // callId more than 15 digits
+                VALID_CALL_ID // callId more than 15 digits
         );
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
@@ -2013,7 +2014,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         HttpGet httpGet = createGetSubscriberDetailsRequest("1234567890", // callingNumber
                 "A", // operator
                 null, // circle missing
-                "123456789012345" // callId
+                VALID_CALL_ID // callId
         );
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
@@ -2163,7 +2164,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         String subscriptionId = subscription.getSubscriptionId();
         // callingNumber less than 10 digits
         HttpDeleteWithBody httpDelete = createDeactivateSubscriptionHttpDelete(
-                "100000000", "A", "AP", "123456789012345", subscriptionId);
+                "100000000", "A", "AP", VALID_CALL_ID, subscriptionId);
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
@@ -2188,7 +2189,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
         // callingNumber more than 10 digits
         HttpDeleteWithBody httpDelete = createDeactivateSubscriptionHttpDelete(
-                "12345678901", "A", "AP", "123456789012345", subscriptionId);
+                "12345678901", "A", "AP", VALID_CALL_ID, subscriptionId);
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
                 httpDelete, ADMIN_USERNAME, ADMIN_PASSWORD);
@@ -2210,7 +2211,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
         // callingNumber alphanumeric
         HttpDeleteWithBody httpDelete = createDeactivateSubscriptionHttpDelete(
-                "1234DE678901", "A", "AP", "123456789012345", subscriptionId);
+                "1234DE678901", "A", "AP", VALID_CALL_ID, subscriptionId);
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpDelete, ADMIN_USERNAME,
                 ADMIN_PASSWORD);
@@ -2225,7 +2226,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
         // calledNumber missing
         HttpDeleteWithBody httpDelete = createDeactivateSubscriptionHttpDelete(
-                null, "A", "AP", "123456789012345",
+                null, "A", "AP", VALID_CALL_ID,
                 "77f13128-037e-4f98-8651-285fa618d94a");
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Not Present>");
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
@@ -2250,7 +2251,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
         // circle missing
         HttpDeleteWithBody httpDelete = createDeactivateSubscriptionHttpDelete(
-                "1000000000", null, "AP", "123456789012345",
+                "1000000000", null, "AP", VALID_CALL_ID,
                 subscriptionId);
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
                 httpDelete, ADMIN_USERNAME, ADMIN_PASSWORD);
@@ -2271,7 +2272,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
         // circle missing
         HttpDeleteWithBody httpDelete = createDeactivateSubscriptionHttpDelete(
-                "1000000000", "A", null, "123456789012345",
+                "1000000000", "A", null, VALID_CALL_ID,
                 subscriptionId);
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
                 httpDelete, ADMIN_USERNAME, ADMIN_PASSWORD);
@@ -2324,7 +2325,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
             seperator = ",";
         }
         if (callId != null) {
-            sb.append(String.format("%s\"callId\": %s", seperator, callId));
+            sb.append(String.format("%s\"callId\": \"%s\"", seperator, callId));
             seperator = ",";
         }
         if (languageLocationCode != null) {
@@ -2376,7 +2377,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     public void verifyFT62() throws IOException, InterruptedException {
         // callId more than 15 digit
         HttpPost httpPost = createSubscriptionHttpPost("1234567890", "A", "AP",
-                "1234567890125456", "10", "childPack");
+                VALID_CALL_ID.concat("foo"), "10", "childPack");
         String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
                 httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
@@ -2411,7 +2412,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         HttpPost httpPost = createInboxCallDetailsRequestHttpPost("1234567890", // callingNumber
                 "A", // operator
                 "AP", // circle
-                "123456789012345", // callId
+                VALID_CALL_ID, // callId
                 "7/12/2015", // callStartTime invalid
                 "456", // callEndTime
                 "123", // callDurationInPulses
@@ -2432,7 +2433,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         HttpPost httpPost = createInboxCallDetailsRequestHttpPost("1234567890", // callingNumber
                 "A", // operator
                 "AP", // circle
-                "123456789012345", // callId
+                VALID_CALL_ID, // callId
                 "456", // callStartTime
                 "07/12/2015", // callEndTime invalid
                 "123", // callDurationInPulses
@@ -2560,7 +2561,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         HttpPost httpPost = createInboxCallDetailsRequestHttpPost("1234567890", // callingNumber
                 "A", // operator
                 "AP", // circle
-                "123456789012345", // callId
+                VALID_CALL_ID, // callId
                 "456", // callStartTime
                 "876", // callEndTime
                 "123", // callDurationInPulses
@@ -2589,7 +2590,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         HttpPost httpPost = createInboxCallDetailsRequestHttpPost("1234567890", // callingNumber
                 "A", // operator
                 "AP", // circle
-                "123456789012345", // callId
+                VALID_CALL_ID, // callId
                 "456", // callStartTime
                 "786", // callEndTime
                 "123", // callDurationInPulses
@@ -2619,7 +2620,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 // blank
                 "A", // operator
                 "AP", // circle
-                "123456789012345", // callId
+                VALID_CALL_ID, // callId
                 "456", // callStartTime
                 "785", // callEndTime invalid
                 "123", // callDurationInPulses
@@ -2634,7 +2635,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 // blank(single space)
                 "A", // operator
                 "AP", // circle
-                "123456789012345", // callId
+                VALID_CALL_ID, // callId
                 "456", // callStartTime
                 "785", // callEndTime invalid
                 "123", // callDurationInPulses
@@ -2656,7 +2657,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         HttpPost httpPost = createInboxCallDetailsRequestHttpPost("1234567890",
                 "A", // operator
                 "", // circle blank
-                "123456789012345", // callId
+                VALID_CALL_ID, // callId
                 "456", // callStartTime
                 "785", // callEndTime invalid
                 "123", // callDurationInPulses
@@ -2670,7 +2671,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
         httpPost = createInboxCallDetailsRequestHttpPost("1234567890", "A", // operator
                 " ", // circle blank(single space)
-                "123456789012345", // callId
+                VALID_CALL_ID, // callId
                 "456", // callStartTime
                 "785", // callEndTime invalid
                 "123", // callDurationInPulses
@@ -2694,7 +2695,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         HttpPost httpPost = createInboxCallDetailsRequestHttpPost("1234567890",
                 "A", // operator
                 "AP", // circle
-                "123456789012345", // callId
+                VALID_CALL_ID, // callId
                 "456", // callStartTime
                 "785", // callEndTime invalid
                 "123", // callDurationInPulses
@@ -2707,7 +2708,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
         httpPost = createInboxCallDetailsRequestHttpPost("1234567890", "A", // operator
                 "AP", // circle
-                "123456789012345", // callId
+                VALID_CALL_ID, // callId
                 "456", // callStartTime
                 "785", // callEndTime invalid
                 "123", // callDurationInPulses
@@ -2732,14 +2733,14 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         String subscriptionId = subscription.getSubscriptionId();
 
         // callingNumber blank
-        HttpDeleteWithBody httpDelete = createDeactivateSubscriptionHttpDelete("", "A", "AP", "123456789012345",
+        HttpDeleteWithBody httpDelete = createDeactivateSubscriptionHttpDelete("", "A", "AP", VALID_CALL_ID,
                 subscriptionId);
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpDelete, ADMIN_USERNAME, ADMIN_PASSWORD);
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
 
         // callingNumber blank
-        httpDelete = createDeactivateSubscriptionHttpDelete(" ", "A", "AP", "123456789012345", subscriptionId);
+        httpDelete = createDeactivateSubscriptionHttpDelete(" ", "A", "AP", VALID_CALL_ID, subscriptionId);
         response = SimpleHttpClient.httpRequestAndResponse(httpDelete, ADMIN_USERNAME, ADMIN_PASSWORD);
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
@@ -2758,7 +2759,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         String subscriptionId = subscription.getSubscriptionId();
         // circle blank
         HttpDeleteWithBody httpDelete = createDeactivateSubscriptionHttpDelete(
-                "1000000000", "A", "", "123456789012345", subscriptionId);
+                "1000000000", "A", "", VALID_CALL_ID, subscriptionId);
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
                 httpDelete, ADMIN_USERNAME, ADMIN_PASSWORD);
@@ -2768,7 +2769,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
         // circle blank(single space)
         httpDelete = createDeactivateSubscriptionHttpDelete("1000000000", "A",
-                " ", "123456789012345", subscriptionId);
+                " ", VALID_CALL_ID, subscriptionId);
 
         response = SimpleHttpClient.httpRequestAndResponse(httpDelete,
                 ADMIN_USERNAME, ADMIN_PASSWORD);
@@ -2786,7 +2787,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
             InterruptedException {
         // callingNumber missing
         HttpPost httpPost = createSubscriptionHttpPost(null, "A", "AP",
-                "123456789012545", "10", "childPack");
+                VALID_CALL_ID, "10", "childPack");
 
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Not Present>");
 
@@ -2805,7 +2806,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     @Test
     public void verifyFT66() throws IOException, InterruptedException {
         // operator missing
-        HttpPost httpPost = createSubscriptionHttpPost("1234567890", null, rh.delhiCircle().getName(), "123456789012545", rh.hindiLanguage().getCode(),
+        HttpPost httpPost = createSubscriptionHttpPost("1234567890", null, rh.delhiCircle().getName(), VALID_CALL_ID, rh.hindiLanguage().getCode(),
                 sh.childPack().getName());
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
@@ -2823,7 +2824,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     public void verifyFT67() throws IOException, InterruptedException {
         // circle missing(optional parameter)
         HttpPost httpPost = createSubscriptionHttpPost("9999911122",
-                rh.airtelOperator(), null, "123456789012545", rh
+                rh.airtelOperator(), null, VALID_CALL_ID, rh
                         .hindiLanguage().getCode(), sh.childPack().getName());
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
@@ -2864,7 +2865,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     public void verifyFT69() throws IOException, InterruptedException {
         // languageLocationCode missing
         HttpPost httpPost = createSubscriptionHttpPost("1234567890", "A", "AP",
-                "123456789012545", null, "childPack");
+                VALID_CALL_ID, null, "childPack");
         String expectedJsonResponse = createFailureResponseJson("<languageLocationCode: Not Present>");
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
@@ -2883,7 +2884,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     public void verifyFT70() throws IOException, InterruptedException {
         // subscriptionPack missing
         HttpPost httpPost = createSubscriptionHttpPost("1234567890", "A", "AP",
-                "123456789012545", "10", null);
+                VALID_CALL_ID, "10", null);
 
         String expectedJsonResponse = createFailureResponseJson("<subscriptionPack: Not Present>");
 
@@ -2905,7 +2906,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         HttpPost httpPost = createInboxCallDetailsRequestHttpPost("1234567890", // callingNumber
                 "A", // operator
                 "AP", // circle
-                "123456789012345", // callId less
+                VALID_CALL_ID, // callId less
                 "123", // callStartTime
                 "456", // callEndTime
                 "1A3", // callDurationInPulses alphanumeric
@@ -2927,7 +2928,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         HttpPost httpPost = createInboxCallDetailsRequestHttpPost("1234567890", // callingNumber
                 "A", // operator
                 "AP", // circle
-                "123456789012345", // callId
+                VALID_CALL_ID, // callId
                 "456", // callStartTime
                 "856", // callEndTime
                 "123", // callDurationInPulses
@@ -2949,7 +2950,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         HttpPost httpPost = createInboxCallDetailsRequestHttpPost("1234567890", // callingNumber
                 "A", // operator
                 "AP", // circle
-                "123456789012345", // callId
+                VALID_CALL_ID, // callId
                 "456", // callStartTime
                 "856", // callEndTime
                 "123", // callDurationInPulses
@@ -3029,7 +3030,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 1234567890L, // callingNumber
                 "A", // operator
                 "AP", // circle
-                123456789012345L, // callId
+                VALID_CALL_ID, // callId
                 123L, // callStartTime
                 456L, // callEndTime
                 123, // callDurationInPulses
@@ -3072,7 +3073,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 1234567890L, // callingNumber
                 "A", // operator
                 "AP", // circle
-                123456789012345L, // callId
+                VALID_CALL_ID, // callId
                 123L, // callStartTime
                 456L, // callEndTime
                 123, // callDurationInPulses
@@ -3115,7 +3116,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 1234567890L, // callingNumber
                 "A", // operator
                 "AP", // circle
-                123456789012345L, // callId
+                VALID_CALL_ID, // callId
                 123L, // callStartTime
                 456L, // callEndTime
                 123, // callDurationInPulses
@@ -3158,7 +3159,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 1234567890L, // callingNumber
                 "A", // operator
                 "AP", // circle
-                123456789012345L, // callId
+                VALID_CALL_ID, // callId
                 123L, // callStartTime
                 456L, // callEndTime
                 123, // callDurationInPulses
@@ -3201,7 +3202,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 1234567890L, // callingNumber
                 "A", // operator
                 "AP", // circle
-                123456789012345L, // callId
+                VALID_CALL_ID, // callId
                 123L, // callStartTime
                 456L, // callEndTime
                 123, // callDurationInPulses
@@ -3245,7 +3246,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 1234567890L, // callingNumber
                 "A", // operator
                 "AP", // circle
-                123456789012345L, // callId
+                VALID_CALL_ID, // callId
                 123L, // callStartTime
                 456L, // callEndTime
                 123, // callDurationInPulses
@@ -3288,7 +3289,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 null, // callingNumber missing
                 "A", // operator
                 "AP", // circle
-                123456789012345L, // callId
+                VALID_CALL_ID, // callId
                 123L, // callStartTime
                 456L, // callEndTime
                 123, // callDurationInPulses
@@ -3316,7 +3317,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 1234567890L, // callingNumber
                 null, // operator missing
                 "AP", // circle
-                123456789012345L, // callId
+                VALID_CALL_ID, // callId
                 123L, // callStartTime
                 456L, // callEndTime
                 123, // callDurationInPulses
@@ -3340,7 +3341,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 1234567890L, // callingNumber
                 "A", // operator
                 null, // circle missing
-                123456789012345L, // callId
+                VALID_CALL_ID, // callId
                 123L, // callStartTime
                 456L, // callEndTime
                 123, // callDurationInPulses
@@ -3393,7 +3394,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 1234567890L, // callingNumber
                 "A", // operator
                 "AP", // circle
-                123456789012345L, // callId
+                VALID_CALL_ID, // callId
                 null, // callStartTime missing
                 456L, // callEndTime
                 123, // callDurationInPulses
@@ -3421,7 +3422,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 1234567890L, // callingNumber
                 "A", // operator
                 "AP", // circle
-                123456789012345L, // callId
+                VALID_CALL_ID, // callId
                 123L, // callStartTime
                 null, // callEndTime missing
                 123, // callDurationInPulses
@@ -3449,7 +3450,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 1234567890L, // callingNumber
                 "A", // operator
                 "AP", // circle
-                123456789012345L, // callId
+                VALID_CALL_ID, // callId
                 123L, // callStartTime
                 456L, // callEndTime
                 null, // callDurationInPulses missing
@@ -3477,7 +3478,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 1234567890L, // callingNumber
                 "A", // operator
                 "AP", // circle
-                123456789012345L, // callId
+                VALID_CALL_ID, // callId
                 123L, // callStartTime
                 456L, // callEndTime
                 123, // callDurationInPulses
@@ -3505,7 +3506,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 1234567890L, // callingNumber
                 "A", // operator
                 "AP", // circle
-                123456789012345L, // callId
+                VALID_CALL_ID, // callId
                 123L, // callStartTime
                 456L, // callEndTime
                 123, // callDurationInPulses
@@ -3530,7 +3531,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     public void verifyFT89() throws IOException,
             InterruptedException {
         // callingNumber missing
-        HttpGet httpGet = createHttpGet(false, "", true, "123456789012345");
+        HttpGet httpGet = createHttpGet(false, "", true, VALID_CALL_ID);
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Not Present>");
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
@@ -3620,7 +3621,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     public void verifyFT58() throws IOException, InterruptedException {
         // Calling Number less than 10 digit
         HttpPost httpPost = createSubscriptionHttpPost("123456789", "A", "AP",
-                "123456789012545", "10", "childPack");
+                "1234567890123456789012345", "10", "childPack");
 
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
@@ -3639,7 +3640,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     public void verifyFT59() throws IOException, InterruptedException {
         // Calling Number more than 10 digit
         HttpPost httpPost = createSubscriptionHttpPost("12345678901", "A",
-                "AP", "123456789012545", "10", "childPack");
+                "AP", "1234567890123456789012345", "10", "childPack");
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
                 httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
@@ -3657,7 +3658,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     @Test
     public void verifyFT60() throws IOException, InterruptedException {
         // Calling Number alphanumeric
-        HttpPost httpPost = createSubscriptionHttpPost("12345AD890", "A", "AP", "123456789012545", "10",
+        HttpPost httpPost = createSubscriptionHttpPost("12345AD890", "A", "AP", VALID_CALL_ID, "10",
                 "childPack");
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
@@ -3677,7 +3678,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 123456789L, // callingNumber less than 10 digit
                 "A", // operator
                 "AP", // circle
-                123456789012345L, // callId
+                VALID_CALL_ID, // callId
                 123L, // callStartTime
                 456L, // callEndTime
                 123, // callDurationInPulses
@@ -3703,7 +3704,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 12345678901L, // callingNumber more than 10 digit
                 "A", // operator
                 "AP", // circle
-                123456789012345L, // callId
+                VALID_CALL_ID, // callId
                 123L, // callStartTime
                 456L, // callEndTime
                 123, // callDurationInPulses
@@ -3731,7 +3732,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 // alphanumeric
                 "A", // operator
                 "AP", // circle
-                "123456789012345", // callId
+                VALID_CALL_ID, // callId
                 "123", // callStartTime
                 "456", // callEndTime
                 "123", // callDurationInPulses
@@ -3762,7 +3763,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 // digits
                 "A", // operator
                 "AP", // circle
-                "123456789012345" // callId
+                VALID_CALL_ID // callId
         );
 
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
@@ -3786,7 +3787,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 // 10 digits
                 "A", // operator
                 "AP", // circle
-                "123456789012345" // callId
+                VALID_CALL_ID // callId
         );
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
 
@@ -3810,7 +3811,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 // numeric
                 "A", // operator
                 "AP", // circle
-                "123456789012345" // callId
+                VALID_CALL_ID // callId
         );
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
@@ -3860,7 +3861,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                         + "\",\"subscriptionPack\":\"pregnancyPack\",\"inboxWeekId\":\"w1_1\",\"contentFileName\":\"w1_1.wav.*");
 
         HttpGet httpGet = createHttpGet(true, "9999911122", true,
-                "123456789012345");
+                VALID_CALL_ID);
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
                 childPackJsonPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
@@ -3908,7 +3909,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                         + "\",\"subscriptionPack\":\"pregnancyPack\",\"inboxWeekId\":\"w1_2\",\"contentFileName\":\"w1_2.wav.*");
 
         HttpGet httpGet = createHttpGet(true, "9999911122", true,
-                "123456789012345");
+                VALID_CALL_ID);
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
                 childPackJsonPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
@@ -3956,7 +3957,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 + "\",\"subscriptionPack\":\"childPack\",\"inboxWeekId\":\"w1_1\",\"contentFileName\":\"w1_1.wav\"}]}";
 
         HttpGet httpGet = createHttpGet(true, "9999911122", true,
-                "123456789012345");
+                VALID_CALL_ID);
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
                 expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
@@ -4008,7 +4009,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                         + "\",\"subscriptionPack\":\"childPack\",\"inboxWeekId\":\"w1_1\",\"contentFileName\":\"w1_1.wav.*");
 
         HttpGet httpGet = createHttpGet(true, "9999911122", true,
-                "123456789012345");
+                VALID_CALL_ID);
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
                 oldPregnancyPackPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
@@ -4055,7 +4056,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 + "\",\"subscriptionPack\":\"pregnancyPack\",\"inboxWeekId\":\"w1_1\",\"contentFileName\":\"w1_1.wav\"}]}";
 
         HttpGet httpGet = createHttpGet(true, "9999911122", true,
-                "123456789012345");
+                VALID_CALL_ID);
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
                 expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
@@ -4101,7 +4102,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 + "\",\"subscriptionPack\":\"pregnancyPack\",\"inboxWeekId\":\"w1_1\",\"contentFileName\":\"w1_1.wav\"}]}";
 
         HttpGet httpGet = createHttpGet(true, "9999911122", true,
-                "123456789012345");
+                VALID_CALL_ID);
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
                 expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
@@ -4143,7 +4144,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 + "\",\"subscriptionPack\":\"childPack\",\"inboxWeekId\":\"w1_1\",\"contentFileName\":\"w1_1.wav\"}]}";
 
         HttpGet httpGet = createHttpGet(true, "9999911122", true,
-                "123456789012345");
+                VALID_CALL_ID);
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
                 expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
@@ -4193,7 +4194,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                         + "\",\"subscriptionPack\":\"childPack\",\"inboxWeekId\":\"w1_1\",\"contentFileName\":\"w1_1.wav.*");
 
         HttpGet httpGet = createHttpGet(true, "9999911122", true,
-                "123456789012345");
+                VALID_CALL_ID);
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
                 oldchildPackPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,

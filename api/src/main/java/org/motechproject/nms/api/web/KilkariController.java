@@ -86,7 +86,7 @@ public class KilkariController extends BaseController {
     @RequestMapping("/inbox")
     @ResponseBody
     public InboxResponse getInboxDetails(@RequestParam(required = false) Long callingNumber,
-                                         @RequestParam(required = false) Long callId) {
+                                         @RequestParam(required = false) String callId) {
 
         log("REQUEST: /kilkari/inbox", String.format("callingNumber=%s, callId=%s",
                 LogHelper.obscure(callingNumber), callId));

@@ -42,7 +42,7 @@ public class BaseControllerTest {
         BadRequest badRequest = new BadRequest(message);
         when(subscriberService.getSubscriber(anyLong())).thenThrow(new NullPointerException(message));
 
-        String url = "/kilkari/inbox?callingNumber=1111111111&callId=123456789123456";
+        String url = "/kilkari/inbox?callingNumber=1111111111&callId=1234567891234561234512345";
 
         mockMvc.perform(
                 get(url)

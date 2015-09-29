@@ -131,7 +131,7 @@ public class MobileAcademyController extends BaseController {
             method = RequestMethod.GET)
     @ResponseBody
     public GetBookmarkResponse getBookmarkWithScore(@RequestParam(required = false) Long callingNumber,
-                                                    @RequestParam(required = false) Long callId) {
+                                                    @RequestParam(required = false) String callId) {
 
         log("REQUEST: /mobileacademy/bookmarkWithScore", String.format("callingNumber=%s, callId=%s",
                 LogHelper.obscure(callingNumber), callId));
@@ -142,7 +142,7 @@ public class MobileAcademyController extends BaseController {
             throw new IllegalArgumentException(errors.toString());
         }
 
-        validateField15Digits(errors, "callId", callId);
+        validateCallId(errors, callId);
         if (errors.length() != 0) {
             throw new IllegalArgumentException(errors.toString());
         }
@@ -182,7 +182,7 @@ public class MobileAcademyController extends BaseController {
         }
 
         // validate call id
-        validateField15Digits(errors, "callId", bookmarkRequest.getCallId());
+        validateCallId(errors, bookmarkRequest.getCallId());
         if (errors.length() != 0) {
             throw new IllegalArgumentException(errors.toString());
         }

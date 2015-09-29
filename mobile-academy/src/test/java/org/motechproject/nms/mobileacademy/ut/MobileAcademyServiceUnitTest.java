@@ -61,6 +61,8 @@ import static org.mockito.MockitoAnnotations.initMocks;
  */
 public class MobileAcademyServiceUnitTest {
 
+    private static final String VALID_CALL_ID = "1234567890123456789012345";
+
     @Mock
     private MobileAcademyService mobileAcademyService;
 
@@ -133,7 +135,7 @@ public class MobileAcademyServiceUnitTest {
         when(bookmarkService.getLatestBookmarkByUserId(anyString()))
                 .thenReturn(newBookmark);
 
-        MaBookmark mab = mobileAcademyService.getBookmark(55L, 10L);
+        MaBookmark mab = mobileAcademyService.getBookmark(55L, VALID_CALL_ID);
         assertTrue(mab.getCallingNumber() == 55);
     }
 
@@ -145,7 +147,7 @@ public class MobileAcademyServiceUnitTest {
 
     @Test
     public void setNewBookmarkTest() {
-        MaBookmark mab = new MaBookmark(1234567890L, 123456789011121L, "Chapter1_Lesson1", null);
+        MaBookmark mab = new MaBookmark(1234567890L, VALID_CALL_ID, "Chapter1_Lesson1", null);
 
         when(bookmarkService.createBookmark(any(Bookmark.class))).thenReturn(new Bookmark());
         when(bookmarkService.getLatestBookmarkByUserId(anyString())).thenReturn(null);
@@ -154,7 +156,7 @@ public class MobileAcademyServiceUnitTest {
 
     @Test
     public void setUpdateBookmarkTest() {
-        MaBookmark mab = new MaBookmark(1234567890L, 123456789011121L, "Chapter1_Lesson1", null);
+        MaBookmark mab = new MaBookmark(1234567890L, VALID_CALL_ID, "Chapter1_Lesson1", null);
 
         when(bookmarkService.createBookmark(any(Bookmark.class)))
                 .thenReturn(new Bookmark());
@@ -169,7 +171,7 @@ public class MobileAcademyServiceUnitTest {
         for (int i = 1; i < 12; i++) {
             scores.put(String.valueOf(i), ((int) (Math.random() * 100)) % 5);
         }
-        MaBookmark mab = new MaBookmark(1234567890L, 123456789011121L, "COURSE_COMPLETED", scores);
+        MaBookmark mab = new MaBookmark(1234567890L, VALID_CALL_ID, "COURSE_COMPLETED", scores);
         doNothing().when(eventRelay).sendEventMessage(any(MotechEvent.class));
 
         CompletionRecord cr = new CompletionRecord(1234567890L, 22, false, 1);
@@ -183,7 +185,7 @@ public class MobileAcademyServiceUnitTest {
         for (int i = 1; i < 12; i++) {
             scores.put(String.valueOf(i), 0);
         }
-        MaBookmark mab = new MaBookmark(1234567890L, 123456789011121L, "COURSE_COMPLETED", scores);
+        MaBookmark mab = new MaBookmark(1234567890L, VALID_CALL_ID, "COURSE_COMPLETED", scores);
         doNothing().when(eventRelay).sendEventMessage(any(MotechEvent.class));
         mobileAcademyService.setBookmark(mab);
     }
@@ -203,7 +205,7 @@ public class MobileAcademyServiceUnitTest {
         when(bookmarkService.getLatestBookmarkByUserId(anyString()))
                 .thenReturn(newBookmark);
 
-        MaBookmark retrieved = mobileAcademyService.getBookmark(55L, 56L);
+        MaBookmark retrieved = mobileAcademyService.getBookmark(55L, VALID_CALL_ID);
         assertNull(retrieved.getBookmark());
         assertNull(retrieved.getScoresByChapter());
     }

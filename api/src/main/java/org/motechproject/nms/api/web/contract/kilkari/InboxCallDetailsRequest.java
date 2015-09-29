@@ -17,7 +17,7 @@ public class InboxCallDetailsRequest {
     private Long callingNumber;
     private String operator;
     private String circle;
-    private Long callId;
+    private String callId;
     private Long callStartTime;
     private Long callEndTime;
     private Integer callDurationInPulses;
@@ -28,7 +28,7 @@ public class InboxCallDetailsRequest {
     public InboxCallDetailsRequest() { }
 
     public InboxCallDetailsRequest(Long callingNumber, // NO CHECKSTYLE More than 7 parameters
-                                   String operator, String circle, Long callId, Long callStartTime,
+                                   String operator, String circle, String callId, Long callStartTime,
                                    Long callEndTime, Integer callDurationInPulses, Integer callStatus,
                                    Integer callDisconnectReason, Set<CallDataRequest> content) {
         this.callingNumber = callingNumber;
@@ -67,11 +67,11 @@ public class InboxCallDetailsRequest {
         this.circle = circle;
     }
 
-    public Long getCallId() {
+    public String getCallId() {
         return callId;
     }
 
-    public void setCallId(Long callId) {
+    public void setCallId(String callId) {
         this.callId = callId;
     }
 

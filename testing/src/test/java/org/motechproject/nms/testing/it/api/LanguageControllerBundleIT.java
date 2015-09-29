@@ -52,6 +52,8 @@ public class LanguageControllerBundleIT extends BasePaxIT {
     private static final String ADMIN_USERNAME = "motech";
     private static final String ADMIN_PASSWORD = "motech";
 
+    private static final String VALID_CALL_ID = "1234567890123456789012345";
+
     @Inject
     FrontLineWorkerService frontLineWorkerService;
 
@@ -117,7 +119,7 @@ public class LanguageControllerBundleIT extends BasePaxIT {
     @Test
     public void testSetLanguageInvalidService() throws IOException, InterruptedException {
         HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/NO_SERVICE/languageLocationCode", TestContext.getJettyPort()));
-        StringEntity params = new StringEntity("{\"callingNumber\":1111111111,\"callId\":123456789012345,\"languageLocationCode\":10}");
+        StringEntity params = new StringEntity("{\"callingNumber\":1111111111,\"callId\":"+ VALID_CALL_ID + ",\"languageLocationCode\":10}");
         httpPost.setEntity(params);
 
         httpPost.addHeader("content-type", "application/json");
@@ -130,7 +132,7 @@ public class LanguageControllerBundleIT extends BasePaxIT {
     @Test
     public void testSetLanguageMissingCallingNumber() throws IOException, InterruptedException {
         HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/languageLocationCode", TestContext.getJettyPort()));
-        StringEntity params = new StringEntity("{\"callId\":123456789012345,\"languageLocationCode\":10}");
+        StringEntity params = new StringEntity("{\"callId\":"+ VALID_CALL_ID + ",\"languageLocationCode\":10}");
         httpPost.setEntity(params);
 
         httpPost.addHeader("content-type", "application/json");
@@ -146,7 +148,7 @@ public class LanguageControllerBundleIT extends BasePaxIT {
 
         UserLanguageRequest request = new UserLanguageRequest(
                 123L, //callingNumber
-                123456789012345l, //callId
+                VALID_CALL_ID, //callId
                 "123"); //languageLocationCode
         String json = new ObjectMapper().writeValueAsString(request);
         StringEntity params = new StringEntity(json);
@@ -192,7 +194,7 @@ public class LanguageControllerBundleIT extends BasePaxIT {
     @Test
     public void testSetLanguageMissingLanguageLocationCode() throws IOException, InterruptedException {
         HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/languageLocationCode", TestContext.getJettyPort()));
-        StringEntity params = new StringEntity("{\"callingNumber\":1111111111,\"callId\":123456789012345}");
+        StringEntity params = new StringEntity("{\"callingNumber\":1111111111,\"callId\":"+ VALID_CALL_ID + "}");
         httpPost.setEntity(params);
 
         httpPost.addHeader("content-type", "application/json");
@@ -205,7 +207,7 @@ public class LanguageControllerBundleIT extends BasePaxIT {
     @Test
     public void testSetLanguageInvalidLanguageLocationCode() throws IOException, InterruptedException {
         HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/languageLocationCode", TestContext.getJettyPort()));
-        StringEntity params = new StringEntity("{\"callingNumber\":1111111111,\"callId\":123456789012345,\"languageLocationCode\":\"AA\"}");
+        StringEntity params = new StringEntity("{\"callingNumber\":1111111111,\"callId\":"+ VALID_CALL_ID + ",\"languageLocationCode\":\"AA\"}");
         httpPost.setEntity(params);
 
         httpPost.addHeader("content-type", "application/json");
@@ -220,7 +222,7 @@ public class LanguageControllerBundleIT extends BasePaxIT {
 
         HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/languageLocationCode", TestContext.getJettyPort()));
         StringEntity params = new StringEntity(
-                "{\"callingNumber\":1111111111,\"callId\":123456789012345,\"languageLocationCode\":\""
+                "{\"callingNumber\":1111111111,\"callId\":" + VALID_CALL_ID + ",\"languageLocationCode\":\""
                         + rh.hindiLanguage().getCode() + "\"}");
         httpPost.setEntity(params);
 
@@ -242,7 +244,7 @@ public class LanguageControllerBundleIT extends BasePaxIT {
         createFlwCappedServiceNoUsageNoLocationNoLanguage();
 
         HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/languageLocationCode", TestContext.getJettyPort()));
-        StringEntity params = new StringEntity("{\"callingNumber\":1111111111,\"callId\":123456789012345,\"languageLocationCode\":77}");
+        StringEntity params = new StringEntity("{\"callingNumber\":1111111111,\"callId\":"+ VALID_CALL_ID + ",\"languageLocationCode\":77}");
         httpPost.setEntity(params);
 
         httpPost.addHeader("content-type", "application/json");
@@ -258,7 +260,7 @@ public class LanguageControllerBundleIT extends BasePaxIT {
 
         HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobileacademy/languageLocationCode", TestContext.getJettyPort()));
         StringEntity params = new StringEntity(
-                "{\"callingNumber\":1111111111,\"callId\":123456789012345,\"languageLocationCode\":\""
+                "{\"callingNumber\":1111111111,\"callId\":"+ VALID_CALL_ID + ",\"languageLocationCode\":\""
                         + rh.tamilLanguage().getCode() + "\"}");
         httpPost.setEntity(params);
 
@@ -277,7 +279,7 @@ public class LanguageControllerBundleIT extends BasePaxIT {
 
         HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/languageLocationCode", TestContext.getJettyPort()));
         StringEntity params = new StringEntity(
-                "{\"callingNumber\":1111111111,\"callId\":123456789012345,\"languageLocationCode\":\""
+                "{\"callingNumber\":1111111111,\"callId\":"+ VALID_CALL_ID + ",\"languageLocationCode\":\""
                         + rh.hindiLanguage().getCode() + "\"}");
 
         httpPost.setEntity(params);
@@ -310,7 +312,7 @@ public class LanguageControllerBundleIT extends BasePaxIT {
                 "http://localhost:%d/api/mobileacademy/languageLocationCode",
                 TestContext.getJettyPort()));
         StringEntity params = new StringEntity(
-                "{\"callingNumber\":1111111112,\"callId\":123456789012345,\"languageLocationCode\":\""
+                "{\"callingNumber\":1111111112,\"callId\":"+ VALID_CALL_ID + ",\"languageLocationCode\":\""
                         + rh.hindiLanguage().getCode() + "\"}");
         httpPost.setEntity(params);
         httpPost.addHeader("content-type", "application/json");
@@ -333,7 +335,7 @@ public class LanguageControllerBundleIT extends BasePaxIT {
                 "http://localhost:%d/api/mobileacademy/languageLocationCode",
                 TestContext.getJettyPort()));
         StringEntity params = new StringEntity(
-                "{\"callId\":123456789012345,\"languageLocationCode\":\""
+                "{\"callId\":"+ VALID_CALL_ID + ",\"languageLocationCode\":\""
                         + rh.hindiLanguage().getCode() + "\"}");
         httpPost.setEntity(params);
         httpPost.addHeader("content-type", "application/json");
@@ -374,7 +376,7 @@ public class LanguageControllerBundleIT extends BasePaxIT {
                 "http://localhost:%d/api/mobileacademy/languageLocationCode",
                 TestContext.getJettyPort()));
         StringEntity params = new StringEntity(
-                "{\"callingNumber\":1111111112,\"callId\":123456789012345}");
+                "{\"callingNumber\":1111111112,\"callId\":"+ VALID_CALL_ID + "}");
         httpPost.setEntity(params);
         httpPost.addHeader("content-type", "application/json");
 
@@ -395,7 +397,7 @@ public class LanguageControllerBundleIT extends BasePaxIT {
                 "http://localhost:%d/api/mobileacademy/languageLocationCode",
                 TestContext.getJettyPort()));
         StringEntity params = new StringEntity(
-                "{\"callingNumber\":123456789,\"callId\":123456789012345,\"languageLocationCode\":\""
+                "{\"callingNumber\":123456789,\"callId\":"+ VALID_CALL_ID + ",\"languageLocationCode\":\""
                         + rh.hindiLanguage().getCode() + "\"}");
         httpPost.setEntity(params);
         httpPost.addHeader("content-type", "application/json");
@@ -439,7 +441,7 @@ public class LanguageControllerBundleIT extends BasePaxIT {
                 "http://localhost:%d/api/mobileacademy/languageLocationCode",
                 TestContext.getJettyPort()));
         StringEntity params = new StringEntity(
-                "{\"callingNumber\":1234567890,\"callId\":123456789012345,\"languageLocationCode\":\"TT\"}");
+                "{\"callingNumber\":1234567890,\"callId\":"+ VALID_CALL_ID + ",\"languageLocationCode\":\"TT\"}");
         httpPost.setEntity(params);
         httpPost.addHeader("content-type", "application/json");
 
@@ -471,7 +473,7 @@ public class LanguageControllerBundleIT extends BasePaxIT {
     public void verifyFT359() throws IOException, InterruptedException{
     	createFlwWithStatusAnonymous();
     	HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/languageLocationCode", TestContext.getJettyPort()));
-        StringEntity params = new StringEntity("{\"callingNumber\":1111111111,\"callId\":123456789012345,\"languageLocationCode\":99}");
+        StringEntity params = new StringEntity("{\"callingNumber\":1111111111,\"callId\":"+ VALID_CALL_ID +",\"languageLocationCode\":99}");
         httpPost.setEntity(params);
 
         httpPost.addHeader("content-type", "application/json");
