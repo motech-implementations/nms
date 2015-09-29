@@ -884,7 +884,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
     /**
      * To verify that Save Call Details API if rejected when mandatory parameter
      * "CallId" is having invalid value i.e. "CallId" is having value greater
-     * than 15 digit.
+     * than 25 digit.
      * This is a silly test since testCallDetailsInvalidCallId already covers this. sigh.
      */
     @Test

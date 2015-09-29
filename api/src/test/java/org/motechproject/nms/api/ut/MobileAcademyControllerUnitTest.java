@@ -70,7 +70,7 @@ public class MobileAcademyControllerUnitTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testBookmarkMinCallId() {
+    public void testBookmarkInvalidCallId() {
         SaveBookmarkRequest sb = new SaveBookmarkRequest();
         sb.setCallingNumber(BaseController.SMALLEST_10_DIGIT_NUMBER);
         sb.setCallId(VALID_CALL_ID.substring(1));

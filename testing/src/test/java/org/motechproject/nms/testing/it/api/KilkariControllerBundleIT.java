@@ -738,7 +738,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         InboxCallDetailRecord inboxCallDetailRecord = inboxCallDetailsDataService
                 .retrieve("callingNumber", 3000000000L);
         assertTrue(3000000000L == inboxCallDetailRecord.getCallingNumber());
-        assertTrue(VALID_CALL_ID.equals(inboxCallDetailRecord.getCallId()));
+        assertEquals(VALID_CALL_ID, inboxCallDetailRecord.getCallId());
         assertEquals("A", inboxCallDetailRecord.getOperator());
         assertEquals("AP", inboxCallDetailRecord.getCircle());
         assertTrue(123 == inboxCallDetailRecord.getCallDurationInPulses());
@@ -794,7 +794,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         InboxCallDetailRecord inboxCallDetailRecord = inboxCallDetailsDataService
                 .retrieve("callingNumber", 3000000000L);
         assertTrue(3000000000L == inboxCallDetailRecord.getCallingNumber());
-        assertTrue(VALID_CALL_ID.equals(inboxCallDetailRecord.getCallId()));
+        assertEquals(VALID_CALL_ID, inboxCallDetailRecord.getCallId());
         assertEquals("A", inboxCallDetailRecord.getOperator());
         assertEquals("AP", inboxCallDetailRecord.getCircle());
         assertTrue(123 == inboxCallDetailRecord.getCallDurationInPulses());
@@ -1337,7 +1337,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         InboxCallDetailRecord inboxCallDetailRecord = inboxCallDetailsDataService
                 .retrieve("callingNumber", 3000000000L);
         assertTrue(3000000000L == inboxCallDetailRecord.getCallingNumber());
-        assertTrue(VALID_CALL_ID.equals(inboxCallDetailRecord.getCallId()));
+        assertEquals(VALID_CALL_ID, inboxCallDetailRecord.getCallId());
         assertEquals("A", inboxCallDetailRecord.getOperator());
         assertEquals("AP", inboxCallDetailRecord.getCircle());
         assertTrue(123 == inboxCallDetailRecord.getCallDurationInPulses());
@@ -1652,7 +1652,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
     /**
      * To verify the behavior of Save Inbox call Details API if provided
-     * beneficiary's callId is not valid : less than 15 digits.
+     * beneficiary's callId is not valid : less than 25 digits.
      */
     @Test
     public void verifyFT27() throws IOException, InterruptedException {
@@ -1679,7 +1679,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
     /**
      * To verify the behavior of Save Inbox call Details API if provided
-     * beneficiary's callId is not valid : more than 15 digits.
+     * beneficiary's callId is not valid : more than 25 digits.
      */
     @Test
     public void verifyFT28() throws IOException, InterruptedException {
@@ -1687,7 +1687,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 1234567890L, // callingNumber
                 "A", // operator
                 "AP", // circle
-                VALID_CALL_ID + "12", // callId more than 15 digit
+                VALID_CALL_ID + "12", // callId more than 25 digit
                 123L, // callStartTime
                 456L, // callEndTime
                 123, // callDurationInPulses
@@ -1905,7 +1905,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         InboxCallDetailRecord inboxCallDetailRecord = inboxCallDetailsDataService
                 .retrieve("callingNumber", 1234567899L);
         assertTrue(1234567899L == inboxCallDetailRecord.getCallingNumber());
-        assertTrue(VALID_CALL_ID.equals(inboxCallDetailRecord.getCallId()));
+        assertEquals(VALID_CALL_ID, inboxCallDetailRecord.getCallId());
         assertEquals("A", inboxCallDetailRecord.getOperator());
         assertEquals("AP", inboxCallDetailRecord.getCircle());
         assertTrue(123 == inboxCallDetailRecord.getCallDurationInPulses());
@@ -2371,11 +2371,11 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
     /**
      * To verify the behavior of Create Subscription Request API if provided
-     * beneficiary's callId is not valid : more than 15 digits.
+     * beneficiary's callId is not valid : more than 25 digits.
      */
     @Test
     public void verifyFT62() throws IOException, InterruptedException {
-        // callId more than 15 digit
+        // callId more than 25 digit
         HttpPost httpPost = createSubscriptionHttpPost("1234567890", "A", "AP",
                 VALID_CALL_ID.concat("foo"), "10", "childPack");
         String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
@@ -3621,7 +3621,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     public void verifyFT58() throws IOException, InterruptedException {
         // Calling Number less than 10 digit
         HttpPost httpPost = createSubscriptionHttpPost("123456789", "A", "AP",
-                "1234567890123456789012345", "10", "childPack");
+                VALID_CALL_ID, "10", "childPack");
 
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
@@ -3640,7 +3640,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     public void verifyFT59() throws IOException, InterruptedException {
         // Calling Number more than 10 digit
         HttpPost httpPost = createSubscriptionHttpPost("12345678901", "A",
-                "AP", "1234567890123456789012345", "10", "childPack");
+                "AP", VALID_CALL_ID, "10", "childPack");
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
                 httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
