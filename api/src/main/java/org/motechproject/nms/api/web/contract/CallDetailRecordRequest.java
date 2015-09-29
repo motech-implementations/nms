@@ -18,7 +18,7 @@ import java.util.List;
  */
 public class CallDetailRecordRequest {
     private Long callingNumber;
-    private Long callId;
+    private String callId;
     private String operator;
     private String circle;
     private Long callStartTime;
@@ -40,11 +40,11 @@ public class CallDetailRecordRequest {
         this.callingNumber = callingNumber;
     }
 
-    public Long getCallId() {
+    public String getCallId() {
         return callId;
     }
 
-    public void setCallId(Long callId) {
+    public void setCallId(String callId) {
         this.callId = callId;
     }
 

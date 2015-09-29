@@ -33,7 +33,7 @@ public interface MobileAcademyService {
      * @param callId unique call tracking id
      * @return bookmark for the user if it exists, null otherwise
      */
-    MaBookmark getBookmark(Long callingNumber, Long callId);
+    MaBookmark getBookmark(Long callingNumber, String callId);
 
     /**
      * Update the bookmark for a caller

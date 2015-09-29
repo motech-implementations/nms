@@ -40,8 +40,8 @@ public class CallDetailRecord {
     private long callingNumber;
 
     @Field
-    @Column(length = 15)
-    private long callId;
+    @Column(length = 25)
+    private String callId;
 
     @Field
     @Column(length = 255)
@@ -103,11 +103,11 @@ public class CallDetailRecord {
         this.callingNumber = callingNumber;
     }
 
-    public long getCallId() {
+    public String getCallId() {
         return callId;
     }
 
-    public void setCallId(long callId) {
+    public void setCallId(String callId) {
         this.callId = callId;
     }
 

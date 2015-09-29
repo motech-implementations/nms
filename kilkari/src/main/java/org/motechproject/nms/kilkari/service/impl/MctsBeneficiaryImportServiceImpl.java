@@ -1,6 +1,5 @@
 package org.motechproject.nms.kilkari.service.impl;
 
-import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
 import org.motechproject.metrics.service.Timer;
 import org.motechproject.nms.csv.exception.CsvImportDataException;
@@ -49,6 +48,7 @@ import java.util.Map;
 @Service("mctsBeneficiaryImportService")
 public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportService {
 
+    public static final String IMPORTED = "Imported {}";
     private SubscriptionService subscriptionService;
     private SubscriptionErrorDataService subscriptionErrorDataService;
     private LocationService locationService;
@@ -111,7 +111,6 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         int count = 0;
 
         BufferedReader bufferedReader = new BufferedReader(reader);
-        readHeader(bufferedReader); // ignoring header as all interesting data is in the tab separated rows
 
         CsvMapImporter csvImporter = new CsvImporterBuilder()
                 .setProcessorMapping(getMotherProcessorMapping())
@@ -125,11 +124,11 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                 importMotherRecord(record);
                 count++;
                 if (count % PROGRESS_INTERVAL == 0) {
-                    LOGGER.debug("Imported {}", timer.frequency(count));
+                    LOGGER.debug(IMPORTED, timer.frequency(count));
                 }
             }
             if (count % PROGRESS_INTERVAL != 0) {
-                LOGGER.debug("Imported {}", timer.frequency(count));
+                LOGGER.debug(IMPORTED, timer.frequency(count));
             }
         } catch (ConstraintViolationException e) {
             throw new CsvImportDataException(String.format("MCTS mother import error, constraints violated: %s",
@@ -146,7 +145,6 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         int count = 0;
 
         BufferedReader bufferedReader = new BufferedReader(reader);
-        readHeader(bufferedReader); // ignoring header as all interesting data in tab separated rows
 
         CsvMapImporter csvImporter = new CsvImporterBuilder()
                 .setProcessorMapping(getChildProcessorMapping())
@@ -155,9 +153,16 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
         try {
             Map<String, Object> record;
+            Timer timer = new Timer("kid", "kids");
             while (null != (record = csvImporter.read())) {
                 importChildRecord(record);
                 count++;
+                if (count % PROGRESS_INTERVAL == 0) {
+                    LOGGER.debug(IMPORTED, timer.frequency(count));
+                }
+            }
+            if (count % PROGRESS_INTERVAL != 0) {
+                LOGGER.debug(IMPORTED, timer.frequency(count));
             }
         } catch (ConstraintViolationException e) {
             throw new CsvImportDataException(String.format("MCTS child import error, constraints violated: %s",
@@ -382,26 +387,6 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         return mapping;
     }
 
-    private void readHeader(BufferedReader bufferedReader) throws IOException {
-        readLineWhileBlank(bufferedReader);
-        readLineWhileNotBlank(bufferedReader);
-    }
-
-    private String readLineWhileBlank(BufferedReader bufferedReader) throws IOException {
-        String line;
-        do {
-            line = bufferedReader.readLine();
-        } while (null != line && StringUtils.isBlank(line));
-        return line;
-    }
-
-    private String readLineWhileNotBlank(BufferedReader bufferedReader) throws IOException {
-        String line;
-        do {
-            line = bufferedReader.readLine();
-        } while (null != line && StringUtils.isNotBlank(line));
-        return line;
-    }
 
 
 }

@@ -81,7 +81,7 @@ public class UserController extends BaseController {
                              @RequestParam(required = false) Long callingNumber,
                              @RequestParam(required = false) String operator,
                              @RequestParam(required = false) String circle,
-                             @RequestParam(required = false) Long callId) {
+                             @RequestParam(required = false) String callId) {
 
         log(String.format("REQUEST: /%s/user", serviceName), String.format(
                 "callingNumber=%s, callId=%s, operator=%s, callId=%s",
@@ -234,6 +234,25 @@ public class UserController extends BaseController {
         return kilkariUserResponse;
     }
 
+    private boolean serviceDeployedInCircle(Service service, Circle circle) {
+        if (circle == null) {
+            return true;
+        }
+
+        List<State> stateList = circle.getStates();
+        if (stateList == null || stateList.isEmpty()) { // No state available
+            return true;
+        }
+
+        for (State currentState : stateList) { // multiple states, false if undeployed in all states
+            if (serviceDeployedInUserState(service, currentState)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private UserResponse getFrontLineWorkerResponseUser(String serviceName, Long callingNumber, Circle circle) {
         FlwUserResponse user = new FlwUserResponse();
 
@@ -244,6 +263,11 @@ public class UserController extends BaseController {
 
         State state = getStateForFrontLineWorker(flw, circle);
         if (!serviceDeployedInUserState(service, state)) {
+            throw new NotDeployedException(String.format(NOT_DEPLOYED, service));
+        }
+
+        // If we have no state for the user see if the service is deployed in at least one state in the circle
+        if (state == null && !serviceDeployedInCircle(service, circle)) {
             throw new NotDeployedException(String.format(NOT_DEPLOYED, service));
         }
 

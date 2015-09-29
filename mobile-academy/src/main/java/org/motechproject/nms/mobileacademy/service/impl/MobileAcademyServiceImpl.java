@@ -158,7 +158,7 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
     }
 
     @Override
-    public MaBookmark getBookmark(Long callingNumber, Long callId) {
+    public MaBookmark getBookmark(Long callingNumber, String callId) {
 
         Bookmark existingBookmark = bookmarkService.getLatestBookmarkByUserId(callingNumber.toString());
 

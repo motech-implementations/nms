@@ -16,6 +16,8 @@ import static org.mockito.MockitoAnnotations.initMocks;
  */
 public class MobileAcademyControllerUnitTest {
 
+    private static final String VALID_CALL_ID = "1234567890123456789012345";
+
     private MobileAcademyController mobileAcademyController;
     
     @Mock
@@ -34,7 +36,7 @@ public class MobileAcademyControllerUnitTest {
     public void testBookmarkNullCallingNumber() {
         SaveBookmarkRequest sb = new SaveBookmarkRequest();
         sb.setCallingNumber(null);
-        sb.setCallId(BaseController.SMALLEST_15_DIGIT_NUMBER);
+        sb.setCallId(VALID_CALL_ID);
         mobileAcademyController.saveBookmarkWithScore(sb);
     }
 
@@ -42,7 +44,7 @@ public class MobileAcademyControllerUnitTest {
     public void testBookmarkMinCallingNumber() {
         SaveBookmarkRequest sb = new SaveBookmarkRequest();
         sb.setCallingNumber(999999999L);
-        sb.setCallId(BaseController.SMALLEST_15_DIGIT_NUMBER);
+        sb.setCallId(VALID_CALL_ID);
         mobileAcademyController.saveBookmarkWithScore(sb);
     }
 
@@ -55,7 +57,7 @@ public class MobileAcademyControllerUnitTest {
     public void testBookmarkMaxCallingNumber() {
         SaveBookmarkRequest sb = new SaveBookmarkRequest();
         sb.setCallingNumber(10000000000L);
-        sb.setCallId(BaseController.SMALLEST_15_DIGIT_NUMBER);
+        sb.setCallId(VALID_CALL_ID);
         mobileAcademyController.saveBookmarkWithScore(sb);
     }
 
@@ -71,7 +73,7 @@ public class MobileAcademyControllerUnitTest {
     public void testBookmarkMinCallId() {
         SaveBookmarkRequest sb = new SaveBookmarkRequest();
         sb.setCallingNumber(BaseController.SMALLEST_10_DIGIT_NUMBER);
-        sb.setCallId(99999999999999L);
+        sb.setCallId(VALID_CALL_ID.substring(1));
         mobileAcademyController.saveBookmarkWithScore(sb);
     }
 

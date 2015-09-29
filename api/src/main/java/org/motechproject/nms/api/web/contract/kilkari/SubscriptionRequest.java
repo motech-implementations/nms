@@ -19,14 +19,14 @@ public class SubscriptionRequest {
     private Long callingNumber;
     private String operator;
     private String circle;
-    private Long callId;
+    private String callId;
     private String languageLocationCode; // 4.2.3 Create Subscription
     private String subscriptionPack;     // 4.2.3 Create Subscription
     private String subscriptionId;       // 4.2.4 Deactivate Subscription
 
     public SubscriptionRequest() { }
 
-    public SubscriptionRequest(Long callingNumber, String operator, String circle, Long callId,
+    public SubscriptionRequest(Long callingNumber, String operator, String circle, String callId,
         String languageLocationCode, String subscriptionPack) {
         this.callingNumber = callingNumber;
         this.operator = operator;
@@ -36,7 +36,7 @@ public class SubscriptionRequest {
         this.subscriptionPack = subscriptionPack;
     }
 
-    public SubscriptionRequest(Long calledNumber, String operator, String circle, Long callId, String subscriptionId) {
+    public SubscriptionRequest(Long calledNumber, String operator, String circle, String callId, String subscriptionId) {
         this.callingNumber = calledNumber;
         this.operator = operator;
         this.circle = circle;
@@ -76,11 +76,11 @@ public class SubscriptionRequest {
         this.circle = circle;
     }
 
-    public Long getCallId() {
+    public String getCallId() {
         return callId;
     }
 
-    public void setCallId(Long callId) {
+    public void setCallId(String callId) {
         this.callId = callId;
     }
 

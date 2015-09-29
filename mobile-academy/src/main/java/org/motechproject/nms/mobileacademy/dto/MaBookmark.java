@@ -9,7 +9,7 @@ public class MaBookmark {
 
     private Long callingNumber;
 
-    private Long callId;
+    private String callId;
 
     private String bookmark;
 
@@ -18,7 +18,7 @@ public class MaBookmark {
     public MaBookmark() {
     }
 
-    public MaBookmark(Long callingNumber, Long callId, String bookmark, Map<String, Integer> scoresByChapter) {
+    public MaBookmark(Long callingNumber, String callId, String bookmark, Map<String, Integer> scoresByChapter) {
 
         this.callingNumber = callingNumber;
         this.callId = callId;
@@ -34,11 +34,11 @@ public class MaBookmark {
         this.callingNumber = callingNumber;
     }
 
-    public Long getCallId() {
+    public String getCallId() {
         return callId;
     }
 
-    public void setCallId(Long callId) {
+    public void setCallId(String callId) {
         this.callId = callId;
     }
 

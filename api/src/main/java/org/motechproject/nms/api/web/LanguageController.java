@@ -55,7 +55,7 @@ public class LanguageController extends BaseController {
         log(String.format("REQUEST: /%s/languageLocationCode (POST)", serviceName), LogHelper.nullOrString(userLanguageRequest));
 
         Long callingNumber = userLanguageRequest.getCallingNumber();
-        Long callId = userLanguageRequest.getCallId();
+        String callId = userLanguageRequest.getCallId();
         String languageLocationCode = userLanguageRequest.getLanguageLocationCode();
 
         StringBuilder failureReasons = validate(callingNumber, callId);
