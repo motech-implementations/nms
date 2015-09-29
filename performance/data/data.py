@@ -63,6 +63,8 @@ if __name__ == '__main__':
     parser.add_argument("--debug", help="debug mode, even more verbose", action="store_true")
     parser.add_argument("--mctsmoms", help="number of MCTS mothers", type=int, default=0)
     parser.add_argument("--mctskids", help="number of MCTS children", type=int, default=0)
+    parser.add_argument("--lmp", help="static LMP", action="store_true")
+    parser.add_argument("--dob", help="static DOB", action="store_true")
     args = parser.parse_args()
 
     if args.verbose:
@@ -91,10 +93,12 @@ if __name__ == '__main__':
     # Create MCTS mothers file?
     #
     if args.mctsmoms > 0:
-        exec_http_get("{}/module/testing/createMctsMoms".format(args.server), {'count': args.mctsmoms})
+        params = {'count': args.mctsmoms, 'lmp': args.lmp > 0}
+        exec_http_get("{}/module/testing/createMctsMoms".format(args.server), params)
 
     #
     # Create MCTS children file?
     #
     if args.mctskids > 0:
-        exec_http_get("{}/module/testing/createMctsKids".format(args.server), {'count': args.mctskids})
+        params = {'count': args.mctskids, 'dob': args.dob > 0}
+        exec_http_get("{}/module/testing/createMctsKids".format(args.server), params)

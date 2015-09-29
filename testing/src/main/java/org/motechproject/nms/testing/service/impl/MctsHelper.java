@@ -187,12 +187,22 @@ public class MctsHelper {
     }
 
 
+    private DateTime staticLmpDate() {
+        return new DateTime().minusDays(MIN_LMP_DAYS);
+    }
+
+
     private DateTime randomMomBirthDate() {
         DateTime today = new DateTime();
         int year = today.getYear() - randomInt(MIN_MOM_AGE, MAX_MOM_AGE);
         int day = randomInt(1, isLeapYear(year) ? 365 : 364);
 
         return new DateTime().withYear(year).withDayOfYear(day);
+    }
+
+
+    private DateTime staticKidBirthDate() {
+        return new DateTime();
     }
 
 
@@ -241,7 +251,7 @@ public class MctsHelper {
     }
 
 
-    public String oneMctsMom() {
+    public String oneMctsMom(boolean staticLMP) {
 
         Long stateId = randomStateId();
         Long districtId = randomDistrictId(stateId);
@@ -253,7 +263,7 @@ public class MctsHelper {
         String name = randomName();
         Long msisdn = randomMsisdn();
         DateTime birthDate = randomMomBirthDate();
-        DateTime lmpdate = randomLmpDate();
+        DateTime lmpdate = staticLMP ? staticLmpDate() : randomLmpDate();
         StringBuilder sb = new StringBuilder();
 
         //StateID
@@ -393,7 +403,7 @@ public class MctsHelper {
     }
 
 
-    public String oneMctsKid() {
+    public String oneMctsKid(boolean staticDOB) {
 
         Long stateId = randomStateId();
         Long districtId = randomDistrictId(stateId);
@@ -402,7 +412,7 @@ public class MctsHelper {
         Long idNo = randomIdNo();
         String name = randomName();
         Long msisdn = randomMsisdn();
-        DateTime birthDate = randomKidBirthDate();
+        DateTime birthDate = staticDOB ? staticKidBirthDate() : randomKidBirthDate();
 
         StringBuilder sb = new StringBuilder();
         
@@ -527,7 +537,7 @@ public class MctsHelper {
     }
 
 
-    private String createMctsRecipient(boolean mom, int count) throws IOException {
+    private String createMctsRecipient(boolean mom, int count, boolean staticStart) throws IOException {
 
         Timer timer = mom ? new Timer("mom", "moms") :  new Timer("kid", "kids");
         File file = findNewFileName(mom);
@@ -536,7 +546,7 @@ public class MctsHelper {
         writer.newLine();
         for (int i = 0; i < count; i++) {
 
-            writer.write(mom ? oneMctsMom() : oneMctsKid());
+            writer.write(mom ? oneMctsMom(staticStart) : oneMctsKid(staticStart));
             writer.newLine();
 
             if (i > 0 && i % PROGRESS_INTERVAL == 0) {
@@ -558,16 +568,16 @@ public class MctsHelper {
     }
 
 
-    public String createMoms(int count) throws IOException { //NOPMD NcssMethodCount
+    public String createMoms(int count, boolean staticLMP) throws IOException { //NOPMD NcssMethodCount
 
-        LOGGER.debug("createMoms(count={})", count);
-        return createMctsRecipient(true, count);
+        LOGGER.debug("createMoms(count={}, staticLMP={})", count, staticLMP);
+        return createMctsRecipient(true, count, staticLMP);
     }
 
 
-    public String createKids(int count) throws IOException { //NOPMD NcssMethodCount
+    public String createKids(int count, boolean staticDOB) throws IOException { //NOPMD NcssMethodCount
 
-        LOGGER.debug("createKidss(count={})", count);
-        return createMctsRecipient(false, count);
+        LOGGER.debug("createKidss(count={}, staticDOB={})", count, staticDOB);
+        return createMctsRecipient(false, count, staticDOB);
     }
 }

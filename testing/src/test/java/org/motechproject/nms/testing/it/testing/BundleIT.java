@@ -94,7 +94,7 @@ public class BundleIT extends BasePaxIT {
         getLogger().debug("createLocationData: {}", timer.time());
 
         timer = new Timer("mom", "moms");
-        String file = testingService.createMctsMoms(TEST_COUNT).split("\t")[0];
+        String file = testingService.createMctsMoms(TEST_COUNT, false).split("\t")[0];
         getLogger().debug("Created {}", timer.frequency(TEST_COUNT));
 
         timer.reset();
@@ -102,7 +102,7 @@ public class BundleIT extends BasePaxIT {
         getLogger().debug("Imported {}", timer.frequency(TEST_COUNT));
 
         timer = new Timer("kid", "kids");
-        file = testingService.createMctsKids(TEST_COUNT).split("\t")[0];
+        file = testingService.createMctsKids(TEST_COUNT, false).split("\t")[0];
         getLogger().debug("Created {}", timer.frequency(TEST_COUNT));
 
         timer.reset();
