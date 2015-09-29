@@ -93,4 +93,7 @@
     <!-- CSV Audit Service -->
     <osgi:reference id="csvAuditService" interface="org.motechproject.nms.csv.service.CsvAuditService" />
 
+    <!-- Event Relay -->
+    <osgi:reference id="eventRelay" interface="org.motechproject.event.listener.EventRelay"/>
+
 </beans>

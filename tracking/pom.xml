@@ -75,6 +75,11 @@
                             org.motechproject.nms.tracking.utils;version=${project.version}
                         </Export-Package>
                         <Import-Package>
+                            org.aopalliance.aop,
+                            org.springframework.aop,
+                            org.springframework.aop.framework,
+                            org.springframework.cache.support,
+                            org.springframework.cache.concurrent,
                             *
                         </Import-Package>
                     </instructions>

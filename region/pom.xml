@@ -94,6 +94,8 @@
                             org.motechproject.osgi.web,
                             org.motechproject.nms.tracking.aspect,
                             org.springframework.web.multipart.commons,
+                            org.springframework.cache.support,
+                            org.springframework.cache.concurrent,
                             *
                         </Import-Package>
                     </instructions>

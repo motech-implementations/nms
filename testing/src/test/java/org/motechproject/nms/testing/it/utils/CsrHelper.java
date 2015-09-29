@@ -16,6 +16,7 @@ import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
+import org.motechproject.nms.region.service.LanguageService;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -36,6 +37,7 @@ public class CsrHelper {
             SubscriptionPackDataService subscriptionPackDataService,
             SubscriberDataService subscriberDataService,
             LanguageDataService languageDataService,
+            LanguageService languageService,
             CircleDataService circleDataService,
             StateDataService stateDataService,
             DistrictDataService districtDataService,
@@ -45,7 +47,8 @@ public class CsrHelper {
         TIMESTAMP = timestamp;
 
         sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
-                languageDataService, circleDataService, stateDataService, districtDataService, districtService);
+                languageDataService, languageService, circleDataService, stateDataService, districtDataService,
+                districtService);
     }
 
 

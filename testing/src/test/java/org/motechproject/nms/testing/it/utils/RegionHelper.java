@@ -15,21 +15,25 @@ import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
+import org.motechproject.nms.region.service.LanguageService;
 
 public class RegionHelper {
     private LanguageDataService languageDataService;
+    private LanguageService languageService;
     private CircleDataService circleDataService;
     private DistrictDataService districtDataService;
     private DistrictService districtService;
     private StateDataService stateDataService;
 
     public RegionHelper(LanguageDataService languageDataService,
+                        LanguageService languageService,
                         CircleDataService circleDataService,
                         StateDataService stateDataService,
                         DistrictDataService districtDataService,
                         DistrictService districtService) {
 
         this.languageDataService = languageDataService;
+        this.languageService = languageService;
         this.circleDataService = circleDataService;
         this.stateDataService = stateDataService;
         this.districtDataService = districtDataService;
@@ -158,7 +162,7 @@ public class RegionHelper {
 
 
     public Language tamilLanguage() {
-        Language l = languageDataService.findByName("Tamil");
+        Language l = languageService.getForName("Tamil");
 
         if (l == null) {
             l = languageDataService.create(new Language("ta", "Tamil"));
@@ -169,7 +173,7 @@ public class RegionHelper {
 
 
     public Language kannadaLanguage() {
-        Language l = languageDataService.findByName("Kannada");
+        Language l = languageService.getForName("Kannada");
 
         if (l == null) {
             l = languageDataService.create(new Language("kn", "Kannada"));
@@ -180,7 +184,7 @@ public class RegionHelper {
 
 
     public Language punjabiLanguage() {
-        Language l = languageDataService.findByName("Punjabi");
+        Language l = languageService.getForName("Punjabi");
 
         if (l == null) {
             l = languageDataService.create(new Language("pa", "Punjabi"));
@@ -191,7 +195,7 @@ public class RegionHelper {
 
 
     public Language hindiLanguage() {
-        Language l = languageDataService.findByName("Hindi");
+        Language l = languageService.getForName("Hindi");
 
         if (l == null) {
             l = languageDataService.create(new Language("hi", "Hindi"));

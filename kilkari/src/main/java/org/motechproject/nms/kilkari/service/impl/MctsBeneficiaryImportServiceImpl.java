@@ -22,7 +22,6 @@ import org.motechproject.nms.kilkari.domain.SubscriptionRejectionReason;
 import org.motechproject.nms.kilkari.repository.MctsChildDataService;
 import org.motechproject.nms.kilkari.repository.MctsMotherDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
-import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
@@ -50,9 +49,9 @@ import java.util.Map;
 @Service("mctsBeneficiaryImportService")
 public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportService {
 
+    public static final String IMPORTED = "Imported {}";
     private SubscriptionService subscriptionService;
     private SubscriptionErrorDataService subscriptionErrorDataService;
-    private SubscriptionPackDataService subscriptionPackDataService;
     private LocationService locationService;
     private MctsMotherDataService mctsMotherDataService;
     private MctsChildDataService mctsChildDataService;
@@ -88,12 +87,10 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     @Autowired
     public MctsBeneficiaryImportServiceImpl(SubscriptionService subscriptionService,
                                             SubscriptionErrorDataService subscriptionErrorDataService,
-                                            SubscriptionPackDataService subscriptionPackDataService,
                                             LocationService locationService, MctsMotherDataService mctsMotherDataService,
                                             MctsChildDataService mctsChildDataService, SubscriberService subscriberService) {
         this.subscriptionService = subscriptionService;
         this.subscriptionErrorDataService = subscriptionErrorDataService;
-        this.subscriptionPackDataService = subscriptionPackDataService;
         this.locationService = locationService;
         this.mctsMotherDataService = mctsMotherDataService;
         this.mctsChildDataService = mctsChildDataService;
@@ -111,7 +108,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     @Override
     @Transactional
     public int importMotherData(Reader reader) throws IOException {
-        pregnancyPack = subscriptionPackDataService.byType(SubscriptionPackType.PREGNANCY);
+        pregnancyPack = subscriptionService.getSubscriptionPack(SubscriptionPackType.PREGNANCY);
         int count = 0;
 
         BufferedReader bufferedReader = new BufferedReader(reader);
@@ -129,11 +126,11 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                 importMotherRecord(record);
                 count++;
                 if (count % PROGRESS_INTERVAL == 0) {
-                    LOGGER.debug("Imported {}", timer.frequency(count));
+                    LOGGER.debug(IMPORTED, timer.frequency(count));
                 }
             }
             if (count % PROGRESS_INTERVAL != 0) {
-                LOGGER.debug("Imported {}", timer.frequency(count));
+                LOGGER.debug(IMPORTED, timer.frequency(count));
             }
         } catch (ConstraintViolationException e) {
             throw new CsvImportDataException(String.format("MCTS mother import error, constraints violated: %s",
@@ -146,7 +143,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     @Override
     @Transactional
     public int importChildData(Reader reader) throws IOException {
-        childPack = subscriptionPackDataService.byType(SubscriptionPackType.CHILD);
+        childPack = subscriptionService.getSubscriptionPack(SubscriptionPackType.CHILD);
         int count = 0;
 
         BufferedReader bufferedReader = new BufferedReader(reader);
@@ -159,9 +156,16 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
         try {
             Map<String, Object> record;
+            Timer timer = new Timer("kid", "kids");
             while (null != (record = csvImporter.read())) {
                 importChildRecord(record);
                 count++;
+                if (count % PROGRESS_INTERVAL == 0) {
+                    LOGGER.debug(IMPORTED, timer.frequency(count));
+                }
+            }
+            if (count % PROGRESS_INTERVAL != 0) {
+                LOGGER.debug(IMPORTED, timer.frequency(count));
             }
         } catch (ConstraintViolationException e) {
             throw new CsvImportDataException(String.format("MCTS child import error, constraints violated: %s",

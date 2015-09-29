@@ -21,7 +21,7 @@ import java.util.Map;
 public class TestingController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TestingController.class);
-    private static final String[] UNITS = new String[] { "B", "kB", "MB", "GB", "TB" };
+    private static final String[] UNITS = new String[] {"B", "kB", "MB", "GB", "TB"};
 
     private static final DecimalFormat FMT_DEC = new DecimalFormat("#,##0.000");
 
@@ -64,6 +64,13 @@ public class TestingController {
     @ResponseBody
     public String createMctsMoms(@RequestParam(required = true) int count) throws IOException {
         return testingService.createMctsMoms(count);
+    }
+
+
+    @RequestMapping(value = "/createMctsKids")
+    @ResponseBody
+    public String createMctsKids(@RequestParam(required = true) int count) throws IOException {
+        return testingService.createMctsKids(count);
     }
 
 

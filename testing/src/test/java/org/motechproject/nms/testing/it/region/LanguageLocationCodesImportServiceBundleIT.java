@@ -331,22 +331,22 @@ public class LanguageLocationCodesImportServiceBundleIT extends BasePaxIT {
         // assert circle for default LLC
         assertNull(ncrCircle.getDefaultLanguage());
         assertNull(upWestCircle.getDefaultLanguage());
-        
+
         // fetch district and assert
         District agraDistrict=districtService.findByStateAndName(upState, "AGRA");
         District aligarhDistrict=districtService.findByStateAndName(upState, "ALIGARH");
         District noidaDistrict=districtService.findByStateAndName(upState, "NOIDA");
         District northDistrict=districtService.findByStateAndName(delhiState, "NORTH DISTRICT");
-        
+
         assertNull(agraDistrict.getLanguage());
         assertNull(aligarhDistrict.getLanguage());
         assertNull(noidaDistrict.getLanguage());
         assertNull(northDistrict.getLanguage());
-        
+
         //import LLC data
         response = importCsvFileForLocationData(null, "llc_data_ft_518.csv");
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
-        
+
         // fetch circle and LLc data again
         ncrCircle = circleDataService.findByName("DELHI-NCR");
         upWestCircle = circleDataService.findByName("UP-WEST");
@@ -361,13 +361,13 @@ public class LanguageLocationCodesImportServiceBundleIT extends BasePaxIT {
         // assert circle for default LLC
         assertEquals("HINDI", ((Language)circleDataService.getDetachedField(upWestCircle, "defaultLanguage")).getName());
         assertEquals("ENGLISH", ((Language)circleDataService.getDetachedField(ncrCircle, "defaultLanguage")).getName());
-        
+
         // assert district for LLC
         assertEquals("HINDI", agraDistrict.getLanguage().getName());
         assertEquals("URDU", aligarhDistrict.getLanguage().getName());
         assertEquals("HINDI", noidaDistrict.getLanguage().getName());
         assertEquals("ENGLISH", northDistrict.getLanguage().getName());
-        
+
     }
 
     /**

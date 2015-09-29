@@ -32,6 +32,7 @@ import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
+import org.motechproject.nms.region.service.LanguageService;
 import org.motechproject.nms.testing.it.utils.RegionHelper;
 import org.motechproject.nms.testing.it.utils.SubscriptionHelper;
 import org.motechproject.nms.testing.service.TestingService;
@@ -81,6 +82,8 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     @Inject
     LanguageDataService languageDataService;
     @Inject
+    LanguageService languageService;
+    @Inject
     InboxCallDetailRecordDataService inboxCallDetailRecordDataService;
     @Inject
     InboxCallDataDataService inboxCallDataDataService;
@@ -104,11 +107,12 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     public void setupTestData() {
         testingService.clearDatabase();
 
-        rh = new RegionHelper(languageDataService, circleDataService, stateDataService, districtDataService,
-                districtService);
+        rh = new RegionHelper(languageDataService, languageService, circleDataService, stateDataService,
+                districtDataService, districtService);
 
         sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
-                languageDataService, circleDataService, stateDataService, districtDataService, districtService);
+                languageDataService, languageService, circleDataService, stateDataService, districtDataService,
+                districtService);
 
         Subscriber subscriber1 = subscriberDataService.create(new Subscriber(1000000000L));
         subscriptionService.createSubscription(subscriber1.getCallingNumber(), rh.hindiLanguage(),

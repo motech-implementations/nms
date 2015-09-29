@@ -82,6 +82,13 @@ public interface SubscriptionService {
     void deactivateSubscription(Subscription subscription, DeactivationReason reason);
 
     /**
+     * Get the subscription pack with the specified type
+     * @param type The type of the subscription pack to retrieve
+     * @return Subscription pack with the specified type, or null if none exists
+     */
+    SubscriptionPack getSubscriptionPack(SubscriptionPackType type);
+
+    /**
      * Get the subscription pack with the specified name
      * @param name The name of the subscription pack to retrieve
      * @return Subscription pack with the specified name, or null if none exists
@@ -97,11 +104,6 @@ public interface SubscriptionService {
     Subscription getActiveSubscription(Subscriber subscriber, SubscriptionPackType type);
 
     List<SubscriptionPack> getSubscriptionPacks();
-
-    /**
-     * Delete all Kilkari subscriptions. To be used only by test code.
-     */
-    void deleteAll();
 
     /**
      * Create the specified subscription in the database. To be used only by test code.
@@ -176,4 +178,19 @@ public interface SubscriptionService {
     @InstanceLifecycleListener(InstanceLifecycleListenerType.PRE_DELETE)
     void deletePreconditionCheck(Subscription subscription);
 
+    /**
+     * Lifecycle listener that broadcasts a cache evict message for the message pack cache
+     *
+     * @param pack
+     */
+    @InstanceLifecycleListener({InstanceLifecycleListenerType.POST_CREATE, InstanceLifecycleListenerType.PRE_DELETE,
+            InstanceLifecycleListenerType.PRE_STORE})
+    void broadcastCacheEvictMessage(SubscriptionPack pack);
+
+    /**
+     *
+     * Message pack cache evict
+     *
+     */
+    void cacheEvict(MotechEvent event);
 }

@@ -32,7 +32,7 @@ import static org.junit.Assert.assertNotNull;
 @ExamFactory(value = MotechNativeTestContainerFactory.class)
 public class BundleIT extends BasePaxIT {
 
-    public static final int TEST_COUNT = 1000;
+    public static final int TEST_COUNT = 3;
     @Inject
     TestingService testingService;
 
@@ -99,6 +99,14 @@ public class BundleIT extends BasePaxIT {
 
         timer.reset();
         mctsBeneficiaryImportService.importMotherData(new InputStreamReader(new FileInputStream(file)));
+        getLogger().debug("Imported {}", timer.frequency(TEST_COUNT));
+
+        timer = new Timer("kid", "kids");
+        file = testingService.createMctsKids(TEST_COUNT).split("\t")[0];
+        getLogger().debug("Created {}", timer.frequency(TEST_COUNT));
+
+        timer.reset();
+        mctsBeneficiaryImportService.importChildData(new InputStreamReader(new FileInputStream(file)));
         getLogger().debug("Imported {}", timer.frequency(TEST_COUNT));
     }
 }

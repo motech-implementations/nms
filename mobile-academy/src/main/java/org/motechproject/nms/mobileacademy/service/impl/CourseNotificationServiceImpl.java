@@ -13,7 +13,6 @@ import org.motechproject.nms.imi.service.SmsNotificationService;
 import org.motechproject.nms.mobileacademy.domain.CompletionRecord;
 import org.motechproject.nms.mobileacademy.repository.CompletionRecordDataService;
 import org.motechproject.nms.mobileacademy.service.CourseNotificationService;
-import org.motechproject.nms.region.domain.Language;
 import org.motechproject.scheduler.contract.RepeatingSchedulableJob;
 import org.motechproject.scheduler.service.MotechSchedulerService;
 import org.motechproject.server.config.SettingsFacade;
@@ -40,7 +39,7 @@ public class CourseNotificationServiceImpl implements CourseNotificationService 
     private static final String DELIVERY_STATUS = "deliveryStatus";
     private static final String ADDRESS = "address";
     private static final String SMS_CONTENT_PREFIX = "sms.content.";
-    private static final String SMS_DEFAULT_LANGUAGE_CODE = "50";
+    private static final String SMS_DEFAULT_LANGUAGE_PROPERTY = "default";
     private static final Logger LOGGER = LoggerFactory.getLogger(CourseNotificationServiceImpl.class);
 
     /**
@@ -188,26 +187,36 @@ public class CourseNotificationServiceImpl implements CourseNotificationService 
     private String buildSmsContent(Long callingNumber) {
 
         FrontLineWorker flw = frontLineWorkerService.getByContactNumber(callingNumber);
+        String locationCode = "XX"; // unknown location id
+        String smsLanguageProperty = null;
+
         if (flw == null) {
             throw new IllegalStateException("Unable to find flw for calling number: " + callingNumber);
         }
-        Language flwLanguage = flw.getLanguage() != null ? flw.getLanguage() : flw.getDistrict().getLanguage();
-        String smsLanguage;
-        if (flwLanguage != null && flwLanguage.getCode() != null) {
-            smsLanguage = flwLanguage.getCode();
-        } else {
-            smsLanguage = settingsFacade.getProperty(SMS_DEFAULT_LANGUAGE_CODE);
+
+        // Build location code
+        if (flw.getState() != null && flw.getDistrict() != null) {
+            locationCode = flw.getState().getCode().toString() + flw.getDistrict().getCode();
         }
 
-        String smsContent = settingsFacade.getProperty(SMS_CONTENT_PREFIX + smsLanguage);
+        // set sms content language
+        if (flw.getLanguage() != null) {
+            smsLanguageProperty = flw.getLanguage().getCode();
+        } else if (flw.getDistrict() != null && flw.getDistrict().getLanguage() != null) {
+            smsLanguageProperty = flw.getDistrict().getLanguage().getCode();
+        } else {
+            LOGGER.debug("No language code found. Reverting to national default");
+            smsLanguageProperty = SMS_DEFAULT_LANGUAGE_PROPERTY;
+        }
+
+        // fetch sms content
+        String smsContent = settingsFacade.getProperty(SMS_CONTENT_PREFIX + smsLanguageProperty);
         if (smsContent == null) {
             throw new IllegalStateException("Unable to get sms content for flw language: " +
-                    SMS_CONTENT_PREFIX + smsLanguage);
+                    SMS_CONTENT_PREFIX + smsLanguageProperty);
         }
 
-        String locationId = flw.getState().getCode().toString() + flw.getDistrict().getCode();
         int attempts = activityService.getAllActivityForUser(callingNumber.toString()).size();
-        return smsContent + locationId + callingNumber + attempts;
-
+        return smsContent + locationCode + callingNumber + attempts;
     }
 }

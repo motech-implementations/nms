@@ -1,7 +1,5 @@
 package org.motechproject.nms.testing.service.impl;
 
-import org.apache.commons.lang.StringUtils;
-import org.joda.time.DateTime;
 import org.motechproject.mds.query.SqlQueryExecution;
 import org.motechproject.metrics.service.Timer;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
@@ -9,10 +7,9 @@ import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
-import org.motechproject.nms.region.domain.District;
-import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.service.LanguageService;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.server.config.SettingsFacade;
 import org.slf4j.Logger;
@@ -22,57 +19,23 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import javax.jdo.Query;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Random;
 
 @Service("testingService")
 public class TestingServiceImpl implements TestingService {
 
     private static final String TESTING_ENVIRONMENT = "testing.environment";
-    private static final String TESTING_DIRECTORY = "testing.directory";
     private static final int PREGNANCY_PACK_WEEKS = 72;
     private static final int CHILD_PACK_WEEKS = 48;
     private static final int TWO_MINUTES = 120;
     private static final int TEN_SECS = 10;
-    private static final long MIN_ID_NO = 100000000000000000L;
-    private static final long MAX_ID_NO = 999999999999999999L;
-    private static final int ABORTION_PERCENT = 3;
-    private static final int PROGRESS_INTERVAL = 100;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TestingServiceImpl.class);
     public static final String CHILD_PACK = "childPack";
     public static final String PREGNANCY_PACK = "pregnancyPack";
     public static final String TESTING_SERVICE_FORBIDDEN = "calling TestingService in a production environment is forbidden!";
-    public static final String MCTSMOMS = "mctsmoms.csv";
-    public static final long MAX_MSISDN = 9999999999L;
-    public static final long MIN_MSISDN = 1000000000L;
-    public static final int MIN_MOM_AGE = 15;
-    public static final int MAX_MOM_AGE = 50;
-    public static final int MIN_LMP_DAYS = 84;
-    public static final int MAX_LMP_DAYS = 329;
-    public static final int STILL_BIRTH_PERCENT = 3;
-    public static final int DEATH_PERCENT = 1;
-    public static final String DEATH = "9";
-    public static final String DEATH_NONE = "";
-    public static final String ABORTION1 = "Spontaneous";
-    public static final String ABORTION2 = "MTP<12 Weeks";
-    public static final String ABORTION3 = "MTP>12 Weeks";
-    public static final String STILL_BIRTH = "0";
-    public static final String STILL_BIRTH_NONE = "";
-    public static final String ABORTION_NONE1 = "";
-    public static final String ABORTION_NONE2 = "None";
-
-    private List<Long> states;
-    private Map<Long, List<Long>> districts;
-    private Map<Long, String> districtNames;
 
 
     private static final String[] QUERIES = {
@@ -176,11 +139,6 @@ public class TestingServiceImpl implements TestingService {
         "nms_whitelisted_states__TRASH",
     };
 
-    private Random random = new Random(System.currentTimeMillis());
-
-
-
-
     /**
      * Kilkari
      */
@@ -195,6 +153,8 @@ public class TestingServiceImpl implements TestingService {
     @Autowired
     private DistrictDataService districtDataService;
     @Autowired
+    private LanguageService languageService;
+    @Autowired
     private StateDataService stateDataService;
 
 
@@ -206,12 +166,16 @@ public class TestingServiceImpl implements TestingService {
     private SettingsFacade settingsFacade;
 
 
-
     public TestingServiceImpl() {
         //
         // Should only happen on dev / CI machines, so no need to save/restore settings
         //
         System.setProperty("org.motechproject.testing.osgi.http.numTries", "1");
+    }
+
+
+    private MctsHelper createMctsHelper() {
+        return new MctsHelper(settingsFacade, stateDataService, districtDataService);
     }
 
 
@@ -311,6 +275,8 @@ public class TestingServiceImpl implements TestingService {
 
         enableConstraints();
 
+        languageService.cacheEvict(null);
+
         LOGGER.debug("clearDatabase: {}", timer.time());
     }
 
@@ -389,164 +355,10 @@ public class TestingServiceImpl implements TestingService {
     }
 
 
-    private String getTestingDirectory() {
-        String dir = settingsFacade.getProperty(TESTING_DIRECTORY);
-        File file = new File(dir);
-        if (!file.exists()) {
-            file.mkdirs();
-        }
-        return file.getAbsolutePath();
-    }
-
-
-    private Long randomStateId() {
-        if (states == null) {
-            states = new ArrayList<>();
-        }
-        if (states.size() <= 0) {
-            for (State state : stateDataService.retrieveAll()) {
-                states.add(state.getCode());
-            }
-        }
-        if (states.size() <= 0) {
-            throw new IllegalStateException("There are no State entities in the database!");
-        }
-        return states.get(random.nextInt(states.size()));
-    }
-
-
-    private Long randomDistrictId(Long state) {
-        if (districts == null) {
-            districts = new HashMap<>();
-            districtNames = new HashMap<>();
-            if (stateDataService.count() > 0) {
-                for (District district : districtDataService.retrieveAll()) {
-                    if (!districts.containsKey(district.getState().getCode())) {
-                        districts.put(district.getState().getCode(), new ArrayList<Long>());
-                    }
-                    districts.get(district.getState().getCode()).add(district.getCode());
-                    districtNames.put(district.getCode(), district.getName());
-                }
-            } else {
-                throw new IllegalStateException("There are no District entities in the database!");
-            }
-        }
-        if (districts.containsKey(state)) {
-            List<Long> stateDistricts = districts.get(state);
-            int index = random.nextInt(stateDistricts.size());
-            return stateDistricts.get(index);
-        }
-        throw new IllegalStateException(String.format("No districts for state %d", state));
-    }
-
-
-    private Long randomLong(long min, long max) {
-        long m = max - min + 1;
-        long bits;
-        long val;
-        do {
-            bits = (random.nextLong() << 1) >>> 1;
-            val = bits % m;
-        } while (bits - val + (m - 1) < 0L);
-        return min + val;
-    }
-
-
-    private Long randomIdNo() {
-        return randomLong(MIN_ID_NO, MAX_ID_NO);
-    }
-
-
-    private Long randomMsisdn() {
-        return randomLong(MIN_MSISDN, MAX_MSISDN);
-    }
-
-
-    private String randomName() {
-        //todo: better!
-        return String.format("RandomName%d", random.nextInt());
-    }
-
-
-    private Integer randomInt(int min, int max) {
-        return min + random.nextInt(max - min);
-    }
-
-
-    private Boolean isLeapYear(int year) {
-        DateTime feb29 = new DateTime().withYear(year).withMonthOfYear(2).withDayOfMonth(28).plusDays(1);
-        return feb29.getMonthOfYear() == 2;
-    }
-
-
-    private DateTime randomLmpDate() {
-        // between 12 - 47 weeks before today
-        return new DateTime().minusDays(randomInt(MIN_LMP_DAYS, MAX_LMP_DAYS));
-    }
-
-
-    private DateTime randomBirthDate() {
-        DateTime today = new DateTime();
-        int year = today.getYear() - randomInt(MIN_MOM_AGE, MAX_MOM_AGE);
-        int day = randomInt(1, isLeapYear(year) ? 365 : 364);
-
-        return new DateTime().withYear(year).withDayOfYear(day);
-    }
-
-
-    private String randomDeath() {
-        if (random.nextInt(100) < DEATH_PERCENT) {
-            return DEATH;
-        }
-
-        return DEATH_NONE;
-    }
-
-
-    private String randomAbortion(String death) {
-        if (DEATH_NONE.equals(death) && random.nextInt(100) < ABORTION_PERCENT) {
-            int type = random.nextInt(100);
-            if (type < 33) {
-                return ABORTION1;
-            } else if (type < 66) {
-                return ABORTION2;
-            } else {
-                return ABORTION3;
-            }
-        }
-
-        return random.nextInt(100) < 50 ? ABORTION_NONE1 : ABORTION_NONE2;
-    }
-
-
-    private String randomStillBirth(String death, String abortion) {
-        if (DEATH_NONE.equals(death) &&
-            (ABORTION_NONE1.equals(abortion) || ABORTION_NONE2.equals(abortion)) &&
-            random.nextInt(100) < STILL_BIRTH_PERCENT) {
-            return STILL_BIRTH;
-        }
-
-        return STILL_BIRTH_NONE;
-    }
 
 
     @Override
-    public String createMctsMoms(int count) throws IOException { //NOPMD NcssMethodCount
-
-        String[] fields = {"StateID", "District_ID", "District_Name", "Taluka_ID", "Taluka_Name", "HealthBlock_ID",
-                "HealthBlock_Name", "PHC_ID", "PHC_Name", "SubCentre_ID", "SubCentre_Name", "Village_ID",
-                "Village_Name", "Yr", "GP_Village", "Address", "ID_No", "Name", "Husband_Name", "PhoneNo_Of_Whom",
-                "Whom_PhoneNo", "Birthdate", "JSY_Beneficiary", "Caste", "SubCentre_Name1", "ANM_Name", "ANM_Phone",
-                "ASHA_Name", "ASHA_Phone", "Delivery_Lnk_Facility", "Facility_Name", "LMP_Date", "ANC1_Date",
-                "ANC2_Date", "ANC3_Date", "ANC4_Date", "TT1_Date", "TT2_Date", "TTBooster_Date", "IFA100_Given_Date",
-                "Anemia", "ANC_Complication", "RTI_STI", "Dly_Date", "Dly_Place_Home_Type", "Dly_Place_Public",
-                "Dly_Place_Private", "Dly_Type", "Dly_Complication", "Discharge_Date", "JSY_Paid_Date", "Abortion",
-                "PNC_Home_Visit", "PNC_Complication", "PPC_Method", "PNC_Checkup", "Outcome_Nos", "Child1_Name",
-                "Child1_Sex", "Child1_Wt", "Child1_Brestfeeding", "Child2_Name", "Child2_Sex", "Child2_Wt",
-                "Child2_Brestfeeding", "Child3_Name", "Child3_Sex", "Child3_Wt", "Child3_Brestfeeding", "Child4_Name",
-                "Child4_Sex", "Child4_Wt", "Child4_Brestfeeding", "Age", "MTHR_REG_DATE", "LastUpdateDate", "Remarks",
-                "ANM_ID", "ASHA_ID", "Call_Ans", "NoCall_Reason", "NoPhone_Reason", "Created_By", "Updated_By",
-                "Aadhar_No", "BPL_APL", "EID", "EIDTime", "Entry_Type"};
+    public String createMctsMoms(int count) throws IOException {
 
         LOGGER.debug("createMctsMoms(count={})", count);
 
@@ -554,183 +366,21 @@ public class TestingServiceImpl implements TestingService {
             throw new IllegalStateException(TESTING_SERVICE_FORBIDDEN);
         }
 
-        Timer timer = new Timer("mom", "moms");
-        int retry = 1;
-        File file = new File(getTestingDirectory(), String.format("%s.%d", MCTSMOMS, retry));
-        while (file.exists()) {
-            retry += 1;
-            file = new File(getTestingDirectory(), String.format("%s.%d", MCTSMOMS, retry));
+        MctsHelper mctsHelper = createMctsHelper();
+        return mctsHelper.createMoms(count);
+    }
+
+
+    @Override
+    public String createMctsKids(int count) throws IOException {
+
+        LOGGER.debug("createMctsKids(count={})", count);
+
+        if (!Boolean.parseBoolean(settingsFacade.getProperty(TESTING_ENVIRONMENT))) {
+            throw new IllegalStateException(TESTING_SERVICE_FORBIDDEN);
         }
-        BufferedWriter writer = new BufferedWriter(new FileWriter(file));
-        writer.write("###ignore this line###");
-        writer.newLine();
-        writer.newLine();
-        writer.write(StringUtils.join(fields, "\t"));
-        writer.newLine();
-        for (int i = 0; i < count; i++) {
 
-            Long stateId = randomStateId();
-            Long districtId = randomDistrictId(stateId);
-            String districtName = districtNames.get(districtId);
-            String death = randomDeath();
-            String abortion = randomAbortion(death);
-            String stillBirth = randomStillBirth(death, abortion);
-            Long idNo = randomIdNo();
-            String name = randomName();
-            Long msisdn = randomMsisdn();
-            DateTime birthDate = randomBirthDate();
-            DateTime lmpdate = randomLmpDate();
-
-            //StateID
-            writer.write(stateId.toString());
-            writer.write("\t");
-
-            //District_ID
-            writer.write(districtId.toString());
-            writer.write("\t");
-
-            //District_Name
-            writer.write(districtName);
-            writer.write("\t");
-
-            //Taluka_ID
-            //Taluka_Name
-            //HealthBlock_ID
-            //HealthBlock_Name
-            //PHC_ID
-            //PHC_Name
-            //SubCentre_ID
-            //SubCentre_Name
-            //Village_ID
-            //Village_Name
-            //Yr
-            //GP_Village
-            //Address
-            writer.write("\t\t\t\t\t\t\t\t\t\t\t\t\t");
-
-            //ID_No
-            writer.write(idNo.toString());
-            writer.write("\t");
-
-            //Name
-            writer.write(name);
-            writer.write("\t");
-
-            //Husband_Name
-            //PhoneNo_Of_Whom
-            writer.write("\t\t");
-
-            //Whom_PhoneNo
-            writer.write(msisdn.toString());
-            writer.write("\t");
-
-            //Birthdate
-            writer.write(birthDate.toString("dd-MM-yyyy"));
-            writer.write("\t");
-
-            //JSY_Beneficiary
-            //Caste
-            //SubCentre_Name1
-            //ANM_Name
-            //ANM_Phone
-            //ASHA_Name
-            //ASHA_Phone
-            //Delivery_Lnk_Facility
-            //Facility_Name
-            writer.write("\t\t\t\t\t\t\t\t\t");
-
-            //LMP_Date
-            writer.write(lmpdate.toString("dd-MM-yyyy"));
-            writer.write("\t");
-
-            //ANC1_Date
-            //ANC2_Date
-            //ANC3_Date
-            //ANC4_Date
-            //TT1_Date
-            //TT2_Date
-            //TTBooster_Date
-            //IFA100_Given_Date
-            //Anemia
-            //ANC_Complication
-            //RTI_STI
-            //Dly_Date
-            //Dly_Place_Home_Type
-            //Dly_Place_Public
-            //Dly_Place_Private
-            //Dly_Type
-            //Dly_Complication
-            //Discharge_Date
-            //JSY_Paid_Date
-            writer.write("\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t");
-
-            //Abortion
-            writer.write(abortion);
-            writer.write("\t");
-
-            //PNC_Home_Visit
-            //PNC_Complication
-            //PPC_Method
-            //PNC_Checkup
-            writer.write("\t\t\t\t");
-
-            //Outcome_Nos
-            writer.write(stillBirth);
-            writer.write("\t");
-
-            //Child1_Name
-            //Child1_Sex
-            //Child1_Wt
-            //Child1_Brestfeeding
-            //Child2_Name
-            //Child2_Sex
-            //Child2_Wt
-            //Child2_Brestfeeding
-            //Child3_Name
-            //Child3_Sex
-            //Child3_Wt
-            //Child3_Brestfeeding
-            //Child4_Name
-            //Child4_Sex
-            //Child4_Wt
-            //Child4_Brestfeeding
-            //Age
-            //MTHR_REG_DATE
-            //LastUpdateDate
-            //Remarks
-            //ANM_ID
-            //ASHA_ID
-            //Call_Ans
-            //NoCall_Reason
-            //NoPhone_Reason
-            //Created_By
-            //Updated_By
-            //Aadhar_No
-            //BPL_APL
-            //EID
-            //EIDTime
-            writer.write("\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t");
-
-            //Entry_Type
-            writer.write(death);
-            writer.newLine();
-
-            if (i > 0 && i % PROGRESS_INTERVAL == 0) {
-                LOGGER.debug("Created {}", timer.frequency(i));
-            }
-        }
-        writer.close();
-
-        LOGGER.debug("Created {}", timer.frequency(count));
-
-
-        Runtime runtime = Runtime.getRuntime();
-        runtime.exec(String.format("cp %s %s",
-                file.getAbsolutePath(), new File(getTestingDirectory(), MCTSMOMS).getAbsolutePath()));
-
-        LOGGER.debug(file.getName());
-
-        return String.format("%s\t%s", file.getAbsolutePath(), new DecimalFormat("#,##0").format(count));
+        MctsHelper mctsHelper = createMctsHelper();
+        return mctsHelper.createKids(count);
     }
 }
-

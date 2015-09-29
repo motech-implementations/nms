@@ -87,7 +87,7 @@ public class MctsBeneficiaryImportController {
     public void importChildData(@RequestParam MultipartFile csvFile) {
 
         LOGGER.debug("importChildData() BEGIN");
-        Timer timer = new Timer("child", "children");
+        Timer timer = new Timer("kid", "kids");
         int count = 0;
         try {
             try (InputStream in = csvFile.getInputStream()) {
@@ -101,7 +101,7 @@ public class MctsBeneficiaryImportController {
             logError(csvFile.getOriginalFilename(), "/kilkari/child/import", e);
             throw new CsvImportException("An error occurred during CSV import", e);
         }
-        LOGGER.debug("importMotherData() END ({})", count > 0 ? timer.frequency(count) : timer.time());
+        LOGGER.debug("importChildData() END ({})", count > 0 ? timer.frequency(count) : timer.time());
     }
 
     @RequestMapping(value = "/beneficiary/update", method = RequestMethod.POST)

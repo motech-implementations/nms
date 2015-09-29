@@ -10,6 +10,6 @@ public interface DistrictService {
     Set<District> getAllForLanguage(Language language);
     District findByStateAndCode(State state, Long code);
     District findByStateAndName(State state, String name);
-    void create(District district);
-    void update(District district);
+    District create(District district);
+    District update(District district);
 }

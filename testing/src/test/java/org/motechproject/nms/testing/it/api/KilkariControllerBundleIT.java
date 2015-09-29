@@ -17,8 +17,6 @@ import org.motechproject.nms.api.web.contract.kilkari.InboxCallDetailsRequest;
 import org.motechproject.nms.api.web.contract.kilkari.InboxResponse;
 import org.motechproject.nms.api.web.contract.kilkari.InboxSubscriptionDetailResponse;
 import org.motechproject.nms.api.web.contract.kilkari.SubscriptionRequest;
-import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
-import org.motechproject.nms.flw.repository.ServiceUsageCapDataService;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.domain.InboxCallData;
 import org.motechproject.nms.kilkari.domain.InboxCallDetailRecord;
@@ -46,6 +44,7 @@ import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
+import org.motechproject.nms.region.service.LanguageService;
 import org.motechproject.nms.testing.it.api.utils.HttpDeleteWithBody;
 import org.motechproject.nms.testing.it.utils.RegionHelper;
 import org.motechproject.nms.testing.it.utils.SubscriptionHelper;
@@ -97,11 +96,9 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     @Inject
     SubscriptionDataService subscriptionDataService;
     @Inject
-    FrontLineWorkerDataService frontLineWorkerDataService;
-    @Inject
-    ServiceUsageCapDataService serviceUsageCapDataService;
-    @Inject
     LanguageDataService languageDataService;
+    @Inject
+    LanguageService languageService;
     @Inject
     CircleDataService circleDataService;
     @Inject
@@ -128,11 +125,12 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     public void setupTestData() {
         testingService.clearDatabase();
 
-        rh = new RegionHelper(languageDataService, circleDataService, stateDataService, districtDataService,
-                districtService);
+        rh = new RegionHelper(languageDataService, languageService, circleDataService, stateDataService,
+                districtDataService, districtService);
 
         sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
-                languageDataService, circleDataService, stateDataService, districtDataService, districtService);
+                languageDataService, languageService, circleDataService, stateDataService, districtDataService,
+                districtService);
 
         // subscriber1 subscribed to child pack only
         Subscriber subscriber1 = subscriberDataService.create(new Subscriber(1000000000L));
@@ -154,7 +152,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         deployedServiceDataService.create(new DeployedService(rh.delhiState(), Service.KILKARI));
     }
 
-    
+
     private HttpGet createHttpGet(boolean includeCallingNumber, String callingNumber,
                                   boolean includeCallId, String callId) {
 
@@ -172,7 +170,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         return new HttpGet(sb.toString());
     }
 
-    
+
     private String createInboxResponseJson(Set<InboxSubscriptionDetailResponse> inboxSubscriptionDetailList)
             throws IOException {
         InboxResponse response = new InboxResponse(inboxSubscriptionDetailList);
@@ -214,7 +212,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertEquals(expectedJson, EntityUtils.toString(response.getEntity()));
     }
 
-    
+
     @Test
     public void testInboxRequestTwoSubscriptions() throws IOException, InterruptedException {
 
@@ -714,7 +712,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
                 ADMIN_USERNAME, ADMIN_PASSWORD));
     }
-    
+
     /**
      * NMS_FT_22 To verify the that Save Inbox call Details API request should succeed with content being saved for both
      * Packs as blank.
@@ -1510,12 +1508,6 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         // setup data to remove 2 messages per week configuration for Pregnancy pack
         testingService.clearDatabase();
 
-        rh = new RegionHelper(languageDataService, circleDataService, stateDataService, districtDataService,
-                districtService);
-
-        sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
-                languageDataService, circleDataService, stateDataService, districtDataService, districtService);
-
         deployedServiceDataService.create(new DeployedService(rh.delhiState(), Service.KILKARI));
 
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
@@ -1557,12 +1549,6 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     public void verifyFT110() throws IOException, InterruptedException {
         // setup data to remove 2 messages per week configuration for Pregnancy pack
         testingService.clearDatabase();
-
-        rh = new RegionHelper(languageDataService, circleDataService, stateDataService, districtDataService,
-                districtService);
-
-        sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
-                languageDataService, circleDataService, stateDataService, districtDataService, districtService);
 
         deployedServiceDataService.create(new DeployedService(rh.delhiState(), Service.KILKARI));
 

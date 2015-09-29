@@ -25,20 +25,6 @@
             <version>${motech.version}</version>
         </dependency>
 
-        <!-- Scheduler -->
-        <dependency>
-            <groupId>org.motechproject</groupId>
-            <artifactId>motech-scheduler</artifactId>
-            <version>${motech.version}</version>
-        </dependency>
-
-        <!-- Event relay -->
-        <dependency>
-            <groupId>org.motechproject</groupId>
-            <artifactId>motech-platform-event</artifactId>
-            <version>${motech.version}</version>
-        </dependency>
-
         <!-- common properties -->
         <dependency>
             <groupId>org.motechproject.nms</groupId>
@@ -118,6 +104,8 @@
                             org.motechproject.nms.region.repository,
                             org.apache.commons.fileupload,
                             org.springframework.web.multipart.commons,
+                            org.springframework.cache.support,
+                            org.springframework.cache.concurrent,
                             *
                         </Import-Package>
                     </instructions>
