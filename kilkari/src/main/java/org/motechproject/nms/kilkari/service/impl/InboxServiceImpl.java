@@ -11,6 +11,8 @@ import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.exception.NoInboxForSubscriptionException;
 import org.motechproject.nms.kilkari.repository.InboxCallDetailRecordDataService;
 import org.motechproject.nms.kilkari.service.InboxService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -20,7 +22,7 @@ import org.springframework.stereotype.Service;
 @Service("inboxService")
 public class InboxServiceImpl implements InboxService {
 
-    private static final int DAYS_IN_WEEK = 7;
+    private static final Logger LOGGER = LoggerFactory.getLogger(InboxServiceImpl.class);
 
     private InboxCallDetailRecordDataService inboxCallDetailRecordDataService;
 
@@ -39,6 +41,7 @@ public class InboxServiceImpl implements InboxService {
     public SubscriptionPackMessage getInboxMessage(Subscription subscription) throws NoInboxForSubscriptionException {
         if ((subscription.getStartDate() == null) || (subscription.getStatus() == SubscriptionStatus.DEACTIVATED)) {
             // there is no inbox for this subscription, throw
+            LOGGER.debug(String.format("Subscription is null or deactivated: %s", subscription.getSubscriptionId()));
             throw new NoInboxForSubscriptionException(String.format("No inbox exists for subscription %s",
                     subscription.getSubscriptionId()));
         }
@@ -49,41 +52,15 @@ public class InboxServiceImpl implements InboxService {
             return null;
         }
 
-        SubscriptionPack pack = subscription.getSubscriptionPack();
-        int daysIntoPack = Days.daysBetween(subscription.getStartDate(), DateTime.now()).getDays();
-        int messageIndex;
-        int currentWeek = daysIntoPack / DAYS_IN_WEEK + 1;
-        int daysIntoWeek = daysIntoPack % DAYS_IN_WEEK;
-
-        if (subscription.getStatus() == SubscriptionStatus.COMPLETED) {
-            // if > 7 days since subscription completion, return no subscription; otherwise return final message
-            if (daysIntoPack > pack.getWeeks() * DAYS_IN_WEEK + DAYS_IN_WEEK) {
-                throw new NoInboxForSubscriptionException(String.format("No inbox exists for subscription %s",
-                        subscription.getSubscriptionId()));
-            }
-            currentWeek = pack.getWeeks();
-            messageIndex = (pack.getMessagesPerWeek() == 1) ? 1 : 2;
-        } else if (subscription.getSubscriptionPack().getMessagesPerWeek() == 1) {
-
-            messageIndex = 1;
-        } else {
-
-            // messagesPerWeek == 2
-            // day of and next 3 days, so if day of week is Monday: Mon, Tue, Wed, Thu
-            // remaining days, so if day of week is Monday: Fri, Sat, Sun
-            messageIndex = (daysIntoWeek >= 0 && daysIntoWeek < 4) ? 1 : 2;
-
+        try {
+            return subscription.nextScheduledMessage(DateTime.now());
+        } catch (IllegalStateException ise) {
+            String exceptionMessage = String.format(
+                    "Unable to get subscription pack message for subscription %s. %s",
+                    subscription.getSubscriptionId(), ise.toString());
+            LOGGER.debug(exceptionMessage);
+            throw new NoInboxForSubscriptionException(exceptionMessage);
         }
-
-        SubscriptionPackMessage spm = subscription.getMessageByWeekAndMessageId(currentWeek, messageIndex);
-
-        if ((subscription.getOrigin() == SubscriptionOrigin.MCTS_IMPORT) &&
-                subscription.needsWelcomeMessageViaInbox()) {
-            // Subscriber has been subscribed via MCTS and may not know what Kilkari is; play welcome message this week
-            spm.setMessageFileName(SubscriptionPackMessage.getWelcomeMessage().getMessageFileName());
-        }
-
-        return spm;
     }
 
 }
