@@ -217,12 +217,6 @@ public class Subscription {
             }
         }
 
-        // Subscription is active, calculate message and week
-        if (!DayOfTheWeek.fromDateTime(date).equals(firstMessageDayOfWeek) && !DayOfTheWeek.fromDateTime(date).equals(secondMessageDayOfWeek)) {
-            // bad call, no message scheduled for the day
-            throw new IllegalStateException(String.format("Subscription with ID %s is not due for any scheduled message for given date", subscriptionId));
-        }
-
         int currentWeek = daysIntoPack / DAYS_IN_WEEK + 1;
 
         if (subscriptionPack.getMessagesPerWeek() == 1) {

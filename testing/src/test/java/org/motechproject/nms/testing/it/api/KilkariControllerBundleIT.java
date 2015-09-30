@@ -1573,6 +1573,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscriberDataService.update(mctsSubscriber);
         Subscription newSubscription = subscriptionService.createSubscription(
                 9999911122L, rh.hindiLanguage(), sh.pregnancyPack(1), SubscriptionOrigin.MCTS_IMPORT);
+        newSubscription.setNeedsWelcomeMessageViaObd(true);
 
         String expectedJsonResponse = "{\"inboxSubscriptionDetailList\":[{\"subscriptionId\":\""
                 + newSubscription.getSubscriptionId()

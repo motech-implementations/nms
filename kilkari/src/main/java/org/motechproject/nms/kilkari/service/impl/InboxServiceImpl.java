@@ -1,11 +1,8 @@
 package org.motechproject.nms.kilkari.service.impl;
 
 import org.joda.time.DateTime;
-import org.joda.time.Days;
 import org.motechproject.nms.kilkari.domain.InboxCallDetailRecord;
 import org.motechproject.nms.kilkari.domain.Subscription;
-import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
-import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.exception.NoInboxForSubscriptionException;
@@ -59,7 +56,7 @@ public class InboxServiceImpl implements InboxService {
                     "Unable to get subscription pack message for subscription %s. %s",
                     subscription.getSubscriptionId(), ise.toString());
             LOGGER.debug(exceptionMessage);
-            throw new NoInboxForSubscriptionException(exceptionMessage);
+            throw new NoInboxForSubscriptionException(ise, exceptionMessage);
         }
     }
 
