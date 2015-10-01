@@ -195,12 +195,7 @@ public class Subscription {
             throw new IllegalStateException(String.format("Subscription with ID %s is not active", subscriptionId));
         }
 
-        // If created via MCTS, check for welcome message
-        if ((origin == SubscriptionOrigin.MCTS_IMPORT) && needsWelcomeMessageViaObd) {
-            // Subscriber has been subscribed via MCTS and may not know what Kilkari is; play welcome message this week
-            return SubscriptionPackMessage.getWelcomeMessage();
-        }
-
+        // get days into pack
         int daysIntoPack = Days.daysBetween(startDate, date).getDays();
         if (daysIntoPack < 0) {
             // there is no message due
@@ -208,7 +203,7 @@ public class Subscription {
                     String.format("Subscription with ID %s is not due for any scheduled message. Start date in the future", subscriptionId));
         }
 
-        // If completed, send last message for the week after
+        // If completed, send last message in pack for 7 day window after completion
         if (status == SubscriptionStatus.COMPLETED) {
             if (daysIntoPack < (subscriptionPack.getWeeks() * DAYS_IN_WEEK + DAYS_IN_WEEK)) {
                 return getMessageByWeekAndMessageId(subscriptionPack.getWeeks(), subscriptionPack.getMessagesPerWeek());
@@ -217,8 +212,14 @@ public class Subscription {
             }
         }
 
-        int currentWeek = daysIntoPack / DAYS_IN_WEEK + 1;
+        // If check for welcome message condition
+        if (needsWelcomeMessageViaObd) {
+            // Subscriber may have subscribed via MCTS/IVR and may not know what Kilkari is; play welcome message this week
+            return SubscriptionPackMessage.getWelcomeMessage();
+        }
 
+        // get next message and week index
+        int currentWeek = daysIntoPack / DAYS_IN_WEEK + 1;
         if (subscriptionPack.getMessagesPerWeek() == 1) {
             return getMessageByWeekAndMessageId(currentWeek, 1);
         } else {
