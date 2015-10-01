@@ -225,6 +225,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 SubscriptionOrigin.MCTS_IMPORT);
         mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
         child.setNeedsWelcomeMessageViaObd(false);
+        subscriptionDataService.update(child);
 
         // due to subscription rules detailed in #157, we need to clear out the DOB and set an LMP in order to
         // create a second subscription for this MCTS subscriber
@@ -236,7 +237,6 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         Subscription mother = subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.pregnancyPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
         mother.setNeedsWelcomeMessageViaObd(false);
-        subscriptionDataService.update(child);
         subscriptionDataService.update(mother);
 
         Pattern childPackJsonPattern = Pattern.compile(".*\"subscriptionPack\":\"childPack\",\"inboxWeekId\":\"w36_1\",\"contentFileName\":\"w36_1\\.wav.*");
@@ -350,6 +350,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         Subscription child = subscriptionService.createSubscription(2000000000L, rh.hindiLanguage(), sh.childPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
         child.setNeedsWelcomeMessageViaObd(false);
+        subscriptionDataService.update(child);
         subscriber = subscriberDataService.findByNumber(2000000000L);
 
         // due to subscription rules detailed in #157, we need to clear out the DOB and set an LMP in order to
@@ -362,7 +363,6 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         Subscription mother = subscriptionService.createSubscription(2000000000L, rh.hindiLanguage(), sh.pregnancyPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
         mother.setNeedsWelcomeMessageViaObd(false);
-        subscriptionDataService.update(child);
         subscriptionDataService.update(mother);
 
         subscriber = subscriberDataService.findByNumber(2000000000L);
@@ -3901,6 +3901,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 .createSubscription(9999911122L, rh.hindiLanguage(),
                         sh.childPack(), SubscriptionOrigin.MCTS_IMPORT);
         childPackSubscription.setNeedsWelcomeMessageViaObd(false);
+        subscriptionDataService.update(childPackSubscription);
 
         mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
 
@@ -3912,7 +3913,6 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 .createSubscription(9999911122L, rh.hindiLanguage(),
                         sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
         pregnancyPackSubscription.setNeedsWelcomeMessageViaObd(false);
-        subscriptionDataService.update(childPackSubscription);
         subscriptionDataService.update(pregnancyPackSubscription);
 
         Pattern childPackJsonPattern = Pattern
