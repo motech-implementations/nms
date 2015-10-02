@@ -246,9 +246,17 @@ public class ImiController {
 
 
     @ExceptionHandler({ RuntimeException.class })
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ResponseBody
     public BadRequest handleException(RuntimeException e, HttpServletRequest request) {
+        log(String.format(LOG_RESPONSE_FORMAT, request.getRequestURI()), e.getMessage());
+        return new BadRequest(e.toString());
+    }
+
+    @ExceptionHandler({ IllegalArgumentException.class })
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseBody
+    public BadRequest handleException(IllegalArgumentException e, HttpServletRequest request) {
         log(String.format(LOG_RESPONSE_FORMAT, request.getRequestURI()), e.getMessage());
         return new BadRequest(e.getMessage());
     }
