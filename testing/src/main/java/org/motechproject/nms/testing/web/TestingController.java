@@ -62,15 +62,21 @@ public class TestingController {
 
     @RequestMapping(value = "/createMctsMoms")
     @ResponseBody
-    public String createMctsMoms(@RequestParam(required = true) int count) throws IOException {
-        return testingService.createMctsMoms(count);
+    public String createMctsMoms(
+            @RequestParam(required = true) int count,
+            @RequestParam(required = true) boolean lmp)
+            throws IOException {
+        return testingService.createMctsMoms(count, lmp);
     }
 
 
     @RequestMapping(value = "/createMctsKids")
     @ResponseBody
-    public String createMctsKids(@RequestParam(required = true) int count) throws IOException {
-        return testingService.createMctsKids(count);
+    public String createMctsKids(
+            @RequestParam(required = true) int count,
+            @RequestParam(required = true) boolean dob)
+            throws IOException {
+        return testingService.createMctsKids(count, dob);
     }
 
 

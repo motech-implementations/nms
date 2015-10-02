@@ -355,32 +355,30 @@ public class TestingServiceImpl implements TestingService {
     }
 
 
-
-
     @Override
-    public String createMctsMoms(int count) throws IOException {
+    public String createMctsMoms(int count, boolean staticLMP) throws IOException {
 
-        LOGGER.debug("createMctsMoms(count={})", count);
+        LOGGER.debug("createMctsMoms(count={}, lmp={})", count, staticLMP);
 
         if (!Boolean.parseBoolean(settingsFacade.getProperty(TESTING_ENVIRONMENT))) {
             throw new IllegalStateException(TESTING_SERVICE_FORBIDDEN);
         }
 
         MctsHelper mctsHelper = createMctsHelper();
-        return mctsHelper.createMoms(count);
+        return mctsHelper.createMoms(count, staticLMP);
     }
 
 
     @Override
-    public String createMctsKids(int count) throws IOException {
+    public String createMctsKids(int count, boolean staticDOB) throws IOException {
 
-        LOGGER.debug("createMctsKids(count={})", count);
+        LOGGER.debug("createMctsKids(count={}, dob={})", count, staticDOB);
 
         if (!Boolean.parseBoolean(settingsFacade.getProperty(TESTING_ENVIRONMENT))) {
             throw new IllegalStateException(TESTING_SERVICE_FORBIDDEN);
         }
 
         MctsHelper mctsHelper = createMctsHelper();
-        return mctsHelper.createKids(count);
+        return mctsHelper.createKids(count, staticDOB);
     }
 }
