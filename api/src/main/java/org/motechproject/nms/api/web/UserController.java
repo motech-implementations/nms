@@ -84,8 +84,8 @@ public class UserController extends BaseController {
                              @RequestParam(required = false) String callId) {
 
         log(String.format("REQUEST: /%s/user", serviceName), String.format(
-                "callingNumber=%s, callId=%s, operator=%s, callId=%s",
-                LogHelper.obscure(callingNumber), operator, circle, callId));
+                "callingNumber=%s, callId=%s, operator=%s, circle=%s",
+                LogHelper.obscure(callingNumber), callId, operator, circle));
 
         StringBuilder failureReasons = validate(callingNumber, callId, operator, circle);
         if (failureReasons.length() > 0) {
