@@ -365,7 +365,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                 return child;
             }
         });
-        mapping.put(BENEFICIARY_NAME, new GetString());
+        mapping.put(BENEFICIARY_NAME, new Optional(new GetString()));
         mapping.put(MOTHER_ID, new Optional(new GetInstanceByString<MctsMother>() {
             @Override
             public MctsMother retrieve(String value) {
