@@ -52,6 +52,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
     private static final String SUBCENTRE = "SubCentre_ID";
     private static final String CENSUS_VILLAGE = "Village_ID";
     private static final String NON_CENSUS_VILAGE = "SVID";
+    private static final int MASK_LENGTH = 3;
 
 
     private FrontLineWorkerService frontLineWorkerService;
@@ -131,11 +132,24 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
             // if the mcts id has changed.
             if (flw != null && mctsFlwId != null && !mctsFlwId.equals(flw.getMctsFlwId())) {
                 throw new CsvImportDataException(String.format("Existing FLW with same MSISDN (%s) but " +
-                                        "different MCTS ID (%s != %s)", msisdn, mctsFlwId, flw.getMctsFlwId()));
+                                        "different MCTS ID (%s != %s)", obscureNumber(msisdn), mctsFlwId, flw.getMctsFlwId()));
             }
         }
 
         return flw;
+    }
+
+    // obscure code from LogHelper in API package. Copy-paste since we cannot do a circular reference
+    public static String obscureNumber(Long callingNumber) {
+        if (callingNumber == null) {
+            return "null";
+        }
+        String s = callingNumber.toString();
+        int l = s.length();
+        if (s.length() > MASK_LENGTH) {
+            s = org.apache.commons.lang3.StringUtils.repeat('*', l - MASK_LENGTH) + s.substring(l - MASK_LENGTH);
+        }
+        return s;
     }
 
     private String readLineWhileBlank(BufferedReader bufferedReader) throws IOException {
