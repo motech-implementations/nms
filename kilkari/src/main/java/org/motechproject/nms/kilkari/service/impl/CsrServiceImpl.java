@@ -163,7 +163,7 @@ public class CsrServiceImpl implements CsrService {
         if (callRetry == null) {
 
             // This message was never retried before, so this is a first retry
-
+            LOGGER.debug(String.format("Creating retry for subscription: %s", subscription.getSubscriptionId()));
             DayOfTheWeek nextDay = DayOfTheWeek.fromInt(subscription.getStartDate().dayOfWeek().get()).nextDay();
             CallRetry newCallRetry = new CallRetry(
                     subscription.getSubscriptionId(),
@@ -196,7 +196,7 @@ public class CsrServiceImpl implements CsrService {
                 subscriptionDataService.update(subscription);
             }
 
-
+            LOGGER.debug(String.format("Deleting retry entry for subscription: %s", subscription.getSubscriptionId()));
             callRetryDataService.delete(callRetry);
 
             // Does subscription need to be marked complete, even if we failed to send the last message?
@@ -206,7 +206,7 @@ public class CsrServiceImpl implements CsrService {
 
 
         // Re-reschedule the call
-
+        LOGGER.debug(String.format("Updating retry entry for subscription: %s", subscription.getSubscriptionId()));
         callRetry.setCallStage(callRetry.getCallStage().nextStage());
         callRetry.setDayOfTheWeek(callRetry.getDayOfTheWeek().nextDay());
         callRetryDataService.update(callRetry);
