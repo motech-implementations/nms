@@ -104,7 +104,7 @@ public class SubscriptionUnitTest {
                 new Subscriber(1111111111L),
                 createSubscriptionPack("pack", SubscriptionPackType.CHILD, 10, 1),
                 SubscriptionOrigin.IVR);
-        s.setStatus(SubscriptionStatus.ACTIVE);
+        s.setStatus(SubscriptionStatus.DEACTIVATED);
         s.setStartDate(DateTime.now());
 
         //day of

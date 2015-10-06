@@ -5,12 +5,14 @@ import org.motechproject.mds.annotations.Field;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
 
 import javax.jdo.annotations.Column;
+import javax.jdo.annotations.Unique;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 
 @Entity(tableName = "nms_kk_retry_records")
 public class CallRetry {
     @Field
+    @Unique
     private String subscriptionId;
 
     @Field

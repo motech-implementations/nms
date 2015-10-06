@@ -221,9 +221,11 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscriberDataService.create(mctsSubscriber);
 
         // create subscription to child pack
-        subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.childPack(),
+        Subscription child = subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.childPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
         mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
+        child.setNeedsWelcomeMessageViaObd(false);
+        subscriptionDataService.update(child);
 
         // due to subscription rules detailed in #157, we need to clear out the DOB and set an LMP in order to
         // create a second subscription for this MCTS subscriber
@@ -232,8 +234,10 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscriberDataService.update(mctsSubscriber);
 
         // create subscription to pregnancy pack
-        subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.pregnancyPack(),
+        Subscription mother = subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.pregnancyPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
+        mother.setNeedsWelcomeMessageViaObd(false);
+        subscriptionDataService.update(mother);
 
         Pattern childPackJsonPattern = Pattern.compile(".*\"subscriptionPack\":\"childPack\",\"inboxWeekId\":\"w36_1\",\"contentFileName\":\"w36_1\\.wav.*");
         Pattern pregnancyPackJsonPattern = Pattern.compile(".*\"subscriptionPack\":\"pregnancyPack\",\"inboxWeekId\":\"w2_2\",\"contentFileName\":\"w2_2\\.wav.*");
@@ -343,8 +347,10 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         // create subscription to child pack
         subscriber.setDateOfBirth(DateTime.now().minusDays(250));
         subscriberDataService.update(subscriber);
-        subscriptionService.createSubscription(2000000000L, rh.hindiLanguage(), sh.childPack(),
+        Subscription child = subscriptionService.createSubscription(2000000000L, rh.hindiLanguage(), sh.childPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
+        child.setNeedsWelcomeMessageViaObd(false);
+        subscriptionDataService.update(child);
         subscriber = subscriberDataService.findByNumber(2000000000L);
 
         // due to subscription rules detailed in #157, we need to clear out the DOB and set an LMP in order to
@@ -354,8 +360,10 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscriberDataService.update(subscriber);
 
         // create subscription to pregnancy pack
-        subscriptionService.createSubscription(2000000000L, rh.hindiLanguage(), sh.pregnancyPack(),
+        Subscription mother = subscriptionService.createSubscription(2000000000L, rh.hindiLanguage(), sh.pregnancyPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
+        mother.setNeedsWelcomeMessageViaObd(false);
+        subscriptionDataService.update(mother);
 
         subscriber = subscriberDataService.findByNumber(2000000000L);
         assertEquals(2, subscriber.getActiveAndPendingSubscriptions().size());
@@ -1565,6 +1573,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
         // update old pregnancy subscription pack to complete, setting the subscription to have ended > a week ago
         subscriptionService.updateStartDate(oldSubscription, DateTime.now().minusDays(512 + 90));
+        oldSubscription.setNeedsWelcomeMessageViaObd(false);
 
         mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
 
@@ -1579,8 +1588,9 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 + "\",\"subscriptionPack\":\"pregnancyPack\",\"inboxWeekId\":\"w1_1\",\"contentFileName\":\"w1_1.wav\"}]}";
 
         HttpGet httpGet = createHttpGet(true, "9999911122", true, VALID_CALL_ID);
-        assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
-                expectedJsonResponse, ADMIN_USERNAME, ADMIN_PASSWORD));
+        String responseBody = EntityUtils.toString(SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD).getEntity());
+        assertEquals(responseBody, expectedJsonResponse);
     }
 
     // This method is a utility method for running the test cases. this is
@@ -3840,6 +3850,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         Subscription childPackSubscription = subscriptionService
                 .createSubscription(9999911122L, rh.hindiLanguage(),
                         sh.childPack(), SubscriptionOrigin.MCTS_IMPORT);
+        childPackSubscription.setNeedsWelcomeMessageViaObd(false);
+        subscriptionDataService.update(childPackSubscription);
 
         mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
 
@@ -3888,6 +3900,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         Subscription childPackSubscription = subscriptionService
                 .createSubscription(9999911122L, rh.hindiLanguage(),
                         sh.childPack(), SubscriptionOrigin.MCTS_IMPORT);
+        childPackSubscription.setNeedsWelcomeMessageViaObd(false);
+        subscriptionDataService.update(childPackSubscription);
 
         mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
 
@@ -3898,6 +3912,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         Subscription pregnancyPackSubscription = subscriptionService
                 .createSubscription(9999911122L, rh.hindiLanguage(),
                         sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
+        pregnancyPackSubscription.setNeedsWelcomeMessageViaObd(false);
+        subscriptionDataService.update(pregnancyPackSubscription);
 
         Pattern childPackJsonPattern = Pattern
                 .compile(".*\"subscriptionId\":\""

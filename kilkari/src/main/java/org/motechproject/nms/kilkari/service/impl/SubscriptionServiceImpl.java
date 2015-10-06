@@ -360,6 +360,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             return null;
         }
 
+        // creating new subscription from MCTS, set welcome flag
+        subscription.setNeedsWelcomeMessageViaObd(true);
         return subscriptionDataService.create(subscription);
     }
 
