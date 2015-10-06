@@ -208,7 +208,7 @@ public class Subscription {
             if (daysIntoPack < (subscriptionPack.getWeeks() * DAYS_IN_WEEK + DAYS_IN_WEEK)) {
                 return getMessageByWeekAndMessageId(subscriptionPack.getWeeks(), subscriptionPack.getMessagesPerWeek());
             } else {
-                throw new IllegalStateException("No inbox found for completed subscription");
+                throw new IllegalStateException("Trying to get last subscription message more than a week after the subscription has completed.");
             }
         }
 
