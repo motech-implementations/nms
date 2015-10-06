@@ -470,9 +470,9 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
     // TODO JIRA issue: https://applab.atlassian.net/browse/NMS-239
     @Test
     public void verifyFT408() throws IOException, InterruptedException {
-        // callId more than 15 digit
+        // callId more than 25 digit
         HttpGet request = createHttpGetBookmarkWithScore("1234567890",
-                "1234567890123456");
+                VALID_CALL_ID.concat("14"));
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
                 request, RequestBuilder.ADMIN_USERNAME,
@@ -635,7 +635,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
         assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response
                 .getEntity())));
 
-        // callId less than 15 digit
+        // callId less than 25 digit
         bookmarkRequest.setCallId(VALID_CALL_ID.substring(2));
         request = RequestBuilder.createPostRequest(endpoint, bookmarkRequest);
         response = SimpleHttpClient.httpRequestAndResponse(request,
