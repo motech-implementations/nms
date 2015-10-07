@@ -13,6 +13,9 @@ import org.motechproject.nms.imi.service.SmsNotificationService;
 import org.motechproject.nms.mobileacademy.domain.CompletionRecord;
 import org.motechproject.nms.mobileacademy.repository.CompletionRecordDataService;
 import org.motechproject.nms.mobileacademy.service.CourseNotificationService;
+import org.motechproject.nms.region.domain.District;
+import org.motechproject.nms.region.domain.Language;
+import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.scheduler.contract.RepeatingSchedulableJob;
 import org.motechproject.scheduler.service.MotechSchedulerService;
 import org.motechproject.server.config.SettingsFacade;
@@ -63,6 +66,11 @@ public class CourseNotificationServiceImpl implements CourseNotificationService 
     private FrontLineWorkerService frontLineWorkerService;
 
     /**
+     * Used to get detached field
+     */
+    private DistrictDataService districtDataService;
+
+    /**
      * scheduler for future sms retries
      */
     private MotechSchedulerService schedulerService;
@@ -84,7 +92,8 @@ public class CourseNotificationServiceImpl implements CourseNotificationService 
                                          ActivityService activityService,
                                          MotechSchedulerService schedulerService,
                                          AlertService alertService,
-                                         FrontLineWorkerService frontLineWorkerService) {
+                                         FrontLineWorkerService frontLineWorkerService,
+                                         DistrictDataService districtDataService) {
 
         this.completionRecordDataService = completionRecordDataService;
         this.smsNotificationService = smsNotificationService;
@@ -93,6 +102,7 @@ public class CourseNotificationServiceImpl implements CourseNotificationService 
         this.alertService = alertService;
         this.activityService = activityService;
         this.frontLineWorkerService = frontLineWorkerService;
+        this.districtDataService = districtDataService;
     }
 
     @MotechListener(subjects = { COURSE_COMPLETED_SUBJECT })
@@ -115,6 +125,7 @@ public class CourseNotificationServiceImpl implements CourseNotificationService 
             }
 
             String smsContent = buildSmsContent(callingNumber);
+            cr = completionRecordDataService.findRecordByCallingNumber(callingNumber); //refetch since this might have been updated
             cr.setSentNotification(smsNotificationService.sendSms(callingNumber, smsContent));
             completionRecordDataService.update(cr);
         } catch (IllegalStateException se) {
@@ -205,11 +216,20 @@ public class CourseNotificationServiceImpl implements CourseNotificationService 
 
         // set sms content language
         if (flw.getLanguage() != null) {
+            // get language from flw, if exists
             smsLanguageProperty = flw.getLanguage().getCode();
-        } else if (flw.getDistrict() != null && flw.getDistrict().getLanguage() != null) {
-            smsLanguageProperty = flw.getDistrict().getLanguage().getCode();
         } else {
-            LOGGER.debug("No language code found. Reverting to national default");
+            District flwDistrict = flw.getDistrict();
+            if (flwDistrict != null) {
+                // get language from flw location (district), if exists
+                Language flwLanguage = (Language) districtDataService.getDetachedField(flwDistrict, "language");
+                if (flwLanguage != null) {
+                    smsLanguageProperty = flwLanguage.getCode();
+                }
+            }
+        }
+        if (smsLanguageProperty == null || smsLanguageProperty.isEmpty()) {
+            LOGGER.debug("No language code found in FLW. Reverting to national default");
             smsLanguageProperty = SMS_DEFAULT_LANGUAGE_PROPERTY;
         }
 

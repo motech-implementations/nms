@@ -439,6 +439,41 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         // TODO: cannot check the notification status yet since we don't have a real IMI url to hit
     }
 
+    @Test
+    public void testSmsReference() {
+        long callingNumber = 2111113333L;
+
+        // Setup language/location and flw for notification
+        FrontLineWorker flw = frontLineWorkerService.getByContactNumber(callingNumber);
+        if (flw != null) {
+            flw.setStatus(FrontLineWorkerStatus.INVALID);
+            frontLineWorkerService.update(flw);
+            frontLineWorkerService.delete(flw);
+        }
+
+        createLanguageLocationData();
+        State sampleState = stateDataService.findByCode(1L);
+        flw = new FrontLineWorker("Test Worker", callingNumber);
+        flw.setState(sampleState);
+        flw.setDistrict(sampleState.getDistricts().get(0));
+        frontLineWorkerService.add(flw);
+        flw = frontLineWorkerService.getByContactNumber(callingNumber);
+        assertNotNull(flw);
+
+        MotechEvent event = new MotechEvent();
+        event.getParameters().put("callingNumber", callingNumber);
+        event.getParameters().put("smsContent", "FooBar");
+        CompletionRecord cr = new CompletionRecord(callingNumber, 35, false, 1);
+        completionRecordDataService.create(cr);
+        assertNull(cr.getSmsReferenceNumber());
+
+        courseNotificationService.sendSmsNotification(event);
+        CompletionRecord smsCr = completionRecordDataService.findRecordByCallingNumber(callingNumber);
+        assertNotNull(smsCr.getSmsReferenceNumber());
+        String expectedCode = "" + flw.getState().getCode() + flw.getDistrict().getCode() + callingNumber + 0; // location code + callingNumber + tries
+        assertEquals(expectedCode, smsCr.getSmsReferenceNumber());
+    }
+
     private void createLanguageLocationData() {
         Language ta = languageService.getForCode("50");
         if (ta == null) {

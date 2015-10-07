@@ -29,6 +29,7 @@ import org.motechproject.nms.mobileacademy.service.impl.MobileAcademyServiceImpl
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Language;
 import org.motechproject.nms.region.domain.State;
+import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.scheduler.contract.RepeatingSchedulableJob;
 import org.motechproject.scheduler.service.MotechSchedulerService;
 import org.motechproject.server.config.SettingsFacade;
@@ -102,6 +103,9 @@ public class MobileAcademyServiceUnitTest {
     @Mock
     private MotechSchedulerService schedulerService;
 
+    @Mock
+    private DistrictDataService districtDataService;
+
     private Validator validator;
 
     @Before
@@ -113,7 +117,7 @@ public class MobileAcademyServiceUnitTest {
                 nmsCourseDataService, completionRecordDataService, eventRelay, settingsFacade, alertService);
         courseNotificationService = new CourseNotificationServiceImpl(completionRecordDataService,
                 smsNotificationService, settingsFacade, activityService, schedulerService, alertService,
-                frontLineWorkerService);
+                frontLineWorkerService, districtDataService);
         validator = Validation.buildDefaultValidatorFactory().getValidator();
         when(activityService.createActivity(any(ActivityRecord.class))).thenReturn(new ActivityRecord());
     }
