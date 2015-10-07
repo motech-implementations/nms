@@ -154,10 +154,13 @@ public class CourseNotificationServiceImpl implements CourseNotificationService 
                 cr.getNotificationRetryCount() < Integer.parseInt(settingsFacade.getProperty(SMS_RETRY_COUNT))) {
 
             try {
+                Long msisdn = Long.parseLong(callingNumber);
+                String smsContent = buildSmsContent(msisdn);
                 MotechEvent retryEvent = new MotechEvent(COURSE_COMPLETED_SUBJECT);
-                retryEvent.getParameters().put(CALLING_NUMBER, Long.parseLong(callingNumber));
-                retryEvent.getParameters().put(SMS_CONTENT, buildSmsContent(Long.parseLong(callingNumber)));
+                retryEvent.getParameters().put(CALLING_NUMBER, msisdn);
+                retryEvent.getParameters().put(SMS_CONTENT, smsContent);
                 retryEvent.getParameters().put(RETRY_FLAG, true);
+
                 if (nextRetryTime.isBefore(currentTime)) {
                     // retry right away
                     sendSmsNotification(retryEvent);
@@ -187,6 +190,7 @@ public class CourseNotificationServiceImpl implements CourseNotificationService 
     private String buildSmsContent(Long callingNumber) {
 
         FrontLineWorker flw = frontLineWorkerService.getByContactNumber(callingNumber);
+        CompletionRecord completionRecord = completionRecordDataService.findRecordByCallingNumber(callingNumber);
         String locationCode = "XX"; // unknown location id
         String smsLanguageProperty = null;
 
@@ -217,6 +221,9 @@ public class CourseNotificationServiceImpl implements CourseNotificationService 
         }
 
         int attempts = activityService.getAllActivityForUser(callingNumber.toString()).size();
-        return smsContent + locationCode + callingNumber + attempts;
+        String smsReferenceNumber = locationCode + callingNumber + attempts;
+        completionRecord.setSmsReferenceNumber(smsReferenceNumber);
+        completionRecordDataService.update(completionRecord);
+        return smsContent + smsReferenceNumber;
     }
 }
