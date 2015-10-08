@@ -475,4 +475,48 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         assertEquals("Success", auditRecord.getOutcome());
         assertEquals("flw_location_update_msisdn.txt", auditRecord.getFile());
     }
+
+    /**
+     * Verify that an FLWs state can be updated
+     */
+    @Test
+    public void verifyNIP166() throws InterruptedException, IOException {
+        State state = stateDataService.findByName("State 1");
+        District district1 = state.getDistricts().get(0);
+        District district2 = state.getDistricts().get(1);
+        Language language1 = languageService.getForCode("L1");
+        assertEquals("District 11", district1.getName());
+        assertEquals("District 12", district2.getName());
+
+        State state2 = createState(2L, "State 2");
+        District district22 = createDistrict(state2, 22L, "District 22");
+        state2.getDistricts().add(district22);
+        stateDataService.create(state2);
+
+        FrontLineWorker flw = new FrontLineWorker("Test MSISDN", 1234567890L);
+        flw.setState(state);
+        flw.setDistrict(district1);
+        flw.setLanguage(language1);
+        frontLineWorkerService.add(flw);
+
+        importCsvFileForFLW("flw_update_state_by_msisdn.txt");
+
+        flw = frontLineWorkerService.getByContactNumber(1234567890L);
+
+        assertFLW(flw, "#0", 1234567890L, "Test MSISDN", "District 22", language1.getCode());
+
+        List<CsvAuditRecord> auditRecords = csvAuditRecordDataService.retrieveAll();
+        assertNotNull(auditRecords);
+        assertEquals(1, auditRecords.size());
+
+        CsvAuditRecord auditRecord = auditRecords.get(0);
+        assertEquals("Success", auditRecord.getOutcome());
+        assertEquals("flw_update_state_by_msisdn.txt", auditRecord.getFile());
+
+        // deleting the FLW to avoid conflicts at later stage
+        flw.setStatus(FrontLineWorkerStatus.INVALID);
+        flw.setInvalidationDate(DateTime.now().minusYears(1));
+        frontLineWorkerService.update(flw);
+        frontLineWorkerService.delete(flw);
+    }
 }
