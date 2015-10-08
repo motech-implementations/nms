@@ -514,19 +514,22 @@ public class TargetFileServiceImpl implements TargetFileService {
     }
 
     private void activatePendingSubscriptions(DateTime today, int maxQueryBlock) {
-        int page = 1;
+        DateTime tomorrow = today.plusDays(1).withTimeAtStartOfDay();
+        int count = 0;
         while (true) {
+            // We're using tomorrow as the upper bound of the select query (which uses a <)
             List<Subscription> subscriptions = subscriptionService
-                    .findPendingSubscriptionsFromDate(today, page, maxQueryBlock);
+                    .findPendingSubscriptionsFromDate(tomorrow, 1, maxQueryBlock);
             if (CollectionUtils.isNotEmpty(subscriptions)) {
                 for (Subscription subscription : subscriptions) {
                     subscriptionService.activateSubscription(subscription);
                 }
-                page++;
+                count += subscriptions.size();
             } else {
                 break;
             }
         }
+        LOGGER.debug("Activated {} subscriptions", count);
     }
 
     private void sendNotificationRequest(TargetFileNotification tfn) {
