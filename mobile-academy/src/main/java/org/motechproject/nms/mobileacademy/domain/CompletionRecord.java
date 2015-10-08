@@ -34,6 +34,9 @@ public class CompletionRecord extends MdsEntity {
     @Field
     private String lastDeliveryStatus;
 
+    @Field
+    private String smsReferenceNumber;
+
     /**
      * Note, this is the number of additional times to try on top of the original send notification request
      */
@@ -102,5 +105,13 @@ public class CompletionRecord extends MdsEntity {
 
     public void setNotificationRetryCount(int notificationRetryCount) {
         this.notificationRetryCount = notificationRetryCount;
+    }
+
+    public String getSmsReferenceNumber() {
+        return smsReferenceNumber;
+    }
+
+    public void setSmsReferenceNumber(String smsReferenceNumber) {
+        this.smsReferenceNumber = smsReferenceNumber;
     }
 }
