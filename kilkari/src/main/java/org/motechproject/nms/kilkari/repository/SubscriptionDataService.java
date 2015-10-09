@@ -21,6 +21,6 @@ public interface SubscriptionDataService extends MotechDataService<Subscription>
     @Lookup
     List<Subscription> findByStatusAndStartDate(
             @LookupField(name = "status")SubscriptionStatus status,
-            @LookupField(name = "startDate", customOperator = Constants.Operators.LT_EQ)DateTime startDate,
+            @LookupField(name = "startDate", customOperator = Constants.Operators.LT)DateTime startDate,
             QueryParams queryParams);
 }

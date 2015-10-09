@@ -15,6 +15,7 @@ import org.motechproject.alerts.domain.AlertType;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.annotations.MotechListener;
 import org.motechproject.mds.query.QueryParams;
+import org.motechproject.metrics.service.Timer;
 import org.motechproject.nms.imi.domain.FileAuditRecord;
 import org.motechproject.nms.imi.domain.FileProcessedStatus;
 import org.motechproject.nms.imi.domain.FileType;
@@ -65,10 +66,13 @@ public class TargetFileServiceImpl implements TargetFileService {
     private static final String IMI_RETRY_CHECK_DND = "imi.retry_check_dnd";
     private static final String IMI_RETRY_NO_CHECK_DND = "imi.retry_no_check_dnd";
 
+    private static final int PROGRESS_INTERVAL = 100;
+
     private static final String GENERATE_TARGET_FILE_EVENT = "nms.obd.generate_target_file";
 
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormat.forPattern("yyyyMMddHHmmss");
     private static final String DEFAULT_CIRCLE = "99";  // https://applab.atlassian.net/browse/NIP-64
+    public static final String WROTE = "Wrote {}";
 
     private SettingsFacade settingsFacade;
     private MotechSchedulerService schedulerService;
@@ -361,13 +365,14 @@ public class TargetFileServiceImpl implements TargetFileService {
         int recordCount = 0;
         int page = 1;
         int numBlockRecord;
+        int count = 0;
+        Timer timer = new Timer("fresh call", "fresh calls");
         do {
             List<Subscription> subscriptions = subscriptionService.findActiveSubscriptionsForDay(dow, page,
                     maxQueryBlock);
             numBlockRecord = subscriptions.size();
             int messageWriteCount = 0;
             for (Subscription subscription : subscriptions) {
-
 
                 Subscriber subscriber = subscription.getSubscriber();
 
@@ -396,6 +401,10 @@ public class TargetFileServiceImpl implements TargetFileService {
                             subscription.getOrigin().getCode(),
                             writer);
                     messageWriteCount += 1;
+                    count++;
+                    if (count % PROGRESS_INTERVAL == 0) {
+                        LOGGER.debug(WROTE, timer.frequency(count));
+                    }
 
                 } catch (IllegalStateException se) {
                     LOGGER.error(se.toString());
@@ -407,6 +416,10 @@ public class TargetFileServiceImpl implements TargetFileService {
 
         } while (numBlockRecord > 0);
 
+        if (count % PROGRESS_INTERVAL != 0) {
+            LOGGER.debug(WROTE, timer.frequency(count));
+        }
+
         return recordCount;
     }
 
@@ -417,6 +430,8 @@ public class TargetFileServiceImpl implements TargetFileService {
         int recordCount = 0;
         int page = 1;
         int numBlockRecord;
+        int count = 0;
+        Timer timer = new Timer("retry call", "retry calls");
         do {
             List<CallRetry> callRetries = callRetryDataService.findByDayOfTheWeek(dow,
                     new QueryParams(page, maxQueryBlock));
@@ -438,12 +453,21 @@ public class TargetFileServiceImpl implements TargetFileService {
                         callRetry.getCircle(),
                         callRetry.getSubscriptionOrigin().getCode(),
                         writer);
+                count++;
+                if (count % PROGRESS_INTERVAL == 0) {
+                    LOGGER.debug(WROTE, timer.frequency(count));
+                }
+
             }
 
             page++;
             recordCount += numBlockRecord;
 
         } while (numBlockRecord > 0);
+
+        if (count % PROGRESS_INTERVAL != 0) {
+            LOGGER.debug(WROTE, timer.frequency(count));
+        }
 
         return recordCount;
     }
@@ -514,18 +538,32 @@ public class TargetFileServiceImpl implements TargetFileService {
     }
 
     private void activatePendingSubscriptions(DateTime today, int maxQueryBlock) {
-        int page = 1;
+        DateTime tomorrow = today.plusDays(1).withTimeAtStartOfDay();
+        int count = 0;
+        Timer timer = new Timer("subscription", "subscriptions");
+
         while (true) {
+            // We're using tomorrow as the upper bound of the select query (which uses a <)
+            Timer qryTimer = new Timer();
             List<Subscription> subscriptions = subscriptionService
-                    .findPendingSubscriptionsFromDate(today, page, maxQueryBlock);
+                    .findPendingSubscriptionsFromDate(tomorrow, 1, maxQueryBlock);
+            LOGGER.debug("findPendingSubscriptionsFromDate {}", qryTimer.time());
+            Timer actTimer = new Timer();
             if (CollectionUtils.isNotEmpty(subscriptions)) {
                 for (Subscription subscription : subscriptions) {
                     subscriptionService.activateSubscription(subscription);
+                    count++;
+                    if (count % PROGRESS_INTERVAL == 0) {
+                        LOGGER.debug("Activated {}", timer.frequency(count));
+                    }
                 }
-                page++;
             } else {
                 break;
             }
+            LOGGER.debug("Activated(only) {}", actTimer.frequency(subscriptions.size()));
+        }
+        if (count % PROGRESS_INTERVAL != 0) {
+            LOGGER.debug("Activated {}", timer.frequency(count));
         }
     }
 
