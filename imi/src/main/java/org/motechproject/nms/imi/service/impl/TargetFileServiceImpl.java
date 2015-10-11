@@ -1,7 +1,6 @@
 package org.motechproject.nms.imi.service.impl;
 
 
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
@@ -31,7 +30,6 @@ import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
 import org.motechproject.nms.kilkari.repository.CallRetryDataService;
-import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
 import org.motechproject.nms.props.domain.RequestId;
@@ -78,7 +76,6 @@ public class TargetFileServiceImpl implements TargetFileService {
     private MotechSchedulerService schedulerService;
     private AlertService alertService;
     private SubscriptionService subscriptionService;
-    private SubscriberDataService subscriberDataService;
     private CallRetryDataService callRetryDataService;
     private FileAuditRecordDataService fileAuditRecordDataService;
 
@@ -135,14 +132,12 @@ public class TargetFileServiceImpl implements TargetFileService {
                                  MotechSchedulerService schedulerService, AlertService alertService,
                                  SubscriptionService subscriptionService,
                                  CallRetryDataService callRetryDataService,
-                                 SubscriberDataService subscriberDataService,
                                  FileAuditRecordDataService fileAuditRecordDataService) {
         this.schedulerService = schedulerService;
         this.settingsFacade = settingsFacade;
         this.alertService = alertService;
         this.subscriptionService = subscriptionService;
         this.callRetryDataService = callRetryDataService;
-        this.subscriberDataService = subscriberDataService;
         this.fileAuditRecordDataService = fileAuditRecordDataService;
 
         scheduleTargetFileGeneration();
@@ -371,35 +366,24 @@ public class TargetFileServiceImpl implements TargetFileService {
         int count = 0;
         Timer timer = new Timer("fresh call", "fresh calls");
         do {
-            Timer t2 = new Timer();
             List<Subscription> subscriptions = subscriptionService.findActiveSubscriptionsForDay(dow, page,
                     maxQueryBlock);
-            LOGGER.debug("findActiveSubscriptionsForDay {}", t2.time());
 
             numBlockRecord = subscriptions.size();
             int messageWriteCount = 0;
             for (Subscription subscription : subscriptions) {
 
-                t2.reset();
                 Subscriber subscriber = subscription.getSubscriber();
-                LOGGER.debug("getSubscriber {}", t2.time());
 
                 RequestId requestId = new RequestId(subscription.getSubscriptionId(),
                         TIME_FORMATTER.print(timestamp));
 
                 try {
-                    t2.reset();
                     SubscriptionPackMessage msg = subscription.nextScheduledMessage(timestamp);
-                    LOGGER.debug("nextScheduledMessage {}", t2.time());
 
-                    //todo: don't understand why subscriber.getLanguage() doesn't work here...
-                    // it's not working because of https://applab.atlassian.net/browse/MOTECH-1678
-                    t2.reset();
-                    Language language = (Language) subscriberDataService.getDetachedField(subscriber, "language");
-                    Circle circle = (Circle) subscriberDataService.getDetachedField(subscriber, "circle");
-                    LOGGER.debug("get lang + circle detahcedField{}", t2.time());
+                    Language language = subscriber.getLanguage();
+                    Circle circle = subscriber.getCircle();
 
-                    t2.reset();
                     writeSubscriptionRow(
                             requestId.toString(),
                             serviceIdFromOrigin(true, subscription.getOrigin()),
@@ -413,7 +397,6 @@ public class TargetFileServiceImpl implements TargetFileService {
                             circle == null ? "" : circle.getName(),
                             subscription.getOrigin().getCode(),
                             writer);
-                    LOGGER.debug("writeSubscriptionRow {}", t2.time());
 
                     messageWriteCount += 1;
                     count++;
@@ -516,7 +499,7 @@ public class TargetFileServiceImpl implements TargetFileService {
                 callFlowUrl = "";
             }
 
-            activatePendingSubscriptions(today, maxQueryBlock);
+            activatePendingSubscriptions(today);
 
             //Header
             writeHeader(writer);
@@ -552,34 +535,12 @@ public class TargetFileServiceImpl implements TargetFileService {
         return tfn;
     }
 
-    private void activatePendingSubscriptions(DateTime today, int maxQueryBlock) {
+    private void activatePendingSubscriptions(DateTime today) {
         DateTime tomorrow = today.plusDays(1).withTimeAtStartOfDay();
-        int count = 0;
-        Timer timer = new Timer("subscription", "subscriptions");
 
-        while (true) {
-            // We're using tomorrow as the upper bound of the select query (which uses a <)
-            Timer qryTimer = new Timer();
-            List<Subscription> subscriptions = subscriptionService
-                    .findPendingSubscriptionsFromDate(tomorrow, 1, maxQueryBlock);
-            LOGGER.debug("findPendingSubscriptionsFromDate {}", qryTimer.time());
-            Timer actTimer = new Timer();
-            if (CollectionUtils.isNotEmpty(subscriptions)) {
-                for (Subscription subscription : subscriptions) {
-                    subscriptionService.activateSubscription(subscription);
-                    count++;
-                    if (count % PROGRESS_INTERVAL == 0) {
-                        LOGGER.debug("Activated {}", timer.frequency(count));
-                    }
-                }
-            } else {
-                break;
-            }
-            LOGGER.debug("Activated(only) {}", actTimer.frequency(subscriptions.size()));
-        }
-        if (count % PROGRESS_INTERVAL != 0) {
-            LOGGER.debug("Activated {}", timer.frequency(count));
-        }
+        Timer timer = new Timer();
+        subscriptionService.activatePendingSubscriptionsUpTo(tomorrow);
+        LOGGER.debug("Activated all pending subscriptions up to {} in {}", tomorrow, timer.time());
     }
 
     private void sendNotificationRequest(TargetFileNotification tfn) {

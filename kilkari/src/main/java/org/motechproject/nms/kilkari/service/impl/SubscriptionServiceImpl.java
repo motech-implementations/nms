@@ -1,6 +1,5 @@
 package org.motechproject.nms.kilkari.service.impl;
 
-import org.apache.commons.collections.ListUtils;
 import org.datanucleus.store.rdbms.query.ForwardQueryResult;
 import org.joda.time.DateTime;
 import org.joda.time.Weeks;
@@ -42,7 +41,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import javax.jdo.Query;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -59,10 +58,13 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private static final String WEEKS_TO_KEEP_CLOSED_SUBSCRIPTIONS = "kilkari.weeks_to_keep_closed_subscriptions";
 
     private static final String SUBSCRIPTION_PURGE_EVENT_SUBJECT = "nms.kilkari.purge_closed_subscriptions";
-    public static final String SELECT_SUBSCRIBERS_BY_NUMBER = "select * from nms_subscribers where callingNumber = ?";
-    public static final String MORE_THAN_ONE_SUBSCRIBER = "More than one subscriber returned for callingNumber %s";
+    private static final String SELECT_SUBSCRIBERS_BY_NUMBER = "select * from nms_subscribers where callingNumber = ?";
+    private static final String MORE_THAN_ONE_SUBSCRIBER = "More than one subscriber returned for callingNumber %s";
 
-    public static final String PACK_CACHE_EVICT_MESSAGE = "nms.kilkari.cache.evict.pack";
+    private static final String PACK_CACHE_EVICT_MESSAGE = "nms.kilkari.cache.evict.pack";
+
+    //2015-10-21 05:11:56.598
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.S");
 
     private SettingsFacade settingsFacade;
     private MotechSchedulerService schedulerService;
@@ -419,6 +421,25 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         }
     }
 
+    public void activatePendingSubscriptionsUpTo(final DateTime upToDateTime) {
+        SqlQueryExecution sqe = new SqlQueryExecution() {
+
+            @Override
+            public String getSqlQuery() {
+                return String.format("UPDATE nms_subscriptions SET status='ACTIVE', modificationDate='%s' " +
+                        "WHERE status='PENDING_ACTIVATION' AND startDate < '%s'",
+                        TIME_FORMATTER.print(DateTime.now()), upToDateTime);
+            }
+
+            @Override
+            public Object execute(Query query) {
+                query.execute();
+                return null;
+            }
+        };
+        subscriptionDataService.executeSQLQuery(sqe);
+    }
+
     @Override
     public void deactivateSubscription(Subscription subscription, DeactivationReason reason) {
         if (subscription.getStatus() == SubscriptionStatus.ACTIVE ||
@@ -447,8 +468,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
 
     @Override
-    @Cacheable("packs")
+    @Cacheable(value = "packs", key = "-")
     public List<SubscriptionPack> getSubscriptionPacks() {
+        //todo: this seems to be called more than once, yet the cache is never evicted, figure out why...
         LOGGER.debug("*** NO CACHE getSubscriptionPacks() ***");
         return subscriptionPackDataService.retrieveAll();
     }
@@ -460,23 +482,17 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
 
     public List<Subscription> findActiveSubscriptionsForDay(DayOfTheWeek dayOfTheWeek, int page, int pageSize) {
-        List<Subscription> subscriptions = Collections.emptyList();
+        List<Subscription> subscriptions = new ArrayList<>();
         List<SubscriptionPack> subscriptionPacks = getSubscriptionPacks();
 
         for (SubscriptionPack subscriptionPack : subscriptionPacks) {
-            List<Subscription> packSubscriptions;
-            List<Subscription> firstDay;
-            List<Subscription> secondDay = Collections.emptyList();
 
-            firstDay = findByStatusAndFirstMessageDayOfWeekAndPack(SubscriptionStatus.ACTIVE, dayOfTheWeek,
-                                                                   subscriptionPack, page, pageSize);
+            subscriptions.addAll(findByStatusAndFirstMessageDayOfWeekAndPack(SubscriptionStatus.ACTIVE, dayOfTheWeek,
+                    subscriptionPack, page, pageSize));
             if (subscriptionPack.getMessagesPerWeek() == 2) {
-                secondDay = findByStatusAndSecondMessageDayOfWeekAndPack(SubscriptionStatus.ACTIVE, dayOfTheWeek,
-                                                                         subscriptionPack, page, pageSize);
+                subscriptions.addAll(findByStatusAndSecondMessageDayOfWeekAndPack(SubscriptionStatus.ACTIVE,
+                        dayOfTheWeek, subscriptionPack, page, pageSize));
             }
-
-            packSubscriptions = ListUtils.union(firstDay, secondDay);
-            subscriptions = ListUtils.union(subscriptions, packSubscriptions);
         }
 
         return subscriptions;

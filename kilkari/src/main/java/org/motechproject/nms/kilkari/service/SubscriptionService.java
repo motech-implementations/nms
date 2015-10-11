@@ -75,6 +75,12 @@ public interface SubscriptionService {
     void activateSubscription(Subscription subscription);
 
     /**
+     * Activate the all pending subscriptions up to (but not including) the given date/time
+     * @param upToDateTime The date/time up to which all pending subscriptions will be activated
+     */
+    void activatePendingSubscriptionsUpTo(final DateTime upToDateTime);
+
+    /**
      * Deactivate the specified subscription
      * @param subscription The subscription to deactivate
      * @param reason The reason for deactivation
