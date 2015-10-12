@@ -371,35 +371,26 @@ public class TargetFileServiceImpl implements TargetFileService {
         int count = 0;
         Timer timer = new Timer("fresh call", "fresh calls");
         do {
-            Timer t2 = new Timer();
             List<Subscription> subscriptions = subscriptionService.findActiveSubscriptionsForDay(dow, page,
                     maxQueryBlock);
-            LOGGER.debug("findActiveSubscriptionsForDay {}", t2.time());
 
             numBlockRecord = subscriptions.size();
             int messageWriteCount = 0;
             for (Subscription subscription : subscriptions) {
 
-                t2.reset();
                 Subscriber subscriber = subscription.getSubscriber();
-                LOGGER.debug("getSubscriber {}", t2.time());
 
                 RequestId requestId = new RequestId(subscription.getSubscriptionId(),
                         TIME_FORMATTER.print(timestamp));
 
                 try {
-                    t2.reset();
                     SubscriptionPackMessage msg = subscription.nextScheduledMessage(timestamp);
-                    LOGGER.debug("nextScheduledMessage {}", t2.time());
 
                     //todo: don't understand why subscriber.getLanguage() doesn't work here...
                     // it's not working because of https://applab.atlassian.net/browse/MOTECH-1678
-                    t2.reset();
                     Language language = (Language) subscriberDataService.getDetachedField(subscriber, "language");
                     Circle circle = (Circle) subscriberDataService.getDetachedField(subscriber, "circle");
-                    LOGGER.debug("get lang + circle detahcedField{}", t2.time());
 
-                    t2.reset();
                     writeSubscriptionRow(
                             requestId.toString(),
                             serviceIdFromOrigin(true, subscription.getOrigin()),
@@ -413,7 +404,6 @@ public class TargetFileServiceImpl implements TargetFileService {
                             circle == null ? "" : circle.getName(),
                             subscription.getOrigin().getCode(),
                             writer);
-                    LOGGER.debug("writeSubscriptionRow {}", t2.time());
 
                     messageWriteCount += 1;
                     count++;
