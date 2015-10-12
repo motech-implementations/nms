@@ -424,11 +424,13 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     public void activatePendingSubscriptionsUpTo(final DateTime upToDateTime) {
         SqlQueryExecution sqe = new SqlQueryExecution() {
 
+            private String now = TIME_FORMATTER.print(DateTime.now());
+
             @Override
             public String getSqlQuery() {
-                return String.format("UPDATE nms_subscriptions SET status='ACTIVE', modificationDate='%s' " +
-                        "WHERE status='PENDING_ACTIVATION' AND startDate < '%s'",
-                        TIME_FORMATTER.print(DateTime.now()), upToDateTime);
+                return String.format("UPDATE nms_subscriptions SET status='ACTIVE', activationDate='%s', " +
+                                "modificationDate='%s' WHERE status='PENDING_ACTIVATION' AND startDate < '%s'",
+                        now, now, upToDateTime);
             }
 
             @Override
