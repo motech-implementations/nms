@@ -360,23 +360,23 @@ public class TargetFileServiceImpl implements TargetFileService {
                                    OutputStreamWriter writer) throws IOException {
 
         DayOfTheWeek dow = DayOfTheWeek.fromDateTime(timestamp);
-        int recordCount = 0;
-        int page = 1;
-        int numBlockRecord;
+        int recordsWritten = 0;
+        int recordsRead = 0;
         int count = 0;
         Timer timer = new Timer("fresh call", "fresh calls");
         do {
-            List<Subscription> subscriptions = subscriptionService.findActiveSubscriptionsForDay(dow, page,
+            List<Subscription> subscriptions = subscriptionService.findActiveSubscriptionsForDay(dow, recordsRead,
                     maxQueryBlock);
 
-            numBlockRecord = subscriptions.size();
-            int messageWriteCount = 0;
+            if (subscriptions.size() == 0) {
+                break;
+            }
+
+            recordsRead += subscriptions.size();
             for (Subscription subscription : subscriptions) {
 
                 Subscriber subscriber = subscription.getSubscriber();
-
-                RequestId requestId = new RequestId(subscription.getSubscriptionId(),
-                        TIME_FORMATTER.print(timestamp));
+                RequestId requestId = new RequestId(subscription.getSubscriptionId(), TIME_FORMATTER.print(timestamp));
 
                 try {
                     SubscriptionPackMessage msg = subscription.nextScheduledMessage(timestamp);
@@ -398,7 +398,7 @@ public class TargetFileServiceImpl implements TargetFileService {
                             subscription.getOrigin().getCode(),
                             writer);
 
-                    messageWriteCount += 1;
+                    recordsWritten++;
                     count++;
                     if (count % PROGRESS_INTERVAL == 0) {
                         LOGGER.debug(WROTE, timer.frequency(count));
@@ -409,16 +409,13 @@ public class TargetFileServiceImpl implements TargetFileService {
                 }
             }
 
-            page++;
-            recordCount += messageWriteCount;
-
-        } while (numBlockRecord > 0);
+        } while (true);
 
         if (count % PROGRESS_INTERVAL != 0) {
             LOGGER.debug(WROTE, timer.frequency(count));
         }
 
-        return recordCount;
+        return recordsWritten;
     }
 
     private int generateRetryCalls(DateTime timestamp, int maxQueryBlock, String callFlowUrl,

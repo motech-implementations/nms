@@ -10,7 +10,6 @@ import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
-import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
 import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.Language;
@@ -122,41 +121,12 @@ public interface SubscriptionService {
      * Get the list of subscriptions due for a message on the specified day. Used by the Kilkari outbound dialer to
      * create the list of message recipients for a given day.
      * @param dayOfTheWeek The day of the week for which to find subscriptions
-     * @param page The page for which to return results
-     * @param pageSize The number of results to return per page
+     * @param offset The row number at which to start returning results
+     * @param rowCount The maximum number of rows to return
      * @return The list of subscriptions due for a message
      */
-    List<Subscription> findActiveSubscriptionsForDay(DayOfTheWeek dayOfTheWeek, int page, int pageSize);
+    List<Subscription> findActiveSubscriptionsForDay(DayOfTheWeek dayOfTheWeek, int offset, int rowCount);
 
-    /**
-     * Get the list of subscriptions in a specific subscription pack, in the given status with a first message
-     * to be sent on the given day.
-     * @param status
-     * @param firstMessageDayOfWeek
-     * @param subscriptionPack
-     * @param page
-     * @param pageSize
-     * @return The list of subscriptions
-     */
-    List<Subscription> findByStatusAndFirstMessageDayOfWeekAndPack(SubscriptionStatus status,
-                                                                   DayOfTheWeek firstMessageDayOfWeek,
-                                                                   SubscriptionPack subscriptionPack,
-                                                                   int page, int pageSize);
-
-    /**
-     * Get the list of subscriptions in a specific subscription pack, in a given status with a second message
-     * to be sent on the given day.
-     * @param status
-     * @param secondMessageDayOfWeek
-     * @param subscriptionPack
-     * @param page
-     * @param pageSize
-     * @return The list of subscriptions
-     */
-    List<Subscription> findByStatusAndSecondMessageDayOfWeekAndPack(SubscriptionStatus status,
-                                                                    DayOfTheWeek secondMessageDayOfWeek,
-                                                                    SubscriptionPack subscriptionPack,
-                                                                    int page, int pageSize);
 
     /**
      * Get the list of pending subscriptions that starts after the specified date.
