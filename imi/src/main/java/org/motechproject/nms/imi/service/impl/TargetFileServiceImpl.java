@@ -33,8 +33,6 @@ import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
 import org.motechproject.nms.props.domain.RequestId;
-import org.motechproject.nms.region.domain.Circle;
-import org.motechproject.nms.region.domain.Language;
 import org.motechproject.scheduler.contract.RepeatingSchedulableJob;
 import org.motechproject.scheduler.service.MotechSchedulerService;
 import org.motechproject.server.config.SettingsFacade;
@@ -107,23 +105,25 @@ public class TargetFileServiceImpl implements TargetFileService {
         String intervalProp = settingsFacade.getProperty(TARGET_FILE_SEC_INTERVAL);
         Integer secInterval = Integer.parseInt(intervalProp);
 
-        if (secInterval > 0) {
-            LOGGER.debug(String.format("The %s message will be sent every %ss starting %s", GENERATE_TARGET_FILE_EVENT,
-                    secInterval.toString(), today.toString()));
-
-            //Schedule repeating job
-            MotechEvent event = new MotechEvent(GENERATE_TARGET_FILE_EVENT);
-            RepeatingSchedulableJob job = new RepeatingSchedulableJob(event,          //MOTECH event
-                    null,           //repeatCount, null means infinity
-                    secInterval,    //repeatIntervalInSeconds
-                    today.toDate(), //startTime
-                    null,           //endTime, null means no end time
-                    true);          //ignorePastFiresAtStart
-
-            schedulerService.safeScheduleRepeatingJob(job);
-        } else {
-            LOGGER.warn("{} is set to zero, no repeating schedule will be set to automatically generate target files!");
+        if (secInterval < 1) {
+            LOGGER.warn("{} is set to less than 1 second, no repeating schedule will be set to automatically generate " +
+                            "target files!", TARGET_FILE_SEC_INTERVAL);
+            return;
         }
+
+        LOGGER.debug(String.format("The %s message will be sent every %ss starting %s", GENERATE_TARGET_FILE_EVENT,
+                secInterval.toString(), today.toString()));
+
+        //Schedule repeating job
+        MotechEvent event = new MotechEvent(GENERATE_TARGET_FILE_EVENT);
+        RepeatingSchedulableJob job = new RepeatingSchedulableJob(event,          //MOTECH event
+                null,           //repeatCount, null means infinity
+                secInterval,    //repeatIntervalInSeconds
+                today.toDate(), //startTime
+                null,           //endTime, null means no end time
+                true);          //ignorePastFiresAtStart
+
+        schedulerService.safeScheduleRepeatingJob(job);
     }
 
 
@@ -381,9 +381,6 @@ public class TargetFileServiceImpl implements TargetFileService {
                 try {
                     SubscriptionPackMessage msg = subscription.nextScheduledMessage(timestamp);
 
-                    Language language = subscriber.getLanguage();
-                    Circle circle = subscriber.getCircle();
-
                     writeSubscriptionRow(
                             requestId.toString(),
                             serviceIdFromOrigin(true, subscription.getOrigin()),
@@ -393,8 +390,8 @@ public class TargetFileServiceImpl implements TargetFileService {
                             msg.getMessageFileName(),
                             msg.getWeekId(),
                             // we are happy with empty language and circle since they are optional
-                            language == null ? "" : language.getCode(),
-                            circle == null ? "" : circle.getName(),
+                            subscriber.getLanguage() == null ? "" : subscriber.getLanguage().getCode(),
+                            subscriber.getCircle() == null ? "" : subscriber.getCircle().getName(),
                             subscription.getOrigin().getCode(),
                             writer);
 
