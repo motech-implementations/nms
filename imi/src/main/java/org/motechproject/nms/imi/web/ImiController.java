@@ -9,6 +9,7 @@ import org.motechproject.nms.imi.exception.NotFoundException;
 import org.motechproject.nms.imi.repository.FileAuditRecordDataService;
 import org.motechproject.nms.imi.service.CdrFileService;
 import org.motechproject.nms.imi.service.TargetFileService;
+import org.motechproject.nms.imi.service.contract.TargetFileNotification;
 import org.motechproject.nms.imi.service.impl.ScpHelper;
 import org.motechproject.nms.imi.web.contract.AggregateBadRequest;
 import org.motechproject.nms.imi.web.contract.BadRequest;
@@ -125,6 +126,22 @@ public class ImiController {
         if (fileAuditRecordDataService.countFindByFileName(fileName) < 1) {
             throw new NotFoundException(String.format("<%s: Not Found>", fileName));
         }
+    }
+
+
+    /**
+     * "manually" trigger the target file generation - used for ITs only
+     * *** NOTE: the scheduler will also trigger the file generation so some unexpected side effect is very likely
+     */
+    @RequestMapping("/generateTargetFile")
+    @ResponseBody
+    public String generateTargetFile() {
+
+        LOGGER.debug("/generateTargetFile (GET)");
+        TargetFileNotification tfn = targetFileService.generateTargetFile();
+        LOGGER.debug("targetFileService.generateTargetFile() returned {}", tfn.toString());
+
+        return tfn == null ? "null" : tfn.getFileName();
     }
 
 
