@@ -31,12 +31,9 @@ import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
 import org.motechproject.nms.kilkari.repository.CallRetryDataService;
-import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
 import org.motechproject.nms.props.domain.RequestId;
-import org.motechproject.nms.region.domain.Circle;
-import org.motechproject.nms.region.domain.Language;
 import org.motechproject.scheduler.contract.RepeatingSchedulableJob;
 import org.motechproject.scheduler.service.MotechSchedulerService;
 import org.motechproject.server.config.SettingsFacade;
@@ -78,7 +75,6 @@ public class TargetFileServiceImpl implements TargetFileService {
     private MotechSchedulerService schedulerService;
     private AlertService alertService;
     private SubscriptionService subscriptionService;
-    private SubscriberDataService subscriberDataService;
     private CallRetryDataService callRetryDataService;
     private FileAuditRecordDataService fileAuditRecordDataService;
 
@@ -132,14 +128,12 @@ public class TargetFileServiceImpl implements TargetFileService {
                                  MotechSchedulerService schedulerService, AlertService alertService,
                                  SubscriptionService subscriptionService,
                                  CallRetryDataService callRetryDataService,
-                                 SubscriberDataService subscriberDataService,
                                  FileAuditRecordDataService fileAuditRecordDataService) {
         this.schedulerService = schedulerService;
         this.settingsFacade = settingsFacade;
         this.alertService = alertService;
         this.subscriptionService = subscriptionService;
         this.callRetryDataService = callRetryDataService;
-        this.subscriberDataService = subscriberDataService;
         this.fileAuditRecordDataService = fileAuditRecordDataService;
 
         scheduleTargetFileGeneration();
@@ -382,11 +376,6 @@ public class TargetFileServiceImpl implements TargetFileService {
                 try {
                     SubscriptionPackMessage msg = subscription.nextScheduledMessage(timestamp);
 
-                    //todo: don't understand why subscriber.getLanguage() doesn't work here...
-                    // it's not working because of https://applab.atlassian.net/browse/MOTECH-1678
-                    Language language = (Language) subscriberDataService.getDetachedField(subscriber, "language");
-                    Circle circle = (Circle) subscriberDataService.getDetachedField(subscriber, "circle");
-
                     writeSubscriptionRow(
                             requestId.toString(),
                             serviceIdFromOrigin(true, subscription.getOrigin()),
@@ -396,8 +385,8 @@ public class TargetFileServiceImpl implements TargetFileService {
                             msg.getMessageFileName(),
                             msg.getWeekId(),
                             // we are happy with empty language and circle since they are optional
-                            language == null ? "" : language.getCode(),
-                            circle == null ? "" : circle.getName(),
+                            subscriber.getLanguage() == null ? "" : subscriber.getLanguage().getCode(),
+                            subscriber.getCircle() == null ? "" : subscriber.getCircle().getName(),
                             subscription.getOrigin().getCode(),
                             writer);
                     messageWriteCount += 1;
