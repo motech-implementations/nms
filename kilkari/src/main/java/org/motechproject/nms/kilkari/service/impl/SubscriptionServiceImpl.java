@@ -1,5 +1,6 @@
 package org.motechproject.nms.kilkari.service.impl;
 
+import org.apache.commons.collections.ListUtils;
 import org.datanucleus.store.rdbms.query.ForwardQueryResult;
 import org.joda.time.DateTime;
 import org.joda.time.Weeks;
@@ -41,6 +42,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import javax.jdo.Query;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -57,13 +59,10 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private static final String WEEKS_TO_KEEP_CLOSED_SUBSCRIPTIONS = "kilkari.weeks_to_keep_closed_subscriptions";
 
     private static final String SUBSCRIPTION_PURGE_EVENT_SUBJECT = "nms.kilkari.purge_closed_subscriptions";
-    private static final String SELECT_SUBSCRIBERS_BY_NUMBER = "select * from nms_subscribers where callingNumber = ?";
-    private static final String MORE_THAN_ONE_SUBSCRIBER = "More than one subscriber returned for callingNumber %s";
+    public static final String SELECT_SUBSCRIBERS_BY_NUMBER = "select * from nms_subscribers where callingNumber = ?";
+    public static final String MORE_THAN_ONE_SUBSCRIBER = "More than one subscriber returned for callingNumber %s";
 
-    private static final String PACK_CACHE_EVICT_MESSAGE = "nms.kilkari.cache.evict.pack";
-
-    //2015-10-21 05:11:56.598
-    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.S");
+    public static final String PACK_CACHE_EVICT_MESSAGE = "nms.kilkari.cache.evict.pack";
 
     private SettingsFacade settingsFacade;
     private MotechSchedulerService schedulerService;
@@ -420,28 +419,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         }
     }
 
-    public void activatePendingSubscriptionsUpTo(final DateTime upToDateTime) {
-        SqlQueryExecution sqe = new SqlQueryExecution() {
-
-            private String now = TIME_FORMATTER.print(DateTime.now());
-
-            @Override
-            public String getSqlQuery() {
-                return String.format("UPDATE nms_subscriptions SET status='ACTIVE', activationDate='%s', " +
-                                "modificationDate='%s' WHERE status='PENDING_ACTIVATION' AND startDate < '%s'",
-                        now, now, upToDateTime);
-            }
-
-            @Override
-            public Object execute(Query query) {
-                query.execute();
-                return null;
-            }
-        };
-        subscriptionDataService.executeSQLQuery(sqe);
-        subscriptionDataService.evictAll();
-    }
-
     @Override
     public void deactivateSubscription(Subscription subscription, DeactivationReason reason) {
         if (subscription.getStatus() == SubscriptionStatus.ACTIVE ||
@@ -470,9 +447,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
 
     @Override
-    @Cacheable(value = "packs", key = "-")
+    @Cacheable("packs")
     public List<SubscriptionPack> getSubscriptionPacks() {
-        //todo: this seems to be called more than once, yet the cache is never evicted, figure out why...
         LOGGER.debug("*** NO CACHE getSubscriptionPacks() ***");
         return subscriptionPackDataService.retrieveAll();
     }
@@ -483,34 +459,78 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
 
-    @Override
-    public List<Subscription> findActiveSubscriptionsForDay(final DayOfTheWeek day, final int offset,
-                                                            final int rowCount) {
-        @SuppressWarnings("unchecked")
-        SqlQueryExecution<List<Subscription>> queryExecution = new SqlQueryExecution<List<Subscription>>() {
+    public List<Subscription> findActiveSubscriptionsForDay(DayOfTheWeek dayOfTheWeek, int page, int pageSize) {
+        List<Subscription> subscriptions = Collections.emptyList();
+        List<SubscriptionPack> subscriptionPacks = getSubscriptionPacks();
 
-            @Override
-            public String getSqlQuery() {
-                return String.format("SELECT * FROM nms_subscriptions WHERE " +
-                        "(firstMessageDayOfWeek = '%s' OR secondMessageDayOfWeek = '%s') AND status = 'ACTIVE' " +
-                        "ORDER BY id " +
-                        "LIMIT %d, %d", day, day, offset, rowCount);
+        for (SubscriptionPack subscriptionPack : subscriptionPacks) {
+            List<Subscription> packSubscriptions;
+            List<Subscription> firstDay;
+            List<Subscription> secondDay = Collections.emptyList();
+
+            firstDay = findByStatusAndFirstMessageDayOfWeekAndPack(SubscriptionStatus.ACTIVE, dayOfTheWeek,
+                                                                   subscriptionPack, page, pageSize);
+            if (subscriptionPack.getMessagesPerWeek() == 2) {
+                secondDay = findByStatusAndSecondMessageDayOfWeekAndPack(SubscriptionStatus.ACTIVE, dayOfTheWeek,
+                                                                         subscriptionPack, page, pageSize);
             }
 
+            packSubscriptions = ListUtils.union(firstDay, secondDay);
+            subscriptions = ListUtils.union(subscriptions, packSubscriptions);
+        }
+
+        return subscriptions;
+    }
+
+    //todo: IT to make sure chunking works!
+
+    @Override
+    public List<Subscription> findByStatusAndFirstMessageDayOfWeekAndPack(final SubscriptionStatus status,
+                                                                          final DayOfTheWeek firstMessageDayOfWeek,
+                                                                          final SubscriptionPack subscriptionPack,
+                                                                          final int page, final int pageSize) {
+        @SuppressWarnings("unchecked")
+        QueryExecution<List<Subscription>> queryExecution = new QueryExecution<List<Subscription>>() {
             @Override
-            public List<Subscription> execute(Query query) {
+            public List<Subscription> execute(Query query, InstanceSecurityRestriction restriction) {
 
-                query.setClass(Subscription.class);
+                query.setFilter("status == s && firstMessageDayOfWeek == msgDayOfWeek && subscriptionPack == sp");
+                query.declareParameters("org.motechproject.nms.kilkari.domain.SubscriptionStatus s, " +
+                                        "org.motechproject.nms.props.domain.DayOfTheWeek msgDayOfWeek, " +
+                                        "org.motechproject.nms.kilkari.domain.SubscriptionPack sp");
+                query.setRange(((page - 1) * pageSize), (page * pageSize) );
 
-                ForwardQueryResult fqr = (ForwardQueryResult) query.execute();
-
-                return (List<Subscription>) fqr;
+                return (List<Subscription>) query.executeWithArray(status, firstMessageDayOfWeek, subscriptionPack);
             }
         };
 
-        return subscriptionDataService.executeSQLQuery(queryExecution);
+        return subscriptionDataService.executeQuery(queryExecution);
     }
 
+    //todo: IT to make sure chunking works!
+
+    @Override
+    public List<Subscription> findByStatusAndSecondMessageDayOfWeekAndPack(final SubscriptionStatus status,
+                                                                           final DayOfTheWeek secondMessageDayOfWeek,
+                                                                           final SubscriptionPack subscriptionPack,
+                                                                           final int page, final int pageSize) {
+        @SuppressWarnings("unchecked")
+        QueryExecution<List<Subscription>> queryExecution = new QueryExecution<List<Subscription>>() {
+            @Override
+            public List<Subscription> execute(Query query, InstanceSecurityRestriction restriction) {
+
+                query.setFilter("status == s && secondMessageDayOfWeek == msgDayOfWeek && subscriptionPack == sp");
+                query.declareParameters("org.motechproject.nms.kilkari.domain.SubscriptionStatus s, " +
+                        "org.motechproject.nms.props.domain.DayOfTheWeek msgDayOfWeek, " +
+                        "org.motechproject.nms.kilkari.domain.SubscriptionPack sp");
+                query.setRange(((page - 1) * pageSize), (page * pageSize));
+
+                return (List<Subscription>) query.executeWithArray(status, secondMessageDayOfWeek, subscriptionPack);
+            }
+        };
+
+        return subscriptionDataService.executeQuery(queryExecution);
+    }
 
     public List<Subscription> findPendingSubscriptionsFromDate(DateTime startDate, int page, int pageSize) {
         return subscriptionDataService.findByStatusAndStartDate(SubscriptionStatus.PENDING_ACTIVATION, startDate, new QueryParams(page, pageSize));
