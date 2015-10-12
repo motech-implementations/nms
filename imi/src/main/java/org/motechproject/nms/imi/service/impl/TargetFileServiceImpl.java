@@ -110,23 +110,25 @@ public class TargetFileServiceImpl implements TargetFileService {
         String intervalProp = settingsFacade.getProperty(TARGET_FILE_SEC_INTERVAL);
         Integer secInterval = Integer.parseInt(intervalProp);
 
-        if (secInterval > 0) {
-            LOGGER.debug(String.format("The %s message will be sent every %ss starting %s", GENERATE_TARGET_FILE_EVENT,
-                    secInterval.toString(), today.toString()));
-
-            //Schedule repeating job
-            MotechEvent event = new MotechEvent(GENERATE_TARGET_FILE_EVENT);
-            RepeatingSchedulableJob job = new RepeatingSchedulableJob(event,          //MOTECH event
-                    null,           //repeatCount, null means infinity
-                    secInterval,    //repeatIntervalInSeconds
-                    today.toDate(), //startTime
-                    null,           //endTime, null means no end time
-                    true);          //ignorePastFiresAtStart
-
-            schedulerService.safeScheduleRepeatingJob(job);
-        } else {
-            LOGGER.warn("{} is set to zero, no repeating schedule will be set to automatically generate target files!");
+        if (secInterval < 1) {
+            LOGGER.warn("{} is set to less than 1 second, no repeating schedule will be set to automatically generate " +
+                            "target files!", TARGET_FILE_SEC_INTERVAL);
+            return;
         }
+
+        LOGGER.debug(String.format("The %s message will be sent every %ss starting %s", GENERATE_TARGET_FILE_EVENT,
+                secInterval.toString(), today.toString()));
+
+        //Schedule repeating job
+        MotechEvent event = new MotechEvent(GENERATE_TARGET_FILE_EVENT);
+        RepeatingSchedulableJob job = new RepeatingSchedulableJob(event,          //MOTECH event
+                null,           //repeatCount, null means infinity
+                secInterval,    //repeatIntervalInSeconds
+                today.toDate(), //startTime
+                null,           //endTime, null means no end time
+                true);          //ignorePastFiresAtStart
+
+        schedulerService.safeScheduleRepeatingJob(job);
     }
 
 
