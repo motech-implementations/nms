@@ -1,7 +1,6 @@
 package org.motechproject.nms.imi.service.impl;
 
 
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
@@ -108,7 +107,7 @@ public class TargetFileServiceImpl implements TargetFileService {
 
         if (secInterval < 1) {
             LOGGER.warn("{} is set to less than 1 second, no repeating schedule will be set to automatically generate " +
-                            "target files!", TARGET_FILE_SEC_INTERVAL);
+                    "target files!", TARGET_FILE_SEC_INTERVAL);
             return;
         }
 
@@ -361,23 +360,23 @@ public class TargetFileServiceImpl implements TargetFileService {
                                    OutputStreamWriter writer) throws IOException {
 
         DayOfTheWeek dow = DayOfTheWeek.fromDateTime(timestamp);
-        int recordCount = 0;
-        int page = 1;
-        int numBlockRecord;
+        int recordsWritten = 0;
+        int recordsRead = 0;
         int count = 0;
         Timer timer = new Timer("fresh call", "fresh calls");
         do {
-            List<Subscription> subscriptions = subscriptionService.findActiveSubscriptionsForDay(dow, page,
+            List<Subscription> subscriptions = subscriptionService.findActiveSubscriptionsForDay(dow, recordsRead,
                     maxQueryBlock);
 
-            numBlockRecord = subscriptions.size();
-            int messageWriteCount = 0;
+            if (subscriptions.size() == 0) {
+                break;
+            }
+
+            recordsRead += subscriptions.size();
             for (Subscription subscription : subscriptions) {
 
                 Subscriber subscriber = subscription.getSubscriber();
-
-                RequestId requestId = new RequestId(subscription.getSubscriptionId(),
-                        TIME_FORMATTER.print(timestamp));
+                RequestId requestId = new RequestId(subscription.getSubscriptionId(), TIME_FORMATTER.print(timestamp));
 
                 try {
                     SubscriptionPackMessage msg = subscription.nextScheduledMessage(timestamp);
@@ -396,7 +395,7 @@ public class TargetFileServiceImpl implements TargetFileService {
                             subscription.getOrigin().getCode(),
                             writer);
 
-                    messageWriteCount += 1;
+                    recordsWritten++;
                     count++;
                     if (count % PROGRESS_INTERVAL == 0) {
                         LOGGER.debug(WROTE, timer.frequency(count));
@@ -407,16 +406,13 @@ public class TargetFileServiceImpl implements TargetFileService {
                 }
             }
 
-            page++;
-            recordCount += messageWriteCount;
-
-        } while (numBlockRecord > 0);
+        } while (true);
 
         if (count % PROGRESS_INTERVAL != 0) {
             LOGGER.debug(WROTE, timer.frequency(count));
         }
 
-        return recordCount;
+        return recordsWritten;
     }
 
     private int generateRetryCalls(DateTime timestamp, int maxQueryBlock, String callFlowUrl,
@@ -487,7 +483,7 @@ public class TargetFileServiceImpl implements TargetFileService {
 
         File targetFile = new File(localTargetDir, targetFileName);
         try (FileOutputStream fos = new FileOutputStream(targetFile);
-            OutputStreamWriter writer = new OutputStreamWriter(fos)) {
+             OutputStreamWriter writer = new OutputStreamWriter(fos)) {
 
             int maxQueryBlock = Integer.parseInt(settingsFacade.getProperty(MAX_QUERY_BLOCK));
             String callFlowUrl = settingsFacade.getProperty(TARGET_FILE_CALL_FLOW_URL);
@@ -497,7 +493,7 @@ public class TargetFileServiceImpl implements TargetFileService {
                 callFlowUrl = "";
             }
 
-            activatePendingSubscriptions(today, maxQueryBlock);
+            activatePendingSubscriptions(today);
 
             //Header
             writeHeader(writer);
@@ -533,34 +529,12 @@ public class TargetFileServiceImpl implements TargetFileService {
         return tfn;
     }
 
-    private void activatePendingSubscriptions(DateTime today, int maxQueryBlock) {
+    private void activatePendingSubscriptions(DateTime today) {
         DateTime tomorrow = today.plusDays(1).withTimeAtStartOfDay();
-        int count = 0;
-        Timer timer = new Timer("subscription", "subscriptions");
 
-        while (true) {
-            // We're using tomorrow as the upper bound of the select query (which uses a <)
-            Timer qryTimer = new Timer();
-            List<Subscription> subscriptions = subscriptionService
-                    .findPendingSubscriptionsFromDate(tomorrow, 1, maxQueryBlock);
-            LOGGER.debug("findPendingSubscriptionsFromDate {}", qryTimer.time());
-            Timer actTimer = new Timer();
-            if (CollectionUtils.isNotEmpty(subscriptions)) {
-                for (Subscription subscription : subscriptions) {
-                    subscriptionService.activateSubscription(subscription);
-                    count++;
-                    if (count % PROGRESS_INTERVAL == 0) {
-                        LOGGER.debug("Activated {}", timer.frequency(count));
-                    }
-                }
-            } else {
-                break;
-            }
-            LOGGER.debug("Activated(only) {}", actTimer.frequency(subscriptions.size()));
-        }
-        if (count % PROGRESS_INTERVAL != 0) {
-            LOGGER.debug("Activated {}", timer.frequency(count));
-        }
+        Timer timer = new Timer();
+        subscriptionService.activatePendingSubscriptionsUpTo(tomorrow);
+        LOGGER.debug("Activated all pending subscriptions up to {} in {}", tomorrow, timer.time());
     }
 
     private void sendNotificationRequest(TargetFileNotification tfn) {

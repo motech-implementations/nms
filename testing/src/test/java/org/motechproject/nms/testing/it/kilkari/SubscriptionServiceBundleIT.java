@@ -661,7 +661,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         subscription.setStartDate(startDate);
         subscriptionDataService.create(subscription);
 
-        List<Subscription> subscriptions = subscriptionService.findActiveSubscriptionsForDay(startDay, 1, 10);
+        List<Subscription> subscriptions = subscriptionService.findActiveSubscriptionsForDay(startDay, 0, 10);
         assertTrue(subscriptions.size() > 0);
         for (Subscription s : subscriptions) {
             if (s.getSubscriber().getCallingNumber() == 1111111111L) {
