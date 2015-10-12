@@ -470,10 +470,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
 
     @Override
-    @Cacheable(value = "packs", key = "-")
     public List<SubscriptionPack> getSubscriptionPacks() {
-        //todo: this seems to be called more than once, yet the cache is never evicted, figure out why...
-        LOGGER.debug("*** NO CACHE getSubscriptionPacks() ***");
         return subscriptionPackDataService.retrieveAll();
     }
 
@@ -516,7 +513,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         return subscriptionDataService.findByStatusAndStartDate(SubscriptionStatus.PENDING_ACTIVATION, startDate, new QueryParams(page, pageSize));
     }
 
-    @CacheEvict(value = {"pack", "packs" }, allEntries = true)
+    @CacheEvict(value = {"pack" }, allEntries = true)
     public void broadcastCacheEvictMessage(SubscriptionPack pack) {
         LOGGER.debug("*** BROADCAST CACHE EVICT MSG ***");
         MotechEvent motechEvent = new MotechEvent(PACK_CACHE_EVICT_MESSAGE);
@@ -524,7 +521,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @MotechListener(subjects = { PACK_CACHE_EVICT_MESSAGE })
-    @CacheEvict(value = {"pack", "packs" }, allEntries = true)
+    @CacheEvict(value = {"pack" }, allEntries = true)
     public void cacheEvict(MotechEvent event) {
         LOGGER.debug("*** RECEIVE CACHE EVICT MSG ***");
     }
