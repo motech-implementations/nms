@@ -187,7 +187,7 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
         if (existingBookmark == null ||
                 (existingBookmark.getProgress() != null && existingBookmark.getProgress().isEmpty())) {
             activityService.createActivity(
-                    new ActivityRecord(callingNumber, null, null, null, null, DateTime.now(), ActivityState.STARTED));
+                    new ActivityRecord(callingNumber, null, null, null, DateTime.now(), null, ActivityState.STARTED));
         }
 
         if (existingBookmark == null) {
