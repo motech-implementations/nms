@@ -6,6 +6,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.event.MotechEvent;
+import org.motechproject.mtraining.domain.ActivityState;
 import org.motechproject.mtraining.domain.Bookmark;
 import org.motechproject.mtraining.repository.ActivityDataService;
 import org.motechproject.mtraining.repository.BookmarkDataService;
@@ -211,6 +212,16 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     }
 
     @Test
+    public void testStartedActivity() {
+        List<Bookmark> existing = bookmarkDataService.findBookmarksForUser("555");
+        MaBookmark bookmark = new MaBookmark(555L, VALID_CALL_ID, null, null);
+        maService.setBookmark(bookmark);
+        List<Bookmark> added = bookmarkDataService.findBookmarksForUser("555");
+        assertTrue(added.size() == (existing.size() + 1));
+        assertEquals(1, activityDataService.findRecordsForUserByState("555", ActivityState.STARTED).size());
+    }
+
+    @Test
     public void testSetExistingBookmark() {
 
         MaBookmark bookmark = new MaBookmark(556L, VALID_CALL_ID, null, null);
@@ -266,7 +277,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         }
         bookmark.setScoresByChapter(scores);
         maService.setBookmark(bookmark);
-        int completionCountAfter = activityDataService.findRecordsForUser(String.valueOf(callingNumber)).size();
+        int completionCountAfter = activityDataService.findRecordsForUserByState(String.valueOf(callingNumber), ActivityState.COMPLETED).size();
 
         assertEquals(completionCountBefore + 1, completionCountAfter);
     }
