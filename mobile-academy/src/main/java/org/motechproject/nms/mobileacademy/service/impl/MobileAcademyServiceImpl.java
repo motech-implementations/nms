@@ -184,7 +184,8 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
 
         // write a new activity record if existing bookmark is null or
         // existing bookmark has no progress from earlier reset
-        if (existingBookmark == null || existingBookmark.getProgress().isEmpty()) {
+        if (existingBookmark == null ||
+                (existingBookmark.getProgress() != null && existingBookmark.getProgress().isEmpty())) {
             activityService.createActivity(
                     new ActivityRecord(callingNumber, null, null, null, null, DateTime.now(), ActivityState.STARTED));
         }
