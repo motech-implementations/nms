@@ -125,7 +125,7 @@ public interface SubscriptionService {
      * @param rowCount The maximum number of rows to return
      * @return The list of subscriptions due for a message
      */
-    List<Subscription> findActiveSubscriptionsForDay(DayOfTheWeek dayOfTheWeek, int offset, int rowCount);
+    List<Subscription> findActiveSubscriptionsForDay(DayOfTheWeek dayOfTheWeek, long offset, int rowCount);
 
 
     /**

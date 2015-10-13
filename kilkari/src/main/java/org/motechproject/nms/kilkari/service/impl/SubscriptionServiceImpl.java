@@ -481,17 +481,19 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
 
     @Override
-    public List<Subscription> findActiveSubscriptionsForDay(final DayOfTheWeek day, final int offset,
+    public List<Subscription> findActiveSubscriptionsForDay(final DayOfTheWeek day, final long offset,
                                                             final int rowCount) {
         @SuppressWarnings("unchecked")
         SqlQueryExecution<List<Subscription>> queryExecution = new SqlQueryExecution<List<Subscription>>() {
 
             @Override
             public String getSqlQuery() {
-                return String.format("SELECT * FROM nms_subscriptions WHERE " +
+                String query = String.format("SELECT * FROM nms_subscriptions WHERE id > %d AND " +
                         "(firstMessageDayOfWeek = '%s' OR secondMessageDayOfWeek = '%s') AND status = 'ACTIVE' " +
                         "ORDER BY id " +
-                        "LIMIT %d, %d", day, day, offset, rowCount);
+                        "LIMIT %d", offset, day, day, rowCount);
+                LOGGER.debug("SQL QUERY: {}", query);
+                return query;
             }
 
             @Override
