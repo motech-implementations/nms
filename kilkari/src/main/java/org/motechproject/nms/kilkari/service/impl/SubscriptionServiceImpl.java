@@ -439,7 +439,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             }
         };
         subscriptionDataService.executeSQLQuery(sqe);
-        subscriptionDataService.evictAll();
+        subscriptionDataService.evictEntityCache(true);
     }
 
     @Override
