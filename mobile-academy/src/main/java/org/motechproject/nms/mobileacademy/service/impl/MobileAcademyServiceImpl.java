@@ -182,6 +182,13 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
         String callingNumber = saveBookmark.getCallingNumber().toString();
         Bookmark existingBookmark = bookmarkService.getLatestBookmarkByUserId(callingNumber);
 
+        // write a new activity record if existing bookmark is null or
+        // existing bookmark has no progress from earlier reset
+        if (existingBookmark == null || existingBookmark.getProgress().isEmpty()) {
+            activityService.createActivity(
+                    new ActivityRecord(callingNumber, null, null, null, null, DateTime.now(), ActivityState.STARTED));
+        }
+
         if (existingBookmark == null) {
             // if no bookmarks exist for user
             LOGGER.info("No bookmarks found for user " + callingNumber);
@@ -201,7 +208,7 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
             LOGGER.debug("Found last bookmark and 11 scores. Starting evaluation & notification");
             // Create an activity record here since pass/fail counts as 1 try
             activityService.createActivity(
-                    new ActivityRecord(callingNumber.toString(), null, null, null, null, DateTime.now(), ActivityState.COMPLETED));
+                    new ActivityRecord(callingNumber, null, null, null, null, DateTime.now(), ActivityState.COMPLETED));
             evaluateCourseCompletion(saveBookmark.getCallingNumber(), saveBookmark.getScoresByChapter());
         }
     }
