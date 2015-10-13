@@ -41,17 +41,19 @@ import java.util.Set;
 @Service("frontLineWorkerImportService")
 public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportService {
 
-    public static final String ID = "ID";
-    public static final String CONTACT_NO = "Contact_No";
-    public static final String NAME = "Name";
+    private static final String ID = "ID";
+    private static final String CONTACT_NO = "Contact_No";
+    private static final String NAME = "Name";
     private static final String STATE = "StateID";
-    public static final String DISTRICT_ID = "District_ID";
+    private static final String DISTRICT_ID = "District_ID";
     private static final String TALUKA = "Taluka_ID";
     private static final String HEALTH_BLOCK = "HealthBlock_ID";
     private static final String PHC = "PHC_ID";
     private static final String SUBCENTRE = "SubCentre_ID";
     private static final String CENSUS_VILLAGE = "Village_ID";
     private static final String NON_CENSUS_VILAGE = "SVID";
+    private static final String TYPE = "Type";
+
     private static final int MASK_LENGTH = 3;
 
 
@@ -185,6 +187,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
         String mctsFlwId = (String) record.get(ID);
         Long contactNumber = (Long) record.get(CONTACT_NO);
         String name = (String) record.get(NAME);
+        String type = (String) record.get(TYPE);
 
         if (contactNumber != null) {
             flw.setContactNumber(contactNumber);
@@ -202,6 +205,10 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
 
         if (flw.getLanguage() == null) {
             flw.setLanguage(flw.getDistrict().getLanguage());
+        }
+
+        if (flw.getDesignation() == null) {
+            flw.setDesignation(type);
         }
 
         return flw;
@@ -241,6 +248,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
         mapping.put(SUBCENTRE, new Optional(new GetLong()));
         mapping.put(CENSUS_VILLAGE, new Optional(new GetLong()));
         mapping.put(NON_CENSUS_VILAGE, new Optional(new GetLong()));
+        mapping.put(TYPE, new Optional(new GetString()));
 
         return mapping;
     }
