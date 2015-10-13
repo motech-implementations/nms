@@ -5,6 +5,7 @@ import org.joda.time.DateTime;
 import org.joda.time.Days;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
+import org.motechproject.mds.domain.MdsEntity;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
 
 import javax.jdo.annotations.Column;
@@ -16,7 +17,7 @@ import java.util.UUID;
 
 @Entity(maxFetchDepth = -1, tableName = "nms_subscriptions")
 @Index(name = "status_endDate_composit_idx", members = { "status", "endDate" })
-public class Subscription {
+public class Subscription extends MdsEntity {
 
     private static final int DAYS_IN_WEEK = 7;
     private static final int WEEKDAY1 = 0;

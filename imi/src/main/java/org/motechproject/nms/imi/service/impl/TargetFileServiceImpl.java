@@ -363,17 +363,24 @@ public class TargetFileServiceImpl implements TargetFileService {
         int recordsWritten = 0;
         int recordsRead = 0;
         int count = 0;
-        Timer timer = new Timer("fresh call", "fresh calls");
+        Long offset = 0L;
+        Timer timer = new Timer("overall fresh call", "overall fresh calls");
         do {
-            List<Subscription> subscriptions = subscriptionService.findActiveSubscriptionsForDay(dow, recordsRead,
+            Timer queryTimer = new Timer();
+            List<Subscription> subscriptions = subscriptionService.findActiveSubscriptionsForDay(dow, offset,
                     maxQueryBlock);
+            LOGGER.debug(String.format("findActiveSubscriptionsForDay(%s, %d, %d) %s", dow, offset, maxQueryBlock,
+                    queryTimer.time()));
 
             if (subscriptions.size() == 0) {
                 break;
             }
 
+            Timer rowTimer = new Timer("file row", "file rows");
             recordsRead += subscriptions.size();
             for (Subscription subscription : subscriptions) {
+
+                offset = subscription.getId();
 
                 Subscriber subscriber = subscription.getSubscriber();
                 RequestId requestId = new RequestId(subscription.getSubscriptionId(), TIME_FORMATTER.print(timestamp));
@@ -398,7 +405,7 @@ public class TargetFileServiceImpl implements TargetFileService {
                     recordsWritten++;
                     count++;
                     if (count % PROGRESS_INTERVAL == 0) {
-                        LOGGER.debug(WROTE, timer.frequency(count));
+                        LOGGER.debug(WROTE, rowTimer.frequency(count));
                     }
 
                 } catch (IllegalStateException se) {
@@ -406,11 +413,10 @@ public class TargetFileServiceImpl implements TargetFileService {
                 }
             }
 
+            LOGGER.debug(WROTE, timer.frequency(count));
+
         } while (true);
 
-        if (count % PROGRESS_INTERVAL != 0) {
-            LOGGER.debug(WROTE, timer.frequency(count));
-        }
 
         return recordsWritten;
     }
