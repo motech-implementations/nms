@@ -1,0 +1,39 @@
+TCode,ID,Name_G,Name_E,DCode,MDDS_Code,IsVerified
+0001,25,Narela,Narela,2,430,True
+0002,13,Saraswati Vihar,Saraswati Vihar,1,431,True
+0003,26,Model Town,Model Town,2,432,True
+0004,27,Civil Lines,Civil Lines,6,433,True
+0005,14,Sadar Bazar,Sadar Bazar,2,434,True
+0006,15,Kotwali,Kotwali,6,435,True
+0007,16,Seelam Pur,Seelam Pur,3,436,True
+0008,17,Shahdara,Shahdara,10,437,True
+0009,18,Seema Puri,Seema Puri,10,438,True
+0010,19,Gandhi Nagar,Gandhi Nagar,4,439,True
+0011,20,Vivek Vihar,Vivek Vihar,10,440,True
+0012,21,Preet Vihar,Preet Vihar,4,441,True
+0013,22,Connaught Place,Connaught Place,5,442,False
+0014,23,Chanakya Puri,Chanakya Puri,5,443,True
+0015,24,Parliament Street,Parliament Street,5,444,False
+0016,4,Darya Ganj,Darya Ganj,6,445,True
+0017,5,Pahar Ganj,Pahar Ganj,6,446,True
+0018,6,Karol Bagh,Karol Bagh,6,447,True
+0019,7,Patel Nagar,Patel Nagar,7,448,True
+0020,8,Rajouri Garden,Rajouri Garden,7,449,True
+0021,9,Punjabi Bagh,Punjabi Bagh,7,450,True
+0022,10,Najafgarh,Najafgarh,8,451,True
+0023,1,Delhi Cantonment,Delhi Cantonment,5,452,True
+0024,2,Vasant Vihar,Vasant Vihar,5,453,True
+0025,3,Hauz Khas,Hauz Khas,9,454,True
+0026,11,Defence Colony,Defence Colony,11,455,True
+0027,12,Kalkaji,Kalkaji,11,456,True
+0028,28,Mayur Vihar,Mayur Vihar,4,6084,True
+0029,29,Kanjhawla,Kanjhawla,1,6078,True
+0030,30,Rohini,Rohini,1,6077,True
+0031,31,Alipur,Alipur,2,6076,True
+0033,33,Dwarka,Dwarka,8,6086,True
+0034,34,Kapashera,Kapashera,8,6085,True
+0035,35,Mehrauli,Mehrauli,9,6080,True
+0036,36,Saket,Saket,9,6079,True
+0037,37,Sarita Vihar,Sarita Vihar,11,6081,True
+0038,38,Yamuna Vihar,Yamuna Vihar,3,6082,True
+0039,39,Karawal Nagar,Karawal Nagar,3,6083,True

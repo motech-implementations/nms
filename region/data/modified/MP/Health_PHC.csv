@@ -1,0 +1,1681 @@
+PID,Name_E,Name_G,CID,DCode,TCode,BID,Code_16,Phy_VCode,Facility_Type,Is_Tribal,Is_Notional
+5,PHC Astoan,PHC Astoan,,8,0044,4,501,,1,0,False
+6,PHC Budhera,PHC Budhera,,8,0044,4,502,,1,0,False
+7,PHC Simra,PHC Simra,,8,0038,7,501,,1,0,False
+8,PHC Jeron,PHC Jeron,,8,0038,7,502,,1,0,False
+9,PHC Luharguwa,PHC Luharguwa,,8,0038,7,503,,1,0,False
+10,PHC Barana (Thar),PHC Barana (Thar),,8,0041,9,501,,1,0,False
+11,PHC Bamhori Kala,PHC Bamhori Kala,,8,0041,9,502,,1,0,False
+12,PHC Kachhora,PHC Kachhora,,8,0041,9,503,,1,0,False
+13,PHC Orchha,PHC Orchha,,8,0036,6,501,,1,0,False
+14,PHC Teharka,PHC Teharka,,8,0036,6,502,,1,0,False
+15,PHC Taricharkala,PHC Taricharkala,,8,0036,6,503,,1,0,False
+16,PHC Chandawani,PHC Chandawani,,8,0036,6,504,,1,0,False
+17,PHC Hata,PHC Hata,,8,0042,5,501,,1,0,False
+18,PHC Baisa,PHC Baisa,,8,0042,5,502,,1,0,False
+19,PHC Sarkanpur,PHC Sarkanpur,,8,0042,5,503,,1,0,False
+20,PHC Dingora,PHC Dingora,,8,0039,8,501,,1,0,False
+21,PHC Mohangarh,PHC Mohangarh,,8,0039,8,502,,1,0,False
+22,PHC Lidhora,PHC Lidhora,,8,0039,8,503,,1,0,False
+23,PHC Jarua,PHC Jarua,,8,0039,8,504,,1,0,False
+24,PHC Chandera,PHC Chandera,,8,0039,8,505,,1,0,False
+25,PHC Niwari,PHC Niwari,,8,0036,6,505,,1,0,False
+28,CHC Parasi,CHC Parasi,,49,0315,10,501,,1,0,False
+29,CHC Phunga,CHC Phunga,,49,0315,10,502,,1,0,False
+30,PHC SAKRA,PHC SAKRA,,49,0315,10,503,,1,0,False
+31,CHC Jaithari,CHC Jaithari,,49,0316,13,501,,1,0,False
+32,CHC Venkatnagar,CHC Venkatnagar,,49,0316,13,502,,1,0,False
+33,PHC Sindhora,PHC Sindhora,,49,0316,13,503,,1,0,False
+34,PHC Lapta,PHC Lapta,,49,0316,13,504,,1,0,False
+36,PHC Cholana,PHC Cholana,,49,0316,13,505,,1,0,False
+37,CHC Kotma,CHC Kotma,,49,0314,12,501,,1,0,False
+38,PHC Kothi,PHC Kothi,,49,0314,12,502,,1,0,False
+39,PHC Beliyabadi,PHC Beliyabadi,,49,0314,12,503,,1,0,False
+40,PHC Nigwani,PHC Nigwani,,49,0314,12,504,,1,0,False
+41,PHC Malga,PHC Malga,,49,0314,12,505,,1,0,False
+42,PHC Bijuri,PHC Bijuri,,49,0314,12,506,,1,0,False
+43,PHC Chondi-pondi,PHC Chondi-pondi,,49,0314,12,507,,1,0,False
+44,CHC Rejendragram (Pushprajgarh),CHC Rejendragram (Pushprajgarh),,49,0317,11,501,,1,0,False
+45,CHC Karpa,CHC Karpa,,49,0317,11,502,,1,0,False
+46,PHC Amarkantak,PHC Amarkantak,,49,0317,11,503,,1,0,False
+47,PHC Koylari,PHC Koylari,,49,0317,11,504,,1,0,False
+48,PHC Ghata,PHC Ghata,,49,0317,11,505,,1,0,False
+49,PHC Khamraudh,PHC Khamraudh,,49,0317,11,506,,1,0,False
+50,PHC Benibari,PHC Benibari,,49,0317,11,507,,1,0,False
+51,PHC Karkeli,PHC Karkeli,,15,0103,14,501,,1,0,False
+52,PHC Bilaspur,PHC Bilaspur,,15,0103,14,502,,1,0,False
+53,PHC Harwah,PHC Harwah,,15,0103,14,503,,1,0,False
+54,PHC Ghulghuli,PHC Ghulghuli,,15,0103,14,504,,1,0,False
+56,PHC Amarpur,PHC Amarpur,,15,0105,15,501,,1,0,False
+57,PHC Indwar,PHC Indwar,,15,0105,15,502,,1,0,False
+58,PHC Tala,PHC Tala,,15,0105,15,503,,1,0,False
+59,PHC Dhamokhar,PHC Dhamokhar,,15,0105,15,504,,1,0,False
+60,PHC Bijori,PHC Bijori,,15,0105,15,505,,1,0,False
+61,PHC Chauri,PHC Chauri,,15,0106,16,501,,1,0,False
+62,PHC Jamudi,PHC Jamudi,,15,0106,16,502,,1,0,False
+63,CHC Pali,CHC Pali,,15,0106,16,503,0,1,0,False
+64,CHC Chandia,CHC Chandia,,15,0104,,501,,1,0,False
+65,CHC MANPUR,CHC MANPUR,,15,0105,15,506,,1,0,False
+66,PHC Bhishampur,PHC Bhishampur,,13,0089,22,501,,1,0,False
+67,PHC Tala,PHC Tala,,13,0089,22,502,,1,0,False
+68,PHC Majgawan,PHC Majgawan,,13,0089,22,503,,1,0,False
+69,PHC Bahelia Bhat,PHC Bahelia Bhat,,13,0089,22,504,,1,0,False
+70,PHC Sannahi,PHC Sannahi,,13,0089,22,505,,1,0,False
+71,PHC Jhinna,PHC Jhinna,,13,0089,22,506,,1,0,False
+72,CHC Amarpatan,CHC Amarpatan,,13,0089,22,507,0,2,0,False
+73,CHC Mukundpur,CHC Mukundpur,,13,0089,22,508,0,2,0,False
+74,PHC Payari,PHC Payari,,49,0314,12,508,,1,0,False
+75,PHC Ghunawara,PHC Ghunawara,,13,0091,23,501,,1,0,False
+76,PHC Sabhaganj,PHC Sabhaganj,,13,0091,23,502,,1,0,False
+77,PHC Badera,PHC Badera,,13,0091,23,503,,1,0,False
+78,CHC Amdara,CHC Amdara,,13,0091,23,504,0,2,0,False
+80,PHC Karigohi,PHC Karigohi,,13,0083,24,501,,1,0,False
+82,PHC Barondha,PHC Barondha,,13,0083,24,502,,1,0,False
+86,PHC Nayagaon (Chitrakut),PHC Nayagaon (Chitrakut),,13,0083,24,503,,1,0,False
+88,CHC Majhgawan,CHC Majhgawan,,13,0083,24,504,0,2,0,False
+89,PHC Rod,PHC Rod,,13,0085,25,501,,1,0,False
+90,PHC Jaso,PHC Jaso,,13,0085,25,502,,1,0,False
+91,PHC Aamkui,PHC Aamkui,,13,0085,25,503,,1,0,False
+92,PHC Singhpur,PHC Singhpur,,13,0085,25,504,,1,0,False
+93,PHC Usrar,PHC Usrar,,13,0085,25,505,,1,0,False
+94,CHC Nagod,CHC Nagod,,13,0085,25,506,0,2,0,False
+95,PHC Sohawal,PHC Sohawal,,13,0082,26,501,0,1,0,False
+96,PHC Madhavgarh,PHC Madhavgarh,,13,0082,26,502,,1,0,False
+97,PHC Dagdiha,PHC Dagdiha,,13,0082,26,503,,1,0,False
+98,PHC Naina,PHC Naina,,13,0082,26,504,,1,0,False
+99,PHC Kuaan,PHC Kuaan,,13,0082,26,505,,1,0,False
+100,PHC Ghurdang,PHC Ghurdang,,13,0082,26,506,,1,0,False
+102,PHC Regaon,PHC Regaon,,13,0082,26,507,,1,0,False
+103,CHC KOTHI,CHC Kothi,,13,0082,26,508,0,2,0,False
+104,PHC Badwar,PHC Badwar,,13,0090,27,501,,1,0,False
+105,PHC Budabaur (Saria),PHC Budabaur (Saria),,13,0090,27,502,,1,0,False
+106,PHC Maryadpur,PHC Maryadpur,,13,0090,27,503,,1,0,False
+107,CHC Devrajnagar,CHC Devrajnagar,,13,0090,27,504,0,2,0,False
+108,CHC Ramnagar,CHC Ramnagar,,13,0090,27,505,0,2,0,False
+110,PHC Sajjanpur,PHC Sajjanpur,,13,0087,28,501,,1,0,False
+112,PHC Selhana,PHC Selhana,,13,0087,28,502,,1,0,False
+115,CHC Rampur Baghelan,CHC Rampur Baghelan,,13,0087,28,503,0,2,0,False
+116,PHC Parasamania,PHC Parasamania,,13,0086,29,501,,1,0,False
+117,PHC Babupur,PHC Babupur,,13,0086,29,502,,1,0,False
+118,PHC Kulgarhi,PHC Kulgarhi,,13,0086,29,503,,1,0,False
+119,CHC Uchehera,CHC Uchehera,,13,0086,29,504,0,2,0,False
+123,PHC Aamkhoot,PHC Aamkhoot,,53,0334,36,503,,1,0,False
+125,PHC Barjhar,PHC Barjhar,,53,0332,37,501,,1,0,False
+126,PHC Jhiran,PHC Jhiran,,53,0332,37,502,,1,0,False
+127,CHC Kalyanpura,CHC Kalyanpura,,52,0330,35,501,,1,0,False
+128,PHC Madrani,PHC Madrani,,52,0329,39,501,,1,0,False
+129,PHC Rambhapur,PHC Rambhapur,,52,0329,39,502,,1,0,False
+130,PHC Bori,PHC Bori,,53,0333,40,501,,1,0,False
+131,PHC Kanakakad,PHC Kanakakad,,53,0333,40,502,,1,0,False
+132,PHC Kakanvani,PHC Kakanvani,,52,0327,41,501,,1,0,False
+133,PHC Khawasa,PHC Khawasa,,52,0327,41,502,,1,0,False
+138,PHC Pitol,PHC Pitol,,52,0330,35,502,,1,0,False
+139,CHC Meghnagar,CHC Meghnagar,,52,0329,39,503,,1,0,False
+140,PHC Bamnia,PHC Bamnia,,52,0328,45,501,,1,0,False
+141,PHC Sarangi,PHC Sarangi,,52,0328,45,502,,1,0,False
+142,PHC Karwad,PHC Karwad,,52,0328,45,503,0,1,0,False
+143,PHC Kardawad,PHC Kardawad,,52,0328,45,504,0,1,0,False
+144,PHC Raipuria,PHC Raipuria,,52,0328,45,505,,1,0,False
+145,PHC Bekalda,PHC Bekalda,,52,0328,45,506,,1,0,False
+146,PHC Jhakanavada,PHC Jhakanavada,,52,0328,45,507,,1,0,False
+147,PHC Ramnagar Kanti,PHC Ramnagar Kanti,,9,0050,46,501,,1,0,False
+148,CHC Isanagar,CHC Isanagar,,9,0050,46,502,,1,0,False
+149,CHC Tendukheda,CHC Tendukheda,,12,0081,62,501,,1,0,False
+150,PHC Sarra,PHC Sarra,,12,0081,62,502,,1,0,False
+151,CHC Jabera,CHC Jabera,,12,0080,64,501,,1,0,False
+152,PHC Rond,PHC Rond,,12,0080,64,502,,1,0,False
+153,PHC Nohatta,PHC Nohatta,,12,0080,64,503,,1,0,False
+154,CHC Hindoriya,CHC Hindoriya,,12,0079,59,501,,1,0,False
+155,PHC Abhana,PHC Abhana,,12,0079,59,502,,1,0,False
+156,PHC Bandakpure,PHC Bandakpure,,12,0079,59,503,,1,0,False
+157,PHC Imaliaghat,PHC Imaliaghat,,12,0079,59,504,,1,0,False
+158,CHC Patharia,CHC Patharia,,12,0078,66,501,,1,0,False
+159,PHC Baasakala,PHC Baasakala,,12,0078,66,502,,1,0,False
+160,PHC Shahpure Sonakiya,PHC Shahpure Sonakiya,,12,0078,66,503,,1,0,False
+161,PHC Jerat,PHC Jerat,,12,0078,66,504,,1,0,False
+162,PHC Sadguwa,PHC Sadguwa,,12,0078,66,505,,1,0,False
+163,CHC Batiyagarh,CHC Batiyagarh,,12,0077,69,501,,1,0,False
+164,CHC Ajaigarh,CHC Ajaigarh,,10,0056,55,501,,1,0,False
+165,PHC Madiadoh,PHC Madiadoh,,12,0075,71,501,,1,0,False
+166,PHC Bariyarpur,PHC Bariyarpur,,10,0056,55,502,,1,0,False
+167,PHC Raneh,PHC Raneh,,12,0075,71,502,,1,0,False
+168,PHC Hinota,PHC Hinota,,12,0075,71,503,,1,0,False
+169,PHC Chandora,PHC Chandora,,10,0056,55,503,,1,0,False
+170,CHC Patera,CHC Patera,,12,0076,73,501,,1,0,False
+171,PHC Dharampur,PHC Dharampur,,10,0056,55,504,,1,0,False
+172,PHC Kumari,PHC Kumari,,12,0076,73,502,,1,0,False
+173,PHC Khora,PHC Khora,,10,0056,55,505,,1,0,False
+174,PHC Rahatgaon,Rahatgaon,,36,0232,85,501,,1,0,False
+175,PHC Maina,PHC Maina,,33,0205,47,501,,1,0,False
+176,PHC Khotri,PHC Khotri,,33,0205,47,502,,1,0,False
+177,PHC Siddiganj,PHC Siddiganj,,33,0205,47,503,,1,0,False
+178,CHC Sirali,Sirali,,36,0228,3,501,,1,0,False
+181,PHC Baktra,PHC Baktra,,33,0209,48,501,,1,0,False
+182,PHC Shahganj,PHC Shahganj,,33,0209,48,502,,1,0,False
+183,PHC Ninore,PHC Ninore,,33,0209,48,503,,1,0,False
+184,PHC Mardanpur,PHC Mardanpur,,33,0209,48,504,,1,0,False
+187,PHC Lahera Purwa,PHC Lahera Purwa,,9,0050,46,503,,1,0,False
+188,PHC Ramnagar,PHC Ramnagar,,33,0207,50,501,,1,0,False
+189,PHC Dewadia,PHC Dewadia,,33,0207,50,502,,1,0,False
+190,CHC Jatara,CHC Jatara,,8,0039,8,506,,1,0,False
+191,PHC Amlaha,PHC Amlaha,,33,0207,50,503,,1,0,False
+192,PHC Matguan,PHC Matguan,,9,0050,46,504,,1,0,False
+193,CHC Baldevgarh,CHC Baldevgarh,,8,0042,5,504,,1,0,False
+194,CHC Ichhawar,CHC Ichhawar,,33,0207,50,504,,1,0,False
+195,CHC Bada Malhera,CHC Bada Malhera,,9,0052,98,501,,1,0,False
+196,CHC Ghuwara,CHC Ghuwara,,9,0052,98,502,,1,0,False
+197,CHC Pawai,CHC Pawai,,10,0061,58,501,,1,0,False
+198,PHC Gamakhar,PHC Gamakhar,,31,0194,53,501,,1,0,False
+199,PHC Simariya,PHC Simariya,,10,0061,58,502,,1,0,False
+200,CHC Suthaliya,CHC Suthaliya,,30,0187,78,501,,1,0,False
+201,PHC Mohandra,PHC Mohandra,,10,0061,58,503,,1,0,False
+202,PHC Harduakhamariya,PHC Harduakhamariya,,10,0061,58,504,,1,0,False
+204,PHC Kulhar,PHC Kulhar,,31,0194,53,502,,1,0,False
+205,PHC Sendhpa,PHC Sendhpa,,9,0052,98,503,,1,0,False
+206,CHC Khargapur,CHC Khargapur,,8,0043,5,501,,1,0,False
+207,PHC Udaypur,PHC Udaypur,,31,0194,53,503,,1,0,False
+208,PHC Lakhanwas,PHC Lakhanwas,,30,0187,78,502,,1,0,False
+209,PHC Mohangarh,PHC Mohangarh,,8,0040,,501,,1,0,False
+210,PHC Todi,PHC Todi,,30,0187,78,503,,1,0,False
+211,CHC Tyonda,CHC Tyonda,,31,0194,53,504,,1,0,False
+212,CHC Babai,CHC Babai,,37,0237,88,501,,1,0,False
+213,PHC Malawar,PHC Malawar,,30,0187,78,504,,1,0,False
+214,Civil Ashta,Civil Ashta,,33,0205,47,504,,1,0,False
+215,PHC Bagratawa,PHC Bagratawa,,37,0237,88,502,,1,0,False
+216,PHC Orchha,PHC Orchha,,8,0037,,501,,1,0,False
+217,CHC Jawar,CHC Jawar,,33,0205,47,505,,1,0,False
+218,PHC Napanera,PHC Napanera,,30,0187,78,505,,1,0,False
+219,PHC Gulabganj,PHC Gulabganj,,31,0198,65,501,,1,0,False
+220,CHC Palera,CHC Palera,,8,0041,9,504,,1,0,False
+221,CHC Budni,CHC Budni,,33,0209,48,506,,1,0,False
+222,CHC Bankhedi,CHC Bankhedi,,37,0240,89,501,44796,1,0,False
+223,PHC Bhagwan,PHC Bhagwan,,9,0052,98,504,,1,0,False
+224,PHC Umardha,PHC Umardha,,37,0240,89,502,,1,0,False
+225,CHC Prithvipur,CHC Prithvipur,,8,0038,7,504,,1,0,False
+226,CHC Jeerapur,CHC Jeerapur,,30,0184,93,501,,1,0,False
+227,PHC Haidergarh,PHC Haidergarh,,31,0198,65,502,,1,0,False
+228,PHC Ramtoriya,PHC Ramtoriya,,9,0052,98,505,,1,0,False
+229,CHC Rehti,CHC Rehti,,33,0209,48,507,,1,0,False
+230,PHC Dolariya,PHC Dolariya,,37,0235,91,501,,1,0,False
+231,CHC Badagaon,CHC Badagaon,,8,0044,4,503,,1,0,False
+232,PHC Bhagora,PHC Bhagora,,30,0184,93,502,,1,0,False
+233,PHC Bamnora,PHC Bamnora,,9,0052,98,506,,1,0,False
+234,PHC Gurra,PHC Gurra,,37,0235,91,502,,1,0,False
+235,CHC Nasrullaganj,CHC Nasrullaganj,,33,0208,52,501,,1,0,False
+236,PHC Misrod,PHC Misrod,,37,0235,91,503,,1,0,False
+237,PHC Ramgarh,PHC Ramgarh,,30,0184,93,503,,1,0,False
+238,PHC Baibori,PHC Baibori,,33,0208,52,502,,1,0,False
+239,CHC Bijawar,CHC Bijawar,,9,0054,100,501,,1,0,False
+240,PHC Mohammadgarh,PHC Mohammadgarh,,31,0198,65,503,,1,0,False
+241,PHC Itawa Itarasi,PHC Itawa Itarasi,,33,0208,52,503,,1,0,False
+242,PHC Satai,PHC Satai,,9,0054,100,502,,1,0,False
+243,PHC Goghatpur,PHC Goghatpur,,30,0184,93,504,,1,0,False
+244,CHC Gyaraspur,CHC Gyaraspur,,31,0198,65,504,,1,0,False
+245,CHC Sukhtawa,CHC Sukhtawa,,37,0234,96,501,,1,0,False
+246,CHC Ladkui,CHC Ladkui,,33,0208,52,504,,1,0,False
+247,CHC Kishangarh,CHC Kishangarh,,9,0054,100,503,,1,0,False
+248,PHC Pipliya Kulmi,PHC Pipliya Kulmi,,30,0184,93,505,,1,0,False
+249,PHC Jamani,PHC Jamani,,37,0234,96,502,,1,0,False
+250,CHC Kurwai,CHC Kurwai,,31,0193,68,501,,1,0,False
+251,PHC Lakhanguan,PHC Lakhanguan,,9,0054,100,504,,1,0,False
+252,CHC Shyampur,CHC Shyampur,,33,0204,54,501,,1,0,False
+253,PHC Tangna,PHC Tangna,,37,0234,96,503,,1,0,False
+254,PHC Machalpur,PHC Machalpur,,30,0184,93,506,,1,0,False
+255,PHC Angaur,PHC Angaur,,9,0054,100,505,,1,0,False
+256,CHC Bilkisganj,CHC Bilkisganj,,33,0204,54,502,,1,0,False
+257,PHC Pathari,PHC Pathari,,31,0193,68,502,,1,0,False
+258,PHC Devra,PHC Devra,,9,0054,100,506,,1,0,False
+259,PHC Dhoraha,PHC Dhoraha,,33,0204,54,503,,1,0,False
+260,CHC Khilchipur,CHC Khilchipur,,30,0185,108,501,,1,0,False
+261,PHC Gulganj,PHC Gulganj,,9,0054,100,507,,1,0,False
+262,PHC Ahmedpur,PHC Ahmedpur,,33,0204,54,504,,1,0,False
+263,PHC Layra,PHC Layra,,31,0193,68,503,,1,0,False
+264,PHC Chhapiheda,PHC Chhapiheda,,30,0185,108,502,,1,0,False
+265,Base Hospital Tawanagar,Base Hospital Tawanagar,,37,0234,96,504,,1,0,False
+266,PHC Bamuliya,PHC Bamuliya,,33,0204,54,505,,1,0,False
+267,PHC Barbai,PHC Barbai,,31,0193,68,504,,1,0,False
+268,PHC Somwariya,PHC Somwariya,,30,0185,108,503,,1,0,False
+269,CHC Pipariya,CHC Pipariya,,37,0239,118,501,,1,0,False
+270,PHC Sandia,PHC Sandia,,37,0239,118,502,,1,0,False
+271,PHC Bhojpur,PHC Bhojpur,,30,0185,108,504,,1,0,False
+272,CHC Buxwaha,CHC Buxwaha,,9,0055,101,501,,1,0,False
+273,PHC Bandrabatha,PHC Bandrabatha,,31,0193,68,505,,1,0,False
+274,PHC Bajna,PHC Bajna,,9,0055,101,502,,1,0,False
+275,CHC Seoni Malwa,CHC Seoni Malwa,,37,0233,115,501,,1,0,False
+276,CHC Sachi,CHC Sachi,,34,0211,119,501,,1,0,False
+277,CHC Khujner,CHC Khujner,,30,0186,74,501,0,2,0,False
+278,PHC Shivpur,PHC Shivpur,,37,0233,115,502,,1,0,False
+279,PHC Karedi,PHC Karedi,,30,0186,74,502,,1,0,False
+280,PHC Dhaoba,PHC Dhaoba,,31,0193,68,506,,1,0,False
+281,PHC Babadia Bhau,PHC Babadia Bhau,,37,0233,115,503,,1,0,False
+282,CHC Gaurihar,CHC Gaurihar,,9,0045,103,501,,1,0,False
+283,PHC Sustani,PHC Sustani,,30,0186,74,503,,1,0,False
+284,PHC Barigarh,PHC Barigarh,,9,0045,103,502,,1,0,False
+285,PHC Karanwas,PHC Karanwas,,30,0186,74,504,,1,0,False
+286,CHC Lateri,CHC Lateri,,31,0191,72,501,,1,0,False
+287,PHC Kalda,PHC Kalda,,10,0061,58,505,,1,0,False
+288,PHC Pahra,PHC Pahra,,9,0045,103,503,,1,0,False
+289,PHC Kalipith,PHC Kalipith,,30,0186,74,505,,1,0,False
+290,PHC Khadeha,PHC Khadeha,,9,0045,103,504,,1,0,False
+291,PHC Siharan,PHC Siharan,,10,0061,58,506,,1,0,False
+292,PHC Sarvai,PHC Sarvai,,9,0045,103,505,,1,0,False
+293,CHC Sehra,CHC Sehra,,35,0221,77,501,,1,0,False
+294,PHC Rusallisahu,PHC Rusallisahu,,31,0191,72,502,,1,0,False
+295,CHC Laundi,CHC Laundi,,9,0046,105,501,,1,0,False
+296,PHC Padhana,PHC Padhana,,30,0188,110,501,,1,0,False
+297,CHC Nateran,CHC Nateran,,31,0196,76,501,,1,0,False
+298,PHC Chandla,PHC Chandla,,9,0046,105,502,,1,0,False
+299,PHC Rondha,PHC Rondha,,35,0221,77,502,,1,0,False
+300,PHC Dhamanda,PHC Dhamanda,,30,0188,110,502,,1,0,False
+301,CHC Devendranagar,CHC Devendranagar,,10,0057,67,501,,1,0,False
+302,CHC Shamshabad,CHC Shamshabad,,31,0196,76,502,,1,0,False
+303,PHC Nausar,Nausar,,36,0231,85,501,,1,0,False
+304,PHC Barhvi,PHC Barhvi,,35,0221,77,503,,1,0,False
+305,PHC Kakrahti,PHC Kakrahti,,10,0057,67,502,,1,0,False
+306,PHC Munderi,PHC Munderi,,9,0046,105,503,,1,0,False
+307,PHC Barachh,PHC Barachh,,10,0057,67,503,,1,0,False
+308,PHC Khandara,PHC Khandara,,35,0221,77,504,,1,0,False
+309,PHC Chhati Bamhori,PHC Chhati Bamhori,,9,0046,105,504,,1,0,False
+310,CHC Sirali,Sirali,,36,0227,83,501,0,2,0,False
+311,PHC Itwakalan,PHC Itwakalan,,10,0057,67,504,,1,0,False
+312,PHC Kothra,PHC Kothra,,37,0233,115,504,,1,0,False
+313,PHC Rakseha,PHC Rakseha,,10,0057,67,505,,1,0,False
+314,CHC Nowgong,CHC Nowgong,,9,0048,106,501,,1,0,False
+315,PHC Borgaon,PHC Borgaon,,35,0221,77,505,,1,0,False
+316,CHC Sohagpur,CHC Sohagpur,,37,0238,116,501,,1,0,False
+317,PHC Udankhedi,PHC Udankhedi,,30,0188,110,503,,1,0,False
+318,PHC Mahow,PHC Mahow,,31,0196,76,503,,1,0,False
+319,PHC Maharajpur,PHC Maharajpur,,9,0048,106,502,,1,0,False
+320,PHC Semari Harchand,PHC Semari Harchand,,37,0238,116,502,,1,0,False
+321,PHC Betul Bazar,PHC Betul Bazar,,35,0221,77,506,,1,0,False
+322,PHC Harpalpur,PHC Harpalpur,,9,0048,106,503,,1,0,False
+323,PHC Shobhapur,PHC Shobhapur,,37,0238,116,503,,1,0,False
+324,PHC Barkhera jageer,PHC Barkhera jageer,,31,0196,76,504,,1,0,False
+325,PHC Pachore,PHC Pachore,,30,0190,110,501,,1,0,False
+326,PHC Alipura,PHC Alipura,,9,0048,106,504,,1,0,False
+328,PHC Garroli,PHC Garroli,,9,0048,106,505,,1,0,False
+329,PHC Chandbehda,PHC Chandbehda,,35,0221,77,507,,1,0,False
+330,PHC Vardha,PHC Vardha,,31,0196,76,505,,1,0,False
+331,PHC Kamti,PHC Kamti,,37,0238,116,504,,1,0,False
+332,CHC Boda,CHC Boda,,30,0189,79,501,,1,0,False
+333,PHC Lugasi,PHC Lugasi,,9,0048,106,506,,1,0,False
+334,PHC Lapajhiri,PHC Lapajhiri,,35,0221,77,508,,1,0,False
+335,PHC Gadimalhera,PHC Gadimalhera,,9,0048,106,507,,1,0,False
+336,PHC Talen,PHC Talen,,30,0189,79,502,,1,0,False
+337,CHC Shahpur,CHC Shahpur,,35,0224,114,501,,1,0,False
+338,PHC Garetha,PHC Garetha,,31,0192,82,501,,1,0,False
+339,PHC Kurraha,PHC Kurraha,,9,0048,106,508,,1,0,False
+340,PHC Kurawar,PHC Kurawar,,30,0189,79,503,,1,0,False
+341,PHC Kasbatal,PHC Kasbatal,,31,0192,82,502,,1,0,False
+342,PHC Bhoura,PHC Bhoura,,35,0224,114,502,,1,0,False
+343,PHC Iklera,PHC Iklera,,30,0189,79,504,,1,0,False
+344,CHC Khajuraho,CHC Khajuraho,,9,0051,107,501,,1,0,False
+345,PHC Mudiakheda,PHC Mudiakheda,,34,0211,119,502,,1,0,False
+346,CHC Pachmari,CHC Pachmari,,37,0239,118,503,,1,0,False
+347,PHC Bhaisana,PHC Bhaisana,,30,0189,79,505,,1,0,False
+348,PHC Bijadehi,PHC Bijadehi,,35,0224,114,503,,1,0,False
+349,PHC Rajnagar,PHC Rajnagar,,9,0051,107,502,,1,0,False
+350,CHC Pipalkheda,CHC Pipalkheda,,31,0200,81,501,,1,0,False
+351,PHC Dhabla,PHC Dhabla,,30,0189,79,506,,1,0,False
+352,PHC Dabri,PHC Dabri,,35,0224,114,504,,1,0,False
+353,PHC Bamitha,PHC Bamitha,,9,0051,107,503,,1,0,False
+354,PHC Deewanganj,PHC Deewanganj,,34,0211,119,503,,1,0,False
+355,PHC Kunwar Kotri,PHC Kunwar Kotri,,30,0189,79,507,,1,0,False
+356,PHC Vikrampur,PHC Vikrampur,,9,0051,107,504,,1,0,False
+357,PHC Kotra,PHC Kotra,,30,0189,79,508,,1,0,False
+358,PHC Barro,PHC Barro,,31,0200,81,502,,1,0,False
+359,PHC Chandranagar,PHC Chandranagar,,9,0051,107,505,,1,0,False
+360,CHC Ghodadongri,CHC Ghodadongri,,35,0223,99,501,,1,0,False
+361,PHC Balabarkheda,PHC Balabarkheda,,31,0200,81,503,,1,0,False
+362,PHC Dawad,PHC Dawad,,9,0051,107,506,,1,0,False
+363,CH Sarangpur,CH Sarangpur,,30,0188,110,504,0,6,0,False
+364,PHC Ranipur,PHC Ranipur,,35,0223,99,502,,1,0,False
+365,PHC Silon,PHC Silon,,9,0051,107,507,,1,0,False
+366,PHC Ahmedpur,PHC Ahmedpur,,31,0200,81,504,,1,0,False
+367,PHC Hirapur,PHC Hirapur,,35,0223,99,503,,1,0,False
+368,PHC Salamatpur,PHC Salamatpur,,34,0211,119,504,,1,0,False
+369,PHC Basari,PHC Basari,,9,0051,107,508,,1,0,False
+370,PHC Shayer,PHC Shayer,,31,0200,81,505,,1,0,False
+371,PHC Karri,PHC Karri,,9,0051,107,509,,1,0,False
+372,CHC Gunnor,CHC Gunnor,,10,0059,75,501,,1,0,False
+373,PHC Dehri Amdhana,PHC Dehri Amdhana,,35,0223,99,504,,1,0,False
+374,PHC Saleha,PHC Saleha,,10,0059,75,502,,1,0,False
+375,PHC Jhamtuli,PHC Jhamtuli,,9,0051,107,510,,1,0,False
+376,CHC Udaipura,Udaipura,,34,0218,123,501,,1,0,False
+377,PHC Pathakheda,PHC Pathakheda,,35,0223,99,505,,1,0,False
+378,PHC Kuchwada,Kuchwada,,34,0218,123,502,,1,0,False
+379,CHC Chicholi,CHC Chicholi,,35,0222,56,501,,1,0,False
+380,PHC Chirapatla,PHC Chirapatla,,35,0222,56,502,,1,0,False
+381,CHC Banda,CHC Banda,,11,0067,87,501,,1,0,False
+385,PHC Pataua,PHC Pataua,,11,0067,87,502,,1,0,False
+389,PHC Chakeri Bineka,PHC Chakeri Bineka,,11,0067,87,503,,1,0,False
+390,PHC Makdai,Makdai,,36,0228,,502,,1,0,False
+391,CHC Athner,CHC Athner,,35,0220,61,501,,1,0,False
+392,PHC Dhanora,PHC Dhanora,,35,0220,61,502,,1,0,False
+393,PHC Mandvi,PHC Mandvi,,35,0220,61,503,,1,0,False
+394,CHC Mandi Bamora,CHC Mandi Bamora,,11,0064,51,501,,1,0,False
+395,PHC Hidli,PHC Hidli,,35,0220,61,504,,1,0,False
+397,PHC Agasod,PHC Agasod,,11,0064,51,502,,1,0,False
+398,CHC Amla,CHC Amla,,35,0226,49,501,,1,0,False
+399,PHC Bordehi,PHC Bordehi,,35,0226,49,502,,1,0,False
+400,CHC Deori,CHC Deori,,11,0074,124,501,,1,0,False
+401,PHC Morkha,PHC Morkha,,35,0226,49,503,,1,0,False
+402,PHC Gaurjhamar,PHC Gaurjhamar,,11,0074,124,502,,1,0,False
+403,PHC Ketughan,Ketughan,,34,0218,123,503,,1,0,False
+405,PHC Maharajpur,PHC Maharajpur,,11,0074,124,503,,1,0,False
+406,CHC Shahnagar,CHC Shahnagar,,10,0062,80,501,,1,0,False
+409,PHC Barkoti,PHC Barkoti,,11,0074,124,504,,1,0,False
+410,CHC Kesli,CHC Kesli,,11,0073,121,501,,1,0,False
+412,PHC Dewari,Dewari,,34,0218,123,504,,1,0,False
+413,PHC Sahajpur,PHC Sahajpur,,11,0073,121,502,,1,0,False
+414,CHC Prabhat Pattan,CHC Prabhat Pattan,,35,0225,109,505,0,2,0,False
+415,PHC Chhater,Chhater,,34,0218,123,505,,1,0,False
+416,PHC Tada,PHC Tada,,11,0073,121,503,,1,0,False
+417,PHC Raipura,PHC Raipura,,10,0062,80,502,,1,0,False
+418,PHC Masod,PHC Masod,,35,0225,109,506,,1,0,False
+419,CHC Khurai,CHC Khurai,,11,0065,84,501,,1,0,False
+420,PHC Amravati Ghat,PHC Amravati Ghat,,35,0225,109,507,,1,0,False
+421,PHC Khimlasa,PHC Khimlasa,,11,0065,84,502,,1,0,False
+422,PHC Bisnoor,PHC Bisnoor,,35,0225,109,508,,1,0,False
+423,CHC Amanganj,CHC Amanganj,,10,0059,75,503,,1,0,False
+424,CHC Malthone,CHC Malthone,,11,0066,86,501,,1,0,False
+425,PHC Birul Bazar,PHC Birul Bazar,,35,0225,109,509,,1,0,False
+426,PHC Bandri,PHC Bandri,,11,0066,86,502,,1,0,False
+427,CHC Bhimpur,CHC Bhimpur,,35,0219,111,505,,1,0,False
+428,PHC Roda,PHC Roda,,11,0066,86,503,,1,0,False
+429,CHC Silwani,CHC Silwani,,34,0217,113,501,,1,0,False
+430,PHC Chunaloma,PHC Chunaloma,,35,0219,111,506,,1,0,False
+431,PHC Jaithari,PHC Jaithari,,34,0217,113,502,,1,0,False
+432,PHC Rajwas,PHC Rajwas,,11,0066,86,504,,1,0,False
+433,PHC Damjipura,PHC Damjipura,,35,0219,111,507,,1,0,False
+434,PHC Bamhori,PHC Bamhori,,34,0217,113,503,,1,0,False
+435,PHC Mohta,PHC Mohta,,35,0219,111,508,,1,0,False
+436,PHC Barodiya Kalan,PHC Barodiya Kalan,,11,0066,86,505,,1,0,False
+437,CHC Rahatgarh,CHC Rahatgarh,,11,0069,125,501,,1,0,False
+438,PHC Jaruakheda,PHC Jaruakheda,,11,0069,125,502,,1,0,False
+439,PHC Naryaoli,PHC Naryaoli,,11,0069,125,503,,1,0,False
+440,PHC Obedullganj,Obedullganj,,34,0214,122,501,,1,0,False
+441,PHC Bhainsa,PHC Bhainsa,,11,0069,125,504,,1,0,False
+442,PHC Pipra,PHC Pipra,,11,0069,125,505,,1,0,False
+443,CHC Mandideep,Mandideep,,34,0214,122,502,,1,0,False
+444,PHC Sehora,PHC Sehora,,11,0069,125,506,,1,0,False
+445,PHC Chiklod,Chiklod,,34,0214,122,503,,1,0,False
+446,CHC Garhakota,CHC Garhakota,,11,0072,117,501,,1,0,False
+447,PHC Sultanpur,Sultanpur,,34,0214,122,504,,1,0,False
+448,PHC Rehli,PHC Rehli,,11,0072,117,502,,1,0,False
+449,PHC Barkheda,Barkheda,,34,0214,122,505,,1,0,False
+450,PHC Chhulla,PHC Chhulla,,11,0072,117,503,,1,0,False
+451,PHC Chhirari,PHC Chhirari,,11,0072,117,504,,1,0,False
+452,PHC Goharganj,Goharganj,,34,0214,122,506,,1,0,False
+453,PHC Gunjora,PHC Gunjora,,11,0072,117,505,,1,0,False
+454,CHC Gairatganj,Gairatganj,,34,0212,97,501,,1,0,False
+455,PHC Dehgaon,Dehgaon,,34,0212,97,502,,1,0,False
+456,CHC Jaisinagar,CHC Jaisinagar,,11,0070,126,501,,1,0,False
+457,CHC Begamganj,Begamganj,,34,0213,94,501,,1,0,False
+458,PHC Sultanganj,Sultanganj,,34,0213,94,502,,1,0,False
+459,CHC Surkhi,CHC Surkhi,,11,0070,95,502,,1,0,False
+460,PHC Bilehra,PHC Bilehra,,11,0070,126,503,,1,0,False
+461,PHC Dhana,PHC Dhana,,11,0070,95,504,,1,0,False
+462,PHC Shahpur,PHC Shahpur,,11,0070,95,505,,1,0,False
+463,PHC Karrapur,PHC Karrapur,,11,0070,95,506,,1,0,False
+464,CHC Shahgarh,CHC Shahgarh,,11,0068,92,501,,1,0,False
+465,PHC Baraitha,PHC Baraitha,,11,0068,92,502,,1,0,False
+466,CHC Khirkiya,Khirkiya,,36,0227,83,502,0,2,0,False
+467,CHC Timarni,Timarni,,36,0231,85,502,0,2,0,False
+468,CHC Bareli,Badi-Bareli,,34,0215,,501,,1,0,False
+469,PHC Gugalwada,Gugalwada,,34,0215,,502,,1,0,False
+470,PHC Dumar,Dumar,,34,0215,,503,,1,0,False
+471,PHC Khargone,Khargone,,34,0215,,504,,1,0,False
+472,PHC Badi,Badi,,34,0215,,505,,1,0,False
+473,PHC Utiakala,Utiakala,,34,0215,,506,,1,0,False
+475,PHC PHANDA,PHC PHANDA,,32,0202,128,501,,1,0,False
+476,PHC TOOMDA,PHC TOOMDA,,32,0202,128,502,,1,0,False
+477,CHC BERASIA,CHC BERASIA,,32,0201,129,501,0,2,0,False
+478,PHC LALRIYA,PHC LALRIYA,,32,0201,129,502,,1,0,False
+479,PHC RUNAHA,PHC RUNAHA,,32,0201,129,503,,1,0,False
+480,PHC GUNGA,PHC GUNGA,,32,0201,129,504,,1,0,False
+481,PHC DHAMARRAH,PHC DHAMARRAH,,32,0201,129,505,,1,0,False
+482,PHC NAZEERABAD,PHC NAZEERABAD,,32,0201,129,506,,1,0,False
+485,CHC KOLAR,CHC KOLAR,,32,0202,128,503,,1,0,False
+486,CHC Baroda,CHC Baroda,,1,0004,2,501,,1,0,False
+487,CHC Karahal,CHC Karahal,,1,0005,1,501,,1,0,False
+488,CHC Vijaypur,CHC Vijaypur,,1,0001,3,501,,1,0,False
+490,CHC Bhitarwar,CHC Bhitarwar,,4,0022,140,501,,1,0,False
+491,CHC Badarwas,CHC Badarwas,,6,0033,148,501,,1,0,False
+492,CHC Mohna,CHC Mohna,,4,0020,158,501,,1,0,False
+493,CHC Bhander,CHC Bhander,,5,0027,143,501,,1,0,False
+494,PHC Khatora,PHC Khatora,,6,0033,148,502,,1,0,False
+495,PHC Sohan,PHC Sohan,,5,0027,143,502,,1,0,False
+496,PHC Rannod,PHC Rannod,,6,0033,148,503,,1,0,False
+497,PHC Mohangarh,PHC Mohangarh,,4,0022,140,502,,1,0,False
+498,PHC Salon-B,PHC Salon-B,,5,0027,143,503,,1,0,False
+499,PHC Barcholi,PHC Barcholi,,5,0027,143,504,,1,0,False
+500,CHC Karera,CHC Karera,,6,0031,142,501,,1,0,False
+501,PHC Unao,PHC Unao,,5,0026,153,501,,1,0,False
+502,PHC Amolpatha,PHC Amolpatha,,6,0031,142,502,,1,0,False
+503,PHC Sonagir,PHC Sonagir,,5,0026,153,502,,1,0,False
+504,CHC Basai,CHC Basai,,5,0026,153,503,,1,0,False
+506,PHC Dinara,PHC Dinara,,6,0031,142,503,,1,0,False
+507,PHC Sirsod,PHC Sirsod,,6,0031,142,504,,1,0,False
+509,CHC Khaniyadhana,CHC Khaniyadhana,,6,0035,151,501,,1,0,False
+510,PHC Billowa,PHC Billowa,,4,0021,165,501,,1,0,False
+511,PHC Bamorekala,PHC Bamorekala,,6,0035,151,502,,1,0,False
+512,PHC Devgarh,PHC Devgarh,,2,0009,133,501,,1,0,False
+513,PHC Shuklahari,PHC Shuklahari,,4,0021,165,502,,1,0,False
+514,PHC Mohari,PHC Mohari,,6,0035,151,503,,1,0,False
+515,PHC Pichhore,PHC Pichhore,,4,0021,165,503,,1,0,False
+516,PHC Sumavali,PHC Sumavali,,2,0009,133,502,,1,0,False
+517,CHC Kolaras,CHC Kolaras,,6,0032,144,501,,1,0,False
+518,PHC Kariyawati,PHC Kariyawati,,4,0021,165,504,,1,0,False
+519,PHC Bagchini,PHC Bagchini,,2,0009,133,503,,1,0,False
+520,PHC Dursada,PHC Dursada,,5,0026,153,504,,1,0,False
+521,PHC Salwai,PHC Salwai,,4,0021,165,505,,1,0,False
+522,PHC Lukwasa,PHC Lukwasa,,6,0032,144,502,,1,0,False
+523,PHC Galetha,PHC Galetha,,2,0009,133,504,,1,0,False
+524,CHC Narwar,CHC Narwar,,6,0030,139,501,,1,0,False
+525,PHC Barai,PHC Barai,,4,0020,158,502,,1,0,False
+526,CHC Ingoriya,CHC Ingoriya,,21,0135,169,501,,1,0,False
+527,PHC Magroni,PHC Magroni,,6,0030,139,502,,1,0,False
+528,PHC Kulaith,PHC Kulaith,,4,0020,158,503,,1,0,False
+529,PHC Sujarma,PHC Sujarma,,2,0010,141,501,,1,0,False
+530,CHC Pichhore,CHC Pichhore,,6,0034,149,501,,1,0,False
+531,PHC Veerpur,PHC Veerpur,,4,0020,158,504,,1,0,False
+532,PHC Baroni,PHC Baroni,,5,0026,153,505,,1,0,False
+533,PHC Patai,PHC Patai,,4,0020,158,505,,1,0,False
+534,PHC Manpura,PHC Manpura,,6,0034,149,502,,1,0,False
+535,PHC Khod,PHC Khod,,6,0034,149,503,,1,0,False
+536,PHC Bhatpachlana,PHC Bhatpachlana,,21,0135,169,502,,1,0,False
+537,PHC Dimni,PHC Dimni,,2,0006,131,501,,1,0,False
+538,PHC Jouha,PHC Jouha,,2,0006,131,502,,1,0,False
+539,PHC Kharsodkala,PHC Kharsodkala,,21,0135,169,503,,1,0,False
+540,PHC Hastinapur,PHC Hastinapur,,4,0020,161,506,,1,0,False
+541,CHC Pohari,CHC Pohari,,6,0028,130,501,,1,0,False
+542,PHC Utila,PHC Utila,,4,0020,161,507,,1,0,False
+543,PHC Lohana,PHC Lohana,,21,0135,169,504,,1,0,False
+544,CHC Indergarh,CHC Indergarh,,5,0025,152,501,,1,0,False
+545,PHC Bairad,PHC Bairad,,6,0028,130,502,,1,0,False
+546,PHC Parsen,PHC Parsen,,4,0020,161,508,,1,0,False
+547,PHC Banmore,PHC Banmore,,2,0008,145,501,,1,0,False
+548,CHC Ghatiya,CHC Ghatiya,,21,0132,171,501,,1,0,False
+549,CHC Satanwara,CHC Satanwara,,6,0029,137,501,,1,0,False
+550,PHC Panbihar,PHC Panbihar,,21,0132,171,502,,1,0,False
+551,PHC Tharet,PHC Tharet,,5,0025,152,502,,1,0,False
+552,PHC Rethorakala,PHC Rethorakala,,2,0008,145,502,,1,0,False
+553,PHC Uchad,PHC Uchad,,5,0025,152,503,,1,0,False
+554,PHC Unhel,PHC Unhel,,21,0129,173,501,,1,0,False
+555,PHC Chapakheda,PHC Chapakheda,,21,0129,173,502,,1,0,False
+556,PHC Madawada,PHC Madawada,,21,0129,173,503,,1,0,False
+557,CHC Aron,CHC Aron,,46,0303,134,501,,1,0,False
+559,PHC Nayakpura,PHC Nayakpura,,2,0008,145,503,,1,0,False
+560,CHC Zharda,CHC Zharda,,21,0131,177,501,,1,0,False
+561,PHC Ranayarapir,PHC Ranayarapir,,21,0131,177,502,,1,0,False
+562,PHC Bolkhedanaw,PHC Bolkhedanaw,,21,0131,177,503,,1,0,False
+563,PHC Bara,PHC Bara,,2,0009,136,505,,1,0,False
+564,PHC Zhuthawada,PHC Zhuthawada,,21,0131,177,504,,1,0,False
+565,PHC Khedakhajuriya,PHC Khedakhajuriya,,21,0131,177,505,,1,0,False
+566,PHC Mahidpurroad,PHC Mahidpurroad,,21,0131,177,506,,1,0,False
+567,PHC Pachokhora,PHC Pachokhora,,2,0009,136,506,,1,0,False
+568,CHC Tarana,CHC Tarana,,21,0133,183,501,,1,0,False
+569,PHC Panwadihat,PHC Panwadihat,,46,0303,134,502,,1,0,False
+570,PHC Makdon,PHC Makdon,,21,0133,183,502,,1,0,False
+571,PHC Devri,PHC Devri,,46,0303,134,503,,1,0,False
+572,PHC Jawasiyakumar,PHC Jawasiyakumar,,21,0133,183,503,,1,0,False
+573,PHC Kanasiya,PHC Kanasiya,,21,0133,183,504,,1,0,False
+574,PHC Dhabalahardu,PHC Dhabalahardu,,21,0133,183,505,,1,0,False
+575,PHC Kharwakala,PHC Kharwakala,,20,0123,154,501,,1,0,False
+576,PHC Nanded,PHC Nanded,,21,0133,183,506,,1,0,False
+577,PHC Kayatha,PHC Kayatha,,21,0133,183,507,,1,0,False
+578,CHC Bajna,CHC Bajna,,20,0126,157,501,,1,0,False
+579,PHC Rupakhedi,PHC Rupakhedi,,21,0133,183,508,,1,0,False
+580,PHC Mahua,PHC Mahua,,2,0007,146,501,,1,0,False
+581,CHC Narwar,CHC Narwar,,21,0134,184,501,,1,0,False
+582,PHC Parikshitpura,PHC Parikshitpura,,2,0007,146,502,,1,0,False
+583,PHC Tajpur,PHC Tajpur,,21,0134,184,502,,1,0,False
+584,PHC Panthpiplai,PHC Panthpiplai,,21,0134,184,503,,1,0,False
+585,PHC Rampurkala,PHC Rampurkala,,2,0011,147,501,,1,0,False
+586,PHC Chintamanjawasiya,PHC Chintamanjawasiya,,21,0134,184,504,,1,0,False
+587,PHC Tentra,PHC Tentra,,2,0011,147,502,,1,0,False
+588,PHC Jhundpura,PHC Jhundpura,,2,0011,147,503,,1,0,False
+589,CHC Bamori,CHC Bamori,,46,0299,138,501,,1,0,False
+590,PHC Bishanwada,PHC Bishanwada,,46,0299,138,502,,1,0,False
+591,CHC Sabalgarh,CHC Sabalgarh,,2,0011,147,504,,1,0,False
+592,PHC Fatehgarh,PHC Fatehgarh,,46,0299,138,503,,1,0,False
+593,CHC Porsa,CHC Porsa,,2,0007,146,503,,1,0,False
+594,CHC Pahargarh,CHC Pahargarh,,2,0009,136,507,,1,0,False
+595,CHC Beenaganj,CHC Beenaganj,,46,0304,155,501,,1,0,False
+596,CHC Noorabad,CHC Noorabad,,2,0008,145,504,,1,0,False
+597,CHC Khumbhraj,CHC Khumbhraj,,46,0304,155,502,,1,0,False
+598,CHC Khadiyahar,CHC Khadiyahar,,2,0006,131,503,,1,0,False
+599,PHC Mrigwas,PHC Mrigwas,,46,0304,155,503,,1,0,False
+600,PHC Teligaon,PHC Teligaon,,46,0304,155,504,,1,0,False
+601,CHC Kailaras,CHC Kailaras,,2,0010,141,502,,1,0,False
+602,CHC Joura,CHC Joura,,2,0009,133,508,,1,0,False
+603,PHC Chachaura,PHC Chachaura,,46,0304,155,505,,1,0,False
+604,CHC Myana,CHC Myana,,46,0298,159,501,,1,0,False
+606,PHC Bhadora,PHC Bhadora,,46,0298,159,502,,1,0,False
+607,PHC Markimahu,PHC Markimahu,,46,0298,159,503,,1,0,False
+608,PHC Bajrangarh,PHC Bajrangarh,,46,0298,159,504,,1,0,False
+611,CHC Vijayganj Mandi,CHC Vijayganj Mandi,,23,0147,172,501,,1,0,False
+614,PHC Barotha,PHC Barotha,,23,0147,172,502,,1,0,False
+615,CHC Taal,CHC Taal,,20,0123,154,502,,1,0,False
+616,PHC Doblechoki,PHC Doblechoki,,23,0147,172,503,,1,0,False
+618,PHC Sunvani Gopal,PHC Sunvani Gopal,,23,0147,172,504,,1,0,False
+625,PHC Mandawal,PHC Mandawal,,20,0123,154,503,,1,0,False
+629,PHC Bhojakhedi,PHC Bhojakhedi,,20,0123,154,504,,1,0,False
+630,CHC Tonk Khurd,CHC Tonk Khurd,,23,0145,178,501,,1,0,False
+631,PHC Chobaradira,PHC Chobaradira,,23,0145,178,502,,1,0,False
+632,CHC Mungaoli,CHC Mungaoli,,47,0309,200,501,0,2,0,False
+633,CHC Sonakatch,CHC Sonakatch,,23,0146,174,501,,1,0,False
+634,PHC Bargawa,PHC Bargawa,,1,0005,1,502,,1,0,False
+635,PHC Kandiya,PHC Kandiya,,20,0123,154,505,,1,0,False
+636,PHC Pipalranwa,PHC Pipalranwa,,23,0146,174,502,,1,0,False
+637,PHC Bahadurpur,PHC Bahadurpur,,47,0309,200,502,,1,0,False
+638,PHC Durgapuri,PHC Durgapuri,,1,0003,2,505,0,1,0,False
+639,PHC Malhargarh,PHC Malhargarh,,47,0309,200,503,,1,0,False
+640,PHC Sehrai,PHC Sehrai,,47,0309,200,504,,1,0,False
+641,PHC Athaikheda,PHC Athaikheda,,47,0309,200,505,,1,0,False
+642,PHC Bhoransa,PHC Bhoransa,,23,0146,174,503,,1,0,False
+643,PHC Birpur,PHC Birpur,,1,0001,3,502,,1,0,False
+644,PHC Agra,PHC Agra,,1,0001,3,503,,1,0,False
+645,PHC Barkhedakla,PHC Barkhedakla,,20,0123,154,506,,1,0,False
+646,PHC Sahasram,PHC Sahasram,,1,0001,3,504,,1,0,False
+647,CHC Malhargarh,CHC Malhargarh,,19,0114,168,501,,1,0,False
+648,PHC Piprai,PHC Piprai,,47,0309,200,506,,1,0,False
+649,PHC Pipliya Mandi,PHC Pipliya Mandi,,19,0114,168,502,,1,0,False
+650,PHC Sanjit,PHC Sanjit,,19,0114,168,503,,1,0,False
+651,PHC Narayangarh,PHC Narayangarh,,19,0114,168,504,,1,0,False
+652,PHC Takrawad,PHC Takrawad,,19,0114,168,505,,1,0,False
+653,PHC Budha,PHC Budha,,19,0114,168,506,,1,0,False
+654,PHC Kanghatti,PHC Kanghatti,,19,0114,168,507,,1,0,False
+655,PHC Jharda,PHC Jharda,,19,0114,168,508,,1,0,False
+657,CHC Sitamau,CHC Sitamau,,19,0119,175,501,,1,0,False
+658,CHC Chanderi,CHC Chanderi,,47,0306,186,501,0,2,0,False
+659,CHC Suwasara,CHC Suwasara,,19,0119,175,502,,1,0,False
+660,CHC Kannod,CHC Kannod,,23,0148,189,501,,1,0,False
+661,PHC Nahargarh,PHC Nahargarh,,19,0119,175,503,,1,0,False
+662,PHC Kayampur,PHC Kayampur,,19,0119,175,504,,1,0,False
+663,PHC Rawati,PHC Rawati,,20,0126,157,502,,1,0,False
+664,PHC Laduna,PHC Laduna,,19,0119,175,505,,1,0,False
+665,PHC Chandragarh,PHC Chandragarh,,20,0126,157,503,,1,0,False
+666,CHC Issagarh,CHC Issagarh,,47,0305,187,501,0,2,0,False
+667,PHC Dipakheda,PHC Dipakheda,,19,0119,175,506,,1,0,False
+668,PHC Satwas,PHC Satwas,,23,0148,189,502,,1,0,False
+669,PHC Baijakwada,PHC Baijakwada,,23,0148,189,503,,1,0,False
+670,PHC Bardiyagoyal,PHC Bardiyagoyal,,20,0122,160,501,,1,0,False
+671,PHC Naisaray,PHC Naisaray,,47,0305,187,502,,1,0,False
+672,PHC Loharada,PHC Loharada,,23,0148,189,504,,1,0,False
+674,PHC Parsol,PHC Parsol,,47,0305,187,503,,1,0,False
+675,PHC Kalabaghbhonra,PHC Kalabaghbhonra,,47,0305,187,504,,1,0,False
+676,PHC Ringnod,PHC Ringnod,,20,0122,160,502,,1,0,False
+677,PHC Kantaphod,PHC Kantaphod,,23,0148,189,505,,1,0,False
+678,PHC Dhodhar,PHC Dhodhar,,20,0122,160,503,,1,0,False
+679,PHC Dhablamahesh,PHC Dhablamahesh,,19,0119,175,507,,1,0,False
+680,PHC Bavdikheda,PHC Bavdikheda,,23,0148,189,506,,1,0,False
+681,PHC Badawada,PHC Badawada,,20,0122,160,504,,1,0,False
+682,CHC Shadora,CHC Shadora,,47,0308,195,501,0,2,0,False
+683,PHC Paniaon,PHC Paniaon,,23,0148,189,507,,1,0,False
+684,PHC Kachnar,PHC Kachnar,,47,0308,195,502,,1,0,False
+685,PHC Dokakuie,PHC Dokakuie,,23,0148,189,508,,1,0,False
+686,PHC Kusmania,PHC Kusmania,,23,0148,189,509,,1,0,False
+688,CHC Piploda,CHC Piploda,,20,0121,162,501,,1,0,False
+689,CHC Khategaon,CHC Khategaon,,23,0152,181,501,,1,0,False
+690,CHC Shamgarh,CHC Shamgarh,,19,0115,176,501,,1,0,False
+691,PHC Nemawar,PHC Nemawar,,23,0152,181,502,,1,0,False
+692,PHC Kalukheda,PHC Kalukheda,,20,0121,162,502,,1,0,False
+693,PHC Melkheda,PHC Melkheda,,19,0115,176,502,,1,0,False
+694,PHC Sandalpur,PHC Sandalpur,,23,0152,181,503,,1,0,False
+695,PHC Sukheda,PHC Sukheda,,20,0121,162,503,,1,0,False
+696,PHC Boliya,PHC Boliya,,19,0115,176,503,,1,0,False
+697,PHC Panchewa,PHC Panchewa,,20,0121,162,504,,1,0,False
+698,PHC Hatuniya,PHC Hatuniya,,19,0115,176,504,,1,0,False
+699,PHC Baloda,PHC Baloda,,19,0115,176,505,,1,0,False
+700,PHC Mawta,PHC Mawta,,20,0121,162,505,,1,0,False
+701,PHC Sathkheda,PHC Sathkheda,,19,0115,176,506,,1,0,False
+702,PHC Amla,PHC Amla,,23,0152,181,504,,1,0,False
+703,PHC Khadawada,PHC Khadawada,,19,0115,176,507,,1,0,False
+704,CHC Namli,CHC Namli,,20,0128,167,501,,1,0,False
+705,PHC Khajuripanth,PHC Khajuripanth,,19,0115,176,508,,1,0,False
+707,PHC Bardiya Amra,PHC Bardiya Amra,,19,0115,176,509,,1,0,False
+708,PHC Lasudiya,PHC Lasudiya,,19,0115,176,510,,1,0,False
+709,PHC Diken,PHC Diken,,18,0108,209,501,,1,0,False
+710,PHC Khaikheda,PHC Khaikheda,,19,0115,176,511,,1,0,False
+711,PHC Ratangarh,PHC Ratangarh,,18,0108,209,502,,1,0,False
+712,PHC Billpank,PHC Billpank,,20,0128,167,502,,1,0,False
+713,PHC Dhamnod,PHC Dhamnod,,20,0128,167,503,,1,0,False
+714,PHC Parasali,PHC Parasali,,19,0115,176,512,,1,0,False
+715,PHC Sarwaniya Maharaj,PHC Sarwaniya Maharaj,,18,0108,209,503,,1,0,False
+717,PHC Dharad,PHC Dharad,,20,0128,167,504,,1,0,False
+718,PHC Pawti,PHC Pawti,,19,0115,176,513,,1,0,False
+719,PHC Bangrod,PHC Bangrod,,20,0128,167,505,,1,0,False
+720,PHC Jhantla,PHC Jhantla,,18,0108,209,505,,1,0,False
+725,PHC Birmawal,PHC Birmawal,,20,0128,167,506,,1,0,False
+729,PHC Sandhara,PHC Sandhara,,19,0113,179,501,,1,0,False
+730,CHC Bagli,CHC Bagli,,23,0150,192,501,,1,0,False
+733,PHC Gandhi Sagar-3,PHC Gandhi Sagar-3,,19,0113,179,502,,1,0,False
+734,PHC Hatpiplya,PHC Hatpiplya,,23,0150,192,502,,1,0,False
+735,CHC Sailana,CHC Sailana,,20,0125,170,501,,1,0,False
+736,PHC Bhaisoda,PHC Bhaisoda,,19,0113,179,503,,1,0,False
+737,PHC Amlataj,PHC Amlataj,,23,0150,192,503,,1,0,False
+738,PHC Dantarda kala,PHC Dantarda kala,,1,0004,2,505,441,1,0,False
+739,PHC Sarwan,PHC Sarwan,,20,0125,170,502,,1,0,False
+740,PHC Gandhi Sagar-8,PHC Gandhi Sagar-8,,19,0113,179,504,,1,0,False
+741,PHC Shivgarh,PHC Shivgarh,,20,0125,170,503,,1,0,False
+742,PHC Kamlapur,PHC Kamlapur,,23,0150,192,504,,1,0,False
+743,PHC Sanada,PHC Sanada,,19,0113,179,505,,1,0,False
+744,PHC Sakrawada,PHC Sakrawada,,20,0125,170,504,,1,0,False
+746,PHC Punjapura,PHC Punjapura,,23,0150,192,505,,1,0,False
+747,PHC Osara,PHC Osara,,19,0113,179,506,,1,0,False
+748,PHC Berda,PHC Berda,,20,0125,170,505,,1,0,False
+749,PHC Udainagar,PHC Udainagar,,23,0150,192,506,,1,0,False
+750,PHC Dhabla Madhosingh,PHC Dhabla Madhosingh,,19,0113,179,507,,1,0,False
+752,PHC Osarna,PHC Osarna,,19,0113,179,508,,1,0,False
+753,PHC Ratanpur,PHC Ratanpur,,23,0150,192,507,,1,0,False
+754,PHC Kohla,PHC Kohla,,19,0113,179,509,,1,0,False
+755,PHC Antraliya,PHC Antraliya,,19,0113,179,510,,1,0,False
+756,PHC Navali,PHC Navali,,19,0113,179,511,,1,0,False
+757,PHC Babulda,PHC Babulda,,19,0113,179,512,,1,0,False
+758,CHC Manasa,CHC Manasa,,18,0112,204,501,,1,0,False
+759,PHC Kukdeshwar,PHC Kukdeshwar,,18,0112,204,502,,1,0,False
+760,PHC Mahagarh,PHC Mahagarh,,18,0112,204,503,,1,0,False
+761,PHC Kanjarda,PHC Kanjarda,,18,0112,204,504,,1,0,False
+762,PHC Parda,PHC Parda,,18,0112,204,505,,1,0,False
+763,CHC Jeeran,CHC Jeeran,,18,0110,203,501,,1,0,False
+764,PHC Palsoda,PHC Palsoda,,18,0110,203,502,,1,0,False
+765,PHC Bisalwas Kala,PHC Bisalwas Kala,,18,0110,203,503,,1,0,False
+766,PHC Bordiya Kala,PHC Bordiya Kala,,18,0110,203,504,,1,0,False
+768,CHC Barod,CHC Barod,,56,0138,193,501,,1,0,False
+769,PHC Bijanagari,PHC Bijanagari,,56,0138,193,502,,1,0,False
+770,CHC Kalapipal,CHC Kalapipal,,22,0144,194,501,,1,0,False
+772,PHC Arniakalan,PHC Arniakalan,,22,0144,194,502,,1,0,False
+773,CHC Nagari,CHC Nagari,,19,0117,206,501,,1,0,False
+774,PHC Dhundharka,PHC Dhundharka,,19,0117,206,502,,1,0,False
+775,PHC Khokrakalan,PHC Khokrakalan,,22,0144,194,503,,1,0,False
+776,PHC Bhaugarh,PHC Bhaugarh,,19,0117,206,503,,1,0,False
+777,PHC Nimbod,PHC Nimbod,,19,0117,206,504,,1,0,False
+778,PHC Amlawad,PHC Amlawad,,19,0117,206,505,,1,0,False
+779,PHC Digaonmali,PHC Digaonmali,,19,0117,206,506,,1,0,False
+780,PHC Sabakheda,PHC Sabakheda,,19,0117,206,507,,1,0,False
+781,PHC Tilawadmaina,PHC Tilawadmaina,,22,0144,194,504,,1,0,False
+782,CHC Moman Barodia,CHC Moman Barodia,,22,0142,196,501,,1,0,False
+783,PHC Bolai,PHC Bolai,,22,0142,196,502,,1,0,False
+784,PHC Mohna,PHC Mohna,,22,0142,196,503,,1,0,False
+785,PHC Chotipolay,PHC Chotipolay,,22,0142,196,504,,1,0,False
+786,PHC Gulana,PHC Gulana,,22,0142,196,505,,1,0,False
+787,PHC Dupada,PHC Dupada,,22,0142,196,506,,1,0,False
+788,CHC Nalkheda,CHC Nalkheda,,56,0137,197,501,,1,0,False
+789,PHC Badagoan,PHC Badagoan,,56,0137,197,502,,1,0,False
+790,PHC Berchha,PHC Berchha,,22,0140,198,501,,1,0,False
+791,PHC Jhokar,PHC Jhokar,,22,0140,198,502,,1,0,False
+792,PHC Maksi,PHC Maksi,,22,0140,198,503,,1,0,False
+793,PHC Semli,PHC Semli,,22,0140,198,504,,1,0,False
+794,PHC Makodi,PHC Makodi,,22,0140,198,505,,1,0,False
+795,CHC Sundarsi,CHC Sundarsi,,22,0140,198,506,,1,0,False
+796,CHC Polaykalan,CHC Polaykalan,,22,0143,199,501,,1,0,False
+798,PHC Aakodiya,PHC Aakodiya,,22,0143,199,502,,1,0,False
+800,CHC Susner,CHC Susner,,56,0136,201,501,,1,0,False
+801,PHC Soyat,PHC Soyat,,56,0136,201,502,,1,0,False
+803,CHC Handiya,CHC Handiya,,36,0230,208,504,0,2,0,False
+804,PHC Kanad,PHC Kanad,,56,0139,191,501,,1,0,False
+805,PHC Chanangoan,PHC Chanangoan,,56,0139,191,502,,1,0,False
+807,PHC Sontalai,PHC Sontalai,,36,0229,208,501,,1,0,False
+808,PHC Masangoan,PHC Masangoan,,36,0229,208,502,,1,0,False
+810,PHC Ranhaikala,PHC Ranhaikala,,36,0229,208,504,,1,0,False
+812,PHC Berkhedi Dev,PHC Berkhedi Dev,,32,0201,129,509,,1,0,False
+813,PHC MISROD,PHC MISROD,,32,0202,128,504,,1,0,False
+814,PHC RATIBAD,PHC RATIBAD,,32,0202,128,505,,1,0,False
+815,PHC Awan,PHC Awan,,46,0300,164,501,,1,0,False
+816,CHC Singoli,CHC Singoli,,18,0108,209,512,,1,0,False
+817,PHC Ruthiyai,PHC Ruthiyai,,46,0300,164,502,,1,0,False
+818,PHC Jamner,PHC Jamner,,46,0300,164,503,,1,0,False
+819,PHC Maksudangarh,PHC Maksudangarh,,46,0300,164,504,,1,0,False
+820,CHC Raghogarh,CHC Raghogarh,,46,0300,164,505,,1,0,False
+821,PHC Vijaypur,PHC Vijaypur,,46,0300,164,506,,1,0,False
+822,CHC GANDHINAGAR,CHC GANDHINAGAR,,32,0202,128,506,,1,0,False
+823,CHC Pahadi,CHC Pahadi,,38,0241,210,501,,1,0,False
+824,PHC Kanhwara,PHC Kanhwara,,38,0241,210,502,,1,0,False
+826,CHC Beohari,CHC Beohari,,48,0310,17,501,,1,0,False
+827,PHC Daiolodh,PHC Daiolodh,,48,0310,17,502,,1,0,False
+828,CHC Kusmi,CHC Kusmi,,50,0323,214,501,,1,0,False
+829,PHC Budwa,PHC Budwa,,48,0310,17,503,,1,0,False
+830,PHC Tansar,PHC Tansar,,50,0323,214,502,,1,0,False
+831,PHC Pondi,PHC Pondi,,50,0323,214,503,,1,0,False
+832,PHC Papredi,PHC Papredi,,48,0310,17,504,,1,0,False
+833,PHC Bhuimad,PHC Bhuimad,,50,0323,214,504,,1,0,False
+834,PHC Akhetpur,PHC Akhetpur,,48,0310,17,505,,1,0,False
+835,PHC Bholehara,PHC Bholehara,,48,0310,17,506,,1,0,False
+836,PHC Nipaniya,PHC Nipaniya,,48,0310,17,507,,1,0,False
+837,CHC Rampur Naikin,CHC Rampur Naikin,,50,0318,223,501,,1,0,False
+838,PHC Sarsi,PHC Sarsi,,48,0310,17,508,,1,0,False
+839,PHC Badera,PHC Badera,,38,0241,210,503,,1,0,False
+841,PHC Deorihatai,PHC Deorihatai,,38,0241,210,504,,1,0,False
+843,CHC Badwara,CHC Badwara,,38,0244,234,501,,1,0,False
+844,PHC Basadi,PHC Basadi,,38,0244,234,502,,1,0,False
+848,CHC Devsar,CHC Devsar,,51,0325,30,501,,1,0,False
+850,CHC Sarai,CHC Sarai,,51,0325,30,502,,1,0,False
+851,CHC Niwas,CHC Niwas,,51,0325,30,503,,1,0,False
+853,CHC Khutar,CHC Khutar,,51,0326,254,501,,1,0,False
+854,CHC Chitrangi,CHC Chitrangi,,51,0324,31,501,,1,0,False
+855,CHC Bairdah,CHC Bairdah,,51,0324,31,502,,1,0,False
+856,CHC Jaisinghnager,CHC Jaisinghnager,,48,0311,18,501,,1,0,False
+858,PHC Gannai,PHC Gannai,,51,0325,30,504,,1,0,False
+859,CHC Bunsakuli,CHC Bunsakuli,,48,0311,18,502,,1,0,False
+860,PHC Tingudi,PHC Tingudi,,51,0325,30,505,,1,0,False
+861,PHC Baghwar,PHC Baghwar,,50,0318,223,502,,1,0,False
+862,PHC Barka,PHC Barka,,51,0325,30,506,,1,0,False
+863,PHC TIhki,PHC TIhki,,48,0311,18,503,,1,0,False
+864,PHC Pipri Naya Tola,PHC Pipri Naya Tola,,51,0325,30,507,,1,0,False
+865,PHC Hanumangarh,PHC Hanumangarh,,50,0318,223,503,,1,0,False
+866,PHC Posta,PHC Posta,,50,0318,223,504,,1,0,False
+867,PHC Morba,PHC Morba,,51,0326,254,502,,1,0,False
+868,PHC Aamdeeh,PHC Aamdeeh,,48,0311,18,504,0,1,0,False
+869,PHC Mada (Bindul),PHC Mada (Bindul),,51,0326,254,503,,1,0,False
+870,PHC Amjhor,PHC Amjhor,,48,0311,18,505,,1,0,False
+871,PHC Khanuaa,PHC Khanuaa,,51,0326,254,504,,1,0,False
+872,PHC Khaddi,PHC Khaddi,,50,0318,223,505,,1,0,False
+873,PHC Langhadol,PHC Langhadol,,51,0326,254,505,,1,0,False
+874,PHC Kanadi,PHC Kanadi,,48,0311,18,506,0,1,0,False
+875,PHC Dhanha,PHC Dhanha,,50,0318,223,506,,1,0,False
+876,PHC Lamsarai (Naudhihava),PHC Lamsarai (Naudhihava),,51,0324,31,503,,1,0,False
+877,PHC Karthua,PHC Karthua,,51,0324,31,504,,1,0,False
+878,PHC Bagdara,PHC Bagdara,,51,0324,31,505,,1,0,False
+879,PHC Khatai,PHC Khatai,,51,0324,31,506,,1,0,False
+883,PHC Ufari,PHC Ufari,,48,0311,18,507,,1,0,False
+884,PHC Adegon,PHC Adegon,,44,0280,247,501,,1,0,False
+885,PHC Dhuma,PHC Dhuma,,44,0280,247,502,,1,0,False
+887,CHC AMARPUR,CHC AMARPUR,,41,0261,246,501,48718,2,0,False
+888,PHC KISALPURI,PHC KISALPURI,,41,0261,246,502,,1,0,False
+889,PHC Chauki,PHC Chauki,,44,0280,247,503,,1,0,False
+890,CHC Baihar,CHC Baihar,,45,0295,260,501,,1,0,False
+891,CHC Bahoriband,CHC Bahoriband,,38,0246,229,501,,1,0,False
+892,PHC Garhi,PHC Garhi,,45,0295,260,502,,1,0,False
+893,PHC Bhanderi,PHC Bhanderi,,45,0295,260,503,,1,0,False
+894,PHC KAMKOMOHANIYA,PHC KAMKOMOHANIYA,,41,0261,246,503,,1,0,False
+895,CHC BAJAG,CHC BAJAG,,41,0261,248,504,0,2,0,False
+896,PHC GADASARAI,PHC GADASARAI,,41,0261,248,505,,1,0,False
+897,PHC SARWAHI,PHC SARWAHI,,41,0261,248,506,,1,0,False
+898,PHC CHANDA,PHC CHANDA,,41,0261,248,507,,1,0,False
+899,PHC Behrai,PHC Behrai,,44,0286,230,501,,1,0,False
+900,PHC Teori,PHC Teori,,38,0246,229,502,,1,0,False
+901,PHC Ari,PHC Ari,,44,0286,230,502,,1,0,False
+902,CHC VIKRAMPUR,CHC VIKRAMPUR,,41,0261,243,508,0,2,0,False
+903,PHC Sleemnabad,PHC Sleemnabad,,38,0246,229,503,,1,0,False
+904,PHC JAMGAON,PHC JAMGAON,,41,0261,243,509,,1,0,False
+905,PHC AMNIPIPARIYA,PHC AMNIPIPARIYA,,41,0261,243,510,,1,0,False
+906,CHC Paraswada,CHC Paraswada,,45,0295,258,504,,1,0,False
+907,PHC SARASTAL,PHC SARASTAL,,41,0261,243,511,,1,0,False
+908,PHC Bakal,PHC Bakal,,38,0246,229,504,,1,0,False
+909,PHC Dhapara,PHC Dhapara,,44,0286,230,503,,1,0,False
+910,PHC NARAYANDEEH,PHC NARAYANDEEH,,41,0261,243,512,,1,0,False
+911,PHC - Ukwa,PHC - Ukwa,,45,0295,258,505,,1,0,False
+912,PHC - Chikhlajhodi,PHC - Chikhlajhodi,,45,0295,258,506,,1,0,False
+913,PHC Bachaiya,PHC Bachaiya,,38,0246,229,505,,1,0,False
+914,CHC KARANJIYA,CHC KARANJIYA,,41,0261,249,513,0,2,0,False
+915,PHC GORAKHPUR,PHC GORAKHPUR,,41,0261,249,514,,1,0,False
+916,PHC Majhgaon,PHC Majhgaon,,45,0295,258,507,,1,0,False
+917,PHC BAHARPUR,PHC BAHARPUR,,41,0261,249,515,,1,0,False
+918,PHC ROOSA,PHC ROOSA,,41,0261,249,516,,1,0,False
+919,PHC Chamari,PHC Chamari,,44,0281,233,501,,1,0,False
+920,CHC Birsa,CHC Birsa,,45,0295,232,508,,1,0,False
+921,CHC MEHANDWANI,CHC MEHANDWANI,,41,0260,242,501,0,2,0,False
+922,PHC RAI,PHC RAI,,41,0260,242,502,,1,0,False
+923,CHC Churahat,CHC Churahat,,50,0318,223,507,,1,0,False
+924,PHC Mohgaon,PHC Mohgaon,,45,0295,232,509,,1,0,False
+925,PHC KANERI,PHC KANERI,,41,0260,242,503,,1,0,False
+926,PHC Bhimgarh,PHC Bhimgarh,,44,0281,233,502,,1,0,False
+927,PHC Mandai,PHC Mandai,,45,0295,232,510,,1,0,False
+928,PHC Gorakhpur,PHC Gorakhpur,,44,0281,233,503,,1,0,False
+929,PHC  Badkhara,PHC  Badkhara,,50,0318,223,508,,1,0,False
+930,CHC SAMNAPUR,CHC SAMNAPUR,,41,0261,252,517,0,2,0,False
+931,PHC Damoh,PHC Damoh,,45,0295,232,511,,1,0,False
+932,PHC Manegaon,PHC Manegaon,,45,0295,232,512,,1,0,False
+933,PHC Dadhiya,PHC Dadhiya,,50,0318,223,509,,1,0,False
+934,PHC GAURAKANHARI,PHC GAURAKANHARI,,41,0261,252,518,,1,0,False
+935,PHC Deori Kala,PHC Deori Kala,,44,0281,233,504,,1,0,False
+936,PHC Songudda,PHC Songudda,,45,0295,232,513,,1,0,False
+937,PHC BAMHNI,PHC BAMHNI,,41,0261,252,519,,1,0,False
+938,CHC Umariyapan,CHC Umariyapan,,38,0247,224,501,,1,0,False
+939,PHC Bargawan,PHC Bargawan,,51,0325,30,508,,1,0,False
+940,CHC SHAHPURA,CHC SHAHPURA,,41,0260,240,504,0,2,0,False
+942,PHC DUNGARIYA,PHC DUNGARIYA,,41,0260,240,505,,1,0,False
+943,PHC Khamtra,PHC Khamtra,,38,0247,224,503,,1,0,False
+944,PHC BARGAON,PHC BARGAON,,41,0260,240,506,,1,0,False
+945,PHC BICHHIYA,PHC BICHHIYA,,41,0260,240,507,,1,0,False
+946,PHC KOHANI DEWARI,PHC KOHANI DEWARI,,41,0260,240,508,,1,0,False
+947,PHC Barela,PHC Barela,,39,0252,264,501,,1,0,False
+948,PHC MANIKPUR,PHC MANIKPUR,,41,0260,240,509,,1,0,False
+950,PHC Silondi,PHC Silondi,,38,0247,224,504,,1,0,False
+951,PHC KASTURI PIPARIYA,PHC KASTURI PIPARIYA,,41,0260,240,510,,1,0,False
+952,PHC Bargi,PHC Bargi,,39,0252,264,502,,1,0,False
+953,PHC Kachargaon,PHC Kachargaon,,38,0247,224,505,,1,0,False
+954,CHC Semariya,CHC Semariya,,50,0320,225,501,,1,0,False
+955,CHC Rithi,CHC Rithi,,38,0242,222,501,,1,0,False
+956,CHC Kundam,CHC Kundam,,39,0254,269,501,,1,0,False
+957,PHC Bariganwa,PHC Bariganwa,,50,0320,225,502,,1,0,False
+958,PHC Badgaon,PHC Badgaon,,38,0242,222,502,,1,0,False
+959,PHC Baghragi,PHC Baghragi,,39,0254,269,502,,1,0,False
+960,PHC Banjari,PHC Banjari,,50,0320,225,503,,1,0,False
+961,PHC Bilhari,PHC Bilhari,,38,0242,222,503,,1,0,False
+962,PHC Padaria,PHC Padaria,,39,0254,269,503,,1,0,False
+963,PHC Karwahi,PHC Karwahi,,50,0320,225,504,,1,0,False
+964,PHC Ghoghra,PHC Ghoghra,,38,0242,222,504,,1,0,False
+965,PHC Imlai,PHC Imlai,,39,0254,269,504,,1,0,False
+966,CHC Sihawal,CHC Sihawal,,50,0321,217,501,,1,0,False
+967,PHC Saletekri,PHC Saletekri (Kachnari),,45,0295,232,514,,1,0,False
+968,PHC Kudari,PHC Kudari,,44,0282,239,501,,1,0,False
+969,PHC Supela,PHC Supela,,50,0321,217,502,,1,0,False
+970,PHC Sunwara,PHC Sunwara,,44,0282,239,502,,1,0,False
+971,CHC Majholi,CHC Majholi,,39,0249,270,501,,1,0,False
+972,PHC Amiliya,PHC Amiliya,,50,0321,217,503,,1,0,False
+973,CH Vijayraghavgarh,CH Vijayraghavgarh,,38,0245,231,501,0,6,0,False
+974,PHC Indrana,PHC Indrana,,39,0249,270,502,,1,0,False
+975,PHC Ghunor,PHC Ghunor,,38,0245,231,502,,1,0,False
+977,PHC Bandol,PHC Bandol,,44,0285,250,501,,1,0,False
+978,PHC Lamta,PHC Lamta,,45,0293,227,501,,1,0,False
+979,PHC Nakjhar,PHC Nakjhar,,50,0321,217,504,,1,0,False
+980,PHC Lamakna,PHC Lamakna,,39,0249,270,503,,1,0,False
+981,PHC Amarpur,PHC Amarpur,,50,0321,217,505,0,1,0,False
+982,PHC Kymore,PHC Kymore,,38,0245,231,503,,1,0,False
+983,PHC Chhui,PHC Chhui,,44,0285,250,502,,1,0,False
+985,PHC Hatta,PHC Hatta,,45,0293,227,502,,1,0,False
+986,PHC Pokhara,PHC Pokhara,,50,0321,217,506,0,1,0,False
+988,PHC Bhoma,PHC Bhoma,,44,0285,250,503,,1,0,False
+989,PHC Charegaon,PHC Charegaon,,45,0293,227,503,,1,0,False
+990,CHC Panagar,CHC Panagar,,39,0253,272,501,,1,0,False
+991,PHC Singaudi,PHC Singaudi,,38,0245,231,504,,1,0,False
+992,PHC Sonpur,PHC Sonpur,,39,0253,272,502,,1,0,False
+993,PHC Changotola,PHC Changotola,,45,0293,227,504,,1,0,False
+994,PHC Umaria Choubey,PHC Umaria Choubey,,39,0253,272,503,,1,0,False
+995,CHC Katangi,CHC Katangi,,45,0288,213,501,,1,0,False
+997,PHC Bamhni,PHC Bamhni,,45,0288,213,502,,1,0,False
+999,PHC Tirodi,PHC Tirodi,,45,0288,213,503,,1,0,False
+1000,PHC Mehduli,PHC Mehduli,,45,0288,213,504,,1,0,False
+1001,PHC Mahkepar,PHC Mahkepar,,45,0288,213,505,,1,0,False
+1002,PHC Goreghat,PHC Goreghat,,45,0288,213,506,,1,0,False
+1003,PHC Sirpur,PHC Sirpur,,45,0288,213,507,,1,0,False
+1004,PHC Kanhiwada,PHC Kanhiwada,,44,0285,250,504,,1,0,False
+1005,CHC Khairlanji,CHC Khairlanji,,45,0291,218,501,,1,0,False
+1006,PHC Mowad,PHC Mowad,,45,0291,218,502,,1,0,False
+1007,PHC Bakhari,PHC Bakhari,,44,0285,250,505,,1,0,False
+1008,PHC Miragpur,PHC Miragpur,,45,0291,218,503,,1,0,False
+1009,PHC Arambha,PHC Arambha,,45,0291,218,504,,1,0,False
+1010,PHC Bithauli,PHC Bithauli,,50,0321,217,507,,1,0,False
+1011,PHC Mugwani,PHC Mugwani,,44,0285,250,506,,1,0,False
+1012,CHC Kirnapur,CHC Kirnapur,,45,0294,228,501,,1,0,False
+1013,PHC Belkhadu,PHC Belkhadu,,39,0253,272,504,,1,0,False
+1014,PHC Mate,PHC Mate,,45,0294,228,502,,1,0,False
+1016,CHC Majhauli,CHC Majhauli,,50,0322,215,501,,1,0,False
+1017,PHC Rajegaon,PHC Rajegaon,,45,0294,228,503,,1,0,False
+1018,PHC Lugharwada,PHC Lugharwada,,44,0285,250,507,,1,0,False
+1019,PHC Tala,PHC Tala,,50,0322,215,502,,1,0,False
+1020,CHC Patan,CHC Patan,,39,0250,275,501,,1,0,False
+1021,CHC Lalbarra,CHC Lalbarra,,45,0292,220,501,,1,0,False
+1022,PHC Madwas,PHC Madwas,,50,0322,215,503,,1,0,False
+1023,PHC Katangjhari,PHC Katangjhari,,45,0292,220,502,,1,0,False
+1024,PHC Katangi,PHC Katangi,,39,0250,275,502,,1,0,False
+1025,PHC Jam,PHC Jam,,45,0292,220,503,,1,0,False
+1026,PHC Boria,PHC Boria,,39,0250,275,503,,1,0,False
+1027,PHC Mohgaon,PHC Mohgaon,,45,0292,220,504,,1,0,False
+1028,CHC Lanji,CHC Lanji,,45,0297,235,501,,1,0,False
+1029,CHC Natwara,CHC Natwara,,39,0251,277,501,,1,0,False
+1030,PHC Bhanegaon,PHC Bhanegaon,,45,0297,235,502,,1,0,False
+1031,PHC Pand,PHC Pand,,50,0322,215,504,,1,0,False
+1032,PHC Bahela,PHC Bahela,,45,0297,235,503,,1,0,False
+1033,PHC Pandiya Chhapara,PHC Pandiya Chhapara,,44,0284,244,501,,1,0,False
+1034,PHC Risewada,PHC Risewada,,45,0297,235,504,,1,0,False
+1035,PHC Danga,PHC Danga,,50,0322,215,505,,1,0,False
+1037,PHC Ugli,PHC Ugli,,44,0284,244,502,,1,0,False
+1038,PHC Karanja,PHC Karanja,,45,0297,235,505,,1,0,False
+1039,PHC Khadaura,PHC Khadaura,,50,0322,215,506,,1,0,False
+1040,PHC Rumal,PHC Rumal,,44,0284,244,503,,1,0,False
+1042,PHC Palari,PHC Palari,,44,0284,244,504,,1,0,False
+1043,PHC Naudhiya,PHC Naudhiya,,50,0322,215,507,,1,0,False
+1044,PHC Chargawa,PHC Chargawa,,39,0251,277,502,,1,0,False
+1045,PHC Dhutera,PHC Dhutera,,44,0284,244,505,,1,0,False
+1046,CHC Chourai,CHC Chourai,,43,0271,268,501,0,2,0,False
+1047,PHC Kahani,PHC Kahani,,44,0282,241,503,,1,0,False
+1049,PHC Belkheda,PHC Belkheda,,39,0251,277,503,,1,0,False
+1050,CHC Jamai,CHC Jamai,,43,0272,274,501,0,2,0,False
+1051,PHC Bhidki,PHC Bhidki,,39,0251,277,504,,1,0,False
+1053,PHC Durjanpur,PHC Durjanpur,,44,0282,241,504,,1,0,False
+1054,CH Sihora,CH Sihora,,39,0248,279,501,,1,0,False
+1055,CHC Rampaily,CHC Rampaily,,45,0290,216,501,,2,0,False
+1056,PHC Majhgawa,PHC Majhgawa,,39,0248,279,502,,1,0,False
+1057,PHC Budbuda,PHC Budbuda,,45,0290,216,502,,1,0,False
+1058,PHC Dongarmali,PHC Dongarmali,,45,0290,216,503,,1,0,False
+1059,PHC Kumhi,PHC Kumhi,,39,0248,279,503,,1,0,False
+1060,PHC Jhaliwada,PHC Jhaliwada,,45,0290,216,504,,1,0,False
+1062,PHC Gosalpur,PHC Gosalpur,,39,0248,279,504,,1,0,False
+1063,PHC Kedarpur,PHC Kedarpur,,44,0282,241,505,,1,0,False
+1064,PHC Khiotola,PHC Khitola,,39,0248,279,505,,1,0,False
+1065,CHC Tendukheda,CHC Tendukheda,,40,0259,238,501,,1,0,False
+1067,PHC Dhobi Sarra,PHC Dhobi Sarra,,44,0287,245,501,,1,0,False
+1068,CHC Salichouka,CHC Salichouka,,40,0256,253,501,,1,0,False
+1070,PHC Piparwani,PHC Piparwani,,44,0287,245,502,,1,0,False
+1072,CHC Gotegaon,CHC Gotegaon,,40,0255,255,501,,1,0,False
+1073,CHC Parasia,CHC Parasia,,43,0273,281,501,0,2,0,False
+1074,PHC Khawasa,PHC Khawasa,,44,0287,245,503,,1,0,False
+1076,CHC Kareli,CHC Kareli,,40,0258,251,501,,1,0,False
+1077,PHC Gwari,PHC Gwari,,44,0287,245,504,,1,0,False
+1078,PHC Dhamna,PHC Dhamna,,40,0257,237,501,,1,0,False
+1079,CHC Raipur-Karchuliyan,CHC Raipur-Karchuliyan,,14,0101,287,501,0,2,0,False
+1080,CHC Saikheda,CHC Saikheda,,40,0256,256,502,,1,0,False
+1084,PHC Barahdi,PHC Barahdi,,14,0101,287,503,,1,0,False
+1087,PHC Bohani,PHC Bohani,,40,0259,238,502,,1,0,False
+1088,PHC Dobhi,PHC Dobhi,,40,0259,238,503,,1,0,False
+1089,PHC Khulri,PHC Khulri,,40,0259,238,504,,1,0,False
+1090,PHC Bhama,PHC Bhama,,40,0259,238,505,,1,0,False
+1091,PHC Chichli,PHC Chichli,,40,0256,253,503,,1,0,False
+1092,PHC Shahpur,PHC Shahpur,,40,0256,253,504,,1,0,False
+1093,PHC Barhabada,PHC Barhabada,,40,0256,253,505,,1,0,False
+1094,PHC Barheta,PHC Barheta,,40,0255,255,502,,1,0,False
+1095,PHC Karakbel,PHC Karakbel,,40,0255,255,503,,1,0,False
+1096,PHC Shrinagar,PHC Shrinagar,,40,0255,255,504,,1,0,False
+1098,PHC Barman,PHC Barman,,40,0258,251,502,,1,0,False
+1099,PHC Amgaon Bada,PHC Amgaon Bada,,40,0258,251,503,,1,0,False
+1100,PHC Kerpani,PHC Kerpani,,40,0258,251,504,,1,0,False
+1102,PHC Chhui,PHC Chhui,,43,0269,265,501,,1,0,False
+1103,PHC Singhpur,PHC Singhpur,,40,0257,237,502,,1,0,False
+1104,PHC Malahpipariya,PHC Malahpipariya,,40,0257,237,503,,1,0,False
+1105,PHC Badegaon,PHC Badegaon,,43,0269,265,502,,1,0,False
+1106,PHC Khurpa,PHC Khurpa,,40,0257,237,504,,1,0,False
+1107,PHC Sonpur,PHC Sonpur,,43,0269,265,503,,1,0,False
+1108,PHC Palaho Bada,PHC Palaho Bada,,40,0256,256,506,,1,0,False
+1111,CHC Singodi,CHC Singodi,,43,0269,265,504,0,2,0,False
+1112,CHC Bichhua,CHC Bichua,,43,0278,267,501,0,2,0,False
+1114,PHC Khamarpani,PHC Khamarpani,,43,0278,267,502,,1,0,False
+1115,PHC Dhanegaon,PHC Dhanegaon,,43,0278,267,503,,1,0,False
+1116,PHC Khamra,PHC Khamra,,43,0278,267,504,,1,0,False
+1117,PHC Pathri,PHC Pathri,,43,0278,267,505,,1,0,False
+1119,PHC Lohangi,PHC Lohangi,,43,0278,267,506,,1,0,False
+1120,PHC Jamunia,PHC Jamunia,,43,0275,288,501,,1,0,False
+1121,PHC Rohnakala,PHC Rohnakala,,43,0275,288,502,,1,0,False
+1123,CHC Barghat,CHC Barghat,,44,0286,230,504,,1,0,False
+1124,CHC Chhapara,CHC Chhapara,,44,0281,233,505,,1,0,False
+1125,CHC Dhanora,CHC Dhanora,,44,0282,239,506,,1,0,False
+1126,CHC Bamhani Banjar,CHC Bamhani Banjar,,42,0264,297,501,,1,0,False
+1127,PHC Hirdaynagar,PHC Hirdaynagar,,42,0264,297,502,,1,0,False
+1128,CHC Gopalganj,CHC Gopalganj,,44,0285,250,508,,1,0,False
+1129,PHC Mohaniya Patpara,PHC Mohaniya Patpara,,42,0264,297,503,,1,0,False
+1130,CHC Keolari,CHC Keolari,,44,0284,244,506,,1,0,False
+1131,PHC Maharajpur,PHC Maharajpur,,42,0264,297,504,,1,0,False
+1133,CHC Bichhiya,CHC Bichhiya,,42,0266,291,501,,1,0,False
+1134,CHC Ghansore,CHC Ghansore,,44,0282,241,507,,1,0,False
+1135,CHC Kurai,CHC Kurai,,44,0287,245,505,,1,0,False
+1136,PHC Kakaiya,PHC Kakaiya,,42,0266,291,502,,1,0,False
+1137,CHC Lakhnadon,CHC Lakhnadon,,44,0280,247,504,,1,0,False
+1138,PHC Sijhaura,PHC Sijhaura,,42,0266,291,503,,1,0,False
+1139,PHC Madhopur,PHC Madhopur,,42,0266,291,504,,1,0,False
+1142,PHC Anjaniya,PHC Anjaniya,,42,0266,291,505,,1,0,False
+1143,CHC Nainpur,CHC Nainpur,,42,0267,290,501,,1,0,False
+1144,PHC Tatari,PHC Tatari,,42,0267,290,502,,1,0,False
+1145,PHC Pindrai,PHC Pindrai,,42,0267,290,503,,1,0,False
+1146,PHC Pathasihora,PHC Pathasihora,,42,0267,290,504,,1,0,False
+1147,PHC Tinduabamhani,PHC Tinduabamhani,,42,0267,290,505,,1,0,False
+1149,PHC Bharveli,PHC Bharveli,,42,0267,290,506,,1,0,False
+1150,CHC Niwas,CHC Niwas,,42,0262,289,501,,1,0,False
+1151,PHC Maneri,PHC Maneri,,42,0262,289,502,,1,0,False
+1152,PHC Gadra,PHC Gadra,,42,0262,289,503,,1,0,False
+1154,CHC Narayanganj,CHC Narayanganj,,42,0262,293,504,,1,0,False
+1155,PHC Babliabazar,PHC Babliabazar,,42,0262,293,505,,1,0,False
+1156,CHC Bijadandi,CHC Bijadandi,,42,0262,294,506,,1,0,False
+1157,PHC Jamthar,PHC Jamthar,,42,0262,294,507,,1,0,False
+1158,PHC Udaipur,PHC Udaipur,,42,0262,294,508,,1,0,False
+1159,PHC Chhindgaon,PHC Chhindgaon,,42,0262,294,509,,1,0,False
+1160,PHC Korsar,PHC Korsar,,51,0324,31,507,,1,0,False
+1161,PHC Vijaypur,PHC Vijaypur,,42,0262,294,510,,1,0,False
+1162,CHC Mohgaon,CHC Mohgaon,,42,0264,295,505,,1,0,False
+1163,PHC Chubhawal,PHC Chubhawal,,42,0264,295,506,,1,0,False
+1164,PHC Chandawara,PHC Chandawara,,42,0264,295,507,,1,0,False
+1169,CHC Mawai,CHC Mawai,,42,0266,292,506,,1,0,False
+1170,PHC Salodi,PHC Salodi,,42,0266,292,507,,1,0,False
+1171,PHC Anjani,PHC Anjani,,42,0266,292,508,,1,0,False
+1172,PHC Tap,PHC Tap,,43,0271,268,502,,1,0,False
+1174,PHC Kunda,PHC Kunda,,43,0271,268,503,,1,0,False
+1177,PHC Chand,PHC Chand,,43,0271,268,504,,1,0,False
+1178,PHC Machagora,PHC Machagora,,43,0271,268,505,,1,0,False
+1179,PHC Panjara,PHC Panjara,,43,0271,268,506,,1,0,False
+1180,PHC Batkakhapa,PHC Batkakhapa,,43,0270,273,501,,1,0,False
+1181,CHC Harrai,PHC Harrai,,43,0270,273,502,0,2,0,False
+1182,PHC Partapur,PHC Partapur,,43,0270,273,503,,1,0,False
+1183,PHC Ojhaldhana,PHC Ojhaldhana,,43,0270,273,504,,1,0,False
+1184,PHC Surlakhapa,PHC Surlakhapa,,43,0270,273,505,,1,0,False
+1185,PHC Hirdagarh,PHC Hirdagarh,,43,0272,274,502,,1,0,False
+1186,PHC Rampur,PHC Rampur,,43,0272,274,503,,1,0,False
+1187,PHC Barelipar,PHC Barelipar,,43,0272,274,504,,1,0,False
+1188,PHC Bhatodia,PHC Bhatodia,,43,0272,274,505,,1,0,False
+1190,PHC Hanotia,PHC Hanotia,,43,0272,274,506,,1,0,False
+1191,CHC Damua,CHC Damua,,43,0272,274,507,0,2,0,False
+1193,PHC Burrikhurd,PHC Burrikhurd,,43,0272,274,508,,1,0,False
+1194,PHC Goptarai,PHC Goptarai,,43,0272,274,509,,1,0,False
+1196,PHC Saouri,PHC Saouri,,43,0276,276,501,,1,0,False
+1197,PHC Linga,PHC Linga,,43,0276,276,502,,1,0,False
+1198,PHC Shikarpur,PHC Shikarpur,,43,0276,276,503,,1,0,False
+1199,PHC Heerawadi,PHC Heerawadi,,43,0276,276,504,,1,0,False
+1200,CHC Mohkhed,CHC Mohkhed,,43,0276,276,505,0,2,0,False
+1201,PHC Umranala,PHC Umranala,,43,0276,276,506,,1,0,False
+1202,PHC Ambada,PHC Ambada,,43,0279,280,501,,1,0,False
+1203,PHC Badchicholi,PHC Badchicholi,,43,0279,280,502,,1,0,False
+1204,PHC Marud,PHC Marud,,43,0279,280,503,,1,0,False
+1205,PHC Siratha,PHC Siratha,,43,0279,280,504,,1,0,False
+1206,PHC Seoni,PHC Seoni,,43,0279,280,505,,1,0,False
+1207,CHC Nadanwari,CHC Nadanwadi,,43,0279,280,506,0,2,0,False
+1208,PHC Lingajatlapur,PHC Lingajatlapur,,43,0279,280,507,,1,0,False
+1209,PHC Mangruli,PHC Mangruli,,43,0279,280,508,,1,0,False
+1210,PHC Bhajipani,PHC Bhajipani,,43,0273,281,502,,1,0,False
+1211,PHC Bagbardia,PHC Bagbardia,,43,0273,281,503,,1,0,False
+1213,PHC Singod,PHC Singod,,39,0253,272,505,,1,0,False
+1214,PHC Pagara,PHC Pagara,,43,0273,281,505,,1,0,False
+1216,PHC Ridhora,PHC Ridhora,,43,0273,281,507,,1,0,False
+1219,PHC Pindraikala,PHC Pinderaikala,,43,0275,288,503,,1,0,False
+1220,PHC Shankh,PHC Shankh,,43,0275,288,504,,1,0,False
+1221,PHC Ubhegaon,PHC Ubhegaon,,43,0275,288,505,0,1,0,False
+1222,PHC Ramakona,PHC Ramakona,,43,0277,282,501,,1,0,False
+1223,PHC PiplaNarayanwar,PHC PiplaNarayanwar,,43,0277,282,502,,1,0,False
+1224,PHC Paradsinga,PHC Paradsinga,,43,0277,282,503,,1,0,False
+1225,PHC Mohgaon,PHC Mohgaon,,43,0277,282,504,,1,0,False
+1226,PHC Lodhikheda,PHC Lodhikheda,,43,0277,282,505,,1,0,False
+1227,PHC Pandhrakhedi,PHC Pandhrakhedi,,43,0277,282,506,,1,0,False
+1228,PHC Rangari,PHC Rangari,,43,0277,282,507,,1,0,False
+1229,PHC Saikheda,PHC Saikheda,,43,0277,282,508,,1,0,False
+1230,PHC Sawanga,PHC Sawanga,,43,0277,282,509,,1,0,False
+1236,DH Agar,DH Agar,,56,0139,191,503,0,5,0,False
+1237,CHC Paunar,CHC Paunar,,43,0269,265,505,0,2,0,False
+1239,PHC Chawarpatha,PHC Chawarpatha,,40,0259,238,506,,1,0,False
+1240,CHC Naigarhi,CHC Naigarhi,,14,0099,298,502,0,2,0,False
+1241,CHC Dhanora,CHC Dhanora,,43,0270,273,506,0,2,0,False
+1242,PHC Barachh,PHC Barachh,,48,0311,18,508,,1,0,False
+1245,PHC Dungaria,PHC Dungaria,,43,0272,274,510,,1,0,False
+1246,CHC Pandhurna,CHC Pandhurna,,43,0279,280,509,0,2,0,False
+1247,PHC Teegaon,PHC Teegaon,,43,0279,280,510,,1,0,False
+1253,PHC Berdi,PHC Berdi,,43,0277,282,510,,1,0,False
+1255,PHC Borgaon,PHC Borgaon,,43,0277,282,511,,1,0,False
+1257,PHC Piwaday,PHC Piwaday,,26,0164,300,501,,1,0,False
+1259,CHC Manpur,CHC Manpur,,26,0165,304,501,0,2,0,False
+1260,PHC Hasalpur,PHC Hasalpur,,26,0165,304,502,,1,0,False
+1261,PHC Jethway,PHC Jethway,,27,0166,302,501,,1,0,False
+1262,CHC Depalpur,CHC Depalpur,,26,0161,301,501,0,2,0,False
+1263,CHC Bagod,CHC Bagod,,27,0166,302,502,0,2,0,False
+1264,PHC Kodriya,PHC Kodriya,,26,0165,304,503,,1,0,False
+1265,PHC Harsola,PHC Harsola,,26,0165,304,504,,1,0,False
+1266,PHC Palasiyapaar,PHC Palasiyapaar,,26,0161,301,502,,1,0,False
+1267,PHC Gawali Palasiya,PHC Gawali Palasiya,,26,0165,304,505,,1,0,False
+1268,PHC Balwada,PHC Balwada,,27,0166,302,503,,1,0,False
+1269,PHC Bhagora,PHC Bhagora,,26,0165,304,506,,1,0,False
+1270,PHC Simrol,PHC Simrol,,26,0165,304,507,,1,0,False
+1271,PHC Gautmpura,PHC Gautmpura,,26,0161,301,503,,1,0,False
+1272,PHC Ataheda,PHC Ataheda,,26,0161,301,504,,1,0,False
+1273,PHC Bedia,PHC Bedia,,27,0166,302,504,,1,0,False
+1274,CHC Betma,CHC Betma,,26,0161,301,505,0,2,0,False
+1275,PHC Dhannd,PHC Dhannd,,26,0161,301,506,,1,0,False
+1276,PHC Bangerda,PHC Bangerda,,27,0166,302,505,,1,0,False
+1277,PHC Badud,PHC Badud,,27,0166,302,506,,1,0,False
+1278,PHC Kshipra,PHC Kshipra,,26,0163,308,501,0,1,0,False
+1279,PHC Kanapur,PHC Kanapur,,27,0166,302,507,,1,0,False
+1280,PHC Phopnar,PHC Phopnar,,55,0340,327,501,,1,0,False
+1281,PHC Mardana,PHC Mardana,,27,0166,302,508,,1,0,False
+1282,PHC Dhakalgaon,PHC Dhakalgaon,,27,0166,302,509,,1,0,False
+1283,PHC Katkut,PHC Katkut,,27,0166,302,510,,1,0,False
+1284,PHC Loni,PHC Loni,,55,0340,327,502,,1,0,False
+1285,PHC Bodarli,PHC Bodarli,,55,0340,327,503,,1,0,False
+1286,PHC Nimbola,PHC Nimbola,,55,0340,327,504,,1,0,False
+1288,PHC Ashapur,PHC Ashapur,,27,0167,312,501,,1,0,False
+1289,PHC Dhulkot,PHC Dhulkot,,55,0340,327,505,,1,0,False
+1290,PHC Kakarda,PHC Kakarda,,27,0167,312,502,,1,0,False
+1291,PHC Choli,PHC Choli,,27,0167,312,503,,1,0,False
+1292,PHC Somakhedi,PHC Somakhedi,,27,0167,312,504,,1,0,False
+1293,CHC Bhagwanpura,CHC Bhagwanpura,,27,0173,305,501,0,2,0,False
+1294,PHC Pipaljhopa,PHC Pipaljhopa,,27,0173,305,502,,1,0,False
+1295,PHC Hatod,PHC Hatod,,26,0164,300,502,,1,0,False
+1296,PHC Mohana,PHC Mohana,,27,0173,305,503,,1,0,False
+1297,PHC Tillor Khurd,PHC Tillor Khurd,,26,0164,300,503,,1,0,False
+1298,PHC Bhagyapur,PHC Bhagyapur,,27,0173,305,504,,1,0,False
+1300,PHC Kampel,PHC Kampel,,26,0164,300,505,,1,0,False
+1301,PHC Mandawkheda,PHC Mandawkheda,,27,0173,305,505,,1,0,False
+1302,PHC Devnaliya,PHC Devnaliya,,27,0173,305,506,,1,0,False
+1303,PHC Sirvel,PHC Sirvel,,27,0173,305,507,,1,0,False
+1304,PHC Kawdia,PHC Kawdia,,27,0167,312,505,,1,0,False
+1305,PHC Karhi,PHC Karhi,,27,0167,312,506,,1,0,False
+1306,PHC Padliya,PHC Padliya,,27,0167,312,507,,1,0,False
+1307,PHC Behrampur,PHC Behrampur,,27,0172,307,501,,1,0,False
+1308,CHC Shahpur,CHC Shahpur,,55,0340,327,506,,1,0,False
+1309,PHC Dhargaon,PHC Dhargaon,,27,0167,312,508,,1,0,False
+1310,CHC Gogawa,CHC Gogawa,,27,0172,307,502,0,2,0,False
+1311,PHC Nandra,PHC Nandra,,27,0167,312,509,,1,0,False
+1312,PHC Bisthan,PHC Bisthan,,27,0172,307,503,,1,0,False
+1313,PHC Doifodia,PHC Doifodia,,55,0341,328,501,,1,0,False
+1314,PHC Umarkhali,PHC Umarkhali,,27,0172,307,504,,1,0,False
+1316,PHC Gulai,PHC Gulai,,55,0341,328,502,,1,0,False
+1317,PHC Amullakhurd,PHC Amullakhurd,,55,0341,328,503,,1,0,False
+1318,CHC Silawad,CHC Silawad,,28,0175,303,501,,1,0,False
+1319,PHC Paretha,PHC Paretha,,55,0341,328,504,,1,0,False
+1320,PHC Bardiya,PHC Bardiya,,27,0167,312,510,,1,0,False
+1322,PHC Bhawti,PHC Bhawti,,28,0175,303,502,,1,0,False
+1323,PHC Talwada Bujurg,PHC Talwada Bujurg,,28,0175,303,503,,1,0,False
+1325,PHC Menmimata,PHC Menmimata,,28,0175,303,504,,1,0,False
+1326,PHC Sival,PHC Sival,,55,0342,328,501,,1,0,False
+1328,PHC Haiderpur,PHC Haiderpur,,55,0342,328,502,,1,0,False
+1329,PHC Sarola,PHC Sarola,,55,0342,328,503,,1,0,False
+1330,CHC Nepanager,CHC Nepanager,,55,0342,328,504,,1,0,False
+1331,PHC Bicholihapsi,PHC Bicholihapsi,,26,0164,300,506,,1,0,False
+1332,PHC Kotha Khurd,PHC Kotha Khurd,,27,0172,307,505,33252,1,0,False
+1333,PHC Nagziri,PHC Nagziri,,27,0172,307,506,,1,0,False
+1334,CHC Khaknar,CHC Khaknar,,55,0341,328,505,,1,0,False
+1335,PHC Badgaon,PHC Badgaon,,27,0172,307,507,,1,0,False
+1336,CHC Baldi (Killod),CHC Baldi (Killod),,54,0336,315,501,,1,0,False
+1337,CHC Chhegaon Makhan,CHC Chhegaon Makhan,,54,0337,321,501,,1,0,False
+1338,PHC Goridiya,PHC Goridiya,,27,0170,306,501,,1,0,False
+1339,PHC Dakachya,PHC Dakachya,,26,0163,308,502,,1,0,False
+1340,PHC Bamnala,PHC Bamnala,,27,0170,306,502,,1,0,False
+1341,PHC Dhangaon,PHC Dhangaon,,54,0337,321,502,,1,0,False
+1342,PHC Andad,PHC Andad,,27,0170,306,503,,1,0,False
+1343,CHC Niwali,CHC Niwali,,28,0181,322,501,,1,0,False
+1344,PHC Rodiya,PHC Rodiya,,27,0170,306,504,,1,0,False
+1345,PHC Chandrawatigang,PHC Chandrawatigang,,26,0163,308,503,,1,0,False
+1346,PHC Jogwada,PHC Jogwada,,28,0181,322,502,,1,0,False
+1347,PHC Barud,PHC Barud,,54,0337,321,503,,1,0,False
+1348,CHC Petlawad,CHC Petlawad,,52,0328,45,508,,1,0,False
+1349,PHC Kaldha,PHC Kaldha,,27,0170,306,505,,1,0,False
+1350,CHC Rama,CHC Rama,,52,0330,38,503,,1,0,False
+1351,PHC Chichgohan,PHC Chichgohan,,54,0337,321,504,,1,0,False
+1352,CHC Para,CHC Para,,52,0330,38,504,,1,0,False
+1353,CHC Sanwer,CHC Sanwer,,26,0163,308,504,0,2,0,False
+1354,PHC Shrikhandi,PHC Shrikhandi,,27,0169,313,501,,1,0,False
+1355,PHC Ratimali,PHC Ratimali,,52,0330,38,505,,1,0,False
+1356,CHC Jhirnya,CHC Jhirnya,,27,0174,309,501,0,2,0,False
+1357,PHC Keli,PHC Keli,,27,0169,313,502,,1,0,False
+1358,PHC Umarkot,PHC Umarkot,,52,0330,38,506,,1,0,False
+1359,CHC Harsud,CHC Harsud,,54,0335,314,501,,1,0,False
+1360,PHC Pithanpur,PHC Pithanpur,,52,0330,38,507,,1,0,False
+1361,PHC Ratanpur,PHC Ratanpur,,27,0174,309,502,,1,0,False
+1362,PHC Chatli,PHC Chatli,,28,0181,322,503,,1,0,False
+1363,CHC Ranapur,CHC Ranapur,,52,0331,44,501,,1,0,False
+1364,PHC Kanjawani,PHC Kanjawani,,52,0331,44,502,,1,0,False
+1366,PHC Samoi,PHC Samoi,,52,0331,44,503,,1,0,False
+1367,CHC Khalwa,CHC Khalwa,,54,0338,316,501,,1,0,False
+1368,PHC Mordundiya,PHC Mordundiya,,52,0331,44,504,,1,0,False
+1369,PHC Paliya,PHC Paliya,,26,0163,308,505,,1,0,False
+1370,PHC Roshani,PHC Roshani,,54,0338,316,502,,1,0,False
+1371,CHC Thandla,CHC Thandla,,52,0327,41,503,,1,0,False
+1372,PHC Kudana,PHC Kudana,,26,0163,308,506,,1,0,False
+1373,PHC Khar,PHC Khar,,54,0338,316,503,,1,0,False
+1374,PHC Sendhwal,PHC Sendhwal,,54,0338,316,504,,1,0,False
+1375,PHC Oon,PHC Oon,,27,0171,311,501,,1,0,False
+1376,PHC Raibidpura,PHC Raibidpura,,27,0171,311,502,,1,0,False
+1377,PHC Jawar,PHC Jawar,,54,0337,319,505,,1,0,False
+1378,PHC Temla,PHC Temla,,27,0171,311,503,,1,0,False
+1379,PHC Shivna,PHC Shivna,,27,0174,309,503,,1,0,False
+1381,PHC Singhada,PHC Singhada,,54,0337,319,506,,1,0,False
+1382,PHC Mengaon,PHC Mengaon,,27,0171,311,504,,1,0,False
+1383,PHC Helapadawa,PHC Helapadawa,,27,0174,309,504,,1,0,False
+1384,PHC Sahejala,PHC Sahejala,,54,0337,319,507,,1,0,False
+1385,CHC Pati,CHC Pati,,28,0176,318,501,,1,0,False
+1386,PHC Ghegaon,PHC Ghegaon,,27,0171,311,505,,1,0,False
+1387,PHC Dongergaon,PHC Dongergaon,,27,0171,311,506,,1,0,False
+1388,PHC Bokarata,PHC Bokarata,,28,0176,318,502,,1,0,False
+1389,PHC Kalanka,PHC Kalanka,,54,0339,317,501,,1,0,False
+1390,PHC Piplod,PHC Piplod,,54,0339,317,502,,1,0,False
+1391,PHC Gandhawa,PHC Gandhawa,,54,0339,317,503,,1,0,False
+1392,PHC Deewal,PHC Deewal,,54,0339,317,504,,1,0,False
+1393,PHC Roshar,PHC Roshar,,28,0176,318,503,,1,0,False
+1394,PHC Rayalbeda,PHC Rayalbeda,,27,0174,309,505,,1,0,False
+1395,PHC Borgaon,PHC Borgaon,,54,0339,317,505,,1,0,False
+1396,PHC Gandhwal,PHC Gandhwal,,28,0176,318,504,,1,0,False
+1397,CHC Kasrawad,CHC Kasrawad,,27,0168,310,501,0,2,0,False
+1398,PHC Singot,PHC Singot,,54,0339,317,506,,1,0,False
+1399,PHC Gudi,PHC Gudi,,54,0339,317,507,,1,0,False
+1400,PHC Balsamud,PHC Balsamud,,27,0168,310,502,,1,0,False
+1401,PHC Kohadarh,PHC Kohadarh,,54,0339,317,508,,1,0,False
+1402,CHC Maheshwar,CHC Maheshwar,,27,0167,312,511,0,2,0,False
+1403,PHC Arud,PHC Arud,,54,0339,317,509,,1,0,False
+1404,PHC Balakwada,PHC Balakwada,,27,0168,310,503,,1,0,False
+1405,CHC Mandleshwar,CHC Mandleshwar,,27,0167,312,512,0,2,0,False
+1406,CHC Pansemal,CHC Pansemal,,28,0180,323,501,,1,0,False
+1407,PHC Ghatakhedi,PHC Ghatakhedi,,54,0339,317,510,,1,0,False
+1408,PHC Khamkheda,PHC Khamkheda,,27,0168,310,504,,1,0,False
+1409,PHC Multhaan,PHC Multhaan,,27,0168,310,505,,1,0,False
+1411,CHC Segaon,CHC Segaon,,27,0169,313,503,0,2,0,False
+1412,CHC Pandhana,CHC Pandhana,,54,0339,317,511,,1,0,False
+1413,PHC Khetia-10,PHC Khetia-10,,28,0180,323,502,,1,0,False
+1414,CHC Bhikangaon,CHC Bhikangaon,,27,0170,306,506,0,2,0,False
+1415,PHC Moyada,PHC Moyada,,28,0180,323,503,,1,0,False
+1416,PHC Pipliya Bujurg,PHC Pipliya Bujurg,,27,0167,312,513,,1,0,False
+1417,CHC Mundi,CHC Mundi,,54,0337,320,508,,1,0,False
+1418,PHC Rakhi Bujurg,PHC Rakhi Bujurg,,28,0180,323,504,,1,0,False
+1419,PHC Bandhara Bujurg,PHC Bandhara Bujurg,,28,0180,323,505,,1,0,False
+1420,PHC Mandhata,PHC Mandhata,,54,0337,320,509,,1,0,False
+1421,PHC Sulgaon,PHC Sulgaon,,54,0337,320,510,,1,0,False
+1422,CHC Barud,CHC Barud,,27,0171,311,507,0,2,0,False
+1423,CHC Rajpur,CHC Rajpur,,28,0179,324,501,,1,0,False
+1424,CHC Palsood,CHC Palsood,,28,0179,324,502,,1,0,False
+1425,PHC Richfal,PHC Richfal,,54,0337,320,511,,1,0,False
+1426,PHC Gol,PHC Gol,,54,0337,320,512,,1,0,False
+1427,PHC Ojhar - 6,PHC Ojhar - 6,,28,0179,324,503,,1,0,False
+1428,PHC Julwania,PHC Julwania,,28,0179,324,504,,1,0,False
+1429,PHC Mohna,PHC Mohna,,54,0337,320,513,,1,0,False
+1430,PHC Upala,PHC Upala,,28,0179,324,505,,1,0,False
+1431,PHC Purni,PHC Purni,,54,0337,320,514,,1,0,False
+1432,PHC Nagalwadi,PHC Nagalwadi,,28,0179,324,506,,1,0,False
+1433,PHC Beed,PHC Beed,,54,0337,320,515,,1,0,False
+1434,PHC Indrapur,PHC Indrapur,,28,0179,324,507,,1,0,False
+1435,PHC Punasa,PHC Punasa,,54,0337,320,516,,1,0,False
+1436,PHC Boradimal,PHC Boradimal,,54,0337,320,517,,1,0,False
+1437,PHC Jamkota,PHC Jamkota,,54,0337,320,518,,1,0,False
+1438,CHC Sirmour,CHC Sirmour,,14,0094,329,501,0,2,0,False
+1439,PHC Baikuntpur,PHC Baikuntpur,,14,0094,329,502,,1,0,False
+1440,PHC Majhiiyar,PHC Majhiiyar,,14,0094,329,503,,1,0,False
+1448,CHC Katthiwada,CHC Katthiwada,,53,0334,36,509,0,2,0,False
+1449,CHC Bhabra,CHC Bhabra,,53,0332,37,503,0,2,0,False
+1450,CHC Jobat,CHC Jobat,,53,0333,43,504,0,2,0,False
+1451,CHC Udaigarh,CHC Udaigarh,,53,0333,40,505,0,2,0,False
+1452,CHC Badnawar,CHC Badnawar,,25,0153,330,501,0,2,0,False
+1453,CH Sendhwa,CH Sendhwa,,28,0182,325,501,,1,0,False
+1454,PHC Bidwal,PHC Bidwal,,25,0153,330,502,,1,0,False
+1455,PHC Jhopali,PHC Jhopali,,28,0182,325,502,,1,0,False
+1456,PHC Dhanora,PHC Dhanora,,28,0182,325,503,,1,0,False
+1458,CHC Chachariapati,CHC Warla,,28,0183,325,501,0,1,0,False
+1459,PHC Balwadi,PHC Balwadi,,28,0183,325,502,,1,0,False
+1460,PHC Dhawali,PHC Dhawali,,28,0183,325,503,,1,0,False
+1462,PHC Anjad,PHC Anjad,,28,0178,326,501,,1,0,False
+1463,PHC Unchawad,PHC Unchawad,,28,0178,326,502,,1,0,False
+1464,CHC Thikri,CHC Thikri,,28,0177,326,501,,1,0,False
+1465,PHC Barufatak,PHC Barufatak,,28,0177,326,502,,1,0,False
+1468,PHC Bramhangaon,PHC Bramhangaon,,28,0177,326,504,,1,0,False
+1470,PHC Satkur,PHC Satkur,,27,0168,310,506,,1,0,False
+1471,CHC Pithampur,CHC Pithampur,,25,0155,333,501,0,2,0,False
+1472,PHC Mandav,PHC Mandav,,25,0155,333,502,,1,0,False
+1473,PHC Nalchha,PHC Nalchha,,25,0155,333,503,,1,0,False
+1474,PHC Bagadi,PHC Bagadi,,25,0155,333,504,,1,0,False
+1475,PHC Digthan,PHC Digthan,,25,0155,333,505,,1,0,False
+1476,PHC Sagore,PHC Sagore,,25,0155,333,506,,1,0,False
+1477,CHC Sardarpur,CHC Sardarpur,,25,0154,334,501,0,2,0,False
+1478,CHC Amjhera,CHC Amjhera,,25,0154,334,502,0,2,0,False
+1479,PHC Rajgarh,PHC Rajgarh,,25,0154,334,503,,1,0,False
+1480,PHC Ringnod,PHC Ringnod,,25,0154,334,504,,1,0,False
+1481,PHC Rajod,PHC Rajod,,25,0154,334,505,,1,0,False
+1482,PHC Barmandal,PHC Barmandal,,25,0154,334,506,,1,0,False
+1483,PHC Dasai,PHC Dasai,,25,0154,334,507,,1,0,False
+1484,CHC Kukshi,CHC Kukshi,,25,0157,339,501,0,2,0,False
+1485,PHC Dehari,PHC Dehari,,25,0157,339,502,,1,0,False
+1486,PHC Dholiya,PHC Dholiya,,25,0157,339,503,,1,0,False
+1488,PHC Haldi,PHC Haldi,,25,0157,339,504,,1,0,False
+1489,PHC Talavadi,PHC Talavadi,,25,0157,339,505,,1,0,False
+1490,CHC Dharampuri,CHC Dharampuri,,25,0160,336,501,0,2,0,False
+1492,CHC Dhamnod,CHC Dhamnod,,25,0160,336,502,0,2,0,False
+1493,PHC Khalghat,PHC Khalghat,,25,0160,336,503,,1,0,False
+1494,PHC Bhavaniya,PHC Bhavaniya,,25,0160,336,504,,1,0,False
+1495,PHC Gujari,PHC Gujari,,25,0160,336,505,,1,0,False
+1496,PHC Bharudpura,PHC Bharudpura,,25,0160,336,506,,1,0,False
+1497,PHC Sundrel,PHC Sundrel,,25,0160,336,507,,1,0,False
+1509,PHC Ghatabillod,PHC Ghatabillod,,25,0155,331,507,,1,0,False
+1510,PHC Teesgao,PHC Teesgao,,25,0155,331,508,,1,0,False
+1511,PHC Kesure,PHC Kesure,,25,0155,331,509,,1,0,False
+1512,PHC Dotriya,PHC Dotriya,,25,0153,330,503,,1,0,False
+1513,PHC Multhan,PHC Multhan,,25,0153,330,504,,1,0,False
+1514,PHC Bakhatgarh,PHC Bakhatgarh,,25,0153,330,505,,1,0,False
+1515,PHC Kachhi Baroda,PHC Kachhi Baroda,,25,0153,330,506,,1,0,False
+1516,PHC Kanvan,PHC Kanvan,,25,0153,330,507,,1,0,False
+1517,CHC Dahi,CHC Dahi,,25,0158,340,501,0,2,0,False
+1518,PHC Barda,PHC Barda,,25,0158,340,502,,1,0,False
+1519,PHC Basad,PHC Basad,,55,0342,327,505,,1,0,False
+1520,PHC Dharamrai,PHC Dharamrai,,25,0158,340,503,,1,0,False
+1521,CHC Manawar,CHC Manawar,,25,0159,335,501,0,2,0,False
+1522,PHC Singhana,PHC Singhana,,25,0159,335,502,,1,0,False
+1523,PHC Karoli,PHC Karoli,,25,0159,335,503,,1,0,False
+1524,CHC Bagh,CHC Bagh,,25,0157,341,506,0,2,0,False
+1525,PHC Akhada,PHC Akhada,,25,0157,341,507,,1,0,False
+1526,PHC Tanda,PHC Tanda,,25,0157,341,508,,1,0,False
+1528,PHC Narvali,PHC Narvali,,25,0157,341,509,,1,0,False
+1529,CHC Nisarpur,CHC Nisarpur,,25,0157,342,510,0,2,0,False
+1530,PHC Susari,PHC Susari,,25,0157,342,511,,1,0,False
+1531,PHC Narmada Nagar,PHC Narmada Nagar,,25,0157,342,512,,1,0,False
+1532,PHC Piplya,PHC Piplya,,25,0157,342,513,,1,0,False
+1533,PHC Lohari,PHC Lohari,,25,0157,342,514,,1,0,False
+1534,CHC Gandhwani,CHC Gandhwani,,25,0156,337,501,0,2,0,False
+1535,PHC Panva,PHC Panva,,25,0156,337,502,,1,0,False
+1536,PHC Zirabad,PHC Zirabad,,25,0156,337,503,,1,0,False
+1537,PHC Baledi,PHC Baledi,,25,0156,337,504,,1,0,False
+1538,CHC Bakaner,CHC Bakaner,,25,0159,338,504,0,2,0,False
+1539,PHC Umarban,PHC Umarban,,25,0159,338,505,,1,0,False
+1540,PHC Kalibawadi,PHC Kalibawadi,,25,0159,338,506,,1,0,False
+1541,PHC Padwar,PHC Padwar,,39,0249,270,504,,1,0,False
+1542,PHC Birsinghpur,PHC Birsinghpur,,13,0084,24,501,,1,0,False
+1543,PHC Pagar Khurd,PHC Pagar Khurd,,13,0084,24,502,,1,0,False
+1544,PHC Rimari,PHC Rimari,,13,0084,24,503,,1,0,False
+1545,PHC Berahna,PHC Berahna,,13,0084,24,504,,1,0,False
+1546,PHC Jaitwara,PHC Jaitwara,,13,0084,24,505,,1,0,False
+1547,PHC Khutaha,PHC Khutaha,,13,0084,24,506,,1,0,False
+1551,PHC Chakghat,Chakghat,,14,0092,344,501,,1,0,False
+1552,PHC Gardhi,Gardhi,,14,0092,344,502,,1,0,False
+1553,CHC Semaria,CHC Semaria,,14,0096,329,501,0,2,0,False
+1555,PHC Padari,Padari,,14,0092,344,503,,1,0,False
+1556,PHC RAGAULI,PHC RAGAULI,,14,0096,329,502,0,1,0,False
+1557,PHC Beeda,PHC Beeda,,14,0096,329,503,,1,0,False
+1558,PHC Beerkham,PHC Beerkham,,14,0096,329,504,,1,0,False
+1559,PHC BARON,PHC BARON,,14,0096,329,505,0,1,0,False
+1560,PHC Raipur Sonauri,Raipur Sonauri,,14,0092,344,504,,1,0,False
+1562,CHC Teonthar,CHC Teonthar,,14,0092,344,505,0,2,0,False
+1571,CHC Hanumana,CHC Hanumana,,14,0097,349,501,0,2,0,False
+1572,PHC Hata,PHC Hata,,14,0097,349,502,,1,0,False
+1573,PHC Pahadi,PHC Pahadi,,14,0097,349,503,,1,0,False
+1574,CHC Tamia,CHC Tamia,,43,0268,283,501,0,2,0,False
+1575,PHC Chhindi,PHC Chhindi,,43,0268,283,502,,1,0,False
+1576,PHC Delakhari,PHC Delakhari,,43,0268,283,503,,1,0,False
+1577,PHC Chawalpani,PHC Chawalpani,,43,0268,283,504,,1,0,False
+1582,PHC Kotar,PHC Kotar,,13,0088,28,501,,1,0,False
+1583,PHC Chundkhurd (Chund),PHC Chundkhurd (Chund),,13,0088,28,502,,1,0,False
+1584,PHC Chhiboura,PHC Chhiboura,,13,0088,28,503,,1,0,False
+1585,PHC Goraiya,PHC Goraiya,,13,0088,28,504,,1,0,False
+1586,CHC Amarwara,CHC Amarwara,,43,0269,265,506,0,2,0,False
+1588,CHC Jawa,CHC Jawa,,14,0093,350,501,0,2,0,False
+1589,PHC Dabhura,PHC Dabhura,,14,0093,350,502,,1,0,False
+1591,PHC Chaukhandi,PHC Chaukhandi,,14,0093,350,504,,1,0,False
+1596,PHC Talwadadeb,PHC Talwadadeb,,28,0178,326,503,,1,0,False
+1598,PHC Brahmangaon,PHC Brahmangaon,,28,0178,326,505,,1,0,False
+1601,PHC Khalodi,PHC Khalodi,,42,0266,292,509,,1,0,False
+1616,CHC Govindgarh,CHC Govindgarh,,14,0100,351,502,0,2,0,False
+1617,PHC Rahat,PHC Rahat,,14,0100,351,503,,1,0,False
+1618,PHC Teekar,PHC Teekar,,14,0100,351,504,,1,0,False
+1623,CHC Singhpur,CHC Singhpur,,48,0312,20,501,,1,0,False
+1624,PHC Amarha,PHC Amarha,,48,0312,20,502,,1,0,False
+1625,PHC Khairha,PHC Khairha,,48,0312,20,503,,1,0,False
+1626,PHC Bamhauri,PHC Bamhauri,,48,0312,20,504,,1,0,False
+1627,PHC Bartara,PHC Bartara,,48,0312,20,505,,1,0,False
+1628,PHC Panchgawn,PHC Panchgawn,,48,0312,20,506,,1,0,False
+1629,PHC Majhgawa,PHC Majhgawa,,48,0312,20,507,,1,0,False
+1630,PHC Kanchanpur,PHC Kanchanpur,,48,0312,20,508,,1,0,False
+1631,PHC Ramnagar,PHC Ramnagar,,42,0266,291,510,,1,0,False
+1632,PHC Khatiya,PHC Khatiya,,42,0266,291,511,,1,0,False
+1633,PHC Mocha,PHC Mocha,,42,0266,291,512,,1,0,False
+1636,PHC Chachria,PHC Chachria,,28,0182,325,504,,1,0,False
+1637,CHC Gangeo,CHC Gangeo,,14,0095,352,502,0,2,0,False
+1639,PHC Jodauri,PHC Jodauri,,14,0095,352,504,,1,0,False
+1640,PHC Jaraha,PHC Jaraha,,14,0095,352,505,,1,0,False
+1643,PHC Dewas,PHC Dewas,,14,0094,352,506,,1,0,False
+1648,PHC Lafda,PHC Lafda,,48,0313,286,508,,1,0,False
+1649,CHC Gohparu,CHC Gohparu,,48,0312,286,509,,1,0,False
+1651,CHC Burhar,CHC Burhar,,48,0312,285,510,,1,0,False
+1652,CHC Dhanpuri,CHC Dhanpuri,,48,0312,285,511,,1,0,False
+1653,PHC BIruhali,PHC BIruhali,,48,0312,285,512,,1,0,False
+1654,PHC Rampur,PHC Rampur,,48,0312,285,513,,1,0,False
+1655,PHC Channaudi,PHC Channaudi,,48,0313,285,509,,1,0,False
+1656,PHC Keshwahi,PHC Keshwahi,,48,0313,285,510,,1,0,False
+1657,PHC Rasmohani,PHC Rasmohani,,48,0313,285,511,,1,0,False
+1658,PHC Jaitpur,PHC Jaitpur,,48,0313,285,512,,1,0,False
+1659,PHC Sakhi,PHC Sakhi,,48,0313,285,513,,1,0,False
+1664,CHC Ater,CHC Ater,,3,0012,355,501,,1,0,False
+1665,PHC Aithar,PHC Aithar,,3,0012,355,502,,1,0,False
+1666,PHC Bijora,PHC BIjora,,3,0012,355,503,,1,0,False
+1667,PHC Kanera,PHC Kanera,,3,0012,355,504,,1,0,False
+1668,PHC Pipari,PHC Pipari,,3,0012,355,505,,1,0,False
+1669,PHC PIthanpura,PHC PIthanpura,,3,0012,355,506,,1,0,False
+1670,PHC Surpura,PHC Surpura,,3,0012,355,507,,1,0,False
+1671,PHC Aino,PHC Aino,,3,0016,354,501,,1,0,False
+1672,CHC Gohad,CHC Gohad,,3,0016,354,502,0,2,0,False
+1673,PHC Guhisar,PHC Guhisar,,3,0016,354,503,,1,0,False
+1674,CHC Mau,CHC Mau,,3,0016,354,504,0,2,0,False
+1675,PHC Alampur,PHC Alampur,,3,0019,356,501,,1,0,False
+1676,PHC Aswar,PHC Aswar,,3,0019,356,502,,1,0,False
+1677,PHC Barha,PHC Barah,,3,0019,356,503,,1,0,False
+1678,PHC Bijora Rawatpura,PHC Bijora Rawatpura,,3,0019,356,504,,1,0,False
+1679,PHC Daboh,PHC Daboh,,3,0019,356,505,,1,0,False
+1680,CHC Lahar,CHC Lahar,,3,0019,356,506,,1,0,False
+1681,CHC Amayan,CHC Amayan,,3,0014,353,501,0,2,0,False
+1682,PHC Bharoli,PHC Bharoli,,3,0014,353,502,,1,0,False
+1683,PHC Gormi,PHC Gormi,,3,0014,353,503,,1,0,False
+1684,PHC Katrol,PHC Katrol,,3,0014,353,504,,1,0,False
+1685,PHC Manhad,PHC Manhad,,3,0014,353,505,,1,0,False
+1686,CHC Mehgaon,CHC Mehgaon,,3,0014,353,506,0,2,0,False
+1687,PHC Mihona,PHC Mihona,,3,0017,357,501,,1,0,False
+1688,CHC Ron,CHC Ron,,3,0017,357,502,,1,0,False
+1689,PHC Phoop,PHC Phoop,,3,0013,358,501,,1,0,False
+1690,PHC Sihoda,PHC Sihoda,,3,0013,358,502,,1,0,False
+1691,PHC Umari,PHC Umari,,3,0013,358,503,,1,0,False
+1692,PHC Antri,PHC Antri,,4,0022,140,503,0,1,0,False
+1693,PHC Chinor,PHC Chinor,,4,0022,140,504,0,1,0,False
+1694,PHC REHATGAON,REHATGAON,,36,0232,85,502,0,1,0,False
+1696,PHC Makdai,PHC Makdai,,36,0227,83,503,0,1,0,False
+1697,DH Neemuch,DH Neemuch,,18,0110,203,505,0,5,0,False
+1698,PHC Nayagaon,PHC Nayagaon,,18,0108,209,513,0,1,0,False
+1699,PHC Kadwasa,PHC Kadwasa,,18,0108,209,514,0,1,0,False
+1700,PHC Kankriya Talai,PHC Kankriya Talai,,18,0108,209,515,0,1,0,False
+1701,PHC Athava Kala,PHC Athava Kala,,18,0108,209,516,0,1,0,False
+1702,PHC Lasoor,PHC Lasoor,,18,0108,209,517,0,1,0,False
+1703,PHC Athana,PHC Athana,,18,0108,209,518,0,1,0,False
+1704,PHC Jaat,PHC Jaat,,18,0108,209,519,0,1,0,False
+1705,CH Jawad,CH Jawad,,18,0108,209,520,0,6,0,False
+1706,CH Rampura,CH Rampura,,18,0112,204,506,0,6,0,False
+1707,DH JHABUA,DH JHABUA,,52,0330,35,508,0,5,0,False
+1708,DH Rajgarh,DH Rajgarh,,30,0186,74,506,0,5,0,False
+1709,CH Biaora,,,30,0187,78,506,0,6,0,False
+1710,PHC Ambua,PHC Ambua,,53,0334,33,510,0,1,0,False
+1711,CH Narsingharh,CH Narsingharh,,30,0189,79,509,0,6,0,False
+1712,PHC Nanpur,PHC Nanpur,,53,0334,33,511,0,1,0,False
+1713,PHC Khattali,PHC Khattali,,53,0333,43,506,0,1,0,False
+1714,PHC Narsinghgarh,Urban Dispensary, Narsinghgarh,,30,0189,79,510,0,1,0,False
+1715,PHC Sorwa,PHC Sorwa,,53,0334,36,512,0,1,0,False
+1716,PHC Umrali,PHC Umrali,,53,0334,34,513,0,1,0,False
+1717,PHC Guneri,PHC Guneri,,53,0334,34,514,0,1,0,False
+1718,PHC Bakhatgarh,PHC Bakhatgarh,,53,0334,34,515,0,1,0,False
+1719,DH Alirajpur,DH Alirajpur,,53,0334,33,516,0,5,0,False
+1720,CHC Sondwa,CHC Sondwa,,53,0334,34,517,0,2,0,False
+1721,CHC Tilra,CHC Tirla,,25,0155,332,513,30457,2,0,False
+1722,PHC Satipura,PHC Satipura,,25,0155,332,514,30506,1,0,False
+1723,PHC Khadanbujurg,PHC Khadanbujurg,,25,0155,332,515,0,1,0,False
+1724,DH Raisen,,,34,0211,119,505,0,5,0,False
+1725,CHC Bareli,,,34,0216,359,501,0,2,0,False
+1726,PHC DAWANA,PHC DAWANA,,28,0178,326,506,0,1,0,False
+1727,PHC DAWANA-THIKHRI TEHSIL,PHC DAWANA,,28,0177,326,505,0,1,0,False
+1728,CHC Lalbagh,CHC Lalbagh,,55,0340,327,507,0,1,0,False
+1730,DH Burhanpur,DH Burhanpur,,55,0340,327,508,0,5,0,False
+1731,PHC Kanadiya,PHC Kanadiya,,26,0164,300,507,0,1,0,False
+1732,DH Hoshangabad,DH Hoshangabad,,37,0235,91,504,0,5,0,False
+1733,JSR Itarsi,JSR Itarsi,,37,0234,96,505,0,6,0,False
+1734,DH SEHORE,DH SEHORE,,33,0203,70,501,0,5,0,False
+1735,DH Dhar,DH Dhar,,25,0155,331,516,0,5,0,False
+1736,CH Mhow,CH Mhow,,26,0165,304,508,0,6,0,False
+1737,CH Sanyogitaganj,CH Sanyogitaganj,,26,0164,300,508,0,6,0,False
+1738,DH Indore,DH Indore,,26,0164,300,509,0,5,0,False
+1739,CH SANAVAD,,,27,0166,302,511,32462,6,0,False
+1740,PHC Jalodiyagyan,PHC Jalodiyagyan,,26,0161,301,507,31533,1,0,False
+1741,PHC Ublad,PHC Ublad,,53,0333,43,507,0,1,0,False
+1742,PHC Foolmaal,PHC Foolmaal,,53,0334,36,518,0,1,0,False
+1743,CH BARWAHA,,,27,0166,302,512,32253,6,0,False
+1744,PHC Umrath,PHC Umrath,,53,0334,34,519,0,1,0,False
+1745,DH KHARGONE,,,27,0171,311,508,0,5,0,False
+1746,KAILASH NATH KATJU,KAILASH NATH KATJU,,32,0202,128,507,0,6,0,False
+1747,CIVIL HOSPITAL BAIRAGARH,CIVIL HOSPITAL BAIRAGARH,,32,0202,128,508,0,6,0,False
+1748,J.P HOSPITAL,J.P HOSPITAL,,32,0202,128,509,0,5,0,False
+1749,Nanda Nagar,Nanda Nagar,,26,0164,300,510,0,10,0,False
+1750,DH Damoh,DH Damoh,,12,0079,59,505,0,5,0,False
+1751,Hukum Chand,Hukum Chand,,26,0164,300,511,0,3,0,False
+1752,Malharganj,Malharganj,,26,0164,300,512,0,3,0,False
+1753,Civil Hospital,Civil Hospital,,12,0075,71,504,12664,6,0,False
+1754,CHC Barhi,Barhi,,38,0243,234,501,0,1,0,False
+1755,DH CHHATARPUR,DH CHHATARPUR,,9,0050,46,505,0,5,0,False
+1756,CH Bhanpura,CH Bhanpura,,19,0113,179,513,0,6,0,False
+1757,Civil Hospital Waraseoni,Civil Hospital Waraseoni,,45,0290,216,505,0,6,0,False
+1758,DH DEWAS,DH DEWAS,,23,0147,172,505,0,5,0,False
+1759,District Hospital Balaghat,District Hospital Balaghat,,45,0293,227,505,0,5,0,False
+1760,CH Chandameta,CH Chandameta,,43,0273,281,508,0,6,0,False
+1761,DH Panna,,,10,0057,67,506,0,5,0,False
+1762,CH Khachrod,CH Khachrod,,21,0129,173,504,0,6,0,False
+1763,CH Saunsar,CH Saunsar,,43,0277,282,512,0,6,0,False
+1764,CH Nagda,CH Nagda,,21,0130,173,501,0,6,0,False
+1765,CH Badnagar,CH Badnagar,,21,0135,169,505,0,6,0,False
+1766,DH Dindori,District Hospital Dindori,,41,0261,243,520,0,5,0,False
+1767,CH Amarwara,CH Amarwara,,43,0269,265,507,0,6,0,False
+1768,CH Mahidpur,CH Mahidpur,,21,0131,177,507,0,6,0,False
+1769,DH Ujjain,DH Ujjain,,21,0134,184,505,0,5,0,False
+1770,CH Madhavnagar,CH Madhavnagar,,21,0134,184,506,0,6,0,False
+1771,CH Jivajiganj,CH Jivajiganj,,21,0134,184,507,0,3,0,False
+1772,UHC Karthikchowk,UHC Karthikchowk,,21,0134,184,508,0,8,0,False
+1773,CHC GHUGHARI,CHC GHUGHARI,,42,0264,296,508,0,2,0,False
+1774,CH Garoth,CH Garoth,,19,0115,176,514,0,6,0,False
+1775,UHC Chatrichowk,UHC Chatrichowk,,21,0134,184,509,0,8,0,False
+1776,UHC Jaisinghpura,UHC Jaisinghpura,,21,0134,184,510,0,8,0,False
+1777,UHC Bhairugarh,UHC Bhairugarh,,21,0134,184,511,0,8,0,False
+1778,UHC Sanjaynagar,UHC Sanjaynagar,,21,0134,184,512,0,8,0,False
+1779,PHC Ramhepur,PHC Ramhepur,,42,0264,296,509,0,1,0,False
+1780,DH Chhindwara,DH Chhindwara,,43,0275,288,506,0,5,0,False
+1781,PHC Surehali,PHC Surehali,,42,0264,296,510,0,1,0,False
+1782,PHC Najhre,PHC Najhre,,42,0264,296,511,0,1,0,False
+1783,PHC Kundali,PHC Kundali,,43,0273,281,509,0,1,0,False
+1784,PHC Mordongri,PHC Mordongri,,43,0273,281,510,0,1,0,False
+1785,PHC Umreth,PHC Umreth,,43,0274,281,501,0,1,0,False
+1786,District Hospital (Victoria) Jabalpur,MC (NSCB) Jabalpur,,39,0252,264,503,0,17,0,False
+1787,DH Jabalpur,DH Jabalpur,,39,0252,264,504,0,5,0,False
+1788,CH Ranjhi,CH Ranjhi,,39,0252,264,505,0,6,0,False
+1789,DH District Hospital Katni,JIla Chikitsalaya  Katni,,38,0241,210,505,0,5,0,False
+1790,PHC Jalodia Gyan,PHC Jalodia Gyan,,26,0161,301,508,31533,1,0,False
+1791,PHC Geldubba,PHC Geldubba,,43,0268,283,505,0,1,0,False
+1792,DH SEONI,DH SEONI,,44,0285,250,509,0,5,0,False
+1793,District Hospital Ratlam,District Hospital Ratlam,,20,0128,167,507,0,5,0,False
+1794,DH Sagar,Zila Chikitslaya,,11,0070,95,507,0,5,0,False
+1795,Civil Hospital Alot,Civil Hospital Alot,,20,0123,154,507,0,6,0,False
+1796,CH Bina,Civil Hospital Bina,,11,0064,51,503,0,6,0,False
+1797,DH Mandsaur,DH Mandsaur,,19,0117,206,508,0,5,0,False
+1798,Civil Hospital Jaora,,,20,0122,160,505,0,6,0,False
+1799,UPHC NSCB Medical College, Jabalpur,UPHC NSCB Medical College, Jabalpur,,39,0252,264,506,0,3,0,False
+1800,District Hospital (Elgin) Jabalpur,District Hospital (Elgin) Jabalpur,,39,0252,264,507,0,3,0,False
+1801,UPHC Chandmari, Jabalpur,UPHC Chandmari, Jabalpur,,39,0252,264,508,0,3,0,False
+1802,UPHC City Dispensory and Prasutika Grah, Kotwali J,UPHC City Dispensory and Prasutika Grah, Kotwali J,,39,0252,264,509,0,3,0,False
+1803,UPHC Prasutikagrah, Motinala, Jabalpur,UPHC Prasutikagrah, Motinala, Jabalpur,,39,0252,264,510,0,3,0,False
+1804,UPHC Gupteshwar, Jabalpur,UPHC Gupteshwar, Jabalpur,,39,0252,264,511,0,3,0,False
+1805,DH SHAJAPUR,DH SHAJAPUR,,22,0140,198,507,0,5,0,False
+1806,UPHC Ghamapur, Jabalpur,UPHC Ghamapur, Jabalpur,,39,0252,264,512,0,3,0,False
+1807,UPHC Paraswara, Jabalpur,UPHC Paraswara, Jabalpur,,39,0252,264,513,0,3,0,False
+1808,UPHC Kajarwara, Jabalpur,UPHC Kajarwara, Jabalpur,,39,0252,264,514,0,3,0,False
+1809,UPHC Pushpak Nagar Adhartal, Jabalpur,UPHC Pushpak Nagar Adhartal, Jabalpur,,39,0252,264,515,0,3,0,False
+1810,UPHC Bada Pathhar, Jabalpur,UPHC Bada Pathhar, Jabalpur,,39,0252,264,516,0,3,0,False
+1811,UPHC Polipathar, Jabalpur,UPHC Polipathar, Jabalpur,,39,0252,264,517,0,3,0,False
+1812,CH SHUJALPUR,CH SHUJALPUR,,22,0143,199,503,0,6,0,False
+1813,UPHC Tilwaraghat, Jabalpur,UPHC Tilwaraghat, Jabalpur,,39,0252,264,518,0,3,0,False
+1815,UPHC Ram Nagar, Adhartal, Jabalpur,UPHC Ram Nagar, Adhartal, Jabalpur,,39,0252,264,519,0,3,0,False
+1816,UPHC Shanti Nagar, Jabalpur,UPHC Shanti Nagar, Jabalpur,,39,0252,264,520,0,3,0,False
+1817,UPHC Ukhri, Jabalpur,UPHC Ukhri, Jabalpur,,39,0252,264,521,0,3,0,False
+1818,DH Anuppur,DH Anuppur,,49,0315,10,504,0,5,0,False
+1819,DH Narsinghpur,DH Narsinghpur,,40,0257,237,505,0,5,0,False
+1820,CH GADARWARA,CH GADARWARA,,40,0256,256,507,0,6,0,False
+1821,PHC NOWRAZABAD,PHC NOWRAZABAD,,15,0107,14,501,0,1,0,False
+1822,CHC CHANDIA,CHC CHANDIA,,15,0104,14,502,0,2,0,False
+1823,DH UMARIA,DH UMARIA,,15,0103,14,505,0,5,0,False
+1825,DH Morena,DH Morena,,2,0008,145,505,0,5,0,False
+1826,CH Ambah,CH Ambah,,2,0006,131,504,0,6,0,False
+1827,PHC Radep,PHC Radep,,1,0004,2,506,404,1,0,False
+1828,PHC Dhodhar,PHC Dhodhar,,1,0004,2,507,0,1,0,False
+1829,PHC Premsar,PHC Premsar,,1,0004,2,508,0,1,0,False
+1830,CH Maihar,CH Maihar,,13,0091,23,505,0,6,0,False
+1831,DH Satna,Satna Urban,,13,0082,26,509,0,5,0,False
+1832,CD Dhawari,Dhawari,,13,0082,26,510,0,8,0,False
+1833,CH Seondha,CH Seondha,,5,0024,152,501,0,6,0,False
+1834,Kareli - URBAN,Kareli - URBAN,,40,0258,251,505,0,2,0,False
+1835,Gotegaon - URBAN,Gotegaon - URBAN,,40,0255,255,505,0,2,0,False
+1836,DH Gwalior,DH Morar (Gwalior),,4,0020,161,509,0,5,0,False
+1837,MH Birlanagar,MH Birlanagar,,4,0020,161,510,0,10,0,False
+1838,MH Madhoganj,MH Madhoganj,,4,0020,158,511,0,10,0,False
+1839,MH Laxmiganj,MH Laxmiganj,,4,0020,158,512,0,10,0,False
+1840,UFHC Thatipur,UFHC Thatipur,,4,0020,161,513,0,3,0,False
+1841,CH Gwalior,CH Hazira Gwalior,,4,0020,158,514,0,6,0,False
+1842,CH Hem Singh Ki Pared,CH Hem Singh Ki Pared,,4,0020,158,515,0,6,0,False
+1843,CH Dabra,CH Dabra,,4,0021,165,506,0,6,0,False
+1844,CD SP Ashram,CD SP Ashram,,4,0020,158,516,0,8,0,False
+1845,CD Janakganj,CD Janakganj,,4,0020,158,517,0,8,0,False
+1846,CD Phalka Bazar,CD Phalka Bazar,,4,0020,158,518,0,8,0,False
+1847,CD Gol Pahadia,CD Gol Pahadia,,4,0020,158,519,0,8,0,False
+1848,CD High Court,CD High Court,,4,0020,161,520,0,8,0,False
+1849,CD Motimahal,CD Motimahal,,4,0020,158,521,0,8,0,False
+1850,CD AGMP,CD AGMP,,4,0020,158,522,0,8,0,False
+1851,CD Fort,CD Fort (Kila Gate),,4,0020,158,523,0,8,0,False
+1852,CD Gorkhi,CD Gorkhi,,4,0020,158,524,0,8,0,False
+1853,HBA Gandewali Sadak,Harijan Basti Aushdhalaya Gandewali Sadak,,4,0020,158,525,0,100,0,False
+1854,HBA Phalka Bazar,HBA Phalka Bazar Phalka Bazar,,4,0020,158,526,0,100,0,False
+1855,HBA Dullapur,Harijan Basti Aushdhalaya Dullapur,,4,0020,158,527,0,100,0,False
+1856,HBA Ladheri,Harijan Basti Aushdhalaya Ladheri,,4,0020,158,528,0,100,0,False
+1857,HBA Laxmiganj,HBA Laxmiganj,,4,0020,158,529,0,100,0,False
+1858,CD Deendayal,CD Deendayal,,4,0020,161,530,0,8,0,False
+1859,MC Gwalior,Medical College Gwalior,,4,0020,158,531,0,14,0,False
+1860,CHC Jhikbijuri,chc jhikbijuri,,48,0313,285,514,0,2,0,False
+1861,DH VIDISHA,DH VIDISHA,,31,0200,81,506,0,5,0,False
+1862,CH BASODA,CH BASODA,,31,0194,53,505,0,6,0,False
+1863,CH SIRONJ,CH SIRONJ,,31,0192,82,503,0,6,0,False
+1864,PHC UTIYA KALAN,PHC UTIYA KALAN,,34,0215,359,508,0,1,0,False
+1865,PHC KHARGON,PHC KHARGON,,34,0215,359,509,0,1,0,False
+1866,PHC DOOMAR,PHC DOOMAR,,34,0215,359,510,0,1,0,False
+1867,PHC GOOGALAWADA,PHC GOOGALAWADA,,34,0216,359,502,0,1,0,False
+1868,CHC BADI,CHC BADI,,34,0216,359,503,0,2,0,False
+1869,CH MANGAWAN,CH MANGAWAN,,14,0095,352,506,0,6,0,False
+1870,PHC LALGAWAN,PHC LALGAWAN,,14,0095,352,507,0,1,0,False
+1871,PHC TIWANI,PHC TIWANI,,14,0095,352,508,0,1,0,False
+1872,PHC KONI,PHC KONI,,14,0093,350,506,0,1,0,False
+1873,CHC MAUGANJ,CHC MAUGANJ,,14,0098,345,501,0,2,0,False
+1874,PHC DHERA,PHC DHERA,,14,0098,345,502,0,1,0,False
+1875,PHC DEVTALAB,PHC DEVTALAB,,14,0098,345,503,0,1,0,False
+1876,PHC MALAIGAWA,PHC MALAIGAWA,,14,0098,345,504,0,1,0,False
+1877,PHC LAXMANPUR,PHC LAXMANPUR,,14,0101,287,504,0,1,0,False
+1878,PHC AMILIHA,PHC AMILIHA,,14,0101,287,505,0,1,0,False
+1879,CHC GURH,CHC GURH,,14,0102,287,501,0,2,0,False
+1880,PHC CHACHAI,PHC CHACHAI,,14,0096,329,506,0,1,0,False
+1881,DH REWA,DH REWA,,14,0100,351,505,0,5,0,False
+1882,UHC REWA,UHC REWA,,14,0100,351,506,0,3,0,False
+1883,MC REWA,MC REWA,,14,0100,351,507,0,17,0,False
+1884,DH Sheopur,DH Sheopur,,1,0003,2,506,302,5,0,False
+1885,District Hospital Betul,District Hospital Betul,,35,0221,77,509,0,5,0,False
+1886,CHC MULTAI,CHC MULTAI,,35,0225,104,510,43072,2,0,False
+1887,CHC BHAINSDEHI,,,35,0219,102,509,0,2,0,False
+1888,PHC DUNAWA,,,35,0225,104,511,43056,1,0,False
+1889,PHC BARKHED,,,35,0225,104,512,43076,1,0,False
+1890,PHC KHEDIKORT,,,35,0225,104,513,42934,1,0,False
+1891,PHC JHALLAR,,,35,0219,102,510,0,1,0,False
+1892,PHC KHAMLA,,,35,0219,102,511,0,1,0,False
+1893,PHC SAWALMENDA,,,35,0219,102,512,0,1,0,False
+1894,MASTERLAL SINGH HOSPITAL,MASTERLAL SINGH HOSPITAL (W-9,10,11,13),,32,0202,128,510,0,13,0,False
+1895,SULTANIYA JANANA HOSPITAL,SULTANIYA JANANA HOSPITAL(W,21,23,24,25),,32,0202,128,511,0,17,0,False
+1896,INDIRA GANDHI HOSPITAL,INDIRA GANDHI HOSPITAL (W-18,20,39,40),,32,0202,128,512,0,14,0,False
+1897,JAWAHARLAL NEHRU HOSPITAL,JAWAHARLAL NEHRU HOSPITAL(W-12,16,66),,32,0202,128,513,0,14,0,False
+1898,C.D. PROFESOR COLONY,C.D. PROFESOR COLONY (W-26,34),,32,0202,128,514,0,8,0,False
+1899,C.D. SEWANIYAGOND,C.D. SEWANIYAGOND (W-31),,32,0202,128,515,0,8,0,False
+1900,C.D. AHEMDABAD,C.D. AHEMDABAD (W-5),,32,0202,128,516,0,8,0,False
+1901,LADY BHORE CENTER,LADY BHORE CENTER (W-6,7,8,19,22),,32,0202,128,517,0,8,0,False
+1902,C.D. RUKMABAI,C.D. RUKMABAI (W-36,37,38,41,42,43,44),,32,0202,128,518,0,8,0,False
+1903,C.D. 1100 QTR.,C.D. 1100 QTR. (W-48,50,51,52),,32,0202,128,519,0,8,0,False
+1904,C.D. BAG SEWANIYA,C.D. BAG SEWANIYA (W-53),,32,0202,128,520,0,8,0,False
+1905,C.D. PIPLANI,C.D. PIPLANI (W-56,61),,32,0202,128,521,0,8,0,False
+1906,C.D. GOVINDPURA,C.D. GOVINDPURA (W-46,47,63,64),,32,0202,128,522,0,8,0,False
+1907,C.D. BARKHEDA PATHANI,C.D. BARKHEDA PATHANI (W-54,58,59),,32,0202,128,523,0,8,0,False
+1908,C.D. PANCHSHEEL NAGAR,C.D. PANCHSHEEL NAGAR (W-31,49),,32,0202,128,524,0,8,0,False
+1909,C.D. ANAND NAGAR,C.D. ANAND NAGAR (W-60,62),,32,0202,128,525,0,8,0,False
+1910,C.D. TELAJAMALPURA,C.D. TELAJAMALPURA (W-14,17,66C),,32,0202,128,526,0,8,0,False
+1911,C.D. CHOLA,C.D. CHOLA (W-15,65),,32,0202,128,527,0,8,0,False
+1912,C.D. KOTRA SULTANABAD,C.D. KOTRA SULTANABAD (W-29,30),,32,0202,128,528,0,8,0,False
+1913,DH Shivpuri,DH Shivpuri,,6,0029,137,502,3894,5,0,False
+1914,C.D.KRISHNPURA(HUKUMCHAND HOSPITAL),KRISHNPURA,,26,0164,300,513,0,8,0,False
+1915,C.D. HARSIDDI(HUKUMCHAND HOSPITAL),HARSIDDI,,26,0164,300,514,0,8,0,False
+1916,C.D.JUNI INDORE(HUKUMCHAND HOSPITAL),JUNI INDORE,,26,0164,300,515,0,8,0,False
+1917,C.D.MOG LINE(MALHARGANJ),MOG LINE,,26,0164,300,516,0,8,0,False
+1918,PHC(URBAN) RAJENDRANAGAR(MALHARGANJ),RAJENDRANAGAR,,26,0164,300,517,0,1,0,False
+1919,C.D.MOHTA NAGAR(NANDA NAGAR),MOHTA NAGAR,,26,0164,300,518,0,8,0,False
+1920,C.D.MANGILAL CHURIYA(NANDA NAGAR),MANGILALCHURIYA,,26,0164,300,519,0,8,0,False
+1921,C.D.ARANY(NANDA NAGAR),ARANY,,26,0164,300,520,0,8,0,False
+1922,C.D.BRINDAWAN COLONY(NANDA NAGAR),BRINDAWAN COLONY,,26,0164,300,521,0,8,0,False
+1923,C.D.BHAWARKUWA(SANYOGITAGANJ),BHAWARKUWA,,26,0164,300,522,0,8,0,False
+1924,C.D.AZAD NAGAR(SANYOGITAGANJ),AZAD NAGAR,,26,0164,300,523,0,8,0,False
+1925,C.D.KHAJRANA(SANYOGITAGANJ),KHAJRANA,,26,0164,300,524,0,8,0,False
+1926,C.D.RADIO COLONY(SANYOGITAGANJ),RADIO COLONY,,26,0164,300,525,0,8,0,False
+1927,DH KHANDWA,DH KHANDWA,,54,0337,319,519,0,5,0,False
+1928,DH Guna,DH Guna,,46,0298,159,505,5889,5,0,False
+1929,DH MANDLA,DH MANDLA,,42,0264,297,512,0,5,0,False
+1930,DH TIKAMGARH,DH TIKAMGARH,,8,0044,4,504,0,5,0,False
+1931,DH HARDA,DH HARDA,,36,0229,208,505,0,5,0,False
+1932,DH ASHOKNAGAR,DH ASHOKNAGAR,,47,0308,195,503,0,5,0,False
+1933,UPHC Sneh Nagar, Jabalpur,UPHC Sneh Nagar, Jabalpur,,39,0252,264,522,0,3,0,False
+1934,DH Bhind,DH Bhind,,3,0013,358,504,1681,5,0,False
+1935,NGO Gole ka Mandir,NGO Gole ka Mandir,,4,0020,161,532,0,100,0,False
+1936,NGO FPAI Branch Kampoo,NGO FPAI Branch Kampoo,,4,0020,158,533,0,100,0,False
+1937,PHOTC CENTER,PHOTC CENTER,,4,0020,158,534,0,100,0,False
+1938,DH DATIA,DH DATIA,,5,0026,153,506,0,5,0,False
+1939,MY MEDICAL COLLEGE,MY MEDICAL COLLEGE,,26,0162,300,501,0,17,0,False
+1940,PRIVATE HOSPITALS,PRIVATE HOSPITALS,,32,0202,128,529,0,13,0,False
+1941,DH SHAHDOL,DH SHAHDOL,,48,0312,20,514,0,5,0,False
+1942,DH BARWANI,DH BARWANI,,28,0175,303,505,33704,5,0,False
+1943,BHOPAL PRIVATE,BHOPAL PRIVATE,,32,0202,128,530,0,100,0,False
+1944,DH SIDHI,DH SIDHI,,50,0320,225,505,0,5,0,False
