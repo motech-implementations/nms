@@ -88,6 +88,10 @@ public class FrontLineWorker extends MdsEntity implements FullLocation {
     @Persistent(defaultFetchGroup = "true")
     private HealthSubFacility healthSubFacility;
 
+    @Field
+    @Column(length = 20)
+    private String designation;
+
     public FrontLineWorker(Long contactNumber) {
         this.contactNumber = contactNumber;
     }
@@ -229,6 +233,15 @@ public class FrontLineWorker extends MdsEntity implements FullLocation {
     public void setHealthSubFacility(HealthSubFacility healthSubFacility) {
         this.healthSubFacility = healthSubFacility;
     }
+
+    public String getDesignation() {
+        return designation;
+    }
+
+    public void setDesignation(String designation) {
+        this.designation = designation;
+    }
+
 
     @Override //NO CHECKSTYLE CyclomaticComplexity
     public boolean equals(Object o) {
