@@ -156,6 +156,11 @@ public class CsrServiceImpl implements CsrService {
     }
 
 
+    private boolean isFirstMessageOfWeek(String weekId) {
+        return weekId.endsWith("1");
+    }
+
+
     private void rescheduleCall(Subscription subscription, CallSummaryRecord record, CallRetry callRetry) {
 
         Long msisdn = subscription.getSubscriber().getCallingNumber();
@@ -164,7 +169,16 @@ public class CsrServiceImpl implements CsrService {
 
             // This message was never retried before, so this is a first retry
             LOGGER.debug(String.format("Creating retry for subscription: %s", subscription.getSubscriptionId()));
-            DayOfTheWeek nextDay = DayOfTheWeek.fromInt(subscription.getStartDate().dayOfWeek().get()).nextDay();
+
+            // Looking at the weekId, we can figure out if this was the first or second message for that week
+            // and calculate which day of the week we should reschedule the call for
+            DayOfTheWeek nextDay;
+            if (isFirstMessageOfWeek(record.getWeekId())) {
+                nextDay = subscription.getFirstMessageDayOfWeek().nextDay();
+            } else {
+                nextDay = subscription.getSecondMessageDayOfWeek().nextDay();
+            }
+            
             CallRetry newCallRetry = new CallRetry(
                     subscription.getSubscriptionId(),
                     msisdn,
