@@ -14,6 +14,13 @@ public class SubscriptionPackMessage {
 
     private static final int TWO_MINUTES = 120;
 
+    /**
+     * The format of the weekId string is:
+     *
+     * w_{week}_{message}, where {week} is the week number in the pack and {message} is the message number for the week
+     * eg: The weekId for the pack message for the first message of the 4th week in a pack would be w_4_1, and the
+     *     weekId for the second message for the 12th week would be w_12_2
+     */
     @Field
     private String weekId;
 
