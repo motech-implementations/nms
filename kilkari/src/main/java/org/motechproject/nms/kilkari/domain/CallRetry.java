@@ -2,6 +2,7 @@ package org.motechproject.nms.kilkari.domain;
 
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
+import org.motechproject.mds.domain.MdsEntity;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
 
 import javax.jdo.annotations.Column;
@@ -10,7 +11,7 @@ import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 
 @Entity(tableName = "nms_kk_retry_records")
-public class CallRetry {
+public class CallRetry extends MdsEntity {
     @Field
     @Unique
     private String subscriptionId;

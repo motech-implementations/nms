@@ -1,0 +1,250 @@
+BID,Name_E,Name_G,HQ,DCode,TCode,MDDS_Code
+1,Srinagar,श्रीनगर	,Srinagar,21,0155,573
+2,Pisangan,पीसांगन	,Pisangan,21,0152,572
+3,Kishangarh,किशनगढ	,Kishangarh,21,0150,
+4,Masooda,मसूदा	,Masooda,21,0154,571
+5,Arain,अरॉई,Arain,21,0150,566
+6,Bhinai,भिनाय	,Bhinai,21,0156,
+7,Kekri,केकडी	,Kekri,21,0158,569
+8,Jawaja,जवाजा	,Jawaja,21,0153,568
+9,Asind,आसीन्‍द,Asind,24,0171,620
+10,Gulabpura,गुलाबपुरा,Gulabpura,24,0172,
+11,Shahpura,शाहपुरा	,Shahpura,24,0173,629
+12,Jahazpur,जहाजपुर,Jahazpur,24,0180,623
+13,Banera,बनेडा	,Banera,24,0174,621
+14,Mandal,माण्‍डल,Mandal,24,0175,625
+15,Raipur,रायपुर	,Raipur,24,0176,627
+16,Sahara,सहाड्रा	,Sahara,24,0177,628
+17,Suwana,सुवाणा	,Suwana,24,0178,630
+18,Kotri,कोटडी ,Kotri,24,0179,624
+19,Mandalgarh,माण्‍डलगढ्,Mandalgarh,24,0181,626
+20,Ladnu,लाडनूं,Ladnu,14,0101,744
+21,Deedwana,डीडवाना ,Deedwana,14,0102,
+22,Jayal,जायल	,Jayal,14,0103,742
+23,Nagaur,नागौर,Nagaur,14,0104,748
+24,Mundwa,मूण्‍डवा,Mundwa,14,0004,747
+25,Merta,मेडता,Merta,14,0106,746
+26,Degana,डेगाना	,Degana,14,0107,740
+27,Riyan Bari,रिंयाबडी,Riyan Bari,14,0006,750
+28,Makrana,मकराना,Makrana,14,0109,745
+29,Parbatsar,परबतसर,Parbatsar,14,0108,749
+30,Kuchaman City,कुचामन सिटी,Kuchaman City,14,0010,
+31,Malpura,मालपुरा	,Malpura,22,0159,787
+32,Newai,निवाई	,Newai,22,0161,788
+33,Todaraisingh,टोडारायसिंह	,Todaraisingh,22,0163,789
+34,Tonk,टोंक	,Tonk,22,0162,790
+35,Deoli,देवली,Deoli,22,0164,786
+36,Uniara,उनियारा,Uniara,22,0165,791
+37,Kherli Mandi,खेडली मण्‍डी,Kherli Mandi,6,0046,
+38,Reni,रैणी,Reni,6,0046,584
+39,Ramgarh,रामगढ,Ramgarh,6,0042,583
+40,Bansur,बानसूर ,Bansur,6,0044,574
+41,Kishangarhbas,किशनगढबास	,Kishangarhbas,6,0041,577
+42,Rajgarh,राजगढ,Rajgarh,6,0046,582
+43,Behror,बहरोड	,Behror,6,0037,575
+44,Laxmangarh,लक्ष्‍मणगढ	,Laxmangarh,6,0047,579
+45,Thanagazi,थानागाजी,Thanagazi,6,0045,585
+46,Kotkasim,कोटकासिम	,Kotkasim,6,0039,578
+47,Tijara,तिजारा,Tijara,6,0040,586
+48,Shahjanpur,शाहजापुर,Shahjanpur,6,0048,
+49,Mundawar,मुण्‍डावर,Mundawar,6,0038,
+50,Malakhera,मालाखेडा,Malakhera,6,0043,
+51,Bandikui,बादीकुई	,Bandikui,11,0077,660
+52,Dausa,दौसा	,Dausa,11,0080,661
+53,Sikrai,सिकराय	,Sikrai,11,0079,664
+54,Mahwa,महवा	,Mahwa,11,0078,663
+55,Lalsot,लालसोट,Lalsot,11,0081,662
+56,Kotputli,कोटपुतली	,Kotputli,12,0082,691
+57,Viratnagar,विराटनगर	,Viratnagar,12,0083,696
+58,Shahpura,शाहपुरा	,Shahpura,12,0084,695
+59,Govindgarh,गोविन्दगढ	,Govindgarh,12,0085,688
+60,Jhotwara,झोटवाडा	,Jhotwara,12,0090,690
+61,Amber,आमेर	,Amber,12,0091,684
+62,Jamwa Ramgarh,जमवा रामगढ	,Jamwa Ramgarh,12,0092,689
+63,Jhunjhunu,झुन्‍झुनू,Jhunjhunu,5,0031,716
+64,Malsisar,मलसीसर,Malsisar,5,0031,
+65,Chirawa,चिडावा,Chirawa,5,0032,715
+66,Surajgarh,सुरजगढ,Surajgarh,5,0032,719
+67,Buhana,बुहाना,Buhana,5,0033,714
+68,Khetri,खेतडी,Khetri,5,0034,717
+69,Nawalgarh,नवलगढ,Nawalgarh,5,0035,718
+70,Udaipurwati,उदयपुरवाटी,Udaipurwati,5,0036,720
+71,Fatehpur,फतेहपुर,Fatehpur,13,0095,775
+72,Laxmangarh,लक्ष्मणगढ ,Laxmangarh,13,0096,
+73,Kudan,कूदन ,Kudan,13,0097,
+74,Neem Ka Thana,नीम का थाना ,Neem Ka Thana,13,0100,778
+75,Sri Madhopur,श्रीमाधोपुर ,Sri Madhopur,13,0099,780
+76,Khandela,खंण्डेला ,Khandela,13,0098,776
+77,Piprali,पीपराली ,Piprali,13,0097,779
+78,Danta,दॉता,Danta,13,0095,
+79,Sambhar,सांभर,Sambhar,12,0086,693
+80,Dudu,दूदू	,Dudu,12,0087,687
+81,Phagi,फागी,Phagi,12,0088,692
+82,Sanganer,सांगानेर,Sanganer,12,0089,694
+83,Bassi,बस्‍सी	,Bassi,12,0093,685
+84,Chaksu,चाकसु,Chaksu,12,0094,686
+85,Anta,अन्‍ता,Anta,31,0215,596
+86,Shahbad,शाहबाद	,Shahbad,31,0219,602
+87,Chhabra,छबडा	,Chhabra,31,0220,599
+88,Atru,अटरू	,Atru,31,0217,597
+89,Chhipabaro,छीपाबडौद,Chhipabaro,31,0221,
+90,Baran,बारां,Baran,31,0216,
+91,Kishanganj,किशनगंज,Kishanganj,31,0218,601
+92,Hindoli,हि‍ण्‍डौली,Hindoli,23,0166,636
+93,Nainwa,नैनवां,Nainwa,23,0167,638
+94,Kapran,कापरान,Kapran,23,0169,
+95,Talera,तालेडा,Talera,23,0168,639
+96,Bundi,बूंदी,Bundi,23,0170,
+97,Khanpur,खानपूर,Khanpur,32,0222,710
+98,Jhalrapatan,झालरापाटन,Jhalrapatan,32,0223,709
+99,Bakani,बकानी,Bakani,32,0223,707
+100,Manoharthana,मनोहरथाना,Manoharthana,32,0225,711
+101,Dag,डग,Dag,32,0228,708
+102,Pirawa,पिडावा,Pirawa,32,0227,
+103,Ladpura,लाडपुरा,Ladpura,30,0211,737
+104,Sangod,सागोंद,Sangod,30,0213,738
+105,Sultanpur,सुलतानपुर,Sultanpur,30,0210,739
+106,Itawa,इटावा,Itawa,30,0209,735
+107,Chechat (Khairabad),चेचट ,Chechat (Khairabad),30,0212,
+108,Sheo,शिव,Sheo,17,0121,608
+109,Baytu,बायतु,Baytu,17,0122,
+110,Balotra,बालोतरा,Balotra,17,0123,603
+111,Barmer,बाडमेर,Barmer,17,0126,604
+112,Chohtan,चौहटन,Chohtan,17,0128,606
+113,Sindhary,सिन्‍धरी,Sindhary,17,0124,
+114,Dhorimana,धौरीमन्‍ना,Dhorimana,17,0125,
+115,Siwana,सिवाना,Siwana,17,0124,610
+116,Jaisalmer,जैसलमेर	,Jaisalmer,16,0118,697
+117,Pokaran,पोकरण	,Pokaran,16,0119,
+118,Ramgarh,रामगढ	,Ramgarh,16,0118,
+119,Jalore,जालोर,Jalore,18,0003,702
+120,Sayla,सायला,Sayla,18,0129,706
+121,Ahore,आहोर,Ahore,18,0130,700
+122,Raniwara,रानीवाडा,Raniwara,18,0135,704
+123,Sanchore,सांचोर	,Sanchore,18,0134,705
+124,Bhinmal,भीनमाल,Bhinmal,18,0132,701
+125,Jaswantpura,जसवंतपुरा ,Jaswantpura,18,0132,703
+126,Chitalwana,चितालवाना,Chitalwana,18,0134,6732
+127,Phalodi,फलौदी	,Phalodi,15,0111,728
+128,Bap,बाप,Bap,15,0111,722
+129,Osian,ओसिंया,Osian,15,0112,727
+130,Bhopalgarh,भोपालगढ़,Bhopalgarh,15,0113,723
+131,Shergarh,शेरगढ	,Shergarh,15,0115,729
+132,Balesar,बालेसर,Balesar,15,0111,721
+133,Mandor,मण्‍डोर,Mandor,15,0114,726
+134,Luni,लूनी,Luni,15,0116,725
+135,Bilara,बिलाडा,Bilara,15,0117,724
+136,Bawri,बावड़ी ,Bawri,15,0112,6718
+137,Jaitaran,जैतारण,Jaitaran,20,0141,753
+138,Raipur,रायपुर,Raipur,20,0142,756
+139,Sojat,सोजत,Sojat,20,0143,759
+140,Pali,पाली,Pali,20,0145,755
+141,Rohat,रोहट,Rohat,20,0144,758
+142,Kharchi,खारची,Kharchi,20,0146,754
+143,Desuri,देसुरी,Desuri,20,0147,752
+144,Rani Station,रानी स्‍टेशन,Rani Station,20,0150,757
+145,Bali,बाली,Bali,20,0149,751
+146,Sumerpur,सुमेरपुर,Sumerpur,20,0148,760
+147,Sheoganj,शिवगंज,Sheoganj,19,0136,784
+148,Sirohi,सिरोही,Sirohi,19,0137,785
+149,Pindwara,पिण्‍डवाडा,Pindwara,19,0138,782
+150,Abu Road,आबूरोड,Abu Road,19,0139,781
+151,Reodar,रेवदर,Reodar,19,0140,783
+152,Ghatol,घाटोल,Ghatol,28,0194,592
+153,Partapur,परतापुर,Partapur,28,0195,
+154,Choti Sarwan,छोटी सरवन,Choti Sarwan,28,0196,6606
+155,Bagidora,बागीदौरा,Bagidora,28,0197,589
+156,Kushalgarh,कुशलगढ्,Kushalgarh,28,0198,593
+157,Chota Dungara,छोटा डुँगरा,Chota Dungara,28,0197,
+158,Talwara,तलवाडा,Talwara,28,0196,
+159,Anandpuri,आन्‍नदपुरी,Anandpuri,28,0197,588
+160,Rashmi,राशमी,Rashmi,29,0199,653
+161,Gangrar,गंगरार,Gangrar,29,0200,649
+162,Begun,बैंगू ,Begun,29,0201,642
+163,Rawatbhata,रावतभाटा	,Rawatbhata,29,0202,
+164,Chittorgarh,चित्‍तौडगढ	,Chittorgarh,29,0000,647
+165,Kapasan,कपासन,Kapasan,29,0204,650
+166,Bhopalsagar,भूपालसागर ,Bhopalsagar,29,0204,645
+167,Dungla,डूंगला	,Dungla,29,0205,648
+168,Bhadesar,भदेसर ,Bhadesar,29,0206,643
+169,Nimbahera,निम्‍बाहेडा,Nimbahera,29,0207,651
+170,Bari Sadri,बडी सादडी ,Bari Sadri,29,0208,641
+171,Dungarpur,डूंगरपुर,Dungarpur,27,0190,671
+172,Aspur,आसपुर,Aspur,27,0191,669
+173,Sagwara,सागवाडा,Sagwara,27,0192,672
+174,Simalwara,सिमलवाडा,Simalwara,27,0193,673
+175,Bichiwara,बिछिवाडा,Bichiwara,27,0190,
+176,Amet,आमेट	,Amet,25,0185,761
+177,Bhim,भीम,Bhim,25,0183,762
+178,Deogarh,देवगढ,Deogarh,25,0184,763
+179,Khamnor,खमनोर,Khamnor,25,0189,764
+180,Kumbhalgarh,कुम्‍भलगढ,Kumbhalgarh,25,0186,765
+181,Rajsamand,राजसमन्‍द,Rajsamand,25,0187,767
+182,Railmagra,रेलमगरा,Railmagra,25,0188,766
+183,Kotra,कोटडा	,Kotra,33,0231,799
+184,Girwa,गिर्वा,Girwa,33,0233,795
+185,Salumbar,सलूम्‍बर,Salumbar,33,0236,801
+186,Bargaon,बडगांव,Bargaon,33,0200,792
+187,Lasadia,लसाडिया,Lasadia,33,0235,6620
+188,Gogunda,गोगून्‍दा,Gogunda,33,0230,796
+189,Sarada,सराडा,Sarada,33,0237,802
+190,Jhadol,झाडोल,Jhadol,33,0232,797
+191,Bhinder,भीण्‍डर,Bhinder,33,0234,793
+192,Kherwara,खैरवाडा,Kherwara,33,0239,798
+193,Mavli,मावली,Mavli,33,0229,800
+194,Rishabdev,ऋषबदेव,Rishabdev,33,0238,
+195,Dhariawad,धरि‍यावद	,Dhariawad,34,0240,794
+196,Chhoti Sadri,छोटी सादडी,Chhoti Sadri,34,0242,646
+197,Pratapgarh,प्रतापगढ	,Pratapgarh,34,0243,652
+198,Arnod,अरनोद	,Arnod,34,0244,640
+199,Pipalkhunt,पीपलखूंट,Pipalkhunt,34,0241,
+200,Kolayat,कोलायत,Kolayat,3,0020,632
+201,Nokha,नोखा,Nokha,3,0021,634
+202,Bikaner,बीकानेर,Bikaner ,3,0017,631
+203,Dungergarh,डूगरगढ,Dungergarh,3,0024,
+204,Loonkaransar,लूनकरणसर,Loonkaransar,3,0019,633
+205,Khajuwala,खाजूवाला,Khajuwala,3,0022,6715
+206,Sardarshahar,सरदारशहर,Sardarshahar,4,0027,657
+207,Churu,चूरू,Churu,4,0028,654
+208,Taranagar,तारानगर,Taranagar,4,0025,659
+209,Ratangarh,रतनगढ,Ratangarh,4,0029,656
+210,Sujangarh,सुजानगढ,Sujangarh,4,0030,658
+211,Rajgarh,राजगढ,Rajgarh,4,0026,655
+212,Karanpur,करणपुर,Karanpur,1,0001,676
+213,Ganganagar,गंगानगर	,Ganganagar,1,0002,675
+214,Padampur,पदमपुर,Padampur,1,0004,677
+215,Sadulshahar,सादूलशहर	,Sadulshahar,1,0003,679
+216,Raisinghnagar,रायसिहन्रगर	,Raisinghnagar,1,0005,678
+217,Suratgarh,सूरतगढ्,Suratgarh,1,0009,680
+218,Anupgarh,अनूपगढ्,Anupgarh,1,0006,674
+219,Gharsana,घडसाना,Gharsana,1,0007,6719
+220,Hanumangarh,हनुमानगढ	,Hanumangarh,2,0000,682
+221,Nohar,नोहर	,Nohar,2,0015,683
+222,Bhadra,भादरा	,Bhadra,2,0016,681
+223,Pilibanga,पीलीबंगा,Pilibanga,2,0013,6614
+224,Sangaria,संगरि‍या,Sangaria,2,0010,6615
+225,Tibbi,टिब्‍बी,Tibbi,2,0011,6616
+226,Rawatsar,रावतसर,Rawatsar,2,0014,6617
+227,Kaman,कामां	,Kaman,7,0050,613
+228,Nagar,नगर	,Nagar,7,0051,
+229,Deeg,डीग	,Deeg,7,0052,612
+230,Kumher,कुम्‍हेर,Kumher,7,0054,614
+231,Sewar,सेवर,Sewar,7,0055,618
+232,Nadbai,नदबई,Nadbai,7,0053,615
+233,Bhusawar,भुसावर,Bhusawar,7,0056,
+234,Bayana,बयाना,Bayana,7,0057,611
+235,Rupbas,रूपवास	,Rupbas,7,0058,617
+236,Baseri,बसेडी,Baseri,8,0059,666
+237,Bari,बाडी,Bari,8,0060,665
+238,Dholpur,धौलपुर,Dholpur,8,0000,667
+239,Rajakhera,राजाखेडा,Rajakhera,8,0063,668
+240,Karoli,करौली	,Karoli,9,0067,731
+241,Sapotra,सपोटरा	,Sapotra,9,0069,733
+242,Hindaun,हिण्‍डोन	,Hindaun,9,0066,730
+243,Todabhim,टोडाभीम	,Todabhim,9,0064,734
+244,Gudachandraji,गुडाचन्‍द्रजी,Gudachandraji,9,0065,
+245,Bamanwas,बामनवास	,Bamanwas,10,0071,768
+246,Gangapur City,गंगापुर सिटी,Gangapur City,10,0010,770
+247,Bonli,बौली	,Bonli,10,0073,769
+248,Sawai Madhopur,सवाई माधोपुर	,Sawai Madhopur,10,0000,772
+249,Khandar,खण्‍डार,Khandar,10,0076,771
