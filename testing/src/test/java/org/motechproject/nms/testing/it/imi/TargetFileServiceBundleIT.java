@@ -189,11 +189,9 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         //Set the clock back to normal
         DateTimeUtils.setCurrentMillisSystem();
 
-
-
-        // Should not be picked up because it's not for today
+        // Should be picked up because all callRetries are picked up
         callRetryDataService.create(new CallRetry("11111111-1111-1111-1111-111111111111", 3333333333L,
-                DayOfTheWeek.today().nextDay(), CallStage.RETRY_1, "w1_m1.wav", "w1_1",
+                DayOfTheWeek.fromDateTime(DateTime.now().minusDays(1)), CallStage.RETRY_1, "w1_m1.wav", "w1_1",
                 rh.hindiLanguage().getCode(), rh.delhiCircle().getName(), SubscriptionOrigin.IVR));
 
 
@@ -203,12 +201,12 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         // Should pickup subscription1
         // Should not pickup subscription2 because its status is not ACTIVE
         // Should not pickup subscription3 because it's for tomorrow
-        // Should not pickup call retry record because it's for tomorrow also
+        // Should pickup call retry record because it's for yesterday and all call retries are picked up
         // Should pickup subscription4 and set its status to ACTIVE
         // Should not pickup subscription5 because its start DOW doesn't match today's DOW but should set its status to ACTIVE
         // Should not pickup subscription6 because it's for tomorrow
         // Should pickup subscription7
-        assertEquals(3, (int) tfn.getRecordsCount());
+        assertEquals(4, (int) tfn.getRecordsCount());
 
         //read the file to get record count
         File targetDir = new File(settingsService.getSettingsFacade().getProperty("imi.local_obd_dir"));

@@ -165,10 +165,11 @@ public class CsrServiceImpl implements CsrService {
 
         Long msisdn = subscription.getSubscriber().getCallingNumber();
 
-        if (callRetry == null) {
+        if (callRetry == null || !callRetry.getWeekId().equals(record.getWeekId())) {
 
-            // This message was never retried before, so this is a first retry
-            LOGGER.debug(String.format("Creating retry for subscription: %s", subscription.getSubscriptionId()));
+            // This message was never retried for this week before, so this is a first retry
+            LOGGER.debug(String.format("Creating retry for subscription %s and weekId %s",
+                    subscription.getSubscriptionId(), record.getWeekId()));
 
             // Looking at the weekId, we can figure out if this was the first or second message for that week
             // and calculate which day of the week we should reschedule the call for
@@ -178,23 +179,39 @@ public class CsrServiceImpl implements CsrService {
             } else {
                 nextDay = subscription.getSecondMessageDayOfWeek().nextDay();
             }
-            
-            CallRetry newCallRetry = new CallRetry(
-                    subscription.getSubscriptionId(),
-                    msisdn,
-                    nextDay,
-                    CallStage.RETRY_1,
-                    record.getContentFileName(),
-                    record.getWeekId(),
-                    getLanguageCode(subscription),
-                    getCircleName(subscription),
-                    subscription.getOrigin()
-            );
-            callRetryDataService.create(newCallRetry);
+
+            if (callRetry == null) {
+                // no retry was ever tried
+
+                CallRetry newCallRetry = new CallRetry(
+                        subscription.getSubscriptionId(),
+                        msisdn,
+                        nextDay,
+                        CallStage.RETRY_1,
+                        record.getContentFileName(),
+                        record.getWeekId(),
+                        getLanguageCode(subscription),
+                        getCircleName(subscription),
+                        subscription.getOrigin()
+                );
+                callRetryDataService.create(newCallRetry);
+            } else {
+                // this call was retried for a different week but never removed from the CallRetry table which means we
+                // never got a CDR from IMI, so let's warn about this and still try to reschedule it for this week.
+
+                Long id = (Long) callRetryDataService.getDetachedField(callRetry, "id");
+                LOGGER.warn(String.format("CallRetry record (id %d) for subscription %s for weekId %s was never " +
+                                "deleted, which means we never received a CDR about it. Someone should look into this.", id,
+                        callRetry.getSubscriptionId(), callRetry.getWeekId()));
+                callRetry.setCallStage(CallStage.RETRY_1);
+                callRetry.setDayOfTheWeek(nextDay);
+                callRetry.setWeekId(record.getWeekId());
+                callRetryDataService.update(callRetry);
+            }
             return;
         }
 
-        
+
         // We've already rescheduled this call, let's see if it needs to be re-rescheduled
 
         if ((subscription.getSubscriptionPack().retryCount() == 1) ||
