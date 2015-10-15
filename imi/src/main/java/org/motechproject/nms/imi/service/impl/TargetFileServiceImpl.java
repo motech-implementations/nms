@@ -13,7 +13,6 @@ import org.motechproject.alerts.domain.AlertStatus;
 import org.motechproject.alerts.domain.AlertType;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.annotations.MotechListener;
-import org.motechproject.mds.query.QueryParams;
 import org.motechproject.metrics.service.Timer;
 import org.motechproject.nms.imi.domain.FileAuditRecord;
 import org.motechproject.nms.imi.domain.FileProcessedStatus;
@@ -29,7 +28,7 @@ import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
-import org.motechproject.nms.kilkari.repository.CallRetryDataService;
+import org.motechproject.nms.kilkari.service.CallRetryService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
 import org.motechproject.nms.props.domain.RequestId;
@@ -74,7 +73,7 @@ public class TargetFileServiceImpl implements TargetFileService {
     private MotechSchedulerService schedulerService;
     private AlertService alertService;
     private SubscriptionService subscriptionService;
-    private CallRetryDataService callRetryDataService;
+    private CallRetryService callRetryService;
     private FileAuditRecordDataService fileAuditRecordDataService;
 
     private static String freshCheckDND;
@@ -131,13 +130,13 @@ public class TargetFileServiceImpl implements TargetFileService {
     public TargetFileServiceImpl(@Qualifier("imiSettings") SettingsFacade settingsFacade,
                                  MotechSchedulerService schedulerService, AlertService alertService,
                                  SubscriptionService subscriptionService,
-                                 CallRetryDataService callRetryDataService,
+                                 CallRetryService callRetryService,
                                  FileAuditRecordDataService fileAuditRecordDataService) {
         this.schedulerService = schedulerService;
         this.settingsFacade = settingsFacade;
         this.alertService = alertService;
         this.subscriptionService = subscriptionService;
-        this.callRetryDataService = callRetryDataService;
+        this.callRetryService = callRetryService;
         this.fileAuditRecordDataService = fileAuditRecordDataService;
 
         scheduleTargetFileGeneration();
@@ -424,26 +423,28 @@ public class TargetFileServiceImpl implements TargetFileService {
     private int generateRetryCalls(DateTime timestamp, int maxQueryBlock, String callFlowUrl,
                                    OutputStreamWriter writer) throws IOException {
 
-        DayOfTheWeek dow = DayOfTheWeek.fromDateTime(timestamp);
-        int recordCount = 0;
-        int page = 1;
-        int numBlockRecord;
         int count = 0;
+        Long offset = 0L;
         Timer timer = new Timer("retry call", "retry calls");
         do {
-            List<CallRetry> callRetries = callRetryDataService.findByDayOfTheWeek(dow,
-                    new QueryParams(page, maxQueryBlock));
-            numBlockRecord = callRetries.size();
+            // All calls are rescheduled for the next day which means that we should query for all CallRetry records
+            List<CallRetry> callRetries = callRetryService.retrieveAll(offset, maxQueryBlock);
+
+            if (callRetries.size() == 0) {
+                break;
+            }
 
             for (CallRetry callRetry : callRetries) {
-                RequestId requestId = new RequestId(callRetry.getSubscriptionId(),
-                        TIME_FORMATTER.print(timestamp));
+
+                offset = callRetry.getId();
+
+                RequestId requestId = new RequestId(callRetry.getSubscriptionId(), TIME_FORMATTER.print(timestamp));
 
                 writeSubscriptionRow(
                         requestId.toString(),
                         serviceIdFromOrigin(false, callRetry.getSubscriptionOrigin()),
                         callRetry.getMsisdn().toString(),
-                        NORMAL_PRIORITY, //todo: look into priorities...
+                        NORMAL_PRIORITY,
                         callFlowUrl,
                         callRetry.getContentFileName(),
                         callRetry.getWeekId(),
@@ -451,6 +452,7 @@ public class TargetFileServiceImpl implements TargetFileService {
                         callRetry.getCircle(),
                         callRetry.getSubscriptionOrigin().getCode(),
                         writer);
+
                 count++;
                 if (count % PROGRESS_INTERVAL == 0) {
                     LOGGER.debug(WROTE, timer.frequency(count));
@@ -458,16 +460,13 @@ public class TargetFileServiceImpl implements TargetFileService {
 
             }
 
-            page++;
-            recordCount += numBlockRecord;
-
-        } while (numBlockRecord > 0);
+        } while (true);
 
         if (count % PROGRESS_INTERVAL != 0) {
             LOGGER.debug(WROTE, timer.frequency(count));
         }
 
-        return recordCount;
+        return count;
     }
 
 
