@@ -29,3 +29,5 @@ docs/env
 docs/source/packages.rst
 docs/source/org
 .tx/config
+testing-directory/
+
