@@ -43,4 +43,7 @@
 
     <osgi:reference id="eventRelay" interface="org.motechproject.event.listener.EventRelay"/>
 
+    <!-- Used to access the clearAllCaches API -->
+    <osgi:reference id="subscriptionDataService" interface="org.motechproject.nms.kilkari.repository.SubscriptionDataService" />
+
 </beans>
