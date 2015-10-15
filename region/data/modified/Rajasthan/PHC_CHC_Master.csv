@@ -1,0 +1,20 @@
+PHC_CHC_ID,PHC_CHC_Type,ShortName
+1,Primary Health Centre,PHC
+2,Community Health Center,CHC
+3,Urban Health Centre,UHC
+4,Sub-District Hospital,SDH
+5,District Hospital,DH
+6,Civil Hospital/General Hospital,CH
+7,Referral Hospital,RH
+8,Dispensaries,DISPENSARY
+9,Ayush Dispensaries,AYUSH-D
+10,Maternity Home,MH
+100,Others,OTHER FACILITY
+11,Post Partum Unit,PPU
+12,M&CW Center,MCW
+13,<100 Bedded Hospital,<100Bedded H
+14,100-500 Bedded Hospital,100-500Bedded H
+15,>500 Bedded Hospital,>500Bedded H
+16,Urban Health Posts,UHP
+17,Medical Colleges Hospital,MCH
+18,Women Hospital,WH

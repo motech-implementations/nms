@@ -1,0 +1,454 @@
+TCode,ID,Name_G,Name_E,DCode,MDDS_Code,IsVerified
+0001,638,Paikamal,Paikamal,1,2755,True
+0002,484,Jharbandha,Jharbandha,1,2756,True
+0003,639,Padmapur,Padmapur,1,2757,True
+0004,719,Burden,Burden,1,2758,True
+0005,720,Gaisilet,Gaisilet,1,2759,True
+0006,721,Melchhamunda,Melchhamunda,1,2760,True
+0007,722,Sohela,Sohela,1,2761,True
+0008,723,Bijepur,Bijepur,1,2762,True
+0009,724,Barapali,Barapali,1,2763,True
+0010,551,Bheden,Bheden,1,2764,True
+0011,483,Bargarh,Bargarh,1,2765,True
+0012,552,Bargarh Sadar,Bargarh Sadar,1,2766,True
+0013,553,Bhatli,Bhatli,1,2767,True
+0014,554,Ambabhona,Ambabhona,1,2768,True
+0015,555,Attabira,Attabira,1,2769,True
+0026,566,Govindpur P.S.,Govindpur P.S.,3,2780,True
+0027,567,Mahulpalli P.S.,Mahulpalli P.S.,3,2781,True
+0028,568,Kochinda P.S.,Kochinda P.S.,3,2782,True
+0029,569,Katarbaga P.S.,Katarbaga P.S.,3,2783,True
+0030,570,Thelkoloi  P.S. (New),Thelkoloi  P.S. (New),3,2784,True
+0031,571,Rengali P.S. (New),Rengali P.S. (New),3,2785,True
+0032,572,Sasan P.S.,Sasan P.S.,3,2786,True
+0033,573,Hirakud P.S.,Hirakud P.S.,3,2787,True
+0034,574,Burla P.S.,Burla P.S.,3,2788,True
+0035,575,Dhanupali P.S.,Dhanupali P.S.,3,2789,True
+0036,576,Ainthapali P.S.,Ainthapali P.S.,3,2790,True
+0037,577,Sadar P.S.,Sadar P.S.,3,2791,True
+0038,578,Jamankira P.S.,Jamankira P.S.,3,2792,True
+0039,579,Kisinda P.S.,Kisinda P.S.,3,2793,True
+0040,580,Jujomura P.S.,Jujomura P.S.,3,2794,True
+0041,581,Dhama P.S.,Dhama P.S.,3,2795,True
+0042,582,Charamal P.S.,Charamal P.S.,3,2796,True
+0043,583,Rairakhol P.S.,Rairakhol P.S.,3,2797,True
+0044,640,Naktideul P.S.,Naktideul P.S.,3,2798,True
+0045,641,Sambalpur (M) P.S.,Sambalpur (M) P.S.,3,2799,True
+0046,642,Debagarh P.S.,Debagarh P.S.,4,2800,True
+0047,643,Barkot P.S.,Barkot P.S.,4,2801,True
+0048,644,Kundheigola P.S.,Kundheigola P.S.,4,2802,True
+0049,645,Reamal P.S.(P),Reamal P.S.(P),4,2803,True
+0050,646,Hemgir P.S.,Hemgir P.S.,5,2804,True
+0051,647,Lephripara P.S.,Lephripara P.S.,5,2805,True
+0052,648,Bhasma P.S.,Bhasma P.S.,5,2806,True
+0053,649,Dharuadihi P.S.(New),Dharuadihi P.S.(New),5,2807,True
+0054,650,Sundargarh Town P.S.,Sundargarh Town P.S.,5,2808,True
+0055,651,Sundargarh  P.S.  ,Sundargarh  P.S.  ,5,2809,True
+0056,652,Kinjirkela P.S.,Kinjirkela P.S.,5,2810,True
+0057,653,Talasara P.S.,Talasara P.S.,5,2811,True
+0058,654,Baragaon P.S.,Baragaon P.S.,5,2812,True
+0059,655,Kutra P.S.,Kutra P.S.,5,2813,True
+0060,656,Rajagangapur P.S.,Rajagangapur P.S.,5,2814,True
+0061,657,Raiboga P.S.,Raiboga P.S.,5,2815,True
+0062,658,Biramitrapur P.S.,Biramitrapur P.S.,5,2816,True
+0063,659,Hatibari P.S.,Hatibari P.S.,5,2817,True
+0064,660,Bisra P.S.,Bisra P.S.,5,2818,True
+0065,661,Bondamunda P.S.,Bondamunda P.S.,5,2819,True
+0066,662,Brahmani Tarang P.S.,Brahmani Tarang P.S.,5,2820,True
+0067,663,Raghunathapali P.S.,Raghunathapali P.S.,5,2821,True
+0068,664,Tangarapali P.S.,Tangarapali P.S.,5,2822,True
+0069,665,Lathikata P.S.,Lathikata P.S.,5,2823,True
+0070,666,Chandiposh P.S.,Chandiposh P.S.,5,2824,True
+0071,667,Kamarposh Balang P.S.,Kamarposh Balang P.S.,5,2825,True
+0072,668,Koida P.S.,Koida P.S.,5,2826,True
+0073,669,Lahunipara P.S.,Lahunipara P.S.,5,2827,True
+0074,485,Gurundia P.S.,Gurundia P.S.,5,2828,True
+0075,486,Tikaetpali P.S.,Tikaetpali P.S.,5,2829,True
+0076,487,Banei P.S.,Banei P.S.,5,2830,True
+0077,488,Mahulapada P.S.,Mahulapada P.S.,5,2831,True
+0078,489,Raurkela (M) P.S.,Raurkela (M) P.S.,5,2832,True
+0079,490,Raurkela (ITS)P.S.,Raurkela (ITS)P.S.,5,2833,True
+0080,491,Barbil P.S.,Barbil P.S.,6,2834,True
+0081,492,Bolani P.S.(New),Bolani P.S.(New),6,2835,True
+0082,493,Rugudi P.S.(New),Rugudi P.S.(New),6,2836,True
+0083,494,Joda P.S.,Joda P.S.,6,2837,True
+0084,495,Bamebari P.S. (New),Bamebari P.S. (New),6,2838,True
+0085,496,Champua P.S.,Champua P.S.,6,2839,True
+0086,497,Jhumpura P.S.(P) (New),Jhumpura P.S.(P) (New),6,2840,True
+0087,498,Baria P.S.,Baria P.S.,6,2841,True
+0088,499,Turumunga P.S.,Turumunga P.S.,6,2842,True
+0089,500,Patana P.S.,Patana P.S.,6,2843,True
+0090,501,Kendujhar Sadar P.S.,Kendujhar Sadar P.S.,6,2844,True
+0091,502,Kendujhar Town P.S.,Kendujhar Town P.S.,6,2845,True
+0092,503,Nayakote P.S.,Nayakote P.S.,6,2846,True
+0093,505,Kanjipani P.S.,Kanjipani P.S.,6,2847,True
+0094,506,Telkoi P.S.,Telkoi P.S.,6,2848,True
+0095,507,Pandapara P.S.,Pandapara P.S.,6,2849,True
+0096,508,Ghatgaon P.S.,Ghatgaon P.S.,6,2850,True
+0097,509,Harichandanpur P.S.,Harichandanpur P.S.,6,2851,True
+0098,510,Daitari P.S.,Daitari P.S.,6,2852,True
+0099,511,Ghasipura P.S.,Ghasipura P.S.,6,2853,True
+0100,512,Anandapur P.S.,Anandapur P.S.,6,2854,True
+0101,513,Soso P.S.,Soso P.S.,6,2855,True
+0102,514,Nandipada P.S.,Nandipada P.S.,6,2856,True
+0103,515,Sainkul P.S.,Sainkul P.S.,6,2857,True
+0104,516,Tiring P.S.,Tiring P.S.,7,2858,True
+0105,517,Bahalda P.S.,Bahalda P.S.,7,2859,True
+0106,518,Jamda P.S.(New),Jamda P.S.(New),7,2860,True
+0107,519,Rairangpur Town P.S.,Rairangpur Town P.S.,7,2861,True
+0108,520,Gorumahisani P.S.,Gorumahisani P.S.,7,2862,True
+0109,521,Jharpokharia P.S.,Jharpokharia P.S.,7,2863,True
+0110,522,Bisoi P.S.,Bisoi P.S.,7,2864,True
+0111,523,Rairangpur P.S.,Rairangpur P.S.,7,2865,True
+0112,524,Badampahar P.S.,Badampahar P.S.,7,2866,True
+0113,670,Jashipur P.S.,Jashipur P.S.,7,2867,True
+0114,671,Raruan P.S.,Raruan P.S.,7,2868,True
+0115,672,Ghagarbeda P.S. (New),Ghagarbeda P.S. (New),7,2869,True
+0116,673,Karanjia P.S.,Karanjia P.S.,7,2870,True
+0117,674,Thakurmunda P.S.,Thakurmunda P.S.,7,2871,True
+0118,675,Baripada Sadar P.S.,Baripada Sadar P.S.,7,2872,True
+0119,676,Baripada Town P.S.,Baripada Town P.S.,7,2873,True
+0120,677,Koliana P.S.,Koliana P.S.,7,2874,True
+0121,678,Bangiriposi P.S.,Bangiriposi P.S.,7,2875,True
+0122,679,Chandua P.S.,Chandua P.S.,7,2876,True
+0123,680,Suliapada P.S.,Suliapada P.S.,7,2877,True
+0124,681,Muruda P.S.,Muruda P.S.,7,2878,True
+0125,682,Rasagobindapur P.S.,Rasagobindapur P.S.,7,2879,True
+0126,683,Baisinga P.S.,Baisinga P.S.,7,2880,True
+0127,684,Betanati P.S.,Betanati P.S.,7,2881,True
+0128,685,Barsahi P.S.,Barsahi P.S.,7,2882,True
+0129,686,Khunta P.S.,Khunta P.S.,7,2883,True
+0130,687,Udala P.S.,Udala P.S.,7,2884,True
+0131,688,Kaptipada P.S.,Kaptipada P.S.,7,2885,True
+0132,689,Sharata P.S.,Sharata P.S.,7,2886,True
+0133,690,Mahuldiha P.S.,Mahuldiha P.S.,7,2887,True
+0134,691,Baripada (M) P.S.,Baripada (M) P.S.,7,2888,True
+0135,692,Raibania P.S. ,Raibania P.S. ,8,2889,True
+0136,693,Jaleswar P.S. ,Jaleswar P.S. ,8,2890,True
+0137,694,Bhograi P.S.,Bhograi P.S.,8,2891,True
+0138,525,Kamarda P.S. (New),Kamarda P.S. (New),8,2892,True
+0139,526,Baliapal P.S. ,Baliapal P.S. ,8,2893,True
+0140,527,Singla P.S. ,Singla P.S. ,8,2894,True
+0141,528,Basta P.S. ,Basta P.S. ,8,2895,True
+0142,529,Rupsa P.S. ,Rupsa P.S. ,8,2896,True
+0143,530,Baleshwar Sadar P.S.(P) ,Baleshwar Sadar P.S.(P) ,8,2897,True
+0144,532,Sahadevkhunta P.S.(New),Sahadevkhunta P.S.(New),8,2898,True
+0145,533,Chandipur P.S. ,Chandipur P.S. ,8,2899,True
+0146,534,Balaramgadi Marine,Balaramgadi Marine,8,2900,True
+0147,535,Bampada P.S. ,Bampada P.S. ,8,2901,True
+0148,536,Remuna P.S. ,Remuna P.S. ,8,2902,True
+0149,537,Nilagiri P.S. ,Nilagiri P.S. ,8,2903,True
+0150,538,Berhampur P.S. ,Berhampur P.S. ,8,2904,True
+0151,539,Oupada P.S. ,Oupada P.S. ,8,2905,True
+0152,540,Khaira P.S. ,Khaira P.S. ,8,2906,True
+0153,541,Soro P.S.,Soro P.S.,8,2907,True
+0154,542,Similia P.S. ,Similia P.S. ,8,2908,True
+0155,543,Baleshwar (M) P.S.,Baleshwar (M) P.S.,8,2909,True
+0156,544,Agarpada P.S. ,Agarpada P.S. ,9,2910,True
+0157,545,Bant P.S. ,Bant P.S. ,9,2911,True
+0158,546,Bhandari Pokhari P.S. ,Bhandari Pokhari P.S. ,9,2912,True
+0159,547,Dhamanagar P.S.,Dhamanagar P.S.,9,2913,True
+0160,548,Bhadrak Rural P.S. ,Bhadrak Rural P.S. ,9,2914,True
+0161,549,Basudebpur P.S. ,Basudebpur P.S. ,9,2915,True
+0162,550,Naikanidihi P.S. ,Naikanidihi P.S. ,9,2916,True
+0163,695,Tihidi P.S.,Tihidi P.S.,9,2917,True
+0164,696,Dhusuri P.S.,Dhusuri P.S.,9,2918,True
+0165,697,Chandabali P.S. ,Chandabali P.S. ,9,2919,True
+0166,698,Bansada P.S. ,Bansada P.S. ,9,2920,True
+0167,699,Dhamara Marine P.S.(New),Dhamara Marine P.S.(New),9,2921,True
+0168,700,Rajkanika ,Rajkanika ,10,2922,True
+0169,701,Rajnagar,Rajnagar,10,2923,True
+0170,702,Jamboo Marine  ,Jamboo Marine  ,10,2924,True
+0171,703,Aali ,Aali ,10,2925,True
+0172,704,Pattamundai ,Pattamundai ,10,2926,True
+0173,705,Kendrapara (Urban),Kendrapara (Urban),10,2927,True
+0174,706,Kendrapara Sadar  ,Kendrapara Sadar  ,10,2928,True
+0175,707,Nikirai ,Nikirai ,10,2929,True
+0176,708,Derabish ,Derabish ,10,2930,True
+0177,709,Patkura ,Patkura ,10,2931,True
+0178,710,Marsaghai ,Marsaghai ,10,2932,True
+0179,711,Mahakalapada ,Mahakalapada ,10,2933,True
+0180,712,Paradip P.S. ,Paradip P.S. ,11,2934,True
+0181,713,Paradeep Lock P.S. (New),Paradeep Lock P.S. (New),11,2935,True
+0182,714,Kujang P.S.,Kujang P.S.,11,2936,True
+0183,715,Abhyachandpur P.S. (New),Abhyachandpur P.S. (New),11,2937,True
+0184,716,Ersama P.S. ,Ersama P.S. ,11,2938,True
+0185,717,Tirtol P.S. ,Tirtol P.S. ,11,2939,True
+0186,718,Jagatsinghapur P.S.,Jagatsinghapur P.S.,11,2940,True
+0187,584,Biridi P.S.(New),Biridi P.S.(New),11,2941,True
+0188,585,Naugaon P.S.,Naugaon P.S.,11,2942,True
+0189,587,Balikuda P.S. ,Balikuda P.S. ,11,2943,True
+0190,588,Narasinghpur ,Narasinghpur ,12,2944,True
+0191,589,Kanpur ,Kanpur ,12,2945,True
+0192,590,Badamba ,Badamba ,12,2946,True
+0193,591,Baidyeswar,Baidyeswar,12,2947,True
+0194,592,Banki  ,Banki  ,12,2948,True
+0195,593,Tigiria ,Tigiria ,12,2949,True
+0196,594,Athagad  ,Athagad  ,12,2950,True
+0197,595,Barang  ,Barang  ,12,2951,True
+0198,596,Gurudijhatia ,Gurudijhatia ,12,2952,True
+0199,597,Khuntuni ,Khuntuni ,12,2953,True
+0200,598,Choudwar ,Choudwar ,12,2954,True
+0201,599,Tangi ,Tangi ,12,2955,True
+0202,600,Mahanga ,Mahanga ,12,2956,True
+0203,725,Salepur ,Salepur ,12,2957,True
+0204,726,Nischintakoili  ,Nischintakoili  ,12,2958,True
+0205,727,Nemalo ,Nemalo ,12,2959,True
+0206,728,Kishannagar P.S. ,Kishannagar P.S. ,12,2960,True
+0207,729,Jagatpur  ,Jagatpur  ,12,2961,True
+0208,730,Cuttack Sadar ,Cuttack Sadar ,12,2962,True
+0209,731,Kandarpur,Kandarpur,12,2963,True
+0210,732,C.R.R.I. ,C.R.R.I. ,12,2964,True
+0211,733,Gobindpur ,Gobindpur ,12,2965,True
+0212,734,Olatapur ,Olatapur ,12,2966,True
+0213,735,Niali  ,Niali  ,12,2967,True
+0214,736,Cuttack (M.Corp.) P.S,Cuttack (M.Corp.) P.S,12,2968,True
+0215,737,Sukinda ,Sukinda ,13,2969,True
+0216,738,Tomka P.S.,Tomka P.S.,13,2970,True
+0217,739,Kaliapani P.S. (New),Kaliapani P.S. (New),13,2971,True
+0218,740,Kalinganagar P.S. (P),Kalinganagar P.S. (P),13,2972,True
+0219,741,Jakhapura P.S.(New),Jakhapura P.S.(New),13,2973,True
+0220,742,Jajapur Road P.S.(P) ,Jajapur Road P.S.(P) ,13,2974,True
+0221,743,Korai P.S. ,Korai P.S. ,13,2975,True
+0222,744,Panikoili P.S.(P) (New),Panikoili P.S.(P) (New),13,2976,True
+0223,745,Jajapur    P.S. (P),Jajapur    P.S. (P),13,2977,True
+0224,746,Jajpur Sadar P.S. (P) (New),Jajpur Sadar P.S. (P) (New),13,2978,True
+0225,747,Dharmasala P.S. (P),Dharmasala P.S. (P),13,2979,True
+0226,748,Jenapur P.S. (P) (New),Jenapur P.S. (P) (New),13,2980,True
+0227,749,Kuakhia P.S.  (New),Kuakhia P.S.  (New),13,2981,True
+0228,750,Badachana P.S. (P),Badachana P.S. (P),13,2982,True
+0229,751,Balichandrapur P.S. (P),Balichandrapur P.S. (P),13,2983,True
+0230,752,Binjharpur P.S. (P),Binjharpur P.S. (P),13,2984,True
+0231,753,Bari - Ramachandrapur P.S.(New),Bari - Ramachandrapur P.S.(New),13,2985,True
+0232,754,Mangalpur P.S. ,Mangalpur P.S. ,13,2986,True
+0233,755,Parajang ,Parajang ,14,2987,True
+0234,756,Kamakshyanagar ,Kamakshyanagar ,14,2988,True
+0235,757,Kankadahad ,Kankadahad ,14,2989,True
+0236,758,Bhuban ,Bhuban ,14,2990,True
+0237,759,Gandia ,Gandia ,14,2991,True
+0238,760,Nihalprasad ,Nihalprasad ,14,2992,True
+0239,601,Tumusingha ,Tumusingha ,14,2993,True
+0240,602,Motunga ,Motunga ,14,2994,True
+0241,603,Bhusan Steel Limited. ,Bhusan Steel Limited. ,14,2995,True
+0242,604,Balimi ,Balimi ,14,2996,True
+0243,605,Hindol ,Hindol ,14,2997,True
+0244,606,Rasol ,Rasol ,14,2998,True
+0245,607,Dhenkanal Sadar ,Dhenkanal Sadar ,14,2999,True
+0246,608,Palalahada ,Palalahada ,15,3000,True
+0247,609,Khamar ,Khamar ,15,3001,True
+0248,610,Rengali Damsite ,Rengali Damsite ,15,3002,True
+0249,611,Kaniha,Kaniha,15,3003,True
+0250,612,N.T.P.C.  ,N.T.P.C.  ,15,3004,True
+0251,613,Samal Barrage ,Samal Barrage ,15,3005,True
+0252,614,Talcher Sadar ,Talcher Sadar ,15,3006,True
+0253,615,Colliery ,Colliery ,15,3007,True
+0254,616,Bikrampur,Bikrampur,15,3008,True
+0255,617,NALCO   ,NALCO   ,15,3009,True
+0256,618,Banarpal ,Banarpal ,15,3010,True
+0257,619,Bhusan Steel Limited. ,Bhusan Steel Limited. ,15,,False
+0258,620,Anugul ,Anugul ,15,3011,True
+0259,621,Jarapada ,Jarapada ,15,3012,True
+0260,622,Industrial  ,Industrial  ,15,3013,True
+0261,623,Chhendipada  ,Chhendipada  ,15,3014,True
+0262,624,Handapa ,Handapa ,15,3015,True
+0263,625,Kishorenagar ,Kishorenagar ,15,3016,True
+0264,626,Athmallik ,Athmallik ,15,3017,True
+0265,627,Kiakata ,Kiakata ,15,3018,True
+0266,628,Thakurgarh ,Thakurgarh ,15,3019,True
+0267,629,Purunakot,Purunakot,15,3020,True
+0268,630,Bantala ,Bantala ,15,3021,True
+0269,631,Gania ,Gania ,16,3022,True
+0270,632,Dasapalla  ,Dasapalla  ,16,3023,True
+0271,633,Banigochha ,Banigochha ,16,3024,True
+0272,634,Nuagaon ,Nuagaon ,16,3025,True
+0273,635,Khandapada ,Khandapada ,16,3026,True
+0274,761,Fategarh ,Fategarh ,16,3027,True
+0275,762,Nayagarh ,Nayagarh ,16,3028,True
+0276,763,Itamati ,Itamati ,16,3029,True
+0277,764,Nayagarh Sadar ,Nayagarh Sadar ,16,3030,True
+0278,765,Odagaon ,Odagaon ,16,3031,True
+0279,766,Sarankul ,Sarankul ,16,3032,True
+0280,767,Ranapur ,Ranapur ,16,3033,True
+0281,768,Bolagad ,Bolagad ,17,3034,True
+0282,769,Begunia ,Begunia ,17,3035,True
+0283,770,Khordha,Khordha,17,3036,True
+0284,771,Khurda Sadar ,Khurda Sadar ,17,3037,True
+0285,772,Chandaka ,Chandaka ,17,3038,True
+0286,773,Nandankanan ,Nandankanan ,17,3039,True
+0287,774,Saheednagar ,Saheednagar ,17,3040,True
+0288,775,Mancheswar ,Mancheswar ,17,3041,True
+0289,776,Balianta ,Balianta ,17,3042,True
+0290,777,Balipatna ,Balipatna ,17,3043,True
+0291,778,Lingaraj ,Lingaraj ,17,3044,True
+0292,779,Airfield (Kapila Prasad) ,Airfield (Kapila Prasad) ,17,3045,True
+0293,780,Uttara ,Uttara ,17,3046,True
+0294,781,Khandagiri ,Khandagiri ,17,3047,True
+0295,782,Tamando ,Tamando ,17,3048,True
+0296,783,Jatani ,Jatani ,17,3049,True
+0297,784,Jankia ,Jankia ,17,3050,True
+0298,785,Nirakarpur ,Nirakarpur ,17,3051,True
+0299,786,Tangi ,Tangi ,17,3052,True
+0300,787,Balugaon ,Balugaon ,17,3053,True
+0301,788,Banapur ,Banapur ,17,3054,True
+0302,789,Bhubaneswar (M.Corp.) P.S.,Bhubaneswar (M.Corp.) P.S.,17,3055,True
+0318,886,TARASINGI,TARASINGI,19,3071,True
+0319,887,BUGUDA ,BUGUDA ,19,3072,True
+0320,888,JAGANNATH PRASAD ,JAGANNATH PRASAD ,19,3073,True
+0321,889,BHANJANAGAR ,BHANJANAGAR ,19,3074,True
+0322,890,GANGAPUR ,GANGAPUR ,19,3075,True
+0323,891,SURADA ,SURADA ,19,3076,True
+0324,892,BADAGADA ,BADAGADA ,19,3077,True
+0325,893,ASIKA ,ASIKA ,19,3078,True
+0326,894,DHARAKOTE ,DHARAKOTE ,19,3079,True
+0327,895,KABISURYANAGAR ,KABISURYANAGAR ,19,3080,True
+0328,896,POLASARA ,POLASARA ,19,3081,True
+0329,897,KODALA ,KODALA ,19,3082,True
+0330,898,KHALIKOTE ,KHALIKOTE ,19,3083,True
+0331,899,RAMBHA ,RAMBHA ,19,3084,True
+0332,900,CHHATRAPUR ,CHHATRAPUR ,19,3085,True
+0333,901,GANJAM ,GANJAM ,19,3086,True
+0334,902,CHAMAKHANDI ,CHAMAKHANDI ,19,3087,True
+0335,903,ARJYAPALLI MARINE ,ARJYAPALLI MARINE ,19,3088,True
+0336,904,PURUSOTTAMPUR,PURUSOTTAMPUR,19,3089,True
+0337,905,HINJILI ,HINJILI ,19,3090,True
+0338,906,PATAPUR ,PATAPUR ,19,3091,True
+0339,907,SERAGAD ,SERAGAD ,19,3092,True
+0340,796,BRAHMAPUR SADAR ,BRAHMAPUR SADAR ,19,3093,True
+0341,797,GOPALPUR ,GOPALPUR ,19,3094,True
+0342,798,GOLANTHARA ,GOLANTHARA ,19,3095,True
+0343,799,DIGAPAHANDI ,DIGAPAHANDI ,19,3096,True
+0344,800,NUAGAON ,NUAGAON ,19,3097,True
+0345,801,JARADA ,JARADA ,19,3098,True
+0346,802,RAMAGIRI ,RAMAGIRI ,19,,False
+0347,803,Brahmapur (M.Corp.) P.S.,Brahmapur (M.Corp.) P.S.,19,3099,True
+0348,804,Adva,Adva,20,3100,True
+0349,805,Mohana,Mohana,20,3101,True
+0350,806,R.Udayagiri,R.Udayagiri,20,3102,True
+0351,807,Serango,Serango,20,3103,True
+0352,808,Kashinagar,Kashinagar,20,3104,True
+0353,809,Parlakhemundi,Parlakhemundi,20,3105,True
+0354,810,Gurandi,Gurandi,20,3106,True
+0355,811,Rayagada,Rayagada,20,3107,True
+0356,812,Garabandha,Garabandha,20,3108,True
+0357,813,Ramagiri,Ramagiri,20,3109,True
+0358,814,Gochhapada ,Gochhapada ,21,3110,True
+0359,815,Phulabani ,Phulabani ,21,3111,True
+0360,816,Phulabani Town  ,Phulabani Town  ,21,3112,True
+0361,817,Khajuripada ,Khajuripada ,21,3113,True
+0362,818,G.Udayagiri ,G.Udayagiri ,21,3114,True
+0363,819,Tikabali ,Tikabali ,21,3115,True
+0364,820,Chakapada ,Chakapada ,21,3116,True
+0365,821,Sarangagarh ,Sarangagarh ,21,3117,True
+0366,822,Phiringia  ,Phiringia  ,21,3118,True
+0367,823,Baliguda ,Baliguda ,21,3119,True
+0368,824,Nuagaon ,Nuagaon ,21,3120,True
+0369,825,Tumudibandha ,Tumudibandha ,21,3121,True
+0370,826,Belaghar ,Belaghar ,21,3122,True
+0371,827,Kotagarh ,Kotagarh ,21,3123,True
+0372,828,Brahmanigaon,Brahmanigaon,21,3124,True
+0373,829,Daringbadi,Daringbadi,21,3125,True
+0374,830,Raikia ,Raikia ,21,3126,True
+0375,831,Kantamal,Kantamal,22,3127,True
+0376,832,Manamunda ,Manamunda ,22,3128,True
+0377,833,Baunsuni ,Baunsuni ,22,3129,True
+0378,834,Baudh Sadar ,Baudh Sadar ,22,3130,True
+0379,835,Puruna Katak ,Puruna Katak ,22,3131,True
+0380,836,Harbhanga  ,Harbhanga  ,22,3132,True
+0381,837,Dunguripali ,Dunguripali ,23,3133,True
+0382,838,Rampur ,Rampur ,23,3134,True
+0383,839,Binika ,Binika ,23,3135,True
+0384,840,Ulunda ,Ulunda ,23,3136,True
+0385,841,Biramaharajpur ,Biramaharajpur ,23,3137,True
+0386,908,Subalaya ,Subalaya ,23,3138,True
+0387,909,Sonapur ,Sonapur ,23,3139,True
+0388,910,Tarbha ,Tarbha ,23,3140,True
+0389,911,Loisinga ,Loisinga ,24,3141,True
+0390,912,Balangir ,Balangir ,24,3142,True
+0391,913,Tushura ,Tushura ,24,3143,True
+0392,914,Patnagarh ,Patnagarh ,24,3144,True
+0393,915,Khaprakhol ,Khaprakhol ,24,3145,True
+0394,916,Turekela ,Turekela ,24,3146,True
+0395,917,Belpara ,Belpara ,24,3147,True
+0396,918,Saintala ,Saintala ,24,3148,True
+0397,919,Kantabanji ,Kantabanji ,24,3149,True
+0398,920,Bangomunda ,Bangomunda ,24,3150,True
+0399,921,Sindhekela ,Sindhekela ,24,3151,True
+0400,922,Titlagarh ,Titlagarh ,24,3152,True
+0401,923,Jonk,Jonk,25,3153,True
+0402,924,Nuapada,Nuapada,25,3154,True
+0403,926,Komana ,Komana ,25,3155,True
+0404,927,Khariar ,Khariar ,25,3156,True
+0405,928,Boden ,Boden ,25,3157,True
+0406,929,Sinapali ,Sinapali ,25,3158,True
+0407,930,Kesinga ,Kesinga ,26,3159,True
+0408,931,Madanpur Rampur ,Madanpur Rampur ,26,3160,True
+0409,932,Narala ,Narala ,26,3161,True
+0410,842,Lanjigarh  ,Lanjigarh  ,26,3162,True
+0411,843,Biswanathpur ,Biswanathpur ,26,3163,True
+0412,844,Sadar ,Sadar ,26,3164,True
+0413,845,Kegaon ,Kegaon ,26,3165,True
+0414,846,Junagarh ,Junagarh ,26,3166,True
+0415,847,Golamunda ,Golamunda ,26,3167,True
+0416,848,Dharamgarh ,Dharamgarh ,26,3168,True
+0417,849,Kokasara ,Kokasara ,26,3169,True
+0418,850,Jayapatna ,Jayapatna ,26,3170,True
+0419,851,Thuamul Rampur ,Thuamul Rampur ,26,3171,True
+0420,852,Ambadala ,Ambadala ,27,3172,True
+0421,853,Muniguda ,Muniguda ,27,3173,True
+0422,854,Chandrapur ,Chandrapur ,27,3174,True
+0423,855,Bishamakatak,Bishamakatak,27,3175,True
+0424,856,Kalyanasingpur ,Kalyanasingpur ,27,3176,True
+0425,857,Kashipur ,Kashipur ,27,3177,True
+0426,858,Andirakanch ,Andirakanch ,27,3178,True
+0427,859,Tikiri ,Tikiri ,27,3179,True
+0428,860,Doraguda ,Doraguda ,27,3180,True
+0429,933,Rayagada ,Rayagada ,27,3181,True
+0430,934,Seskhal ,Seskhal ,27,3182,True
+0431,935,Gunupur ,Gunupur ,27,3183,True
+0432,936,Gudari ,Gudari ,27,3184,True
+0433,937,Padmapur ,Padmapur ,27,3185,True
+0434,938,Puttasing ,Puttasing ,27,3186,True
+0435,939,Raighar ,Raighar ,28,3187,True
+0436,940,Kundei ,Kundei ,28,3188,True
+0437,941,Umarkote ,Umarkote ,28,3189,True
+0438,942,Chandahandi ,Chandahandi ,28,3190,True
+0439,943,Jharigan  ,Jharigan  ,28,3191,True
+0440,944,Dabugan ,Dabugan ,28,3192,True
+0441,945,Paparahandi ,Paparahandi ,28,3193,True
+0442,946,Kodinga ,Kodinga ,28,3194,True
+0443,947,Kosagumuda ,Kosagumuda ,28,3195,True
+0444,948,Nabarangapur,Nabarangapur,28,3196,True
+0445,949,Tentulikhunti ,Tentulikhunti ,28,3197,True
+0446,950,Khatiguda ,Khatiguda ,28,3198,True
+0447,951,Kotpad ,Kotpad ,29,3199,True
+0448,952,Boriguma ,Boriguma ,29,3200,True
+0449,953,Bhairabsingipur ,Bhairabsingipur ,29,3201,True
+0450,954,Dasamantapur ,Dasamantapur ,29,3202,True
+0451,955,Lakshmipur,Lakshmipur,29,3203,True
+0452,956,Narayanpatana ,Narayanpatana ,29,3204,True
+0453,957,Bandhugaon ,Bandhugaon ,29,3205,True
+0454,958,Kakiriguma ,Kakiriguma ,29,3206,True
+0455,959,Koraput ,Koraput ,29,3207,True
+0456,960,Koraput Town ,Koraput Town ,29,3208,True
+0457,961,Jeypur ,Jeypur ,29,3209,True
+0458,962,Kundura ,Kundura ,29,3210,True
+0459,963,Boipariguda ,Boipariguda ,29,3211,True
+0460,964,Machh kund ,Machh kund ,29,3212,True
+0461,861,Padua ,Padua ,29,3213,True
+0462,862,Nandapur ,Nandapur ,29,3214,True
+0463,863,Similiguda ,Similiguda ,29,3215,True
+0464,864,Sunabeda ,Sunabeda ,29,3216,True
+0465,865,Damanjodi ,Damanjodi ,29,3217,True
+0466,866,Pottangi ,Pottangi ,29,3218,True
+0467,867,Kotiya ,Kotiya ,29,3219,True
+0468,868,Malkangiri ,Malkangiri ,30,3220,True
+0469,869,Mathili ,Mathili ,30,3221,True
+0470,870,Mudulipada ,Mudulipada ,30,3222,True
+0471,871,Chitrakonda ,Chitrakonda ,30,3223,True
+0472,872,Paparmetla ,Paparmetla ,30,3224,True
+0473,873,Jodamba ,Jodamba ,30,3225,True
+0474,874,Orkel ,Orkel ,30,3226,True
+0475,875,Kalimela ,Kalimela ,30,3227,True
+0476,876,Podia ,Podia ,30,3228,True
+0477,877,M.V. 79 ,M.V. 79 ,30,3229,True
+0478,878,Motu ,Motu ,30,3230,True
