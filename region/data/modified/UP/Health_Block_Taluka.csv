@@ -919,7 +919,7 @@ TCode,Name_E,Name_G,BID
 0020,Bilari (0020) ,Bilari (0020) ,41
 0173,Atarra  (0173) ,Atarra  (0173) ,426
 0072,District Women Hospital,District Women Hospital,982
-0074,RNM, District Joint Hospital,RNM, District Joint Hospital,983
+0074,"RNM, District Joint Hospital","RNM, District Joint Hospital",983
 0142,District Combind Hospital,District Combind Hospital,992
 0116,District Male Hospital,District Male Hospital,995
 0116,District Women Hospital,District Women Hospital,996
