@@ -160,6 +160,7 @@ public class CsrServiceImpl implements CsrService {
 
         Long msisdn = subscription.getSubscriber().getCallingNumber();
 
+        // This message was never retried before, so this is a first retry
         if (callRetry == null) {
 
             String action = String.format("Creating retry for subscription: %s", subscription.getSubscriptionId());
@@ -188,9 +189,23 @@ public class CsrServiceImpl implements CsrService {
             return;
         }
 
-        
-        // We've already rescheduled this call, let's see if it needs to be re-rescheduled
+        // This call was retried for a different week but never removed from the CallRetry table which means we never
+        // got a CDR from IMI, so let's warn about this and still try to reschedule as a first try it for this week.
+        if (!callRetry.getWeekId().equals(record.getWeekId())) {
 
+            String message = String.format("CallRetry record (id %d) for subscription %s for weekId %s was never " +
+                            "deleted, which means we never received a CDR about it. Someone should look into this.",
+                    callRetry.getId(), callRetry.getSubscriptionId(), callRetry.getWeekId());
+            LOGGER.warn(message);
+            alertService.create("CSR Processing", message, null, AlertType.HIGH, AlertStatus.NEW, 0, null);
+            callRetry.setCallStage(CallStage.RETRY_1);
+            callRetry.setWeekId(record.getWeekId());
+            callRetryDataService.update(callRetry);
+            return;
+        }
+
+
+        // We've already rescheduled this call, let's see if it needs to be re-rescheduled
         if ((subscription.getSubscriptionPack().retryCount() == 1) ||
                 (callRetry.getCallStage() == CallStage.RETRY_LAST)) {
 

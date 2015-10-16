@@ -16,6 +16,9 @@
     <osgi:service ref="subscriptionService"
                   interface="org.motechproject.nms.kilkari.service.SubscriptionService" />
 
+    <osgi:service ref="callRetryService"
+                  interface="org.motechproject.nms.kilkari.service.CallRetryService" />
+
     <osgi:service ref="inboxService"
                   interface="org.motechproject.nms.kilkari.service.InboxService" />
 

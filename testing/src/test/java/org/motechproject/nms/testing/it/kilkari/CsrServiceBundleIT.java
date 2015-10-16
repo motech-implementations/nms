@@ -396,7 +396,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 new RequestId(subscription.getSubscriptionId(), timestamp),
                 subscription.getSubscriber().getCallingNumber(),
                 contentFileName,
-                "XXX",
+                "w1_1",
                 "XXX",
                 "XX",
                 FinalCallStatus.FAILED,
@@ -417,7 +417,6 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
         assertEquals(subscription.getSubscriptionId(), retries.get(0).getSubscriptionId());
         assertEquals(CallStage.RETRY_1, retries.get(0).getCallStage());
-        assertEquals(DayOfTheWeek.today().nextDay(),retries.get(0).getDayOfTheWeek());
     }
 
     @Test
@@ -451,7 +450,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 new RequestId(subscription.getSubscriptionId(), timestamp),
                 subscription.getSubscriber().getCallingNumber(),
                 contentFileName,
-                "XXX",
+                "w1_1",
                 rh.hindiLanguage().getCode(),
                 rh.delhiCircle().getName(),
                 FinalCallStatus.FAILED,
@@ -475,7 +474,6 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
         assertEquals(subscription.getSubscriptionId(), retries.get(0).getSubscriptionId());
         assertEquals(CallStage.RETRY_1, retries.get(0).getCallStage());
-        assertEquals(DayOfTheWeek.today().nextDay(),retries.get(0).getDayOfTheWeek());
     }
 
 
@@ -884,7 +882,6 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
         assertEquals(subscription.getSubscriptionId(), retries.get(0).getSubscriptionId());
         assertEquals(CallStage.RETRY_1, retries.get(0).getCallStage());
-        assertEquals(DayOfTheWeek.today().nextDay(), retries.get(0).getDayOfTheWeek());
 
         csr = new CallSummaryRecordDto(
                 new RequestId(subscription.getSubscriptionId(), "11112233445566"),
@@ -949,7 +946,6 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
         assertEquals(subscription.getSubscriptionId(), retries.get(0).getSubscriptionId());
         assertEquals(CallStage.RETRY_1, retries.get(0).getCallStage());
-        assertEquals(DayOfTheWeek.today().nextDay(), retries.get(0).getDayOfTheWeek());
 
         csr = new CallSummaryRecordDto(
                 new RequestId(subscription.getSubscriptionId(), "11112233445566"),
