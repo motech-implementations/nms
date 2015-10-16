@@ -162,21 +162,29 @@ public class CsrServiceImpl implements CsrService {
 
         if (callRetry == null) {
 
-            // This message was never retried before, so this is a first retry
-            LOGGER.debug(String.format("Creating retry for subscription: %s", subscription.getSubscriptionId()));
-            DayOfTheWeek nextDay = DayOfTheWeek.fromInt(subscription.getStartDate().dayOfWeek().get()).nextDay();
-            CallRetry newCallRetry = new CallRetry(
-                    subscription.getSubscriptionId(),
-                    msisdn,
-                    nextDay,
-                    CallStage.RETRY_1,
-                    record.getContentFileName(),
-                    record.getWeekId(),
-                    getLanguageCode(subscription),
-                    getCircleName(subscription),
-                    subscription.getOrigin()
-            );
-            callRetryDataService.create(newCallRetry);
+            String action = String.format("Creating retry for subscription: %s", subscription.getSubscriptionId());
+            try {
+                // This message was never retried before, so this is a first retry
+                LOGGER.debug(action);
+
+                CallRetry newCallRetry = new CallRetry(
+                        subscription.getSubscriptionId(),
+                        msisdn,
+                        DayOfTheWeek.fromInt(subscription.getStartDate().dayOfWeek().get()).nextDay(),
+                        CallStage.RETRY_1,
+                        record.getContentFileName(),
+                        record.getWeekId(),
+                        getLanguageCode(subscription),
+                        getCircleName(subscription),
+                        subscription.getOrigin()
+                );
+                callRetryDataService.create(newCallRetry);
+            } catch (Exception e) {
+                String msg = String.format("Exception while trying to reschedule call for subscription %s: %s",
+                        subscription.getSubscriptionId(), e);
+                LOGGER.error(msg);
+                alertService.create("rescheduleCall()", action, msg, AlertType.HIGH, AlertStatus.NEW, 0, null);
+            }
             return;
         }
 
@@ -284,31 +292,35 @@ public class CsrServiceImpl implements CsrService {
     @MotechListener(subjects = { PROCESS_SUMMARY_RECORD_SUBJECT })
     public void processCallSummaryRecord(MotechEvent event) {
 
-        CallSummaryRecordDto csrDto = (CallSummaryRecordDto) event.getParameters().get(CSR_PARAM_KEY);
-        String subscriptionId = csrDto.getRequestId().getSubscriptionId();
-        CallSummaryRecord csr = aggregateSummaryRecord(csrDto);
+        try {
+            CallSummaryRecordDto csrDto = (CallSummaryRecordDto) event.getParameters().get(CSR_PARAM_KEY);
+            String subscriptionId = csrDto.getRequestId().getSubscriptionId();
+            CallSummaryRecord csr = aggregateSummaryRecord(csrDto);
 
-        CallRetry callRetry = callRetryDataService.findBySubscriptionId(subscriptionId);
-        Subscription subscription = subscriptionDataService.findBySubscriptionId(subscriptionId);
+            CallRetry callRetry = callRetryDataService.findBySubscriptionId(subscriptionId);
+            Subscription subscription = subscriptionDataService.findBySubscriptionId(subscriptionId);
 
 
-        switch (csrDto.getFinalStatus()) {
-            case SUCCESS:
-                completeSubscriptionIfNeeded(subscription, csr, callRetry);
-                break;
+            switch (csrDto.getFinalStatus()) {
+                case SUCCESS:
+                    completeSubscriptionIfNeeded(subscription, csr, callRetry);
+                    break;
 
-            case FAILED:
-                rescheduleCall(subscription, csr, callRetry);
-                break;
+                case FAILED:
+                    rescheduleCall(subscription, csr, callRetry);
+                    break;
 
-            case REJECTED:
-                deactivateSubscription(subscription, callRetry);
-                break;
+                case REJECTED:
+                    deactivateSubscription(subscription, callRetry);
+                    break;
 
-            default:
-                String error = String.format("Invalid FinalCallStatus: %s", csrDto.getFinalStatus());
-                LOGGER.error(error);
-                alertService.create(PROCESS_SUMMARY_RECORD_SUBJECT, error, error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+                default:
+                    String error = String.format("Invalid FinalCallStatus: %s", csrDto.getFinalStatus());
+                    LOGGER.error(error);
+                    alertService.create(PROCESS_SUMMARY_RECORD_SUBJECT, error, error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            }
+        } catch (Exception e) {
+            LOGGER.error("**** Exception in processCallSummaryRecord() ****: {}", e);
         }
     }
 
