@@ -190,9 +190,11 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         DateTimeUtils.setCurrentMillisSystem();
 
         // Should be picked up because all callRetries are picked up
+        DateTime dt = DateTime.now().minusDays(1);
         callRetryDataService.create(new CallRetry("11111111-1111-1111-1111-111111111111", 3333333333L,
-                DayOfTheWeek.fromDateTime(DateTime.now().minusDays(1)), CallStage.RETRY_1, "w1_m1.wav", "w1_1",
-                rh.hindiLanguage().getCode(), rh.delhiCircle().getName(), SubscriptionOrigin.IVR));
+                DayOfTheWeek.fromDateTime(dt), CallStage.RETRY_1, "w1_m1.wav", "w1_1",
+                rh.hindiLanguage().getCode(), rh.delhiCircle().getName(), SubscriptionOrigin.IVR,
+                RequestId.timestampFromDateTime(dt)));
 
 
         TargetFileNotification tfn = targetFileService.generateTargetFile();
@@ -269,9 +271,12 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
     @Ignore
     public void createLargeFile() {
 
+        DateTime dtNow = DateTime.now();
+
         for (int i=0 ; i<1000 ; i++) {
-            sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now());
+            sh.mksub(SubscriptionOrigin.MCTS_IMPORT, dtNow);
         }
+
 
         for (int i=0 ; i<0 ; i++) {
 
@@ -289,7 +294,8 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
                     sh.getWeekId(sub, randomWeek),
                     sh.getLanguageCode(sub),
                     sh.getCircle(sub),
-                    SubscriptionOrigin.MCTS_IMPORT
+                    SubscriptionOrigin.MCTS_IMPORT,
+                    RequestId.timestampFromDateTime(dtNow)
             ));
         }
 

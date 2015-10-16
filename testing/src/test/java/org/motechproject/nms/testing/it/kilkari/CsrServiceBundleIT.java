@@ -183,7 +183,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 "w1_1",
                 rh.hindiLanguage().getCode(),
                 rh.delhiCircle().getName(),
-                SubscriptionOrigin.MCTS_IMPORT
+                SubscriptionOrigin.MCTS_IMPORT,
+                "11112233445566"
         ));
 
         CallSummaryRecordDto csr = new CallSummaryRecordDto(
@@ -256,7 +257,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 "XXX",
                 "XXX",
                 "XX",
-                SubscriptionOrigin.MCTS_IMPORT
+                SubscriptionOrigin.MCTS_IMPORT,
+                timestamp
         ));
 
 
@@ -303,7 +305,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 "XXX",
                 "XXX",
                 "XX",
-                SubscriptionOrigin.MCTS_IMPORT
+                SubscriptionOrigin.MCTS_IMPORT,
+                timestamp
         ));
 
 
@@ -499,7 +502,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 "XXX",
                 "XXX",
                 "XX",
-                SubscriptionOrigin.MCTS_IMPORT
+                SubscriptionOrigin.MCTS_IMPORT,
+                timestamp
         ));
 
 
@@ -556,7 +560,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 "XXX",
                 "XXX",
                 "XX",
-                SubscriptionOrigin.MCTS_IMPORT
+                SubscriptionOrigin.MCTS_IMPORT,
+                timestamp
         ));
 
 
@@ -676,7 +681,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 sh.getWeekId(subscription, 0),
                 rh.hindiLanguage().getCode(),
                 rh.delhiCircle().getName(),
-                SubscriptionOrigin.MCTS_IMPORT
+                SubscriptionOrigin.MCTS_IMPORT,
+                "11112233445566"
         ));
 
         CallSummaryRecordDto csr = new CallSummaryRecordDto(
@@ -759,7 +765,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 "XXX",
                 "XXX",
                 "XX",
-                SubscriptionOrigin.MCTS_IMPORT
+                SubscriptionOrigin.MCTS_IMPORT,
+                timestamp
         ));
 
 
@@ -806,7 +813,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 "w48_1",
                 "XXX",
                 "XX",
-                SubscriptionOrigin.MCTS_IMPORT
+                SubscriptionOrigin.MCTS_IMPORT,
+                timestamp
         ));
 
         int index = sh.getLastMessageIndex(sub);
@@ -1024,7 +1032,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 "w72_2",
                 "XXX",
                 "XX",
-                SubscriptionOrigin.MCTS_IMPORT
+                SubscriptionOrigin.MCTS_IMPORT,
+                timestamp
         ));
 
         int index = sh.getLastMessageIndex(sub);
@@ -1074,7 +1083,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 "w48_1",
                 "XXX",
                 "XX",
-                SubscriptionOrigin.MCTS_IMPORT
+                SubscriptionOrigin.MCTS_IMPORT,
+                timestamp
         ));
 
         int index = sh.getLastMessageIndex(sub);

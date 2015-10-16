@@ -22,12 +22,14 @@ import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackMessageDataService;
 import org.motechproject.nms.kilkari.service.CsrService;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
+import org.motechproject.nms.props.domain.RequestId;
 import org.motechproject.nms.props.domain.StatusCode;
 import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.Language;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -177,10 +179,11 @@ public class CsrServiceImpl implements CsrService {
                         record.getWeekId(),
                         getLanguageCode(subscription),
                         getCircleName(subscription),
-                        subscription.getOrigin()
+                        subscription.getOrigin(),
+                        RequestId.fromString(record.getRequestId()).getTimestamp()
                 );
                 callRetryDataService.create(newCallRetry);
-            } catch (Exception e) {
+            } catch (DataIntegrityViolationException e) {
                 String msg = String.format("Exception while trying to reschedule call for subscription %s: %s",
                         subscription.getSubscriptionId(), e);
                 LOGGER.error(msg);
@@ -188,6 +191,7 @@ public class CsrServiceImpl implements CsrService {
             }
             return;
         }
+
 
         // This call was retried for a different week but never removed from the CallRetry table which means we never
         // got a CDR from IMI, so let's warn about this and still try to reschedule as a first try it for this week.
@@ -202,6 +206,21 @@ public class CsrServiceImpl implements CsrService {
             callRetry.setWeekId(record.getWeekId());
             callRetryDataService.update(callRetry);
             return;
+        }
+
+
+        // We've already rescheduled this call, but we may have gotten crappy (duplicate) data from IMI, let's check
+        // for that and ignore the retry if we need.
+        // For more info see:
+        // https://applab.atlassian.net/browse/NIP-53?focusedCommentId=65208&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-65208
+        if (callRetry.getTimestamp() != null &&
+                callRetry.getTimestamp().equals(RequestId.fromString(record.getRequestId()).getTimestamp())) {
+            // Bad data from IMI indeed (CSR-only error code in CDR likely culprit), let's ignore the retry since it's
+            // already rescheduled
+            LOGGER.warn(String.format("Ignoring duplicate CDR/CSR call failure for subscription: %s",
+                    subscription.getSubscriptionId()));
+            return;
+
         }
 
 
@@ -306,9 +325,10 @@ public class CsrServiceImpl implements CsrService {
     @MotechListener(subjects = { PROCESS_SUMMARY_RECORD_SUBJECT })
     public void processCallSummaryRecord(MotechEvent event) {
 
+        CallSummaryRecordDto csrDto = (CallSummaryRecordDto) event.getParameters().get(CSR_PARAM_KEY);
+        String subscriptionId = csrDto.getRequestId().getSubscriptionId();
+
         try {
-            CallSummaryRecordDto csrDto = (CallSummaryRecordDto) event.getParameters().get(CSR_PARAM_KEY);
-            String subscriptionId = csrDto.getRequestId().getSubscriptionId();
             CallSummaryRecord csr = aggregateSummaryRecord(csrDto);
 
             CallRetry callRetry = callRetryDataService.findBySubscriptionId(subscriptionId);
@@ -334,7 +354,8 @@ public class CsrServiceImpl implements CsrService {
                     alertService.create(PROCESS_SUMMARY_RECORD_SUBJECT, error, error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
             }
         } catch (Exception e) {
-            String msg = String.format("Exception in processCallSummaryRecord(): %s", e);
+            String msg = String.format("Exception in processCallSummaryRecord() for subscription %s: %s",
+                    subscriptionId, e);
             LOGGER.error(msg);
             alertService.create(PROCESS_SUMMARY_RECORD_SUBJECT, msg, null, AlertType.HIGH, AlertStatus.NEW, 0, null);
         }
