@@ -161,7 +161,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
         Subscriber subscriber = subscription.getSubscriber();
 
         csrDataService.create(new CallSummaryRecord(
-                new RequestId(subscription.getSubscriptionId(), "11112233445566").toString(),
+                new RequestId(subscription.getSubscriptionId(), "11112233445555").toString(),
                 subscription.getSubscriber().getCallingNumber(),
                 "w1_1.wav",
                 "w1_1",
@@ -184,7 +184,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 rh.hindiLanguage().getCode(),
                 rh.delhiCircle().getName(),
                 SubscriptionOrigin.MCTS_IMPORT,
-                "11112233445566"
+                "11112233445555"
         ));
 
         CallSummaryRecordDto csr = new CallSummaryRecordDto(
@@ -240,11 +240,11 @@ public class CsrServiceBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT140() {
-            String timestamp = DateTime.now().toString(TIME_FORMATTER);
+        DateTime now = DateTime.now();
 
         // Create a record in the CallRetry table marked as "last try" and verify it is erased from the
         // CallRetry table
-        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(3),
+        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, now.minusDays(3),
                 SubscriptionPackType.CHILD);
 
         String contentFileName = sh.getContentMessageFile(subscription, 0);
@@ -258,13 +258,13 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 "XXX",
                 "XX",
                 SubscriptionOrigin.MCTS_IMPORT,
-                timestamp
+                now.minusDays(3).toString(TIME_FORMATTER)
         ));
 
 
         Map<Integer, Integer> callStats = new HashMap<>();
         CallSummaryRecordDto record = new CallSummaryRecordDto(
-                new RequestId(subscription.getSubscriptionId(), timestamp),
+                new RequestId(subscription.getSubscriptionId(), now.toString(TIME_FORMATTER)),
                 subscription.getSubscriber().getCallingNumber(),
                 contentFileName,
                 "XXX",
@@ -290,11 +290,12 @@ public class CsrServiceBundleIT extends BasePaxIT {
     @Test
     public void verifyFT144() {
 
-        String timestamp = DateTime.now().toString(TIME_FORMATTER);
+        DateTime now = DateTime.now();
 
         // To check that NMS shall retry the OBD messages which failed as IVR did not attempt OBD for those messages.
 
-        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now(),SubscriptionPackType.CHILD);
+        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, now.minusDays(3),
+                SubscriptionPackType.CHILD);
         String contentFileName = sh.getContentMessageFile(subscription, 0);
         CallRetry retry = callRetryDataService.create(new CallRetry(
                 subscription.getSubscriptionId(),
@@ -306,14 +307,14 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 "XXX",
                 "XX",
                 SubscriptionOrigin.MCTS_IMPORT,
-                timestamp
+                now.minusDays(3).toString(TIME_FORMATTER)
         ));
 
 
         Map<Integer, Integer> callStats = new HashMap<>();
         callStats.put(StatusCode.OBD_FAILED_NOATTEMPT.getValue(), 1);
         CallSummaryRecordDto record = new CallSummaryRecordDto(
-                new RequestId(subscription.getSubscriptionId(), timestamp),
+                new RequestId(subscription.getSubscriptionId(), now.toString(TIME_FORMATTER)),
                 subscription.getSubscriber().getCallingNumber(),
                 contentFileName,
                 "XXX",
@@ -486,12 +487,12 @@ public class CsrServiceBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT138() {
-        String timestamp = DateTime.now().toString(TIME_FORMATTER);
+        DateTime now = DateTime.now();
 
         // Create a record in the CallRetry table marked as "retry_1" and verify it is updated as "retry_2" in
         // CallRetry table
 
-        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(3));
+        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, now.minusDays(3));
         String contentFileName = sh.getContentMessageFile(subscription, 0);
         CallRetry retry = callRetryDataService.create(new CallRetry(
                 subscription.getSubscriptionId(),
@@ -503,13 +504,13 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 "XXX",
                 "XX",
                 SubscriptionOrigin.MCTS_IMPORT,
-                timestamp
+                now.minusDays(3).toString(TIME_FORMATTER)
         ));
 
 
         Map<Integer, Integer> callStats = new HashMap<>();
         CallSummaryRecordDto record = new CallSummaryRecordDto(
-                new RequestId(subscription.getSubscriptionId(), timestamp),
+                new RequestId(subscription.getSubscriptionId(), now.toString(TIME_FORMATTER)),
                 subscription.getSubscriber().getCallingNumber(),
                 contentFileName,
                 "XXX",
@@ -544,12 +545,12 @@ public class CsrServiceBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT139() {
-        String timestamp = DateTime.now().toString(TIME_FORMATTER);
+        DateTime now = DateTime.now();
 
         // Create a record in the CallRetry table marked as "retry_2" and verify it is updated as "retry_last" in
         // CallRetry table
 
-        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(3));
+        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, now.minusDays(3));
         String contentFileName = sh.getContentMessageFile(subscription, 0);
         CallRetry retry = callRetryDataService.create(new CallRetry(
                 subscription.getSubscriptionId(),
@@ -561,13 +562,13 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 "XXX",
                 "XX",
                 SubscriptionOrigin.MCTS_IMPORT,
-                timestamp
+                now.minusDays(3).toString(TIME_FORMATTER)
         ));
 
 
         Map<Integer, Integer> callStats = new HashMap<>();
         CallSummaryRecordDto record = new CallSummaryRecordDto(
-                new RequestId(subscription.getSubscriptionId(), timestamp),
+                new RequestId(subscription.getSubscriptionId(), now.toString(TIME_FORMATTER)),
                 subscription.getSubscriber().getCallingNumber(),
                 contentFileName,
                 "XXX",
@@ -682,7 +683,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 rh.hindiLanguage().getCode(),
                 rh.delhiCircle().getName(),
                 SubscriptionOrigin.MCTS_IMPORT,
-                "11112233445566"
+                "11112233445555"
         ));
 
         CallSummaryRecordDto csr = new CallSummaryRecordDto(
@@ -748,12 +749,12 @@ public class CsrServiceBundleIT extends BasePaxIT {
     @Test
     public void verifyFT142() {
 
-        String timestamp = DateTime.now().toString(TIME_FORMATTER);
+        DateTime now = DateTime.now();
 
         // Create a record in the CallRetry table marked as "retry 1" and verify it is erased from the
         // CallRetry table
 
-        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(3),
+        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, now.minusDays(3),
                 SubscriptionPackType.PREGNANCY);
         String contentFileName = sh.getContentMessageFile(subscription, 0);
         CallRetry retry = callRetryDataService.create(new CallRetry(
@@ -766,13 +767,13 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 "XXX",
                 "XX",
                 SubscriptionOrigin.MCTS_IMPORT,
-                timestamp
+                now.minusDays(3).toString(TIME_FORMATTER)
         ));
 
 
         Map<Integer, Integer> callStats = new HashMap<>();
         CallSummaryRecordDto record = new CallSummaryRecordDto(
-                new RequestId(subscription.getSubscriptionId(), timestamp),
+                new RequestId(subscription.getSubscriptionId(), now.toString(TIME_FORMATTER)),
                 subscription.getSubscriber().getCallingNumber(),
                 contentFileName,
                 "XXX",
@@ -798,10 +799,10 @@ public class CsrServiceBundleIT extends BasePaxIT {
     */
     @Test
     public void verifyFT187() {
-        String timestamp = DateTime.now().toString(TIME_FORMATTER);
+        DateTime now = DateTime.now();
 
         int days = sh.childPack().getWeeks() * 7;
-        Subscription sub = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(days),
+        Subscription sub = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, now.minusDays(days),
                 SubscriptionPackType.CHILD);
 
         callRetryDataService.create(new CallRetry(
@@ -814,12 +815,12 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 "XXX",
                 "XX",
                 SubscriptionOrigin.MCTS_IMPORT,
-                timestamp
+                now.minusDays(3).toString(TIME_FORMATTER)
         ));
 
         int index = sh.getLastMessageIndex(sub);
         CallSummaryRecordDto r = new CallSummaryRecordDto(
-                new RequestId(sub.getSubscriptionId(), timestamp),
+                new RequestId(sub.getSubscriptionId(), now.toString(TIME_FORMATTER)),
                 sub.getSubscriber().getCallingNumber(),
                 sh.getContentMessageFile(sub, index),
                 sh.getWeekId(sub, index),
@@ -862,7 +863,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 SubscriptionPackType.PREGNANCY);
 
         CallSummaryRecordDto csr = new CallSummaryRecordDto(
-                new RequestId(subscription.getSubscriptionId(), "11112233445566"),
+                new RequestId(subscription.getSubscriptionId(), "11112233445555"),
                 subscription.getSubscriber().getCallingNumber(),
                 sh.getContentMessageFile(subscription, 0),
                 sh.getWeekId(subscription, 0),
