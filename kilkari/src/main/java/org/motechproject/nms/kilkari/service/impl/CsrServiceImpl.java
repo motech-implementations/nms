@@ -227,7 +227,6 @@ public class CsrServiceImpl implements CsrService {
             return;
         }
 
-
         // Re-reschedule the call
         LOGGER.debug(String.format("Updating retry entry for subscription: %s", subscription.getSubscriptionId()));
         callRetry.setCallStage(callRetry.getCallStage().nextStage());
@@ -335,7 +334,9 @@ public class CsrServiceImpl implements CsrService {
                     alertService.create(PROCESS_SUMMARY_RECORD_SUBJECT, error, error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
             }
         } catch (Exception e) {
-            LOGGER.error("**** Exception in processCallSummaryRecord() ****: {}", e);
+            String msg = String.format("Exception in processCallSummaryRecord(): %s", e);
+            LOGGER.error(msg);
+            alertService.create(PROCESS_SUMMARY_RECORD_SUBJECT, msg, null, AlertType.HIGH, AlertStatus.NEW, 0, null);
         }
     }
 
