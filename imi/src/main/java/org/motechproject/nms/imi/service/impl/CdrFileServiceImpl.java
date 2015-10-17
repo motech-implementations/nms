@@ -452,6 +452,7 @@ public class CdrFileServiceImpl implements CdrFileService {
                     if (!currentRequestId.equals(cdr.getRequestId().toString())) {
                         // Send last CSR, if any, for processing
                         if (csr != null) {
+                            LOGGER.debug("sendProcessSummaryRecordEvent({})", csr);
                             sendProcessSummaryRecordEvent(csr);
                             csr = null; //todo: does that help the GC?
                         }
@@ -478,8 +479,8 @@ public class CdrFileServiceImpl implements CdrFileService {
                 lineNumber++;
             }
 
+            LOGGER.debug("final sendProcessSummaryRecordEvent({})", csr);
             sendProcessSummaryRecordEvent(csr);
-
 
         } catch (IOException e) {
             String error = String.format(UNABLE_TO_READ_FMT, fileName, e.getMessage());
@@ -727,10 +728,10 @@ public class CdrFileServiceImpl implements CdrFileService {
         // Phase 3: distribute the processing of aggregated CDRs to all nodes.
         //          copy CDRs from IMI to the database
         //          each node may generate an individual error that NMS-OPS will have to respond to.
-        File cdrFile = new File(localCdrDir(), request.getCdrDetail().getCdrFile());
+        File cdrFile = new File(localCdrDir(), request.getCdrDetail().getCdrFile() + SORTED_SUFFIX);
         errors = sendAggregatedRecords(cdrFile);
         if (errors.size() > 0) {
-            reportAuditAndPost(request.getCdrDetail().getCdrFile(), errors);
+            reportAuditAndPost(request.getCdrDetail().getCdrFile() + SORTED_SUFFIX, errors);
             return errors;
         }
 

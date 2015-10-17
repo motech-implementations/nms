@@ -1,5 +1,9 @@
 package org.motechproject.nms.props.domain;
 
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
+
 import java.io.Serializable;
 import java.util.regex.Pattern;
 
@@ -17,9 +21,11 @@ public class RequestId implements Serializable {
     private static final int TIMESTAMP_LENGTH = 14; //YYYYMMDDHHMMSS
     private static final int UUID_LENGTH = 36;
     private static final int REQUEST_ID_LENGTH = TIMESTAMP_LENGTH + UUID_LENGTH +  1;
-    public static final Pattern TIMESTAMP_PATTERN = Pattern.compile("[0-9]{14}");
-    public static final Pattern UUID_PATTERN = Pattern.compile(
+    private static final Pattern TIMESTAMP_PATTERN = Pattern.compile("[0-9]{14}");
+    private static final Pattern UUID_PATTERN = Pattern.compile(
             "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}");
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormat.forPattern("yyyyMMddHHmmss");
+
 
     private String subscriptionId;
     private String timestamp;
@@ -48,6 +54,11 @@ public class RequestId implements Serializable {
 
         this.subscriptionId = subscriptionId;
         this.timestamp = timestamp;
+    }
+
+
+    public static String timestampFromDateTime(DateTime dt) {
+        return TIME_FORMATTER.print(dt);
     }
 
 
