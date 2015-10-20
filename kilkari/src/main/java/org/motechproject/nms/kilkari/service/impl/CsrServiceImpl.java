@@ -21,7 +21,6 @@ import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackMessageDataService;
 import org.motechproject.nms.kilkari.service.CsrService;
-import org.motechproject.nms.props.domain.DayOfTheWeek;
 import org.motechproject.nms.props.domain.RequestId;
 import org.motechproject.nms.props.domain.StatusCode;
 import org.motechproject.nms.region.domain.Circle;
@@ -173,7 +172,7 @@ public class CsrServiceImpl implements CsrService {
                 CallRetry newCallRetry = new CallRetry(
                         subscription.getSubscriptionId(),
                         msisdn,
-                        DayOfTheWeek.fromInt(subscription.getStartDate().dayOfWeek().get()).nextDay(),
+                        null, //we used to specify which DOW the retry should fall on, now it's always next day
                         CallStage.RETRY_1,
                         record.getContentFileName(),
                         record.getWeekId(),
@@ -249,7 +248,6 @@ public class CsrServiceImpl implements CsrService {
         // Re-reschedule the call
         LOGGER.debug(String.format("Updating retry entry for subscription: %s", subscription.getSubscriptionId()));
         callRetry.setCallStage(callRetry.getCallStage().nextStage());
-        callRetry.setDayOfTheWeek(callRetry.getDayOfTheWeek().nextDay());
         callRetryDataService.update(callRetry);
     }
 
@@ -364,7 +362,7 @@ public class CsrServiceImpl implements CsrService {
 
     private void resetWelcomeFlagInSubscription(Subscription subscription) {
 
-        if (subscription.getNeedsWelcomeMessageViaObd() == true) {
+        if (subscription.getNeedsWelcomeMessageViaObd()) {
             subscription.setNeedsWelcomeMessageViaObd(false);
             subscriptionDataService.update(subscription);
         }
