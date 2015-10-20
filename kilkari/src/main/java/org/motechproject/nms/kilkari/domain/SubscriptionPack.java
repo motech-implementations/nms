@@ -101,19 +101,20 @@ public class SubscriptionPack {
         this.messages = messages;
     }
 
-    public boolean isReferenceDateValidForPack(DateTime date) {
+    public String isReferenceDateValidForPack(DateTime date) {
+
         if (date.isAfterNow()) {
-            return false;
+            return String.format("Reference date is after now: %s", date.toString());
         }
 
         int packLengthInDays = weeks * DAYS_IN_WEEK;
-        DateTime startDate = date;
+        DateTime startDate = (type == SubscriptionPackType.PREGNANCY) ? date.plusDays(THREE_MONTHS) : date;
 
-        if (type == SubscriptionPackType.PREGNANCY) {
-            startDate = date.plusDays(THREE_MONTHS);
+        if (!startDate.plusDays(packLengthInDays).isAfterNow()) {
+            return String.format("Start date + pack length < today: (%s)", startDate.plusDays(packLengthInDays).toString());
         }
 
-        return startDate.plusDays(packLengthInDays).isAfterNow();
+        return "";
     }
 
     @Ignore

@@ -272,9 +272,10 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                     new SubscriptionError(msisdn, SubscriptionRejectionReason.MISSING_LMP, SubscriptionPackType.PREGNANCY));
             return false;
         }
-        if (!pregnancyPack.isReferenceDateValidForPack(lmp)) {
+        String referenceDateError = pregnancyPack.isReferenceDateValidForPack(lmp);
+        if (!referenceDateError.isEmpty()) {
             subscriptionErrorDataService.create(
-                    new SubscriptionError(msisdn, SubscriptionRejectionReason.INVALID_LMP, SubscriptionPackType.PREGNANCY));
+                    new SubscriptionError(msisdn, SubscriptionRejectionReason.INVALID_LMP, SubscriptionPackType.PREGNANCY, referenceDateError));
             return false;
         }
 
@@ -287,9 +288,10 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                     new SubscriptionError(msisdn, SubscriptionRejectionReason.MISSING_DOB, SubscriptionPackType.CHILD));
             return false;
         }
-        if (!childPack.isReferenceDateValidForPack(dob)) {
+        String referenceValidation = childPack.isReferenceDateValidForPack(dob);
+        if (!referenceValidation.isEmpty()) {
             subscriptionErrorDataService.create(
-                    new SubscriptionError(msisdn, SubscriptionRejectionReason.INVALID_DOB, SubscriptionPackType.CHILD));
+                    new SubscriptionError(msisdn, SubscriptionRejectionReason.INVALID_DOB, SubscriptionPackType.CHILD, referenceValidation));
             return false;
         }
 
