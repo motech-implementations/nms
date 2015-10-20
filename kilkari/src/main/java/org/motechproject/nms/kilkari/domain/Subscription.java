@@ -128,10 +128,7 @@ public class Subscription extends MdsEntity {
     public void setStartDate(DateTime startDate) {
         this.startDate = startDate.withTimeAtStartOfDay();
         this.firstMessageDayOfWeek = DayOfTheWeek.fromInt(startDate.getDayOfWeek());
-        // if we are in a 2 msg/week pack, populate the second message day
-        if (subscriptionPack.getMessagesPerWeek() == 2) {
-            this.secondMessageDayOfWeek = DayOfTheWeek.fromDateTime(startDate.plusDays(4));
-        }
+        this.secondMessageDayOfWeek = DayOfTheWeek.fromDateTime(startDate.plusDays(4));
     }
 
     public DateTime getEndDate() {

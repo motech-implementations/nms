@@ -488,10 +488,19 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
             @Override
             public String getSqlQuery() {
-                String query = String.format("SELECT * FROM nms_subscriptions WHERE id > %d AND " +
-                        "(firstMessageDayOfWeek = '%s' OR secondMessageDayOfWeek = '%s') AND status = 'ACTIVE' " +
-                        "ORDER BY id " +
-                        "LIMIT %d", offset, day, day, rowCount);
+                String query = String.format(
+                        "select s.id as id, activationDate, deactivationReason, endDate, firstMessageDayOfWeek, " +
+                                "s.needsWelcomeMessageViaObd, s.origin, s.secondMessageDayOfWeek, s.startDate, " +
+                                "s.status, s.subscriber_id_OID, s.subscriptionId, s.subscriptionPack_id_OID, " +
+                                "s.creationDate, s.creator, s.modificationDate, s.modifiedBy, s.owner " +
+                                "FROM nms_subscriptions AS s " +
+                                "INNER JOIN nms_subscription_packs AS p ON s.subscriptionPack_id_OID = p.id " +
+                                "WHERE s.id > %d AND " +
+                                "(firstMessageDayOfWeek = '%s' OR " +
+                                "(secondMessageDayOfWeek = '%s' AND p.messagesPerWeek = 2)) AND " +
+                                "status = 'ACTIVE' " +
+                                "ORDER BY s.id " +
+                                "LIMIT %d", offset, day, day, rowCount);
                 LOGGER.debug("SQL QUERY: {}", query);
                 return query;
             }
