@@ -300,7 +300,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
         CallRetry retry = callRetryDataService.create(new CallRetry(
                 subscription.getSubscriptionId(),
                 subscription.getSubscriber().getCallingNumber(),
-                DayOfTheWeek.today(),
+                null,
                 CallStage.RETRY_1,
                 contentFileName,
                 "XXX",
@@ -339,8 +339,6 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
         assertEquals(subscription.getSubscriptionId(), retries.get(0).getSubscriptionId());
         assertEquals(CallStage.RETRY_2, retries.get(0).getCallStage());
-        assertEquals(DayOfTheWeek.today().nextDay(),retries.get(0).getDayOfTheWeek());
-
     }
 
 
@@ -497,7 +495,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
         CallRetry retry = callRetryDataService.create(new CallRetry(
                 subscription.getSubscriptionId(),
                 subscription.getSubscriber().getCallingNumber(),
-                DayOfTheWeek.today(),
+                null,
                 CallStage.RETRY_1,
                 contentFileName,
                 "XXX",
@@ -535,7 +533,6 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
         assertEquals(subscription.getSubscriptionId(), retries.get(0).getSubscriptionId());
         assertEquals(CallStage.RETRY_2, retries.get(0).getCallStage());
-        assertEquals(DayOfTheWeek.today().nextDay(),retries.get(0).getDayOfTheWeek());
     }
 
 
@@ -555,7 +552,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
         CallRetry retry = callRetryDataService.create(new CallRetry(
                 subscription.getSubscriptionId(),
                 subscription.getSubscriber().getCallingNumber(),
-                DayOfTheWeek.today(),
+                null,
                 CallStage.RETRY_2,
                 contentFileName,
                 "XXX",
@@ -593,7 +590,6 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
         assertEquals(subscription.getSubscriptionId(), retries.get(0).getSubscriptionId());
         assertEquals(CallStage.RETRY_LAST, retries.get(0).getCallStage());
-        assertEquals(DayOfTheWeek.today().nextDay(), retries.get(0).getDayOfTheWeek());
     }
 
     /**
@@ -676,7 +672,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
         callRetryDataService.create(new CallRetry(
                 subscription.getSubscriptionId(),
                 subscription.getSubscriber().getCallingNumber(),
-                DayOfTheWeek.today(),
+                null,
                 CallStage.RETRY_2,
                 sh.getContentMessageFile(subscription, 0),
                 sh.getWeekId(subscription, 0),
@@ -715,7 +711,6 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
         assertEquals(subscription.getSubscriptionId(), retries.get(0).getSubscriptionId());
         assertEquals(CallStage.RETRY_LAST, retries.get(0).getCallStage());
-        assertEquals(DayOfTheWeek.today().nextDay(), retries.get(0).getDayOfTheWeek());
 
         csr = new CallSummaryRecordDto(
                 new RequestId(subscription.getSubscriptionId(), "11112233445566"),
@@ -808,7 +803,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
         callRetryDataService.create(new CallRetry(
                 sub.getSubscriptionId(),
                 sub.getSubscriber().getCallingNumber(),
-                DayOfTheWeek.today(),
+                null,
                 CallStage.RETRY_1,
                 "w48_1.wav",
                 "w48_1",
@@ -844,7 +839,6 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
         assertEquals(sub.getSubscriptionId(), retries.get(0).getSubscriptionId());
         assertEquals(CallStage.RETRY_2, retries.get(0).getCallStage());
-        assertEquals(DayOfTheWeek.today().nextDay(), retries.get(0).getDayOfTheWeek());
 
         // verify that subscription is still Active, as last message was not delivered successfully and retries
         // are left
