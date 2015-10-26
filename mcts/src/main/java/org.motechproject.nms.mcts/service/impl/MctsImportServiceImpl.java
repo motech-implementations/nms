@@ -8,6 +8,7 @@ import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.kilkari.repository.MctsChildDataService;
 import org.motechproject.nms.kilkari.repository.MctsMotherDataService;
 import org.motechproject.nms.mcts.service.MctsImportService;
+import org.motechproject.nms.mcts.soap.MctsServiceLocator;
 import org.motechproject.nms.mcts.utils.Constants;
 import org.motechproject.scheduler.contract.CronSchedulableJob;
 import org.motechproject.scheduler.service.MotechSchedulerService;
@@ -44,6 +45,10 @@ public class MctsImportServiceImpl implements MctsImportService {
     @Autowired
     @Qualifier("mctsSettings")
     private SettingsFacade settingsFacade;
+
+    @Autowired
+    @Qualifier("mctsServiceLocator")
+    private MctsServiceLocator mctsServiceLocator;
 
     @PostConstruct
     public void init() {

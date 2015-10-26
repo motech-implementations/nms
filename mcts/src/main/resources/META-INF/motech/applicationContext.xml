@@ -17,4 +17,6 @@
         </property>
     </bean>
 
+    <bean id="mctsServiceLocator" class="org.motechproject.nms.mcts.soap.MctsServiceLocator" autowire="byType" />
+
 </beans>
