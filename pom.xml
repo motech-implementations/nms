@@ -751,6 +751,7 @@
         <module>region</module>
         <module>props</module>
         <module>imi</module>
+        <module>mcts</module>
         <module>testing</module>
     </modules>
 
