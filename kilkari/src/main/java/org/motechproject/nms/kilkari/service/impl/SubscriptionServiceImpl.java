@@ -536,4 +536,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     public void cacheEvict(MotechEvent event) {
         LOGGER.debug("*** RECEIVE CACHE EVICT MSG ***");
     }
+
+    public void completeOldSubscriptions() {
+        LOGGER.debug("*** Completing old subscriptions ***");
+    }
 }

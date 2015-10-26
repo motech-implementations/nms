@@ -169,4 +169,9 @@ public interface SubscriptionService {
      *
      */
     void cacheEvict(MotechEvent event);
+
+    /**
+     * Helper to complete subscriptions that no longer have messages due
+     */
+    void completeOldSubscriptions();
 }

@@ -59,6 +59,8 @@ public class CdrFileServiceImpl implements CdrFileService {
     private static final String CDR_FILE_NOTIFICATION_URL = "imi.cdr_file_notification_url";
     private static final String LOCAL_CDR_DIR = "imi.local_cdr_dir";
     private static final String MAX_CDR_ERROR_COUNT = "imi.max_cdr_error_count";
+    private static final String CDR_RETENTION_DURATION = "imi.cdr.retention.duration";
+    private static final int MIN_CDR_RETENTION_DURATION = 5;
     private static final int MAX_CDR_ERROR_COUNT_DEFAULT = 100;
     private static final String PROCESS_SUMMARY_RECORD_SUBJECT = "nms.imi.kk.process_summary_record";
     private static final String CSR_PARAM_KEY = "csr";
@@ -743,5 +745,22 @@ public class CdrFileServiceImpl implements CdrFileService {
             reportAuditAndPost(request.getCdrSummary().getCdrFile(), errors);
         }
         return errors;
+    }
+
+    public void cleanOldCdr() {
+        int duration = MIN_CDR_RETENTION_DURATION;
+
+        try {
+            int durationFromConfig = Integer.parseInt(settingsFacade.getProperty(CDR_RETENTION_DURATION));
+            if (durationFromConfig < duration) {
+                LOGGER.debug("Discarding retention property from config since it is less than MIN");
+            } else {
+                duration = durationFromConfig;
+            }
+        } catch (NumberFormatException ne) {
+            LOGGER.debug(String.format("Unable to get property from config: %s", CDR_RETENTION_DURATION));
+        }
+
+        callDetailRecordDataService.executeQuery()
     }
 }
