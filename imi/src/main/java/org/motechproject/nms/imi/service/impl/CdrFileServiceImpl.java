@@ -761,6 +761,6 @@ public class CdrFileServiceImpl implements CdrFileService {
             LOGGER.debug(String.format("Unable to get property from config: %s", CDR_RETENTION_DURATION));
         }
 
-        callDetailRecordDataService.executeQuery()
+        callDetailRecordDataService.executeQuery("SELECT count(*) FROM motech_data_services.nms_imi_cdrs where creationDate < now() - interval 6 DAY;")
     }
 }
