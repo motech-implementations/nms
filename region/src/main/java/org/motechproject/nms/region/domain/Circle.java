@@ -1,6 +1,6 @@
 package org.motechproject.nms.region.domain;
 
-import org.codehaus.jackson.annotate.JsonBackReference;
+import org.codehaus.jackson.annotate.JsonManagedReference;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.annotations.InstanceLifecycleListeners;
@@ -8,8 +8,8 @@ import org.motechproject.mds.domain.MdsEntity;
 import org.motechproject.nms.tracking.annotation.TrackClass;
 import org.motechproject.nms.tracking.annotation.TrackFields;
 
+import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.Unique;
-import java.util.ArrayList;
 import java.util.List;
 
 @Entity(tableName = "nms_circles")
@@ -22,19 +22,18 @@ public class Circle extends MdsEntity {
     private String name;
 
     @Field
-    @JsonBackReference
-    private List<State> states;
+    @Persistent(mappedBy = "circle", defaultFetchGroup = "true")
+    @JsonManagedReference
+    private List<District> districts;
 
     @Field
     private Language defaultLanguage;
 
     public Circle() {
-        this.states = new ArrayList<>();
     }
 
     public Circle(String name) {
         this.name = name;
-        this.states = new ArrayList<>();
     }
 
     public String getName() {
@@ -45,12 +44,12 @@ public class Circle extends MdsEntity {
         this.name = name;
     }
 
-    public List<State> getStates() {
-        return states;
+    public List<District> getDistricts() {
+        return districts;
     }
 
-    public void setStates(List<State> states) {
-        this.states = states;
+    public void setDistricts(List<District> districts) {
+        this.districts = districts;
     }
 
     public Language getDefaultLanguage() {

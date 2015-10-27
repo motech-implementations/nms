@@ -10,8 +10,6 @@ import org.motechproject.nms.tracking.annotation.TrackClass;
 import org.motechproject.nms.tracking.annotation.TrackFields;
 
 import javax.jdo.annotations.Column;
-import javax.jdo.annotations.Element;
-import javax.jdo.annotations.Join;
 import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.Unique;
 import javax.validation.constraints.NotNull;
@@ -44,24 +42,14 @@ public class State extends MdsEntity {
     @JsonManagedReference
     private List<District> districts;
 
-    @Field
-    @Cascade(delete = true)
-    @Persistent(table = "nms_states_join_circles", mappedBy = "states", defaultFetchGroup = "true")
-    @Join(column = "state_id")
-    @Element(column = "circle_id")
-    @JsonManagedReference
-    private List<Circle> circles;
-
     public State() {
         this.districts = new ArrayList<>();
-        this.circles = new ArrayList<>();
     }
 
     public State(String name, Long code) {
         this.name = name;
         this.code = code;
         this.districts = new ArrayList<>();
-        this.circles = new ArrayList<>();
     }
 
     public String getName() {
@@ -86,14 +74,6 @@ public class State extends MdsEntity {
 
     public void setDistricts(List<District> districts) {
         this.districts = districts;
-    }
-
-    public List<Circle> getCircles() {
-        return circles;
-    }
-
-    public void setCircles(List<Circle> circles) {
-        this.circles = circles;
     }
 
     @Override

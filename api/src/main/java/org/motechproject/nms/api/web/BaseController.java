@@ -14,6 +14,7 @@ import org.motechproject.nms.props.domain.FinalCallStatus;
 import org.motechproject.nms.props.domain.Service;
 import org.motechproject.nms.props.service.PropertyService;
 import org.motechproject.nms.region.domain.Circle;
+import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.State;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,8 +26,10 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * BaseController
@@ -229,17 +232,29 @@ public class BaseController {
         return state;
     }
 
+    protected Set<State> getStatesFromCircle(Circle circle) {
+        Set<State> states = new HashSet<>();
+        if (circle != null) {
+            List<District> districts = circle.getDistricts();
+
+            for (District district : districts) {
+                states.add(district.getState());
+            }
+        }
+
+        return states;
+    }
+
     protected State getStateFromCircle(Circle circle) {
 
         State state = null;
 
         if (circle != null) {
-            List<State> states = circle.getStates();
+            Set<State> states = getStatesFromCircle(circle);
 
             if (states.size() == 1) {
-                state = states.get(0);
+                state = states.iterator().next();
             }
-
         }
 
         return state;

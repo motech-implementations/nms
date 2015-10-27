@@ -33,7 +33,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 
@@ -191,16 +190,16 @@ public class UserController extends BaseController {
             return true;
         }
 
-        List<State> stateList = currentCircle.getStates();
-        if (stateList == null || stateList.isEmpty()) { // No state available
+        Set<State> states = getStatesFromCircle(currentCircle);
+        if (states == null || states.isEmpty()) { // No state available
             return true;
         }
 
-        if (stateList.size() == 1) { // only one state available
-            return serviceDeployedInUserState(Service.KILKARI, stateList.get(0));
+        if (states.size() == 1) { // only one state available
+            return serviceDeployedInUserState(Service.KILKARI, states.iterator().next());
         }
 
-        for (State currentState : stateList) { // multiple states, false if undeployed in all states
+        for (State currentState : states) { // multiple states, false if undeployed in all states
             if (serviceDeployedInUserState(Service.KILKARI, currentState)) {
                 return true;
             }
@@ -239,12 +238,12 @@ public class UserController extends BaseController {
             return true;
         }
 
-        List<State> stateList = circle.getStates();
-        if (stateList == null || stateList.isEmpty()) { // No state available
+        Set<State> states = getStatesFromCircle(circle);
+        if (states == null || states.isEmpty()) { // No state available
             return true;
         }
 
-        for (State currentState : stateList) { // multiple states, false if undeployed in all states
+        for (State currentState : states) { // multiple states, false if undeployed in all states
             if (serviceDeployedInUserState(service, currentState)) {
                 return true;
             }

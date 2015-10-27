@@ -71,7 +71,6 @@
                   interface="org.motechproject.nms.region.service.CircleService" />
     <osgi:reference id="circleDataService"
                     interface="org.motechproject.nms.region.repository.CircleDataService" />
-    <osgi:service ref="circleImportService" interface="org.motechproject.nms.region.csv.CircleImportService" />
 
     <!-- Location Data Import Services -->
     <osgi:service ref="stateImportService" interface="org.motechproject.nms.region.csv.StateImportService" />

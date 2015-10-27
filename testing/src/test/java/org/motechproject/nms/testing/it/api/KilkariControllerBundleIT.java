@@ -69,6 +69,8 @@ import java.util.regex.Pattern;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createDistrict;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createState;
 
 
 /**
@@ -1786,9 +1788,14 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
         // create circle and add states to it
         Circle circle = new Circle("NR");
+        circleDataService.create(circle);
+
+        State s = createState(7L, "New State in delhi");
+        stateDataService.create(s);
+        districtDataService.create(createDistrict(s, 1L, "Circle", circle));
+
         circle.getStates().add(state1);
         circle.getStates().add(state2);
-        circleDataService.create(circle);
 
         // setup create subscription request
         SubscriptionRequest subscriptionRequest = new SubscriptionRequest(
