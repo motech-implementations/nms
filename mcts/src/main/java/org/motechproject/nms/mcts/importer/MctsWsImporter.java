@@ -2,6 +2,7 @@ package org.motechproject.nms.mcts.importer;
 
 import org.apache.commons.lang.StringUtils;
 import org.joda.time.LocalDate;
+import org.motechproject.commons.date.util.DateUtil;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.annotations.MotechListener;
 import org.motechproject.nms.flw.exception.FlwImportException;
@@ -73,7 +74,7 @@ public class MctsWsImporter {
     public void handleImportEvent(MotechEvent event) {
         List<Long> stateIds = getStateIds();
         URL endpoint = getEndpointUrl();
-        LocalDate referenceDate = LocalDate.now().minusDays(1);
+        LocalDate referenceDate = DateUtil.today().minusDays(1);
 
         importMothersData(endpoint, stateIds, referenceDate);
         importChildrenData(endpoint, stateIds, referenceDate);
