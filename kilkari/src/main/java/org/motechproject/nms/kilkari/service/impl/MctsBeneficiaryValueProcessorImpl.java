@@ -14,7 +14,7 @@ import org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-@Service
+@Service("mctsBeneficiaryValueProcessor")
 public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValueProcessor {
 
     @Autowired

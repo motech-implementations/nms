@@ -34,7 +34,7 @@
     <osgi:service ref="mctsBeneficiaryUpdateService"
                   interface="org.motechproject.nms.kilkari.service.MctsBeneficiaryUpdateService" />
 
-    <osgi:service ref="MctsBeneficiaryValueProcessor"
+    <osgi:service ref="mctsBeneficiaryValueProcessor"
                   interface="org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor"/>
 
     <osgi:reference id="transactionManager"

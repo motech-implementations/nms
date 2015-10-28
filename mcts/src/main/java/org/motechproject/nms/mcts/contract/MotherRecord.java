@@ -1,13 +1,9 @@
 package org.motechproject.nms.mcts.contract;
 
-import org.motechproject.nms.kilkari.utils.KilkariConstants;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
-import java.util.HashMap;
-import java.util.Map;
 
 @XmlType
 @XmlAccessorType(XmlAccessType.NONE)
