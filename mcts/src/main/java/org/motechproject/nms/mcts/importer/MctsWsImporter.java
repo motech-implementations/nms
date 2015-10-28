@@ -73,14 +73,14 @@ public class MctsWsImporter {
     public void handleImportEvent(MotechEvent event) {
         List<Long> stateIds = getStateIds();
         URL endpoint = getEndpointUrl();
+        LocalDate referenceDate = LocalDate.now().minusDays(1);
 
-        importMothersData(endpoint, stateIds);
-        importChildrenData(endpoint, stateIds);
-        importAnmAshaData(endpoint, stateIds);
+        importMothersData(endpoint, stateIds, referenceDate);
+        importChildrenData(endpoint, stateIds, referenceDate);
+        importAnmAshaData(endpoint, stateIds, referenceDate);
     }
 
-    private void importChildrenData(URL endpoint, List<Long> locations) {
-        LocalDate referenceDate = LocalDate.now().minusDays(1);
+    private void importChildrenData(URL endpoint, List<Long> locations, LocalDate referenceDate) {
         for (Long stateId : locations) {
             try {
                 ChildrenDataSet childrenDataSet = mctsWebServiceFacade.getChildrenData(referenceDate, referenceDate, endpoint, stateId);
@@ -96,8 +96,7 @@ public class MctsWsImporter {
         }
     }
 
-    private void importMothersData(URL endpoint, List<Long> locations) {
-        LocalDate referenceDate = LocalDate.now().minusDays(1);
+    private void importMothersData(URL endpoint, List<Long> locations, LocalDate referenceDate) {
         for (Long stateId : locations) {
             try {
                 MothersDataSet mothersDataSet = mctsWebServiceFacade.getMothersData(referenceDate, referenceDate, endpoint, stateId);
@@ -113,8 +112,7 @@ public class MctsWsImporter {
         }
     }
 
-    private void importAnmAshaData(URL endpoint, List<Long> locations) {
-        LocalDate referenceDate = LocalDate.now().minusDays(1);
+    private void importAnmAshaData(URL endpoint, List<Long> locations, LocalDate referenceDate) {
         for (Long stateId : locations) {
             try {
                 State state = stateDataService.findByCode(stateId);
@@ -152,7 +150,7 @@ public class MctsWsImporter {
     }
 
     private List<Long> getStateIds() {
-        String locationProp = Constants.MCTS_LOCATIONS;
+        String locationProp = settingsFacade.getProperty(Constants.MCTS_LOCATIONS);
         if (StringUtils.isBlank(locationProp)) {
             LOGGER.warn("No states configured for import");
             return Collections.emptyList();
