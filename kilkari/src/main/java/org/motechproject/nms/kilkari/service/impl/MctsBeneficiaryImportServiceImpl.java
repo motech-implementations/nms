@@ -23,6 +23,7 @@ import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
+import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.motechproject.nms.region.exception.InvalidLocationException;
 import org.motechproject.nms.region.service.LocationService;
 import org.slf4j.Logger;
@@ -53,25 +54,6 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     private LocationService locationService;
     private SubscriberService subscriberService;
     private MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor;
-
-    private static final String BENEFICIARY_ID = "ID_No";
-    private static final String BENEFICIARY_NAME = "Name";
-    private static final String MSISDN = "Whom_PhoneNo";
-    private static final String LMP = "LMP_Date";
-    private static final String DOB = "Birthdate";
-    private static final String MOTHER_ID = "Mother_ID";
-    private static final String MOTHER_DOB = "Birthdate";
-    private static final String ABORTION = "Abortion";
-    private static final String STILLBIRTH = "Outcome_Nos";
-    private static final String DEATH = "Entry_Type";
-    private static final String STATE = "StateID";
-    private static final String DISTRICT = "District_ID";
-    private static final String TALUKA = "Taluka_ID";
-    private static final String HEALTH_BLOCK = "HealthBlock_ID";
-    private static final String PHC = "PHC_ID";
-    private static final String SUBCENTRE = "SubCentre_ID";
-    private static final String CENSUS_VILLAGE = "Village_ID";
-    private static final String NON_CENSUS_VILLAGE = "SVID";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MctsBeneficiaryImportServiceImpl.class);
 
@@ -135,7 +117,6 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         return count;
     }
 
-    @Override
     @Transactional
     public int importChildData(Reader reader) throws IOException {
         childPack = subscriptionService.getSubscriptionPack(SubscriptionPackType.CHILD);
@@ -169,16 +150,17 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         return count;
     }
 
+    @Override
     @Transactional
     public void importMotherRecord(Map<String, Object> record) {
-        MctsMother mother = (MctsMother) record.get(BENEFICIARY_ID);
-        String name = (String) record.get(BENEFICIARY_NAME);
-        Long msisdn = (Long) record.get(MSISDN);
-        DateTime lmp = (DateTime) record.get(LMP);
-        DateTime motherDOB = (DateTime) record.get(MOTHER_DOB);
-        Boolean abortion = (Boolean) record.get(ABORTION);
-        Boolean stillBirth = (Boolean) record.get(STILLBIRTH);
-        Boolean death = (Boolean) record.get(DEATH);
+        MctsMother mother = (MctsMother) record.get(KilkariConstants.BENEFICIARY_ID);
+        String name = (String) record.get(KilkariConstants.BENEFICIARY_NAME);
+        Long msisdn = (Long) record.get(KilkariConstants.MSISDN);
+        DateTime lmp = (DateTime) record.get(KilkariConstants.LMP);
+        DateTime motherDOB = (DateTime) record.get(KilkariConstants.MOTHER_DOB);
+        Boolean abortion = (Boolean) record.get(KilkariConstants.ABORTION);
+        Boolean stillBirth = (Boolean) record.get(KilkariConstants.STILLBIRTH);
+        Boolean death = (Boolean) record.get(KilkariConstants.DEATH);
 
         // validate and set location
         try {
@@ -214,13 +196,15 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
     }
 
-    private void importChildRecord(Map<String, Object> record) {
-        MctsChild child = (MctsChild) record.get(BENEFICIARY_ID);
-        String name = (String) record.get(BENEFICIARY_NAME);
-        Long msisdn = (Long) record.get(MSISDN);
-        MctsMother mother = (MctsMother) record.get(MOTHER_ID);
-        DateTime dob = (DateTime) record.get(DOB);
-        Boolean death = (Boolean) record.get(DEATH);
+    @Override
+    @Transactional
+    public void importChildRecord(Map<String, Object> record) {
+        MctsChild child = (MctsChild) record.get(KilkariConstants.BENEFICIARY_ID);
+        String name = (String) record.get(KilkariConstants.BENEFICIARY_NAME);
+        Long msisdn = (Long) record.get(KilkariConstants.MSISDN);
+        MctsMother mother = (MctsMother) record.get(KilkariConstants.MOTHER_ID);
+        DateTime dob = (DateTime) record.get(KilkariConstants.DOB);
+        Boolean death = (Boolean) record.get(KilkariConstants.DEATH);
 
         // validate and set location
         try {
@@ -298,14 +282,14 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
     private Map<String, CellProcessor> getBeneficiaryLocationMapping() {
         Map<String, CellProcessor> mapping = new HashMap<>();
-        mapping.put(STATE, new Optional(new GetLong()));
-        mapping.put(DISTRICT, new Optional(new GetLong()));
-        mapping.put(TALUKA, new Optional(new GetString()));
-        mapping.put(HEALTH_BLOCK, new Optional(new GetLong()));
-        mapping.put(PHC, new Optional(new GetLong()));
-        mapping.put(SUBCENTRE, new Optional(new GetLong()));
-        mapping.put(CENSUS_VILLAGE, new Optional(new GetLong()));
-        mapping.put(NON_CENSUS_VILLAGE, new Optional(new GetLong()));
+        mapping.put(KilkariConstants.STATE, new Optional(new GetLong()));
+        mapping.put(KilkariConstants.DISTRICT, new Optional(new GetLong()));
+        mapping.put(KilkariConstants.TALUKA, new Optional(new GetString()));
+        mapping.put(KilkariConstants.HEALTH_BLOCK, new Optional(new GetLong()));
+        mapping.put(KilkariConstants.PHC, new Optional(new GetLong()));
+        mapping.put(KilkariConstants.SUBCENTRE, new Optional(new GetLong()));
+        mapping.put(KilkariConstants.CENSUS_VILLAGE, new Optional(new GetLong()));
+        mapping.put(KilkariConstants.NON_CENSUS_VILLAGE, new Optional(new GetLong()));
 
         return mapping;
     }
@@ -313,29 +297,29 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     private Map<String, CellProcessor> getMotherProcessorMapping() {
         Map<String, CellProcessor> mapping = getBeneficiaryLocationMapping();
 
-        mapping.put(BENEFICIARY_ID, new GetInstanceByString<MctsMother>() {
+        mapping.put(KilkariConstants.BENEFICIARY_ID, new GetInstanceByString<MctsMother>() {
             @Override
             public MctsMother retrieve(String value) {
                 return mctsBeneficiaryValueProcessor.getOrCreateMotherInstance(value);
             }
         });
-        mapping.put(BENEFICIARY_NAME, new GetString());
-        mapping.put(MSISDN, MctsBeneficiaryUtils.MSISDN_BY_STRING);
-        mapping.put(LMP, new Optional(MctsBeneficiaryUtils.DATE_BY_STRING));
-        mapping.put(MOTHER_DOB, new Optional(MctsBeneficiaryUtils.DATE_BY_STRING));
-        mapping.put(ABORTION, new Optional(new GetInstanceByString<Boolean>() {
+        mapping.put(KilkariConstants.BENEFICIARY_NAME, new GetString());
+        mapping.put(KilkariConstants.MSISDN, MctsBeneficiaryUtils.MSISDN_BY_STRING);
+        mapping.put(KilkariConstants.LMP, new Optional(MctsBeneficiaryUtils.DATE_BY_STRING));
+        mapping.put(KilkariConstants.MOTHER_DOB, new Optional(MctsBeneficiaryUtils.DATE_BY_STRING));
+        mapping.put(KilkariConstants.ABORTION, new Optional(new GetInstanceByString<Boolean>() {
              @Override
              public Boolean retrieve(String value) {
                  return mctsBeneficiaryValueProcessor.getAbortionDataFromString(value);
              }
         }));
-        mapping.put(STILLBIRTH, new Optional(new GetInstanceByString<Boolean>() {
+        mapping.put(KilkariConstants.STILLBIRTH, new Optional(new GetInstanceByString<Boolean>() {
             @Override
             public Boolean retrieve(String value) {
                 return mctsBeneficiaryValueProcessor.getStillBirthFromString(value);
             }
         }));
-        mapping.put(DEATH, new Optional(new GetInstanceByString<Boolean>() {
+        mapping.put(KilkariConstants.DEATH, new Optional(new GetInstanceByString<Boolean>() {
             @Override
             public Boolean retrieve(String value) {
                 return mctsBeneficiaryValueProcessor.getDeathFromString(value);
@@ -348,22 +332,22 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     private Map<String, CellProcessor> getChildProcessorMapping() {
         Map<String, CellProcessor> mapping = getBeneficiaryLocationMapping();
 
-        mapping.put(BENEFICIARY_ID, new GetInstanceByString<MctsChild>() {
+        mapping.put(KilkariConstants.BENEFICIARY_ID, new GetInstanceByString<MctsChild>() {
             @Override
             public MctsChild retrieve(String value) {
                 return mctsBeneficiaryValueProcessor.getChildInstanceByString(value);
             }
         });
-        mapping.put(BENEFICIARY_NAME, new Optional(new GetString()));
-        mapping.put(MOTHER_ID, new Optional(new GetInstanceByString<MctsMother>() {
+        mapping.put(KilkariConstants.BENEFICIARY_NAME, new Optional(new GetString()));
+        mapping.put(KilkariConstants.MOTHER_ID, new Optional(new GetInstanceByString<MctsMother>() {
             @Override
             public MctsMother retrieve(String value) {
                 return mctsBeneficiaryValueProcessor.getMotherInstanceByBeneficiaryId(value);
             }
         }));
-        mapping.put(MSISDN, MctsBeneficiaryUtils.MSISDN_BY_STRING);
-        mapping.put(DOB, new Optional(MctsBeneficiaryUtils.DATE_BY_STRING));
-        mapping.put(DEATH, new Optional(new GetInstanceByString<Boolean>() {
+        mapping.put(KilkariConstants.MSISDN, MctsBeneficiaryUtils.MSISDN_BY_STRING);
+        mapping.put(KilkariConstants.DOB, new Optional(MctsBeneficiaryUtils.DATE_BY_STRING));
+        mapping.put(KilkariConstants.DEATH, new Optional(new GetInstanceByString<Boolean>() {
             @Override
             public Boolean retrieve(String value) {
                 return mctsBeneficiaryValueProcessor.getDeathFromString(value);
