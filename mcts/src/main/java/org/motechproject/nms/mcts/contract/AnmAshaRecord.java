@@ -66,7 +66,7 @@ public class AnmAshaRecord {
         return stateId;
     }
 
-    @XmlElement(name = "stateID")
+    @XmlElement(name = "StateID")
     public void setStateId(Long stateID) {
         this.stateId = stateID;
     }
