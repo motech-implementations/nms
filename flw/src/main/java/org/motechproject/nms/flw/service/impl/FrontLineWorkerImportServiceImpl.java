@@ -127,7 +127,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
             // then the data needs to be hand corrected since we don't know if the msisdn has changed or
             // if the mcts id has changed.
             if (flw != null && mctsFlwId != null && flw.getMctsFlwId() != null && !mctsFlwId.equals(flw.getMctsFlwId())) {
-                throw new CsvImportDataException(String.format("Existing FLW with same MSISDN (%s) but " +
+                throw new FlwImportException(String.format("Existing FLW with same MSISDN (%s) but " +
                                         "different MCTS ID (%s != %s)", obscureNumber(msisdn), mctsFlwId, flw.getMctsFlwId()));
             }
         }

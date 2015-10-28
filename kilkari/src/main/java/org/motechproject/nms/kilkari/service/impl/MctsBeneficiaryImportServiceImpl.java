@@ -18,10 +18,9 @@ import org.motechproject.nms.kilkari.domain.SubscriptionError;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.domain.SubscriptionRejectionReason;
-import org.motechproject.nms.kilkari.repository.MctsChildDataService;
-import org.motechproject.nms.kilkari.repository.MctsMotherDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
+import org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.region.exception.InvalidLocationException;
@@ -52,9 +51,8 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     private SubscriptionService subscriptionService;
     private SubscriptionErrorDataService subscriptionErrorDataService;
     private LocationService locationService;
-    private MctsMotherDataService mctsMotherDataService;
-    private MctsChildDataService mctsChildDataService;
     private SubscriberService subscriberService;
+    private MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor;
 
     private static final String BENEFICIARY_ID = "ID_No";
     private static final String BENEFICIARY_NAME = "Name";
@@ -86,14 +84,13 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     @Autowired
     public MctsBeneficiaryImportServiceImpl(SubscriptionService subscriptionService,
                                             SubscriptionErrorDataService subscriptionErrorDataService,
-                                            LocationService locationService, MctsMotherDataService mctsMotherDataService,
-                                            MctsChildDataService mctsChildDataService, SubscriberService subscriberService) {
+                                            LocationService locationService, SubscriberService subscriberService,
+                                            MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor) {
         this.subscriptionService = subscriptionService;
         this.subscriptionErrorDataService = subscriptionErrorDataService;
         this.locationService = locationService;
-        this.mctsMotherDataService = mctsMotherDataService;
-        this.mctsChildDataService = mctsChildDataService;
         this.subscriberService = subscriberService;
+        this.mctsBeneficiaryValueProcessor = mctsBeneficiaryValueProcessor;
     }
 
 
@@ -172,7 +169,8 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         return count;
     }
 
-    private void importMotherRecord(Map<String, Object> record) {
+    @Transactional
+    public void importMotherRecord(Map<String, Object> record) {
         MctsMother mother = (MctsMother) record.get(BENEFICIARY_ID);
         String name = (String) record.get(BENEFICIARY_NAME);
         Long msisdn = (Long) record.get(MSISDN);
@@ -318,11 +316,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         mapping.put(BENEFICIARY_ID, new GetInstanceByString<MctsMother>() {
             @Override
             public MctsMother retrieve(String value) {
-                MctsMother mother = mctsMotherDataService.findByBeneficiaryId(value);
-                if (mother == null) {
-                    mother = new MctsMother(value);
-                }
-                return mother;
+                return mctsBeneficiaryValueProcessor.getOrCreateMotherInstance(value);
             }
         });
         mapping.put(BENEFICIARY_NAME, new GetString());
@@ -332,22 +326,19 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         mapping.put(ABORTION, new Optional(new GetInstanceByString<Boolean>() {
              @Override
              public Boolean retrieve(String value) {
-                 String trimmedValue = value.trim();
-                 return "Spontaneous".equals(trimmedValue) || "MTP<12 Weeks".equals(trimmedValue) ||
-                         "MTP>12 Weeks".equals(trimmedValue); // "None" or blank indicates no abortion/miscarriage
+                 return mctsBeneficiaryValueProcessor.getAbortionDataFromString(value);
              }
         }));
         mapping.put(STILLBIRTH, new Optional(new GetInstanceByString<Boolean>() {
             @Override
             public Boolean retrieve(String value) {
-                return "0".equals(value.trim()); // This column indicates the number of live births that resulted from this pregnancy.
-                                                 // 0 implies stillbirth, other values (including blank) do not.
+                return mctsBeneficiaryValueProcessor.getStillBirthFromString(value);
             }
         }));
         mapping.put(DEATH, new Optional(new GetInstanceByString<Boolean>() {
             @Override
             public Boolean retrieve(String value) {
-                return "9".equals(value.trim()); // 9 indicates beneficiary death; other values do not
+                return mctsBeneficiaryValueProcessor.getDeathFromString(value);
             }
         }));
 
@@ -360,21 +351,14 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         mapping.put(BENEFICIARY_ID, new GetInstanceByString<MctsChild>() {
             @Override
             public MctsChild retrieve(String value) {
-                MctsChild child = mctsChildDataService.findByBeneficiaryId(value);
-                if (child == null) {
-                    child = new MctsChild(value);
-                }
-                return child;
+                return mctsBeneficiaryValueProcessor.getChildInstanceByString(value);
             }
         });
         mapping.put(BENEFICIARY_NAME, new Optional(new GetString()));
         mapping.put(MOTHER_ID, new Optional(new GetInstanceByString<MctsMother>() {
             @Override
             public MctsMother retrieve(String value) {
-                if (value == null) {
-                    return null;
-                }
-                return mctsMotherDataService.findByBeneficiaryId(value);
+                return mctsBeneficiaryValueProcessor.getMotherInstanceByBeneficiaryId(value);
             }
         }));
         mapping.put(MSISDN, MctsBeneficiaryUtils.MSISDN_BY_STRING);
@@ -382,13 +366,10 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         mapping.put(DEATH, new Optional(new GetInstanceByString<Boolean>() {
             @Override
             public Boolean retrieve(String value) {
-                return "9".equals(value.trim()); // 9 indicates beneficiary death; other values do not
+                return mctsBeneficiaryValueProcessor.getDeathFromString(value);
             }
         }));
 
         return mapping;
     }
-
-
-
 }
