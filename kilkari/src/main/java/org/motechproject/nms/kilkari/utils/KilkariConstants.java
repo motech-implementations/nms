@@ -1,7 +1,7 @@
 package org.motechproject.nms.kilkari.utils;
 
 /**
- * Created by tomasz on 28.10.15.
+ * Constant field names for MCTS beneficiary import.
  */
 public final class KilkariConstants {
 
