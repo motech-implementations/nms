@@ -111,10 +111,11 @@ public class SubscriptionPack {
         int packLengthInDays = weeks * DAYS_IN_WEEK;
         int minDaysLeftInPack = MIN_MSG_WEEKS * DAYS_IN_WEEK; // BBC requirement to have at least 12 weeks of messages to send
         DateTime startDate = (type == SubscriptionPackType.PREGNANCY) ? date.plusDays(THREE_MONTHS) : date;
-        DateTime cutOff = DateTime.now().minusDays(minDaysLeftInPack);
+        DateTime cutOff = DateTime.now().plusDays(minDaysLeftInPack + 1); // plus 1 since we start calling people the next day
 
-        if (startDate.plusDays(packLengthInDays).isAfter(cutOff)) {
-            return String.format("Start date (%s) + pack length(%d) is after desired date range: (%s)", startDate, packLengthInDays, cutOff);
+        // Cutoff date is the minimum days left in  pack for us to deliver 12 weeks worth of messages
+        if (startDate.plusDays(packLengthInDays).isBefore(cutOff)) {
+            return String.format("Start date (%s) + pack length(%d) is before min message: (%s)", startDate, packLengthInDays, cutOff);
         }
 
         return "";
