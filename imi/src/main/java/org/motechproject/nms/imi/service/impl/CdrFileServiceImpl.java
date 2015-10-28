@@ -782,6 +782,8 @@ public class CdrFileServiceImpl implements CdrFileService {
 
         LOGGER.debug(String.format(logTemplate, callDetailRecordDataService.count(), CDR_TABLE_NAME));
         LOGGER.debug(String.format(logTemplate, callSummaryRecordDataService.count(), CSR_TABLE_NAME));
+        callDetailRecordDataService.evictEntityCache(false);
+        callSummaryRecordDataService.evictEntityCache(false);
     }
 
     /**

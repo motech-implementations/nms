@@ -115,7 +115,8 @@ public class SubscriptionPack {
 
         // Cutoff date is the minimum days left in  pack for us to deliver 12 weeks worth of messages
         if (startDate.plusDays(packLengthInDays).isBefore(cutOff)) {
-            return String.format("Start date (%s) + pack length(%d) is before min message: (%s)", startDate, packLengthInDays, cutOff);
+            return String.format("Start date (%s) + pack length(%d) is before min delivery date: (%s)",
+                    startDate, packLengthInDays, cutOff);
         }
 
         return "";

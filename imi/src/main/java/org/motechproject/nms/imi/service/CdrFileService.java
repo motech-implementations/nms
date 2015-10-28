@@ -62,7 +62,7 @@ public interface CdrFileService {
     List<String> processDetailFile(MotechEvent event);
 
     /**
-     * To be called by a scheduled event or triggered with Ops API. We expect ~3x the # of OBD requests/day of CDRs
+     * To be called during target file generation or triggered with Ops API. We expect ~3x the # of OBD requests/day of CDRs
      * coming back. For phase 1, ~360k CDR for 120k OBD/day. The minimum default retention is set to 5 days and can be
      * increased through config value in imi.properties - imi.cdr.retention.duration
      */
