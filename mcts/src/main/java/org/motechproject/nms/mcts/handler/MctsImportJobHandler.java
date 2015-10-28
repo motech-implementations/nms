@@ -39,10 +39,14 @@ public class MctsImportJobHandler {
 
     @PostConstruct
     public void initImportJob() {
-        String cronExpression = settingsFacade.getProperty(Constants.MCTS_SYNC_START_TIME);
-        if (StringUtils.isBlank(cronExpression) || !CronExpression.isValidExpression(cronExpression)) {
-            LOGGER.error("Cron expression from setting is invalid");
-            throw new MctsImportConfigurationException("Cron expression from setting is invalid");
+        String cronExpression = settingsFacade.getProperty(Constants.MCTS_SYNC_CRON);
+        if (StringUtils.isBlank(cronExpression)) {
+            LOGGER.warn("No cron expression configured for MCTS data import, no import will be performed");
+            return;
+        }
+
+        if (!CronExpression.isValidExpression(cronExpression)) {
+            throw new MctsImportConfigurationException("Cron expression from setting is invalid: " + cronExpression);
         }
 
         CronSchedulableJob mctsImportJob = new CronSchedulableJob(new MotechEvent(Constants.MCTS_IMPORT_EVENT), cronExpression);
