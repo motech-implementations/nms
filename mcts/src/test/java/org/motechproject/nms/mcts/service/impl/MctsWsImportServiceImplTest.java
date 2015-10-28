@@ -1,4 +1,4 @@
-package org.motechproject.nms.mcts.importer;
+package org.motechproject.nms.mcts.service.impl;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
@@ -12,7 +12,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.motechproject.commons.date.util.DateUtil;
-import org.motechproject.event.MotechEvent;
 import org.motechproject.nms.flw.service.FrontLineWorkerImportService;
 import org.motechproject.nms.flw.utils.FlwConstants;
 import org.motechproject.nms.kilkari.domain.MctsChild;
@@ -31,7 +30,6 @@ import org.motechproject.nms.mcts.utils.Constants;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.exception.InvalidLocationException;
 import org.motechproject.nms.region.repository.StateDataService;
-import org.motechproject.scheduler.contract.CronSchedulableJob;
 import org.motechproject.scheduler.service.MotechSchedulerService;
 import org.motechproject.server.config.SettingsFacade;
 import org.motechproject.testing.utils.TimeFaker;
@@ -41,7 +39,6 @@ import java.util.Map;
 
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
@@ -49,16 +46,13 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
-public class MctsWsImporterTest {
+public class MctsWsImportServiceImplTest {
 
     @InjectMocks
-    private MctsWsImporter mctsWsImporter = new MctsWsImporter();
+    private MctsWsImportServiceImpl mctsWsImportServiceImpl = new MctsWsImportServiceImpl();
 
     @Mock
     private SettingsFacade settingsFacade;
-
-    @Mock
-    private MotechSchedulerService schedulerService;
 
     @Mock
     private StateDataService stateDataService;
@@ -103,20 +97,6 @@ public class MctsWsImporterTest {
     }
 
     @Test
-    public void shouldScheduleCronJobOnInit() {
-        when(settingsFacade.getProperty(Constants.MCTS_SYNC_START_TIME)).thenReturn("0 0 16 * * ? *");
-
-        mctsWsImporter.initImportJob();
-
-        ArgumentCaptor<CronSchedulableJob> captor = ArgumentCaptor.forClass(CronSchedulableJob.class);
-        verify(schedulerService).safeScheduleJob(captor.capture());
-        assertEquals("0 0 16 * * ? *", captor.getValue().getCronExpression());
-        assertNull(captor.getValue().getEndTime());
-        assertNull(captor.getValue().getStartTime());
-        assertEquals(Constants.MCTS_IMPORT_EVENT, captor.getValue().getMotechEvent().getSubject());
-    }
-
-    @Test
     public void shouldImportData() throws InvalidLocationException {
         prepStates();
         prepFlwData();
@@ -142,7 +122,7 @@ public class MctsWsImporterTest {
         when(mctsWebServiceFacade.getMothersData(eq(yesterday), eq(yesterday), any(URL.class), eq(15L)))
                 .thenReturn(motherDs2);
 
-        mctsWsImporter.handleImportEvent(new MotechEvent());
+        mctsWsImportServiceImpl.importFromMcts();
 
         // flw
         ArgumentCaptor<Map> mapCaptor = ArgumentCaptor.forClass(Map.class);

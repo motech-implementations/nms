@@ -1,11 +1,9 @@
-package org.motechproject.nms.mcts.importer;
+package org.motechproject.nms.mcts.service.impl;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.joda.time.LocalDate;
 import org.motechproject.commons.date.util.DateUtil;
-import org.motechproject.event.MotechEvent;
-import org.motechproject.event.listener.annotations.MotechListener;
 import org.motechproject.nms.flw.exception.FlwImportException;
 import org.motechproject.nms.flw.service.FrontLineWorkerImportService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
@@ -21,21 +19,18 @@ import org.motechproject.nms.mcts.exception.MctsImportConfigurationException;
 import org.motechproject.nms.mcts.exception.MctsInvalidResponseStructureException;
 import org.motechproject.nms.mcts.exception.MctsWebServiceExeption;
 import org.motechproject.nms.mcts.service.MctsWebServiceFacade;
+import org.motechproject.nms.mcts.service.MctsWsImportService;
 import org.motechproject.nms.mcts.utils.Constants;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.exception.InvalidLocationException;
 import org.motechproject.nms.region.repository.StateDataService;
-import org.motechproject.scheduler.contract.CronSchedulableJob;
-import org.motechproject.scheduler.service.MotechSchedulerService;
 import org.motechproject.server.config.SettingsFacade;
-import org.quartz.CronExpression;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -45,10 +40,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Component
-public class MctsWsImporter {
+@Service
+public class MctsWsImportServiceImpl implements MctsWsImportService {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(MctsWsImporter.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(MctsWsImportServiceImpl.class);
 
     @Autowired
     private FrontLineWorkerImportService frontLineWorkerImportService;
@@ -60,9 +55,6 @@ public class MctsWsImporter {
     private MctsWebServiceFacade mctsWebServiceFacade;
 
     @Autowired
-    private MotechSchedulerService motechSchedulerService;
-
-    @Autowired
     private MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor;
 
     @Autowired
@@ -72,20 +64,8 @@ public class MctsWsImporter {
     @Qualifier("mctsSettings")
     private SettingsFacade settingsFacade;
 
-    @PostConstruct
-    public void initImportJob() {
-        String cronExpression = settingsFacade.getProperty(Constants.MCTS_SYNC_START_TIME);
-        if (StringUtils.isBlank(cronExpression) || !CronExpression.isValidExpression(cronExpression)) {
-            LOGGER.error("Cron expression from setting is invalid");
-            throw new MctsImportConfigurationException("Cron expression from setting is invalid");
-        }
-
-        CronSchedulableJob mctsImportJob = new CronSchedulableJob(new MotechEvent(Constants.MCTS_IMPORT_EVENT), cronExpression);
-        motechSchedulerService.safeScheduleJob(mctsImportJob);
-    }
-
-    @MotechListener(subjects = Constants.MCTS_IMPORT_EVENT)
-    public void handleImportEvent(MotechEvent event) {
+    @Override
+    public void importFromMcts() {
         StopWatch stopWatch = new StopWatch();
 
         LOGGER.info("Starting import from MCTS web service");
