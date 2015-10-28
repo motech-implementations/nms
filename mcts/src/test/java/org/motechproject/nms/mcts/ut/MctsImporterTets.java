@@ -1,4 +1,4 @@
 package org.motechproject.nms.mcts.ut;
 
-public class MctsImportServiceTest {
+public class MctsImporterTets {
 }

@@ -29,10 +29,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
-import javax.xml.rpc.ServiceException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -60,7 +58,7 @@ public class MctsWsImporter {
     private SettingsFacade settingsFacade;
 
     @PostConstruct
-    public void initImportJob() throws RemoteException, ServiceException {
+    public void initImportJob() {
         String cronExpression = settingsFacade.getProperty(Constants.MCTS_SYNC_START_TIME);
         if (StringUtils.isBlank(cronExpression) || !CronExpression.isValidExpression(cronExpression)) {
             LOGGER.error("Cron expression from setting is invalid");
