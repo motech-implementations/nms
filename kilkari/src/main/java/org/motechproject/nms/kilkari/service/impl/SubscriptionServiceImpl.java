@@ -69,6 +69,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private MotechSchedulerService schedulerService;
 
     private static final int THREE_MONTHS = 90;
+    private static final int PREGNANCY_PACK_LENGTH_DAYS = 72 * 7;
+    private static final int CHILD_PACK_LENGTH_DAYS = 48 * 7;
+
 
     private SubscriberDataService subscriberDataService;
     private SubscriptionPackDataService subscriptionPackDataService;
@@ -200,6 +203,46 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         }
 
         LOGGER.info(String.format("Purged %s subscribers and %s subscriptions with status (%s or %s) and " + "endDate date before %s", purgedSubscribers, purgedSubscriptions, SubscriptionStatus.COMPLETED, SubscriptionStatus.DEACTIVATED, cutoff.toString()));
+    }
+
+    @Override
+    public void completePastDueSubscriptions() {
+
+        final DateTime currentTime = DateTime.now();
+        final DateTime oldestPregnancyStart = currentTime.minusDays(PREGNANCY_PACK_LENGTH_DAYS);
+        final DateTime oldestChildStart = currentTime.minusDays(CHILD_PACK_LENGTH_DAYS);
+
+        LOGGER.debug(String.format("Completing active pregnancy susbscriptions older than %s", oldestPregnancyStart));
+        LOGGER.debug(String.format("Completing active child susbscriptions older than %s", oldestChildStart));
+
+        @SuppressWarnings("unchecked")
+        SqlQueryExecution<List<Subscription>> queryExecution = new SqlQueryExecution<List<Subscription>>() {
+
+            @Override
+            public String getSqlQuery() {
+                String query = String.format(
+                        "UPDATE motech_data_services.nms_subscriptions AS s " +
+                        "JOIN motech_data_services.nms_subscription_packs AS sp " +
+                        "ON s.subscriptionPack_id_OID = sp.id " +
+                        "SET s.status = 'COMPLETED', s.endDate = %s " +
+                        "WHERE " +
+                        "s.status = 'ACTIVE' AND " +
+                        "((sp.type = 'PREGNANCY' AND s.startDate < %s) OR (sp.type = 'CHILD' AND s.startDate < %s))",
+                        currentTime, oldestPregnancyStart, oldestChildStart);
+                LOGGER.debug("SQL QUERY: {}", query);
+                return query;
+            }
+
+            @Override
+            public List<Subscription> execute(Query query) {
+
+                query.setClass(Subscription.class);
+                ForwardQueryResult fqr = (ForwardQueryResult) query.execute();
+                return (List<Subscription>) fqr;
+            }
+        };
+
+        subscriptionDataService.executeSQLQuery(queryExecution);
     }
 
     @Override

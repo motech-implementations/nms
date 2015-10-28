@@ -146,6 +146,11 @@ public interface SubscriptionService {
     void purgeOldInvalidSubscriptions(MotechEvent event);
 
     /**
+     * This is used to complete active subscriptions that have extended past their scheduled message delivery length
+     */
+    void completePastDueSubscriptions();
+
+    /**
      * Lifecycle listener that verifies a subscription can only be deleted if it is deactivated or completed
      * and has been in that state for 6 weeks
      *
@@ -159,8 +164,8 @@ public interface SubscriptionService {
      *
      * @param pack
      */
-    @InstanceLifecycleListener({InstanceLifecycleListenerType.POST_CREATE, InstanceLifecycleListenerType.PRE_DELETE,
-            InstanceLifecycleListenerType.PRE_STORE})
+    @InstanceLifecycleListener({ InstanceLifecycleListenerType.POST_CREATE, InstanceLifecycleListenerType.PRE_DELETE,
+            InstanceLifecycleListenerType.PRE_STORE })
     void broadcastCacheEvictMessage(SubscriptionPack pack);
 
     /**
@@ -169,9 +174,4 @@ public interface SubscriptionService {
      *
      */
     void cacheEvict(MotechEvent event);
-
-    /**
-     * Helper to complete subscriptions that no longer have messages due
-     */
-    void completeOldSubscriptions();
 }

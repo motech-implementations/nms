@@ -1,6 +1,8 @@
 package org.motechproject.nms.api.web;
 
+import org.motechproject.nms.imi.service.CdrFileService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
+import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,10 +20,15 @@ public class OpsController extends BaseController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OpsController.class);
     private SubscriptionDataService subscriptionDataService;
+    private SubscriptionService subscriptionService;
+    private CdrFileService cdrFileService;
 
     @Autowired
-    public OpsController(SubscriptionDataService subscriptionDataService) {
+    public OpsController(SubscriptionDataService subscriptionDataService, SubscriptionService subscriptionService,
+                         CdrFileService cdrFileService) {
         this.subscriptionDataService = subscriptionDataService;
+        this.subscriptionService = subscriptionService;
+        this.cdrFileService = cdrFileService;
     }
 
     /**
@@ -37,19 +44,16 @@ public class OpsController extends BaseController {
     @RequestMapping("/cleanSubscriptions")
     @ResponseStatus(HttpStatus.OK)
     public void cleanSubscriptions() {
+
         LOGGER.info("/cleanSubscriptions()");
+        subscriptionService.completePastDueSubscriptions();
     }
 
-    @RequestMapping("/cleanCdr")
+    @RequestMapping("/cleanCallRecords")
     @ResponseStatus(HttpStatus.OK)
-    public void clearCdr() {
+    public void clearCallRecords() {
+
         LOGGER.info("/cleanCdr()");
+        cdrFileService.cleanOldCallRecords();
     }
-
-    @RequestMapping("/cleanCsr")
-    @ResponseStatus(HttpStatus.OK)
-    public void clearCsr() {
-        LOGGER.info("/cleanCsr()");
-    }
-
 }
