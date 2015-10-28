@@ -915,6 +915,7 @@
                 <version>2.10</version>
                 <configuration>
                     <configLocation>${modules.root.dir}/checkstyle.xml</configLocation>
+                    <suppressionsLocation>${modules.root.dir}/suppressions.xml</suppressionsLocation>
                     <includeTestSourceDirectory>false</includeTestSourceDirectory>
                     <enableFilesSummary>true</enableFilesSummary>
                     <failsOnError>true</failsOnError>
