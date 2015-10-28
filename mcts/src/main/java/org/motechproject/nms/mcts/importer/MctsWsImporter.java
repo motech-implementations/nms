@@ -7,6 +7,7 @@ import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.annotations.MotechListener;
 import org.motechproject.nms.flw.exception.FlwImportException;
 import org.motechproject.nms.flw.service.FrontLineWorkerImportService;
+import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.motechproject.nms.mcts.contract.AnmAshaDataSet;
@@ -63,6 +64,9 @@ public class MctsWsImporter {
     private MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor;
 
     @Autowired
+    private MctsBeneficiaryImportService mctsBeneficiaryImportService;
+
+    @Autowired
     @Qualifier("mctsSettings")
     private SettingsFacade settingsFacade;
 
@@ -92,15 +96,34 @@ public class MctsWsImporter {
     private void importChildrenData(URL endpoint, List<Long> locations, LocalDate referenceDate) {
         for (Long stateId : locations) {
             try {
+                State state = stateDataService.findByCode(stateId);
+                if (state == null) {
+                    LOGGER.warn("State with code {} doesn't exist in database. Skipping child import for this state",
+                            stateId);
+                    continue;
+                }
+
                 ChildrenDataSet childrenDataSet = mctsWebServiceFacade.getChildrenData(referenceDate, referenceDate, endpoint, stateId);
 
                 LOGGER.debug("Received children data set with {} records", sizeNullSafe(childrenDataSet.getRecords()));
-                // TODO save data to the database
+
+                saveImportedChildrenData(childrenDataSet, state);
 
             } catch (MctsWebServiceExeption e) {
                 LOGGER.error("Cannot read children data from {} state.", stateId, e);
             } catch (MctsInvalidResponseStructureException e) {
                 LOGGER.error("Cannot read children data from {} state. Response Deserialization Error", stateId, e);
+            }
+        }
+    }
+
+    private void saveImportedChildrenData(ChildrenDataSet childrenDataSet, State state) {
+        for (ChildRecord record : childrenDataSet.getRecords()) {
+            try {
+                mctsBeneficiaryImportService.importChildRecord(toMap(record));
+            } catch (RuntimeException e) {
+                LOGGER.error("Flw import Error. Cannot import Child with ID: {} for state ID: {}",
+                        record.getIdNo(), state.getCode(), e);
             }
         }
     }
@@ -126,7 +149,7 @@ public class MctsWsImporter {
             try {
                 State state = stateDataService.findByCode(stateId);
                 if (state == null) {
-                    LOGGER.warn("State with code {} dosen't exsist in database. Skipping FLW importing for this state", stateId);
+                    LOGGER.warn("State with code {} doesn't exist in database. Skipping FLW import for this state", stateId);
                     continue;
                 }
                 AnmAshaDataSet anmAshaDataSet = mctsWebServiceFacade.getAnmAshaData(referenceDate, referenceDate, endpoint, stateId);
@@ -171,9 +194,8 @@ public class MctsWsImporter {
 
         map.put(KilkariConstants.BENEFICIARY_NAME, childRecord.getName());
 
-        // TODO
-        map.put(KilkariConstants.MSISDN, null);
-        map.put(KilkariConstants.DOB, null);
+        map.put(KilkariConstants.MSISDN, mctsBeneficiaryValueProcessor.getMsisdnByString(childRecord.getWhomPhoneNo()));
+        map.put(KilkariConstants.DOB, mctsBeneficiaryValueProcessor.getDateByString(childRecord.getBirthdate()));
 
         map.put(KilkariConstants.BENEFICIARY_ID,
                 mctsBeneficiaryValueProcessor.getChildInstanceByString(childRecord.getIdNo()));
