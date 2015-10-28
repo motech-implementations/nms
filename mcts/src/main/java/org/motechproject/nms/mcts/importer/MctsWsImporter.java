@@ -1,6 +1,7 @@
 package org.motechproject.nms.mcts.importer;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.time.StopWatch;
 import org.joda.time.LocalDate;
 import org.motechproject.commons.date.util.DateUtil;
 import org.motechproject.event.MotechEvent;
@@ -85,16 +86,41 @@ public class MctsWsImporter {
 
     @MotechListener(subjects = Constants.MCTS_IMPORT_EVENT)
     public void handleImportEvent(MotechEvent event) {
+        StopWatch stopWatch = new StopWatch();
+
+        LOGGER.info("Starting import from MCTS web service");
+        stopWatch.start();
+
+
         List<Long> stateIds = getStateIds();
         URL endpoint = getEndpointUrl();
         LocalDate referenceDate = DateUtil.today().minusDays(1);
 
-        importMothersData(endpoint, stateIds, referenceDate);
-        importChildrenData(endpoint, stateIds, referenceDate);
-        importAnmAshaData(endpoint, stateIds, referenceDate);
+        LOGGER.info("Pulling data for {}, for states {}", referenceDate, stateIds);
+        if (endpoint == null) {
+            LOGGER.debug("Using default service endpoint from WSDL");
+        } else {
+            LOGGER.debug("Using custom endpoint {}", endpoint);
+        }
+
+        int savedMothers = importMothersData(endpoint, stateIds, referenceDate);
+        int savedChildren = importChildrenData(endpoint, stateIds, referenceDate);
+        int savedAnmAsha = importAnmAshaData(endpoint, stateIds, referenceDate);
+
+        stopWatch.stop();
+
+        double seconds = stopWatch.getTime() / 1000d;
+        LOGGER.info("Finished import from MCTS in {} seconds. Import {} mothers, {} children and {} front line workers.",
+                seconds, savedMothers, savedChildren, savedAnmAsha);
     }
 
-    private void importChildrenData(URL endpoint, List<Long> locations, LocalDate referenceDate) {
+    private int importChildrenData(URL endpoint, List<Long> locations, LocalDate referenceDate) {
+        LOGGER.info("Starting children import");
+
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
+
+        int saved = 0;
         for (Long stateId : locations) {
             try {
                 State state = stateDataService.findByCode(stateId);
@@ -108,7 +134,7 @@ public class MctsWsImporter {
 
                 LOGGER.debug("Received children data set with {} records", sizeNullSafe(childrenDataSet.getRecords()));
 
-                saveImportedChildrenData(childrenDataSet, state);
+                saved += saveImportedChildrenData(childrenDataSet, state);
 
             } catch (MctsWebServiceExeption e) {
                 LOGGER.error("Cannot read children data from {} state.", stateId, e);
@@ -116,20 +142,36 @@ public class MctsWsImporter {
                 LOGGER.error("Cannot read children data from {} state. Response Deserialization Error", stateId, e);
             }
         }
+
+        stopWatch.stop();
+
+        double seconds = stopWatch.getTime() / 1000d;
+        LOGGER.info("Finished children import {} seconds. Imported {} children.", seconds, saved);
+
+        return saved;
     }
 
-    private void saveImportedChildrenData(ChildrenDataSet childrenDataSet, State state) {
+    private int saveImportedChildrenData(ChildrenDataSet childrenDataSet, State state) {
+        int saved = 0;
         for (ChildRecord record : childrenDataSet.getRecords()) {
             try {
                 mctsBeneficiaryImportService.importChildRecord(toMap(record));
+                saved++;
             } catch (RuntimeException e) {
                 LOGGER.error("Flw import Error. Cannot import Child with ID: {} for state ID: {}",
                         record.getIdNo(), state.getCode(), e);
             }
         }
+        return saved;
     }
 
-    private void importMothersData(URL endpoint, List<Long> locations, LocalDate referenceDate) {
+    private int importMothersData(URL endpoint, List<Long> locations, LocalDate referenceDate) {
+        LOGGER.info("Starting mother import");
+
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
+
+        int saved = 0;
         for (Long stateId : locations) {
             try {
                 State state = stateDataService.findByCode(stateId);
@@ -141,7 +183,8 @@ public class MctsWsImporter {
 
                 LOGGER.debug("Received Mothers data set with {} records for {} state",
                         sizeNullSafe(mothersDataSet.getRecords()), state.getName());
-                saveImportedMothersData(mothersDataSet, state);
+
+                saved += saveImportedMothersData(mothersDataSet, state);
 
                 LOGGER.debug("Received mother data set with {} records for {} state", sizeNullSafe(mothersDataSet.getRecords()),
                         state.getName());
@@ -153,9 +196,22 @@ public class MctsWsImporter {
                 LOGGER.error("Cannot read mothers data from {} state. Response Deserialization Error", stateId, e);
             }
         }
+
+        stopWatch.stop();
+
+        double seconds = stopWatch.getTime() / 1000d;
+        LOGGER.info("Finished mother import {} seconds. Imported {} mothers.", seconds, saved);
+
+        return saved;
     }
 
-    private void importAnmAshaData(URL endpoint, List<Long> locations, LocalDate referenceDate) {
+    private int importAnmAshaData(URL endpoint, List<Long> locations, LocalDate referenceDate) {
+        LOGGER.info("Starting Anm Asha import");
+
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
+
+        int saved = 0;
         for (Long stateId : locations) {
             try {
                 State state = stateDataService.findByCode(stateId);
@@ -167,7 +223,8 @@ public class MctsWsImporter {
 
                 LOGGER.debug("Received Anm Asha data set with {} records for {} state",
                         sizeNullSafe(anmAshaDataSet.getRecords()), state.getName());
-                saveImportedAnmAshaData(anmAshaDataSet, state);
+
+                saved += saveImportedAnmAshaData(anmAshaDataSet, state);
 
             } catch (MctsWebServiceExeption e) {
                 LOGGER.error("Cannot read anm asha data from {} state.", stateId, e);
@@ -175,12 +232,21 @@ public class MctsWsImporter {
                 LOGGER.error("Cannot read anm asha data from {} state. Response Deserialization Error", stateId, e);
             }
         }
+
+        stopWatch.stop();
+
+        double seconds = stopWatch.getTime() / 1000d;
+        LOGGER.info("Finished Anm Asha import {} seconds. Imported {} front line workers.", seconds, saved);
+
+        return saved;
     }
 
-    private void saveImportedAnmAshaData(AnmAshaDataSet anmAshaDataSet, State state) {
+    private int saveImportedAnmAshaData(AnmAshaDataSet anmAshaDataSet, State state) {
+        int saved = 0;
         for (AnmAshaRecord record : anmAshaDataSet.getRecords()) {
             try {
                 frontLineWorkerImportService.importFrontLineWorker(record.toFlwRecordMap(), state);
+                saved++;
             } catch (InvalidLocationException e) {
                 LOGGER.warn("Invalid location for FLW: ", e);
             } catch (FlwImportException e) {
@@ -190,17 +256,21 @@ public class MctsWsImporter {
                         record.getId(), record.getContactNo(), e);
             }
         }
+        return saved;
     }
 
-    private void saveImportedMothersData(MothersDataSet mothersDataSet, State state) {
+    private int saveImportedMothersData(MothersDataSet mothersDataSet, State state) {
+        int saved = 0;
         for (MotherRecord record : mothersDataSet.getRecords()) {
             try {
                 mctsBeneficiaryImportService.importMotherRecord(toMap(record));
+                saved++;
             } catch (RuntimeException e) {
                 LOGGER.error("Flw import Error. Cannot import Mother with ID: {} for state ID: {}",
                         record.getIdNo(), state.getCode(), e);
             }
         }
+        return saved;
     }
 
     private Map<String, Object> toMap(ChildRecord childRecord) {
