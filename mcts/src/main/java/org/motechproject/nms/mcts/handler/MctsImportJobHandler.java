@@ -1,6 +1,8 @@
 package org.motechproject.nms.mcts.handler;
 
 import org.apache.commons.lang.StringUtils;
+import org.joda.time.LocalDate;
+import org.motechproject.commons.date.util.DateUtil;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.annotations.MotechListener;
 import org.motechproject.nms.mcts.exception.MctsImportConfigurationException;
@@ -18,6 +20,11 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Component responsible for scheduling and handling the MCTS import job.
@@ -56,6 +63,38 @@ public class MctsImportJobHandler {
     @MotechListener(subjects = Constants.MCTS_IMPORT_EVENT)
     public void handleImportEvent(MotechEvent event) {
         LOGGER.info("Starting import from MCTS");
-        mctsWsImportService.importFromMcts();
+
+        List<Long> stateIds = getStateIds();
+        URL endpoint = getEndpointUrl();
+        LocalDate referenceDate = DateUtil.today().minusDays(1);
+
+        mctsWsImportService.importFromMcts(stateIds, referenceDate, endpoint);
+    }
+
+
+    private List<Long> getStateIds() {
+        String locationProp = settingsFacade.getProperty(Constants.MCTS_LOCATIONS);
+        if (StringUtils.isBlank(locationProp)) {
+            LOGGER.warn("No states configured for import");
+            return Collections.emptyList();
+        }
+
+        String[] locationParts = StringUtils.split(locationProp, ',');
+
+        List<Long> stateIds = new ArrayList<>();
+        for (String locationPart : locationParts) {
+            stateIds.add(Long.valueOf(locationPart));
+        }
+
+        return stateIds;
+    }
+
+    private URL getEndpointUrl() {
+        String endpoint = settingsFacade.getProperty(Constants.MCTS_ENDPOINT);
+        try {
+            return StringUtils.isBlank(endpoint) ? null : new URL(endpoint);
+        } catch (MalformedURLException e) {
+            throw new MctsImportConfigurationException("Malformed endpoint configured: " + endpoint, e);
+        }
     }
 }

@@ -3,8 +3,6 @@ package org.motechproject.nms.mcts.service.impl;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.joda.time.LocalTime;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -26,13 +24,9 @@ import org.motechproject.nms.mcts.contract.ChildrenDataSet;
 import org.motechproject.nms.mcts.contract.MotherRecord;
 import org.motechproject.nms.mcts.contract.MothersDataSet;
 import org.motechproject.nms.mcts.service.MctsWebServiceFacade;
-import org.motechproject.nms.mcts.utils.Constants;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.exception.InvalidLocationException;
 import org.motechproject.nms.region.repository.StateDataService;
-import org.motechproject.scheduler.service.MotechSchedulerService;
-import org.motechproject.server.config.SettingsFacade;
-import org.motechproject.testing.utils.TimeFaker;
 
 import java.net.URL;
 import java.util.Map;
@@ -50,9 +44,6 @@ public class MctsWsImportServiceImplTest {
 
     @InjectMocks
     private MctsWsImportServiceImpl mctsWsImportServiceImpl = new MctsWsImportServiceImpl();
-
-    @Mock
-    private SettingsFacade settingsFacade;
 
     @Mock
     private StateDataService stateDataService;
@@ -85,27 +76,15 @@ public class MctsWsImportServiceImplTest {
     private final LocalDate today = DateUtil.today();
     private final LocalDate yesterday = today.minusDays(1);
 
-    @Before
-    public void setUp() {
-        TimeFaker.fakeToday(today);
-        when(mctsBeneficiaryValueProcessor.getDeathFromString("9")).thenReturn(true);
-    }
-
-    @After
-    public void tearDown() {
-        TimeFaker.stopFakingTime();
-    }
-
     @Test
     public void shouldImportData() throws InvalidLocationException {
         prepStates();
         prepFlwData();
         prepChildData();
         prepMotherData();
-        when(settingsFacade.getProperty(Constants.MCTS_ENDPOINT)).thenReturn("http://localhost/web-service");
-        when(settingsFacade.getProperty(Constants.MCTS_LOCATIONS)).thenReturn("1,15");
         when(stateDataService.findByCode(1L)).thenReturn(state1);
         when(stateDataService.findByCode(15L)).thenReturn(state15);
+        when(mctsBeneficiaryValueProcessor.getDeathFromString("9")).thenReturn(true);
         // flw
         when(mctsWebServiceFacade.getAnmAshaData(eq(yesterday), eq(yesterday), any(URL.class), eq(1L)))
                 .thenReturn(flwDs1);
@@ -122,7 +101,7 @@ public class MctsWsImportServiceImplTest {
         when(mctsWebServiceFacade.getMothersData(eq(yesterday), eq(yesterday), any(URL.class), eq(15L)))
                 .thenReturn(motherDs2);
 
-        mctsWsImportServiceImpl.importFromMcts();
+        mctsWsImportServiceImpl.importFromMcts(asList(1L, 15L), yesterday, null);
 
         // flw
         ArgumentCaptor<Map> mapCaptor = ArgumentCaptor.forClass(Map.class);

@@ -8,6 +8,9 @@
     <osgi:service ref="mctsWebServiceFacade"
                     interface="org.motechproject.nms.mcts.service.MctsWebServiceFacade" />
 
+    <osgi:service ref="mctsWsImportService"
+                  interface="org.motechproject.nms.mcts.service.MctsWsImportService" />
+
     <osgi:reference id="mctsChildDataService"
                     interface="org.motechproject.nms.kilkari.repository.MctsChildDataService" />
 

@@ -1,9 +1,7 @@
 package org.motechproject.nms.mcts.service.impl;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.joda.time.LocalDate;
-import org.motechproject.commons.date.util.DateUtil;
 import org.motechproject.nms.flw.exception.FlwImportException;
 import org.motechproject.nms.flw.service.FrontLineWorkerImportService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
@@ -15,32 +13,25 @@ import org.motechproject.nms.mcts.contract.ChildRecord;
 import org.motechproject.nms.mcts.contract.ChildrenDataSet;
 import org.motechproject.nms.mcts.contract.MotherRecord;
 import org.motechproject.nms.mcts.contract.MothersDataSet;
-import org.motechproject.nms.mcts.exception.MctsImportConfigurationException;
 import org.motechproject.nms.mcts.exception.MctsInvalidResponseStructureException;
 import org.motechproject.nms.mcts.exception.MctsWebServiceExeption;
 import org.motechproject.nms.mcts.service.MctsWebServiceFacade;
 import org.motechproject.nms.mcts.service.MctsWsImportService;
-import org.motechproject.nms.mcts.utils.Constants;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.exception.InvalidLocationException;
 import org.motechproject.nms.region.repository.StateDataService;
-import org.motechproject.server.config.SettingsFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Service
+@Service("mctsWsImportService")
 public class MctsWsImportServiceImpl implements MctsWsImportService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MctsWsImportServiceImpl.class);
@@ -60,21 +51,13 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
     @Autowired
     private MctsBeneficiaryImportService mctsBeneficiaryImportService;
 
-    @Autowired
-    @Qualifier("mctsSettings")
-    private SettingsFacade settingsFacade;
 
     @Override
-    public void importFromMcts() {
+    public void importFromMcts(List<Long> stateIds, LocalDate referenceDate, URL endpoint) {
         StopWatch stopWatch = new StopWatch();
 
         LOGGER.info("Starting import from MCTS web service");
         stopWatch.start();
-
-
-        List<Long> stateIds = getStateIds();
-        URL endpoint = getEndpointUrl();
-        LocalDate referenceDate = DateUtil.today().minusDays(1);
 
         LOGGER.info("Pulling data for {}, for states {}", referenceDate, stateIds);
         if (endpoint == null) {
@@ -298,32 +281,6 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         map.put(KilkariConstants.DEATH, mctsBeneficiaryValueProcessor.getDeathFromString(String.valueOf(motherRecord.getEntryType())));
 
         return map;
-    }
-
-    private List<Long> getStateIds() {
-        String locationProp = settingsFacade.getProperty(Constants.MCTS_LOCATIONS);
-        if (StringUtils.isBlank(locationProp)) {
-            LOGGER.warn("No states configured for import");
-            return Collections.emptyList();
-        }
-
-        String[] locationParts = StringUtils.split(locationProp, ',');
-
-        List<Long> stateIds = new ArrayList<>();
-        for (String locationPart : locationParts) {
-            stateIds.add(Long.valueOf(locationPart));
-        }
-
-        return stateIds;
-    }
-
-    private URL getEndpointUrl() {
-        String endpoint = settingsFacade.getProperty(Constants.MCTS_ENDPOINT);
-        try {
-            return StringUtils.isBlank(endpoint) ? null : new URL(endpoint);
-        } catch (MalformedURLException e) {
-            throw new MctsImportConfigurationException("Malformed endpoint configured: " + endpoint, e);
-        }
     }
 
     private int sizeNullSafe(Collection collection) {

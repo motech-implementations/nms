@@ -27,7 +27,7 @@ import static org.junit.Assert.assertEquals;
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerSuite.class)
 @ExamFactory(MotechNativeTestContainerFactory.class)
-public class MctsImportBundleIT extends BasePaxIT {
+public class MctsWebServiceFacadeBundleIT extends BasePaxIT {
 
     @Inject
     private MctsWebServiceFacade mctsWebServiceFacade;
