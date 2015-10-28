@@ -1,6 +1,5 @@
 package org.motechproject.nms.testing.it.mcts;
 
-import org.apache.commons.io.IOUtils;
 import org.joda.time.LocalDate;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -8,6 +7,7 @@ import org.motechproject.nms.mcts.contract.AnmAshaDataSet;
 import org.motechproject.nms.mcts.contract.ChildrenDataSet;
 import org.motechproject.nms.mcts.contract.MothersDataSet;
 import org.motechproject.nms.mcts.service.MctsWebServiceFacade;
+import org.motechproject.nms.testing.it.mcts.util.MctsImportTestHelper;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.motechproject.testing.osgi.http.SimpleHttpServer;
@@ -18,7 +18,6 @@ import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
 import java.io.IOException;
-import java.io.StringWriter;
 import java.net.URL;
 
 import static org.junit.Assert.assertEquals;
@@ -34,9 +33,7 @@ public class MctsWebServiceFacadeBundleIT extends BasePaxIT {
 
     @Test
     public void shouldDeserializeMothersDataFromSoapResponse() throws IOException {
-        StringWriter writer = new StringWriter();
-        IOUtils.copy(this.getClass().getResourceAsStream("/mcts/mcts-mothers-data.xml"), writer);
-        String response = writer.toString();
+        String response = MctsImportTestHelper.getMotherResponseData();
 
         SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
         String url = simpleServer.start("mctsEndpoint", 200, response);
@@ -58,9 +55,7 @@ public class MctsWebServiceFacadeBundleIT extends BasePaxIT {
 
     @Test
     public void shouldDeserializeChildrenDataFromSoapResponse() throws IOException {
-        StringWriter writer = new StringWriter();
-        IOUtils.copy(this.getClass().getResourceAsStream("/mcts/mcts-children-data.xml"), writer);
-        String response = writer.toString();
+        String response = MctsImportTestHelper.getChildrenResponseData();
 
         SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
         String url = simpleServer.start("mctsEndpoint", 200, response);
@@ -78,9 +73,7 @@ public class MctsWebServiceFacadeBundleIT extends BasePaxIT {
 
     @Test
     public void shouldDeserializeAnmAshanDataFromSoapResponse() throws IOException {
-        StringWriter writer = new StringWriter();
-        IOUtils.copy(this.getClass().getResourceAsStream("/mcts/mcts-anm-asha-data.xml"), writer);
-        String response = writer.toString();
+        String response = MctsImportTestHelper.getAnmAshaResponseData();
 
         SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
         String url = simpleServer.start("mctsEndpoint", 200, response);
