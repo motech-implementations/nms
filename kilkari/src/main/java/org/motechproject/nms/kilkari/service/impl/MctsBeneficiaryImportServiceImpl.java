@@ -304,9 +304,24 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             }
         });
         mapping.put(KilkariConstants.BENEFICIARY_NAME, new GetString());
-        mapping.put(KilkariConstants.MSISDN, MctsBeneficiaryUtils.MSISDN_BY_STRING);
-        mapping.put(KilkariConstants.LMP, new Optional(MctsBeneficiaryUtils.DATE_BY_STRING));
-        mapping.put(KilkariConstants.MOTHER_DOB, new Optional(MctsBeneficiaryUtils.DATE_BY_STRING));
+        mapping.put(KilkariConstants.MSISDN, new Optional(new GetInstanceByString<Long>() {
+            @Override
+            public Long retrieve(String value) {
+                return mctsBeneficiaryValueProcessor.getMsisdnByString(value);
+            }
+        }));
+        mapping.put(KilkariConstants.LMP, new Optional(new GetInstanceByString<DateTime>() {
+            @Override
+            public DateTime retrieve(String value) {
+                return mctsBeneficiaryValueProcessor.getDateByString(value);
+            }
+        }));
+        mapping.put(KilkariConstants.MOTHER_DOB, new Optional(new GetInstanceByString<DateTime>() {
+            @Override
+            public DateTime retrieve(String value) {
+                return mctsBeneficiaryValueProcessor.getDateByString(value);
+            }
+        }));
         mapping.put(KilkariConstants.ABORTION, new Optional(new GetInstanceByString<Boolean>() {
              @Override
              public Boolean retrieve(String value) {
@@ -345,8 +360,18 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                 return mctsBeneficiaryValueProcessor.getMotherInstanceByBeneficiaryId(value);
             }
         }));
-        mapping.put(KilkariConstants.MSISDN, MctsBeneficiaryUtils.MSISDN_BY_STRING);
-        mapping.put(KilkariConstants.DOB, new Optional(MctsBeneficiaryUtils.DATE_BY_STRING));
+        mapping.put(KilkariConstants.MSISDN, new Optional(new GetInstanceByString<Long>() {
+            @Override
+            public Long retrieve(String value) {
+                return mctsBeneficiaryValueProcessor.getMsisdnByString(value);
+            }
+        }));
+        mapping.put(KilkariConstants.DOB, new Optional(new GetInstanceByString<DateTime>() {
+            @Override
+            public DateTime retrieve(String value) {
+                return mctsBeneficiaryValueProcessor.getDateByString(value);
+            }
+        }));
         mapping.put(KilkariConstants.DEATH, new Optional(new GetInstanceByString<Boolean>() {
             @Override
             public Boolean retrieve(String value) {

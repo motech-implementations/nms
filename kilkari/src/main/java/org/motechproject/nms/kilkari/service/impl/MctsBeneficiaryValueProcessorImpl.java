@@ -1,7 +1,13 @@
 package org.motechproject.nms.kilkari.service.impl;
 
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.DateTimeFormatterBuilder;
+import org.joda.time.format.DateTimeParser;
 import org.motechproject.nms.kilkari.domain.MctsChild;
 import org.motechproject.nms.kilkari.domain.MctsMother;
+import org.motechproject.nms.kilkari.exception.InvalidReferanceDateException;
 import org.motechproject.nms.kilkari.repository.MctsChildDataService;
 import org.motechproject.nms.kilkari.repository.MctsMotherDataService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor;
@@ -60,4 +66,38 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
         }
         return child;
     }
+
+    @Override
+    public DateTime getDateByString(String value) {
+        if (value == null) {
+            return null;
+        }
+
+        DateTime referenceDate;
+
+        try {
+            DateTimeParser[] parsers = {
+                    DateTimeFormat.forPattern("dd-MM-yyyy").getParser(),
+                    DateTimeFormat.forPattern("dd/MM/yyyy").getParser()};
+            DateTimeFormatter formatter = new DateTimeFormatterBuilder().append(null, parsers).toFormatter();
+
+            referenceDate = formatter.parseDateTime(value);
+
+        } catch (IllegalArgumentException e) {
+            throw new InvalidReferanceDateException(String.format("Reference date %s is invalid", value), e);
+        }
+
+        return referenceDate;
+    }
+
+    @Override
+    public Long getMsisdnByString(String value) {
+        if (value.length() < 10) {
+            throw new NumberFormatException("Beneficiary MSISDN too short, must be at least 10 digits");
+        }
+        String msisdn = value.substring(value.length() - 10);
+
+        return Long.parseLong(msisdn);
+    }
+
 }
