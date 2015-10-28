@@ -243,7 +243,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         };
 
         Long rowCount = subscriptionDataService.executeSQLQuery(queryExecution);
-        LOGGER.debug(String.format("Updated %d subscriptions to completed.", rowCount));
+        LOGGER.debug(String.format("Updated %d subscription(s) to COMPLETED", rowCount));
+        subscriptionDataService.evictEntityCache(false); // no need to evict sub-entity classes
     }
 
     @Override
@@ -579,9 +580,5 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     @CacheEvict(value = {"pack" }, allEntries = true)
     public void cacheEvict(MotechEvent event) {
         LOGGER.debug("*** RECEIVE CACHE EVICT MSG ***");
-    }
-
-    public void completeOldSubscriptions() {
-        LOGGER.debug("*** Completing old subscriptions ***");
     }
 }
