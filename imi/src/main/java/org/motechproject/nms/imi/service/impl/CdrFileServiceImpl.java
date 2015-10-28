@@ -5,7 +5,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.datanucleus.store.rdbms.query.ForwardQueryResult;
 import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.alerts.domain.AlertStatus;
 import org.motechproject.alerts.domain.AlertType;
@@ -792,25 +791,25 @@ public class CdrFileServiceImpl implements CdrFileService {
      */
     private void deleteRecords(final int retentionInDays, final String tableName) {
         @SuppressWarnings("unchecked")
-        SqlQueryExecution<List<Object>> queryExecution = new SqlQueryExecution<List<Object>>() {
+        SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
 
             @Override
             public String getSqlQuery() {
                 String query = String.format(
-                        "DELETE * FROM %s where creationDate < now() - INTERVAL %d DAY;", tableName, retentionInDays);
+                        "DELETE FROM %s where creationDate < now() - INTERVAL %d DAY", tableName, retentionInDays);
                 LOGGER.debug("SQL QUERY: {}", query);
                 return query;
             }
 
             @Override
-            public List<Object> execute(Query query) {
+            public Long execute(Query query) {
 
-                return (ForwardQueryResult) query.execute();
+                return (Long) query.execute();
             }
         };
 
         // FYI: doesn't matter what data service we use since it is just used as a vehicle to execute the custom query
-        callDetailRecordDataService.executeSQLQuery(queryExecution);
-        LOGGER.debug(String.format("Table %s cleaned up.", tableName));
+        Long rowCount = callDetailRecordDataService.executeSQLQuery(queryExecution);
+        LOGGER.debug(String.format("Table %s cleaned up and deleted %d rows", tableName, rowCount));
     }
 }
