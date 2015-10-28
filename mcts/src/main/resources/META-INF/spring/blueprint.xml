@@ -26,7 +26,10 @@
     <osgi:reference id="frontLineWorkerImportService"
                   interface="org.motechproject.nms.flw.service.FrontLineWorkerImportService" />
 
-    <osgi:reference id="MctsBeneficiaryValueProcessor"
+    <osgi:reference id="mctsBeneficiaryValueProcessor"
                   interface="org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor"/>
+
+    <osgi:reference id="mctsBeneficiaryImportService"
+                    interface="org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService"/>
 
 </beans>

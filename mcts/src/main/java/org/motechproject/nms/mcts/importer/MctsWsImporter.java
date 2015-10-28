@@ -14,6 +14,7 @@ import org.motechproject.nms.mcts.contract.AnmAshaDataSet;
 import org.motechproject.nms.mcts.contract.AnmAshaRecord;
 import org.motechproject.nms.mcts.contract.ChildRecord;
 import org.motechproject.nms.mcts.contract.ChildrenDataSet;
+import org.motechproject.nms.mcts.contract.MotherRecord;
 import org.motechproject.nms.mcts.contract.MothersDataSet;
 import org.motechproject.nms.mcts.exception.MctsImportConfigurationException;
 import org.motechproject.nms.mcts.exception.MctsInvalidResponseStructureException;
@@ -131,10 +132,20 @@ public class MctsWsImporter {
     private void importMothersData(URL endpoint, List<Long> locations, LocalDate referenceDate) {
         for (Long stateId : locations) {
             try {
+                State state = stateDataService.findByCode(stateId);
+                if (state == null) {
+                    LOGGER.warn("State with code {} doesn't exist in database. Skipping Mother importing for this state", stateId);
+                    continue;
+                }
                 MothersDataSet mothersDataSet = mctsWebServiceFacade.getMothersData(referenceDate, referenceDate, endpoint, stateId);
 
-                LOGGER.debug("Received mother data set with {} records", sizeNullSafe(mothersDataSet.getRecords()));
-                // TODO save data to the database
+                LOGGER.debug("Received Mothers data set with {} records for {} state",
+                        sizeNullSafe(mothersDataSet.getRecords()), state.getName());
+                saveImportedMothersData(mothersDataSet, state);
+
+                LOGGER.debug("Received mother data set with {} records for {} state", sizeNullSafe(mothersDataSet.getRecords()),
+                        state.getName());
+
 
             } catch (MctsWebServiceExeption e) {
                 LOGGER.error("Cannot read mothers data from {} state.", stateId, e);
@@ -181,6 +192,17 @@ public class MctsWsImporter {
         }
     }
 
+    private void saveImportedMothersData(MothersDataSet mothersDataSet, State state) {
+        for (MotherRecord record : mothersDataSet.getRecords()) {
+            try {
+                mctsBeneficiaryImportService.importMotherRecord(toMap(record));
+            } catch (RuntimeException e) {
+                LOGGER.error("Flw import Error. Cannot import Mother with ID: {} for state ID: {}",
+                        record.getIdNo(), state.getCode(), e);
+            }
+        }
+    }
+
     private Map<String, Object> toMap(ChildRecord childRecord) {
         Map<String, Object> map = new HashMap<>();
 
@@ -203,6 +225,27 @@ public class MctsWsImporter {
                 mctsBeneficiaryValueProcessor.getMotherInstanceByBeneficiaryId(childRecord.getMotherId()));
         map.put(KilkariConstants.DEATH,
                 mctsBeneficiaryValueProcessor.getDeathFromString(String.valueOf(childRecord.getEntryType())));
+
+        return map;
+    }
+
+    private Map<String, Object> toMap(MotherRecord motherRecord) {
+        Map<String, Object> map = new HashMap<>();
+        map.put(KilkariConstants.STATE, motherRecord.getStateId());
+        map.put(KilkariConstants.DISTRICT, motherRecord.getDistrictId());
+        map.put(KilkariConstants.TALUKA, motherRecord.getTalukaId());
+        map.put(KilkariConstants.HEALTH_BLOCK, motherRecord.getHealthBlockId());
+        map.put(KilkariConstants.PHC, motherRecord.getPhcid());
+        map.put(KilkariConstants.SUBCENTRE, motherRecord.getSubCentreid());
+        map.put(KilkariConstants.CENSUS_VILLAGE, motherRecord.getVillageId());
+        map.put(KilkariConstants.BENEFICIARY_ID, mctsBeneficiaryValueProcessor.getOrCreateMotherInstance(motherRecord.getIdNo()));
+        map.put(KilkariConstants.BENEFICIARY_NAME, motherRecord.getName());
+        map.put(KilkariConstants.MSISDN, mctsBeneficiaryValueProcessor.getMsisdnByString(motherRecord.getWhomPhoneNo()));
+        map.put(KilkariConstants.LMP, mctsBeneficiaryValueProcessor.getDateByString(motherRecord.getLmpDate()));
+        map.put(KilkariConstants.MOTHER_DOB, mctsBeneficiaryValueProcessor.getDateByString(motherRecord.getBirthdate()));
+        map.put(KilkariConstants.ABORTION, mctsBeneficiaryValueProcessor.getAbortionDataFromString(motherRecord.getAbortion()));
+        map.put(KilkariConstants.STILLBIRTH, mctsBeneficiaryValueProcessor.getStillBirthFromString(String.valueOf(motherRecord.getOutcomeNos())));
+        map.put(KilkariConstants.DEATH, mctsBeneficiaryValueProcessor.getDeathFromString(String.valueOf(motherRecord.getEntryType())));
 
         return map;
     }

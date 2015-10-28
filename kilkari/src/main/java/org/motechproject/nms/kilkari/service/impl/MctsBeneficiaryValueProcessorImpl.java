@@ -7,7 +7,7 @@ import org.joda.time.format.DateTimeFormatterBuilder;
 import org.joda.time.format.DateTimeParser;
 import org.motechproject.nms.kilkari.domain.MctsChild;
 import org.motechproject.nms.kilkari.domain.MctsMother;
-import org.motechproject.nms.kilkari.exception.InvalidReferanceDateException;
+import org.motechproject.nms.kilkari.exception.InvalidReferenceDateException;
 import org.motechproject.nms.kilkari.repository.MctsChildDataService;
 import org.motechproject.nms.kilkari.repository.MctsMotherDataService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor;
@@ -84,7 +84,7 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
             referenceDate = formatter.parseDateTime(value);
 
         } catch (IllegalArgumentException e) {
-            throw new InvalidReferanceDateException(String.format("Reference date %s is invalid", value), e);
+            throw new InvalidReferenceDateException(String.format("Reference date %s is invalid", value), e);
         }
 
         return referenceDate;

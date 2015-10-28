@@ -115,6 +115,7 @@
                             org.motechproject.nms.kilkari.domain,
                             org.motechproject.nms.kilkari.repository,
                             org.motechproject.nms.kilkari.service,
+                            org.motechproject.nms.kilkari.utils,
                             org.motechproject.nms.region.domain,
                             org.motechproject.nms.region.exception,
                             org.motechproject.nms.region.repository,
