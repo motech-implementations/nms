@@ -21,7 +21,7 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.net.URL;
 
-import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 
 
 @RunWith(PaxExam.class)
@@ -50,7 +50,10 @@ public class MctsImportBundleIT extends BasePaxIT {
         MothersDataSet result = mctsWebServiceFacade.getMothersData(referenceDate, referenceDate, endpoint, 21l);
         Thread.currentThread().setContextClassLoader(cl);
 
-        //TODO add assert
+        assertEquals(3, result.getRecords().size());
+        assertEquals("Name 1", result.getRecords().get(0).getName());
+        assertEquals("Name 2", result.getRecords().get(1).getName());
+        assertEquals("Name 3", result.getRecords().get(2).getName());
     }
 
     @Test
@@ -67,7 +70,10 @@ public class MctsImportBundleIT extends BasePaxIT {
 
         ChildrenDataSet result = mctsWebServiceFacade.getChildrenData(referenceDate, referenceDate, endpoint, 21l);
 
-        //TODO add assert
+        assertEquals(3, result.getRecords().size());
+        assertEquals("Name 1", result.getRecords().get(0).getName());
+        assertEquals("Name 2", result.getRecords().get(1).getName());
+        assertEquals("Name 3", result.getRecords().get(2).getName());
     }
 
     @Test
@@ -87,16 +93,9 @@ public class MctsImportBundleIT extends BasePaxIT {
         AnmAshaDataSet result = mctsWebServiceFacade.getAnmAshaData(referenceDate, referenceDate, endpoint, 21l);
         Thread.currentThread().setContextClassLoader(cl);
 
-        assertEquals(10, result.getRecords().size());
-        assertEquals("Rupi Dei", result.getRecords().get(0).getName());
-        assertEquals("Mamata Kausalya", result.getRecords().get(1).getName());
-        assertEquals("Shantilata Mallik", result.getRecords().get(2).getName());
-        assertEquals("Santilata Sandil", result.getRecords().get(3).getName());
-        assertEquals("Hiramani Munda", result.getRecords().get(4).getName());
-        assertEquals("Nima Mahanta", result.getRecords().get(5).getName());
-        assertEquals("Anjali Jana", result.getRecords().get(6).getName());
-        assertEquals("Suchitra Barik", result.getRecords().get(7).getName());
-        assertEquals("Sobhasini Majhi", result.getRecords().get(8).getName());
-        assertEquals("Sima Pradhan", result.getRecords().get(9).getName());
+        assertEquals(3, result.getRecords().size());
+        assertEquals("Sample Name 1", result.getRecords().get(0).getName());
+        assertEquals("Sample Name 2", result.getRecords().get(1).getName());
+        assertEquals("Sample Name 3", result.getRecords().get(2).getName());
     }
 }
