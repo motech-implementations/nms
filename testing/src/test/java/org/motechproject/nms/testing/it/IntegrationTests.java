@@ -24,6 +24,7 @@ import org.motechproject.nms.testing.it.kilkari.MctsBeneficiaryUpdateServiceBund
 import org.motechproject.nms.testing.it.kilkari.SubscriberServiceBundleIT;
 import org.motechproject.nms.testing.it.kilkari.SubscriptionServiceBundleIT;
 import org.motechproject.nms.testing.it.ma.MobileAcademyServiceBundleIT;
+import org.motechproject.nms.testing.it.mcts.MctsImportBundleIT;
 import org.motechproject.nms.testing.it.props.PropertyServiceBundleIT;
 import org.motechproject.nms.testing.it.region.CircleServiceBundleIT;
 import org.motechproject.nms.testing.it.region.LanguageLocationCodesImportServiceBundleIT;
@@ -95,6 +96,11 @@ import org.motechproject.nms.testing.it.tracking.TrackOneToManyChangesBundleIT;
     LocationDataImportServiceBundleIT.class,
     LanguageLocationCodesImportServiceBundleIT.class,
     LanguageServiceBundleIT.class,
+
+    /**
+     * MCTS
+     */
+    MctsImportBundleIT.class,
 
     /**
      * Testing

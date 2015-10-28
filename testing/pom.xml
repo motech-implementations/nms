@@ -89,6 +89,16 @@
             <artifactId>tracking</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.motechproject.nms</groupId>
+            <artifactId>mcts</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.servicemix.bundles</groupId>
+            <artifactId>org.apache.servicemix.bundles.javax.mail</artifactId>
+        </dependency>
+
     </dependencies>
 
     <repositories>
@@ -260,6 +270,9 @@
                             org.motechproject.nms.kilkari.service,
                             org.motechproject.nms.csv.service,
                             org.motechproject.nms.tracking.repository,
+                            org.motechproject.nms.mcts.contract,
+                            org.motechproject.nms.mcts.service,
+                            org.motechproject.nms.mcts.soap,
                             org.aopalliance.aop,
                             org.springframework.aop,
                             org.springframework.aop.framework,
@@ -267,6 +280,7 @@
                             net.sf.cglib.proxy,
                             net.sf.cglib.reflect,
                             org.springframework.transaction,
+                            javax.mail,
                             *
                         </Import-Package>
                     </instructions>

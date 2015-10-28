@@ -7,9 +7,10 @@ public final class Constants {
      */
     public static final String MCTS_USER_ID = "mcts.credentials.user_id";
     public static final String MCTS_PASSWORD = "mcts.credentials.password";
+    public static final String MCTS_LOCATIONS = "mcts.state_ids";
     public static final String MCTS_SYNC_START_TIME = "mcts.sync.start_time";
+    public static final String MCTS_ENDPOINT = "mcts.endpointUrl";
     public static final String MCTS_IMPORT_TMP_LOCATION= "mcts.import_tmp_location";
-
     /**
      * Events
      */
