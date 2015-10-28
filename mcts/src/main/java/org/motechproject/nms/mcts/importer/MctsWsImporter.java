@@ -7,8 +7,11 @@ import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.annotations.MotechListener;
 import org.motechproject.nms.flw.exception.FlwImportException;
 import org.motechproject.nms.flw.service.FrontLineWorkerImportService;
+import org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor;
+import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.motechproject.nms.mcts.contract.AnmAshaDataSet;
 import org.motechproject.nms.mcts.contract.AnmAshaRecord;
+import org.motechproject.nms.mcts.contract.ChildRecord;
 import org.motechproject.nms.mcts.contract.ChildrenDataSet;
 import org.motechproject.nms.mcts.contract.MothersDataSet;
 import org.motechproject.nms.mcts.exception.MctsImportConfigurationException;
@@ -35,7 +38,9 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Component
 public class MctsWsImporter {
@@ -53,6 +58,9 @@ public class MctsWsImporter {
 
     @Autowired
     private MotechSchedulerService motechSchedulerService;
+
+    @Autowired
+    private MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor;
 
     @Autowired
     @Qualifier("mctsSettings")
@@ -148,6 +156,33 @@ public class MctsWsImporter {
                         record.getId(), record.getContactNo(), e);
             }
         }
+    }
+
+    private Map<String, Object> toMap(ChildRecord childRecord) {
+        Map<String, Object> map = new HashMap<>();
+
+        map.put(KilkariConstants.STATE, childRecord.getStateID());
+        map.put(KilkariConstants.DISTRICT, childRecord.getDistrictId());
+        map.put(KilkariConstants.TALUKA, childRecord.getTalukaId());
+        map.put(KilkariConstants.HEALTH_BLOCK, childRecord.getHealthBlockId());
+        map.put(KilkariConstants.PHC, childRecord.getPhcId());
+        map.put(KilkariConstants.SUBCENTRE, childRecord.getSubCentreId());
+        map.put(KilkariConstants.CENSUS_VILLAGE, childRecord.getVillageId());
+
+        map.put(KilkariConstants.BENEFICIARY_NAME, childRecord.getName());
+
+        // TODO
+        map.put(KilkariConstants.MSISDN, null);
+        map.put(KilkariConstants.DOB, null);
+
+        map.put(KilkariConstants.BENEFICIARY_ID,
+                mctsBeneficiaryValueProcessor.getChildInstanceByString(childRecord.getIdNo()));
+        map.put(KilkariConstants.MOTHER_ID,
+                mctsBeneficiaryValueProcessor.getMotherInstanceByBeneficiaryId(childRecord.getMotherId()));
+        map.put(KilkariConstants.DEATH,
+                mctsBeneficiaryValueProcessor.getDeathFromString(String.valueOf(childRecord.getEntryType())));
+
+        return map;
     }
 
     private List<Long> getStateIds() {
