@@ -78,10 +78,10 @@ public class LanguageServiceImpl implements LanguageService {
 
         if (circle != null) {
             for (District district : circle.getDistricts()) {
-                Language language = district.getLanguage();
+                Language language = (Language) districtService.getDetachedField(district, "language");
 
                 if (language != null) {
-                    languages.add(district.getLanguage());
+                    languages.add(language);
                 }
             }
         }
@@ -93,13 +93,7 @@ public class LanguageServiceImpl implements LanguageService {
     @Override
     @Cacheable(value = "languages", key = "'all-languages'")
     public Set<Language> getAll() {
-        Set<Language> languages = new HashSet<>(languageDataService.retrieveAll());
-
-        if (languages == null) {
-            languages = new HashSet<>();
-        }
-
-        return languages;
+        return new HashSet<>(languageDataService.retrieveAll());
     }
 
 
