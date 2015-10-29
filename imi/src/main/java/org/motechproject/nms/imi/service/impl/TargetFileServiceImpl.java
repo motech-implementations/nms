@@ -498,7 +498,11 @@ public class TargetFileServiceImpl implements TargetFileService {
                 callFlowUrl = "";
             }
 
+            // Activate pending subscriptions
             activatePendingSubscriptions(today);
+
+            // Mark all old subscriptions past pack length as complete
+            subscriptionService.completePastDueSubscriptions();
 
             //Header
             writeHeader(writer);

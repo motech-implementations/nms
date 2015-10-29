@@ -11,6 +11,7 @@ import org.motechproject.alerts.domain.AlertType;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.EventRelay;
 import org.motechproject.event.listener.annotations.MotechListener;
+import org.motechproject.mds.query.SqlQueryExecution;
 import org.motechproject.nms.imi.domain.CallSummaryRecord;
 import org.motechproject.nms.imi.domain.FileAuditRecord;
 import org.motechproject.nms.imi.domain.FileProcessedStatus;
@@ -37,6 +38,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
+import javax.jdo.Query;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -59,6 +61,11 @@ public class CdrFileServiceImpl implements CdrFileService {
     private static final String CDR_FILE_NOTIFICATION_URL = "imi.cdr_file_notification_url";
     private static final String LOCAL_CDR_DIR = "imi.local_cdr_dir";
     private static final String MAX_CDR_ERROR_COUNT = "imi.max_cdr_error_count";
+    private static final String CDR_CSR_RETENTION_DURATION = "imi.cdr_csr.retention.duration";
+    private static final int MIN_CALL_DATA_RETENTION_DURATION_IN_DAYS = 5;
+    private static final String CDR_CSR_CLEANUP_SUBJECT = "nms.imi.cdr_csr.cleanup";
+    private static final String CDR_TABLE_NAME = "motech_data_services.nms_imi_cdrs";
+    private static final String CSR_TABLE_NAME = "motech_data_services.nms_imi_csrs";
     private static final int MAX_CDR_ERROR_COUNT_DEFAULT = 100;
     private static final String PROCESS_SUMMARY_RECORD_SUBJECT = "nms.imi.kk.process_summary_record";
     private static final String CSR_PARAM_KEY = "csr";
@@ -71,6 +78,7 @@ public class CdrFileServiceImpl implements CdrFileService {
     private static final String CDR_CHECKSUM_PARAM_KEY = "cdrChecksum";
     private static final String CDR_COUNT_PARAM_KEY = "cdrCount";
     private static final String SORTED_SUFFIX = ".sorted";
+    private static String logTemplate = "Found %d records in table %s";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CdrFileServiceImpl.class);
     public static final String CDR_DETAIL_FILE = "CDR Detail File";
@@ -103,7 +111,6 @@ public class CdrFileServiceImpl implements CdrFileService {
         this.callDetailRecordDataService = callDetailRecordDataService;
         this.callSummaryRecordDataService = callSummaryRecordDataService;
     }
-
 
     private void alertAuditAndThrow(String file, List<String> errors) {
         alertAndAudit(file, errors);
@@ -487,6 +494,7 @@ public class CdrFileServiceImpl implements CdrFileService {
             errors.add(error);
         }
 
+        // return errors from processing
         return errors;
     }
 
@@ -724,6 +732,8 @@ public class CdrFileServiceImpl implements CdrFileService {
                 null
         ));
 
+        // Clean up old CDRs/CSRs before distributing work out
+        cleanOldCallRecords();
 
         // Phase 3: distribute the processing of aggregated CDRs to all nodes.
         //          copy CDRs from IMI to the database
@@ -743,5 +753,70 @@ public class CdrFileServiceImpl implements CdrFileService {
             reportAuditAndPost(request.getCdrSummary().getCdrFile(), errors);
         }
         return errors;
+    }
+
+    @Override
+    @MotechListener(subjects = { CDR_CSR_CLEANUP_SUBJECT })
+    public void cleanOldCallRecords() {
+        LOGGER.info("cleanOldCallRecords() called");
+        int cdrDuration = MIN_CALL_DATA_RETENTION_DURATION_IN_DAYS;
+
+        try {
+            int durationFromConfig = Integer.parseInt(settingsFacade.getProperty(CDR_CSR_RETENTION_DURATION));
+            if (durationFromConfig < cdrDuration) {
+                LOGGER.debug(String.format("Discarding retention property from config since it is less than MIN: %d", cdrDuration));
+            } else {
+                cdrDuration = durationFromConfig;
+                LOGGER.debug(String.format("Using retention property from config: %d", cdrDuration));
+            }
+        } catch (NumberFormatException ne) {
+            LOGGER.debug(String.format("Unable to get property from config: %s", CDR_CSR_RETENTION_DURATION));
+        }
+
+        LOGGER.debug(String.format(logTemplate, callDetailRecordDataService.count(), CDR_TABLE_NAME));
+        LOGGER.debug(String.format(logTemplate, callSummaryRecordDataService.count(), CSR_TABLE_NAME));
+
+        deleteRecords(cdrDuration, CDR_TABLE_NAME);
+        deleteRecords(cdrDuration, CSR_TABLE_NAME);
+
+        LOGGER.debug(String.format(logTemplate, callDetailRecordDataService.count(), CDR_TABLE_NAME));
+        LOGGER.debug(String.format(logTemplate, callSummaryRecordDataService.count(), CSR_TABLE_NAME));
+    }
+
+    /**
+     * Helper to clean out the CDR table with the given retention policy
+     * @param retentionInDays min days to keep CDR for
+     * @param tableName name of the cdr or csr table
+     */
+    private void deleteRecords(final int retentionInDays, final String tableName) {
+        @SuppressWarnings("unchecked")
+        SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
+
+            @Override
+            public String getSqlQuery() {
+                String query = String.format(
+                        "DELETE FROM %s where creationDate < now() - INTERVAL %d DAY", tableName, retentionInDays);
+                LOGGER.debug("SQL QUERY: {}", query);
+                return query;
+            }
+
+            @Override
+            public Long execute(Query query) {
+
+                return (Long) query.execute();
+            }
+        };
+
+        // FYI: doesn't matter what data service we use since it is just used as a vehicle to execute the custom query
+        Long rowCount = callDetailRecordDataService.executeSQLQuery(queryExecution);
+        LOGGER.debug(String.format("Table %s cleaned up and deleted %d rows", tableName, rowCount));
+
+        // evict caches for the changes to be read again
+        if (tableName.equalsIgnoreCase(CDR_TABLE_NAME)) {
+            callDetailRecordDataService.evictEntityCache(false);
+        }
+        if (tableName.equalsIgnoreCase(CSR_TABLE_NAME)) {
+            callSummaryRecordDataService.evictEntityCache(false);
+        }
     }
 }

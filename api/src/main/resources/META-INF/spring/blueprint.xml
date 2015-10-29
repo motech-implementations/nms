@@ -43,6 +43,8 @@
 
     <osgi:reference id="eventRelay" interface="org.motechproject.event.listener.EventRelay"/>
 
+    <osgi:reference id="cdrFileService" interface="org.motechproject.nms.imi.service.CdrFileService" />
+
     <!-- Used to access the clearAllCaches API -->
     <osgi:reference id="subscriptionDataService" interface="org.motechproject.nms.kilkari.repository.SubscriptionDataService" />
 
