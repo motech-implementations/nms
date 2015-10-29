@@ -38,50 +38,39 @@ public class TalukaUnitTest {
     @Test
     public void testNameSize() {
         Taluka taluka = new Taluka();
-        taluka.setName("AAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBX");
+        taluka.setName("AAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBXAAAAsAAsssssssAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAA");
 
         Set<ConstraintViolation<Taluka>> constraintViolations = validator
                 .validateProperty(taluka, "name");
 
         assertEquals(1, constraintViolations.size());
-        assertEquals("size must be between 1 and 100", constraintViolations.iterator().next().getMessage());
+        assertEquals("size must be between 1 and 150", constraintViolations.iterator().next().getMessage());
 
         taluka.setName("");
 
         constraintViolations = validator.validateProperty(taluka, "name");
 
         assertEquals(1, constraintViolations.size());
-        assertEquals("size must be between 1 and 100", constraintViolations.iterator().next().getMessage());
-    }
-
-    @Test
-    public void testRegionalNameNull() {
-        Taluka taluka = new Taluka();
-
-        Set<ConstraintViolation<Taluka>> constraintViolations = validator
-                .validateProperty(taluka, "regionalName");
-
-        assertEquals(1, constraintViolations.size());
-        assertEquals("may not be null", constraintViolations.iterator().next().getMessage());
+        assertEquals("size must be between 1 and 150", constraintViolations.iterator().next().getMessage());
     }
 
     @Test
     public void testRegionalNameSize() {
         Taluka taluka = new Taluka();
-        taluka.setRegionalName("AAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBX");
+        taluka.setRegionalName("AAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBXAAAAsAAsssssssAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAA");
 
         Set<ConstraintViolation<Taluka>> constraintViolations = validator
                 .validateProperty(taluka, "regionalName");
 
         assertEquals(1, constraintViolations.size());
-        assertEquals("size must be between 1 and 100", constraintViolations.iterator().next().getMessage());
+        assertEquals("size must be between 1 and 150", constraintViolations.iterator().next().getMessage());
 
         taluka.setRegionalName("");
 
         constraintViolations = validator.validateProperty(taluka, "regionalName");
 
         assertEquals(1, constraintViolations.size());
-        assertEquals("size must be between 1 and 100", constraintViolations.iterator().next().getMessage());
+        assertEquals("size must be between 1 and 150", constraintViolations.iterator().next().getMessage());
     }
 
     @Test
@@ -112,17 +101,6 @@ public class TalukaUnitTest {
 
         assertEquals(1, constraintViolations.size());
         assertEquals("size must be between 1 and 7", constraintViolations.iterator().next().getMessage());
-    }
-
-    @Test
-    public void testIdentityNull() {
-        Taluka taluka = new Taluka();
-
-        Set<ConstraintViolation<Taluka>> constraintViolations = validator
-                .validateProperty(taluka, "identity");
-
-        assertEquals(1, constraintViolations.size());
-        assertEquals("may not be null", constraintViolations.iterator().next().getMessage());
     }
 
     @Test

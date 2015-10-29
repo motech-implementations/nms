@@ -907,7 +907,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         assertEquals(0, mctsSubscriber.getActiveAndPendingSubscriptions().size()); // No active subscription
 
         DateTime newDob = DateTime.now().minusDays(100);
-        mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(100));
+        mctsSubscriber.setDateOfBirth(newDob);
         subscriberService.update(mctsSubscriber);
         // attempt to create subscription to the same pack -- should succeed
         subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.childPack(),

@@ -40,15 +40,14 @@ import javax.validation.constraints.Size;
 public class Village extends MdsEntity {
 
     @Field
-    @Column(allowsNull = "false", length = 50)
+    @Column(allowsNull = "false", length = 250)
     @NotNull
-    @Size(min = 1, max = 50)
+    @Size(min = 1, max = 250)
     private String name;
 
     @Field
-    @Column(allowsNull = "false", length = 50)
-    @NotNull
-    @Size(min = 1, max = 50)
+    @Column(length = 250)
+    @Size(min = 1, max = 250)
     private String regionalName;
 
     @Field

@@ -46,12 +46,12 @@ public class HealthBlockServiceImpl implements HealthBlockService {
     }
 
     @Override
-    public void create(HealthBlock healthBlock) {
-        healthBlockDataService.create(healthBlock);
+    public HealthBlock create(HealthBlock healthBlock) {
+        return healthBlockDataService.create(healthBlock);
     }
 
     @Override
-    public void update(HealthBlock healthBlock) {
-        healthBlockDataService.update(healthBlock);
+    public HealthBlock update(HealthBlock healthBlock) {
+        return healthBlockDataService.update(healthBlock);
     }
 }

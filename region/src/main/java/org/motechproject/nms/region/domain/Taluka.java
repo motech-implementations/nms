@@ -26,15 +26,14 @@ import java.util.List;
 public class Taluka extends MdsEntity {
 
     @Field
-    @Column(allowsNull = "false", length = 100)
+    @Column(allowsNull = "false", length = 150)
     @NotNull
-    @Size(min = 1, max = 100)
+    @Size(min = 1, max = 150)
     private String name;
 
     @Field
-    @Column(allowsNull = "false", length = 100)
-    @NotNull
-    @Size(min = 1, max = 100)
+    @Column(length = 150)
+    @Size(min = 1, max = 150)
     private String regionalName;
 
     @Field
@@ -47,8 +46,6 @@ public class Taluka extends MdsEntity {
     private String code;
 
     @Field
-    @Column(allowsNull = "false")
-    @NotNull
     private Integer identity;
 
     @Field

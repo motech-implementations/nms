@@ -16,3 +16,4 @@ ID	District_ID	District_Name	Taluka_ID	Taluka_Name	HealthBlock_ID	HealthBlock_Na
 72168	1	Bargarh	0013	Bhatli	175	BHATLI	250	BHATLI CHC	1096	BHATLI SC	0	 	 	Pratima Kumar	9439999245	F	ANM 2	 	 	24-04-2015	 	 	 	 	 	 		 	 	 			 	 	 	Bhatli	Belar Sen
 72169	18	Puri	0304	Pipili	432	Pipli	1441	Managalpur CHC	5159	Bharatipur SC	28981	Bharatipur (28981)	 	Hemalata Behera	8596059653	F	ASHA	 	 	24-04-2015	24-04-2015	 	 	 	 	 		 	 	 			 	 	 	BHARATIPUR	RAMESH BEHERA
 72170	18	Puri	0304	Pipili	432	Pipli	1441	Managalpur CHC	5167	Danagahiri SC	10005284	Nuasahi *	 	Aisha Bibi	9938976266	F	ASHA	 	 	24-04-2015	24-04-2015	 	 	 	 	 		 	 	 			 	 	 	NUASAHI	XXX
+72171	18	Puri	111	Taluka	222	HealthBlock	333	PHC	444	SC	555	Village	 	Aisha Bibi	1138976266	F	ASHA	 	 	24-04-2015	24-04-2015	 	 	 	 	 		 	 	 			 	 	 	NUASAHI	XXX

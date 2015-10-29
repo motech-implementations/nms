@@ -27,15 +27,14 @@ import java.util.List;
 public class HealthFacility extends MdsEntity {
 
     @Field
-    @Column(allowsNull = "false", length = 50)
+    @Column(allowsNull = "false", length = 250)
     @NotNull
-    @Size(min = 1, max = 50)
+    @Size(min = 1, max = 250)
     private String name;
 
     @Field
-    @Column(allowsNull = "false", length = 50)
-    @NotNull
-    @Size(min = 1, max = 50)
+    @Column(length = 250)
+    @Size(min = 1, max = 250)
     private String regionalName;
 
     @Field
@@ -44,8 +43,6 @@ public class HealthFacility extends MdsEntity {
     private Long code;
 
     @Field
-    @Column(allowsNull = "false")
-    @NotNull
     private HealthFacilityType healthFacilityType;
 
     @Field

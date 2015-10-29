@@ -39,51 +39,40 @@ public class HealthSubFacilityUnitTest {
     public void testNameSize() {
         HealthSubFacility healthSubFacility = new HealthSubFacility();
         healthSubFacility
-                .setName("AAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBX");
+                .setName("AAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBXAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBXJGDJFGEJWGFWEJHGFJWEHGFJWEGFJHEGfdewfwefwefeweeee");
 
         Set<ConstraintViolation<HealthSubFacility>> constraintViolations = validator
                 .validateProperty(healthSubFacility, "name");
 
         assertEquals(1, constraintViolations.size());
-        assertEquals("size must be between 1 and 100", constraintViolations.iterator().next().getMessage());
+        assertEquals("size must be between 1 and 250", constraintViolations.iterator().next().getMessage());
 
         healthSubFacility.setName("");
 
         constraintViolations = validator.validateProperty(healthSubFacility, "name");
 
         assertEquals(1, constraintViolations.size());
-        assertEquals("size must be between 1 and 100", constraintViolations.iterator().next().getMessage());
-    }
-
-    @Test
-    public void testRegionalNameNull() {
-        HealthSubFacility healthSubFacility = new HealthSubFacility();
-
-        Set<ConstraintViolation<HealthSubFacility>> constraintViolations = validator
-                .validateProperty(healthSubFacility, "regionalName");
-
-        assertEquals(1, constraintViolations.size());
-        assertEquals("may not be null", constraintViolations.iterator().next().getMessage());
+        assertEquals("size must be between 1 and 250", constraintViolations.iterator().next().getMessage());
     }
 
     @Test
     public void testRegionalNameSize() {
         HealthSubFacility healthSubFacility = new HealthSubFacility();
         healthSubFacility
-                .setRegionalName("AAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBX");
+                .setRegionalName("AAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBXAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBXJGDJFGEJWGFWEJHGFJWEHGFJWEGFJHEGfdewfwefwefeweeee");
 
         Set<ConstraintViolation<HealthSubFacility>> constraintViolations = validator
                 .validateProperty(healthSubFacility, "regionalName");
 
         assertEquals(1, constraintViolations.size());
-        assertEquals("size must be between 1 and 100", constraintViolations.iterator().next().getMessage());
+        assertEquals("size must be between 1 and 250", constraintViolations.iterator().next().getMessage());
 
         healthSubFacility.setRegionalName("");
 
         constraintViolations = validator.validateProperty(healthSubFacility, "regionalName");
 
         assertEquals(1, constraintViolations.size());
-        assertEquals("size must be between 1 and 100", constraintViolations.iterator().next().getMessage());
+        assertEquals("size must be between 1 and 250", constraintViolations.iterator().next().getMessage());
     }
 
     @Test
