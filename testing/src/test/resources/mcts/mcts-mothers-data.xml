@@ -110,14 +110,14 @@
                   <Records diffgr:id="Records1" msdata:rowOrder="0">
                      <StateID>21</StateID>
                      <District_ID>4</District_ID>
-                     <District_Name>District_Name 1</District_Name>
+                     <District_Name>District_Name 4</District_Name>
                      <Taluka_ID>0046</Taluka_ID>
                      <Taluka_Name>Taluka_Name 1</Taluka_Name>
                      <HealthBlock_ID>113</HealthBlock_ID>
                      <HealthBlock_Name>HealthBlock_Name 1</HealthBlock_Name>
-                     <PHC_ID>332</PHC_ID>
-                     <PHC_Name>PHC_Name 1</PHC_Name>
-                     <SubCentre_ID>311</SubCentre_ID>
+                     <PHC_ID>111</PHC_ID>
+                     <PHC_Name>PHC_Name 3</PHC_Name>
+                     <SubCentre_ID>333</SubCentre_ID>
                      <SubCentre_Name>SubCentre_Name 1</SubCentre_Name>
                      <Village_ID>28331</Village_ID>
                      <Village_Name>Village_Name 1</Village_Name>
@@ -271,18 +271,18 @@
                   </Records>
                   <Records diffgr:id="Records3" msdata:rowOrder="2">
                      <StateID>21</StateID>
-                     <District_ID>44</District_ID>
-                     <District_Name>District_Name 3</District_Name>
-                     <Taluka_ID>444</Taluka_ID>
-                     <Taluka_Name>Taluka_Name 3</Taluka_Name>
-                     <HealthBlock_ID>222</HealthBlock_ID>
-                     <HealthBlock_Name>HealthBlock_Name 3</HealthBlock_Name>
+                     <District_ID>4</District_ID>
+                     <District_Name>District_Name 4</District_Name>
+                     <Taluka_ID>0046</Taluka_ID>
+                     <Taluka_Name>Taluka_Name 1</Taluka_Name>
+                     <HealthBlock_ID>113</HealthBlock_ID>
+                     <HealthBlock_Name>HealthBlock_Name 1</HealthBlock_Name>
                      <PHC_ID>111</PHC_ID>
                      <PHC_Name>PHC_Name 3</PHC_Name>
                      <SubCentre_ID>333</SubCentre_ID>
-                     <SubCentre_Name>SubCentre_Name 3</SubCentre_Name>
-                     <Village_ID>2221</Village_ID>
-                     <Village_Name>Village_Name 3</Village_Name>
+                     <SubCentre_Name>SubCentre_Name 1</SubCentre_Name>
+                     <Village_ID>28331</Village_ID>
+                     <Village_Name>Village_Name 1</Village_Name>
                      <Yr>2015</Yr>
                      <GP_Village>GP_Village 3</GP_Village>
                      <Address>Address 3</Address>

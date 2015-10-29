@@ -152,7 +152,11 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
     @Override
     @Transactional
-    public void importMotherRecord(Map<String, Object> record) {
+    public boolean importMotherRecord(Map<String, Object> record) {
+        if (pregnancyPack == null) {
+            pregnancyPack = subscriptionService.getSubscriptionPack(SubscriptionPackType.PREGNANCY);
+        }
+
         MctsMother mother = (MctsMother) record.get(KilkariConstants.BENEFICIARY_ID);
         String name = (String) record.get(KilkariConstants.BENEFICIARY_NAME);
         Long msisdn = (Long) record.get(KilkariConstants.MSISDN);
@@ -169,11 +173,11 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             LOGGER.error(le.toString());
             subscriptionErrorDataService.create(new SubscriptionError(msisdn, SubscriptionRejectionReason.INVALID_LOCATION,
                     SubscriptionPackType.PREGNANCY, le.getMessage()));
-            return;
+            return false;
         }
 
         if (!validateLMP(lmp, msisdn)) {
-            return;
+            return false;
         }
 
         mother.setName(name);
@@ -184,21 +188,26 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
         if ((abortion != null) && abortion) {
             subscriptionService.deactivateSubscription(subscription, DeactivationReason.MISCARRIAGE_OR_ABORTION);
-            return;
+            return true;
         }
         if ((stillBirth != null) && stillBirth) {
             subscriptionService.deactivateSubscription(subscription, DeactivationReason.STILL_BIRTH);
-            return;
+            return true;
         }
         if ((death != null) && death) {
             subscriptionService.deactivateSubscription(subscription, DeactivationReason.MATERNAL_DEATH);
         }
 
+        return true;
     }
 
     @Override
     @Transactional
-    public void importChildRecord(Map<String, Object> record) {
+    public boolean importChildRecord(Map<String, Object> record) {
+        if (childPack == null) {
+            childPack = subscriptionService.getSubscriptionPack(SubscriptionPackType.CHILD);
+        }
+
         MctsChild child = (MctsChild) record.get(KilkariConstants.BENEFICIARY_ID);
         String name = (String) record.get(KilkariConstants.BENEFICIARY_NAME);
         Long msisdn = (Long) record.get(KilkariConstants.MSISDN);
@@ -213,11 +222,11 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             LOGGER.error(le.toString());
             subscriptionErrorDataService.create(new SubscriptionError(msisdn, SubscriptionRejectionReason.INVALID_LOCATION,
                     SubscriptionPackType.CHILD, le.getMessage()));
-            return;
+            return false;
         }
 
         if (!validateDOB(dob, msisdn)) {
-            return;
+            return false;
         }
 
         child.setName(name);
@@ -246,6 +255,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             subscriptionService.deactivateSubscription(childSubscription, DeactivationReason.CHILD_DEATH);
         }
 
+        return true;
     }
 
     private boolean validateLMP(DateTime lmp, Long msisdn) {

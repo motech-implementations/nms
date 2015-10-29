@@ -73,7 +73,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         stopWatch.stop();
 
         double seconds = stopWatch.getTime() / 1000d;
-        LOGGER.info("Finished import from MCTS in {} seconds. Import {} mothers, {} children and {} front line workers.",
+        LOGGER.info("Finished import from MCTS in {} seconds. Imported {} mothers, {} children and {} front line workers.",
                 seconds, savedMothers, savedChildren, savedAnmAsha);
     }
 
@@ -118,10 +118,12 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         int saved = 0;
         for (ChildRecord record : childrenDataSet.getRecords()) {
             try {
-                mctsBeneficiaryImportService.importChildRecord(toMap(record));
-                saved++;
+                boolean success =mctsBeneficiaryImportService.importChildRecord(toMap(record));
+                if (success) {
+                    saved++;
+                }
             } catch (RuntimeException e) {
-                LOGGER.error("Flw import Error. Cannot import Child with ID: {} for state ID: {}",
+                LOGGER.error("Child import Error. Cannot import Child with ID: {} for state ID: {}",
                         record.getIdNo(), state.getCode(), e);
             }
         }
@@ -226,10 +228,12 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         int saved = 0;
         for (MotherRecord record : mothersDataSet.getRecords()) {
             try {
-                mctsBeneficiaryImportService.importMotherRecord(toMap(record));
-                saved++;
+                boolean success = mctsBeneficiaryImportService.importMotherRecord(toMap(record));
+                if (success) {
+                    saved++;
+                }
             } catch (RuntimeException e) {
-                LOGGER.error("Flw import Error. Cannot import Mother with ID: {} for state ID: {}",
+                LOGGER.error("Mother import Error. Cannot import Mother with ID: {} for state ID: {}",
                         record.getIdNo(), state.getCode(), e);
             }
         }

@@ -13,7 +13,7 @@ public interface MctsBeneficiaryImportService {
 
     int importChildData(Reader reader) throws IOException;
 
-    void importMotherRecord(Map<String, Object> record);
+    boolean importMotherRecord(Map<String, Object> record);
 
-    void importChildRecord(Map<String, Object> record);
+    boolean importChildRecord(Map<String, Object> record);
 }
