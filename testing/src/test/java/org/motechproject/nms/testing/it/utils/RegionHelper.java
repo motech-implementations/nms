@@ -44,9 +44,10 @@ public class RegionHelper {
         Circle c = circleDataService.findByName("DE");
 
         if (c == null) {
-            c = circleDataService.create(new Circle("DE"));
+            c = new Circle("DE");
+
             c.setDefaultLanguage(hindiLanguage());
-            circleDataService.update(c);
+            circleDataService.create(c);
 
             // Create the dehli district which is linked to this circle.  Also creates state
             newDelhiDistrict();
@@ -109,6 +110,8 @@ public class RegionHelper {
             d.setLanguage(hindiLanguage());
             d.setCircle(delhiCircle());
             districtDataService.create(d);
+
+            stateDataService.evictAllCache();
         }
 
         return d;
@@ -127,6 +130,8 @@ public class RegionHelper {
             d.setCircle(delhiCircle());
             d.setLanguage(punjabiLanguage());
             districtDataService.create(d);
+
+            stateDataService.evictAllCache();
         }
 
         return d;
@@ -145,6 +150,8 @@ public class RegionHelper {
             d.setCircle(karnatakaCircle());
             d.setLanguage(tamilLanguage());
             districtDataService.create(d);
+
+            stateDataService.evictAllCache();
         }
 
         return d;
@@ -163,6 +170,8 @@ public class RegionHelper {
             d.setCircle(karnatakaCircle());
             d.setLanguage(kannadaLanguage());
             districtDataService.create(d);
+
+            stateDataService.evictAllCache();
         }
 
         return d;
@@ -243,7 +252,12 @@ public class RegionHelper {
         district.setName(name);
         district.setRegionalName(regionalName(name));
         district.setLanguage(language);
-        district.setCircle(circle);
+
+        if (circle != null) {
+            district.setCircle(circle);
+            circle.getDistricts().add(district);
+        }
+
         return district;
     }
 

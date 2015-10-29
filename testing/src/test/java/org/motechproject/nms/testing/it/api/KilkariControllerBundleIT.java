@@ -1749,11 +1749,17 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         Language language1 = new Language("Ur", "urdu");
         languageDataService.create(language1);
 
+        // create circle and add states to it
+        Circle circle = new Circle("NR");
+        circleDataService.create(circle);
+
         District district1 = new District();
         district1.setName("Lucknow");
         district1.setRegionalName("Lucknow");
         district1.setLanguage(language1);
         district1.setCode(11L);
+        district1.setCircle(circle);
+        circle.getDistricts().add(district1);
 
         State state1 = new State();
         state1.setName("UP");
@@ -1771,6 +1777,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         district2.setRegionalName("Bhopal");
         district2.setLanguage(language2);
         district2.setCode(21L);
+        district2.setCircle(circle);
+        circle.getDistricts().add(district2);
 
         State state2 = new State();
         state2.setName("MP");
@@ -1786,16 +1794,9 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         Language language3 = new Language("RJ", "Rajasthai");
         languageDataService.create(language3);
 
-        // create circle and add states to it
-        Circle circle = new Circle("NR");
-        circleDataService.create(circle);
-
         State s = createState(7L, "New State in delhi");
         stateDataService.create(s);
         districtDataService.create(createDistrict(s, 1L, "Circle", circle));
-
-        circle.getStates().add(state1);
-        circle.getStates().add(state2);
 
         // setup create subscription request
         SubscriptionRequest subscriptionRequest = new SubscriptionRequest(
@@ -1842,6 +1843,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         district1.setLanguage(language1);
         district1.setCode(11L);
         district1.setCircle(circle);
+        circle.getDistricts().add(district1);
 
         State state1 = new State();
         state1.setName("UP");
@@ -1860,6 +1862,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         district2.setLanguage(language2);
         district2.setCode(21L);
         district2.setCircle(circle);
+        circle.getDistricts().add(district2);
 
         State state2 = new State();
         state2.setName("MP");

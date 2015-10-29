@@ -4,7 +4,6 @@ import org.codehaus.jackson.annotate.JsonManagedReference;
 import org.motechproject.mds.annotations.Cascade;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
-import org.motechproject.mds.annotations.Ignore;
 import org.motechproject.mds.annotations.InstanceLifecycleListeners;
 import org.motechproject.mds.domain.MdsEntity;
 import org.motechproject.nms.tracking.annotation.TrackClass;
@@ -14,9 +13,7 @@ import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.Unique;
 import javax.validation.constraints.NotNull;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -43,16 +40,16 @@ public class State extends MdsEntity {
     @Cascade(delete = true)
     @Persistent(mappedBy = "state", defaultFetchGroup = "true")
     @JsonManagedReference
-    private List<District> districts;
+    private Set<District> districts;
 
     public State() {
-        this.districts = new ArrayList<>();
+        this.districts = new HashSet<>();
     }
 
     public State(String name, Long code) {
         this.name = name;
         this.code = code;
-        this.districts = new ArrayList<>();
+        this.districts = new HashSet<>();
     }
 
     public String getName() {
@@ -71,23 +68,12 @@ public class State extends MdsEntity {
         this.code = code;
     }
 
-    public List<District> getDistricts() {
+    public Set<District> getDistricts() {
         return districts;
     }
 
-    public void setDistricts(List<District> districts) {
+    public void setDistricts(Set<District> districts) {
         this.districts = districts;
-    }
-
-    @Ignore
-    public Set<Circle> getCircles() {
-        Set<Circle> circles = new HashSet<>();
-
-        for (District district : this.getDistricts()) {
-            circles.add(district.getCircle());
-        }
-
-        return circles;
     }
 
     @Override

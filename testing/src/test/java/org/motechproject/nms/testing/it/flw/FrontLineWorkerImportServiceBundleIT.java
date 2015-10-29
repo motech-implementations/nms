@@ -29,6 +29,7 @@ import org.motechproject.nms.region.domain.Village;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.region.service.LanguageService;
 import org.motechproject.nms.testing.it.api.utils.RequestBuilder;
 import org.motechproject.nms.testing.service.TestingService;
@@ -74,6 +75,8 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     LanguageService languageService;
     @Inject
     StateDataService stateDataService;
+    @Inject
+    DistrictService districtService;
     @Inject
     CircleDataService circleDataService;
     @Inject
@@ -196,7 +199,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     @Test(expected = CsvImportDataException.class)
     public void testImportMSISDNConflict() throws Exception {
         State state = stateDataService.findByName("State 1");
-        District district = state.getDistricts().get(0);
+        District district = state.getDistricts().iterator().next();
 
         FrontLineWorker flw = new FrontLineWorker("Existing With MSISDN", 1234567890L);
         flw.setMctsFlwId("#0");
@@ -441,11 +444,8 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     @Test
     public void verifyFT559() throws InterruptedException, IOException {
         State state = stateDataService.findByName("State 1");
-        District district1 = state.getDistricts().get(0);
-        District district2 = state.getDistricts().get(1);
+        District district1 = districtService.findByStateAndName(state, "District 11");
         Language language1 = languageService.getForCode("L1");
-        assertEquals("District 11", district1.getName());
-        assertEquals("District 12", district2.getName());
 
         FrontLineWorker flw = new FrontLineWorker("Test MSISDN", 1234567890L);
         flw.setMctsFlwId("#0");
@@ -481,11 +481,8 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     @Test
     public void verifyNIP166() throws InterruptedException, IOException {
         State state = stateDataService.findByName("State 1");
-        District district1 = state.getDistricts().get(0);
-        District district2 = state.getDistricts().get(1);
+        District district1 = districtService.findByStateAndName(state, "District 11");
         Language language1 = languageService.getForCode("L1");
-        assertEquals("District 11", district1.getName());
-        assertEquals("District 12", district2.getName());
 
         State state2 = createState(2L, "State 2");
         District district22 = createDistrict(state2, 22L, "District 22");

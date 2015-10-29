@@ -24,6 +24,7 @@ import org.motechproject.nms.region.domain.Language;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.service.CircleService;
 import org.motechproject.nms.region.service.LanguageService;
+import org.motechproject.nms.region.service.StateService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
@@ -58,6 +59,9 @@ public class UserController extends BaseController {
 
     @Autowired
     private LanguageService languageService;
+
+    @Autowired
+    private StateService stateService;
 
     /**
      * 2.2.1 Get User Details API
@@ -190,7 +194,7 @@ public class UserController extends BaseController {
             return true;
         }
 
-        Set<State> states = currentCircle.getStates();
+        Set<State> states = stateService.getAllInCircle(currentCircle);
         if (states == null || states.isEmpty()) { // No state available
             return true;
         }
@@ -238,7 +242,7 @@ public class UserController extends BaseController {
             return true;
         }
 
-        Set<State> states = circle.getStates();
+        Set<State> states = stateService.getAllInCircle(circle);
         if (states == null || states.isEmpty()) { // No state available
             return true;
         }

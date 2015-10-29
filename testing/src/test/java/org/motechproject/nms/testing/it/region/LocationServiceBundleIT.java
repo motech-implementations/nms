@@ -34,6 +34,7 @@ import org.ops4j.pax.exam.spi.reactors.PerSuite;
 import javax.inject.Inject;
 import javax.validation.ConstraintViolationException;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -283,11 +284,11 @@ public class LocationServiceBundleIT extends BasePaxIT {
         assertNotNull(newState);
         Assert.assertEquals(state, newState);
 
-        List<District> districtList = newState.getDistricts();
+        Set<District> districtList = newState.getDistricts();
         assertEquals(1, districtList.size());
         assertTrue(districtList.contains(district));
 
-        List<Taluka> talukaList = districtList.get(0).getTalukas();
+        List<Taluka> talukaList = districtList.iterator().next().getTalukas();
         assertEquals(1, talukaList.size());
         assertTrue(talukaList.contains(taluka));
 

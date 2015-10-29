@@ -405,10 +405,12 @@ public class UserControllerBundleIT extends BasePaxIT {
         // Calling these will make sure the districts exist and will map the districts' language to their state
         District d = rh.newDelhiDistrict();
         d.setCircle(circle);
+        circle.getDistricts().add(d);
         districtDataService.update(d);
 
         d = rh.mysuruDistrict();
         d.setCircle(circle);
+        circle.getDistricts().add(d);
         districtDataService.update(d);
 
         deployedServiceDataService.create(new DeployedService(rh.delhiState(), Service.MOBILE_KUNJI));
@@ -1490,12 +1492,17 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         State nws = createState(7L, "Non-whitelist state in delhi");
         stateDataService.create(nws);
-        districtDataService.create(createDistrict(nws, 1L, "Circle", delhiCircle));
+        District d1 = createDistrict(nws, 1L, "Circle", delhiCircle);
+        delhiCircle.getDistricts().add(d1);
+        districtDataService.create(d1);
 
         // create whitelist state
         State ws = createState(8L, "Whitelist state in delhi");
         stateDataService.create(ws);
-        districtDataService.create(createDistrict(ws, 2L, "Circle", delhiCircle));
+        District d2 = createDistrict(ws, 2L, "Circle", delhiCircle);
+        ws.getDistricts().add(d2);
+        delhiCircle.getDistricts().add(d2);
+        districtDataService.create(d2);
 
         // update deployment
         deployedServiceDataService.create(new DeployedService(ws, Service.KILKARI));
@@ -1530,12 +1537,19 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         State nws = createState(7L, "Non-whitelist state in delhi");
         stateDataService.create(nws);
-        districtDataService.create(createDistrict(nws, 1L, "Circle", delhiCircle));
+        District d1 = createDistrict(nws, 1L, "Circle", delhiCircle);
+        delhiCircle.getDistricts().add(d1);
+        districtDataService.create(d1);
 
         // create whitelist state
         State ws = createState(8L, "Whitelist state in delhi");
         stateDataService.create(ws);
-        districtDataService.create(createDistrict(ws, 2L, "Circle", delhiCircle));
+        District d2 = createDistrict(ws, 2L, "Circle", delhiCircle);
+        delhiCircle.getDistricts().add(d2);
+        districtDataService.create(d2);
+
+//        delhiCircle.getDistricts().addAll(Arrays.asList(d1, d2));
+//        circleDataService.update(delhiCircle);
 
         // no deployment whitelist created
 
@@ -2629,7 +2643,7 @@ public class UserControllerBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT329_427() throws IOException, InterruptedException {
-        State s = rh.delhiState();
+        rh.delhiState();
         rh.delhiCircle();
 
         deployedServiceDataService.create(new DeployedService(rh.delhiState(), Service.MOBILE_KUNJI));
@@ -2639,8 +2653,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         frontLineWorkerService.add(flw);
 
         // Set maxallowedUsageInPulses to 3800
-        ServiceUsageCap serviceUsageCap = new ServiceUsageCap(s,
-                Service.MOBILE_KUNJI, 3800);
+        ServiceUsageCap serviceUsageCap = new ServiceUsageCap(rh.delhiState(), Service.MOBILE_KUNJI, 3800);
         serviceUsageCapDataService.create(serviceUsageCap);
 
         CallDetailRecord cdr = new CallDetailRecord();
@@ -3946,7 +3959,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         State s = createState(7L, "New State in karnataka");
         stateDataService.create(s);
-        districtDataService.create(createDistrict(s, 1L, "Circle", c));
+        districtDataService.create(createDistrict(s, 1L, "Circle", rh.tamilLanguage(), c));
 
         // invoke get user detail API
         HttpGet httpGet = createHttpGet(true, "mobilekunji", // service

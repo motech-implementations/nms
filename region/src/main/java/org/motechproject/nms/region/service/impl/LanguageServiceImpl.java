@@ -77,7 +77,7 @@ public class LanguageServiceImpl implements LanguageService {
         Set<Language> languages = new HashSet<>();
 
         if (circle != null) {
-            for (District district : circle.getDistrictList()) {
+            for (District district : circle.getDistricts()) {
                 Language language = district.getLanguage();
 
                 if (language != null) {
