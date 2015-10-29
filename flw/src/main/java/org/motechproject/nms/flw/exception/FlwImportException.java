@@ -1,7 +1,7 @@
 package org.motechproject.nms.flw.exception;
 
 /**
- * Created by tomasz on 28.10.15.
+ * Signals an issue with importing an FLW.
  */
 public class FlwImportException extends RuntimeException {
 
