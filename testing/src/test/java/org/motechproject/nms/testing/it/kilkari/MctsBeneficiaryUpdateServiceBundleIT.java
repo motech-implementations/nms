@@ -22,6 +22,7 @@ import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryUpdateService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
+import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.HealthBlock;
 import org.motechproject.nms.region.domain.HealthFacility;
@@ -121,12 +122,20 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
 
     private void createLocationData() {
         // specific locations from the mother and child data files:
+        final Circle circle = new Circle();
+        circle.setName("Square");
+        circleDataService.create(circle);
 
-        State state21 = createState(21L, "State 21");
-        District district2 = createDistrict(state21, 2L, "Jharsuguda", new Language("21", "English"));
-        District district3 = createDistrict(state21, 3L, "Sambalpur");
-        District district4 = createDistrict(state21, 4L, "Debagarh");
-        state21.getDistricts().addAll(Arrays.asList(district2, district3, district4));
+        final Circle circle2 = new Circle();
+        circle2.setName("Rectangle");
+        circleDataService.create(circle2);
+
+        final State state21 = createState(21L, "State 21");
+        District district2 = createDistrict(state21, 2L, "Jharsuguda", null, circle);
+        District district3 = createDistrict(state21, 3L, "Sambalpur", null, circle);
+        District district4 = createDistrict(state21, 4L, "Debagarh", null, circle);
+        District district5 = createDistrict(state21, 5L, "Rectangle", null, circle2);
+        state21.getDistricts().addAll(Arrays.asList(district2, district3, district4, district5));
 
         Taluka taluka24 = createTaluka(district2, "0024", "Laikera P.S.", 24);
         district2.getTalukas().add(taluka24);
