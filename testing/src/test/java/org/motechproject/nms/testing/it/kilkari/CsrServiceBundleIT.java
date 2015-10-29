@@ -287,6 +287,57 @@ public class CsrServiceBundleIT extends BasePaxIT {
     }
 
 
+    /**
+     * Verify callRetry record is deleted after a failed, but eventually successful message
+     */
+    @Test
+    public void verifyNIP194() {
+        DateTime now = DateTime.now();
+
+        // Create a record in the CallRetry table marked as RETRY_2
+        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, now.minusDays(3),
+                SubscriptionPackType.CHILD);
+
+        String contentFileName = sh.getContentMessageFile(subscription, 0);
+        CallRetry retry = callRetryDataService.create(new CallRetry(
+                subscription.getSubscriptionId(),
+                subscription.getSubscriber().getCallingNumber(),
+                DayOfTheWeek.today(),
+                CallStage.RETRY_2,
+                contentFileName,
+                "XXX",
+                "XXX",
+                "XX",
+                SubscriptionOrigin.MCTS_IMPORT,
+                now.minusDays(3).toString(TIME_FORMATTER)
+        ));
+
+
+        Map<Integer, Integer> callStats = new HashMap<>();
+        CallSummaryRecordDto record = new CallSummaryRecordDto(
+                new RequestId(subscription.getSubscriptionId(), now.toString(TIME_FORMATTER)),
+                subscription.getSubscriber().getCallingNumber(),
+                contentFileName,
+                "XXX",
+                "XXX",
+                "XX",
+                FinalCallStatus.SUCCESS,
+                callStats,
+                0,
+                5
+        );
+
+
+        Map<String, Object> eventParams = new HashMap<>();
+        eventParams.put(CSR_PARAM_KEY, record);
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
+        csrService.processCallSummaryRecord(motechEvent);
+
+        // There should be no calls to retry since the one above was the last try
+        assertEquals(0, callRetryDataService.count());
+    }
+
+
     @Test
     public void verifyFT144() {
 

@@ -471,8 +471,8 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         assertChild(subscriber1, "210404600521400116", getDateTime("2/12/2014"), "Baby1 of PANI HEMRAM", expectedState,
                 expectedDistrict4);
 
-        // although our MCTS data file contains 10 children, we only create 8 subscribers due to duplicate phone numbers
-        assertEquals(8, subscriberDataService.count());
+        // although our MCTS data file contains 10 children, we only create 9 due to one duplicate phone number
+        assertEquals(9, subscriberDataService.count());
     }
 
     @Test

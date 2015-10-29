@@ -96,7 +96,9 @@
                         <Export-Package>
                             org.motechproject.nms.flw.service;version=${project.version},
                             org.motechproject.nms.flw.repository;version=${project.version},
-                            org.motechproject.nms.flw.domain;version=${project.version}
+                            org.motechproject.nms.flw.domain;version=${project.version},
+                            org.motechproject.nms.flw.utils;version=${project.version},
+                            org.motechproject.nms.flw.exception;version=${project.version}
                         </Export-Package>
                         <Import-Package>
                             org.motechproject.osgi.web,

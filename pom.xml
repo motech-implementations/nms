@@ -632,6 +632,16 @@
                 <artifactId>motech-platform-osgi-extender-fragment</artifactId>
                 <version>${motech.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.apache.axis</groupId>
+                <artifactId>com.springsource.org.apache.axis</artifactId>
+                <version>1.4.0</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.servicemix.bundles</groupId>
+                <artifactId>org.apache.servicemix.bundles.wsdl4j</artifactId>
+                <version>1.6.2_5</version>
+            </dependency>
             <!-- Test -->
             <dependency>
                 <groupId>org.springframework</groupId>
@@ -751,6 +761,7 @@
         <module>region</module>
         <module>props</module>
         <module>imi</module>
+        <module>mcts</module>
         <module>testing</module>
     </modules>
 
@@ -876,6 +887,12 @@
                     <includeTests>false</includeTests>
                     <targetJdk>${jdk.version}</targetJdk>
                     <skip>${pmd.skip}</skip>
+                    <excludes>
+                        <!-- Skip Axis generated classes -->
+                        <exclude>**/mcts/**/soap/*.java</exclude>
+                        <!-- Skip contract classes -->
+                        <exclude>**/mcts/**/contract/*.java</exclude>
+                    </excludes>
                 </configuration>
                 <dependencies>
                     <dependency>
@@ -900,11 +917,14 @@
                 <version>2.10</version>
                 <configuration>
                     <configLocation>${modules.root.dir}/checkstyle.xml</configLocation>
+                    <suppressionsLocation>${modules.root.dir}/suppressions.xml</suppressionsLocation>
                     <includeTestSourceDirectory>false</includeTestSourceDirectory>
                     <enableFilesSummary>true</enableFilesSummary>
                     <failsOnError>true</failsOnError>
                     <consoleOutput>true</consoleOutput>
                     <skip>${checkstyle.skip}</skip>
+                    <!-- Skip Axis generated classes -->
+                    <excludes>**/mcts/**/soap/*.java</excludes>
                 </configuration>
                 <executions>
                     <execution>

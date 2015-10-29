@@ -123,8 +123,7 @@ public class CsrServiceImpl implements CsrService {
     }
 
 
-    private void completeSubscriptionIfNeeded(Subscription subscription, CallSummaryRecord record,
-                                              CallRetry callRetry) {
+    private void completeSubscriptionIfNeeded(Subscription subscription, CallSummaryRecord record) {
 
         resetWelcomeFlagInSubscription(subscription);
 
@@ -136,11 +135,6 @@ public class CsrServiceImpl implements CsrService {
         // Mark the subscription completed
         subscription.setStatus(SubscriptionStatus.COMPLETED);
         subscriptionDataService.update(subscription);
-
-        // Delete the callRetry entry, if any
-        if (callRetry != null) {
-            callRetryDataService.delete(callRetry);
-        }
 
     }
 
@@ -154,6 +148,16 @@ public class CsrServiceImpl implements CsrService {
         }
 
         return record.getStatusStats().containsKey(StatusCode.OBD_FAILED_INVALIDNUMBER.getValue());
+    }
+
+
+    private void deleteCallRetryRecordIfNeeded(CallRetry callRetry) {
+        if (callRetry == null) {
+            return;
+        }
+        LOGGER.debug(String.format("Deleting call retry record for subscription: %s", callRetry.getSubscriptionId()));
+        callRetryDataService.delete(callRetry);
+
     }
 
 
@@ -237,11 +241,10 @@ public class CsrServiceImpl implements CsrService {
                 subscriptionDataService.update(subscription);
             }
 
-            LOGGER.debug(String.format("Deleting retry entry for subscription: %s", subscription.getSubscriptionId()));
-            callRetryDataService.delete(callRetry);
+            deleteCallRetryRecordIfNeeded(callRetry);
 
             // Does subscription need to be marked complete, even if we failed to send the last message?
-            completeSubscriptionIfNeeded(subscription, record, callRetry);
+            completeSubscriptionIfNeeded(subscription, record);
             return;
         }
 
@@ -263,10 +266,7 @@ public class CsrServiceImpl implements CsrService {
             return;
         }
 
-        // Delete the callRetry entry, if any
-        if (callRetry != null) {
-            callRetryDataService.delete(callRetry);
-        }
+        deleteCallRetryRecordIfNeeded(callRetry);
 
         //Deactivate the subscription
         subscription.setStatus(SubscriptionStatus.DEACTIVATED);
@@ -335,7 +335,8 @@ public class CsrServiceImpl implements CsrService {
 
             switch (csrDto.getFinalStatus()) {
                 case SUCCESS:
-                    completeSubscriptionIfNeeded(subscription, csr, callRetry);
+                    completeSubscriptionIfNeeded(subscription, csr);
+                    deleteCallRetryRecordIfNeeded(callRetry);
                     break;
 
                 case FAILED:

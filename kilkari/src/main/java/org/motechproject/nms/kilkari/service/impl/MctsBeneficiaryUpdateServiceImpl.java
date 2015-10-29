@@ -5,6 +5,7 @@ import org.motechproject.mds.service.MotechDataService;
 import org.motechproject.nms.csv.exception.CsvImportDataException;
 import org.motechproject.nms.csv.utils.CsvImporterBuilder;
 import org.motechproject.nms.csv.utils.CsvMapImporter;
+import org.motechproject.nms.csv.utils.GetInstanceByString;
 import org.motechproject.nms.csv.utils.GetLong;
 import org.motechproject.nms.csv.utils.GetString;
 import org.motechproject.nms.kilkari.domain.MctsBeneficiary;
@@ -17,6 +18,7 @@ import org.motechproject.nms.kilkari.repository.MctsChildDataService;
 import org.motechproject.nms.kilkari.repository.MctsMotherDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryUpdateService;
+import org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.region.exception.InvalidLocationException;
 import org.motechproject.nms.region.service.LocationService;
@@ -46,6 +48,7 @@ public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateSe
     private LocationService locationService;
     private MctsMotherDataService mctsMotherDataService;
     private MctsChildDataService mctsChildDataService;
+    private MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor;
 
     private static final String SR_NO = "Sr No";
     private static final String MCTS_ID = "MCTS ID";
@@ -67,12 +70,13 @@ public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateSe
     public MctsBeneficiaryUpdateServiceImpl(SubscriberService subscriberService,
                                             SubscriptionErrorDataService subscriptionErrorDataService,
                                             LocationService locationService, MctsMotherDataService mctsMotherDataService,
-                                            MctsChildDataService mctsChildDataService) {
+                                            MctsChildDataService mctsChildDataService, MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor) {
         this.subscriberService = subscriberService;
         this.subscriptionErrorDataService = subscriptionErrorDataService;
         this.locationService = locationService;
         this.mctsMotherDataService = mctsMotherDataService;
         this.mctsChildDataService = mctsChildDataService;
+        this.mctsBeneficiaryValueProcessor = mctsBeneficiaryValueProcessor;
     }
 
 
@@ -195,8 +199,18 @@ public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateSe
         mapping.put(SR_NO, new Optional(new GetString()));
         mapping.put(MCTS_ID, new Optional(new GetString()));
         mapping.put(STATE_MCTS_ID, new Optional(new GetString()));
-        mapping.put(DOB, new Optional(MctsBeneficiaryUtils.DATE_BY_STRING));
-        mapping.put(LMP, new Optional(MctsBeneficiaryUtils.DATE_BY_STRING));
+        mapping.put(DOB, new Optional(new GetInstanceByString<DateTime>() {
+            @Override
+            public DateTime retrieve(String value) {
+                return mctsBeneficiaryValueProcessor.getDateByString(value);
+            }
+        }));
+        mapping.put(LMP, new Optional(new GetInstanceByString<DateTime>() {
+            @Override
+            public DateTime retrieve(String value) {
+                return mctsBeneficiaryValueProcessor.getDateByString(value);
+            }
+        }));
         mapping.put(PHC, new Optional(new GetLong()));
         mapping.put(SUBCENTRE, new Optional(new GetLong()));
         mapping.put(CENSUS_VILLAGE, new Optional(new GetLong()));
@@ -204,8 +218,12 @@ public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateSe
         mapping.put(DISTRICT, new Optional(new GetLong()));
         mapping.put(TALUKA, new Optional(new GetString()));
         mapping.put(HEALTH_BLOCK, new Optional(new GetLong()));
-
-        mapping.put(MSISDN, new Optional(MctsBeneficiaryUtils.MSISDN_BY_STRING));
+        mapping.put(MSISDN, new Optional(new GetInstanceByString<Long>() {
+            @Override
+            public Long retrieve(String value) {
+                return mctsBeneficiaryValueProcessor.getMsisdnByString(value);
+            }
+        }));
 
         return mapping;
     }

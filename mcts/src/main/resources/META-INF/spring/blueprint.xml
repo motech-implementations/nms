@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:osgi="http://www.eclipse.org/gemini/blueprint/schema/blueprint"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd http://www.eclipse.org/gemini/blueprint/schema/blueprint http://www.eclipse.org/gemini/blueprint/schema/blueprint/gemini-blueprint.xsd">
+
+    <import resource="classpath*:META-INF/motech/*.xml" />
+
+    <osgi:service ref="mctsWebServiceFacade"
+                    interface="org.motechproject.nms.mcts.service.MctsWebServiceFacade" />
+
+    <osgi:service ref="mctsWsImportService"
+                  interface="org.motechproject.nms.mcts.service.MctsWsImportService" />
+
+    <osgi:reference id="mctsChildDataService"
+                    interface="org.motechproject.nms.kilkari.repository.MctsChildDataService" />
+
+    <osgi:reference id="mctsMotherDataService"
+                    interface="org.motechproject.nms.kilkari.repository.MctsMotherDataService" />
+
+    <osgi:reference id="frontLineWorkerDataService"
+                    interface="org.motechproject.nms.flw.repository.FrontLineWorkerDataService" />
+
+    <osgi:reference id="schedulerService"
+                    interface="org.motechproject.scheduler.service.MotechSchedulerService" />
+
+    <osgi:reference id="stateDataService"
+                    interface="org.motechproject.nms.region.repository.StateDataService" />
+
+    <osgi:reference id="frontLineWorkerImportService"
+                  interface="org.motechproject.nms.flw.service.FrontLineWorkerImportService" />
+
+    <osgi:reference id="mctsBeneficiaryValueProcessor"
+                  interface="org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor"/>
+
+    <osgi:reference id="mctsBeneficiaryImportService"
+                    interface="org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService"/>
+
+</beans>
