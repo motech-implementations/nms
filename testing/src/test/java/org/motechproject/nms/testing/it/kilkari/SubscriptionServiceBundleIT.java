@@ -984,7 +984,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     }
 
     /**
-     * Verifies that child subscriptions that are past due (active + >pack length) get completed automatically
+     * Verifies that child subscriptions that are past due (active + <pack length) don't get completed automatically
      */
     @Test
     public void verifyChildPastDueCompletionNoChange() {
@@ -995,7 +995,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         Subscription sub = subscriptionService.createSubscription(subscriber.getCallingNumber(),
                 rh.hindiLanguage(), sh.childPack(), SubscriptionOrigin.IVR);
 
-        // get and update subscription with old start date beyond expected range (>48wks for child pack)
+        // get and update subscription with old start date within expected range (<48wks for child pack)
         Long subscriptionId = sub.getId();
         sub.setStatus(SubscriptionStatus.ACTIVE);
         sub.setStartDate(DateTime.now().minusDays(48 * 7 - 1));
@@ -1023,7 +1023,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         Subscription sub = subscriptionService.createSubscription(subscriber.getCallingNumber(),
                 rh.hindiLanguage(), sh.childPack(), SubscriptionOrigin.IVR);
 
-        // get and update subscription with old start date beyond expected range (>48wks for child pack)
+        // get and update subscription with old start date beyond expected range (>72wks for pregnancy pack)
         Long subscriptionId = sub.getId();
         sub.setStatus(SubscriptionStatus.ACTIVE);
         sub.setStartDate(DateTime.now().minusDays(73 * 7));
@@ -1040,7 +1040,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     }
 
     /**
-     * Verifies that pregnancy subscriptions that are past due (active + >pack length) get completed automatically
+     * Verifies that pregnancy subscriptions that are past due (active + <pack length) don't get completed automatically
      */
     @Test
     public void verifyPregnancyPastDueCompletionNoChange() {
@@ -1051,7 +1051,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         Subscription sub = subscriptionService.createSubscription(subscriber.getCallingNumber(),
                 rh.hindiLanguage(), sh.childPack(), SubscriptionOrigin.IVR);
 
-        // get and update subscription with old start date beyond expected range (>48wks for child pack)
+        // get and update subscription with old start date within expected range (<72wks for pregnancy pack)
         Long subscriptionId = sub.getId();
         sub.setStatus(SubscriptionStatus.ACTIVE);
         sub.setStartDate(DateTime.now().minusDays(72 * 7 - 1));

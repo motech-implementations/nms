@@ -78,6 +78,7 @@ public class CdrFileServiceImpl implements CdrFileService {
     private static final String CDR_CHECKSUM_PARAM_KEY = "cdrChecksum";
     private static final String CDR_COUNT_PARAM_KEY = "cdrCount";
     private static final String SORTED_SUFFIX = ".sorted";
+    private static String logTemplate = "Found %d records in table %s";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CdrFileServiceImpl.class);
     public static final String CDR_DETAIL_FILE = "CDR Detail File";
@@ -731,7 +732,7 @@ public class CdrFileServiceImpl implements CdrFileService {
                 null
         ));
 
-        // TODO: is there a better place/way to trigger this?
+        // Clean up old CDRs/CSRs before distributing work out
         cleanOldCallRecords();
 
         // Phase 3: distribute the processing of aggregated CDRs to all nodes.
@@ -772,8 +773,6 @@ public class CdrFileServiceImpl implements CdrFileService {
             LOGGER.debug(String.format("Unable to get property from config: %s", CDR_CSR_RETENTION_DURATION));
         }
 
-        String logTemplate = "Found %d records in table %s";
-
         LOGGER.debug(String.format(logTemplate, callDetailRecordDataService.count(), CDR_TABLE_NAME));
         LOGGER.debug(String.format(logTemplate, callSummaryRecordDataService.count(), CSR_TABLE_NAME));
 
@@ -782,8 +781,6 @@ public class CdrFileServiceImpl implements CdrFileService {
 
         LOGGER.debug(String.format(logTemplate, callDetailRecordDataService.count(), CDR_TABLE_NAME));
         LOGGER.debug(String.format(logTemplate, callSummaryRecordDataService.count(), CSR_TABLE_NAME));
-        callDetailRecordDataService.evictEntityCache(false);
-        callSummaryRecordDataService.evictEntityCache(false);
     }
 
     /**
@@ -813,5 +810,13 @@ public class CdrFileServiceImpl implements CdrFileService {
         // FYI: doesn't matter what data service we use since it is just used as a vehicle to execute the custom query
         Long rowCount = callDetailRecordDataService.executeSQLQuery(queryExecution);
         LOGGER.debug(String.format("Table %s cleaned up and deleted %d rows", tableName, rowCount));
+
+        // evict caches for the changes to be read again
+        if (tableName.equalsIgnoreCase(CDR_TABLE_NAME)) {
+            callDetailRecordDataService.evictEntityCache(false);
+        }
+        if (tableName.equalsIgnoreCase(CSR_TABLE_NAME)) {
+            callSummaryRecordDataService.evictEntityCache(false);
+        }
     }
 }

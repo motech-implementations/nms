@@ -227,7 +227,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                         "ON s.subscriptionPack_id_OID = sp.id " +
                         "SET s.status = 'COMPLETED', s.endDate = '%s' " +
                         "WHERE " +
-                        "s.status = 'ACTIVE' AND " +
+                        "(s.status = 'ACTIVE' OR s.status = 'PENDING_ACTIVATION') AND " +
                         "((sp.type = 'PREGNANCY' AND s.startDate < '%s') OR (sp.type = 'CHILD' AND s.startDate < '%s'))",
                         currentTime.toString(dateTimeFormatter),
                         oldestPregnancyStart.toString(dateTimeFormatter),
