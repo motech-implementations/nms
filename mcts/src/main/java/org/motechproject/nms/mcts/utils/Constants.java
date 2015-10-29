@@ -10,12 +10,11 @@ public final class Constants {
     public static final String MCTS_LOCATIONS = "mcts.state_ids";
     public static final String MCTS_SYNC_CRON = "mcts.sync.cron";
     public static final String MCTS_ENDPOINT = "mcts.endpointUrl";
-    public static final String MCTS_IMPORT_TMP_LOCATION= "mcts.import_tmp_location";
     /**
      * Events
      */
     public static final String BASE_MCTS_SUBJECT = "org.motechproject.mcts";
-    public static final String MCTS_IMPORT_EVENT = BASE_MCTS_SUBJECT + ".Import";
+    public static final String MCTS_IMPORT_EVENT = BASE_MCTS_SUBJECT + ".import";
 
     /**
      * Scheduler

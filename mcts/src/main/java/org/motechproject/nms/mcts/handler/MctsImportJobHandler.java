@@ -68,14 +68,18 @@ public class MctsImportJobHandler {
         URL endpoint = getEndpointUrl();
         LocalDate referenceDate = DateUtil.today().minusDays(1);
 
-        mctsWsImportService.importFromMcts(stateIds, referenceDate, endpoint);
+        if (stateIds.isEmpty()) {
+            LOGGER.warn("No states configured for import, not doing anything");
+        } else {
+            mctsWsImportService.importFromMcts(stateIds, referenceDate, endpoint);
+        }
     }
 
 
     private List<Long> getStateIds() {
         String locationProp = settingsFacade.getProperty(Constants.MCTS_LOCATIONS);
         if (StringUtils.isBlank(locationProp)) {
-            LOGGER.warn("No states configured for import");
+
             return Collections.emptyList();
         }
 

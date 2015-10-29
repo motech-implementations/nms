@@ -15,11 +15,6 @@
                 <value>classpath:mcts.properties</value>
             </list>
         </property>
-        <property name="rawConfigFiles">
-            <list>
-                <value>classpath:mcts-locations.json</value>
-            </list>
-        </property>
     </bean>
 
     <bean id="mctsServiceLocator" class="org.motechproject.nms.mcts.soap.MctsServiceLocator" autowire="byType" />
