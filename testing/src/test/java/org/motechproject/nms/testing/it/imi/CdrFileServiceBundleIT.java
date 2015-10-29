@@ -10,6 +10,7 @@ import org.motechproject.alerts.contract.AlertCriteria;
 import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.alerts.domain.Alert;
 import org.motechproject.event.MotechEvent;
+import org.motechproject.nms.imi.domain.CallDetailRecord;
 import org.motechproject.nms.imi.exception.InvalidCdrFileException;
 import org.motechproject.nms.imi.repository.CallDetailRecordDataService;
 import org.motechproject.nms.imi.repository.FileAuditRecordDataService;
@@ -281,5 +282,15 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         List<String> errors = cdrFileService.sendAggregatedRecords(cdrFile);
 
         assertEquals(0, errors.size());
+    }
+
+    @Test
+    public void testCdrCleanup() {
+        callDetailRecordDataService.create(new CallDetailRecord());
+        cdrFileService.cleanOldCallRecords();
+        assertEquals(1, callDetailRecordDataService.count());
+
+        // Hard to test the positive cleanup case without extending MdsEntity, which is a schema change.
+        // This is because we rely on the entity creation date for cleanup
     }
 }

@@ -12,13 +12,6 @@ import java.util.List;
  */
 public interface CdrFileService {
 
-    enum Action {
-        PASS1, // record count, valid csv, checksum
-        PASS2, // record count, valid csv + sort order, entities (subscription, circle, etc...) exist
-        PASS3  // record count, valid csv + aggregate CDRS into CSR and send for distributed processing
-    }
-
-
     /**
      * Verifies the checksum & record count provided in fileInfo match the checksum & record count of file
      * also verifies all csv rows are valid.
@@ -67,4 +60,11 @@ public interface CdrFileService {
      * NOTE: only exposed here for ITs. Normally called by the MOTECH event system (it's a @MotechListener)
      */
     List<String> processDetailFile(MotechEvent event);
+
+    /**
+     * To be called during target file generation or triggered with Ops API. We expect ~3x the # of OBD requests/day of CDRs
+     * coming back. For phase 1, ~360k CDR for 120k OBD/day. The minimum default retention is set to 5 days and can be
+     * increased through config value in imi.properties - imi.cdr.retention.duration
+     */
+    void cleanOldCallRecords();
 }
