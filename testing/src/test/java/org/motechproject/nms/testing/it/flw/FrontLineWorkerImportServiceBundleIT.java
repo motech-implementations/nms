@@ -97,8 +97,11 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         Language lang1 = createLanguage("L1", "Lang 1");
         languageDataService.create(lang1);
 
+        Circle circle1 = createCircle("Circle 1");
+        circleDataService.create(circle1);
+
         State state1 = createState(1L, "State 1");
-        District district11 = createDistrict(state1, 11L, "District 11", lang1);
+        District district11 = createDistrict(state1, 11L, "District 11", lang1, circle1);
         District district12 = createDistrict(state1, 12L, "District 12");
 
         District kuraput = createDistrict(state1, 29L, "Koraput");
@@ -186,10 +189,6 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         state1.getDistricts().addAll(Arrays.asList(district11, district12,
                 kuraput, kandhamal, ganjam, jharsuguda, bargarh, puri));
         stateDataService.create(state1);
-
-        Circle circle1 = createCircle("Circle 1");
-        circle1.getStates().addAll(Arrays.asList(state1));
-        circleDataService.create(circle1);
     }
 
     // This test should load the FLW with MCTS id '#1' and attempt to update their MSISDN to a number already

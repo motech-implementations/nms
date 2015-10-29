@@ -3,6 +3,7 @@ package org.motechproject.nms.region.domain;
 import org.codehaus.jackson.annotate.JsonManagedReference;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
+import org.motechproject.mds.annotations.Ignore;
 import org.motechproject.mds.annotations.InstanceLifecycleListeners;
 import org.motechproject.mds.domain.MdsEntity;
 import org.motechproject.nms.tracking.annotation.TrackClass;
@@ -10,7 +11,9 @@ import org.motechproject.nms.tracking.annotation.TrackFields;
 
 import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.Unique;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity(tableName = "nms_circles")
 @TrackClass
@@ -24,7 +27,7 @@ public class Circle extends MdsEntity {
     @Field
     @Persistent(mappedBy = "circle", defaultFetchGroup = "true")
     @JsonManagedReference
-    private List<District> districts;
+    private List<District> districtList;
 
     @Field
     private Language defaultLanguage;
@@ -44,12 +47,12 @@ public class Circle extends MdsEntity {
         this.name = name;
     }
 
-    public List<District> getDistricts() {
-        return districts;
+    public List<District> getDistrictList() {
+        return districtList;
     }
 
-    public void setDistricts(List<District> districts) {
-        this.districts = districts;
+    public void setDistrictList(List<District> districtList) {
+        this.districtList = districtList;
     }
 
     public Language getDefaultLanguage() {
@@ -58,6 +61,17 @@ public class Circle extends MdsEntity {
 
     public void setDefaultLanguage(Language defaultLanguage) {
         this.defaultLanguage = defaultLanguage;
+    }
+
+    @Ignore
+    public Set<State> getStates() {
+        Set<State> states = new HashSet<>();
+
+        for (District district : this.getDistrictList()) {
+            states.add(district.getState());
+        }
+
+        return states;
     }
 
     @Override

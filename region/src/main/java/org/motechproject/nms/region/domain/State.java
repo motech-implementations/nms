@@ -4,6 +4,7 @@ import org.codehaus.jackson.annotate.JsonManagedReference;
 import org.motechproject.mds.annotations.Cascade;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
+import org.motechproject.mds.annotations.Ignore;
 import org.motechproject.mds.annotations.InstanceLifecycleListeners;
 import org.motechproject.mds.domain.MdsEntity;
 import org.motechproject.nms.tracking.annotation.TrackClass;
@@ -14,7 +15,9 @@ import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.Unique;
 import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * This class Models data for State location records
@@ -74,6 +77,17 @@ public class State extends MdsEntity {
 
     public void setDistricts(List<District> districts) {
         this.districts = districts;
+    }
+
+    @Ignore
+    public Set<Circle> getCircles() {
+        Set<Circle> circles = new HashSet<>();
+
+        for (District district : this.getDistricts()) {
+            circles.add(district.getCircle());
+        }
+
+        return circles;
     }
 
     @Override

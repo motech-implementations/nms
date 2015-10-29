@@ -190,7 +190,7 @@ public class UserController extends BaseController {
             return true;
         }
 
-        Set<State> states = getStatesFromCircle(currentCircle);
+        Set<State> states = currentCircle.getStates();
         if (states == null || states.isEmpty()) { // No state available
             return true;
         }
@@ -238,7 +238,7 @@ public class UserController extends BaseController {
             return true;
         }
 
-        Set<State> states = getStatesFromCircle(circle);
+        Set<State> states = circle.getStates();
         if (states == null || states.isEmpty()) { // No state available
             return true;
         }

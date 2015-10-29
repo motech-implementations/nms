@@ -525,7 +525,7 @@ public class UserControllerBundleIT extends BasePaxIT {
             userResponse.setLanguageLocationCode(locationCode);
         }
         if (allowedLanguageLocations != null) {
-            userResponse.setAllowedLanguageLocationCodes(Sets.newTreeSet(allowedLanguageLocations));
+            userResponse.setAllowedLanguageLocationCodes(Sets.newLinkedHashSet(allowedLanguageLocations));
         }
         if (currentUsageInPulses != null) {
             userResponse.setCurrentUsageInPulses(currentUsageInPulses);
@@ -935,7 +935,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         String expectedJsonResponse = createFlwUserResponseJson(
                 rh.hindiLanguage().getCode(),  //defaultLanguageLocationCode
                 null,  //locationCode
-                Arrays.asList(rh.hindiLanguage().getCode(), rh.kannadaLanguage()
+                Arrays.asList(rh.tamilLanguage().getCode(), rh.hindiLanguage().getCode(), rh.kannadaLanguage()
                         .getCode()), // allowedLanguageLocationCodes
                 0L,    //currentUsageInPulses
                 0L,    //endOfUsagePromptCounter
@@ -1047,7 +1047,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         String expectedJsonResponse = createFlwUserResponseJson(
                 rh.hindiLanguage().getCode(),  //defaultLanguageLocationCode
                 null,  //locationCode
-                Arrays.asList(rh.hindiLanguage().getCode(), rh.kannadaLanguage()
+                Arrays.asList(rh.tamilLanguage().getCode(), rh.hindiLanguage().getCode(), rh.kannadaLanguage()
                         .getCode()), // allowedLanguageLocationCodes
                 0L,    //currentUsageInPulses
                 0L,    //endOfUsagePromptCounter
@@ -3606,8 +3606,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         String expectedJsonResponse = createFlwUserResponseJson(
                 rh.hindiLanguage().getCode(),  //defaultLanguageLocationCode
                 null,  //locationCode
-                Arrays.asList(rh.hindiLanguage().getCode(), rh.kannadaLanguage()
-                        .getCode()), // allowedLanguageLocationCodes
+                Arrays.asList(rh.tamilLanguage().getCode(), rh.hindiLanguage().getCode(), rh.kannadaLanguage().getCode()), // allowedLanguageLocationCodes
                 0L,    //currentUsageInPulses
                 0L,    //endOfUsagePromptCounter
                 false, //welcomePromptFlag
@@ -3813,7 +3812,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         State s = createState(7L, "New State in delhi");
         stateDataService.create(s);
-        districtDataService.create(createDistrict(s, 1L, "Circle", c));
+        districtDataService.create(createDistrict(s, 1L, "Circle", rh.tamilLanguage(), c));
 
         // service deployed only in delhi state
         deployedServiceDataService.create(new DeployedService(rh.delhiState(),
@@ -3880,7 +3879,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         State s = createState(7L, "New State in karnataka");
         stateDataService.create(s);
-        districtDataService.create(createDistrict(s, 1L, "Circle", c));
+        districtDataService.create(createDistrict(s, 1L, "Circle", rh.tamilLanguage(), c));
 
         // service deployed only in delhi state
         deployedServiceDataService.create(new DeployedService(rh.delhiState(),

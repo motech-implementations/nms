@@ -1,10 +1,8 @@
 package org.motechproject.nms.region.service.impl;
 
-import com.google.common.collect.Sets;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.EventRelay;
 import org.motechproject.event.listener.annotations.MotechListener;
-import org.motechproject.mds.query.SqlQueryExecution;
 import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Language;
@@ -21,9 +19,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
-import javax.jdo.Query;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 @Service("languageService")
@@ -78,31 +74,16 @@ public class LanguageServiceImpl implements LanguageService {
     @Override
     @Cacheable(value = "languages", key = "#p0")
     public Set<Language> getAllForCircle(final Circle circle) {
+        Set<Language> languages = new HashSet<>();
 
-        SqlQueryExecution<List<Language>> queryExecution = new SqlQueryExecution<List<Language>>() {
+        if (circle != null) {
+            for (District district : circle.getDistrictList()) {
+                Language language = district.getLanguage();
 
-            @Override
-            public String getSqlQuery() {
-                String query = "select * " +
-                        "from nms_languages l " +
-                        "join nms_districts d on  d.language_id_oid = l.id " +
-                        "join nms_states s on d.state_id_oid = s.id " +
-                        "join nms_states_join_circles sxc on s.id = sxc.state_id and sxc.circle_id = ?";
-
-                return query;
+                if (language != null) {
+                    languages.add(district.getLanguage());
+                }
             }
-
-            @Override
-            public List<Language> execute(Query query) {
-                query.setClass(Language.class);
-                return (List<Language>) query.execute(circle.getId());
-            }
-        };
-
-        Set<Language> languages = Sets.newHashSet(languageDataService.executeSQLQuery(queryExecution));
-
-        if (languages == null) {
-            languages = new HashSet<>();
         }
 
         return languages;
