@@ -304,8 +304,7 @@ public class CdrFileServiceImpl implements CdrFileService {
                 errors.add(error);
             }
 
-
-            if (!thisChecksum.equals(fileInfo.getChecksum())) {
+            if (!thisChecksum.equalsIgnoreCase(fileInfo.getChecksum())) {
                 String error = String.format("Checksum mismatch, provided checksum: %s, calculated checksum: %s",
                         fileInfo.getChecksum(), thisChecksum);
                 errors.add(error);
