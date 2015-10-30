@@ -5,12 +5,12 @@
     <parent>
         <artifactId>nms</artifactId>
         <groupId>org.motechproject.nms</groupId>
-        <version>1.0.1</version>
+        <version>1.1.0</version>
         <relativePath>../</relativePath>
     </parent>
 
     <artifactId>mobile-academy</artifactId>
-    <version>1.0.1</version>
+    <version>1.1.0</version>
     <packaging>bundle</packaging>
     <name>Mobile Academy module</name>
 
