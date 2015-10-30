@@ -175,6 +175,7 @@ public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateSe
         }
         if (newReferenceDate != null) {
             subscriberService.updateOrCreateMctsSubscriber(beneficiary, subscriber.getCallingNumber(), newReferenceDate, packType);
+            subscriberService.updateOrCreateMctsSubscriber(beneficiary, subscriber.getCallingNumber(), newReferenceDate, packType);
         }
 
         // Finally, update the beneficiary's MSISDN if a new one is provided

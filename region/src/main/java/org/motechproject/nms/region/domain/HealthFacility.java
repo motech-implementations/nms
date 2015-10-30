@@ -139,8 +139,6 @@ public class HealthFacility extends MdsEntity {
         return "HealthFacility{" +
                 "name='" + name + '\'' +
                 ", code=" + code +
-                ", healthFacilityType=" + healthFacilityType +
-                ", healthBlock=" + healthBlock +
                 '}';
     }
 }

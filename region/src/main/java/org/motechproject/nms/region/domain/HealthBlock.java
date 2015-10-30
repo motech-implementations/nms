@@ -143,7 +143,6 @@ public class HealthBlock extends MdsEntity {
         return "HealthBlock{" +
                 "name='" + name + '\'' +
                 ", code=" + code +
-                ", taluka=" + taluka +
                 '}';
     }
 }

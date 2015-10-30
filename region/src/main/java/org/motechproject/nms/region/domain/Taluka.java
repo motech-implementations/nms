@@ -157,7 +157,6 @@ public class Taluka extends MdsEntity {
         return "Taluka{" +
                 "name='" + name + '\'' +
                 ", code=" + code +
-                ", district=" + district +
                 '}';
     }
 }

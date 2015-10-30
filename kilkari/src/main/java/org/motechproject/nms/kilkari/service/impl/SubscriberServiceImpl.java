@@ -155,7 +155,7 @@ public class SubscriberServiceImpl implements SubscriberService {
     }
 
     @Override
-    public void updateMsisdnForSubscriber(Subscriber subscriber, MctsBeneficiary beneficiary, Long newMsisdn) {
+    public void     updateMsisdnForSubscriber(Subscriber subscriber, MctsBeneficiary beneficiary, Long newMsisdn) {
         SubscriptionPackType packType;
         packType = (beneficiary instanceof MctsChild) ? SubscriptionPackType.CHILD : SubscriptionPackType.PREGNANCY;
 

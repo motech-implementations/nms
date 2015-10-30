@@ -45,8 +45,11 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.TransactionCallbackWithoutResult;
 
 import javax.inject.Inject;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
@@ -418,8 +421,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         assertEquals(453L, (long) updatedChild.getHealthBlock().getCode());
     }
 
-    @Test
-    public void testUpdateBeneficiariesFromFile() throws Exception {
+    private void doTestUpdateBeneficiariesFromFile()  {
         createLocationData();
 
         // ----Create 4 beneficiaries:----
@@ -452,7 +454,12 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
 
         // ----Update all 4 via CSV:----
 
-        mctsBeneficiaryUpdateService.updateBeneficiaryData(read("csv/mcts_beneficiary_update.csv"));
+        try {
+            mctsBeneficiaryUpdateService.updateBeneficiaryData(read("csv/mcts_beneficiary_update.csv"));
+        }
+        catch(IOException e) {
+            assert false;
+        }
 
         // ----Validate updates to each:----
 
@@ -488,7 +495,24 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         Subscription updatedSubscription = subscriber4.getActiveAndPendingSubscriptions().iterator().next();
         assertEquals(updatedDOB, getDateString(updatedSubscription.getStartDate()));
         assertEquals(SubscriptionStatus.ACTIVE, updatedSubscription.getStatus());
+
+        // Location insert:
+        assertEquals("Taluka", subscriber4.getChild().getTaluka().getName());
+
     }
+
+
+    @Test
+    public void testUpdateBeneficiariesFromFile() throws Exception {
+        mctsChildDataService.doInTransaction(new TransactionCallbackWithoutResult() {
+            @Override
+            protected void doInTransactionWithoutResult(TransactionStatus transactionStatus) {
+                doTestUpdateBeneficiariesFromFile();
+            }
+        });
+
+    }
+
 
     private void makeMctsSubscription(MctsBeneficiary beneficiary, DateTime startDate, SubscriptionPackType packType, Long number) {
         sh.mksub(SubscriptionOrigin.MCTS_IMPORT, startDate, packType, number);
