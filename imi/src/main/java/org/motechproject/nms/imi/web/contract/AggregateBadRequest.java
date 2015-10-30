@@ -3,17 +3,17 @@ package org.motechproject.nms.imi.web.contract;
 import java.util.List;
 
 public class AggregateBadRequest {
-    private List<String> failureReasons;
+    private List<String> failureReason;
 
-    public AggregateBadRequest(List<String> failureReasons) {
-        this.failureReasons = failureReasons;
+    public AggregateBadRequest(List<String> failureReason) {
+        this.failureReason = failureReason;
     }
 
-    public List<String> getFailureReasons() {
-        return failureReasons;
+    public List<String> getFailureReason() {
+        return failureReason;
     }
 
-    public void setFailureReasons(List<String> failureReasons) {
-        this.failureReasons = failureReasons;
+    public void setFailureReason(List<String> failureReason) {
+        this.failureReason = failureReason;
     }
 }
