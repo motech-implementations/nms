@@ -387,7 +387,7 @@ public class CdrFileServiceImpl implements CdrFileService {
                         }
                         CallSummaryRecordDto csrDto = new CallSummaryRecordDto();
                         aggregateDetailRecord(cdr, csrDto);
-                        csrValidatorService.validateSummaryRecord(csrDto);
+                        csrValidatorService.validateSummaryRecordDto(csrDto);
 
                     } else {
 
