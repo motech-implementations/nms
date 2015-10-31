@@ -608,6 +608,8 @@ public class CdrFileServiceImpl implements CdrFileService {
     @Override
     public void verifyDetailFileChecksumAndCount(CdrFileNotificationRequest request) {
 
+        LOGGER.debug("Starting CDR Process Phase 1");
+
         List<String> cdrErrors = verifyChecksumAndCountAndCsv(request.getCdrDetail(), true);
         alertAndAudit(request.getCdrDetail().getCdrFile(), cdrErrors);
 
@@ -624,6 +626,8 @@ public class CdrFileServiceImpl implements CdrFileService {
 
         // Send a MOTECH event to continue to phase 2 (without timing out the POST from IMI)
         sendProcessFilesEvent(request);
+
+        LOGGER.debug("CDR Process Phase 1 - Success");
     }
 
 
@@ -703,6 +707,7 @@ public class CdrFileServiceImpl implements CdrFileService {
     @Override
     @MotechListener(subjects = { PROCESS_FILES_SUBJECT })
     public List<String> processDetailFile(MotechEvent event) {
+        LOGGER.debug("Starting CDR Process Phase 2");
         CdrFileNotificationRequest request = requestFromParams(event.getParameters());
 
         //
@@ -750,7 +755,11 @@ public class CdrFileServiceImpl implements CdrFileService {
         errors = sendSummaryRecords(csrFile);
         if (errors.size() > 0) {
             reportAuditAndPost(request.getCdrSummary().getCdrFile(), errors);
+            return errors;
         }
+
+        LOGGER.debug("CDR Process Phase 2 - Success");
+
         return errors;
     }
 
