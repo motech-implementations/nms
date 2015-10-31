@@ -45,8 +45,6 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
-import org.springframework.transaction.TransactionStatus;
-import org.springframework.transaction.support.TransactionCallbackWithoutResult;
 
 import javax.inject.Inject;
 import java.io.IOException;
@@ -504,13 +502,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
 
     @Test
     public void testUpdateBeneficiariesFromFile() throws Exception {
-        mctsChildDataService.doInTransaction(new TransactionCallbackWithoutResult() {
-            @Override
-            protected void doInTransactionWithoutResult(TransactionStatus transactionStatus) {
-                doTestUpdateBeneficiariesFromFile();
-            }
-        });
-
+        doTestUpdateBeneficiariesFromFile();
     }
 
 

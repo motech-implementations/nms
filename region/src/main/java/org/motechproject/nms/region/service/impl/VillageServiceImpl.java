@@ -48,7 +48,9 @@ public class VillageServiceImpl implements VillageService {
 
     @Override
     public Village create(Village village) {
-        return dataService.create(village);
+        Village v = dataService.create(village);
+        dataService.evictEntityCache();
+        return v;
     }
 
     @Override

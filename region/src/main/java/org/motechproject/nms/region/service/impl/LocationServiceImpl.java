@@ -76,7 +76,7 @@ public class LocationServiceImpl implements LocationService {
     }
 
 
-    private boolean isNonZero(final Map<String, Object> map, final String key) {
+    private boolean isValidID(final Map<String, Object> map, final String key) {
         Object obj = map.get(key);
         if (obj == null) {
             return false;
@@ -97,7 +97,7 @@ public class LocationServiceImpl implements LocationService {
         Map<String, Object> locations = new HashMap<>();
 
         // set state
-        if (!isNonZero(map, STATE)) {
+        if (!isValidID(map, STATE)) {
             return locations;
         }
         State state = stateDataService.findByCode((Long) map.get(STATE));
@@ -108,7 +108,7 @@ public class LocationServiceImpl implements LocationService {
 
 
         // set district
-        if (!isNonZero(map, DISTRICT)) {
+        if (!isValidID(map, DISTRICT)) {
             return locations;
         }
         District district = districtService.findByStateAndCode(state, (Long) map.get(DISTRICT));
@@ -119,7 +119,7 @@ public class LocationServiceImpl implements LocationService {
 
 
         // set and/or create taluka
-        if (!isNonZero(map, TALUKA_ID)) {
+        if (!isValidID(map, TALUKA_ID)) {
             return locations;
         }
         Taluka taluka = talukaService.findByDistrictAndCode(district, (String) map.get(TALUKA_ID));
@@ -138,7 +138,6 @@ public class LocationServiceImpl implements LocationService {
         Long svid = map.get(NON_CENSUS_VILLAGE) == null ? 0 : (Long) map.get(NON_CENSUS_VILLAGE);
         Long vcode = map.get(VILLAGE_ID) == null ? 0 : (Long) map.get(VILLAGE_ID);
         if (vcode != 0 || svid != 0) {
-
             Village village = villageService.findByTalukaAndVcodeAndSvid(taluka, vcode, svid);
             if (village == null) {
                 village = new Village();
@@ -148,14 +147,13 @@ public class LocationServiceImpl implements LocationService {
                 village.setName((String) map.get(VILLAGE_NAME));
                 village = villageService.create(village);
                 LOGGER.debug(String.format("Created %s in %s with id %d", village, taluka, village.getId()));
-
             }
             locations.put(VILLAGE_ID + NON_CENSUS_VILLAGE, village);
         }
 
 
         // set and/or create health block
-        if (!isNonZero(map, HEALTHBLOCK_ID)) {
+        if (!isValidID(map, HEALTHBLOCK_ID)) {
             return locations;
         }
         HealthBlock healthBlock = healthBlockService.findByTalukaAndCode(taluka, (Long) map.get(HEALTHBLOCK_ID));
@@ -171,7 +169,7 @@ public class LocationServiceImpl implements LocationService {
 
 
         // set and/or create health facility
-        if (!isNonZero(map, PHC_ID)) {
+        if (!isValidID(map, PHC_ID)) {
             return locations;
         }
         HealthFacility healthFacility = healthFacilityService.findByHealthBlockAndCode(healthBlock, (Long) map.get(PHC_ID));
@@ -187,7 +185,7 @@ public class LocationServiceImpl implements LocationService {
 
 
         // set and/or create health sub-facility
-        if (!isNonZero(map, SUBCENTRE_ID)) {
+        if (!isValidID(map, SUBCENTRE_ID)) {
             return locations;
         }
         HealthSubFacility healthSubFacility = healthSubFacilityService.findByHealthFacilityAndCode(healthFacility, (Long) map.get(SUBCENTRE_ID));
