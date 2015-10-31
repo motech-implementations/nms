@@ -1,5 +1,8 @@
 package org.motechproject.nms.imi.service.impl;
 
+import org.motechproject.alerts.contract.AlertService;
+import org.motechproject.alerts.domain.AlertStatus;
+import org.motechproject.alerts.domain.AlertType;
 import org.motechproject.nms.imi.domain.CallSummaryRecord;
 import org.motechproject.nms.imi.exception.InvalidCsrException;
 import org.motechproject.nms.imi.service.CsrValidatorService;
@@ -34,6 +37,7 @@ public class CsrValidatorServiceImpl implements CsrValidatorService {
     private SubscriptionService subscriptionService;
     private LanguageService languageService;
     private CircleService circleService;
+    private AlertService alertService;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CsrValidatorServiceImpl.class);
 
@@ -41,10 +45,12 @@ public class CsrValidatorServiceImpl implements CsrValidatorService {
     @Autowired
     public CsrValidatorServiceImpl(SubscriptionService subscriptionService,
                                    LanguageService languageService,
-                                   CircleService circleService) {
+                                   CircleService circleService,
+                                   AlertService alertService) {
         this.subscriptionService = subscriptionService;
         this.languageService = languageService;
         this.circleService = circleService;
+        this.alertService = alertService;
     }
 
 
@@ -135,15 +141,25 @@ public class CsrValidatorServiceImpl implements CsrValidatorService {
     }
 
 
+    private Subscription validateSubscription(String id) {
+        Subscription sub = subscriptionService.getSubscription(id);
+        if (sub == null) {
+            String error = String.format("Subscription %s does not exist in the database", id);
+            LOGGER.warn(error);
+            alertService.create(String.format("Subscription"), "CSR Validation", error, AlertType.HIGH, AlertStatus.NEW, 0, null);
+        }
+        return sub;
+    }
+
+
     //todo: IT
     @Override
     public void validateSummaryRecord(CallSummaryRecordDto record) {
-        Subscription sub = subscriptionService.getSubscription(record.getRequestId().getSubscriptionId());
+        Subscription sub = validateSubscription(record.getRequestId().getSubscriptionId());
         if (sub == null) {
-            throw new InvalidCsrException(String.format("Subscription %s does not exist in the database",
-                    record.getRequestId().getSubscriptionId()));
+            // This is a messed up subscription, we logged & alerted it, let's just not validate anything more
+            return;
         }
-
         String pack = sub.getSubscriptionPack().getName();
         validateWeekId(pack, record.getWeekId());
         validateContentFileName(pack, record.getContentFileName());
@@ -156,12 +172,11 @@ public class CsrValidatorServiceImpl implements CsrValidatorService {
     @Override
     public void validateSummaryRecord(CallSummaryRecord record) {
         RequestId requestId = RequestId.fromString(record.getRequestId());
-        Subscription sub = subscriptionService.getSubscription(requestId.getSubscriptionId());
+        Subscription sub = validateSubscription(requestId.getSubscriptionId());
         if (sub == null) {
-            throw new InvalidCsrException(String.format("Subscription %s does not exist in the database",
-                    requestId.getSubscriptionId()));
+            // This is a messed up subscription, we logged & alerted it, let's just not validate anything more
+            return;
         }
-
         String pack = sub.getSubscriptionPack().getName();
         validateWeekId(pack, record.getWeekId());
         validateContentFileName(pack, record.getContentFileName());
