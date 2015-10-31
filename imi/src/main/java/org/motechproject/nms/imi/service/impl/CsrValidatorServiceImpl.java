@@ -156,7 +156,7 @@ public class CsrValidatorServiceImpl implements CsrValidatorService {
 
     //todo: IT
     @Override
-    public void validateSummaryRecord(CallSummaryRecordDto record) {
+    public void validateSummaryRecordDto(CallSummaryRecordDto record) {
         Subscription sub = validateSubscription(record.getRequestId().getSubscriptionId());
         if (sub == null) {
             // This is a messed up subscription, we logged & alerted it, let's just not validate anything more

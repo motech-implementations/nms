@@ -88,7 +88,7 @@ public class CsrValidatorServiceBundleIT extends BasePaxIT {
         helper.makeRecords(1, 0, 0, 0);
 
         // any error inside this would throw an exception
-        csrValidatorService.validateSummaryRecord(helper.getRecords().get(0));
+        csrValidatorService.validateSummaryRecordDto(helper.getRecords().get(0));
     }
 
 
@@ -106,7 +106,7 @@ public class CsrValidatorServiceBundleIT extends BasePaxIT {
         helper.makeRecords(0, 0, 0, 1);
 
         // An invalid subscription should not throw
-        csrValidatorService.validateSummaryRecord(helper.getRecords().get(0));
+        csrValidatorService.validateSummaryRecordDto(helper.getRecords().get(0));
     }
 
 
@@ -126,6 +126,6 @@ public class CsrValidatorServiceBundleIT extends BasePaxIT {
         csr.setCircle("INVALID_CIRCLE");
 
         // An invalid circle should throw
-        csrValidatorService.validateSummaryRecord(csr);
+        csrValidatorService.validateSummaryRecordDto(csr);
     }
 }
