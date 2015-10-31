@@ -1,5 +1,6 @@
 package org.motechproject.nms.imi.service.impl;
 
+import org.apache.commons.lang3.StringUtils;
 import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.alerts.domain.AlertStatus;
 import org.motechproject.alerts.domain.AlertType;
@@ -146,7 +147,8 @@ public class CsrValidatorServiceImpl implements CsrValidatorService {
         if (sub == null) {
             String error = String.format("Subscription %s does not exist in the database", id);
             LOGGER.warn(error);
-            alertService.create(String.format("Subscription"), "CSR Validation", error, AlertType.HIGH, AlertStatus.NEW, 0, null);
+            String externalID = "Subscription" + (StringUtils.isBlank(id) ? "" : " " + id);
+            alertService.create(externalID, "CSR Validation", error, AlertType.HIGH, AlertStatus.NEW, 0, null);
         }
         return sub;
     }
