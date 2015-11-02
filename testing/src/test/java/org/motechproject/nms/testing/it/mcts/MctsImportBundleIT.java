@@ -31,6 +31,7 @@ import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.motechproject.testing.utils.TestContext;
+import org.motechproject.testing.utils.TimeFaker;
 import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
@@ -157,22 +158,28 @@ public class MctsImportBundleIT extends BasePaxIT {
         LocalDate yesterday = DateUtil.today().minusDays(1);
         List<Long> stateIds = singletonList(21L);
 
-        // this CL workaround is for an issue with PAX IT logging messing things up
-        // shouldn't affect production
-        ClassLoader cl = Thread.currentThread().getContextClassLoader();
-        Thread.currentThread().setContextClassLoader(mctsWsImportService.getClass().getClassLoader());
-        mctsWsImportService.importFromMcts(stateIds, yesterday, endpoint);
-        Thread.currentThread().setContextClassLoader(cl);
+        try {
+            TimeFaker.fakeToday(DateUtil.newDate(2015, 7, 24));
+            // this CL workaround is for an issue with PAX IT logging messing things up
+            // shouldn't affect production
+            ClassLoader cl = Thread.currentThread().getContextClassLoader();
+            Thread.currentThread().setContextClassLoader(mctsWsImportService.getClass().getClassLoader());
+            mctsWsImportService.importFromMcts(stateIds, yesterday, endpoint);
+            Thread.currentThread().setContextClassLoader(cl);
 
-        // we expect two of each - the second entry in each ds (3 total) has wrong location data
-        List<MctsMother> mothers = mctsMotherDataService.retrieveAll();
-        assertEquals(2, mothers.size());
+            // we expect two of each - the second entry in each ds (3 total) has wrong location data
+            List<MctsMother> mothers = mctsMotherDataService.retrieveAll();
+            assertEquals(2, mothers.size());
 
-        List<MctsChild> children  = mctsChildDataService.retrieveAll();
-        assertEquals(2, children.size());
+            List<MctsChild> children = mctsChildDataService.retrieveAll();
+            assertEquals(2, children.size());
 
-        List<FrontLineWorker> flws  = flwDataService.retrieveAll();
-        assertEquals(2, flws.size());
+            List<FrontLineWorker> flws = flwDataService.retrieveAll();
+            assertEquals(2, flws.size());
+        } finally {
+            TimeFaker.stopFakingTime();
+        }
+
     }
 }
 

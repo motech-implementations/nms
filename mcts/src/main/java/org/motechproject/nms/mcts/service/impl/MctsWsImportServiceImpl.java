@@ -88,7 +88,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
             try {
                 State state = stateDataService.findByCode(stateId);
                 if (state == null) {
-                    LOGGER.warn("State with code {} doesn't exist in database. Skipping child import for this state",
+                    LOGGER.warn("State with code {} doesn't exist in database. Skipping Children import for this state",
                             stateId);
                     continue;
                 }
@@ -144,16 +144,13 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
                     LOGGER.warn("State with code {} doesn't exist in database. Skipping Mother importing for this state", stateId);
                     continue;
                 }
+
                 MothersDataSet mothersDataSet = mctsWebServiceFacade.getMothersData(referenceDate, referenceDate, endpoint, stateId);
 
                 LOGGER.debug("Received Mothers data set with {} records for {} state",
                         sizeNullSafe(mothersDataSet.getRecords()), state.getName());
 
                 saved += saveImportedMothersData(mothersDataSet, state);
-
-                LOGGER.debug("Received mother data set with {} records for {} state", sizeNullSafe(mothersDataSet.getRecords()),
-                        state.getName());
-
 
             } catch (MctsWebServiceExeption e) {
                 LOGGER.error("Cannot read mothers data from {} state.", stateId, e);
