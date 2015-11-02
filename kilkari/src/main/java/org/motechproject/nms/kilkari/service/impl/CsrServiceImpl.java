@@ -332,6 +332,26 @@ public class CsrServiceImpl implements CsrService {
             CallRetry callRetry = callRetryDataService.findBySubscriptionId(subscriptionId);
             Subscription subscription = subscriptionDataService.findBySubscriptionId(subscriptionId);
 
+            /**
+             * If we somehow have a null subscription (it was deleted for some reason), but still have a retry record
+             * for it, then we definitely want to erase the call retry record.
+             */
+            if (subscription == null) {
+                String msg = String.format("Subscription %s doesn't exist in the database anymore.", subscriptionId);
+                LOGGER.warn(msg);
+                alertService.create(subscriptionId, PROCESS_SUMMARY_RECORD_SUBJECT, msg, AlertType.MEDIUM,
+                        AlertStatus.NEW, 0, null);
+
+                if (callRetry != null) {
+                    msg = String.format("Deleting callRetry record for deleted subscription %s", subscriptionId);
+                    LOGGER.warn(msg);
+                    alertService.create(subscriptionId, PROCESS_SUMMARY_RECORD_SUBJECT, msg, AlertType.MEDIUM,
+                            AlertStatus.NEW, 0, null);
+                    deleteCallRetryRecordIfNeeded(callRetry);
+                }
+
+                return;
+            }
 
             switch (csrDto.getFinalStatus()) {
                 case SUCCESS:
@@ -350,7 +370,8 @@ public class CsrServiceImpl implements CsrService {
                 default:
                     String error = String.format("Invalid FinalCallStatus: %s", csrDto.getFinalStatus());
                     LOGGER.error(error);
-                    alertService.create(PROCESS_SUMMARY_RECORD_SUBJECT, error, error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+                    alertService.create(subscriptionId, PROCESS_SUMMARY_RECORD_SUBJECT, error, AlertType.CRITICAL,
+                            AlertStatus.NEW, 0, null);
             }
         } catch (Exception e) {
             String msg = String.format("Exception in processCallSummaryRecord() for subscription %s: %s",

@@ -12,6 +12,7 @@ import org.motechproject.mds.query.QueryExecution;
 import org.motechproject.mds.query.QueryParams;
 import org.motechproject.mds.query.SqlQueryExecution;
 import org.motechproject.mds.util.InstanceSecurityRestriction;
+import org.motechproject.nms.kilkari.domain.CallRetry;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
@@ -21,6 +22,7 @@ import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.domain.SubscriptionRejectionReason;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
+import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
@@ -77,6 +79,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private SubscriptionPackDataService subscriptionPackDataService;
     private SubscriptionDataService subscriptionDataService;
     private SubscriptionErrorDataService subscriptionErrorDataService;
+    private CallRetryDataService callRetryDataService;
     private EventRelay eventRelay;
 
     @Autowired
@@ -86,7 +89,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                                    SubscriptionPackDataService subscriptionPackDataService,
                                    SubscriptionDataService subscriptionDataService,
                                    SubscriptionErrorDataService subscriptionErrorDataService,
-                                   EventRelay eventRelay) {
+                                   EventRelay eventRelay,
+                                   CallRetryDataService callRetryDataService) {
         this.subscriberDataService = subscriberDataService;
         this.subscriptionPackDataService = subscriptionPackDataService;
         this.subscriptionDataService = subscriptionDataService;
@@ -94,6 +98,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         this.schedulerService = schedulerService;
         this.settingsFacade = settingsFacade;
         this.eventRelay = eventRelay;
+        this.callRetryDataService = callRetryDataService;
 
         schedulePurgeOfOldSubscriptions();
     }
@@ -191,12 +196,22 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         for (Subscription subscription : purgeList) {
             Long callingNumber = subscription.getSubscriber().getCallingNumber();
 
+            // If, for some reason, there is a retry record for that subscription, delete it too.
+            CallRetry callRetry = callRetryDataService.findBySubscriptionId(subscription.getSubscriptionId());
+            if (callRetry != null) {
+                LOGGER.debug("Purging CallRetry record for subscription {}", subscription.getSubscriptionId());
+                callRetryDataService.delete(callRetry);
+            }
+
+            LOGGER.debug("Purging subscription {}", subscription.getSubscriptionId());
             subscriptionDataService.delete(subscription);
 
             // I need to load the subscriber since I deleted one of their subscription prior
             Subscriber subscriber = getSubscriber(callingNumber);
             purgedSubscriptions++;
             if (subscriber.getSubscriptions().size() == 0) {
+                LOGGER.debug("Purging subscriber for subscription {} as it was the last subscription for that subscriber",
+                        subscription.getSubscriptionId());
                 subscriberDataService.delete(subscriber);
                 purgedSubscribers++;
             }
