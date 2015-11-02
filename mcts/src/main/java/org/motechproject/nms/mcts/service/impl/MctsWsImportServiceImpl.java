@@ -118,7 +118,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         int saved = 0;
         for (ChildRecord record : childrenDataSet.getRecords()) {
             try {
-                boolean success =mctsBeneficiaryImportService.importChildRecord(toMap(record));
+                boolean success = mctsBeneficiaryImportService.importChildRecord(toMap(record));
                 if (success) {
                     saved++;
                 }

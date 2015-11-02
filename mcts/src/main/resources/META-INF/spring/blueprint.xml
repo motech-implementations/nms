@@ -11,15 +11,6 @@
     <osgi:service ref="mctsWsImportService"
                   interface="org.motechproject.nms.mcts.service.MctsWsImportService" />
 
-    <osgi:reference id="mctsChildDataService"
-                    interface="org.motechproject.nms.kilkari.repository.MctsChildDataService" />
-
-    <osgi:reference id="mctsMotherDataService"
-                    interface="org.motechproject.nms.kilkari.repository.MctsMotherDataService" />
-
-    <osgi:reference id="frontLineWorkerDataService"
-                    interface="org.motechproject.nms.flw.repository.FrontLineWorkerDataService" />
-
     <osgi:reference id="schedulerService"
                     interface="org.motechproject.scheduler.service.MotechSchedulerService" />
 
