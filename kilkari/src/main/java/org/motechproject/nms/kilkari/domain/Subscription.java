@@ -296,7 +296,7 @@ public class Subscription extends MdsEntity {
 
             if (today.isBefore(startDate)) {
                 return SubscriptionStatus.PENDING_ACTIVATION;
-            } else if (today.isEqual(startDate) || (today.isAfter(startDate) && today.isBefore(completionDate)) ) {
+            } else if (today.isEqual(startDate) || (today.isAfter(startDate) && today.isBefore(completionDate))) {
                 return SubscriptionStatus.ACTIVE;
             } else {
                 return SubscriptionStatus.COMPLETED;

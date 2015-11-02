@@ -8,6 +8,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.imi.exception.InvalidCsrException;
 import org.motechproject.nms.imi.service.CsrValidatorService;
+import org.motechproject.nms.kilkari.dto.CallSummaryRecordDto;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
@@ -87,7 +88,25 @@ public class CsrValidatorServiceBundleIT extends BasePaxIT {
         helper.makeRecords(1, 0, 0, 0);
 
         // any error inside this would throw an exception
-        csrValidatorService.validateSummaryRecord(helper.getRecords().get(0));
+        csrValidatorService.validateSummaryRecordDto(helper.getRecords().get(0));
+    }
+
+
+    @Test
+    public void testInvalidSubscription() {
+        getLogger().debug("testInvalidSubscription()");
+
+        String timestamp = DateTime.now().toString(TIME_FORMATTER);
+
+        CsrHelper helper = new CsrHelper(timestamp, subscriptionService, subscriptionPackDataService,
+                subscriberDataService, languageDataService, languageService, circleDataService, stateDataService,
+                districtDataService, districtService);
+
+        // Invalid CSR - invalid subscription
+        helper.makeRecords(0, 0, 0, 1);
+
+        // An invalid subscription should not throw
+        csrValidatorService.validateSummaryRecordDto(helper.getRecords().get(0));
     }
 
 
@@ -101,8 +120,12 @@ public class CsrValidatorServiceBundleIT extends BasePaxIT {
                 subscriberDataService, languageDataService, languageService, circleDataService, stateDataService,
                 districtDataService, districtService);
 
-        helper.makeRecords(0, 0, 0, 1);
+        helper.makeRecords(1, 0, 0, 0);
 
-        csrValidatorService.validateSummaryRecord(helper.getRecords().get(0));
+        CallSummaryRecordDto csr = helper.getRecords().get(0);
+        csr.setCircle("INVALID_CIRCLE");
+
+        // An invalid circle should throw
+        csrValidatorService.validateSummaryRecordDto(csr);
     }
 }
