@@ -12,6 +12,7 @@ import org.motechproject.mds.query.QueryExecution;
 import org.motechproject.mds.query.QueryParams;
 import org.motechproject.mds.query.SqlQueryExecution;
 import org.motechproject.mds.util.InstanceSecurityRestriction;
+import org.motechproject.nms.kilkari.domain.CallRetry;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
@@ -21,6 +22,7 @@ import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.domain.SubscriptionRejectionReason;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
+import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
@@ -69,11 +71,15 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private MotechSchedulerService schedulerService;
 
     private static final int THREE_MONTHS = 90;
+    private static final int PREGNANCY_PACK_LENGTH_DAYS = 72 * 7;
+    private static final int CHILD_PACK_LENGTH_DAYS = 48 * 7;
+
 
     private SubscriberDataService subscriberDataService;
     private SubscriptionPackDataService subscriptionPackDataService;
     private SubscriptionDataService subscriptionDataService;
     private SubscriptionErrorDataService subscriptionErrorDataService;
+    private CallRetryDataService callRetryDataService;
     private EventRelay eventRelay;
 
     @Autowired
@@ -83,7 +89,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                                    SubscriptionPackDataService subscriptionPackDataService,
                                    SubscriptionDataService subscriptionDataService,
                                    SubscriptionErrorDataService subscriptionErrorDataService,
-                                   EventRelay eventRelay) {
+                                   EventRelay eventRelay,
+                                   CallRetryDataService callRetryDataService) {
         this.subscriberDataService = subscriberDataService;
         this.subscriptionPackDataService = subscriptionPackDataService;
         this.subscriptionDataService = subscriptionDataService;
@@ -91,6 +98,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         this.schedulerService = schedulerService;
         this.settingsFacade = settingsFacade;
         this.eventRelay = eventRelay;
+        this.callRetryDataService = callRetryDataService;
 
         schedulePurgeOfOldSubscriptions();
     }
@@ -188,18 +196,70 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         for (Subscription subscription : purgeList) {
             Long callingNumber = subscription.getSubscriber().getCallingNumber();
 
+            // If, for some reason, there is a retry record for that subscription, delete it too.
+            CallRetry callRetry = callRetryDataService.findBySubscriptionId(subscription.getSubscriptionId());
+            if (callRetry != null) {
+                LOGGER.debug("Purging CallRetry record for subscription {}", subscription.getSubscriptionId());
+                callRetryDataService.delete(callRetry);
+            }
+
+            LOGGER.debug("Purging subscription {}", subscription.getSubscriptionId());
             subscriptionDataService.delete(subscription);
 
             // I need to load the subscriber since I deleted one of their subscription prior
             Subscriber subscriber = getSubscriber(callingNumber);
             purgedSubscriptions++;
             if (subscriber.getSubscriptions().size() == 0) {
+                LOGGER.debug("Purging subscriber for subscription {} as it was the last subscription for that subscriber",
+                        subscription.getSubscriptionId());
                 subscriberDataService.delete(subscriber);
                 purgedSubscribers++;
             }
         }
 
         LOGGER.info(String.format("Purged %s subscribers and %s subscriptions with status (%s or %s) and " + "endDate date before %s", purgedSubscribers, purgedSubscriptions, SubscriptionStatus.COMPLETED, SubscriptionStatus.DEACTIVATED, cutoff.toString()));
+    }
+
+    @Override
+    public void completePastDueSubscriptions() {
+
+        final DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
+        final DateTime currentTime = DateTime.now();
+        final DateTime oldestPregnancyStart = currentTime.minusDays(PREGNANCY_PACK_LENGTH_DAYS).withTimeAtStartOfDay();
+        final DateTime oldestChildStart = currentTime.minusDays(CHILD_PACK_LENGTH_DAYS).withTimeAtStartOfDay();
+
+        LOGGER.debug(String.format("Completing active pregnancy susbscriptions older than %s", oldestPregnancyStart));
+        LOGGER.debug(String.format("Completing active child susbscriptions older than %s", oldestChildStart));
+
+        @SuppressWarnings("unchecked")
+        SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
+
+            @Override
+            public String getSqlQuery() {
+                String query = String.format(
+                        "UPDATE motech_data_services.nms_subscriptions AS s " +
+                        "JOIN motech_data_services.nms_subscription_packs AS sp " +
+                        "ON s.subscriptionPack_id_OID = sp.id " +
+                        "SET s.status = 'COMPLETED', s.endDate = '%s' " +
+                        "WHERE " +
+                        "(s.status = 'ACTIVE' OR s.status = 'PENDING_ACTIVATION') AND " +
+                        "((sp.type = 'PREGNANCY' AND s.startDate < '%s') OR (sp.type = 'CHILD' AND s.startDate < '%s'))",
+                        currentTime.toString(dateTimeFormatter),
+                        oldestPregnancyStart.toString(dateTimeFormatter),
+                        oldestChildStart.toString(dateTimeFormatter));
+                LOGGER.debug("SQL QUERY: {}", query);
+                return query;
+            }
+
+            @Override
+            public Long execute(Query query) {
+                return (Long) query.execute();
+            }
+        };
+
+        Long rowCount = subscriptionDataService.executeSQLQuery(queryExecution);
+        LOGGER.debug(String.format("Updated %d subscription(s) to COMPLETED", rowCount));
+        subscriptionDataService.evictEntityCache(false); // no need to evict sub-entity classes
     }
 
     @Override

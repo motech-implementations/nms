@@ -11,7 +11,7 @@ public interface CsrValidatorService {
      *
      * @param record
      */
-    void validateSummaryRecord(CallSummaryRecordDto record);
+    void validateSummaryRecordDto(CallSummaryRecordDto record);
 
     /**
      * Validates a call summary record. Throws InvalidCallSummaryRecord exception if something goes wrong.

@@ -638,7 +638,8 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
         mctsSubscriber.setLastMenstrualPeriod(now.minusDays(90));
         subscriberDataService.create(mctsSubscriber);
-        subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
+        subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh
+                .pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
         mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
 
         Subscription subscription = mctsSubscriber.getSubscriptions().iterator().next();
@@ -890,7 +891,8 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     public void verifyFT160() {
 
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
-        mctsSubscriber.setDateOfBirth(DateTime.now());
+        DateTime currentTime = DateTime.now();
+        mctsSubscriber.setDateOfBirth(currentTime);
         subscriberDataService.create(mctsSubscriber);
 
         subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.childPack(),
@@ -898,7 +900,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         
         // mark subscription as complete
         mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
-        mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(340));
+        mctsSubscriber.setDateOfBirth(currentTime.minusDays(340));
         subscriberService.update(mctsSubscriber);
         
         mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
@@ -906,7 +908,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         assertEquals(1, mctsSubscriber.getSubscriptions().size());
         assertEquals(0, mctsSubscriber.getActiveAndPendingSubscriptions().size()); // No active subscription
 
-        DateTime newDob = DateTime.now().minusDays(100);
+        DateTime newDob = currentTime.minusDays(100);
         mctsSubscriber.setDateOfBirth(newDob);
         subscriberService.update(mctsSubscriber);
         // attempt to create subscription to the same pack -- should succeed
@@ -935,8 +937,8 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         Subscriber subscriber2 = subscriberDataService.findByNumber(1111111122L);
         assertNotNull(subscriber2);
-    } 
-    
+    }
+
     /*
      * To verify that user's subscription should create in pending state
      */
@@ -953,6 +955,118 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         Subscription subscription = subscriber.getSubscriptions().iterator().next();
         assertEquals(1, subscriber.getSubscriptions().size());
         assertEquals(SubscriptionStatus.PENDING_ACTIVATION, subscription.getStatus());
+    }
+
+    /**
+     * Verifies that child subscriptions that are past due (active + >pack length) get completed automatically
+     */
+    @Test
+    public void verifyChildPastDueCompletion() {
+
+        // create subscriber and subscription
+        Subscriber subscriber = new Subscriber(9999911222L);
+        subscriberService.create(subscriber);
+        Subscription sub = subscriptionService.createSubscription(subscriber.getCallingNumber(),
+                rh.hindiLanguage(), sh.childPack(), SubscriptionOrigin.IVR);
+
+        // get and update subscription with old start date beyond expected range (>48wks for child pack)
+        Long subscriptionId = sub.getId();
+        sub.setStatus(SubscriptionStatus.ACTIVE);
+        sub.setStartDate(DateTime.now().minusDays(49 * 7));
+        subscriptionDataService.update(sub);
+
+        // fetch and assert after update
+        Subscription fetch = subscriptionDataService.findById(subscriptionId);
+        assertEquals(SubscriptionStatus.ACTIVE, fetch.getStatus());
+
+        // run update script
+        subscriptionService.completePastDueSubscriptions();
+        Subscription fetchUpdate = subscriptionDataService.findById(subscriptionId);
+        assertEquals(SubscriptionStatus.COMPLETED, fetchUpdate.getStatus());
+    }
+
+    /**
+     * Verifies that child subscriptions that are past due (active + <pack length) don't get completed automatically
+     */
+    @Test
+    public void verifyChildPastDueCompletionNoChange() {
+
+        // create subscriber and subscription
+        Subscriber subscriber = new Subscriber(9999911222L);
+        subscriberService.create(subscriber);
+        Subscription sub = subscriptionService.createSubscription(subscriber.getCallingNumber(),
+                rh.hindiLanguage(), sh.childPack(), SubscriptionOrigin.IVR);
+
+        // get and update subscription with old start date within expected range (<48wks for child pack)
+        Long subscriptionId = sub.getId();
+        sub.setStatus(SubscriptionStatus.ACTIVE);
+        sub.setStartDate(DateTime.now().minusDays(48 * 7 - 1));
+        subscriptionDataService.update(sub);
+
+        // fetch and assert after update
+        Subscription fetch = subscriptionDataService.findById(subscriptionId);
+        assertEquals(SubscriptionStatus.ACTIVE, fetch.getStatus());
+
+        // run update script
+        subscriptionService.completePastDueSubscriptions();
+        Subscription fetchUpdate = subscriptionDataService.findById(subscriptionId);
+        assertEquals(SubscriptionStatus.ACTIVE, fetchUpdate.getStatus());
+    }
+
+    /**
+     * Verifies that pregnancy subscriptions that are past due (active + >pack length) get completed automatically
+     */
+    @Test
+    public void verifyPregnancyPastDueCompletion() {
+
+        // create subscriber and subscription
+        Subscriber subscriber = new Subscriber(9999911222L);
+        subscriberService.create(subscriber);
+        Subscription sub = subscriptionService.createSubscription(subscriber.getCallingNumber(),
+                rh.hindiLanguage(), sh.childPack(), SubscriptionOrigin.IVR);
+
+        // get and update subscription with old start date beyond expected range (>72wks for pregnancy pack)
+        Long subscriptionId = sub.getId();
+        sub.setStatus(SubscriptionStatus.ACTIVE);
+        sub.setStartDate(DateTime.now().minusDays(73 * 7));
+        subscriptionDataService.update(sub);
+
+        // fetch and assert after update
+        Subscription fetch = subscriptionDataService.findById(subscriptionId);
+        assertEquals(SubscriptionStatus.ACTIVE, fetch.getStatus());
+
+        // run update script
+        subscriptionService.completePastDueSubscriptions();
+        Subscription fetchUpdate = subscriptionDataService.findById(subscriptionId);
+        assertEquals(SubscriptionStatus.COMPLETED, fetchUpdate.getStatus());
+    }
+
+    /**
+     * Verifies that pregnancy subscriptions that are past due (active + <pack length) don't get completed automatically
+     */
+    @Test
+    public void verifyPregnancyPastDueCompletionNoChange() {
+
+        // create subscriber and subscription
+        Subscriber subscriber = new Subscriber(9999911222L);
+        subscriberService.create(subscriber);
+        Subscription sub = subscriptionService.createSubscription(subscriber.getCallingNumber(),
+                rh.hindiLanguage(), sh.childPack(), SubscriptionOrigin.IVR);
+
+        // get and update subscription with old start date within expected range (<72wks for pregnancy pack)
+        Long subscriptionId = sub.getId();
+        sub.setStatus(SubscriptionStatus.ACTIVE);
+        sub.setStartDate(DateTime.now().minusDays(72 * 7 - 1));
+        subscriptionDataService.update(sub);
+
+        // fetch and assert after update
+        Subscription fetch = subscriptionDataService.findById(subscriptionId);
+        assertEquals(SubscriptionStatus.ACTIVE, fetch.getStatus());
+
+        // run update script
+        subscriptionService.completePastDueSubscriptions();
+        Subscription fetchUpdate = subscriptionDataService.findById(subscriptionId);
+        assertEquals(SubscriptionStatus.COMPLETED, fetchUpdate.getStatus());
     }
 
 }
