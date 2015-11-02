@@ -81,7 +81,7 @@ public class LocationDataImportController {
     private void logError(String fileName, String endpoint, String location, Exception exception) {
         LOGGER.error(exception.getMessage(), exception);
         csvAuditService.auditFailure(fileName, endpoint, exception.getMessage());
-        alertService.create("location_data_import_error",
+        alertService.create(fileName,
                 String.format("Location data import error: %s", location),
                 exception.getMessage(), AlertType.CRITICAL, AlertStatus.NEW, 0, null);
     }
