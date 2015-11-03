@@ -128,7 +128,7 @@ public class LocationServiceImpl implements LocationService {
             taluka.setCode((String) map.get(TALUKA_ID));
             taluka.setName((String) map.get(TALUKA_NAME));
             taluka.setDistrict(district);
-            taluka = talukaService.create(taluka);
+            district.getTalukas().add(taluka);
             LOGGER.debug(String.format("Created %s in %s with id %d", taluka, district, taluka.getId()));
         }
         locations.put(TALUKA_ID, taluka);
@@ -145,7 +145,7 @@ public class LocationServiceImpl implements LocationService {
                 village.setVcode(vcode);
                 village.setTaluka(taluka);
                 village.setName((String) map.get(VILLAGE_NAME));
-                village = villageService.create(village);
+                taluka.getVillages().add(village);
                 LOGGER.debug(String.format("Created %s in %s with id %d", village, taluka, village.getId()));
             }
             locations.put(VILLAGE_ID + NON_CENSUS_VILLAGE, village);
@@ -162,7 +162,7 @@ public class LocationServiceImpl implements LocationService {
             healthBlock.setTaluka(taluka);
             healthBlock.setCode((Long) map.get(HEALTHBLOCK_ID));
             healthBlock.setName((String) map.get(HEALTHBLOCK_NAME));
-            healthBlock = healthBlockService.create(healthBlock);
+            taluka.getHealthBlocks().add(healthBlock);
             LOGGER.debug(String.format("Created %s in %s with id %d", healthBlock, taluka, healthBlock.getId()));
         }
         locations.put(HEALTHBLOCK_ID, healthBlock);
@@ -178,7 +178,7 @@ public class LocationServiceImpl implements LocationService {
             healthFacility.setHealthBlock(healthBlock);
             healthFacility.setCode((Long) map.get(PHC_ID));
             healthFacility.setName((String) map.get(PHC_NAME));
-            healthFacility = healthFacilityService.create(healthFacility);
+            healthBlock.getHealthFacilities().add(healthFacility);
             LOGGER.debug(String.format("Created %s in %s with id %d", healthFacility, healthBlock, healthFacility.getId()));
         }
         locations.put(PHC_ID, healthFacility);
@@ -194,7 +194,7 @@ public class LocationServiceImpl implements LocationService {
             healthSubFacility.setHealthFacility(healthFacility);
             healthSubFacility.setCode((Long) map.get(SUBCENTRE_ID));
             healthSubFacility.setName((String) map.get(SUBCENTRE_NAME));
-            healthSubFacility = healthSubFacilityService.create(healthSubFacility);
+            healthFacility.getHealthSubFacilities().add(healthSubFacility);
             LOGGER.debug(String.format("Created %s in %s with id %d", healthSubFacility, healthFacility, healthSubFacility.getId()));
         }
         locations.put(SUBCENTRE_ID, healthSubFacility);

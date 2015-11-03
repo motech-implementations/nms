@@ -419,7 +419,8 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         assertEquals(453L, (long) updatedChild.getHealthBlock().getCode());
     }
 
-    private void doTestUpdateBeneficiariesFromFile()  {
+    @Test
+    public void testUpdateBeneficiariesFromFile() throws Exception {
         createLocationData();
 
         // ----Create 4 beneficiaries:----
@@ -496,13 +497,6 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
 
         // Location insert:
         assertEquals("Taluka", subscriber4.getChild().getTaluka().getName());
-
-    }
-
-
-    @Test
-    public void testUpdateBeneficiariesFromFile() throws Exception {
-        doTestUpdateBeneficiariesFromFile();
     }
 
 
