@@ -33,8 +33,8 @@ public class LocationServiceImpl implements LocationService {
     private static final Logger LOGGER = LoggerFactory.getLogger(LocationServiceImpl.class);
 
     private static final String INVALID = "<%s - %s : Invalid location>";
-    private static final String STATE = "StateID";
-    private static final String DISTRICT = "District_ID";
+    private static final String STATE_ID = "StateID";
+    private static final String DISTRICT_ID = "District_ID";
     private static final String TALUKA_ID = "Taluka_ID";
     private static final String TALUKA_NAME = "Taluka_Name";
     private static final String HEALTHBLOCK_ID = "HealthBlock_ID";
@@ -97,25 +97,25 @@ public class LocationServiceImpl implements LocationService {
         Map<String, Object> locations = new HashMap<>();
 
         // set state
-        if (!isValidID(map, STATE)) {
+        if (!isValidID(map, STATE_ID)) {
             return locations;
         }
-        State state = stateDataService.findByCode((Long) map.get(STATE));
+        State state = stateDataService.findByCode((Long) map.get(STATE_ID));
         if (state == null) { // we are here because stateId wasn't null but fetch returned no data
-            throw new InvalidLocationException(String.format(INVALID, STATE, map.get(STATE)));
+            throw new InvalidLocationException(String.format(INVALID, STATE_ID, map.get(STATE_ID)));
         }
-        locations.put(STATE, state);
+        locations.put(STATE_ID, state);
 
 
         // set district
-        if (!isValidID(map, DISTRICT)) {
+        if (!isValidID(map, DISTRICT_ID)) {
             return locations;
         }
-        District district = districtService.findByStateAndCode(state, (Long) map.get(DISTRICT));
+        District district = districtService.findByStateAndCode(state, (Long) map.get(DISTRICT_ID));
         if (district == null) {
-            throw new InvalidLocationException(String.format(INVALID, DISTRICT, map.get(DISTRICT)));
+            throw new InvalidLocationException(String.format(INVALID, DISTRICT_ID, map.get(DISTRICT_ID)));
         }
-        locations.put(DISTRICT, district);
+        locations.put(DISTRICT_ID, district);
 
 
         // set and/or create taluka

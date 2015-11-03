@@ -18,6 +18,9 @@ public class HealthBlockServiceImpl implements HealthBlockService {
     private HealthBlockDataService healthBlockDataService;
 
     @Override
+    // Since Taluka <-> HealthBlocks are many to many, but we don't model that in our system
+    // We instead just want to find a taluka with a matching code in the same state as the
+    // provided taluka
     public HealthBlock findByTalukaAndCode(final Taluka taluka, final Long code) {
         if (taluka == null) { return null; }
 
@@ -25,13 +28,21 @@ public class HealthBlockServiceImpl implements HealthBlockService {
 
             @Override
             public String getSqlQuery() {
-                return "select * from nms_health_blocks where taluka_id_oid = ? and code = ?";
+                return "select * " +
+                         "from nms_health_blocks " +
+                         "join nms_talukas t on nms_health_blocks.taluka_id_oid = t.id " +
+                         "join nms_districts d on t.district_id_oid = d.id " +
+                         "join nms_states s on d.state_id_oid = s.id " +
+                         "join nms_states s2 on s.id = s2.id " +
+                         "join nms_districts d2 on d2.state_id_oid = s2.id " +
+                         "join nms_talukas t2 on t2.district_id_oid = d2.id " +
+                        "where nms_health_blocks.code = ? and t2.id = ?";
             }
 
             @Override
             public HealthBlock execute(Query query) {
                 query.setClass(HealthBlock.class);
-                ForwardQueryResult fqr = (ForwardQueryResult) query.execute(taluka.getId(), code);
+                ForwardQueryResult fqr = (ForwardQueryResult) query.execute(code, taluka.getId());
                 if (fqr.isEmpty()) {
                     return null;
                 }

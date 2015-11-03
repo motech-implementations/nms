@@ -223,21 +223,6 @@ public class FullLocationValidatorUnitTest {
         assertEquals("Village is not a child of the Taluka", constraintViolations.iterator().next().getMessage());
     }
 
-    //   Test health block not in taluka
-    @Test
-    public void testHealthBlockNotInTaluka() {
-        TestLocation testLocation = new TestLocation();
-        buildValidFullLocation(testLocation);
-
-        testLocation.getTaluka().setHealthBlocks(Collections.<HealthBlock>emptyList());
-        testLocation.getHealthBlock().setTaluka(null);
-
-        Set<ConstraintViolation<TestLocation>> constraintViolations = validator.validate(testLocation);
-
-        assertEquals(1, constraintViolations.size());
-        assertEquals("Health Block is not a child of the Taluka", constraintViolations.iterator().next().getMessage());
-    }
-
     //   Test health facility not in health block
     @Test
     public void testHealthFacilityNotInHealthBlock() {
