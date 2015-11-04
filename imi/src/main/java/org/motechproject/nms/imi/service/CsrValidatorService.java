@@ -5,6 +5,11 @@ import org.motechproject.nms.imi.domain.CallSummaryRecord;
 
 public interface CsrValidatorService {
     /**
+     * Clears the memory used by the cache
+     */
+    void evictCache();
+
+    /**
      * Validates a call summary record. Throws InvalidCallSummaryRecord exception if something goes wrong.
 
      * NOTE: directly used in IT only

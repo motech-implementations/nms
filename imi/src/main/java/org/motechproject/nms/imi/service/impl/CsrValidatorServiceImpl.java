@@ -4,6 +4,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.alerts.domain.AlertStatus;
 import org.motechproject.alerts.domain.AlertType;
+import org.motechproject.metrics.service.Timer;
 import org.motechproject.nms.imi.domain.CallSummaryRecord;
 import org.motechproject.nms.imi.exception.InvalidCsrException;
 import org.motechproject.nms.imi.service.CsrValidatorService;
@@ -34,6 +35,7 @@ public class CsrValidatorServiceImpl implements CsrValidatorService {
     private Map<String, Set<String>> contentFileNames;
     private Set<String> languageCodes;
     private Set<String> circles;
+    private Map<String, String> subscriptions;
 
     private SubscriptionService subscriptionService;
     private LanguageService languageService;
@@ -55,9 +57,20 @@ public class CsrValidatorServiceImpl implements CsrValidatorService {
     }
 
 
+    public void evictCache() {
+        weekIds = null;
+        contentFileNames = null;
+        languageCodes = null;
+        circles = null;
+        subscriptions = null;
+    }
+
+
     private void loadPacks() {
+        LOGGER.debug("loading Packs");
         weekIds = new HashMap<>();
         contentFileNames = new HashMap<>();
+        Timer timer = new Timer();
         for (SubscriptionPack pack : subscriptionService.getSubscriptionPacks()) {
             Set<String> packWeekIds = new HashSet<String>();
             Set<String> packContentFileNames = new HashSet<String>();
@@ -68,6 +81,7 @@ public class CsrValidatorServiceImpl implements CsrValidatorService {
             weekIds.put(pack.getName(), packWeekIds);
             contentFileNames.put(pack.getName(), packContentFileNames);
         }
+        LOGGER.debug("Loaded {} packs in {}", weekIds.size(), timer.time());
         if (weekIds.size() == 0) {
             LOGGER.debug("No subscription packs in the database!");
             weekIds = null;
@@ -77,10 +91,13 @@ public class CsrValidatorServiceImpl implements CsrValidatorService {
 
 
     private void loadLanguageLocationCodes() {
+        LOGGER.debug("loading LanguageLocationCodes");
         languageCodes = new HashSet<String>();
+        Timer timer = new Timer();
         for (Language language : languageService.getAll()) {
             languageCodes.add(language.getCode());
         }
+        LOGGER.debug("Loaded {} LanguageLocationCodes in {}", languageCodes.size(), timer.time());
         if (languageCodes.size() == 0) {
             LOGGER.debug("No languages in the database!");
             languageCodes = null;
@@ -89,14 +106,28 @@ public class CsrValidatorServiceImpl implements CsrValidatorService {
 
 
     private void loadCircles() {
+        LOGGER.debug("loading Circles");
         circles = new HashSet<String>();
+        Timer timer = new Timer();
         for (Circle circle : circleService.getAll()) {
             circles.add(circle.getName());
         }
+        LOGGER.debug("Loaded {} circles in {}", circles.size(), timer.time());
         if (circles.size() == 0) {
             LOGGER.debug("No circles in the database!");
             circles = null;
         }
+    }
+
+
+    private void loadSubscriptions() {
+        LOGGER.debug("loading Subscriptions");
+        subscriptions = new HashMap<String, String>();
+        Timer timer = new Timer();
+        for (Subscription subscription : subscriptionService.retrieveAll()) {
+            subscriptions.put(subscription.getSubscriptionId(), subscription.getSubscriptionPack().getName());
+        }
+        LOGGER.debug("Loaded {} subscriptions in {}", subscriptions.size(), timer.time());
     }
 
 
@@ -142,27 +173,36 @@ public class CsrValidatorServiceImpl implements CsrValidatorService {
     }
 
 
-    private Subscription validateSubscription(String id) {
-        Subscription sub = subscriptionService.getSubscription(id);
-        if (sub == null) {
-            String error = String.format("Subscription %s does not exist in the database", id);
-            LOGGER.warn(error);
-            String externalID = "Subscription" + (StringUtils.isBlank(id) ? "" : " " + id);
-            alertService.create(externalID, "CSR Validation", error, AlertType.HIGH, AlertStatus.NEW, 0, null);
+    /**
+     * Makes sure the given subscription exists in the database
+     * @param id - the subscription id
+     * @return the pack name for the given subscription - a bit funky to return a pack name, but optimized for speed
+     */
+    private String validateSubscription(String id) {
+        if (subscriptions == null) {
+            loadSubscriptions();
         }
-        return sub;
+        if (subscriptions.containsKey(id)) {
+            return subscriptions.get(id);
+        }
+
+        String error = String.format("Subscription %s does not exist in the database", id);
+        LOGGER.warn(error);
+        String externalID = "Subscription" + (StringUtils.isBlank(id) ? "" : " " + id);
+        alertService.create(externalID, "CSR Validation", error, AlertType.HIGH, AlertStatus.NEW, 0, null);
+
+        return null;
     }
 
 
     //todo: IT
     @Override
     public void validateSummaryRecordDto(CallSummaryRecordDto record) {
-        Subscription sub = validateSubscription(record.getRequestId().getSubscriptionId());
-        if (sub == null) {
+        String pack = validateSubscription(record.getRequestId().getSubscriptionId());
+        if (pack == null) {
             // This is a messed up subscription, we logged & alerted it, let's just not validate anything more
             return;
         }
-        String pack = sub.getSubscriptionPack().getName();
         validateWeekId(pack, record.getWeekId());
         validateContentFileName(pack, record.getContentFileName());
         validateCircle(record.getCircle());
@@ -174,12 +214,11 @@ public class CsrValidatorServiceImpl implements CsrValidatorService {
     @Override
     public void validateSummaryRecord(CallSummaryRecord record) {
         RequestId requestId = RequestId.fromString(record.getRequestId());
-        Subscription sub = validateSubscription(requestId.getSubscriptionId());
-        if (sub == null) {
+        String pack = validateSubscription(requestId.getSubscriptionId());
+        if (pack == null) {
             // This is a messed up subscription, we logged & alerted it, let's just not validate anything more
             return;
         }
-        String pack = sub.getSubscriptionPack().getName();
         validateWeekId(pack, record.getWeekId());
         validateContentFileName(pack, record.getContentFileName());
         validateCircle(record.getCircle());
