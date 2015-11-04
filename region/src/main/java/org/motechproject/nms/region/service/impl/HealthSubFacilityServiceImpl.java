@@ -46,12 +46,12 @@ public class HealthSubFacilityServiceImpl implements HealthSubFacilityService {
     }
 
     @Override
-    public void create(HealthSubFacility healthSubFacility) {
-        dataService.create(healthSubFacility);
+    public HealthSubFacility create(HealthSubFacility healthSubFacility) {
+        return dataService.create(healthSubFacility);
     }
 
     @Override
-    public void update(HealthSubFacility healthSubFacility) {
-        dataService.update(healthSubFacility);
+    public HealthSubFacility update(HealthSubFacility healthSubFacility) {
+        return dataService.update(healthSubFacility);
     }
 }

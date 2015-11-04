@@ -47,6 +47,7 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
@@ -452,7 +453,12 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
 
         // ----Update all 4 via CSV:----
 
-        mctsBeneficiaryUpdateService.updateBeneficiaryData(read("csv/mcts_beneficiary_update.csv"));
+        try {
+            mctsBeneficiaryUpdateService.updateBeneficiaryData(read("csv/mcts_beneficiary_update.csv"));
+        }
+        catch(IOException e) {
+            assert false;
+        }
 
         // ----Validate updates to each:----
 
@@ -488,7 +494,11 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         Subscription updatedSubscription = subscriber4.getActiveAndPendingSubscriptions().iterator().next();
         assertEquals(updatedDOB, getDateString(updatedSubscription.getStartDate()));
         assertEquals(SubscriptionStatus.ACTIVE, updatedSubscription.getStatus());
+
+        // Location insert:
+        assertEquals("Taluka", subscriber4.getChild().getTaluka().getName());
     }
+
 
     private void makeMctsSubscription(MctsBeneficiary beneficiary, DateTime startDate, SubscriptionPackType packType, Long number) {
         sh.mksub(SubscriptionOrigin.MCTS_IMPORT, startDate, packType, number);

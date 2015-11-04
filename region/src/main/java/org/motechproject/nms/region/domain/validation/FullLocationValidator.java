@@ -2,7 +2,6 @@ package org.motechproject.nms.region.domain.validation;
 
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.FullLocation;
-import org.motechproject.nms.region.domain.HealthBlock;
 import org.motechproject.nms.region.domain.HealthFacility;
 import org.motechproject.nms.region.domain.HealthSubFacility;
 import org.motechproject.nms.region.domain.Taluka;
@@ -155,18 +154,10 @@ public class FullLocationValidator implements ConstraintValidator<ValidFullLocat
         }
 
         if (location.getHealthBlock() != null) {
-            HealthBlock healthBlock = location.getHealthBlock();
-
             if (location.getTaluka() == null) {
                 constraintValidatorContext.disableDefaultConstraintViolation();
                 constraintValidatorContext.buildConstraintViolationWithTemplate("Taluka must be set if block " +
                                                                          "is provided").addConstraintViolation();
-                isValid = false;
-            } else if (healthBlock.getTaluka() == null ||
-                    !healthBlock.getTaluka().getId().equals(location.getTaluka().getId())) {
-                constraintValidatorContext.disableDefaultConstraintViolation();
-                constraintValidatorContext.buildConstraintViolationWithTemplate("Health Block is not a child " +
-                                                                      "of the Taluka").addConstraintViolation();
                 isValid = false;
             }
         }

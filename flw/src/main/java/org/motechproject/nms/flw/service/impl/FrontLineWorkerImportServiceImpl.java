@@ -44,14 +44,21 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
     private static final String ID = "ID";
     private static final String CONTACT_NO = "Contact_No";
     private static final String NAME = "Name";
-    private static final String STATE = "StateID";
+    private static final String STATE_ID = "StateID";
     private static final String DISTRICT_ID = "District_ID";
-    private static final String TALUKA = "Taluka_ID";
-    private static final String HEALTH_BLOCK = "HealthBlock_ID";
-    private static final String PHC = "PHC_ID";
-    private static final String SUBCENTRE = "SubCentre_ID";
-    private static final String CENSUS_VILLAGE = "Village_ID";
-    private static final String NON_CENSUS_VILAGE = "SVID";
+    private static final String DISTRICT_NAME = "District_Name";
+    private static final String TALUKA_ID = "Taluka_ID";
+    private static final String TALUKA_NAME = "Taluka_Name";
+    private static final String HEALTH_BLOCK_ID = "HealthBlock_ID";
+    private static final String HEALTH_BLOCK_NAME = "HealthBlock_Name";
+    private static final String PHC_ID = "PHC_ID";
+    private static final String PHC_NAME = "PHC_Name";
+    private static final String SUB_CENTRE_ID = "SubCentre_ID";
+    private static final String SUB_CENTRE_NAME = "SubCentre_Name";
+    private static final String CENSUS_VILLAGE_ID = "Village_ID";
+    private static final String VILLAGE_NAME = "Village_Name";
+    private static final String NON_CENSUS_VILLAGE_ID = "SVID";
+
     private static final String TYPE = "Type";
 
     private static final int MASK_LENGTH = 3;
@@ -64,7 +71,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
     /*
         Expected file format:
         * any number of empty lines
-        * first non blank line to contain state name in the following format:  State Name : ACTUAL STATE NAME
+        * first non blank line to contain state name in the following format:  State Name : ACTUAL STATE_ID NAME
         * any number of additional header lines
         * one empty line
         * CSV data (tab-separated)
@@ -86,7 +93,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
 
                 FrontLineWorker flw = flwFromRecord(record, state);
 
-                record.put(STATE, state.getCode());
+                record.put(STATE_ID, state.getCode());
                 Map<String, Object> location = locationService.getLocations(record);
 
                 if (flw == null) {
@@ -215,11 +222,11 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
     }
 
     private void setFrontLineWorkerLocation(FrontLineWorker flw, Map<String, Object> locations) throws InvalidLocationException {
-        if (locations.get(STATE) == null && locations.get(DISTRICT_ID) == null) {
+        if (locations.get(STATE_ID) == null && locations.get(DISTRICT_ID) == null) {
             throw new InvalidLocationException("Missing mandatory state and district fields");
         }
 
-        if (locations.get(STATE) == null) {
+        if (locations.get(STATE_ID) == null) {
             throw new InvalidLocationException("Missing mandatory state field");
         }
 
@@ -227,13 +234,13 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
             throw new InvalidLocationException("Missing mandatory district field");
         }
 
-        flw.setState((State) locations.get(STATE));
+        flw.setState((State) locations.get(STATE_ID));
         flw.setDistrict((District) locations.get(DISTRICT_ID));
-        flw.setTaluka((Taluka) locations.get(TALUKA));
-        flw.setHealthBlock((HealthBlock) locations.get(HEALTH_BLOCK));
-        flw.setHealthFacility((HealthFacility) locations.get(PHC));
-        flw.setHealthSubFacility((HealthSubFacility) locations.get(SUBCENTRE));
-        flw.setVillage((Village) locations.get(CENSUS_VILLAGE + NON_CENSUS_VILAGE));
+        flw.setTaluka((Taluka) locations.get(TALUKA_ID));
+        flw.setHealthBlock((HealthBlock) locations.get(HEALTH_BLOCK_ID));
+        flw.setHealthFacility((HealthFacility) locations.get(PHC_ID));
+        flw.setHealthSubFacility((HealthSubFacility) locations.get(SUB_CENTRE_ID));
+        flw.setVillage((Village) locations.get(CENSUS_VILLAGE_ID + NON_CENSUS_VILLAGE_ID));
     }
 
     private Map<String, CellProcessor> getProcessorMapping() {
@@ -241,13 +248,28 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
         mapping.put(ID, new GetString());
         mapping.put(CONTACT_NO, new GetLong());
         mapping.put(NAME, new GetString());
+
+        mapping.put(STATE_ID, new Optional(new GetLong()));
+
         mapping.put(DISTRICT_ID, new Optional(new GetLong()));
-        mapping.put(TALUKA, new Optional(new GetString()));
-        mapping.put(HEALTH_BLOCK, new Optional(new GetLong()));
-        mapping.put(PHC, new Optional(new GetLong()));
-        mapping.put(SUBCENTRE, new Optional(new GetLong()));
-        mapping.put(CENSUS_VILLAGE, new Optional(new GetLong()));
-        mapping.put(NON_CENSUS_VILAGE, new Optional(new GetLong()));
+        mapping.put(DISTRICT_NAME, new Optional(new GetString()));
+
+        mapping.put(TALUKA_ID, new Optional(new GetString()));
+        mapping.put(TALUKA_NAME, new Optional(new GetString()));
+
+        mapping.put(HEALTH_BLOCK_ID, new Optional(new GetLong()));
+        mapping.put(HEALTH_BLOCK_NAME, new Optional(new GetString()));
+
+        mapping.put(PHC_ID, new Optional(new GetLong()));
+        mapping.put(PHC_NAME, new Optional(new GetString()));
+
+        mapping.put(SUB_CENTRE_ID, new Optional(new GetLong()));
+        mapping.put(SUB_CENTRE_NAME, new Optional(new GetString()));
+
+        mapping.put(CENSUS_VILLAGE_ID, new Optional(new GetLong()));
+        mapping.put(NON_CENSUS_VILLAGE_ID, new Optional(new GetLong()));
+        mapping.put(VILLAGE_NAME, new Optional(new GetString()));
+
         mapping.put(TYPE, new Optional(new GetString()));
 
         return mapping;

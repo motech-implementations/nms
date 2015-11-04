@@ -38,7 +38,12 @@ import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
+import org.motechproject.nms.region.service.HealthBlockService;
+import org.motechproject.nms.region.service.HealthFacilityService;
+import org.motechproject.nms.region.service.HealthSubFacilityService;
 import org.motechproject.nms.region.service.LanguageService;
+import org.motechproject.nms.region.service.TalukaService;
+import org.motechproject.nms.region.service.VillageService;
 import org.motechproject.nms.testing.it.utils.RegionHelper;
 import org.motechproject.nms.testing.it.utils.SubscriptionHelper;
 import org.motechproject.nms.testing.service.TestingService;
@@ -102,6 +107,16 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     SubscriptionErrorDataService subscriptionErrorDataService;
     @Inject
     SubscriberService subscriberService;
+    @Inject
+    TalukaService talukaDataService;
+    @Inject
+    HealthBlockService healthBlockService;
+    @Inject
+    HealthFacilityService healthFacilityService;
+    @Inject
+    HealthSubFacilityService healthSubFacilityService;
+    @Inject
+    VillageService villageService;
 
     SubscriptionHelper sh;
 
@@ -1002,7 +1017,27 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
                 expectedDistrict);
 
         // although our MCTS data file contains 10 mothers, we only create 3 subscribers due to duplicate phone numbers
-        assertEquals(3, subscriberDataService.count());
+        assertEquals(4, subscriberDataService.count());
+
+
+        // verify location data was created on the fly
+        State state = stateDataService.findByCode(21L);
+        District district = districtService.findByStateAndCode(state, 3L);
+        Taluka taluka = talukaDataService.findByDistrictAndCode(district, "111");
+        assertEquals("Taluka", taluka.getName());
+
+        HealthBlock healthBlock = healthBlockService.findByTalukaAndCode(taluka, 222L);
+        assertEquals("HealthBlock", healthBlock.getName());
+
+        HealthFacility healthFacility = healthFacilityService.findByHealthBlockAndCode(healthBlock, 333L);
+        assertEquals("PHC", healthFacility.getName());
+
+        HealthSubFacility healthSubFacility = healthSubFacilityService.findByHealthFacilityAndCode(healthFacility, 444L);
+        assertEquals("SubCentre", healthSubFacility.getName());
+
+        Village village = villageService.findByTalukaAndVcodeAndSvid(taluka, 555L, 0L);
+        assertEquals("Village", village.getName());
+
     }
 
     private void assertNoSubscriber(long callingNumber) {

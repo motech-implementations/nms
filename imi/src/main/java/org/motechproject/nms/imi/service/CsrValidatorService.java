@@ -1,7 +1,7 @@
 package org.motechproject.nms.imi.service;
 
-import org.motechproject.nms.kilkari.dto.CallSummaryRecordDto;
 import org.motechproject.nms.imi.domain.CallSummaryRecord;
+import org.motechproject.nms.kilkari.dto.CallSummaryRecordDto;
 
 public interface CsrValidatorService {
     /**
