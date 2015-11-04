@@ -75,8 +75,7 @@ public class SmsNotificationServiceImpl implements SmsNotificationService {
         }
 
         ExponentialRetrySender sender = new ExponentialRetrySender(settingsFacade, alertService);
-        sender.sendNotificationRequest(httpPost, HttpStatus.SC_CREATED, ALERT_ID, ALERT_NAME);
-        return true;
+        return sender.sendNotificationRequest(httpPost, HttpStatus.SC_CREATED, ALERT_ID, ALERT_NAME);
     }
 
     private HttpPost prepareSmsRequest(Long callingNumber, String content) {
