@@ -22,6 +22,7 @@ import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryUpdateService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
+import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.HealthBlock;
 import org.motechproject.nms.region.domain.HealthFacility;
@@ -122,12 +123,20 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
 
     private void createLocationData() {
         // specific locations from the mother and child data files:
+        final Circle circle = new Circle();
+        circle.setName("Square");
+        circleDataService.create(circle);
 
-        State state21 = createState(21L, "State 21");
-        District district2 = createDistrict(state21, 2L, "Jharsuguda", new Language("21", "English"));
-        District district3 = createDistrict(state21, 3L, "Sambalpur");
-        District district4 = createDistrict(state21, 4L, "Debagarh");
-        state21.getDistricts().addAll(Arrays.asList(district2, district3, district4));
+        final Circle circle2 = new Circle();
+        circle2.setName("Rectangle");
+        circleDataService.create(circle2);
+
+        final State state21 = createState(21L, "State 21");
+        District district2 = createDistrict(state21, 2L, "Jharsuguda", null, circle);
+        District district3 = createDistrict(state21, 3L, "Sambalpur", null, circle);
+        District district4 = createDistrict(state21, 4L, "Debagarh", null, circle);
+        District district5 = createDistrict(state21, 5L, "Rectangle", null, circle2);
+        state21.getDistricts().addAll(Arrays.asList(district2, district3, district4, district5));
 
         Taluka taluka24 = createTaluka(district2, "0024", "Laikera P.S.", 24);
         district2.getTalukas().add(taluka24);
@@ -282,14 +291,18 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         DateTime originalDOB = DateTime.now();
         DateTime updatedDOB = originalDOB.minusDays(100);
 
-        sh.mksub(SubscriptionOrigin.MCTS_IMPORT, originalDOB, SubscriptionPackType.CHILD, msisdn);
-        Subscriber subscriber = subscriberDataService.findByNumber(msisdn);
-        subscriber.setDateOfBirth(originalDOB);
         MctsChild child = new MctsChild(childId);
         child.setState(stateDataService.findByCode(21L));
         child.setDistrict(districtService.findByStateAndCode(child.getState(), 3L));
+        makeMctsSubscription(child, originalDOB, SubscriptionPackType.CHILD, msisdn);
+
+        /*
+        sh.mksub(SubscriptionOrigin.MCTS_IMPORT, originalDOB, SubscriptionPackType.CHILD, msisdn);
+        Subscriber subscriber = subscriberDataService.findByNumber(msisdn);
+        subscriber.setDateOfBirth(originalDOB);
         subscriber.setChild(child);
         subscriberDataService.update(subscriber);
+        */
 
         // this updates the db with the new data (DOB)
         Reader reader = createUpdateReaderWithHeaders("1," + childId + ",," + getDateString(updatedDOB) + ",,,,,,,,,,,");
@@ -312,14 +325,17 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         DateTime originalLMP = DateTime.now().minusDays(100);
         DateTime updatedLMP = originalLMP.minusDays(200);
 
-        sh.mksub(SubscriptionOrigin.MCTS_IMPORT, originalLMP, SubscriptionPackType.PREGNANCY, msisdn);
-        Subscriber subscriber = subscriberDataService.findByNumber(msisdn);
-        subscriber.setLastMenstrualPeriod(originalLMP);
         MctsMother mother = new MctsMother(motherId);
         mother.setState(stateDataService.findByCode(21L));
         mother.setDistrict(districtService.findByStateAndCode(mother.getState(), 3L));
+        makeMctsSubscription(mother, originalLMP, SubscriptionPackType.PREGNANCY, msisdn);
+
+        /*
+        sh.mksub(SubscriptionOrigin.MCTS_IMPORT, originalLMP, SubscriptionPackType.PREGNANCY, msisdn);
+        subscriber.setLastMenstrualPeriod(originalLMP);
         subscriber.setMother(mother);
         subscriberDataService.update(subscriber);
+        */
 
         Reader reader = createUpdateReaderWithHeaders("1," + motherId + ",,," + getDateString(updatedLMP) + ",,,,,,,,,,");
         mctsBeneficiaryUpdateService.updateBeneficiaryData(reader);
@@ -340,16 +356,22 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         DateTime originalLMP = DateTime.now().minusDays(100);
         DateTime updatedLMP = originalLMP.minusDays(100);
 
-        sh.mksub(SubscriptionOrigin.MCTS_IMPORT, originalLMP, SubscriptionPackType.PREGNANCY, msisdn);
-        Subscriber subscriber = subscriberDataService.findByNumber(msisdn);
-        subscriber.setLastMenstrualPeriod(originalLMP);
+
         MctsMother mother = new MctsMother(motherId);
         mother.setState(stateDataService.findByCode(21L));
         mother.setDistrict(districtService.findByStateAndCode(mother.getState(), 3L));
+        makeMctsSubscription(mother, originalLMP, SubscriptionPackType.PREGNANCY, msisdn);
+
+        /*
+        sh.mksub(SubscriptionOrigin.MCTS_IMPORT, originalLMP, SubscriptionPackType.PREGNANCY, msisdn);
+        Subscriber subscriber = subscriberDataService.findByNumber(msisdn);
+        subscriber.setLastMenstrualPeriod(originalLMP);
         subscriber.setMother(mother);
         subscriberDataService.update(subscriber);
+        */
 
         // pre-date the LMP so that the subscription will be marked completed
+        Subscriber subscriber = subscriberDataService.findByNumber(msisdn);
         subscriber.setLastMenstrualPeriod(originalLMP.minusDays(600));
         subscriberService.update(subscriber);
         subscriber = subscriberDataService.findByNumber(msisdn);

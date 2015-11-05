@@ -22,15 +22,13 @@ import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Language;
-import org.motechproject.nms.region.domain.State;
-import org.motechproject.nms.region.repository.DistrictDataService;
+import org.motechproject.nms.region.service.DistrictService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.jdo.Query;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 
 
@@ -48,20 +46,20 @@ public class SubscriberServiceImpl implements SubscriberService {
     private SubscriptionDataService subscriptionDataService;
     private SubscriptionErrorDataService subscriptionErrorDataService;
     private SubscriptionPackDataService subscriptionPackDataService;
-    private DistrictDataService districtDataService;
+    private DistrictService districtService;
 
     @Autowired
     public SubscriberServiceImpl(SubscriberDataService subscriberDataService, SubscriptionService subscriptionService,
                                  SubscriptionDataService subscriptionDataService,
                                  SubscriptionErrorDataService subscriptionErrorDataService,
                                  SubscriptionPackDataService subscriptionPackDataService,
-                                 DistrictDataService districtDataService) {
+                                 DistrictService districtService) {
         this.subscriberDataService = subscriberDataService;
         this.subscriptionService = subscriptionService;
         this.subscriptionDataService = subscriptionDataService;
         this.subscriptionErrorDataService = subscriptionErrorDataService;
         this.subscriptionPackDataService = subscriptionPackDataService;
-        this.districtDataService = districtDataService;
+        this.districtService = districtService;
     }
 
     @Override
@@ -193,23 +191,12 @@ public class SubscriberServiceImpl implements SubscriberService {
         subscriptionDataService.update(subscription);
     }
 
-    private Circle circleFromDistrict(District district) {
-        State state = (State) districtDataService.getDetachedField(district, "state");
-        List<Circle> circleList = state.getCircles();
-
-        if (circleList.size() == 1) {
-            return circleList.get(0);
-        }
-
-        return null;
-    }
-
     @Override
     public Subscription updateOrCreateMctsSubscriber(MctsBeneficiary beneficiary, Long msisdn, DateTime referenceDate,
                                                      SubscriptionPackType packType) {
         District district = beneficiary.getDistrict();
-        Circle circle = circleFromDistrict(district);
-        Language language = (Language) districtDataService.getDetachedField(district, "language");
+        Circle circle = (Circle) districtService.getDetachedField(district, "circle");
+        Language language = (Language) districtService.getDetachedField(district, "language");
         Subscriber subscriber = getSubscriber(msisdn);
 
 

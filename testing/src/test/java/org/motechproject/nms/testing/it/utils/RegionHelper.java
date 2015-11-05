@@ -44,10 +44,13 @@ public class RegionHelper {
         Circle c = circleDataService.findByName("DE");
 
         if (c == null) {
-            c = circleDataService.create(new Circle("DE"));
-            c.getStates().add(delhiState());
+            c = new Circle("DE");
+
             c.setDefaultLanguage(hindiLanguage());
-            circleDataService.update(c);
+            circleDataService.create(c);
+
+            // Create the dehli district which is linked to this circle.  Also creates state
+            newDelhiDistrict();
         }
 
         return c;
@@ -58,8 +61,10 @@ public class RegionHelper {
 
         if (c == null) {
             c = circleDataService.create(new Circle("KA"));
-            c.getStates().add(karnatakaState());
             circleDataService.update(c);
+
+            // Create a district which also creates the link and the state
+            bangaloreDistrict();
         }
 
         return c;
@@ -103,7 +108,10 @@ public class RegionHelper {
             d.setCode(1L);
             d.setState(delhiState());
             d.setLanguage(hindiLanguage());
+            d.setCircle(delhiCircle());
             districtDataService.create(d);
+
+            stateDataService.evictAllCache();
         }
 
         return d;
@@ -119,8 +127,11 @@ public class RegionHelper {
             d.setRegionalName("South Delhi");
             d.setCode(5L);
             d.setState(delhiState());
+            d.setCircle(delhiCircle());
             d.setLanguage(punjabiLanguage());
             districtDataService.create(d);
+
+            stateDataService.evictAllCache();
         }
 
         return d;
@@ -136,8 +147,11 @@ public class RegionHelper {
             d.setRegionalName("Bengaluru");
             d.setCode(4L);
             d.setState(karnatakaState());
+            d.setCircle(karnatakaCircle());
             d.setLanguage(tamilLanguage());
             districtDataService.create(d);
+
+            stateDataService.evictAllCache();
         }
 
         return d;
@@ -153,8 +167,11 @@ public class RegionHelper {
             d.setRegionalName("Mysuru");
             d.setCode(2L);
             d.setState(karnatakaState());
+            d.setCircle(karnatakaCircle());
             d.setLanguage(kannadaLanguage());
             districtDataService.create(d);
+
+            stateDataService.evictAllCache();
         }
 
         return d;
@@ -217,16 +234,30 @@ public class RegionHelper {
     }
 
     public static District createDistrict(State state, Long code, String name) {
-        return createDistrict(state, code, name, null);
+        return createDistrict(state, code, name, null, null);
     }
 
     public static District createDistrict(State state, Long code, String name, Language language) {
+        return createDistrict(state, code, name, language, null);
+    }
+
+    public static District createDistrict(State state, Long code, String name, Circle circle) {
+        return createDistrict(state, code, name, null, circle);
+    }
+
+    public static District createDistrict(State state, Long code, String name, Language language, Circle circle) {
         District district = new District();
         district.setState(state);
         district.setCode(code);
         district.setName(name);
         district.setRegionalName(regionalName(name));
         district.setLanguage(language);
+
+        if (circle != null) {
+            district.setCircle(circle);
+            circle.getDistricts().add(district);
+        }
+
         return district;
     }
 

@@ -184,7 +184,7 @@ public class FullLocationValidatorUnitTest {
         TestLocation testLocation = new TestLocation();
         buildValidFullLocation(testLocation);
 
-        testLocation.getState().setDistricts(Collections.<District>emptyList());
+        testLocation.getState().setDistricts(Collections.<District>emptySet());
         testLocation.getDistrict().setState(null);
 
         Set<ConstraintViolation<TestLocation>> constraintViolations = validator.validate(testLocation);
