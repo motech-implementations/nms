@@ -410,11 +410,17 @@ public class AnmAshaRecord {
         map.put(FlwConstants.CONTACT_NO, getContactNo() == null ? null : Long.parseLong(getContactNo()));
         map.put(FlwConstants.NAME, getName());
         map.put(FlwConstants.DISTRICT_ID, getDistrictId());
+        map.put(FlwConstants.DISTRICT_NAME, getDistrictName());
         map.put(FlwConstants.TALUKA_ID, getTalukaId());
+        map.put(FlwConstants.TALUKA_NAME, getTalukaName());
         map.put(FlwConstants.HEALTH_BLOCK_ID, getHealthBlockId());
+        map.put(FlwConstants.HEALTH_BLOCK_NAME, getHealthBlockName());
         map.put(FlwConstants.PHC_ID, getPhcId());
+        map.put(FlwConstants.PHC_NAME, getPhcName());
         map.put(FlwConstants.SUB_CENTRE_ID, getSubCentreId());
+        map.put(FlwConstants.SUB_CENTRE_NAME, getSubCentreName());
         map.put(FlwConstants.CENSUS_VILLAGE_ID, getVillageId());
+        map.put(FlwConstants.VILLAGE_NAME, getVillageName());
         map.put(FlwConstants.TYPE, getType());
         return map;
     }
