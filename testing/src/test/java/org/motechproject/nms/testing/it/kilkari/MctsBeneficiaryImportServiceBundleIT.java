@@ -1358,7 +1358,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     }
 
     /*
-     * To verify pregnancy record gets created when child record exist with status as deactivated.
+     * Verify correct circle when inserting mothers in state with two districts with each district a different circle
      *
      * https://applab.atlassian.net/browse/NMS-234
      */
