@@ -1,6 +1,6 @@
 package org.motechproject.nms.api.web.contract.kilkari;
 
-import org.motechproject.nms.api.web.contract.LogHelper;
+import org.motechproject.nms.props.service.LogHelper;
 
 import java.util.Set;
 

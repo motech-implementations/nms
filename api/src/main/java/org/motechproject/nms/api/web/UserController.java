@@ -1,7 +1,6 @@
 package org.motechproject.nms.api.web;
 
 import org.motechproject.nms.api.web.contract.FlwUserResponse;
-import org.motechproject.nms.api.web.contract.LogHelper;
 import org.motechproject.nms.api.web.contract.UserResponse;
 import org.motechproject.nms.api.web.contract.kilkari.KilkariUserResponse;
 import org.motechproject.nms.api.web.exception.NotAuthorizedException;
@@ -19,6 +18,7 @@ import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.props.domain.Service;
+import org.motechproject.nms.props.service.LogHelper;
 import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.Language;
 import org.motechproject.nms.region.domain.State;
