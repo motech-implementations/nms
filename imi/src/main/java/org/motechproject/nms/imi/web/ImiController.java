@@ -47,7 +47,7 @@ public class ImiController {
     public static final String IVR_INTERACTION_LOG = "IVR INTERACTION: %s";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ImiController.class);
-    public static final String LOG_RESPONSE_FORMAT = "RESPONSE: %s";
+    public static final String LOG_RESPONSE_FORMAT = "RESPONSE: HTTP %d - %s";
 
     private SettingsFacade settingsFacade;
     private CdrFileService cdrFileService;
@@ -257,7 +257,7 @@ public class ImiController {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ResponseBody
     public BadRequest handleException(NotFoundException e, HttpServletRequest request) {
-        log(String.format(LOG_RESPONSE_FORMAT, request.getRequestURI()), e.getMessage());
+        log(String.format(LOG_RESPONSE_FORMAT, HttpStatus.NOT_FOUND.value(), request.getRequestURI()), e.getMessage());
         return new BadRequest(e.getMessage());
     }
 
@@ -266,7 +266,7 @@ public class ImiController {
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ResponseBody
     public BadRequest handleException(RuntimeException e, HttpServletRequest request) {
-        log(String.format(LOG_RESPONSE_FORMAT, request.getRequestURI()), e.getMessage());
+        log(String.format(LOG_RESPONSE_FORMAT, HttpStatus.INTERNAL_SERVER_ERROR.value(), request.getRequestURI()), e.getMessage());
         return new BadRequest(e.toString());
     }
 
@@ -274,7 +274,7 @@ public class ImiController {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ResponseBody
     public BadRequest handleException(IllegalArgumentException e, HttpServletRequest request) {
-        log(String.format(LOG_RESPONSE_FORMAT, request.getRequestURI()), e.getMessage());
+        log(String.format(LOG_RESPONSE_FORMAT, HttpStatus.BAD_REQUEST.value(), request.getRequestURI()), e.getMessage());
         return new BadRequest(e.getMessage());
     }
 
@@ -286,7 +286,7 @@ public class ImiController {
     @ResponseBody
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public BadRequest handleException(HttpMessageNotReadableException e, HttpServletRequest request) {
-        log(String.format(LOG_RESPONSE_FORMAT, request.getRequestURI()), e.getMessage());
+        log(String.format(LOG_RESPONSE_FORMAT, HttpStatus.BAD_REQUEST.value(), request.getRequestURI()), e.getMessage());
         if (e.getLocalizedMessage().contains(INVALID_STATUS_ENUM)) {
             return new BadRequest("<fileProcessedStatus: Invalid Value>");
         }
@@ -304,7 +304,7 @@ public class ImiController {
     @ResponseBody
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public AggregateBadRequest handleException(InvalidCdrFileException e, HttpServletRequest request) {
-        log(String.format(LOG_RESPONSE_FORMAT, request.getRequestURI()), e.getMessage());
+        log(String.format(LOG_RESPONSE_FORMAT, HttpStatus.BAD_REQUEST.value(), request.getRequestURI()), e.getMessages().toString());
         return new AggregateBadRequest(e.getMessages());
     }
 
@@ -316,7 +316,7 @@ public class ImiController {
     @ResponseBody
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public BadRequest handleException(Exception e, HttpServletRequest request) {
-        log(String.format(LOG_RESPONSE_FORMAT, request.getRequestURI()), e.getMessage());
+        log(String.format(LOG_RESPONSE_FORMAT, HttpStatus.INTERNAL_SERVER_ERROR.value(), request.getRequestURI()), e.getMessage());
         return new BadRequest(e.getMessage());
     }
 }

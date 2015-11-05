@@ -30,7 +30,12 @@ import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
+import org.motechproject.nms.region.service.HealthBlockService;
+import org.motechproject.nms.region.service.HealthFacilityService;
+import org.motechproject.nms.region.service.HealthSubFacilityService;
 import org.motechproject.nms.region.service.LanguageService;
+import org.motechproject.nms.region.service.TalukaService;
+import org.motechproject.nms.region.service.VillageService;
 import org.motechproject.nms.testing.it.api.utils.RequestBuilder;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
@@ -85,7 +90,16 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     TestingService testingService;
     @Inject
     FrontLineWorkerService frontLineWorkerService;
-
+    @Inject
+    TalukaService talukaDataService;
+    @Inject
+    HealthBlockService healthBlockService;
+    @Inject
+    HealthFacilityService healthFacilityService;
+    @Inject
+    HealthSubFacilityService healthSubFacilityService;
+    @Inject
+    VillageService villageService;
     @Inject
     FrontLineWorkerImportService frontLineWorkerImportService;
 
@@ -268,6 +282,24 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
 
         FrontLineWorker flw1 = frontLineWorkerDataService.findByContactNumber(9999999996L);
         assertFLW(flw1, "72185", 9999999996L, "Bishnu Priya Behera", "Koraput", null);
+
+        // verify location data was created on the fly
+        State state = stateDataService.findByCode(1L);
+        District district = districtService.findByStateAndCode(state, 18L);
+        Taluka taluka = talukaDataService.findByDistrictAndCode(district, "111");
+        assertEquals("Taluka", taluka.getName());
+
+        HealthBlock healthBlock = healthBlockService.findByTalukaAndCode(taluka, 222L);
+        assertEquals("HealthBlock", healthBlock.getName());
+
+        HealthFacility healthFacility = healthFacilityService.findByHealthBlockAndCode(healthBlock, 333L);
+        assertEquals("PHC", healthFacility.getName());
+
+        HealthSubFacility healthSubFacility = healthSubFacilityService.findByHealthFacilityAndCode(healthFacility, 444L);
+        assertEquals("SC", healthSubFacility.getName());
+
+        Village village = villageService.findByTalukaAndVcodeAndSvid(taluka, 555L, 0L);
+        assertEquals("Village", village.getName());
     }
 
     /**
@@ -377,7 +409,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     private void assertFLW(FrontLineWorker flw, String mctsFlwId, Long contactNumber, String name, String districtName, String languageLocationCode) {
         assertNotNull(flw);
         assertEquals(mctsFlwId, flw.getMctsFlwId());
-        assertEquals(contactNumber, null != flw.getContactNumber() ? (long) flw.getContactNumber() : null);
+        assertEquals(contactNumber, null != flw.getContactNumber() ? flw.getContactNumber() : null);
         assertEquals(name, flw.getName());
         assertEquals(districtName, null != flw.getDistrict() ? flw.getDistrict().getName() : null);
         assertEquals(languageLocationCode, null != flw.getLanguage() ? flw.getLanguage().getCode() : null);

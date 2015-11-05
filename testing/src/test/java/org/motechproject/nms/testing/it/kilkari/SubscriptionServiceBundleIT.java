@@ -638,7 +638,8 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
         mctsSubscriber.setLastMenstrualPeriod(now.minusDays(90));
         subscriberDataService.create(mctsSubscriber);
-        subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
+        subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh
+                .pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
         mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
 
         Subscription subscription = mctsSubscriber.getSubscriptions().iterator().next();
@@ -890,7 +891,8 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     public void verifyFT160() {
 
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
-        mctsSubscriber.setDateOfBirth(DateTime.now());
+        DateTime currentTime = DateTime.now();
+        mctsSubscriber.setDateOfBirth(currentTime);
         subscriberDataService.create(mctsSubscriber);
 
         subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.childPack(),
@@ -898,7 +900,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         
         // mark subscription as complete
         mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
-        mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(340));
+        mctsSubscriber.setDateOfBirth(currentTime.minusDays(340));
         subscriberService.update(mctsSubscriber);
         
         mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
@@ -906,8 +908,8 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         assertEquals(1, mctsSubscriber.getSubscriptions().size());
         assertEquals(0, mctsSubscriber.getActiveAndPendingSubscriptions().size()); // No active subscription
 
-        DateTime newDob = DateTime.now().minusDays(100);
-        mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(100));
+        DateTime newDob = currentTime.minusDays(100);
+        mctsSubscriber.setDateOfBirth(newDob);
         subscriberService.update(mctsSubscriber);
         // attempt to create subscription to the same pack -- should succeed
         subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.childPack(),
@@ -935,8 +937,8 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         Subscriber subscriber2 = subscriberDataService.findByNumber(1111111122L);
         assertNotNull(subscriber2);
-    } 
-    
+    }
+
     /*
      * To verify that user's subscription should create in pending state
      */

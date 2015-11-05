@@ -53,13 +53,18 @@ public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateSe
     private static final String DOB = "Beneficiary New DOB change";
     private static final String LMP = "Beneficiary New LMP change";
     private static final String MSISDN = "Beneficiary New Mobile no change";
-    private static final String STATE = "StateID";
-    private static final String DISTRICT = "District_ID";
-    private static final String TALUKA = "Taluka_ID";
-    private static final String HEALTH_BLOCK = "HealthBlock_ID";
-    private static final String PHC = "PHC_ID";
-    private static final String SUBCENTRE = "SubCentre_ID";
-    private static final String CENSUS_VILLAGE = "Village_ID";
+    private static final String STATE_ID = "StateID";
+    private static final String DISTRICT_ID = "District_ID";
+    private static final String TALUKA_ID = "Taluka_ID";
+    private static final String TALUKA_NAME = "Taluka_Name";
+    private static final String HEALTH_BLOCK_ID = "HealthBlock_ID";
+    private static final String HEALTH_BLOCK_NAME = "HealthBlock_Name";
+    private static final String PHC_ID = "PHC_ID";
+    private static final String PHC_NAME = "PHC_Name";
+    private static final String SUB_CENTRE_ID = "SubCentre_ID";
+    private static final String SUB_CENTRE_NAME = "SubCentre_Name";
+    private static final String VILLAGE_ID = "Village_ID";
+    private static final String VILLAGE_NAME = "Village_Name";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MctsBeneficiaryUpdateServiceImpl.class);
 
@@ -197,13 +202,18 @@ public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateSe
         mapping.put(STATE_MCTS_ID, new Optional(new GetString()));
         mapping.put(DOB, new Optional(MctsBeneficiaryUtils.DATE_BY_STRING));
         mapping.put(LMP, new Optional(MctsBeneficiaryUtils.DATE_BY_STRING));
-        mapping.put(PHC, new Optional(new GetLong()));
-        mapping.put(SUBCENTRE, new Optional(new GetLong()));
-        mapping.put(CENSUS_VILLAGE, new Optional(new GetLong()));
-        mapping.put(STATE, new Optional(new GetLong()));
-        mapping.put(DISTRICT, new Optional(new GetLong()));
-        mapping.put(TALUKA, new Optional(new GetString()));
-        mapping.put(HEALTH_BLOCK, new Optional(new GetLong()));
+        mapping.put(HEALTH_BLOCK_ID, new Optional(new GetLong()));
+        mapping.put(HEALTH_BLOCK_NAME, new Optional(new GetString()));
+        mapping.put(PHC_ID, new Optional(new GetLong()));
+        mapping.put(PHC_NAME, new Optional(new GetString()));
+        mapping.put(SUB_CENTRE_ID, new Optional(new GetLong()));
+        mapping.put(SUB_CENTRE_NAME, new Optional(new GetString()));
+        mapping.put(STATE_ID, new Optional(new GetLong()));
+        mapping.put(DISTRICT_ID, new Optional(new GetLong()));
+        mapping.put(TALUKA_ID, new Optional(new GetString()));
+        mapping.put(TALUKA_NAME, new Optional(new GetString()));
+        mapping.put(VILLAGE_ID, new Optional(new GetLong()));
+        mapping.put(VILLAGE_NAME, new Optional(new GetString()));
 
         mapping.put(MSISDN, new Optional(MctsBeneficiaryUtils.MSISDN_BY_STRING));
 
@@ -234,9 +244,9 @@ public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateSe
     }
 
     private boolean containsLocationUpdate(Map<String, Object> record) {
-        return ((record.get(STATE) != null) || (record.get(DISTRICT) != null) || (record.get(TALUKA) != null) || //NO CHECKSTYLE BooleanExpressionComplexity
-                (record.get(HEALTH_BLOCK) != null) || (record.get(PHC) != null) || (record.get(SUBCENTRE) != null) ||
-                (record.get(CENSUS_VILLAGE) != null));
+        return ((record.get(STATE_ID) != null) || (record.get(DISTRICT_ID) != null) || (record.get(TALUKA_ID) != null) || //NO CHECKSTYLE BooleanExpressionComplexity
+                (record.get(HEALTH_BLOCK_ID) != null) || (record.get(PHC_ID) != null) || (record.get(SUB_CENTRE_ID) != null) ||
+                (record.get(VILLAGE_ID) != null));
     }
 
 }

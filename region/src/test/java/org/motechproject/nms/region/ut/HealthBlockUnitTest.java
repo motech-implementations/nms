@@ -35,61 +35,39 @@ public class HealthBlockUnitTest {
     @Test
     public void testNameSize() {
         HealthBlock healthBlock = new HealthBlock();
-        healthBlock.setName("AAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBX");
+        healthBlock.setName("sfdsdfewfwefwefewfrweAAAAAAAAAABAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBXdsdsaasadsadasdasdasdasferferferfewrfed");
 
         Set<ConstraintViolation<HealthBlock>> constraintViolations = validator
                 .validateProperty(healthBlock, "name");
 
         assertEquals(1, constraintViolations.size());
-        assertEquals("size must be between 1 and 35", constraintViolations.iterator().next().getMessage());
+        assertEquals("size must be between 1 and 150", constraintViolations.iterator().next().getMessage());
 
         healthBlock.setName("");
 
         constraintViolations = validator.validateProperty(healthBlock, "name");
 
         assertEquals(1, constraintViolations.size());
-        assertEquals("size must be between 1 and 35", constraintViolations.iterator().next().getMessage());
-    }
-
-    @Test
-    public void testRegionalNameNull() {
-        HealthBlock healthBlock = new HealthBlock();
-
-        Set<ConstraintViolation<HealthBlock>> constraintViolations = validator
-                .validateProperty(healthBlock, "regionalName");
-
-        assertEquals(1, constraintViolations.size());
-        assertEquals("may not be null", constraintViolations.iterator().next().getMessage());
+        assertEquals("size must be between 1 and 150", constraintViolations.iterator().next().getMessage());
     }
 
     @Test
     public void testRegionalNameSize() {
         HealthBlock healthBlock = new HealthBlock();
-        healthBlock.setRegionalName("AAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBX");
+        healthBlock.setRegionalName("sfdsdfewfwefwefewfrweAAAAAAAAAABAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBXdsdsaasadsadasdasdasdasferferferfewrfed");
 
         Set<ConstraintViolation<HealthBlock>> constraintViolations = validator
                 .validateProperty(healthBlock, "regionalName");
 
         assertEquals(1, constraintViolations.size());
-        assertEquals("size must be between 1 and 50", constraintViolations.iterator().next().getMessage());
+        assertEquals("size must be between 1 and 150", constraintViolations.iterator().next().getMessage());
 
         healthBlock.setRegionalName("");
 
         constraintViolations = validator.validateProperty(healthBlock, "regionalName");
 
         assertEquals(1, constraintViolations.size());
-        assertEquals("size must be between 1 and 50", constraintViolations.iterator().next().getMessage());
-    }
-
-    @Test
-    public void testHQNull() {
-        HealthBlock healthBlock = new HealthBlock();
-
-        Set<ConstraintViolation<HealthBlock>> constraintViolations = validator
-                .validateProperty(healthBlock, "hq");
-
-        assertEquals(1, constraintViolations.size());
-        assertEquals("may not be null", constraintViolations.iterator().next().getMessage());
+        assertEquals("size must be between 1 and 150", constraintViolations.iterator().next().getMessage());
     }
 
     @Test

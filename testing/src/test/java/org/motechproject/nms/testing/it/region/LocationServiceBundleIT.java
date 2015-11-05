@@ -23,6 +23,7 @@ import org.motechproject.nms.region.repository.HealthSubFacilityDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.repository.TalukaDataService;
 import org.motechproject.nms.region.repository.VillageDataService;
+import org.motechproject.nms.region.service.HealthBlockService;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
@@ -38,6 +39,7 @@ import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(PaxExam.class)
@@ -58,6 +60,9 @@ public class LocationServiceBundleIT extends BasePaxIT {
 
     @Inject
     HealthBlockDataService healthBlockDataService;
+
+    @Inject
+    HealthBlockService healthBlockService;
 
     @Inject
     HealthFacilityTypeDataService healthFacilityTypeDataService;
@@ -274,6 +279,136 @@ public class LocationServiceBundleIT extends BasePaxIT {
         villageDataService.create(otherVillage);
     }
 
+    // Single Taluka Single HB, should find it
+    // State -> District -> Taluka -> HealthBlock(1)
+    @Test
+    public void testFindHealthBlockByTalukaAndCode1() {
+        stateDataService.create(state);
+        districtDataService.create(district);
+        Taluka t = talukaDataService.create(taluka);
+        healthBlockDataService.create(healthBlock);
+
+        HealthBlock hb = healthBlockService.findByTalukaAndCode(t, 1L);
+        assertNotNull(hb);
+        assertEquals(hb.getCode(), healthBlock.getCode());
+    }
+
+    // Multiple, lookup by t(1) and HB(2), should find it
+    // State -> District -> Taluka(1) -> HealthBlock(1)
+    //                   -> Taluka(2) -> HealthBlock(2)
+    @Test
+    public void testFindHealthBlockByTalukaAndCode2() {
+        stateDataService.create(state);
+        district = districtDataService.create(district);
+        Taluka t = talukaDataService.create(taluka);
+        healthBlockDataService.create(healthBlock);
+
+        HealthBlock healthBlock2 = new HealthBlock();
+        healthBlock2.setName("Health Block 2");
+        healthBlock2.setRegionalName("Health Block 2");
+        healthBlock2.setHq("Health Block 2 HQ");
+        healthBlock2.setCode(2L);
+
+        Taluka taluka2 = new Taluka();
+        taluka2.setName("Taluka 2");
+        taluka2.setRegionalName("Taluka 2");
+        taluka2.setIdentity(2);
+        taluka2.setCode("0005");
+        taluka2.setDistrict(district);
+        taluka2.getHealthBlocks().add(healthBlock2);
+
+        taluka2 = talukaDataService.create(taluka2);
+        healthBlockDataService.create(healthBlock2);
+
+        HealthBlock hb = healthBlockService.findByTalukaAndCode(t, 2L);
+        assertNotNull(hb);
+        assertEquals(hb.getCode(), healthBlock2.getCode());
+
+        hb = healthBlockService.findByTalukaAndCode(t, 1L);
+        assertNotNull(hb);
+        assertEquals(hb.getCode(), healthBlock.getCode());
+
+        hb = healthBlockService.findByTalukaAndCode(taluka2, 1L);
+        assertNotNull(hb);
+        assertEquals(hb.getCode(), healthBlock.getCode());
+
+        hb = healthBlockService.findByTalukaAndCode(taluka2, 2L);
+        assertNotNull(hb);
+        assertEquals(hb.getCode(), healthBlock2.getCode());
+    }
+
+    // Two HB in Single Taluka, lookup by t(1) hb(1), should find it
+    // State -> District -> Taluka -> HealthBlock(1)
+    //                             -> HealthBlock(2)
+    @Test
+    public void testFindHealthBlockByTalukaAndCode3() {
+        stateDataService.create(state);
+        districtDataService.create(district);
+        Taluka t = talukaDataService.create(taluka);
+        healthBlockDataService.create(healthBlock);
+
+        HealthBlock healthBlock2 = new HealthBlock();
+        healthBlock2.setName("Health Block 2");
+        healthBlock2.setRegionalName("Health Block 2");
+        healthBlock2.setHq("Health Block 2 HQ");
+        healthBlock2.setCode(2L);
+        healthBlock2.setTaluka(t);
+
+        healthBlockDataService.create(healthBlock2);
+
+        HealthBlock hb = healthBlockService.findByTalukaAndCode(t, 1L);
+        assertNotNull(hb);
+        assertEquals(hb.getCode(), healthBlock.getCode());
+
+        hb = healthBlockService.findByTalukaAndCode(t, 2L);
+        assertNotNull(hb);
+        assertEquals(hb.getCode(), healthBlock2.getCode());
+    }
+    // Multiple, lookup by t(1), hb(2) should not find it
+    // State(1) -> District -> Taluka(1) -> HealthBlock(1)
+    // State(2) -> District -> Taluka(2) -> HealthBlock(2)
+    @Test
+    public void testFindHealthBlockByTalukaAndCode4() {
+        stateDataService.create(state);
+        districtDataService.create(district);
+        Taluka t = talukaDataService.create(taluka);
+        healthBlockDataService.create(healthBlock);
+
+        HealthBlock healthBlock2 = new HealthBlock();
+        healthBlock2.setName("Health Block 2");
+        healthBlock2.setRegionalName("Health Block 2");
+        healthBlock2.setHq("Health Block 2 HQ");
+        healthBlock2.setCode(2L);
+
+        Taluka taluka2 = new Taluka();
+        taluka2.setName("Taluka 2");
+        taluka2.setRegionalName("Taluka 2");
+        taluka2.setIdentity(2);
+        taluka2.setCode("0005");
+        taluka2.getHealthBlocks().add(healthBlock2);
+
+        District district2 = new District();
+        district2.setName("District 2");
+        district2.setRegionalName("District 2");
+        district2.setCode(2L);
+        district2.getTalukas().add(taluka2);
+
+        State state2 = new State();
+        state2.setName("State 2");
+        state2.setCode(2L);
+        state2.getDistricts().add(district2);
+
+        stateDataService.create(state2);
+        districtDataService.create(district2);
+        Taluka t2 = talukaDataService.create(taluka2);
+        healthBlockDataService.create(healthBlock2);
+
+        HealthBlock hb = healthBlockService.findByTalukaAndCode(t, 2L);
+        assertNull(hb);
+
+        hb = healthBlockService.findByTalukaAndCode(t2, 1L);
+        assertNull(hb);
+    }
 
     @Test
     @Ignore // TODO: Remove once https://applab.atlassian.net/browse/MOTECH-1678 is resolved

@@ -36,50 +36,39 @@ public class VillageUnitTest {
     @Test
     public void testNameSize() {
         Village village = new Village();
-        village.setName("AAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBX");
+        village.setName("AAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBXAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBXJGDJFGEJWGFWEJHGFJWEHGFJWEGFJHEGfdewfwefwefeweeee");
 
         Set<ConstraintViolation<Village>> constraintViolations = validator
                 .validateProperty(village, "name");
 
         assertEquals(1, constraintViolations.size());
-        assertEquals("size must be between 1 and 50", constraintViolations.iterator().next().getMessage());
+        assertEquals("size must be between 1 and 250", constraintViolations.iterator().next().getMessage());
 
         village.setName("");
 
         constraintViolations = validator.validateProperty(village, "name");
 
         assertEquals(1, constraintViolations.size());
-        assertEquals("size must be between 1 and 50", constraintViolations.iterator().next().getMessage());
-    }
-
-    @Test
-    public void testRegionalNameNull() {
-        Village village = new Village();
-
-        Set<ConstraintViolation<Village>> constraintViolations = validator
-                .validateProperty(village, "regionalName");
-
-        assertEquals(1, constraintViolations.size());
-        assertEquals("may not be null", constraintViolations.iterator().next().getMessage());
+        assertEquals("size must be between 1 and 250", constraintViolations.iterator().next().getMessage());
     }
 
     @Test
     public void testRegionalNameToLong() {
         Village village = new Village();
-        village.setRegionalName("AAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBX");
+        village.setRegionalName("AAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBXAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBAAAAAAAAAABBBBBBBBBBXJGDJFGEJWGFWEJHGFJWEHGFJWEGFJHEGfdewfwefwefeweeee");
 
         Set<ConstraintViolation<Village>> constraintViolations = validator
                 .validateProperty(village, "regionalName");
 
         assertEquals(1, constraintViolations.size());
-        assertEquals("size must be between 1 and 50", constraintViolations.iterator().next().getMessage());
+        assertEquals("size must be between 1 and 250", constraintViolations.iterator().next().getMessage());
 
         village.setRegionalName("");
 
         constraintViolations = validator.validateProperty(village, "regionalName");
 
         assertEquals(1, constraintViolations.size());
-        assertEquals("size must be between 1 and 50", constraintViolations.iterator().next().getMessage());
+        assertEquals("size must be between 1 and 250", constraintViolations.iterator().next().getMessage());
     }
 
     @Test

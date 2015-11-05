@@ -45,12 +45,12 @@ public class HealthFacilityServiceImpl implements HealthFacilityService {
     }
 
     @Override
-    public void create(HealthFacility healthFacility) {
-        dataService.create(healthFacility);
+    public HealthFacility create(HealthFacility healthFacility) {
+        return dataService.create(healthFacility);
     }
 
     @Override
-    public void update(HealthFacility healthFacility) {
-        dataService.update(healthFacility);
+    public HealthFacility update(HealthFacility healthFacility) {
+        return dataService.update(healthFacility);
     }
 }

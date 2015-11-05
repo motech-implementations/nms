@@ -66,14 +66,20 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     private static final String ABORTION = "Abortion";
     private static final String STILLBIRTH = "Outcome_Nos";
     private static final String DEATH = "Entry_Type";
-    private static final String STATE = "StateID";
-    private static final String DISTRICT = "District_ID";
-    private static final String TALUKA = "Taluka_ID";
-    private static final String HEALTH_BLOCK = "HealthBlock_ID";
-    private static final String PHC = "PHC_ID";
-    private static final String SUBCENTRE = "SubCentre_ID";
-    private static final String CENSUS_VILLAGE = "Village_ID";
-    private static final String NON_CENSUS_VILLAGE = "SVID";
+    private static final String STATE_ID = "StateID";
+    private static final String DISTRICT_ID = "District_ID";
+    private static final String DISTRICT_NAME = "District_Name";
+    private static final String TALUKA_ID = "Taluka_ID";
+    private static final String TALUKA_NAME = "Taluka_Name";
+    private static final String HEALTH_BLOCK_ID = "HealthBlock_ID";
+    private static final String HEALTH_BLOCK_NAME = "HealthBlock_Name";
+    private static final String PHC_ID = "PHC_ID";
+    private static final String PHC_NAME = "PHC_Name";
+    private static final String SUB_CENTRE_ID = "SubCentre_ID";
+    private static final String SUB_CENTRE_NAME = "SubCentre_Name";
+    private static final String CENSUS_VILLAGE_ID = "Village_ID";
+    private static final String VILLAGE_NAME = "Village_Name";
+    private static final String NON_CENSUS_VILLAGE_ID = "SVID";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MctsBeneficiaryImportServiceImpl.class);
 
@@ -100,7 +106,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     /**
      * Expected file format:
      * - any number of empty lines
-     * - header lines in the following format:  State Name : ACTUAL STATE NAME
+     * - header lines in the following format:  State Name : ACTUAL STATE_ID NAME
      * - one empty line
      * - CSV data (tab-separated)
      */
@@ -300,14 +306,26 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
     private Map<String, CellProcessor> getBeneficiaryLocationMapping() {
         Map<String, CellProcessor> mapping = new HashMap<>();
-        mapping.put(STATE, new Optional(new GetLong()));
-        mapping.put(DISTRICT, new Optional(new GetLong()));
-        mapping.put(TALUKA, new Optional(new GetString()));
-        mapping.put(HEALTH_BLOCK, new Optional(new GetLong()));
-        mapping.put(PHC, new Optional(new GetLong()));
-        mapping.put(SUBCENTRE, new Optional(new GetLong()));
-        mapping.put(CENSUS_VILLAGE, new Optional(new GetLong()));
-        mapping.put(NON_CENSUS_VILLAGE, new Optional(new GetLong()));
+        mapping.put(STATE_ID, new Optional(new GetLong()));
+
+        mapping.put(DISTRICT_ID, new Optional(new GetLong()));
+        mapping.put(DISTRICT_NAME, new Optional(new GetString()));
+
+        mapping.put(TALUKA_ID, new Optional(new GetString()));
+        mapping.put(TALUKA_NAME, new Optional(new GetString()));
+
+        mapping.put(HEALTH_BLOCK_ID, new Optional(new GetLong()));
+        mapping.put(HEALTH_BLOCK_NAME, new Optional(new GetString()));
+
+        mapping.put(PHC_ID, new Optional(new GetLong()));
+        mapping.put(PHC_NAME, new Optional(new GetString()));
+
+        mapping.put(SUB_CENTRE_ID, new Optional(new GetLong()));
+        mapping.put(SUB_CENTRE_NAME, new Optional(new GetString()));
+
+        mapping.put(CENSUS_VILLAGE_ID, new Optional(new GetLong()));
+        mapping.put(NON_CENSUS_VILLAGE_ID, new Optional(new GetLong()));
+        mapping.put(VILLAGE_NAME, new Optional(new GetString()));
 
         return mapping;
     }

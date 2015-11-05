@@ -5,6 +5,6 @@ import org.motechproject.nms.region.domain.Taluka;
 
 public interface TalukaService {
     Taluka findByDistrictAndCode(District district, String code);
-    void create(Taluka taluka);
-    void update(Taluka taluka);
+    Taluka create(Taluka taluka);
+    Taluka update(Taluka taluka);
 }
