@@ -21,7 +21,9 @@ import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.service.CircleService;
 import org.motechproject.nms.region.service.DistrictService;
+import org.motechproject.nms.region.service.StateService;
 import org.motechproject.nms.testing.it.api.utils.RequestBuilder;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
@@ -61,11 +63,15 @@ public class LanguageLocationCodesImportServiceBundleIT extends BasePaxIT {
     @Inject
     StateDataService stateDataService;
     @Inject
+    StateService stateService;
+    @Inject
     DistrictDataService districtDataService;
     @Inject
     DistrictService districtService;
     @Inject
     CircleDataService circleDataService;
+    @Inject
+    CircleService circleService;
     @Inject
     LanguageLocationImportService languageLocationImportService;
 
@@ -84,45 +90,41 @@ public class LanguageLocationCodesImportServiceBundleIT extends BasePaxIT {
         Language lang2 = new Language("L2", "Lang 2");
         languageDataService.create(lang2);
 
-        state1 = createState(1L, "State 1");
-        District district11 = createDistrict(state1, 11L, "District 11", null);
-        District district12 = createDistrict(state1, 12L, "District 12", null);
-        state1.getDistricts().addAll(Arrays.asList(district11, district12));
-        stateDataService.create(state1);
-
-        State state2 = createState(2L, "State 2");
-        District district21 = createDistrict(state2, 21L, "District 21", null);
-        state2.getDistricts().addAll(Collections.singletonList(district21));
-        districtDataService.create(district21);
-
-        state3 = createState(3L, "State 3");
-        District district31 = createDistrict(state3, 31L, "District 31", null);
-        District district32 = createDistrict(state3, 32L, "District 32", lang1);
-        state3.getDistricts().addAll(Arrays.asList(district31, district32));
-        stateDataService.create(state3);
-
-        State state4 = createState(4L, "State 4");
-        District district41 = createDistrict(state4, 41L, "District 41", lang1);
-        District district42 = createDistrict(state4, 42L, "District 42", null);
-        state4.getDistricts().addAll(Arrays.asList(district41, district42));
-        stateDataService.create(state4);
-
         Circle circle1 = createCircle("Circle 1");
-        circle1.getStates().addAll(Arrays.asList(state1, state2));
         circleDataService.create(circle1);
 
         Circle circle2 = createCircle("Circle 2");
-        circle2.getStates().addAll(Collections.singletonList(state3));
         circleDataService.create(circle2);
 
         Circle circle3 = createCircle("Circle 3");
-        circle3.getStates().addAll(Collections.singletonList(state3));
         circleDataService.create(circle3);
 
         Circle circle4 = createCircle("Circle 4");
         circle4.setDefaultLanguage(lang1);
-        circle4.getStates().addAll(Collections.singletonList(state4));
         circleDataService.create(circle4);
+
+        state1 = createState(1L, "State 1");
+        District district11 = createDistrict(state1, 11L, "District 11", null, circle1);
+        District district12 = createDistrict(state1, 12L, "District 12", null, circle1);
+        state1.getDistricts().addAll(Arrays.asList(district11, district12));
+        stateDataService.create(state1);
+
+        State state2 = createState(2L, "State 2");
+        District district21 = createDistrict(state2, 21L, "District 21", null, circle1);
+        state2.getDistricts().addAll(Collections.singletonList(district21));
+        districtDataService.create(district21);
+
+        state3 = createState(3L, "State 3");
+        District district31 = createDistrict(state3, 31L, "District 31", null, circle2);
+        District district32 = createDistrict(state3, 32L, "District 32", lang1, circle3);
+        state3.getDistricts().addAll(Arrays.asList(district31, district32));
+        stateDataService.create(state3);
+
+        State state4 = createState(4L, "State 4");
+        District district41 = createDistrict(state4, 41L, "District 41", lang1, circle4);
+        District district42 = createDistrict(state4, 42L, "District 42", null, circle4);
+        state4.getDistricts().addAll(Arrays.asList(district41, district42));
+        stateDataService.create(state4);
     }
 
     @Rule
@@ -168,13 +170,6 @@ public class LanguageLocationCodesImportServiceBundleIT extends BasePaxIT {
     @Test
     public void testImportWhenStateAndDistrictAreNull() throws Exception {
         Reader reader = createReaderWithHeaders("L1,Lang 1,Circle 1,,,N");
-        exception.expect(CsvImportDataException.class);
-        languageLocationImportService.importData(reader);
-    }
-
-    @Test
-    public void testImportWhenDistrictNotContainedInCircle() throws Exception {
-        Reader reader = createReaderWithHeaders("L1,Lang 1,Circle 1,State 3,District 31,N");
         exception.expect(CsvImportDataException.class);
         languageLocationImportService.importData(reader);
     }
@@ -314,23 +309,11 @@ public class LanguageLocationCodesImportServiceBundleIT extends BasePaxIT {
                 "district_ft_518.csv");
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
 
-        // Import circle
-        response = importCsvFileForLocationData("circle", "circle_ft_518.csv");
-        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
-
-        Circle ncrCircle = circleDataService.findByName("DELHI-NCR");
-        Circle upWestCircle = circleDataService.findByName("UP-WEST");
-
         State upState = stateDataService.findByName("UTTAR PRADESH");
         State delhiState = stateDataService.findByName("DELHI");
 
-        assertNotNull(ncrCircle);
-        assertNotNull(upWestCircle);
         assertNotNull(upState);
         assertNotNull(delhiState);
-        // assert circle for default LLC
-        assertNull(ncrCircle.getDefaultLanguage());
-        assertNull(upWestCircle.getDefaultLanguage());
 
         // fetch district and assert
         District agraDistrict=districtService.findByStateAndName(upState, "AGRA");
@@ -348,8 +331,8 @@ public class LanguageLocationCodesImportServiceBundleIT extends BasePaxIT {
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
 
         // fetch circle and LLc data again
-        ncrCircle = circleDataService.findByName("DELHI-NCR");
-        upWestCircle = circleDataService.findByName("UP-WEST");
+        Circle ncrCircle = circleDataService.findByName("DELHI-NCR");
+        Circle upWestCircle = circleDataService.findByName("UP-WEST");
 
         agraDistrict = districtService.findByStateAndName(upState, "AGRA");
         aligarhDistrict = districtService
@@ -375,31 +358,16 @@ public class LanguageLocationCodesImportServiceBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT519() throws InterruptedException, IOException {
-        HttpResponse response = null;
-        // Import state
-        response = importCsvFileForLocationData("state", "state_ft_518.csv");
-        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        stateDataService.evictAllCache();
 
-        // Import circle
-        response = importCsvFileForLocationData("circle", "circle_ft_518.csv");
-        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        // Circle 1 circle have two states
+        State state1 = stateDataService.findByCode(1L);
+        State state2 = stateDataService.findByCode(2L);
+        Circle circle = circleDataService.findByName("Circle 1");
 
-        Circle ncrCircle = circleDataService.findByName("DELHI-NCR");
-        Circle upWestCircle = circleDataService.findByName("UP-WEST");
-
-        State upState = stateDataService.findByName("UTTAR PRADESH");
-        State delhiState = stateDataService.findByName("DELHI");
-
-        assertNotNull(ncrCircle);
-        assertNotNull(upWestCircle);
-        assertNotNull(upState);
-        assertNotNull(delhiState);
-
-        // DELHI-NCR circle have two states
-        Circle circle = circleDataService.findByName("DELHI-NCR");
-        assertTrue(circle.getStates().size() > 1);
-        assertTrue(circle.getStates().contains(delhiState));
-        assertTrue(circle.getStates().contains(upState));
+        assertTrue(stateService.getAllInCircle(circle).size() > 1);
+        assertTrue(stateService.getAllInCircle(circle).contains(state1));
+        assertTrue(stateService.getAllInCircle(circle).contains(state2));
     }
 
     /**
@@ -407,29 +375,15 @@ public class LanguageLocationCodesImportServiceBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT520() throws InterruptedException, IOException {
-        HttpResponse response = null;
-        // Import state
-        response = importCsvFileForLocationData("state", "state_ft_518.csv");
-        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        stateDataService.evictAllCache();
 
-        // Import circle
-        response = importCsvFileForLocationData("circle", "circle_ft_518.csv");
-        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        State state = stateDataService.findByCode(3L);
+        Circle circleA = circleDataService.findByName("Circle 2");
+        Circle circleB = circleDataService.findByName("Circle 3");
 
-        Circle ncrCircle = circleDataService.findByName("DELHI-NCR");
-        Circle upWestCircle = circleDataService.findByName("UP-WEST");
-
-        State upState = stateDataService.findByName("UTTAR PRADESH");
-        State delhiState = stateDataService.findByName("DELHI");
-
-        assertNotNull(ncrCircle);
-        assertNotNull(upWestCircle);
-        assertNotNull(upState);
-        assertNotNull(delhiState);
-
-        // UP state mapped to two circles
-        assertTrue(upState.getCircles().size() > 1);
-        assertTrue(upState.getCircles().contains(ncrCircle));
-        assertTrue(upState.getCircles().contains(upWestCircle));
+        // state3 mapped to two circles
+        assertTrue(circleService.getAllInState(state).size() > 1);
+        assertTrue(circleService.getAllInState(state).contains(circleA));
+        assertTrue(circleService.getAllInState(state).contains(circleB));
     }
 }

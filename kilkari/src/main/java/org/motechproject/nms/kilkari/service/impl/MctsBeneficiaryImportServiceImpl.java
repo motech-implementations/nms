@@ -7,7 +7,6 @@ import org.motechproject.nms.csv.utils.ConstraintViolationUtils;
 import org.motechproject.nms.csv.utils.CsvImporterBuilder;
 import org.motechproject.nms.csv.utils.CsvMapImporter;
 import org.motechproject.nms.csv.utils.GetInstanceByString;
-import org.motechproject.nms.csv.utils.GetLong;
 import org.motechproject.nms.csv.utils.GetString;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.domain.MctsChild;
@@ -79,7 +78,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     /**
      * Expected file format:
      * - any number of empty lines
-     * - header lines in the following format:  State Name : ACTUAL STATE NAME
+     * - header lines in the following format:  State Name : ACTUAL STATE_ID NAME
      * - one empty line
      * - CSV data (tab-separated)
      */
@@ -290,22 +289,10 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         return true;
     }
 
-    private Map<String, CellProcessor> getBeneficiaryLocationMapping() {
-        Map<String, CellProcessor> mapping = new HashMap<>();
-        mapping.put(KilkariConstants.STATE, new Optional(new GetLong()));
-        mapping.put(KilkariConstants.DISTRICT, new Optional(new GetLong()));
-        mapping.put(KilkariConstants.TALUKA, new Optional(new GetString()));
-        mapping.put(KilkariConstants.HEALTH_BLOCK, new Optional(new GetLong()));
-        mapping.put(KilkariConstants.PHC, new Optional(new GetLong()));
-        mapping.put(KilkariConstants.SUBCENTRE, new Optional(new GetLong()));
-        mapping.put(KilkariConstants.CENSUS_VILLAGE, new Optional(new GetLong()));
-        mapping.put(KilkariConstants.NON_CENSUS_VILLAGE, new Optional(new GetLong()));
-
-        return mapping;
-    }
-
     private Map<String, CellProcessor> getMotherProcessorMapping() {
-        Map<String, CellProcessor> mapping = getBeneficiaryLocationMapping();
+        Map<String, CellProcessor> mapping = new HashMap<>();
+
+        MctsBeneficiaryUtils.getBeneficiaryLocationMapping(mapping);
 
         mapping.put(KilkariConstants.BENEFICIARY_ID, new GetInstanceByString<MctsMother>() {
             @Override
@@ -355,7 +342,9 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     }
 
     private Map<String, CellProcessor> getChildProcessorMapping() {
-        Map<String, CellProcessor> mapping = getBeneficiaryLocationMapping();
+        Map<String, CellProcessor> mapping = new HashMap<>();
+
+        MctsBeneficiaryUtils.getBeneficiaryLocationMapping(mapping);
 
         mapping.put(KilkariConstants.BENEFICIARY_ID, new GetInstanceByString<MctsChild>() {
             @Override

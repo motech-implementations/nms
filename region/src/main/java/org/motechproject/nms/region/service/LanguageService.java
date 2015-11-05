@@ -29,7 +29,7 @@ public interface LanguageService {
      * @param language
      */
     @InstanceLifecycleListener({InstanceLifecycleListenerType.POST_CREATE, InstanceLifecycleListenerType.PRE_DELETE,
-            InstanceLifecycleListenerType.PRE_STORE})
+            InstanceLifecycleListenerType.PRE_STORE} )
     void broadcastCacheEvictMessage(Language language);
 
     /**

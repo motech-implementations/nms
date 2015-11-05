@@ -67,8 +67,6 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
-import org.springframework.transaction.TransactionStatus;
-import org.springframework.transaction.support.TransactionCallbackWithoutResult;
 
 import javax.inject.Inject;
 import java.io.IOException;
@@ -83,6 +81,8 @@ import java.util.regex.Pattern;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createDistrict;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createState;
 
 
 /**
@@ -209,10 +209,15 @@ public class UserControllerBundleIT extends BasePaxIT {
         FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 1111111111L);
         frontLineWorkerService.add(flw);
 
+        Circle circle = new Circle("AA");
+        circle.setDefaultLanguage(language);
+        circleDataService.create(circle);
+
         District district = new District();
         district.setName("District 1");
         district.setRegionalName("District 1");
         district.setLanguage(language);
+        district.setCircle(circle);
         district.setCode(1L);
 
         State state = new State();
@@ -224,11 +229,6 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         deployedServiceDataService.create(new DeployedService(state, Service.MOBILE_ACADEMY));
         deployedServiceDataService.create(new DeployedService(state, Service.MOBILE_KUNJI));
-
-        Circle circle = new Circle("AA");
-        circle.getStates().add(state);
-        circle.setDefaultLanguage(language);
-        circleDataService.create(circle);
 
         ServiceUsageCap serviceUsageCap = new ServiceUsageCap(null, Service.MOBILE_KUNJI, 3600);
         serviceUsageCapDataService.create(serviceUsageCap);
@@ -363,10 +363,14 @@ public class UserControllerBundleIT extends BasePaxIT {
         Language language = new Language("34", "Language From Whitelisted State");
         languageDataService.create(language);
 
+        Circle circle = new Circle("AA");
+        circleDataService.create(circle);
+
         District district = new District();
         district.setName("District 1");
         district.setRegionalName("District 1");
         district.setLanguage(language);
+        district.setCircle(circle);
         district.setCode(1L);
 
         State whitelist = new State();
@@ -379,9 +383,6 @@ public class UserControllerBundleIT extends BasePaxIT {
         deployedServiceDataService.create(new DeployedService(whitelist, Service.MOBILE_ACADEMY));
         deployedServiceDataService.create(new DeployedService(whitelist, Service.MOBILE_KUNJI));
 
-        Circle circle = new Circle("AA");
-        circle.getStates().add(whitelist);
-        circleDataService.create(circle);
 
         whitelistStateDataService.create(new WhitelistState(whitelist));
 
@@ -402,18 +403,15 @@ public class UserControllerBundleIT extends BasePaxIT {
         circleDataService.create(circle);
 
         // Calling these will make sure the districts exist and will map the districts' language to their state
-        rh.newDelhiDistrict();
-        rh.mysuruDistrict();
+        District d = rh.newDelhiDistrict();
+        d.setCircle(circle);
+        circle.getDistricts().add(d);
+        districtDataService.update(d);
 
-        //TODO: remove this when https://applab.atlassian.net/browse/MOTECH-1679 is fixed
-        circleDataService.doInTransaction(new TransactionCallbackWithoutResult() {
-            @Override
-            protected void doInTransactionWithoutResult(TransactionStatus transactionStatus) {
-                circle.getStates().add(rh.delhiState());
-                circle.getStates().add(rh.karnatakaState());
-                circleDataService.update(circle);
-            }
-        });
+        d = rh.mysuruDistrict();
+        d.setCircle(circle);
+        circle.getDistricts().add(d);
+        districtDataService.update(d);
 
         deployedServiceDataService.create(new DeployedService(rh.delhiState(), Service.MOBILE_KUNJI));
 
@@ -421,11 +419,18 @@ public class UserControllerBundleIT extends BasePaxIT {
     }
 
     private void createCircleWithSingleLanguage() {
+        Language language = new Language("99", "Papiamento");
+        languageDataService.create(language);
+
+        Circle circle = new Circle("AA");
+        circle.setDefaultLanguage(language);
+        circleDataService.create(circle);
 
         District district = new District();
         district.setName("District 1");
         district.setRegionalName("District 1");
         district.setCode(1L);
+        district.setCircle(circle);
 
         State state = new State();
         state.setName("State 1");
@@ -433,14 +438,6 @@ public class UserControllerBundleIT extends BasePaxIT {
         state.getDistricts().add(district);
 
         stateDataService.create(state);
-
-        Language language = new Language("99", "Papiamento");
-        languageDataService.create(language);
-
-        Circle circle = new Circle("AA");
-        circle.setDefaultLanguage(language);
-        circle.getStates().add(state);
-        circleDataService.create(circle);
 
         nationalDefaultLanguageDataService.create(new NationalDefaultLanguage(language));
     }
@@ -530,7 +527,7 @@ public class UserControllerBundleIT extends BasePaxIT {
             userResponse.setLanguageLocationCode(locationCode);
         }
         if (allowedLanguageLocations != null) {
-            userResponse.setAllowedLanguageLocationCodes(Sets.newTreeSet(allowedLanguageLocations));
+            userResponse.setAllowedLanguageLocationCodes(Sets.newLinkedHashSet(allowedLanguageLocations));
         }
         if (currentUsageInPulses != null) {
             userResponse.setCurrentUsageInPulses(currentUsageInPulses);
@@ -575,11 +572,15 @@ public class UserControllerBundleIT extends BasePaxIT {
         Language language = new Language("10", "English");
         languageDataService.create(language);
 
+        Circle circle = new Circle("AA");
+        circleDataService.create(circle);
+
         District district = new District();
         district.setName("District 1");
         district.setRegionalName("District 1");
         district.setLanguage(language);
         district.setCode(1L);
+        district.setCircle(circle);
 
         State state = new State();
         state.setName("State 1");
@@ -587,10 +588,6 @@ public class UserControllerBundleIT extends BasePaxIT {
         state.getDistricts().add(district);
 
         stateDataService.create(state);
-
-        Circle circle = new Circle("AA");
-        circle.getStates().add(state);
-        circleDataService.create(circle);
 
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
         flw.setLanguage(language);
@@ -940,7 +937,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         String expectedJsonResponse = createFlwUserResponseJson(
                 rh.hindiLanguage().getCode(),  //defaultLanguageLocationCode
                 null,  //locationCode
-                Arrays.asList(rh.hindiLanguage().getCode(), rh.kannadaLanguage()
+                Arrays.asList(rh.tamilLanguage().getCode(), rh.hindiLanguage().getCode(), rh.kannadaLanguage()
                         .getCode()), // allowedLanguageLocationCodes
                 0L,    //currentUsageInPulses
                 0L,    //endOfUsagePromptCounter
@@ -1052,7 +1049,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         String expectedJsonResponse = createFlwUserResponseJson(
                 rh.hindiLanguage().getCode(),  //defaultLanguageLocationCode
                 null,  //locationCode
-                Arrays.asList(rh.hindiLanguage().getCode(), rh.kannadaLanguage()
+                Arrays.asList(rh.tamilLanguage().getCode(), rh.hindiLanguage().getCode(), rh.kannadaLanguage()
                         .getCode()), // allowedLanguageLocationCodes
                 0L,    //currentUsageInPulses
                 0L,    //endOfUsagePromptCounter
@@ -1491,22 +1488,21 @@ public class UserControllerBundleIT extends BasePaxIT {
     @Test
     public void testCircleMixedDeployedMutipleStates() throws IOException, InterruptedException {
 
-        // create non-whitelist state
-        State nws = new State();
-        nws.setName("Non-whitelist state in delhi");
-        nws.setCode(7L);
+        Circle delhiCircle = circleDataService.create(new Circle("DE"));
+
+        State nws = createState(7L, "Non-whitelist state in delhi");
         stateDataService.create(nws);
+        District d1 = createDistrict(nws, 1L, "Circle", delhiCircle);
+        delhiCircle.getDistricts().add(d1);
+        districtDataService.create(d1);
 
         // create whitelist state
-        State ws = new State();
-        ws.setName("Whitelist state in delhi");
-        ws.setCode(8L);
+        State ws = createState(8L, "Whitelist state in delhi");
         stateDataService.create(ws);
-
-        // create and update circle
-        Circle delhiCircle = circleDataService.create(new Circle("DE"));
-        delhiCircle.setStates(new ArrayList<>(Arrays.asList(nws, ws)));
-        circleDataService.update(delhiCircle);
+        District d2 = createDistrict(ws, 2L, "Circle", delhiCircle);
+        ws.getDistricts().add(d2);
+        delhiCircle.getDistricts().add(d2);
+        districtDataService.create(d2);
 
         // update deployment
         deployedServiceDataService.create(new DeployedService(ws, Service.KILKARI));
@@ -1537,22 +1533,23 @@ public class UserControllerBundleIT extends BasePaxIT {
     @Test
     public void testUndeployedCircleMutipleStates() throws IOException, InterruptedException {
 
-        // create non-whitelist state
-        State nws = new State();
-        nws.setName("Non-whitelist state in delhi");
-        nws.setCode(7L);
+        Circle delhiCircle = circleDataService.create(new Circle("DE"));
+
+        State nws = createState(7L, "Non-whitelist state in delhi");
         stateDataService.create(nws);
+        District d1 = createDistrict(nws, 1L, "Circle", delhiCircle);
+        delhiCircle.getDistricts().add(d1);
+        districtDataService.create(d1);
 
         // create whitelist state
-        State ws = new State();
-        ws.setName("Whitelist state in delhi");
-        ws.setCode(8L);
+        State ws = createState(8L, "Whitelist state in delhi");
         stateDataService.create(ws);
+        District d2 = createDistrict(ws, 2L, "Circle", delhiCircle);
+        delhiCircle.getDistricts().add(d2);
+        districtDataService.create(d2);
 
-        // create and update circle
-        Circle delhiCircle = circleDataService.create(new Circle("DE"));
-        delhiCircle.setStates(new ArrayList<>(Arrays.asList(nws, ws)));
-        circleDataService.update(delhiCircle);
+//        delhiCircle.getDistricts().addAll(Arrays.asList(d1, d2));
+//        circleDataService.update(delhiCircle);
 
         // no deployment whitelist created
 
@@ -1747,12 +1744,10 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         // Delhi circle has a state already, add one more
         Circle delhiCircle = rh.delhiCircle();
-        State s = new State();
-        s.setName("New State in delhi");
-        s.setCode(7L);
-        stateDataService.create(s);
-        delhiCircle.getStates().add(s);
-        circleDataService.update(delhiCircle);
+
+        State nws = createState(7L, "New State in delhi");
+        stateDataService.create(nws);
+        districtDataService.create(createDistrict(nws, 1L, "Circle", delhiCircle));
 
         // Create the whitelist number entry in whitelist table
         WhitelistEntry entry = new WhitelistEntry(WHITELIST_CONTACT_NUMBER,
@@ -1864,12 +1859,10 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         // Delhi circle has a state already, add one more
         Circle delhiCircle = rh.delhiCircle();
-        State s = new State();
-        s.setName("New State in delhi");
-        s.setCode(7L);
-        stateDataService.create(s);
-        delhiCircle.getStates().add(s);
-        circleDataService.update(delhiCircle);
+        State nws = createState(7L, "New State in delhi");
+        stateDataService.create(nws);
+        districtDataService.create(createDistrict(nws, 1L, "Circle", delhiCircle));
+
 
         // Deploy the service in user's state
         deployedServiceDataService.create(new DeployedService(whitelistState,
@@ -1974,12 +1967,9 @@ public class UserControllerBundleIT extends BasePaxIT {
         // karnataka circle has a state already, add one more
 
         Circle karnatakaCircle = rh.karnatakaCircle();
-        State s = new State();
-        s.setName("New State in Karnataka");
-        s.setCode(7L);
+        State s = createState(7L, "New State in Karnataka");
         stateDataService.create(s);
-        karnatakaCircle.getStates().add(s);
-        circleDataService.update(karnatakaCircle);
+        districtDataService.create(createDistrict(s, 1L, "Circle", karnatakaCircle));
 
         // Create the whitelist number entry in whitelist table
         WhitelistEntry entry = new WhitelistEntry(WHITELIST_CONTACT_NUMBER,
@@ -2029,11 +2019,8 @@ public class UserControllerBundleIT extends BasePaxIT {
     public void verifyFT346() throws InterruptedException, IOException {
         setupWhiteListData();
 
-        Circle delhiCircle = circleDataService.findByName(rh.delhiCircle()
-                .getName());
+        Circle delhiCircle = circleDataService.findByName(rh.delhiCircle().getName());
         assertNotNull(delhiCircle);
-        assertNotNull(delhiCircle.getStates());
-        assertEquals(delhiCircle.getStates().size(), 1);
 
         // Create the whitelist number entry in whitelist table
         WhitelistEntry entry = new WhitelistEntry(WHITELIST_CONTACT_NUMBER,
@@ -2064,11 +2051,8 @@ public class UserControllerBundleIT extends BasePaxIT {
     public void verifyFT347() throws InterruptedException, IOException {
         setupWhiteListData();
 
-        Circle delhiCircle = circleDataService.findByName(rh.delhiCircle()
-                .getName());
+        Circle delhiCircle = circleDataService.findByName(rh.delhiCircle().getName());
         assertNotNull(delhiCircle);
-        assertNotNull(delhiCircle.getStates());
-        assertEquals(delhiCircle.getStates().size(), 1);
 
         // Deploy the service in user's state
         deployedServiceDataService.create(new DeployedService(whitelistState,
@@ -2201,12 +2185,10 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         // Delhi circle has a state already, add one more
         Circle delhiCircle = rh.delhiCircle();
-        State s = new State();
-        s.setName("New State in delhi");
-        s.setCode(7L);
+        State s = createState(7L, "New State in delhi");
         stateDataService.create(s);
-        delhiCircle.getStates().add(s);
-        circleDataService.update(delhiCircle);
+        districtDataService.create(createDistrict(s, 1L, "Circle", delhiCircle));
+
 
         // Create the whitelist number entry in whitelist table
         WhitelistEntry entry = new WhitelistEntry(WHITELIST_CONTACT_NUMBER,
@@ -2340,12 +2322,9 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         // Delhi circle has a state already, add one more
         Circle delhiCircle = rh.delhiCircle();
-        State s = new State();
-        s.setName("New State in delhi");
-        s.setCode(7L);
+        State s = createState(7L, "New State in delhi");
         stateDataService.create(s);
-        delhiCircle.getStates().add(s);
-        circleDataService.update(delhiCircle);
+        districtDataService.create(createDistrict(s, 1L, "Circle", delhiCircle));
 
         // Deploy the service in user's state
         deployedServiceDataService.create(new DeployedService(whitelistState,
@@ -2476,12 +2455,10 @@ public class UserControllerBundleIT extends BasePaxIT {
         // karnataka circle has a state already, add one more
 
         Circle karnatakaCircle = rh.karnatakaCircle();
-        State s = new State();
-        s.setName("New State in Karnataka");
-        s.setCode(7L);
+        State s = createState(7L, "New State in Karnataka");
         stateDataService.create(s);
-        karnatakaCircle.getStates().add(s);
-        circleDataService.update(karnatakaCircle);
+        districtDataService.create(createDistrict(s, 1L, "Circle", karnatakaCircle));
+
 
         // Create the whitelist number entry in whitelist table
         WhitelistEntry entry = new WhitelistEntry(WHITELIST_CONTACT_NUMBER,
@@ -2531,11 +2508,8 @@ public class UserControllerBundleIT extends BasePaxIT {
     public void verifyFT451() throws InterruptedException, IOException {
         setupWhiteListData();
 
-        Circle delhiCircle = circleDataService.findByName(rh.delhiCircle()
-                .getName());
+        Circle delhiCircle = circleDataService.findByName(rh.delhiCircle().getName());
         assertNotNull(delhiCircle);
-        assertNotNull(delhiCircle.getStates());
-        assertEquals(delhiCircle.getStates().size(), 1);
 
         // Create the whitelist number entry in whitelist table
         WhitelistEntry entry = new WhitelistEntry(WHITELIST_CONTACT_NUMBER,
@@ -2566,11 +2540,8 @@ public class UserControllerBundleIT extends BasePaxIT {
     public void verifyFT452() throws InterruptedException, IOException {
         setupWhiteListData();
 
-        Circle delhiCircle = circleDataService.findByName(rh.delhiCircle()
-                .getName());
+        Circle delhiCircle = circleDataService.findByName(rh.delhiCircle().getName());
         assertNotNull(delhiCircle);
-        assertNotNull(delhiCircle.getStates());
-        assertEquals(delhiCircle.getStates().size(), 1);
 
         // Deploy the service in user's state
         deployedServiceDataService.create(new DeployedService(whitelistState,
@@ -2672,7 +2643,7 @@ public class UserControllerBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT329_427() throws IOException, InterruptedException {
-        State s = rh.delhiState();
+        rh.delhiState();
         rh.delhiCircle();
 
         deployedServiceDataService.create(new DeployedService(rh.delhiState(), Service.MOBILE_KUNJI));
@@ -2682,8 +2653,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         frontLineWorkerService.add(flw);
 
         // Set maxallowedUsageInPulses to 3800
-        ServiceUsageCap serviceUsageCap = new ServiceUsageCap(s,
-                Service.MOBILE_KUNJI, 3800);
+        ServiceUsageCap serviceUsageCap = new ServiceUsageCap(rh.delhiState(), Service.MOBILE_KUNJI, 3800);
         serviceUsageCapDataService.create(serviceUsageCap);
 
         CallDetailRecord cdr = new CallDetailRecord();
@@ -3649,8 +3619,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         String expectedJsonResponse = createFlwUserResponseJson(
                 rh.hindiLanguage().getCode(),  //defaultLanguageLocationCode
                 null,  //locationCode
-                Arrays.asList(rh.hindiLanguage().getCode(), rh.kannadaLanguage()
-                        .getCode()), // allowedLanguageLocationCodes
+                Arrays.asList(rh.tamilLanguage().getCode(), rh.hindiLanguage().getCode(), rh.kannadaLanguage().getCode()), // allowedLanguageLocationCodes
                 0L,    //currentUsageInPulses
                 0L,    //endOfUsagePromptCounter
                 false, //welcomePromptFlag
@@ -3853,9 +3822,11 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         rh.newDelhiDistrict();
         Circle c = rh.delhiCircle();
-        rh.bangaloreDistrict();
-        c.getStates().add(rh.karnatakaState());
-        circleDataService.update(c);
+
+        State s = createState(7L, "New State in delhi");
+        stateDataService.create(s);
+        districtDataService.create(createDistrict(s, 1L, "Circle", rh.tamilLanguage(), c));
+
         // service deployed only in delhi state
         deployedServiceDataService.create(new DeployedService(rh.delhiState(),
                 Service.MOBILE_ACADEMY));
@@ -3918,9 +3889,11 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         rh.newDelhiDistrict();
         Circle c = rh.delhiCircle();
-        rh.bangaloreDistrict();
-        c.getStates().add(rh.karnatakaState());
-        circleDataService.update(c);
+
+        State s = createState(7L, "New State in karnataka");
+        stateDataService.create(s);
+        districtDataService.create(createDistrict(s, 1L, "Circle", rh.tamilLanguage(), c));
+
         // service deployed only in delhi state
         deployedServiceDataService.create(new DeployedService(rh.delhiState(),
                 Service.MOBILE_ACADEMY));
@@ -3983,9 +3956,10 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         rh.newDelhiDistrict();
         Circle c = rh.delhiCircle();
-        rh.bangaloreDistrict();
-        c.getStates().add(rh.karnatakaState());
-        circleDataService.update(c);
+
+        State s = createState(7L, "New State in karnataka");
+        stateDataService.create(s);
+        districtDataService.create(createDistrict(s, 1L, "Circle", rh.tamilLanguage(), c));
 
         // invoke get user detail API
         HttpGet httpGet = createHttpGet(true, "mobilekunji", // service

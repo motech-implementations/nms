@@ -15,14 +15,20 @@ public final class KilkariConstants {
     public static final String ABORTION = "Abortion";
     public static final String STILLBIRTH = "Outcome_Nos";
     public static final String DEATH = "Entry_Type";
-    public static final String STATE = "StateID";
-    public static final String DISTRICT = "District_ID";
-    public static final String TALUKA = "Taluka_ID";
-    public static final String HEALTH_BLOCK = "HealthBlock_ID";
-    public static final String PHC = "PHC_ID";
-    public static final String SUBCENTRE = "SubCentre_ID";
-    public static final String CENSUS_VILLAGE = "Village_ID";
-    public static final String NON_CENSUS_VILLAGE = "SVID";
+    public static final String STATE_ID = "StateID";
+    public static final String DISTRICT_ID = "District_ID";
+    public static final String DISTRICT_NAME = "District_Name";
+    public static final String TALUKA_ID = "Taluka_ID";
+    public static final String TALUKA_NAME = "Taluka_Name";
+    public static final String HEALTH_BLOCK_ID = "HealthBlock_ID";
+    public static final String HEALTH_BLOCK_NAME = "HealthBlock_Name";
+    public static final String PHC_ID = "PHC_ID";
+    public static final String PHC_NAME = "PHC_Name";
+    public static final String SUB_CENTRE_ID = "SubCentre_ID";
+    public static final String SUB_CENTRE_NAME = "SubCentre_Name";
+    public static final String CENSUS_VILLAGE_ID = "Village_ID";
+    public static final String VILLAGE_NAME = "Village_Name";
+    public static final String NON_CENSUS_VILLAGE_ID = "SVID";
 
     private KilkariConstants() {
     }

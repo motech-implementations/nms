@@ -3,7 +3,10 @@ package org.motechproject.nms.kilkari.service.impl;
 
 import org.motechproject.nms.csv.exception.CsvImportDataException;
 import org.motechproject.nms.csv.utils.ConstraintViolationUtils;
+import org.motechproject.nms.csv.utils.GetLong;
+import org.motechproject.nms.csv.utils.GetString;
 import org.motechproject.nms.kilkari.domain.MctsBeneficiary;
+import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.HealthBlock;
 import org.motechproject.nms.region.domain.HealthFacility;
@@ -12,6 +15,8 @@ import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.domain.Village;
 import org.motechproject.nms.region.exception.InvalidLocationException;
+import org.supercsv.cellprocessor.Optional;
+import org.supercsv.cellprocessor.ift.CellProcessor;
 
 import javax.validation.ConstraintViolation;
 import java.util.Map;
@@ -29,6 +34,30 @@ public final class MctsBeneficiaryUtils {
     private static final String NON_CENSUS_VILLAGE = "SVID";
 
     private MctsBeneficiaryUtils() {
+    }
+
+
+    public static void getBeneficiaryLocationMapping(Map<String, CellProcessor> mapping) {
+        mapping.put(KilkariConstants.STATE_ID, new Optional(new GetLong()));
+
+        mapping.put(KilkariConstants.DISTRICT_ID, new Optional(new GetLong()));
+        mapping.put(KilkariConstants.DISTRICT_NAME, new Optional(new GetString()));
+
+        mapping.put(KilkariConstants.TALUKA_ID, new Optional(new GetString()));
+        mapping.put(KilkariConstants.TALUKA_NAME, new Optional(new GetString()));
+
+        mapping.put(KilkariConstants.CENSUS_VILLAGE_ID, new Optional(new GetLong()));
+        mapping.put(KilkariConstants.NON_CENSUS_VILLAGE_ID, new Optional(new GetLong()));
+        mapping.put(KilkariConstants.VILLAGE_NAME, new Optional(new GetString()));
+
+        mapping.put(KilkariConstants.PHC_ID, new Optional(new GetLong()));
+        mapping.put(KilkariConstants.PHC_NAME, new Optional(new GetString()));
+
+        mapping.put(KilkariConstants.HEALTH_BLOCK_ID, new Optional(new GetLong()));
+        mapping.put(KilkariConstants.HEALTH_BLOCK_NAME, new Optional(new GetString()));
+
+        mapping.put(KilkariConstants.SUB_CENTRE_ID, new Optional(new GetLong()));
+        mapping.put(KilkariConstants.SUB_CENTRE_NAME, new Optional(new GetString()));
     }
 
     public static void setLocationFields(Map<String, Object> locations, MctsBeneficiary beneficiary) throws InvalidLocationException {

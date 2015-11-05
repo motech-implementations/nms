@@ -66,8 +66,6 @@ public class TestingServiceImpl implements TestingService {
         "NMS_KK_SUMMARY_RECORDS__TRASH_STATUSSTATS",
         "nms_call_content",
         "nms_call_content__TRASH",
-        "nms_states_join_circles",
-        "nms_states_join_circles__TRASH",
         "nms_subscription_errors",
         "nms_subscription_errors__TRASH",
         "nms_subscription_pack_messages",

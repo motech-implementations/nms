@@ -46,12 +46,12 @@ public class TalukaServiceImpl implements TalukaService {
     }
 
     @Override
-    public void create(Taluka taluka) {
-        dataService.create(taluka);
+    public Taluka create(Taluka taluka) {
+        return dataService.create(taluka);
     }
 
     @Override
-    public void update(Taluka taluka) {
-        dataService.update(taluka);
+    public Taluka update(Taluka taluka) {
+        return dataService.update(taluka);
     }
 }

@@ -240,13 +240,19 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
     private Map<String, Object> toMap(ChildRecord childRecord) {
         Map<String, Object> map = new HashMap<>();
 
-        map.put(KilkariConstants.STATE, childRecord.getStateID());
-        map.put(KilkariConstants.DISTRICT, childRecord.getDistrictId());
-        map.put(KilkariConstants.TALUKA, childRecord.getTalukaId());
-        map.put(KilkariConstants.HEALTH_BLOCK, childRecord.getHealthBlockId());
-        map.put(KilkariConstants.PHC, childRecord.getPhcId());
-        map.put(KilkariConstants.SUBCENTRE, childRecord.getSubCentreId());
-        map.put(KilkariConstants.CENSUS_VILLAGE, childRecord.getVillageId());
+        map.put(KilkariConstants.STATE_ID, childRecord.getStateID());
+        map.put(KilkariConstants.DISTRICT_ID, childRecord.getDistrictId());
+        map.put(KilkariConstants.DISTRICT_NAME, childRecord.getDistrictName());
+        map.put(KilkariConstants.TALUKA_ID, childRecord.getTalukaId());
+        map.put(KilkariConstants.TALUKA_NAME, childRecord.getTalukaName());
+        map.put(KilkariConstants.HEALTH_BLOCK_ID, childRecord.getHealthBlockId());
+        map.put(KilkariConstants.HEALTH_BLOCK_NAME, childRecord.getHealthBlockName());
+        map.put(KilkariConstants.PHC_ID, childRecord.getPhcId());
+        map.put(KilkariConstants.PHC_NAME, childRecord.getPhcName());
+        map.put(KilkariConstants.SUB_CENTRE_ID, childRecord.getSubCentreId());
+        map.put(KilkariConstants.SUB_CENTRE_NAME, childRecord.getSubCentreName());
+        map.put(KilkariConstants.CENSUS_VILLAGE_ID, childRecord.getVillageId());
+        map.put(KilkariConstants.VILLAGE_NAME, childRecord.getVillageName());
 
         map.put(KilkariConstants.BENEFICIARY_NAME, childRecord.getName());
 
@@ -265,13 +271,20 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
 
     private Map<String, Object> toMap(MotherRecord motherRecord) {
         Map<String, Object> map = new HashMap<>();
-        map.put(KilkariConstants.STATE, motherRecord.getStateId());
-        map.put(KilkariConstants.DISTRICT, motherRecord.getDistrictId());
-        map.put(KilkariConstants.TALUKA, motherRecord.getTalukaId());
-        map.put(KilkariConstants.HEALTH_BLOCK, motherRecord.getHealthBlockId());
-        map.put(KilkariConstants.PHC, motherRecord.getPhcid());
-        map.put(KilkariConstants.SUBCENTRE, motherRecord.getSubCentreid());
-        map.put(KilkariConstants.CENSUS_VILLAGE, motherRecord.getVillageId());
+        map.put(KilkariConstants.STATE_ID, motherRecord.getStateId());
+        map.put(KilkariConstants.DISTRICT_ID, motherRecord.getDistrictId());
+        map.put(KilkariConstants.DISTRICT_NAME, motherRecord.getDistrictName());
+        map.put(KilkariConstants.TALUKA_ID, motherRecord.getTalukaId());
+        map.put(KilkariConstants.TALUKA_NAME, motherRecord.getTalukaName());
+        map.put(KilkariConstants.HEALTH_BLOCK_ID, motherRecord.getHealthBlockId());
+        map.put(KilkariConstants.HEALTH_BLOCK_NAME, motherRecord.getHealthBlockName());
+        map.put(KilkariConstants.PHC_ID, motherRecord.getPhcid());
+        map.put(KilkariConstants.PHC_NAME, motherRecord.getPhcName());
+        map.put(KilkariConstants.SUB_CENTRE_ID, motherRecord.getSubCentreid());
+        map.put(KilkariConstants.SUB_CENTRE_NAME, motherRecord.getSubCentreName());
+        map.put(KilkariConstants.CENSUS_VILLAGE_ID, motherRecord.getVillageId());
+        map.put(KilkariConstants.VILLAGE_NAME, motherRecord.getVillageName());
+
         map.put(KilkariConstants.BENEFICIARY_ID, mctsBeneficiaryValueProcessor.getOrCreateMotherInstance(motherRecord.getIdNo()));
         map.put(KilkariConstants.BENEFICIARY_NAME, motherRecord.getName());
         map.put(KilkariConstants.MSISDN, mctsBeneficiaryValueProcessor.getMsisdnByString(motherRecord.getWhomPhoneNo()));

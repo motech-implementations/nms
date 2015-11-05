@@ -53,7 +53,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
     /*
         Expected file format:
         * any number of empty lines
-        * first non blank line to contain state name in the following format:  State Name : ACTUAL STATE NAME
+        * first non blank line to contain state name in the following format:  State Name : ACTUAL STATE_ID NAME
         * any number of additional header lines
         * one empty line
         * CSV data (tab-separated)
@@ -86,7 +86,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
     public void importFrontLineWorker(Map<String, Object> record, State state) throws InvalidLocationException {
         FrontLineWorker flw = flwFromRecord(record, state);
 
-        record.put(FlwConstants.STATE, state.getCode());
+        record.put(FlwConstants.STATE_ID, state.getCode());
         Map<String, Object> location = locationService.getLocations(record);
 
         if (flw == null) {
@@ -209,11 +209,11 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
     }
 
     private void setFrontLineWorkerLocation(FrontLineWorker flw, Map<String, Object> locations) throws InvalidLocationException {
-        if (locations.get(FlwConstants.STATE) == null && locations.get(FlwConstants.DISTRICT_ID) == null) {
+        if (locations.get(FlwConstants.STATE_ID) == null && locations.get(FlwConstants.DISTRICT_ID) == null) {
             throw new InvalidLocationException("Missing mandatory state and district fields");
         }
 
-        if (locations.get(FlwConstants.STATE) == null) {
+        if (locations.get(FlwConstants.STATE_ID) == null) {
             throw new InvalidLocationException("Missing mandatory state field");
         }
 
@@ -221,13 +221,13 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
             throw new InvalidLocationException("Missing mandatory district field");
         }
 
-        flw.setState((State) locations.get(FlwConstants.STATE));
+        flw.setState((State) locations.get(FlwConstants.STATE_ID));
         flw.setDistrict((District) locations.get(FlwConstants.DISTRICT_ID));
-        flw.setTaluka((Taluka) locations.get(FlwConstants.TALUKA));
-        flw.setHealthBlock((HealthBlock) locations.get(FlwConstants.HEALTH_BLOCK));
-        flw.setHealthFacility((HealthFacility) locations.get(FlwConstants.PHC));
-        flw.setHealthSubFacility((HealthSubFacility) locations.get(FlwConstants.SUBCENTRE));
-        flw.setVillage((Village) locations.get(FlwConstants.CENSUS_VILLAGE + FlwConstants.NON_CENSUS_VILAGE));
+        flw.setTaluka((Taluka) locations.get(FlwConstants.TALUKA_ID));
+        flw.setHealthBlock((HealthBlock) locations.get(FlwConstants.HEALTH_BLOCK_ID));
+        flw.setHealthFacility((HealthFacility) locations.get(FlwConstants.PHC_ID));
+        flw.setHealthSubFacility((HealthSubFacility) locations.get(FlwConstants.SUB_CENTRE_ID));
+        flw.setVillage((Village) locations.get(FlwConstants.CENSUS_VILLAGE_ID + FlwConstants.NON_CENSUS_VILLAGE_ID));
     }
 
     private Map<String, CellProcessor> getProcessorMapping() {
@@ -235,13 +235,28 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
         mapping.put(FlwConstants.ID, new GetString());
         mapping.put(FlwConstants.CONTACT_NO, new GetLong());
         mapping.put(FlwConstants.NAME, new GetString());
+
+        mapping.put(FlwConstants.STATE_ID, new Optional(new GetLong()));
+
         mapping.put(FlwConstants.DISTRICT_ID, new Optional(new GetLong()));
-        mapping.put(FlwConstants.TALUKA, new Optional(new GetString()));
-        mapping.put(FlwConstants.HEALTH_BLOCK, new Optional(new GetLong()));
-        mapping.put(FlwConstants.PHC, new Optional(new GetLong()));
-        mapping.put(FlwConstants.SUBCENTRE, new Optional(new GetLong()));
-        mapping.put(FlwConstants.CENSUS_VILLAGE, new Optional(new GetLong()));
-        mapping.put(FlwConstants.NON_CENSUS_VILAGE, new Optional(new GetLong()));
+        mapping.put(FlwConstants.DISTRICT_NAME, new Optional(new GetString()));
+
+        mapping.put(FlwConstants.TALUKA_ID, new Optional(new GetString()));
+        mapping.put(FlwConstants.TALUKA_NAME, new Optional(new GetString()));
+
+        mapping.put(FlwConstants.HEALTH_BLOCK_ID, new Optional(new GetLong()));
+        mapping.put(FlwConstants.HEALTH_BLOCK_NAME, new Optional(new GetString()));
+
+        mapping.put(FlwConstants.PHC_ID, new Optional(new GetLong()));
+        mapping.put(FlwConstants.PHC_NAME, new Optional(new GetString()));
+
+        mapping.put(FlwConstants.SUB_CENTRE_ID, new Optional(new GetLong()));
+        mapping.put(FlwConstants.SUB_CENTRE_NAME, new Optional(new GetString()));
+
+        mapping.put(FlwConstants.CENSUS_VILLAGE_ID, new Optional(new GetLong()));
+        mapping.put(FlwConstants.NON_CENSUS_VILLAGE_ID, new Optional(new GetLong()));
+        mapping.put(FlwConstants.VILLAGE_NAME, new Optional(new GetString()));
+
         mapping.put(FlwConstants.TYPE, new Optional(new GetString()));
 
         return mapping;

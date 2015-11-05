@@ -169,11 +169,11 @@ public class MctsWsImportServiceImplTest {
         assertEquals(id.toString(), flwpMap.get(FlwConstants.ID));
         assertEquals(Long.valueOf("48" + id), flwpMap.get(FlwConstants.CONTACT_NO));
         assertEquals("AnmAsha " + id, flwpMap.get(FlwConstants.NAME));
-        assertEquals("Taluka " + id, flwpMap.get(FlwConstants.TALUKA));
-        assertEquals(id + 1, flwpMap.get(FlwConstants.HEALTH_BLOCK));
-        assertEquals(id + 2, flwpMap.get(FlwConstants.PHC));
-        assertEquals(id + 3, flwpMap.get(FlwConstants.SUBCENTRE));
-        assertEquals(id + 4, flwpMap.get(FlwConstants.CENSUS_VILLAGE));
+        assertEquals("Taluka " + id, flwpMap.get(FlwConstants.TALUKA_ID));
+        assertEquals(id + 1, flwpMap.get(FlwConstants.HEALTH_BLOCK_ID));
+        assertEquals(id + 2, flwpMap.get(FlwConstants.PHC_ID));
+        assertEquals(id + 3, flwpMap.get(FlwConstants.SUB_CENTRE_ID));
+        assertEquals(id + 4, flwpMap.get(FlwConstants.CENSUS_VILLAGE_ID));
         assertEquals("Type " + id, flwpMap.get(FlwConstants.TYPE));
     }
 
@@ -237,13 +237,13 @@ public class MctsWsImportServiceImplTest {
     }
 
     private void verifyChild(Map<String, Object> record, long id, long stateId) {
-        assertEquals(stateId, record.get(KilkariConstants.STATE));
-        assertEquals(stateId + 1, record.get(KilkariConstants.DISTRICT));
-        assertEquals("Taluka " + id, record.get(KilkariConstants.TALUKA));
-        assertEquals(id + 1, record.get(KilkariConstants.HEALTH_BLOCK));
-        assertEquals(id + 2, record.get(KilkariConstants.PHC));
-        assertEquals(id + 3 , record.get(KilkariConstants.SUBCENTRE));
-        assertEquals(id + 4, record.get(KilkariConstants.CENSUS_VILLAGE));
+        assertEquals(stateId, record.get(KilkariConstants.STATE_ID));
+        assertEquals(stateId + 1, record.get(KilkariConstants.DISTRICT_ID));
+        assertEquals("Taluka " + id, record.get(KilkariConstants.TALUKA_ID));
+        assertEquals(id + 1, record.get(KilkariConstants.HEALTH_BLOCK_ID));
+        assertEquals(id + 2, record.get(KilkariConstants.PHC_ID));
+        assertEquals(id + 3 , record.get(KilkariConstants.SUB_CENTRE_ID));
+        assertEquals(id + 4, record.get(KilkariConstants.CENSUS_VILLAGE_ID));
         assertEquals("Child " + id, record.get(KilkariConstants.BENEFICIARY_NAME));
         assertEquals(Long.valueOf("48" + id), record.get(KilkariConstants.MSISDN));
         assertEquals(today.toDateTime(new LocalTime(10, (int) id)), record.get(KilkariConstants.DOB));
@@ -297,13 +297,13 @@ public class MctsWsImportServiceImplTest {
     }
 
     private void verifyMother(Map<String, Object> record, long id, long stateId) {
-        assertEquals(stateId, record.get(KilkariConstants.STATE));
-        assertEquals(stateId + 1, record.get(KilkariConstants.DISTRICT));
-        assertEquals("Taluka " + id, record.get(KilkariConstants.TALUKA));
-        assertEquals(id + 1, record.get(KilkariConstants.HEALTH_BLOCK));
-        assertEquals(id + 2, record.get(KilkariConstants.PHC));
-        assertEquals(id + 3, record.get(KilkariConstants.SUBCENTRE));
-        assertEquals(id + 4, record.get(KilkariConstants.CENSUS_VILLAGE));
+        assertEquals(stateId, record.get(KilkariConstants.STATE_ID));
+        assertEquals(stateId + 1, record.get(KilkariConstants.DISTRICT_ID));
+        assertEquals("Taluka " + id, record.get(KilkariConstants.TALUKA_ID));
+        assertEquals(id + 1, record.get(KilkariConstants.HEALTH_BLOCK_ID));
+        assertEquals(id + 2, record.get(KilkariConstants.PHC_ID));
+        assertEquals(id + 3, record.get(KilkariConstants.SUB_CENTRE_ID));
+        assertEquals(id + 4, record.get(KilkariConstants.CENSUS_VILLAGE_ID));
 
         MctsMother mctsMother = (MctsMother) record.get(KilkariConstants.BENEFICIARY_ID);
         assertEquals(String.valueOf(id), mctsMother.getBeneficiaryId());
