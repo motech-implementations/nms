@@ -2,6 +2,9 @@ package org.motechproject.nms.mcts.service.impl;
 
 import org.apache.commons.lang.time.StopWatch;
 import org.joda.time.LocalDate;
+import org.motechproject.alerts.contract.AlertService;
+import org.motechproject.alerts.domain.AlertStatus;
+import org.motechproject.alerts.domain.AlertType;
 import org.motechproject.nms.flw.exception.FlwImportException;
 import org.motechproject.nms.flw.service.FrontLineWorkerImportService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
@@ -35,6 +38,7 @@ import java.util.Map;
 public class MctsWsImportServiceImpl implements MctsWsImportService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MctsWsImportServiceImpl.class);
+    public static final String MCTS_WEB_SERVICE = "MCTS Web Service";
 
     @Autowired
     private FrontLineWorkerImportService frontLineWorkerImportService;
@@ -51,6 +55,8 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
     @Autowired
     private MctsBeneficiaryImportService mctsBeneficiaryImportService;
 
+    @Autowired
+    private AlertService alertService;
 
     @Override
     public void importFromMcts(List<Long> stateIds, LocalDate referenceDate, URL endpoint) {
@@ -101,8 +107,10 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
 
             } catch (MctsWebServiceException e) {
                 LOGGER.error("Cannot read children data from {} state.", stateId, e);
+                alertService.create(MCTS_WEB_SERVICE, "MCTS Web Service Child Import", e.getMessage(), AlertType.CRITICAL, AlertStatus.NEW, 0, null);
             } catch (MctsInvalidResponseStructureException e) {
                 LOGGER.error("Cannot read children data from {} state. Response Deserialization Error", stateId, e);
+                alertService.create(MCTS_WEB_SERVICE, "MCTS Web Service Child Import", e.getMessage(), AlertType.CRITICAL, AlertStatus.NEW, 0, null);
             }
         }
 
@@ -154,8 +162,12 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
 
             } catch (MctsWebServiceException e) {
                 LOGGER.error("Cannot read mothers data from {} state.", stateId, e);
+                alertService.create(MCTS_WEB_SERVICE, "MCTS Web Service Mother Import", e
+                        .getMessage(), AlertType.CRITICAL, AlertStatus.NEW, 0, null);
             } catch (MctsInvalidResponseStructureException e) {
                 LOGGER.error("Cannot read mothers data from {} state. Response Deserialization Error", stateId, e);
+                alertService.create(MCTS_WEB_SERVICE, "MCTS Web Service Mother Import", e
+                        .getMessage(), AlertType.CRITICAL, AlertStatus.NEW, 0, null);
             }
         }
 
@@ -190,8 +202,12 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
 
             } catch (MctsWebServiceException e) {
                 LOGGER.error("Cannot read anm asha data from {} state.", stateId, e);
+                alertService.create(MCTS_WEB_SERVICE, "MCTS Web Service FLW Import", e
+                        .getMessage(), AlertType.CRITICAL, AlertStatus.NEW, 0, null);
             } catch (MctsInvalidResponseStructureException e) {
                 LOGGER.error("Cannot read anm asha data from {} state. Response Deserialization Error", stateId, e);
+                alertService.create(MCTS_WEB_SERVICE, "MCTS Web Service FLW Import", e
+                        .getMessage(), AlertType.CRITICAL, AlertStatus.NEW, 0, null);
             }
         }
 

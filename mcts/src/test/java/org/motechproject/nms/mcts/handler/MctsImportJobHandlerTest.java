@@ -44,6 +44,7 @@ public class MctsImportJobHandlerTest {
 
     @Test
     public void shouldScheduleCronJobOnInit() {
+        when(settingsFacade.getProperty(Constants.DAYS_TO_PULL)).thenReturn("1");
         when(settingsFacade.getProperty(Constants.MCTS_SYNC_CRON)).thenReturn("0 0 16 * * ? *");
 
         mctsImportJobHandler.initImportJob();
@@ -57,6 +58,7 @@ public class MctsImportJobHandlerTest {
     }
 
     public void shouldNotScheduleJobWhenNoCronInSettings() {
+        when(settingsFacade.getProperty(Constants.DAYS_TO_PULL)).thenReturn("1");
         when(settingsFacade.getProperty(Constants.MCTS_SYNC_CRON)).thenReturn("");
 
         mctsImportJobHandler.initImportJob();
@@ -66,6 +68,7 @@ public class MctsImportJobHandlerTest {
 
     @Test(expected = MctsImportConfigurationException.class)
     public void shouldThrowExceptionOnInvalidCron() {
+        when(settingsFacade.getProperty(Constants.DAYS_TO_PULL)).thenReturn("1");
         when(settingsFacade.getProperty(Constants.MCTS_SYNC_CRON)).thenReturn("whatever");
         try {
             mctsImportJobHandler.initImportJob();
@@ -81,6 +84,7 @@ public class MctsImportJobHandlerTest {
         try {
             TimeFaker.fakeToday(today);
 
+            when(settingsFacade.getProperty(Constants.DAYS_TO_PULL)).thenReturn("1");
             when(settingsFacade.getProperty(Constants.MCTS_LOCATIONS)).thenReturn("4,15,51,2");
             when(settingsFacade.getProperty(Constants.MCTS_ENDPOINT)).thenReturn("http://localhost:9090/test.svc");
 

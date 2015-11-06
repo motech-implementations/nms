@@ -26,4 +26,6 @@
     <osgi:reference id="mctsBeneficiaryImportService"
                     interface="org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService"/>
 
+    <osgi:reference id="alertsService" interface="org.motechproject.alerts.contract.AlertService" />
+
 </beans>
