@@ -1,4 +1,4 @@
-package org.motechproject.nms.api.web.contract;
+package org.motechproject.nms.props.service;
 
 import org.apache.commons.lang3.StringUtils;
 

@@ -1,6 +1,5 @@
 package org.motechproject.nms.api.web;
 
-import org.motechproject.nms.api.web.contract.LogHelper;
 import org.motechproject.nms.api.web.contract.kilkari.CallDataRequest;
 import org.motechproject.nms.api.web.contract.kilkari.InboxCallDetailsRequest;
 import org.motechproject.nms.api.web.contract.kilkari.InboxResponse;
@@ -21,6 +20,7 @@ import org.motechproject.nms.kilkari.service.InboxService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.domain.Service;
+import org.motechproject.nms.props.service.LogHelper;
 import org.motechproject.nms.props.service.PropertyService;
 import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.Language;
