@@ -66,7 +66,8 @@ public class MctsImportJobHandler {
 
         List<Long> stateIds = getStateIds();
         URL endpoint = getEndpointUrl();
-        LocalDate referenceDate = DateUtil.today().minusDays(1);
+        int daysToPull = getDaysToPull();
+        LocalDate referenceDate = DateUtil.today().minusDays(daysToPull);
 
         if (stateIds.isEmpty()) {
             LOGGER.warn("No states configured for import, not doing anything");
@@ -75,6 +76,21 @@ public class MctsImportJobHandler {
         }
     }
 
+    private int getDaysToPull() {
+        int daysToPull;
+        String daysToPullValue = settingsFacade.getProperty(Constants.DAYS_TO_PULL);
+        try {
+            daysToPull = Integer.parseInt(daysToPullValue);
+        } catch (NumberFormatException e) {
+            throw new MctsImportConfigurationException("Malformed days to pull configured: " + daysToPullValue, e);
+        }
+
+        if (daysToPull > 7 || daysToPull < 0) {
+            throw new MctsImportConfigurationException("Malformed days to pull configured: " + daysToPull);
+        }
+
+        return daysToPull;
+    }
 
     private List<Long> getStateIds() {
         String locationProp = settingsFacade.getProperty(Constants.MCTS_LOCATIONS);

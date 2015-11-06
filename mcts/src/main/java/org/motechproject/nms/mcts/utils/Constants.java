@@ -10,6 +10,8 @@ public final class Constants {
     public static final String MCTS_LOCATIONS = "mcts.state_ids";
     public static final String MCTS_SYNC_CRON = "mcts.sync.cron";
     public static final String MCTS_ENDPOINT = "mcts.endpointUrl";
+    public static final String DAYS_TO_PULL = "mcts.days_to_pull";
+
     /**
      * Events
      */
