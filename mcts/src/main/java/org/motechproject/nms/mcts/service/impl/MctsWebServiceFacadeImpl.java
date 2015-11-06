@@ -5,7 +5,7 @@ import org.motechproject.nms.mcts.contract.AnmAshaDataSet;
 import org.motechproject.nms.mcts.contract.ChildrenDataSet;
 import org.motechproject.nms.mcts.contract.MothersDataSet;
 import org.motechproject.nms.mcts.exception.MctsInvalidResponseStructureException;
-import org.motechproject.nms.mcts.exception.MctsWebServiceExeption;
+import org.motechproject.nms.mcts.exception.MctsWebServiceException;
 import org.motechproject.nms.mcts.service.MctsWebServiceFacade;
 import org.motechproject.nms.mcts.soap.DS_GetAnmAshaDataResponseDS_GetAnmAshaDataResult;
 import org.motechproject.nms.mcts.soap.DS_GetChildDataResponseDS_GetChildDataResult;
@@ -46,7 +46,7 @@ public class MctsWebServiceFacadeImpl implements MctsWebServiceFacade {
             result = dataService.DS_GetChildData(settingsFacade.getProperty(Constants.MCTS_USER_ID), settingsFacade.getProperty(Constants.MCTS_PASSWORD),
                     from.toString(DATE_FORMAT), to.toString(DATE_FORMAT), stateId.toString());
         } catch (RemoteException e) {
-            throw new MctsWebServiceExeption(String.format("Cannot read children data from %s state. Remote Server Error", stateId), e);
+            throw new MctsWebServiceException(String.format("Cannot read children data from %s state. Remote Server Error", stateId), e);
         }
 
         try {
@@ -66,7 +66,7 @@ public class MctsWebServiceFacadeImpl implements MctsWebServiceFacade {
             result = dataService.DS_GetMotherData(settingsFacade.getProperty(Constants.MCTS_USER_ID), settingsFacade.getProperty(Constants.MCTS_PASSWORD),
                     from.toString(DATE_FORMAT), to.toString(DATE_FORMAT), stateId.toString());
         } catch (RemoteException e) {
-            throw new MctsWebServiceExeption(String.format("Cannot read mothers data from %s state. Remote Server Error", stateId), e);
+            throw new MctsWebServiceException(String.format("Cannot read mothers data from %s state. Remote Server Error", stateId), e);
         }
 
         try {
@@ -86,7 +86,7 @@ public class MctsWebServiceFacadeImpl implements MctsWebServiceFacade {
             result = dataService.DS_GetAnmAshaData(settingsFacade.getProperty(Constants.MCTS_USER_ID), settingsFacade.getProperty(Constants.MCTS_PASSWORD),
                     from.toString(DATE_FORMAT), to.toString(DATE_FORMAT), stateId.toString());
         } catch (RemoteException e) {
-            throw new MctsWebServiceExeption(String.format("Cannot read anm asha data from %s state. Remote Server Error", stateId), e);
+            throw new MctsWebServiceException(String.format("Cannot read anm asha data from %s state. Remote Server Error", stateId), e);
         }
 
         try {
@@ -105,7 +105,7 @@ public class MctsWebServiceFacadeImpl implements MctsWebServiceFacade {
                 return mctsServiceLocator.getbasicEndpoint();
             }
         } catch (ServiceException e) {
-            throw new MctsWebServiceExeption("Cannot retrieve MCTS Service for the endpoint", e);
+            throw new MctsWebServiceException("Cannot retrieve MCTS Service for the endpoint", e);
         }
     }
 

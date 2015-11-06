@@ -14,7 +14,7 @@ import org.motechproject.nms.mcts.contract.ChildrenDataSet;
 import org.motechproject.nms.mcts.contract.MotherRecord;
 import org.motechproject.nms.mcts.contract.MothersDataSet;
 import org.motechproject.nms.mcts.exception.MctsInvalidResponseStructureException;
-import org.motechproject.nms.mcts.exception.MctsWebServiceExeption;
+import org.motechproject.nms.mcts.exception.MctsWebServiceException;
 import org.motechproject.nms.mcts.service.MctsWebServiceFacade;
 import org.motechproject.nms.mcts.service.MctsWsImportService;
 import org.motechproject.nms.region.domain.State;
@@ -99,7 +99,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
 
                 saved += saveImportedChildrenData(childrenDataSet, state);
 
-            } catch (MctsWebServiceExeption e) {
+            } catch (MctsWebServiceException e) {
                 LOGGER.error("Cannot read children data from {} state.", stateId, e);
             } catch (MctsInvalidResponseStructureException e) {
                 LOGGER.error("Cannot read children data from {} state. Response Deserialization Error", stateId, e);
@@ -152,7 +152,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
 
                 saved += saveImportedMothersData(mothersDataSet, state);
 
-            } catch (MctsWebServiceExeption e) {
+            } catch (MctsWebServiceException e) {
                 LOGGER.error("Cannot read mothers data from {} state.", stateId, e);
             } catch (MctsInvalidResponseStructureException e) {
                 LOGGER.error("Cannot read mothers data from {} state. Response Deserialization Error", stateId, e);
@@ -188,7 +188,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
 
                 saved += saveImportedAnmAshaData(anmAshaDataSet, state);
 
-            } catch (MctsWebServiceExeption e) {
+            } catch (MctsWebServiceException e) {
                 LOGGER.error("Cannot read anm asha data from {} state.", stateId, e);
             } catch (MctsInvalidResponseStructureException e) {
                 LOGGER.error("Cannot read anm asha data from {} state. Response Deserialization Error", stateId, e);
