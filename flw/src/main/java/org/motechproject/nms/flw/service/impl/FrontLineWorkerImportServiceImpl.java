@@ -9,8 +9,10 @@ import org.motechproject.nms.csv.utils.GetLong;
 import org.motechproject.nms.csv.utils.GetString;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
+import org.motechproject.nms.flw.exception.FlwImportException;
 import org.motechproject.nms.flw.service.FrontLineWorkerImportService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
+import org.motechproject.nms.flw.utils.FlwConstants;
 import org.motechproject.nms.props.service.LogHelper;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.HealthBlock;
@@ -42,26 +44,6 @@ import java.util.Set;
 @Service("frontLineWorkerImportService")
 public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportService {
 
-    private static final String ID = "ID";
-    private static final String CONTACT_NO = "Contact_No";
-    private static final String NAME = "Name";
-    private static final String STATE_ID = "StateID";
-    private static final String DISTRICT_ID = "District_ID";
-    private static final String DISTRICT_NAME = "District_Name";
-    private static final String TALUKA_ID = "Taluka_ID";
-    private static final String TALUKA_NAME = "Taluka_Name";
-    private static final String HEALTH_BLOCK_ID = "HealthBlock_ID";
-    private static final String HEALTH_BLOCK_NAME = "HealthBlock_Name";
-    private static final String PHC_ID = "PHC_ID";
-    private static final String PHC_NAME = "PHC_Name";
-    private static final String SUB_CENTRE_ID = "SubCentre_ID";
-    private static final String SUB_CENTRE_NAME = "SubCentre_Name";
-    private static final String CENSUS_VILLAGE_ID = "Village_ID";
-    private static final String VILLAGE_NAME = "Village_Name";
-    private static final String NON_CENSUS_VILLAGE_ID = "SVID";
-
-    private static final String TYPE = "Type";
-
     private FrontLineWorkerService frontLineWorkerService;
     private StateDataService stateDataService;
     private LocationService locationService;
@@ -88,22 +70,27 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
         try {
             Map<String, Object> record;
             while (null != (record = csvImporter.read())) {
-
-                FrontLineWorker flw = flwFromRecord(record, state);
-
-                record.put(STATE_ID, state.getCode());
-                Map<String, Object> location = locationService.getLocations(record);
-
-                if (flw == null) {
-                    frontLineWorkerService.add(processInstance(record, location));
-                } else {
-                    frontLineWorkerService.update(processInstance(flw, record, location));
-                }
+                importFrontLineWorker(record, state);
             }
         } catch (ConstraintViolationException e) {
             throw new CsvImportDataException(createErrorMessage(e.getConstraintViolations(), csvImporter.getRowNumber()), e);
-        } catch (InvalidLocationException | CsvImportDataException | JDODataStoreException e) {
+        } catch (InvalidLocationException | FlwImportException | JDODataStoreException e) {
             throw new CsvImportDataException(createErrorMessage(e.getMessage(), csvImporter.getRowNumber()), e);
+        }
+    }
+
+    @Override
+    @Transactional
+    public void importFrontLineWorker(Map<String, Object> record, State state) throws InvalidLocationException {
+        FrontLineWorker flw = flwFromRecord(record, state);
+
+        record.put(FlwConstants.STATE_ID, state.getCode());
+        Map<String, Object> location = locationService.getLocations(record);
+
+        if (flw == null) {
+            frontLineWorkerService.add(processInstance(record, location));
+        } else {
+            frontLineWorkerService.update(processInstance(flw, record, location));
         }
     }
 
@@ -124,8 +111,8 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
     private FrontLineWorker flwFromRecord(Map<String, Object> record, State state) {
         FrontLineWorker flw = null;
 
-        String mctsFlwId = (String) record.get(ID);
-        Long msisdn = (Long) record.get(CONTACT_NO);
+        String mctsFlwId = (String) record.get(FlwConstants.ID);
+        Long msisdn = (Long) record.get(FlwConstants.CONTACT_NO);
 
         if (mctsFlwId != null) {
             flw = frontLineWorkerService.getByMctsFlwIdAndState(mctsFlwId, state);
@@ -165,7 +152,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
 
     private FrontLineWorker processInstance(Map<String, Object> record, Map<String, Object> location)
             throws InvalidLocationException {
-        Long contactNumber = (Long) record.get(CONTACT_NO);
+        Long contactNumber = (Long) record.get(FlwConstants.CONTACT_NO);
 
         FrontLineWorker flw = new FrontLineWorker(contactNumber);
         flw.setStatus(FrontLineWorkerStatus.INACTIVE);
@@ -176,10 +163,10 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
     private FrontLineWorker processInstance(FrontLineWorker flw, Map<String, Object> record,
                                             Map<String, Object> location) throws InvalidLocationException {
 
-        String mctsFlwId = (String) record.get(ID);
-        Long contactNumber = (Long) record.get(CONTACT_NO);
-        String name = (String) record.get(NAME);
-        String type = (String) record.get(TYPE);
+        String mctsFlwId = (String) record.get(FlwConstants.ID);
+        Long contactNumber = (Long) record.get(FlwConstants.CONTACT_NO);
+        String name = (String) record.get(FlwConstants.NAME);
+        String type = (String) record.get(FlwConstants.TYPE);
 
         if (contactNumber != null) {
             flw.setContactNumber(contactNumber);
@@ -207,55 +194,55 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
     }
 
     private void setFrontLineWorkerLocation(FrontLineWorker flw, Map<String, Object> locations) throws InvalidLocationException {
-        if (locations.get(STATE_ID) == null && locations.get(DISTRICT_ID) == null) {
+        if (locations.get(FlwConstants.STATE_ID) == null && locations.get(FlwConstants.DISTRICT_ID) == null) {
             throw new InvalidLocationException("Missing mandatory state and district fields");
         }
 
-        if (locations.get(STATE_ID) == null) {
+        if (locations.get(FlwConstants.STATE_ID) == null) {
             throw new InvalidLocationException("Missing mandatory state field");
         }
 
-        if (locations.get(DISTRICT_ID) == null) {
+        if (locations.get(FlwConstants.DISTRICT_ID) == null) {
             throw new InvalidLocationException("Missing mandatory district field");
         }
 
-        flw.setState((State) locations.get(STATE_ID));
-        flw.setDistrict((District) locations.get(DISTRICT_ID));
-        flw.setTaluka((Taluka) locations.get(TALUKA_ID));
-        flw.setHealthBlock((HealthBlock) locations.get(HEALTH_BLOCK_ID));
-        flw.setHealthFacility((HealthFacility) locations.get(PHC_ID));
-        flw.setHealthSubFacility((HealthSubFacility) locations.get(SUB_CENTRE_ID));
-        flw.setVillage((Village) locations.get(CENSUS_VILLAGE_ID + NON_CENSUS_VILLAGE_ID));
+        flw.setState((State) locations.get(FlwConstants.STATE_ID));
+        flw.setDistrict((District) locations.get(FlwConstants.DISTRICT_ID));
+        flw.setTaluka((Taluka) locations.get(FlwConstants.TALUKA_ID));
+        flw.setHealthBlock((HealthBlock) locations.get(FlwConstants.HEALTH_BLOCK_ID));
+        flw.setHealthFacility((HealthFacility) locations.get(FlwConstants.PHC_ID));
+        flw.setHealthSubFacility((HealthSubFacility) locations.get(FlwConstants.SUB_CENTRE_ID));
+        flw.setVillage((Village) locations.get(FlwConstants.CENSUS_VILLAGE_ID + FlwConstants.NON_CENSUS_VILLAGE_ID));
     }
 
     private Map<String, CellProcessor> getProcessorMapping() {
         Map<String, CellProcessor> mapping = new HashMap<>();
-        mapping.put(ID, new GetString());
-        mapping.put(CONTACT_NO, new GetLong());
-        mapping.put(NAME, new GetString());
+        mapping.put(FlwConstants.ID, new GetString());
+        mapping.put(FlwConstants.CONTACT_NO, new GetLong());
+        mapping.put(FlwConstants.NAME, new GetString());
 
-        mapping.put(STATE_ID, new Optional(new GetLong()));
+        mapping.put(FlwConstants.STATE_ID, new Optional(new GetLong()));
 
-        mapping.put(DISTRICT_ID, new Optional(new GetLong()));
-        mapping.put(DISTRICT_NAME, new Optional(new GetString()));
+        mapping.put(FlwConstants.DISTRICT_ID, new Optional(new GetLong()));
+        mapping.put(FlwConstants.DISTRICT_NAME, new Optional(new GetString()));
 
-        mapping.put(TALUKA_ID, new Optional(new GetString()));
-        mapping.put(TALUKA_NAME, new Optional(new GetString()));
+        mapping.put(FlwConstants.TALUKA_ID, new Optional(new GetString()));
+        mapping.put(FlwConstants.TALUKA_NAME, new Optional(new GetString()));
 
-        mapping.put(HEALTH_BLOCK_ID, new Optional(new GetLong()));
-        mapping.put(HEALTH_BLOCK_NAME, new Optional(new GetString()));
+        mapping.put(FlwConstants.HEALTH_BLOCK_ID, new Optional(new GetLong()));
+        mapping.put(FlwConstants.HEALTH_BLOCK_NAME, new Optional(new GetString()));
 
-        mapping.put(PHC_ID, new Optional(new GetLong()));
-        mapping.put(PHC_NAME, new Optional(new GetString()));
+        mapping.put(FlwConstants.PHC_ID, new Optional(new GetLong()));
+        mapping.put(FlwConstants.PHC_NAME, new Optional(new GetString()));
 
-        mapping.put(SUB_CENTRE_ID, new Optional(new GetLong()));
-        mapping.put(SUB_CENTRE_NAME, new Optional(new GetString()));
+        mapping.put(FlwConstants.SUB_CENTRE_ID, new Optional(new GetLong()));
+        mapping.put(FlwConstants.SUB_CENTRE_NAME, new Optional(new GetString()));
 
-        mapping.put(CENSUS_VILLAGE_ID, new Optional(new GetLong()));
-        mapping.put(NON_CENSUS_VILLAGE_ID, new Optional(new GetLong()));
-        mapping.put(VILLAGE_NAME, new Optional(new GetString()));
+        mapping.put(FlwConstants.CENSUS_VILLAGE_ID, new Optional(new GetLong()));
+        mapping.put(FlwConstants.NON_CENSUS_VILLAGE_ID, new Optional(new GetLong()));
+        mapping.put(FlwConstants.VILLAGE_NAME, new Optional(new GetString()));
 
-        mapping.put(TYPE, new Optional(new GetString()));
+        mapping.put(FlwConstants.TYPE, new Optional(new GetString()));
 
         return mapping;
     }

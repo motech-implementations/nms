@@ -5,7 +5,7 @@ import org.motechproject.mds.service.MotechDataService;
 import org.motechproject.nms.csv.exception.CsvImportDataException;
 import org.motechproject.nms.csv.utils.CsvImporterBuilder;
 import org.motechproject.nms.csv.utils.CsvMapImporter;
-import org.motechproject.nms.csv.utils.GetLong;
+import org.motechproject.nms.csv.utils.GetInstanceByString;
 import org.motechproject.nms.csv.utils.GetString;
 import org.motechproject.nms.kilkari.domain.MctsBeneficiary;
 import org.motechproject.nms.kilkari.domain.MctsMother;
@@ -17,7 +17,9 @@ import org.motechproject.nms.kilkari.repository.MctsChildDataService;
 import org.motechproject.nms.kilkari.repository.MctsMotherDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryUpdateService;
+import org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor;
 import org.motechproject.nms.kilkari.service.SubscriberService;
+import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.motechproject.nms.region.exception.InvalidLocationException;
 import org.motechproject.nms.region.service.LocationService;
 import org.slf4j.Logger;
@@ -46,6 +48,7 @@ public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateSe
     private LocationService locationService;
     private MctsMotherDataService mctsMotherDataService;
     private MctsChildDataService mctsChildDataService;
+    private MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor;
 
     private static final String SR_NO = "Sr No";
     private static final String MCTS_ID = "MCTS ID";
@@ -53,18 +56,6 @@ public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateSe
     private static final String DOB = "Beneficiary New DOB change";
     private static final String LMP = "Beneficiary New LMP change";
     private static final String MSISDN = "Beneficiary New Mobile no change";
-    private static final String STATE_ID = "StateID";
-    private static final String DISTRICT_ID = "District_ID";
-    private static final String TALUKA_ID = "Taluka_ID";
-    private static final String TALUKA_NAME = "Taluka_Name";
-    private static final String HEALTH_BLOCK_ID = "HealthBlock_ID";
-    private static final String HEALTH_BLOCK_NAME = "HealthBlock_Name";
-    private static final String PHC_ID = "PHC_ID";
-    private static final String PHC_NAME = "PHC_Name";
-    private static final String SUB_CENTRE_ID = "SubCentre_ID";
-    private static final String SUB_CENTRE_NAME = "SubCentre_Name";
-    private static final String VILLAGE_ID = "Village_ID";
-    private static final String VILLAGE_NAME = "Village_Name";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MctsBeneficiaryUpdateServiceImpl.class);
 
@@ -72,12 +63,13 @@ public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateSe
     public MctsBeneficiaryUpdateServiceImpl(SubscriberService subscriberService,
                                             SubscriptionErrorDataService subscriptionErrorDataService,
                                             LocationService locationService, MctsMotherDataService mctsMotherDataService,
-                                            MctsChildDataService mctsChildDataService) {
+                                            MctsChildDataService mctsChildDataService, MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor) {
         this.subscriberService = subscriberService;
         this.subscriptionErrorDataService = subscriptionErrorDataService;
         this.locationService = locationService;
         this.mctsMotherDataService = mctsMotherDataService;
         this.mctsChildDataService = mctsChildDataService;
+        this.mctsBeneficiaryValueProcessor = mctsBeneficiaryValueProcessor;
     }
 
 
@@ -200,26 +192,28 @@ public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateSe
         mapping.put(SR_NO, new Optional(new GetString()));
         mapping.put(MCTS_ID, new Optional(new GetString()));
         mapping.put(STATE_MCTS_ID, new Optional(new GetString()));
-        mapping.put(DOB, new Optional(MctsBeneficiaryUtils.DATE_BY_STRING));
-        mapping.put(LMP, new Optional(MctsBeneficiaryUtils.DATE_BY_STRING));
-        mapping.put(HEALTH_BLOCK_ID, new Optional(new GetLong()));
-        mapping.put(HEALTH_BLOCK_NAME, new Optional(new GetString()));
-        mapping.put(PHC_ID, new Optional(new GetLong()));
-        mapping.put(PHC_NAME, new Optional(new GetString()));
-        mapping.put(SUB_CENTRE_ID, new Optional(new GetLong()));
-        mapping.put(SUB_CENTRE_NAME, new Optional(new GetString()));
-        mapping.put(STATE_ID, new Optional(new GetLong()));
-        mapping.put(DISTRICT_ID, new Optional(new GetLong()));
-        mapping.put(TALUKA_ID, new Optional(new GetString()));
-        mapping.put(TALUKA_NAME, new Optional(new GetString()));
-        mapping.put(VILLAGE_ID, new Optional(new GetLong()));
-        mapping.put(VILLAGE_NAME, new Optional(new GetString()));
-
-        mapping.put(MSISDN, new Optional(MctsBeneficiaryUtils.MSISDN_BY_STRING));
+        mapping.put(DOB, new Optional(new GetInstanceByString<DateTime>() {
+            @Override
+            public DateTime retrieve(String value) {
+                return mctsBeneficiaryValueProcessor.getDateByString(value);
+            }
+        }));
+        mapping.put(LMP, new Optional(new GetInstanceByString<DateTime>() {
+            @Override
+            public DateTime retrieve(String value) {
+                return mctsBeneficiaryValueProcessor.getDateByString(value);
+            }
+        }));
+        MctsBeneficiaryUtils.getBeneficiaryLocationMapping(mapping);
+        mapping.put(MSISDN, new Optional(new GetInstanceByString<Long>() {
+            @Override
+            public Long retrieve(String value) {
+                return mctsBeneficiaryValueProcessor.getMsisdnByString(value);
+            }
+        }));
 
         return mapping;
     }
-
 
     private MctsBeneficiary beneficiaryFromId(String mctsId, String stateMctsId) {
         if ((mctsId == null) && (stateMctsId == null)) {
@@ -244,9 +238,9 @@ public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateSe
     }
 
     private boolean containsLocationUpdate(Map<String, Object> record) {
-        return ((record.get(STATE_ID) != null) || (record.get(DISTRICT_ID) != null) || (record.get(TALUKA_ID) != null) || //NO CHECKSTYLE BooleanExpressionComplexity
-                (record.get(HEALTH_BLOCK_ID) != null) || (record.get(PHC_ID) != null) || (record.get(SUB_CENTRE_ID) != null) ||
-                (record.get(VILLAGE_ID) != null));
+        return ((record.get(KilkariConstants.STATE_ID) != null) || (record.get(KilkariConstants.DISTRICT_ID) != null) || (record.get(KilkariConstants.TALUKA_ID) != null) || //NO CHECKSTYLE BooleanExpressionComplexity
+                (record.get(KilkariConstants.HEALTH_BLOCK_ID) != null) || (record.get(KilkariConstants.PHC_ID) != null) || (record.get(KilkariConstants.SUB_CENTRE_ID) != null) ||
+                (record.get(KilkariConstants.CENSUS_VILLAGE_ID) != null));
     }
 
 }
