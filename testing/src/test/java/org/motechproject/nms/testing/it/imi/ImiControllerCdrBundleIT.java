@@ -520,10 +520,7 @@ public class ImiControllerCdrBundleIT extends BasePaxIT {
         //We're expecting for the file copy to fail, what we wanted to check here is that the given file name
         //is valid
         String expectedJsonFailure1 = "{\"failureReason\":\"Error 1 running";
-        String expectedJsonFailure2 = ": No such file or directory\\n\"}";
         String responseBody = EntityUtils.toString(response.getEntity());
         assertEquals(expectedJsonFailure1,  responseBody.substring(0, expectedJsonFailure1.length()));
-        assertEquals(expectedJsonFailure2,
-                responseBody.substring(responseBody.length() - expectedJsonFailure2.length()));
     }
 }
