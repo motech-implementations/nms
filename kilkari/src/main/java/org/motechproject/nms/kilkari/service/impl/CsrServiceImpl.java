@@ -220,7 +220,7 @@ public class CsrServiceImpl implements CsrService {
                 callRetry.getTimestamp().equals(RequestId.fromString(record.getRequestId()).getTimestamp())) {
             // Bad data from IMI indeed (CSR-only error code in CDR likely culprit), let's ignore the retry since it's
             // already rescheduled
-            LOGGER.warn(String.format("Ignoring duplicate CDR/CSR call failure for subscription: %s",
+            LOGGER.warn(String.format("Ignoring duplicate call failure for subscription: %s",
                     subscription.getSubscriptionId()));
             return;
 
