@@ -15,9 +15,6 @@
     <osgi:service ref="cdrFileService"
                   interface="org.motechproject.nms.imi.service.CdrFileService" />
 
-    <osgi:service ref="csrValidatorService"
-                  interface="org.motechproject.nms.imi.service.CsrValidatorService" />
-
     <osgi:service ref="smsNotificationService"
                   interface="org.motechproject.nms.imi.service.SmsNotificationService" />
 

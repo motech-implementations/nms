@@ -123,6 +123,26 @@ public class SubscriptionPack {
     }
 
     @Ignore
+    public boolean hasMessageWithWeekId(String weekId) {
+        for (SubscriptionPackMessage message : messages) {
+            if (message.getWeekId().equals(weekId)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Ignore
+    public boolean hasMessageWithFilename(String filename) {
+        for (SubscriptionPackMessage message : messages) {
+            if (message.getMessageFileName().equals(filename)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Ignore
     public int retryCount() {
         //See SRS 6.2.2 - Figure 7
         if (messagesPerWeek == 1) {

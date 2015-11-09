@@ -14,7 +14,6 @@ import org.motechproject.nms.testing.it.flw.ServiceUsageCapServiceBundleIT;
 import org.motechproject.nms.testing.it.flw.ServiceUsageServiceBundleIT;
 import org.motechproject.nms.testing.it.flw.WhiteListServiceBundleIT;
 import org.motechproject.nms.testing.it.imi.CdrFileServiceBundleIT;
-import org.motechproject.nms.testing.it.imi.CsrValidatorServiceBundleIT;
 import org.motechproject.nms.testing.it.imi.ImiControllerCdrBundleIT;
 import org.motechproject.nms.testing.it.imi.ImiControllerObdBundleIT;
 import org.motechproject.nms.testing.it.imi.TargetFileServiceBundleIT;
@@ -65,7 +64,6 @@ import org.motechproject.nms.testing.it.tracking.TrackOneToManyChangesBundleIT;
     ImiControllerObdBundleIT.class,
     TargetFileServiceBundleIT.class,
     CdrFileServiceBundleIT.class,
-    CsrValidatorServiceBundleIT.class,
 
     /**
      * Kilkari

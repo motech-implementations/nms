@@ -97,6 +97,12 @@
     <osgi:reference id="healthSubFacilityService"
                     interface="org.motechproject.nms.region.service.HealthSubFacilityService" />
 
+    <osgi:reference id="circleService"
+                    interface="org.motechproject.nms.region.service.CircleService" />
+
+    <osgi:reference id="languageService"
+                    interface="org.motechproject.nms.region.service.LanguageService" />
+
     <osgi:reference id="alertsService" interface="org.motechproject.alerts.contract.AlertService" />
 
     <osgi:reference id="schedulerService"

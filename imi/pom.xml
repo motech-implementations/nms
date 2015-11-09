@@ -99,6 +99,7 @@
                             net.sf.cglib.reflect,
                             org.springframework.transaction,
                             org.motechproject.nms.kilkari.repository,
+                            org.motechproject.nms.region.service,
                             *
                         </Import-Package>
                     </instructions>
