@@ -1,15 +1,12 @@
 package org.motechproject.nms.kilkari.service.impl;
 
 
-import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
-import org.joda.time.format.DateTimeFormatterBuilder;
-import org.joda.time.format.DateTimeParser;
 import org.motechproject.nms.csv.exception.CsvImportDataException;
 import org.motechproject.nms.csv.utils.ConstraintViolationUtils;
-import org.motechproject.nms.csv.utils.GetInstanceByString;
+import org.motechproject.nms.csv.utils.GetLong;
+import org.motechproject.nms.csv.utils.GetString;
 import org.motechproject.nms.kilkari.domain.MctsBeneficiary;
+import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.HealthBlock;
 import org.motechproject.nms.region.domain.HealthFacility;
@@ -18,6 +15,8 @@ import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.domain.Village;
 import org.motechproject.nms.region.exception.InvalidLocationException;
+import org.supercsv.cellprocessor.Optional;
+import org.supercsv.cellprocessor.ift.CellProcessor;
 
 import javax.validation.ConstraintViolation;
 import java.util.Map;
@@ -37,42 +36,29 @@ public final class MctsBeneficiaryUtils {
     private MctsBeneficiaryUtils() {
     }
 
-    public static final GetInstanceByString<DateTime> DATE_BY_STRING = new GetInstanceByString<DateTime>() {
-        @Override
-        public DateTime retrieve(String value) {
-            if (value == null) {
-                return null;
-            }
 
-            DateTime referenceDate;
+    public static void getBeneficiaryLocationMapping(Map<String, CellProcessor> mapping) {
+        mapping.put(KilkariConstants.STATE_ID, new Optional(new GetLong()));
 
-            try {
-                DateTimeParser[] parsers = {
-                        DateTimeFormat.forPattern("dd-MM-yyyy").getParser(),
-                        DateTimeFormat.forPattern("dd/MM/yyyy").getParser()};
-                DateTimeFormatter formatter = new DateTimeFormatterBuilder().append(null, parsers).toFormatter();
+        mapping.put(KilkariConstants.DISTRICT_ID, new Optional(new GetLong()));
+        mapping.put(KilkariConstants.DISTRICT_NAME, new Optional(new GetString()));
 
-                referenceDate = formatter.parseDateTime(value);
+        mapping.put(KilkariConstants.TALUKA_ID, new Optional(new GetString()));
+        mapping.put(KilkariConstants.TALUKA_NAME, new Optional(new GetString()));
 
-            } catch (IllegalArgumentException e) {
-                throw new CsvImportDataException(String.format("Reference date %s is invalid", value), e);
-            }
+        mapping.put(KilkariConstants.CENSUS_VILLAGE_ID, new Optional(new GetLong()));
+        mapping.put(KilkariConstants.NON_CENSUS_VILLAGE_ID, new Optional(new GetLong()));
+        mapping.put(KilkariConstants.VILLAGE_NAME, new Optional(new GetString()));
 
-            return referenceDate;
-        }
-    };
+        mapping.put(KilkariConstants.PHC_ID, new Optional(new GetLong()));
+        mapping.put(KilkariConstants.PHC_NAME, new Optional(new GetString()));
 
-    public static final GetInstanceByString<Long> MSISDN_BY_STRING = new GetInstanceByString<Long>() {
-        @Override
-        public Long retrieve(String value) {
-            if (value.length() < 10) {
-                throw new NumberFormatException("Beneficiary MSISDN too short, must be at least 10 digits");
-            }
-            String msisdn = value.substring(value.length() - 10);
+        mapping.put(KilkariConstants.HEALTH_BLOCK_ID, new Optional(new GetLong()));
+        mapping.put(KilkariConstants.HEALTH_BLOCK_NAME, new Optional(new GetString()));
 
-            return Long.parseLong(msisdn);
-        }
-    };
+        mapping.put(KilkariConstants.SUB_CENTRE_ID, new Optional(new GetLong()));
+        mapping.put(KilkariConstants.SUB_CENTRE_NAME, new Optional(new GetString()));
+    }
 
     public static void setLocationFields(Map<String, Object> locations, MctsBeneficiary beneficiary) throws InvalidLocationException {
 

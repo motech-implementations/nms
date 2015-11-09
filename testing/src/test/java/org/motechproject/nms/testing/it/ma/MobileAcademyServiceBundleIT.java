@@ -410,7 +410,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         flw = new FrontLineWorker("Test Worker", callingNumber);
         flw.setLanguage(language);
         flw.setState(sampleState);
-        flw.setDistrict(sampleState.getDistricts().get(0));
+        flw.setDistrict(sampleState.getDistricts().iterator().next());
         frontLineWorkerService.add(flw);
         flw = frontLineWorkerService.getByContactNumber(callingNumber);
         assertNotNull(flw);
@@ -466,7 +466,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         State sampleState = stateDataService.findByCode(1L);
         flw = new FrontLineWorker("Test Worker", callingNumber);
         flw.setState(sampleState);
-        flw.setDistrict(sampleState.getDistricts().get(0));
+        flw.setDistrict(sampleState.getDistricts().iterator().next());
         frontLineWorkerService.add(flw);
         flw = frontLineWorkerService.getByContactNumber(callingNumber);
         assertNotNull(flw);

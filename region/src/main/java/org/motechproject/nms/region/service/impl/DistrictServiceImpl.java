@@ -117,4 +117,9 @@ public class DistrictServiceImpl implements DistrictService {
     public District update(District district) {
         return districtDataService.update(district);
     }
+
+    @Override
+    public Object getDetachedField(District district, String fieldName) {
+        return districtDataService.getDetachedField(district, fieldName);
+    }
 }

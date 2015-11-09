@@ -1,6 +1,7 @@
 package org.motechproject.nms.kilkari.domain;
 
 import org.joda.time.DateTime;
+import org.motechproject.commons.date.util.DateUtil;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.annotations.Ignore;
@@ -104,14 +105,14 @@ public class SubscriptionPack {
 
     public String isReferenceDateValidForPack(DateTime date) {
 
-        if (date.isAfterNow()) {
+        if (!DateUtil.isOnOrBefore(date, DateUtil.now())) {
             return String.format("Reference date is after now: %s", date.toString());
         }
 
         int packLengthInDays = weeks * DAYS_IN_WEEK;
         int minDaysLeftInPack = MIN_MSG_WEEKS * DAYS_IN_WEEK; // BBC requirement to have at least 12 weeks of messages to send
         DateTime startDate = (type == SubscriptionPackType.PREGNANCY) ? date.plusDays(THREE_MONTHS) : date;
-        DateTime cutOff = DateTime.now().plusDays(minDaysLeftInPack + 1); // plus 1 since we start calling people the next day
+        DateTime cutOff = DateUtil.now().plusDays(minDaysLeftInPack + 1); // plus 1 since we start calling people the next day
 
         // Cutoff date is the minimum days left in  pack for us to deliver 12 weeks worth of messages
         if (startDate.plusDays(packLengthInDays).isBefore(cutOff)) {

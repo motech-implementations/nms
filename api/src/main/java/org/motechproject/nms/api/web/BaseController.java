@@ -15,6 +15,7 @@ import org.motechproject.nms.props.domain.Service;
 import org.motechproject.nms.props.service.PropertyService;
 import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.State;
+import org.motechproject.nms.region.service.StateService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,8 +26,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * BaseController
@@ -71,6 +72,8 @@ public class BaseController {
     @Autowired
     private FrontLineWorkerService frontLineWorkerService;
 
+    @Autowired
+    private StateService stateService;
 
     protected static void log(final String endpoint, final String s) {
         LOGGER.info(IVR_INTERACTION_LOG.format(endpoint) + (StringUtils.isBlank(s) ? "" : " : " + s));
@@ -234,12 +237,11 @@ public class BaseController {
         State state = null;
 
         if (circle != null) {
-            List<State> states = circle.getStates();
+            Set<State> states = stateService.getAllInCircle(circle);
 
             if (states.size() == 1) {
-                state = states.get(0);
+                state = states.iterator().next();
             }
-
         }
 
         return state;

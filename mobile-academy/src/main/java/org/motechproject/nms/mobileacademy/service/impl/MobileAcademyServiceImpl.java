@@ -23,6 +23,7 @@ import org.motechproject.nms.mobileacademy.exception.CourseNotCompletedException
 import org.motechproject.nms.mobileacademy.repository.CompletionRecordDataService;
 import org.motechproject.nms.mobileacademy.repository.NmsCourseDataService;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
+import org.motechproject.nms.props.service.LogHelper;
 import org.motechproject.server.config.SettingsFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -320,7 +321,7 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
         int totalScore = getTotalScore(scores);
         if (getTotalScore(scores) < PASS_SCORE) {
             // nothing to do
-            LOGGER.debug("User with calling number: " + callingNumber + " failed with score: " + totalScore);
+            LOGGER.debug("User with calling number: " + LogHelper.obscure(callingNumber) + " failed with score: " + totalScore);
             return;
         }
 

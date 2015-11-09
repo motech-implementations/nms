@@ -43,6 +43,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -270,7 +271,7 @@ public class MobileAcademyServiceUnitTest {
         District district = new District();
         district.setState(state);
         district.setCode(444L);
-        state.setDistricts(Arrays.asList(district));
+        state.setDistricts(new HashSet<>(Arrays.asList(district)));
         flw.setState(state);
         flw.setDistrict(district);
         flw.setLanguage(new Language("hin", "Hindi"));

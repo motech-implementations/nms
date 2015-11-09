@@ -1,7 +1,6 @@
 package org.motechproject.nms.api.web;
 
 import org.motechproject.nms.api.web.contract.FlwUserResponse;
-import org.motechproject.nms.api.web.contract.LogHelper;
 import org.motechproject.nms.api.web.contract.UserResponse;
 import org.motechproject.nms.api.web.contract.kilkari.KilkariUserResponse;
 import org.motechproject.nms.api.web.exception.NotAuthorizedException;
@@ -19,11 +18,13 @@ import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.props.domain.Service;
+import org.motechproject.nms.props.service.LogHelper;
 import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.Language;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.service.CircleService;
 import org.motechproject.nms.region.service.LanguageService;
+import org.motechproject.nms.region.service.StateService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,7 +34,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 
@@ -59,6 +59,9 @@ public class UserController extends BaseController {
 
     @Autowired
     private LanguageService languageService;
+
+    @Autowired
+    private StateService stateService;
 
     /**
      * 2.2.1 Get User Details API
@@ -191,16 +194,16 @@ public class UserController extends BaseController {
             return true;
         }
 
-        List<State> stateList = currentCircle.getStates();
-        if (stateList == null || stateList.isEmpty()) { // No state available
+        Set<State> states = stateService.getAllInCircle(currentCircle);
+        if (states == null || states.isEmpty()) { // No state available
             return true;
         }
 
-        if (stateList.size() == 1) { // only one state available
-            return serviceDeployedInUserState(Service.KILKARI, stateList.get(0));
+        if (states.size() == 1) { // only one state available
+            return serviceDeployedInUserState(Service.KILKARI, states.iterator().next());
         }
 
-        for (State currentState : stateList) { // multiple states, false if undeployed in all states
+        for (State currentState : states) { // multiple states, false if undeployed in all states
             if (serviceDeployedInUserState(Service.KILKARI, currentState)) {
                 return true;
             }
@@ -239,12 +242,12 @@ public class UserController extends BaseController {
             return true;
         }
 
-        List<State> stateList = circle.getStates();
-        if (stateList == null || stateList.isEmpty()) { // No state available
+        Set<State> states = stateService.getAllInCircle(circle);
+        if (states == null || states.isEmpty()) { // No state available
             return true;
         }
 
-        for (State currentState : stateList) { // multiple states, false if undeployed in all states
+        for (State currentState : states) { // multiple states, false if undeployed in all states
             if (serviceDeployedInUserState(service, currentState)) {
                 return true;
             }

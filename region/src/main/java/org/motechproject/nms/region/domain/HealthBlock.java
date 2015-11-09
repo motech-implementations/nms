@@ -29,20 +29,18 @@ import java.util.List;
 public class HealthBlock extends MdsEntity {
 
     @Field
-    @Column(allowsNull = "false", length = 35)
+    @Column(allowsNull = "false", length = 150)
     @NotNull
-    @Size(min = 1, max = 35)
+    @Size(min = 1, max = 150)
     private String name;
 
     @Field
-    @Column(allowsNull = "false", length = 50)
-    @NotNull
-    @Size(min = 1, max = 50)
+    @Column(length = 150)
+    @Size(min = 1, max = 150)
     private String regionalName;
 
     @Field
-    @Column(allowsNull = "false", length = 50)
-    @NotNull
+    @Column(length = 50)
     @Size(min = 1, max = 50)
     private String hq;
 
@@ -145,7 +143,6 @@ public class HealthBlock extends MdsEntity {
         return "HealthBlock{" +
                 "name='" + name + '\'' +
                 ", code=" + code +
-                ", taluka=" + taluka +
                 '}';
     }
 }

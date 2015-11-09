@@ -101,14 +101,12 @@ public class LanguageLocationImportServiceImpl implements LanguageLocationImport
                                                  Boolean defaultForCircle, State state, District district) {
         verify(Objects.equals(district.getState().getCode(), state.getCode()),
                 "District's state does not match the state supplied in the CSV record");
-        verifyStateInCircle(circle, state);
         verifyDistrictLanguage(district);
         addDistrictToLanguageLocation(languageCode, languageName, circle, defaultForCircle, Collections.singletonList(district));
     }
 
     private void importRecordForState(String languageCode, String languageName, Circle circle,
                                       Boolean defaultForCircle, State state) {
-        verifyStateInCircle(circle, state);
         for (District stateDistrict : state.getDistricts()) {
             verifyDistrictLanguage(stateDistrict);
         }
@@ -118,7 +116,6 @@ public class LanguageLocationImportServiceImpl implements LanguageLocationImport
     private void importRecordForDistrict(String languageCode, String languageName, Circle circle,
                                          Boolean defaultForCircle, District district) {
         LOGGER.warn("State not specified for the '{}' district", district.getName());
-        verifyStateInCircle(circle, district.getState());
         verifyDistrictLanguage(district);
         addDistrictToLanguageLocation(languageCode, languageName, circle, defaultForCircle, Collections.singletonList(district));
     }
@@ -135,6 +132,7 @@ public class LanguageLocationImportServiceImpl implements LanguageLocationImport
 
         for (District district: districts) {
             district.setLanguage(language);
+            district.setCircle(circle);
             districtDataService.update(district);
         }
 
@@ -150,12 +148,9 @@ public class LanguageLocationImportServiceImpl implements LanguageLocationImport
         }
     }
 
-    private void verifyStateInCircle(Circle circle, State state) {
-        verify(circle.getStates().contains(state), "State is not contained in the supplied circle");
-    }
-
     private void verifyDistrictLanguage(District district) {
-        verify(null == district.getLanguage(), "Language location for the '%s' district already specified", district.getName());
+        verify(null == district
+                .getLanguage(), "Language location for the '%s' district already specified", district.getName());
     }
 
     private Map<String, CellProcessor> getProcessorMapping() {
@@ -166,7 +161,11 @@ public class LanguageLocationImportServiceImpl implements LanguageLocationImport
             @Override
             public Circle retrieve(String value) {
                 Circle circle = circleDataService.findByName(value);
-                verify(null != circle, "Circle does not exist");
+                if (circle == null) {
+                    circle = new Circle(value);
+                    circle = circleDataService.create(circle);
+                }
+                verify(null != circle, "Circle does not exist and unable to create");
                 return circle;
             }
         });

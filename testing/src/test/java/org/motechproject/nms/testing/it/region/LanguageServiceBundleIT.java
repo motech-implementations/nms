@@ -23,7 +23,6 @@ import org.ops4j.pax.exam.spi.reactors.PerSuite;
 import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
@@ -66,12 +65,17 @@ public class LanguageServiceBundleIT extends BasePaxIT {
 
         stateDataService.create(state);
 
+        Circle circle = new Circle("AA");
+        circle.setDefaultLanguage(ta);
+        circleDataService.create(circle);
+
         District district = new District();
         district.setName("District 1");
         district.setRegionalName("District 1");
         district.setCode(1L);
         district.setLanguage(ta);
         district.setState(state);
+        district.setCircle(circle);
 
         District district2 = new District();
         district2.setName("District 2");
@@ -79,6 +83,7 @@ public class LanguageServiceBundleIT extends BasePaxIT {
         district2.setCode(2L);
         district2.setLanguage(ta);
         district2.setState(state);
+        district2.setCircle(circle);
 
         District district3 = new District();
         district3.setName("District 3");
@@ -86,13 +91,8 @@ public class LanguageServiceBundleIT extends BasePaxIT {
         district3.setCode(3L);
         district3.setLanguage(hi);
         district3.setState(state);
+        district3.setCircle(circle);
 
-        Circle circle = new Circle("AA");
-        circle.setDefaultLanguage(ta);
-        circle.setStates(new ArrayList<>(Collections.singletonList(state)));
-        circleDataService.create(circle);
-
-        state.setCircles(new ArrayList<>(Collections.singletonList(circle)));
         state.getDistricts().addAll(new ArrayList<>(Arrays.asList(district, district2, district3)));
         stateDataService.update(state);
     }

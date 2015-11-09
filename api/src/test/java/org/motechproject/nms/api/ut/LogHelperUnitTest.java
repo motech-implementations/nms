@@ -2,7 +2,7 @@ package org.motechproject.nms.api.ut;
 
 
 import org.junit.Test;
-import org.motechproject.nms.api.web.contract.LogHelper;
+import org.motechproject.nms.props.service.LogHelper;
 
 import static org.junit.Assert.assertEquals;
 

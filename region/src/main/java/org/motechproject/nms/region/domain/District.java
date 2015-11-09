@@ -59,6 +59,10 @@ public class District extends MdsEntity {
     private List<Taluka> talukas;
 
     @Field
+    @JsonBackReference
+    private Circle circle;
+
+    @Field
     @Persistent(defaultFetchGroup = "true")
     private Language language;
 
@@ -104,6 +108,14 @@ public class District extends MdsEntity {
 
     public void setTalukas(List<Taluka> talukas) {
         this.talukas = talukas;
+    }
+
+    public Circle getCircle() {
+        return circle;
+    }
+
+    public void setCircle(Circle circle) {
+        this.circle = circle;
     }
 
     public Language getLanguage() {

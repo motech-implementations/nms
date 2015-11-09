@@ -47,12 +47,12 @@ public class VillageServiceImpl implements VillageService {
     }
 
     @Override
-    public void create(Village village) {
-        dataService.create(village);
+    public Village create(Village village) {
+        return dataService.create(village);
     }
 
     @Override
-    public void update(Village village) {
-        dataService.update(village);
+    public Village update(Village village) {
+        return dataService.update(village);
     }
 }

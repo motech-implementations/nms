@@ -21,15 +21,14 @@ import javax.validation.constraints.Size;
 public class HealthSubFacility extends MdsEntity {
 
     @Field
-    @Column(allowsNull = "false", length = 100)
+    @Column(allowsNull = "false", length = 250)
     @NotNull
-    @Size(min = 1, max = 100)
+    @Size(min = 1, max = 250)
     private String name;
 
     @Field
-    @Column(allowsNull = "false", length = 100)
-    @NotNull
-    @Size(min = 1, max = 100)
+    @Column(length = 250)
+    @Size(min = 1, max = 250)
     private String regionalName;
 
     @Field
@@ -108,7 +107,6 @@ public class HealthSubFacility extends MdsEntity {
         return "HealthSubFacility{" +
                 "name='" + name + '\'' +
                 ", code=" + code +
-                ", healthFacility=" + healthFacility +
                 '}';
     }
 }

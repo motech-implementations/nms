@@ -1,5 +1,7 @@
 package org.motechproject.nms.api.web.contract;
 
+import org.motechproject.nms.props.service.LogHelper;
+
 import java.util.Collections;
 import java.util.List;
 

@@ -1,6 +1,5 @@
 package org.motechproject.nms.api.web;
 
-import org.motechproject.nms.api.web.contract.LogHelper;
 import org.motechproject.nms.api.web.contract.UserLanguageRequest;
 import org.motechproject.nms.api.web.exception.NotAuthorizedException;
 import org.motechproject.nms.api.web.exception.NotDeployedException;
@@ -8,6 +7,7 @@ import org.motechproject.nms.api.web.exception.NotFoundException;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.props.domain.Service;
+import org.motechproject.nms.props.service.LogHelper;
 import org.motechproject.nms.region.domain.Language;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.service.LanguageService;
