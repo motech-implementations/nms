@@ -788,7 +788,7 @@ public class CdrFileServiceImpl implements CdrFileService {
         LOGGER.info("Phase 3 - sendAggregatedRecords - distributing aggregate CDRs");
         errors = sendAggregatedRecords(cdrFile);
         if (errors.size() > 0) {
-            reportAuditAndPost(request.getFileName() + SORTED_SUFFIX, errors);
+            reportAuditAndPost(request.getFileName(), errors);
             LOGGER.debug(CDR_PROCESS_PHASE_2_ERROR);
             return errors;
         }
