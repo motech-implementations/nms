@@ -13,6 +13,7 @@ import org.motechproject.nms.flw.exception.FlwImportException;
 import org.motechproject.nms.flw.service.FrontLineWorkerImportService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.flw.utils.FlwConstants;
+import org.motechproject.nms.props.service.LogHelper;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.HealthBlock;
 import org.motechproject.nms.region.domain.HealthFacility;
@@ -42,9 +43,6 @@ import java.util.Set;
 
 @Service("frontLineWorkerImportService")
 public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportService {
-
-    private static final int MASK_LENGTH = 3;
-
 
     private FrontLineWorkerService frontLineWorkerService;
     private StateDataService stateDataService;
@@ -127,25 +125,12 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
             // then the data needs to be hand corrected since we don't know if the msisdn has changed or
             // if the mcts id has changed.
             if (flw != null && mctsFlwId != null && flw.getMctsFlwId() != null && !mctsFlwId.equals(flw.getMctsFlwId())) {
-                throw new FlwImportException(String.format("Existing FLW with same MSISDN (%s) but " +
-                                        "different MCTS ID (%s != %s)", obscureNumber(msisdn), mctsFlwId, flw.getMctsFlwId()));
+                throw new CsvImportDataException(String.format("Existing FLW with same MSISDN (%s) but " +
+                                        "different MCTS ID (%s != %s)", LogHelper.obscure(msisdn), mctsFlwId, flw.getMctsFlwId()));
             }
         }
 
         return flw;
-    }
-
-    // obscure code from LogHelper in API package. Copy-paste since we cannot do a circular reference
-    public static String obscureNumber(Long callingNumber) {
-        if (callingNumber == null) {
-            return "null";
-        }
-        String s = callingNumber.toString();
-        int l = s.length();
-        if (s.length() > MASK_LENGTH) {
-            s = org.apache.commons.lang3.StringUtils.repeat('*', l - MASK_LENGTH) + s.substring(l - MASK_LENGTH);
-        }
-        return s;
     }
 
     private String readLineWhileBlank(BufferedReader bufferedReader) throws IOException {
