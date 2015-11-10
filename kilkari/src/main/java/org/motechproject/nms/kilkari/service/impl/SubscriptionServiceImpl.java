@@ -584,6 +584,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         return subscriptionDataService.findByStatusAndStartDate(SubscriptionStatus.PENDING_ACTIVATION, startDate, new QueryParams(page, pageSize));
     }
 
+
     @CacheEvict(value = {"pack" }, allEntries = true)
     public void broadcastCacheEvictMessage(SubscriptionPack pack) {
         LOGGER.debug("*** BROADCAST CACHE EVICT MSG ***");
@@ -591,9 +592,16 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         eventRelay.sendEventMessage(motechEvent);
     }
 
+
     @MotechListener(subjects = { PACK_CACHE_EVICT_MESSAGE })
     @CacheEvict(value = {"pack" }, allEntries = true)
     public void cacheEvict(MotechEvent event) {
         LOGGER.debug("*** RECEIVE CACHE EVICT MSG ***");
+    }
+
+
+    @Override
+    public List<Subscription> retrieveAll() {
+        return subscriptionDataService.retrieveAll();
     }
 }

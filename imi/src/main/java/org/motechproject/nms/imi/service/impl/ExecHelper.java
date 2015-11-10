@@ -93,10 +93,9 @@ public class ExecHelper {
                 logger.debug("waitFor()");
                 exit = process.waitFor();
                 if (exit != 0) {
-                    error = stream(process.getErrorStream());
-                    logger.error(error);
+                    logger.error(stream(process.getErrorStream()));
                 } else {
-                    logger.debug("success: {}", stream(process.getInputStream()));
+                    logger.debug("success");
                 }
             } catch (InterruptedException ignore) {
                 logger.debug("InterruptedException: {}", ignore.getMessage());

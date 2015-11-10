@@ -174,4 +174,11 @@ public interface SubscriptionService {
      *
      */
     void cacheEvict(MotechEvent event);
+
+    /**
+     *
+     * Retrieves all subscriptions in the database
+     *
+     */
+    List<Subscription> retrieveAll();
 }

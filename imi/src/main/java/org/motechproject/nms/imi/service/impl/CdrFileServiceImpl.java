@@ -12,6 +12,7 @@ import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.EventRelay;
 import org.motechproject.event.listener.annotations.MotechListener;
 import org.motechproject.mds.query.SqlQueryExecution;
+import org.motechproject.metrics.service.Timer;
 import org.motechproject.nms.imi.domain.CallSummaryRecord;
 import org.motechproject.nms.imi.domain.FileAuditRecord;
 import org.motechproject.nms.imi.domain.FileProcessedStatus;
@@ -23,7 +24,6 @@ import org.motechproject.nms.imi.repository.CallDetailRecordDataService;
 import org.motechproject.nms.imi.repository.CallSummaryRecordDataService;
 import org.motechproject.nms.imi.repository.FileAuditRecordDataService;
 import org.motechproject.nms.imi.service.CdrFileService;
-import org.motechproject.nms.imi.service.CsrValidatorService;
 import org.motechproject.nms.imi.service.contract.CdrFileProcessedNotification;
 import org.motechproject.nms.imi.web.contract.CdrFileNotificationRequest;
 import org.motechproject.nms.imi.web.contract.FileInfo;
@@ -68,6 +68,7 @@ public class CdrFileServiceImpl implements CdrFileService {
     private static final String CSR_TABLE_NAME = "motech_data_services.nms_imi_csrs";
     private static final int MAX_CDR_ERROR_COUNT_DEFAULT = 100;
     private static final String PROCESS_SUMMARY_RECORD_SUBJECT = "nms.imi.kk.process_summary_record";
+    private static final String END_OF_CDR_PROCESSING_SUBJECT = "nms.imi.kk.end_of_cdr_processing";
     private static final String CSR_PARAM_KEY = "csr";
     private static final String PROCESS_FILES_SUBJECT = "nms.imi.kk.process_files";
     private static final String OBD_FILE_PARAM_KEY = "obdFile";
@@ -78,21 +79,22 @@ public class CdrFileServiceImpl implements CdrFileService {
     private static final String CDR_CHECKSUM_PARAM_KEY = "cdrChecksum";
     private static final String CDR_COUNT_PARAM_KEY = "cdrCount";
     private static final String SORTED_SUFFIX = ".sorted";
-    private static String logTemplate = "Found %d records in table %s";
+    private static final String LOG_TEMPLATE = "Found %d records in table %s";
+    private static final String CDR_DETAIL_FILE = "CDR Detail File";
+    private static final String LINE_NUMBER_FMT = "Line %d: %s";
+    private static final String MAX_ERROR_REACHED_FMT = "The maximum number of allowed errors of %d has been " +
+            "reached, ending file verification.";
+    private static final String UNABLE_TO_READ_FMT = "Unable to read %s: %s";
+    private static final String UNABLE_TO_READ_HEADER_FMT = "Unable to read  header %s: %s";
+    private static final int CDR_PROGRESS_REPORT_CHUNK = 1000;
+
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CdrFileServiceImpl.class);
-    public static final String CDR_DETAIL_FILE = "CDR Detail File";
-    public static final String LINE_NUMBER_FMT = "Line %d: %s";
-    public static final String MAX_ERROR_REACHED_FMT = "The maximum number of allowed errors of %d has been " +
-            "reached, ending file verification.";
-    public static final String UNABLE_TO_READ_FMT = "Unable to read %s: %s";
-    public static final String UNABLE_TO_READ_HEADER_FMT = "Unable to read  header %s: %s";
 
     private SettingsFacade settingsFacade;
     private EventRelay eventRelay;
     private FileAuditRecordDataService fileAuditRecordDataService;
     private AlertService alertService;
-    private CsrValidatorService csrValidatorService;
     private CallDetailRecordDataService callDetailRecordDataService;
     private CallSummaryRecordDataService callSummaryRecordDataService;
 
@@ -100,14 +102,12 @@ public class CdrFileServiceImpl implements CdrFileService {
     @Autowired
     public CdrFileServiceImpl(@Qualifier("imiSettings") SettingsFacade settingsFacade, EventRelay eventRelay,
                               FileAuditRecordDataService fileAuditRecordDataService, AlertService alertService,
-                              CsrValidatorService csrValidatorService,
                               CallDetailRecordDataService callDetailRecordDataService,
                               CallSummaryRecordDataService callSummaryRecordDataService) {
         this.settingsFacade = settingsFacade;
         this.eventRelay = eventRelay;
         this.fileAuditRecordDataService = fileAuditRecordDataService;
         this.alertService = alertService;
-        this.csrValidatorService = csrValidatorService;
         this.callDetailRecordDataService = callDetailRecordDataService;
         this.callSummaryRecordDataService = callSummaryRecordDataService;
     }
@@ -324,18 +324,14 @@ public class CdrFileServiceImpl implements CdrFileService {
     }
 
 
-
     /**
-     * Verifies all entities referenced in the detail file exist in the database and verify the file is sorted
-     * or
-     * Verifies all entities referenced in the summary file exist in the database
+     * Verifies the file is sorted
      *
      * @param file          file to process
-     * @param isDetailFile  true: processes a CDR file, otherwise processes a CSR file
 
      * @return              a list of errors (failure) or an empty list (success)
      */
-    private List<String> verifyEntitiesAndSortOrder(File file, boolean isDetailFile) {
+    private List<String> verifySortOrder(File file) {
         int maxErrorCount = getMaxErrorCount();
         int errorCount = 0;
         List<String> errors = new ArrayList<>();
@@ -353,11 +349,7 @@ public class CdrFileServiceImpl implements CdrFileService {
             try {
 
                 line = reader.readLine();
-                if (isDetailFile) {
-                    CdrHelper.validateHeader(line);
-                } else {
-                    CsrHelper.validateHeader(line);
-                }
+                CdrHelper.validateHeader(line);
 
             } catch (IllegalArgumentException e) {
                 String error = String.format(UNABLE_TO_READ_HEADER_FMT, fileName, e.getMessage());
@@ -368,33 +360,24 @@ public class CdrFileServiceImpl implements CdrFileService {
             while ((line = reader.readLine()) != null) {
                 try {
 
-                    if (isDetailFile) {
-                        CallDetailRecordDto cdr = CdrHelper.csvLineToCdrDto(line);
+                    CallDetailRecordDto cdr = CdrHelper.csvLineToCdrDto(line);
 
-                        if (!currentRequestId.equals(cdr.getRequestId().toString())) {
-                            currentRequestId = cdr.getRequestId().toString();
+                    if (!currentRequestId.equals(cdr.getRequestId().toString())) {
+                        currentRequestId = cdr.getRequestId().toString();
 
-                            // Check for sort order, in reality we don't care about the ascending or descending
-                            // thing, what's important is that all the CDRs for one call are grouped.
-                            if (requestIds.contains(currentRequestId)) {
-                                // An identical requestId was found, that means this file isn't sorted
-                                errors.add(String.format("%s is not sorted properly!", fileName));
-                                alertAuditAndThrow(fileName, errors);
-                            }
-                            requestIds.add(currentRequestId);
-
-                            // Start aggregating a new CSR
+                        // Check for sort order, in reality we don't care about the ascending or descending
+                        // thing, what's important is that all the CDRs for one call are grouped.
+                        if (requestIds.contains(currentRequestId)) {
+                            // An identical requestId was found, that means this file isn't sorted
+                            errors.add(String.format("%s is not sorted properly!", fileName));
+                            alertAuditAndThrow(fileName, errors);
                         }
-                        CallSummaryRecordDto csrDto = new CallSummaryRecordDto();
-                        aggregateDetailRecord(cdr, csrDto);
-                        csrValidatorService.validateSummaryRecordDto(csrDto);
+                        requestIds.add(currentRequestId);
 
-                    } else {
-
-                        CallSummaryRecord csr = CsrHelper.csvLineToCsr(line);
-                        csrValidatorService.validateSummaryRecord(csr);
-
+                        // Start aggregating a new CSR
                     }
+                    CallSummaryRecordDto csrDto = new CallSummaryRecordDto();
+                    aggregateDetailRecord(cdr, csrDto);
 
 
                 } catch (IllegalArgumentException e) {
@@ -424,13 +407,14 @@ public class CdrFileServiceImpl implements CdrFileService {
      * @param file      file to process
      * @return          a list of errors (failure) or an empty list (success)
      */
-    @Override
-    public List<String> sendAggregatedRecords(File file) {
+    @Override //NO CHECKSTYLE Cyclomatic Complexity
+    public List<String> sendAggregatedRecords(File file) { //NOPMD NcssMethodCount
         int maxErrorCount = getMaxErrorCount();
         int errorCount = 0;
         List<String> errors = new ArrayList<>();
         int lineNumber = 1;
         String fileName = file.getName();
+        int record = 0;
 
         try (FileInputStream fis = new FileInputStream(file);
              InputStreamReader isr = new InputStreamReader(fis);
@@ -449,6 +433,7 @@ public class CdrFileServiceImpl implements CdrFileService {
                 return errors;
             }
 
+            Timer timer = new Timer("record", "records");
             while ((line = reader.readLine()) != null) {
                 try {
                     // Parse the CSV line into a CDR
@@ -458,8 +443,11 @@ public class CdrFileServiceImpl implements CdrFileService {
                     if (!currentRequestId.equals(cdr.getRequestId().toString())) {
                         // Send last CSR, if any, for processing
                         if (csr != null) {
-                            LOGGER.debug("sendProcessSummaryRecordEvent({})", csr);
                             sendProcessSummaryRecordEvent(csr);
+                            record++;
+                            if (record % CDR_PROGRESS_REPORT_CHUNK == 0) {
+                                LOGGER.debug("Detail Records - aggregated & sent {}", timer.frequency(record));
+                            }
                             csr = null; //todo: does that help the GC?
                         }
 
@@ -475,21 +463,31 @@ public class CdrFileServiceImpl implements CdrFileService {
                     callDetailRecordDataService.create(CdrHelper.csvLineToCdr(line));
 
                 } catch (IllegalArgumentException e) {
-                    errors.add(String.format(LINE_NUMBER_FMT, lineNumber, e.getMessage()));
+                    String error = String.format(LINE_NUMBER_FMT, lineNumber, e.getMessage());
+                    if (LOGGER.isDebugEnabled()) {
+                        error += "\n***\n" + line + "\n***";
+                    }
+                    errors.add(error);
                     errorCount++;
                 }
                 if (errorCount >= maxErrorCount) {
                     errors.add(String.format(MAX_ERROR_REACHED_FMT, maxErrorCount));
                     return errors;
                 }
+                if (lineNumber % CDR_PROGRESS_REPORT_CHUNK == 0) {
+                    LOGGER.debug("Detail Records - saved {}", timer.frequency(lineNumber));
+                }
                 lineNumber++;
             }
 
-            LOGGER.debug("final sendProcessSummaryRecordEvent({})", csr);
             sendProcessSummaryRecordEvent(csr);
+
+            LOGGER.info("Detail Records - aggregated & sent {}", timer.frequency(record));
+            LOGGER.info("Detail Records - saved {}", timer.frequency(lineNumber));
 
         } catch (IOException e) {
             String error = String.format(UNABLE_TO_READ_FMT, fileName, e.getMessage());
+            LOGGER.warn(error);
             errors.add(error);
         }
 
@@ -505,12 +503,13 @@ public class CdrFileServiceImpl implements CdrFileService {
      * @param file      file to process
      * @return          a list of errors (failure) or an empty list (success)
      */
-    @Override
+    @Override //NO CHECKSTYLE Cyclomatic Complexity
     public List<String> sendSummaryRecords(File file) {
         int maxErrorCount = getMaxErrorCount();
         int errorCount = 0;
         List<String> errors = new ArrayList<>();
         int lineNumber = 1;
+        int record = 0;
         String fileName = file.getName();
 
         try (FileInputStream fis = new FileInputStream(file);
@@ -521,6 +520,7 @@ public class CdrFileServiceImpl implements CdrFileService {
                 String line = reader.readLine();
                 CsrHelper.validateHeader(line);
 
+                Timer timer = new Timer("record", "records");
                 while ((line = reader.readLine()) != null) {
                     try {
 
@@ -533,6 +533,10 @@ public class CdrFileServiceImpl implements CdrFileService {
                             // Mark the CSR as FAILED (even thought it might have been REJECTED) so it's always retried
                             dto.setFinalStatus(FinalCallStatus.FAILED);
                             sendProcessSummaryRecordEvent(dto);
+                            record++;
+                            if (record % CDR_PROGRESS_REPORT_CHUNK == 0) {
+                                LOGGER.debug("Summary Records - sent {}", timer.frequency(record));
+                            }
                         }
 
                     } catch (IllegalArgumentException e) {
@@ -544,9 +548,18 @@ public class CdrFileServiceImpl implements CdrFileService {
                         return errors;
                     }
 
+                    if (lineNumber % CDR_PROGRESS_REPORT_CHUNK == 0) {
+                        LOGGER.debug("Summary Records - saved {}", timer.frequency(lineNumber));
+                    }
+
                     lineNumber++;
 
                 }
+
+                LOGGER.info("Summary Records - sent {}", timer.frequency(record));
+                LOGGER.info("Summary Records - saved {}", timer.frequency(lineNumber));
+
+
             } catch (IllegalArgumentException e) {
                 String error = String.format(UNABLE_TO_READ_HEADER_FMT, fileName, e.getMessage());
                 errors.add(error);
@@ -575,6 +588,16 @@ public class CdrFileServiceImpl implements CdrFileService {
                 (int) params.get(CDR_COUNT_PARAM_KEY)
             )
         );
+    }
+
+
+    /**
+     * Send a simple END_OF_CDR_PROCESSING_SUBJECT message to aid in debugging & diagnosing - no functional impact
+     *
+     */
+    private void sendEndCdrProcessingEvent(CdrFileNotificationRequest request) {
+        MotechEvent motechEvent = new MotechEvent(END_OF_CDR_PROCESSING_SUBJECT, paramsFromRequest(request));
+        eventRelay.sendEventMessage(motechEvent);
     }
 
 
@@ -608,7 +631,7 @@ public class CdrFileServiceImpl implements CdrFileService {
     @Override
     public void verifyDetailFileChecksumAndCount(CdrFileNotificationRequest request) {
 
-        LOGGER.debug("Starting CDR Process Phase 1");
+        LOGGER.info("CDR Processing - Phase 1 - Start");
 
         List<String> cdrErrors = verifyChecksumAndCountAndCsv(request.getCdrDetail(), true);
         alertAndAudit(request.getCdrDetail().getCdrFile(), cdrErrors);
@@ -627,7 +650,7 @@ public class CdrFileServiceImpl implements CdrFileService {
         // Send a MOTECH event to continue to phase 2 (without timing out the POST from IMI)
         sendProcessFilesEvent(request);
 
-        LOGGER.debug("CDR Process Phase 1 - Success");
+        LOGGER.info("Phase 1 - Success");
     }
 
 
@@ -670,12 +693,13 @@ public class CdrFileServiceImpl implements CdrFileService {
         // NOTE: once sorted the checksums won't match anymore.
 
         // Second verification pass (more in detail) verify all entities & sort order
-        return verifyEntitiesAndSortOrder(cdrFile, true);
+        return verifySortOrder(cdrFile);
     }
 
 
     private List<String> processSummaryFile(CdrFileNotificationRequest request) {
 
+        List<String> errors = new ArrayList<>();
         File csrFile = new File(localCdrDir(), request.getCdrSummary().getCdrFile());
         String csrFileName = csrFile.getName();
 
@@ -689,14 +713,12 @@ public class CdrFileServiceImpl implements CdrFileService {
             try {
                 scpHelper.scpCdrFromRemote(csrFileName);
             } catch (ExecException e) {
-                List<String> errors = new ArrayList<>();
                 errors.add(String.format("Error copying CSR file %s: %s", csrFileName, e.getMessage()));
                 return errors;
             }
         }
 
-        // Second verification pass, verify all entities
-        return verifyEntitiesAndSortOrder(csrFile, false);
+        return errors;
     }
 
 
@@ -707,58 +729,89 @@ public class CdrFileServiceImpl implements CdrFileService {
     @Override
     @MotechListener(subjects = { PROCESS_FILES_SUBJECT })
     public List<String> processDetailFile(MotechEvent event) {
-        LOGGER.debug("Starting CDR Process Phase 2");
+        LOGGER.info("Phase 2 - Start");
+
         CdrFileNotificationRequest request = requestFromParams(event.getParameters());
+
+        LOGGER.debug("Phase 2 - cdrFileNotificationRequest: {}", request);
 
         //
         // Detail File
         //
+        LOGGER.info("Phase 2 - processDetailFile");
         List<String> errors = processDetailFile(request);
         if (errors.size() > 0) {
-            reportAuditAndPost(request.getCdrDetail().getCdrFile(), errors);
+            reportAuditAndPost(request.getFileName(), errors);
+            LOGGER.debug("Phase 2 - Error");
             return errors;
         }
 
         //
         // Summary File
         //
-
+        LOGGER.info("Phase 2 - processSummaryFile");
         errors = processSummaryFile(request);
         if (errors.size() > 0) {
-            reportAuditAndPost(request.getCdrSummary().getCdrFile(), errors);
+            reportAuditAndPost(request.getFileName(), errors);
+            LOGGER.debug("Phase 2 - Error");
             return errors;
         }
 
+        //
         // We processed as much as we can, let IMI know before distributing the work to phase 3
+        //
+        LOGGER.info("Phase 2 - sendNotificationRequest");
         sendNotificationRequest(new CdrFileProcessedNotification(
                 FileProcessedStatus.FILE_PROCESSED_SUCCESSFULLY.getValue(),
                 request.getFileName(),
                 null
         ));
 
+
+        //
         // Clean up old CDRs/CSRs before distributing work out
+        //
+        LOGGER.info("Phase 2 - cleanOldCallRecords");
         cleanOldCallRecords();
+
+
+        LOGGER.info("Phase 2 - End");
+
+
+        LOGGER.info("Phase 3 - Start");
 
         // Phase 3: distribute the processing of aggregated CDRs to all nodes.
         //          copy CDRs from IMI to the database
         //          each node may generate an individual error that NMS-OPS will have to respond to.
         File cdrFile = new File(localCdrDir(), request.getCdrDetail().getCdrFile() + SORTED_SUFFIX);
+        LOGGER.info("Phase 3 - sendAggregatedRecords - distributing aggregate CDRs");
         errors = sendAggregatedRecords(cdrFile);
         if (errors.size() > 0) {
-            reportAuditAndPost(request.getCdrDetail().getCdrFile() + SORTED_SUFFIX, errors);
+            reportAuditAndPost(request.getFileName(), errors);
+            LOGGER.debug("Phase 3 - Error");
             return errors;
         }
 
+        LOGGER.info("Phase 3 - done distributing aggregate CDRs");
+
+
+
+        LOGGER.info("Phase 4 - Start");
 
         // Phase 4: distribute the processing of CSRs to all nodes, make backup copy of all received CSR
         File csrFile = new File(localCdrDir(), request.getCdrSummary().getCdrFile());
+        LOGGER.info("Phase 4 - sendSummaryRecords - distributing CSRs");
         errors = sendSummaryRecords(csrFile);
         if (errors.size() > 0) {
-            reportAuditAndPost(request.getCdrSummary().getCdrFile(), errors);
+            reportAuditAndPost(request.getFileName(), errors);
+            LOGGER.debug("Phase 4 - Error");
             return errors;
         }
 
-        LOGGER.debug("CDR Process Phase 2 - Success");
+        LOGGER.info("Phase 4 - done distributing CSRs");
+
+
+        sendEndCdrProcessingEvent(request);
 
         return errors;
     }
@@ -781,14 +834,14 @@ public class CdrFileServiceImpl implements CdrFileService {
             LOGGER.debug(String.format("Unable to get property from config: %s", CDR_CSR_RETENTION_DURATION));
         }
 
-        LOGGER.debug(String.format(logTemplate, callDetailRecordDataService.count(), CDR_TABLE_NAME));
-        LOGGER.debug(String.format(logTemplate, callSummaryRecordDataService.count(), CSR_TABLE_NAME));
+        LOGGER.debug(String.format(LOG_TEMPLATE, callDetailRecordDataService.count(), CDR_TABLE_NAME));
+        LOGGER.debug(String.format(LOG_TEMPLATE, callSummaryRecordDataService.count(), CSR_TABLE_NAME));
 
         deleteRecords(cdrDuration, CDR_TABLE_NAME);
         deleteRecords(cdrDuration, CSR_TABLE_NAME);
 
-        LOGGER.debug(String.format(logTemplate, callDetailRecordDataService.count(), CDR_TABLE_NAME));
-        LOGGER.debug(String.format(logTemplate, callSummaryRecordDataService.count(), CSR_TABLE_NAME));
+        LOGGER.debug(String.format(LOG_TEMPLATE, callDetailRecordDataService.count(), CDR_TABLE_NAME));
+        LOGGER.debug(String.format(LOG_TEMPLATE, callSummaryRecordDataService.count(), CSR_TABLE_NAME));
     }
 
     /**
@@ -826,5 +879,15 @@ public class CdrFileServiceImpl implements CdrFileService {
         if (tableName.equalsIgnoreCase(CSR_TABLE_NAME)) {
             callSummaryRecordDataService.evictEntityCache(false);
         }
+    }
+
+
+    @MotechListener(subjects = { END_OF_CDR_PROCESSING_SUBJECT })
+    public void processEndOfCdrProcessing(MotechEvent event) {
+        LOGGER.info("End of CDR processing");
+
+        CdrFileNotificationRequest request = requestFromParams(event.getParameters());
+
+        LOGGER.debug("cdrFileNotificationRequest: {}", request);
     }
 }

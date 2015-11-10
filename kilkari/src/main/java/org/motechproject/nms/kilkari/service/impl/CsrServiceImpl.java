@@ -15,6 +15,7 @@ import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.dto.CallSummaryRecordDto;
+import org.motechproject.nms.kilkari.exception.InvalidCdrData;
 import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.CallSummaryRecordDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
@@ -25,6 +26,8 @@ import org.motechproject.nms.props.domain.RequestId;
 import org.motechproject.nms.props.domain.StatusCode;
 import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.Language;
+import org.motechproject.nms.region.service.CircleService;
+import org.motechproject.nms.region.service.LanguageService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,6 +54,8 @@ public class CsrServiceImpl implements CsrService {
     private SubscriberDataService subscriberDataService;
     private AlertService alertService;
     private SubscriptionPackMessageDataService subscriptionPackMessageDataService;
+    private CircleService circleService;
+    private LanguageService languageService;
 
     private Map<String, Integer> messageDurationCache;
 
@@ -61,13 +66,16 @@ public class CsrServiceImpl implements CsrService {
                           CallRetryDataService callRetryDataService,
                           SubscriberDataService subscriberDataService,
                           AlertService alertService,
-                          SubscriptionPackMessageDataService subscriptionPackMessageDataService) {
+                          SubscriptionPackMessageDataService subscriptionPackMessageDataService,
+                          CircleService circleService, LanguageService languageService) {
         this.csrDataService = csrDataService;
         this.subscriptionDataService = subscriptionDataService;
         this.callRetryDataService = callRetryDataService;
         this.subscriberDataService = subscriberDataService;
         this.alertService = alertService;
         this.subscriptionPackMessageDataService = subscriptionPackMessageDataService;
+        this.circleService = circleService;
+        this.languageService = languageService;
 
         buildMessageDurationCache();
     }
@@ -220,7 +228,7 @@ public class CsrServiceImpl implements CsrService {
                 callRetry.getTimestamp().equals(RequestId.fromString(record.getRequestId()).getTimestamp())) {
             // Bad data from IMI indeed (CSR-only error code in CDR likely culprit), let's ignore the retry since it's
             // already rescheduled
-            LOGGER.warn(String.format("Ignoring duplicate CDR/CSR call failure for subscription: %s",
+            LOGGER.info(String.format("Ignoring duplicate call failure for subscription: %s",
                     subscription.getSubscriptionId()));
             return;
 
@@ -288,8 +296,6 @@ public class CsrServiceImpl implements CsrService {
 
     private CallSummaryRecord aggregateSummaryRecord(CallSummaryRecordDto csr) {
 
-        LOGGER.debug("aggregateSummaryRecord({})", csr.getRequestId().toString());
-
         CallSummaryRecord record = csrDataService.findByRequestId(csr.getRequestId().toString());
         if (record == null) {
             record = csrDataService.create(new CallSummaryRecord(
@@ -320,6 +326,32 @@ public class CsrServiceImpl implements CsrService {
     }
 
 
+    //
+    //Consider not verifying anything at all and removing this altogether
+    //
+    private void validateCallSummaryRecord(Subscription subscription, CallSummaryRecordDto csr) throws InvalidCdrData {
+        if (!subscription.getSubscriptionPack().hasMessageWithWeekId(csr.getWeekId())) {
+            throw new InvalidCdrData(String.format("%s is an invalid weekId for pack %s",
+                    csr.getWeekId(), subscription.getSubscriptionPack().getName()));
+        }
+
+        if (!subscription.getSubscriptionPack().hasMessageWithFilename(csr.getContentFileName())) {
+            throw new InvalidCdrData(String.format("%s is an invalid contentFilename for pack %s",
+                    csr.getContentFileName(), subscription.getSubscriptionPack().getName()));
+        }
+
+        if (circleService.getByName(csr.getCircle()) == null) {
+            throw new InvalidCdrData(String.format("invalid circle: %s", csr.getCircle()));
+        }
+
+
+        if (languageService.getForCode(csr.getLanguageLocationCode()) == null) {
+            throw new InvalidCdrData(String.format("invalid languageLocationCode: %s", csr.getLanguageLocationCode()));
+        }
+
+    }
+
+
     @MotechListener(subjects = { PROCESS_SUMMARY_RECORD_SUBJECT })
     public void processCallSummaryRecord(MotechEvent event) {
 
@@ -327,10 +359,11 @@ public class CsrServiceImpl implements CsrService {
         String subscriptionId = csrDto.getRequestId().getSubscriptionId();
 
         try {
-            CallSummaryRecord csr = aggregateSummaryRecord(csrDto);
-
             CallRetry callRetry = callRetryDataService.findBySubscriptionId(subscriptionId);
             Subscription subscription = subscriptionDataService.findBySubscriptionId(subscriptionId);
+            validateCallSummaryRecord(subscription, csrDto);
+
+            CallSummaryRecord csr = aggregateSummaryRecord(csrDto);
 
             /**
              * If we somehow have a null subscription (it was deleted for some reason), but still have a retry record
@@ -377,7 +410,8 @@ public class CsrServiceImpl implements CsrService {
             String msg = String.format("Exception in processCallSummaryRecord() for subscription %s: %s",
                     subscriptionId, e);
             LOGGER.error(msg);
-            alertService.create(PROCESS_SUMMARY_RECORD_SUBJECT, msg, null, AlertType.HIGH, AlertStatus.NEW, 0, null);
+            alertService.create(subscriptionId, PROCESS_SUMMARY_RECORD_SUBJECT, msg, AlertType.HIGH, AlertStatus.NEW, 0,
+                    null);
         }
     }
 

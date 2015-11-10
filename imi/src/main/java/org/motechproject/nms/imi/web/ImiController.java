@@ -1,6 +1,9 @@
 package org.motechproject.nms.imi.web;
 
 import org.apache.commons.lang3.StringUtils;
+import org.motechproject.alerts.contract.AlertService;
+import org.motechproject.alerts.domain.AlertStatus;
+import org.motechproject.alerts.domain.AlertType;
 import org.motechproject.nms.imi.domain.FileAuditRecord;
 import org.motechproject.nms.imi.domain.FileType;
 import org.motechproject.nms.imi.exception.ExecException;
@@ -53,13 +56,15 @@ public class ImiController {
     private CdrFileService cdrFileService;
     private TargetFileService targetFileService;
     private FileAuditRecordDataService fileAuditRecordDataService;
+    private AlertService alertService;
 
 
     @Autowired
-    public ImiController(SettingsFacade settingsFacade, CdrFileService cdrFileService,
+    public ImiController(SettingsFacade settingsFacade, CdrFileService cdrFileService, AlertService alertService,
                          TargetFileService targetFileService, FileAuditRecordDataService fileAuditRecordDataService) {
         this.settingsFacade = settingsFacade;
         this.cdrFileService = cdrFileService;
+        this.alertService = alertService;
         this.targetFileService = targetFileService;
         this.fileAuditRecordDataService = fileAuditRecordDataService;
     }
@@ -191,7 +196,7 @@ public class ImiController {
                     null,
                     null
             ));
-            //todo: send alert
+            alertService.create(fileName, "scpCdrFromRemote", error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
             throw new IllegalArgumentException(e.getMessage(), e);
         }
 
@@ -210,13 +215,15 @@ public class ImiController {
                     null,
                     null
             ));
-            //todo: send alert
+            alertService.create(fileName, "scpCdrFromRemote", error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
             throw new IllegalArgumentException(e.getMessage(), e);
         }
 
         // This checks the file, checksum, record count & csv lines, then sends an event to proceed to phase 2 of the
         // CDR processing task also handled by the IMI module: processDetailFile
         cdrFileService.verifyDetailFileChecksumAndCount(request);
+
+        LOGGER.debug("RESPONSE: {}", HttpStatus.ACCEPTED);
     }
 
 
@@ -250,6 +257,8 @@ public class ImiController {
 
         //
         targetFileService.handleFileProcessedStatusNotification(request);
+
+        LOGGER.debug("RESPONSE: {}", HttpStatus.OK);
     }
 
 

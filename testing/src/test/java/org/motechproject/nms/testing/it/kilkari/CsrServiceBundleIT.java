@@ -6,6 +6,10 @@ import org.joda.time.format.DateTimeFormatter;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.motechproject.alerts.contract.AlertCriteria;
+import org.motechproject.alerts.contract.AlertService;
+import org.motechproject.alerts.domain.Alert;
+import org.motechproject.alerts.domain.AlertType;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.nms.kilkari.domain.CallRetry;
 import org.motechproject.nms.kilkari.domain.CallStage;
@@ -91,6 +95,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
     DistrictService districtService;
     @Inject
     TestingService testingService;
+    @Inject
+    AlertService alertService;
 
 
     private RegionHelper rh;
@@ -150,6 +156,110 @@ public class CsrServiceBundleIT extends BasePaxIT {
         eventParams.put(CSR_PARAM_KEY, csr);
         MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
         csrService.processCallSummaryRecord(motechEvent);
+    }
+
+
+    @Test
+    public void verifyInvalidWeekId() {
+        Subscription subscription = sh.mksub(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
+        Map<String, Object> eventParams = new HashMap<>();
+        eventParams.put(CSR_PARAM_KEY, new CallSummaryRecordDto(
+                new RequestId(subscription.getSubscriptionId(), "11112233445566"),
+                1234567890L,
+                "w1_1.wav",
+                "xxx",
+                rh.hindiLanguage().getCode(),
+                rh.delhiCircle().getName(),
+                FinalCallStatus.FAILED,
+                makeStatsMap(StatusCode.OBD_FAILED_INVALIDNUMBER, 3),
+                0,
+                3
+        ));
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
+
+        csrService.processCallSummaryRecord(motechEvent);
+        AlertCriteria criteria = new AlertCriteria().byExternalId(subscription.getSubscriptionId());
+        List<Alert> alerts = alertService.search(criteria);
+        assertEquals(1, alerts.size());
+        assertEquals(AlertType.HIGH, alerts.get(0).getAlertType());
+    }
+
+
+    @Test
+    public void verifyInvalidFilename() {
+        Subscription subscription = sh.mksub(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
+        Map<String, Object> eventParams = new HashMap<>();
+        eventParams.put(CSR_PARAM_KEY, new CallSummaryRecordDto(
+                new RequestId(subscription.getSubscriptionId(), "11112233445566"),
+                1234567890L,
+                "xxx",
+                "w1_1",
+                rh.hindiLanguage().getCode(),
+                rh.delhiCircle().getName(),
+                FinalCallStatus.FAILED,
+                makeStatsMap(StatusCode.OBD_FAILED_INVALIDNUMBER, 3),
+                0,
+                3
+        ));
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
+
+        csrService.processCallSummaryRecord(motechEvent);
+        AlertCriteria criteria = new AlertCriteria().byExternalId(subscription.getSubscriptionId());
+        List<Alert> alerts = alertService.search(criteria);
+        assertEquals(1, alerts.size());
+        assertEquals(AlertType.HIGH, alerts.get(0).getAlertType());
+    }
+
+
+    @Test
+    public void verifyInvalidCircle() {
+        Subscription subscription = sh.mksub(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
+        Map<String, Object> eventParams = new HashMap<>();
+        eventParams.put(CSR_PARAM_KEY, new CallSummaryRecordDto(
+                new RequestId(subscription.getSubscriptionId(), "11112233445566"),
+                1234567890L,
+                "w1_1.wav",
+                "w1_1",
+                rh.hindiLanguage().getCode(),
+                "xxx",
+                FinalCallStatus.FAILED,
+                makeStatsMap(StatusCode.OBD_FAILED_INVALIDNUMBER, 3),
+                0,
+                3
+        ));
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
+
+        csrService.processCallSummaryRecord(motechEvent);
+        AlertCriteria criteria = new AlertCriteria().byExternalId(subscription.getSubscriptionId());
+        List<Alert> alerts = alertService.search(criteria);
+        assertEquals(1, alerts.size());
+        assertEquals(AlertType.HIGH, alerts.get(0).getAlertType());
+    }
+
+
+    @Test
+    public void verifyInvalidLanguage() {
+        Subscription subscription = sh.mksub(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
+        Map<String, Object> eventParams = new HashMap<>();
+        eventParams.put(CSR_PARAM_KEY, new CallSummaryRecordDto(
+                new RequestId(subscription.getSubscriptionId(), "11112233445566"),
+                1234567890L,
+                "w1_1.wav",
+                "w1_1",
+                "xxx",
+                rh.delhiCircle().getName(),
+                FinalCallStatus.FAILED,
+                makeStatsMap(StatusCode.OBD_FAILED_INVALIDNUMBER, 3),
+                0,
+                3
+        ));
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
+
+        csrService.processCallSummaryRecord(motechEvent);
+        AlertCriteria criteria = new AlertCriteria().byExternalId(subscription.getSubscriptionId());
+        List<Alert> alerts = alertService.search(criteria);
+        assertEquals(1, alerts.size());
+        assertEquals(AlertType.HIGH, alerts.get(0).getAlertType());
     }
 
 
@@ -254,9 +364,9 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 DayOfTheWeek.today(),
                 CallStage.RETRY_LAST,
                 contentFileName,
-                "XXX",
-                "XXX",
-                "XX",
+                sh.getWeekId(subscription, 0),
+                rh.hindiLanguage().getCode(),
+                rh.delhiCircle().getName(),
                 SubscriptionOrigin.MCTS_IMPORT,
                 now.minusDays(3).toString(TIME_FORMATTER)
         ));
@@ -267,9 +377,9 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 new RequestId(subscription.getSubscriptionId(), now.toString(TIME_FORMATTER)),
                 subscription.getSubscriber().getCallingNumber(),
                 contentFileName,
-                "XXX",
-                "XXX",
-                "XX",
+                sh.getWeekId(subscription, 0),
+                rh.hindiLanguage().getCode(),
+                rh.delhiCircle().getName(),
                 FinalCallStatus.FAILED,
                 callStats,
                 0,
@@ -305,9 +415,9 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 DayOfTheWeek.today(),
                 CallStage.RETRY_2,
                 contentFileName,
-                "XXX",
-                "XXX",
-                "XX",
+                sh.getWeekId(subscription, 0),
+                rh.hindiLanguage().getCode(),
+                rh.delhiCircle().getName(),
                 SubscriptionOrigin.MCTS_IMPORT,
                 now.minusDays(3).toString(TIME_FORMATTER)
         ));
@@ -318,9 +428,9 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 new RequestId(subscription.getSubscriptionId(), now.toString(TIME_FORMATTER)),
                 subscription.getSubscriber().getCallingNumber(),
                 contentFileName,
-                "XXX",
-                "XXX",
-                "XX",
+                sh.getWeekId(subscription, 0),
+                rh.hindiLanguage().getCode(),
+                rh.delhiCircle().getName(),
                 FinalCallStatus.SUCCESS,
                 callStats,
                 0,
@@ -354,9 +464,9 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 null,
                 CallStage.RETRY_1,
                 contentFileName,
-                "XXX",
-                "XXX",
-                "XX",
+                sh.getWeekId(subscription, 0),
+                rh.hindiLanguage().getCode(),
+                rh.delhiCircle().getName(),
                 SubscriptionOrigin.MCTS_IMPORT,
                 now.minusDays(3).toString(TIME_FORMATTER)
         ));
@@ -368,9 +478,9 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 new RequestId(subscription.getSubscriptionId(), now.toString(TIME_FORMATTER)),
                 subscription.getSubscriber().getCallingNumber(),
                 contentFileName,
-                "XXX",
-                "XXX",
-                "XX",
+                sh.getWeekId(subscription, 0),
+                rh.hindiLanguage().getCode(),
+                rh.delhiCircle().getName(),
                 FinalCallStatus.FAILED,
                 callStats,
                 0,
@@ -411,9 +521,9 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 new RequestId(subscription.getSubscriptionId(), timestamp),
                 subscription.getSubscriber().getCallingNumber(),
                 contentFileName,
-                "XXX",
-                "XXX",
-                "XX",
+                sh.getWeekId(subscription, 0),
+                rh.hindiLanguage().getCode(),
+                rh.delhiCircle().getName(),
                 FinalCallStatus.REJECTED,
                 callStats,
                 0,
@@ -450,8 +560,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 subscription.getSubscriber().getCallingNumber(),
                 contentFileName,
                 "w1_1",
-                "XXX",
-                "XX",
+                rh.hindiLanguage().getCode(),
+                rh.delhiCircle().getName(),
                 FinalCallStatus.FAILED,
                 callStats,
                 0,
@@ -549,9 +659,9 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 null,
                 CallStage.RETRY_1,
                 contentFileName,
-                "XXX",
-                "XXX",
-                "XX",
+                sh.getWeekId(subscription, 0),
+                rh.hindiLanguage().getCode(),
+                rh.delhiCircle().getName(),
                 SubscriptionOrigin.MCTS_IMPORT,
                 now.minusDays(3).toString(TIME_FORMATTER)
         ));
@@ -562,9 +672,9 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 new RequestId(subscription.getSubscriptionId(), now.toString(TIME_FORMATTER)),
                 subscription.getSubscriber().getCallingNumber(),
                 contentFileName,
-                "XXX",
-                "XXX",
-                "XX",
+                sh.getWeekId(subscription, 0),
+                rh.hindiLanguage().getCode(),
+                rh.delhiCircle().getName(),
                 FinalCallStatus.FAILED,
                 callStats,
                 0,
@@ -606,9 +716,9 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 null,
                 CallStage.RETRY_2,
                 contentFileName,
-                "XXX",
-                "XXX",
-                "XX",
+                sh.getWeekId(subscription, 0),
+                rh.hindiLanguage().getCode(),
+                rh.delhiCircle().getName(),
                 SubscriptionOrigin.MCTS_IMPORT,
                 now.minusDays(3).toString(TIME_FORMATTER)
         ));
@@ -619,9 +729,9 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 new RequestId(subscription.getSubscriptionId(), now.toString(TIME_FORMATTER)),
                 subscription.getSubscriber().getCallingNumber(),
                 contentFileName,
-                "XXX",
-                "XXX",
-                "XX",
+                sh.getWeekId(subscription, 0),
+                rh.hindiLanguage().getCode(),
+                rh.delhiCircle().getName(),
                 FinalCallStatus.FAILED,
                 callStats,
                 0,
@@ -809,9 +919,9 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 DayOfTheWeek.today(),
                 CallStage.RETRY_1,
                 contentFileName,
-                "XXX",
-                "XXX",
-                "XX",
+                sh.getWeekId(subscription, 0),
+                rh.hindiLanguage().getCode(),
+                rh.delhiCircle().getName(),
                 SubscriptionOrigin.MCTS_IMPORT,
                 now.minusDays(3).toString(TIME_FORMATTER)
         ));
@@ -822,9 +932,9 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 new RequestId(subscription.getSubscriptionId(), now.toString(TIME_FORMATTER)),
                 subscription.getSubscriber().getCallingNumber(),
                 contentFileName,
-                "XXX",
-                "XXX",
-                "XX",
+                sh.getWeekId(subscription, 0),
+                rh.hindiLanguage().getCode(),
+                rh.delhiCircle().getName(),
                 FinalCallStatus.FAILED,
                 callStats,
                 0,
@@ -858,8 +968,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 CallStage.RETRY_1,
                 "w48_1.wav",
                 "w48_1",
-                "XXX",
-                "XX",
+                rh.hindiLanguage().getCode(),
+                rh.delhiCircle().getName(),
                 SubscriptionOrigin.MCTS_IMPORT,
                 now.minusDays(3).toString(TIME_FORMATTER)
         ));
@@ -1076,8 +1186,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 CallStage.RETRY_1,
                 "w72_2.wav",
                 "w72_2",
-                "XXX",
-                "XX",
+                rh.hindiLanguage().getCode(),
+                rh.delhiCircle().getName(),
                 SubscriptionOrigin.MCTS_IMPORT,
                 timestamp
         ));
@@ -1127,8 +1237,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 CallStage.RETRY_1,
                 "w48_1.wav",
                 "w48_1",
-                "XXX",
-                "XX",
+                rh.hindiLanguage().getCode(),
+                rh.delhiCircle().getName(),
                 SubscriptionOrigin.MCTS_IMPORT,
                 timestamp
         ));
