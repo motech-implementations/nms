@@ -79,8 +79,7 @@ public class CdrFileServiceImpl implements CdrFileService {
     private static final String CDR_CHECKSUM_PARAM_KEY = "cdrChecksum";
     private static final String CDR_COUNT_PARAM_KEY = "cdrCount";
     private static final String SORTED_SUFFIX = ".sorted";
-    public static final String CDR_PROCESS_PHASE_2_ERROR = "Phase 2 - Error";
-    private static String logTemplate = "Found %d records in table %s";
+    private static final String LOG_TEMPLATE = "Found %d records in table %s";
     private static final String CDR_DETAIL_FILE = "CDR Detail File";
     private static final String LINE_NUMBER_FMT = "Line %d: %s";
     private static final String MAX_ERROR_REACHED_FMT = "The maximum number of allowed errors of %d has been " +
@@ -632,7 +631,7 @@ public class CdrFileServiceImpl implements CdrFileService {
     @Override
     public void verifyDetailFileChecksumAndCount(CdrFileNotificationRequest request) {
 
-        LOGGER.info("Phase 1 - Start");
+        LOGGER.info("CDR Processing - Phase 1 - Start");
 
         List<String> cdrErrors = verifyChecksumAndCountAndCsv(request.getCdrDetail(), true);
         alertAndAudit(request.getCdrDetail().getCdrFile(), cdrErrors);
@@ -743,7 +742,7 @@ public class CdrFileServiceImpl implements CdrFileService {
         List<String> errors = processDetailFile(request);
         if (errors.size() > 0) {
             reportAuditAndPost(request.getFileName(), errors);
-            LOGGER.debug(CDR_PROCESS_PHASE_2_ERROR);
+            LOGGER.debug("Phase 2 - Error");
             return errors;
         }
 
@@ -754,7 +753,7 @@ public class CdrFileServiceImpl implements CdrFileService {
         errors = processSummaryFile(request);
         if (errors.size() > 0) {
             reportAuditAndPost(request.getFileName(), errors);
-            LOGGER.debug(CDR_PROCESS_PHASE_2_ERROR);
+            LOGGER.debug("Phase 2 - Error");
             return errors;
         }
 
@@ -789,7 +788,7 @@ public class CdrFileServiceImpl implements CdrFileService {
         errors = sendAggregatedRecords(cdrFile);
         if (errors.size() > 0) {
             reportAuditAndPost(request.getFileName(), errors);
-            LOGGER.debug(CDR_PROCESS_PHASE_2_ERROR);
+            LOGGER.debug("Phase 3 - Error");
             return errors;
         }
 
@@ -805,7 +804,7 @@ public class CdrFileServiceImpl implements CdrFileService {
         errors = sendSummaryRecords(csrFile);
         if (errors.size() > 0) {
             reportAuditAndPost(request.getFileName(), errors);
-            LOGGER.debug(CDR_PROCESS_PHASE_2_ERROR);
+            LOGGER.debug("Phase 4 - Error");
             return errors;
         }
 
@@ -835,14 +834,14 @@ public class CdrFileServiceImpl implements CdrFileService {
             LOGGER.debug(String.format("Unable to get property from config: %s", CDR_CSR_RETENTION_DURATION));
         }
 
-        LOGGER.debug(String.format(logTemplate, callDetailRecordDataService.count(), CDR_TABLE_NAME));
-        LOGGER.debug(String.format(logTemplate, callSummaryRecordDataService.count(), CSR_TABLE_NAME));
+        LOGGER.debug(String.format(LOG_TEMPLATE, callDetailRecordDataService.count(), CDR_TABLE_NAME));
+        LOGGER.debug(String.format(LOG_TEMPLATE, callSummaryRecordDataService.count(), CSR_TABLE_NAME));
 
         deleteRecords(cdrDuration, CDR_TABLE_NAME);
         deleteRecords(cdrDuration, CSR_TABLE_NAME);
 
-        LOGGER.debug(String.format(logTemplate, callDetailRecordDataService.count(), CDR_TABLE_NAME));
-        LOGGER.debug(String.format(logTemplate, callSummaryRecordDataService.count(), CSR_TABLE_NAME));
+        LOGGER.debug(String.format(LOG_TEMPLATE, callDetailRecordDataService.count(), CDR_TABLE_NAME));
+        LOGGER.debug(String.format(LOG_TEMPLATE, callSummaryRecordDataService.count(), CSR_TABLE_NAME));
     }
 
     /**

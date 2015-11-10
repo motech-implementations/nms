@@ -326,6 +326,9 @@ public class CsrServiceImpl implements CsrService {
     }
 
 
+    //
+    //Consider not verifying anything at all and removing this altogether
+    //
     private void validateCallSummaryRecord(Subscription subscription, CallSummaryRecordDto csr) throws InvalidCdrData {
         if (!subscription.getSubscriptionPack().hasMessageWithWeekId(csr.getWeekId())) {
             throw new InvalidCdrData(String.format("%s is an invalid weekId for pack %s",
