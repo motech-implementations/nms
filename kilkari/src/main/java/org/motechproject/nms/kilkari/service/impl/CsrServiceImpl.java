@@ -1,10 +1,13 @@
 package org.motechproject.nms.kilkari.service.impl;
 
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.alerts.domain.AlertStatus;
 import org.motechproject.alerts.domain.AlertType;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.annotations.MotechListener;
+import org.motechproject.mds.query.SqlQueryExecution;
+import org.motechproject.metrics.service.Timer;
 import org.motechproject.nms.kilkari.domain.CallRetry;
 import org.motechproject.nms.kilkari.domain.CallStage;
 import org.motechproject.nms.kilkari.domain.CallSummaryRecord;
@@ -15,7 +18,7 @@ import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.dto.CallSummaryRecordDto;
-import org.motechproject.nms.kilkari.exception.InvalidCdrData;
+import org.motechproject.nms.kilkari.exception.InvalidCdrDataException;
 import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.CallSummaryRecordDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
@@ -34,6 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
+import javax.jdo.Query;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -125,8 +129,10 @@ public class CsrServiceImpl implements CsrService {
 
 
     private String getCircleName(Subscription subscription) {
+        Timer timer = new Timer();
         Subscriber subscriber = subscription.getSubscriber();
         Circle circle = (Circle) subscriberDataService.getDetachedField(subscriber, "circle");
+        LOGGER.debug("getCircleName({}): {}", subscription.getSubscriptionId(), timer.time());
         return circle.getName();
     }
 
@@ -329,24 +335,24 @@ public class CsrServiceImpl implements CsrService {
     //
     //Consider not verifying anything at all and removing this altogether
     //
-    private void validateCallSummaryRecord(Subscription subscription, CallSummaryRecordDto csr) throws InvalidCdrData {
+    private void validateCallSummaryRecord(Subscription subscription, CallSummaryRecordDto csr) throws InvalidCdrDataException {
         if (!subscription.getSubscriptionPack().hasMessageWithWeekId(csr.getWeekId())) {
-            throw new InvalidCdrData(String.format("%s is an invalid weekId for pack %s",
+            throw new InvalidCdrDataException(String.format("%s is an invalid weekId for pack %s",
                     csr.getWeekId(), subscription.getSubscriptionPack().getName()));
         }
 
         if (!subscription.getSubscriptionPack().hasMessageWithFilename(csr.getContentFileName())) {
-            throw new InvalidCdrData(String.format("%s is an invalid contentFilename for pack %s",
+            throw new InvalidCdrDataException(String.format("%s is an invalid contentFilename for pack %s",
                     csr.getContentFileName(), subscription.getSubscriptionPack().getName()));
         }
 
         if (circleService.getByName(csr.getCircle()) == null) {
-            throw new InvalidCdrData(String.format("invalid circle: %s", csr.getCircle()));
+            throw new InvalidCdrDataException(String.format("invalid circle: %s", csr.getCircle()));
         }
 
 
         if (languageService.getForCode(csr.getLanguageLocationCode()) == null) {
-            throw new InvalidCdrData(String.format("invalid languageLocationCode: %s", csr.getLanguageLocationCode()));
+            throw new InvalidCdrDataException(String.format("invalid languageLocationCode: %s", csr.getLanguageLocationCode()));
         }
 
     }
@@ -358,9 +364,15 @@ public class CsrServiceImpl implements CsrService {
         CallSummaryRecordDto csrDto = (CallSummaryRecordDto) event.getParameters().get(CSR_PARAM_KEY);
         String subscriptionId = csrDto.getRequestId().getSubscriptionId();
 
+        Timer timer = new Timer();
+
         try {
-            CallRetry callRetry = callRetryDataService.findBySubscriptionId(subscriptionId);
             Subscription subscription = subscriptionDataService.findBySubscriptionId(subscriptionId);
+            if (subscription == null) {
+                throw new InvalidCdrDataException(String.format("Subscription %s does not exist in the database",
+                        subscriptionId));
+            }
+            CallRetry callRetry = callRetryDataService.findBySubscriptionId(subscriptionId);
             validateCallSummaryRecord(subscription, csrDto);
 
             CallSummaryRecord csr = aggregateSummaryRecord(csrDto);
@@ -406,13 +418,21 @@ public class CsrServiceImpl implements CsrService {
                     alertService.create(subscriptionId, PROCESS_SUMMARY_RECORD_SUBJECT, error, AlertType.CRITICAL,
                             AlertStatus.NEW, 0, null);
             }
+        } catch (InvalidCdrDataException e) {
+            String msg = String.format("Invalid CDR data for subscription %s: %s", subscriptionId, e.getMessage());
+            LOGGER.error(msg);
+            alertService.create(subscriptionId, "Invalid CDR Data", msg, AlertType.HIGH, AlertStatus.NEW, 0,
+                    null);
         } catch (Exception e) {
-            String msg = String.format("Exception in processCallSummaryRecord() for subscription %s: %s",
-                    subscriptionId, e);
+            String msg = String.format("MOTECH BUG *** Unexpected exception in processCallSummaryRecord() for " +
+                            "subscription %s: %s", subscriptionId, ExceptionUtils.getFullStackTrace(e));
             LOGGER.error(msg);
             alertService.create(subscriptionId, PROCESS_SUMMARY_RECORD_SUBJECT, msg, AlertType.HIGH, AlertStatus.NEW, 0,
                     null);
         }
+
+        LOGGER.debug("processCallSummaryRecord {} : {}", subscriptionId, timer.time());
+
     }
 
 
@@ -422,5 +442,55 @@ public class CsrServiceImpl implements CsrService {
             subscription.setNeedsWelcomeMessageViaObd(false);
             subscriptionDataService.update(subscription);
         }
+    }
+
+
+    @Override
+    public void deleteOldCallSummaryRecords(final int retentionInDays) {
+
+        @SuppressWarnings("unchecked")
+        SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
+
+            @Override
+            public String getSqlQuery() {
+                String query = String.format(
+                        "DELETE FROM NMS_KK_SUMMARY_RECORDS_STATUSSTATS where id_OID in " +
+                                "(select id from nms_kk_summary_records where creationDate < now() - INTERVAL %d DAY)",
+                        retentionInDays);
+                LOGGER.debug("SQL QUERY: {}", query);
+                return query;
+            }
+
+            @Override
+            public Long execute(Query query) {
+
+                return (Long) query.execute();
+            }
+        };
+
+        Long rowCount = csrDataService.executeSQLQuery(queryExecution);
+        LOGGER.debug(String.format("Deleted %d rows from NMS_KK_SUMMARY_RECORDS_STATUSSTATS", rowCount));
+
+        queryExecution = new SqlQueryExecution<Long>() {
+
+            @Override
+            public String getSqlQuery() {
+                String query = String.format(
+                        "DELETE FROM nms_kk_summary_records where creationDate < now() - INTERVAL %d DAY",
+                        retentionInDays);
+                LOGGER.debug("SQL QUERY: {}", query);
+                return query;
+            }
+
+            @Override
+            public Long execute(Query query) {
+
+                return (Long) query.execute();
+            }
+        };
+
+        rowCount = csrDataService.executeSQLQuery(queryExecution);
+        LOGGER.debug(String.format("Deleted %d rows from nms_kk_summary_records", rowCount));
+
     }
 }

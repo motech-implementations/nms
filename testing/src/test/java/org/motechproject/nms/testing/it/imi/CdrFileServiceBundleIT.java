@@ -159,7 +159,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         helper.makeLocalCdrFile();
         helper.makeCsrs(1);
         helper.makeLocalCsrFile(0);
-        cdrFileService.verifyDetailFileChecksumAndCount(helper.cdrFileNotificationRequest());
+        cdrFileService.cdrProcessingPhase1(helper.cdrFileNotificationRequest());
     }
 
     @Rule
@@ -181,7 +181,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
                 csrFileInfo,
                 cdrFileInfo
         );
-        cdrFileService.verifyDetailFileChecksumAndCount(request);
+        cdrFileService.cdrProcessingPhase1(request);
     }
 
 
@@ -192,7 +192,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         helper.makeLocalCdrFile(2);
         helper.makeLocalCsrFile();
         try {
-            cdrFileService.verifyDetailFileChecksumAndCount(helper.cdrFileNotificationRequest());
+            cdrFileService.cdrProcessingPhase1(helper.cdrFileNotificationRequest());
         } catch (InvalidCdrFileException e) {
             assertEquals(2, e.getMessages().size());
         }
@@ -206,7 +206,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         helper.makeLocalCdrFile(5);
         helper.makeLocalCsrFile();
         try {
-            cdrFileService.verifyDetailFileChecksumAndCount(helper.cdrFileNotificationRequest());
+            cdrFileService.cdrProcessingPhase1(helper.cdrFileNotificationRequest());
         } catch (InvalidCdrFileException e) {
             List<String> errors = e.getMessages();
             assertEquals(4, errors.size());
@@ -227,7 +227,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         Map<String, Object> eventParams = new HashMap<>();
         eventParams.put(FILE_NOTIFICATION_REQUEST_PARAM_KEY, helper.cdrFileNotificationRequest());
         MotechEvent motechEvent = new MotechEvent(PROCESS_FILES_SUBJECT, helper.cdrFileNotificationParams());
-        List<String> errors = cdrFileService.processDetailFile(motechEvent);
+        List<String> errors = cdrFileService.cdrProcessPhase234(motechEvent);
         assertEquals(0, errors.size());
 
         // This is going to try to send the file processed notification back to IMI, but will fail since we

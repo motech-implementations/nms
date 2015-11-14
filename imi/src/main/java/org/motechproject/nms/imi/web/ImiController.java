@@ -84,6 +84,7 @@ public class ImiController {
     }
 
 
+    // verify the passed targetFileName is valid
     private static boolean validateTargetFileName(StringBuilder errors, String targetFileName) {
         if (validateFieldPresent(errors, "fileName", targetFileName)) {
             if (TARGET_FILENAME_PATTERN.matcher(targetFileName).matches()) {
@@ -97,6 +98,7 @@ public class ImiController {
     }
 
 
+    // verify the detail/summary file info is valid
     private static boolean validateCdrFileInfo(StringBuilder errors, FileInfo fileInfo,
         String fieldName, String targetFileName) {
 
@@ -129,7 +131,7 @@ public class ImiController {
 
     private void verifyFileExistsInAuditRecord(String fileName) {
         if (fileAuditRecordDataService.countFindByFileName(fileName) < 1) {
-            throw new NotFoundException(String.format("<%s: Not Found>", fileName));
+            throw new NotFoundException(String.format("<%s: Not found in FileAuditRecord>", fileName));
         }
     }
 
@@ -165,11 +167,11 @@ public class ImiController {
         log("REQUEST: /cdrFileNotification (POST)", request.toString());
 
         StringBuilder failureReasons = new StringBuilder();
+
+        // Sanity check on the arguments passed in the json structure
         validateTargetFileName(failureReasons, request.getFileName());
-        validateCdrFileInfo(failureReasons, request.getCdrSummary(), "cdrSummary",
-                request.getFileName());
-        validateCdrFileInfo(failureReasons, request.getCdrDetail(), "cdrDetail",
-                request.getFileName());
+        validateCdrFileInfo(failureReasons, request.getCdrSummary(), "cdrSummary", request.getFileName());
+        validateCdrFileInfo(failureReasons, request.getCdrDetail(), "cdrDetail", request.getFileName());
 
         if (failureReasons.length() > 0) {
             throw new IllegalArgumentException(failureReasons.toString());
@@ -219,11 +221,11 @@ public class ImiController {
             throw new IllegalArgumentException(e.getMessage(), e);
         }
 
-        // This checks the file, checksum, record count & csv lines, then sends an event to proceed to phase 2 of the
-        // CDR processing task also handled by the IMI module: processDetailFile
-        cdrFileService.verifyDetailFileChecksumAndCount(request);
+        // Checks the CSR/CDR checksum, record count & csv, then sends an event to proceed to phase 2 of the
+        // CDR processing task also handled by the IMI module: cdrProcessPhase234
+        cdrFileService.cdrProcessingPhase1(request);
 
-        LOGGER.debug("RESPONSE: {}", HttpStatus.ACCEPTED);
+        LOGGER.debug("RESPONSE: HTTP {}", HttpStatus.ACCEPTED);
     }
 
 
