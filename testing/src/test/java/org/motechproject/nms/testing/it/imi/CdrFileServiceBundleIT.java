@@ -227,7 +227,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         Map<String, Object> eventParams = new HashMap<>();
         eventParams.put(FILE_NOTIFICATION_REQUEST_PARAM_KEY, helper.cdrFileNotificationRequest());
         MotechEvent motechEvent = new MotechEvent(PROCESS_FILES_SUBJECT, helper.cdrFileNotificationParams());
-        List<String> errors = cdrFileService.cdrProcessPhase234(motechEvent);
+        List<String> errors = cdrFileService.cdrProcessPhase2(motechEvent);
         assertEquals(0, errors.size());
 
         // This is going to try to send the file processed notification back to IMI, but will fail since we
@@ -279,9 +279,9 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
 
         File cdrFile = helper.makeLocalCdrFile();
 
-        List<String> errors = cdrFileService.sendAggregatedRecords(cdrFile);
+        cdrFileService.sendAggregatedRecords(cdrFile);
 
-        assertEquals(0, errors.size());
+        assertEquals(0, alertService.search(new AlertCriteria()));
     }
 
     @Test

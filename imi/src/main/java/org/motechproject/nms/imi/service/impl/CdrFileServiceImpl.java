@@ -62,14 +62,12 @@ public class CdrFileServiceImpl implements CdrFileService {
 
     private static final String CDR_FILE_NOTIFICATION_URL = "imi.cdr_file_notification_url";
     private static final String LOCAL_CDR_DIR = "imi.local_cdr_dir";
-    private static final String MAX_CDR_ERROR_COUNT = "imi.max_cdr_error_count";
     private static final String CDR_CSR_RETENTION_DURATION = "imi.cdr_csr.retention.duration";
     private static final int MIN_CALL_DATA_RETENTION_DURATION_IN_DAYS = 5;
     private static final String CDR_CSR_CLEANUP_SUBJECT = "nms.imi.cdr_csr.cleanup";
     private static final String CDR_TABLE_NAME = "motech_data_services.nms_imi_cdrs";
     private static final String CSR_TABLE_NAME = "motech_data_services.nms_imi_csrs";
     private static final String KK_CSR_TABLE_NAME = "motech_data_services.nms_kk_summary_records";
-    private static final int MAX_CDR_ERROR_COUNT_DEFAULT = 100;
     private static final String PROCESS_SUMMARY_RECORD_SUBJECT = "nms.imi.kk.process_summary_record";
     private static final String END_OF_CDR_PROCESSING_SUBJECT = "nms.imi.kk.end_of_cdr_processing";
     private static final String CSR_PARAM_KEY = "csr";
@@ -88,14 +86,21 @@ public class CdrFileServiceImpl implements CdrFileService {
     private static final String LOG_TEMPLATE = "Found %d records in table %s";
     private static final String CDR_DETAIL_FILE = "CDR Detail File";
     private static final String LINE_NUMBER_FMT = "Line %d: %s";
-    private static final String MAX_ERROR_REACHED_FMT = "The maximum number of allowed errors of %d has been " +
-            "reached, ending file verification.";
     private static final String UNABLE_TO_READ_FMT = "Unable to read %s: %s";
     private static final String UNABLE_TO_READ_HEADER_FMT = "Unable to read  header %s: %s";
     private static final int CDR_PROGRESS_REPORT_CHUNK = 1000;
 
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CdrFileServiceImpl.class);
+    public static final String INVALID_CDR_HEADER_P4 = "The CDR header should be valid in  Phase 4, this is an internal MOTECH error and must be investigated - ";
+    public static final String INVALID_CDR_P4 = "The CDR should be readable & valid in Phase 4, this is an internal MOTECH error and must be investigated - ";
+    public static final String INVALID_CSR_HEADER_P5 = "The CSR header should be valid in  Phase 5, this is an internal MOTECH error and must be investigated - ";
+    public static final String INVALID_CSR_P5 = "The CSR should be readable & valid in Phase 5, this is an internal MOTECH error and must be investigated - ";
+    public static final String INVALID_CDR_HEADER_P2 = "The CDR header should be valid in  Phase 2, this is an internal MOTECH error and must be investigated - ";
+    public static final String INVALID_CDR_P2 = "The CDR should be readable & valid in Phase 2, this is an internal MOTECH error and must be investigated - ";
+    public static final String INVALID_CSR_HEADER_P2 = "The CSR header should be valid in  Phase 2, this is an internal MOTECH error and must be investigated - ";
+    public static final String INVALID_CSR_P2 = "The CSR should be readable & valid in Phase 2, this is an internal MOTECH error and must be investigated - ";
+    public static final String COPY_ERROR = "Copy Error";
 
     private SettingsFacade settingsFacade;
     private EventRelay eventRelay;
@@ -119,13 +124,6 @@ public class CdrFileServiceImpl implements CdrFileService {
         this.callSummaryRecordDataService = callSummaryRecordDataService;
         this.csrService = csrService;
     }
-
-    private void alertAuditAndThrow(String file, List<String> errors) {
-        alertAndAudit(file, errors);
-
-        throw new InvalidCdrFileException(errors);
-    }
-
 
     private void alertAndAudit(String file, List<String> errors) {
         for (String error : errors) {
@@ -162,21 +160,6 @@ public class CdrFileServiceImpl implements CdrFileService {
         }
 
         sender.sendNotificationRequest(httpPost, HttpStatus.SC_OK, cfpn.getFileName(), "cdrFile Notification Request");
-    }
-
-
-    private void reportAuditAndPost(String file, List<String> errors) {
-        for (String error : errors) {
-            LOGGER.error(error);
-            alertService.create(file, CDR_DETAIL_FILE, error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
-            fileAuditRecordDataService.create(new FileAuditRecord(FileType.CDR_DETAIL_FILE, file, false, error,
-                    null, null));
-        }
-        sendNotificationRequest(new CdrFileProcessedNotification(
-                FileProcessedStatus.FILE_ERROR_IN_FILE_FORMAT.getValue(),
-                file,
-                StringUtils.join(errors, ",")
-        ));
     }
 
 
@@ -224,15 +207,6 @@ public class CdrFileServiceImpl implements CdrFileService {
             }
 
             csr.setCallAttempts(csr.getCallAttempts() + 1);
-        }
-    }
-
-
-    private int getMaxErrorCount() {
-        try {
-            return Integer.parseInt(settingsFacade.getProperty(MAX_CDR_ERROR_COUNT));
-        } catch (NumberFormatException e) {
-            return MAX_CDR_ERROR_COUNT_DEFAULT;
         }
     }
 
@@ -350,8 +324,7 @@ public class CdrFileServiceImpl implements CdrFileService {
                 line = reader.readLine();
                 CdrHelper.validateHeader(line);
             } catch (IllegalArgumentException e) {
-                String error ="The CDR header should be valid in  Phase 4, this is an internal MOTECH error and " +
-                        "must be investigated - " + String.format(UNABLE_TO_READ_HEADER_FMT, fileName, e.getMessage());
+                String error = INVALID_CDR_HEADER_P4 + String.format(UNABLE_TO_READ_HEADER_FMT, fileName, e.getMessage());
                 LOGGER.error(error);
                 alertService.create(fileName, "Invalid CDR Header in Phase 4", error, AlertType.CRITICAL,
                         AlertStatus.NEW, 0, null);
@@ -407,8 +380,7 @@ public class CdrFileServiceImpl implements CdrFileService {
             LOGGER.info("Detail Records - saved {}", timer.frequency(lineNumber));
 
         } catch (IOException e) {
-            String error ="The CDR should be readable & valid in Phase 4, this is an internal MOTECH error and " +
-                    "must be investigated - " + String.format(UNABLE_TO_READ_FMT, fileName, e.getMessage());
+            String error = INVALID_CDR_P4 + String.format(UNABLE_TO_READ_FMT, fileName, e.getMessage());
             LOGGER.error(error);
             alertService.create(fileName, "Invalid CDR in Phase 4", error, AlertType.CRITICAL, AlertStatus.NEW, 0,
                     null);
@@ -437,8 +409,7 @@ public class CdrFileServiceImpl implements CdrFileService {
                 line = reader.readLine();
                 CsrHelper.validateHeader(line);
             } catch (IllegalArgumentException e) {
-                String error ="The CSR header should be valid in  Phase 5, this is an internal MOTECH error and " +
-                        "must be investigated - " + String.format(UNABLE_TO_READ_HEADER_FMT,
+                String error = INVALID_CSR_HEADER_P5 + String.format(UNABLE_TO_READ_HEADER_FMT,
                         fileName, e.getMessage());
                 LOGGER.error(error);
                 alertService.create(fileName, "Invalid CSR Header in Phase 5", error, AlertType.CRITICAL,
@@ -481,8 +452,7 @@ public class CdrFileServiceImpl implements CdrFileService {
             LOGGER.info("CSRs - sent {}", timer.frequency(lineNumber));
 
         } catch (IOException e) {
-            String error ="The CSR should be readable & valid in Phase 5, this is an internal MOTECH error and " +
-                    "must be investigated - " + String.format(UNABLE_TO_READ_FMT, fileName, e.getMessage());
+            String error = INVALID_CSR_P5 + String.format(UNABLE_TO_READ_FMT, fileName, e.getMessage());
             LOGGER.error(error);
             alertService.create(fileName, "Invalid CSR in Phase 5", error, AlertType.CRITICAL, AlertStatus.NEW, 0,
                     null);
@@ -504,16 +474,6 @@ public class CdrFileServiceImpl implements CdrFileService {
                 (int) params.get(CDR_COUNT_PARAM_KEY)
             )
         );
-    }
-
-
-    /**
-     * Send a simple END_OF_CDR_PROCESSING_SUBJECT message to aid in debugging & diagnosing - no functional impact
-     *
-     */
-    private void sendEndCdrProcessingEvent(CdrFileNotificationRequest request) {
-        MotechEvent motechEvent = new MotechEvent(END_OF_CDR_PROCESSING_SUBJECT, paramsFromRequest(request));
-        eventRelay.sendEventMessage(motechEvent);
     }
 
 
@@ -598,8 +558,7 @@ public class CdrFileServiceImpl implements CdrFileService {
                 line = reader.readLine();
                 CdrHelper.validateHeader(line);
             } catch (IllegalArgumentException e) {
-                String error ="CDR header should be valid in  Phase 2, this is an internal MOTECH error and " +
-                        "must be investigated - " + String.format(UNABLE_TO_READ_HEADER_FMT, fileName, e.getMessage());
+                String error = INVALID_CDR_HEADER_P2 + String.format(UNABLE_TO_READ_HEADER_FMT, fileName, e.getMessage());
                 errors.add(error);
                 LOGGER.error(error);
                 alertService.create(fileName, "Invalid CDR Header in Phase 2", error, AlertType.CRITICAL,
@@ -613,15 +572,14 @@ public class CdrFileServiceImpl implements CdrFileService {
                     CdrHelper.csvLineToCdrDto(line);
 
                 } catch (InvalidCsrException e) {
-                    LOGGER.debug(String.format("%s(%d): %s\n\n%s\n\n", fileName, line, line));
+                    LOGGER.debug(String.format("%s(%d): %s\n\n%s\n", fileName, lineNumber, e.getMessage(), line));
                     errors.add(String.format(LINE_NUMBER_FMT, lineNumber, e.getMessage()));
                 }
                 lineNumber++;
             }
 
         } catch (IOException e) {
-            String error ="The CDR should be readable & valid in Phase 2, this is an internal MOTECH error and " +
-                    "must be investigated - " + String.format(UNABLE_TO_READ_FMT, fileName, e.getMessage());
+            String error = INVALID_CDR_P2 + String.format(UNABLE_TO_READ_FMT, fileName, e.getMessage());
             errors.add(error);
             LOGGER.error(error);
             alertService.create(fileName, "Invalid CDR in Phase 2", error, AlertType.CRITICAL, AlertStatus.NEW, 0,
@@ -650,8 +608,8 @@ public class CdrFileServiceImpl implements CdrFileService {
                 line = reader.readLine();
                 CsrHelper.validateHeader(line);
             } catch (IllegalArgumentException e) {
-                String error ="The CSR header should be valid in  Phase 2, this is an internal MOTECH error and " +
-                        "must be investigated - " + String.format(UNABLE_TO_READ_HEADER_FMT, fileName, e.getMessage());
+                String error = INVALID_CSR_HEADER_P2 + String.format(UNABLE_TO_READ_HEADER_FMT,
+                        fileName, e.getMessage());
                 errors.add(error);
                 LOGGER.error(error);
                 alertService.create(fileName, "Invalid CSR Header in Phase 2", error, AlertType.CRITICAL,
@@ -665,15 +623,14 @@ public class CdrFileServiceImpl implements CdrFileService {
                     CsrHelper.csvLineToCsr(line);
 
                 } catch (InvalidCsrException e) {
-                    LOGGER.debug(String.format("%s(%d): %s\n\n%s\n\n", fileName, line, line));
+                    LOGGER.debug(String.format("%s(%d): %s\n\n%s\n", fileName, lineNumber, e.getMessage(), line));
                     errors.add(String.format(LINE_NUMBER_FMT, lineNumber, e.getMessage()));
                 }
                 lineNumber++;
             }
 
         } catch (IOException e) {
-            String error ="The CSR should be readable & valid in Phase 2, this is an internal MOTECH error and " +
-                    "must be investigated - " + String.format(UNABLE_TO_READ_FMT, fileName, e.getMessage());
+            String error = INVALID_CSR_P2 + String.format(UNABLE_TO_READ_FMT, fileName, e.getMessage());
             errors.add(error);
             LOGGER.error(error);
             alertService.create(fileName, "Invalid File in Phase 2", error, AlertType.CRITICAL, AlertStatus.NEW, 0,
@@ -689,8 +646,8 @@ public class CdrFileServiceImpl implements CdrFileService {
     //          Send list on invalid CDR/CSR rows in CdrFileProcessedNotification HTTP POST back to IMI and dispatches
     //          messages for Phase 3 & 4 processing to any node.
     @Override
-    @MotechListener(subjects = {CDR_PHASE_2})
-    public List<String> cdrProcessPhase2(MotechEvent event) {
+    @MotechListener(subjects = { CDR_PHASE_2 })
+    public List<String> cdrProcessPhase2(MotechEvent event) { //NOPMD NcssMethodCount
 
         LOGGER.info("Phase 2 - Start");
 
@@ -708,7 +665,7 @@ public class CdrFileServiceImpl implements CdrFileService {
         } catch (ExecException e) {
             String error = String.format("Error copying CDR file %s: %s", cdrFile.getName(), e.getMessage());
             LOGGER.error(error);
-            alertService.create(cdrFile.getName(), "Copy Error", error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            alertService.create(cdrFile.getName(), COPY_ERROR, error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
             return Arrays.asList(error);
         }
         LOGGER.info("Phase 2 - verify detail File");
@@ -724,7 +681,7 @@ public class CdrFileServiceImpl implements CdrFileService {
         } catch (ExecException e) {
             String error = String.format("Error copying CSR file %s: %s", csrFile.getName(), e.getMessage());
             LOGGER.error(error);
-            alertService.create(csrFile.getName(), "Copy Error", error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            alertService.create(csrFile.getName(), COPY_ERROR, error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
             // This is a monster error, let's not even bother talking about the potential errors in detailErrors
             return Arrays.asList(error);
         }
@@ -789,7 +746,7 @@ public class CdrFileServiceImpl implements CdrFileService {
 
 
     // Phase 3:  Deletes old IMI CSR & IMI CDR & KK CSR
-    @MotechListener(subjects = {CDR_PHASE_3})
+    @MotechListener(subjects = { CDR_PHASE_3 })
     public void cdrProcessPhase3(MotechEvent event) {
 
         Timer timer = new Timer();
@@ -802,7 +759,7 @@ public class CdrFileServiceImpl implements CdrFileService {
 
 
     // Phase 4:  Aggregates & sends aggregated CDR rows into CSR for processing (by kilkari module) on any node
-    @MotechListener(subjects = {CDR_PHASE_4})
+    @MotechListener(subjects = { CDR_PHASE_4 })
     public void cdrProcessPhase4(MotechEvent event) {
 
         Timer timer = new Timer();
@@ -819,7 +776,7 @@ public class CdrFileServiceImpl implements CdrFileService {
         } catch (ExecException e) {
             String error = String.format("Error copying CDR file %s: %s", cdrFileName, e.getMessage());
             LOGGER.error(error);
-            alertService.create(cdrFileName, "Copy Error", error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            alertService.create(cdrFileName, COPY_ERROR, error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
             return;
         }
 
@@ -847,7 +804,7 @@ public class CdrFileServiceImpl implements CdrFileService {
 
 
     // Phase 5: Sends CSR rows from IMI (only ones not covered by CDR rows) for processing on any node
-    @MotechListener(subjects = {CDR_PHASE_5})
+    @MotechListener(subjects = { CDR_PHASE_5 })
     public void cdrProcessPhase5(MotechEvent event) {
 
         Timer timer = new Timer();
@@ -865,7 +822,7 @@ public class CdrFileServiceImpl implements CdrFileService {
         } catch (ExecException e) {
             String error = String.format("Error copying CDR file %s: %s", csrFileName, e.getMessage());
             LOGGER.error(error);
-            alertService.create(csrFileName, "Copy Error", error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            alertService.create(csrFileName, COPY_ERROR, error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
             return;
         }
 
