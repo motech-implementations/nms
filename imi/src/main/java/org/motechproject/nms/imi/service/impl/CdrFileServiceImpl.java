@@ -62,6 +62,7 @@ import static java.lang.Math.min;
 @Service("cdrFileService")
 public class CdrFileServiceImpl implements CdrFileService {
 
+    public static final String DISPLAYING_THE_FIRST_N_ERRORS = "%d errors, only displaying the first %d";
     private static final String CDR_FILE_NOTIFICATION_URL = "imi.cdr_file_notification_url";
     private static final String LOCAL_CDR_DIR = "imi.local_cdr_dir";
     private static final String CDR_CSR_RETENTION_DURATION = "imi.cdr_csr.retention.duration";
@@ -538,7 +539,7 @@ public class CdrFileServiceImpl implements CdrFileService {
     // Phase 1: verify the file exists, the csv is valid and its record count and checksum match the provided info
     //          while collecting a list of errors on the go.
     //          Does not proceed to phase 2 if any error occurred and returns an error
-    @Override
+    @Override //NO CHECKSTYLE Cyclomatic Complexity
     public void cdrProcessingPhase1(CdrFileNotificationRequest request) {
 
         LOGGER.info("CDR Processing - Phase 1 - Start");
@@ -550,10 +551,67 @@ public class CdrFileServiceImpl implements CdrFileService {
         List<String> csrErrors = verifyChecksumAndCountAndCsv(request.getCdrSummary(), false);
         alertAndAudit(request.getCdrSummary().getCdrFile(), csrErrors);
 
-        List<String> errors = new ArrayList<>(cdrErrors);
-        errors.addAll(csrErrors);
-        if (errors.size() > 0) {
-            throw new InvalidCdrFileException(errors);
+        if (cdrErrors.size() > 0 || csrErrors.size() > 0) {
+
+            List<String> returnedErrors = new ArrayList<>();
+
+            int maxErrors = getMaxErrorCount();
+
+            LOGGER.debug("Phase 1 - Error");
+
+            if (cdrErrors.size() > 0) {
+                List<String> maxCdrErrors = cdrErrors.subList(0, min(maxErrors, cdrErrors.size()));
+
+                for (String error : maxCdrErrors) {
+                    LOGGER.error(error);
+                    alertService.create(request.getCdrDetail().getCdrFile(), "Phase 1 - Invalid CDR", error,
+                            AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+                }
+
+                if (cdrErrors.size() > maxErrors) {
+                    String error = String.format(DISPLAYING_THE_FIRST_N_ERRORS, cdrErrors.size(), maxErrors);
+                    LOGGER.error(error);
+                    alertService.create(request.getCdrDetail().getCdrFile(), "Phase 1 - Too many errors in CDR", error,
+                            AlertType.HIGH, AlertStatus.NEW, 0, null);
+                    returnedErrors.add(error);
+                }
+
+                returnedErrors.addAll(maxCdrErrors);
+            }
+
+            if (csrErrors.size() > 0) {
+                List<String> maxCsrErrors = csrErrors.subList(0, min(maxErrors, csrErrors.size()));
+
+                for (String error : maxCsrErrors) {
+                    LOGGER.error(error);
+                    alertService.create(request.getCdrSummary().getCdrFile(), "Phase 1 - Invalid CSR", error,
+                            AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+                }
+
+                if (csrErrors.size() > maxErrors) {
+                    String error = String.format(DISPLAYING_THE_FIRST_N_ERRORS, csrErrors.size(), maxErrors);
+                    LOGGER.error(error);
+                    alertService.create(request.getCdrSummary().getCdrFile(), "Phase 1 - Too many errors in CSR", error,
+                            AlertType.HIGH, AlertStatus.NEW, 0, null);
+                    returnedErrors.add(error);
+                }
+
+                returnedErrors.addAll(maxCsrErrors);
+            }
+
+            if (cdrErrors.size() > 0) {
+                fileAuditRecordDataService.create(new FileAuditRecord(FileType.CDR_DETAIL_FILE,
+                        request.getCdrDetail().getCdrFile(), false,
+                        String.format("%d invalid CDR rows, see tomcat log", cdrErrors.size()), null, null));
+            }
+
+            if (csrErrors.size() > 0) {
+                fileAuditRecordDataService.create(new FileAuditRecord(FileType.CDR_SUMMARY_FILE,
+                        request.getCdrSummary().getCdrFile(), false,
+                        String.format("%d invalid CSR rows, see tomcat log", csrErrors.size()), null, null));
+            }
+
+            throw new InvalidCdrFileException(returnedErrors);
         }
 
         // Send a MOTECH event to continue to phase 2 (without timing out the POST from IMI)
@@ -751,8 +809,7 @@ public class CdrFileServiceImpl implements CdrFileService {
                 }
 
                 if (detailErrors.size() > maxErrors) {
-                    String error = String.format("%d errors, only displaying the first %d", detailErrors.size(),
-                            maxErrors);
+                    String error = String.format(DISPLAYING_THE_FIRST_N_ERRORS, detailErrors.size(), maxErrors);
                     LOGGER.error(error);
                     alertService.create(request.getCdrDetail().getCdrFile(), "Too many errors in CDR", error,
                             AlertType.HIGH, AlertStatus.NEW, 0, null);
@@ -772,8 +829,7 @@ public class CdrFileServiceImpl implements CdrFileService {
                 }
 
                 if (summaryErrors.size() > maxErrors) {
-                    String error = String.format("%d errors, only displaying the first %d", summaryErrors.size(),
-                            maxErrors);
+                    String error = String.format(DISPLAYING_THE_FIRST_N_ERRORS, summaryErrors.size(), maxErrors);
                     LOGGER.error(error);
                     alertService.create(request.getCdrSummary().getCdrFile(), "Too many errors in CSR", error,
                             AlertType.HIGH, AlertStatus.NEW, 0, null);
@@ -794,7 +850,7 @@ public class CdrFileServiceImpl implements CdrFileService {
             if (summaryErrors.size() > 0) {
                 fileAuditRecordDataService.create(new FileAuditRecord(FileType.CDR_SUMMARY_FILE,
                         request.getCdrSummary().getCdrFile(), false,
-                        String.format("%d invalid CSR rows, see tomcat log", detailErrors.size()), null, null));
+                        String.format("%d invalid CSR rows, see tomcat log", summaryErrors.size()), null, null));
             }
         }
 
