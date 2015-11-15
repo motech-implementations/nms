@@ -1,6 +1,5 @@
 package org.motechproject.nms.imi.service.impl;
 
-import org.apache.commons.collections.ListUtils;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.client.methods.HttpPost;
@@ -53,6 +52,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static java.lang.Math.min;
+
 
 /**
  * Implementation of the {@link CdrFileService} interface.
@@ -66,7 +67,6 @@ public class CdrFileServiceImpl implements CdrFileService {
     private static final int MIN_CALL_DATA_RETENTION_DURATION_IN_DAYS = 5;
     private static final String CDR_CSR_CLEANUP_SUBJECT = "nms.imi.cdr_csr.cleanup";
     private static final String CDR_TABLE_NAME = "motech_data_services.nms_imi_cdrs";
-    private static final String CSR_TABLE_NAME = "motech_data_services.nms_imi_csrs";
     private static final String KK_CSR_TABLE_NAME = "motech_data_services.nms_kk_summary_records";
     private static final String PROCESS_SUMMARY_RECORD_SUBJECT = "nms.imi.kk.process_summary_record";
     private static final String END_OF_CDR_PROCESSING_SUBJECT = "nms.imi.kk.end_of_cdr_processing";
@@ -91,6 +91,9 @@ public class CdrFileServiceImpl implements CdrFileService {
     private static final String UNABLE_TO_READ_FMT = "Unable to read %s: %s";
     private static final String UNABLE_TO_READ_HEADER_FMT = "Unable to read  header %s: %s";
     private static final int CDR_PROGRESS_REPORT_CHUNK = 1000;
+    private static final String MAX_CDR_ERROR_COUNT = "imi.max_cdr_error_count";
+    private static final String CSR_TABLE_NAME = "motech_data_services.nms_imi_csrs";
+    private static final int MAX_CDR_ERROR_COUNT_DEFAULT = 100;
 
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CdrFileServiceImpl.class);
@@ -376,7 +379,10 @@ public class CdrFileServiceImpl implements CdrFileService {
                 lineNumber++;
             }
 
-            sendProcessSummaryRecordEvent(csr);
+            // It's possible the last CDR was invalid, in which case we won't have any CSR to send
+            if (csr != null) {
+                sendProcessSummaryRecordEvent(csr);
+            }
 
             LOGGER.info("Detail Records - aggregated & sent {}", timer.frequency(aggregated));
             LOGGER.info("Detail Records - saved {}", timer.frequency(lineNumber));
@@ -652,10 +658,19 @@ public class CdrFileServiceImpl implements CdrFileService {
     }
 
 
+    private int getMaxErrorCount() {
+        try {
+            return Integer.parseInt(settingsFacade.getProperty(MAX_CDR_ERROR_COUNT));
+        } catch (NumberFormatException e) {
+            return MAX_CDR_ERROR_COUNT_DEFAULT;
+        }
+    }
+
+
     // Phase 2: Verify files a little mode deeply than t=in phase 1 (ie: check csv field values are valid)
     //          Send list on invalid CDR/CSR rows in CdrFileProcessedNotification HTTP POST back to IMI and dispatches
     //          messages for Phase 3 & 4 processing to any node.
-    @Override
+    @Override //NO CHECKSTYLE Cyclomatic Complexity
     @MotechListener(subjects = { CDR_PHASE_2 })
     public List<String> cdrProcessPhase2(MotechEvent event) { //NOPMD NcssMethodCount
 
@@ -699,28 +714,59 @@ public class CdrFileServiceImpl implements CdrFileService {
         List<String> summaryErrors = verifySummaryFile(request);
 
 
-        List<String> allErrors = ListUtils.union(detailErrors, summaryErrors);
+        List<String> returnedErrors = new ArrayList<>();
         FileProcessedStatus status = FileProcessedStatus.FILE_PROCESSED_SUCCESSFULLY;
         String failure = null;
-        if (allErrors.size() > 0) {
+        if (detailErrors.size() > 0 || summaryErrors.size() > 0) {
+
+            int maxErrors = getMaxErrorCount();
 
             LOGGER.debug("Phase 2 - Error");
-
-            //todo: what's the maximum number of errors I rcan report back in a POST?
             status = FileProcessedStatus.FILE_ERROR_IN_FILE_FORMAT;
-            failure = StringUtils.join(allErrors, ",");
 
-            for (String error : detailErrors) {
-                LOGGER.error(error);
-                alertService.create(request.getCdrDetail().getCdrFile(), "Invalid CDR", error, AlertType.MEDIUM,
-                        AlertStatus.NEW, 0, null);
+            if (detailErrors.size() > 0) {
+                List<String> maxDetailErrors = detailErrors.subList(0, min(maxErrors, detailErrors.size()));
+
+                for (String error : maxDetailErrors) {
+                    LOGGER.error(error);
+                    alertService.create(request.getCdrDetail().getCdrFile(), "Invalid CDR", error, AlertType.MEDIUM,
+                            AlertStatus.NEW, 0, null);
+                }
+
+                if (detailErrors.size() > maxErrors) {
+                    String error = String.format("%d errors, only displaying the first %d", detailErrors.size(),
+                            maxErrors);
+                    LOGGER.error(error);
+                    alertService.create(request.getCdrDetail().getCdrFile(), "Too many errors in CDR", error,
+                            AlertType.HIGH, AlertStatus.NEW, 0, null);
+                    returnedErrors.add(error);
+                }
+
+                returnedErrors.addAll(maxDetailErrors);
             }
 
-            for (String error : summaryErrors) {
-                LOGGER.error(error);
-                alertService.create(request.getCdrSummary().getCdrFile(), "Invalid CSR", error, AlertType.MEDIUM,
-                        AlertStatus.NEW, 0, null);
+            if (summaryErrors.size() > 0) {
+                List<String> maxSummaryErrors = summaryErrors.subList(0, min(maxErrors, summaryErrors.size()));
+
+                for (String error : maxSummaryErrors) {
+                    LOGGER.error(error);
+                    alertService.create(request.getCdrSummary().getCdrFile(), "Invalid CSR", error, AlertType.MEDIUM,
+                            AlertStatus.NEW, 0, null);
+                }
+
+                if (summaryErrors.size() > maxErrors) {
+                    String error = String.format("%d errors, only displaying the first %d", summaryErrors.size(),
+                            maxErrors);
+                    LOGGER.error(error);
+                    alertService.create(request.getCdrSummary().getCdrFile(), "Too many errors in CSR", error,
+                            AlertType.HIGH, AlertStatus.NEW, 0, null);
+                    returnedErrors.add(error);
+                }
+
+                returnedErrors.addAll(maxSummaryErrors);
             }
+
+            failure = StringUtils.join(returnedErrors, ",");
 
             if (detailErrors.size() > 0) {
                 fileAuditRecordDataService.create(new FileAuditRecord(FileType.CDR_DETAIL_FILE,
@@ -751,7 +797,7 @@ public class CdrFileServiceImpl implements CdrFileService {
 
         LOGGER.info("Phase 2 - End");
 
-        return allErrors;
+        return returnedErrors;
     }
 
 
