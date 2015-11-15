@@ -262,7 +262,6 @@ public class CallSummaryRecordDto implements Serializable {
         return params;
     }
 
-
     @Override
     public String toString() {
         return "CallSummaryRecordDto{" +

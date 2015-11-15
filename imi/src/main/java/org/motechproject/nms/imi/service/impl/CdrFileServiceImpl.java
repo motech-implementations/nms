@@ -2,6 +2,7 @@ package org.motechproject.nms.imi.service.impl;
 
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -314,6 +315,7 @@ public class CdrFileServiceImpl implements CdrFileService {
         int lineNumber = 1;
         String fileName = file.getName();
         int aggregated = 0;
+        int numCdrSaved = 0;
 
         try (FileInputStream fis = new FileInputStream(file);
              InputStreamReader isr = new InputStreamReader(fis);
@@ -347,7 +349,7 @@ public class CdrFileServiceImpl implements CdrFileService {
                             sendProcessCsrEvent(csr);
                             aggregated++;
                             if (aggregated % CDR_PROGRESS_REPORT_CHUNK == 0) {
-                                LOGGER.debug("CDRs, aggregated & sent {}", timer.frequency(aggregated));
+                                LOGGER.debug("CDRs, aggregated {}", timer.frequency(aggregated));
                             }
                             csr = null; //todo: does that help the GC?
                         }
@@ -361,8 +363,18 @@ public class CdrFileServiceImpl implements CdrFileService {
                     aggregateDetailRecord(cdr, csr);
 
                     // Save a copy of the CDR into CallDetailRecord for reporting
-                    if (callDetailRecordDataService.countFindByRequestId(currentRequestId) > 0) {
+                    long l = 0;
+                    try {
+                        l = callDetailRecordDataService.countFindByRequestId(currentRequestId);
+                    } catch (Exception e) {
+                        LOGGER.error("EEEEEK!!! {}", ExceptionUtils.getFullStackTrace(e));
+                    }
+                    if (l > 0) {
                         callDetailRecordDataService.create(CdrHelper.csvLineToCdr(line));
+                        numCdrSaved++;
+                        if (numCdrSaved % CDR_PROGRESS_REPORT_CHUNK == 0) {
+                            LOGGER.debug("CDRs,  saved {}", timer.frequency(numCdrSaved));
+                        }
                     }
 
                 } catch (InvalidCsrException e) {
@@ -371,7 +383,7 @@ public class CdrFileServiceImpl implements CdrFileService {
                     LOGGER.debug(String.format(IGNORING_CDR_ROW_FMT, fileName, lineNumber, e.getMessage()));
                 }
                 if (lineNumber % CDR_PROGRESS_REPORT_CHUNK == 0) {
-                    LOGGER.debug("CDRs - saved {}", timer.frequency(lineNumber));
+                    LOGGER.debug("CDRs,  processed {}", timer.frequency(lineNumber));
                 }
                 lineNumber++;
             }
@@ -389,6 +401,11 @@ public class CdrFileServiceImpl implements CdrFileService {
             LOGGER.error(error);
             alertService.create(fileName, "Invalid CDR in Phase 4", error, AlertType.CRITICAL, AlertStatus.NEW, 0,
                     null);
+        } catch (Exception e) {
+            String msg = String.format("MOTECH BUG *** Unexpected exception in Phase 4 - sendAggregatedRecords() : %s",
+                    ExceptionUtils.getFullStackTrace(e));
+            LOGGER.error(msg);
+            alertService.create(fileName, "sendAggregatedRecords", msg, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
         }
     }
 
@@ -403,6 +420,7 @@ public class CdrFileServiceImpl implements CdrFileService {
     @Override //NO CHECKSTYLE Cyclomatic Complexity
     public void sendSummaryRecords(File file) {
         int lineNumber = 1;
+        int numCsrSaved = 0;
         String fileName = file.getName();
 
         try (FileInputStream fis = new FileInputStream(file);
@@ -429,6 +447,10 @@ public class CdrFileServiceImpl implements CdrFileService {
                     CallSummaryRecord csr = CsrHelper.csvLineToCsr(line);
                     if (callSummaryRecordDataService.countFindByRequestId(csr.getRequestId()) > 0) {
                         callSummaryRecordDataService.create(csr);
+                        numCsrSaved++;
+                        if (numCsrSaved % CDR_PROGRESS_REPORT_CHUNK == 0) {
+                            LOGGER.debug("CSRs - saved {}", timer.frequency(numCsrSaved));
+                        }
                     }
 
                     // We only want to send summary records which contain information not in detail records
@@ -453,7 +475,7 @@ public class CdrFileServiceImpl implements CdrFileService {
                 }
 
                 if (lineNumber % CDR_PROGRESS_REPORT_CHUNK == 0) {
-                    LOGGER.debug("CSRs - saved {}", timer.frequency(lineNumber));
+                    LOGGER.debug("CSRs - sent {}", timer.frequency(lineNumber));
                 }
 
                 lineNumber++;
@@ -467,6 +489,11 @@ public class CdrFileServiceImpl implements CdrFileService {
             LOGGER.error(error);
             alertService.create(fileName, "Invalid CSR in Phase 5", error, AlertType.CRITICAL, AlertStatus.NEW, 0,
                     null);
+        } catch (Exception e) {
+            String msg = String.format("MOTECH BUG *** Unexpected exception in Phase 5 - sendSummaryRecords() : %s",
+                    ExceptionUtils.getFullStackTrace(e));
+            LOGGER.error(msg);
+            alertService.create(fileName, "sendSummaryRecords", msg, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
         }
     }
 

@@ -299,41 +299,21 @@ public class CsrServiceImpl implements CsrService {
     }
 
 
-    private CallSummaryRecord aggregateSummaryRecord(CallSummaryRecordDto csr) {
+    private CallSummaryRecord aggregate(CallSummaryRecord csr, CallSummaryRecordDto dto) {
 
-        CallSummaryRecord record = csrDataService.findByRequestId(csr.getRequestId().toString());
-        if (record == null) {
-            record = csrDataService.create(new CallSummaryRecord(
-                    csr.getRequestId().toString(),
-                    csr.getMsisdn(),
-                    csr.getContentFileName(),
-                    csr.getWeekId(),
-                    csr.getLanguageLocationCode(),
-                    csr.getCircle(),
-                    csr.getFinalStatus(),
-                    csr.getStatusStats(),
-                    calculatePercentPlayed(csr.getContentFileName(), csr.getSecondsPlayed()),
-                    csr.getCallAttempts(),
-                    1));
-        } else {
-            aggregateStats(csr.getStatusStats(), record.getStatusStats());
-            record.setCallAttempts(record.getCallAttempts() + csr.getCallAttempts());
-            record.setAttemptedDayCount(record.getAttemptedDayCount() + 1);
-            record.setFinalStatus(csr.getFinalStatus());
-            int percentPlayed = calculatePercentPlayed(csr.getContentFileName(), csr.getSecondsPlayed());
-            if (percentPlayed > record.getPercentPlayed()) {
-                record.setPercentPlayed(percentPlayed);
-            }
-            csrDataService.update(record);
+        aggregateStats(dto.getStatusStats(), csr.getStatusStats());
+        csr.setCallAttempts(csr.getCallAttempts() + dto.getCallAttempts());
+        csr.setAttemptedDayCount(csr.getAttemptedDayCount() + 1);
+        csr.setFinalStatus(dto.getFinalStatus());
+        int percentPlayed = calculatePercentPlayed(dto.getContentFileName(), dto.getSecondsPlayed());
+        if (percentPlayed > csr.getPercentPlayed()) {
+            csr.setPercentPlayed(percentPlayed);
         }
 
-        return record;
+        return csr;
     }
 
 
-    //
-    //Consider not verifying anything at all and removing this altogether
-    //
     private void validateCallSummaryRecord(Subscription subscription, CallSummaryRecordDto csr) throws InvalidCdrDataException {
         if (!subscription.getSubscriptionPack().hasMessageWithWeekId(csr.getWeekId())) {
             throw new InvalidCdrDataException(String.format("%s is an invalid weekId for pack %s",
@@ -357,8 +337,8 @@ public class CsrServiceImpl implements CsrService {
     }
 
 
-    @MotechListener(subjects = { NMS_IMI_KK_PROCESS_CSR })
-    public void processCallSummaryRecord(MotechEvent event) {
+    @MotechListener(subjects = { NMS_IMI_KK_PROCESS_CSR }) //NO CHECKSTYLE Cyclomatic Complexity
+    public void processCallSummaryRecord(MotechEvent event) { //NOPMD NcssMethodCount
 
         Timer timer = new Timer();
 
@@ -371,10 +351,35 @@ public class CsrServiceImpl implements CsrService {
                 throw new InvalidCdrDataException(String.format("Subscription %s does not exist in the database",
                         subscriptionId));
             }
-            CallRetry callRetry = callRetryDataService.findBySubscriptionId(subscriptionId);
             validateCallSummaryRecord(subscription, csrDto);
 
-            CallSummaryRecord csr = aggregateSummaryRecord(csrDto);
+            CallSummaryRecord existingCsr = csrDataService.findByRequestId(csrDto.getRequestId().toString());
+            CallSummaryRecord csr;
+            if (existingCsr == null) {
+                csr = csrDataService.create(new CallSummaryRecord(
+                        csrDto.getRequestId().toString(),
+                        csrDto.getMsisdn(),
+                        csrDto.getContentFileName(),
+                        csrDto.getWeekId(),
+                        csrDto.getLanguageLocationCode(),
+                        csrDto.getCircle(),
+                        csrDto.getFinalStatus(),
+                        csrDto.getStatusStats(),
+                        calculatePercentPlayed(csrDto.getContentFileName(), csrDto.getSecondsPlayed()),
+                        csrDto.getCallAttempts(),
+                        1));
+
+            } else {
+                if (csrDto.getRequestId().toString().equals(existingCsr.getRequestId())) {
+                    // The requestId matches, this CSR is from the same OBD
+                    LOGGER.debug("We've already processed this CSR, let's skip it");
+                    return;
+                } else {
+                    existingCsr = aggregate(existingCsr, csrDto);
+                    csr = csrDataService.update(existingCsr);
+                }
+            }
+            CallRetry callRetry = callRetryDataService.findBySubscriptionId(subscriptionId);
 
             /**
              * If we somehow have a null subscription (it was deleted for some reason), but still have a retry record
@@ -426,7 +431,7 @@ public class CsrServiceImpl implements CsrService {
             String msg = String.format("MOTECH BUG *** Unexpected exception in processCallSummaryRecord() for " +
                             "subscription %s: %s", subscriptionId, ExceptionUtils.getFullStackTrace(e));
             LOGGER.error(msg);
-            alertService.create(subscriptionId, NMS_IMI_KK_PROCESS_CSR, msg, AlertType.HIGH, AlertStatus.NEW, 0,
+            alertService.create(subscriptionId, NMS_IMI_KK_PROCESS_CSR, msg, AlertType.CRITICAL, AlertStatus.NEW, 0,
                     null);
         }
 
