@@ -6,6 +6,7 @@ import org.motechproject.nms.kilkari.dto.CallSummaryRecordDto;
 import org.motechproject.nms.props.domain.FinalCallStatus;
 import org.motechproject.nms.props.domain.RequestId;
 
+import javax.jdo.annotations.Index;
 import java.util.HashMap;
 
 /**
@@ -15,6 +16,7 @@ import java.util.HashMap;
 public class CallSummaryRecord {
 
     @Field
+    @Index //In an ideal world this would be unique, but there are lots of existing dupe rows in the production db
     private String requestId;
 
     @Field

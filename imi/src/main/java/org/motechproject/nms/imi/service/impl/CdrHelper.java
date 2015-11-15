@@ -181,7 +181,7 @@ public final class CdrHelper {
                     fields[FieldName.CALL_DISCONNECT_REASON.ordinal()])));
 
             cdr.setWeekId(fields[FieldName.WEEK_ID.ordinal()]);
-        } catch (Exception e) {
+        } catch (IllegalArgumentException e) {
             throw new InvalidCsrException(e);
         }
 

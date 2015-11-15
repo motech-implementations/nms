@@ -85,7 +85,9 @@ public class CdrFileServiceImpl implements CdrFileService {
     private static final String SORTED_SUFFIX = ".sorted";
     private static final String LOG_TEMPLATE = "Found %d records in table %s";
     private static final String CDR_DETAIL_FILE = "CDR Detail File";
-    private static final String LINE_NUMBER_FMT = "Line %d: %s";
+    private static final String IGNORING_CSR_ROW_FMT = "Ignoring CSR error - %s(%d): %s";
+    private static final String IGNORING_CDR_ROW_FMT = "Ignoring CDR error - %s(%d): %s";
+    private static final String FILE_LINE_ERROR_FMT = "%s(%d): %s";
     private static final String UNABLE_TO_READ_FMT = "Unable to read %s: %s";
     private static final String UNABLE_TO_READ_HEADER_FMT = "Unable to read  header %s: %s";
     private static final int CDR_PROGRESS_REPORT_CHUNK = 1000;
@@ -101,6 +103,7 @@ public class CdrFileServiceImpl implements CdrFileService {
     public static final String INVALID_CSR_HEADER_P2 = "The CSR header should be valid in  Phase 2, this is an internal MOTECH error and must be investigated - ";
     public static final String INVALID_CSR_P2 = "The CSR should be readable & valid in Phase 2, this is an internal MOTECH error and must be investigated - ";
     public static final String COPY_ERROR = "Copy Error";
+    public static final String ENTIRE_LINE_FMT = "%s [%s]";
 
     private SettingsFacade settingsFacade;
     private EventRelay eventRelay;
@@ -261,7 +264,7 @@ public class CdrFileServiceImpl implements CdrFileService {
                         }
 
                     } catch (IllegalArgumentException e) {
-                        errors.add(String.format(LINE_NUMBER_FMT, lineNumber, e.getMessage()));
+                        errors.add(String.format(FILE_LINE_ERROR_FMT, fileName, lineNumber, e.getMessage()));
                     }
 
                     lineNumber++;
@@ -279,8 +282,8 @@ public class CdrFileServiceImpl implements CdrFileService {
             }
 
             if (!thisChecksum.equalsIgnoreCase(fileInfo.getChecksum())) {
-                String error = String.format("Checksum mismatch, provided checksum: %s, calculated checksum: %s",
-                        fileInfo.getChecksum(), thisChecksum);
+                String error = String.format("Checksum mismatch for %s: provided checksum: %s, calculated checksum: %s",
+                        fileName, fileInfo.getChecksum(), thisChecksum);
                 errors.add(error);
             }
 
@@ -358,15 +361,14 @@ public class CdrFileServiceImpl implements CdrFileService {
                     aggregateDetailRecord(cdr, csr);
 
                     // Save a copy of the CDR into CallDetailRecord for reporting
-                    //todo upsert!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                    //todo upsert!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                    //todo upsert!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                    callDetailRecordDataService.create(CdrHelper.csvLineToCdr(line));
+                    if (callDetailRecordDataService.countFindByRequestId(currentRequestId) > 0) {
+                        callDetailRecordDataService.create(CdrHelper.csvLineToCdr(line));
+                    }
 
-                } catch (IllegalArgumentException | InvalidCsrException e) {
+                } catch (InvalidCsrException e) {
                     //errors here should have been reported in Phase 2, let's just ignore them
                     //todo remove following line to not over confuse ops
-                    LOGGER.debug("Ignoring CDR error line {}", lineNumber);
+                    LOGGER.debug(String.format(IGNORING_CDR_ROW_FMT, fileName, lineNumber, e.getMessage()));
                 }
                 if (lineNumber % CDR_PROGRESS_REPORT_CHUNK == 0) {
                     LOGGER.debug("CDRs - saved {}", timer.frequency(lineNumber));
@@ -422,23 +424,29 @@ public class CdrFileServiceImpl implements CdrFileService {
                 try {
 
                     CallSummaryRecord csr = CsrHelper.csvLineToCsr(line);
-                    //todo upsert!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                    //todo upsert!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                    //todo upsert!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                    callSummaryRecordDataService.create(csr);
+                    if (callSummaryRecordDataService.countFindByRequestId(csr.getRequestId()) > 0) {
+                        callSummaryRecordDataService.create(csr);
+                    }
 
                     // We only want to send summary records which contain information not in detail records
-                    if (StatusCode.summaryOnlyFailure(csr.getStatusCode())) {
+                    boolean summaryOnlyFailure = false;
+                    try {
+                        summaryOnlyFailure = StatusCode.summaryOnlyFailure(csr.getStatusCode());
+                    } catch (IllegalArgumentException e) {
+                        //todo remove following line to not over confuse ops?
+                        LOGGER.debug(String.format(IGNORING_CSR_ROW_FMT, fileName, lineNumber, e.getMessage()));
+                    }
+                    if (summaryOnlyFailure) {
                         CallSummaryRecordDto dto = csr.toDto();
                         // Mark the CSR as FAILED (even thought it might have been REJECTED) so it's always retried
                         dto.setFinalStatus(FinalCallStatus.FAILED);
                         sendProcessSummaryRecordEvent(dto);
                     }
 
-                } catch (IllegalArgumentException | InvalidCsrException e) {
+                } catch (InvalidCsrException e) {
                     // All errors here should have been reported in Phase 2, let's just ignore them
-                    //todo remove following line to not over confuse ops
-                    LOGGER.debug("Ignoring CSR error line {}", lineNumber);
+                    //todo remove following line to not over confuse ops?
+                    LOGGER.debug(String.format(IGNORING_CSR_ROW_FMT, fileName, lineNumber, e.getMessage()));
                 }
 
                 if (lineNumber % CDR_PROGRESS_REPORT_CHUNK == 0) {
@@ -572,8 +580,9 @@ public class CdrFileServiceImpl implements CdrFileService {
                     CdrHelper.csvLineToCdrDto(line);
 
                 } catch (InvalidCsrException e) {
-                    LOGGER.debug(String.format("%s(%d): %s\n\n%s\n", fileName, lineNumber, e.getMessage(), line));
-                    errors.add(String.format(LINE_NUMBER_FMT, lineNumber, e.getMessage()));
+                    String error = String.format(FILE_LINE_ERROR_FMT, fileName, lineNumber, e.getMessage());
+                    LOGGER.debug(String.format(ENTIRE_LINE_FMT, error, line));
+                    errors.add(error);
                 }
                 lineNumber++;
             }
@@ -623,8 +632,9 @@ public class CdrFileServiceImpl implements CdrFileService {
                     CsrHelper.csvLineToCsr(line);
 
                 } catch (InvalidCsrException e) {
-                    LOGGER.debug(String.format("%s(%d): %s\n\n%s\n", fileName, lineNumber, e.getMessage(), line));
-                    errors.add(String.format(LINE_NUMBER_FMT, lineNumber, e.getMessage()));
+                    String error = String.format(FILE_LINE_ERROR_FMT, fileName, lineNumber, e.getMessage());
+                    LOGGER.debug(String.format(ENTIRE_LINE_FMT, error, line));
+                    errors.add(error);
                 }
                 lineNumber++;
             }

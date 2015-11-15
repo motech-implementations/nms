@@ -2,6 +2,7 @@ package org.motechproject.nms.imi.service.impl;
 
 import org.motechproject.nms.imi.domain.CallSummaryRecord;
 import org.motechproject.nms.imi.exception.InvalidCsrException;
+import org.motechproject.nms.props.domain.StatusCode;
 
 /**
  * Helper class to parse a CSR CSV line to a CallSummaryRecord
@@ -122,10 +123,10 @@ public final class CsrHelper {
 
             csr.setFinalStatus(integerFromString("FinalStatus", fields[FieldName.FINAL_STATUS.ordinal()]));
 
-            csr.setStatusCode(integerFromString("StatusCode", fields[FieldName.STATUS_CODE.ordinal()]));
+            csr.setStatusCode(StatusCode.fromInt(integerFromString("StatusCode", fields[FieldName.STATUS_CODE.ordinal()])).getValue());
 
             csr.setAttempts(integerFromString("Attempts", fields[FieldName.ATTEMPTS.ordinal()]));
-        } catch (Exception e) {
+        } catch (IllegalArgumentException e) {
             throw new InvalidCsrException(e);
         }
 

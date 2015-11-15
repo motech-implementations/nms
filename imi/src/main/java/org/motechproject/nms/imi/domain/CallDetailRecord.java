@@ -3,6 +3,8 @@ package org.motechproject.nms.imi.domain;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 
+import javax.jdo.annotations.Index;
+
 /**
  * See NMS API - 4.4.3 CDR Detail File Format
  */
@@ -10,6 +12,7 @@ import org.motechproject.mds.annotations.Field;
 public class CallDetailRecord {
 
     @Field
+    @Index //In an ideal world this would be unique, but there are lots of existing dupe rows in the production db
     private String requestId;
 
     @Field
