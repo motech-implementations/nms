@@ -244,44 +244,43 @@ public class CdrFileServiceImpl implements CdrFileService {
              InputStreamReader isr = new InputStreamReader(fis);
              BufferedReader reader = new BufferedReader(isr)) {
 
-            String line;
+            String line = reader.readLine();
+            
             try {
-
-                line = reader.readLine();
                 if (isDetailFile) {
                     CdrHelper.validateHeader(line);
                 } else {
                     CsrHelper.validateHeader(line);
                 }
-
-                while ((line = reader.readLine()) != null) {
-
-                    try {
-                        // Parse the CSV line into a CDR or CSR (which we actually discard in this phase)
-                        // This will trow IllegalArgumentException if the CSV is malformed
-                        if (isDetailFile) {
-                            CdrHelper.validateCsv(line);
-                        } else {
-                            CsrHelper.validateCsv(line);
-                        }
-
-                    } catch (IllegalArgumentException e) {
-                        errors.add(String.format(FILE_LINE_ERROR_FMT, fileName, lineNumber, e.getMessage()));
-                    }
-
-                    lineNumber++;
-
-                }
-                reader.close();
-                isr.close();
-                fis.close();
-
-                thisChecksum = ChecksumHelper.checksum(file);
-
             } catch (IllegalArgumentException e) {
                 String error = String.format("Unable to read header %s: %s", fileName, e.getMessage());
                 errors.add(error);
             }
+
+            while ((line = reader.readLine()) != null) {
+
+                try {
+                    // Parse the CSV line into a CDR or CSR (which we actually discard in this phase)
+                    // This will trow IllegalArgumentException if the CSV is malformed
+                    if (isDetailFile) {
+                        CdrHelper.validateCsv(line);
+                    } else {
+                        CsrHelper.validateCsv(line);
+                    }
+
+                } catch (IllegalArgumentException e) {
+                    errors.add(String.format(FILE_LINE_ERROR_FMT, fileName, lineNumber, e.getMessage()));
+                }
+
+                lineNumber++;
+
+            }
+            reader.close();
+            isr.close();
+            fis.close();
+
+            thisChecksum = ChecksumHelper.checksum(file);
+
 
             if (!thisChecksum.equalsIgnoreCase(fileInfo.getChecksum())) {
                 String error = String.format("Checksum mismatch for %s: provided checksum: %s, calculated checksum: %s",
