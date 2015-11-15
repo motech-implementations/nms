@@ -544,16 +544,13 @@ public class CdrFileServiceImpl implements CdrFileService {
     }
 
 
-    private void copyFileIfNeeded(File file) throws ExecException {
-        if (file.exists()) {
-            LOGGER.debug("{} already exists on this MOTECH node, no need to copy it from IMI.", file.getName());
-            return;
-        }
-        LOGGER.debug("{} doesn't exists on this MOTECH node, copying it from IMI...", file.getName());
+    // Runs the copy command stored in the imi.scp.from_command entry of the imi.properties file
+    // Likely scp, but could be something else
+    private void copyFile(File file) throws ExecException {
+        LOGGER.debug("Copying {} from IMI...", file.getName());
         ScpHelper scpHelper = new ScpHelper(settingsFacade);
         scpHelper.scpCdrFromRemote(file.getName());
     }
-
 
 
     private List<String> verifyDetailFile(CdrFileNotificationRequest request) {
@@ -686,7 +683,7 @@ public class CdrFileServiceImpl implements CdrFileService {
         LOGGER.info("Phase 2 - copy detail File");
         File cdrFile = new File(localCdrDir(), request.getCdrDetail().getCdrFile());
         try {
-            copyFileIfNeeded(cdrFile);
+            copyFile(cdrFile);
         } catch (ExecException e) {
             String error = String.format("Error copying CDR file %s: %s", cdrFile.getName(), e.getMessage());
             LOGGER.error(error);
@@ -702,7 +699,7 @@ public class CdrFileServiceImpl implements CdrFileService {
         LOGGER.info("Phase 2 - copy detail File");
         File csrFile = new File(localCdrDir(), request.getCdrSummary().getCdrFile());
         try {
-            copyFileIfNeeded(csrFile);
+            copyFile(csrFile);
         } catch (ExecException e) {
             String error = String.format("Error copying CSR file %s: %s", csrFile.getName(), e.getMessage());
             LOGGER.error(error);
@@ -828,7 +825,7 @@ public class CdrFileServiceImpl implements CdrFileService {
         File cdrFile = new File(localCdrDir(), request.getCdrDetail().getCdrFile());
         String cdrFileName = cdrFile.getName();
         try {
-            copyFileIfNeeded(cdrFile);
+            copyFile(cdrFile);
         } catch (ExecException e) {
             String error = String.format("Error copying CDR file %s: %s", cdrFileName, e.getMessage());
             LOGGER.error(error);
@@ -874,7 +871,7 @@ public class CdrFileServiceImpl implements CdrFileService {
         // Copy summary file, if needed
         LOGGER.info("Phase 5 - copying CSR");
         try {
-            copyFileIfNeeded(csrFile);
+            copyFile(csrFile);
         } catch (ExecException e) {
             String error = String.format("Error copying CDR file %s: %s", csrFileName, e.getMessage());
             LOGGER.error(error);
