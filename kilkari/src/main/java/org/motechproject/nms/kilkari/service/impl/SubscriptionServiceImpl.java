@@ -83,7 +83,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private EventRelay eventRelay;
 
     @Autowired
-    public SubscriptionServiceImpl(@Qualifier("kilkariSettings") SettingsFacade settingsFacade,
+    public SubscriptionServiceImpl(@Qualifier("kilkariSettings") SettingsFacade settingsFacade, // NO CHECKSTYLE More than 7 parameters
                                    MotechSchedulerService schedulerService,
                                    SubscriberDataService subscriberDataService,
                                    SubscriptionPackDataService subscriptionPackDataService,

@@ -45,8 +45,7 @@ import java.util.Map;
 @Service("csrService")
 public class CsrServiceImpl implements CsrService {
 
-    private static final String PROCESS_SUMMARY_RECORD_SUBJECT = "nms.imi.kk.process_summary_record";
-    private static final String CSR_PARAM_KEY = "csr";
+    private static final String NMS_IMI_KK_PROCESS_CSR = "nms.imi.kk.process_csr";
 
     private static final int ONE_HUNDRED = 100;
 
@@ -65,7 +64,7 @@ public class CsrServiceImpl implements CsrService {
 
 
     @Autowired
-    public CsrServiceImpl(CallSummaryRecordDataService csrDataService,
+    public CsrServiceImpl(CallSummaryRecordDataService csrDataService, // NO CHECKSTYLE More than 7 parameters
                           SubscriptionDataService subscriptionDataService,
                           CallRetryDataService callRetryDataService,
                           SubscriberDataService subscriberDataService,
@@ -358,13 +357,13 @@ public class CsrServiceImpl implements CsrService {
     }
 
 
-    @MotechListener(subjects = { PROCESS_SUMMARY_RECORD_SUBJECT })
+    @MotechListener(subjects = { NMS_IMI_KK_PROCESS_CSR })
     public void processCallSummaryRecord(MotechEvent event) {
 
-        CallSummaryRecordDto csrDto = (CallSummaryRecordDto) event.getParameters().get(CSR_PARAM_KEY);
-        String subscriptionId = csrDto.getRequestId().getSubscriptionId();
-
         Timer timer = new Timer();
+
+        CallSummaryRecordDto csrDto = CallSummaryRecordDto.fromParams(event.getParameters());
+        String subscriptionId = csrDto.getRequestId().getSubscriptionId();
 
         try {
             Subscription subscription = subscriptionDataService.findBySubscriptionId(subscriptionId);
@@ -384,13 +383,13 @@ public class CsrServiceImpl implements CsrService {
             if (subscription == null) {
                 String msg = String.format("Subscription %s doesn't exist in the database anymore.", subscriptionId);
                 LOGGER.warn(msg);
-                alertService.create(subscriptionId, PROCESS_SUMMARY_RECORD_SUBJECT, msg, AlertType.MEDIUM,
+                alertService.create(subscriptionId, NMS_IMI_KK_PROCESS_CSR, msg, AlertType.MEDIUM,
                         AlertStatus.NEW, 0, null);
 
                 if (callRetry != null) {
                     msg = String.format("Deleting callRetry record for deleted subscription %s", subscriptionId);
                     LOGGER.warn(msg);
-                    alertService.create(subscriptionId, PROCESS_SUMMARY_RECORD_SUBJECT, msg, AlertType.MEDIUM,
+                    alertService.create(subscriptionId, NMS_IMI_KK_PROCESS_CSR, msg, AlertType.MEDIUM,
                             AlertStatus.NEW, 0, null);
                     deleteCallRetryRecordIfNeeded(callRetry);
                 }
@@ -415,7 +414,7 @@ public class CsrServiceImpl implements CsrService {
                 default:
                     String error = String.format("Invalid FinalCallStatus: %s", csrDto.getFinalStatus());
                     LOGGER.error(error);
-                    alertService.create(subscriptionId, PROCESS_SUMMARY_RECORD_SUBJECT, error, AlertType.CRITICAL,
+                    alertService.create(subscriptionId, NMS_IMI_KK_PROCESS_CSR, error, AlertType.CRITICAL,
                             AlertStatus.NEW, 0, null);
             }
         } catch (InvalidCdrDataException e) {
@@ -427,7 +426,7 @@ public class CsrServiceImpl implements CsrService {
             String msg = String.format("MOTECH BUG *** Unexpected exception in processCallSummaryRecord() for " +
                             "subscription %s: %s", subscriptionId, ExceptionUtils.getFullStackTrace(e));
             LOGGER.error(msg);
-            alertService.create(subscriptionId, PROCESS_SUMMARY_RECORD_SUBJECT, msg, AlertType.HIGH, AlertStatus.NEW, 0,
+            alertService.create(subscriptionId, NMS_IMI_KK_PROCESS_CSR, msg, AlertType.HIGH, AlertStatus.NEW, 0,
                     null);
         }
 

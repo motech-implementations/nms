@@ -68,9 +68,8 @@ public class CdrFileServiceImpl implements CdrFileService {
     private static final String CDR_CSR_CLEANUP_SUBJECT = "nms.imi.cdr_csr.cleanup";
     private static final String CDR_TABLE_NAME = "motech_data_services.nms_imi_cdrs";
     private static final String KK_CSR_TABLE_NAME = "motech_data_services.nms_kk_summary_records";
-    private static final String PROCESS_SUMMARY_RECORD_SUBJECT = "nms.imi.kk.process_summary_record";
+    private static final String NMS_IMI_KK_PROCESS_CSR = "nms.imi.kk.process_csr";
     private static final String END_OF_CDR_PROCESSING_SUBJECT = "nms.imi.kk.end_of_cdr_processing";
-    private static final String CSR_PARAM_KEY = "csr";
     private static final String CDR_PHASE_2 = "nms.imi.kk.cdr_phase_2";
     private static final String CDR_PHASE_3 = "nms.imi.kk.cdr_phase_3";
     private static final String CDR_PHASE_4 = "nms.imi.kk.cdr_phase_4";
@@ -217,10 +216,8 @@ public class CdrFileServiceImpl implements CdrFileService {
     }
 
 
-    private void sendProcessSummaryRecordEvent(CallSummaryRecordDto record) {
-        Map<String, Object> eventParams = new HashMap<>();
-        eventParams.put(CSR_PARAM_KEY, record);
-        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
+    private void sendProcessCsrEvent(CallSummaryRecordDto record) {
+        MotechEvent motechEvent = new MotechEvent(NMS_IMI_KK_PROCESS_CSR, CallSummaryRecordDto.toParams(record));
         eventRelay.sendEventMessage(motechEvent);
     }
 
@@ -347,7 +344,7 @@ public class CdrFileServiceImpl implements CdrFileService {
                     if (!currentRequestId.equals(cdr.getRequestId().toString())) {
                         // Send last CSR, if any, for processing
                         if (csr != null) {
-                            sendProcessSummaryRecordEvent(csr);
+                            sendProcessCsrEvent(csr);
                             aggregated++;
                             if (aggregated % CDR_PROGRESS_REPORT_CHUNK == 0) {
                                 LOGGER.debug("CDRs, aggregated & sent {}", timer.frequency(aggregated));
@@ -381,7 +378,7 @@ public class CdrFileServiceImpl implements CdrFileService {
 
             // It's possible the last CDR was invalid, in which case we won't have any CSR to send
             if (csr != null) {
-                sendProcessSummaryRecordEvent(csr);
+                sendProcessCsrEvent(csr);
             }
 
             LOGGER.info("Detail Records - aggregated & sent {}", timer.frequency(aggregated));
@@ -446,7 +443,7 @@ public class CdrFileServiceImpl implements CdrFileService {
                         CallSummaryRecordDto dto = csr.toDto();
                         // Mark the CSR as FAILED (even thought it might have been REJECTED) so it's always retried
                         dto.setFinalStatus(FinalCallStatus.FAILED);
-                        sendProcessSummaryRecordEvent(dto);
+                        sendProcessCsrEvent(dto);
                     }
 
                 } catch (InvalidCsrException e) {
