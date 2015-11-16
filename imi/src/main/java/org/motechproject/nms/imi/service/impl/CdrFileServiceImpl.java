@@ -264,7 +264,6 @@ public class CdrFileServiceImpl implements CdrFileService {
     @Override
     public void saveDetailRecords(File file) {
         int lineNumber = 1;
-        int numSaved = 0;
         String fileName = file.getName();
 
         try (FileInputStream fis = new FileInputStream(file);
@@ -291,10 +290,6 @@ public class CdrFileServiceImpl implements CdrFileService {
                     // Save a copy of the CDR into CallDetailRecord for reporting - but no dupes
                     if (callDetailRecordDataService.countFindByRequestId(cdr.getRequestId()) == 0) {
                         callDetailRecordDataService.create(cdr);
-                        numSaved++;
-                        if (numSaved % CDR_PROGRESS_REPORT_CHUNK == 0) {
-                            LOGGER.debug("CDRs, saved {}", timer.frequency(numSaved));
-                        }
                     }
 
                 } catch (InvalidCsrException e) {
@@ -309,7 +304,6 @@ public class CdrFileServiceImpl implements CdrFileService {
             }
 
             LOGGER.info("CDRs, processed {}", timer.frequency(lineNumber));
-            LOGGER.info("CDRs, saved {}", timer.frequency(numSaved));
 
         } catch (IOException e) {
             String error = INVALID_CDR_P4 + String.format(UNABLE_TO_READ_FMT, fileName, e.getMessage());
@@ -335,7 +329,6 @@ public class CdrFileServiceImpl implements CdrFileService {
     @Override //NO CHECKSTYLE Cyclomatic Complexity
     public void sendSummaryRecords(File file) {
         int lineNumber = 1;
-        int numCsrSaved = 0;
         String fileName = file.getName();
 
         try (FileInputStream fis = new FileInputStream(file);
@@ -359,10 +352,6 @@ public class CdrFileServiceImpl implements CdrFileService {
                     CallSummaryRecord csr = CsrHelper.csvLineToCsr(line);
                     if (callSummaryRecordDataService.countFindByRequestId(csr.getRequestId()) == 0) {
                         callSummaryRecordDataService.create(csr);
-                        numCsrSaved++;
-                        if (numCsrSaved % CDR_PROGRESS_REPORT_CHUNK == 0) {
-                            LOGGER.debug("CSRs, saved {}", timer.frequency(numCsrSaved));
-                        }
                     }
 
                     sendProcessCsrEvent(csr.toDto());
@@ -374,14 +363,14 @@ public class CdrFileServiceImpl implements CdrFileService {
                 }
 
                 if (lineNumber % CDR_PROGRESS_REPORT_CHUNK == 0) {
-                    LOGGER.debug("CSRs, sent {}", timer.frequency(lineNumber));
+                    LOGGER.debug("CSRs, processed {}", timer.frequency(lineNumber));
                 }
 
                 lineNumber++;
 
             }
 
-            LOGGER.info("CSRs - sent {}", timer.frequency(lineNumber));
+            LOGGER.info("CSRs - processed {}", timer.frequency(lineNumber));
 
         } catch (IOException e) {
             String error = INVALID_CSR_P5 + String.format(UNABLE_TO_READ_FMT, fileName, e.getMessage());

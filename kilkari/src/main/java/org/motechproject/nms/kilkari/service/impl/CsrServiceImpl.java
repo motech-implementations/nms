@@ -234,7 +234,7 @@ public class CsrServiceImpl implements CsrService {
             @Override
             public List<CallSummaryRecord> execute(Query query) {
 
-                query.setClass(CallRetry.class);
+                query.setClass(CallSummaryRecord.class);
 
                 ForwardQueryResult fqr = (ForwardQueryResult) query.execute();
 
