@@ -60,14 +60,13 @@ import static java.lang.Math.min;
 @Service("cdrFileService")
 public class CdrFileServiceImpl implements CdrFileService {
 
-    public static final String DISPLAYING_THE_FIRST_N_ERRORS = "%d errors, only displaying the first %d";
+    public static final String DISPLAYING_THE_FIRST_N_ERRORS = "%s: %d errors only displaying the first %d";
     private static final String CDR_FILE_NOTIFICATION_URL = "imi.cdr_file_notification_url";
     private static final String LOCAL_CDR_DIR = "imi.local_cdr_dir";
     private static final String CDR_CSR_RETENTION_DURATION = "imi.cdr_csr.retention.duration";
     private static final int MIN_CALL_DATA_RETENTION_DURATION_IN_DAYS = 5;
     private static final String CDR_CSR_CLEANUP_SUBJECT = "nms.imi.cdr_csr.cleanup";
     private static final String CDR_TABLE_NAME = "motech_data_services.nms_imi_cdrs";
-    private static final String KK_CSR_TABLE_NAME = "motech_data_services.nms_kk_summary_records";
     private static final String NMS_IMI_KK_PROCESS_CSR = "nms.imi.kk.process_csr";
     private static final String END_OF_CDR_PROCESSING_SUBJECT = "nms.imi.kk.end_of_cdr_processing";
     private static final String CDR_PHASE_2 = "nms.imi.kk.cdr_phase_2";
@@ -94,6 +93,7 @@ public class CdrFileServiceImpl implements CdrFileService {
     private static final String MAX_CDR_ERROR_COUNT = "imi.max_cdr_error_count";
     private static final String CSR_TABLE_NAME = "motech_data_services.nms_imi_csrs";
     private static final int MAX_CDR_ERROR_COUNT_DEFAULT = 100;
+    private static final int MAX_CHAR_ALERT = 4500;
 
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CdrFileServiceImpl.class);
@@ -293,7 +293,7 @@ public class CdrFileServiceImpl implements CdrFileService {
                         callDetailRecordDataService.create(cdr);
                         numSaved++;
                         if (numSaved % CDR_PROGRESS_REPORT_CHUNK == 0) {
-                            LOGGER.debug("CDRs,  saved {}", timer.frequency(numSaved));
+                            LOGGER.debug("CDRs, saved {}", timer.frequency(numSaved));
                         }
                     }
 
@@ -319,7 +319,8 @@ public class CdrFileServiceImpl implements CdrFileService {
         } catch (Exception e) {
             String msg = String.format(MOTECH_BUG, "P4 - saveDetailRecords", ExceptionUtils.getFullStackTrace(e));
             LOGGER.error(msg);
-            alertService.create(fileName, "saveDetailRecords", msg, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            alertService.create(fileName, "saveDetailRecords", msg.substring(0, min(msg.length(), MAX_CHAR_ALERT)),
+                    AlertType.CRITICAL, AlertStatus.NEW, 0, null);
         }
     }
 
@@ -390,7 +391,8 @@ public class CdrFileServiceImpl implements CdrFileService {
         } catch (Exception e) {
             String msg = String.format(MOTECH_BUG, "P5 - sendSummaryRecords", ExceptionUtils.getFullStackTrace(e));
             LOGGER.error(msg);
-            alertService.create(fileName, "sendSummaryRecords", msg, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            alertService.create(fileName, "sendSummaryRecords", msg.substring(0, min(msg.length(), MAX_CHAR_ALERT)),
+                    AlertType.CRITICAL, AlertStatus.NEW, 0, null);
         }
     }
 
@@ -469,7 +471,8 @@ public class CdrFileServiceImpl implements CdrFileService {
                 }
 
                 if (cdrErrors.size() > maxErrors) {
-                    String error = String.format(DISPLAYING_THE_FIRST_N_ERRORS, cdrErrors.size(), maxErrors);
+                    String error = String.format(DISPLAYING_THE_FIRST_N_ERRORS, request.getCdrDetail().getCdrFile(),
+                            cdrErrors.size(), maxErrors);
                     LOGGER.error(error);
                     alertService.create(request.getCdrDetail().getCdrFile(), "Phase 1 - Too many errors in CDR", error,
                             AlertType.HIGH, AlertStatus.NEW, 0, null);
@@ -489,7 +492,8 @@ public class CdrFileServiceImpl implements CdrFileService {
                 }
 
                 if (csrErrors.size() > maxErrors) {
-                    String error = String.format(DISPLAYING_THE_FIRST_N_ERRORS, csrErrors.size(), maxErrors);
+                    String error = String.format(DISPLAYING_THE_FIRST_N_ERRORS, request.getCdrSummary().getCdrFile(),
+                            csrErrors.size(), maxErrors);
                     LOGGER.error(error);
                     alertService.create(request.getCdrSummary().getCdrFile(), "Phase 1 - Too many errors in CSR", error,
                             AlertType.HIGH, AlertStatus.NEW, 0, null);
@@ -709,7 +713,8 @@ public class CdrFileServiceImpl implements CdrFileService {
                 }
 
                 if (detailErrors.size() > maxErrors) {
-                    String error = String.format(DISPLAYING_THE_FIRST_N_ERRORS, detailErrors.size(), maxErrors);
+                    String error = String.format(DISPLAYING_THE_FIRST_N_ERRORS, cdrFile.getName(), detailErrors.size(),
+                            maxErrors);
                     LOGGER.error(error);
                     alertService.create(request.getCdrDetail().getCdrFile(), "Too many errors in CDR", error,
                             AlertType.HIGH, AlertStatus.NEW, 0, null);
@@ -729,7 +734,8 @@ public class CdrFileServiceImpl implements CdrFileService {
                 }
 
                 if (summaryErrors.size() > maxErrors) {
-                    String error = String.format(DISPLAYING_THE_FIRST_N_ERRORS, summaryErrors.size(), maxErrors);
+                    String error = String.format(DISPLAYING_THE_FIRST_N_ERRORS, csrFile.getName(), summaryErrors.size(),
+                            maxErrors);
                     LOGGER.error(error);
                     alertService.create(request.getCdrSummary().getCdrFile(), "Too many errors in CSR", error,
                             AlertType.HIGH, AlertStatus.NEW, 0, null);
@@ -876,7 +882,6 @@ public class CdrFileServiceImpl implements CdrFileService {
 
         deleteRecords(cdrDuration, CDR_TABLE_NAME);
         deleteRecords(cdrDuration, CSR_TABLE_NAME);
-        deleteRecords(cdrDuration, KK_CSR_TABLE_NAME);
 
         LOGGER.debug(String.format(LOG_TEMPLATE, callDetailRecordDataService.count(), CDR_TABLE_NAME));
         LOGGER.debug(String.format(LOG_TEMPLATE, callSummaryRecordDataService.count(), CSR_TABLE_NAME));

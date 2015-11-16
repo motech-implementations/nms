@@ -192,8 +192,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         DateTime dt = DateTime.now().minusDays(1);
         callRetryDataService.create(new CallRetry("11111111-1111-1111-1111-111111111111", 3333333333L,
                 CallStage.RETRY_1, "w1_m1.wav", "w1_1",
-                rh.hindiLanguage().getCode(), rh.delhiCircle().getName(), SubscriptionOrigin.IVR,
-                RequestId.timestampFromDateTime(dt)));
+                rh.hindiLanguage().getCode(), rh.delhiCircle().getName(), SubscriptionOrigin.IVR));
 
 
         TargetFileNotification tfn = targetFileService.generateTargetFile();
@@ -292,8 +291,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
                     sh.getWeekId(sub, randomWeek),
                     sh.getLanguageCode(sub),
                     sh.getCircle(sub),
-                    SubscriptionOrigin.MCTS_IMPORT,
-                    RequestId.timestampFromDateTime(dtNow)
+                    SubscriptionOrigin.MCTS_IMPORT
             ));
         }
 

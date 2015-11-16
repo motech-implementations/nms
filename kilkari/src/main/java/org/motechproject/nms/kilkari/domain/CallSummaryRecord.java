@@ -10,12 +10,9 @@ import javax.jdo.annotations.Unique;
 @Entity(tableName = "nms_kk_summary_records")
 public class CallSummaryRecord {
 
-    //
-    // NOTE: we repurposed this field to contain a subscriptionId, see lookupAndFixOldCsr
-    //
     @Field
     @Unique
-    private String requestId;
+    private String subscriptionId;
 
     @Field
     private String contentFileName;
@@ -39,7 +36,7 @@ public class CallSummaryRecord {
 
     public CallSummaryRecord(String subscriptionId, String contentFileName, String languageCode, String circleName,
                              String weekId, StatusCode statusCode, FinalCallStatus finalStatus) {
-        this.requestId = subscriptionId;
+        this.subscriptionId = subscriptionId;
         this.contentFileName = contentFileName;
         this.languageCode = languageCode;
         this.circleName = circleName;
@@ -48,8 +45,8 @@ public class CallSummaryRecord {
         this.finalStatus = finalStatus;
     }
 
-    public String getRequestId() {
-        return requestId;
+    public String getSubscriptionId() {
+        return subscriptionId;
     }
 
     public String getContentFileName() {
@@ -76,8 +73,8 @@ public class CallSummaryRecord {
         this.circleName = circleName;
     }
 
-    public void setRequestId(String requestId) {
-        this.requestId = requestId;
+    public void setSubscriptionId(String requestId) {
+        this.subscriptionId = requestId;
     }
 
     public String getWeekId() {

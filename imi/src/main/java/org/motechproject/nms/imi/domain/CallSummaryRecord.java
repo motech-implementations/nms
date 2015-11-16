@@ -11,10 +11,10 @@ import javax.jdo.annotations.Index;
  * See NMS API - 4.4.2 CDR Summary File Format
  */
 @Entity(tableName = "nms_imi_csrs")
+@Index(members = { "requestId" })
 public class CallSummaryRecord {
 
     @Field
-    @Index //In an ideal world this would be unique, but there are lots of existing dupe rows in the production db
     private String requestId;
 
     @Field

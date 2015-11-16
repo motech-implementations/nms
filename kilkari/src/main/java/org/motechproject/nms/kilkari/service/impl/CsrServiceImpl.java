@@ -38,11 +38,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static java.lang.Math.min;
+
 
 @Service("csrService")
 public class CsrServiceImpl implements CsrService {
 
     private static final String NMS_IMI_KK_PROCESS_CSR = "nms.imi.kk.process_csr";
+    private static final int MAX_CHAR_ALERT = 4500;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CsrServiceImpl.class);
 
@@ -137,8 +140,7 @@ public class CsrServiceImpl implements CsrService {
                         csr.getWeekId(),
                         csr.getLanguageCode(),
                         csr.getCircleName(),
-                        subscription.getOrigin(),
-                        RequestId.fromString(csr.getRequestId()).getTimestamp()
+                        subscription.getOrigin()
                 );
                 callRetryDataService.create(newCallRetry);
             } catch (DataIntegrityViolationException e) {
@@ -156,29 +158,13 @@ public class CsrServiceImpl implements CsrService {
         if (!callRetry.getWeekId().equals(csr.getWeekId())) {
 
             String message = String.format("CallRetry record (id %d) for subscription %s for weekId %s was never " +
-                            "deleted, which means we never received a CDR about it. Someone should look into this.",
+                            "deleted, which means we never received a CDR about it. I'm cleaning it up.",
                     callRetry.getId(), callRetry.getSubscriptionId(), callRetry.getWeekId());
-            LOGGER.warn(message);
-            alertService.create("CSR Processing", message, null, AlertType.HIGH, AlertStatus.NEW, 0, null);
+            LOGGER.info(message);
             callRetry.setCallStage(CallStage.RETRY_1);
             callRetry.setWeekId(csr.getWeekId());
             callRetryDataService.update(callRetry);
             return;
-        }
-
-
-        // We've already rescheduled this call, but we may have gotten crappy (duplicate) data from IMI, let's check
-        // for that and ignore the retry if we need.
-        // For more info see:
-        // https://applab.atlassian.net/browse/NIP-53?focusedCommentId=65208&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-65208
-        if (callRetry.getTimestamp() != null &&
-                callRetry.getTimestamp().equals(RequestId.fromString(csr.getRequestId()).getTimestamp())) {
-            // Bad data from IMI indeed (CSR-only error code in CDR likely culprit), let's ignore the retry since it's
-            // already rescheduled
-            LOGGER.info(String.format("Ignoring duplicate call failure for subscription: %s",
-                    subscription.getSubscriptionId()));
-            return;
-
         }
 
 
@@ -238,8 +224,8 @@ public class CsrServiceImpl implements CsrService {
             public String getSqlQuery() {
                 String query = String.format(
                         "SELECT * FROM nms_kk_summary_records " +
-                        "WHERE requestId like '%%%s' " +
-                        "ORDER BY weekId, requestId DESC",
+                        "WHERE subscriptionId like '%%%s' " +
+                        "ORDER BY weekId, subscriptionId DESC",
                         subscriptionId, weekId);
                 LOGGER.debug("SQL QUERY: {}", query);
                 return query;
@@ -263,7 +249,8 @@ public class CsrServiceImpl implements CsrService {
     /**
      * Try to find any old CSRs that would exist in the table wih no subcriptionId
      * If there are more than one CSRs for that weekId and subscription, delete all but the last one and set its
-     * subscriptionId and return it
+     * subscriptionId and return it. findOldCallSummaryRecords returns the list sorted on weekId and subscriptionId in
+     * descending order so that if we find a subscriptionId that matches for that week we'll pick the very first one
      *
      * @param subscriptionId
      * @return an old and now fixed up CSR, or null
@@ -277,7 +264,13 @@ public class CsrServiceImpl implements CsrService {
         CallSummaryRecord found = null;
         for (CallSummaryRecord csr : csrs) {
             if (found == null && weekId.equals(csr.getWeekId())) {
-                csr.setRequestId(RequestId.fromString(csr.getRequestId()).getSubscriptionId());
+                //
+                // Funky code!
+                // This old CSR used to have a RequestId in the subscriptionId field, and now we really want the
+                // subscriptionId field to be a subscriptionId, so we treat the field as a requestId as the value
+                // passed to the setter. Get it?
+                //
+                csr.setSubscriptionId(RequestId.fromString(csr.getSubscriptionId()).getSubscriptionId());
                 found = csrDataService.update(csr);
             } else {
                 csrDataService.delete(csr);
@@ -384,8 +377,8 @@ public class CsrServiceImpl implements CsrService {
             String msg = String.format("MOTECH BUG *** Unexpected exception in processCallSummaryRecord() for " +
                             "subscription %s: %s", subscriptionId, ExceptionUtils.getFullStackTrace(e));
             LOGGER.error(msg);
-            alertService.create(subscriptionId, NMS_IMI_KK_PROCESS_CSR, msg, AlertType.CRITICAL, AlertStatus.NEW, 0,
-                    null);
+            alertService.create(subscriptionId, NMS_IMI_KK_PROCESS_CSR,
+                    msg.substring(0, min(msg.length(), MAX_CHAR_ALERT)), AlertType.CRITICAL, AlertStatus.NEW, 0, null);
         }
 
         LOGGER.debug("processCallSummaryRecord {} : {}", subscriptionId, timer.time());

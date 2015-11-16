@@ -40,19 +40,11 @@ public class CallRetry extends MdsEntity {
     @Field
     private SubscriptionOrigin subscriptionOrigin;
 
-    /**
-     * the time at which this callRetry was created (extracted from a RequestId)
-     * allows us to check for duplicate callRetry and end up with better CDR processing logic when dealing with
-     * bad data from IMI
-     */
-    @Field
-    private String timestamp;
-
     public CallRetry() { }
 
     public CallRetry(String subscriptionId, Long msisdn, //NO CHECKSTYLE More than 7 parameters
                      CallStage callStage, String contentFileName, String weekId, String languageLocationCode,
-                     String circle, SubscriptionOrigin subscriptionOrigin, String timestamp) {
+                     String circle, SubscriptionOrigin subscriptionOrigin) {
         this.subscriptionId = subscriptionId;
         this.msisdn = msisdn;
         this.callStage = callStage;
@@ -61,7 +53,6 @@ public class CallRetry extends MdsEntity {
         this.languageLocationCode = languageLocationCode;
         this.circle = circle;
         this.subscriptionOrigin = subscriptionOrigin;
-        this.timestamp = timestamp;
     }
 
     public String getSubscriptionId() {
@@ -128,14 +119,6 @@ public class CallRetry extends MdsEntity {
         this.subscriptionOrigin = subscriptionOrigin;
     }
 
-    public String getTimestamp() {
-        return timestamp;
-    }
-
-    public void setTimestamp(String timestamp) {
-        this.timestamp = timestamp;
-    }
-
     @Override
     public String toString() {
         return "CallRetry{" +
@@ -147,7 +130,6 @@ public class CallRetry extends MdsEntity {
                 ", languageLocationCode='" + languageLocationCode + '\'' +
                 ", circle='" + circle + '\'' +
                 ", subscriptionOrigin=" + subscriptionOrigin +
-                ", timestamp='" + timestamp + '\'' +
                 '}';
     }
 }

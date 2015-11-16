@@ -7,9 +7,6 @@ import org.motechproject.nms.kilkari.domain.CallSummaryRecord;
 
 public interface CallSummaryRecordDataService extends MotechDataService<CallSummaryRecord> {
 
-    //
-    // The requestId field was repurposed to hold the subscriptionId only, see lookupAndFixOldCsr
-    //
     @Lookup
-    CallSummaryRecord findBySubscriptionId(@LookupField(name = "requestId") String requestId);
+    CallSummaryRecord findBySubscriptionId(@LookupField(name = "subscriptionId") String subscriptionId);
 }
