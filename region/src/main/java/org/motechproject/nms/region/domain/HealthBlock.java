@@ -57,7 +57,7 @@ public class HealthBlock extends MdsEntity {
 
     @Field
     @Cascade(delete = true)
-    @Persistent(mappedBy = "healthBlock", defaultFetchGroup = "true")
+    @Persistent(mappedBy = "healthBlock", defaultFetchGroup = "false")
     @JsonManagedReference
     private List<HealthFacility> healthFacilities;
 
