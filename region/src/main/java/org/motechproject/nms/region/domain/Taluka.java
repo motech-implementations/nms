@@ -56,13 +56,13 @@ public class Taluka extends MdsEntity {
 
     @Field
     @Cascade(delete = true)
-    @Persistent(mappedBy = "taluka", defaultFetchGroup = "true")
+    @Persistent(mappedBy = "taluka", defaultFetchGroup = "false")
     @JsonManagedReference
     private List<HealthBlock> healthBlocks;
 
     @Field
     @Cascade(delete = true)
-    @Persistent(mappedBy = "taluka", defaultFetchGroup = "true")
+    @Persistent(mappedBy = "taluka", defaultFetchGroup = "false")
     @JsonManagedReference
     private List<Village> villages;
 

@@ -38,7 +38,7 @@ public class State extends MdsEntity {
 
     @Field
     @Cascade(delete = true)
-    @Persistent(mappedBy = "state", defaultFetchGroup = "true")
+    @Persistent(mappedBy = "state", defaultFetchGroup = "false")
     @JsonManagedReference
     private Set<District> districts;
 
