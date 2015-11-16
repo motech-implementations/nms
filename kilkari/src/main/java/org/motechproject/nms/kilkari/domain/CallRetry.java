@@ -3,7 +3,7 @@ package org.motechproject.nms.kilkari.domain;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.domain.MdsEntity;
-import org.motechproject.nms.props.domain.DayOfTheWeek;
+import org.motechproject.nms.props.service.LogHelper;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Unique;
@@ -21,9 +21,6 @@ public class CallRetry extends MdsEntity {
     @Max(value = 9999999999L, message = "msisdn must be 10 digits")
     @Column(length = 10)
     private Long msisdn;
-
-    @Field
-    private DayOfTheWeek dayOfTheWeek;
 
     @Field
     private CallStage callStage;
@@ -54,12 +51,10 @@ public class CallRetry extends MdsEntity {
     public CallRetry() { }
 
     public CallRetry(String subscriptionId, Long msisdn, //NO CHECKSTYLE More than 7 parameters
-                     DayOfTheWeek dayOfTheWeek, CallStage callStage, String contentFileName, String weekId,
-                     String languageLocationCode, String circle, SubscriptionOrigin subscriptionOrigin,
-                     String timestamp) {
+                     CallStage callStage, String contentFileName, String weekId, String languageLocationCode,
+                     String circle, SubscriptionOrigin subscriptionOrigin, String timestamp) {
         this.subscriptionId = subscriptionId;
         this.msisdn = msisdn;
-        this.dayOfTheWeek = dayOfTheWeek;
         this.callStage = callStage;
         this.contentFileName = contentFileName;
         this.weekId = weekId;
@@ -83,14 +78,6 @@ public class CallRetry extends MdsEntity {
 
     public void setMsisdn(Long msisdn) {
         this.msisdn = msisdn;
-    }
-
-    public DayOfTheWeek getDayOfTheWeek() {
-        return dayOfTheWeek;
-    }
-
-    public void setDayOfTheWeek(DayOfTheWeek dayOfTheWeek) {
-        this.dayOfTheWeek = dayOfTheWeek;
     }
 
     public CallStage getCallStage() {
@@ -153,14 +140,13 @@ public class CallRetry extends MdsEntity {
     public String toString() {
         return "CallRetry{" +
                 "subscriptionId='" + subscriptionId + '\'' +
-                ", msisdn=" + msisdn +
-                ", dayOfTheWeek=" + dayOfTheWeek +
+                ", msisdn=" + LogHelper.obscure(msisdn) +
                 ", callStage=" + callStage +
                 ", contentFileName='" + contentFileName + '\'' +
                 ", weekId='" + weekId + '\'' +
                 ", languageLocationCode='" + languageLocationCode + '\'' +
                 ", circle='" + circle + '\'' +
-                ", subscriptionOrigin='" + subscriptionOrigin + '\'' +
+                ", subscriptionOrigin=" + subscriptionOrigin +
                 ", timestamp='" + timestamp + '\'' +
                 '}';
     }

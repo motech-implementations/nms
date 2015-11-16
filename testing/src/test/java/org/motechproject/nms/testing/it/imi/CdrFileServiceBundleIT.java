@@ -279,7 +279,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
 
         File cdrFile = helper.makeLocalCdrFile();
 
-        cdrFileService.sendAggregatedRecords(cdrFile);
+        cdrFileService.saveDetailRecords(cdrFile);
 
         assertEquals(0, alertService.search(new AlertCriteria()));
     }

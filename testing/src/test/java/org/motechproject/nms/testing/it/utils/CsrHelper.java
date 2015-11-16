@@ -8,8 +8,6 @@ import org.motechproject.nms.kilkari.dto.CallSummaryRecordDto;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
-import org.motechproject.nms.props.domain.FinalCallStatus;
-import org.motechproject.nms.props.domain.RequestId;
 import org.motechproject.nms.props.domain.StatusCode;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
@@ -76,16 +74,13 @@ public class CsrHelper {
                 index--;
             }
             CallSummaryRecordDto r = new CallSummaryRecordDto(
-                    new RequestId(sub.getSubscriptionId(), TIMESTAMP),
-                    sub.getSubscriber().getCallingNumber(),
+                    sub.getSubscriptionId(),
+                    1001,
+                    1,
                     sh.getContentMessageFile(sub, index),
                     sh.getWeekId(sub, index),
                     sh.getLanguageCode(sub),
-                    sh.getCircle(sub),
-                    FinalCallStatus.SUCCESS,
-                    makeStatsMap(StatusCode.OBD_SUCCESS_CALL_CONNECTED, 1),
-                    120,
-                    1
+                    sh.getCircle(sub)
             );
             records.add(r);
         }
@@ -96,16 +91,13 @@ public class CsrHelper {
                     SubscriptionPackType.CHILD);
             int index = sh.getLastMessageIndex(sub);
             CallSummaryRecordDto r = new CallSummaryRecordDto(
-                    new RequestId(sub.getSubscriptionId(), TIMESTAMP),
-                    sub.getSubscriber().getCallingNumber(),
+                    sub.getSubscriptionId(),
+                    1001,
+                    1,
                     sh.getContentMessageFile(sub, index),
                     sh.getWeekId(sub, index),
                     sh.getLanguageCode(sub),
-                    sh.getCircle(sub),
-                    FinalCallStatus.SUCCESS,
-                    makeStatsMap(StatusCode.OBD_SUCCESS_CALL_CONNECTED, 1),
-                    120,
-                    1
+                    sh.getCircle(sub)
             );
             records.add(r);
         }
@@ -115,16 +107,13 @@ public class CsrHelper {
                     SubscriptionPackType.CHILD);
             int index = sh.getRandomMessageIndex(sub);
             CallSummaryRecordDto r = new CallSummaryRecordDto(
-                    new RequestId(sub.getSubscriptionId(), TIMESTAMP),
-                    sub.getSubscriber().getCallingNumber(),
+                    sub.getSubscriptionId(),
+                    2001,
+                    2,
                     sh.getContentMessageFile(sub, index),
                     sh.getWeekId(sub, index),
                     sh.getLanguageCode(sub),
-                    sh.getCircle(sub),
-                    FinalCallStatus.FAILED,
-                    makeStatsMap(StatusCode.OBD_FAILED_BUSY, 3),
-                    0,
-                    3
+                    sh.getCircle(sub)
             );
             records.add(r);
         }
@@ -134,16 +123,13 @@ public class CsrHelper {
                     SubscriptionPackType.CHILD);
             int index = sh.getRandomMessageIndex(sub);
             CallSummaryRecordDto r = new CallSummaryRecordDto(
-                    new RequestId("00000000-0000-0000-0000-000000000000", TIMESTAMP),
-                    sub.getSubscriber().getCallingNumber(),
+                    "00000000-0000-0000-0000-000000000000",
+                    2001,
+                    2,
                     sh.getContentMessageFile(sub, index),
                     sh.getWeekId(sub, index),
                     sh.getLanguageCode(sub),
-                    sh.getCircle(sub),
-                    FinalCallStatus.SUCCESS,
-                    makeStatsMap(StatusCode.OBD_SUCCESS_CALL_CONNECTED, 1),
-                    120,
-                    1
+                    sh.getCircle(sub)
             );
             records.add(r);
         }

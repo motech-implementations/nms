@@ -85,9 +85,9 @@ if __name__ == '__main__':
         unirest.timeout(30)
         exec_http_get("{}/module/testing/createSubscriptionPacks".format(args.server))
         import_region_domain_data("state")
-        import_region_domain_data("circle")
+        import_region_domain_data("circleName")
         import_region_domain_data("district")
-        import_domain_data("languageLocationCode/import", "language_location_code.csv")
+        import_domain_data("languageCode/import", "language_location_code.csv")
 
     #
     # Create MCTS mothers file?

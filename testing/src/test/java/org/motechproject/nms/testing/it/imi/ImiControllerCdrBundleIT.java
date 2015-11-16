@@ -317,9 +317,11 @@ public class ImiControllerCdrBundleIT extends BasePaxIT {
 
         HttpPost httpPost = createHttpPost(targetFile, cdrSummary, cdrDetail);
         String expectedJsonResponse =
-                createFailureResponseJson("<" +targetFile +": Not Found>");
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_NOT_FOUND, expectedJsonResponse,
-                ImiTestHelper.ADMIN_USERNAME, ImiTestHelper.ADMIN_PASSWORD));
+                createFailureResponseJson("<" +targetFile +": Not found in FileAuditRecord>");
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpPost, ImiTestHelper.ADMIN_USERNAME,
+                ImiTestHelper.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_NOT_FOUND, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
     /*

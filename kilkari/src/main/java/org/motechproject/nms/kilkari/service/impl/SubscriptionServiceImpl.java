@@ -303,7 +303,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             subscriberDataService.create(subscriber);
         }
 
-        // todo: switch to subscriber.getLanguage() & .getCircle() when the ticket is fixed
+        // todo: switch to subscriber.getLanguage() & .getCircleName() when the ticket is fixed
         // https://applab.atlassian.net/browse/MOTECH-1678
         Language subscriberLanguage = (Language) subscriberDataService.getDetachedField(subscriber, "language");
         Circle subscriberCircle = (Circle) subscriberDataService.getDetachedField(subscriber, "circle");

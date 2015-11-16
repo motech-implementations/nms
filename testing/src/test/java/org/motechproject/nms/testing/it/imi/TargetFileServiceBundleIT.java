@@ -23,7 +23,6 @@ import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
-import org.motechproject.nms.props.domain.DayOfTheWeek;
 import org.motechproject.nms.props.domain.RequestId;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
@@ -192,7 +191,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         // Should be picked up because all callRetries are picked up
         DateTime dt = DateTime.now().minusDays(1);
         callRetryDataService.create(new CallRetry("11111111-1111-1111-1111-111111111111", 3333333333L,
-                DayOfTheWeek.fromDateTime(dt), CallStage.RETRY_1, "w1_m1.wav", "w1_1",
+                CallStage.RETRY_1, "w1_m1.wav", "w1_1",
                 rh.hindiLanguage().getCode(), rh.delhiCircle().getName(), SubscriptionOrigin.IVR,
                 RequestId.timestampFromDateTime(dt)));
 
@@ -288,7 +287,6 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
             callRetryDataService.create(new CallRetry(
                     sub.getSubscriptionId(),
                     sub.getSubscriber().getCallingNumber(),
-                    DayOfTheWeek.today(),
                     CallStage.RETRY_1,
                     sh.getContentMessageFile(sub, randomWeek),
                     sh.getWeekId(sub, randomWeek),
