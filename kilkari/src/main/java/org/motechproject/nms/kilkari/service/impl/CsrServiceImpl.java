@@ -56,6 +56,7 @@ public class CsrServiceImpl implements CsrService {
     private SubscriptionPackMessageDataService subscriptionPackMessageDataService;
 
     private Map<String, Integer> messageDurationCache;
+    private boolean oldCallSummaryRecordsInDatabase;
 
 
     @Autowired
@@ -71,6 +72,7 @@ public class CsrServiceImpl implements CsrService {
         this.subscriptionPackMessageDataService = subscriptionPackMessageDataService;
 
         buildMessageDurationCache();
+        oldCallSummaryRecordsInDatabase = oldCallSummaryRecordsInDb();
     }
 
 
@@ -216,6 +218,13 @@ public class CsrServiceImpl implements CsrService {
     }
 
 
+    private boolean oldCallSummaryRecordsInDb() {
+        Long l = csrDataService.countFindLikeSubscriptionId(":");
+        LOGGER.debug("There are still {} old CSR(s) in the database", l);
+        return (l > 0);
+    }
+
+
     private List<CallSummaryRecord> findOldCallSummaryRecords(final String subscriptionId, final String weekId) {
         @SuppressWarnings("unchecked")
         SqlQueryExecution<List<CallSummaryRecord>> queryExecution = new SqlQueryExecution<List<CallSummaryRecord>>() {
@@ -224,8 +233,8 @@ public class CsrServiceImpl implements CsrService {
             public String getSqlQuery() {
                 String query = String.format(
                         "SELECT * FROM nms_kk_summary_records " +
-                        "WHERE subscriptionId like '%%%s' " +
-                        "ORDER BY weekId, subscriptionId DESC",
+                                "WHERE subscriptionId like '%%%s' " +
+                                "ORDER BY weekId, subscriptionId DESC",
                         subscriptionId, weekId);
                 LOGGER.debug("SQL QUERY: {}", query);
                 return query;
@@ -252,11 +261,11 @@ public class CsrServiceImpl implements CsrService {
      * subscriptionId and return it. findOldCallSummaryRecords returns the list sorted on weekId and subscriptionId in
      * descending order so that if we find a subscriptionId that matches for that week we'll pick the very first one
      *
-     * @param subscriptionId
+     * @param requestId
      * @return an old and now fixed up CSR, or null
      */
-    private CallSummaryRecord lookupAndFixOldCsr(String subscriptionId, String weekId) {
-        List<CallSummaryRecord> csrs = findOldCallSummaryRecords(subscriptionId, weekId);
+    private CallSummaryRecord lookupAndFixOldCsr(String requestId, String weekId) {
+        List<CallSummaryRecord> csrs = findOldCallSummaryRecords(requestId, weekId);
         if (csrs == null || csrs.size() == 0) {
             return null;
         }
@@ -267,11 +276,13 @@ public class CsrServiceImpl implements CsrService {
                 //
                 // Funky code!
                 // This old CSR used to have a RequestId in the subscriptionId field, and now we really want the
-                // subscriptionId field to be a subscriptionId, so we treat the field as a requestId as the value
-                // passed to the setter. Get it?
+                // subscriptionId field to be a subscriptionId.
                 //
-                csr.setSubscriptionId(RequestId.fromString(csr.getSubscriptionId()).getSubscriptionId());
+                RequestId oldRequestId = RequestId.fromString(csr.getSubscriptionId());
+                String newSubscriptionId = oldRequestId.getSubscriptionId();
+                csr.setSubscriptionId(newSubscriptionId);
                 found = csrDataService.update(csr);
+                LOGGER.debug("Fixed up {}", newSubscriptionId);
             } else {
                 csrDataService.delete(csr);
             }
@@ -297,7 +308,7 @@ public class CsrServiceImpl implements CsrService {
             }
 
             CallSummaryRecord existingCsr = csrDataService.findBySubscriptionId(subscriptionId);
-            if (existingCsr == null) {
+            if (existingCsr == null && oldCallSummaryRecordsInDatabase) {
                 existingCsr = lookupAndFixOldCsr(subscriptionId, csrDto.getWeekId());
             }
             CallSummaryRecord csr;

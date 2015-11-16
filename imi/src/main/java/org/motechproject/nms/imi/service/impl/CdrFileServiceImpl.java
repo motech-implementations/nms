@@ -296,8 +296,13 @@ public class CdrFileServiceImpl implements CdrFileService {
                     //errors here should have been reported in Phase 2, let's just ignore them
                     //todo remove following line to not over confuse ops?
                     LOGGER.debug(String.format(IGNORING_CDR_ROW_FMT, fileName, lineNumber, e.getMessage()));
+                } catch (IllegalArgumentException e) {
+                //errors here should have been reported in Phase 2, let's just ignore them
+                //todo remove following line to not over confuse ops?
+                LOGGER.debug(String.format(IGNORING_CDR_ROW_FMT, fileName, lineNumber, e.getMessage()));
                 }
-                if (lineNumber % CDR_PROGRESS_REPORT_CHUNK == 0) {
+
+            if (lineNumber % CDR_PROGRESS_REPORT_CHUNK == 0) {
                     LOGGER.debug("CDRs, processed {}", timer.frequency(lineNumber));
                 }
                 lineNumber++;
@@ -358,6 +363,10 @@ public class CdrFileServiceImpl implements CdrFileService {
 
                 } catch (InvalidCsrException e) {
                     // All errors here should have been reported in Phase 2, let's just ignore them
+                    //todo remove following line to not over confuse ops?
+                    LOGGER.debug(String.format(IGNORING_CSR_ROW_FMT, fileName, lineNumber, e.getMessage()));
+                } catch (IllegalArgumentException e) {
+                    //errors here should have been reported in Phase 2, let's just ignore them
                     //todo remove following line to not over confuse ops?
                     LOGGER.debug(String.format(IGNORING_CSR_ROW_FMT, fileName, lineNumber, e.getMessage()));
                 }
