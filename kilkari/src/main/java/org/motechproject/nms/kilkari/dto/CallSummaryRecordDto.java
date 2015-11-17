@@ -1,6 +1,11 @@
 package org.motechproject.nms.kilkari.dto;
 
 import org.motechproject.mds.annotations.Ignore;
+import org.motechproject.nms.kilkari.domain.Subscription;
+import org.motechproject.nms.props.domain.FinalCallStatus;
+import org.motechproject.nms.props.domain.StatusCode;
+import org.motechproject.nms.region.domain.Circle;
+import org.motechproject.nms.region.domain.Language;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -9,6 +14,7 @@ import java.util.Map;
 public class CallSummaryRecordDto implements Serializable {
 
     private static final long serialVersionUID = -8391255985224161089L;
+    public static final String XXX = "xxx";
 
 
     private String subscriptionId;
@@ -36,6 +42,20 @@ public class CallSummaryRecordDto implements Serializable {
         this.weekId = weekId;
         this.languageCode = languageCode;
         this.circleName = circleName;
+    }
+
+    // Helper constructor for ITs
+    public CallSummaryRecordDto(Subscription subscription, StatusCode statusCode, FinalCallStatus finalStatus,
+                                String contentFileName, String weekId, Language language, Circle circle) {
+        this(
+                subscription == null ? XXX : subscription.getSubscriptionId(),
+                statusCode == null ? -1 : statusCode.getValue(),
+                finalStatus == null ? -1 : finalStatus.getValue(),
+                contentFileName == null ? XXX : contentFileName,
+                weekId == null ? XXX : weekId,
+                language == null ? XXX : language.getCode(),
+                circle == null ? XXX : circle.getName()
+        );
     }
 
     public String getSubscriptionId() {

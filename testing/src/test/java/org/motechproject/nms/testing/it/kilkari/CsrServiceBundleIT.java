@@ -6,10 +6,19 @@ import org.joda.time.format.DateTimeFormatter;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.motechproject.alerts.contract.AlertCriteria;
 import org.motechproject.alerts.contract.AlertService;
+import org.motechproject.alerts.domain.Alert;
+import org.motechproject.alerts.domain.AlertType;
 import org.motechproject.event.MotechEvent;
+import org.motechproject.nms.kilkari.domain.CallRetry;
+import org.motechproject.nms.kilkari.domain.CallStage;
+import org.motechproject.nms.kilkari.domain.CallSummaryRecord;
+import org.motechproject.nms.kilkari.domain.DeactivationReason;
+import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
+import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.dto.CallSummaryRecordDto;
 import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.CallSummaryRecordDataService;
@@ -18,6 +27,7 @@ import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.CsrService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
+import org.motechproject.nms.props.domain.FinalCallStatus;
 import org.motechproject.nms.props.domain.StatusCode;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
@@ -25,6 +35,7 @@ import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.region.service.LanguageService;
+import org.motechproject.nms.testing.it.utils.CsrHelper;
 import org.motechproject.nms.testing.it.utils.RegionHelper;
 import org.motechproject.nms.testing.it.utils.SubscriptionHelper;
 import org.motechproject.nms.testing.service.TestingService;
@@ -37,8 +48,10 @@ import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(PaxExam.class)
@@ -100,7 +113,6 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
         sh.childPack();
         sh.pregnancyPack();
-        csrService.buildMessageDurationCache();
 
     }
 
@@ -118,211 +130,178 @@ public class CsrServiceBundleIT extends BasePaxIT {
     }
 
 
+    private void processCsr(CallSummaryRecordDto csr) {
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, CallSummaryRecordDto.toParams(csr));
+        csrService.processCallSummaryRecord(motechEvent);
+    }
+
+
     @Test
     public void verifyServiceFunctional() {
         Subscription subscription = sh.mksub(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
 
         CallSummaryRecordDto csr = new CallSummaryRecordDto(
+                subscription,
+                StatusCode.OBD_FAILED_NOANSWER,
+                FinalCallStatus.FAILED,
+                "w1_1.wav",
+                "w1_1",
+                rh.hindiLanguage(),
+                rh.delhiCircle()
+        );
+
+        processCsr(csr);
+    }
+
+
+    @Test
+    public void verifyInvalidWeekId() {
+        Subscription subscription = sh.mksub(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
+        processCsr(new CallSummaryRecordDto(
+                subscription,
+                StatusCode.OBD_FAILED_NOANSWER,
+                FinalCallStatus.FAILED,
+                "w1_1.wav",
+                null,
+                rh.hindiLanguage(),
+                rh.delhiCircle()
+        ));
+
+        AlertCriteria criteria = new AlertCriteria().byExternalId(subscription.getSubscriptionId());
+        List<Alert> alerts = alertService.search(criteria);
+        assertEquals(1, alerts.size());
+        assertEquals(AlertType.HIGH, alerts.get(0).getAlertType());
+    }
+
+
+    @Test
+    public void verifyInvalidFilename() {
+        Subscription subscription = sh.mksub(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
+        processCsr(new CallSummaryRecordDto(
+                subscription,
+                StatusCode.OBD_FAILED_NOANSWER,
+                FinalCallStatus.FAILED,
+                null,
+                "w1_1",
+                rh.hindiLanguage(),
+                rh.delhiCircle()
+        ));
+
+        AlertCriteria criteria = new AlertCriteria().byExternalId(subscription.getSubscriptionId());
+        List<Alert> alerts = alertService.search(criteria);
+        assertEquals(1, alerts.size());
+        assertEquals(AlertType.HIGH, alerts.get(0).getAlertType());
+    }
+
+
+    @Test
+    public void verifyInvalidCircle() {
+        Subscription subscription = sh.mksub(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
+        processCsr(new CallSummaryRecordDto(
+                subscription,
+                StatusCode.OBD_FAILED_NOANSWER,
+                FinalCallStatus.FAILED,
+                "w1_1.wav",
+                "w1_1",
+                rh.hindiLanguage(),
+                null
+        ));
+
+        AlertCriteria criteria = new AlertCriteria().byExternalId(subscription.getSubscriptionId());
+        List<Alert> alerts = alertService.search(criteria);
+        assertEquals(1, alerts.size());
+        assertEquals(AlertType.HIGH, alerts.get(0).getAlertType());
+    }
+
+
+    @Test
+    public void verifyInvalidLanguage() {
+        Subscription subscription = sh.mksub(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
+        processCsr(new CallSummaryRecordDto(
+                subscription,
+                StatusCode.OBD_FAILED_NOANSWER,
+                FinalCallStatus.FAILED,
+                "w1_1.wav",
+                "w1_1",
+                null,
+                rh.delhiCircle()
+        ));
+
+        AlertCriteria criteria = new AlertCriteria().byExternalId(subscription.getSubscriptionId());
+        List<Alert> alerts = alertService.search(criteria);
+        assertEquals(1, alerts.size());
+        assertEquals(AlertType.HIGH, alerts.get(0).getAlertType());
+    }
+
+
+    // Deactivate if user phone number does not exist
+    // https://github.com/motech-implementations/mim/issues/169
+    @Test
+    public void verifyIssue169() {
+        Subscription subscription = sh.mksub(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
+        Subscriber subscriber = subscription.getSubscriber();
+
+        csrDataService.create(new CallSummaryRecord(
                 subscription.getSubscriptionId(),
-                2002,
-                2,
+                "w1_1.wav",
+                rh.hindiLanguage().getCode(),
+                rh.delhiCircle().getName(),
+                "w1_1",
+                StatusCode.OBD_FAILED_INVALIDNUMBER,
+                FinalCallStatus.FAILED
+        ));
+
+        callRetryDataService.create(new CallRetry(
+                subscription.getSubscriptionId(),
+                subscription.getSubscriber().getCallingNumber(),
+                CallStage.RETRY_LAST,
                 "w1_1.wav",
                 "w1_1",
                 rh.hindiLanguage().getCode(),
-                rh.delhiCircle().getName()
+                rh.delhiCircle().getName(),
+                SubscriptionOrigin.MCTS_IMPORT
+        ));
+
+        CallSummaryRecordDto csr = new CallSummaryRecordDto(
+                subscription,
+                StatusCode.OBD_FAILED_INVALIDNUMBER,
+                FinalCallStatus.FAILED,
+                "w1_1.wav",
+                "w1_1",
+                rh.hindiLanguage(),
+                rh.delhiCircle()
         );
 
-        Map<String, Object> eventParams = new HashMap<>();
-        eventParams.put(CSR_PARAM_KEY, csr);
-        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
-        csrService.processCallSummaryRecord(motechEvent);
+        processCsr(csr);
+
+        subscription = subscriptionDataService.findBySubscriptionId(subscription.getSubscriptionId());
+        assertEquals(SubscriptionStatus.DEACTIVATED, subscription.getStatus());
+        assertEquals(DeactivationReason.INVALID_NUMBER, subscription.getDeactivationReason());
     }
 
-//
-//    @Test
-//    public void verifyInvalidWeekId() {
-//        Subscription subscription = sh.mksub(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
-//        Map<String, Object> eventParams = new HashMap<>();
-//        eventParams.put(CSR_PARAM_KEY, new CallSummaryRecordDto(
-//                new RequestId(subscription.getSubscriptionId(), "11112233445566"),
-//                1234567890L,
-//                "w1_1.wav",
-//                "xxx",
-//                rh.hindiLanguage().getCode(),
-//                rh.delhiCircle().getName(),
-//                FinalCallStatus.FAILED,
-//                makeStatsMap(StatusCode.OBD_FAILED_INVALIDNUMBER, 3),
-//                0,
-//                3
-//        ));
-//        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
-//
-//        csrService.processCallSummaryRecord(motechEvent);
-//        AlertCriteria criteria = new AlertCriteria().byExternalId(subscription.getSubscriptionId());
-//        List<Alert> alerts = alertService.search(criteria);
-//        assertEquals(1, alerts.size());
-//        assertEquals(AlertType.HIGH, alerts.get(0).getAlertType());
-//    }
-//
-//
-//    @Test
-//    public void verifyInvalidFilename() {
-//        Subscription subscription = sh.mksub(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
-//        Map<String, Object> eventParams = new HashMap<>();
-//        eventParams.put(CSR_PARAM_KEY, new CallSummaryRecordDto(
-//                new RequestId(subscription.getSubscriptionId(), "11112233445566"),
-//                1234567890L,
-//                "xxx",
-//                "w1_1",
-//                rh.hindiLanguage().getCode(),
-//                rh.delhiCircle().getName(),
-//                FinalCallStatus.FAILED,
-//                makeStatsMap(StatusCode.OBD_FAILED_INVALIDNUMBER, 3),
-//                0,
-//                3
-//        ));
-//        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
-//
-//        csrService.processCallSummaryRecord(motechEvent);
-//        AlertCriteria criteria = new AlertCriteria().byExternalId(subscription.getSubscriptionId());
-//        List<Alert> alerts = alertService.search(criteria);
-//        assertEquals(1, alerts.size());
-//        assertEquals(AlertType.HIGH, alerts.get(0).getAlertType());
-//    }
-//
-//
-//    @Test
-//    public void verifyInvalidCircle() {
-//        Subscription subscription = sh.mksub(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
-//        Map<String, Object> eventParams = new HashMap<>();
-//        eventParams.put(CSR_PARAM_KEY, new CallSummaryRecordDto(
-//                new RequestId(subscription.getSubscriptionId(), "11112233445566"),
-//                1234567890L,
-//                "w1_1.wav",
-//                "w1_1",
-//                rh.hindiLanguage().getCode(),
-//                "xxx",
-//                FinalCallStatus.FAILED,
-//                makeStatsMap(StatusCode.OBD_FAILED_INVALIDNUMBER, 3),
-//                0,
-//                3
-//        ));
-//        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
-//
-//        csrService.processCallSummaryRecord(motechEvent);
-//        AlertCriteria criteria = new AlertCriteria().byExternalId(subscription.getSubscriptionId());
-//        List<Alert> alerts = alertService.search(criteria);
-//        assertEquals(1, alerts.size());
-//        assertEquals(AlertType.HIGH, alerts.get(0).getAlertType());
-//    }
-//
-//
-//    @Test
-//    public void verifyInvalidLanguage() {
-//        Subscription subscription = sh.mksub(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
-//        Map<String, Object> eventParams = new HashMap<>();
-//        eventParams.put(CSR_PARAM_KEY, new CallSummaryRecordDto(
-//                new RequestId(subscription.getSubscriptionId(), "11112233445566"),
-//                1234567890L,
-//                "w1_1.wav",
-//                "w1_1",
-//                "xxx",
-//                rh.delhiCircle().getName(),
-//                FinalCallStatus.FAILED,
-//                makeStatsMap(StatusCode.OBD_FAILED_INVALIDNUMBER, 3),
-//                0,
-//                3
-//        ));
-//        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
-//
-//        csrService.processCallSummaryRecord(motechEvent);
-//        AlertCriteria criteria = new AlertCriteria().byExternalId(subscription.getSubscriptionId());
-//        List<Alert> alerts = alertService.search(criteria);
-//        assertEquals(1, alerts.size());
-//        assertEquals(AlertType.HIGH, alerts.get(0).getAlertType());
-//    }
-//
-//
-//    // Deactivate if user phone number does not exist
-//    // https://github.com/motech-implementations/mim/issues/169
-//    @Test
-//    public void verifyIssue169() {
-//        Subscription subscription = sh.mksub(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
-//        Subscriber subscriber = subscription.getSubscriber();
-//
-//        csrDataService.create(new CallSummaryRecord(
-//                new RequestId(subscription.getSubscriptionId(), "11112233445555").toString(),
-//                subscription.getSubscriber().getCallingNumber(),
-//                "w1_1.wav",
-//                "w1_1",
-//                rh.hindiLanguage().getCode(),
-//                rh.delhiCircle().getName(),
-//                FinalCallStatus.FAILED,
-//                makeStatsMap(StatusCode.OBD_FAILED_INVALIDNUMBER, 10),
-//                0,
-//                10,
-//                3
-//        ));
-//
-//        callRetryDataService.create(new CallRetry(
-//                subscription.getSubscriptionId(),
-//                subscription.getSubscriber().getCallingNumber(),
-//                DayOfTheWeek.today(),
-//                CallStage.RETRY_LAST,
-//                "w1_1.wav",
-//                "w1_1",
-//                rh.hindiLanguage().getCode(),
-//                rh.delhiCircle().getName(),
-//                SubscriptionOrigin.MCTS_IMPORT,
-//                "11112233445555"
-//        ));
-//
-//        CallSummaryRecordDto csr = new CallSummaryRecordDto(
-//                new RequestId(subscription.getSubscriptionId(), "11112233445566"),
-//                subscription.getSubscriber().getCallingNumber(),
-//                "w1_1.wav",
-//                "w1_1",
-//                rh.hindiLanguage().getCode(),
-//                rh.delhiCircle().getName(),
-//                FinalCallStatus.FAILED,
-//                makeStatsMap(StatusCode.OBD_FAILED_INVALIDNUMBER, 3),
-//                0,
-//                3
-//        );
-//
-//        Map<String, Object> eventParams = new HashMap<>();
-//        eventParams.put(CSR_PARAM_KEY, csr);
-//        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
-//        csrService.processCallSummaryRecord(motechEvent);
-//
-//        subscription = subscriptionDataService.findBySubscriptionId(subscription.getSubscriptionId());
-//        assertEquals(SubscriptionStatus.DEACTIVATED, subscription.getStatus());
-//        assertEquals(DeactivationReason.INVALID_NUMBER, subscription.getDeactivationReason());
-//    }
-//
-//
-//    @Test
-//    public void verifySubscriptionCompletion() {
-//
-//        String timestamp = DateTime.now().toString(TIME_FORMATTER);
-//
-//        CsrHelper helper = new CsrHelper(timestamp, subscriptionService, subscriptionPackDataService,
-//                subscriberDataService, languageDataService, languageService, circleDataService, stateDataService,
-//                districtDataService, districtService);
-//
-//        helper.makeRecords(1, 3, 0, 0);
-//
-//        for (CallSummaryRecordDto record : helper.getRecords()) {
-//            Map<String, Object> eventParams = new HashMap<>();
-//            eventParams.put(CSR_PARAM_KEY, record);
-//            MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
-//            csrService.processCallSummaryRecord(motechEvent);
-//        }
-//
-//        List<Subscription> subscriptions = subscriptionDataService.findByStatus(SubscriptionStatus.COMPLETED);
-//        assertEquals(3, subscriptions.size());
-//    }
-//
+
+    @Test
+    public void verifySubscriptionCompletion() {
+
+        String timestamp = DateTime.now().toString(TIME_FORMATTER);
+
+        CsrHelper helper = new CsrHelper(timestamp, subscriptionService, subscriptionPackDataService,
+                subscriberDataService, languageDataService, languageService, circleDataService, stateDataService,
+                districtDataService, districtService);
+
+        helper.makeRecords(1, 3, 0, 0);
+
+        for (CallSummaryRecordDto record : helper.getRecords()) {
+            Map<String, Object> eventParams = new HashMap<>();
+            eventParams.put(CSR_PARAM_KEY, record);
+            MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
+            csrService.processCallSummaryRecord(motechEvent);
+        }
+
+        List<Subscription> subscriptions = subscriptionDataService.findByStatus(SubscriptionStatus.COMPLETED);
+        assertEquals(3, subscriptions.size());
+    }
+
 //
 //    /**
 //     * To check that NMS shall not retry OBD message for which all OBD attempts(1 actual+3 retry) fails with
@@ -743,7 +722,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
 //        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(14));
 //
 //        CallSummaryRecordDto csr = new CallSummaryRecordDto(
-//                new RequestId(subscription.getSubscriptionId(), "11112233445566"),
+//                subscription.getSubscriptionId(),
 //                subscription.getSubscriber().getCallingNumber(),
 //                sh.getContentMessageFile(subscription, 0),
 //                sh.getWeekId(subscription, 0),
@@ -824,7 +803,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
 //        ));
 //
 //        CallSummaryRecordDto csr = new CallSummaryRecordDto(
-//                new RequestId(subscription.getSubscriptionId(), "11112233445566"),
+//                subscription.getSubscriptionId(),
 //                subscription.getSubscriber().getCallingNumber(),
 //                sh.getContentMessageFile(subscription, 0),
 //                sh.getWeekId(subscription, 0),
@@ -854,7 +833,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
 //        assertEquals(CallStage.RETRY_LAST, retries.get(0).getCallStage());
 //
 //        csr = new CallSummaryRecordDto(
-//                new RequestId(subscription.getSubscriptionId(), "11112233445566"),
+//                subscription.getSubscriptionId(),
 //                subscription.getSubscriber().getCallingNumber(),
 //                sh.getContentMessageFile(subscription, 0),
 //                sh.getWeekId(subscription, 0),
@@ -1028,7 +1007,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
 //        assertEquals(CallStage.RETRY_1, retries.get(0).getCallStage());
 //
 //        csr = new CallSummaryRecordDto(
-//                new RequestId(subscription.getSubscriptionId(), "11112233445566"),
+//                subscription.getSubscriptionId(),
 //                subscription.getSubscriber().getCallingNumber(),
 //                sh.getContentMessageFile(subscription, 0),
 //                sh.getWeekId(subscription, 0),
@@ -1062,7 +1041,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
 //                SubscriptionPackType.PREGNANCY);
 //
 //        CallSummaryRecordDto csr = new CallSummaryRecordDto(
-//                new RequestId(subscription.getSubscriptionId(), "11112233445566"),
+//                subscription.getSubscriptionId(),
 //                subscription.getSubscriber().getCallingNumber(),
 //                sh.getContentMessageFile(subscription, 0),
 //                sh.getWeekId(subscription, 0),
@@ -1092,7 +1071,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
 //        assertEquals(CallStage.RETRY_1, retries.get(0).getCallStage());
 //
 //        csr = new CallSummaryRecordDto(
-//                new RequestId(subscription.getSubscriptionId(), "11112233445566"),
+//                subscription.getSubscriptionId(),
 //                subscription.getSubscriber().getCallingNumber(),
 //                sh.getContentMessageFile(subscription, 0),
 //                sh.getWeekId(subscription, 0),
@@ -1272,7 +1251,4 @@ public class CsrServiceBundleIT extends BasePaxIT {
 //        assertEquals(1, subscriptions.size());
 //        assertEquals(false,subscriptions.get(0).getNeedsWelcomeMessageViaObd());
 //    }
-//
-//    //todo: verify multiple days' worth of summary record aggregation
-//    //todo: verify more stuff I can't think of now
 }

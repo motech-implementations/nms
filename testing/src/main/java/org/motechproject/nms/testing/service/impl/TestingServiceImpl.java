@@ -62,8 +62,6 @@ public class TestingServiceImpl implements TestingService {
         "MTRAINING_MODULE_QUESTION__TRASH",
         "MTRAINING_MODULE_QUIZ",
         "MTRAINING_MODULE_QUIZ__TRASH",
-        "NMS_KK_SUMMARY_RECORDS_STATUSSTATS",
-        "NMS_KK_SUMMARY_RECORDS__TRASH_STATUSSTATS",
         "nms_call_content",
         "nms_call_content__TRASH",
         "nms_subscription_errors",

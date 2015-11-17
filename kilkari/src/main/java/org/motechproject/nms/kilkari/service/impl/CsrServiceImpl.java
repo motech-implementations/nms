@@ -15,15 +15,14 @@ import org.motechproject.nms.kilkari.domain.CallSummaryRecord;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
-import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.dto.CallSummaryRecordDto;
 import org.motechproject.nms.kilkari.exception.InvalidCdrDataException;
 import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.CallSummaryRecordDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
-import org.motechproject.nms.kilkari.repository.SubscriptionPackMessageDataService;
 import org.motechproject.nms.kilkari.service.CsrService;
+import org.motechproject.nms.kilkari.service.CsrVerifierService;
 import org.motechproject.nms.props.domain.FinalCallStatus;
 import org.motechproject.nms.props.domain.RequestId;
 import org.motechproject.nms.props.domain.StatusCode;
@@ -34,9 +33,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import javax.jdo.Query;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import static java.lang.Math.min;
 
@@ -53,41 +50,23 @@ public class CsrServiceImpl implements CsrService {
     private SubscriptionDataService subscriptionDataService;
     private CallRetryDataService callRetryDataService;
     private AlertService alertService;
-    private SubscriptionPackMessageDataService subscriptionPackMessageDataService;
+    private CsrVerifierService csrVerifierService;
 
-    private Map<String, Integer> messageDurationCache;
     private boolean oldCallSummaryRecordsInDatabase;
 
 
     @Autowired
-    public CsrServiceImpl(CallSummaryRecordDataService csrDataService,
-                          SubscriptionDataService subscriptionDataService,
-                          CallRetryDataService callRetryDataService,
-                          AlertService alertService,
-                          SubscriptionPackMessageDataService subscriptionPackMessageDataService) {
+    public CsrServiceImpl(CallSummaryRecordDataService csrDataService, SubscriptionDataService subscriptionDataService,
+                          CallRetryDataService callRetryDataService, AlertService alertService,
+                          CsrVerifierService csrVerifierService) {
         this.csrDataService = csrDataService;
         this.subscriptionDataService = subscriptionDataService;
         this.callRetryDataService = callRetryDataService;
         this.alertService = alertService;
-        this.subscriptionPackMessageDataService = subscriptionPackMessageDataService;
+        this.csrVerifierService = csrVerifierService;
 
-        buildMessageDurationCache();
         oldCallSummaryRecordsInDatabase = oldCallSummaryRecordsInDb();
     }
-
-
-    public final void buildMessageDurationCache() {
-        messageDurationCache = new HashMap<>();
-        for (SubscriptionPackMessage msg : subscriptionPackMessageDataService.retrieveAll()) {
-            messageDurationCache.put(msg.getMessageFileName(), msg.getDuration());
-        }
-
-        if (messageDurationCache.size() == 0) {
-            alertService.create("Message Duration Cache", "Subscription Message duration cache empty",
-                    "Subscription pack messages not found", AlertType.CRITICAL, AlertStatus.NEW, 0, null);
-        }
-    }
-
 
     private void completeSubscriptionIfNeeded(Subscription subscription, CallSummaryRecord record) {
 
@@ -297,10 +276,12 @@ public class CsrServiceImpl implements CsrService {
 
         Timer timer = new Timer();
 
-        CallSummaryRecordDto csrDto = CallSummaryRecordDto.fromParams(event.getParameters());
-        String subscriptionId = csrDto.getSubscriptionId();
-
+        String subscriptionId = "###INVALID###";
         try {
+            CallSummaryRecordDto csrDto = CallSummaryRecordDto.fromParams(event.getParameters());
+            subscriptionId = csrDto.getSubscriptionId();
+            csrVerifierService.verify(csrDto);
+
             Subscription subscription = subscriptionDataService.findBySubscriptionId(subscriptionId);
             if (subscription == null) {
                 throw new InvalidCdrDataException(String.format("Subscription %s does not exist in the database",

@@ -9,5 +9,4 @@ public interface CsrService {
     // IT only
 
     void processCallSummaryRecord(MotechEvent event);
-    void buildMessageDurationCache();
 }

@@ -31,7 +31,9 @@ import org.motechproject.nms.imi.service.contract.CdrFileProcessedNotification;
 import org.motechproject.nms.imi.web.contract.CdrFileNotificationRequest;
 import org.motechproject.nms.imi.web.contract.FileInfo;
 import org.motechproject.nms.kilkari.dto.CallSummaryRecordDto;
+import org.motechproject.nms.kilkari.exception.CsrConversionException;
 import org.motechproject.nms.kilkari.service.CsrService;
+import org.motechproject.nms.kilkari.service.CsrVerifierService;
 import org.motechproject.server.config.SettingsFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -116,13 +118,15 @@ public class CdrFileServiceImpl implements CdrFileService {
     private CallDetailRecordDataService callDetailRecordDataService;
     private CallSummaryRecordDataService callSummaryRecordDataService;
     private CsrService csrService;
+    private CsrVerifierService csrVerifierService;
 
 
     @Autowired
     public CdrFileServiceImpl(@Qualifier("imiSettings") SettingsFacade settingsFacade, EventRelay eventRelay,
                               FileAuditRecordDataService fileAuditRecordDataService, AlertService alertService,
                               CallDetailRecordDataService callDetailRecordDataService,
-                              CallSummaryRecordDataService callSummaryRecordDataService, CsrService csrService) {
+                              CallSummaryRecordDataService callSummaryRecordDataService, CsrService csrService,
+                              CsrVerifierService csrVerifierService) {
         this.settingsFacade = settingsFacade;
         this.eventRelay = eventRelay;
         this.fileAuditRecordDataService = fileAuditRecordDataService;
@@ -130,6 +134,9 @@ public class CdrFileServiceImpl implements CdrFileService {
         this.callDetailRecordDataService = callDetailRecordDataService;
         this.callSummaryRecordDataService = callSummaryRecordDataService;
         this.csrService = csrService;
+        this.csrVerifierService = csrVerifierService;
+
+
     }
 
     private void alertAndAudit(String file, List<String> errors) {
@@ -170,8 +177,8 @@ public class CdrFileServiceImpl implements CdrFileService {
     }
 
 
-    private void sendProcessCsrEvent(CallSummaryRecordDto record) {
-        MotechEvent motechEvent = new MotechEvent(NMS_IMI_KK_PROCESS_CSR, CallSummaryRecordDto.toParams(record));
+    private void sendProcessCsrEvent(CallSummaryRecordDto csrDto) {
+        MotechEvent motechEvent = new MotechEvent(NMS_IMI_KK_PROCESS_CSR, CallSummaryRecordDto.toParams(csrDto));
         eventRelay.sendEventMessage(motechEvent);
     }
 
@@ -359,9 +366,11 @@ public class CdrFileServiceImpl implements CdrFileService {
                         callSummaryRecordDataService.create(csr);
                     }
 
-                    sendProcessCsrEvent(csr.toDto());
+                    CallSummaryRecordDto csrDto = csr.toDto();
+                    csrVerifierService.verify(csrDto);
+                    sendProcessCsrEvent(csrDto);
 
-                } catch (InvalidCsrException e) {
+                } catch (InvalidCsrException | CsrConversionException e) {
                     // All errors here should have been reported in Phase 2, let's just ignore them
                     //todo remove following line to not over confuse ops?
                     LOGGER.debug(String.format(IGNORING_CSR_ROW, fileName, lineNumber, e.getMessage()));
@@ -746,11 +755,11 @@ public class CdrFileServiceImpl implements CdrFileService {
         LOGGER.info("Phase 2 - Sending Phase 3 event");
         sendPhaseEvent(CDR_PHASE_3, request);
 
-        // Aggregate & send aggregated CDR rows into CSR for processing
+        // Save CDRs
         LOGGER.info("Phase 2 - Sending Phase 4 event");
         sendPhaseEvent(CDR_PHASE_4, request);
 
-        // Sends native CSRs rows for processing
+        // Send CSRs for processing
         LOGGER.info("Phase 2 - Sending Phase 5 event");
         sendPhaseEvent(CDR_PHASE_5, request);
 
