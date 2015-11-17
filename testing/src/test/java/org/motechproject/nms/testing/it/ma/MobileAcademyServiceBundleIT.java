@@ -523,23 +523,19 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
      */
     private JSONObject setupMaCourse() throws IOException {
         MaCourse course = new MaCourse();
-        String jsonText = IOUtils
-                .toString(getFileInputStream("nmsCourse.json"));
+        InputStream fileStream = getFileInputStream("nmsCourse.json");
+        String jsonText = IOUtils.toString(fileStream);
         JSONObject jo = new JSONObject(jsonText);
         course.setName(jo.get("name").toString());
         course.setContent(jo.get("chapters").toString());
         nmsCourseDataService.create(new NmsCourse(course.getName(), course
                 .getContent()));
+        fileStream.close();
         return jo;
     }
 
     private InputStream getFileInputStream(String fileName) {
-        try {
-            return new FileInputStream(new File(Thread.currentThread()
-                    .getContextClassLoader().getResource(fileName).getPath()));
-        } catch (IOException io) {
-            return null;
-        }
+        return getClass().getClassLoader().getResourceAsStream(fileName);
     }
 
 }
