@@ -174,12 +174,12 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         FileInfo cdrFileInfo = new FileInfo(helper.cdr(), "invalid checksum", helper.cdrCount());
         FileInfo csrFileInfo = new FileInfo(helper.csr(), helper.csrLocalChecksum(), helper.csrCount());
 
-        exception.expect(IllegalStateException.class);
         CdrFileNotificationRequest request = new CdrFileNotificationRequest(
                 helper.obd(),
                 csrFileInfo,
                 cdrFileInfo
         );
+        exception.expect(IllegalStateException.class);
         cdrFileService.cdrProcessingPhase1(request);
     }
 
@@ -209,7 +209,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         } catch (InvalidCdrFileException e) {
             List<String> errors = e.getMessages();
             assertEquals(4, errors.size());
-            String expected = String.format("%s: 5 errors only displaying the first 3", helper.csr());
+            String expected = String.format("%s: 5 errors - only displaying the first 3", helper.csr());
             assertEquals(expected, errors.get(0));
         }
     }
