@@ -45,9 +45,11 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import javax.inject.Inject;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
@@ -104,6 +106,9 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
     private MctsChildDataService mctsChildDataService;
     @Inject
     private MctsMotherDataService mctsMotherDataService;
+
+    @Inject
+    PlatformTransactionManager transactionManager;
 
     private SubscriptionHelper sh;
 
@@ -207,6 +212,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         subscription.getSubscriber().setChild(new MctsChild(mctsId));
         subscriberDataService.update(subscription.getSubscriber());
 
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         Reader reader = createUpdateReaderWithHeaders("1," + mctsId + ",,,,,,,,,,,,," + newMsisdn);
         mctsBeneficiaryUpdateService.updateBeneficiaryData(reader);
 
@@ -217,12 +223,15 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         Subscriber subscriber = subscriberDataService.findByNumber(newMsisdn);
         assertNotNull(subscriber);
         assertEquals(mctsId, subscriber.getChild().getBeneficiaryId());
+        transactionManager.commit(status);
     }
 
     @Test
     public void testUpdateMsisdnForSubscriberWithBothPacks() throws Exception {
         Long oldMsisdn = sh.makeNumber();
         Long newMsisdn = sh.makeNumber();
+
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         Subscription childSubscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now(),
                 SubscriptionPackType.CHILD, oldMsisdn);
@@ -235,12 +244,18 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         String motherId = "9876543210";
         pregnancySubscription.getSubscriber().setMother(new MctsMother(motherId));
         subscriberDataService.update(pregnancySubscription.getSubscriber());
+        transactionManager.commit(status);
 
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         assertEquals(2, subscriberDataService.findByNumber(oldMsisdn).getActiveAndPendingSubscriptions().size());
+        transactionManager.commit(status);
 
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         Reader reader = createUpdateReaderWithHeaders("1," + motherId + ",,,,,,,,,,,,," + newMsisdn);
         mctsBeneficiaryUpdateService.updateBeneficiaryData(reader);
+        transactionManager.commit(status);
 
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         Subscriber pregnancySubscriber = subscriberDataService.findByNumber(newMsisdn);
         Subscriber childSubscriber = subscriberDataService.findByNumber(oldMsisdn);
 
@@ -253,6 +268,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         assertNull(childSubscriber.getMother());
         assertEquals(1, pregnancySubscriber.getActiveAndPendingSubscriptions().size());
         assertEquals(1, childSubscriber.getActiveAndPendingSubscriptions().size());
+        transactionManager.commit(status);
     }
 
     @Test
@@ -274,8 +290,10 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         subscriberDataService.update(secondSubscription.getSubscriber());
 
         // try to set the second child's MSISDN to the same number as the first child's MSISDN
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         Reader reader = createUpdateReaderWithHeaders("1," + secondChildId + ",,,,,,,,,,,,," + firstMsisdn);
         mctsBeneficiaryUpdateService.updateBeneficiaryData(reader);
+        transactionManager.commit(status);
 
         List<SubscriptionError> errors = subscriptionErrorDataService.findByContactNumber(firstMsisdn);
         assertEquals(1, errors.size());
@@ -304,6 +322,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         */
 
         // this updates the db with the new data (DOB)
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         Reader reader = createUpdateReaderWithHeaders("1," + childId + ",," + getDateString(updatedDOB) + ",,,,,,,,,,,");
         mctsBeneficiaryUpdateService.updateBeneficiaryData(reader);
 
@@ -313,6 +332,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         Subscription updatedSubscription = updatedSubscriber.getActiveAndPendingSubscriptions().iterator().next();
         assertEquals(getDateString(updatedDOB), getDateString(updatedSubscription.getStartDate()));
         assertEquals(SubscriptionStatus.ACTIVE, updatedSubscription.getStatus());
+        transactionManager.commit(status);
     }
 
     @Test
@@ -336,6 +356,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         subscriberDataService.update(subscriber);
         */
 
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         Reader reader = createUpdateReaderWithHeaders("1," + motherId + ",,," + getDateString(updatedLMP) + ",,,,,,,,,,");
         mctsBeneficiaryUpdateService.updateBeneficiaryData(reader);
 
@@ -344,6 +365,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         Subscription updatedSubscription = updatedSubscriber.getActiveAndPendingSubscriptions().iterator().next();
         assertEquals(getDateString(updatedLMP.plusDays(90)), getDateString(updatedSubscription.getStartDate()));
         assertEquals(SubscriptionStatus.ACTIVE, updatedSubscription.getStatus());
+        transactionManager.commit(status);
     }
 
     @Test
@@ -370,6 +392,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         */
 
         // pre-date the LMP so that the subscription will be marked completed
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         Subscriber subscriber = subscriberDataService.findByNumber(msisdn);
         subscriber.setLastMenstrualPeriod(originalLMP.minusDays(600));
         subscriberService.update(subscriber);
@@ -386,6 +409,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         Subscription updatedSubscription = updatedSubscriber.getActiveAndPendingSubscriptions().iterator().next();
         assertEquals(getDateString(updatedLMP.plusDays(90)), getDateString(updatedSubscription.getStartDate()));
         assertEquals(SubscriptionStatus.ACTIVE, updatedSubscription.getStatus());
+        transactionManager.commit(status);
     }
 
     @Test
@@ -403,6 +427,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         makeMctsSubscription(child, originalDOB, SubscriptionPackType.CHILD, msisdn);
 
         // verify that the subscription is active
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         Subscriber subscriber = subscriberDataService.findByNumber(msisdn);
         Subscription subscription = subscriber.getAllSubscriptions().iterator().next();
         assertEquals(SubscriptionStatus.ACTIVE, subscription.getStatus());
@@ -416,6 +441,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         Subscription updatedSubscription = updatedSubscriber.getAllSubscriptions().iterator().next();
         assertEquals(getDateString(updatedDOB), getDateString(updatedSubscription.getStartDate()));
         assertEquals(SubscriptionStatus.COMPLETED, updatedSubscription.getStatus());
+        transactionManager.commit(status);
     }
 
     @Test
@@ -474,12 +500,8 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
 
         // ----Update all 4 via CSV:----
 
-        try {
-            mctsBeneficiaryUpdateService.updateBeneficiaryData(read("csv/mcts_beneficiary_update.csv"));
-        }
-        catch(IOException e) {
-            assert false;
-        }
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        mctsBeneficiaryUpdateService.updateBeneficiaryData(read("csv/mcts_beneficiary_update.csv"));
 
         // ----Validate updates to each:----
 
@@ -518,6 +540,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
 
         // Location insert:
         assertEquals("Taluka", subscriber4.getChild().getTaluka().getName());
+        transactionManager.commit(status);
     }
 
 
