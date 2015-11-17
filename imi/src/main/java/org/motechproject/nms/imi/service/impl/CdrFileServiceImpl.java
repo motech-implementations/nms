@@ -62,7 +62,7 @@ import static java.lang.Math.min;
 @Service("cdrFileService")
 public class CdrFileServiceImpl implements CdrFileService {
 
-    public static final String DISPLAYING_THE_FIRST_N_ERRORS = "%s: %d errors only displaying the first %d";
+    public static final String DISPLAYING_THE_FIRST_N_ERRORS = "%s: %d errors - only displaying the first %d";
     private static final String CDR_FILE_NOTIFICATION_URL = "imi.cdr_file_notification_url";
     private static final String LOCAL_CDR_DIR = "imi.local_cdr_dir";
     private static final String CDR_CSR_RETENTION_DURATION = "imi.cdr_csr.retention.duration";
@@ -70,7 +70,6 @@ public class CdrFileServiceImpl implements CdrFileService {
     private static final String CDR_CSR_CLEANUP_SUBJECT = "nms.imi.cdr_csr.cleanup";
     private static final String CDR_TABLE_NAME = "motech_data_services.nms_imi_cdrs";
     private static final String NMS_IMI_KK_PROCESS_CSR = "nms.imi.kk.process_csr";
-    private static final String END_OF_CDR_PROCESSING_SUBJECT = "nms.imi.kk.end_of_cdr_processing";
     private static final String CDR_PHASE_2 = "nms.imi.kk.cdr_phase_2";
     private static final String CDR_PHASE_3 = "nms.imi.kk.cdr_phase_3";
     private static final String CDR_PHASE_4 = "nms.imi.kk.cdr_phase_4";
@@ -366,9 +365,7 @@ public class CdrFileServiceImpl implements CdrFileService {
                         callSummaryRecordDataService.create(csr);
                     }
 
-                    CallSummaryRecordDto csrDto = csr.toDto();
-                    csrVerifierService.verify(csrDto);
-                    sendProcessCsrEvent(csrDto);
+                    sendProcessCsrEvent(csr.toDto());
 
                 } catch (InvalidCsrException | InvalidCsrDataException e) {
                     // All errors here should have been reported in Phase 2, let's just ignore them
@@ -609,7 +606,10 @@ public class CdrFileServiceImpl implements CdrFileService {
             while ((line = reader.readLine()) != null) {
                 try {
 
-                    CsrHelper.csvLineToCsr(line);
+                    CallSummaryRecord csr = CsrHelper.csvLineToCsr(line);
+                    CallSummaryRecordDto csrDto = csr.toDto();
+                    csrVerifierService.verify(csrDto);
+
 
                 } catch (InvalidCsrException e) {
                     String error = String.format(FILE_LINE_ERROR, fileName, lineNumber, e.getMessage());
@@ -907,15 +907,5 @@ public class CdrFileServiceImpl implements CdrFileService {
         if (tableName.equalsIgnoreCase(CSR_TABLE_NAME)) {
             callSummaryRecordDataService.evictEntityCache(false);
         }
-    }
-
-
-    @MotechListener(subjects = { END_OF_CDR_PROCESSING_SUBJECT })
-    public void processEndOfCdrProcessing(MotechEvent event) {
-        LOGGER.info("End of CDR processing");
-
-        CdrFileNotificationRequest request = requestFromParams(event.getParameters());
-
-        LOGGER.debug("cdrFileNotificationRequest: {}", request);
     }
 }

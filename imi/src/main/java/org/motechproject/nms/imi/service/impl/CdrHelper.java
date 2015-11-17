@@ -203,8 +203,7 @@ public final class CdrHelper {
 
         if (fields.length != FieldName.FIELD_COUNT.ordinal()) {
             throw new IllegalArgumentException(String.format(
-                    "Invalid field count, expecting %d but received %d", FieldName.FIELD_COUNT.ordinal(),
-                    fields.length));
+                "Invalid field count - expected %d but received %d", FieldName.FIELD_COUNT.ordinal(), fields.length));
         }
 
         /*
