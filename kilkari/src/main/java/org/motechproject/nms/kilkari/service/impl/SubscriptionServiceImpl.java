@@ -198,6 +198,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         int purgedSubscribers = 0;
         int purgedSubscriptions = 0;
         for (Subscription subscription : purgeList) {
+            String subscriptionId = subscription.getSubscriptionId();
             Long callingNumber = subscription.getSubscriber().getCallingNumber();
 
             // If, for some reason, there is a retry record for that subscription, delete it too.
@@ -215,7 +216,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             purgedSubscriptions++;
             if (subscriber.getSubscriptions().size() == 0) {
                 LOGGER.debug("Purging subscriber for subscription {} as it was the last subscription for that subscriber",
-                        subscription.getSubscriptionId());
+                        subscriptionId);
                 subscriberDataService.delete(subscriber);
                 purgedSubscribers++;
             }
@@ -263,7 +264,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
         Long rowCount = subscriptionDataService.executeSQLQuery(queryExecution);
         LOGGER.debug(String.format("Updated %d subscription(s) to COMPLETED", rowCount));
-        subscriptionDataService.evictEntityCache(false); // no need to evict sub-entity classes
+        subscriptionDataService.evictEntityCache(true); // no need to evict sub-entity classes
     }
 
     @Override

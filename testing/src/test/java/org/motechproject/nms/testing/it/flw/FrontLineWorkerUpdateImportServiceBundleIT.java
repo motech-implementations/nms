@@ -89,7 +89,7 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
         rh.hindiLanguage();
         rh.kannadaLanguage();
         rh.delhiState();
-        rh.newDelhiDistrict();
+        rh.delhiCircle();
     }
 
     // Test when state not provided

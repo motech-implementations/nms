@@ -91,11 +91,12 @@ public class LanguageControllerBundleIT extends BasePaxIT {
 
     @Before
     public void setupTestData() {
+
         testingService.clearDatabase();
 
         rh = new RegionHelper(languageDataService, languageService, circleDataService, stateDataService,
                 districtDataService, districtService);
-        rh.newDelhiDistrict();
+//        rh.newDelhiDistrict();  delhiCircle also creates the district
         rh.delhiCircle();
 
         // All 3 services deployed in DELHI
@@ -104,7 +105,7 @@ public class LanguageControllerBundleIT extends BasePaxIT {
         deployedServiceDataService.create(new DeployedService(rh.delhiState(), Service.MOBILE_ACADEMY));
 
         // Services not deployed in KARNATAKA
-        rh.bangaloreDistrict();
+//        rh.bangaloreDistrict();  karnatakaCircle creates bangalore district
         rh.karnatakaCircle();
     }
 

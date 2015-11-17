@@ -46,6 +46,9 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import javax.inject.Inject;
 import java.io.File;
@@ -105,6 +108,9 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
 
     @Inject
     private CsvAuditRecordDataService csvAuditRecordDataService;
+
+    @Inject
+    PlatformTransactionManager transactionManager;
 
     public static final String SUCCESS = "Success";
     @Before
@@ -212,6 +218,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     // in use.  This should result in a unique constraint exception
     @Test(expected = CsvImportDataException.class)
     public void testImportMSISDNConflict() throws Exception {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         State state = stateDataService.findByName("State 1");
         District district = state.getDistricts().iterator().next();
 
@@ -226,6 +233,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         flw.setState(state);
         flw.setDistrict(district);
         frontLineWorkerService.add(flw);
+        transactionManager.commit(status);
 
         Reader reader = createReaderWithHeaders("#1\t1234567890\tFLW 0\t11");
         frontLineWorkerImportService.importData(reader);
