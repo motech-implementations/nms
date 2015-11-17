@@ -311,10 +311,11 @@ public class CsrServiceImpl implements CsrService {
             if (existingCsr == null && oldCallSummaryRecordsInDatabase) {
                 existingCsr = lookupAndFixOldCsr(subscriptionId, csrDto.getWeekId());
             }
+
             CallSummaryRecord csr;
             if (existingCsr == null) {
                 csr = csrDataService.create(new CallSummaryRecord(
-                        csrDto.getSubscriptionId(),
+                        subscriptionId,
                         csrDto.getContentFileName(),
                         csrDto.getLanguageCode(),
                         csrDto.getCircleName(),
@@ -329,6 +330,7 @@ public class CsrServiceImpl implements CsrService {
                 existingCsr.setWeekId(csrDto.getWeekId());
                 csr = csrDataService.update(existingCsr);
             }
+
             CallRetry callRetry = callRetryDataService.findBySubscriptionId(subscriptionId);
 
             /**

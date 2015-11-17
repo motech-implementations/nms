@@ -2,6 +2,7 @@ package org.motechproject.nms.imi.service.impl;
 
 import org.motechproject.nms.imi.domain.CallSummaryRecord;
 import org.motechproject.nms.imi.exception.InvalidCsrException;
+import org.motechproject.nms.props.domain.FinalCallStatus;
 import org.motechproject.nms.props.domain.StatusCode;
 
 /**
@@ -121,7 +122,7 @@ public final class CsrHelper {
 
             csr.setCircle(fields[FieldName.CIRCLE.ordinal()]);
 
-            csr.setFinalStatus(integerFromString("FinalStatus", fields[FieldName.FINAL_STATUS.ordinal()]));
+            csr.setFinalStatus(FinalCallStatus.fromInt(integerFromString("FinalStatus", fields[FieldName.FINAL_STATUS.ordinal()])).getValue());
 
             csr.setStatusCode(StatusCode.fromInt(integerFromString("StatusCode", fields[FieldName.STATUS_CODE.ordinal()])).getValue());
 
