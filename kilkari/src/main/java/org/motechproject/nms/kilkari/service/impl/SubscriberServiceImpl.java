@@ -172,9 +172,9 @@ public class SubscriberServiceImpl implements SubscriberService {
 
         Subscriber newSubscriber = new Subscriber(newMsisdn, subscriber.getLanguage(), subscriber.getCircle());
         Subscription subscription = subscriptionService.getActiveSubscription(subscriber, packType);
-        subscriber.getSubscriptions().remove(subscription);
         newSubscriber.getSubscriptions().add(subscription);
         subscription.setSubscriber(newSubscriber);
+        subscriber.getSubscriptions().remove(subscription);
 
         if (packType == SubscriptionPackType.CHILD) {
             subscriber.setChild(null);
