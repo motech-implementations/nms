@@ -114,40 +114,11 @@ public class MctsWsImportServiceImplTest {
         ArgumentCaptor<MotechEvent> captor = ArgumentCaptor.forClass(MotechEvent.class);
         verify(eventRelay, times(6)).sendEventMessage(captor.capture());
         assertEquals(Constants.MCTS_MOTHER_IMPORT_SUBJECT, captor.getAllValues().get(0).getSubject());
-        assertEquals(Constants.MCTS_MOTHER_IMPORT_SUBJECT, captor.getAllValues().get(1).getSubject());
-        assertEquals(Constants.MCTS_CHILD_IMPORT_SUBJECT, captor.getAllValues().get(2).getSubject());
-        assertEquals(Constants.MCTS_CHILD_IMPORT_SUBJECT, captor.getAllValues().get(3).getSubject());
-        assertEquals(Constants.MCTS_ASHA_IMPORT_SUBJECT, captor.getAllValues().get(4).getSubject());
+        assertEquals(Constants.MCTS_CHILD_IMPORT_SUBJECT, captor.getAllValues().get(1).getSubject());
+        assertEquals(Constants.MCTS_ASHA_IMPORT_SUBJECT, captor.getAllValues().get(2).getSubject());
+        assertEquals(Constants.MCTS_MOTHER_IMPORT_SUBJECT, captor.getAllValues().get(3).getSubject());
+        assertEquals(Constants.MCTS_CHILD_IMPORT_SUBJECT, captor.getAllValues().get(4).getSubject());
         assertEquals(Constants.MCTS_ASHA_IMPORT_SUBJECT, captor.getAllValues().get(5).getSubject());
-
-        /*
-        // flw
-        ArgumentCaptor<Map> mapCaptor = ArgumentCaptor.forClass(Map.class);
-        verify(flwImportService, times(2)).importFrontLineWorker(mapCaptor.capture(), eq(state1));
-        verifyFlw(mapCaptor.getAllValues().get(0), 0L);
-        verifyFlw(mapCaptor.getAllValues().get(1), 1L);
-
-        mapCaptor = ArgumentCaptor.forClass(Map.class);
-        verify(flwImportService, times(2)).importFrontLineWorker(mapCaptor.capture(), eq(state15));
-        verifyFlw(mapCaptor.getAllValues().get(0), 2L);
-        verifyFlw(mapCaptor.getAllValues().get(1), 3L);
-
-        // children
-        mapCaptor = ArgumentCaptor.forClass(Map.class);
-        verify(mctsBeneficiaryImportService, times(4)).importChildRecord(mapCaptor.capture());
-        verifyChild(mapCaptor.getAllValues().get(0), 0, 1);
-        verifyChild(mapCaptor.getAllValues().get(1), 1, 1);
-        verifyChild(mapCaptor.getAllValues().get(2), 2, 15);
-        verifyChild(mapCaptor.getAllValues().get(3), 3, 15);
-
-        // mothers
-        mapCaptor = ArgumentCaptor.forClass(Map.class);
-        verify(mctsBeneficiaryImportService, times(4)).importMotherRecord(mapCaptor.capture());
-        verifyMother(mapCaptor.getAllValues().get(0), 0, 1);
-        verifyMother(mapCaptor.getAllValues().get(1), 1, 1);
-        verifyMother(mapCaptor.getAllValues().get(2), 2, 15);
-        verifyMother(mapCaptor.getAllValues().get(3), 3, 15);
-        */
     }
 
     private void prepFlwData() {

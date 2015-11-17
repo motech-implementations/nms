@@ -20,6 +20,8 @@ public final class Constants {
     public static final String MCTS_CHILD_IMPORT_SUBJECT = BASE_MCTS_SUBJECT + ".child.import";
     public static final String MCTS_MOTHER_IMPORT_SUBJECT = BASE_MCTS_SUBJECT + ".mother.import";
     public static final String MCTS_ASHA_IMPORT_SUBJECT = BASE_MCTS_SUBJECT + ".asha.import";
+    public static final String STATE_ID_PARAM = "stateId";
+    public static final String ENDPOINT_PARAM = "endpoint";
     public static final String STATE_NAME_PARAM = "stateName";
     public static final String STATE_CODE_PARAM = "stateCode";
     public static final String DATE_PARAM = "date";
