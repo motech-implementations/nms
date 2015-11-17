@@ -120,7 +120,6 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         remoteObdDirBackup = ImiTestHelper.setupTestDir(settingsService, ImiTestHelper.REMOTE_OBD_DIR, "obd-remote-dir-it");
         initialRetryDelay = settingsService.getSettingsFacade().getProperty(INITIAL_RETRY_DELAY);
         settingsService.getSettingsFacade().setProperty(INITIAL_RETRY_DELAY, "0");
-        settingsService.getSettingsFacade().setProperty(INITIAL_RETRY_DELAY, "0");
         maxErrorCountBackup = settingsService.getSettingsFacade().getProperty(MAX_CDR_ERROR_COUNT);
         settingsService.getSettingsFacade().setProperty(MAX_CDR_ERROR_COUNT, "3");
     }
@@ -232,9 +231,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
 
         // This is going to try to send the file processed notification back to IMI, but will fail since we
         // didn't setup a server
-        AlertCriteria criteria = new AlertCriteria().byExternalId(
-                helper.cdrFileNotificationRequest().getFileName()
-        );
+        AlertCriteria criteria = new AlertCriteria().byExternalId(helper.cdrFileNotificationRequest().getFileName());
         List<Alert> alerts = alertService.search(criteria);
         assertEquals(4, alerts.size()); //three warnings plus one error
 

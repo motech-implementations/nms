@@ -90,7 +90,7 @@ public class CsrServiceImpl implements CsrService {
     private boolean isMsisdnInvalid(Subscription subscription, CallSummaryRecord csr) {
 
         Timer timer = new Timer();
-        boolean ret = csr.getInvalidNumberCount() == subscription.getSubscriptionPack().getMessagesPerWeek();
+        boolean ret = csr.getInvalidNumberCount() > subscription.getSubscriptionPack().retryCount();
         LOGGER.debug("**********DELETE ME********** isMsisdnInvalid: {}", timer.time());
         return ret;
     }

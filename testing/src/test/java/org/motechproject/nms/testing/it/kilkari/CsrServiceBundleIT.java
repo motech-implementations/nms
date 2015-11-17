@@ -243,26 +243,34 @@ public class CsrServiceBundleIT extends BasePaxIT {
         Subscription subscription = sh.mksub(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
         Subscriber subscriber = subscription.getSubscriber();
 
-        csrDataService.create(new CallSummaryRecord(
-                subscription.getSubscriptionId(),
-                "w1_1.wav",
-                rh.hindiLanguage().getCode(),
-                rh.delhiCircle().getName(),
-                "w1_1",
+        processCsr(new CallSummaryRecordDto(
+                subscription,
                 StatusCode.OBD_FAILED_INVALIDNUMBER,
                 FinalCallStatus.FAILED,
-                1
-        ));
-
-        callRetryDataService.create(new CallRetry(
-                subscription.getSubscriptionId(),
-                subscription.getSubscriber().getCallingNumber(),
-                CallStage.RETRY_LAST,
                 "w1_1.wav",
                 "w1_1",
-                rh.hindiLanguage().getCode(),
-                rh.delhiCircle().getName(),
-                SubscriptionOrigin.MCTS_IMPORT
+                rh.hindiLanguage(),
+                rh.delhiCircle()
+        ));
+
+        processCsr(new CallSummaryRecordDto(
+                subscription,
+                StatusCode.OBD_FAILED_INVALIDNUMBER,
+                FinalCallStatus.FAILED,
+                "w1_1.wav",
+                "w1_1",
+                rh.hindiLanguage(),
+                rh.delhiCircle()
+        ));
+
+        processCsr(new CallSummaryRecordDto(
+                subscription,
+                StatusCode.OBD_FAILED_INVALIDNUMBER,
+                FinalCallStatus.FAILED,
+                "w1_1.wav",
+                "w1_1",
+                rh.hindiLanguage(),
+                rh.delhiCircle()
         ));
 
         processCsr(new CallSummaryRecordDto(
@@ -714,16 +722,23 @@ public class CsrServiceBundleIT extends BasePaxIT {
         String contentFileName = sh.getContentMessageFile(subscription, 0);
         String weekId = sh.getWeekId(subscription, 0);
 
-        callRetryDataService.create(new CallRetry(
-                subscription.getSubscriptionId(),
-                subscription.getSubscriber().getCallingNumber(),
-                CallStage.RETRY_2,
+        processCsr(new CallSummaryRecordDto(
+                subscription,
+                StatusCode.OBD_FAILED_INVALIDNUMBER,
+                FinalCallStatus.FAILED,
                 contentFileName,
                 weekId,
-                rh.hindiLanguage().getCode(),
-                rh.delhiCircle().getName(),
-                SubscriptionOrigin.MCTS_IMPORT
-        ));
+                rh.hindiLanguage(),
+                rh.delhiCircle()));
+
+        processCsr(new CallSummaryRecordDto(
+                subscription,
+                StatusCode.OBD_FAILED_INVALIDNUMBER,
+                FinalCallStatus.FAILED,
+                contentFileName,
+                weekId,
+                rh.hindiLanguage(),
+                rh.delhiCircle()));
 
         processCsr(new CallSummaryRecordDto(
                 subscription,
