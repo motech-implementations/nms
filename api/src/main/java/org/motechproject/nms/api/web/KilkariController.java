@@ -83,6 +83,7 @@ public class KilkariController extends BaseController {
      * /api/kilkari/inbox?callingNumber=1111111111&callId=123456789123456&languageLocationCode=10
      *
      */
+    @Transactional(readOnly = true)
     @RequestMapping("/inbox")
     @ResponseBody
     public InboxResponse getInboxDetails(@RequestParam(required = false) Long callingNumber,

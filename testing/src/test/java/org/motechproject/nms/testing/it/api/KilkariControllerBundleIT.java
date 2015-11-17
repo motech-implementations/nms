@@ -57,6 +57,9 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import javax.inject.Inject;
 import java.io.IOException;
@@ -118,13 +121,16 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     @Inject
     InboxCallDataDataService inboxCallDataDataService;
 
+    @Inject
+    PlatformTransactionManager transactionManager;
 
     private RegionHelper rh;
     private SubscriptionHelper sh;
 
-
     @Before
     public void setupTestData() {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         testingService.clearDatabase();
 
         rh = new RegionHelper(languageDataService, languageService, circleDataService, stateDataService,
@@ -152,7 +158,9 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 sh.pregnancyPack(), SubscriptionOrigin.IVR);
 
         deployedServiceDataService.create(new DeployedService(rh.delhiState(), Service.KILKARI));
-    }
+
+        transactionManager.commit(status);
+     }
 
 
     private HttpGet createHttpGet(boolean includeCallingNumber, String callingNumber,
@@ -187,9 +195,10 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         return mapper.writeValueAsString(badRequest);
     }
 
-
     @Test
     public void testInboxRequest() throws IOException, InterruptedException {
+
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         Subscriber subscriber = subscriberDataService.findByNumber(1000000000L); // 1 subscription
         Subscription subscription = subscriber.getSubscriptions().iterator().next();
@@ -198,6 +207,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscription.setStartDate(DateTime.now().minusDays(2));
         subscription.setStatus(Subscription.getStatus(subscription, DateTime.now()));
         subscriptionDataService.update(subscription);
+
+        transactionManager.commit(status);
 
         HttpGet httpGet = createHttpGet(true, "1000000000", true, VALID_CALL_ID);
         String expectedJson = createInboxResponseJson(new HashSet<>(Arrays.asList(
@@ -217,6 +228,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testInboxRequestTwoSubscriptions() throws IOException, InterruptedException {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
         mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(250));
@@ -241,6 +253,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         mother.setNeedsWelcomeMessageViaObd(false);
         subscriptionDataService.update(mother);
 
+        transactionManager.commit(status);
+
         Pattern childPackJsonPattern = Pattern.compile(".*\"subscriptionPack\":\"childPack\",\"inboxWeekId\":\"w36_1\",\"contentFileName\":\"w36_1\\.wav.*");
         Pattern pregnancyPackJsonPattern = Pattern.compile(".*\"subscriptionPack\":\"pregnancyPack\",\"inboxWeekId\":\"w2_2\",\"contentFileName\":\"w2_2\\.wav.*");
 
@@ -254,6 +268,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testInboxRequestEarlySubscription() throws IOException, InterruptedException {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
         mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(30));
@@ -261,6 +276,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         // create subscription to pregnancy pack, not due to start for 60 days
         subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.pregnancyPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
+
+        transactionManager.commit(status);
 
         Pattern expectedJsonPattern = Pattern.compile(
                 ".*\"subscriptionPack\":\"pregnancyPack\",\"inboxWeekId\":null,\"contentFileName\":null.*");
@@ -272,12 +289,16 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     @Test
     public void testInboxRequestCompletedSubscription() throws IOException, InterruptedException {
 
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
         Subscription subscription = subscriber.getSubscriptions().iterator().next();
         // setting the subscription to have ended more than a week ago -- no message should be returned
         subscription.setStartDate(DateTime.now().minusDays(500));
         subscription.setStatus(SubscriptionStatus.COMPLETED);
         subscriptionDataService.update(subscription);
+
+        transactionManager.commit(status);
 
         String expectedJson = "{\"inboxSubscriptionDetailList\":[]}";
 
@@ -288,6 +309,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testInboxRequestRecentlyCompletedSubscription() throws IOException, InterruptedException {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
         Subscription subscription = subscriber.getSubscriptions().iterator().next();
@@ -295,6 +317,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscription.setStartDate(DateTime.now().minusDays(340));
         subscription.setStatus(SubscriptionStatus.COMPLETED);
         subscriptionDataService.update(subscription);
+
+        transactionManager.commit(status);
 
         Pattern expectedJsonPattern = Pattern.compile(".*\"subscriptionPack\":\"childPack\",\"inboxWeekId\":\"w48_1\",\"contentFileName\":\"w48_1\\.wav.*");
 
@@ -306,11 +330,15 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     @Test
     public void testInboxRequestDeactivatedSubscription() throws IOException, InterruptedException {
 
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
         Subscription subscription = subscriber.getSubscriptions().iterator().next();
         subscription.setStatus(SubscriptionStatus.DEACTIVATED);
         subscription.setDeactivationReason(DeactivationReason.DEACTIVATED_BY_USER);
         subscriptionDataService.update(subscription);
+
+        transactionManager.commit(status);
 
         String expectedJson = "{\"inboxSubscriptionDetailList\":[]}";
 
@@ -321,6 +349,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testInboxRequestSeveralSubscriptionsInDifferentStates() throws IOException, InterruptedException {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         // subscriber has two active subscriptions
         Subscriber subscriber = subscriberService.getSubscriber(2000000000L);
@@ -339,12 +368,16 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscription2.setStatus(SubscriptionStatus.COMPLETED);
         subscriptionDataService.update(subscription2);
 
+        transactionManager.commit(status);
+
         // inbox request should return empty inbox
         String expectedJson = "{\"inboxSubscriptionDetailList\":[]}";
         HttpGet httpGet = createHttpGet(true, "2000000000", true, VALID_CALL_ID);
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, expectedJson, ADMIN_USERNAME, ADMIN_PASSWORD));
 
         // create two more subscriptions -- this time using MCTS import as subscription origin
+
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         // create subscription to child pack
         subscriber.setDateOfBirth(DateTime.now().minusDays(250));
@@ -370,6 +403,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscriber = subscriberDataService.findByNumber(2000000000L);
         assertEquals(2, subscriber.getActiveAndPendingSubscriptions().size());
         assertEquals(4, subscriber.getAllSubscriptions().size());
+
+        transactionManager.commit(status);
 
         Pattern childPackJsonPattern = Pattern.compile(".*\"subscriptionPack\":\"childPack\",\"inboxWeekId\":\"w36_1\",\"contentFileName\":\"w36_1\\.wav.*");
         Pattern pregnancyPackJsonPattern = Pattern.compile(".*\"subscriptionPack\":\"pregnancyPack\",\"inboxWeekId\":\"w2_2\",\"contentFileName\":\"w2_2\\.wav.*");
@@ -438,10 +473,14 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testCreateSubscriptionRequestAlreadySubscribedViaMCTS() throws IOException, InterruptedException {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
         Subscription subscription = subscriber.getActiveAndPendingSubscriptions().iterator().next();
         subscription.setOrigin(SubscriptionOrigin.MCTS_IMPORT);
         subscriptionDataService.update(subscription);
+
+        transactionManager.commit(status);
 
         String subscriptionId = subscription.getSubscriptionId();
 
@@ -472,13 +511,21 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
         SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK, ADMIN_USERNAME, ADMIN_PASSWORD);
 
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         Subscriber subscriber = subscriberService.getSubscriber(callingNumber);
         int numberOfSubsBefore = subscriber.getActiveAndPendingSubscriptions().size();
 
+        transactionManager.commit(status);
+
         SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK, ADMIN_USERNAME, ADMIN_PASSWORD);
+
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         subscriber = subscriberService.getSubscriber(callingNumber);
         int numberOfSubsAfter = subscriber.getActiveAndPendingSubscriptions().size();
+
+        transactionManager.commit(status);
 
         // No additional subscription should be created because subscriber already has an active subscription
         // to this pack
@@ -494,15 +541,23 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         HttpResponse resp = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, resp.getStatusLine().getStatusCode());
 
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         Subscriber subscriber = subscriberService.getSubscriber(callingNumber);
         int numberOfSubsBefore = subscriber.getActiveAndPendingSubscriptions().size();
+
+        transactionManager.commit(status);
 
         httpPost = createSubscriptionHttpPost(callingNumber, sh.pregnancyPack().getName());
         resp = SimpleHttpClient.httpRequestAndResponse(httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, resp.getStatusLine().getStatusCode());
 
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         subscriber = subscriberService.getSubscriber(callingNumber);
         int numberOfSubsAfter = subscriber.getActiveAndPendingSubscriptions().size();
+
+        transactionManager.commit(status);
 
         // Another subscription should be allowed because these are two different packs
         assertTrue((numberOfSubsBefore + 1) == numberOfSubsAfter);
@@ -554,10 +609,13 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testDeactivateSubscriptionRequest() throws IOException, InterruptedException {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
         Subscription subscription = subscriber.getActiveAndPendingSubscriptions().iterator().next();
         String subscriptionId = subscription.getSubscriptionId();
+
+        transactionManager.commit(status);
 
         SubscriptionRequest subscriptionRequest = new SubscriptionRequest(1000000000L, rh.airtelOperator(),
                 rh.delhiCircle().getName(), VALID_CALL_ID, subscriptionId);
@@ -581,10 +639,14 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     @Test
     public void testDeactivateSubscriptionRequestAlreadyInactive() throws IOException, InterruptedException {
 
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
         Subscription subscription = subscriber.getActiveAndPendingSubscriptions().iterator().next();
         String subscriptionId = subscription.getSubscriptionId();
         subscriptionService.deactivateSubscription(subscription, DeactivationReason.DEACTIVATED_BY_USER);
+
+        transactionManager.commit(status);
 
         SubscriptionRequest subscriptionRequest = new SubscriptionRequest(1000000000L, rh.airtelOperator(), rh.delhiCircle().getName(),
                 VALID_CALL_ID, subscriptionId);
@@ -766,10 +828,14 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     @Test
     public void verifyFT23() throws IOException, InterruptedException {
 
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         Subscriber subscriber1 = subscriberDataService.findByNumber(1000000000L);
         Subscription subscription1 = subscriber1.getAllSubscriptions().iterator().next();
         Subscriber subscriber2 = subscriberDataService.findByNumber(2000000000L);
         Subscription subscription2 = subscriber2.getAllSubscriptions().iterator().next();
+
+        transactionManager.commit(status);
 
         HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
                 3000000000L, // callingNumber
@@ -843,6 +909,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     @Test
     public void verifyFT77() throws IOException, InterruptedException {
 
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         // 4000000000L subscribed to 72Week Pack subscription
         Subscriber subscriber = subscriberService.getSubscriber(4000000000L);
         Subscription subscription = subscriber.getSubscriptions().iterator()
@@ -852,6 +920,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscription.setStartDate(DateTime.now().minusDays(505));
         subscription.setStatus(SubscriptionStatus.COMPLETED);
         subscriptionDataService.update(subscription);
+
+        transactionManager.commit(status);
 
         Pattern expectedJsonPattern = Pattern
                 .compile(".*\"subscriptionPack\":\"pregnancyPack\",\"inboxWeekId\":\"w72_2\",\"contentFileName\":\"w72_2\\.wav.*");
@@ -874,6 +944,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     @Test
     public void verifyFT75() throws IOException, InterruptedException {
 
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         // 4000000000L subscribed to Pregnancy Pack subscription
         Subscriber subscriber = subscriberService.getSubscriber(4000000000L);
         Subscription subscription = subscriber.getSubscriptions().iterator()
@@ -883,6 +955,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscription.setStartDate(DateTime.now().minusDays(512));
         subscription.setStatus(SubscriptionStatus.COMPLETED);
         subscriptionDataService.update(subscription);
+
+        transactionManager.commit(status);
 
         String expectedJson = "{\"inboxSubscriptionDetailList\":[]}";
 
@@ -981,6 +1055,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT76() throws IOException, InterruptedException {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
         mctsSubscriber.setDateOfBirth(DateTime.now());
         subscriberDataService.create(mctsSubscriber);
@@ -1011,6 +1087,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscriptionService.updateStartDate(pregnancyPackSubscription, DateTime
                 .now().minusDays(512 + 90));
 
+        transactionManager.commit(status);
+
         String expectedJsonResponse = "{\"inboxSubscriptionDetailList\":[{\"subscriptionId\":\""
                 + childPackSubscription.getSubscriptionId()
                 + "\",\"subscriptionPack\":\"childPack\",\"inboxWeekId\":\"w1_1\",\"contentFileName\":\"w1_1.wav\"}]}";
@@ -1028,6 +1106,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT82() throws IOException, InterruptedException {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
         mctsSubscriber.setDateOfBirth(DateTime.now());
@@ -1061,6 +1140,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                         sh.pregnancyPack(),
                         SubscriptionOrigin.MCTS_IMPORT);
 
+        transactionManager.commit(status);
+
         Pattern childPackJsonPattern = Pattern
                 .compile(".*\"subscriptionId\":\""
                         + childPackSubscription.getSubscriptionId()
@@ -1085,6 +1166,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT80() throws IOException, InterruptedException {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
         mctsSubscriber.setDateOfBirth(DateTime.now());
@@ -1118,6 +1200,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 .createSubscription(9999911122L, rh.hindiLanguage(),
                         sh.pregnancyPack(),
                         SubscriptionOrigin.MCTS_IMPORT);
+
+        transactionManager.commit(status);
 
         String expectedJsonResponse = "{\"inboxSubscriptionDetailList\":[{\"subscriptionId\":\""
                 + pregnancyPackSubscription.getSubscriptionId()
@@ -1162,6 +1246,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT36() throws IOException, InterruptedException {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         Subscriber subscriber = subscriberDataService.create(new Subscriber(
                 3000000000L));
         Subscription subscription1 = subscriptionService.createSubscription(
@@ -1170,6 +1256,9 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         Subscription subscription2 = subscriptionService.createSubscription(
                 subscriber.getCallingNumber(), rh.hindiLanguage(), sh.pregnancyPack(),
                 SubscriptionOrigin.IVR);
+
+        transactionManager.commit(status);
+
         HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
                 1234567890L, // callingNumber
                 "A", // operator
@@ -1210,6 +1299,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     @Test
     //https://applab.atlassian.net/browse/NMS-178
     public void verifyFT185() throws IOException, InterruptedException {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         // subscribed caller with deactivated subscription i.e no active and
         // pending subscriptions
         Subscriber subscriber = subscriberDataService.create(new Subscriber(3000000000L));
@@ -1217,6 +1308,9 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 rh.hindiLanguage(), sh.childPack(), SubscriptionOrigin.IVR);
         // deactivate subscription
         subscriptionService.deactivateSubscription(subscription1, DeactivationReason.DEACTIVATED_BY_USER);
+
+        transactionManager.commit(status);
+
         HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
                 3000000000L, // callingNumber
                 "A", // operator
@@ -1274,12 +1368,17 @@ public class KilkariControllerBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT35() throws IOException, InterruptedException {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         // subscriber subscribed to both pack
         Subscriber subscriber = subscriberDataService.create(new Subscriber(3000000000L));
         Subscription subscription = subscriptionService.createSubscription(subscriber.getCallingNumber(),
                 rh.hindiLanguage(), sh.childPack(), SubscriptionOrigin.IVR);
         subscriptionService.createSubscription(subscriber.getCallingNumber(), rh.hindiLanguage(),
                 sh.pregnancyPack(), SubscriptionOrigin.IVR);
+
+        transactionManager.commit(status);
+
         HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
                 3000000000L, // callingNumber
                 "A", // operator
@@ -1317,11 +1416,16 @@ public class KilkariControllerBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT186() throws IOException, InterruptedException {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         Subscriber subscriber = subscriberDataService.create(new Subscriber(3000000000L));
         Subscription subscription = subscriptionService.createSubscription(subscriber.getCallingNumber(),
                 rh.hindiLanguage(), sh.childPack(), SubscriptionOrigin.IVR);
         subscriptionService.createSubscription(subscriber.getCallingNumber(), rh.hindiLanguage(),
                 sh.pregnancyPack(), SubscriptionOrigin.IVR);
+
+        transactionManager.commit(status);
+
         HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
                 3000000000L, // callingNumber
                 "A", // operator
@@ -1373,11 +1477,16 @@ public class KilkariControllerBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT186_2() throws IOException, InterruptedException {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         Subscriber subscriber = subscriberDataService.create(new Subscriber(3000000000L));
         Subscription subscription = subscriptionService.createSubscription(subscriber.getCallingNumber(),
                 rh.hindiLanguage(), sh.childPack(), SubscriptionOrigin.IVR);
         subscriptionService.createSubscription(subscriber.getCallingNumber(), rh.hindiLanguage(),
                 sh.pregnancyPack(), SubscriptionOrigin.IVR);
+
+        transactionManager.commit(status);
+
         HttpPost httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
                 3000000000L, // callingNumber
                 "A", // operator
@@ -1515,6 +1624,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT109() throws IOException, InterruptedException {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         // setup data to remove 2 messages per week configuration for Pregnancy pack
         testingService.clearDatabase();
 
@@ -1540,6 +1651,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         Subscription newSubscription = subscriptionService.createSubscription(
                 9999911122L, rh.hindiLanguage(), sh.pregnancyPack(1), SubscriptionOrigin.MCTS_IMPORT);
 
+        transactionManager.commit(status);
+
         String expectedJsonResponse = "{\"inboxSubscriptionDetailList\":[{\"subscriptionId\":\""
                 + newSubscription.getSubscriptionId()
                 + "\",\"subscriptionPack\":\"pregnancyPack\",\"inboxWeekId\":\"w1_1\",\"contentFileName\":\"w1_1.wav\"}]}";
@@ -1557,6 +1670,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT110() throws IOException, InterruptedException {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         // setup data to remove 2 messages per week configuration for Pregnancy pack
         testingService.clearDatabase();
 
@@ -1584,6 +1699,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscriberDataService.update(mctsSubscriber);
         Subscription newSubscription = subscriptionService.createSubscription(
                 9999911122L, rh.hindiLanguage(), sh.pregnancyPack(1), SubscriptionOrigin.MCTS_IMPORT);
+
+        transactionManager.commit(status);
 
         String expectedJsonResponse = "{\"inboxSubscriptionDetailList\":[{\"subscriptionId\":\""
                 + newSubscription.getSubscriptionId()
@@ -1815,10 +1932,15 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
                 httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         Subscriber subscriber = subscriberDataService
                 .findByNumber(9999911122L);
         assertNotNull(subscriber);
         assertNotNull(subscriber.getSubscriptions());
+
+        transactionManager.commit(status);
     }
 
     /**
@@ -1935,15 +2057,19 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertTrue(123000L == inboxCallDetailRecord.getCallStartTime().getMillis());
         assertTrue(456000L == inboxCallDetailRecord.getCallEndTime().getMillis());
 
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         // subscribed caller with deactivated subscription i.e no active and
         // pending subscriptions
-        Subscriber subscriber = subscriberDataService.create(new Subscriber(
-                5000000000L));
+        Subscriber subscriber = subscriberDataService.create(new Subscriber(5000000000L));
         Subscription subscription1 = subscriptionService.createSubscription(
                 subscriber.getCallingNumber(), rh.hindiLanguage(),
                 sh.childPack(), SubscriptionOrigin.IVR);
         subscriptionService.deactivateSubscription(subscription1,
                 DeactivationReason.DEACTIVATED_BY_USER);
+
+        transactionManager.commit(status);
+
         httpPost = createInboxCallDetailsRequestHttpPost(new InboxCallDetailsRequest(
                 5000000000L, // callingNumber
                 "A", // operator
@@ -2116,10 +2242,15 @@ public class KilkariControllerBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT98() throws IOException, InterruptedException {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
         Subscription subscription = subscriber.getActiveAndPendingSubscriptions()
                 .iterator().next();
         String subscriptionId = subscription.getSubscriptionId();
+
+        transactionManager.commit(status);
+
         // callId less than 15 digits
         HttpDeleteWithBody httpDelete = createDeactivateSubscriptionHttpDelete(
                 "1000000000", "A", "AP", "12345678901234", subscriptionId);
@@ -2138,10 +2269,15 @@ public class KilkariControllerBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT99() throws IOException, InterruptedException {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
         Subscription subscription = subscriber.getActiveAndPendingSubscriptions()
                 .iterator().next();
         String subscriptionId = subscription.getSubscriptionId();
+
+        transactionManager.commit(status);
+
         // callId more than 15 digits
         HttpDeleteWithBody httpDelete = createDeactivateSubscriptionHttpDelete(
                 "1000000000", "A", "AP", "1234567890123455", subscriptionId);
@@ -2160,9 +2296,14 @@ public class KilkariControllerBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT100() throws IOException, InterruptedException {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
         Subscription subscription = subscriber.getActiveAndPendingSubscriptions().iterator().next();
         String subscriptionId = subscription.getSubscriptionId();
+
+        transactionManager.commit(status);
+
         // callId alphanumeric
         HttpDeleteWithBody httpDelete = createDeactivateSubscriptionHttpDelete(
                 "1000000000", "A", "AP", "12345RF89012345", subscriptionId);
@@ -2179,10 +2320,15 @@ public class KilkariControllerBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT95() throws IOException, InterruptedException {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
         Subscription subscription = subscriber.getActiveAndPendingSubscriptions()
                 .iterator().next();
         String subscriptionId = subscription.getSubscriptionId();
+
+        transactionManager.commit(status);
+
         // callingNumber less than 10 digits
         HttpDeleteWithBody httpDelete = createDeactivateSubscriptionHttpDelete(
                 "100000000", "A", "AP", VALID_CALL_ID, subscriptionId);
@@ -2202,11 +2348,15 @@ public class KilkariControllerBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT96() throws IOException, InterruptedException {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
         Subscription subscription = subscriber.getActiveAndPendingSubscriptions()
                 .iterator().next();
         String subscriptionId = subscription.getSubscriptionId();
         String expectedJsonResponse = createFailureResponseJson("<callingNumber: Invalid>");
+
+        transactionManager.commit(status);
 
         // callingNumber more than 10 digits
         HttpDeleteWithBody httpDelete = createDeactivateSubscriptionHttpDelete(
@@ -2226,9 +2376,13 @@ public class KilkariControllerBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT97() throws IOException, InterruptedException {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
         Subscription subscription = subscriber.getActiveAndPendingSubscriptions().iterator().next();
         String subscriptionId = subscription.getSubscriptionId();
+
+        transactionManager.commit(status);
 
         // callingNumber alphanumeric
         HttpDeleteWithBody httpDelete = createDeactivateSubscriptionHttpDelete(
@@ -2264,11 +2418,15 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     @Test
     public void verifyFT102() throws IOException, InterruptedException {
 
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         // operator missing
         Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
         Subscription subscription = subscriber.getActiveAndPendingSubscriptions()
                 .iterator().next();
         String subscriptionId = subscription.getSubscriptionId();
+
+        transactionManager.commit(status);
 
         // circle missing
         HttpDeleteWithBody httpDelete = createDeactivateSubscriptionHttpDelete(
@@ -2286,10 +2444,14 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     @Test
     public void verifyFT103() throws IOException, InterruptedException {
 
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
         Subscription subscription = subscriber.getActiveAndPendingSubscriptions()
                 .iterator().next();
         String subscriptionId = subscription.getSubscriptionId();
+
+        transactionManager.commit(status);
 
         // circle missing
         HttpDeleteWithBody httpDelete = createDeactivateSubscriptionHttpDelete(
@@ -2749,9 +2911,13 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     @Test
     public void verifyFT105() throws IOException, InterruptedException {
 
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
         Subscription subscription = subscriber.getActiveAndPendingSubscriptions().iterator().next();
         String subscriptionId = subscription.getSubscriptionId();
+
+        transactionManager.commit(status);
 
         // callingNumber blank
         HttpDeleteWithBody httpDelete = createDeactivateSubscriptionHttpDelete("", "A", "AP", VALID_CALL_ID,
@@ -2774,10 +2940,15 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     @Test
     public void verifyFT106() throws IOException, InterruptedException {
 
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
         Subscription subscription = subscriber.getActiveAndPendingSubscriptions()
                 .iterator().next();
         String subscriptionId = subscription.getSubscriptionId();
+
+        transactionManager.commit(status);
+
         // circle blank
         HttpDeleteWithBody httpDelete = createDeactivateSubscriptionHttpDelete(
                 "1000000000", "A", "", VALID_CALL_ID, subscriptionId);
@@ -3847,6 +4018,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
      **/
     @Test
     public void verifyFT119() throws IOException, InterruptedException {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         // update 2 messages/week to 1 message/week configuration for pregnancy
         // pack
         sh.pregnancyPackFor1MessagePerWeek(subscriptionPackMessageDataService);
@@ -3874,6 +4047,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 .createSubscription(9999911122L, rh.hindiLanguage(),
                         sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
 
+        transactionManager.commit(status);
+
         Pattern childPackJsonPattern = Pattern
                 .compile(".*\"subscriptionId\":\""
                         + childPackSubscription.getSubscriptionId()
@@ -3898,6 +4073,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
      **/
     @Test
     public void verifyFT120() throws IOException, InterruptedException {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         // update child pack to 2 messages per week configuration
         sh.childPackFor2MessagePerWeek(subscriptionPackMessageDataService);
 
@@ -3926,6 +4103,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         pregnancyPackSubscription.setNeedsWelcomeMessageViaObd(false);
         subscriptionDataService.update(pregnancyPackSubscription);
 
+        transactionManager.commit(status);
+
         Pattern childPackJsonPattern = Pattern
                 .compile(".*\"subscriptionId\":\""
                         + childPackSubscription.getSubscriptionId()
@@ -3952,6 +4131,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
      **/
     @Test
     public void verifyFT117() throws IOException, InterruptedException {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         // update pregnancy pack to 1 message/week configuration
         sh.pregnancyPackFor1MessagePerWeek(subscriptionPackMessageDataService);
 
@@ -3979,6 +4160,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 9999911122L, rh.hindiLanguage(), sh.childPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
 
+        transactionManager.commit(status);
+
         String expectedJsonResponse = "{\"inboxSubscriptionDetailList\":[{\"subscriptionId\":\""
                 + newSubscription.getSubscriptionId()
                 + "\",\"subscriptionPack\":\"childPack\",\"inboxWeekId\":\"w1_1\",\"contentFileName\":\"w1_1.wav\"}]}";
@@ -3997,6 +4180,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
      **/
     @Test
     public void verifyFT118() throws IOException, InterruptedException {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         // update pregnancy pack to 1 message/week configuration
         sh.pregnancyPackFor1MessagePerWeek(subscriptionPackMessageDataService);
 
@@ -4026,6 +4211,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 9999911122L, rh.hindiLanguage(), sh.childPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
 
+        transactionManager.commit(status);
+
         Pattern oldPregnancyPackPattern = Pattern
                 .compile(".*\"subscriptionId\":\""
                         + oldSubscription.getSubscriptionId()
@@ -4051,6 +4238,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
      **/
     @Test
     public void verifyFT111() throws IOException, InterruptedException {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         //update pregnancy pack to 1 message/week
         sh.pregnancyPackFor1MessagePerWeek(subscriptionPackMessageDataService);
 
@@ -4078,6 +4267,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 9999911122L, rh.hindiLanguage(), sh.pregnancyPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
 
+        transactionManager.commit(status);
+
         String expectedJsonResponse = "{\"inboxSubscriptionDetailList\":[{\"subscriptionId\":\""
                 + newSubscription.getSubscriptionId()
                 + "\",\"subscriptionPack\":\"pregnancyPack\",\"inboxWeekId\":\"w1_1\",\"contentFileName\":\"w1_1.wav\"}]}";
@@ -4098,6 +4289,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
     public void verifyFT112() throws IOException, InterruptedException {
         //update pregnancy pack to 1 message/week
         sh.pregnancyPackFor1MessagePerWeek(subscriptionPackMessageDataService);
+
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
         // set DOB for old child pack
@@ -4124,6 +4317,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 9999911122L, rh.hindiLanguage(), sh.pregnancyPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
 
+        transactionManager.commit(status);
+
         String expectedJsonResponse = "{\"inboxSubscriptionDetailList\":[{\"subscriptionId\":\""
                 + newSubscription.getSubscriptionId()
                 + "\",\"subscriptionPack\":\"pregnancyPack\",\"inboxWeekId\":\"w1_1\",\"contentFileName\":\"w1_1.wav\"}]}";
@@ -4143,6 +4338,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
     @Test
     public void verifyFT115() throws IOException, InterruptedException {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
         // set DOB for old child pack
         mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(180));
@@ -4166,6 +4363,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 9999911122L, rh.hindiLanguage(), sh.childPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
 
+        transactionManager.commit(status);
+
         String expectedJsonResponse = "{\"inboxSubscriptionDetailList\":[{\"subscriptionId\":\""
                 + newSubscription.getSubscriptionId()
                 + "\",\"subscriptionPack\":\"childPack\",\"inboxWeekId\":\"w1_1\",\"contentFileName\":\"w1_1.wav\"}]}";
@@ -4185,6 +4384,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
     @Test
     public void verifyFT116() throws IOException, InterruptedException {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
         // set DOB for old child pack
         mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(180));
@@ -4211,6 +4412,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 9999911122L, rh.hindiLanguage(), sh.childPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
 
+        transactionManager.commit(status);
+
         Pattern oldchildPackPattern = Pattern
                 .compile(".*\"subscriptionId\":\""
                         + oldSubscription.getSubscriptionId()
@@ -4227,6 +4430,4 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
                 newchildPackPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
-
-
 }

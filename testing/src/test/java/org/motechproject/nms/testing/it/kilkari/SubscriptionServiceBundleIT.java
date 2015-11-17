@@ -42,6 +42,9 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import javax.inject.Inject;
 import java.util.Arrays;
@@ -98,6 +101,8 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     @Inject
     TestingService testingService;
 
+    @Inject
+    PlatformTransactionManager transactionManager;
 
     private RegionHelper rh;
     private SubscriptionHelper sh;
@@ -114,6 +119,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
                 languageDataService, languageService, circleDataService, stateDataService, districtDataService,
                 districtService);
 
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         Subscriber subscriber1 = subscriberDataService.create(new Subscriber(1000000000L));
         subscriptionService.createSubscription(subscriber1.getCallingNumber(), rh.hindiLanguage(),
                 sh.childPack(), SubscriptionOrigin.IVR);
@@ -123,6 +129,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
                 sh.childPack(), SubscriptionOrigin.IVR);
         subscriptionService.createSubscription(subscriber2.getCallingNumber(), rh.hindiLanguage(),
                 sh.pregnancyPack(), SubscriptionOrigin.IVR);
+        transactionManager.commit(status);
     }
 
 
@@ -734,6 +741,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
     @Test
     public void testDeleteRecentCompletedSubscription() {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
         mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(14));
@@ -746,6 +754,8 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         exception.expect(JdoListenerInvocationException.class);
         subscriptionDataService.delete(subscription);
+
+        transactionManager.commit(status);
     }
 
 
@@ -806,6 +816,8 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT156() {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
         mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(28));
         subscriberDataService.create(mctsSubscriber);
@@ -837,6 +849,8 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         assertEquals(mctsSubscriber.getLastMenstrualPeriod(), newLMP);
         assertEquals(2, mctsSubscriber.getSubscriptions().size());
         assertEquals(1, mctsSubscriber.getActiveAndPendingSubscriptions().size()); // One active subscription
+
+        transactionManager.commit(status);
     }
 
 
@@ -850,6 +864,8 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT159() {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
         mctsSubscriber.setDateOfBirth(DateTime.now());
         subscriberDataService.create(mctsSubscriber);
@@ -876,6 +892,8 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         assertEquals(mctsSubscriber.getDateOfBirth(), newDob);
         assertEquals(2, mctsSubscriber.getSubscriptions().size());
         assertEquals(1, mctsSubscriber.getActiveAndPendingSubscriptions().size());
+
+        transactionManager.commit(status);
     }
 
 
@@ -889,6 +907,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT160() {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
         DateTime currentTime = DateTime.now();
@@ -918,7 +937,9 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
         assertFalse(mctsSubscriber.getDateOfBirth().equals(oldDob));
         assertEquals(mctsSubscriber.getDateOfBirth(), newDob);
-        assertEquals(2, mctsSubscriber.getSubscriptions().size());		 
+        assertEquals(2, mctsSubscriber.getSubscriptions().size());
+
+        transactionManager.commit(status);
     }
     
     /*
@@ -944,6 +965,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT153() {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         Subscriber subscriber = new Subscriber(9999911222L);
         subscriberService.create(subscriber);
@@ -955,6 +977,8 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         Subscription subscription = subscriber.getSubscriptions().iterator().next();
         assertEquals(1, subscriber.getSubscriptions().size());
         assertEquals(SubscriptionStatus.PENDING_ACTIVATION, subscription.getStatus());
+
+        transactionManager.commit(status);
     }
 
     /**
@@ -962,6 +986,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyChildPastDueCompletion() {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         // create subscriber and subscription
         Subscriber subscriber = new Subscriber(9999911222L);
@@ -974,6 +999,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         sub.setStatus(SubscriptionStatus.ACTIVE);
         sub.setStartDate(DateTime.now().minusDays(49 * 7));
         subscriptionDataService.update(sub);
+        transactionManager.commit(status);
 
         // fetch and assert after update
         Subscription fetch = subscriptionDataService.findById(subscriptionId);
@@ -990,6 +1016,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyChildPastDueCompletionNoChange() {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         // create subscriber and subscription
         Subscriber subscriber = new Subscriber(9999911222L);
@@ -1011,6 +1038,8 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         subscriptionService.completePastDueSubscriptions();
         Subscription fetchUpdate = subscriptionDataService.findById(subscriptionId);
         assertEquals(SubscriptionStatus.ACTIVE, fetchUpdate.getStatus());
+
+        transactionManager.commit(status);
     }
 
     /**
@@ -1018,7 +1047,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyPregnancyPastDueCompletion() {
-
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         // create subscriber and subscription
         Subscriber subscriber = new Subscriber(9999911222L);
         subscriberService.create(subscriber);
@@ -1030,6 +1059,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         sub.setStatus(SubscriptionStatus.ACTIVE);
         sub.setStartDate(DateTime.now().minusDays(73 * 7));
         subscriptionDataService.update(sub);
+        transactionManager.commit(status);
 
         // fetch and assert after update
         Subscription fetch = subscriptionDataService.findById(subscriptionId);
@@ -1046,6 +1076,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyPregnancyPastDueCompletionNoChange() {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         // create subscriber and subscription
         Subscriber subscriber = new Subscriber(9999911222L);
@@ -1058,6 +1089,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         sub.setStatus(SubscriptionStatus.ACTIVE);
         sub.setStartDate(DateTime.now().minusDays(72 * 7 - 1));
         subscriptionDataService.update(sub);
+        transactionManager.commit(status);
 
         // fetch and assert after update
         Subscription fetch = subscriptionDataService.findById(subscriptionId);

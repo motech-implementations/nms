@@ -40,6 +40,9 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import javax.inject.Inject;
 import java.io.BufferedReader;
@@ -101,6 +104,8 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
     @Inject
     TestingService testingService;
 
+    @Inject
+    PlatformTransactionManager transactionManager;
 
     RegionHelper rh;
     SubscriptionHelper sh;
@@ -131,6 +136,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
 
     @Test
     public void testTargetFileGeneration() throws NoSuchAlgorithmException, IOException {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         Subscriber subscriber1 = new Subscriber(1111111111L, rh.hindiLanguage(), rh.delhiCircle());
         subscriber1.setLastMenstrualPeriod(DateTime.now().minusDays(90)); // startDate will be today
@@ -184,6 +190,8 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         subscriberDataService.create(subscriber7);
         Subscription subscription7 = subscriptionService.createSubscription(7777777777L, rh.kannadaLanguage(),
                 sh.childPack(), SubscriptionOrigin.IVR);
+
+        transactionManager.commit(status);
 
         //Set the clock back to normal
         DateTimeUtils.setCurrentMillisSystem();
@@ -303,6 +311,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
     // To check that target file should contain correct weekID according to LMP of the subscriber.
     @Test
     public void verifyFT151() throws NoSuchAlgorithmException, IOException {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         Subscriber subscriber1 = new Subscriber(1111111111L, rh.hindiLanguage(), rh.delhiCircle());
         subscriber1.setLastMenstrualPeriod(DateTime.now().minusDays(125)); // weekId will be W6_1
@@ -311,6 +320,8 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
                 sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
         subscription.setNeedsWelcomeMessageViaObd(false);
         subscriptionDataService.update(subscription);
+
+        transactionManager.commit(status);
 
         List<String> contents = new ArrayList<>();
         String line;
@@ -344,7 +355,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
     // To check that target file should contain correct weekID according to DOB of the subscriber.
     @Test
     public void verifyFT152() throws NoSuchAlgorithmException, IOException {
-
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         Subscriber subscriber1 = new Subscriber(1111111111L, rh.hindiLanguage(), rh.delhiCircle());
         subscriber1.setDateOfBirth(DateTime.now().minusDays(28)); // weekId will be W5_1
@@ -353,6 +364,8 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
                 sh.childPack(), SubscriptionOrigin.MCTS_IMPORT);
         subscription.setNeedsWelcomeMessageViaObd(false);
         subscriptionDataService.update(subscription);
+
+        transactionManager.commit(status);
 
         List<String> contents = new ArrayList<>();
         String line;
@@ -414,11 +427,15 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
     */
     @Test
     public void verifyFT190() throws NoSuchAlgorithmException, IOException {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         Subscriber subscriber1 = new Subscriber(1111111111L, rh.hindiLanguage(), rh.delhiCircle());
         subscriber1.setLastMenstrualPeriod(DateTime.now().minusDays(90)); // weekId will be W1_1
         subscriberDataService.create(subscriber1);
         subscriptionService.createSubscription(1111111111L, rh.hindiLanguage(), sh.pregnancyPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
+
+        transactionManager.commit(status);
 
         List<String> contents = new ArrayList<>();
         String line;
@@ -452,11 +469,15 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
     */
     @Test
     public void verifyFT191() throws NoSuchAlgorithmException, IOException {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         Subscriber subscriber1 = new Subscriber(1111111111L, rh.hindiLanguage(), rh.delhiCircle());
         subscriber1.setDateOfBirth(DateTime.now()); // weekId will be W1_1
         subscriberDataService.create(subscriber1);
         subscriptionService.createSubscription(1111111111L, rh.hindiLanguage(), sh.childPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
+
+        transactionManager.commit(status);
 
         List<String> contents = new ArrayList<>();
         String line;
@@ -491,12 +512,15 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
     @Test
     public void testChecksumsVaryWithFileContent() throws NoSuchAlgorithmException, IOException,
             InterruptedException {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         Subscriber subscriber1 = new Subscriber(1111111111L, rh.hindiLanguage(), rh.delhiCircle());
         subscriber1.setLastMenstrualPeriod(DateTime.now().minusDays(90)); // startDate will be today
         subscriberDataService.create(subscriber1);
         subscriptionService.createSubscription(subscriber1.getCallingNumber(), rh.hindiLanguage(),
                 sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
+
+        transactionManager.commit(status);
 
         TargetFileNotification tfn1 = targetFileService.generateTargetFile();
         assertNotNull(tfn1);
@@ -507,11 +531,14 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
 
         testingService.clearDatabase();
 
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         Subscriber subscriber2 = new Subscriber(2222222222L, rh.kannadaLanguage(), rh.karnatakaCircle());
         subscriber2.setLastMenstrualPeriod(DateTime.now().minusDays(90)); // startDate will be today
         subscriberDataService.create(subscriber2);
         subscriptionService.createSubscription(subscriber2.getCallingNumber(), rh.kannadaLanguage(),
                 sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
+
+        transactionManager.commit(status);
 
         TargetFileNotification tfn2 = targetFileService.generateTargetFile();
         assertNotNull(tfn2);

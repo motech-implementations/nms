@@ -41,6 +41,9 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import javax.inject.Inject;
 import java.io.File;
@@ -83,6 +86,9 @@ public class ImiControllerCdrBundleIT extends BasePaxIT {
     TestingService testingService;
     @Inject
     TargetFileService targetFileService;
+
+    @Inject
+    PlatformTransactionManager transactionManager;
 
 
     private String localCdrDirBackup;
@@ -491,11 +497,13 @@ public class ImiControllerCdrBundleIT extends BasePaxIT {
                 subscriptionPackDataService, languageDataService, languageService, circleDataService, stateDataService,
                 districtDataService, districtService);
 
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         Subscriber subscriber1 = new Subscriber(1111111111L, rh.hindiLanguage(), rh.delhiCircle());
         subscriber1.setLastMenstrualPeriod(DateTime.now().minusDays(90)); // startDate will be today
         subscriberDataService.create(subscriber1);
         subscriptionService.createSubscription(1111111111L, rh.hindiLanguage(), sh.pregnancyPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
+        transactionManager.commit(status);
 
         TargetFileNotification tfn = targetFileService.generateTargetFile();
         assertNotNull(tfn);

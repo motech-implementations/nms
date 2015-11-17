@@ -37,6 +37,9 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import javax.inject.Inject;
 import java.io.File;
@@ -100,6 +103,9 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
 
     @Inject
     TestingService testingService;
+
+    @Inject
+    PlatformTransactionManager transactionManager;
 
     private static final String VALID_COURSE_NAME = "MobileAcademyCourse";
 
@@ -405,6 +411,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         }
 
         createLanguageLocationData();
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         State sampleState = stateDataService.findByCode(1L);
         Language language = languageService.getForCode("50");
         flw = new FrontLineWorker("Test Worker", callingNumber);
@@ -414,6 +421,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         frontLineWorkerService.add(flw);
         flw = frontLineWorkerService.getByContactNumber(callingNumber);
         assertNotNull(flw);
+        transactionManager.commit(status);
 
         MotechEvent event = new MotechEvent();
         event.getParameters().put("callingNumber", callingNumber);
@@ -463,6 +471,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         }
 
         createLanguageLocationData();
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         State sampleState = stateDataService.findByCode(1L);
         flw = new FrontLineWorker("Test Worker", callingNumber);
         flw.setState(sampleState);
@@ -470,6 +479,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         frontLineWorkerService.add(flw);
         flw = frontLineWorkerService.getByContactNumber(callingNumber);
         assertNotNull(flw);
+        transactionManager.commit(status);
 
         MotechEvent event = new MotechEvent();
         event.getParameters().put("callingNumber", callingNumber);
