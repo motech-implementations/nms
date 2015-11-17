@@ -77,95 +77,160 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
 
     @Override
     public void importFromMcts(List<Long> stateIds, LocalDate referenceDate, URL endpoint) {
-        StopWatch stopWatch = new StopWatch();
 
         LOGGER.info("Starting import from MCTS web service");
-        stopWatch.start();
-
         LOGGER.info("Pulling data for {}, for states {}", referenceDate, stateIds);
+
         if (endpoint == null) {
             LOGGER.debug("Using default service endpoint from WSDL");
         } else {
             LOGGER.debug("Using custom endpoint {}", endpoint);
         }
 
-        int savedMothers = importMothersData(endpoint, stateIds, referenceDate);
-        int savedChildren = importChildrenData(endpoint, stateIds, referenceDate);
-        int savedAnmAsha = importAnmAshaData(endpoint, stateIds, referenceDate);
+        for (Long stateId : stateIds) {
+            LOGGER.debug("Sending import message for stateId {}", stateId);
+            Map<String, Object> eventParams = new HashMap<>();
+            eventParams.put(Constants.DATE_PARAM, referenceDate);
+            eventParams.put(Constants.STATE_ID_PARAM, stateId);
+            eventParams.put(Constants.ENDPOINT_PARAM, endpoint);
+            eventRelay.sendEventMessage(new MotechEvent(Constants.MCTS_MOTHER_IMPORT_SUBJECT, eventParams));
+            eventRelay.sendEventMessage(new MotechEvent(Constants.MCTS_CHILD_IMPORT_SUBJECT, eventParams));
+            eventRelay.sendEventMessage(new MotechEvent(Constants.MCTS_ASHA_IMPORT_SUBJECT, eventParams));
+        }
 
-        stopWatch.stop();
-
-        double seconds = stopWatch.getTime() / THOUSAND;
-        LOGGER.info("Initiated import from MCTS in {} seconds. Received {} mothers, {} children and {} front line workers.",
-                seconds, savedMothers, savedChildren, savedAnmAsha);
+        LOGGER.info("Initiated import workflow from MCTS for mothers, children and ashas");
     }
 
-    private int importChildrenData(URL endpoint, List<Long> locations, LocalDate referenceDate) {
-        LOGGER.info("Starting children import");
+    @MotechListener(subjects = { Constants.MCTS_MOTHER_IMPORT_SUBJECT })
+    public void importMothersData(MotechEvent motechEvent) {
+        Long stateId = (Long) motechEvent.getParameters().get(Constants.STATE_ID_PARAM);
+        LocalDate referenceDate = (LocalDate) motechEvent.getParameters().get(Constants.DATE_PARAM);
+        URL endpoint = (URL) motechEvent.getParameters().get(Constants.ENDPOINT_PARAM);
 
+        LOGGER.info("Starting mother import");
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
 
-        int totalChildren = 0;
-        for (Long stateId : locations) {
-            State state = stateDataService.findByCode(stateId);
-            if (state == null) {
-                String error = String.format("State with code %s doesn't exist in database. Skipping Children import for this state", stateId);
-                LOGGER.error(error);
-                mctsImportAuditDataService.create(new MctsImportAudit(referenceDate, MctsUserType.CHILD, stateId, null, 0, 0, error));
-                continue;
-            }
-            String stateName = state.getName();
-            Long stateCode = state.getCode();
-            try {
 
-                ChildrenDataSet childrenDataSet = mctsWebServiceFacade.getChildrenData(referenceDate, referenceDate, endpoint, stateId);
-                if (childrenDataSet == null || childrenDataSet.getRecords() == null) {
-                    String error = "No child data set received from MCTS";
-                    LOGGER.debug(error);
-                    mctsImportAuditDataService.create(new MctsImportAudit(referenceDate, MctsUserType.CHILD, stateCode, stateName, 0, 0, error));
-                    continue;
-                }
-
-                Map<String, Object> eventParams = new HashMap<>();
-                eventParams.put("childFeed", childrenDataSet);
-                eventParams.put(Constants.DATE_PARAM, referenceDate);
-                eventParams.put(Constants.STATE_NAME_PARAM, stateName);
-                eventParams.put(Constants.STATE_CODE_PARAM, stateCode);
-                eventRelay.sendEventMessage(new MotechEvent(Constants.MCTS_CHILD_IMPORT_SUBJECT, eventParams));
-
-                totalChildren += sizeNullSafe(childrenDataSet.getRecords());
-                LOGGER.debug("Dispatched children data set with {} records for {} state",
-                        sizeNullSafe(childrenDataSet.getRecords()), state.getName());
-
-            } catch (MctsWebServiceException e) {
-                String error = String.format("Cannot read children data from %s State with stateId:%d", stateName, stateCode);
-                LOGGER.error(error, e);
-                alertService.create(MCTS_WEB_SERVICE, "MCTS Web Service Child Import", e.getMessage(), AlertType.CRITICAL, AlertStatus.NEW, 0, null);
-                mctsImportAuditDataService.create(new MctsImportAudit(referenceDate, MctsUserType.CHILD, stateCode, stateName, 0, 0, error));
-            } catch (MctsInvalidResponseStructureException e) {
-                String error = String.format("Cannot read children data from %s state with stateId:%d. Response Deserialization Error", stateName, stateCode);
-                LOGGER.error(error, e);
-                alertService.create(MCTS_WEB_SERVICE, "MCTS Web Service Child Import", e.getMessage(), AlertType.CRITICAL, AlertStatus.NEW, 0, null);
-                mctsImportAuditDataService.create(new MctsImportAudit(referenceDate, MctsUserType.CHILD, stateCode, stateName, 0, 0, error));
-            }
+        State state = stateDataService.findByCode(stateId);
+        if (state == null) {
+            String error = String.format("State with code %s doesn't exist in database. Skipping Mother importing for this state", stateId);
+            LOGGER.error(error);
+            mctsImportAuditDataService.create(new MctsImportAudit(referenceDate, MctsUserType.MOTHER, stateId, null, 0, 0, error));
+            return;
         }
 
-        stopWatch.stop();
+        String stateName = state.getName();
+        Long stateCode = state.getCode();
+        try {
+            MothersDataSet mothersDataSet = mctsWebServiceFacade.getMothersData(referenceDate, referenceDate, endpoint, stateId);
+            if (mothersDataSet == null || mothersDataSet.getRecords() == null) {
+                String error = String.format("No mother data set received from MCTS for %s state", stateName);
+                LOGGER.debug(error);
+                mctsImportAuditDataService.create(new MctsImportAudit(referenceDate, MctsUserType.MOTHER, stateCode, stateName, 0, 0, error));
+                return;
+            }
+            LOGGER.info("Received {} mother records from MCTS for {} state", sizeNullSafe(mothersDataSet.getRecords()), stateName);
 
-        double seconds = stopWatch.getTime() / THOUSAND;
-        LOGGER.info("Finished children import dispatch in {} seconds. Received {} childred", seconds, totalChildren);
-        return totalChildren;
+            MctsImportAudit audit = saveImportedMothersData(mothersDataSet, stateName, stateCode, referenceDate);
+            mctsImportAuditDataService.create(audit);
+            stopWatch.stop();
+            double seconds = stopWatch.getTime() / THOUSAND;
+            LOGGER.info("Finished mother import dispatch in {} seconds. Accepted {} mothers, Rejected {} mothers",
+                    seconds, audit.getAccepted(), audit.getRejected());
+
+        } catch (MctsWebServiceException e) {
+            String error = String.format("Cannot read mothers data from %s state with stateId: %d", stateName, stateId);
+            LOGGER.error(error, e);
+            alertService.create(MCTS_WEB_SERVICE, "MCTS Web Service Mother Import", e
+                    .getMessage(), AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            mctsImportAuditDataService.create(new MctsImportAudit(referenceDate, MctsUserType.MOTHER, stateCode, stateName, 0, 0, error));
+        } catch (MctsInvalidResponseStructureException e) {
+            String error = String.format("Cannot read mothers data from %s state with stateId: %d. Response Deserialization Error", stateName, stateId);
+            LOGGER.error(error, e);
+            alertService.create(MCTS_WEB_SERVICE, "MCTS Web Service Mother Import", e
+                    .getMessage(), AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            mctsImportAuditDataService.create(new MctsImportAudit(referenceDate, MctsUserType.MOTHER, stateCode, stateName, 0, 0, error));
+        }
+    }
+
+    private MctsImportAudit saveImportedMothersData(MothersDataSet mothersDataSet, String stateName, Long stateCode, LocalDate referenceDate) {
+        LOGGER.info("Starting mother import for state {}", stateName);
+
+        int saved = 0;
+        int rejected = 0;
+        for (MotherRecord record : mothersDataSet.getRecords()) {
+            try {
+                if (mctsBeneficiaryImportService.importMotherRecord(toMap(record))) {
+                    saved++;
+                } else {
+                    rejected++;
+                }
+                if ((saved + rejected) % THOUSAND == 0) {
+                    LOGGER.debug("{} state, Progress: {} mothers imported, {} mothers rejected", stateName, saved, rejected);
+                }
+            } catch (RuntimeException e) {
+                LOGGER.error("Mother import Error. Cannot import Mother with ID: {} for state ID: {}",
+                        record.getIdNo(), stateCode, e);
+            }
+        }
+        LOGGER.debug("{} state, Total: {} mothers imported, {} mothers rejected", stateName, saved, rejected);
+        return new MctsImportAudit(referenceDate, MctsUserType.MOTHER, stateCode, stateName, saved, rejected, null);
     }
 
     @MotechListener(subjects = { Constants.MCTS_CHILD_IMPORT_SUBJECT })
-    public void saveImportedChildrenData(MotechEvent motechEvent) {
-        String stateName = (String) motechEvent.getParameters().get(Constants.STATE_NAME_PARAM);
-        Long stateCode = (Long) motechEvent.getParameters().get(Constants.STATE_CODE_PARAM);
+    public void importChildrenData(MotechEvent motechEvent) {
+        Long stateId = (Long) motechEvent.getParameters().get(Constants.STATE_ID_PARAM);
+        LocalDate referenceDate = (LocalDate) motechEvent.getParameters().get(Constants.DATE_PARAM);
+        URL endpoint = (URL) motechEvent.getParameters().get(Constants.ENDPOINT_PARAM);
+
+        LOGGER.info("Starting children import for stateId: {}", stateId);
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
+
+        State state = stateDataService.findByCode(stateId);
+        if (state == null) {
+            String error = String.format("State with code %s doesn't exist in database. Skipping Children import for this state", stateId);
+            LOGGER.error(error);
+            mctsImportAuditDataService.create(new MctsImportAudit(referenceDate, MctsUserType.CHILD, stateId, null, 0, 0, error));
+            return;
+        }
+        String stateName = state.getName();
+        Long stateCode = state.getCode();
+        try {
+
+            ChildrenDataSet childrenDataSet = mctsWebServiceFacade.getChildrenData(referenceDate, referenceDate, endpoint, stateId);
+            if (childrenDataSet == null || childrenDataSet.getRecords() == null) {
+                String error = String.format("No child data set received from MCTS for %s state", stateName);
+                LOGGER.debug(error);
+                mctsImportAuditDataService.create(new MctsImportAudit(referenceDate, MctsUserType.CHILD, stateCode, stateName, 0, 0, error));
+                return;
+            }
+            LOGGER.info("Received {} children records from MCTS for {} state", sizeNullSafe(childrenDataSet.getRecords()), stateName);
+
+            MctsImportAudit audit = saveImportedChildrenData(childrenDataSet, stateName, stateCode, referenceDate);
+            mctsImportAuditDataService.create(audit);
+            stopWatch.stop();
+            double seconds = stopWatch.getTime() / THOUSAND;
+            LOGGER.info("Finished children import dispatch in {} seconds. Accepted {} children, Rejected {} children",
+                    seconds, audit.getAccepted(), audit.getRejected());
+
+        } catch (MctsWebServiceException e) {
+            String error = String.format("Cannot read children data from %s State with stateId:%d", stateName, stateCode);
+            LOGGER.error(error, e);
+            alertService.create(MCTS_WEB_SERVICE, "MCTS Web Service Child Import", e.getMessage(), AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            mctsImportAuditDataService.create(new MctsImportAudit(referenceDate, MctsUserType.CHILD, stateCode, stateName, 0, 0, error));
+        } catch (MctsInvalidResponseStructureException e) {
+            String error = String.format("Cannot read children data from %s state with stateId:%d. Response Deserialization Error", stateName, stateCode);
+            LOGGER.error(error, e);
+            alertService.create(MCTS_WEB_SERVICE, "MCTS Web Service Child Import", e.getMessage(), AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            mctsImportAuditDataService.create(new MctsImportAudit(referenceDate, MctsUserType.CHILD, stateCode, stateName, 0, 0, error));
+        }
+    }
+
+    private MctsImportAudit saveImportedChildrenData(ChildrenDataSet childrenDataSet, String stateName, Long stateCode, LocalDate referenceDate) {
         LOGGER.info("Starting children import for state {}", stateName);
 
-        ChildrenDataSet childrenDataSet = (ChildrenDataSet) motechEvent.getParameters().get("childFeed");
-        LocalDate referenceDate = (LocalDate) motechEvent.getParameters().get(Constants.DATE_PARAM);
         int saved = 0;
         int rejected = 0;
 
@@ -186,164 +251,63 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
             }
         }
         LOGGER.debug("{} state, Total: {} children imported, {} children rejected", stateName, saved, rejected);
-        mctsImportAuditDataService.create(new MctsImportAudit(referenceDate, MctsUserType.CHILD, stateCode, stateName, saved, rejected, null));
-    }
-
-    private int importMothersData(URL endpoint, List<Long> locations, LocalDate referenceDate) {
-        LOGGER.info("Starting mother import");
-
-        StopWatch stopWatch = new StopWatch();
-        stopWatch.start();
-
-        int totalMothers = 0;
-        for (Long stateId : locations) {
-            State state = stateDataService.findByCode(stateId);
-            if (state == null) {
-                String error = String.format("State with code %s doesn't exist in database. Skipping Mother importing for this state", stateId);
-                LOGGER.error(error);
-                mctsImportAuditDataService.create(new MctsImportAudit(referenceDate, MctsUserType.MOTHER, stateId, null, 0, 0, error));
-                continue;
-            }
-            String stateName = state.getName();
-            Long stateCode = state.getCode();
-            try {
-                MothersDataSet mothersDataSet = mctsWebServiceFacade.getMothersData(referenceDate, referenceDate, endpoint, stateId);
-                if (mothersDataSet == null || mothersDataSet.getRecords() == null) {
-                    String error = String.format("No mother data set received from MCTS for %s state", stateName);
-                    LOGGER.debug(error);
-                    mctsImportAuditDataService.create(new MctsImportAudit(referenceDate, MctsUserType.MOTHER, stateCode, stateName, 0, 0, error));
-                    continue;
-                }
-
-                Map<String, Object> eventParams = new HashMap<>();
-                eventParams.put("motherFeed", mothersDataSet);
-                eventParams.put(Constants.DATE_PARAM, referenceDate);
-                eventParams.put(Constants.STATE_NAME_PARAM, stateName);
-                eventParams.put(Constants.STATE_CODE_PARAM, stateCode);
-                eventRelay.sendEventMessage(new MotechEvent(Constants.MCTS_MOTHER_IMPORT_SUBJECT, eventParams));
-
-                totalMothers += sizeNullSafe(mothersDataSet.getRecords());
-                LOGGER.debug("Dispatched Mothers data set with {} records for {} state",
-                        sizeNullSafe(mothersDataSet.getRecords()), state.getName());
-
-            } catch (MctsWebServiceException e) {
-                String error = String.format("Cannot read mothers data from %s state with stateId: %d", stateName, stateId);
-                LOGGER.error(error, e);
-                alertService.create(MCTS_WEB_SERVICE, "MCTS Web Service Mother Import", e
-                        .getMessage(), AlertType.CRITICAL, AlertStatus.NEW, 0, null);
-                mctsImportAuditDataService.create(new MctsImportAudit(referenceDate, MctsUserType.MOTHER, stateCode, stateName, 0, 0, error));
-            } catch (MctsInvalidResponseStructureException e) {
-                String error = String.format("Cannot read mothers data from %s state with stateId: %d. Response Deserialization Error", stateName, stateId);
-                LOGGER.error(error, e);
-                alertService.create(MCTS_WEB_SERVICE, "MCTS Web Service Mother Import", e
-                        .getMessage(), AlertType.CRITICAL, AlertStatus.NEW, 0, null);
-                mctsImportAuditDataService.create(new MctsImportAudit(referenceDate, MctsUserType.MOTHER, stateCode, stateName, 0, 0, error));
-            }
-        }
-
-        stopWatch.stop();
-        double seconds = stopWatch.getTime() / THOUSAND;
-        LOGGER.info("Finished mother import dispatch in {} seconds. Received {} mothers.", seconds, totalMothers);
-        return totalMothers;
-    }
-
-    @MotechListener(subjects = { Constants.MCTS_MOTHER_IMPORT_SUBJECT })
-    public void saveImportedMothersData(MotechEvent motechEvent) {
-        String stateName = (String) motechEvent.getParameters().get(Constants.STATE_NAME_PARAM);
-        Long stateCode = (Long) motechEvent.getParameters().get(Constants.STATE_CODE_PARAM);
-        LOGGER.info("Starting mother import for state {}", stateName);
-
-        MothersDataSet mothersDataSet = (MothersDataSet) motechEvent.getParameters().get("motherFeed");
-        LocalDate referenceDate = (LocalDate) motechEvent.getParameters().get(Constants.DATE_PARAM);
-        int saved = 0;
-        int rejected = 0;
-
-        for (MotherRecord record : mothersDataSet.getRecords()) {
-            try {
-                if (mctsBeneficiaryImportService.importMotherRecord(toMap(record))) {
-                    saved++;
-                } else {
-                    rejected++;
-                }
-                if ((saved + rejected) % THOUSAND == 0) {
-                    LOGGER.debug("{} state, Progress: {} mothers imported, {} mothers rejected", stateName, saved, rejected);
-                }
-            } catch (RuntimeException e) {
-                LOGGER.error("Mother import Error. Cannot import Mother with ID: {} for state ID: {}",
-                        record.getIdNo(), stateCode, e);
-            }
-        }
-        LOGGER.debug("{} state, Total: {} mothers imported, {} mothers rejected", stateName, saved, rejected);
-        mctsImportAuditDataService.create(new MctsImportAudit(referenceDate, MctsUserType.MOTHER, stateCode, stateName, saved, rejected, null));
-    }
-
-    private int importAnmAshaData(URL endpoint, List<Long> locations, LocalDate referenceDate) {
-        LOGGER.info("Starting Anm Asha import");
-
-        StopWatch stopWatch = new StopWatch();
-        stopWatch.start();
-
-        int totalAsha = 0;
-        for (Long stateId : locations) {
-            State state = stateDataService.findByCode(stateId);
-            if (state == null) {
-                LOGGER.warn("State with code {} doesn't exist in database. Skipping FLW import for this state", stateId);
-                continue;
-            }
-            String stateName = state.getName();
-            Long stateCode = state.getCode();
-
-            try {
-                AnmAshaDataSet anmAshaDataSet = mctsWebServiceFacade.getAnmAshaData(referenceDate, referenceDate, endpoint, stateId);
-                if (anmAshaDataSet == null || anmAshaDataSet.getRecords() == null) {
-                    String error = String.format("No ANM Asha data set received from MCTS for %s state", stateName);
-                    LOGGER.debug(error, stateName);
-                    mctsImportAuditDataService.create(new MctsImportAudit(referenceDate, MctsUserType.ASHA, stateCode, stateName, 0, 0, error));
-                    continue;
-                }
-
-                Map<String, Object> eventParams = new HashMap<>();
-                eventParams.put("ashaFeed", anmAshaDataSet);
-                eventParams.put(Constants.DATE_PARAM, referenceDate);
-                eventParams.put(Constants.STATE_PARAM, state);
-                eventParams.put(Constants.STATE_NAME_PARAM, stateName);
-                eventParams.put(Constants.STATE_CODE_PARAM, stateCode);
-                eventRelay.sendEventMessage(new MotechEvent(Constants.MCTS_ASHA_IMPORT_SUBJECT, eventParams));
-
-                totalAsha += sizeNullSafe(anmAshaDataSet.getRecords());
-                LOGGER.debug("Dispatched Anm Asha data set with {} records for {} state",
-                        sizeNullSafe(anmAshaDataSet.getRecords()), state.getName());
-
-            } catch (MctsWebServiceException e) {
-                String error = String.format("Cannot read anm asha data from %s state with stateId:%d", stateName, stateId);
-                LOGGER.error(error, e);
-                alertService.create(MCTS_WEB_SERVICE, "MCTS Web Service FLW Import", e
-                        .getMessage(), AlertType.CRITICAL, AlertStatus.NEW, 0, null);
-                mctsImportAuditDataService.create(new MctsImportAudit(referenceDate, MctsUserType.ASHA, stateCode, stateName, 0, 0, error));
-            } catch (MctsInvalidResponseStructureException e) {
-                String error = String.format("Cannot read anm asha data from %s state with stateId: %d. Response Deserialization Error", stateName, stateCode);
-                LOGGER.error(error, e);
-                alertService.create(MCTS_WEB_SERVICE, "MCTS Web Service FLW Import", e
-                        .getMessage(), AlertType.CRITICAL, AlertStatus.NEW, 0, null);
-                mctsImportAuditDataService.create(new MctsImportAudit(referenceDate, MctsUserType.ASHA, stateCode, stateName, 0, 0, error));
-            }
-        }
-
-        stopWatch.stop();
-        double seconds = stopWatch.getTime() / THOUSAND;
-        LOGGER.info("Finished Anm Asha import dispatch in {} seconds. Received {} front line workers.", seconds, totalAsha);
-        return totalAsha;
+        return new MctsImportAudit(referenceDate, MctsUserType.CHILD, stateCode, stateName, saved, rejected, null);
     }
 
     @MotechListener(subjects = { Constants.MCTS_ASHA_IMPORT_SUBJECT })
-    public void saveImportedAnmAshaData(MotechEvent motechEvent) {
-        State state = (State) motechEvent.getParameters().get(Constants.STATE_PARAM);
-        String stateName = (String) motechEvent.getParameters().get(Constants.STATE_NAME_PARAM);
-        Long stateCode = (Long) motechEvent.getParameters().get(Constants.STATE_CODE_PARAM);
-        LOGGER.info("Starting ASHA import for state {}", stateName);
-
-        AnmAshaDataSet anmAshaDataSet = (AnmAshaDataSet) motechEvent.getParameters().get("ashaFeed");
+    public void importAnmAshaData(MotechEvent motechEvent) {
+        Long stateId = (Long) motechEvent.getParameters().get(Constants.STATE_ID_PARAM);
         LocalDate referenceDate = (LocalDate) motechEvent.getParameters().get(Constants.DATE_PARAM);
+        URL endpoint = (URL) motechEvent.getParameters().get(Constants.ENDPOINT_PARAM);
+
+        LOGGER.info("Starting Anm Asha import");
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
+
+        State state = stateDataService.findByCode(stateId);
+        if (state == null) {
+            LOGGER.warn("State with code {} doesn't exist in database. Skipping FLW import for this state", stateId);
+            return;
+        }
+        String stateName = state.getName();
+        Long stateCode = state.getCode();
+
+        try {
+            AnmAshaDataSet anmAshaDataSet = mctsWebServiceFacade.getAnmAshaData(referenceDate, referenceDate, endpoint, stateId);
+            if (anmAshaDataSet == null || anmAshaDataSet.getRecords() == null) {
+                String error = String.format("No ANM Asha data set received from MCTS for %s state", stateName);
+                LOGGER.debug(error, stateName);
+                mctsImportAuditDataService.create(new MctsImportAudit(referenceDate, MctsUserType.ASHA, stateCode, stateName, 0, 0, error));
+                return;
+            }
+            LOGGER.info("Received {} ASHA records from MCTS for {} state", sizeNullSafe(anmAshaDataSet.getRecords()), stateName);
+
+            MctsImportAudit audit = saveImportedAnmAshaData(anmAshaDataSet, state, referenceDate);
+            mctsImportAuditDataService.create(audit);
+            stopWatch.stop();
+            double seconds = stopWatch.getTime() / THOUSAND;
+            LOGGER.info("Finished Anm Asha import dispatch in {} seconds. Accepted {} ASHA, Rejected {} ASHA",
+                    seconds, audit.getAccepted(), audit.getRejected());
+
+        } catch (MctsWebServiceException e) {
+            String error = String.format("Cannot read anm asha data from %s state with stateId:%d", stateName, stateId);
+            LOGGER.error(error, e);
+            alertService.create(MCTS_WEB_SERVICE, "MCTS Web Service FLW Import", e
+                    .getMessage(), AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            mctsImportAuditDataService.create(new MctsImportAudit(referenceDate, MctsUserType.ASHA, stateCode, stateName, 0, 0, error));
+        } catch (MctsInvalidResponseStructureException e) {
+            String error = String.format("Cannot read anm asha data from %s state with stateId: %d. Response Deserialization Error", stateName, stateCode);
+            LOGGER.error(error, e);
+            alertService.create(MCTS_WEB_SERVICE, "MCTS Web Service FLW Import", e
+                    .getMessage(), AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            mctsImportAuditDataService.create(new MctsImportAudit(referenceDate, MctsUserType.ASHA, stateCode, stateName, 0, 0, error));
+        }
+    }
+
+    private MctsImportAudit saveImportedAnmAshaData(AnmAshaDataSet anmAshaDataSet, State state, LocalDate referenceDate) {
+        String stateName = state.getName();
+        Long stateCode = state.getCode();
+        LOGGER.info("Starting ASHA import for state {}", stateName);
         int saved = 0;
         int rejected = 0;
 
@@ -367,10 +331,8 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
             }
         }
         LOGGER.debug("{} state, Total: {} Ashas imported, {} Ashas rejected", stateName, saved, rejected);
-        mctsImportAuditDataService.create(new MctsImportAudit(referenceDate, MctsUserType.ASHA, stateCode, stateName, saved, rejected, null));
+        return new MctsImportAudit(referenceDate, MctsUserType.ASHA, stateCode, stateName, saved, rejected, null);
     }
-
-
 
     private Map<String, Object> toMap(ChildRecord childRecord) {
         Map<String, Object> map = new HashMap<>();

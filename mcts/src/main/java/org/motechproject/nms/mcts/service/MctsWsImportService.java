@@ -1,6 +1,7 @@
 package org.motechproject.nms.mcts.service;
 
 import org.joda.time.LocalDate;
+import org.motechproject.event.MotechEvent;
 
 import java.net.URL;
 import java.util.List;
@@ -17,4 +18,10 @@ public interface MctsWsImportService {
      * @param endpoint the url of the web service endpoint, null will mean using the default one from WSDL
      */
     void importFromMcts(List<Long> stateIds, LocalDate referenceDate, URL endpoint);
+
+    // TEST HOOK ONLY. Do not call directly in production. AAAAAHHHHH
+    void importMothersData(MotechEvent motechEvent);
+    void importChildrenData(MotechEvent motechEvent);
+    void importAnmAshaData(MotechEvent motechEvent);
+
 }

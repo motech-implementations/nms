@@ -6,6 +6,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.commons.date.util.DateUtil;
+import org.motechproject.event.MotechEvent;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.kilkari.domain.MctsChild;
@@ -17,6 +18,7 @@ import org.motechproject.nms.kilkari.repository.MctsChildDataService;
 import org.motechproject.nms.kilkari.repository.MctsMotherDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.mcts.service.MctsWsImportService;
+import org.motechproject.nms.mcts.utils.Constants;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.HealthBlock;
 import org.motechproject.nms.region.domain.HealthFacility;
@@ -45,7 +47,9 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
@@ -164,8 +168,20 @@ public class MctsImportBundleIT extends BasePaxIT {
             // shouldn't affect production
             ClassLoader cl = Thread.currentThread().getContextClassLoader();
             Thread.currentThread().setContextClassLoader(mctsWsImportService.getClass().getClassLoader());
-            mctsWsImportService.importFromMcts(stateIds, yesterday, endpoint);
+
+            // setup motech event
+            Map<String, Object> params = new HashMap<>();
+            params.put(Constants.DATE_PARAM, yesterday);
+            params.put(Constants.STATE_ID_PARAM, 21L);
+            params.put(Constants.ENDPOINT_PARAM, endpoint);
+            MotechEvent event = new MotechEvent("foobar", params);
+
+            /* Hard to test this since we do async loading now, using test hook. UT already tests message distribution */
+            mctsWsImportService.importMothersData(event);
+            mctsWsImportService.importChildrenData(event);
+            mctsWsImportService.importAnmAshaData(event);
             Thread.currentThread().setContextClassLoader(cl);
+
 
             // we expect two of each - the second entry in each ds (3 total) has wrong location data
             List<MctsMother> mothers = mctsMotherDataService.retrieveAll();
@@ -181,5 +197,6 @@ public class MctsImportBundleIT extends BasePaxIT {
         }
 
     }
+
 }
 
