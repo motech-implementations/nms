@@ -128,7 +128,7 @@ public final class CsrHelper {
 
             csr.setAttempts(integerFromString("Attempts", fields[FieldName.ATTEMPTS.ordinal()]));
         } catch (IllegalArgumentException e) {
-            throw new InvalidCsrException(e);
+            throw new InvalidCsrException(e.getMessage(), e);
         }
 
         return csr;

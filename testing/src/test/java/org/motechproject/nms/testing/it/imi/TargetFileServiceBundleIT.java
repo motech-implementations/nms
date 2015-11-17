@@ -290,7 +290,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
                     sh.getContentMessageFile(sub, randomWeek),
                     sh.getWeekId(sub, randomWeek),
                     sh.getLanguageCode(sub),
-                    sh.getCircle(sub),
+                    sh.getCircleName(sub),
                     SubscriptionOrigin.MCTS_IMPORT
             ));
         }

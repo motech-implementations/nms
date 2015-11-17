@@ -182,7 +182,7 @@ public final class CdrHelper {
 
             cdr.setWeekId(fields[FieldName.WEEK_ID.ordinal()]);
         } catch (IllegalArgumentException e) {
-            throw new InvalidCsrException(e);
+            throw new InvalidCsrException(e.getMessage(), e);
         }
 
         return cdr;

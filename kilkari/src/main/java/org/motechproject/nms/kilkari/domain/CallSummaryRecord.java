@@ -32,10 +32,17 @@ public class CallSummaryRecord {
     @Field
     private FinalCallStatus finalStatus;
 
+    /**
+     * Number of times the status for this call was OBD_FAILED_INVALIDNUMBER for this weekId
+     */
+    @Field
+    private Integer invalidNumberCount;
+
     public CallSummaryRecord() { }
 
     public CallSummaryRecord(String subscriptionId, String contentFileName, String languageCode, String circleName,
-                             String weekId, StatusCode statusCode, FinalCallStatus finalStatus) {
+                             String weekId, StatusCode statusCode, FinalCallStatus finalStatus,
+                             Integer invalidNumberCount) {
         this.subscriptionId = subscriptionId;
         this.contentFileName = contentFileName;
         this.languageCode = languageCode;
@@ -43,6 +50,7 @@ public class CallSummaryRecord {
         this.weekId = weekId;
         this.statusCode = statusCode;
         this.finalStatus = finalStatus;
+        this.invalidNumberCount = invalidNumberCount;
     }
 
     public String getSubscriptionId() {
@@ -101,4 +109,11 @@ public class CallSummaryRecord {
         this.finalStatus = finalStatus;
     }
 
+    public Integer getInvalidNumberCount() {
+        return invalidNumberCount;
+    }
+
+    public void setInvalidNumberCount(Integer invalidNumberCount) {
+        this.invalidNumberCount = invalidNumberCount;
+    }
 }

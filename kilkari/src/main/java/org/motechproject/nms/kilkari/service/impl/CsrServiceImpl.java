@@ -17,7 +17,8 @@ import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.dto.CallSummaryRecordDto;
-import org.motechproject.nms.kilkari.exception.InvalidCdrDataException;
+import org.motechproject.nms.kilkari.exception.InvalidCsrDataException;
+import org.motechproject.nms.kilkari.exception.NoSuchSubscriptionException;
 import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.CallSummaryRecordDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
@@ -86,8 +87,12 @@ public class CsrServiceImpl implements CsrService {
 
     // Check if this call has been failing with OBD_FAILED_INVALIDNUMBER for all the retries.
     // See issue #169: https://github.com/motech-implementations/mim/issues/169
-    private boolean isMsisdnInvalid(CallSummaryRecord record) {
-        return record.getStatusCode() == StatusCode.OBD_FAILED_INVALIDNUMBER;
+    private boolean isMsisdnInvalid(Subscription subscription, CallSummaryRecord csr) {
+
+        Timer timer = new Timer();
+        boolean ret = csr.getInvalidNumberCount() == subscription.getSubscriptionPack().getMessagesPerWeek();
+        LOGGER.debug("**********DELETE ME********** isMsisdnInvalid: {}", timer.time());
+        return ret;
     }
 
 
@@ -157,7 +162,7 @@ public class CsrServiceImpl implements CsrService {
 
             // Deactivate subscription for persistent invalid numbers
             // See https://github.com/motech-implementations/mim/issues/169
-            if (isMsisdnInvalid(csr)) {
+            if (isMsisdnInvalid(subscription, csr)) {
                 subscription.setStatus(SubscriptionStatus.DEACTIVATED);
                 subscription.setDeactivationReason(DeactivationReason.INVALID_NUMBER);
                 subscriptionDataService.update(subscription);
@@ -284,8 +289,7 @@ public class CsrServiceImpl implements CsrService {
 
             Subscription subscription = subscriptionDataService.findBySubscriptionId(subscriptionId);
             if (subscription == null) {
-                throw new InvalidCdrDataException(String.format("Subscription %s does not exist in the database",
-                        subscriptionId));
+                throw new NoSuchSubscriptionException(subscriptionId);
             }
 
             CallSummaryRecord existingCsr = csrDataService.findBySubscriptionId(subscriptionId);
@@ -294,6 +298,7 @@ public class CsrServiceImpl implements CsrService {
             }
 
             CallSummaryRecord csr;
+            boolean invalidNr = StatusCode.fromInt(csrDto.getStatusCode()).equals(StatusCode.OBD_FAILED_INVALIDNUMBER);
             if (existingCsr == null) {
                 csr = csrDataService.create(new CallSummaryRecord(
                         subscriptionId,
@@ -302,13 +307,17 @@ public class CsrServiceImpl implements CsrService {
                         csrDto.getCircleName(),
                         csrDto.getWeekId(),
                         StatusCode.fromInt(csrDto.getStatusCode()),
-                        FinalCallStatus.fromInt(csrDto.getFinalStatus())));
+                        FinalCallStatus.fromInt(csrDto.getFinalStatus()),
+                        invalidNr ? 1 : 0));
 
             } else {
                 existingCsr.setFinalStatus(FinalCallStatus.fromInt(csrDto.getFinalStatus()));
                 existingCsr.setContentFileName(csrDto.getContentFileName());
                 existingCsr.setStatusCode(StatusCode.fromInt(csrDto.getStatusCode()));
                 existingCsr.setWeekId(csrDto.getWeekId());
+                if (invalidNr) {
+                    existingCsr.setInvalidNumberCount(existingCsr.getInvalidNumberCount() + 1);
+                }
                 csr = csrDataService.update(existingCsr);
             }
 
@@ -362,14 +371,17 @@ public class CsrServiceImpl implements CsrService {
 
             }
 
-        } catch (InvalidCdrDataException e) {
+        } catch (NoSuchSubscriptionException e) {
+            String msg = String.format("No such subscription %s", e.getMessage());
+            LOGGER.error(msg);
+            alertService.create(subscriptionId, "Invalid CSR Data", msg, AlertType.HIGH, AlertStatus.NEW, 0, null);
+        } catch (InvalidCsrDataException e) {
             String msg = String.format("Invalid CDR data for subscription %s: %s", subscriptionId, e.getMessage());
             LOGGER.error(msg);
-            alertService.create(subscriptionId, "Invalid CDR Data", msg, AlertType.HIGH, AlertStatus.NEW, 0,
-                    null);
+            alertService.create(subscriptionId, "Invalid CSR Data", msg, AlertType.HIGH, AlertStatus.NEW, 0, null);
         } catch (Exception e) {
             String msg = String.format("MOTECH BUG *** Unexpected exception in processCallSummaryRecord() for " +
-                            "subscription %s: %s", subscriptionId, ExceptionUtils.getFullStackTrace(e));
+                    "subscription %s: %s", subscriptionId, ExceptionUtils.getFullStackTrace(e));
             LOGGER.error(msg);
             alertService.create(subscriptionId, NMS_IMI_KK_PROCESS_CSR,
                     msg.substring(0, min(msg.length(), MAX_CHAR_ALERT)), AlertType.CRITICAL, AlertStatus.NEW, 0, null);

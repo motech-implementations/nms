@@ -27,6 +27,7 @@ import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
+import org.motechproject.nms.kilkari.service.CsrVerifierService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
 import org.motechproject.nms.region.domain.Circle;
@@ -80,6 +81,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private SubscriptionDataService subscriptionDataService;
     private SubscriptionErrorDataService subscriptionErrorDataService;
     private CallRetryDataService callRetryDataService;
+    private CsrVerifierService csrVerifierService;
     private EventRelay eventRelay;
 
     @Autowired
@@ -90,7 +92,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                                    SubscriptionDataService subscriptionDataService,
                                    SubscriptionErrorDataService subscriptionErrorDataService,
                                    EventRelay eventRelay,
-                                   CallRetryDataService callRetryDataService) {
+                                   CallRetryDataService callRetryDataService,
+                                   CsrVerifierService csrVerifierService) {
         this.subscriberDataService = subscriberDataService;
         this.subscriptionPackDataService = subscriptionPackDataService;
         this.subscriptionDataService = subscriptionDataService;
@@ -99,6 +102,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         this.settingsFacade = settingsFacade;
         this.eventRelay = eventRelay;
         this.callRetryDataService = callRetryDataService;
+        this.csrVerifierService = csrVerifierService;
 
         schedulePurgeOfOldSubscriptions();
     }
@@ -597,6 +601,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     @CacheEvict(value = {"pack" }, allEntries = true)
     public void cacheEvict(MotechEvent event) {
         LOGGER.debug("*** RECEIVE CACHE EVICT MSG ***");
+        csrVerifierService.cacheEvict();
     }
 
 

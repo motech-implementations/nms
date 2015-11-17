@@ -22,7 +22,7 @@ import org.motechproject.nms.imi.domain.FileType;
 import org.motechproject.nms.imi.exception.ExecException;
 import org.motechproject.nms.imi.exception.InternalException;
 import org.motechproject.nms.imi.exception.InvalidCdrFileException;
-import org.motechproject.nms.imi.exception.InvalidCsrException;
+import org.motechproject.nms.imi.exception. InvalidCsrException;
 import org.motechproject.nms.imi.repository.CallDetailRecordDataService;
 import org.motechproject.nms.imi.repository.CallSummaryRecordDataService;
 import org.motechproject.nms.imi.repository.FileAuditRecordDataService;
@@ -31,7 +31,7 @@ import org.motechproject.nms.imi.service.contract.CdrFileProcessedNotification;
 import org.motechproject.nms.imi.web.contract.CdrFileNotificationRequest;
 import org.motechproject.nms.imi.web.contract.FileInfo;
 import org.motechproject.nms.kilkari.dto.CallSummaryRecordDto;
-import org.motechproject.nms.kilkari.exception.CsrConversionException;
+import org.motechproject.nms.kilkari.exception.InvalidCsrDataException;
 import org.motechproject.nms.kilkari.service.CsrService;
 import org.motechproject.nms.kilkari.service.CsrVerifierService;
 import org.motechproject.server.config.SettingsFacade;
@@ -370,7 +370,7 @@ public class CdrFileServiceImpl implements CdrFileService {
                     csrVerifierService.verify(csrDto);
                     sendProcessCsrEvent(csrDto);
 
-                } catch (InvalidCsrException | CsrConversionException e) {
+                } catch (InvalidCsrException | InvalidCsrDataException e) {
                     // All errors here should have been reported in Phase 2, let's just ignore them
                     //todo remove following line to not over confuse ops?
                     LOGGER.debug(String.format(IGNORING_CSR_ROW, fileName, lineNumber, e.getMessage()));

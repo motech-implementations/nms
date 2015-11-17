@@ -7,4 +7,5 @@ import org.motechproject.nms.kilkari.dto.CallSummaryRecordDto;
  */
 public interface CsrVerifierService {
     void verify(CallSummaryRecordDto csrDto);
+    void cacheEvict();
 }
