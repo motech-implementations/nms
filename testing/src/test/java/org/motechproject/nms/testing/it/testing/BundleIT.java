@@ -19,6 +19,9 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import javax.inject.Inject;
 import java.io.FileInputStream;
@@ -48,6 +51,8 @@ public class BundleIT extends BasePaxIT {
     @Inject
     MctsBeneficiaryImportService mctsBeneficiaryImportService;
 
+    @Inject
+    PlatformTransactionManager transactionManager;
 
     @Test
     public void testNothingImportant() {
@@ -93,17 +98,21 @@ public class BundleIT extends BasePaxIT {
         createLocationData();
         getLogger().debug("createLocationData: {}", timer.time());
 
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         timer = new Timer("mom", "moms");
         String file = testingService.createMctsMoms(TEST_COUNT, false).split("\t")[0];
         getLogger().debug("Created {}", timer.frequency(TEST_COUNT));
+        transactionManager.commit(status);
 
         timer.reset();
         mctsBeneficiaryImportService.importMotherData(new InputStreamReader(new FileInputStream(file)));
         getLogger().debug("Imported {}", timer.frequency(TEST_COUNT));
 
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         timer = new Timer("kid", "kids");
         file = testingService.createMctsKids(TEST_COUNT, false).split("\t")[0];
         getLogger().debug("Created {}", timer.frequency(TEST_COUNT));
+        transactionManager.commit(status);
 
         timer.reset();
         mctsBeneficiaryImportService.importChildData(new InputStreamReader(new FileInputStream(file)));
