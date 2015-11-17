@@ -141,6 +141,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     
     @Test
     public void testPurgeOldClosedSubscriptionsNothingToPurge() {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         // s1 & s2 should remain untouched
         subscriptionService.createSubscription(1000000000L, rh.hindiLanguage(), sh.childPack(),
@@ -176,14 +177,17 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         assertNotNull(subscriber);
         subscriptions = subscriber.getSubscriptions();
         assertEquals(2, subscriptions.size());
-    }
 
+        transactionManager.commit(status);
+    }
 
     @Test
     public void testPurgeOldClosedSubscriptionsSubscribersDeleted() {
 
         Subscriber subscriber;
         Set<Subscription> subscriptions;
+
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         // s3 & s4 should be deleted
         Subscriber s3 = new Subscriber(1000000002L, rh.hindiLanguage());
@@ -235,8 +239,9 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         subscriber = subscriberService.getSubscriber(1000000003L);
         assertNull(subscriber);
-    }
 
+        transactionManager.commit(status);
+    }
 
     @Test
     public void testPurgeOldClosedSubscriptionsRemoveSubscriptionLeaveSubscriber() {
@@ -245,6 +250,8 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         Set<Subscription> subscriptions;
         Iterator<Subscription> subscriptionIterator;
         Subscription subscription;
+
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         // s5 & s6 should remain but with one less subscription
         Subscriber s5 = new Subscriber(1000000004L, rh.hindiLanguage());
@@ -285,7 +292,13 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         subscriptions = subscriber.getSubscriptions();
         assertEquals(2, subscriptions.size());
 
+        transactionManager.commit(status);
+
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         subscriptionService.purgeOldInvalidSubscriptions(new MotechEvent());
+        transactionManager.commit(status);
+
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         subscriber = subscriberService.getSubscriber(1000000004L);
         assertNotNull(subscriber);
@@ -296,11 +309,13 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         assertNotNull(subscriber);
         subscriptions = subscriber.getSubscriptions();
         assertEquals(1, subscriptions.size());
-    }
 
+        transactionManager.commit(status);
+    }
 
     @Test
     public void testServiceFunctional() throws Exception {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         SubscriptionPack pack1 = subscriptionPackDataService.byName("pack1");
         SubscriptionPack pack2 = subscriptionPackDataService.byName("pack2");
@@ -311,6 +326,8 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
         Set<Subscription> subscriptions = subscriber.getSubscriptions();
+
+        transactionManager.commit(status);
 
         Set<String> packs = new HashSet<>();
         for (Subscription subscription : subscriptions) {
@@ -357,6 +374,8 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
     @Test
     public void testSubscriptionPackCreation() throws Exception {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         Subscriber s2 = new Subscriber(1000000001L, rh.hindiLanguage());
         subscriberService.create(s2);
 
@@ -370,14 +389,17 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         SubscriptionPack seventyTwoWeekPack = subscriptionPackDataService.byName("pregnancyPack");
         assertEquals(144, seventyTwoWeekPack.getMessages().size());
-    }
 
+        transactionManager.commit(status);
+    }
 
     @Test
     public void testCreateSubscriptionNoSubscriber() throws Exception {
         // Just verify the db is clean
         Subscriber s = subscriberService.getSubscriber(1111111111L);
         assertNull(s);
+
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         subscriptionService.createSubscription(1111111111L, rh.hindiLanguage(), sh.childPack(),
                 SubscriptionOrigin.IVR);
@@ -389,8 +411,9 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         Subscription subscription = subscriber.getSubscriptions().iterator().next();
         assertEquals(sh.childPack(), subscription.getSubscriptionPack());
-    }
 
+        transactionManager.commit(status);
+    }
 
     @Test
     public void testCreateSubscriptionExistingSubscriberDifferentLanguage() throws Exception {
@@ -398,6 +421,8 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         // Just verify the db is clean
         Subscriber s = subscriberService.getSubscriber(1111111111L);
         assertNull(s);
+
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         subscriptionService.createSubscription(1111111111L, rh.hindiLanguage(), sh.childPack(),
                 SubscriptionOrigin.IVR);
@@ -413,6 +438,8 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         Subscription subscription = subscriber.getSubscriptions().iterator().next();
         assertEquals(sh.childPack(), subscription.getSubscriptionPack());
+
+        transactionManager.commit(status);
     }
 
 
@@ -422,6 +449,8 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         // Just verify the db is clean
         Subscriber s = subscriberService.getSubscriber(1111111111L);
         assertNull(s);
+
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         subscriberService.create(new Subscriber(1111111111L));
         s = subscriberService.getSubscriber(1111111111L);
@@ -434,11 +463,13 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         Subscriber subscriber = subscriberService.getSubscriber(1111111111L);
         assertNotNull(subscriber);
         assertEquals(rh.hindiLanguage(), subscriber.getLanguage());
-    }
 
+        transactionManager.commit(status);
+    }
 
     @Test
     public void testCreateSubscriptionViaMcts() {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
         mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(14));
@@ -449,11 +480,15 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
         assertEquals(1, mctsSubscriber.getActiveAndPendingSubscriptions().size());
+
+        transactionManager.commit(status);
     }
 
 
     @Test
     public void testCreateDuplicateChildSubscriptionViaMcts() {
+
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
         mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(14));
@@ -470,11 +505,14 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
         assertEquals(1, mctsSubscriber.getActiveAndPendingSubscriptions().size());
+
+        transactionManager.commit(status);
     }
 
 
     @Test
     public void testCreateDuplicatePregnancySubscriptionViaMcts() {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
         mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(28));
@@ -491,11 +529,14 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
         assertEquals(1, mctsSubscriber.getActiveAndPendingSubscriptions().size());
+
+        transactionManager.commit(status);
     }
 
 
     @Test
     public void testCreateSecondPregnancySubscriptionAfterDeactivationViaMcts() {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
         mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(28));
@@ -514,11 +555,14 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
         assertEquals(1, mctsSubscriber.getActiveAndPendingSubscriptions().size());
+
+        transactionManager.commit(status);
     }
 
 
     @Test
     public void testCreateSubscriptionsToDifferentPacksViaMcts() {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
         mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(14));
@@ -541,12 +585,16 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
         assertEquals(2, mctsSubscriber.getActiveAndPendingSubscriptions().size());
+
+        transactionManager.commit(status);
     }
 
 
     @Test
     public void testChangeDOB() {
         DateTime now = DateTime.now();
+
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
         mctsSubscriber.setDateOfBirth(now.minusDays(14));
@@ -569,12 +617,16 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         assertEquals(now.minusDays(100).withTimeAtStartOfDay(), subscription.getStartDate());
         assert(subscription.getStatus() == SubscriptionStatus.ACTIVE);
+
+        transactionManager.commit(status);
     }
 
 
     @Test
     public void testChangeLMP() {
         DateTime now = DateTime.now();
+
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
         mctsSubscriber.setLastMenstrualPeriod(now.minusDays(180));
@@ -607,12 +659,16 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         assertEquals(now.minusDays(910).withTimeAtStartOfDay(), subscription.getStartDate());
         assert(subscription.getStatus() == SubscriptionStatus.COMPLETED);
+
+        transactionManager.commit(status);
     }
 
 
     @Test
     public void testGetNextMessageForSubscription() {
         DateTime now = DateTime.now();
+
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
         mctsSubscriber.setLastMenstrualPeriod(now.minusDays(90)); //so the startDate should be today
@@ -635,12 +691,16 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         message = subscription.nextScheduledMessage(now.plusDays(74));
         assertEquals("w11_2", message.getWeekId());
+
+        transactionManager.commit(status);
     }
 
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testGetNextMessageForCompletedSubscription() {
         DateTime now = DateTime.now();
+
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
         mctsSubscriber.setLastMenstrualPeriod(now.minusDays(90));
@@ -653,7 +713,9 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         subscription.setNeedsWelcomeMessageViaObd(false);
         subscriptionDataService.update(subscription);
 
-        // should throw IllegalStateException
+        transactionManager.commit(status);
+
+        exception.expect(IllegalStateException.class);
         SubscriptionPackMessage message = subscription.nextScheduledMessage(now.plusDays(1000));
     }
 
@@ -684,6 +746,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     // via IVR.
     @Test
     public void verifyIssue182() {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         Subscriber subscriber = new Subscriber(4444444444L);
         subscriber.setLastMenstrualPeriod(DateTime.now().minusDays(90));
@@ -700,15 +763,18 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         // And check the subscription is now pending activation
         assertEquals(SubscriptionStatus.PENDING_ACTIVATION, subscription.getStatus());
+
+        transactionManager.commit(status);
+
     }
 
 
     @Rule
     public ExpectedException exception = ExpectedException.none();
 
-
     @Test
     public void testDeleteOpenSubscription() {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
         mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(14));
@@ -717,6 +783,8 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         Subscription subscription = subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(),
                 sh.childPack(), SubscriptionOrigin.MCTS_IMPORT);
 
+        transactionManager.commit(status);
+
         exception.expect(JdoListenerInvocationException.class);
         subscriptionDataService.delete(subscription);
     }
@@ -724,6 +792,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
     @Test
     public void testDeleteRecentDeactivateSubscription() {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
         mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(14));
@@ -734,10 +803,11 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         subscription.setStatus(SubscriptionStatus.DEACTIVATED);
         subscriptionDataService.update(subscription);
 
+        transactionManager.commit(status);
+
         exception.expect(JdoListenerInvocationException.class);
         subscriptionDataService.delete(subscription);
     }
-
 
     @Test
     public void testDeleteRecentCompletedSubscription() {
@@ -752,15 +822,16 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         subscription.setStatus(SubscriptionStatus.COMPLETED);
         subscriptionDataService.update(subscription);
 
+        transactionManager.commit(status);
+
         exception.expect(JdoListenerInvocationException.class);
         subscriptionDataService.delete(subscription);
-
-        transactionManager.commit(status);
     }
 
 
     @Test
     public void testDeleteOldDeactivatedSubscription() {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         Subscriber subscriber = subscriberService.getSubscriber(2000000000L);
         assertNotNull(subscriber);
@@ -776,11 +847,13 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         subscriber = subscriberDataService.findByNumber(2000000000L);
         assertEquals(1, subscriber.getSubscriptions().size());
-    }
 
+        transactionManager.commit(status);
+    }
 
     @Test
     public void testDeleteOldCompletedSubscription() {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         Subscriber subscriber = subscriberService.getSubscriber(2000000000L);
         assertNotNull(subscriber);
@@ -796,6 +869,8 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         subscriber = subscriberDataService.findByNumber(2000000000L);
         assertEquals(1, subscriber.getSubscriptions().size());
+
+        transactionManager.commit(status);
     }
 
     /*

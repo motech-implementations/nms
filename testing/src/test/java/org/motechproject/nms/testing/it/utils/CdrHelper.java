@@ -249,17 +249,47 @@ public class CdrHelper {
     }
 
 
-    public void makeCsrs(int numFailed) {
+    public void makeCsrs(int numFailed, int numSuccess, int numInvalid) {
         if (csrs == null) { csrs = new ArrayList<>(); }
 
         for (int i=0 ; i<numFailed ; i++) {
-            Subscription sub = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(30));
+            Subscription sub = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(100));
             CallSummaryRecord csr = makeCsr(sub);
             csr.setStatusCode(StatusCode.OBD_FAILED_NOATTEMPT.getValue());
             csr.setContentFileName(sh.childPack().getMessages().get(7).getMessageFileName());
-            csr.setWeekId("w7_1");
+            csr.setWeekId(sh.childPack().getMessages().get(7).getWeekId());
             csr.setPriority(NORMAL_PRIORITY);
             csr.setFinalStatus(FinalCallStatus.FAILED.getValue());
+            csr.setAttempts(1);
+            csr.setCallFlowUrl("url");
+            csr.setCli("cli");
+            csr.setServiceId("id");
+            csrs.add(csr);
+        }
+
+        for (int i=0 ; i<numSuccess ; i++) {
+            Subscription sub = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(110));
+            CallSummaryRecord csr = makeCsr(sub);
+            csr.setStatusCode(StatusCode.OBD_SUCCESS_CALL_CONNECTED.getValue());
+            csr.setContentFileName(sh.childPack().getMessages().get(5).getMessageFileName());
+            csr.setWeekId(sh.childPack().getMessages().get(5).getWeekId());
+            csr.setPriority(NORMAL_PRIORITY);
+            csr.setFinalStatus(FinalCallStatus.SUCCESS.getValue());
+            csr.setAttempts(1);
+            csr.setCallFlowUrl("url");
+            csr.setCli("cli");
+            csr.setServiceId("id");
+            csrs.add(csr);
+        }
+
+        for (int i=0 ; i<numInvalid ; i++) {
+            Subscription sub = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(110));
+            CallSummaryRecord csr = makeCsr(sub);
+            csr.setStatusCode(StatusCode.OBD_SUCCESS_CALL_CONNECTED.getValue());
+            csr.setContentFileName(sh.childPack().getMessages().get(5).getMessageFileName());
+            csr.setWeekId("xxx");
+            csr.setPriority(NORMAL_PRIORITY);
+            csr.setFinalStatus(FinalCallStatus.SUCCESS.getValue());
             csr.setAttempts(1);
             csr.setCallFlowUrl("url");
             csr.setCli("cli");

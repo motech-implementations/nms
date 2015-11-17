@@ -521,7 +521,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     @Override
     @Cacheable(value = "pack", key = "'0-'.concat(#p0)")
     public SubscriptionPack getSubscriptionPack(SubscriptionPackType type) {
-        LOGGER.debug("*** NO CACHE getSubscriptionPack(type={}) ***", type);
         return subscriptionPackDataService.byType(type);
     }
 
@@ -529,7 +528,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     @Override
     @Cacheable(value = "pack", key = "#p0.concat('-0')")
     public SubscriptionPack getSubscriptionPack(String name) {
-        LOGGER.debug("*** NO CACHE getSubscriptionPack(name={}) ***", name);
         return subscriptionPackDataService.byName(name);
     }
 
@@ -592,7 +590,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     @CacheEvict(value = {"pack" }, allEntries = true)
     public void broadcastCacheEvictMessage(SubscriptionPack pack) {
-        LOGGER.debug("*** BROADCAST CACHE EVICT MSG ***");
         MotechEvent motechEvent = new MotechEvent(PACK_CACHE_EVICT_MESSAGE);
         eventRelay.sendEventMessage(motechEvent);
     }
@@ -601,7 +598,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     @MotechListener(subjects = { PACK_CACHE_EVICT_MESSAGE })
     @CacheEvict(value = {"pack" }, allEntries = true)
     public void cacheEvict(MotechEvent event) {
-        LOGGER.debug("*** RECEIVE CACHE EVICT MSG ***");
         csrVerifierService.cacheEvict();
     }
 

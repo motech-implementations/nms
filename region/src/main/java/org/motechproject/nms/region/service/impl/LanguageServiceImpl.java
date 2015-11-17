@@ -12,8 +12,6 @@ import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.NationalDefaultLanguageDataService;
 import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.region.service.LanguageService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -24,8 +22,6 @@ import java.util.Set;
 
 @Service("languageService")
 public class LanguageServiceImpl implements LanguageService {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(LanguageServiceImpl.class);
 
     public static final int NATIONAL_DEFAULT_CODE = 0;
     public static final String LANGUAGE_CACHE_EVICT_MESSAGE = "nms.region.cache.evict.language";
@@ -129,7 +125,6 @@ public class LanguageServiceImpl implements LanguageService {
     @CacheEvict(value = {"language", "languages" }, allEntries = true)
     public void broadcastCacheEvictMessage(Language language) {
         MotechEvent motechEvent = new MotechEvent(LANGUAGE_CACHE_EVICT_MESSAGE);
-        LOGGER.debug("*** BROADCAST CACHE EVICT MSG ***");
         eventRelay.sendEventMessage(motechEvent);
     }
 
@@ -137,7 +132,6 @@ public class LanguageServiceImpl implements LanguageService {
     @MotechListener(subjects = { LANGUAGE_CACHE_EVICT_MESSAGE })
     @CacheEvict(value = {"language", "languages" }, allEntries = true)
     public void cacheEvict(MotechEvent event) {
-        LOGGER.debug("*** RECEIVE CACHE EVICT MSG ***");
     }
 
 }

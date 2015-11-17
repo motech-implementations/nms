@@ -122,7 +122,6 @@ public class CsrVerifierServiceImpl implements CsrVerifierService {
 
     @MotechListener(subjects = { LANGUAGE_CACHE_EVICT_MESSAGE })
     public void cacheEvict(MotechEvent event) {
-        LOGGER.debug("*** RECEIVE CACHE EVICT MSG ***");
         cacheEvict();
     }
 
