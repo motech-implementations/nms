@@ -149,7 +149,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         return count;
     }
 
-    @Override
+    @Override // NO CHECKSTYLE Cyclomatic Complexity
     @Transactional
     public boolean importMotherRecord(Map<String, Object> record) {
         if (pregnancyPack == null) {
@@ -184,6 +184,11 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
         Subscription subscription = subscriberService.updateOrCreateMctsSubscriber(mother, msisdn, lmp,
                 SubscriptionPackType.PREGNANCY);
+
+        // We rejected the update/create for the subscriber
+        if (subscription == null) {
+            return false;
+        }
 
         if ((abortion != null) && abortion) {
             subscriptionService.deactivateSubscription(subscription, DeactivationReason.MISCARRIAGE_OR_ABORTION);
@@ -234,20 +239,22 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         Subscription childSubscription = subscriberService.updateOrCreateMctsSubscriber(child, msisdn, dob,
                 SubscriptionPackType.CHILD);
 
-        if (childSubscription != null) {
-            // a new child subscription was created -- deactivate mother's pregnancy subscription if she has one
+        // child subscription create/update was rejected
+        if (childSubscription == null) {
+            return false;
+        }
 
-            Subscriber subscriber = childSubscription.getSubscriber();
+        // a new child subscription was created -- deactivate mother's pregnancy subscription if she has one
+        Subscriber subscriber = childSubscription.getSubscriber();
 
-            if ((mother != null) && (mother.equals(subscriber.getMother()))) {
+        if ((mother != null) && (mother.equals(subscriber.getMother()))) {
 
-                Subscription pregnancySubscription = subscriptionService.getActiveSubscription(subscriber,
-                        SubscriptionPackType.PREGNANCY);
-                if (pregnancySubscription != null) {
-                    subscriptionService.deactivateSubscription(pregnancySubscription, DeactivationReason.LIVE_BIRTH);
-                }
-
+            Subscription pregnancySubscription = subscriptionService.getActiveSubscription(subscriber,
+                    SubscriptionPackType.PREGNANCY);
+            if (pregnancySubscription != null) {
+                subscriptionService.deactivateSubscription(pregnancySubscription, DeactivationReason.LIVE_BIRTH);
             }
+
         }
 
         if ((death != null) && death) {

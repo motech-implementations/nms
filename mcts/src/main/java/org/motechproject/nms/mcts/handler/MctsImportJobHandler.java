@@ -85,7 +85,8 @@ public class MctsImportJobHandler {
             throw new MctsImportConfigurationException("Malformed days to pull configured: " + daysToPullValue, e);
         }
 
-        if (daysToPull > 7 || daysToPull < 0) {
+        // Valid date range to get data is 1-7 days
+        if (daysToPull > 7 || daysToPull < 1) {
             throw new MctsImportConfigurationException("Malformed days to pull configured: " + daysToPull);
         }
 
