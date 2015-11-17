@@ -214,34 +214,35 @@ public class SubscriberServiceImpl implements SubscriberService {
         }
 
         Subscription subscription = subscriptionService.getActiveSubscription(subscriber, packType);
-        if (subscription != null) {
-            // subscriber already has an active subscription to this pack
-
-            MctsBeneficiary existingBeneficiary = (packType == SubscriptionPackType.PREGNANCY) ? subscriber.getMother() :
-                    subscriber.getChild();
-
-            if (existingBeneficiary == null) {
-                // there's already an IVR-originated subscription for this MSISDN
-                subscriber = setSubscriberFields(subscriber, beneficiary, referenceDate, packType);
-                update(subscriber);
-
-            } else if (!existingBeneficiary.getBeneficiaryId().equals(beneficiary.getBeneficiaryId())) {
-                // if the MCTS ID doesn't match (i.e. there are two beneficiaries with the same phone number), reject the import
-                subscriptionErrorDataService.create(
-                        new SubscriptionError(msisdn, SubscriptionRejectionReason.ALREADY_SUBSCRIBED, packType));
-            } else {
-                // it's the same beneficiary, treat this import as an update
-                subscriber = setSubscriberFields(subscriber, beneficiary, referenceDate, packType);
-                update(subscriber);
-            }
-
-            return subscription;
-        }
 
         // subscriber exists, but doesn't have a subscription to this pack
-        subscriber = setSubscriberFields(subscriber, beneficiary, referenceDate, packType);
-        update(subscriber);
-        return subscriptionService.createSubscription(msisdn, language, circle, pack, SubscriptionOrigin.MCTS_IMPORT);
+        if (subscription == null) {
+            subscriber = setSubscriberFields(subscriber, beneficiary, referenceDate, packType);
+            update(subscriber);
+            return subscriptionService.createSubscription(msisdn, language, circle, pack, SubscriptionOrigin.MCTS_IMPORT);
+        }
+
+        // subscriber already has an active subscription to this pack
+        MctsBeneficiary existingBeneficiary = (packType == SubscriptionPackType.PREGNANCY) ? subscriber.getMother() :
+                subscriber.getChild();
+
+        if (existingBeneficiary == null) {
+            // there's already an IVR-originated subscription for this MSISDN
+            subscriber = setSubscriberFields(subscriber, beneficiary, referenceDate, packType);
+            update(subscriber);
+
+        }  else if (existingBeneficiary.getBeneficiaryId().equals(beneficiary.getBeneficiaryId())) {
+            // it's the same beneficiary, treat this import as an update
+            subscriber = setSubscriberFields(subscriber, beneficiary, referenceDate, packType);
+            update(subscriber);
+        } else {
+            // if the MCTS ID doesn't match (i.e. there are two beneficiaries with the same phone number), reject the import
+            subscriptionErrorDataService.create(
+                    new SubscriptionError(msisdn, SubscriptionRejectionReason.ALREADY_SUBSCRIBED, packType));
+            return null;
+        }
+
+        return subscription;
     }
 
 

@@ -11,6 +11,9 @@
     <osgi:service ref="mctsWsImportService"
                   interface="org.motechproject.nms.mcts.service.MctsWsImportService" />
 
+    <osgi:reference id="mctsImportAuditDataService"
+                  interface="org.motechproject.nms.mcts.repository.MctsImportAuditDataService" />
+
     <osgi:reference id="schedulerService"
                     interface="org.motechproject.scheduler.service.MotechSchedulerService" />
 
@@ -27,5 +30,7 @@
                     interface="org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService"/>
 
     <osgi:reference id="alertsService" interface="org.motechproject.alerts.contract.AlertService" />
+
+    <osgi:reference id="eventRelay" interface="org.motechproject.event.listener.EventRelay"/>
 
 </beans>

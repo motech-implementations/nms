@@ -10,6 +10,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.motechproject.commons.date.util.DateUtil;
+import org.motechproject.event.MotechEvent;
+import org.motechproject.event.listener.EventRelay;
 import org.motechproject.nms.flw.service.FrontLineWorkerImportService;
 import org.motechproject.nms.flw.utils.FlwConstants;
 import org.motechproject.nms.kilkari.domain.MctsChild;
@@ -24,6 +26,7 @@ import org.motechproject.nms.mcts.contract.ChildrenDataSet;
 import org.motechproject.nms.mcts.contract.MotherRecord;
 import org.motechproject.nms.mcts.contract.MothersDataSet;
 import org.motechproject.nms.mcts.service.MctsWebServiceFacade;
+import org.motechproject.nms.mcts.utils.Constants;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.exception.InvalidLocationException;
 import org.motechproject.nms.region.repository.StateDataService;
@@ -35,6 +38,7 @@ import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -59,6 +63,9 @@ public class MctsWsImportServiceImplTest {
 
     @Mock
     private MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor;
+
+    @Mock
+    private EventRelay eventRelay;
 
     @Mock
     private State state1;
@@ -100,9 +107,20 @@ public class MctsWsImportServiceImplTest {
                 .thenReturn(motherDs1);
         when(mctsWebServiceFacade.getMothersData(eq(yesterday), eq(yesterday), any(URL.class), eq(15L)))
                 .thenReturn(motherDs2);
+        doNothing().when(eventRelay).sendEventMessage(any(MotechEvent.class));
 
         mctsWsImportServiceImpl.importFromMcts(asList(1L, 15L), yesterday, null);
 
+        ArgumentCaptor<MotechEvent> captor = ArgumentCaptor.forClass(MotechEvent.class);
+        verify(eventRelay, times(6)).sendEventMessage(captor.capture());
+        assertEquals(Constants.MCTS_MOTHER_IMPORT_SUBJECT, captor.getAllValues().get(0).getSubject());
+        assertEquals(Constants.MCTS_MOTHER_IMPORT_SUBJECT, captor.getAllValues().get(1).getSubject());
+        assertEquals(Constants.MCTS_CHILD_IMPORT_SUBJECT, captor.getAllValues().get(2).getSubject());
+        assertEquals(Constants.MCTS_CHILD_IMPORT_SUBJECT, captor.getAllValues().get(3).getSubject());
+        assertEquals(Constants.MCTS_ASHA_IMPORT_SUBJECT, captor.getAllValues().get(4).getSubject());
+        assertEquals(Constants.MCTS_ASHA_IMPORT_SUBJECT, captor.getAllValues().get(5).getSubject());
+
+        /*
         // flw
         ArgumentCaptor<Map> mapCaptor = ArgumentCaptor.forClass(Map.class);
         verify(flwImportService, times(2)).importFrontLineWorker(mapCaptor.capture(), eq(state1));
@@ -129,6 +147,7 @@ public class MctsWsImportServiceImplTest {
         verifyMother(mapCaptor.getAllValues().get(1), 1, 1);
         verifyMother(mapCaptor.getAllValues().get(2), 2, 15);
         verifyMother(mapCaptor.getAllValues().get(3), 3, 15);
+        */
     }
 
     private void prepFlwData() {
