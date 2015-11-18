@@ -593,7 +593,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     @CacheEvict(value = {"pack" }, allEntries = true)
     public void broadcastCacheEvictMessage(SubscriptionPack pack) {
         MotechEvent motechEvent = new MotechEvent(PACK_CACHE_EVICT_MESSAGE);
-        eventRelay.sendEventMessage(motechEvent);
+        eventRelay.broadcastEventMessage(motechEvent);
     }
 
 

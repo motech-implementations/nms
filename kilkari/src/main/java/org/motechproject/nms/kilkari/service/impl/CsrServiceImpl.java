@@ -7,6 +7,7 @@ import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.alerts.domain.AlertStatus;
 import org.motechproject.alerts.domain.AlertType;
 import org.motechproject.event.MotechEvent;
+import org.motechproject.event.listener.EventRelay;
 import org.motechproject.event.listener.annotations.MotechListener;
 import org.motechproject.mds.query.SqlQueryExecution;
 import org.motechproject.metrics.service.Timer;
@@ -45,7 +46,8 @@ import static java.lang.Math.min;
 public class CsrServiceImpl implements CsrService {
 
     private static final String NMS_IMI_KK_PROCESS_CSR = "nms.imi.kk.process_csr";
-    private static final int MAX_CHAR_ALERT = 4500;
+    private static final String NMS_IMI_KK_CALC_OLD_CSR = "nms.imi.kk.calc_recent_old_csr";
+    private static final int MAX_CHAR_ALERT = 4900;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CsrServiceImpl.class);
 
@@ -54,6 +56,7 @@ public class CsrServiceImpl implements CsrService {
     private CallRetryDataService callRetryDataService;
     private AlertService alertService;
     private CsrVerifierService csrVerifierService;
+    private EventRelay eventRelay;
 
     private DateTime mostRecentOldCsrTimestamp;
 
@@ -61,14 +64,15 @@ public class CsrServiceImpl implements CsrService {
     @Autowired
     public CsrServiceImpl(CallSummaryRecordDataService csrDataService, SubscriptionDataService subscriptionDataService,
                           CallRetryDataService callRetryDataService, AlertService alertService,
-                          CsrVerifierService csrVerifierService) {
+                          CsrVerifierService csrVerifierService, EventRelay eventRelay) {
         this.csrDataService = csrDataService;
         this.subscriptionDataService = subscriptionDataService;
         this.callRetryDataService = callRetryDataService;
         this.alertService = alertService;
         this.csrVerifierService = csrVerifierService;
+        this.eventRelay = eventRelay;
 
-        mostRecentOldCsrTimestamp = mostRecentOldCallSummaryRecordInDb();
+        mostRecentOldCsrTimestamp = getMostRecentOldCsr();
     }
 
     private void completeSubscriptionIfNeeded(Subscription subscription, CallSummaryRecord record) {
@@ -91,10 +95,8 @@ public class CsrServiceImpl implements CsrService {
     // See issue #169: https://github.com/motech-implementations/mim/issues/169
     private boolean isMsisdnInvalid(Subscription subscription, CallSummaryRecord csr) {
 
-        Timer timer = new Timer();
-        boolean ret = csr.getInvalidNumberCount() > subscription.getSubscriptionPack().retryCount();
-        LOGGER.debug("**********DELETE ME********** isMsisdnInvalid: {}", timer.time());
-        return ret;
+        return csr.getInvalidNumberCount() > subscription.getSubscriptionPack().retryCount();
+
     }
 
 
@@ -207,14 +209,32 @@ public class CsrServiceImpl implements CsrService {
     /**
      * Returns the timestamp of the most recent old-style subscriptionId (really a requestId)
      */
-    private DateTime mostRecentOldCallSummaryRecordInDb() {
+    private DateTime getMostRecentOldCsr() {
+
+        Timer timer = new Timer();
+        List<CallSummaryRecord> csrs = mostRecentOldCsrInDb();
+        LOGGER.debug("mostRecentOldCsrInDb(): {}", timer.time());
+
+        if (csrs == null || csrs.size() ==0) {
+            LOGGER.debug("There are no old style CSRs in the database, yay!");
+            return null;
+        }
+
+        LOGGER.debug("Timestamp of the most recent old style CSR in the database: {}",
+                RequestId.fromString(csrs.get(0).getSubscriptionId()).getTimestamp());
+
+        return RequestId.fromString(csrs.get(0).getSubscriptionId()).getTimestampAsDateTime();
+    }
+
+
+    private List<CallSummaryRecord> mostRecentOldCsrInDb() {
         @SuppressWarnings("unchecked")
         SqlQueryExecution<List<CallSummaryRecord>> queryExecution = new SqlQueryExecution<List<CallSummaryRecord>>() {
 
             @Override
             public String getSqlQuery() {
-                String query = "SELECT * FROM nms_kk_summary_records subscriptionId like '%:%' " +
-                        "ORDER BY subscriptionId DESC LIMIT 1";
+                String query = "SELECT * FROM nms_kk_summary_records WHERE LENGTH(subscriptionId) = 51" +
+                        " ORDER BY subscriptionId DESC LIMIT 1";
                 LOGGER.debug("SQL QUERY: {}", query);
                 return query;
             }
@@ -230,12 +250,7 @@ public class CsrServiceImpl implements CsrService {
             }
         };
 
-        List<CallSummaryRecord> csrs = csrDataService.executeSQLQuery(queryExecution);
-        if (csrs == null || csrs.size() ==0) {
-            return null;
-        }
-        return RequestId.fromString(csrs.get(0).getSubscriptionId()).getTimestampAsDateTime();
-
+        return csrDataService.executeSQLQuery(queryExecution);
     }
 
 
@@ -303,6 +318,12 @@ public class CsrServiceImpl implements CsrService {
         }
 
         return found;
+    }
+
+    @MotechListener(subjects = { NMS_IMI_KK_CALC_OLD_CSR })
+    @Transactional
+    public void refreshMostRecentOldCsr(MotechEvent event) { //NOPMD NcssMethodCount
+        mostRecentOldCsrTimestamp = getMostRecentOldCsr();
     }
 
 
@@ -468,5 +489,10 @@ public class CsrServiceImpl implements CsrService {
         Timer timer = new Timer();
         long rowCount = csrDataService.executeSQLQuery(queryExecution);
         LOGGER.debug("Deleted {} rows from nms_kk_summary_records in {}", rowCount, timer.time());
+
+
+        MotechEvent motechEvent = new MotechEvent(NMS_IMI_KK_CALC_OLD_CSR);
+        eventRelay.broadcastEventMessage(motechEvent);
+
     }
 }
