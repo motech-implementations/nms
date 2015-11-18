@@ -2,10 +2,10 @@ package org.motechproject.nms.imi.exception;
 
 import java.util.List;
 
-public class InvalidCdrFileException extends IllegalStateException {
+public class InvalidCallRecordFileException extends IllegalStateException {
     private List<String> messages;
 
-    public InvalidCdrFileException(List<String> messages) {
+    public InvalidCallRecordFileException(List<String> messages) {
         this.messages = messages;
     }
 

@@ -46,7 +46,7 @@ public class District extends MdsEntity {
     private Long code;
 
     @Field
-    @Persistent(defaultFetchGroup = "true")
+    @Persistent(defaultFetchGroup = "false")
     @Column(allowsNull = "false")
     @NotNull
     @JsonBackReference
@@ -54,7 +54,7 @@ public class District extends MdsEntity {
 
     @Field
     @Cascade(delete = true)
-    @Persistent(mappedBy = "district", defaultFetchGroup = "true")
+    @Persistent(mappedBy = "district", defaultFetchGroup = "false")
     @JsonManagedReference
     private List<Taluka> talukas;
 

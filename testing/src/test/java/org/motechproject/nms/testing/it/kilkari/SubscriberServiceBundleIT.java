@@ -31,8 +31,10 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.inject.Inject;
+import java.util.Set;
 
 import static org.junit.Assert.assertNotNull;
 
@@ -68,7 +70,8 @@ public class SubscriberServiceBundleIT extends BasePaxIT {
     CircleDataService circleDataService;
     @Inject
     TestingService testingService;
-
+    @Inject
+    PlatformTransactionManager transactionManager;
 
     private SubscriptionHelper sh;
 
@@ -102,10 +105,13 @@ public class SubscriberServiceBundleIT extends BasePaxIT {
     @Test
     public void testDeleteSubscriberWithOpenSubscription() {
 
+
         Subscriber subscriber = subscriberService.getSubscriber(2000000000L);
         assertNotNull(subscriber);
 
-        Subscription subscription = subscriber.getSubscriptions().iterator().next();
+        Set<Subscription> subscriptions = (Set<Subscription>) subscriberDataService.getDetachedField(subscriber,
+                "subscriptions");
+                Subscription subscription = subscriptions.iterator().next();
         subscription.setStatus(SubscriptionStatus.COMPLETED);
         subscriptionDataService.update(subscription);
 
@@ -120,7 +126,9 @@ public class SubscriberServiceBundleIT extends BasePaxIT {
         Subscriber subscriber = subscriberService.getSubscriber(2000000000L);
         assertNotNull(subscriber);
 
-        for (Subscription subscription: subscriber.getSubscriptions()) {
+        Set<Subscription> subscriptions = (Set<Subscription>) subscriberDataService.getDetachedField(subscriber,
+                "subscriptions");
+        for (Subscription subscription: subscriptions) {
             subscription.setStatus(SubscriptionStatus.COMPLETED);
             subscription.setEndDate(new DateTime().withDate(2011, 8, 1));
             subscriptionDataService.update(subscription);

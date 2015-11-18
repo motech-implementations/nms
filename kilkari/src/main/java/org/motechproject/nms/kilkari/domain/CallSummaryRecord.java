@@ -3,88 +3,58 @@ package org.motechproject.nms.kilkari.domain;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.nms.props.domain.FinalCallStatus;
+import org.motechproject.nms.props.domain.StatusCode;
 
-import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Unique;
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
-import java.util.Map;
 
 @Entity(tableName = "nms_kk_summary_records")
 public class CallSummaryRecord {
 
     @Field
     @Unique
-    private String requestId;
-
-    @Field
-    @Min(value = 1000000000L, message = "msisdn must be 10 digits")
-    @Max(value = 9999999999L, message = "msisdn must be 10 digits")
-    @Column(length = 10)
-    private Long msisdn;
+    private String subscriptionId;
 
     @Field
     private String contentFileName;
 
     @Field
+    private String languageCode;
+
+    @Field
+    private String circleName;
+
+    @Field
     private String weekId;
 
     @Field
-    private String languageLocationCode;
-
-    @Field
-    private String circle;
+    private StatusCode statusCode;
 
     @Field
     private FinalCallStatus finalStatus;
 
+    /**
+     * Number of times the status for this call was OBD_FAILED_INVALIDNUMBER for this weekId
+     */
     @Field
-    private Map<Integer, Integer> statusStats;
-
-    @Field
-    @Min(value = 0, message = "percentPlayed must be >= 0")
-    @Max(value = 100, message = "percentPlayed must be <= 100")
-    private Integer percentPlayed;
-
-    @Field
-    private Integer callAttempts;
-
-    @Field
-    private Integer attemptedDayCount;
+    private Integer invalidNumberCount;
 
     public CallSummaryRecord() { }
 
-    public CallSummaryRecord(String requestId, Long msisdn, // NO CHECKSTYLE More than 7 parameters
-                             String contentFileName, String weekId, String languageLocationCode, String circle,
-                             FinalCallStatus finalStatus, Map<Integer, Integer> statusStats,
-                             Integer percentPlayed, Integer callAttempts, Integer attemptedDayCount) {
-        this.requestId = requestId;
-        this.msisdn = msisdn;
+    public CallSummaryRecord(String subscriptionId, String contentFileName, // NO CHECKSTYLE More than 7 parameters
+                             String languageCode, String circleName, String weekId, StatusCode statusCode,
+                             FinalCallStatus finalStatus, Integer invalidNumberCount) {
+        this.subscriptionId = subscriptionId;
         this.contentFileName = contentFileName;
+        this.languageCode = languageCode;
+        this.circleName = circleName;
         this.weekId = weekId;
-        this.languageLocationCode = languageLocationCode;
-        this.circle = circle;
+        this.statusCode = statusCode;
         this.finalStatus = finalStatus;
-        this.statusStats = statusStats;
-        this.percentPlayed = percentPlayed;
-        this.callAttempts = callAttempts;
-        this.attemptedDayCount = attemptedDayCount;
+        this.invalidNumberCount = invalidNumberCount;
     }
 
-    public String getRequestId() {
-        return requestId;
-    }
-
-    public void setRequestId(String requestId) {
-        this.requestId = requestId;
-    }
-
-    public Long getMsisdn() {
-        return msisdn;
-    }
-
-    public void setMsisdn(Long msisdn) {
-        this.msisdn = msisdn;
+    public String getSubscriptionId() {
+        return subscriptionId;
     }
 
     public String getContentFileName() {
@@ -95,6 +65,26 @@ public class CallSummaryRecord {
         this.contentFileName = contentFileName;
     }
 
+    public String getLanguageCode() {
+        return languageCode;
+    }
+
+    public void setLanguageCode(String languageCode) {
+        this.languageCode = languageCode;
+    }
+
+    public String getCircleName() {
+        return circleName;
+    }
+
+    public void setCircleName(String circleName) {
+        this.circleName = circleName;
+    }
+
+    public void setSubscriptionId(String requestId) {
+        this.subscriptionId = requestId;
+    }
+
     public String getWeekId() {
         return weekId;
     }
@@ -103,20 +93,12 @@ public class CallSummaryRecord {
         this.weekId = weekId;
     }
 
-    public String getLanguageLocationCode() {
-        return languageLocationCode;
+    public StatusCode getStatusCode() {
+        return statusCode;
     }
 
-    public void setLanguageLocationCode(String languageLocationCode) {
-        this.languageLocationCode = languageLocationCode;
-    }
-
-    public String getCircle() {
-        return circle;
-    }
-
-    public void setCircle(String circle) {
-        this.circle = circle;
+    public void setStatusCode(StatusCode statusCode) {
+        this.statusCode = statusCode;
     }
 
     public FinalCallStatus getFinalStatus() {
@@ -127,44 +109,11 @@ public class CallSummaryRecord {
         this.finalStatus = finalStatus;
     }
 
-    public Map<Integer, Integer> getStatusStats() {
-        return statusStats;
+    public Integer getInvalidNumberCount() {
+        return invalidNumberCount;
     }
 
-    public void setStatusStats(Map<Integer, Integer> statusStats) {
-        this.statusStats = statusStats;
+    public void setInvalidNumberCount(Integer invalidNumberCount) {
+        this.invalidNumberCount = invalidNumberCount;
     }
-
-    public Integer getPercentPlayed() {
-        return percentPlayed;
-    }
-
-    public void setPercentPlayed(Integer percentPlayed) {
-        this.percentPlayed = percentPlayed;
-    }
-
-    public Integer getCallAttempts() {
-        return callAttempts;
-    }
-
-    public void setCallAttempts(Integer callAttempts) {
-        this.callAttempts = callAttempts;
-    }
-
-    public Integer getAttemptedDayCount() {
-        return attemptedDayCount;
-    }
-
-    public void setAttemptedDayCount(Integer attemptedDayCount) {
-        this.attemptedDayCount = attemptedDayCount;
-    }
-
-    @Override
-    public String toString() {
-        return "CallSummaryRecord{" +
-                "requestId='" + requestId + '\'' +
-                ", msisdn=" + msisdn +
-                '}';
-    }
-
 }

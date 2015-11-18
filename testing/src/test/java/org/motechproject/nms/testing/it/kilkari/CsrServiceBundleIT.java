@@ -28,9 +28,7 @@ import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.CsrService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
-import org.motechproject.nms.props.domain.DayOfTheWeek;
 import org.motechproject.nms.props.domain.FinalCallStatus;
-import org.motechproject.nms.props.domain.RequestId;
 import org.motechproject.nms.props.domain.StatusCode;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
@@ -54,8 +52,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static junit.framework.Assert.assertNull;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(PaxExam.class)
@@ -117,7 +115,6 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
         sh.childPack();
         sh.pregnancyPack();
-        csrService.buildMessageDurationCache();
 
     }
 
@@ -135,49 +132,43 @@ public class CsrServiceBundleIT extends BasePaxIT {
     }
 
 
+    private void processCsr(CallSummaryRecordDto csr) {
+        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, CallSummaryRecordDto.toParams(csr));
+        csrService.processCallSummaryRecord(motechEvent);
+    }
+
+
     @Test
     public void verifyServiceFunctional() {
         Subscription subscription = sh.mksub(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
 
         CallSummaryRecordDto csr = new CallSummaryRecordDto(
-                new RequestId(subscription.getSubscriptionId(), "11112233445566"),
-                subscription.getSubscriber().getCallingNumber(),
+                subscription,
+                StatusCode.OBD_FAILED_NOANSWER,
+                FinalCallStatus.FAILED,
                 "w1_1.wav",
                 "w1_1",
-                rh.hindiLanguage().getCode(),
-                rh.delhiCircle().getName(),
-                FinalCallStatus.FAILED,
-                makeStatsMap(StatusCode.OBD_FAILED_INVALIDNUMBER, 3),
-                0,
-                3
+                rh.hindiLanguage(),
+                rh.delhiCircle()
         );
 
-        Map<String, Object> eventParams = new HashMap<>();
-        eventParams.put(CSR_PARAM_KEY, csr);
-        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
-        csrService.processCallSummaryRecord(motechEvent);
+        processCsr(csr);
     }
 
 
     @Test
     public void verifyInvalidWeekId() {
         Subscription subscription = sh.mksub(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
-        Map<String, Object> eventParams = new HashMap<>();
-        eventParams.put(CSR_PARAM_KEY, new CallSummaryRecordDto(
-                new RequestId(subscription.getSubscriptionId(), "11112233445566"),
-                1234567890L,
-                "w1_1.wav",
-                "xxx",
-                rh.hindiLanguage().getCode(),
-                rh.delhiCircle().getName(),
+        processCsr(new CallSummaryRecordDto(
+                subscription,
+                StatusCode.OBD_FAILED_NOANSWER,
                 FinalCallStatus.FAILED,
-                makeStatsMap(StatusCode.OBD_FAILED_INVALIDNUMBER, 3),
-                0,
-                3
+                "w1_1.wav",
+                null,
+                rh.hindiLanguage(),
+                rh.delhiCircle()
         ));
-        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
 
-        csrService.processCallSummaryRecord(motechEvent);
         AlertCriteria criteria = new AlertCriteria().byExternalId(subscription.getSubscriptionId());
         List<Alert> alerts = alertService.search(criteria);
         assertEquals(1, alerts.size());
@@ -188,22 +179,16 @@ public class CsrServiceBundleIT extends BasePaxIT {
     @Test
     public void verifyInvalidFilename() {
         Subscription subscription = sh.mksub(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
-        Map<String, Object> eventParams = new HashMap<>();
-        eventParams.put(CSR_PARAM_KEY, new CallSummaryRecordDto(
-                new RequestId(subscription.getSubscriptionId(), "11112233445566"),
-                1234567890L,
-                "xxx",
-                "w1_1",
-                rh.hindiLanguage().getCode(),
-                rh.delhiCircle().getName(),
+        processCsr(new CallSummaryRecordDto(
+                subscription,
+                StatusCode.OBD_FAILED_NOANSWER,
                 FinalCallStatus.FAILED,
-                makeStatsMap(StatusCode.OBD_FAILED_INVALIDNUMBER, 3),
-                0,
-                3
+                null,
+                "w1_1",
+                rh.hindiLanguage(),
+                rh.delhiCircle()
         ));
-        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
 
-        csrService.processCallSummaryRecord(motechEvent);
         AlertCriteria criteria = new AlertCriteria().byExternalId(subscription.getSubscriptionId());
         List<Alert> alerts = alertService.search(criteria);
         assertEquals(1, alerts.size());
@@ -214,22 +199,16 @@ public class CsrServiceBundleIT extends BasePaxIT {
     @Test
     public void verifyInvalidCircle() {
         Subscription subscription = sh.mksub(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
-        Map<String, Object> eventParams = new HashMap<>();
-        eventParams.put(CSR_PARAM_KEY, new CallSummaryRecordDto(
-                new RequestId(subscription.getSubscriptionId(), "11112233445566"),
-                1234567890L,
+        processCsr(new CallSummaryRecordDto(
+                subscription,
+                StatusCode.OBD_FAILED_NOANSWER,
+                FinalCallStatus.FAILED,
                 "w1_1.wav",
                 "w1_1",
-                rh.hindiLanguage().getCode(),
-                "xxx",
-                FinalCallStatus.FAILED,
-                makeStatsMap(StatusCode.OBD_FAILED_INVALIDNUMBER, 3),
-                0,
-                3
+                rh.hindiLanguage(),
+                null
         ));
-        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
 
-        csrService.processCallSummaryRecord(motechEvent);
         AlertCriteria criteria = new AlertCriteria().byExternalId(subscription.getSubscriptionId());
         List<Alert> alerts = alertService.search(criteria);
         assertEquals(1, alerts.size());
@@ -240,22 +219,16 @@ public class CsrServiceBundleIT extends BasePaxIT {
     @Test
     public void verifyInvalidLanguage() {
         Subscription subscription = sh.mksub(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
-        Map<String, Object> eventParams = new HashMap<>();
-        eventParams.put(CSR_PARAM_KEY, new CallSummaryRecordDto(
-                new RequestId(subscription.getSubscriptionId(), "11112233445566"),
-                1234567890L,
+        processCsr(new CallSummaryRecordDto(
+                subscription,
+                StatusCode.OBD_FAILED_NOANSWER,
+                FinalCallStatus.FAILED,
                 "w1_1.wav",
                 "w1_1",
-                "xxx",
-                rh.delhiCircle().getName(),
-                FinalCallStatus.FAILED,
-                makeStatsMap(StatusCode.OBD_FAILED_INVALIDNUMBER, 3),
-                0,
-                3
+                null,
+                rh.delhiCircle()
         ));
-        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
 
-        csrService.processCallSummaryRecord(motechEvent);
         AlertCriteria criteria = new AlertCriteria().byExternalId(subscription.getSubscriptionId());
         List<Alert> alerts = alertService.search(criteria);
         assertEquals(1, alerts.size());
@@ -270,50 +243,45 @@ public class CsrServiceBundleIT extends BasePaxIT {
         Subscription subscription = sh.mksub(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
         Subscriber subscriber = subscription.getSubscriber();
 
-        csrDataService.create(new CallSummaryRecord(
-                new RequestId(subscription.getSubscriptionId(), "11112233445555").toString(),
-                subscription.getSubscriber().getCallingNumber(),
+        processCsr(new CallSummaryRecordDto(
+                subscription,
+                StatusCode.OBD_FAILED_INVALIDNUMBER,
+                FinalCallStatus.FAILED,
                 "w1_1.wav",
                 "w1_1",
-                rh.hindiLanguage().getCode(),
-                rh.delhiCircle().getName(),
-                FinalCallStatus.FAILED,
-                makeStatsMap(StatusCode.OBD_FAILED_INVALIDNUMBER, 10),
-                0,
-                10,
-                3
+                rh.hindiLanguage(),
+                rh.delhiCircle()
         ));
 
-        callRetryDataService.create(new CallRetry(
-                subscription.getSubscriptionId(),
-                subscription.getSubscriber().getCallingNumber(),
-                DayOfTheWeek.today(),
-                CallStage.RETRY_LAST,
+        processCsr(new CallSummaryRecordDto(
+                subscription,
+                StatusCode.OBD_FAILED_INVALIDNUMBER,
+                FinalCallStatus.FAILED,
                 "w1_1.wav",
                 "w1_1",
-                rh.hindiLanguage().getCode(),
-                rh.delhiCircle().getName(),
-                SubscriptionOrigin.MCTS_IMPORT,
-                "11112233445555"
+                rh.hindiLanguage(),
+                rh.delhiCircle()
         ));
 
-        CallSummaryRecordDto csr = new CallSummaryRecordDto(
-                new RequestId(subscription.getSubscriptionId(), "11112233445566"),
-                subscription.getSubscriber().getCallingNumber(),
+        processCsr(new CallSummaryRecordDto(
+                subscription,
+                StatusCode.OBD_FAILED_INVALIDNUMBER,
+                FinalCallStatus.FAILED,
                 "w1_1.wav",
                 "w1_1",
-                rh.hindiLanguage().getCode(),
-                rh.delhiCircle().getName(),
-                FinalCallStatus.FAILED,
-                makeStatsMap(StatusCode.OBD_FAILED_INVALIDNUMBER, 3),
-                0,
-                3
-        );
+                rh.hindiLanguage(),
+                rh.delhiCircle()
+        ));
 
-        Map<String, Object> eventParams = new HashMap<>();
-        eventParams.put(CSR_PARAM_KEY, csr);
-        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
-        csrService.processCallSummaryRecord(motechEvent);
+        processCsr(new CallSummaryRecordDto(
+                subscription,
+                StatusCode.OBD_FAILED_INVALIDNUMBER,
+                FinalCallStatus.FAILED,
+                "w1_1.wav",
+                "w1_1",
+                rh.hindiLanguage(),
+                rh.delhiCircle()
+        ));
 
         subscription = subscriptionDataService.findBySubscriptionId(subscription.getSubscriptionId());
         assertEquals(SubscriptionStatus.DEACTIVATED, subscription.getStatus());
@@ -333,10 +301,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
         helper.makeRecords(1, 3, 0, 0);
 
         for (CallSummaryRecordDto record : helper.getRecords()) {
-            Map<String, Object> eventParams = new HashMap<>();
-            eventParams.put(CSR_PARAM_KEY, record);
-            MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
-            csrService.processCallSummaryRecord(motechEvent);
+            processCsr(record);
         }
 
         List<Subscription> subscriptions = subscriptionDataService.findByStatus(SubscriptionStatus.COMPLETED);
@@ -358,39 +323,31 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 SubscriptionPackType.CHILD);
 
         String contentFileName = sh.getContentMessageFile(subscription, 0);
+        String weekId = sh.getWeekId(subscription, 0);
         CallRetry retry = callRetryDataService.create(new CallRetry(
                 subscription.getSubscriptionId(),
                 subscription.getSubscriber().getCallingNumber(),
-                DayOfTheWeek.today(),
                 CallStage.RETRY_LAST,
                 contentFileName,
-                sh.getWeekId(subscription, 0),
+                weekId,
                 rh.hindiLanguage().getCode(),
                 rh.delhiCircle().getName(),
-                SubscriptionOrigin.MCTS_IMPORT,
-                now.minusDays(3).toString(TIME_FORMATTER)
+                SubscriptionOrigin.MCTS_IMPORT
         ));
 
 
         Map<Integer, Integer> callStats = new HashMap<>();
         CallSummaryRecordDto record = new CallSummaryRecordDto(
-                new RequestId(subscription.getSubscriptionId(), now.toString(TIME_FORMATTER)),
-                subscription.getSubscriber().getCallingNumber(),
-                contentFileName,
-                sh.getWeekId(subscription, 0),
-                rh.hindiLanguage().getCode(),
-                rh.delhiCircle().getName(),
+                subscription,
+                StatusCode.OBD_FAILED_NOANSWER,
                 FinalCallStatus.FAILED,
-                callStats,
-                0,
-                5
+                contentFileName,
+                weekId,
+                rh.hindiLanguage(),
+                rh.delhiCircle()
         );
 
-
-        Map<String, Object> eventParams = new HashMap<>();
-        eventParams.put(CSR_PARAM_KEY, record);
-        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
-        csrService.processCallSummaryRecord(motechEvent);
+        processCsr(record);
 
         // There should be no calls to retry since the one above was the last try
         assertEquals(0, callRetryDataService.count());
@@ -409,39 +366,31 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 SubscriptionPackType.CHILD);
 
         String contentFileName = sh.getContentMessageFile(subscription, 0);
+        String weekId = sh.getWeekId(subscription, 0);
         CallRetry retry = callRetryDataService.create(new CallRetry(
                 subscription.getSubscriptionId(),
                 subscription.getSubscriber().getCallingNumber(),
-                DayOfTheWeek.today(),
                 CallStage.RETRY_2,
                 contentFileName,
-                sh.getWeekId(subscription, 0),
+                weekId,
                 rh.hindiLanguage().getCode(),
                 rh.delhiCircle().getName(),
-                SubscriptionOrigin.MCTS_IMPORT,
-                now.minusDays(3).toString(TIME_FORMATTER)
+                SubscriptionOrigin.MCTS_IMPORT
         ));
 
 
         Map<Integer, Integer> callStats = new HashMap<>();
         CallSummaryRecordDto record = new CallSummaryRecordDto(
-                new RequestId(subscription.getSubscriptionId(), now.toString(TIME_FORMATTER)),
-                subscription.getSubscriber().getCallingNumber(),
-                contentFileName,
-                sh.getWeekId(subscription, 0),
-                rh.hindiLanguage().getCode(),
-                rh.delhiCircle().getName(),
+                subscription,
+                StatusCode.OBD_SUCCESS_CALL_CONNECTED,
                 FinalCallStatus.SUCCESS,
-                callStats,
-                0,
-                5
+                contentFileName,
+                weekId,
+                rh.hindiLanguage(),
+                rh.delhiCircle()
         );
 
-
-        Map<String, Object> eventParams = new HashMap<>();
-        eventParams.put(CSR_PARAM_KEY, record);
-        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
-        csrService.processCallSummaryRecord(motechEvent);
+        processCsr(record);
 
         // There should be no calls to retry since the one above was the last try
         assertEquals(0, callRetryDataService.count());
@@ -458,40 +407,31 @@ public class CsrServiceBundleIT extends BasePaxIT {
         Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, now.minusDays(3),
                 SubscriptionPackType.CHILD);
         String contentFileName = sh.getContentMessageFile(subscription, 0);
+        String weekId = sh.getWeekId(subscription, 0);
         CallRetry retry = callRetryDataService.create(new CallRetry(
                 subscription.getSubscriptionId(),
                 subscription.getSubscriber().getCallingNumber(),
-                null,
                 CallStage.RETRY_1,
                 contentFileName,
-                sh.getWeekId(subscription, 0),
+                weekId,
                 rh.hindiLanguage().getCode(),
                 rh.delhiCircle().getName(),
-                SubscriptionOrigin.MCTS_IMPORT,
-                now.minusDays(3).toString(TIME_FORMATTER)
+                SubscriptionOrigin.MCTS_IMPORT
         ));
 
 
-        Map<Integer, Integer> callStats = new HashMap<>();
-        callStats.put(StatusCode.OBD_FAILED_NOATTEMPT.getValue(), 1);
         CallSummaryRecordDto record = new CallSummaryRecordDto(
-                new RequestId(subscription.getSubscriptionId(), now.toString(TIME_FORMATTER)),
-                subscription.getSubscriber().getCallingNumber(),
-                contentFileName,
-                sh.getWeekId(subscription, 0),
-                rh.hindiLanguage().getCode(),
-                rh.delhiCircle().getName(),
+                subscription,
+                StatusCode.OBD_FAILED_NOATTEMPT,
                 FinalCallStatus.FAILED,
-                callStats,
-                0,
-                1
+                contentFileName,
+                weekId,
+                rh.hindiLanguage(),
+                rh.delhiCircle()
         );
 
+        processCsr(record);
 
-        Map<String, Object> eventParams = new HashMap<>();
-        eventParams.put(CSR_PARAM_KEY, record);
-        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
-        csrService.processCallSummaryRecord(motechEvent);
 
         // There should be one calls to retry since the one above was the last failed with No attempt
         assertEquals(1, callRetryDataService.count());
@@ -513,29 +453,22 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
         Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now(),SubscriptionPackType.CHILD);
         String contentFileName = sh.getContentMessageFile(subscription, 0);
+        String weekId = sh.getWeekId(subscription, 0);
 
 
         Map<Integer, Integer> callStats = new HashMap<>();
         callStats.put(StatusCode.OBD_DNIS_IN_DND.getValue(), 1);
         CallSummaryRecordDto record = new CallSummaryRecordDto(
-                new RequestId(subscription.getSubscriptionId(), timestamp),
-                subscription.getSubscriber().getCallingNumber(),
-                contentFileName,
-                sh.getWeekId(subscription, 0),
-                rh.hindiLanguage().getCode(),
-                rh.delhiCircle().getName(),
+                subscription,
+                StatusCode.OBD_DNIS_IN_DND,
                 FinalCallStatus.REJECTED,
-                callStats,
-                0,
-                1
+                contentFileName,
+                weekId,
+                rh.hindiLanguage(),
+                rh.delhiCircle()
         );
 
-
-
-        Map<String, Object> eventParams = new HashMap<>();
-        eventParams.put(CSR_PARAM_KEY, record);
-        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
-        csrService.processCallSummaryRecord(motechEvent);
+        processCsr(record);
 
         // There should be no calls to retry since the one above was the last rejected with DND reason
         assertEquals(0, callRetryDataService.count());
@@ -552,27 +485,21 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
         Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now());
         String contentFileName = sh.getContentMessageFile(subscription, 0);
+        String weekId = sh.getWeekId(subscription, 0);
 
         Map<Integer, Integer> callStats = new HashMap<>();
         callStats.put(StatusCode.OBD_FAILED_OTHERS.getValue(),1);
         CallSummaryRecordDto record = new CallSummaryRecordDto(
-                new RequestId(subscription.getSubscriptionId(), timestamp),
-                subscription.getSubscriber().getCallingNumber(),
-                contentFileName,
-                "w1_1",
-                rh.hindiLanguage().getCode(),
-                rh.delhiCircle().getName(),
+                subscription,
+                StatusCode.OBD_FAILED_OTHERS,
                 FinalCallStatus.FAILED,
-                callStats,
-                0,
-                1
+                contentFileName,
+                weekId,
+                rh.hindiLanguage(),
+                rh.delhiCircle()
         );
 
-
-        Map<String, Object> eventParams = new HashMap<>();
-        eventParams.put(CSR_PARAM_KEY, record);
-        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
-        csrService.processCallSummaryRecord(motechEvent);
+        processCsr(record);
 
         // There should be one call to retry since the one above call was rescheduled.
         assertEquals(1, callRetryDataService.count());
@@ -593,43 +520,30 @@ public class CsrServiceBundleIT extends BasePaxIT {
         Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now(),
                 SubscriptionPackType.PREGNANCY);
         String contentFileName = sh.getContentMessageFile(subscription, 0);
+        String weekId = sh.getWeekId(subscription, 0);
 
         csrDataService.create(new CallSummaryRecord(
-                new RequestId(subscription.getSubscriptionId(), "11112233445566").toString(),
-                subscription.getSubscriber().getCallingNumber(),
-                "w1_1.wav",
-                "w1_1",
-                rh.hindiLanguage().getCode(),
-                rh.delhiCircle().getName(),
-                FinalCallStatus.FAILED,
-                makeStatsMap(StatusCode.OBD_FAILED_BUSY, 1),
-                0,
-                10,
-                3
-        ));
-        Map<Integer, Integer> callStats = new HashMap<>();
-        callStats.put(StatusCode.OBD_FAILED_BUSY.getValue(), 1);
-        CallSummaryRecordDto record = new CallSummaryRecordDto(
-                new RequestId(subscription.getSubscriptionId(), timestamp),
-                subscription.getSubscriber().getCallingNumber(),
+                subscription.getSubscriptionId(),
                 contentFileName,
-                "w1_1",
                 rh.hindiLanguage().getCode(),
                 rh.delhiCircle().getName(),
+                weekId,
+                StatusCode.OBD_FAILED_BUSY,
                 FinalCallStatus.FAILED,
-                callStats,
-                0,
-                3
+                0
+        ));
+
+        CallSummaryRecordDto record = new CallSummaryRecordDto(
+                subscription,
+                StatusCode.OBD_FAILED_BUSY,
+                FinalCallStatus.FAILED,
+                contentFileName,
+                weekId,
+                rh.hindiLanguage(),
+                rh.delhiCircle()
         );
 
-
-        Map<String, Object> eventParams = new HashMap<>();
-        eventParams.put(CSR_PARAM_KEY, record);
-        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
-        csrService.processCallSummaryRecord(motechEvent);
-
-
-
+        processCsr(record);
 
         assertEquals(1, callRetryDataService.count());
 
@@ -653,39 +567,31 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
         Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, now.minusDays(3));
         String contentFileName = sh.getContentMessageFile(subscription, 0);
+        String weekId = sh.getWeekId(subscription, 0);
         CallRetry retry = callRetryDataService.create(new CallRetry(
                 subscription.getSubscriptionId(),
                 subscription.getSubscriber().getCallingNumber(),
-                null,
                 CallStage.RETRY_1,
                 contentFileName,
-                sh.getWeekId(subscription, 0),
+                weekId,
                 rh.hindiLanguage().getCode(),
                 rh.delhiCircle().getName(),
-                SubscriptionOrigin.MCTS_IMPORT,
-                now.minusDays(3).toString(TIME_FORMATTER)
+                SubscriptionOrigin.MCTS_IMPORT
         ));
 
 
         Map<Integer, Integer> callStats = new HashMap<>();
         CallSummaryRecordDto record = new CallSummaryRecordDto(
-                new RequestId(subscription.getSubscriptionId(), now.toString(TIME_FORMATTER)),
-                subscription.getSubscriber().getCallingNumber(),
-                contentFileName,
-                sh.getWeekId(subscription, 0),
-                rh.hindiLanguage().getCode(),
-                rh.delhiCircle().getName(),
+                subscription,
+                StatusCode.OBD_FAILED_NOANSWER,
                 FinalCallStatus.FAILED,
-                callStats,
-                0,
-                5
+                contentFileName,
+                weekId,
+                rh.hindiLanguage(),
+                rh.delhiCircle()
         );
 
-
-        Map<String, Object> eventParams = new HashMap<>();
-        eventParams.put(CSR_PARAM_KEY, record);
-        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
-        csrService.processCallSummaryRecord(motechEvent);
+        processCsr(record);
 
         // There should be one calls to retry since the retry 1 was failed.
         assertEquals(1, callRetryDataService.count());
@@ -710,39 +616,31 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
         Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, now.minusDays(3));
         String contentFileName = sh.getContentMessageFile(subscription, 0);
+        String weekId = sh.getWeekId(subscription, 0);
         CallRetry retry = callRetryDataService.create(new CallRetry(
                 subscription.getSubscriptionId(),
                 subscription.getSubscriber().getCallingNumber(),
-                null,
                 CallStage.RETRY_2,
                 contentFileName,
-                sh.getWeekId(subscription, 0),
+                weekId,
                 rh.hindiLanguage().getCode(),
                 rh.delhiCircle().getName(),
-                SubscriptionOrigin.MCTS_IMPORT,
-                now.minusDays(3).toString(TIME_FORMATTER)
+                SubscriptionOrigin.MCTS_IMPORT
         ));
 
 
         Map<Integer, Integer> callStats = new HashMap<>();
         CallSummaryRecordDto record = new CallSummaryRecordDto(
-                new RequestId(subscription.getSubscriptionId(), now.toString(TIME_FORMATTER)),
-                subscription.getSubscriber().getCallingNumber(),
-                contentFileName,
-                sh.getWeekId(subscription, 0),
-                rh.hindiLanguage().getCode(),
-                rh.delhiCircle().getName(),
+                subscription,
+                StatusCode.OBD_FAILED_NOANSWER,
                 FinalCallStatus.FAILED,
-                callStats,
-                0,
-                5
+                contentFileName,
+                weekId,
+                rh.hindiLanguage(),
+                rh.delhiCircle()
         );
 
-
-        Map<String, Object> eventParams = new HashMap<>();
-        eventParams.put(CSR_PARAM_KEY, record);
-        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
-        csrService.processCallSummaryRecord(motechEvent);
+        processCsr(record);
 
         // There should be one calls to retry since the retry 2 was failed.
         assertEquals(1, callRetryDataService.count());
@@ -761,24 +659,20 @@ public class CsrServiceBundleIT extends BasePaxIT {
     public void verifyFT177() {
 
         Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(14));
+        String contentFileName = sh.getContentMessageFile(subscription, 0);
+        String weekId = sh.getWeekId(subscription, 0);
 
         CallSummaryRecordDto csr = new CallSummaryRecordDto(
-                new RequestId(subscription.getSubscriptionId(), "11112233445566"),
-                subscription.getSubscriber().getCallingNumber(),
-                sh.getContentMessageFile(subscription, 0),
-                sh.getWeekId(subscription, 0),
-                rh.hindiLanguage().getCode(),
-                rh.delhiCircle().getName(),
+                subscription,
+                StatusCode.OBD_DNIS_IN_DND,
                 FinalCallStatus.REJECTED,
-                makeStatsMap(StatusCode.OBD_DNIS_IN_DND, 3),
-                0,
-                3
+                contentFileName,
+                weekId,
+                rh.hindiLanguage(),
+                rh.delhiCircle()
         );
 
-        Map<String, Object> eventParams = new HashMap<>();
-        eventParams.put(CSR_PARAM_KEY, csr);
-        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
-        csrService.processCallSummaryRecord(motechEvent);
+        processCsr(csr);
 
         // verify that subscription created via MCTS-import is still Deactivated with reason "do not disturb"
         subscription = subscriptionDataService.findBySubscriptionId(subscription.getSubscriptionId());
@@ -794,29 +688,25 @@ public class CsrServiceBundleIT extends BasePaxIT {
     @Test
     public void verifyFT163() {
 
-        Subscription subscription2 = sh.mksub(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
+        Subscription subscription = sh.mksub(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
+        String contentFileName = sh.getContentMessageFile(subscription, 0);
+        String weekId = sh.getWeekId(subscription, 0);
 
         CallSummaryRecordDto csr = new CallSummaryRecordDto(
-                new RequestId(subscription2.getSubscriptionId(), "11112233445566"),
-                subscription2.getSubscriber().getCallingNumber(),
-                sh.getContentMessageFile(subscription2, 0),
-                sh.getWeekId(subscription2, 0),
-                rh.hindiLanguage().getCode(),
-                rh.delhiCircle().getName(),
+                subscription,
+                StatusCode.OBD_DNIS_IN_DND,
                 FinalCallStatus.REJECTED,
-                makeStatsMap(StatusCode.OBD_DNIS_IN_DND, 3),
-                0,
-                3
+                contentFileName,
+                weekId,
+                rh.hindiLanguage(),
+                rh.delhiCircle()
         );
 
-        Map<String, Object> eventParams = new HashMap<>();
-        eventParams.put(CSR_PARAM_KEY, csr);
-        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
-        csrService.processCallSummaryRecord(motechEvent);
+        processCsr(csr);
 
         // verify that subscription created via IVR is still Active
-        subscription2 = subscriptionDataService.findBySubscriptionId(subscription2.getSubscriptionId());
-        assertEquals(SubscriptionStatus.ACTIVE, subscription2.getStatus());
+        subscription = subscriptionDataService.findBySubscriptionId(subscription.getSubscriptionId());
+        assertEquals(SubscriptionStatus.ACTIVE, subscription.getStatus());
     }
 
 
@@ -829,37 +719,35 @@ public class CsrServiceBundleIT extends BasePaxIT {
     public void verifyFT176() {
 
         Subscription subscription = sh.mksub(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
+        String contentFileName = sh.getContentMessageFile(subscription, 0);
+        String weekId = sh.getWeekId(subscription, 0);
 
-        callRetryDataService.create(new CallRetry(
-                subscription.getSubscriptionId(),
-                subscription.getSubscriber().getCallingNumber(),
-                null,
-                CallStage.RETRY_2,
-                sh.getContentMessageFile(subscription, 0),
-                sh.getWeekId(subscription, 0),
-                rh.hindiLanguage().getCode(),
-                rh.delhiCircle().getName(),
-                SubscriptionOrigin.MCTS_IMPORT,
-                "11112233445555"
-        ));
-
-        CallSummaryRecordDto csr = new CallSummaryRecordDto(
-                new RequestId(subscription.getSubscriptionId(), "11112233445566"),
-                subscription.getSubscriber().getCallingNumber(),
-                sh.getContentMessageFile(subscription, 0),
-                sh.getWeekId(subscription, 0),
-                rh.hindiLanguage().getCode(),
-                rh.delhiCircle().getName(),
+        processCsr(new CallSummaryRecordDto(
+                subscription,
+                StatusCode.OBD_FAILED_INVALIDNUMBER,
                 FinalCallStatus.FAILED,
-                makeStatsMap(StatusCode.OBD_FAILED_INVALIDNUMBER, 3),
-                0,
-                3
-        );
+                contentFileName,
+                weekId,
+                rh.hindiLanguage(),
+                rh.delhiCircle()));
 
-        Map<String, Object> eventParams = new HashMap<>();
-        eventParams.put(CSR_PARAM_KEY, csr);
-        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
-        csrService.processCallSummaryRecord(motechEvent);
+        processCsr(new CallSummaryRecordDto(
+                subscription,
+                StatusCode.OBD_FAILED_INVALIDNUMBER,
+                FinalCallStatus.FAILED,
+                contentFileName,
+                weekId,
+                rh.hindiLanguage(),
+                rh.delhiCircle()));
+
+        processCsr(new CallSummaryRecordDto(
+                subscription,
+                StatusCode.OBD_FAILED_INVALIDNUMBER,
+                FinalCallStatus.FAILED,
+                contentFileName,
+                weekId,
+                rh.hindiLanguage(),
+                rh.delhiCircle()));
 
         // verify that subscription is still Active
         subscription = subscriptionDataService.findBySubscriptionId(subscription.getSubscriptionId());
@@ -873,23 +761,14 @@ public class CsrServiceBundleIT extends BasePaxIT {
         assertEquals(subscription.getSubscriptionId(), retries.get(0).getSubscriptionId());
         assertEquals(CallStage.RETRY_LAST, retries.get(0).getCallStage());
 
-        csr = new CallSummaryRecordDto(
-                new RequestId(subscription.getSubscriptionId(), "11112233445566"),
-                subscription.getSubscriber().getCallingNumber(),
-                sh.getContentMessageFile(subscription, 0),
-                sh.getWeekId(subscription, 0),
-                rh.hindiLanguage().getCode(),
-                rh.delhiCircle().getName(),
+        processCsr(new CallSummaryRecordDto(
+                subscription,
+                StatusCode.OBD_FAILED_SWITCHEDOFF,
                 FinalCallStatus.FAILED,
-                makeStatsMap(StatusCode.OBD_FAILED_SWITCHEDOFF, 3),
-                0,
-                3
-        );
-
-        eventParams = new HashMap<>();
-        eventParams.put(CSR_PARAM_KEY, csr);
-        motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
-        csrService.processCallSummaryRecord(motechEvent);
+                contentFileName,
+                weekId,
+                rh.hindiLanguage(),
+                rh.delhiCircle()));
 
         // verify that subscription is still Active, it is not deactivated because call was not failed
         // due to invalid number for all retries.
@@ -897,7 +776,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
         assertEquals(SubscriptionStatus.ACTIVE, subscription.getStatus());
     }
 
-    
+
     /**
      * To check that NMS shall not retry OBD message for which all OBD attempts(1 actual+1 retry) fails with
      * two message per week configuration.
@@ -913,42 +792,32 @@ public class CsrServiceBundleIT extends BasePaxIT {
         Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, now.minusDays(3),
                 SubscriptionPackType.PREGNANCY);
         String contentFileName = sh.getContentMessageFile(subscription, 0);
+        String weekId = sh.getWeekId(subscription, 0);
         CallRetry retry = callRetryDataService.create(new CallRetry(
                 subscription.getSubscriptionId(),
                 subscription.getSubscriber().getCallingNumber(),
-                DayOfTheWeek.today(),
                 CallStage.RETRY_1,
                 contentFileName,
-                sh.getWeekId(subscription, 0),
+                weekId,
                 rh.hindiLanguage().getCode(),
                 rh.delhiCircle().getName(),
-                SubscriptionOrigin.MCTS_IMPORT,
-                now.minusDays(3).toString(TIME_FORMATTER)
+                SubscriptionOrigin.MCTS_IMPORT
         ));
 
 
-        Map<Integer, Integer> callStats = new HashMap<>();
-        CallSummaryRecordDto record = new CallSummaryRecordDto(
-                new RequestId(subscription.getSubscriptionId(), now.toString(TIME_FORMATTER)),
-                subscription.getSubscriber().getCallingNumber(),
-                contentFileName,
-                sh.getWeekId(subscription, 0),
-                rh.hindiLanguage().getCode(),
-                rh.delhiCircle().getName(),
+        processCsr(new CallSummaryRecordDto(
+                subscription,
+                StatusCode.OBD_FAILED_NOANSWER,
                 FinalCallStatus.FAILED,
-                callStats,
-                0,
-                5
-        );
-
-        Map<String, Object> eventParams = new HashMap<>();
-        eventParams.put(CSR_PARAM_KEY, record);
-        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
-        csrService.processCallSummaryRecord(motechEvent);
+                contentFileName,
+                weekId,
+                rh.hindiLanguage(),
+                rh.delhiCircle()));
 
         // There should be no calls to retry since the one above was the last try
         assertEquals(0, callRetryDataService.count());
     }
+
 
     /*
     * To verify that childPack Subscription should not be marked completed after just first retry.
@@ -958,54 +827,45 @@ public class CsrServiceBundleIT extends BasePaxIT {
         DateTime now = DateTime.now();
 
         int days = sh.childPack().getWeeks() * 7;
-        Subscription sub = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, now.minusDays(days),
+        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, now.minusDays(days),
                 SubscriptionPackType.CHILD);
+        String contentFileName = sh.getContentMessageFile(subscription, 0);
+        String weekId = sh.getWeekId(subscription, 0);
 
         callRetryDataService.create(new CallRetry(
-                sub.getSubscriptionId(),
-                sub.getSubscriber().getCallingNumber(),
-                null,
+                subscription.getSubscriptionId(),
+                subscription.getSubscriber().getCallingNumber(),
                 CallStage.RETRY_1,
-                "w48_1.wav",
-                "w48_1",
+                contentFileName,
+                weekId,
                 rh.hindiLanguage().getCode(),
                 rh.delhiCircle().getName(),
-                SubscriptionOrigin.MCTS_IMPORT,
-                now.minusDays(3).toString(TIME_FORMATTER)
+                SubscriptionOrigin.MCTS_IMPORT
         ));
 
-        int index = sh.getLastMessageIndex(sub);
-        CallSummaryRecordDto r = new CallSummaryRecordDto(
-                new RequestId(sub.getSubscriptionId(), now.toString(TIME_FORMATTER)),
-                sub.getSubscriber().getCallingNumber(),
-                sh.getContentMessageFile(sub, index),
-                sh.getWeekId(sub, index),
-                sh.getLanguageCode(sub),
-                sh.getCircle(sub),
+        processCsr(new CallSummaryRecordDto(
+                subscription,
+                StatusCode.OBD_FAILED_SWITCHEDOFF,
                 FinalCallStatus.FAILED,
-                makeStatsMap(StatusCode.OBD_FAILED_SWITCHEDOFF, 10),
-                120,
-                1
-        );
-
-        Map<String, Object> eventParams = new HashMap<>();
-        eventParams.put(CSR_PARAM_KEY, r);
-        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
-        csrService.processCallSummaryRecord(motechEvent);
+                contentFileName,
+                weekId,
+                rh.hindiLanguage(),
+                rh.delhiCircle()));
 
         // There should be one calls to retry since the retry 2 was failed.
         assertEquals(1, callRetryDataService.count());
 
         List<CallRetry> retries = callRetryDataService.retrieveAll();
 
-        assertEquals(sub.getSubscriptionId(), retries.get(0).getSubscriptionId());
+        assertEquals(subscription.getSubscriptionId(), retries.get(0).getSubscriptionId());
         assertEquals(CallStage.RETRY_2, retries.get(0).getCallStage());
 
         // verify that subscription is still Active, as last message was not delivered successfully and retries
         // are left
-        sub = subscriptionDataService.findBySubscriptionId(sub.getSubscriptionId());
-        assertEquals(SubscriptionStatus.ACTIVE, sub.getStatus());
+        subscription = subscriptionDataService.findBySubscriptionId(subscription.getSubscriptionId());
+        assertEquals(SubscriptionStatus.ACTIVE, subscription.getStatus());
     }
+
 
     /**
      To verify that pregnancyPack beneficiary will be  deactivated if the error “user number does not exist” is
@@ -1016,24 +876,17 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
         Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now(),
                 SubscriptionPackType.PREGNANCY);
+        String contentFileName = sh.getContentMessageFile(subscription, 0);
+        String weekId = sh.getWeekId(subscription, 0);
 
-        CallSummaryRecordDto csr = new CallSummaryRecordDto(
-                new RequestId(subscription.getSubscriptionId(), "11112233445555"),
-                subscription.getSubscriber().getCallingNumber(),
-                sh.getContentMessageFile(subscription, 0),
-                sh.getWeekId(subscription, 0),
-                rh.hindiLanguage().getCode(),
-                rh.delhiCircle().getName(),
+        processCsr(new CallSummaryRecordDto(
+                subscription,
+                StatusCode.OBD_FAILED_INVALIDNUMBER,
                 FinalCallStatus.FAILED,
-                makeStatsMap(StatusCode.OBD_FAILED_INVALIDNUMBER, 3),
-                0,
-                3
-        );
-
-        Map<String, Object> eventParams = new HashMap<>();
-        eventParams.put(CSR_PARAM_KEY, csr);
-        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
-        csrService.processCallSummaryRecord(motechEvent);
+                contentFileName,
+                weekId,
+                rh.hindiLanguage(),
+                rh.delhiCircle()));
 
         // verify that subscription is still Active
         subscription = subscriptionDataService.findBySubscriptionId(subscription.getSubscriptionId());
@@ -1047,23 +900,15 @@ public class CsrServiceBundleIT extends BasePaxIT {
         assertEquals(subscription.getSubscriptionId(), retries.get(0).getSubscriptionId());
         assertEquals(CallStage.RETRY_1, retries.get(0).getCallStage());
 
-        csr = new CallSummaryRecordDto(
-                new RequestId(subscription.getSubscriptionId(), "11112233445566"),
-                subscription.getSubscriber().getCallingNumber(),
-                sh.getContentMessageFile(subscription, 0),
-                sh.getWeekId(subscription, 0),
-                rh.hindiLanguage().getCode(),
-                rh.delhiCircle().getName(),
+        processCsr(new CallSummaryRecordDto(
+                subscription,
+                StatusCode.OBD_FAILED_INVALIDNUMBER,
                 FinalCallStatus.FAILED,
-                makeStatsMap(StatusCode.OBD_FAILED_INVALIDNUMBER, 3),
-                0,
-                3
-        );
+                contentFileName,
+                weekId,
+                rh.hindiLanguage(),
+                rh.delhiCircle()));
 
-        eventParams = new HashMap<>();
-        eventParams.put(CSR_PARAM_KEY, csr);
-        motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
-        csrService.processCallSummaryRecord(motechEvent);
 
         // verify that subscription is deactivated, call was failed due to invalid number for all attempts.
         subscription = subscriptionDataService.findBySubscriptionId(subscription.getSubscriptionId());
@@ -1071,8 +916,9 @@ public class CsrServiceBundleIT extends BasePaxIT {
         assertEquals(DeactivationReason.INVALID_NUMBER, subscription.getDeactivationReason());
     }
 
+
     /**
-     *To verify that pregnancyPack beneficiary should not be  deactivated if the error “user number does
+     *To verify that pregnancyPack beneficiary should not be deactivated if the error “user number does
      *not exist” is not received for all failed delivery attempts during a scheduling period for a message.
      */
     @Test
@@ -1080,24 +926,17 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
         Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now(),
                 SubscriptionPackType.PREGNANCY);
+        String contentFileName = sh.getContentMessageFile(subscription, 0);
+        String weekId = sh.getWeekId(subscription, 0);
 
-        CallSummaryRecordDto csr = new CallSummaryRecordDto(
-                new RequestId(subscription.getSubscriptionId(), "11112233445566"),
-                subscription.getSubscriber().getCallingNumber(),
-                sh.getContentMessageFile(subscription, 0),
-                sh.getWeekId(subscription, 0),
-                rh.hindiLanguage().getCode(),
-                rh.delhiCircle().getName(),
+        processCsr(new CallSummaryRecordDto(
+                subscription,
+                StatusCode.OBD_FAILED_SWITCHEDOFF,
                 FinalCallStatus.FAILED,
-                makeStatsMap(StatusCode.OBD_FAILED_SWITCHEDOFF, 3),
-                0,
-                3
-        );
-
-        Map<String, Object> eventParams = new HashMap<>();
-        eventParams.put(CSR_PARAM_KEY, csr);
-        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
-        csrService.processCallSummaryRecord(motechEvent);
+                contentFileName,
+                weekId,
+                rh.hindiLanguage(),
+                rh.delhiCircle()));
 
         // verify that subscription is still Active
         subscription = subscriptionDataService.findBySubscriptionId(subscription.getSubscriptionId());
@@ -1111,29 +950,21 @@ public class CsrServiceBundleIT extends BasePaxIT {
         assertEquals(subscription.getSubscriptionId(), retries.get(0).getSubscriptionId());
         assertEquals(CallStage.RETRY_1, retries.get(0).getCallStage());
 
-        csr = new CallSummaryRecordDto(
-                new RequestId(subscription.getSubscriptionId(), "11112233445566"),
-                subscription.getSubscriber().getCallingNumber(),
-                sh.getContentMessageFile(subscription, 0),
-                sh.getWeekId(subscription, 0),
-                rh.hindiLanguage().getCode(),
-                rh.delhiCircle().getName(),
+        processCsr(new CallSummaryRecordDto(
+                subscription,
+                StatusCode.OBD_FAILED_INVALIDNUMBER,
                 FinalCallStatus.FAILED,
-                makeStatsMap(StatusCode.OBD_FAILED_INVALIDNUMBER, 3),
-                0,
-                3
-        );
-
-        eventParams = new HashMap<>();
-        eventParams.put(CSR_PARAM_KEY, csr);
-        motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
-        csrService.processCallSummaryRecord(motechEvent);
+                contentFileName,
+                weekId,
+                rh.hindiLanguage(),
+                rh.delhiCircle()));
 
         // verify that subscription is still Active, it is not deactivated because call was not failed
         // due to invalid number for all retries.
         subscription = subscriptionDataService.findBySubscriptionId(subscription.getSubscriptionId());
         assertEquals(SubscriptionStatus.ACTIVE, subscription.getStatus());
     }
+
 
     /*
     *To verify 72Weeks Pack is marked completed after the Service Pack runs for its scheduled duration.
@@ -1143,28 +974,23 @@ public class CsrServiceBundleIT extends BasePaxIT {
         String timestamp = DateTime.now().toString(TIME_FORMATTER);
 
         int days = sh.pregnancyPack().getWeeks() * 7;
-        Subscription sub = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(days),
+        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(days),
                 SubscriptionPackType.PREGNANCY);
-        int index = sh.getLastMessageIndex(sub);
-        CallSummaryRecordDto r = new CallSummaryRecordDto(
-                new RequestId(sub.getSubscriptionId(), timestamp),
-                sub.getSubscriber().getCallingNumber(),
-                sh.getContentMessageFile(sub, index),
-                sh.getWeekId(sub, index),
-                rh.hindiLanguage().getCode(),
-                sh.getCircle(sub),
-                FinalCallStatus.SUCCESS,
-                makeStatsMap(StatusCode.OBD_SUCCESS_CALL_CONNECTED, 1),
-                120,
-                1
-        );
+        int index = sh.getLastMessageIndex(subscription);
+        String contentFileName = sh.getContentMessageFile(subscription, index);
+        String weekId = sh.getWeekId(subscription, index);
 
-        Map<String, Object> eventParams = new HashMap<>();
-        eventParams.put(CSR_PARAM_KEY, r);
-        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
-        csrService.processCallSummaryRecord(motechEvent);
-        sub = subscriptionDataService.findBySubscriptionId(sub.getSubscriptionId());
-        assertTrue(SubscriptionStatus.COMPLETED == sub.getStatus());
+        processCsr(new CallSummaryRecordDto(
+                subscription,
+                StatusCode.OBD_SUCCESS_CALL_CONNECTED,
+                FinalCallStatus.SUCCESS,
+                contentFileName,
+                weekId,
+                rh.hindiLanguage(),
+                rh.delhiCircle()));
+
+        subscription = subscriptionDataService.findBySubscriptionId(subscription.getSubscriptionId());
+        assertTrue(SubscriptionStatus.COMPLETED == subscription.getStatus());
     }
 
     /*
@@ -1176,45 +1002,37 @@ public class CsrServiceBundleIT extends BasePaxIT {
         String timestamp = DateTime.now().toString(TIME_FORMATTER);
 
         int days = sh.pregnancyPack().getWeeks() * 7;
-        Subscription sub = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(days),
+        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(days),
                 SubscriptionPackType.PREGNANCY);
+        int index = sh.getLastMessageIndex(subscription);
+        String contentFileName = sh.getContentMessageFile(subscription, index);
+        String weekId = sh.getWeekId(subscription, index);
 
         callRetryDataService.create(new CallRetry(
-                sub.getSubscriptionId(),
-                sub.getSubscriber().getCallingNumber(),
-                DayOfTheWeek.today(),
+                subscription.getSubscriptionId(),
+                subscription.getSubscriber().getCallingNumber(),
                 CallStage.RETRY_1,
-                "w72_2.wav",
-                "w72_2",
+                contentFileName,
+                weekId,
                 rh.hindiLanguage().getCode(),
                 rh.delhiCircle().getName(),
-                SubscriptionOrigin.MCTS_IMPORT,
-                timestamp
+                SubscriptionOrigin.MCTS_IMPORT
         ));
 
-        int index = sh.getLastMessageIndex(sub);
-        CallSummaryRecordDto r = new CallSummaryRecordDto(
-                new RequestId(sub.getSubscriptionId(), timestamp),
-                sub.getSubscriber().getCallingNumber(),
-                sh.getContentMessageFile(sub, index),
-                sh.getWeekId(sub, index),
-                rh.hindiLanguage().getCode(),
-                sh.getCircle(sub),
+        processCsr(new CallSummaryRecordDto(
+                subscription,
+                StatusCode.OBD_SUCCESS_CALL_CONNECTED,
                 FinalCallStatus.SUCCESS,
-                makeStatsMap(StatusCode.OBD_SUCCESS_CALL_CONNECTED, 1),
-                120,
-                1
-        );
+                contentFileName,
+                weekId,
+                rh.hindiLanguage(),
+                rh.delhiCircle()));
 
-        Map<String, Object> eventParams = new HashMap<>();
-        eventParams.put(CSR_PARAM_KEY, r);
-        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
-        csrService.processCallSummaryRecord(motechEvent);
-        sub = subscriptionDataService.findBySubscriptionId(sub.getSubscriptionId());
-        assertTrue(SubscriptionStatus.COMPLETED == sub.getStatus());
+        subscription = subscriptionDataService.findBySubscriptionId(subscription.getSubscriptionId());
+        assertTrue(SubscriptionStatus.COMPLETED == subscription.getStatus());
 
         // verify call retry entry is also deleted from the database
-        CallRetry retry = callRetryDataService.findBySubscriptionId(sub.getSubscriptionId());
+        CallRetry retry = callRetryDataService.findBySubscriptionId(subscription.getSubscriptionId());
         assertNull(retry);
     }
 
@@ -1227,45 +1045,37 @@ public class CsrServiceBundleIT extends BasePaxIT {
         String timestamp = DateTime.now().toString(TIME_FORMATTER);
 
         int days = sh.childPack().getWeeks() * 7;
-        Subscription sub = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(days),
+        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(days),
                 SubscriptionPackType.CHILD);
+        int index = sh.getLastMessageIndex(subscription);
+        String contentFileName = sh.getContentMessageFile(subscription, index);
+        String weekId = sh.getWeekId(subscription, index);
 
         callRetryDataService.create(new CallRetry(
-                sub.getSubscriptionId(),
-                sub.getSubscriber().getCallingNumber(),
-                DayOfTheWeek.today(),
+                subscription.getSubscriptionId(),
+                subscription.getSubscriber().getCallingNumber(),
                 CallStage.RETRY_1,
-                "w48_1.wav",
-                "w48_1",
+                contentFileName,
+                weekId,
                 rh.hindiLanguage().getCode(),
                 rh.delhiCircle().getName(),
-                SubscriptionOrigin.MCTS_IMPORT,
-                timestamp
+                SubscriptionOrigin.MCTS_IMPORT
         ));
 
-        int index = sh.getLastMessageIndex(sub);
-        CallSummaryRecordDto r = new CallSummaryRecordDto(
-                new RequestId(sub.getSubscriptionId(), timestamp),
-                sub.getSubscriber().getCallingNumber(),
-                sh.getContentMessageFile(sub, index),
-                sh.getWeekId(sub, index),
-                rh.hindiLanguage().getCode(),
-                sh.getCircle(sub),
+        processCsr(new CallSummaryRecordDto(
+                subscription,
+                StatusCode.OBD_SUCCESS_CALL_CONNECTED,
                 FinalCallStatus.SUCCESS,
-                makeStatsMap(StatusCode.OBD_SUCCESS_CALL_CONNECTED, 1),
-                120,
-                1
-        );
+                contentFileName,
+                weekId,
+                rh.hindiLanguage(),
+                rh.delhiCircle()));
 
-        Map<String, Object> eventParams = new HashMap<>();
-        eventParams.put(CSR_PARAM_KEY, r);
-        MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
-        csrService.processCallSummaryRecord(motechEvent);
-        sub = subscriptionDataService.findBySubscriptionId(sub.getSubscriptionId());
-        assertTrue(SubscriptionStatus.COMPLETED == sub.getStatus());
+        subscription = subscriptionDataService.findBySubscriptionId(subscription.getSubscriptionId());
+        assertTrue(SubscriptionStatus.COMPLETED == subscription.getStatus());
 
         // verify call retry entry is also deleted from the database
-        CallRetry retry = callRetryDataService.findBySubscriptionId(sub.getSubscriptionId());
+        CallRetry retry = callRetryDataService.findBySubscriptionId(subscription.getSubscriptionId());
         assertNull(retry);
     }
 
@@ -1282,17 +1092,13 @@ public class CsrServiceBundleIT extends BasePaxIT {
         helper.makeRecords(1, 0, 0, 0);
 
         for (CallSummaryRecordDto record : helper.getRecords()) {
-            Map<String, Object> eventParams = new HashMap<>();
-            eventParams.put(CSR_PARAM_KEY, record);
-            MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, eventParams);
-            csrService.processCallSummaryRecord(motechEvent);
+
+        processCsr(record);
+
         }
 
         List<Subscription> subscriptions = subscriptionDataService.retrieveAll();
         assertEquals(1, subscriptions.size());
         assertEquals(false,subscriptions.get(0).getNeedsWelcomeMessageViaObd());
     }
-
-    //todo: verify multiple days' worth of summary record aggregation
-    //todo: verify more stuff I can't think of now
 }

@@ -24,8 +24,6 @@ public class ExecHelper {
      */
 
     public void exec(String command, long timeout) throws ExecException {
-        error = null;
-
         LOGGER.debug(command);
 
         Runtime runtime = Runtime.getRuntime();
@@ -43,7 +41,7 @@ public class ExecHelper {
             if (worker.exit != null) {
                 if (worker.exit != 0) {
                     throw new ExecException(String.format("Error %d running '%s': %s", worker.exit, command,
-                            error));
+                            worker.error));
                 }
             } else {
                 throw new ExecException(String.format("Timeout error running '%s'", command));
@@ -84,21 +82,20 @@ public class ExecHelper {
 
         private final Process process;
         private Integer exit;
+        private String error;
         private Worker(Process process) {
             this.process = process;
         }
         public void run() {
             logger.debug("run()");
             try {
-                logger.debug("waitFor()");
                 exit = process.waitFor();
                 if (exit != 0) {
-                    logger.error(stream(process.getErrorStream()));
-                } else {
-                    logger.debug("success");
+                    error = stream(process.getErrorStream());
+                    logger.error(error);
                 }
             } catch (InterruptedException ignore) {
-                logger.debug("InterruptedException: {}", ignore.getMessage());
+                logger.error("InterruptedException: {}", ignore.getMessage());
             }
         }
     }

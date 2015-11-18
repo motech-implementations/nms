@@ -27,6 +27,7 @@ import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
+import org.motechproject.nms.kilkari.service.CsrVerifierService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
 import org.motechproject.nms.region.domain.Circle;
@@ -41,6 +42,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.jdo.Query;
 import java.util.Iterator;
@@ -80,17 +82,19 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private SubscriptionDataService subscriptionDataService;
     private SubscriptionErrorDataService subscriptionErrorDataService;
     private CallRetryDataService callRetryDataService;
+    private CsrVerifierService csrVerifierService;
     private EventRelay eventRelay;
 
     @Autowired
-    public SubscriptionServiceImpl(@Qualifier("kilkariSettings") SettingsFacade settingsFacade,
+    public SubscriptionServiceImpl(@Qualifier("kilkariSettings") SettingsFacade settingsFacade, // NO CHECKSTYLE More than 7 parameters
                                    MotechSchedulerService schedulerService,
                                    SubscriberDataService subscriberDataService,
                                    SubscriptionPackDataService subscriptionPackDataService,
                                    SubscriptionDataService subscriptionDataService,
                                    SubscriptionErrorDataService subscriptionErrorDataService,
                                    EventRelay eventRelay,
-                                   CallRetryDataService callRetryDataService) {
+                                   CallRetryDataService callRetryDataService,
+                                   CsrVerifierService csrVerifierService) {
         this.subscriberDataService = subscriberDataService;
         this.subscriptionPackDataService = subscriptionPackDataService;
         this.subscriptionDataService = subscriptionDataService;
@@ -99,6 +103,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         this.settingsFacade = settingsFacade;
         this.eventRelay = eventRelay;
         this.callRetryDataService = callRetryDataService;
+        this.csrVerifierService = csrVerifierService;
 
         schedulePurgeOfOldSubscriptions();
     }
@@ -168,6 +173,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @MotechListener(subjects = { SUBSCRIPTION_PURGE_EVENT_SUBJECT })
+    @Transactional
     public void purgeOldInvalidSubscriptions(MotechEvent event) {
         int weeksToKeepInvalidFLWs = Integer.parseInt(settingsFacade.getProperty(WEEKS_TO_KEEP_CLOSED_SUBSCRIPTIONS));
         final SubscriptionStatus completed = SubscriptionStatus.COMPLETED;
@@ -194,6 +200,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         int purgedSubscribers = 0;
         int purgedSubscriptions = 0;
         for (Subscription subscription : purgeList) {
+            String subscriptionId = subscription.getSubscriptionId();
             Long callingNumber = subscription.getSubscriber().getCallingNumber();
 
             // If, for some reason, there is a retry record for that subscription, delete it too.
@@ -211,7 +218,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             purgedSubscriptions++;
             if (subscriber.getSubscriptions().size() == 0) {
                 LOGGER.debug("Purging subscriber for subscription {} as it was the last subscription for that subscriber",
-                        subscription.getSubscriptionId());
+                        subscriptionId);
                 subscriberDataService.delete(subscriber);
                 purgedSubscribers++;
             }
@@ -259,7 +266,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
         Long rowCount = subscriptionDataService.executeSQLQuery(queryExecution);
         LOGGER.debug(String.format("Updated %d subscription(s) to COMPLETED", rowCount));
-        subscriptionDataService.evictEntityCache(false); // no need to evict sub-entity classes
+        subscriptionDataService.evictEntityCache(true); // no need to evict sub-entity classes
     }
 
     @Override
@@ -303,7 +310,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             subscriberDataService.create(subscriber);
         }
 
-        // todo: switch to subscriber.getLanguage() & .getCircle() when the ticket is fixed
+        // todo: switch to subscriber.getLanguage() & .getCircleName() when the ticket is fixed
         // https://applab.atlassian.net/browse/MOTECH-1678
         Language subscriberLanguage = (Language) subscriberDataService.getDetachedField(subscriber, "language");
         Circle subscriberCircle = (Circle) subscriberDataService.getDetachedField(subscriber, "circle");
@@ -516,7 +523,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     @Override
     @Cacheable(value = "pack", key = "'0-'.concat(#p0)")
     public SubscriptionPack getSubscriptionPack(SubscriptionPackType type) {
-        LOGGER.debug("*** NO CACHE getSubscriptionPack(type={}) ***", type);
         return subscriptionPackDataService.byType(type);
     }
 
@@ -524,7 +530,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     @Override
     @Cacheable(value = "pack", key = "#p0.concat('-0')")
     public SubscriptionPack getSubscriptionPack(String name) {
-        LOGGER.debug("*** NO CACHE getSubscriptionPack(name={}) ***", name);
         return subscriptionPackDataService.byName(name);
     }
 
@@ -587,16 +592,15 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     @CacheEvict(value = {"pack" }, allEntries = true)
     public void broadcastCacheEvictMessage(SubscriptionPack pack) {
-        LOGGER.debug("*** BROADCAST CACHE EVICT MSG ***");
         MotechEvent motechEvent = new MotechEvent(PACK_CACHE_EVICT_MESSAGE);
-        eventRelay.sendEventMessage(motechEvent);
+        eventRelay.broadcastEventMessage(motechEvent);
     }
 
 
     @MotechListener(subjects = { PACK_CACHE_EVICT_MESSAGE })
     @CacheEvict(value = {"pack" }, allEntries = true)
     public void cacheEvict(MotechEvent event) {
-        LOGGER.debug("*** RECEIVE CACHE EVICT MSG ***");
+        csrVerifierService.cacheEvict();
     }
 
 

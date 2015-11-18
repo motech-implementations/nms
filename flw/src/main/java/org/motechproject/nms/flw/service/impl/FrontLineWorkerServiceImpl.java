@@ -99,6 +99,7 @@ public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
     }
 
     @MotechListener(subjects = { FLW_PURGE_EVENT_SUBJECT })
+    @Transactional
     public void purgeOldInvalidFLWs(MotechEvent event) {
         int weeksToKeepInvalidFLWs = Integer.parseInt(settingsFacade.getProperty(WEEKS_TO_KEEP_INVALID_FLWS));
         final FrontLineWorkerStatus status = FrontLineWorkerStatus.INVALID;

@@ -3,7 +3,7 @@ package org.motechproject.nms.kilkari.domain;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.domain.MdsEntity;
-import org.motechproject.nms.props.domain.DayOfTheWeek;
+import org.motechproject.nms.props.service.LogHelper;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Unique;
@@ -23,9 +23,6 @@ public class CallRetry extends MdsEntity {
     private Long msisdn;
 
     @Field
-    private DayOfTheWeek dayOfTheWeek;
-
-    @Field
     private CallStage callStage;
 
     @Field
@@ -43,30 +40,19 @@ public class CallRetry extends MdsEntity {
     @Field
     private SubscriptionOrigin subscriptionOrigin;
 
-    /**
-     * the time at which this callRetry was created (extracted from a RequestId)
-     * allows us to check for duplicate callRetry and end up with better CDR processing logic when dealing with
-     * bad data from IMI
-     */
-    @Field
-    private String timestamp;
-
     public CallRetry() { }
 
     public CallRetry(String subscriptionId, Long msisdn, //NO CHECKSTYLE More than 7 parameters
-                     DayOfTheWeek dayOfTheWeek, CallStage callStage, String contentFileName, String weekId,
-                     String languageLocationCode, String circle, SubscriptionOrigin subscriptionOrigin,
-                     String timestamp) {
+                     CallStage callStage, String contentFileName, String weekId, String languageLocationCode,
+                     String circle, SubscriptionOrigin subscriptionOrigin) {
         this.subscriptionId = subscriptionId;
         this.msisdn = msisdn;
-        this.dayOfTheWeek = dayOfTheWeek;
         this.callStage = callStage;
         this.contentFileName = contentFileName;
         this.weekId = weekId;
         this.languageLocationCode = languageLocationCode;
         this.circle = circle;
         this.subscriptionOrigin = subscriptionOrigin;
-        this.timestamp = timestamp;
     }
 
     public String getSubscriptionId() {
@@ -83,14 +69,6 @@ public class CallRetry extends MdsEntity {
 
     public void setMsisdn(Long msisdn) {
         this.msisdn = msisdn;
-    }
-
-    public DayOfTheWeek getDayOfTheWeek() {
-        return dayOfTheWeek;
-    }
-
-    public void setDayOfTheWeek(DayOfTheWeek dayOfTheWeek) {
-        this.dayOfTheWeek = dayOfTheWeek;
     }
 
     public CallStage getCallStage() {
@@ -141,27 +119,17 @@ public class CallRetry extends MdsEntity {
         this.subscriptionOrigin = subscriptionOrigin;
     }
 
-    public String getTimestamp() {
-        return timestamp;
-    }
-
-    public void setTimestamp(String timestamp) {
-        this.timestamp = timestamp;
-    }
-
     @Override
     public String toString() {
         return "CallRetry{" +
                 "subscriptionId='" + subscriptionId + '\'' +
-                ", msisdn=" + msisdn +
-                ", dayOfTheWeek=" + dayOfTheWeek +
+                ", msisdn=" + LogHelper.obscure(msisdn) +
                 ", callStage=" + callStage +
                 ", contentFileName='" + contentFileName + '\'' +
                 ", weekId='" + weekId + '\'' +
                 ", languageLocationCode='" + languageLocationCode + '\'' +
                 ", circle='" + circle + '\'' +
-                ", subscriptionOrigin='" + subscriptionOrigin + '\'' +
-                ", timestamp='" + timestamp + '\'' +
+                ", subscriptionOrigin=" + subscriptionOrigin +
                 '}';
     }
 }

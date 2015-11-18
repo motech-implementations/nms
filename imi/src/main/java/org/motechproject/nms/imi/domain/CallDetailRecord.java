@@ -3,10 +3,13 @@ package org.motechproject.nms.imi.domain;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 
+import javax.jdo.annotations.Index;
+
 /**
  * See NMS API - 4.4.3 CDR Detail File Format
  */
 @Entity(tableName = "nms_imi_cdrs")
+@Index(members = { "requestId" })
 public class CallDetailRecord {
 
     @Field

@@ -235,9 +235,9 @@ public class Subscription extends MdsEntity {
         }
     }
 
-    public SubscriptionPackMessage getMessageByWeekAndMessageId(int week, int message) {
+    public SubscriptionPackMessage getMessageByWeekAndMessageId(int week, int day) {
 
-        String weekId = String.format(WEEK_ID_FORMAT, week, message);
+        String weekId = String.format(WEEK_ID_FORMAT, week, day);
         // TODO: This is inefficient but don't want to deal with performance yet. Worst case, we will iterate
         // over 72x2 messages every time. Ideally, we would do a select using lambdaj and the likes
         for (SubscriptionPackMessage currentMessage : subscriptionPack.getMessages()) {
@@ -247,7 +247,8 @@ public class Subscription extends MdsEntity {
         }
 
         throw new IllegalStateException(String.format(
-                "Subscription with ID %s has no message in pack for given week and day. Check deployment", subscriptionId));
+                "Subscription with ID %s has no message in pack for given week(%d) and day(%d). Check deployment",
+                subscriptionId, week, day));
     }
 
     /**

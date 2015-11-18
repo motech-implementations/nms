@@ -1,133 +1,68 @@
 package org.motechproject.nms.kilkari.service.impl;
 
+import org.apache.commons.lang.exception.ExceptionUtils;
+import org.datanucleus.store.rdbms.query.ForwardQueryResult;
 import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.alerts.domain.AlertStatus;
 import org.motechproject.alerts.domain.AlertType;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.annotations.MotechListener;
+import org.motechproject.mds.query.SqlQueryExecution;
+import org.motechproject.metrics.service.Timer;
 import org.motechproject.nms.kilkari.domain.CallRetry;
 import org.motechproject.nms.kilkari.domain.CallStage;
 import org.motechproject.nms.kilkari.domain.CallSummaryRecord;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
-import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
-import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.dto.CallSummaryRecordDto;
-import org.motechproject.nms.kilkari.exception.InvalidCdrData;
+import org.motechproject.nms.kilkari.exception.InvalidCallRecordDataException;
+import org.motechproject.nms.kilkari.exception.NoSuchSubscriptionException;
 import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.CallSummaryRecordDataService;
-import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
-import org.motechproject.nms.kilkari.repository.SubscriptionPackMessageDataService;
 import org.motechproject.nms.kilkari.service.CsrService;
+import org.motechproject.nms.kilkari.service.CsrVerifierService;
+import org.motechproject.nms.props.domain.FinalCallStatus;
 import org.motechproject.nms.props.domain.RequestId;
 import org.motechproject.nms.props.domain.StatusCode;
-import org.motechproject.nms.region.domain.Circle;
-import org.motechproject.nms.region.domain.Language;
-import org.motechproject.nms.region.service.CircleService;
-import org.motechproject.nms.region.service.LanguageService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
-import java.util.Map;
+import javax.jdo.Query;
+import java.util.List;
+
+import static java.lang.Math.min;
 
 
 @Service("csrService")
 public class CsrServiceImpl implements CsrService {
 
-    private static final String PROCESS_SUMMARY_RECORD_SUBJECT = "nms.imi.kk.process_summary_record";
-    private static final String CSR_PARAM_KEY = "csr";
-
-    private static final int ONE_HUNDRED = 100;
+    private static final String NMS_IMI_KK_PROCESS_CSR = "nms.imi.kk.process_csr";
+    private static final int MAX_CHAR_ALERT = 4900;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CsrServiceImpl.class);
 
     private CallSummaryRecordDataService csrDataService;
     private SubscriptionDataService subscriptionDataService;
     private CallRetryDataService callRetryDataService;
-    private SubscriberDataService subscriberDataService;
     private AlertService alertService;
-    private SubscriptionPackMessageDataService subscriptionPackMessageDataService;
-    private CircleService circleService;
-    private LanguageService languageService;
-
-    private Map<String, Integer> messageDurationCache;
-
+    private CsrVerifierService csrVerifierService;
 
     @Autowired
-    public CsrServiceImpl(CallSummaryRecordDataService csrDataService,
-                          SubscriptionDataService subscriptionDataService,
-                          CallRetryDataService callRetryDataService,
-                          SubscriberDataService subscriberDataService,
-                          AlertService alertService,
-                          SubscriptionPackMessageDataService subscriptionPackMessageDataService,
-                          CircleService circleService, LanguageService languageService) {
+    public CsrServiceImpl(CallSummaryRecordDataService csrDataService, SubscriptionDataService subscriptionDataService,
+                          CallRetryDataService callRetryDataService, AlertService alertService,
+                          CsrVerifierService csrVerifierService) {
         this.csrDataService = csrDataService;
         this.subscriptionDataService = subscriptionDataService;
         this.callRetryDataService = callRetryDataService;
-        this.subscriberDataService = subscriberDataService;
         this.alertService = alertService;
-        this.subscriptionPackMessageDataService = subscriptionPackMessageDataService;
-        this.circleService = circleService;
-        this.languageService = languageService;
-
-        buildMessageDurationCache();
-    }
-
-
-    public final void buildMessageDurationCache() {
-        messageDurationCache = new HashMap<>();
-        for (SubscriptionPackMessage msg : subscriptionPackMessageDataService.retrieveAll()) {
-            messageDurationCache.put(msg.getMessageFileName(), msg.getDuration());
-        }
-
-        if (messageDurationCache.size() == 0) {
-            alertService.create("MessageDuration Cache", "Subscription Message duration cache empty",
-                    "Subscription pack messages not found", AlertType.CRITICAL, AlertStatus.NEW, 0, null);
-        }
-    }
-
-
-    //todo: IT
-    private int calculatePercentPlayed(String contentFileName, Integer duration) {
-
-        if (duration == null) {
-            return 0;
-        }
-
-        //refresh cache if empty
-        if (messageDurationCache.size() == 0) {
-            buildMessageDurationCache();
-        }
-
-        if (messageDurationCache.containsKey(contentFileName)) {
-            int totalDuration = messageDurationCache.get(contentFileName);
-            return duration / totalDuration * ONE_HUNDRED;
-        }
-        throw new IllegalArgumentException(String.format("Invalid contentFileName: %s", contentFileName));
-    }
-
-
-    private String getLanguageCode(Subscription subscription) {
-        //todo: don't understand why subscriber.getLanguage() doesn't work here...
-        // it's not working because of https://applab.atlassian.net/browse/MOTECH-1678
-        Subscriber subscriber = subscription.getSubscriber();
-        Language language;
-        language = (Language) subscriberDataService.getDetachedField(subscriber, "language");
-        return language.getCode();
-    }
-
-
-    private String getCircleName(Subscription subscription) {
-        Subscriber subscriber = subscription.getSubscriber();
-        Circle circle = (Circle) subscriberDataService.getDetachedField(subscriber, "circle");
-        return circle.getName();
+        this.csrVerifierService = csrVerifierService;
     }
 
 
@@ -149,13 +84,10 @@ public class CsrServiceImpl implements CsrService {
 
     // Check if this call has been failing with OBD_FAILED_INVALIDNUMBER for all the retries.
     // See issue #169: https://github.com/motech-implementations/mim/issues/169
+    private boolean isMsisdnInvalid(Subscription subscription, CallSummaryRecord csr) {
 
-    private boolean isMsisdnInvalid(CallSummaryRecord record) {
-        if (record.getStatusStats().keySet().size() > 1) {
-            return false;
-        }
+        return csr.getInvalidNumberCount() > subscription.getSubscriptionPack().retryCount();
 
-        return record.getStatusStats().containsKey(StatusCode.OBD_FAILED_INVALIDNUMBER.getValue());
     }
 
 
@@ -163,13 +95,11 @@ public class CsrServiceImpl implements CsrService {
         if (callRetry == null) {
             return;
         }
-        LOGGER.debug(String.format("Deleting call retry record for subscription: %s", callRetry.getSubscriptionId()));
         callRetryDataService.delete(callRetry);
-
     }
 
 
-    private void rescheduleCall(Subscription subscription, CallSummaryRecord record, CallRetry callRetry) {
+    private void rescheduleCall(Subscription subscription, CallSummaryRecord csr, CallRetry callRetry) {
 
         Long msisdn = subscription.getSubscriber().getCallingNumber();
 
@@ -184,14 +114,12 @@ public class CsrServiceImpl implements CsrService {
                 CallRetry newCallRetry = new CallRetry(
                         subscription.getSubscriptionId(),
                         msisdn,
-                        null, //we used to specify which DOW the retry should fall on, now it's always next day
                         CallStage.RETRY_1,
-                        record.getContentFileName(),
-                        record.getWeekId(),
-                        getLanguageCode(subscription),
-                        getCircleName(subscription),
-                        subscription.getOrigin(),
-                        RequestId.fromString(record.getRequestId()).getTimestamp()
+                        csr.getContentFileName(),
+                        csr.getWeekId(),
+                        csr.getLanguageCode(),
+                        csr.getCircleName(),
+                        subscription.getOrigin()
                 );
                 callRetryDataService.create(newCallRetry);
             } catch (DataIntegrityViolationException e) {
@@ -206,32 +134,16 @@ public class CsrServiceImpl implements CsrService {
 
         // This call was retried for a different week but never removed from the CallRetry table which means we never
         // got a CDR from IMI, so let's warn about this and still try to reschedule as a first try it for this week.
-        if (!callRetry.getWeekId().equals(record.getWeekId())) {
+        if (!callRetry.getWeekId().equals(csr.getWeekId())) {
 
             String message = String.format("CallRetry record (id %d) for subscription %s for weekId %s was never " +
-                            "deleted, which means we never received a CDR about it. Someone should look into this.",
+                            "deleted, which means we never received a CDR about it. I'm cleaning it up.",
                     callRetry.getId(), callRetry.getSubscriptionId(), callRetry.getWeekId());
-            LOGGER.warn(message);
-            alertService.create("CSR Processing", message, null, AlertType.HIGH, AlertStatus.NEW, 0, null);
+            LOGGER.info(message);
             callRetry.setCallStage(CallStage.RETRY_1);
-            callRetry.setWeekId(record.getWeekId());
+            callRetry.setWeekId(csr.getWeekId());
             callRetryDataService.update(callRetry);
             return;
-        }
-
-
-        // We've already rescheduled this call, but we may have gotten crappy (duplicate) data from IMI, let's check
-        // for that and ignore the retry if we need.
-        // For more info see:
-        // https://applab.atlassian.net/browse/NIP-53?focusedCommentId=65208&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-65208
-        if (callRetry.getTimestamp() != null &&
-                callRetry.getTimestamp().equals(RequestId.fromString(record.getRequestId()).getTimestamp())) {
-            // Bad data from IMI indeed (CSR-only error code in CDR likely culprit), let's ignore the retry since it's
-            // already rescheduled
-            LOGGER.info(String.format("Ignoring duplicate call failure for subscription: %s",
-                    subscription.getSubscriptionId()));
-            return;
-
         }
 
 
@@ -243,7 +155,7 @@ public class CsrServiceImpl implements CsrService {
 
             // Deactivate subscription for persistent invalid numbers
             // See https://github.com/motech-implementations/mim/issues/169
-            if (isMsisdnInvalid(record)) {
+            if (isMsisdnInvalid(subscription, csr)) {
                 subscription.setStatus(SubscriptionStatus.DEACTIVATED);
                 subscription.setDeactivationReason(DeactivationReason.INVALID_NUMBER);
                 subscriptionDataService.update(subscription);
@@ -252,7 +164,7 @@ public class CsrServiceImpl implements CsrService {
             deleteCallRetryRecordIfNeeded(callRetry);
 
             // Does subscription need to be marked complete, even if we failed to send the last message?
-            completeSubscriptionIfNeeded(subscription, record);
+            completeSubscriptionIfNeeded(subscription, csr);
             return;
         }
 
@@ -283,110 +195,123 @@ public class CsrServiceImpl implements CsrService {
     }
 
 
-    private void aggregateStats(Map<Integer, Integer> src, Map<Integer, Integer> dst) {
-        for (Map.Entry<Integer, Integer> entry : src.entrySet()) {
-            if (dst.containsKey(entry.getKey())) {
-                dst.put(entry.getKey(), dst.get(entry.getKey()) + entry.getValue());
+    private List<CallSummaryRecord> findOldCallSummaryRecords(final String subscriptionId) {
+        @SuppressWarnings("unchecked")
+        SqlQueryExecution<List<CallSummaryRecord>> queryExecution = new SqlQueryExecution<List<CallSummaryRecord>>() {
+
+            @Override
+            public String getSqlQuery() {
+                String query = String.format(
+                        "SELECT * FROM nms_kk_summary_records " +
+                                "WHERE subscriptionId like '%%%s' " +
+                                "ORDER BY weekId, subscriptionId DESC",
+                        subscriptionId);
+                return query;
+            }
+
+            @Override
+            public List<CallSummaryRecord> execute(Query query) {
+
+                query.setClass(CallSummaryRecord.class);
+
+                ForwardQueryResult fqr = (ForwardQueryResult) query.execute();
+
+                return (List<CallSummaryRecord>) fqr;
+            }
+        };
+
+        return csrDataService.executeSQLQuery(queryExecution);
+    }
+
+
+    /**
+     * Try to find any old CSRs that would exist in the table wih no subcriptionId
+     * If there are more than one CSRs for that weekId and subscription, delete all but the last one and set its
+     * subscriptionId and return it. findOldCallSummaryRecords returns the list sorted on weekId and subscriptionId in
+     * descending order so that if we find a subscriptionId that matches for that week we'll pick the very first one
+     *
+     * @param subscriptionId
+     * @return an old and now fixed up CSR, or null
+     */
+    private CallSummaryRecord lookupAndFixOldCsr(String subscriptionId, String weekId) {
+        List<CallSummaryRecord> csrs = findOldCallSummaryRecords(subscriptionId);
+        if (csrs == null || csrs.size() == 0) {
+            return null;
+        }
+
+        CallSummaryRecord found = null;
+        for (CallSummaryRecord csr : csrs) {
+            if (found == null && weekId.equals(csr.getWeekId())) {
+                //
+                // Funky code!
+                // This old CSR used to have a RequestId in the subscriptionId field, and now we really want the
+                // subscriptionId field to be a subscriptionId.
+                //
+                RequestId oldRequestId = RequestId.fromString(csr.getSubscriptionId());
+                String newSubscriptionId = oldRequestId.getSubscriptionId();
+                csr.setSubscriptionId(newSubscriptionId);
+                found = csrDataService.update(csr);
+                LOGGER.debug("Fixed up {}", newSubscriptionId);
             } else {
-                dst.put(entry.getKey(), entry.getValue());
+                csrDataService.delete(csr);
             }
         }
+
+        return found;
     }
 
 
-    private CallSummaryRecord aggregateSummaryRecord(CallSummaryRecordDto csr) {
+    @MotechListener(subjects = { NMS_IMI_KK_PROCESS_CSR }) //NO CHECKSTYLE Cyclomatic Complexity
+    @Transactional
+    public void processCallSummaryRecord(MotechEvent event) { //NOPMD NcssMethodCount
 
-        CallSummaryRecord record = csrDataService.findByRequestId(csr.getRequestId().toString());
-        if (record == null) {
-            record = csrDataService.create(new CallSummaryRecord(
-                    csr.getRequestId().toString(),
-                    csr.getMsisdn(),
-                    csr.getContentFileName(),
-                    csr.getWeekId(),
-                    csr.getLanguageLocationCode(),
-                    csr.getCircle(),
-                    csr.getFinalStatus(),
-                    csr.getStatusStats(),
-                    calculatePercentPlayed(csr.getContentFileName(), csr.getSecondsPlayed()),
-                    csr.getCallAttempts(),
-                    1));
-        } else {
-            aggregateStats(csr.getStatusStats(), record.getStatusStats());
-            record.setCallAttempts(record.getCallAttempts() + csr.getCallAttempts());
-            record.setAttemptedDayCount(record.getAttemptedDayCount() + 1);
-            record.setFinalStatus(csr.getFinalStatus());
-            int percentPlayed = calculatePercentPlayed(csr.getContentFileName(), csr.getSecondsPlayed());
-            if (percentPlayed > record.getPercentPlayed()) {
-                record.setPercentPlayed(percentPlayed);
-            }
-            csrDataService.update(record);
-        }
+        Timer timer = new Timer();
 
-        return record;
-    }
-
-
-    //
-    //Consider not verifying anything at all and removing this altogether
-    //
-    private void validateCallSummaryRecord(Subscription subscription, CallSummaryRecordDto csr) throws InvalidCdrData {
-        if (!subscription.getSubscriptionPack().hasMessageWithWeekId(csr.getWeekId())) {
-            throw new InvalidCdrData(String.format("%s is an invalid weekId for pack %s",
-                    csr.getWeekId(), subscription.getSubscriptionPack().getName()));
-        }
-
-        if (!subscription.getSubscriptionPack().hasMessageWithFilename(csr.getContentFileName())) {
-            throw new InvalidCdrData(String.format("%s is an invalid contentFilename for pack %s",
-                    csr.getContentFileName(), subscription.getSubscriptionPack().getName()));
-        }
-
-        if (circleService.getByName(csr.getCircle()) == null) {
-            throw new InvalidCdrData(String.format("invalid circle: %s", csr.getCircle()));
-        }
-
-
-        if (languageService.getForCode(csr.getLanguageLocationCode()) == null) {
-            throw new InvalidCdrData(String.format("invalid languageLocationCode: %s", csr.getLanguageLocationCode()));
-        }
-
-    }
-
-
-    @MotechListener(subjects = { PROCESS_SUMMARY_RECORD_SUBJECT })
-    public void processCallSummaryRecord(MotechEvent event) {
-
-        CallSummaryRecordDto csrDto = (CallSummaryRecordDto) event.getParameters().get(CSR_PARAM_KEY);
-        String subscriptionId = csrDto.getRequestId().getSubscriptionId();
-
+        String subscriptionId = "###INVALID###";
         try {
-            CallRetry callRetry = callRetryDataService.findBySubscriptionId(subscriptionId);
+            CallSummaryRecordDto csrDto = CallSummaryRecordDto.fromParams(event.getParameters());
+            subscriptionId = csrDto.getSubscriptionId();
+            csrVerifierService.verify(csrDto);
+
             Subscription subscription = subscriptionDataService.findBySubscriptionId(subscriptionId);
-            validateCallSummaryRecord(subscription, csrDto);
-
-            CallSummaryRecord csr = aggregateSummaryRecord(csrDto);
-
-            /**
-             * If we somehow have a null subscription (it was deleted for some reason), but still have a retry record
-             * for it, then we definitely want to erase the call retry record.
-             */
             if (subscription == null) {
-                String msg = String.format("Subscription %s doesn't exist in the database anymore.", subscriptionId);
-                LOGGER.warn(msg);
-                alertService.create(subscriptionId, PROCESS_SUMMARY_RECORD_SUBJECT, msg, AlertType.MEDIUM,
-                        AlertStatus.NEW, 0, null);
-
-                if (callRetry != null) {
-                    msg = String.format("Deleting callRetry record for deleted subscription %s", subscriptionId);
-                    LOGGER.warn(msg);
-                    alertService.create(subscriptionId, PROCESS_SUMMARY_RECORD_SUBJECT, msg, AlertType.MEDIUM,
-                            AlertStatus.NEW, 0, null);
-                    deleteCallRetryRecordIfNeeded(callRetry);
-                }
-
-                return;
+                throw new NoSuchSubscriptionException(subscriptionId);
             }
 
-            switch (csrDto.getFinalStatus()) {
+            CallSummaryRecord existingCsr = csrDataService.findBySubscriptionId(subscriptionId);
+
+            if (existingCsr == null) {
+                // This may be an old style CSR, let's try to fix it up
+                existingCsr = lookupAndFixOldCsr(subscriptionId, csrDto.getWeekId());
+            }
+
+            CallSummaryRecord csr;
+            boolean invalidNr = StatusCode.fromInt(csrDto.getStatusCode()).equals(StatusCode.OBD_FAILED_INVALIDNUMBER);
+            if (existingCsr == null) {
+                csr = csrDataService.create(new CallSummaryRecord(
+                        subscriptionId,
+                        csrDto.getContentFileName(),
+                        csrDto.getLanguageCode(),
+                        csrDto.getCircleName(),
+                        csrDto.getWeekId(),
+                        StatusCode.fromInt(csrDto.getStatusCode()),
+                        FinalCallStatus.fromInt(csrDto.getFinalStatus()),
+                        invalidNr ? 1 : 0));
+
+            } else {
+                existingCsr.setFinalStatus(FinalCallStatus.fromInt(csrDto.getFinalStatus()));
+                existingCsr.setContentFileName(csrDto.getContentFileName());
+                existingCsr.setStatusCode(StatusCode.fromInt(csrDto.getStatusCode()));
+                existingCsr.setWeekId(csrDto.getWeekId());
+                if (invalidNr) {
+                    existingCsr.setInvalidNumberCount(existingCsr.getInvalidNumberCount() + 1);
+                }
+                csr = csrDataService.update(existingCsr);
+            }
+
+            CallRetry callRetry = callRetryDataService.findBySubscriptionId(subscriptionId);
+
+            switch (FinalCallStatus.fromInt(csrDto.getFinalStatus())) {
                 case SUCCESS:
                     completeSubscriptionIfNeeded(subscription, csr);
                     deleteCallRetryRecordIfNeeded(callRetry);
@@ -403,16 +328,28 @@ public class CsrServiceImpl implements CsrService {
                 default:
                     String error = String.format("Invalid FinalCallStatus: %s", csrDto.getFinalStatus());
                     LOGGER.error(error);
-                    alertService.create(subscriptionId, PROCESS_SUMMARY_RECORD_SUBJECT, error, AlertType.CRITICAL,
+                    alertService.create(subscriptionId, NMS_IMI_KK_PROCESS_CSR, error, AlertType.CRITICAL,
                             AlertStatus.NEW, 0, null);
             }
-        } catch (Exception e) {
-            String msg = String.format("Exception in processCallSummaryRecord() for subscription %s: %s",
-                    subscriptionId, e);
+
+        } catch (NoSuchSubscriptionException e) {
+            String msg = String.format("No such subscription %s", e.getMessage());
             LOGGER.error(msg);
-            alertService.create(subscriptionId, PROCESS_SUMMARY_RECORD_SUBJECT, msg, AlertType.HIGH, AlertStatus.NEW, 0,
-                    null);
+            alertService.create(subscriptionId, "Invalid CSR Data", msg, AlertType.HIGH, AlertStatus.NEW, 0, null);
+        } catch (InvalidCallRecordDataException e) {
+            String msg = String.format("Invalid CDR data for subscription %s: %s", subscriptionId, e.getMessage());
+            LOGGER.error(msg);
+            alertService.create(subscriptionId, "Invalid CSR Data", msg, AlertType.HIGH, AlertStatus.NEW, 0, null);
+        } catch (Exception e) {
+            String msg = String.format("MOTECH BUG *** Unexpected exception in processCallSummaryRecord() for " +
+                    "subscription %s: %s", subscriptionId, ExceptionUtils.getFullStackTrace(e));
+            LOGGER.error(msg);
+            alertService.create(subscriptionId, NMS_IMI_KK_PROCESS_CSR,
+                    msg.substring(0, min(msg.length(), MAX_CHAR_ALERT)), AlertType.CRITICAL, AlertStatus.NEW, 0, null);
         }
+
+        LOGGER.debug("processCallSummaryRecord {} : {}", subscriptionId, timer.time());
+
     }
 
 
@@ -422,5 +359,34 @@ public class CsrServiceImpl implements CsrService {
             subscription.setNeedsWelcomeMessageViaObd(false);
             subscriptionDataService.update(subscription);
         }
+    }
+
+
+    @Override
+    public void deleteOldCallSummaryRecords(final int retentionInDays) {
+
+        @SuppressWarnings("unchecked")
+        SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
+
+            @Override
+            public String getSqlQuery() {
+                String query = String.format(
+                        "DELETE FROM nms_kk_summary_records where creationDate < now() - INTERVAL %d DAY",
+                        retentionInDays);
+                LOGGER.debug("SQL QUERY: {}", query);
+                return query;
+            }
+
+            @Override
+            public Long execute(Query query) {
+
+                return (Long) query.execute();
+            }
+        };
+
+        LOGGER.debug("Deleting nms_kk_summary_records older than {} days", retentionInDays);
+        Timer timer = new Timer();
+        long rowCount = csrDataService.executeSQLQuery(queryExecution);
+        LOGGER.debug("Deleted {} rows from nms_kk_summary_records in {}", rowCount, timer.time());
     }
 }

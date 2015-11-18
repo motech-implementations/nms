@@ -3,15 +3,16 @@ package org.motechproject.nms.imi.domain;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.nms.kilkari.dto.CallSummaryRecordDto;
-import org.motechproject.nms.props.domain.FinalCallStatus;
+import org.motechproject.nms.kilkari.exception.InvalidCallRecordDataException;
 import org.motechproject.nms.props.domain.RequestId;
 
-import java.util.HashMap;
+import javax.jdo.annotations.Index;
 
 /**
  * See NMS API - 4.4.2 CDR Summary File Format
  */
 @Entity(tableName = "nms_imi_csrs")
+@Index(members = { "requestId" })
 public class CallSummaryRecord {
 
     @Field
@@ -158,17 +159,20 @@ public class CallSummaryRecord {
     }
 
     public CallSummaryRecordDto toDto() {
+        String subscriptionId;
+        try {
+            subscriptionId = RequestId.fromString(requestId).getSubscriptionId();
+        } catch (IllegalArgumentException e) {
+            throw new InvalidCallRecordDataException(e);
+        }
         return new CallSummaryRecordDto(
-                RequestId.fromString(requestId),
-                msisdn,
+                subscriptionId,
+                statusCode,
+                finalStatus,
                 contentFileName,
                 weekId,
                 languageLocationCode,
-                circle,
-                FinalCallStatus.fromInt(finalStatus),
-                new HashMap<Integer, Integer>(),
-                null,
-                attempts
+                circle
         );
     }
 }

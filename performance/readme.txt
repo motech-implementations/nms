@@ -1,5 +1,5 @@
 # TODO
-- Create location, circle & language import files
+- Create location, circleName & language import files
 - Write script to generate MCTS import files
   - Script should generate seperate files for:
     - Mothers

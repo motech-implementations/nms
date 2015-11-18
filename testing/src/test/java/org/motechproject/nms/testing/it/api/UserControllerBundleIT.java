@@ -67,6 +67,9 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import javax.inject.Inject;
 import java.io.IOException;
@@ -143,6 +146,9 @@ public class UserControllerBundleIT extends BasePaxIT {
     @Inject
     CallDetailRecordService callDetailRecordService;
 
+    @Inject
+    PlatformTransactionManager transactionManager;
+
     public static final Long WHITELIST_CONTACT_NUMBER = 1111111111l;
     public static final Long NOT_WHITELIST_CONTACT_NUMBER = 9000000000l;
 
@@ -168,11 +174,11 @@ public class UserControllerBundleIT extends BasePaxIT {
 
     private void createKilkariTestData() {
 
-        rh.newDelhiDistrict();
         rh.delhiCircle();
-
             
         deployedServiceDataService.create(new DeployedService(rh.delhiState(), Service.KILKARI));
+
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         Subscriber subscriber1 = subscriberDataService.create(new Subscriber(1000000000L, rh.hindiLanguage()));
         subscriptionService.createSubscription(subscriber1.getCallingNumber(), rh.hindiLanguage(),
@@ -187,6 +193,8 @@ public class UserControllerBundleIT extends BasePaxIT {
         Subscriber subscriber3 = subscriberDataService.create(new Subscriber(3000000000L, rh.hindiLanguage()));
         subscriptionService.createSubscription(subscriber3.getCallingNumber(), rh.hindiLanguage(),
                 sh.pregnancyPack(), SubscriptionOrigin.IVR);
+
+        transactionManager.commit(status);
     }
 
     private void createKilkariUndeployTestData() {
@@ -194,9 +202,11 @@ public class UserControllerBundleIT extends BasePaxIT {
         rh.delhiState();
         rh.delhiCircle();
 
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         Subscriber subscriber1 = subscriberDataService.create(new Subscriber(1000000000L, rh.hindiLanguage()));
         subscriptionService.createSubscription(subscriber1.getCallingNumber(), rh.hindiLanguage(),
                 sh.childPack(), SubscriptionOrigin.IVR);
+        transactionManager.commit(status);
     }
 
 
@@ -1487,7 +1497,6 @@ public class UserControllerBundleIT extends BasePaxIT {
      */
     @Test
     public void testCircleMixedDeployedMutipleStates() throws IOException, InterruptedException {
-
         Circle delhiCircle = circleDataService.create(new Circle("DE"));
 
         State nws = createState(7L, "Non-whitelist state in delhi");
@@ -1507,10 +1516,13 @@ public class UserControllerBundleIT extends BasePaxIT {
         // update deployment
         deployedServiceDataService.create(new DeployedService(ws, Service.KILKARI));
 
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         // create subscriber
         Subscriber subscriber1 = subscriberDataService.create(new Subscriber(1000000000L, rh.hindiLanguage()));
         subscriptionService.createSubscription(subscriber1.getCallingNumber(), rh.hindiLanguage(), delhiCircle,
                 sh.childPack(), SubscriptionOrigin.IVR);
+        transactionManager.commit(status);
 
         HttpGet httpGet = createHttpGet(
                 true, "kilkari",                // service
@@ -1554,9 +1566,11 @@ public class UserControllerBundleIT extends BasePaxIT {
         // no deployment whitelist created
 
         // create subscriber
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         Subscriber subscriber1 = subscriberDataService.create(new Subscriber(1000000000L, rh.hindiLanguage()));
         subscriptionService.createSubscription(subscriber1.getCallingNumber(), rh.hindiLanguage(), delhiCircle,
                 sh.childPack(), SubscriptionOrigin.IVR);
+        transactionManager.commit(status);
 
         HttpGet httpGet = createHttpGet(
                 true, "kilkari",                // service
@@ -1580,6 +1594,8 @@ public class UserControllerBundleIT extends BasePaxIT {
         createKilkariTestData();
         // subscriber 4000000000L subscribed to both pack and Pregnancy pack is
         // deactivated
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         Subscriber subscriber = subscriberDataService.create(new Subscriber(4000000000L, rh.hindiLanguage()));
         subscriptionService.createSubscription(subscriber.getCallingNumber(),
                 rh.hindiLanguage(), sh.childPack(), SubscriptionOrigin.IVR);
@@ -1589,7 +1605,9 @@ public class UserControllerBundleIT extends BasePaxIT {
                 SubscriptionOrigin.IVR);
         subscriptionService.deactivateSubscription(pregnancyPack,
                 DeactivationReason.DEACTIVATED_BY_USER);
-        
+
+        transactionManager.commit(status);
+
         Set<String> expectedPacks = new HashSet<>();
         expectedPacks.add("childPack");
 
@@ -1622,6 +1640,9 @@ public class UserControllerBundleIT extends BasePaxIT {
     public void verifyFT184() throws IOException,
             InterruptedException {
         createKilkariTestData();
+
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         // subscriber subscribed to both packs and Pregnancy pack is completed
         Subscriber subscriber = subscriberDataService.create(new Subscriber(5000000000L, rh.hindiLanguage()));
         
@@ -1633,7 +1654,9 @@ public class UserControllerBundleIT extends BasePaxIT {
                 SubscriptionOrigin.IVR);
         subscriptionService.updateStartDate(pregnancyPack, DateTime.now()
                 .minusDays(505 + 90));
- 
+
+        transactionManager.commit(status);
+
         Set<String> expectedPacks = new HashSet<>();
         expectedPacks.add("childPack");
 
@@ -1740,6 +1763,8 @@ public class UserControllerBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT341() throws InterruptedException, IOException {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         setupWhiteListData();
 
         // Delhi circle has a state already, add one more
@@ -1758,6 +1783,8 @@ public class UserControllerBundleIT extends BasePaxIT {
         deployedServiceDataService.create(new DeployedService(whitelistState,
                 Service.MOBILE_KUNJI));
 
+        transactionManager.commit(status);
+
         // Check the response
         HttpGet request = createHttpGet(true, "mobilekunji", true,
                 String.valueOf(WHITELIST_CONTACT_NUMBER), false, "", false, "",
@@ -1768,9 +1795,13 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
                 .getStatusCode());
 
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         Set<State> states = languageService.getAllStatesForLanguage(rh
                 .hindiLanguage());
         assertEquals(1, states.size());
+
+        transactionManager.commit(status);
 
         // create set Language location code request and check the response
         HttpPost postRequest = createHttpPost("mobilekunji",
@@ -1855,6 +1886,8 @@ public class UserControllerBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT343() throws InterruptedException, IOException {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         setupWhiteListData();
 
         // Delhi circle has a state already, add one more
@@ -1863,10 +1896,11 @@ public class UserControllerBundleIT extends BasePaxIT {
         stateDataService.create(nws);
         districtDataService.create(createDistrict(nws, 1L, "Circle", delhiCircle));
 
-
         // Deploy the service in user's state
         deployedServiceDataService.create(new DeployedService(whitelistState,
                 Service.MOBILE_KUNJI));
+
+        transactionManager.commit(status);
 
         // Check the response
         HttpGet request = createHttpGet(true, "mobilekunji", true,
@@ -1878,9 +1912,14 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
                 .getStatusCode());
 
+
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         Set<State> states = languageService.getAllStatesForLanguage(rh
                 .hindiLanguage());
         assertEquals(1, states.size());
+
+        transactionManager.commit(status);
 
         // create set Language location code request and check the response
         HttpPost postRequest = createHttpPost("mobilekunji",
@@ -1962,6 +2001,8 @@ public class UserControllerBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT345() throws InterruptedException, IOException {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         setupWhiteListData();
 
         // karnataka circle has a state already, add one more
@@ -1980,6 +2021,8 @@ public class UserControllerBundleIT extends BasePaxIT {
         deployedServiceDataService.create(new DeployedService(
                 nonWhitelistState, Service.MOBILE_KUNJI));
 
+        transactionManager.commit(status);
+
         // Check the response
         HttpGet request = createHttpGet(true, "mobilekunji", true,
                 String.valueOf(WHITELIST_CONTACT_NUMBER), false, "", false, "",
@@ -1990,9 +2033,13 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
                 .getStatusCode());
 
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         Set<State> states = languageService.getAllStatesForLanguage(rh
                 .tamilLanguage());
         assertEquals(1, states.size());
+
+        transactionManager.commit(status);
 
         // create set Language location code request and check the response
         HttpPost postRequest = createHttpPost("mobilekunji",
@@ -2068,9 +2115,12 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
                 .getStatusCode());
 
-        Set<State> states = languageService.getAllStatesForLanguage(rh
-                .hindiLanguage());
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
+        Set<State> states = languageService.getAllStatesForLanguage(rh.hindiLanguage());
         assertEquals(1, states.size());
+
+        transactionManager.commit(status);
 
         // create set Language location code request and check the response
         HttpPost postRequest = createHttpPost("mobilekunji",
@@ -2181,6 +2231,7 @@ public class UserControllerBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT441() throws InterruptedException, IOException {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         setupWhiteListData();
 
         // Delhi circle has a state already, add one more
@@ -2198,6 +2249,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         // Deploy the service in user's state
         deployedServiceDataService.create(new DeployedService(whitelistState,
                 Service.MOBILE_ACADEMY));
+        transactionManager.commit(status);
 
         // Check the response
         HttpGet request = createHttpGet(true, "mobileacademy", true,
@@ -2209,9 +2261,11 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
                 .getStatusCode());
 
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         Set<State> states = languageService.getAllStatesForLanguage(rh
                 .hindiLanguage());
         assertEquals(1, states.size());
+        transactionManager.commit(status);
 
         // create set Language location code request and check the response
         HttpPost postRequest = createHttpPost("mobileacademy",
@@ -2318,6 +2372,7 @@ public class UserControllerBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT445() throws InterruptedException, IOException {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         setupWhiteListData();
 
         // Delhi circle has a state already, add one more
@@ -2329,6 +2384,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         // Deploy the service in user's state
         deployedServiceDataService.create(new DeployedService(whitelistState,
                 Service.MOBILE_ACADEMY));
+        transactionManager.commit(status);
 
         // Check the response
         HttpGet request = createHttpGet(true, "mobileacademy", true,
@@ -2341,9 +2397,11 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
                 .getStatusCode());
 
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         Set<State> states = languageService.getAllStatesForLanguage(rh
                 .hindiLanguage());
         assertEquals(1, states.size());
+        transactionManager.commit(status);
 
         // create set Language location code request and check the response
         HttpPost postRequest = createHttpPost("mobileacademy",
@@ -2450,6 +2508,7 @@ public class UserControllerBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT449() throws InterruptedException, IOException {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         setupWhiteListData();
 
         // karnataka circle has a state already, add one more
@@ -2468,6 +2527,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         // Deploy the service in user's state
         deployedServiceDataService.create(new DeployedService(
                 nonWhitelistState, Service.MOBILE_ACADEMY));
+        transactionManager.commit(status);
 
         // Check the response
         HttpGet request = createHttpGet(true, "mobileacademy", true,
@@ -2479,9 +2539,11 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
                 .getStatusCode());
 
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         Set<State> states = languageService.getAllStatesForLanguage(rh
                 .tamilLanguage());
         assertEquals(1, states.size());
+        transactionManager.commit(status);
 
         // create set Language location code request and check the response
         HttpPost postRequest = createHttpPost("mobileacademy",
@@ -2538,6 +2600,7 @@ public class UserControllerBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT452() throws InterruptedException, IOException {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         setupWhiteListData();
 
         Circle delhiCircle = circleDataService.findByName(rh.delhiCircle().getName());
@@ -2546,6 +2609,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         // Deploy the service in user's state
         deployedServiceDataService.create(new DeployedService(whitelistState,
                 Service.MOBILE_ACADEMY));
+        transactionManager.commit(status);
 
         // Check the response
         HttpGet request = createHttpGet(true, "mobileacademy", true,
@@ -2557,9 +2621,11 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
                 .getStatusCode());
 
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         Set<State> states = languageService.getAllStatesForLanguage(rh
                 .hindiLanguage());
         assertEquals(1, states.size());
+        transactionManager.commit(status);
 
         // create set Language location code request and check the response
         HttpPost postRequest = createHttpPost("mobileacademy",
@@ -3818,6 +3884,8 @@ public class UserControllerBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT429() throws IOException, InterruptedException {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         // setup delhi circle with two states delhi and karnataka
 
         rh.newDelhiDistrict();
@@ -3830,6 +3898,8 @@ public class UserControllerBundleIT extends BasePaxIT {
         // service deployed only in delhi state
         deployedServiceDataService.create(new DeployedService(rh.delhiState(),
                 Service.MOBILE_ACADEMY));
+
+        transactionManager.commit(status);
 
         // invoke get user detail API
         HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
@@ -3885,6 +3955,7 @@ public class UserControllerBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT438() throws IOException, InterruptedException {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         // setup delhi circle with two states delhi and karnataka
 
         rh.newDelhiDistrict();
@@ -3897,6 +3968,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         // service deployed only in delhi state
         deployedServiceDataService.create(new DeployedService(rh.delhiState(),
                 Service.MOBILE_ACADEMY));
+        transactionManager.commit(status);
 
         // invoke get user detail API
         HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
@@ -3910,8 +3982,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                         .hindiLanguage().getCode(), // defaultLanguageLocationCode=circle
                 // default
                 null, // locationCode
-                Arrays.asList(rh.hindiLanguage().getCode(), rh.tamilLanguage()
-                        .getCode()), // allowedLanguageLocationCodes
+                Arrays.asList(rh.hindiLanguage().getCode(), rh.tamilLanguage().getCode()), // allowedLanguageLocationCodes
                 0L, // currentUsageInPulses
                 0L, // endOfUsagePromptCounter
                 false, // welcomePromptFlag
@@ -3952,6 +4023,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     // should be rejected
     @Test
     public void verifyNIP160() throws IOException, InterruptedException {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         // setup delhi circle with two states delhi and karnataka
 
         rh.newDelhiDistrict();
@@ -3960,6 +4032,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         State s = createState(7L, "New State in karnataka");
         stateDataService.create(s);
         districtDataService.create(createDistrict(s, 1L, "Circle", rh.tamilLanguage(), c));
+        transactionManager.commit(status);
 
         // invoke get user detail API
         HttpGet httpGet = createHttpGet(true, "mobilekunji", // service
@@ -4012,9 +4085,13 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, VALID_CALL_ID // callId
         );
 
+        List<String> allowedLLCCodes = new ArrayList<>();
+        allowedLLCCodes.add(rh.tamilLanguage().getCode());
+        allowedLLCCodes.add(rh.kannadaLanguage().getCode());
+
         String expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
                 null, // locationCode
-                Collections.singletonList(rh.tamilLanguage().getCode()), // allowedLanguageLocationCodes
+                allowedLLCCodes, // allowedLanguageLocationCodes
                 0L, // currentUsageInPulses
                 0L, // endOfUsagePromptCounter
                 false, // welcomePromptFlag
@@ -4055,8 +4132,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     @Test
     public void verifyFT430() throws IOException, InterruptedException {
         // add FLW with active status
-        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright",
-                1200000000l);
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1200000000l);
         flw.setLanguage(rh.tamilLanguage());
         flw.setDistrict(rh.bangaloreDistrict());
         flw.setState(rh.karnatakaState());
@@ -4146,8 +4222,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     @Test
     public void verifyFT432() throws IOException, InterruptedException {
         // add FLW with Invalid status
-        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright",
-                1200000000l);
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1200000000l);
         flw.setLanguage(rh.tamilLanguage());
         flw.setDistrict(rh.bangaloreDistrict());
         flw.setState(rh.karnatakaState());
@@ -4156,8 +4231,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         frontLineWorkerDataService.create(flw);
 
         // service deployed in Karnataka State
-        deployedServiceDataService.create(new DeployedService(rh
-                .karnatakaState(), Service.MOBILE_ACADEMY));
+        deployedServiceDataService.create(new DeployedService(rh.karnatakaState(), Service.MOBILE_ACADEMY));
 
         // invoke get user detail API
         HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
@@ -4167,9 +4241,13 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, VALID_CALL_ID // callId
         );
 
+        List<String> allowedLLCCodes = new ArrayList<>();
+        allowedLLCCodes.add(rh.tamilLanguage().getCode());
+        allowedLLCCodes.add(rh.kannadaLanguage().getCode());
+
         String expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
                 null, // locationCode
-                Collections.singletonList(rh.tamilLanguage().getCode()), // allowedLanguageLocationCodes
+                allowedLLCCodes, // allowedLanguageLocationCodes
                 0L, // currentUsageInPulses
                 0L, // endOfUsagePromptCounter
                 false, // welcomePromptFlag
@@ -4282,9 +4360,13 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, VALID_CALL_ID // callId
         );
 
+        List<String> allowedLLCCodes = new ArrayList<>();
+        allowedLLCCodes.add(rh.tamilLanguage().getCode());
+        allowedLLCCodes.add(rh.kannadaLanguage().getCode());
+
         String expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
                 null, // locationCode
-                Collections.singletonList(rh.tamilLanguage().getCode()), // allowedLanguageLocationCodes
+                allowedLLCCodes, // allowedLanguageLocationCodes
                 0L, // currentUsageInPulses
                 0L, // endOfUsagePromptCounter
                 false, // welcomePromptFlag

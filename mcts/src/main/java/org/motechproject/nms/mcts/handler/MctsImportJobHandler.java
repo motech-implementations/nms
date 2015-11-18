@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
 import java.net.MalformedURLException;
@@ -61,6 +62,7 @@ public class MctsImportJobHandler {
     }
 
     @MotechListener(subjects = Constants.MCTS_IMPORT_EVENT)
+    @Transactional
     public void handleImportEvent(MotechEvent event) {
         LOGGER.info("Starting import from MCTS");
 
@@ -85,7 +87,8 @@ public class MctsImportJobHandler {
             throw new MctsImportConfigurationException("Malformed days to pull configured: " + daysToPullValue, e);
         }
 
-        if (daysToPull > 7 || daysToPull < 0) {
+        // Valid date range to get data is 1-7 days
+        if (daysToPull > 7 || daysToPull < 1) {
             throw new MctsImportConfigurationException("Malformed days to pull configured: " + daysToPull);
         }
 

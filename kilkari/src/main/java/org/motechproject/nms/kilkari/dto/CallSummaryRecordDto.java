@@ -1,119 +1,85 @@
 package org.motechproject.nms.kilkari.dto;
 
+import org.motechproject.mds.annotations.Ignore;
+import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.props.domain.FinalCallStatus;
-import org.motechproject.nms.props.domain.RequestId;
+import org.motechproject.nms.props.domain.StatusCode;
+import org.motechproject.nms.region.domain.Circle;
+import org.motechproject.nms.region.domain.Language;
 
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.Map;
 
 public class CallSummaryRecordDto implements Serializable {
-    private static final long serialVersionUID = -8391255985224161089L;
 
-    /**
-     * number of times the call was attempted (but failed)
-     */
-    private Integer callAttempts;
-    /**
-     * number of seconds that the message was played (I assume that means it'll always be <= message duration)
-     */
-    private Integer secondsPlayed;
-    /**
-     * number of times a call failed for a specific reason
-     */
-    private Map<Integer, Integer> statusStats;
-    /**
-     * Ultimately, what's the status of this call?
-     */
-    private FinalCallStatus finalStatus;
-    /**
-     * calling circle
-     */
-    private String circle;
-    /**
-     * language location code
-     */
-    private String languageLocationCode;
-    /**
-     * filename of the message that was played for this call
-     */
+    private static final long serialVersionUID = -8391255985224161089L;
+    public static final String EMPTY_STRING = "";
+
+
+    private String subscriptionId;
+
+    private int statusCode;
+
+    private int finalStatus;
+
     private String contentFileName;
-    /**
-     * phone number
-     */
-    private Long msisdn;
-    /**
-     * id of the week (within the message pack) that this call corresponds to
-     */
+
     private String weekId;
-    /**
-     * unique id for this call: obd timestamp + subscription id
-     */
-    private RequestId requestId;
+
+    private String languageCode;
+
+    private String circleName;
 
     public CallSummaryRecordDto() { }
 
-    public CallSummaryRecordDto(RequestId requestId, Long msisdn, // NO CHECKSTYLE More than 7 parameters
-                             String contentFileName, String weekId, String languageLocationCode, String circle,
-                             FinalCallStatus finalStatus, Map<Integer, Integer> statusStats,
-                             Integer secondsPlayed, Integer callAttempts) {
-        this.requestId = requestId;
-        this.msisdn = msisdn;
+    public CallSummaryRecordDto(String subscriptionId, int statusCode, int finalStatus, String contentFileName,
+                                String weekId, String languageCode, String circleName) {
+        this.subscriptionId = subscriptionId;
+        this.statusCode = statusCode;
+        this.finalStatus = finalStatus;
         this.contentFileName = contentFileName;
         this.weekId = weekId;
-        this.languageLocationCode = languageLocationCode;
-        this.circle = circle;
-        this.finalStatus = finalStatus;
-        this.statusStats = statusStats;
-        this.secondsPlayed = secondsPlayed;
-        this.callAttempts = callAttempts;
+        this.languageCode = languageCode;
+        this.circleName = circleName;
     }
 
-    public Integer getCallAttempts() {
-        return callAttempts;
+    // Helper constructor for ITs
+    public CallSummaryRecordDto(Subscription subscription, StatusCode statusCode, FinalCallStatus finalStatus,
+                                String contentFileName, String weekId, Language language, Circle circle) {
+        this(
+                subscription == null ? EMPTY_STRING : subscription.getSubscriptionId(),
+                statusCode == null ? -1 : statusCode.getValue(),
+                finalStatus == null ? -1 : finalStatus.getValue(),
+                contentFileName == null ? EMPTY_STRING : contentFileName,
+                weekId == null ? EMPTY_STRING : weekId,
+                language == null ? EMPTY_STRING : language.getCode(),
+                circle == null ? EMPTY_STRING : circle.getName()
+        );
     }
 
-    public void setCallAttempts(Integer callAttempts) {
-        this.callAttempts = callAttempts;
+    public String getSubscriptionId() {
+        return subscriptionId;
     }
 
-    public Integer getSecondsPlayed() {
-        return secondsPlayed;
+    public void setSubscriptionId(String subscriptionId) {
+        this.subscriptionId = subscriptionId;
     }
 
-    public void setSecondsPlayed(Integer secondsPlayed) {
-        this.secondsPlayed = secondsPlayed;
+    public int getStatusCode() {
+        return statusCode;
     }
 
-    public Map<Integer, Integer> getStatusStats() {
-        return statusStats;
+    public void setStatusCode(int statusCode) {
+        this.statusCode = statusCode;
     }
 
-    public void setStatusStats(Map<Integer, Integer> statusStats) {
-        this.statusStats = statusStats;
-    }
-
-    public FinalCallStatus getFinalStatus() {
+    public int getFinalStatus() {
         return finalStatus;
     }
 
-    public void setFinalStatus(FinalCallStatus finalStatus) {
+    public void setFinalStatus(int finalStatus) {
         this.finalStatus = finalStatus;
-    }
-
-    public String getCircle() {
-        return circle;
-    }
-
-    public void setCircle(String circle) {
-        this.circle = circle;
-    }
-
-    public String getLanguageLocationCode() {
-        return languageLocationCode;
-    }
-
-    public void setLanguageLocationCode(String languageLocationCode) {
-        this.languageLocationCode = languageLocationCode;
     }
 
     public String getContentFileName() {
@@ -124,14 +90,6 @@ public class CallSummaryRecordDto implements Serializable {
         this.contentFileName = contentFileName;
     }
 
-    public Long getMsisdn() {
-        return msisdn;
-    }
-
-    public void setMsisdn(Long msisdn) {
-        this.msisdn = msisdn;
-    }
-
     public String getWeekId() {
         return weekId;
     }
@@ -140,20 +98,60 @@ public class CallSummaryRecordDto implements Serializable {
         this.weekId = weekId;
     }
 
-    public RequestId getRequestId() {
-        return requestId;
+    public String getLanguageCode() {
+        return languageCode;
     }
 
-    public void setRequestId(RequestId requestId) {
-        this.requestId = requestId;
+    public void setLanguageCode(String languageCode) {
+        this.languageCode = languageCode;
+    }
+
+    public String getCircleName() {
+        return circleName;
+    }
+
+    public void setCircleName(String circleName) {
+        this.circleName = circleName;
+    }
+
+    @Ignore
+    public static CallSummaryRecordDto fromParams(Map<String, Object> params) {
+        CallSummaryRecordDto csr;
+        csr = new CallSummaryRecordDto(
+                (String) params.get("subscriptionId"),
+                (int) params.get("statusCode"),
+                (int) params.get("finalStatus"),
+                (String) params.get("contentFileName"),
+                (String) params.get("weekId"),
+                (String) params.get("languageCode"),
+                (String) params.get("circleName")
+        );
+        return csr;
+    }
+
+    @Ignore
+    public static Map<String, Object> toParams(CallSummaryRecordDto csr) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("subscriptionId", csr.subscriptionId);
+        params.put("statusCode", csr.statusCode);
+        params.put("finalStatus", csr.finalStatus);
+        params.put("contentFileName", csr.contentFileName);
+        params.put("weekId", csr.weekId);
+        params.put("languageCode", csr.languageCode);
+        params.put("circleName", csr.circleName);
+        return params;
     }
 
     @Override
     public String toString() {
         return "CallSummaryRecordDto{" +
-                "requestId='" + requestId + '\'' +
-                ", msisdn=" + msisdn +
+                "subscriptionId='" + subscriptionId + '\'' +
+                ", statusCode=" + statusCode +
                 ", finalStatus=" + finalStatus +
+                ", contentFileName='" + contentFileName + '\'' +
+                ", weekId='" + weekId + '\'' +
+                ", languageCode='" + languageCode + '\'' +
+                ", circleName='" + circleName + '\'' +
                 '}';
     }
 }

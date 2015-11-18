@@ -22,7 +22,7 @@ public class Circle extends MdsEntity {
     private String name;
 
     @Field
-    @Persistent(mappedBy = "circle", defaultFetchGroup = "true")
+    @Persistent(mappedBy = "circle", defaultFetchGroup = "false")
     @JsonManagedReference
     private Set<District> districts;
 

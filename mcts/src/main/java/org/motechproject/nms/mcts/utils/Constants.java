@@ -11,12 +11,23 @@ public final class Constants {
     public static final String MCTS_SYNC_CRON = "mcts.sync.cron";
     public static final String MCTS_ENDPOINT = "mcts.endpointUrl";
     public static final String DAYS_TO_PULL = "mcts.days_to_pull";
+    public static final String HPD_STATES = "mcts.hpd.states";
+    public static final String BASE_HPD_CONFIG = "mcts.hpd.state";
 
     /**
      * Events
      */
-    public static final String BASE_MCTS_SUBJECT = "org.motechproject.mcts";
+    public static final String BASE_MCTS_SUBJECT = "org.motechproject.nms.mcts";
     public static final String MCTS_IMPORT_EVENT = BASE_MCTS_SUBJECT + ".import";
+    public static final String MCTS_CHILD_IMPORT_SUBJECT = BASE_MCTS_SUBJECT + ".child.import";
+    public static final String MCTS_MOTHER_IMPORT_SUBJECT = BASE_MCTS_SUBJECT + ".mother.import";
+    public static final String MCTS_ASHA_IMPORT_SUBJECT = BASE_MCTS_SUBJECT + ".asha.import";
+    public static final String STATE_ID_PARAM = "stateId";
+    public static final String ENDPOINT_PARAM = "endpoint";
+    public static final String STATE_NAME_PARAM = "stateName";
+    public static final String STATE_CODE_PARAM = "stateCode";
+    public static final String DATE_PARAM = "date";
+    public static final String STATE_PARAM = "state";
 
     /**
      * Scheduler

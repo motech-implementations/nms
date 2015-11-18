@@ -2,6 +2,7 @@ package org.motechproject.nms.kilkari.service.impl;
 
 import org.datanucleus.store.rdbms.query.ForwardQueryResult;
 import org.motechproject.mds.query.SqlQueryExecution;
+import org.motechproject.metrics.service.Timer;
 import org.motechproject.nms.kilkari.domain.CallRetry;
 import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.service.CallRetryService;
@@ -53,4 +54,33 @@ public class CallRetryServiceImpl implements CallRetryService {
         return callRetryDataService.executeSQLQuery(queryExecution);
     }
 
+
+
+    @Override
+    public void deleteOldRetryRecords(final int retentionInDays) {
+
+        @SuppressWarnings("unchecked")
+        SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
+
+            @Override
+            public String getSqlQuery() {
+                String query = String.format(
+                        "DELETE FROM nms_kk_retry_records where creationDate < now() - INTERVAL %d DAY",
+                        retentionInDays);
+                LOGGER.debug("SQL QUERY: {}", query);
+                return query;
+            }
+
+            @Override
+            public Long execute(Query query) {
+
+                return (Long) query.execute();
+            }
+        };
+
+        LOGGER.debug("Deleting nms_kk_retry_records older than {} days", retentionInDays);
+        Timer timer = new Timer();
+        long rowCount = callRetryDataService.executeSQLQuery(queryExecution);
+        LOGGER.debug("Deleted {} rows from nms_kk_retry_records in {}", rowCount, timer.time());
+    }
 }

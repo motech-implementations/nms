@@ -114,9 +114,21 @@ public class SubscriptionHelper {
     }
 
 
-    public String getCircle(Subscription sub) {
+    public String getCircleName(Subscription sub) {
         return ((Circle) subscriberDataService.getDetachedField(
                 sub.getSubscriber(),"circle")).getName();
+    }
+
+
+    public Language getLanguage(Subscription sub) {
+        return ((Language) subscriberDataService.getDetachedField(
+                sub.getSubscriber(),"language"));
+    }
+
+
+    public Circle getCircle(Subscription sub) {
+        return ((Circle) subscriberDataService.getDetachedField(
+                sub.getSubscriber(),"circle"));
     }
 
 

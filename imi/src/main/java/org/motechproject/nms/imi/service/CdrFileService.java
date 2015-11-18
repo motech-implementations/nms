@@ -31,7 +31,7 @@ public interface CdrFileService {
      * @param file      file to process
      * @return          a list of errors (failure) or an empty list (success)
      */
-    List<String> sendAggregatedRecords(File file);
+    void saveDetailRecords(File file);
 
 
     /**
@@ -42,14 +42,14 @@ public interface CdrFileService {
      * @param file      file to process
      * @return          a list of errors (failure) or an empty list (success)
      */
-    List<String> sendSummaryRecords(File file);
+    void sendSummaryRecords(File file);
 
 
     /**
      * Verify file exists, verify checksum & record count match. Then sends event to proceed to CDR processing
      * phase 2
      */
-    void verifyDetailFileChecksumAndCount(CdrFileNotificationRequest request);
+    void cdrProcessingPhase1(CdrFileNotificationRequest request);
 
 
     /**
@@ -59,7 +59,7 @@ public interface CdrFileService {
      *
      * NOTE: only exposed here for ITs. Normally called by the MOTECH event system (it's a @MotechListener)
      */
-    List<String> processDetailFile(MotechEvent event);
+    List<String> cdrProcessPhase2(MotechEvent event);
 
     /**
      * To be called during target file generation or triggered with Ops API. We expect ~3x the # of OBD requests/day of CDRs

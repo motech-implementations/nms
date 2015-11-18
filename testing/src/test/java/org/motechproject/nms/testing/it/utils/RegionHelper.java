@@ -60,8 +60,9 @@ public class RegionHelper {
         Circle c = circleDataService.findByName("KA");
 
         if (c == null) {
-            c = circleDataService.create(new Circle("KA"));
-            circleDataService.update(c);
+            c = new Circle("KA");
+            c.setDefaultLanguage(kannadaLanguage());
+            circleDataService.create(c);
 
             // Create a district which also creates the link and the state
             bangaloreDistrict();
@@ -99,6 +100,9 @@ public class RegionHelper {
 
 
     public District newDelhiDistrict() {
+        delhiState();
+        delhiCircle();
+
         District d = districtService.findByStateAndCode(delhiState(), 1L);
 
         if (d == null) {
@@ -139,6 +143,9 @@ public class RegionHelper {
 
 
     public District bangaloreDistrict() {
+        karnatakaState();
+        karnatakaCircle();
+
         District d = districtService.findByStateAndCode(karnatakaState(), 4L);
 
         if (d == null) {

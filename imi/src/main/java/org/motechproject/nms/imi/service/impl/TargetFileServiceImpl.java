@@ -40,6 +40,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -61,7 +62,7 @@ public class TargetFileServiceImpl implements TargetFileService {
     private static final String IMI_RETRY_CHECK_DND = "imi.retry_check_dnd";
     private static final String IMI_RETRY_NO_CHECK_DND = "imi.retry_no_check_dnd";
 
-    private static final int PROGRESS_INTERVAL = 100;
+    private static final int PROGRESS_INTERVAL = 10000;
 
     private static final String GENERATE_TARGET_FILE_EVENT = "nms.obd.generate_target_file";
 
@@ -571,6 +572,7 @@ public class TargetFileServiceImpl implements TargetFileService {
 
 
     @MotechListener(subjects = { GENERATE_TARGET_FILE_EVENT })
+    @Transactional
     public void generateTargetFile(MotechEvent event) {
         LOGGER.debug(event.toString());
 

@@ -19,6 +19,9 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import javax.inject.Inject;
 import java.util.ArrayList;
@@ -51,6 +54,9 @@ public class LanguageServiceBundleIT extends BasePaxIT {
 
     @Inject
     LanguageDataService languageDataService;
+
+    @Inject
+    PlatformTransactionManager transactionManager;
 
     @Before
     public void setUp() {
@@ -113,36 +119,42 @@ public class LanguageServiceBundleIT extends BasePaxIT {
 
     @Test
     public void testValidGetAllForCircle() {
-        Language tamil = languageService.getForCode("50");
-        Language hindi = languageService.getForCode("99");
 
-        Circle circle = circleDataService.findByName("AA");
-        assertNotNull(circle);
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+            Language tamil = languageService.getForCode("50");
+            Language hindi = languageService.getForCode("99");
 
-        Set<Language> languages = languageService.getAllForCircle(circle);
+            Circle circle = circleDataService.findByName("AA");
+            assertNotNull(circle);
 
-        assertNotNull(languages);
-        assertEquals(2, languages.size());
-        assertTrue(languages.contains(tamil));
-        assertTrue(languages.contains(hindi));
+            Set<Language> languages = languageService.getAllForCircle(circle);
+
+            assertNotNull(languages);
+            assertEquals(2, languages.size());
+            assertTrue(languages.contains(tamil));
+            assertTrue(languages.contains(hindi));
+        transactionManager.commit(status);
     }
 
     @Test
     public void testValidGetAllStatesForLanguage() {
-        Language tamil = languageService.getForCode("50");
-        assertNotNull(tamil);
 
-        Language hindi = languageService.getForCode("99");
-        assertNotNull(hindi);
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+            Language tamil = languageService.getForCode("50");
+            assertNotNull(tamil);
 
-        Set<State> states = languageService.getAllStatesForLanguage(tamil);
-        assertNotNull(states);
-        assertEquals(1, states.size());
-        assertEquals(1l, (long) states.iterator().next().getCode());
+            Language hindi = languageService.getForCode("99");
+            assertNotNull(hindi);
 
-        states = languageService.getAllStatesForLanguage(hindi);
-        assertNotNull(states);
-        assertEquals(1, states.size());
-        assertEquals(1l, (long) states.iterator().next().getCode());
+            Set<State> states = languageService.getAllStatesForLanguage(tamil);
+            assertNotNull(states);
+            assertEquals(1, states.size());
+            assertEquals(1l, (long) states.iterator().next().getCode());
+
+            states = languageService.getAllStatesForLanguage(hindi);
+            assertNotNull(states);
+            assertEquals(1, states.size());
+            assertEquals(1l, (long) states.iterator().next().getCode());
+        transactionManager.commit(status);
     }
 }

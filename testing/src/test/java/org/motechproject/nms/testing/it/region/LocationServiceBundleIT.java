@@ -31,6 +31,9 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import javax.inject.Inject;
 import javax.validation.ConstraintViolationException;
@@ -76,6 +79,9 @@ public class LocationServiceBundleIT extends BasePaxIT {
     @Inject
     TestingService testingService;
 
+    @Inject
+    PlatformTransactionManager transactionManager;
+
     State state;
     District district;
     Taluka taluka;
@@ -89,6 +95,8 @@ public class LocationServiceBundleIT extends BasePaxIT {
     @Before
     public void doTheNeedful() {
         testingService.clearDatabase();
+
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         healthSubFacility = new HealthSubFacility();
         healthSubFacility.setName("Health Sub Facility 1");
@@ -136,6 +144,7 @@ public class LocationServiceBundleIT extends BasePaxIT {
         state.setName("State 1");
         state.setCode(1L);
         state.getDistricts().add(district);
+        transactionManager.commit(status);
     }
 
     @Test(expected = ConstraintViolationException.class)
