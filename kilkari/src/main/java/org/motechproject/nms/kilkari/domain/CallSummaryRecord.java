@@ -40,9 +40,9 @@ public class CallSummaryRecord {
 
     public CallSummaryRecord() { }
 
-    public CallSummaryRecord(String subscriptionId, String contentFileName, String languageCode, String circleName,
-                             String weekId, StatusCode statusCode, FinalCallStatus finalStatus,
-                             Integer invalidNumberCount) {
+    public CallSummaryRecord(String subscriptionId, String contentFileName, // NO CHECKSTYLE More than 7 parameters
+                             String languageCode, String circleName, String weekId, StatusCode statusCode,
+                             FinalCallStatus finalStatus, Integer invalidNumberCount) {
         this.subscriptionId = subscriptionId;
         this.contentFileName = contentFileName;
         this.languageCode = languageCode;

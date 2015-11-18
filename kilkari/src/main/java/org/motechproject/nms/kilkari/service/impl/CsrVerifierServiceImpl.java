@@ -1,5 +1,6 @@
 package org.motechproject.nms.kilkari.service.impl;
 
+import org.apache.commons.lang.StringUtils;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.annotations.MotechListener;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
@@ -35,8 +36,8 @@ public class CsrVerifierServiceImpl implements CsrVerifierService {
     private CircleService circleService;
     private LanguageService languageService;
 
-    // key: weekId, Value:contentFileName
-    private Map<String, String> messages;
+    // key: pack name, value:hash of pack messages: key:weekId, value:contentFileName
+    private Map<String, Map<String, String>> packs;
     private Set<String> circles;
     private Set<String> languages;
 
@@ -51,13 +52,17 @@ public class CsrVerifierServiceImpl implements CsrVerifierService {
 
     private void readDomainData() {
 
-        messages = new HashMap<>();
+        int messageCount = 0;
+        packs = new HashMap<>();
         for (SubscriptionPack pack : subscriptionPackDataService.retrieveAll()) {
+            Map<String, String> messages = new HashMap<>();
             for (SubscriptionPackMessage message : pack.getMessages()) {
                 messages.put(message.getWeekId(), message.getMessageFileName());
+                messageCount++;
             }
+            packs.put(pack.getName(), messages);
         }
-        LOGGER.info("Loaded {} message weekId/fileName pairs from database.", messages.size());
+        LOGGER.info("Loaded {} message weekId/fileName pairs from {} packs from database.", messageCount, packs.size());
 
         circles = new HashSet<>();
         for (Circle circle : circleService.getAll()) {
@@ -73,7 +78,7 @@ public class CsrVerifierServiceImpl implements CsrVerifierService {
     }
 
     private void verifyPackMessage(String weekId, String contentFileName) {
-        if (messages == null) {
+        if (packs == null) {
             readDomainData();
         }
         if (weekId == null) {
@@ -82,13 +87,19 @@ public class CsrVerifierServiceImpl implements CsrVerifierService {
         if (contentFileName == null) {
             throw new InvalidCallRecordDataException("Missing contentFileName");
         }
-        String validContentFileName = messages.get(weekId);
-        if (validContentFileName == null) {
+        Set<String> validContentFileNames = new HashSet<>();
+        for (Map<String, String> messages : packs.values()) {
+            if (messages.containsKey(weekId)) {
+                validContentFileNames.add(messages.get(weekId));
+            }
+        }
+        if (validContentFileNames.size() == 0) {
             throw new InvalidCallRecordDataException(String.format("Invalid weekId: %s", weekId));
         }
-        if (!validContentFileName.equals(contentFileName)) {
-            throw new InvalidCallRecordDataException(String.format("Invalid messageContentFileName %s for weekId %s, the " +
-                    "valid messageContentFileName is %s", contentFileName, weekId, validContentFileName));
+        if (!validContentFileNames.contains(contentFileName)) {
+            throw new InvalidCallRecordDataException(String.format("Invalid messageContentFileName %s for weekId %s, " +
+                    " valid messageContentFileNames are %s", contentFileName, weekId,
+                    StringUtils.join(validContentFileNames, ", ")));
         }
     }
 
@@ -117,7 +128,7 @@ public class CsrVerifierServiceImpl implements CsrVerifierService {
     }
 
     public void cacheEvict() {
-        messages = null;
+        packs = null;
     }
 
     @MotechListener(subjects = { LANGUAGE_CACHE_EVICT_MESSAGE })

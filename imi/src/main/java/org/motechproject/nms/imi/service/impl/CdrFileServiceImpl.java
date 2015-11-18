@@ -610,7 +610,6 @@ public class CdrFileServiceImpl implements CdrFileService {
                     CallSummaryRecordDto csrDto = csr.toDto();
                     csrVerifierService.verify(csrDto);
 
-
                 } catch (InvalidCallRecordDataException e) {
                     String error = String.format(FILE_LINE_ERROR, fileName, lineNumber, e.getMessage());
                     LOGGER.debug(String.format(ENTIRE_LINE_FMT, error, line));
