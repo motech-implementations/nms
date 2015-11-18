@@ -204,8 +204,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             Long callingNumber = subscription.getSubscriber().getCallingNumber();
 
             // If, for some reason, there is a retry record for that subscription, delete it too.
-            CallRetry callRetry = callRetryDataService.findBySubscriptionId(subscription.getSubscriptionId());
-            if (callRetry != null) {
+            List<CallRetry> callRetries = callRetryDataService.findBySubscriptionId(subscription.getSubscriptionId());
+            for (CallRetry callRetry : callRetries) {
                 LOGGER.debug("Purging CallRetry record for subscription {}", subscription.getSubscriptionId());
                 callRetryDataService.delete(callRetry);
             }

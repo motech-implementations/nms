@@ -37,6 +37,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.jdo.Query;
+import java.util.ArrayList;
 import java.util.List;
 
 import static java.lang.Math.min;
@@ -58,6 +59,7 @@ public class CsrServiceImpl implements CsrService {
     private CsrVerifierService csrVerifierService;
     private EventRelay eventRelay;
 
+    private boolean mostRecentOldCsrTimestampQueried = false;
     private DateTime mostRecentOldCsrTimestamp;
 
 
@@ -71,9 +73,8 @@ public class CsrServiceImpl implements CsrService {
         this.alertService = alertService;
         this.csrVerifierService = csrVerifierService;
         this.eventRelay = eventRelay;
-
-        mostRecentOldCsrTimestamp = getMostRecentOldCsr();
     }
+
 
     private void completeSubscriptionIfNeeded(Subscription subscription, CallSummaryRecord record) {
 
@@ -215,7 +216,7 @@ public class CsrServiceImpl implements CsrService {
         List<CallSummaryRecord> csrs = mostRecentOldCsrInDb();
         LOGGER.debug("mostRecentOldCsrInDb(): {}", timer.time());
 
-        if (csrs == null || csrs.size() ==0) {
+        if (csrs == null || csrs.size() == 0) {
             LOGGER.debug("There are no old style CSRs in the database, yay!");
             return null;
         }
@@ -320,10 +321,17 @@ public class CsrServiceImpl implements CsrService {
         return found;
     }
 
-    @MotechListener(subjects = { NMS_IMI_KK_CALC_OLD_CSR })
+
     @Transactional
-    public void refreshMostRecentOldCsr(MotechEvent event) { //NOPMD NcssMethodCount
+    private void internalRefreshMostRecentOldCsr() {
         mostRecentOldCsrTimestamp = getMostRecentOldCsr();
+        mostRecentOldCsrTimestampQueried = true;
+    }
+
+
+    @MotechListener(subjects = { NMS_IMI_KK_CALC_OLD_CSR })
+    public void refreshMostRecentOldCsr(MotechEvent event) { //NOPMD NcssMethodCount
+        internalRefreshMostRecentOldCsr();
     }
 
 
@@ -344,17 +352,15 @@ public class CsrServiceImpl implements CsrService {
                 throw new NoSuchSubscriptionException(subscriptionId);
             }
 
-            CallSummaryRecord existingCsr = null;
+            CallSummaryRecord existingCsr = csrDataService.findBySubscriptionId(subscriptionId);
 
-            // This is an 'old' CSR, let's try to fix it up
-            if (RequestId.isValid(subscriptionId)) {
-                LOGGER.debug("Old style CSR(){}, let's try to do something about id", subscriptionId);
-                RequestId requestId = RequestId.fromString(subscriptionId);
-                if (mostRecentOldCsrTimestamp != null) {
-                    DateTime dtCsr = requestId.getTimestampAsDateTime();
-                    if (dtCsr.isBefore(mostRecentOldCsrTimestamp)) {
-                        existingCsr = lookupAndFixOldCsr(subscriptionId, csrDto.getWeekId());
-                    }
+            if (existingCsr == null) {
+                // This may be an old style CSR, let's try to fix it up
+
+                //todo: speed things up looking at mostRecentOldCsrTimestampQueried and using mostRecentOldCsrTimestamp
+                if (mostRecentOldCsrTimestampQueried &&  mostRecentOldCsrTimestamp != null) {
+                    RequestId requestId = RequestId.fromString((String) event.getParameters().get("oldRequestId"));
+                    existingCsr = lookupAndFixOldCsr(requestId.toString(), csrDto.getWeekId());
                 }
             }
 
@@ -383,7 +389,15 @@ public class CsrServiceImpl implements CsrService {
                 csr = csrDataService.update(existingCsr);
             }
 
-            CallRetry callRetry = callRetryDataService.findBySubscriptionId(subscriptionId);
+            List<CallRetry> callRetries = new ArrayList<>();
+            try {
+                callRetries = callRetryDataService.findBySubscriptionId(subscriptionId);
+            } catch (Exception e) {
+                String msg = String.format("MOTECH BUG *** Unexpected exception in findBySubscriptionId() for " +
+                        "subscription %s: %s", subscriptionId, ExceptionUtils.getFullStackTrace(e));
+                LOGGER.error(msg);
+            }
+            CallRetry callRetry = callRetries.get(0);
 
             /**
              * If we have a null subscription (it was deleted for some reason), but still have a retry record

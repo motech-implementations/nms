@@ -176,8 +176,10 @@ public class CdrFileServiceImpl implements CdrFileService {
     }
 
 
-    private void sendProcessCsrEvent(CallSummaryRecordDto csrDto) {
-        MotechEvent motechEvent = new MotechEvent(NMS_IMI_KK_PROCESS_CSR, CallSummaryRecordDto.toParams(csrDto));
+    private void sendProcessCsrEvent(CallSummaryRecordDto csrDto, String requestId) {
+        Map<String, Object> params = CallSummaryRecordDto.toParams(csrDto);
+        params.put("oldRequestId", requestId);
+        MotechEvent motechEvent = new MotechEvent(NMS_IMI_KK_PROCESS_CSR, params);
         eventRelay.sendEventMessage(motechEvent);
     }
 
@@ -309,12 +311,12 @@ public class CdrFileServiceImpl implements CdrFileService {
                 }
 
             if (lineNumber % CDR_PROGRESS_REPORT_CHUNK == 0) {
-                    LOGGER.debug("CDRs, processed {}", timer.frequency(lineNumber));
+                    LOGGER.debug("Saved {}", timer.frequency(lineNumber));
                 }
                 lineNumber++;
             }
 
-            LOGGER.info("CDRs, processed {}", timer.frequency(lineNumber));
+            LOGGER.info("Saved {}", timer.frequency(lineNumber));
 
         } catch (IOException e) {
             String error = INVALID_CDR_P4 + String.format(UNABLE_TO_READ, fileName, e.getMessage());
@@ -365,7 +367,7 @@ public class CdrFileServiceImpl implements CdrFileService {
                         callSummaryRecordDataService.create(csr);
                     }
 
-                    sendProcessCsrEvent(csr.toDto());
+                    sendProcessCsrEvent(csr.toDto(), csr.getRequestId());
 
                 } catch (InvalidCallRecordDataException e) {
                     // All errors here should have been reported in Phase 2, let's just ignore them
@@ -378,14 +380,14 @@ public class CdrFileServiceImpl implements CdrFileService {
                 }
 
                 if (lineNumber % CDR_PROGRESS_REPORT_CHUNK == 0) {
-                    LOGGER.debug("CSRs, processed {}", timer.frequency(lineNumber));
+                    LOGGER.debug("Saved (& enqueued) {}", timer.frequency(lineNumber));
                 }
 
                 lineNumber++;
 
             }
 
-            LOGGER.info("CSRs - processed {}", timer.frequency(lineNumber));
+            LOGGER.info("Saved (& enqueued) {}", timer.frequency(lineNumber));
 
         } catch (IOException e) {
             String error = INVALID_CSR_P5 + String.format(UNABLE_TO_READ, fileName, e.getMessage());
