@@ -62,7 +62,7 @@ public class TargetFileServiceImpl implements TargetFileService {
     private static final String IMI_RETRY_CHECK_DND = "imi.retry_check_dnd";
     private static final String IMI_RETRY_NO_CHECK_DND = "imi.retry_no_check_dnd";
 
-    private static final int PROGRESS_INTERVAL = 100;
+    private static final int PROGRESS_INTERVAL = 10000;
 
     private static final String GENERATE_TARGET_FILE_EVENT = "nms.obd.generate_target_file";
 
