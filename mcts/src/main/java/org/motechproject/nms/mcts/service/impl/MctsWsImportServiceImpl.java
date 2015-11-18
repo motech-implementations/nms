@@ -1,5 +1,6 @@
 package org.motechproject.nms.mcts.service.impl;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.joda.time.LocalDate;
 import org.motechproject.alerts.contract.AlertService;
@@ -10,6 +11,7 @@ import org.motechproject.event.listener.EventRelay;
 import org.motechproject.event.listener.annotations.MotechListener;
 import org.motechproject.nms.flw.exception.FlwImportException;
 import org.motechproject.nms.flw.service.FrontLineWorkerImportService;
+import org.motechproject.nms.flw.utils.FlwConstants;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
@@ -30,17 +32,21 @@ import org.motechproject.nms.mcts.utils.Constants;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.exception.InvalidLocationException;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.server.config.SettingsFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URL;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Service("mctsWsImportService")
 public class MctsWsImportServiceImpl implements MctsWsImportService {
@@ -69,6 +75,10 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
 
     @Autowired
     private MctsImportAuditDataService mctsImportAuditDataService;
+
+    @Autowired
+    @Qualifier("mctsSettings")
+    private SettingsFacade settingsFacade;
 
     /**
      * Event relay service to handle async notifications
@@ -161,9 +171,17 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
 
         int saved = 0;
         int rejected = 0;
+        Map<Long, Set<Long>> hpdMap = getHpdFilters();
         for (MotherRecord record : mothersDataSet.getRecords()) {
             try {
-                if (mctsBeneficiaryImportService.importMotherRecord(toMap(record))) {
+                // get user property map
+                Map<String, Object> recordMap = toMap(record);
+
+                // validate if user needs to be hpd filtered (true if user can be added)
+                boolean hpdValidation = validateHpdUser(hpdMap,
+                        (long) recordMap.get(KilkariConstants.STATE_ID),
+                        (long) recordMap.get(KilkariConstants.DISTRICT_ID));
+                if (hpdValidation && mctsBeneficiaryImportService.importMotherRecord(recordMap)) {
                     saved++;
                 } else {
                     rejected++;
@@ -236,10 +254,19 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
 
         int saved = 0;
         int rejected = 0;
+        Map<Long, Set<Long>> hpdMap = getHpdFilters();
 
         for (ChildRecord record : childrenDataSet.getRecords()) {
             try {
-                if (mctsBeneficiaryImportService.importChildRecord(toMap(record))) {
+                // get user property map
+                Map<String, Object> recordMap = toMap(record);
+
+                // validate if user needs to be hpd filtered (true if user can be added)
+                boolean hpdValidation = validateHpdUser(hpdMap,
+                        (long) recordMap.get(KilkariConstants.STATE_ID),
+                        (long) recordMap.get(KilkariConstants.DISTRICT_ID));
+
+                if (hpdValidation && mctsBeneficiaryImportService.importChildRecord(toMap(record))) {
                     saved++;
                 } else {
                     rejected++;
@@ -312,13 +339,27 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         String stateName = state.getName();
         Long stateCode = state.getCode();
         LOGGER.info("Starting ASHA import for state {}", stateName);
+
         int saved = 0;
         int rejected = 0;
+        Map<Long, Set<Long>> hpdMap = getHpdFilters();
 
         for (AnmAshaRecord record : anmAshaDataSet.getRecords()) {
             try {
-                frontLineWorkerImportService.importFrontLineWorker(record.toFlwRecordMap(), state);
-                saved++;
+                // get user property map
+                Map<String, Object> recordMap = record.toFlwRecordMap();
+
+                // validate if user needs to be hpd filtered (true if user can be added)
+                boolean hpdValidation = validateHpdUser(hpdMap,
+                        (long) recordMap.get(FlwConstants.STATE_ID),
+                        (long) recordMap.get(FlwConstants.DISTRICT_ID));
+
+                if (hpdValidation) {
+                    frontLineWorkerImportService.importFrontLineWorker(record.toFlwRecordMap(), state);
+                    saved++;
+                } else {
+                    rejected++;
+                }
             } catch (InvalidLocationException e) {
                 LOGGER.warn("Invalid location for FLW: ", e);
                 rejected++;
@@ -400,5 +441,58 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
 
     private int sizeNullSafe(Collection collection) {
         return collection == null ? 0 : collection.size();
+    }
+
+    /**
+     * Helper to check if the user exists in HPD filter state
+     * @param hpdFilters set of districts group by state
+     * @param stateId stateId of user
+     * @param districtId districtId of user
+     * @return true, if the user exists in the hpd district filter or if state is not HPD filtered
+     */
+    private boolean validateHpdUser(Map<Long, Set<Long>> hpdFilters, long stateId, long districtId) {
+
+        // if we have the state for hpd filter
+        if (hpdFilters.containsKey(stateId)) {
+            // if district exists in the hpd filter set
+            Set<Long> districtSet = hpdFilters.get(stateId);
+            if (districtSet != null) {
+                return districtSet.contains(districtId);
+            }
+        }
+
+        return true;
+    }
+
+    private Map<Long, Set<Long>> getHpdFilters() {
+        Map<Long, Set<Long>> hpdMap = new HashMap<>();
+        String locationProp = settingsFacade.getProperty(Constants.HPD_STATES);
+        if (StringUtils.isBlank(locationProp)) {
+            return hpdMap;
+        }
+
+        String[] locationParts = StringUtils.split(locationProp, ',');
+        for (String locationPart : locationParts) {
+            Long stateId = Long.valueOf(locationPart);
+            hpdMap.put(stateId, getHpdForState(stateId));
+        }
+
+        return hpdMap;
+    }
+
+    private Set<Long> getHpdForState(Long stateId) {
+
+        Set<Long> districtSet = new HashSet<>();
+        String hpdProp = settingsFacade.getProperty(Constants.BASE_HPD_CONFIG + stateId);
+        if (StringUtils.isBlank(hpdProp)) {
+            return districtSet;
+        }
+
+        String[] districtParts = StringUtils.split(hpdProp, ',');
+        for (String districtPart : districtParts) {
+            districtSet.add(Long.valueOf(districtPart));
+        }
+
+        return districtSet;
     }
 }

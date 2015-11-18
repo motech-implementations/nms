@@ -3,12 +3,14 @@ package org.motechproject.nms.testing.it.mcts;
 import org.joda.time.LocalDate;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.commons.date.util.DateUtil;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
+import org.motechproject.nms.imi.service.SettingsService;
 import org.motechproject.nms.kilkari.domain.MctsChild;
 import org.motechproject.nms.kilkari.domain.MctsMother;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
@@ -85,6 +87,9 @@ public class MctsImportBundleIT extends BasePaxIT {
 
     @Inject
     private TestingService testingService;
+
+    @Inject
+    private SettingsService settingsService;
 
     @Before
     public void setUp() throws ServletException, NamespaceException {
@@ -196,6 +201,56 @@ public class MctsImportBundleIT extends BasePaxIT {
             TimeFaker.stopFakingTime();
         }
 
+    }
+
+    @Test
+    @Ignore
+    public void shouldFilterHpdImport() throws MalformedURLException {
+        URL endpoint = new URL(String.format("http://localhost:%d/mctsWs", TestContext.getJettyPort()));
+        LocalDate yesterday = DateUtil.today().minusDays(1);
+        List<Long> stateIds = singletonList(21L);
+
+        // setup config
+        String originalStateFilter = settingsService.getSettingsFacade().getProperty("mcts.hpd.states");
+        settingsService.getSettingsFacade().setProperty("mcts.hpd.states", "21");
+        settingsService.getSettingsFacade().setProperty("mcts.hpd.states21", "9");
+
+        try {
+            TimeFaker.fakeToday(DateUtil.newDate(2015, 7, 24));
+            // this CL workaround is for an issue with PAX IT logging messing things up
+            // shouldn't affect production
+            ClassLoader cl = Thread.currentThread().getContextClassLoader();
+            Thread.currentThread().setContextClassLoader(mctsWsImportService.getClass().getClassLoader());
+
+            // setup motech event
+            Map<String, Object> params = new HashMap<>();
+            params.put(Constants.DATE_PARAM, yesterday);
+            params.put(Constants.STATE_ID_PARAM, 21L);
+            params.put(Constants.ENDPOINT_PARAM, endpoint);
+            MotechEvent event = new MotechEvent("foobar", params);
+
+            /* Hard to test this since we do async loading now, using test hook. UT already tests message distribution */
+            mctsWsImportService.importMothersData(event);
+            mctsWsImportService.importChildrenData(event);
+            mctsWsImportService.importAnmAshaData(event);
+            Thread.currentThread().setContextClassLoader(cl);
+
+
+            // we expect two of each - the second entry in each ds (3 total) has wrong location data
+            List<MctsMother> mothers = mctsMotherDataService.retrieveAll();
+            assertEquals(2, mothers.size());
+
+            List<MctsChild> children = mctsChildDataService.retrieveAll();
+            assertEquals(2, children.size());
+
+            List<FrontLineWorker> flws = flwDataService.retrieveAll();
+            assertEquals(2, flws.size());
+
+        } finally {
+            TimeFaker.stopFakingTime();
+            // revert config
+            settingsService.getSettingsFacade().setProperty("mcts.hpd.states", originalStateFilter);
+        }
     }
 
 }

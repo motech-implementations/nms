@@ -11,6 +11,8 @@ public final class Constants {
     public static final String MCTS_SYNC_CRON = "mcts.sync.cron";
     public static final String MCTS_ENDPOINT = "mcts.endpointUrl";
     public static final String DAYS_TO_PULL = "mcts.days_to_pull";
+    public static final String HPD_STATES = "mcts.hpd.states";
+    public static final String BASE_HPD_CONFIG = "mcts.hpd.state";
 
     /**
      * Events
