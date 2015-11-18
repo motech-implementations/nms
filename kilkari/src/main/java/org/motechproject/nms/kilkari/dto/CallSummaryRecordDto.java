@@ -14,7 +14,7 @@ import java.util.Map;
 public class CallSummaryRecordDto implements Serializable {
 
     private static final long serialVersionUID = -8391255985224161089L;
-    public static final String XXX = "xxx";
+    public static final String EMPTY_STRING = "";
 
 
     private String subscriptionId;
@@ -48,13 +48,13 @@ public class CallSummaryRecordDto implements Serializable {
     public CallSummaryRecordDto(Subscription subscription, StatusCode statusCode, FinalCallStatus finalStatus,
                                 String contentFileName, String weekId, Language language, Circle circle) {
         this(
-                subscription == null ? XXX : subscription.getSubscriptionId(),
+                subscription == null ? EMPTY_STRING : subscription.getSubscriptionId(),
                 statusCode == null ? -1 : statusCode.getValue(),
                 finalStatus == null ? -1 : finalStatus.getValue(),
-                contentFileName == null ? XXX : contentFileName,
-                weekId == null ? XXX : weekId,
-                language == null ? XXX : language.getCode(),
-                circle == null ? XXX : circle.getName()
+                contentFileName == null ? EMPTY_STRING : contentFileName,
+                weekId == null ? EMPTY_STRING : weekId,
+                language == null ? EMPTY_STRING : language.getCode(),
+                circle == null ? EMPTY_STRING : circle.getName()
         );
     }
 
