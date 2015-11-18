@@ -34,6 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URL;
 import java.util.Collection;
@@ -102,6 +103,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
     }
 
     @MotechListener(subjects = { Constants.MCTS_MOTHER_IMPORT_SUBJECT })
+    @Transactional
     public void importMothersData(MotechEvent motechEvent) {
         Long stateId = (Long) motechEvent.getParameters().get(Constants.STATE_ID_PARAM);
         LocalDate referenceDate = (LocalDate) motechEvent.getParameters().get(Constants.DATE_PARAM);
@@ -179,6 +181,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
     }
 
     @MotechListener(subjects = { Constants.MCTS_CHILD_IMPORT_SUBJECT })
+    @Transactional
     public void importChildrenData(MotechEvent motechEvent) {
         Long stateId = (Long) motechEvent.getParameters().get(Constants.STATE_ID_PARAM);
         LocalDate referenceDate = (LocalDate) motechEvent.getParameters().get(Constants.DATE_PARAM);
@@ -255,6 +258,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
     }
 
     @MotechListener(subjects = { Constants.MCTS_ASHA_IMPORT_SUBJECT })
+    @Transactional
     public void importAnmAshaData(MotechEvent motechEvent) {
         Long stateId = (Long) motechEvent.getParameters().get(Constants.STATE_ID_PARAM);
         LocalDate referenceDate = (LocalDate) motechEvent.getParameters().get(Constants.DATE_PARAM);

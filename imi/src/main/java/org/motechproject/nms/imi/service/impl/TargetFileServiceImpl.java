@@ -40,6 +40,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -571,6 +572,7 @@ public class TargetFileServiceImpl implements TargetFileService {
 
 
     @MotechListener(subjects = { GENERATE_TARGET_FILE_EVENT })
+    @Transactional
     public void generateTargetFile(MotechEvent event) {
         LOGGER.debug(event.toString());
 

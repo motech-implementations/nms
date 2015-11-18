@@ -22,7 +22,7 @@ import org.motechproject.nms.imi.domain.FileType;
 import org.motechproject.nms.imi.exception.ExecException;
 import org.motechproject.nms.imi.exception.InternalException;
 import org.motechproject.nms.imi.exception.InvalidCdrFileException;
-import org.motechproject.nms.imi.exception. InvalidCsrException;
+import org.motechproject.nms.imi.exception.InvalidCsrException;
 import org.motechproject.nms.imi.repository.CallDetailRecordDataService;
 import org.motechproject.nms.imi.repository.CallSummaryRecordDataService;
 import org.motechproject.nms.imi.repository.FileAuditRecordDataService;
@@ -40,6 +40,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.jdo.Query;
 import java.io.BufferedReader;
@@ -646,6 +647,7 @@ public class CdrFileServiceImpl implements CdrFileService {
     //          messages for Phase 3 & 4 processing to any node.
     @Override //NO CHECKSTYLE Cyclomatic Complexity
     @MotechListener(subjects = { CDR_PHASE_2 })
+    @Transactional
     public List<String> cdrProcessPhase2(MotechEvent event) { //NOPMD NcssMethodCount
 
         LOGGER.info("Phase 2 - Start");
@@ -771,6 +773,7 @@ public class CdrFileServiceImpl implements CdrFileService {
 
     // Phase 3:  Deletes old IMI CSR & IMI CDR & KK CSR
     @MotechListener(subjects = { CDR_PHASE_3 })
+    @Transactional
     public void cdrProcessPhase3(MotechEvent event) {
 
         Timer timer = new Timer();
@@ -784,6 +787,7 @@ public class CdrFileServiceImpl implements CdrFileService {
 
     // Phase 4:  Save CDRs for reporting
     @MotechListener(subjects = { CDR_PHASE_4 })
+    @Transactional
     public void cdrProcessPhase4(MotechEvent event) {
 
         Timer timer = new Timer();
@@ -813,6 +817,7 @@ public class CdrFileServiceImpl implements CdrFileService {
 
     // Phase 5: Sends CSR rows for processing on any node
     @MotechListener(subjects = { CDR_PHASE_5 })
+    @Transactional
     public void cdrProcessPhase5(MotechEvent event) {
 
         Timer timer = new Timer();
@@ -843,6 +848,7 @@ public class CdrFileServiceImpl implements CdrFileService {
 
     @Override
     @MotechListener(subjects = { CDR_CSR_CLEANUP_SUBJECT })
+    @Transactional
     public void cleanOldCallRecords() {
         LOGGER.info("cleanOldCallRecords() called");
         int cdrDuration = MIN_CALL_DATA_RETENTION_DURATION_IN_DAYS;

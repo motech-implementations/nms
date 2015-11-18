@@ -42,6 +42,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.jdo.Query;
 import java.util.Iterator;
@@ -172,6 +173,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @MotechListener(subjects = { SUBSCRIPTION_PURGE_EVENT_SUBJECT })
+    @Transactional
     public void purgeOldInvalidSubscriptions(MotechEvent event) {
         int weeksToKeepInvalidFLWs = Integer.parseInt(settingsFacade.getProperty(WEEKS_TO_KEEP_CLOSED_SUBSCRIPTIONS));
         final SubscriptionStatus completed = SubscriptionStatus.COMPLETED;

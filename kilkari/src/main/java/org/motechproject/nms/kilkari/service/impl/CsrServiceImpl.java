@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.jdo.Query;
 import java.util.List;
@@ -277,6 +278,7 @@ public class CsrServiceImpl implements CsrService {
 
 
     @MotechListener(subjects = { NMS_IMI_KK_PROCESS_CSR }) //NO CHECKSTYLE Cyclomatic Complexity
+    @Transactional
     public void processCallSummaryRecord(MotechEvent event) { //NOPMD NcssMethodCount
 
         Timer timer = new Timer();
