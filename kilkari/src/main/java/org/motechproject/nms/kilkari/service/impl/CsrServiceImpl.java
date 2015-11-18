@@ -213,7 +213,7 @@ public class CsrServiceImpl implements CsrService {
 
             @Override
             public String getSqlQuery() {
-                String query = "SELECT * FROM nms_kk_summary_records subscriptionId like '%%:%%' " +
+                String query = "SELECT * FROM nms_kk_summary_records subscriptionId like '%:%' " +
                         "ORDER BY subscriptionId DESC LIMIT 1";
                 LOGGER.debug("SQL QUERY: {}", query);
                 return query;
