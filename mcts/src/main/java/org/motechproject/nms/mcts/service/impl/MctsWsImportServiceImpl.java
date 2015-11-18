@@ -351,7 +351,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
 
                 // validate if user needs to be hpd filtered (true if user can be added)
                 boolean hpdValidation = validateHpdUser(hpdMap,
-                        (long) recordMap.get(FlwConstants.STATE_ID),
+                        stateCode,
                         (long) recordMap.get(FlwConstants.DISTRICT_ID));
 
                 if (hpdValidation) {
