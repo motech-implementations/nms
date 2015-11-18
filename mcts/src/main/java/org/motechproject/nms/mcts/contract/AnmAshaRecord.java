@@ -409,6 +409,7 @@ public class AnmAshaRecord {
         map.put(FlwConstants.ID, getId() == null ? null : getId().toString());
         map.put(FlwConstants.CONTACT_NO, getContactNo() == null ? null : Long.parseLong(getContactNo()));
         map.put(FlwConstants.NAME, getName());
+        map.put(FlwConstants.STATE_ID, getStateId());
         map.put(FlwConstants.DISTRICT_ID, getDistrictId());
         map.put(FlwConstants.DISTRICT_NAME, getDistrictName());
         map.put(FlwConstants.TALUKA_ID, getTalukaId());
