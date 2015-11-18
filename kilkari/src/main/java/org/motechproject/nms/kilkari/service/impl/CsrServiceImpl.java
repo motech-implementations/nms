@@ -195,7 +195,7 @@ public class CsrServiceImpl implements CsrService {
     }
 
 
-    private List<CallSummaryRecord> findOldCallSummaryRecords(final String subscriptionId, final String weekId) {
+    private List<CallSummaryRecord> findOldCallSummaryRecords(final String subscriptionId) {
         @SuppressWarnings("unchecked")
         SqlQueryExecution<List<CallSummaryRecord>> queryExecution = new SqlQueryExecution<List<CallSummaryRecord>>() {
 
@@ -205,7 +205,7 @@ public class CsrServiceImpl implements CsrService {
                         "SELECT * FROM nms_kk_summary_records " +
                                 "WHERE subscriptionId like '%%%s' " +
                                 "ORDER BY weekId, subscriptionId DESC",
-                        subscriptionId, weekId);
+                        subscriptionId);
                 return query;
             }
 
@@ -234,7 +234,7 @@ public class CsrServiceImpl implements CsrService {
      * @return an old and now fixed up CSR, or null
      */
     private CallSummaryRecord lookupAndFixOldCsr(String subscriptionId, String weekId) {
-        List<CallSummaryRecord> csrs = findOldCallSummaryRecords(subscriptionId, weekId);
+        List<CallSummaryRecord> csrs = findOldCallSummaryRecords(subscriptionId);
         if (csrs == null || csrs.size() == 0) {
             return null;
         }
@@ -311,27 +311,6 @@ public class CsrServiceImpl implements CsrService {
 
             CallRetry callRetry = callRetryDataService.findBySubscriptionId(subscriptionId);
 
-            /**
-             * If we have a null subscription (it was deleted for some reason), but still have a retry record
-             * for it, then we need to erase the call retry record.
-             */
-            if (subscription == null) {
-                String msg = String.format("Subscription %s doesn't exist in the database anymore.", subscriptionId);
-                LOGGER.warn(msg);
-                alertService.create(subscriptionId, NMS_IMI_KK_PROCESS_CSR, msg, AlertType.MEDIUM,
-                        AlertStatus.NEW, 0, null);
-
-                if (callRetry != null) {
-                    msg = String.format("Deleting callRetry record for deleted subscription %s", subscriptionId);
-                    LOGGER.warn(msg);
-                    alertService.create(subscriptionId, NMS_IMI_KK_PROCESS_CSR, msg, AlertType.MEDIUM,
-                            AlertStatus.NEW, 0, null);
-                    deleteCallRetryRecordIfNeeded(callRetry);
-                }
-
-                return;
-            }
-
             switch (FinalCallStatus.fromInt(csrDto.getFinalStatus())) {
                 case SUCCESS:
                     completeSubscriptionIfNeeded(subscription, csr);
@@ -351,12 +330,6 @@ public class CsrServiceImpl implements CsrService {
                     LOGGER.error(error);
                     alertService.create(subscriptionId, NMS_IMI_KK_PROCESS_CSR, error, AlertType.CRITICAL,
                             AlertStatus.NEW, 0, null);
-            }
-
-            if (existingCsr == null) {
-                csrDataService.create(csr);
-            } else {
-
             }
 
         } catch (NoSuchSubscriptionException e) {
