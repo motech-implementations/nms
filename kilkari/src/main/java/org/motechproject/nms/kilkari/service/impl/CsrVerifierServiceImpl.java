@@ -78,6 +78,18 @@ public class CsrVerifierServiceImpl implements CsrVerifierService {
         }
     }
 
+    private void verifyContentFile(String contentFileName) {
+        if (contentFileName == null || contentFileName.isEmpty()) {
+            throw new InvalidCallRecordDataException("Missing contentFileName");
+        }
+    }
+
+    private void verifyWeekId(String weekId) {
+        if (weekId == null || weekId.isEmpty()) {
+            throw new InvalidCallRecordDataException("Missing weekId");
+        }
+    }
+
     public void cacheEvict() {
         circles = null;
         languages = null;
@@ -91,5 +103,7 @@ public class CsrVerifierServiceImpl implements CsrVerifierService {
     public void verify(CallSummaryRecordDto csrDto) {
         verifyCircle(csrDto.getCircleName());
         verifyLanguage(csrDto.getLanguageCode());
+        verifyContentFile(csrDto.getContentFileName());
+        verifyWeekId(csrDto.getWeekId());
     }
 }
