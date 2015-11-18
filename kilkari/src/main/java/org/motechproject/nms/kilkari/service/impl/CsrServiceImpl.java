@@ -2,12 +2,10 @@ package org.motechproject.nms.kilkari.service.impl;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.datanucleus.store.rdbms.query.ForwardQueryResult;
-import org.joda.time.DateTime;
 import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.alerts.domain.AlertStatus;
 import org.motechproject.alerts.domain.AlertType;
 import org.motechproject.event.MotechEvent;
-import org.motechproject.event.listener.EventRelay;
 import org.motechproject.event.listener.annotations.MotechListener;
 import org.motechproject.mds.query.SqlQueryExecution;
 import org.motechproject.metrics.service.Timer;
@@ -46,7 +44,6 @@ import static java.lang.Math.min;
 public class CsrServiceImpl implements CsrService {
 
     private static final String NMS_IMI_KK_PROCESS_CSR = "nms.imi.kk.process_csr";
-    private static final String NMS_IMI_KK_CALC_OLD_CSR = "nms.imi.kk.calc_recent_old_csr";
     private static final int MAX_CHAR_ALERT = 4900;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CsrServiceImpl.class);
@@ -56,22 +53,16 @@ public class CsrServiceImpl implements CsrService {
     private CallRetryDataService callRetryDataService;
     private AlertService alertService;
     private CsrVerifierService csrVerifierService;
-    private EventRelay eventRelay;
-
-    private boolean mostRecentOldCsrTimestampQueried = false;
-    private DateTime mostRecentOldCsrTimestamp;
-
 
     @Autowired
     public CsrServiceImpl(CallSummaryRecordDataService csrDataService, SubscriptionDataService subscriptionDataService,
                           CallRetryDataService callRetryDataService, AlertService alertService,
-                          CsrVerifierService csrVerifierService, EventRelay eventRelay) {
+                          CsrVerifierService csrVerifierService) {
         this.csrDataService = csrDataService;
         this.subscriptionDataService = subscriptionDataService;
         this.callRetryDataService = callRetryDataService;
         this.alertService = alertService;
         this.csrVerifierService = csrVerifierService;
-        this.eventRelay = eventRelay;
     }
 
 
@@ -206,54 +197,6 @@ public class CsrServiceImpl implements CsrService {
     }
 
 
-    /**
-     * Returns the timestamp of the most recent old-style subscriptionId (really a requestId)
-     */
-    private DateTime getMostRecentOldCsr() {
-
-        Timer timer = new Timer();
-        List<CallSummaryRecord> csrs = mostRecentOldCsrInDb();
-        LOGGER.debug("mostRecentOldCsrInDb(): {}", timer.time());
-
-        if (csrs == null || csrs.size() == 0) {
-            LOGGER.debug("There are no old style CSRs in the database, yay!");
-            return null;
-        }
-
-        LOGGER.debug("Timestamp of the most recent old style CSR in the database: {}",
-                RequestId.fromString(csrs.get(0).getSubscriptionId()).getTimestamp());
-
-        return RequestId.fromString(csrs.get(0).getSubscriptionId()).getTimestampAsDateTime();
-    }
-
-
-    private List<CallSummaryRecord> mostRecentOldCsrInDb() {
-        @SuppressWarnings("unchecked")
-        SqlQueryExecution<List<CallSummaryRecord>> queryExecution = new SqlQueryExecution<List<CallSummaryRecord>>() {
-
-            @Override
-            public String getSqlQuery() {
-                String query = "SELECT * FROM nms_kk_summary_records WHERE LENGTH(subscriptionId) = 51" +
-                        " ORDER BY subscriptionId DESC LIMIT 1";
-                LOGGER.debug("SQL QUERY: {}", query);
-                return query;
-            }
-
-            @Override
-            public List<CallSummaryRecord> execute(Query query) {
-
-                query.setClass(CallSummaryRecord.class);
-
-                ForwardQueryResult fqr = (ForwardQueryResult) query.execute();
-
-                return (List<CallSummaryRecord>) fqr;
-            }
-        };
-
-        return csrDataService.executeSQLQuery(queryExecution);
-    }
-
-
     private List<CallSummaryRecord> findOldCallSummaryRecords(final String subscriptionId, final String weekId) {
         @SuppressWarnings("unchecked")
         SqlQueryExecution<List<CallSummaryRecord>> queryExecution = new SqlQueryExecution<List<CallSummaryRecord>>() {
@@ -321,19 +264,6 @@ public class CsrServiceImpl implements CsrService {
     }
 
 
-    @Transactional
-    private void internalRefreshMostRecentOldCsr() {
-        mostRecentOldCsrTimestamp = getMostRecentOldCsr();
-        mostRecentOldCsrTimestampQueried = true;
-    }
-
-
-    @MotechListener(subjects = { NMS_IMI_KK_CALC_OLD_CSR })
-    public void refreshMostRecentOldCsr(MotechEvent event) { //NOPMD NcssMethodCount
-        internalRefreshMostRecentOldCsr();
-    }
-
-
     @MotechListener(subjects = { NMS_IMI_KK_PROCESS_CSR }) //NO CHECKSTYLE Cyclomatic Complexity
     @Transactional
     public void processCallSummaryRecord(MotechEvent event) { //NOPMD NcssMethodCount
@@ -355,14 +285,9 @@ public class CsrServiceImpl implements CsrService {
 
             if (existingCsr == null) {
                 // This may be an old style CSR, let's try to fix it up
-
-                //todo: speed things up looking at mostRecentOldCsrTimestampQueried and using mostRecentOldCsrTimestamp
-                if (mostRecentOldCsrTimestampQueried &&  mostRecentOldCsrTimestamp != null) {
-                    RequestId requestId = RequestId.fromString((String) event.getParameters().get("oldRequestId"));
-                    existingCsr = lookupAndFixOldCsr(requestId.toString(), csrDto.getWeekId());
-                }
+                RequestId requestId = RequestId.fromString((String) event.getParameters().get("oldRequestId"));
+                existingCsr = lookupAndFixOldCsr(requestId.toString(), csrDto.getWeekId());
             }
-
 
             CallSummaryRecord csr;
             boolean invalidNr = StatusCode.fromInt(csrDto.getStatusCode()).equals(StatusCode.OBD_FAILED_INVALIDNUMBER);
@@ -494,10 +419,5 @@ public class CsrServiceImpl implements CsrService {
         Timer timer = new Timer();
         long rowCount = csrDataService.executeSQLQuery(queryExecution);
         LOGGER.debug("Deleted {} rows from nms_kk_summary_records in {}", rowCount, timer.time());
-
-
-        MotechEvent motechEvent = new MotechEvent(NMS_IMI_KK_CALC_OLD_CSR);
-        eventRelay.broadcastEventMessage(motechEvent);
-
     }
 }

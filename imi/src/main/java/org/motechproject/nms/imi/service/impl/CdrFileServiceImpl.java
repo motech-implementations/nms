@@ -289,7 +289,7 @@ public class CdrFileServiceImpl implements CdrFileService {
                 LOGGER.debug(String.format(IGNORING_CDR_HDR, fileName, e.getMessage()));
             }
 
-            Timer timer = new Timer("CDR", "CDRs");
+            Timer timer = new Timer("cdr", "cdrs");
             while ((line = reader.readLine()) != null) {
                 try {
 
@@ -358,7 +358,7 @@ public class CdrFileServiceImpl implements CdrFileService {
                 LOGGER.debug(String.format(IGNORING_CSR_HDR, fileName, e.getMessage()));
             }
 
-            Timer timer = new Timer("CSR", "CSRs");
+            Timer timer = new Timer("csr", "csrs");
             while ((line = reader.readLine()) != null) {
                 try {
 
@@ -380,7 +380,7 @@ public class CdrFileServiceImpl implements CdrFileService {
                 }
 
                 if (lineNumber % CDR_PROGRESS_REPORT_CHUNK == 0) {
-                    LOGGER.debug("Saved (& enqueued) {}", timer.frequency(lineNumber));
+                    LOGGER.debug("Enqueued (& saved) {}", timer.frequency(lineNumber));
                 }
 
                 lineNumber++;
