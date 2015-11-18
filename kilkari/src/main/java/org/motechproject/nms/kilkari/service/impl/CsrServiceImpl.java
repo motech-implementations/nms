@@ -37,7 +37,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.jdo.Query;
-import java.util.ArrayList;
 import java.util.List;
 
 import static java.lang.Math.min;
@@ -389,15 +388,7 @@ public class CsrServiceImpl implements CsrService {
                 csr = csrDataService.update(existingCsr);
             }
 
-            List<CallRetry> callRetries = new ArrayList<>();
-            try {
-                callRetries = callRetryDataService.findBySubscriptionId(subscriptionId);
-            } catch (Exception e) {
-                String msg = String.format("MOTECH BUG *** Unexpected exception in findBySubscriptionId() for " +
-                        "subscription %s: %s", subscriptionId, ExceptionUtils.getFullStackTrace(e));
-                LOGGER.error(msg);
-            }
-            CallRetry callRetry = callRetries.get(0);
+            CallRetry callRetry = callRetryDataService.findBySubscriptionId(subscriptionId);
 
             /**
              * If we have a null subscription (it was deleted for some reason), but still have a retry record
