@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * This handles all the integration pieces between MA and sms module to trigger and handle notifications
@@ -106,6 +107,7 @@ public class CourseNotificationServiceImpl implements CourseNotificationService 
     }
 
     @MotechListener(subjects = { COURSE_COMPLETED_SUBJECT })
+    @Transactional
     public void sendSmsNotification(MotechEvent event) {
 
         try {
@@ -136,6 +138,7 @@ public class CourseNotificationServiceImpl implements CourseNotificationService 
     }
 
     @MotechListener(subjects = { SMS_STATUS_SUBJECT })
+    @Transactional
     public void updateSmsStatus(MotechEvent event) {
 
         LOGGER.debug("Handling update sms delivery status event");

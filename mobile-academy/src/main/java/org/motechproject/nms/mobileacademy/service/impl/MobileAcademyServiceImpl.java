@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronizationAdapter;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
@@ -367,6 +368,7 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
     @MotechListener(subjects = {
             ConfigurationConstants.FILE_CHANGED_EVENT_SUBJECT,
             ConfigurationConstants.FILE_CREATED_EVENT_SUBJECT })
+    @Transactional
     public void handleCourseChanges(MotechEvent event) {
 
         String filePath = (String) event.getParameters().get(ConfigurationConstants.FILE_PATH);

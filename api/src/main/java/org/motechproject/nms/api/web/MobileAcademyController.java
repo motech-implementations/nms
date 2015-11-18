@@ -77,6 +77,7 @@ public class MobileAcademyController extends BaseController {
      * Get course
      * @return course response object
      */
+    @Transactional(readOnly = true)
     @RequestMapping(
             value = "/course",
             method = RequestMethod.GET)
@@ -107,6 +108,7 @@ public class MobileAcademyController extends BaseController {
      * Get the version of the course
      * @return Integer representing the timestamp since epoch
      */
+    @Transactional(readOnly = true)
     @RequestMapping(
             value = "/courseVersion",
             method = RequestMethod.GET)
@@ -126,6 +128,7 @@ public class MobileAcademyController extends BaseController {
      * @param callId unique tracking id for the call
      * @return serialized json bookmark response
      */
+    @Transactional(readOnly = true)
     @RequestMapping(
             value = "/bookmarkWithScore",
             method = RequestMethod.GET)
@@ -200,6 +203,7 @@ public class MobileAcademyController extends BaseController {
      * @param smsDeliveryStatus sms delivery details
      * @return OK or exception
      */
+    @Transactional
     @RequestMapping(
             value = "/sms/status/imi",
             method = RequestMethod.POST)
@@ -226,6 +230,7 @@ public class MobileAcademyController extends BaseController {
         LOGGER.debug("Sent event message to process completion notification");
     }
 
+    @Transactional
     @RequestMapping(
             value = "/notify",
             method = RequestMethod.POST)
