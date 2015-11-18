@@ -61,6 +61,10 @@ public class RequestId implements Serializable {
         return TIME_FORMATTER.print(dt);
     }
 
+    public static DateTime dtFromTimestamp(String timestamp) {
+        return DateTime.parse(timestamp, TIME_FORMATTER);
+    }
+
 
     public String getSubscriptionId() {
         return subscriptionId;
@@ -69,6 +73,15 @@ public class RequestId implements Serializable {
 
     public String getTimestamp() {
         return timestamp;
+    }
+
+    public DateTime getTimestampAsDateTime() {
+        return dtFromTimestamp(timestamp);
+    }
+
+
+    public static boolean isValid(String s) {
+        return REQUEST_ID_PATTERN.matcher(s).matches();
     }
 
 

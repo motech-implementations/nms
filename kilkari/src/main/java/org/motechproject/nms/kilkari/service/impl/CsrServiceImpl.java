@@ -2,6 +2,7 @@ package org.motechproject.nms.kilkari.service.impl;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.datanucleus.store.rdbms.query.ForwardQueryResult;
+import org.joda.time.DateTime;
 import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.alerts.domain.AlertStatus;
 import org.motechproject.alerts.domain.AlertType;
@@ -54,7 +55,7 @@ public class CsrServiceImpl implements CsrService {
     private AlertService alertService;
     private CsrVerifierService csrVerifierService;
 
-    private boolean oldCallSummaryRecordsInDatabase;
+    private DateTime mostRecentOldCsrTimestamp;
 
 
     @Autowired
@@ -67,7 +68,7 @@ public class CsrServiceImpl implements CsrService {
         this.alertService = alertService;
         this.csrVerifierService = csrVerifierService;
 
-        oldCallSummaryRecordsInDatabase = oldCallSummaryRecordsInDb();
+        mostRecentOldCsrTimestamp = mostRecentOldCallSummaryRecordInDb();
     }
 
     private void completeSubscriptionIfNeeded(Subscription subscription, CallSummaryRecord record) {
@@ -203,10 +204,38 @@ public class CsrServiceImpl implements CsrService {
     }
 
 
-    private boolean oldCallSummaryRecordsInDb() {
-        Long l = csrDataService.countFindLikeSubscriptionId(":");
-        LOGGER.debug("There are still {} old CSR(s) in the database", l);
-        return (l > 0);
+    /**
+     * Returns the timestamp of the most recent old-style subscriptionId (really a requestId)
+     */
+    private DateTime mostRecentOldCallSummaryRecordInDb() {
+        @SuppressWarnings("unchecked")
+        SqlQueryExecution<List<CallSummaryRecord>> queryExecution = new SqlQueryExecution<List<CallSummaryRecord>>() {
+
+            @Override
+            public String getSqlQuery() {
+                String query = "SELECT * FROM nms_kk_summary_records subscriptionId like '%%:%%' " +
+                        "ORDER BY subscriptionId DESC LIMIT 1";
+                LOGGER.debug("SQL QUERY: {}", query);
+                return query;
+            }
+
+            @Override
+            public List<CallSummaryRecord> execute(Query query) {
+
+                query.setClass(CallSummaryRecord.class);
+
+                ForwardQueryResult fqr = (ForwardQueryResult) query.execute();
+
+                return (List<CallSummaryRecord>) fqr;
+            }
+        };
+
+        List<CallSummaryRecord> csrs = csrDataService.executeSQLQuery(queryExecution);
+        if (csrs == null || csrs.size() ==0) {
+            return null;
+        }
+        return RequestId.fromString(csrs.get(0).getSubscriptionId()).getTimestampAsDateTime();
+
     }
 
 
@@ -294,10 +323,20 @@ public class CsrServiceImpl implements CsrService {
                 throw new NoSuchSubscriptionException(subscriptionId);
             }
 
-            CallSummaryRecord existingCsr = csrDataService.findBySubscriptionId(subscriptionId);
-            if (existingCsr == null && oldCallSummaryRecordsInDatabase) {
-                existingCsr = lookupAndFixOldCsr(subscriptionId, csrDto.getWeekId());
+            CallSummaryRecord existingCsr = null;
+
+            // This is an 'old' CSR, let's try to fix it up
+            if (RequestId.isValid(subscriptionId)) {
+                LOGGER.debug("Old style CSR(){}, let's try to do something about id", subscriptionId);
+                RequestId requestId = RequestId.fromString(subscriptionId);
+                if (mostRecentOldCsrTimestamp != null) {
+                    DateTime dtCsr = requestId.getTimestampAsDateTime();
+                    if (dtCsr.isBefore(mostRecentOldCsrTimestamp)) {
+                        existingCsr = lookupAndFixOldCsr(subscriptionId, csrDto.getWeekId());
+                    }
+                }
             }
+
 
             CallSummaryRecord csr;
             boolean invalidNr = StatusCode.fromInt(csrDto.getStatusCode()).equals(StatusCode.OBD_FAILED_INVALIDNUMBER);
