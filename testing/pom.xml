@@ -163,6 +163,7 @@
                                     <encoding>UTF-8</encoding>
                                     <summaryFile>target/failsafe-reports/failsafe-summary-it.xml</summaryFile>
                                     <systemPropertiesFile>${modules.root.dir}/maven.properties</systemPropertiesFile>
+                                    <runOrder>random</runOrder>
                                 </configuration>
                             </execution>
                             <execution>
