@@ -19,11 +19,11 @@ public class RequestId implements Serializable {
     private static final long serialVersionUID = 8600346000225276856L;
 
     private static final int TIMESTAMP_LENGTH = 14; //YYYYMMDDHHMMSS
-    private static final int UUID_LENGTH = 36;
-    private static final int REQUEST_ID_LENGTH = TIMESTAMP_LENGTH + UUID_LENGTH +  1;
     private static final Pattern TIMESTAMP_PATTERN = Pattern.compile("[0-9]{14}");
     private static final Pattern UUID_PATTERN = Pattern.compile(
             "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}");
+    private static final Pattern REQUEST_ID_PATTERN = Pattern.compile(
+            "[0-9]{14}:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}");
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormat.forPattern("yyyyMMddHHmmss");
 
 
@@ -73,19 +73,11 @@ public class RequestId implements Serializable {
 
 
     public static RequestId fromString(String s) {
-
-        if (s.length() != REQUEST_ID_LENGTH) {
-            throw new IllegalArgumentException(String.format("Invalid string length: %s", s));
-
+        if (!REQUEST_ID_PATTERN.matcher(s).matches()) {
+            throw new IllegalArgumentException(String.format("Invalid requestId: %s", s));
         }
 
-        String timestamp = s.substring(0, TIMESTAMP_LENGTH);
-        validateTimestamp(timestamp);
-
-        String subscriptionId = s.substring(TIMESTAMP_LENGTH + 1);
-        validateSubscriptionId(subscriptionId);
-
-        return new RequestId(subscriptionId, timestamp);
+        return new RequestId(s.substring(TIMESTAMP_LENGTH + 1), s.substring(0, TIMESTAMP_LENGTH));
     }
 
 

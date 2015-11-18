@@ -3,6 +3,7 @@ package org.motechproject.nms.imi.domain;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.nms.kilkari.dto.CallSummaryRecordDto;
+import org.motechproject.nms.kilkari.exception.InvalidCallRecordDataException;
 import org.motechproject.nms.props.domain.RequestId;
 
 import javax.jdo.annotations.Index;
@@ -158,8 +159,14 @@ public class CallSummaryRecord {
     }
 
     public CallSummaryRecordDto toDto() {
+        String subscriptionId;
+        try {
+            subscriptionId = RequestId.fromString(requestId).getSubscriptionId();
+        } catch (IllegalArgumentException e) {
+            throw new InvalidCallRecordDataException(e);
+        }
         return new CallSummaryRecordDto(
-                RequestId.fromString(requestId).getSubscriptionId(),
+                subscriptionId,
                 statusCode,
                 finalStatus,
                 contentFileName,
