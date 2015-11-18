@@ -7,7 +7,7 @@ import org.motechproject.alerts.domain.AlertType;
 import org.motechproject.nms.imi.domain.FileAuditRecord;
 import org.motechproject.nms.imi.domain.FileType;
 import org.motechproject.nms.imi.exception.ExecException;
-import org.motechproject.nms.imi.exception.InvalidCdrFileException;
+import org.motechproject.nms.imi.exception.InvalidCallRecordFileException;
 import org.motechproject.nms.imi.exception.NotFoundException;
 import org.motechproject.nms.imi.repository.FileAuditRecordDataService;
 import org.motechproject.nms.imi.service.CdrFileService;
@@ -308,13 +308,13 @@ public class ImiController {
 
 
     /**
-     * Handles InvalidCdrFileException - potentially a large amount of errors all in one list of string
+     * Handles InvalidCallRecordFileException - potentially a large amount of errors all in one list of string
      */
     //todo: IT or UT
-    @ExceptionHandler(InvalidCdrFileException.class)
+    @ExceptionHandler(InvalidCallRecordFileException.class)
     @ResponseBody
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public AggregateBadRequest handleException(InvalidCdrFileException e, HttpServletRequest request) {
+    public AggregateBadRequest handleException(InvalidCallRecordFileException e, HttpServletRequest request) {
         log(String.format(LOG_RESPONSE_FORMAT, HttpStatus.BAD_REQUEST.value(), request.getRequestURI()), e.getMessages().toString());
         return new AggregateBadRequest(e.getMessages());
     }

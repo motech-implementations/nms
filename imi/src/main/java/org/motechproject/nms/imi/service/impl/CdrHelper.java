@@ -2,8 +2,8 @@ package org.motechproject.nms.imi.service.impl;
 
 import org.joda.time.DateTime;
 import org.motechproject.nms.imi.domain.CallDetailRecord;
-import org.motechproject.nms.imi.exception.InvalidCsrException;
 import org.motechproject.nms.kilkari.dto.CallDetailRecordDto;
+import org.motechproject.nms.kilkari.exception.InvalidCallRecordDataException;
 import org.motechproject.nms.props.domain.CallDisconnectReason;
 import org.motechproject.nms.props.domain.RequestId;
 import org.motechproject.nms.props.domain.StatusCode;
@@ -182,7 +182,7 @@ public final class CdrHelper {
 
             cdr.setWeekId(fields[FieldName.WEEK_ID.ordinal()]);
         } catch (IllegalArgumentException e) {
-            throw new InvalidCsrException(e.getMessage(), e);
+            throw new InvalidCallRecordDataException(e.getMessage(), e);
         }
 
         return cdr;

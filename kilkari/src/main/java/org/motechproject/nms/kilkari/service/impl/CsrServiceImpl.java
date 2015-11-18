@@ -17,7 +17,7 @@ import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.dto.CallSummaryRecordDto;
-import org.motechproject.nms.kilkari.exception.InvalidCsrDataException;
+import org.motechproject.nms.kilkari.exception.InvalidCallRecordDataException;
 import org.motechproject.nms.kilkari.exception.NoSuchSubscriptionException;
 import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.CallSummaryRecordDataService;
@@ -375,7 +375,7 @@ public class CsrServiceImpl implements CsrService {
             String msg = String.format("No such subscription %s", e.getMessage());
             LOGGER.error(msg);
             alertService.create(subscriptionId, "Invalid CSR Data", msg, AlertType.HIGH, AlertStatus.NEW, 0, null);
-        } catch (InvalidCsrDataException e) {
+        } catch (InvalidCallRecordDataException e) {
             String msg = String.format("Invalid CDR data for subscription %s: %s", subscriptionId, e.getMessage());
             LOGGER.error(msg);
             alertService.create(subscriptionId, "Invalid CSR Data", msg, AlertType.HIGH, AlertStatus.NEW, 0, null);
@@ -423,8 +423,9 @@ public class CsrServiceImpl implements CsrService {
             }
         };
 
+        LOGGER.debug("Deleting nms_kk_summary_records older than {} days", retentionInDays);
+        Timer timer = new Timer();
         long rowCount = csrDataService.executeSQLQuery(queryExecution);
-        LOGGER.debug(String.format("Deleted %d rows from nms_kk_summary_records", rowCount));
-
+        LOGGER.debug("Deleted {} rows from nms_kk_summary_records in {}", rowCount, timer.time());
     }
 }

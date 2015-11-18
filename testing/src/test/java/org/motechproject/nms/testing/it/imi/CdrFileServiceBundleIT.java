@@ -11,7 +11,7 @@ import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.alerts.domain.Alert;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.nms.imi.domain.CallDetailRecord;
-import org.motechproject.nms.imi.exception.InvalidCdrFileException;
+import org.motechproject.nms.imi.exception.InvalidCallRecordFileException;
 import org.motechproject.nms.imi.repository.CallDetailRecordDataService;
 import org.motechproject.nms.imi.repository.CallSummaryRecordDataService;
 import org.motechproject.nms.imi.repository.FileAuditRecordDataService;
@@ -192,7 +192,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         helper.makeLocalCsrFile();
         try {
             cdrFileService.cdrProcessingPhase1(helper.cdrFileNotificationRequest());
-        } catch (InvalidCdrFileException e) {
+        } catch (InvalidCallRecordFileException e) {
             assertEquals(2, e.getMessages().size());
         }
     }
@@ -206,7 +206,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         helper.makeLocalCdrFile();
         try {
             cdrFileService.cdrProcessingPhase1(helper.cdrFileNotificationRequest());
-        } catch (InvalidCdrFileException e) {
+        } catch (InvalidCallRecordFileException e) {
             List<String> errors = e.getMessages();
             assertEquals(4, errors.size());
             String expected = String.format("%s: 5 errors - only displaying the first 3", helper.csr());

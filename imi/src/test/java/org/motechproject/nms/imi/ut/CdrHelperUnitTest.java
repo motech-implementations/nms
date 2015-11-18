@@ -2,9 +2,9 @@ package org.motechproject.nms.imi.ut;
 
 import org.joda.time.DateTime;
 import org.junit.Test;
-import org.motechproject.nms.imi.exception.InvalidCsrException;
 import org.motechproject.nms.imi.service.impl.CdrHelper;
 import org.motechproject.nms.kilkari.dto.CallDetailRecordDto;
+import org.motechproject.nms.kilkari.exception.InvalidCallRecordDataException;
 import org.motechproject.nms.props.domain.CallDisconnectReason;
 import org.motechproject.nms.props.domain.RequestId;
 import org.motechproject.nms.props.domain.StatusCode;
@@ -27,13 +27,13 @@ public class CdrHelperUnitTest {
         assertNotNull(cdr);
     }
 
-    @Test(expected=InvalidCsrException.class)
+    @Test(expected=InvalidCallRecordDataException.class)
     public void testInvalidFields() {
         CallDetailRecordDto cdr = CdrHelper.csvLineToCdrDto("a,b,c,d,e,f,g,h,i,j,k,l,m,o,p,q,r,s");
         assertNotNull(cdr);
     }
 
-    @Test(expected=InvalidCsrException.class)
+    @Test(expected=InvalidCallRecordDataException.class)
     public void testInvalidTimes() {
         CallDetailRecordDto cdr = CdrHelper.csvLineToCdrDto("20150513184533:58747ffc-6b7c-4abb-91d3-f099aa1bf5a3," +
                 "1111111111,c,d,e,123456,g,h,1001,j,k,456,123,o,p,q,3,s");

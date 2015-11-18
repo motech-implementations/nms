@@ -1,7 +1,7 @@
 package org.motechproject.nms.imi.service.impl;
 
 import org.motechproject.nms.imi.domain.CallSummaryRecord;
-import org.motechproject.nms.imi.exception.InvalidCsrException;
+import org.motechproject.nms.kilkari.exception.InvalidCallRecordDataException;
 import org.motechproject.nms.props.domain.FinalCallStatus;
 import org.motechproject.nms.props.domain.StatusCode;
 
@@ -128,7 +128,7 @@ public final class CsrHelper {
 
             csr.setAttempts(integerFromString("Attempts", fields[FieldName.ATTEMPTS.ordinal()]));
         } catch (IllegalArgumentException e) {
-            throw new InvalidCsrException(e.getMessage(), e);
+            throw new InvalidCallRecordDataException(e.getMessage(), e);
         }
 
         return csr;

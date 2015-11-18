@@ -13,4 +13,13 @@ public interface CallRetryService {
      * @return The list of CallRetry records
      */
     List<CallRetry> retrieveAll(long offset, int max);
+
+
+    /**
+     * Deletes all call retry records older than the given number of days
+     *
+     * @param retentionInDays Number of days of call retry records to retain in the database
+     *
+     */
+    void deleteOldRetryRecords(final int retentionInDays);
 }

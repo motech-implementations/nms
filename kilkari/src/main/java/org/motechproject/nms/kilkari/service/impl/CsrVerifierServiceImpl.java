@@ -5,7 +5,7 @@ import org.motechproject.event.listener.annotations.MotechListener;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
 import org.motechproject.nms.kilkari.dto.CallSummaryRecordDto;
-import org.motechproject.nms.kilkari.exception.InvalidCsrDataException;
+import org.motechproject.nms.kilkari.exception.InvalidCallRecordDataException;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.CsrVerifierService;
 import org.motechproject.nms.region.domain.Circle;
@@ -77,17 +77,17 @@ public class CsrVerifierServiceImpl implements CsrVerifierService {
             readDomainData();
         }
         if (weekId == null) {
-            throw new InvalidCsrDataException("Missing weekId");
+            throw new InvalidCallRecordDataException("Missing weekId");
         }
         if (contentFileName == null) {
-            throw new InvalidCsrDataException("Missing contentFileName");
+            throw new InvalidCallRecordDataException("Missing contentFileName");
         }
         String validContentFileName = messages.get(weekId);
         if (validContentFileName == null) {
-            throw new InvalidCsrDataException(String.format("Invalid weekId: %s", weekId));
+            throw new InvalidCallRecordDataException(String.format("Invalid weekId: %s", weekId));
         }
         if (!validContentFileName.equals(contentFileName)) {
-            throw new InvalidCsrDataException(String.format("Invalid messageContentFileName %s for weekId %s, the " +
+            throw new InvalidCallRecordDataException(String.format("Invalid messageContentFileName %s for weekId %s, the " +
                     "valid messageContentFileName is %s", contentFileName, weekId, validContentFileName));
         }
     }
@@ -97,10 +97,10 @@ public class CsrVerifierServiceImpl implements CsrVerifierService {
             readDomainData();
         }
         if (circleName == null) {
-            throw new InvalidCsrDataException("Missing circleName");
+            throw new InvalidCallRecordDataException("Missing circleName");
         }
         if (!circles.contains(circleName)) {
-            throw new InvalidCsrDataException(String.format("Invalid circleName: %s", circleName));
+            throw new InvalidCallRecordDataException(String.format("Invalid circleName: %s", circleName));
         }
     }
 
@@ -109,10 +109,10 @@ public class CsrVerifierServiceImpl implements CsrVerifierService {
             readDomainData();
         }
         if (languageCode == null) {
-            throw new InvalidCsrDataException("Missing languageCode");
+            throw new InvalidCallRecordDataException("Missing languageCode");
         }
         if (!languages.contains(languageCode)) {
-            throw new InvalidCsrDataException(String.format("Invalid languageCode: %s", languageCode));
+            throw new InvalidCallRecordDataException(String.format("Invalid languageCode: %s", languageCode));
         }
     }
 
