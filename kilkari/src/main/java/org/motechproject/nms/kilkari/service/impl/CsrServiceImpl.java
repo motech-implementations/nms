@@ -95,9 +95,7 @@ public class CsrServiceImpl implements CsrService {
         if (callRetry == null) {
             return;
         }
-        LOGGER.debug(String.format("Deleting call retry record for subscription: %s", callRetry.getSubscriptionId()));
         callRetryDataService.delete(callRetry);
-
     }
 
 
@@ -208,7 +206,6 @@ public class CsrServiceImpl implements CsrService {
                                 "WHERE subscriptionId like '%%%s' " +
                                 "ORDER BY weekId, subscriptionId DESC",
                         subscriptionId, weekId);
-                LOGGER.debug("SQL QUERY: {}", query);
                 return query;
             }
 
@@ -233,11 +230,11 @@ public class CsrServiceImpl implements CsrService {
      * subscriptionId and return it. findOldCallSummaryRecords returns the list sorted on weekId and subscriptionId in
      * descending order so that if we find a subscriptionId that matches for that week we'll pick the very first one
      *
-     * @param requestId
+     * @param subscriptionId
      * @return an old and now fixed up CSR, or null
      */
-    private CallSummaryRecord lookupAndFixOldCsr(String requestId, String weekId) {
-        List<CallSummaryRecord> csrs = findOldCallSummaryRecords(requestId, weekId);
+    private CallSummaryRecord lookupAndFixOldCsr(String subscriptionId, String weekId) {
+        List<CallSummaryRecord> csrs = findOldCallSummaryRecords(subscriptionId, weekId);
         if (csrs == null || csrs.size() == 0) {
             return null;
         }
@@ -285,8 +282,7 @@ public class CsrServiceImpl implements CsrService {
 
             if (existingCsr == null) {
                 // This may be an old style CSR, let's try to fix it up
-                RequestId requestId = RequestId.fromString((String) event.getParameters().get("oldRequestId"));
-                existingCsr = lookupAndFixOldCsr(requestId.toString(), csrDto.getWeekId());
+                existingCsr = lookupAndFixOldCsr(subscriptionId, csrDto.getWeekId());
             }
 
             CallSummaryRecord csr;

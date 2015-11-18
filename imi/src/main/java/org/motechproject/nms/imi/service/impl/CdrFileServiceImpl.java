@@ -176,9 +176,8 @@ public class CdrFileServiceImpl implements CdrFileService {
     }
 
 
-    private void sendProcessCsrEvent(CallSummaryRecordDto csrDto, String requestId) {
+    private void sendProcessCsrEvent(CallSummaryRecordDto csrDto) {
         Map<String, Object> params = CallSummaryRecordDto.toParams(csrDto);
-        params.put("oldRequestId", requestId);
         MotechEvent motechEvent = new MotechEvent(NMS_IMI_KK_PROCESS_CSR, params);
         eventRelay.sendEventMessage(motechEvent);
     }
@@ -367,7 +366,7 @@ public class CdrFileServiceImpl implements CdrFileService {
                         callSummaryRecordDataService.create(csr);
                     }
 
-                    sendProcessCsrEvent(csr.toDto(), csr.getRequestId());
+                    sendProcessCsrEvent(csr.toDto());
 
                 } catch (InvalidCallRecordDataException e) {
                     // All errors here should have been reported in Phase 2, let's just ignore them
