@@ -180,7 +180,8 @@ public class CsrServiceImpl implements CsrService {
                     break;
 
                 case FAILED:
-                    if (!csrDto.getTargetFileTimeStamp().equals(callRetry.getTargetFiletimestamp())) {
+                    if (callRetry == null ||
+                            !csrDto.getTargetFileTimeStamp().equals(callRetry.getTargetFiletimestamp())) {
                         doReschedule(subscription, callRetry, csrDto);
                     }
                     break;
