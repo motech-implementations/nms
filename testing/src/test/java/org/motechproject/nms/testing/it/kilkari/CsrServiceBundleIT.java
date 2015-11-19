@@ -1,5 +1,6 @@
 package org.motechproject.nms.testing.it.kilkari;
 
+import junit.framework.Assert;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -225,6 +226,87 @@ public class CsrServiceBundleIT extends BasePaxIT {
         assertEquals(AlertType.HIGH, alerts.get(0).getAlertType());
     }
 
+    /**
+     * Verify that retry update is not update when same target file is submitted again
+     */
+    @Test
+    public void testSuccessUpdateReprocess() {
+        DateTime now = DateTime.now();
+
+        // Create a record in the CallRetry table marked as "last try" and verify it is erased from the
+        // CallRetry table
+        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, now.minusDays(3),
+                SubscriptionPackType.CHILD);
+
+        String contentFileName = sh.getContentMessageFile(subscription, 0);
+        String weekId = sh.getWeekId(subscription, 0);
+        callRetryDataService.create(new CallRetry(
+                subscription.getSubscriptionId(),
+                subscription.getSubscriber().getCallingNumber(),
+                CallStage.RETRY_2,
+                contentFileName,
+                weekId,
+                rh.hindiLanguage().getCode(),
+                rh.delhiCircle().getName(),
+                SubscriptionOrigin.MCTS_IMPORT,
+                "20151119124330",
+                0
+        ));
+
+        CallSummaryRecordDto record = new CallSummaryRecordDto(
+                subscription,
+                StatusCode.OBD_FAILED_NOANSWER,
+                FinalCallStatus.FAILED,
+                contentFileName,
+                weekId,
+                rh.hindiLanguage(),
+                rh.delhiCircle(),
+                "20151119124330"
+        );
+
+        processCsr(record);
+        // There should be one calls to retry since the one above was the last failed with No answer
+        assertEquals(1, callRetryDataService.count());
+        List<CallRetry> retries = callRetryDataService.retrieveAll();
+
+        assertEquals(subscription.getSubscriptionId(), retries.get(0).getSubscriptionId());
+        assertEquals(CallStage.RETRY_2, retries.get(0).getCallStage());
+    }
+
+    /**
+     * Verify that retry update is not update when same target file is submitted again
+     */
+    @Test
+    public void testNoRetryUpdate() {
+        DateTime now = DateTime.now();
+
+        // Create a record in the CallRetry table marked as "last try" and verify it is erased from the
+        // CallRetry table
+        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, now.minusDays(3),
+                SubscriptionPackType.CHILD);
+
+        String contentFileName = sh.getContentMessageFile(subscription, 0);
+        String weekId = sh.getWeekId(subscription, 0);
+
+        CallSummaryRecordDto record = new CallSummaryRecordDto(
+                subscription,
+                StatusCode.OBD_SUCCESS_CALL_CONNECTED,
+                FinalCallStatus.SUCCESS,
+                contentFileName,
+                weekId,
+                rh.hindiLanguage(),
+                rh.delhiCircle(),
+                "20151119124330"
+        );
+
+        processCsr(record);
+        // no retries since call succeeded
+        assertEquals(0, callRetryDataService.count());
+
+        // process it again
+        processCsr(record);
+        assertEquals(0, callRetryDataService.count());
+    }
 
     // Deactivate if user phone number does not exist
     // https://github.com/motech-implementations/mim/issues/169
@@ -251,7 +333,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 "w1_1",
                 rh.hindiLanguage(),
                 rh.delhiCircle(),
-                "20151119124330"
+                "20151119124331"
         ));
 
         processCsr(new CallSummaryRecordDto(
@@ -262,7 +344,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 "w1_1",
                 rh.hindiLanguage(),
                 rh.delhiCircle(),
-                "20151119124330"
+                "20151119124332"
         ));
 
         processCsr(new CallSummaryRecordDto(
@@ -273,7 +355,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 "w1_1",
                 rh.hindiLanguage(),
                 rh.delhiCircle(),
-                "20151119124330"
+                "20151119124333"
         ));
 
         subscription = subscriptionDataService.findBySubscriptionId(subscription.getSubscriptionId());
@@ -338,7 +420,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 weekId,
                 rh.hindiLanguage(),
                 rh.delhiCircle(),
-                "20151119124330"
+                "20151119124331"
         );
 
         processCsr(record);
@@ -426,7 +508,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 weekId,
                 rh.hindiLanguage(),
                 rh.delhiCircle(),
-                "20151119124330"
+                "20151119124332"
         );
 
         processCsr(record);
@@ -570,7 +652,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 weekId,
                 rh.hindiLanguage(),
                 rh.delhiCircle(),
-                "20151119124330"
+                "20151119124331"
         );
 
         processCsr(record);
@@ -620,7 +702,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 weekId,
                 rh.hindiLanguage(),
                 rh.delhiCircle(),
-                "20151119124330"
+                "20151119124331"
         ));
 
         // There should be one calls to retry since the retry 2 was failed.
@@ -802,7 +884,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 weekId,
                 rh.hindiLanguage(),
                 rh.delhiCircle(),
-                "20151119124330"));
+                "20151119124331"));
 
         // There should be no calls to retry since the one above was the last try
         assertEquals(0, callRetryDataService.count());
@@ -843,7 +925,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 weekId,
                 rh.hindiLanguage(),
                 rh.delhiCircle(),
-                "20151119124330"));
+                "20151119124331"));
 
         // There should be one calls to retry since the retry 2 was failed.
         assertEquals(1, callRetryDataService.count());
@@ -902,7 +984,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 weekId,
                 rh.hindiLanguage(),
                 rh.delhiCircle(),
-                "20151119124330"));
+                "20151119124367"));
 
 
         // verify that subscription is deactivated, call was failed due to invalid number for all attempts.
