@@ -31,10 +31,12 @@ public class CallSummaryRecordDto implements Serializable {
 
     private String circleName;
 
+    private String targetFileTimeStamp;
+
     public CallSummaryRecordDto() { }
 
     public CallSummaryRecordDto(String subscriptionId, int statusCode, int finalStatus, String contentFileName,
-                                String weekId, String languageCode, String circleName) {
+                                String weekId, String languageCode, String circleName, String targetFileTimeStamp) {
         this.subscriptionId = subscriptionId;
         this.statusCode = statusCode;
         this.finalStatus = finalStatus;
@@ -42,11 +44,13 @@ public class CallSummaryRecordDto implements Serializable {
         this.weekId = weekId;
         this.languageCode = languageCode;
         this.circleName = circleName;
+        this.targetFileTimeStamp = targetFileTimeStamp;
     }
 
     // Helper constructor for ITs
     public CallSummaryRecordDto(Subscription subscription, StatusCode statusCode, FinalCallStatus finalStatus,
-                                String contentFileName, String weekId, Language language, Circle circle) {
+                                String contentFileName, String weekId, Language language, Circle circle,
+                                String targetFileTimeStamp) {
         this(
                 subscription == null ? EMPTY_STRING : subscription.getSubscriptionId(),
                 statusCode == null ? -1 : statusCode.getValue(),
@@ -54,7 +58,8 @@ public class CallSummaryRecordDto implements Serializable {
                 contentFileName == null ? EMPTY_STRING : contentFileName,
                 weekId == null ? EMPTY_STRING : weekId,
                 language == null ? EMPTY_STRING : language.getCode(),
-                circle == null ? EMPTY_STRING : circle.getName()
+                circle == null ? EMPTY_STRING : circle.getName(),
+                targetFileTimeStamp == null ? EMPTY_STRING : targetFileTimeStamp
         );
     }
 
@@ -114,6 +119,14 @@ public class CallSummaryRecordDto implements Serializable {
         this.circleName = circleName;
     }
 
+    public String getTargetFileTimeStamp() {
+        return targetFileTimeStamp;
+    }
+
+    public void setTargetFileTimeStamp(String targetFileTimeStamp) {
+        this.targetFileTimeStamp = targetFileTimeStamp;
+    }
+
     @Ignore
     public static CallSummaryRecordDto fromParams(Map<String, Object> params) {
         CallSummaryRecordDto csr;
@@ -124,7 +137,8 @@ public class CallSummaryRecordDto implements Serializable {
                 (String) params.get("contentFileName"),
                 (String) params.get("weekId"),
                 (String) params.get("languageCode"),
-                (String) params.get("circleName")
+                (String) params.get("circleName"),
+                (String) params.get("targetFileTimeStamp")
         );
         return csr;
     }
@@ -139,19 +153,7 @@ public class CallSummaryRecordDto implements Serializable {
         params.put("weekId", csr.weekId);
         params.put("languageCode", csr.languageCode);
         params.put("circleName", csr.circleName);
+        params.put("targetFileTimeStamp", csr.targetFileTimeStamp);
         return params;
-    }
-
-    @Override
-    public String toString() {
-        return "CallSummaryRecordDto{" +
-                "subscriptionId='" + subscriptionId + '\'' +
-                ", statusCode=" + statusCode +
-                ", finalStatus=" + finalStatus +
-                ", contentFileName='" + contentFileName + '\'' +
-                ", weekId='" + weekId + '\'' +
-                ", languageCode='" + languageCode + '\'' +
-                ", circleName='" + circleName + '\'' +
-                '}';
     }
 }

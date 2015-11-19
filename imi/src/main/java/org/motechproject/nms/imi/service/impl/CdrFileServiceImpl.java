@@ -897,7 +897,6 @@ public class CdrFileServiceImpl implements CdrFileService {
         LOGGER.debug(String.format(LOG_TEMPLATE, callDetailRecordDataService.count(), CDR_TABLE_NAME));
         LOGGER.debug(String.format(LOG_TEMPLATE, callSummaryRecordDataService.count(), CSR_TABLE_NAME));
 
-        csrService.deleteOldCallSummaryRecords(cdrDuration);
         callRetryService.deleteOldRetryRecords(cdrDuration);
 
     }

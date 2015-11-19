@@ -81,7 +81,8 @@ public class CsrHelper {
                     sh.getContentMessageFile(sub, index),
                     sh.getWeekId(sub, index),
                     sh.getLanguage(sub),
-                    sh.getCircle(sub)
+                    sh.getCircle(sub),
+                    "20151119124330"
             );
             records.add(r);
         }
@@ -98,7 +99,8 @@ public class CsrHelper {
                     sh.getContentMessageFile(sub, index),
                     sh.getWeekId(sub, index),
                     sh.getLanguage(sub),
-                    sh.getCircle(sub)
+                    sh.getCircle(sub),
+                    "20151119124330"
             );
             records.add(r);
         }
@@ -114,7 +116,8 @@ public class CsrHelper {
                     sh.getContentMessageFile(sub, index),
                     sh.getWeekId(sub, index),
                     sh.getLanguage(sub),
-                    sh.getCircle(sub)
+                    sh.getCircle(sub),
+                    "20151119124330"
             );
             records.add(r);
         }
@@ -130,7 +133,8 @@ public class CsrHelper {
                     sh.getContentMessageFile(sub, index),
                     sh.getWeekId(sub, index),
                     sh.getLanguageCode(sub),
-                    sh.getCircleName(sub)
+                    sh.getCircleName(sub),
+                    "20151119124330"
             );
             records.add(r);
         }

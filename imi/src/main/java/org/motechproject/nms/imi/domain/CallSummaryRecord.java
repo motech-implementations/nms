@@ -160,8 +160,11 @@ public class CallSummaryRecord {
 
     public CallSummaryRecordDto toDto() {
         String subscriptionId;
+        String timestamp;
         try {
-            subscriptionId = RequestId.fromString(requestId).getSubscriptionId();
+            RequestId r = RequestId.fromString(requestId);
+            subscriptionId = r.getSubscriptionId();
+            timestamp = r.getTimestamp();
         } catch (IllegalArgumentException e) {
             throw new InvalidCallRecordDataException(e);
         }
@@ -172,7 +175,8 @@ public class CallSummaryRecord {
                 contentFileName,
                 weekId,
                 languageLocationCode,
-                circle
+                circle,
+                timestamp
         );
     }
 }
