@@ -356,8 +356,11 @@ public class CdrFileServiceImpl implements CdrFileService {
     @Override //NO CHECKSTYLE Cyclomatic Complexity
     public void processCsrs(File file) {
         int lineNumber = 1;
+        int saveCount = 0;
+        int processCount = 0;
         String fileName = file.getName();
         boolean distributedProcessing = shouldDistributeCsrProcessing();
+        String verb = distributedProcessing? "distributed" : "enqueued";
         LOGGER.info("CSR processing will be {}", distributedProcessing? "distributed" : "local");
 
         try (FileInputStream fis = new FileInputStream(file);
@@ -381,9 +384,11 @@ public class CdrFileServiceImpl implements CdrFileService {
                     CallSummaryRecord csr = CsrHelper.csvLineToCsr(line);
                     if (callSummaryRecordDataService.countFindByRequestId(csr.getRequestId()) == 0) {
                         callSummaryRecordDataService.create(csr);
+                        saveCount++;
                     }
 
                     processCsrEvent(csr.toDto(), distributedProcessing);
+                    processCount++;
 
                 } catch (InvalidCallRecordDataException e) {
                     // All errors here should have been reported in Phase 2, let's just ignore them
@@ -403,7 +408,8 @@ public class CdrFileServiceImpl implements CdrFileService {
 
             }
 
-            LOGGER.info("Saved (& enqueued) {}", timer.frequency(lineNumber));
+            LOGGER.info(String.format("Read %d saved %d %s %d %s", lineNumber, saveCount, verb, processCount,
+                    timer.frequency(lineNumber)));
 
         } catch (IOException e) {
             String error = INVALID_CSR_P5 + String.format(UNABLE_TO_READ, fileName, e.getMessage());
