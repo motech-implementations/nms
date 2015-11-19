@@ -64,6 +64,8 @@ import static java.lang.Math.min;
 public class CdrFileServiceImpl implements CdrFileService {
 
     public static final String DISPLAYING_THE_FIRST_N_ERRORS = "%s: %d errors - only displaying the first %d";
+    private static final String DISTRIBUTED_CSR_PROCESSING = "imi.distributed_csr_processing";
+    private static final Boolean DISTRIBUTED_CSR_PROCESSING_DEFAULT = false;
     private static final String CDR_FILE_NOTIFICATION_URL = "imi.cdr_file_notification_url";
     private static final String LOCAL_CDR_DIR = "imi.local_cdr_dir";
     private static final String CDR_CSR_RETENTION_DURATION = "imi.cdr_csr.retention.duration";
@@ -176,13 +178,6 @@ public class CdrFileServiceImpl implements CdrFileService {
     }
 
 
-    private void sendProcessCsrEvent(CallSummaryRecordDto csrDto) {
-        Map<String, Object> params = CallSummaryRecordDto.toParams(csrDto);
-        MotechEvent motechEvent = new MotechEvent(NMS_IMI_KK_PROCESS_CSR, params);
-        eventRelay.sendEventMessage(motechEvent);
-    }
-
-
     /**
      * Verifies the checksum & record count provided in fileInfo match the checksum & record count of file
      * also verifies all csv rows are valid.
@@ -261,7 +256,6 @@ public class CdrFileServiceImpl implements CdrFileService {
     }
 
 
-
     /**
      * Save detail records for reporting
      *
@@ -331,17 +325,40 @@ public class CdrFileServiceImpl implements CdrFileService {
     }
 
 
+    private boolean shouldDistributeCsrProcessing() {
+        try {
+            return Boolean.valueOf(settingsFacade.getProperty(DISTRIBUTED_CSR_PROCESSING));
+        } catch (Exception e) {
+            return DISTRIBUTED_CSR_PROCESSING_DEFAULT;
+        }
+    }
+
+
+    private void processCsrEvent(CallSummaryRecordDto csrDto, boolean distributed) {
+        Map<String, Object> params = CallSummaryRecordDto.toParams(csrDto);
+        MotechEvent motechEvent = new MotechEvent(NMS_IMI_KK_PROCESS_CSR, params);
+        if (distributed) {
+            eventRelay.sendEventMessage(motechEvent);
+        } else {
+            csrService.processCallSummaryRecord(motechEvent);
+        }
+    }
+
+
     /**
-     * Send summary records for processing as CallSummaryRecordDto in MOTECH events
+     * Send summary records for processing as CallSummaryRecordDto in MOTECH events or process them directly,
+     * depending on the imi.distributed_csr_processing setting
      * Additionally stores a copy of the provided CSR in the CallSummaryRecord table, for reporting
      *
      * @param file      file to process
      * @return          a list of errors (failure) or an empty list (success)
      */
     @Override //NO CHECKSTYLE Cyclomatic Complexity
-    public void sendSummaryRecords(File file) {
+    public void processCsrs(File file) {
         int lineNumber = 1;
         String fileName = file.getName();
+        boolean distributedProcessing = shouldDistributeCsrProcessing();
+        LOGGER.info("CSR processing will be {}", distributedProcessing? "distributed" : "local");
 
         try (FileInputStream fis = new FileInputStream(file);
              InputStreamReader isr = new InputStreamReader(fis);
@@ -366,7 +383,7 @@ public class CdrFileServiceImpl implements CdrFileService {
                         callSummaryRecordDataService.create(csr);
                     }
 
-                    sendProcessCsrEvent(csr.toDto());
+                    processCsrEvent(csr.toDto(), distributedProcessing);
 
                 } catch (InvalidCallRecordDataException e) {
                     // All errors here should have been reported in Phase 2, let's just ignore them
@@ -394,9 +411,9 @@ public class CdrFileServiceImpl implements CdrFileService {
             alertService.create(fileName, "Invalid CSR in Phase 5", error, AlertType.CRITICAL, AlertStatus.NEW, 0,
                     null);
         } catch (Exception e) {
-            String msg = String.format(MOTECH_BUG, "P5 - sendSummaryRecords", ExceptionUtils.getFullStackTrace(e));
+            String msg = String.format(MOTECH_BUG, "P5 - processCsrs", ExceptionUtils.getFullStackTrace(e));
             LOGGER.error(msg);
-            alertService.create(fileName, "sendSummaryRecords", msg.substring(0, min(msg.length(), MAX_CHAR_ALERT)),
+            alertService.create(fileName, "processCsrs", msg.substring(0, min(msg.length(), MAX_CHAR_ALERT)),
                     AlertType.CRITICAL, AlertStatus.NEW, 0, null);
         }
     }
@@ -838,8 +855,8 @@ public class CdrFileServiceImpl implements CdrFileService {
             return;
         }
 
-        LOGGER.info("Phase 5 - sendSummaryRecords");
-        sendSummaryRecords(csrFile);
+        LOGGER.info("Phase 5 - processCsrs");
+        processCsrs(csrFile);
 
         LOGGER.info("Phase 5 - End {}", timer.time());
     }
