@@ -119,7 +119,6 @@ public class CsrServiceImpl implements CsrService {
             return;
         }
 
-
         if ((subscription.getSubscriptionPack().retryCount() == 1) ||
                 (existingCallRetry.getCallStage() == CallStage.RETRY_LAST)) {
 
@@ -127,7 +126,8 @@ public class CsrServiceImpl implements CsrService {
 
             // Deactivate subscription for persistent invalid numbers
             // See https://github.com/motech-implementations/mim/issues/169
-            if (existingCallRetry.getInvalidNumberCount() == subscription.getSubscriptionPack().retryCount()) {
+            if (existingCallRetry.getInvalidNumberCount() != null &&
+                    existingCallRetry.getInvalidNumberCount() == subscription.getSubscriptionPack().retryCount()) {
                 subscription.setStatus(SubscriptionStatus.DEACTIVATED);
                 subscription.setDeactivationReason(DeactivationReason.INVALID_NUMBER);
                 subscriptionDataService.update(subscription);
