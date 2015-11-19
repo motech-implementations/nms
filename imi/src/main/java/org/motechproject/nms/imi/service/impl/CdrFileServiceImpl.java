@@ -265,7 +265,10 @@ public class CdrFileServiceImpl implements CdrFileService {
     @Override
     public void saveDetailRecords(File file) {
         int lineNumber = 1;
+        int saveCount = 0;
         String fileName = file.getName();
+
+        LOGGER.info("saveDetailRecords({})", fileName);
 
         try (FileInputStream fis = new FileInputStream(file);
              InputStreamReader isr = new InputStreamReader(fis);
@@ -291,6 +294,7 @@ public class CdrFileServiceImpl implements CdrFileService {
                     // Save a copy of the CDR into CallDetailRecord for reporting - but no dupes
                     if (callDetailRecordDataService.countFindByRequestId(cdr.getRequestId()) == 0) {
                         callDetailRecordDataService.create(cdr);
+                        saveCount++;
                     }
 
                 } catch (InvalidCallRecordDataException e) {
@@ -309,7 +313,8 @@ public class CdrFileServiceImpl implements CdrFileService {
                 lineNumber++;
             }
 
-            LOGGER.info("Saved {}", timer.frequency(lineNumber));
+            LOGGER.info("Read {}", timer.frequency(lineNumber));
+            LOGGER.info("Actually saved {}", saveCount);
 
         } catch (IOException e) {
             String error = INVALID_CDR_P4 + String.format(UNABLE_TO_READ, fileName, e.getMessage());
@@ -359,9 +364,13 @@ public class CdrFileServiceImpl implements CdrFileService {
         int saveCount = 0;
         int processCount = 0;
         String fileName = file.getName();
+
+        LOGGER.info("processCsrs({})", fileName);
+
         boolean distributedProcessing = shouldDistributeCsrProcessing();
         String verb = distributedProcessing? "distributed" : "enqueued";
         LOGGER.info("CSR processing will be {}", distributedProcessing? "distributed" : "local");
+
 
         try (FileInputStream fis = new FileInputStream(file);
              InputStreamReader isr = new InputStreamReader(fis);
@@ -408,8 +417,8 @@ public class CdrFileServiceImpl implements CdrFileService {
 
             }
 
-            LOGGER.info(String.format("Read %d saved %d %s %d %s", lineNumber, saveCount, verb, processCount,
-                    timer.frequency(lineNumber)));
+            LOGGER.info(String.format("Read %s", timer.frequency(lineNumber)));
+            LOGGER.info(String.format("Saved %d, %s %d", saveCount, verb, processCount));
 
         } catch (IOException e) {
             String error = INVALID_CSR_P5 + String.format(UNABLE_TO_READ, fileName, e.getMessage());

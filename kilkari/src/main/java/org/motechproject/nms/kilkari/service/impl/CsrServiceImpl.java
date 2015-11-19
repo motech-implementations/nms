@@ -156,7 +156,8 @@ public class CsrServiceImpl implements CsrService {
         // This call should indeed be re-rescheduled
 
         existingCallRetry.setCallStage(existingCallRetry.getCallStage().nextStage());
-        existingCallRetry.setInvalidNumberCount(existingCallRetry.getInvalidNumberCount() + (invalidNr ? 1 : 0));
+        existingCallRetry.setInvalidNumberCount(existingCallRetry.getInvalidNumberCount() == null ? 0 :
+                (existingCallRetry.getInvalidNumberCount() + (invalidNr ? 1 : 0)));
         callRetryDataService.update(existingCallRetry);
 
     }
