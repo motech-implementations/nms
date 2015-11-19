@@ -3,7 +3,6 @@ package org.motechproject.nms.kilkari.domain;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.domain.MdsEntity;
-import org.motechproject.nms.props.service.LogHelper;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Unique;
@@ -40,11 +39,18 @@ public class CallRetry extends MdsEntity {
     @Field
     private SubscriptionOrigin subscriptionOrigin;
 
+    @Field
+    private String targetFiletimestamp;
+
+    @Field
+    private Integer invalidNumberCount;
+
     public CallRetry() { }
 
     public CallRetry(String subscriptionId, Long msisdn, //NO CHECKSTYLE More than 7 parameters
                      CallStage callStage, String contentFileName, String weekId, String languageLocationCode,
-                     String circle, SubscriptionOrigin subscriptionOrigin) {
+                     String circle, SubscriptionOrigin subscriptionOrigin, String targetFiletimestamp,
+                     Integer invalidNumberCount) {
         this.subscriptionId = subscriptionId;
         this.msisdn = msisdn;
         this.callStage = callStage;
@@ -53,6 +59,8 @@ public class CallRetry extends MdsEntity {
         this.languageLocationCode = languageLocationCode;
         this.circle = circle;
         this.subscriptionOrigin = subscriptionOrigin;
+        this.targetFiletimestamp = targetFiletimestamp;
+        this.invalidNumberCount = invalidNumberCount;
     }
 
     public String getSubscriptionId() {
@@ -119,17 +127,19 @@ public class CallRetry extends MdsEntity {
         this.subscriptionOrigin = subscriptionOrigin;
     }
 
-    @Override
-    public String toString() {
-        return "CallRetry{" +
-                "subscriptionId='" + subscriptionId + '\'' +
-                ", msisdn=" + LogHelper.obscure(msisdn) +
-                ", callStage=" + callStage +
-                ", contentFileName='" + contentFileName + '\'' +
-                ", weekId='" + weekId + '\'' +
-                ", languageLocationCode='" + languageLocationCode + '\'' +
-                ", circle='" + circle + '\'' +
-                ", subscriptionOrigin=" + subscriptionOrigin +
-                '}';
+    public String getTargetFiletimestamp() {
+        return targetFiletimestamp;
+    }
+
+    public void setTargetFiletimestamp(String targetFiletimestamp) {
+        this.targetFiletimestamp = targetFiletimestamp;
+    }
+
+    public Integer getInvalidNumberCount() {
+        return invalidNumberCount;
+    }
+
+    public void setInvalidNumberCount(Integer invalidNumberCount) {
+        this.invalidNumberCount = invalidNumberCount;
     }
 }

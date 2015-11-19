@@ -107,6 +107,8 @@ public class MobileAcademyController extends BaseController {
     /**
      * Get the version of the course
      * @return Integer representing the timestamp since epoch
+     * ***NOTE::*** THIS IS USED by the LOAD BALANCER and NAGIOS monitoring to certify server health,
+     * do not delete, or be careful when you refactor!! With great power comes great responsibility!!
      */
     @Transactional(readOnly = true)
     @RequestMapping(

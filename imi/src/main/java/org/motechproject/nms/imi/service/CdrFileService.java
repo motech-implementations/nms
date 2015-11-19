@@ -42,7 +42,7 @@ public interface CdrFileService {
      * @param file      file to process
      * @return          a list of errors (failure) or an empty list (success)
      */
-    void sendSummaryRecords(File file);
+    void processCsrs(File file);
 
 
     /**

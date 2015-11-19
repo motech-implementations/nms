@@ -55,9 +55,6 @@
     <osgi:reference id="inboxCallDetailsDataService"
                     interface="org.motechproject.nms.kilkari.repository.InboxCallDetailRecordDataService" />
 
-    <osgi:reference id="csrDataService"
-                    interface="org.motechproject.nms.kilkari.repository.CallSummaryRecordDataService" />
-
     <osgi:reference id="inboxCallDataDataService"
                     interface="org.motechproject.nms.kilkari.repository.InboxCallDataDataService" />
 

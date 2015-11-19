@@ -1,5 +1,6 @@
 package org.motechproject.nms.testing.it.kilkari;
 
+import junit.framework.Assert;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -13,16 +14,13 @@ import org.motechproject.alerts.domain.AlertType;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.nms.kilkari.domain.CallRetry;
 import org.motechproject.nms.kilkari.domain.CallStage;
-import org.motechproject.nms.kilkari.domain.CallSummaryRecord;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
-import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.dto.CallSummaryRecordDto;
 import org.motechproject.nms.kilkari.repository.CallRetryDataService;
-import org.motechproject.nms.kilkari.repository.CallSummaryRecordDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
@@ -48,9 +46,7 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import static junit.framework.Assert.assertNull;
 import static org.junit.Assert.assertEquals;
@@ -62,7 +58,6 @@ import static org.junit.Assert.assertTrue;
 public class CsrServiceBundleIT extends BasePaxIT {
 
     private static final String PROCESS_SUMMARY_RECORD_SUBJECT = "nms.imi.kk.process_summary_record";
-    private static final String CSR_PARAM_KEY = "csr";
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormat.forPattern("yyyyMMddHHmmss");
 
     @Inject
@@ -81,8 +76,6 @@ public class CsrServiceBundleIT extends BasePaxIT {
     LanguageService languageService;
     @Inject
     CallRetryDataService callRetryDataService;
-    @Inject
-    CallSummaryRecordDataService csrDataService;
     @Inject
     CircleDataService circleDataService;
     @Inject
@@ -125,13 +118,6 @@ public class CsrServiceBundleIT extends BasePaxIT {
     }
 
 
-    private Map<Integer, Integer> makeStatsMap(StatusCode statusCode, int count) {
-        Map<Integer, Integer> map = new HashMap<>();
-        map.put(statusCode.getValue(), count);
-        return map;
-    }
-
-
     private void processCsr(CallSummaryRecordDto csr) {
         MotechEvent motechEvent = new MotechEvent(PROCESS_SUMMARY_RECORD_SUBJECT, CallSummaryRecordDto.toParams(csr));
         csrService.processCallSummaryRecord(motechEvent);
@@ -149,7 +135,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 "w1_1.wav",
                 "w1_1",
                 rh.hindiLanguage(),
-                rh.delhiCircle()
+                rh.delhiCircle(),
+                "20151119124330"
         );
 
         processCsr(csr);
@@ -166,7 +153,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 "w1_1.wav",
                 null,
                 rh.hindiLanguage(),
-                rh.delhiCircle()
+                rh.delhiCircle(),
+                "20151119124330"
         ));
 
         AlertCriteria criteria = new AlertCriteria().byExternalId(subscription.getSubscriptionId());
@@ -186,7 +174,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 null,
                 "w1_1",
                 rh.hindiLanguage(),
-                rh.delhiCircle()
+                rh.delhiCircle(),
+                "20151119124330"
         ));
 
         AlertCriteria criteria = new AlertCriteria().byExternalId(subscription.getSubscriptionId());
@@ -206,7 +195,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 "w1_1.wav",
                 "w1_1",
                 rh.hindiLanguage(),
-                null
+                null,
+                "20151119124330"
         ));
 
         AlertCriteria criteria = new AlertCriteria().byExternalId(subscription.getSubscriptionId());
@@ -226,7 +216,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 "w1_1.wav",
                 "w1_1",
                 null,
-                rh.delhiCircle()
+                rh.delhiCircle(),
+                "20151119124330"
         ));
 
         AlertCriteria criteria = new AlertCriteria().byExternalId(subscription.getSubscriptionId());
@@ -235,13 +226,93 @@ public class CsrServiceBundleIT extends BasePaxIT {
         assertEquals(AlertType.HIGH, alerts.get(0).getAlertType());
     }
 
+    /**
+     * Verify that retry update is not update when same target file is submitted again
+     */
+    @Test
+    public void testSuccessUpdateReprocess() {
+        DateTime now = DateTime.now();
+
+        // Create a record in the CallRetry table marked as "last try" and verify it is erased from the
+        // CallRetry table
+        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, now.minusDays(3),
+                SubscriptionPackType.CHILD);
+
+        String contentFileName = sh.getContentMessageFile(subscription, 0);
+        String weekId = sh.getWeekId(subscription, 0);
+        callRetryDataService.create(new CallRetry(
+                subscription.getSubscriptionId(),
+                subscription.getSubscriber().getCallingNumber(),
+                CallStage.RETRY_2,
+                contentFileName,
+                weekId,
+                rh.hindiLanguage().getCode(),
+                rh.delhiCircle().getName(),
+                SubscriptionOrigin.MCTS_IMPORT,
+                "20151119124330",
+                0
+        ));
+
+        CallSummaryRecordDto record = new CallSummaryRecordDto(
+                subscription,
+                StatusCode.OBD_FAILED_NOANSWER,
+                FinalCallStatus.FAILED,
+                contentFileName,
+                weekId,
+                rh.hindiLanguage(),
+                rh.delhiCircle(),
+                "20151119124330"
+        );
+
+        processCsr(record);
+        // There should be one calls to retry since the one above was the last failed with No answer
+        assertEquals(1, callRetryDataService.count());
+        List<CallRetry> retries = callRetryDataService.retrieveAll();
+
+        assertEquals(subscription.getSubscriptionId(), retries.get(0).getSubscriptionId());
+        assertEquals(CallStage.RETRY_2, retries.get(0).getCallStage());
+    }
+
+    /**
+     * Verify that retry update is not update when same target file is submitted again
+     */
+    @Test
+    public void testNoRetryUpdate() {
+        DateTime now = DateTime.now();
+
+        // Create a record in the CallRetry table marked as "last try" and verify it is erased from the
+        // CallRetry table
+        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, now.minusDays(3),
+                SubscriptionPackType.CHILD);
+
+        String contentFileName = sh.getContentMessageFile(subscription, 0);
+        String weekId = sh.getWeekId(subscription, 0);
+
+        CallSummaryRecordDto record = new CallSummaryRecordDto(
+                subscription,
+                StatusCode.OBD_SUCCESS_CALL_CONNECTED,
+                FinalCallStatus.SUCCESS,
+                contentFileName,
+                weekId,
+                rh.hindiLanguage(),
+                rh.delhiCircle(),
+                "20151119124330"
+        );
+
+        processCsr(record);
+        // no retries since call succeeded
+        assertEquals(0, callRetryDataService.count());
+
+        // process it again
+        processCsr(record);
+        assertEquals(0, callRetryDataService.count());
+    }
 
     // Deactivate if user phone number does not exist
     // https://github.com/motech-implementations/mim/issues/169
     @Test
     public void verifyIssue169() {
         Subscription subscription = sh.mksub(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
-        Subscriber subscriber = subscription.getSubscriber();
 
         processCsr(new CallSummaryRecordDto(
                 subscription,
@@ -250,7 +321,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 "w1_1.wav",
                 "w1_1",
                 rh.hindiLanguage(),
-                rh.delhiCircle()
+                rh.delhiCircle(),
+                "20151119124330"
         ));
 
         processCsr(new CallSummaryRecordDto(
@@ -260,7 +332,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 "w1_1.wav",
                 "w1_1",
                 rh.hindiLanguage(),
-                rh.delhiCircle()
+                rh.delhiCircle(),
+                "20151119124331"
         ));
 
         processCsr(new CallSummaryRecordDto(
@@ -270,7 +343,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 "w1_1.wav",
                 "w1_1",
                 rh.hindiLanguage(),
-                rh.delhiCircle()
+                rh.delhiCircle(),
+                "20151119124332"
         ));
 
         processCsr(new CallSummaryRecordDto(
@@ -280,7 +354,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 "w1_1.wav",
                 "w1_1",
                 rh.hindiLanguage(),
-                rh.delhiCircle()
+                rh.delhiCircle(),
+                "20151119124333"
         ));
 
         subscription = subscriptionDataService.findBySubscriptionId(subscription.getSubscriptionId());
@@ -324,7 +399,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
         String contentFileName = sh.getContentMessageFile(subscription, 0);
         String weekId = sh.getWeekId(subscription, 0);
-        CallRetry retry = callRetryDataService.create(new CallRetry(
+        callRetryDataService.create(new CallRetry(
                 subscription.getSubscriptionId(),
                 subscription.getSubscriber().getCallingNumber(),
                 CallStage.RETRY_LAST,
@@ -332,11 +407,11 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 weekId,
                 rh.hindiLanguage().getCode(),
                 rh.delhiCircle().getName(),
-                SubscriptionOrigin.MCTS_IMPORT
+                SubscriptionOrigin.MCTS_IMPORT,
+                "20151119124330",
+                0
         ));
 
-
-        Map<Integer, Integer> callStats = new HashMap<>();
         CallSummaryRecordDto record = new CallSummaryRecordDto(
                 subscription,
                 StatusCode.OBD_FAILED_NOANSWER,
@@ -344,7 +419,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 contentFileName,
                 weekId,
                 rh.hindiLanguage(),
-                rh.delhiCircle()
+                rh.delhiCircle(),
+                "20151119124331"
         );
 
         processCsr(record);
@@ -367,7 +443,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
         String contentFileName = sh.getContentMessageFile(subscription, 0);
         String weekId = sh.getWeekId(subscription, 0);
-        CallRetry retry = callRetryDataService.create(new CallRetry(
+        callRetryDataService.create(new CallRetry(
                 subscription.getSubscriptionId(),
                 subscription.getSubscriber().getCallingNumber(),
                 CallStage.RETRY_2,
@@ -375,11 +451,12 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 weekId,
                 rh.hindiLanguage().getCode(),
                 rh.delhiCircle().getName(),
-                SubscriptionOrigin.MCTS_IMPORT
+                SubscriptionOrigin.MCTS_IMPORT,
+                "20151119124330",
+                0
         ));
 
 
-        Map<Integer, Integer> callStats = new HashMap<>();
         CallSummaryRecordDto record = new CallSummaryRecordDto(
                 subscription,
                 StatusCode.OBD_SUCCESS_CALL_CONNECTED,
@@ -387,7 +464,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 contentFileName,
                 weekId,
                 rh.hindiLanguage(),
-                rh.delhiCircle()
+                rh.delhiCircle(),
+                "20151119124330"
         );
 
         processCsr(record);
@@ -408,7 +486,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 SubscriptionPackType.CHILD);
         String contentFileName = sh.getContentMessageFile(subscription, 0);
         String weekId = sh.getWeekId(subscription, 0);
-        CallRetry retry = callRetryDataService.create(new CallRetry(
+        callRetryDataService.create(new CallRetry(
                 subscription.getSubscriptionId(),
                 subscription.getSubscriber().getCallingNumber(),
                 CallStage.RETRY_1,
@@ -416,7 +494,9 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 weekId,
                 rh.hindiLanguage().getCode(),
                 rh.delhiCircle().getName(),
-                SubscriptionOrigin.MCTS_IMPORT
+                SubscriptionOrigin.MCTS_IMPORT,
+                "20151119124330",
+                0
         ));
 
 
@@ -427,7 +507,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 contentFileName,
                 weekId,
                 rh.hindiLanguage(),
-                rh.delhiCircle()
+                rh.delhiCircle(),
+                "20151119124332"
         );
 
         processCsr(record);
@@ -447,17 +528,12 @@ public class CsrServiceBundleIT extends BasePaxIT {
     @Test
     public void verifyFT149() {
 
-        String timestamp = DateTime.now().toString(TIME_FORMATTER);
-
         // To check that NMS shall not retry the OBD messages which failed due to user number in dnd.
 
         Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now(),SubscriptionPackType.CHILD);
         String contentFileName = sh.getContentMessageFile(subscription, 0);
         String weekId = sh.getWeekId(subscription, 0);
 
-
-        Map<Integer, Integer> callStats = new HashMap<>();
-        callStats.put(StatusCode.OBD_DNIS_IN_DND.getValue(), 1);
         CallSummaryRecordDto record = new CallSummaryRecordDto(
                 subscription,
                 StatusCode.OBD_DNIS_IN_DND,
@@ -465,7 +541,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 contentFileName,
                 weekId,
                 rh.hindiLanguage(),
-                rh.delhiCircle()
+                rh.delhiCircle(),
+                "20151119124330"
         );
 
         processCsr(record);
@@ -479,16 +556,12 @@ public class CsrServiceBundleIT extends BasePaxIT {
     @Test
     public void verifyFT150() {
 
-        String timestamp = DateTime.now().toString(TIME_FORMATTER);
-
         // To check that NMS shall retry the OBD messages which failed due to OBD_FAILED_OTHERS.
 
         Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now());
         String contentFileName = sh.getContentMessageFile(subscription, 0);
         String weekId = sh.getWeekId(subscription, 0);
 
-        Map<Integer, Integer> callStats = new HashMap<>();
-        callStats.put(StatusCode.OBD_FAILED_OTHERS.getValue(),1);
         CallSummaryRecordDto record = new CallSummaryRecordDto(
                 subscription,
                 StatusCode.OBD_FAILED_OTHERS,
@@ -496,7 +569,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 contentFileName,
                 weekId,
                 rh.hindiLanguage(),
-                rh.delhiCircle()
+                rh.delhiCircle(),
+                "20151119124330"
         );
 
         processCsr(record);
@@ -512,8 +586,6 @@ public class CsrServiceBundleIT extends BasePaxIT {
     @Test
     public void verifyFT141() {
 
-        String timestamp = DateTime.now().toString(TIME_FORMATTER);
-
         // To check that NMS shall retry OBD message for which delivery fails for the first time with two message per
         // week configuration.
 
@@ -522,17 +594,6 @@ public class CsrServiceBundleIT extends BasePaxIT {
         String contentFileName = sh.getContentMessageFile(subscription, 0);
         String weekId = sh.getWeekId(subscription, 0);
 
-        csrDataService.create(new CallSummaryRecord(
-                subscription.getSubscriptionId(),
-                contentFileName,
-                rh.hindiLanguage().getCode(),
-                rh.delhiCircle().getName(),
-                weekId,
-                StatusCode.OBD_FAILED_BUSY,
-                FinalCallStatus.FAILED,
-                0
-        ));
-
         CallSummaryRecordDto record = new CallSummaryRecordDto(
                 subscription,
                 StatusCode.OBD_FAILED_BUSY,
@@ -540,7 +601,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 contentFileName,
                 weekId,
                 rh.hindiLanguage(),
-                rh.delhiCircle()
+                rh.delhiCircle(),
+                "20151119124330"
         );
 
         processCsr(record);
@@ -568,7 +630,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
         Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, now.minusDays(3));
         String contentFileName = sh.getContentMessageFile(subscription, 0);
         String weekId = sh.getWeekId(subscription, 0);
-        CallRetry retry = callRetryDataService.create(new CallRetry(
+        callRetryDataService.create(new CallRetry(
                 subscription.getSubscriptionId(),
                 subscription.getSubscriber().getCallingNumber(),
                 CallStage.RETRY_1,
@@ -576,11 +638,12 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 weekId,
                 rh.hindiLanguage().getCode(),
                 rh.delhiCircle().getName(),
-                SubscriptionOrigin.MCTS_IMPORT
+                SubscriptionOrigin.MCTS_IMPORT,
+                "20151119124330",
+                0
         ));
 
 
-        Map<Integer, Integer> callStats = new HashMap<>();
         CallSummaryRecordDto record = new CallSummaryRecordDto(
                 subscription,
                 StatusCode.OBD_FAILED_NOANSWER,
@@ -588,7 +651,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 contentFileName,
                 weekId,
                 rh.hindiLanguage(),
-                rh.delhiCircle()
+                rh.delhiCircle(),
+                "20151119124331"
         );
 
         processCsr(record);
@@ -617,7 +681,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
         Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, now.minusDays(3));
         String contentFileName = sh.getContentMessageFile(subscription, 0);
         String weekId = sh.getWeekId(subscription, 0);
-        CallRetry retry = callRetryDataService.create(new CallRetry(
+        callRetryDataService.create(new CallRetry(
                 subscription.getSubscriptionId(),
                 subscription.getSubscriber().getCallingNumber(),
                 CallStage.RETRY_2,
@@ -625,22 +689,21 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 weekId,
                 rh.hindiLanguage().getCode(),
                 rh.delhiCircle().getName(),
-                SubscriptionOrigin.MCTS_IMPORT
+                SubscriptionOrigin.MCTS_IMPORT,
+                "20151119124330",
+                0
         ));
 
-
-        Map<Integer, Integer> callStats = new HashMap<>();
-        CallSummaryRecordDto record = new CallSummaryRecordDto(
+        processCsr(new CallSummaryRecordDto(
                 subscription,
                 StatusCode.OBD_FAILED_NOANSWER,
                 FinalCallStatus.FAILED,
                 contentFileName,
                 weekId,
                 rh.hindiLanguage(),
-                rh.delhiCircle()
-        );
-
-        processCsr(record);
+                rh.delhiCircle(),
+                "20151119124331"
+        ));
 
         // There should be one calls to retry since the retry 2 was failed.
         assertEquals(1, callRetryDataService.count());
@@ -669,7 +732,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 contentFileName,
                 weekId,
                 rh.hindiLanguage(),
-                rh.delhiCircle()
+                rh.delhiCircle(),
+                "20151119124330"
         );
 
         processCsr(csr);
@@ -699,7 +763,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 contentFileName,
                 weekId,
                 rh.hindiLanguage(),
-                rh.delhiCircle()
+                rh.delhiCircle(),
+                "20151119124330"
         );
 
         processCsr(csr);
@@ -729,7 +794,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 contentFileName,
                 weekId,
                 rh.hindiLanguage(),
-                rh.delhiCircle()));
+                rh.delhiCircle(),
+                "20151119124330"));
 
         processCsr(new CallSummaryRecordDto(
                 subscription,
@@ -738,7 +804,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 contentFileName,
                 weekId,
                 rh.hindiLanguage(),
-                rh.delhiCircle()));
+                rh.delhiCircle(),
+                "20151119124331"));
 
         processCsr(new CallSummaryRecordDto(
                 subscription,
@@ -747,7 +814,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 contentFileName,
                 weekId,
                 rh.hindiLanguage(),
-                rh.delhiCircle()));
+                rh.delhiCircle(),
+                "20151119124332"));
 
         // verify that subscription is still Active
         subscription = subscriptionDataService.findBySubscriptionId(subscription.getSubscriptionId());
@@ -768,7 +836,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 contentFileName,
                 weekId,
                 rh.hindiLanguage(),
-                rh.delhiCircle()));
+                rh.delhiCircle(),
+                "20151119124330"));
 
         // verify that subscription is still Active, it is not deactivated because call was not failed
         // due to invalid number for all retries.
@@ -793,7 +862,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 SubscriptionPackType.PREGNANCY);
         String contentFileName = sh.getContentMessageFile(subscription, 0);
         String weekId = sh.getWeekId(subscription, 0);
-        CallRetry retry = callRetryDataService.create(new CallRetry(
+        callRetryDataService.create(new CallRetry(
                 subscription.getSubscriptionId(),
                 subscription.getSubscriber().getCallingNumber(),
                 CallStage.RETRY_1,
@@ -801,7 +870,9 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 weekId,
                 rh.hindiLanguage().getCode(),
                 rh.delhiCircle().getName(),
-                SubscriptionOrigin.MCTS_IMPORT
+                SubscriptionOrigin.MCTS_IMPORT,
+                "20151119124330",
+                0
         ));
 
 
@@ -812,7 +883,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 contentFileName,
                 weekId,
                 rh.hindiLanguage(),
-                rh.delhiCircle()));
+                rh.delhiCircle(),
+                "20151119124331"));
 
         // There should be no calls to retry since the one above was the last try
         assertEquals(0, callRetryDataService.count());
@@ -840,7 +912,9 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 weekId,
                 rh.hindiLanguage().getCode(),
                 rh.delhiCircle().getName(),
-                SubscriptionOrigin.MCTS_IMPORT
+                SubscriptionOrigin.MCTS_IMPORT,
+                "20151119124330",
+                0
         ));
 
         processCsr(new CallSummaryRecordDto(
@@ -850,7 +924,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 contentFileName,
                 weekId,
                 rh.hindiLanguage(),
-                rh.delhiCircle()));
+                rh.delhiCircle(),
+                "20151119124331"));
 
         // There should be one calls to retry since the retry 2 was failed.
         assertEquals(1, callRetryDataService.count());
@@ -886,7 +961,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 contentFileName,
                 weekId,
                 rh.hindiLanguage(),
-                rh.delhiCircle()));
+                rh.delhiCircle(),
+                "20151119124330"));
 
         // verify that subscription is still Active
         subscription = subscriptionDataService.findBySubscriptionId(subscription.getSubscriptionId());
@@ -907,7 +983,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 contentFileName,
                 weekId,
                 rh.hindiLanguage(),
-                rh.delhiCircle()));
+                rh.delhiCircle(),
+                "20151119124367"));
 
 
         // verify that subscription is deactivated, call was failed due to invalid number for all attempts.
@@ -936,7 +1013,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 contentFileName,
                 weekId,
                 rh.hindiLanguage(),
-                rh.delhiCircle()));
+                rh.delhiCircle(),
+                "20151119124330"));
 
         // verify that subscription is still Active
         subscription = subscriptionDataService.findBySubscriptionId(subscription.getSubscriptionId());
@@ -957,7 +1035,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 contentFileName,
                 weekId,
                 rh.hindiLanguage(),
-                rh.delhiCircle()));
+                rh.delhiCircle(),
+                "20151119124330"));
 
         // verify that subscription is still Active, it is not deactivated because call was not failed
         // due to invalid number for all retries.
@@ -971,8 +1050,6 @@ public class CsrServiceBundleIT extends BasePaxIT {
     */
     @Test
     public void verifyFT165() {
-        String timestamp = DateTime.now().toString(TIME_FORMATTER);
-
         int days = sh.pregnancyPack().getWeeks() * 7;
         Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(days),
                 SubscriptionPackType.PREGNANCY);
@@ -987,7 +1064,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 contentFileName,
                 weekId,
                 rh.hindiLanguage(),
-                rh.delhiCircle()));
+                rh.delhiCircle(),
+                "20151119124330"));
 
         subscription = subscriptionDataService.findBySubscriptionId(subscription.getSubscriptionId());
         assertTrue(SubscriptionStatus.COMPLETED == subscription.getStatus());
@@ -999,8 +1077,6 @@ public class CsrServiceBundleIT extends BasePaxIT {
     */
     @Test
     public void verifyFT167() {
-        String timestamp = DateTime.now().toString(TIME_FORMATTER);
-
         int days = sh.pregnancyPack().getWeeks() * 7;
         Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(days),
                 SubscriptionPackType.PREGNANCY);
@@ -1016,7 +1092,9 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 weekId,
                 rh.hindiLanguage().getCode(),
                 rh.delhiCircle().getName(),
-                SubscriptionOrigin.MCTS_IMPORT
+                SubscriptionOrigin.MCTS_IMPORT,
+                "20151119124330",
+                0
         ));
 
         processCsr(new CallSummaryRecordDto(
@@ -1026,7 +1104,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 contentFileName,
                 weekId,
                 rh.hindiLanguage(),
-                rh.delhiCircle()));
+                rh.delhiCircle(),
+                "20151119124330"));
 
         subscription = subscriptionDataService.findBySubscriptionId(subscription.getSubscriptionId());
         assertTrue(SubscriptionStatus.COMPLETED == subscription.getStatus());
@@ -1042,8 +1121,6 @@ public class CsrServiceBundleIT extends BasePaxIT {
     */
     @Test
     public void verifyFT168() {
-        String timestamp = DateTime.now().toString(TIME_FORMATTER);
-
         int days = sh.childPack().getWeeks() * 7;
         Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(days),
                 SubscriptionPackType.CHILD);
@@ -1059,7 +1136,9 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 weekId,
                 rh.hindiLanguage().getCode(),
                 rh.delhiCircle().getName(),
-                SubscriptionOrigin.MCTS_IMPORT
+                SubscriptionOrigin.MCTS_IMPORT,
+                "20151119124330",
+                0
         ));
 
         processCsr(new CallSummaryRecordDto(
@@ -1069,7 +1148,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 contentFileName,
                 weekId,
                 rh.hindiLanguage(),
-                rh.delhiCircle()));
+                rh.delhiCircle(),
+                "20151119124330"));
 
         subscription = subscriptionDataService.findBySubscriptionId(subscription.getSubscriptionId());
         assertTrue(SubscriptionStatus.COMPLETED == subscription.getStatus());
