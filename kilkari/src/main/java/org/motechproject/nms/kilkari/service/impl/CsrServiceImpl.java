@@ -136,12 +136,13 @@ public class CsrServiceImpl implements CsrService {
         // got a CDR from IMI, so let's warn about this and still try to reschedule as a first try it for this week.
         if (!callRetry.getWeekId().equals(csr.getWeekId())) {
 
-            String message = String.format("CallRetry record (id %d) for subscription %s for weekId %s was never " +
-                            "deleted, which means we never received a CDR about it. I'm cleaning it up.",
-                    callRetry.getId(), callRetry.getSubscriptionId(), callRetry.getWeekId());
+            String message = String.format(" Updating weekId for leftover CallRetry record (id %d, subscription %s) " +
+                            "from %s to %s.", callRetry.getId(), callRetry.getSubscriptionId(), callRetry.getWeekId(),
+                csr.getWeekId());
             LOGGER.info(message);
             callRetry.setCallStage(CallStage.RETRY_1);
             callRetry.setWeekId(csr.getWeekId());
+            callRetry.setContentFileName(csr.getContentFileName());
             callRetryDataService.update(callRetry);
             return;
         }
