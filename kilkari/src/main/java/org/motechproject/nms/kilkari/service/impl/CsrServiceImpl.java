@@ -122,7 +122,7 @@ public class CsrServiceImpl implements CsrService {
         // We're dealing with a re-reschedule
 
         //From the same targetFile?
-        if (existingCallRetry.getTargetFiletimestamp().equals(csrDto.getTargetFileTimeStamp())) {
+        if (csrDto.getTargetFileTimeStamp().equals(existingCallRetry.getTargetFiletimestamp())) {
             // We've already processed the call from this particular targetFile, this is probably a
             // resubmit, let's ignore it.
             return;
