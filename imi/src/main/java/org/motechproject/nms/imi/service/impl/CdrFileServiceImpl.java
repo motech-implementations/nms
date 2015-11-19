@@ -93,7 +93,7 @@ public class CdrFileServiceImpl implements CdrFileService {
     private static final String FILE_LINE_ERROR = "%s(%d): %s";
     private static final String UNABLE_TO_READ = "Unable to read %s: %s";
     private static final String UNABLE_TO_READ_HEADER = "Unable to read  header %s: %s";
-    private static final int CDR_PROGRESS_REPORT_CHUNK = 1000;
+    private static final int CDR_PROGRESS_REPORT_CHUNK = 10000;
     private static final String MAX_CDR_ERROR_COUNT = "imi.max_cdr_error_count";
     private static final String CSR_TABLE_NAME = "motech_data_services.nms_imi_csrs";
     private static final int MAX_CDR_ERROR_COUNT_DEFAULT = 100;
@@ -402,7 +402,11 @@ public class CdrFileServiceImpl implements CdrFileService {
                 }
 
                 if (lineNumber % CDR_PROGRESS_REPORT_CHUNK == 0) {
-                    LOGGER.debug("Enqueued (& saved) {}", timer.frequency(lineNumber));
+                    LOGGER.debug("Read {}", timer.frequency(lineNumber));
+                }
+
+                if (lineNumber % CDR_PROGRESS_REPORT_CHUNK == 0) {
+                    LOGGER.debug("Processed {}", timer.frequency(processCount));
                 }
 
                 lineNumber++;

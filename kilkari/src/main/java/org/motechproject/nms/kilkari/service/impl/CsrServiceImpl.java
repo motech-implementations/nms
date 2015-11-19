@@ -157,6 +157,7 @@ public class CsrServiceImpl implements CsrService {
     public void processCallSummaryRecord(MotechEvent event) { //NOPMD NcssMethodCount
 
         Timer timer = new Timer();
+        String whatHappened = "##";
 
         String subscriptionId = "###INVALID###";
         try {
@@ -177,6 +178,7 @@ public class CsrServiceImpl implements CsrService {
                     if (callRetry != null) {
                         callRetryDataService.delete(callRetry);
                     }
+                    whatHappened = "SU";
                     break;
 
                 case FAILED:
@@ -184,10 +186,12 @@ public class CsrServiceImpl implements CsrService {
                             !csrDto.getTargetFileTimeStamp().equals(callRetry.getTargetFiletimestamp())) {
                         doReschedule(subscription, callRetry, csrDto);
                     }
+                    whatHappened = "FA";
                     break;
 
                 case REJECTED:
                     deactivateSubscription(subscription, callRetry);
+                    whatHappened = "RE";
                     break;
 
                 default:
@@ -201,20 +205,22 @@ public class CsrServiceImpl implements CsrService {
             String msg = String.format("No such subscription %s", e.getMessage());
             LOGGER.error(msg);
             alertService.create(subscriptionId, "Invalid CSR Data", msg, AlertType.HIGH, AlertStatus.NEW, 0, null);
+            whatHappened = "ES";
         } catch (InvalidCallRecordDataException e) {
             String msg = String.format("Invalid CDR data for subscription %s: %s", subscriptionId, e.getMessage());
             LOGGER.error(msg);
             alertService.create(subscriptionId, "Invalid CSR Data", msg, AlertType.HIGH, AlertStatus.NEW, 0, null);
+            whatHappened = "EI";
         } catch (Exception e) {
             String msg = String.format("MOTECH BUG *** Unexpected exception in processCallSummaryRecord() for " +
                     "subscription %s: %s", subscriptionId, ExceptionUtils.getFullStackTrace(e));
             LOGGER.error(msg);
             alertService.create(subscriptionId, NMS_IMI_KK_PROCESS_CSR,
                     msg.substring(0, min(msg.length(), MAX_CHAR_ALERT)), AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            whatHappened = "E!";
         }
 
-        LOGGER.debug("processCallSummaryRecord {} : {}", subscriptionId, timer.time());
-
+        LOGGER.debug(String.format("processCallSummaryRecord %s %s %s", subscriptionId, whatHappened, timer.time()));
     }
 
 
