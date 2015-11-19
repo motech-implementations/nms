@@ -106,8 +106,6 @@ public class TestingServiceImpl implements TestingService {
         "nms_inbox_call_details__TRASH",
         "nms_kk_retry_records",
         "nms_kk_retry_records__TRASH",
-        "nms_kk_summary_records",
-        "nms_kk_summary_records__TRASH",
         "nms_ma_completion_records",
         "nms_ma_completion_records__TRASH",
         "nms_ma_course",
