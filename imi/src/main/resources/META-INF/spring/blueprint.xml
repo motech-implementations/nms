@@ -26,8 +26,8 @@
     <osgi:reference id="callDetailRecordDataService"
                     interface="org.motechproject.nms.imi.repository.CallDetailRecordDataService" />
 
-    <osgi:reference id="csrProcessingAuditDataService"
-                    interface="org.motechproject.nms.imi.repository.CsrProcessingAuditDataService" />
+    <osgi:reference id="chunkAuditRecordDataService"
+                    interface="org.motechproject.nms.imi.repository.ChunkAuditRecordDataService" />
 
     <osgi:reference id="callSummaryRecordDataService"
                     interface="org.motechproject.nms.imi.repository.CallSummaryRecordDataService" />
