@@ -400,7 +400,7 @@ public class CdrFileServiceImpl implements CdrFileService {
     }
 
 
-    private void reportAllChunksProcessed(final String file) {
+    private void reportIfAllChunksWereProcessed(final String file) {
 
         @SuppressWarnings("unchecked")
         SqlQueryExecution<List<ChunkAuditRecord>> queryExecution = new SqlQueryExecution<List<ChunkAuditRecord>>() {
@@ -432,6 +432,28 @@ public class CdrFileServiceImpl implements CdrFileService {
     }
 
 
+    private void upsertChunkAuditRecord(String file, String chunk, int csrCount) {
+        ChunkAuditRecord record = chunkAuditRecordDataService.findByFileAndChunk(file, chunk);
+        if (record == null) {
+            chunkAuditRecordDataService.create(new ChunkAuditRecord(file, chunk, csrCount, 0, null));
+        } else {
+            record.setCsrProcessed(csrCount);
+            record.setNode(hostName());
+            chunkAuditRecordDataService.update(record);
+        }
+    }
+
+
+    private void updateChunkAuditRecord(String file, String chunk, int csrCount) {
+        ChunkAuditRecord record = chunkAuditRecordDataService.findByFileAndChunk(file, chunk);
+        if (record != null) {
+            record.setCsrProcessed(csrCount);
+            record.setNode(hostName());
+            chunkAuditRecordDataService.update(record);
+        }
+    }
+
+
     @MotechListener(subjects = { NMS_IMI_PROCESS_CHUNK })
     @Transactional
     public void processChunk(MotechEvent event) {
@@ -450,7 +472,7 @@ public class CdrFileServiceImpl implements CdrFileService {
                         e.getMessage()), e);
             }
 
-            LOGGER.info("Processing {} ({} csrs)", name, csrDtos.size());
+            LOGGER.debug("Processing {} ({} csrs)", name, csrDtos.size());
 
             for (CallSummaryRecordDto csrDto : csrDtos) {
                 Map<String, Object> params = CallSummaryRecordDto.toParams(csrDto);
@@ -458,13 +480,9 @@ public class CdrFileServiceImpl implements CdrFileService {
                 csrService.processCallSummaryRecord(motechEvent);
             }
 
-            ChunkAuditRecord record = chunkAuditRecordDataService.findByFileAndChunk(file, name);
-            if (record != null) {
-                record.setCsrProcessed(csrDtos.size());
-                record.setNode(hostName());
-                chunkAuditRecordDataService.update(record);
-            }
-            reportAllChunksProcessed(file);
+            updateChunkAuditRecord(file, name, csrDtos.size());
+            reportIfAllChunksWereProcessed(file);
+
         } catch (Exception e) {
             String msg = String.format(MOTECH_BUG, "P5 - processChunk - " + name, ExceptionUtils.getFullStackTrace(e));
             LOGGER.error(msg);
@@ -544,8 +562,7 @@ public class CdrFileServiceImpl implements CdrFileService {
                                     chunkCount, chunk.size(), chunkTimer.frequency(chunkNumber)));
                             String chunkName = String.format("Chunk%d/%d", chunkNumber, chunkCount);
                             distributeChunk(fileName, chunkName, chunk);
-                            chunkAuditRecordDataService.createOrUpdate(new ChunkAuditRecord(fileName, chunkName,
-                                    chunk.size(), 0, null));
+                            upsertChunkAuditRecord(fileName, chunkName, chunk.size());
                             chunk = new ArrayList<>();
                             chunkNumber++;
                         }
