@@ -544,7 +544,7 @@ public class CdrFileServiceImpl implements CdrFileService {
                                     chunkCount, chunk.size(), chunkTimer.frequency(chunkNumber)));
                             String chunkName = String.format("Chunk%d/%d", chunkNumber, chunkCount);
                             distributeChunk(fileName, chunkName, chunk);
-                            chunkAuditRecordDataService.create(new ChunkAuditRecord(fileName, chunkName,
+                            chunkAuditRecordDataService.createOrUpdate(new ChunkAuditRecord(fileName, chunkName,
                                     chunk.size(), 0, null));
                             chunk = new ArrayList<>();
                             chunkNumber++;
