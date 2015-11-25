@@ -17,6 +17,7 @@ import org.motechproject.mds.query.SqlQueryExecution;
 import org.motechproject.metrics.service.Timer;
 import org.motechproject.nms.imi.domain.CallDetailRecord;
 import org.motechproject.nms.imi.domain.CallSummaryRecord;
+import org.motechproject.nms.imi.domain.ChunkAuditRecord;
 import org.motechproject.nms.imi.domain.FileAuditRecord;
 import org.motechproject.nms.imi.domain.FileProcessedStatus;
 import org.motechproject.nms.imi.domain.FileType;
@@ -26,6 +27,7 @@ import org.motechproject.nms.imi.exception.InternalException;
 import org.motechproject.nms.imi.exception.InvalidCallRecordFileException;
 import org.motechproject.nms.imi.repository.CallDetailRecordDataService;
 import org.motechproject.nms.imi.repository.CallSummaryRecordDataService;
+import org.motechproject.nms.imi.repository.CsrProcessingAuditDataService;
 import org.motechproject.nms.imi.repository.FileAuditRecordDataService;
 import org.motechproject.nms.imi.service.CdrFileService;
 import org.motechproject.nms.imi.service.contract.CdrFileProcessedNotification;
@@ -50,6 +52,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -68,7 +72,7 @@ public class CdrFileServiceImpl implements CdrFileService {
     public static final String DISPLAYING_THE_FIRST_N_ERRORS = "%s: %d errors - only displaying the first %d";
     private static final String DISTRIBUTED_CSR_PROCESSING = "imi.distributed_csr_processing";
     private static final String CSR_CHUNK_SIZE = "imi.csr_chunk_size";
-    private static final int CSR_CHUNK_SIZE_DEFAULT = 1;
+    private static final int CSR_CHUNK_SIZE_DEFAULT = 1000;
     private static final Boolean DISTRIBUTED_CSR_PROCESSING_DEFAULT = false;
     private static final String CDR_FILE_NOTIFICATION_URL = "imi.cdr_file_notification_url";
     private static final String LOCAL_CDR_DIR = "imi.local_cdr_dir";
@@ -114,6 +118,7 @@ public class CdrFileServiceImpl implements CdrFileService {
     private static final String MOTECH_BUG = "!!!MOTECH BUG!!! Unexpected Exception in %s: %s";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CdrFileServiceImpl.class);
+    public static final double HALF = 0.5;
 
     private SettingsFacade settingsFacade;
     private EventRelay eventRelay;
@@ -124,14 +129,17 @@ public class CdrFileServiceImpl implements CdrFileService {
     private CsrService csrService;
     private CallRetryService callRetryService;
     private CsrVerifierService csrVerifierService;
+    private CsrProcessingAuditDataService csrProcessingAuditDataService;
 
 
     @Autowired
-    public CdrFileServiceImpl(@Qualifier("imiSettings") SettingsFacade settingsFacade, EventRelay eventRelay,
+    public CdrFileServiceImpl(@Qualifier("imiSettings") // NO CHECKSTYLE More than 7 parameters
+                              SettingsFacade settingsFacade, EventRelay eventRelay,
                               FileAuditRecordDataService fileAuditRecordDataService, AlertService alertService,
                               CallDetailRecordDataService callDetailRecordDataService,
                               CallSummaryRecordDataService callSummaryRecordDataService, CsrService csrService,
-                              CsrVerifierService csrVerifierService, CallRetryService callRetryService) {
+                              CsrVerifierService csrVerifierService, CallRetryService callRetryService,
+                              CsrProcessingAuditDataService csrProcessingAuditDataService) {
         this.settingsFacade = settingsFacade;
         this.eventRelay = eventRelay;
         this.fileAuditRecordDataService = fileAuditRecordDataService;
@@ -141,9 +149,9 @@ public class CdrFileServiceImpl implements CdrFileService {
         this.csrService = csrService;
         this.csrVerifierService = csrVerifierService;
         this.callRetryService = callRetryService;
-
-
+        this.csrProcessingAuditDataService = csrProcessingAuditDataService;
     }
+
 
     private void alertAndAudit(String file, List<String> errors) {
         for (String error : errors) {
@@ -363,7 +371,7 @@ public class CdrFileServiceImpl implements CdrFileService {
     }
 
 
-    private void distributeChunk(String name, List<CallSummaryRecordDto> csrDtos) {
+    private void distributeChunk(String file, String name, int chunkCount, List<CallSummaryRecordDto> csrDtos) {
         ObjectMapper mapper = new ObjectMapper();
         String chunk;
         try {
@@ -373,34 +381,73 @@ public class CdrFileServiceImpl implements CdrFileService {
         }
 
         Map<String, Object> params = new HashMap<>();
+        params.put("file", file);
         params.put("name", name);
         params.put("chunk", chunk);
-        MotechEvent motechEvent = new MotechEvent(NMS_IMI_KK_PROCESS_CSR, params);
+        params.put("chunkCount", chunkCount);
+        MotechEvent motechEvent = new MotechEvent(NMS_IMI_PROCESS_CHUNK, params);
         eventRelay.sendEventMessage(motechEvent);
     }
 
 
+    private String hostName() {
+        try {
+            return InetAddress.getLocalHost().getHostName();
+        } catch (UnknownHostException e) {
+            return "###";
+        }
+    }
+
+
+    private void reportAllChunksProcessed(String file, int chunkCount) {
+        long count = csrProcessingAuditDataService.countFindByFile(file);
+        if ((int) count == chunkCount) {
+            LOGGER.info("All {} chunk(s) of {} were processed.", chunkCount, file);
+        }
+    }
+
+
     @MotechListener(subjects = { NMS_IMI_PROCESS_CHUNK })
+    @Transactional
     public void processChunk(MotechEvent event) {
         Timer timer = new Timer("csr", "csrs");
+        String file = (String) event.getParameters().get("file");
         String name = (String) event.getParameters().get("name");
         String json = (String) event.getParameters().get("chunk");
+        int chunkCount = (int) event.getParameters().get("chunkCount");
         ObjectMapper mapper = new ObjectMapper();
         List<CallSummaryRecordDto> csrDtos;
 
         try {
-            csrDtos = mapper.readValue(json, new TypeReference<List<CallSummaryRecord>>() { });
-        } catch (IOException e) {
-            throw new ChunkingException(String.format("Exception unpacking packaging CSR chunk %s: %s", name,
-                    e.getMessage()), e);
-        }
+            try {
+                csrDtos = mapper.readValue(json, new TypeReference<List<CallSummaryRecordDto>>() { });
+            } catch (IOException e) {
+                throw new ChunkingException(String.format("Exception unpacking packaging CSR chunk %s: %s", name,
+                        e.getMessage()), e);
+            }
 
-        LOGGER.info("Processing {} ({} csrs)", name, csrDtos.size());
+            LOGGER.info("Processing {} ({} csrs)", name, csrDtos.size());
 
-        for (CallSummaryRecordDto csrDto : csrDtos) {
-            Map<String, Object> params = CallSummaryRecordDto.toParams(csrDto);
-            MotechEvent motechEvent = new MotechEvent(NMS_IMI_KK_PROCESS_CSR, params);
-            csrService.processCallSummaryRecord(motechEvent);
+            for (CallSummaryRecordDto csrDto : csrDtos) {
+                Map<String, Object> params = CallSummaryRecordDto.toParams(csrDto);
+                MotechEvent motechEvent = new MotechEvent(NMS_IMI_KK_PROCESS_CSR, params);
+                csrService.processCallSummaryRecord(motechEvent);
+            }
+
+            ChunkAuditRecord record = csrProcessingAuditDataService.findByFileAndChunk(file, name);
+            if (record != null) {
+                record.setCsrProcessed(csrDtos.size());
+                record.setNode(hostName());
+                csrProcessingAuditDataService.update(record);
+            }
+            reportAllChunksProcessed(file, chunkCount);
+        } catch (Exception e) {
+            String msg = String.format(MOTECH_BUG, "P5 - processChunk - " + name, ExceptionUtils.getFullStackTrace(e));
+            LOGGER.error(msg);
+            alertService.create(name, "processCsrs", msg.substring(0, min(msg.length(), MAX_CHAR_ALERT)),
+                    AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            // We want to fail this event to we get retried
+            throw e;
         }
 
         LOGGER.info("Processed {} {}", name, timer.frequency(csrDtos.size()));
@@ -432,9 +479,10 @@ public class CdrFileServiceImpl implements CdrFileService {
         List<CallSummaryRecordDto> chunk = new ArrayList<>();
         int chunkSize = csrChunkSize();
         if (chunkSize > 1) {
-            chunkCount = (int) (lineCount / chunkSize + 0.5);
+            LOGGER.info("CSRs will be distributed in chunks of {} csrs", chunkSize);
+            chunkCount = (int) Math.round((lineCount / chunkSize) + HALF);
             chunkNumber = 1;
-            LOGGER.info("CSRs will be distributed in {}, chunks of {}", chunkSize, chunkCount);
+            LOGGER.info("{} CSRs will be distributed in {} chunk(s)", lineCount, chunkCount);
             verb = "distributed";
         } else {
             LOGGER.info("CSR processing will be {}", distributedProcessing ? "distributed" : "local");
@@ -455,6 +503,7 @@ public class CdrFileServiceImpl implements CdrFileService {
             }
 
             Timer timer = new Timer("csr", "csrs");
+            Timer chunkTimer = new Timer("chunk", "chunks");
             while ((line = reader.readLine()) != null) {
                 try {
 
@@ -467,10 +516,14 @@ public class CdrFileServiceImpl implements CdrFileService {
                     if (chunkSize > 1) {
                         chunk.add(csr.toDto());
                         if (chunk.size() >= chunkSize || lineNumber >= lineCount) {
-                            LOGGER.info("Distributing chunk {} of {}", chunkNumber, chunkCount);
-                            distributeChunk(String.format("Chunk%d/%d", chunkNumber, chunkCount), chunk);
+                            LOGGER.debug(String.format("Distributing chunk %d of %d (%d csrs): %s", chunkNumber,
+                                    chunkCount, chunk.size(), chunkTimer.frequency(chunkNumber)));
+                            String chunkName = String.format("Chunk%d/%d", chunkNumber, chunkCount);
+                            distributeChunk(fileName, chunkName, chunkCount, chunk);
+                            csrProcessingAuditDataService.create(new ChunkAuditRecord(fileName, chunkName,
+                                    chunk.size(), 0, null));
                             chunk = new ArrayList<>();
-                            chunkCount++;
+                            chunkNumber++;
                         }
                     } else {
                         processOneCsr(csr.toDto(), distributedProcessing);
