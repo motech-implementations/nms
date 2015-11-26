@@ -1,5 +1,6 @@
 package org.motechproject.nms.imi.domain;
 
+import org.joda.time.DateTime;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 
@@ -9,7 +10,7 @@ import javax.jdo.annotations.Unique;
 /**
  * CallSummaryRecord Processing Audit - records CSR chunk processing information
  */
-@Entity(tableName = "nms_imi_chunk_audit_record")
+@Entity(tableName = "nms_imi_chunk_audit_records")
 @Unique(name = "UNIQUE_CHUNK_AUDIT_RECORD_COMPOSITE_IDX", members = { "file", "chunk" })
 public class ChunkAuditRecord {
 
@@ -31,15 +32,22 @@ public class ChunkAuditRecord {
     @Field
     private String node;
 
+    @Field
+    private DateTime processingStart;
+
+    @Field
+    private DateTime processingEnd;
+
+    @Field
+    private String timing;
+
     public ChunkAuditRecord() {
     }
 
-    public ChunkAuditRecord(String file, String chunk, int csrToProcess, int csrProcessed, String node) {
+    public ChunkAuditRecord(String file, String chunk, int csrToProcess) {
         this.file = file;
         this.chunk = chunk;
         this.csrToProcess = csrToProcess;
-        this.csrProcessed = csrProcessed;
-        this.node = node;
     }
 
     public String getFile() {
@@ -80,5 +88,29 @@ public class ChunkAuditRecord {
 
     public void setNode(String node) {
         this.node = node;
+    }
+
+    public String getTiming() {
+        return timing;
+    }
+
+    public void setTiming(String timing) {
+        this.timing = timing;
+    }
+
+    public DateTime getProcessingStart() {
+        return processingStart;
+    }
+
+    public void setProcessingStart(DateTime processingStart) {
+        this.processingStart = processingStart;
+    }
+
+    public DateTime getProcessingEnd() {
+        return processingEnd;
+    }
+
+    public void setProcessingEnd(DateTime processingEnd) {
+        this.processingEnd = processingEnd;
     }
 }

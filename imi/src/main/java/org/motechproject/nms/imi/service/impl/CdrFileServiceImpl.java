@@ -8,6 +8,10 @@ import org.apache.http.entity.StringEntity;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 import org.datanucleus.store.rdbms.query.ForwardQueryResult;
+import org.joda.time.DateTime;
+import org.joda.time.Duration;
+import org.joda.time.format.PeriodFormatter;
+import org.joda.time.format.PeriodFormatterBuilder;
 import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.alerts.domain.AlertStatus;
 import org.motechproject.alerts.domain.AlertType;
@@ -56,6 +60,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -132,6 +137,8 @@ public class CdrFileServiceImpl implements CdrFileService {
     private CallRetryService callRetryService;
     private CsrVerifierService csrVerifierService;
     private ChunkAuditRecordDataService chunkAuditRecordDataService;
+    private PeriodFormatter periodFormatter;
+    private String hostname;
 
 
     @Autowired
@@ -152,6 +159,14 @@ public class CdrFileServiceImpl implements CdrFileService {
         this.csrVerifierService = csrVerifierService;
         this.callRetryService = callRetryService;
         this.chunkAuditRecordDataService = chunkAuditRecordDataService;
+
+        periodFormatter = new PeriodFormatterBuilder()
+                .appendHours().appendSuffix("h")
+                .appendMinutes().appendSuffix("m")
+                .appendSeconds().appendSuffix("s")
+                .toFormatter();
+
+        hostname = hostName();
     }
 
 
@@ -400,6 +415,43 @@ public class CdrFileServiceImpl implements CdrFileService {
     }
 
 
+    private String reportChunkProcessingTime(final String file) {
+
+        @SuppressWarnings("unchecked")
+        SqlQueryExecution<String> queryExecution = new SqlQueryExecution<String>() {
+
+            @Override
+            public String getSqlQuery() {
+                String query = String.format("SELECT MIN(processingStart) as start, MAX(processingEnd) as end " +
+                        "FROM nms_imi_chunk_audit_records WHERE file = '%s'", file);
+                LOGGER.debug("SQL QUERY: {}", query);
+                return query;
+            }
+
+            @Override
+            public String execute(Query query) {
+
+                ForwardQueryResult fqr = (ForwardQueryResult) query.execute();
+
+                if (fqr.isEmpty()) {
+                    throw new IllegalStateException("No row was returned!");
+                }
+                if (fqr.size() == 1) {
+                    Timestamp tsStart = (Timestamp) ((Object[]) fqr.get(0))[0];
+                    Timestamp tsEnd = (Timestamp) ((Object[]) fqr.get(0))[1];
+                    DateTime dtStart = new DateTime(tsStart);
+                    DateTime dtEnd = new DateTime(tsEnd);
+                    Duration d = new Duration(dtStart, dtEnd);
+                    return String.format("%s (%ds)", periodFormatter.print(d.toPeriod()), d.getStandardSeconds());
+                }
+                throw new IllegalStateException("More than one row returned!");
+            }
+        };
+
+        return chunkAuditRecordDataService.executeSQLQuery(queryExecution);
+    }
+
+
     private void reportIfAllChunksWereProcessed(final String file) {
 
         @SuppressWarnings("unchecked")
@@ -407,7 +459,7 @@ public class CdrFileServiceImpl implements CdrFileService {
 
             @Override
             public String getSqlQuery() {
-                String query = String.format("SELECT * FROM nms_imi_chunk_audit_record WHERE file = '%s' AND " +
+                String query = String.format("SELECT * FROM nms_imi_chunk_audit_records WHERE file = '%s' AND " +
                         "node IS NULL LIMIT 1", file);
                 LOGGER.debug("SQL QUERY: {}", query);
                 return query;
@@ -427,7 +479,7 @@ public class CdrFileServiceImpl implements CdrFileService {
         List<ChunkAuditRecord> records = chunkAuditRecordDataService.executeSQLQuery(queryExecution);
 
         if (records.size() == 0) {
-            LOGGER.info("All chunk(s) of {} were processed.", file);
+            LOGGER.info("{} processed in {}.", file, reportChunkProcessingTime(file));
         }
     }
 
@@ -435,20 +487,26 @@ public class CdrFileServiceImpl implements CdrFileService {
     private void upsertChunkAuditRecord(String file, String chunk, int csrCount) {
         ChunkAuditRecord record = chunkAuditRecordDataService.findByFileAndChunk(file, chunk);
         if (record == null) {
-            chunkAuditRecordDataService.create(new ChunkAuditRecord(file, chunk, csrCount, 0, null));
+            chunkAuditRecordDataService.create(new ChunkAuditRecord(file, chunk, csrCount));
         } else {
-            record.setCsrProcessed(csrCount);
-            record.setNode(hostName());
+            record.setCsrProcessed(0);
+            record.setNode(null);
+            record.setProcessingStart(null);
+            record.setProcessingEnd(null);
             chunkAuditRecordDataService.update(record);
         }
     }
 
 
-    private void updateChunkAuditRecord(String file, String chunk, int csrCount) {
+    private void updateChunkAuditRecord(String file, String chunk, int csrCount, DateTime processingStart,
+                                        DateTime processingEnd, String timing) {
         ChunkAuditRecord record = chunkAuditRecordDataService.findByFileAndChunk(file, chunk);
         if (record != null) {
             record.setCsrProcessed(csrCount);
-            record.setNode(hostName());
+            record.setNode(hostname);
+            record.setProcessingStart(processingStart);
+            record.setProcessingEnd(processingEnd);
+            record.setTiming(timing);
             chunkAuditRecordDataService.update(record);
         }
     }
@@ -457,6 +515,7 @@ public class CdrFileServiceImpl implements CdrFileService {
     @MotechListener(subjects = { NMS_IMI_PROCESS_CHUNK })
     @Transactional
     public void processChunk(MotechEvent event) {
+        DateTime processingStart = DateTime.now();
         Timer timer = new Timer("csr", "csrs");
         String file = (String) event.getParameters().get("file");
         String name = (String) event.getParameters().get("name");
@@ -480,7 +539,8 @@ public class CdrFileServiceImpl implements CdrFileService {
                 csrService.processCallSummaryRecord(motechEvent);
             }
 
-            updateChunkAuditRecord(file, name, csrDtos.size());
+            updateChunkAuditRecord(file, name, csrDtos.size(), processingStart, DateTime.now(),
+                    timer.frequency(csrDtos.size()));
             reportIfAllChunksWereProcessed(file);
 
         } catch (Exception e) {
@@ -492,7 +552,16 @@ public class CdrFileServiceImpl implements CdrFileService {
             throw e;
         }
 
-        LOGGER.info("Processed {} {}", name, timer.frequency(csrDtos.size()));
+        LOGGER.info("Processed {} - {}", name, timer.frequency(csrDtos.size()));
+    }
+
+
+    private int calculateChunkCount(int count, int size) {
+        if (count % size == 0) {
+            return count / size;
+        }
+
+        return (int) (count / size) + 1;
     }
 
 
@@ -522,7 +591,7 @@ public class CdrFileServiceImpl implements CdrFileService {
         int chunkSize = csrChunkSize();
         if (chunkSize > 1) {
             LOGGER.info("CSRs will be distributed in chunks of {} csrs", chunkSize);
-            chunkCount = (int) Math.round((lineCount / chunkSize) + HALF);
+            chunkCount = calculateChunkCount(lineCount, chunkSize);
             chunkNumber = 1;
             LOGGER.info("{} CSRs will be distributed in {} chunk(s)", lineCount, chunkCount);
             verb = "distributed";
@@ -558,11 +627,12 @@ public class CdrFileServiceImpl implements CdrFileService {
                     if (chunkSize > 1) {
                         chunk.add(csr.toDto());
                         if (chunk.size() >= chunkSize || lineNumber >= lineCount) {
-                            LOGGER.info(String.format("Distributing chunk %d of %d (%d csrs): %s", chunkNumber,
-                                    chunkCount, chunk.size(), chunkTimer.frequency(chunkNumber)));
                             String chunkName = String.format("Chunk%d/%d", chunkNumber, chunkCount);
                             distributeChunk(fileName, chunkName, chunk);
                             upsertChunkAuditRecord(fileName, chunkName, chunk.size());
+
+                            LOGGER.info("%s - %s", chunkName, chunkTimer.frequency(chunkNumber));
+
                             chunk = new ArrayList<>();
                             chunkNumber++;
                         }
