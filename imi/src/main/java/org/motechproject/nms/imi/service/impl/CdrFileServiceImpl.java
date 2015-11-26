@@ -340,7 +340,7 @@ public class CdrFileServiceImpl implements CdrFileService {
                 lineNumber++;
             }
 
-            LOGGER.info("Read {}", timer.frequency(lineNumber-1));
+            LOGGER.info("Read {}", timer.frequency(lineNumber - 1));
             LOGGER.info("Actually saved {}", saveCount);
 
         } catch (IOException e) {
@@ -654,7 +654,7 @@ public class CdrFileServiceImpl implements CdrFileService {
                 lineNumber++;
             }
 
-            LOGGER.info(String.format("Read %s", timer.frequency(lineNumber)));
+            LOGGER.info(String.format("Read %s", timer.frequency(lineNumber - 1)));
             if (chunkSize <= 1) {
                 LOGGER.info(String.format("Saved %d, %s %d", saveCount, verb, processCount));
             }
