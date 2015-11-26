@@ -480,7 +480,7 @@ public class CdrFileServiceImpl implements CdrFileService {
         List<ChunkAuditRecord> records = chunkAuditRecordDataService.executeSQLQuery(queryExecution);
 
         if (records.size() == 0) {
-            LOGGER.info("{} processed in {}.", file, reportChunkProcessingTime(file));
+            LOGGER.info("CSR processing complete - {} processed in {}.", file, reportChunkProcessingTime(file));
         }
     }
 
