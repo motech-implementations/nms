@@ -161,6 +161,7 @@ public class CdrFileServiceImpl implements CdrFileService {
         this.chunkAuditRecordDataService = chunkAuditRecordDataService;
 
         periodFormatter = new PeriodFormatterBuilder()
+                .appendDays().appendSuffix("d")
                 .appendHours().appendSuffix("h")
                 .appendMinutes().appendSuffix("m")
                 .appendSeconds().appendSuffix("s")
@@ -339,7 +340,7 @@ public class CdrFileServiceImpl implements CdrFileService {
                 lineNumber++;
             }
 
-            LOGGER.info("Read {}", timer.frequency(lineNumber));
+            LOGGER.info("Read {}", timer.frequency(lineNumber-1));
             LOGGER.info("Actually saved {}", saveCount);
 
         } catch (IOException e) {
@@ -514,7 +515,7 @@ public class CdrFileServiceImpl implements CdrFileService {
 
     @MotechListener(subjects = { NMS_IMI_PROCESS_CHUNK })
     @Transactional
-    public void processChunk(MotechEvent event) {
+    public void processChunk(MotechEvent event) throws IOException {
         DateTime processingStart = DateTime.now();
         Timer timer = new Timer("csr", "csrs");
         String file = (String) event.getParameters().get("file");
@@ -524,12 +525,7 @@ public class CdrFileServiceImpl implements CdrFileService {
         List<CallSummaryRecordDto> csrDtos;
 
         try {
-            try {
-                csrDtos = mapper.readValue(json, new TypeReference<List<CallSummaryRecordDto>>() { });
-            } catch (IOException e) {
-                throw new ChunkingException(String.format("Exception unpacking packaging CSR chunk %s: %s", name,
-                        e.getMessage()), e);
-            }
+            csrDtos = mapper.readValue(json, new TypeReference<List<CallSummaryRecordDto>>() { });
 
             LOGGER.debug("Processing {} ({} csrs)", name, csrDtos.size());
 
@@ -631,7 +627,7 @@ public class CdrFileServiceImpl implements CdrFileService {
                             distributeChunk(fileName, chunkName, chunk);
                             upsertChunkAuditRecord(fileName, chunkName, chunk.size());
 
-                            LOGGER.info("%s - %s", chunkName, chunkTimer.frequency(chunkNumber));
+                            LOGGER.info("{} - {}", chunkName, chunkTimer.frequency(chunkNumber));
 
                             chunk = new ArrayList<>();
                             chunkNumber++;
@@ -659,7 +655,9 @@ public class CdrFileServiceImpl implements CdrFileService {
             }
 
             LOGGER.info(String.format("Read %s", timer.frequency(lineNumber)));
-            LOGGER.info(String.format("Saved %d, %s %d", saveCount, verb, processCount));
+            if (chunkSize <= 1) {
+                LOGGER.info(String.format("Saved %d, %s %d", saveCount, verb, processCount));
+            }
 
         } catch (IOException e) {
             String error = INVALID_CSR_P5 + String.format(UNABLE_TO_READ, fileName, e.getMessage());
