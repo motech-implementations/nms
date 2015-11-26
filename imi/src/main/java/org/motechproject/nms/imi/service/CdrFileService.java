@@ -40,9 +40,10 @@ public interface CdrFileService {
      * NOTE: only exposed here for ITs
      *
      * @param file      file to process
+     * @param lineCount number of CSR lines in the file
      * @return          a list of errors (failure) or an empty list (success)
      */
-    void processCsrs(File file);
+    void processCsrs(File file, int lineCount);
 
 
     /**

@@ -6,6 +6,12 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.type.TypeReference;
+import org.datanucleus.store.rdbms.query.ForwardQueryResult;
+import org.joda.time.DateTime;
+import org.joda.time.Duration;
+import org.joda.time.format.PeriodFormatter;
+import org.joda.time.format.PeriodFormatterBuilder;
 import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.alerts.domain.AlertStatus;
 import org.motechproject.alerts.domain.AlertType;
@@ -16,19 +22,23 @@ import org.motechproject.mds.query.SqlQueryExecution;
 import org.motechproject.metrics.service.Timer;
 import org.motechproject.nms.imi.domain.CallDetailRecord;
 import org.motechproject.nms.imi.domain.CallSummaryRecord;
+import org.motechproject.nms.imi.domain.ChunkAuditRecord;
 import org.motechproject.nms.imi.domain.FileAuditRecord;
 import org.motechproject.nms.imi.domain.FileProcessedStatus;
 import org.motechproject.nms.imi.domain.FileType;
+import org.motechproject.nms.imi.exception.ChunkingException;
 import org.motechproject.nms.imi.exception.ExecException;
 import org.motechproject.nms.imi.exception.InternalException;
 import org.motechproject.nms.imi.exception.InvalidCallRecordFileException;
 import org.motechproject.nms.imi.repository.CallDetailRecordDataService;
 import org.motechproject.nms.imi.repository.CallSummaryRecordDataService;
+import org.motechproject.nms.imi.repository.ChunkAuditRecordDataService;
 import org.motechproject.nms.imi.repository.FileAuditRecordDataService;
 import org.motechproject.nms.imi.service.CdrFileService;
 import org.motechproject.nms.imi.service.contract.CdrFileProcessedNotification;
 import org.motechproject.nms.imi.web.contract.CdrFileNotificationRequest;
 import org.motechproject.nms.imi.web.contract.FileInfo;
+import org.motechproject.nms.kilkari.domain.CallRetry;
 import org.motechproject.nms.kilkari.dto.CallSummaryRecordDto;
 import org.motechproject.nms.kilkari.exception.InvalidCallRecordDataException;
 import org.motechproject.nms.kilkari.service.CallRetryService;
@@ -48,6 +58,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -65,6 +78,8 @@ public class CdrFileServiceImpl implements CdrFileService {
 
     public static final String DISPLAYING_THE_FIRST_N_ERRORS = "%s: %d errors - only displaying the first %d";
     private static final String DISTRIBUTED_CSR_PROCESSING = "imi.distributed_csr_processing";
+    private static final String CSR_CHUNK_SIZE = "imi.csr_chunk_size";
+    private static final int CSR_CHUNK_SIZE_DEFAULT = 1000;
     private static final Boolean DISTRIBUTED_CSR_PROCESSING_DEFAULT = false;
     private static final String CDR_FILE_NOTIFICATION_URL = "imi.cdr_file_notification_url";
     private static final String LOCAL_CDR_DIR = "imi.local_cdr_dir";
@@ -73,6 +88,7 @@ public class CdrFileServiceImpl implements CdrFileService {
     private static final String CDR_CSR_CLEANUP_SUBJECT = "nms.imi.cdr_csr.cleanup";
     private static final String CDR_TABLE_NAME = "motech_data_services.nms_imi_cdrs";
     private static final String NMS_IMI_KK_PROCESS_CSR = "nms.imi.kk.process_csr";
+    private static final String NMS_IMI_PROCESS_CHUNK = "nms.imi.process_chunk";
     private static final String CDR_PHASE_2 = "nms.imi.kk.cdr_phase_2";
     private static final String CDR_PHASE_3 = "nms.imi.kk.cdr_phase_3";
     private static final String CDR_PHASE_4 = "nms.imi.kk.cdr_phase_4";
@@ -109,6 +125,7 @@ public class CdrFileServiceImpl implements CdrFileService {
     private static final String MOTECH_BUG = "!!!MOTECH BUG!!! Unexpected Exception in %s: %s";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CdrFileServiceImpl.class);
+    public static final double HALF = 0.5;
 
     private SettingsFacade settingsFacade;
     private EventRelay eventRelay;
@@ -119,14 +136,19 @@ public class CdrFileServiceImpl implements CdrFileService {
     private CsrService csrService;
     private CallRetryService callRetryService;
     private CsrVerifierService csrVerifierService;
+    private ChunkAuditRecordDataService chunkAuditRecordDataService;
+    private PeriodFormatter periodFormatter;
+    private String hostname;
 
 
     @Autowired
-    public CdrFileServiceImpl(@Qualifier("imiSettings") SettingsFacade settingsFacade, EventRelay eventRelay,
+    public CdrFileServiceImpl(@Qualifier("imiSettings") // NO CHECKSTYLE More than 7 parameters
+                              SettingsFacade settingsFacade, EventRelay eventRelay,
                               FileAuditRecordDataService fileAuditRecordDataService, AlertService alertService,
                               CallDetailRecordDataService callDetailRecordDataService,
                               CallSummaryRecordDataService callSummaryRecordDataService, CsrService csrService,
-                              CsrVerifierService csrVerifierService, CallRetryService callRetryService) {
+                              CsrVerifierService csrVerifierService, CallRetryService callRetryService,
+                              ChunkAuditRecordDataService chunkAuditRecordDataService) {
         this.settingsFacade = settingsFacade;
         this.eventRelay = eventRelay;
         this.fileAuditRecordDataService = fileAuditRecordDataService;
@@ -136,9 +158,18 @@ public class CdrFileServiceImpl implements CdrFileService {
         this.csrService = csrService;
         this.csrVerifierService = csrVerifierService;
         this.callRetryService = callRetryService;
+        this.chunkAuditRecordDataService = chunkAuditRecordDataService;
 
+        periodFormatter = new PeriodFormatterBuilder()
+                .appendDays().appendSuffix("d")
+                .appendHours().appendSuffix("h")
+                .appendMinutes().appendSuffix("m")
+                .appendSeconds().appendSuffix("s")
+                .toFormatter();
 
+        hostname = hostName();
     }
+
 
     private void alertAndAudit(String file, List<String> errors) {
         for (String error : errors) {
@@ -309,7 +340,7 @@ public class CdrFileServiceImpl implements CdrFileService {
                 lineNumber++;
             }
 
-            LOGGER.info("Read {}", timer.frequency(lineNumber));
+            LOGGER.info("Read {}", timer.frequency(lineNumber - 1));
             LOGGER.info("Actually saved {}", saveCount);
 
         } catch (IOException e) {
@@ -330,12 +361,24 @@ public class CdrFileServiceImpl implements CdrFileService {
         try {
             return Boolean.valueOf(settingsFacade.getProperty(DISTRIBUTED_CSR_PROCESSING));
         } catch (Exception e) {
+            LOGGER.info("Unable to read {}, returning default value {}", DISTRIBUTED_CSR_PROCESSING,
+                    DISTRIBUTED_CSR_PROCESSING_DEFAULT);
             return DISTRIBUTED_CSR_PROCESSING_DEFAULT;
         }
     }
 
 
-    private void processCsrEvent(CallSummaryRecordDto csrDto, boolean distributed) {
+    private int csrChunkSize() {
+        try {
+            return Integer.valueOf(settingsFacade.getProperty(CSR_CHUNK_SIZE));
+        } catch (Exception e) {
+            LOGGER.info("Unable to read {}, returning default value {}", CSR_CHUNK_SIZE, CSR_CHUNK_SIZE_DEFAULT);
+            return CSR_CHUNK_SIZE_DEFAULT;
+        }
+    }
+
+
+    private void processOneCsr(CallSummaryRecordDto csrDto, boolean distributed) {
         Map<String, Object> params = CallSummaryRecordDto.toParams(csrDto);
         MotechEvent motechEvent = new MotechEvent(NMS_IMI_KK_PROCESS_CSR, params);
         if (distributed) {
@@ -343,6 +386,178 @@ public class CdrFileServiceImpl implements CdrFileService {
         } else {
             csrService.processCallSummaryRecord(motechEvent);
         }
+    }
+
+
+    private void distributeChunk(String file, String name, List<CallSummaryRecordDto> csrDtos) {
+        ObjectMapper mapper = new ObjectMapper();
+        String chunk;
+        try {
+            chunk = mapper.writeValueAsString(csrDtos);
+        } catch (IOException e) {
+            throw new ChunkingException(String.format("Exception packaging CSR chunk: %s", e.getMessage()), e);
+        }
+
+        Map<String, Object> params = new HashMap<>();
+        params.put("file", file);
+        params.put("name", name);
+        params.put("chunk", chunk);
+        MotechEvent motechEvent = new MotechEvent(NMS_IMI_PROCESS_CHUNK, params);
+        eventRelay.sendEventMessage(motechEvent);
+    }
+
+
+    private String hostName() {
+        try {
+            return InetAddress.getLocalHost().getHostName();
+        } catch (UnknownHostException e) {
+            return "###";
+        }
+    }
+
+
+    private String reportChunkProcessingTime(final String file) {
+
+        @SuppressWarnings("unchecked")
+        SqlQueryExecution<String> queryExecution = new SqlQueryExecution<String>() {
+
+            @Override
+            public String getSqlQuery() {
+                String query = String.format("SELECT MIN(processingStart) as start, MAX(processingEnd) as end " +
+                        "FROM nms_imi_chunk_audit_records WHERE file = '%s'", file);
+                LOGGER.debug("SQL QUERY: {}", query);
+                return query;
+            }
+
+            @Override
+            public String execute(Query query) {
+
+                ForwardQueryResult fqr = (ForwardQueryResult) query.execute();
+
+                if (fqr.isEmpty()) {
+                    throw new IllegalStateException("No row was returned!");
+                }
+                if (fqr.size() == 1) {
+                    Timestamp tsStart = (Timestamp) ((Object[]) fqr.get(0))[0];
+                    Timestamp tsEnd = (Timestamp) ((Object[]) fqr.get(0))[1];
+                    DateTime dtStart = new DateTime(tsStart);
+                    DateTime dtEnd = new DateTime(tsEnd);
+                    Duration d = new Duration(dtStart, dtEnd);
+                    return String.format("%s (%ds)", periodFormatter.print(d.toPeriod()), d.getStandardSeconds());
+                }
+                throw new IllegalStateException("More than one row returned!");
+            }
+        };
+
+        return chunkAuditRecordDataService.executeSQLQuery(queryExecution);
+    }
+
+
+    private void reportIfAllChunksWereProcessed(final String file) {
+
+        @SuppressWarnings("unchecked")
+        SqlQueryExecution<List<ChunkAuditRecord>> queryExecution = new SqlQueryExecution<List<ChunkAuditRecord>>() {
+
+            @Override
+            public String getSqlQuery() {
+                String query = String.format("SELECT * FROM nms_imi_chunk_audit_records WHERE file = '%s' AND " +
+                        "node IS NULL LIMIT 1", file);
+                LOGGER.debug("SQL QUERY: {}", query);
+                return query;
+            }
+
+            @Override
+            public List<ChunkAuditRecord> execute(Query query) {
+
+                query.setClass(CallRetry.class);
+
+                ForwardQueryResult fqr = (ForwardQueryResult) query.execute();
+
+                return (List<ChunkAuditRecord>) fqr;
+            }
+        };
+
+        List<ChunkAuditRecord> records = chunkAuditRecordDataService.executeSQLQuery(queryExecution);
+
+        if (records.size() == 0) {
+            LOGGER.info("CSR processing complete - {} processed in {}.", file, reportChunkProcessingTime(file));
+        }
+    }
+
+
+    private void upsertChunkAuditRecord(String file, String chunk, int csrCount) {
+        ChunkAuditRecord record = chunkAuditRecordDataService.findByFileAndChunk(file, chunk);
+        if (record == null) {
+            chunkAuditRecordDataService.create(new ChunkAuditRecord(file, chunk, csrCount));
+        } else {
+            record.setCsrProcessed(0);
+            record.setNode(null);
+            record.setProcessingStart(null);
+            record.setProcessingEnd(null);
+            chunkAuditRecordDataService.update(record);
+        }
+    }
+
+
+    private void updateChunkAuditRecord(String file, String chunk, int csrCount, DateTime processingStart,
+                                        DateTime processingEnd, String timing) {
+        ChunkAuditRecord record = chunkAuditRecordDataService.findByFileAndChunk(file, chunk);
+        if (record != null) {
+            record.setCsrProcessed(csrCount);
+            record.setNode(hostname);
+            record.setProcessingStart(processingStart);
+            record.setProcessingEnd(processingEnd);
+            record.setTiming(timing);
+            chunkAuditRecordDataService.update(record);
+        }
+    }
+
+
+    @MotechListener(subjects = { NMS_IMI_PROCESS_CHUNK })
+    @Transactional
+    public void processChunk(MotechEvent event) throws IOException {
+        DateTime processingStart = DateTime.now();
+        Timer timer = new Timer("csr", "csrs");
+        String file = (String) event.getParameters().get("file");
+        String name = (String) event.getParameters().get("name");
+        String json = (String) event.getParameters().get("chunk");
+        ObjectMapper mapper = new ObjectMapper();
+        List<CallSummaryRecordDto> csrDtos;
+
+        try {
+            csrDtos = mapper.readValue(json, new TypeReference<List<CallSummaryRecordDto>>() { });
+
+            LOGGER.debug("Processing {} ({} csrs)", name, csrDtos.size());
+
+            for (CallSummaryRecordDto csrDto : csrDtos) {
+                Map<String, Object> params = CallSummaryRecordDto.toParams(csrDto);
+                MotechEvent motechEvent = new MotechEvent(NMS_IMI_KK_PROCESS_CSR, params);
+                csrService.processCallSummaryRecord(motechEvent);
+            }
+
+            updateChunkAuditRecord(file, name, csrDtos.size(), processingStart, DateTime.now(),
+                    timer.frequency(csrDtos.size()));
+            reportIfAllChunksWereProcessed(file);
+
+        } catch (Exception e) {
+            String msg = String.format(MOTECH_BUG, "P5 - processChunk - " + name, ExceptionUtils.getFullStackTrace(e));
+            LOGGER.error(msg);
+            alertService.create(name, "processCsrs", msg.substring(0, min(msg.length(), MAX_CHAR_ALERT)),
+                    AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            // We want to fail this event to we get retried
+            throw e;
+        }
+
+        LOGGER.info("Processed {} - {}", name, timer.frequency(csrDtos.size()));
+    }
+
+
+    private int calculateChunkCount(int count, int size) {
+        if (count % size == 0) {
+            return count / size;
+        }
+
+        return (int) (count / size) + 1;
     }
 
 
@@ -355,18 +570,30 @@ public class CdrFileServiceImpl implements CdrFileService {
      * @return          a list of errors (failure) or an empty list (success)
      */
     @Override //NO CHECKSTYLE Cyclomatic Complexity
-    public void processCsrs(File file) {
+    public void processCsrs(File file, int lineCount) { //NOPMD NcssMethodCount
         int lineNumber = 1;
         int saveCount = 0;
         int processCount = 0;
+        int chunkCount = 0;
+        int chunkNumber = 0;
         String fileName = file.getName();
 
-        LOGGER.info("processCsrs({})", fileName);
+        LOGGER.info("processCsrs({}, {})", fileName, lineCount);
 
         boolean distributedProcessing = shouldDistributeCsrProcessing();
-        String verb = distributedProcessing? "distributed" : "enqueued";
-        LOGGER.info("CSR processing will be {}", distributedProcessing? "distributed" : "local");
+        String verb = distributedProcessing ? "distributed" : "enqueued";
 
+        List<CallSummaryRecordDto> chunk = new ArrayList<>();
+        int chunkSize = csrChunkSize();
+        if (chunkSize > 1) {
+            LOGGER.info("CSRs will be distributed in chunks of {} csrs", chunkSize);
+            chunkCount = calculateChunkCount(lineCount, chunkSize);
+            chunkNumber = 1;
+            LOGGER.info("{} CSRs will be distributed in {} chunk(s)", lineCount, chunkCount);
+            verb = "distributed";
+        } else {
+            LOGGER.info("CSR processing will be {}", distributedProcessing ? "distributed" : "local");
+        }
 
         try (FileInputStream fis = new FileInputStream(file);
              InputStreamReader isr = new InputStreamReader(fis);
@@ -383,6 +610,7 @@ public class CdrFileServiceImpl implements CdrFileService {
             }
 
             Timer timer = new Timer("csr", "csrs");
+            Timer chunkTimer = new Timer("chunk", "chunks");
             while ((line = reader.readLine()) != null) {
                 try {
 
@@ -392,8 +620,22 @@ public class CdrFileServiceImpl implements CdrFileService {
                         saveCount++;
                     }
 
-                    processCsrEvent(csr.toDto(), distributedProcessing);
-                    processCount++;
+                    if (chunkSize > 1) {
+                        chunk.add(csr.toDto());
+                        if (chunk.size() >= chunkSize || lineNumber >= lineCount) {
+                            String chunkName = String.format("Chunk%d/%d", chunkNumber, chunkCount);
+                            distributeChunk(fileName, chunkName, chunk);
+                            upsertChunkAuditRecord(fileName, chunkName, chunk.size());
+
+                            LOGGER.info("{} - {}", chunkName, chunkTimer.frequency(chunkNumber));
+
+                            chunk = new ArrayList<>();
+                            chunkNumber++;
+                        }
+                    } else {
+                        processOneCsr(csr.toDto(), distributedProcessing);
+                        processCount++;
+                    }
 
                 } catch (InvalidCallRecordDataException | IllegalArgumentException e) {
                     // All errors here should have been reported in Phase 2, let's just ignore them
@@ -405,16 +647,17 @@ public class CdrFileServiceImpl implements CdrFileService {
                     LOGGER.debug("Read {}", timer.frequency(lineNumber));
                 }
 
-                if (lineNumber % CDR_PROGRESS_REPORT_CHUNK == 0) {
+                if (processCount > 0 && processCount % CDR_PROGRESS_REPORT_CHUNK == 0) {
                     LOGGER.debug("Processed {}", timer.frequency(processCount));
                 }
 
                 lineNumber++;
-
             }
 
-            LOGGER.info(String.format("Read %s", timer.frequency(lineNumber)));
-            LOGGER.info(String.format("Saved %d, %s %d", saveCount, verb, processCount));
+            LOGGER.info(String.format("Read %s", timer.frequency(lineNumber - 1)));
+            if (chunkSize <= 1) {
+                LOGGER.info(String.format("Saved %d, %s %d", saveCount, verb, processCount));
+            }
 
         } catch (IOException e) {
             String error = INVALID_CSR_P5 + String.format(UNABLE_TO_READ, fileName, e.getMessage());
@@ -867,7 +1110,7 @@ public class CdrFileServiceImpl implements CdrFileService {
         }
 
         LOGGER.info("Phase 5 - processCsrs");
-        processCsrs(csrFile);
+        processCsrs(csrFile, request.getCdrSummary().getRecordsCount());
 
         LOGGER.info("Phase 5 - End {}", timer.time());
     }

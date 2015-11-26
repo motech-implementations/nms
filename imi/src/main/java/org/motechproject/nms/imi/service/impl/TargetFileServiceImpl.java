@@ -359,6 +359,8 @@ public class TargetFileServiceImpl implements TargetFileService {
     private int generateFreshCalls(DateTime timestamp, int maxQueryBlock, String callFlowUrl,
                                    OutputStreamWriter writer) throws IOException {
 
+        LOGGER.info("generateFreshCalls({})", timestamp);
+
         DayOfTheWeek dow = DayOfTheWeek.fromDateTime(timestamp);
         int recordsWritten = 0;
         int recordsRead = 0;
@@ -417,12 +419,15 @@ public class TargetFileServiceImpl implements TargetFileService {
 
         } while (true);
 
+        LOGGER.info(WROTE, timer.frequency(count));
 
         return recordsWritten;
     }
 
     private int generateRetryCalls(DateTime timestamp, int maxQueryBlock, String callFlowUrl,
                                    OutputStreamWriter writer) throws IOException {
+
+        LOGGER.info("generateRetryCalls({})", timestamp);
 
         int count = 0;
         Long offset = 0L;
@@ -463,9 +468,7 @@ public class TargetFileServiceImpl implements TargetFileService {
 
         } while (true);
 
-        if (count % PROGRESS_INTERVAL != 0) {
-            LOGGER.debug(WROTE, timer.frequency(count));
-        }
+        LOGGER.info(WROTE, timer.frequency(count));
 
         return count;
     }
@@ -481,6 +484,7 @@ public class TargetFileServiceImpl implements TargetFileService {
      * 4.4.1 Target File Format
      */
     public TargetFileNotification generateTargetFile() {
+        LOGGER.info("generateTargetFile()");
         DateTime today = DateTime.now();
         String targetFileName = targetFileName(TIME_FORMATTER.print(today));
         File localTargetDir = localObdDir();
@@ -514,7 +518,7 @@ public class TargetFileServiceImpl implements TargetFileService {
             //Retry calls
             recordCount += generateRetryCalls(today, maxQueryBlock, callFlowUrl, writer);
 
-            LOGGER.debug("Created targetFile with {} record{}", recordCount, recordCount == 1 ? "" : "s");
+            LOGGER.info("Created targetFile with {} record{}", recordCount, recordCount == 1 ? "" : "s");
 
             writer.close();
             fos.close();

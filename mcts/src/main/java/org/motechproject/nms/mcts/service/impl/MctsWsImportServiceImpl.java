@@ -194,7 +194,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
                         record.getIdNo(), stateCode, e);
             }
         }
-        LOGGER.debug("{} state, Total: {} mothers imported, {} mothers rejected", stateName, saved, rejected);
+        LOGGER.info("{} state, Total: {} mothers imported, {} mothers rejected", stateName, saved, rejected);
         return new MctsImportAudit(referenceDate, MctsUserType.MOTHER, stateCode, stateName, saved, rejected, null);
     }
 
@@ -280,7 +280,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
                         record.getIdNo(), stateName, stateCode, e);
             }
         }
-        LOGGER.debug("{} state, Total: {} children imported, {} children rejected", stateName, saved, rejected);
+        LOGGER.info("{} state, Total: {} children imported, {} children rejected", stateName, saved, rejected);
         return new MctsImportAudit(referenceDate, MctsUserType.CHILD, stateCode, stateName, saved, rejected, null);
     }
 
@@ -375,7 +375,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
                 LOGGER.debug("{} state, Progress: {} Ashas imported, {} Ashas rejected", stateName, saved, rejected);
             }
         }
-        LOGGER.debug("{} state, Total: {} Ashas imported, {} Ashas rejected", stateName, saved, rejected);
+        LOGGER.info("{} state, Total: {} Ashas imported, {} Ashas rejected", stateName, saved, rejected);
         return new MctsImportAudit(referenceDate, MctsUserType.ASHA, stateCode, stateName, saved, rejected, null);
     }
 
