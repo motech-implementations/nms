@@ -647,7 +647,7 @@ public class CdrFileServiceImpl implements CdrFileService {
                     LOGGER.debug("Read {}", timer.frequency(lineNumber));
                 }
 
-                if (lineNumber % CDR_PROGRESS_REPORT_CHUNK == 0) {
+                if (processCount > 0 && processCount % CDR_PROGRESS_REPORT_CHUNK == 0) {
                     LOGGER.debug("Processed {}", timer.frequency(processCount));
                 }
 
