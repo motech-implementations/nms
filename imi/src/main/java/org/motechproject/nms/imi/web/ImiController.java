@@ -223,7 +223,7 @@ public class ImiController {
 
         // Checks the CSR/CDR checksum, record count & csv, then sends an event to proceed to phase 2 of the
         // CDR processing task also handled by the IMI module: cdrProcessPhase234
-        cdrFileService.cdrProcessingPhase1(request);
+        cdrFileService.cdrProcessPhase1(request);
 
         LOGGER.debug("RESPONSE: HTTP {}", HttpStatus.ACCEPTED);
     }

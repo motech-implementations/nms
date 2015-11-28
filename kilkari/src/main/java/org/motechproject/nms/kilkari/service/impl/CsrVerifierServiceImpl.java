@@ -24,6 +24,7 @@ import java.util.Set;
 public class CsrVerifierServiceImpl implements CsrVerifierService {
 
     public static final String LANGUAGE_CACHE_EVICT_MESSAGE = "nms.region.cache.evict.language";
+    public static final String READ_DOMAIN_DATA = "nms.kk.csr_verifier.read_domain_data";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CsrVerifierServiceImpl.class);
     private CircleService circleService;
@@ -32,32 +33,34 @@ public class CsrVerifierServiceImpl implements CsrVerifierService {
     private Set<String> circles;
     private Set<String> languages;
 
-    // This will be be cached for the duration of the module's life
     @Autowired
     public CsrVerifierServiceImpl(CircleService circleService, LanguageService languageService) {
         this.circleService = circleService;
         this.languageService = languageService;
     }
 
-    private void readDomainData() {
+    private synchronized void readDomainData() {
+        if (circles == null || languages == null) {
+            Set<String> circleSet = new HashSet<>();
+            for (Circle circle : circleService.getAll()) {
+                circleSet.add(circle.getName());
+            }
+            LOGGER.info("Loaded {} circles from database.", circleSet.size());
 
-        circles = new HashSet<>();
-        for (Circle circle : circleService.getAll()) {
-            circles.add(circle.getName());
-        }
-        LOGGER.info("Loaded {} circles from database.", circles.size());
+            Set<String> languageSet = new HashSet<>();
+            for (Language language : languageService.getAll()) {
+                languageSet.add(language.getCode());
+            }
+            LOGGER.info("Loaded {} languages from database.", languageSet.size());
 
-        languages = new HashSet<>();
-        for (Language language : languageService.getAll()) {
-            languages.add(language.getCode());
+            circles = circleSet;
+            languages = languageSet;
         }
-        LOGGER.info("Loaded {} languages from database.", languages.size());
     }
 
     private void verifyCircle(String circleName) {
-        if (circles == null) {
-            readDomainData();
-        }
+        readDomainData();
+
         if (circleName == null) {
             throw new InvalidCallRecordDataException("Missing circleName");
         }
@@ -67,9 +70,8 @@ public class CsrVerifierServiceImpl implements CsrVerifierService {
     }
 
     private void verifyLanguage(String languageCode) {
-        if (languages == null) {
-            readDomainData();
-        }
+        readDomainData();
+
         if (languageCode == null) {
             throw new InvalidCallRecordDataException("Missing languageCode");
         }
@@ -98,6 +100,12 @@ public class CsrVerifierServiceImpl implements CsrVerifierService {
     @MotechListener(subjects = { LANGUAGE_CACHE_EVICT_MESSAGE })
     public void cacheEvict(MotechEvent event) {
         cacheEvict();
+    }
+
+    @MotechListener(subjects = { READ_DOMAIN_DATA })
+    public void readDomainData(MotechEvent event) {
+        LOGGER.info("readDomainData");
+        readDomainData();
     }
 
     public void verify(CallSummaryRecordDto csrDto) {

@@ -93,6 +93,7 @@ public class CdrFileServiceImpl implements CdrFileService {
     private static final String CDR_PHASE_3 = "nms.imi.kk.cdr_phase_3";
     private static final String CDR_PHASE_4 = "nms.imi.kk.cdr_phase_4";
     private static final String CDR_PHASE_5 = "nms.imi.kk.cdr_phase_5";
+    private static final String KK_CSR_VERIFIER_READ_DOMAIN_DATA = "nms.kk.csr_verifier.read_domain_data";
     private static final String OBD_FILE_PARAM_KEY = "obdFile";
     private static final String CSR_FILE_PARAM_KEY = "csrFile";
     private static final String CSR_CHECKSUM_PARAM_KEY = "csrChecksum";
@@ -389,7 +390,8 @@ public class CdrFileServiceImpl implements CdrFileService {
     }
 
 
-    private void distributeChunk(String file, String name, List<CallSummaryRecordDto> csrDtos) {
+    private void dipatchChunk(String file, String name, List<CallSummaryRecordDto> csrDtos, int chunkCount,
+                              int csrCount) {
         ObjectMapper mapper = new ObjectMapper();
         String chunk;
         try {
@@ -402,6 +404,8 @@ public class CdrFileServiceImpl implements CdrFileService {
         params.put("file", file);
         params.put("name", name);
         params.put("chunk", chunk);
+        params.put("chunkCount", chunkCount);
+        params.put("csrCount", csrCount);
         MotechEvent motechEvent = new MotechEvent(NMS_IMI_PROCESS_CHUNK, params);
         eventRelay.sendEventMessage(motechEvent);
     }
@@ -624,10 +628,10 @@ public class CdrFileServiceImpl implements CdrFileService {
                         chunk.add(csr.toDto());
                         if (chunk.size() >= chunkSize || lineNumber >= lineCount) {
                             String chunkName = String.format("Chunk%d/%d", chunkNumber, chunkCount);
-                            distributeChunk(fileName, chunkName, chunk);
+                            dipatchChunk(fileName, chunkName, chunk, chunkCount, lineCount);
                             upsertChunkAuditRecord(fileName, chunkName, chunk.size());
 
-                            LOGGER.info("{} - {}", chunkName, chunkTimer.frequency(chunkNumber));
+                            LOGGER.info("Dispatched {} - {}", chunkName, chunkTimer.frequency(chunkNumber));
 
                             chunk = new ArrayList<>();
                             chunkNumber++;
@@ -718,7 +722,7 @@ public class CdrFileServiceImpl implements CdrFileService {
     //          while collecting a list of errors on the go.
     //          Does not proceed to phase 2 if any error occurred and returns an error
     @Override //NO CHECKSTYLE Cyclomatic Complexity
-    public void cdrProcessingPhase1(CdrFileNotificationRequest request) {
+    public void cdrProcessPhase1(CdrFileNotificationRequest request) {
 
         LOGGER.info("CDR Processing - Phase 1 - Start");
 
@@ -1108,6 +1112,8 @@ public class CdrFileServiceImpl implements CdrFileService {
             alertService.create(csrFileName, COPY_ERROR, error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
             return;
         }
+
+        sendPhaseEvent(KK_CSR_VERIFIER_READ_DOMAIN_DATA, request);
 
         LOGGER.info("Phase 5 - processCsrs");
         processCsrs(csrFile, request.getCdrSummary().getRecordsCount());
