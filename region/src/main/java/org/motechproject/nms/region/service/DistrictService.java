@@ -51,5 +51,4 @@ public interface DistrictService {
      * @return field object in district
      */
     Object getDetachedField(District district, String fieldName);
-
 }

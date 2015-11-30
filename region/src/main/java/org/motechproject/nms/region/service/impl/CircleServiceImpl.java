@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.jdo.Query;
 import java.util.HashSet;
@@ -89,6 +90,7 @@ public class CircleServiceImpl implements CircleService {
 
 
     @MotechListener(subjects = { CIRCLE_CACHE_EVICT_MESSAGE })
+    @Transactional
     @CacheEvict(value = { "circle" }, allEntries = true)
     public void cacheEvict(MotechEvent event) {
     }
