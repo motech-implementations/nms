@@ -93,7 +93,6 @@ public class CdrFileServiceImpl implements CdrFileService {
     private static final String CDR_PHASE_3 = "nms.imi.kk.cdr_phase_3";
     private static final String CDR_PHASE_4 = "nms.imi.kk.cdr_phase_4";
     private static final String CDR_PHASE_5 = "nms.imi.kk.cdr_phase_5";
-    private static final String KK_CSR_VERIFIER_READ_DOMAIN_DATA = "nms.kk.csr_verifier.read_domain_data";
     private static final String OBD_FILE_PARAM_KEY = "obdFile";
     private static final String CSR_FILE_PARAM_KEY = "csrFile";
     private static final String CSR_CHECKSUM_PARAM_KEY = "csrChecksum";
@@ -124,6 +123,7 @@ public class CdrFileServiceImpl implements CdrFileService {
     private static final String COPY_ERROR = "Copy Error";
     private static final String ENTIRE_LINE_FMT = "%s [%s]";
     private static final String MOTECH_BUG = "!!!MOTECH BUG!!! Unexpected Exception in %s: %s";
+    private static final String CSR_VERIFIER_CACHE_EVICT_MESSAGE = "nms.kk.cache.evict.csv_verifier";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CdrFileServiceImpl.class);
     public static final double HALF = 0.5;
@@ -1113,7 +1113,7 @@ public class CdrFileServiceImpl implements CdrFileService {
             return;
         }
 
-        sendPhaseEvent(KK_CSR_VERIFIER_READ_DOMAIN_DATA, request);
+        eventRelay.broadcastEventMessage(new MotechEvent(CSR_VERIFIER_CACHE_EVICT_MESSAGE));
 
         LOGGER.info("Phase 5 - processCsrs");
         processCsrs(csrFile, request.getCdrSummary().getRecordsCount());

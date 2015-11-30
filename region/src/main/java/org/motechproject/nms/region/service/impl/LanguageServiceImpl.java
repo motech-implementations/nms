@@ -122,10 +122,8 @@ public class LanguageServiceImpl implements LanguageService {
     }
 
 
-    @CacheEvict(value = {"language", "languages" }, allEntries = true)
     public void broadcastCacheEvictMessage(Language language) {
-        MotechEvent motechEvent = new MotechEvent(LANGUAGE_CACHE_EVICT_MESSAGE);
-        eventRelay.sendEventMessage(motechEvent);
+        eventRelay.broadcastEventMessage(new MotechEvent(LANGUAGE_CACHE_EVICT_MESSAGE));
     }
 
 
@@ -133,5 +131,4 @@ public class LanguageServiceImpl implements LanguageService {
     @CacheEvict(value = {"language", "languages" }, allEntries = true)
     public void cacheEvict(MotechEvent event) {
     }
-
 }

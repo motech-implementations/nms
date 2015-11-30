@@ -1,21 +1,15 @@
 package org.motechproject.nms.kilkari.service.impl;
 
 import org.motechproject.event.MotechEvent;
+import org.motechproject.event.listener.EventRelay;
 import org.motechproject.event.listener.annotations.MotechListener;
 import org.motechproject.nms.kilkari.dto.CallSummaryRecordDto;
 import org.motechproject.nms.kilkari.exception.InvalidCallRecordDataException;
 import org.motechproject.nms.kilkari.service.CsrVerifierService;
-import org.motechproject.nms.region.domain.Circle;
-import org.motechproject.nms.region.domain.Language;
 import org.motechproject.nms.region.service.CircleService;
 import org.motechproject.nms.region.service.LanguageService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * Loads database domain values in memory on initialization and uses it to quickly verify CSRDTOs
@@ -23,59 +17,35 @@ import java.util.Set;
 @Service("csrVerifierService")
 public class CsrVerifierServiceImpl implements CsrVerifierService {
 
-    public static final String LANGUAGE_CACHE_EVICT_MESSAGE = "nms.region.cache.evict.language";
-    public static final String READ_DOMAIN_DATA = "nms.kk.csr_verifier.read_domain_data";
+    private static final String CSR_VERIFIER_CACHE_EVICT_MESSAGE = "nms.kk.cache.evict.csv_verifier";
+    private static final String CIRCLE_CACHE_EVICT_MESSAGE = "nms.region.cache.evict.language";
+    private static final String LANGUAGE_CACHE_EVICT_MESSAGE = "nms.region.cache.evict.language";
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(CsrVerifierServiceImpl.class);
     private CircleService circleService;
     private LanguageService languageService;
-
-    private Set<String> circles;
-    private Set<String> languages;
+    private EventRelay eventRelay;
 
     @Autowired
-    public CsrVerifierServiceImpl(CircleService circleService, LanguageService languageService) {
+    public CsrVerifierServiceImpl(CircleService circleService, LanguageService languageService, EventRelay eventRelay) {
         this.circleService = circleService;
         this.languageService = languageService;
-    }
-
-    private synchronized void readDomainData() {
-        if (circles == null || languages == null) {
-            Set<String> circleSet = new HashSet<>();
-            for (Circle circle : circleService.getAll()) {
-                circleSet.add(circle.getName());
-            }
-            LOGGER.info("Loaded {} circles from database.", circleSet.size());
-
-            Set<String> languageSet = new HashSet<>();
-            for (Language language : languageService.getAll()) {
-                languageSet.add(language.getCode());
-            }
-            LOGGER.info("Loaded {} languages from database.", languageSet.size());
-
-            circles = circleSet;
-            languages = languageSet;
-        }
+        this.eventRelay = eventRelay;
     }
 
     private void verifyCircle(String circleName) {
-        readDomainData();
-
         if (circleName == null) {
             throw new InvalidCallRecordDataException("Missing circleName");
         }
-        if (!circles.contains(circleName)) {
+        if (circleService.getByName(circleName) == null) {
             throw new InvalidCallRecordDataException(String.format("Invalid circleName: %s", circleName));
         }
     }
 
     private void verifyLanguage(String languageCode) {
-        readDomainData();
-
         if (languageCode == null) {
             throw new InvalidCallRecordDataException("Missing languageCode");
         }
-        if (!languages.contains(languageCode)) {
+        if (languageService.getForCode(languageCode) == null) {
             throw new InvalidCallRecordDataException(String.format("Invalid languageCode: %s", languageCode));
         }
     }
@@ -93,19 +63,13 @@ public class CsrVerifierServiceImpl implements CsrVerifierService {
     }
 
     public void cacheEvict() {
-        circles = null;
-        languages = null;
+        eventRelay.broadcastEventMessage(new MotechEvent(CIRCLE_CACHE_EVICT_MESSAGE));
+        eventRelay.broadcastEventMessage(new MotechEvent(LANGUAGE_CACHE_EVICT_MESSAGE));
     }
 
-    @MotechListener(subjects = { LANGUAGE_CACHE_EVICT_MESSAGE })
+    @MotechListener(subjects = { CSR_VERIFIER_CACHE_EVICT_MESSAGE })
     public void cacheEvict(MotechEvent event) {
         cacheEvict();
-    }
-
-    @MotechListener(subjects = { READ_DOMAIN_DATA })
-    public void readDomainData(MotechEvent event) {
-        LOGGER.info("readDomainData");
-        readDomainData();
     }
 
     public void verify(CallSummaryRecordDto csrDto) {
