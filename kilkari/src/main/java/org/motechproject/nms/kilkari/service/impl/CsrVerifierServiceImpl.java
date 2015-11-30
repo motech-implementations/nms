@@ -36,7 +36,7 @@ public class CsrVerifierServiceImpl implements CsrVerifierService {
         if (circleName == null) {
             throw new InvalidCallRecordDataException("Missing circleName");
         }
-        if (circleService.getByName(circleName) == null) {
+        if (!circleService.circleNameExists(circleName)) {
             throw new InvalidCallRecordDataException(String.format("Invalid circleName: %s", circleName));
         }
     }

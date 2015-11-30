@@ -10,4 +10,5 @@ public interface CircleService {
     Circle getByName(String name);
     List<Circle> getAll();
     Set<Circle> getAllInState(final State state);
+    boolean circleNameExists(String circleName);
 }

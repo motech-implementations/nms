@@ -75,8 +75,7 @@ public class LanguageServiceImpl implements LanguageService {
 
         if (circle != null) {
             for (District district : circle.getDistricts()) {
-                Language language = (Language) districtService.getDetachedField(district, "language");
-
+                Language language = district.getLanguage();
                 if (language != null) {
                     languages.add(language);
                 }

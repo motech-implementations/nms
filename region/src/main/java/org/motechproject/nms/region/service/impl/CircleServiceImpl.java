@@ -38,7 +38,6 @@ public class CircleServiceImpl implements CircleService {
      * @return the circle object if found
      */
     @Override
-    @Cacheable(value = "circle")
     public Circle getByName(String name) {
         return circleDataService.findByName(name);
     }
@@ -89,9 +88,15 @@ public class CircleServiceImpl implements CircleService {
     }
 
 
+    @Cacheable(value = "circleName")
+    public boolean circleNameExists(String circleName) {
+        return (getByName(circleName) != null);
+    }
+
+
     @MotechListener(subjects = { CIRCLE_CACHE_EVICT_MESSAGE })
     @Transactional
-    @CacheEvict(value = { "circle" }, allEntries = true)
+    @CacheEvict(value = { "circleName" }, allEntries = true)
     public void cacheEvict(MotechEvent event) {
     }
 }
