@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -74,8 +75,7 @@ public class LanguageServiceImpl implements LanguageService {
 
         if (circle != null) {
             for (District district : circle.getDistricts()) {
-                Language language = (Language) districtService.getDetachedField(district, "language");
-
+                Language language = district.getLanguage();
                 if (language != null) {
                     languages.add(language);
                 }
@@ -122,16 +122,14 @@ public class LanguageServiceImpl implements LanguageService {
     }
 
 
-    @CacheEvict(value = {"language", "languages" }, allEntries = true)
     public void broadcastCacheEvictMessage(Language language) {
-        MotechEvent motechEvent = new MotechEvent(LANGUAGE_CACHE_EVICT_MESSAGE);
-        eventRelay.sendEventMessage(motechEvent);
+        eventRelay.broadcastEventMessage(new MotechEvent(LANGUAGE_CACHE_EVICT_MESSAGE));
     }
 
 
     @MotechListener(subjects = { LANGUAGE_CACHE_EVICT_MESSAGE })
+    @Transactional
     @CacheEvict(value = {"language", "languages" }, allEntries = true)
     public void cacheEvict(MotechEvent event) {
     }
-
 }

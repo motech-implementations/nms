@@ -1079,7 +1079,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
                 expectedDistrict);
 
         Subscriber subscriber2 = subscriberDataService.findByNumber(7894221701L);
-        assertMother(subscriber2, "210302604611400025", getDateTime("9/7/2014"), "Sanjukta Bhainsa", expectedState,
+        assertMother(subscriber2, "210302604611400025", getDateTime("9/8/2014"), "Sanjukta Bhainsa", expectedState,
                 expectedDistrict);
 
         // although our MCTS data file contains 10 mothers, we only create 3 subscribers due to duplicate phone numbers

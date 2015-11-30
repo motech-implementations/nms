@@ -1,13 +1,19 @@
 package org.motechproject.nms.region.service.impl;
 
 import com.google.common.collect.Sets;
+import org.motechproject.event.MotechEvent;
+import org.motechproject.event.listener.EventRelay;
+import org.motechproject.event.listener.annotations.MotechListener;
 import org.motechproject.mds.query.SqlQueryExecution;
 import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.service.CircleService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.jdo.Query;
 import java.util.HashSet;
@@ -16,8 +22,14 @@ import java.util.Set;
 
 @Service("circleService")
 public class CircleServiceImpl implements CircleService {
+
+    public static final String CIRCLE_CACHE_EVICT_MESSAGE = "nms.region.cache.evict.circle";
+
     @Autowired
     private CircleDataService circleDataService;
+
+    @Autowired
+    private EventRelay eventRelay;
 
     /**
      * Returns the circle for a given name
@@ -68,5 +80,23 @@ public class CircleServiceImpl implements CircleService {
         }
 
         return circles;
+    }
+
+
+    public void broadcastCacheEvictMessage() {
+        eventRelay.broadcastEventMessage(new MotechEvent(CIRCLE_CACHE_EVICT_MESSAGE));
+    }
+
+
+    @Cacheable(value = "circleName")
+    public boolean circleNameExists(String circleName) {
+        return (getByName(circleName) != null);
+    }
+
+
+    @MotechListener(subjects = { CIRCLE_CACHE_EVICT_MESSAGE })
+    @Transactional
+    @CacheEvict(value = { "circleName" }, allEntries = true)
+    public void cacheEvict(MotechEvent event) {
     }
 }

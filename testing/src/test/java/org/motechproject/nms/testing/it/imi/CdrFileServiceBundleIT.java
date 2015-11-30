@@ -158,7 +158,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         helper.makeLocalCdrFile();
         helper.makeCsrs(1,0,0);
         helper.makeLocalCsrFile(0);
-        cdrFileService.cdrProcessingPhase1(helper.cdrFileNotificationRequest());
+        cdrFileService.cdrProcessPhase1(helper.cdrFileNotificationRequest());
     }
 
     @Rule
@@ -180,7 +180,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
                 cdrFileInfo
         );
         exception.expect(IllegalStateException.class);
-        cdrFileService.cdrProcessingPhase1(request);
+        cdrFileService.cdrProcessPhase1(request);
     }
 
 
@@ -191,7 +191,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         helper.makeLocalCdrFile(2);
         helper.makeLocalCsrFile();
         try {
-            cdrFileService.cdrProcessingPhase1(helper.cdrFileNotificationRequest());
+            cdrFileService.cdrProcessPhase1(helper.cdrFileNotificationRequest());
         } catch (InvalidCallRecordFileException e) {
             assertEquals(2, e.getMessages().size());
         }
@@ -205,7 +205,7 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         helper.makeLocalCsrFile(5);
         helper.makeLocalCdrFile();
         try {
-            cdrFileService.cdrProcessingPhase1(helper.cdrFileNotificationRequest());
+            cdrFileService.cdrProcessPhase1(helper.cdrFileNotificationRequest());
         } catch (InvalidCallRecordFileException e) {
             List<String> errors = e.getMessages();
             assertEquals(4, errors.size());
