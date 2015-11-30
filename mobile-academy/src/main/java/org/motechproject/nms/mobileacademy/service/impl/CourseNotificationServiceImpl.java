@@ -132,7 +132,7 @@ public class CourseNotificationServiceImpl implements CourseNotificationService 
             completionRecordDataService.update(cr);
         } catch (IllegalStateException se) {
             LOGGER.error("Unable to send sms notification. Stack: " + se.toString());
-            alertService.create("SMS Content", "MA SMS", "Error generating SMS content", AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            alertService.create("SMS Content", "MA SMS", se.getMessage(), AlertType.CRITICAL, AlertStatus.NEW, 0, null);
         }
 
     }
