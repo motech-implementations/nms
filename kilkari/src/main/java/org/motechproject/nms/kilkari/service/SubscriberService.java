@@ -4,6 +4,8 @@ import org.joda.time.DateTime;
 import org.motechproject.mds.annotations.InstanceLifecycleListener;
 import org.motechproject.mds.annotations.InstanceLifecycleListenerType;
 import org.motechproject.nms.kilkari.domain.MctsBeneficiary;
+import org.motechproject.nms.kilkari.domain.MctsChild;
+import org.motechproject.nms.kilkari.domain.MctsMother;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
@@ -59,6 +61,9 @@ public interface SubscriberService {
      */
     Subscription updateOrCreateMctsSubscriber(MctsBeneficiary beneficiary, Long msisdn, DateTime referenceDate,
                                               SubscriptionPackType packType);
+
+    Subscription UpdateMotherSubscriber(Long msisdn, MctsMother mother, DateTime lmp);
+    Subscription UpdateChildSubscriber(Long msisdn, MctsChild child, DateTime lmp);
 
     /**
      * Lifecycle listener that verifies a subscriber can only be deleted if all of their subscriptions have

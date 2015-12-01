@@ -199,18 +199,29 @@ public class SubscriberServiceImpl implements SubscriberService {
         Language language = (Language) districtService.getDetachedField(district, "language");
         Subscriber subscriber = getSubscriber(msisdn);
 
+        Subscriber subscriberByBeneficiary = null;
+        if (beneficiary.getId() != null) {
+            subscriberByBeneficiary = getSubscriberByBeneficiary(beneficiary);
+        }
 
         SubscriptionPack pack = subscriptionPackDataService.byType(packType);
 
         // TODO: #455 Handle the case in which the MCTS beneficiary already exists but with a different phone number
 
-        if (subscriber == null) {
-            // there's no subscriber with this MSISDN, create one
-
+        // Case 1: No existing subscriber by phone number or by beneficiary
+        if (subscriber == null && subscriberByBeneficiary == null) {
+            // create subscriber, beneficiary, subscription and return
             subscriber = new Subscriber(msisdn, language);
             subscriber = setSubscriberFields(subscriber, beneficiary, referenceDate, packType);
             create(subscriber);
             return subscriptionService.createSubscription(msisdn, language, circle, pack, SubscriptionOrigin.MCTS_IMPORT);
+        }
+
+        // Case 2: Found subscriber by phone number and beneficiary attached to the same phone number (subscriber)
+        if (subscriber != null & subscriberByBeneficiary != null && (subscriber.getId().equals(subscriberByBeneficiary.getId()))) {
+            subscriber = setSubscriberFields(subscriber, beneficiary, referenceDate, packType);
+
+
         }
 
         Subscription subscription = subscriptionService.getActiveSubscription(subscriber, packType);
@@ -245,9 +256,77 @@ public class SubscriberServiceImpl implements SubscriberService {
         return subscription;
     }
 
+    @Override
+    public Subscription UpdateMotherSubscriber(Long msisdn, MctsMother mother, DateTime lmp) {
+        District district = mother.getDistrict();
+        Circle circle = district.getCircle();
+        Language language = district.getLanguage();
+        SubscriptionPack pack = subscriptionPackDataService.byType(SubscriptionPackType.PREGNANCY);
+        Subscriber subscriber = getSubscriber(msisdn);
+        Subscriber subscriberByBeneficiary = getSubscriberByBeneficiary(mother);
+
+        if (subscriberByBeneficiary == null && subscriber == null) {
+            // create subscriber, beneficiary, subscription and return
+            subscriber = new Subscriber(msisdn, language);
+            subscriber.setLastMenstrualPeriod(lmp);
+            subscriber.setMother(mother);
+            create(subscriber);
+            return subscriptionService.createSubscription(msisdn, language, circle, pack, SubscriptionOrigin.MCTS_IMPORT);
+        } else if (subscriberByBeneficiary != null) {
+            if (subscriber == null) {
+                // We got here because beneficiary's phone number changed and we have no subscriber attached to the new number
+                // detach mother from existing subscriber
+                Subscription subscription = subscriptionService.getActiveSubscription(subscriberByBeneficiary, SubscriptionPackType.PREGNANCY);
+                subscriberByBeneficiary.setMother(null);
+                subscriberDataService.update(subscriberByBeneficiary);
+                subscriptionService.deactivateSubscription(subscription, Deac);
+
+                // create new subscriber and attach mother
+                Subscriber newSubscriber = new Subscriber(msisdn, language);
+                subscriber.setLastMenstrualPeriod(lmp);
+                subscriber.setMother(mother);
+                subscriberDataService.create(newSubscriber);
+
+                return subscriptionService.createSubscription(msisdn, language, circle, pack, SubscriptionOrigin.MCTS_IMPORT);
+            } else {
+                if (subscriber.getId().equals(subscriberByBeneficiary.getId())) {
+
+                }
+            }
+        } else {
+
+        }
+
+        Subscription subscription = subscriptionService.getActiveSubscription(subscriber, SubscriptionPackType.PREGNANCY);
+
+        if (subscriber != null) {
+            if (subscriber.getMother().getBeneficiaryId().equals(mother.getBeneficiaryId())) {
+                subscriber.setLastMenstrualPeriod(lmp);
+                if (subscription!= null) {
+                    subscriptionService.updateStartDate(subscription, lmp);
+                } else {
+                    return subscriptionService.createSubscription(msisdn, language, circle, pack, SubscriptionOrigin.MCTS_IMPORT);
+                }
+
+            } else {
+
+                // we found a mother attached to the phone number (subscriber) with different mcts id
+                subscriptionErrorDataService.create(new SubscriptionError(msisdn, SubscriptionRejectionReason.ALREADY_SUBSCRIBED, SubscriptionPackType.PREGNANCY));
+                return null;
+            }
+        }
+    }
+
+    @Override
+    public Subscription UpdateChildSubscriber(Long msisdn, MctsChild child, DateTime dob) {
+
+    }
+
 
     private Subscriber setSubscriberFields(Subscriber subscriber, MctsBeneficiary beneficiary, DateTime referenceDate,
                                              SubscriptionPackType packType) {
+        Subscription subscription = subscriptionService.getActiveSubscription(subscriber, packType);
+
         if (packType == SubscriptionPackType.PREGNANCY) {
             subscriber.setLastMenstrualPeriod(referenceDate);
             subscriber.setMother((MctsMother) beneficiary);
