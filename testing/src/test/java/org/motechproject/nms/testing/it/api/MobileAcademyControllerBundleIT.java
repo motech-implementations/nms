@@ -760,12 +760,11 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT417() throws IOException, InterruptedException {
-        String endpoint = String.format(
-                "http://localhost:%d/api/mobileacademy/bookmarkWithScore",
+        String endpoint = String.format("http://localhost:%d/api/mobileacademy/bookmarkWithScore",
                 TestContext.getJettyPort());
         SaveBookmarkRequest bookmarkRequest = new SaveBookmarkRequest();
 
-        // save bookamark first
+        // save bookmark first
         bookmarkRequest.setCallingNumber(1234567890l);
         bookmarkRequest.setCallId(VALID_CALL_ID);
         bookmarkRequest.setBookmark("Chapter03_Lesson01");
@@ -774,41 +773,33 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
         scoreMap.put("2", 1);
         scoreMap.put("3", 0);
         bookmarkRequest.setScoresByChapter(scoreMap);
-        HttpPost postRequest = RequestBuilder.createPostRequest(endpoint,
-                bookmarkRequest);
-        assertTrue(SimpleHttpClient.execHttpRequest(postRequest,
-                HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME,
+        HttpPost postRequest = RequestBuilder.createPostRequest(endpoint, bookmarkRequest);
+        assertTrue(SimpleHttpClient.execHttpRequest(postRequest, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME,
                 RequestBuilder.ADMIN_PASSWORD));
 
         // assert if bookmark has been saved
-        HttpGet getRequest = createHttpGetBookmarkWithScore("1234567890",
-                VALID_CALL_ID);
-        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
-                getRequest, RequestBuilder.ADMIN_USERNAME,
+        HttpGet getRequest = createHttpGetBookmarkWithScore("1234567890", VALID_CALL_ID);
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(getRequest, RequestBuilder.ADMIN_USERNAME,
                 RequestBuilder.ADMIN_PASSWORD);
-        assertEquals(HttpStatus.SC_OK, response.getStatusLine()
-                .getStatusCode());
-        String expectedJsonResponse = "{\"bookmark\":\"Chapter03_Lesson01\",\"scoresByChapter\":{\"3\":0,\"2\":1,\"1\":2}}";
-        assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response
-                .getEntity())));
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        String expectedJsonResponse = "{\"bookmark\":\"Chapter03_Lesson01\",\"scoresByChapter\":{\"1\":2,\"2\":1,\"3\":0}}";
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
 
         // save new scores
         scoreMap.put("3", 3);
         bookmarkRequest.setScoresByChapter(scoreMap);
-        postRequest = RequestBuilder.createPostRequest(endpoint,
-                bookmarkRequest);
-        assertTrue(SimpleHttpClient.execHttpRequest(postRequest,
-                HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME,
-                RequestBuilder.ADMIN_PASSWORD));
+        postRequest = RequestBuilder.createPostRequest(endpoint, bookmarkRequest);
+        response = SimpleHttpClient.httpRequestAndResponse(postRequest, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
 
         // assert if the new score has been saved
         response = SimpleHttpClient.httpRequestAndResponse(getRequest,
                 RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
-        expectedJsonResponse = "{\"bookmark\":\"Chapter03_Lesson01\",\"scoresByChapter\":{\"3\":3,\"2\":1,\"1\":2}}";
+        expectedJsonResponse = "{\"bookmark\":\"Chapter03_Lesson01\",\"scoresByChapter\":{\"1\":2,\"2\":1,\"3\":3}}";
         String actualResponse = EntityUtils.toString(response.getEntity());
-        System.out.println(actualResponse);
-        assertTrue(expectedJsonResponse.equals(actualResponse));
+        assertEquals(expectedJsonResponse, actualResponse);
     }
 
     /**
@@ -817,9 +808,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT418() throws IOException, InterruptedException {
-        String endpoint = String.format(
-                "http://localhost:%d/api/mobileacademy/bookmarkWithScore",
-                TestContext.getJettyPort());
+        String endpoint = String.format("http://localhost:%d/api/mobileacademy/bookmarkWithScore", TestContext.getJettyPort());
         SaveBookmarkRequest bookmarkRequest = new SaveBookmarkRequest();
 
         // save bookamark first
@@ -831,39 +820,31 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
         scoreMap.put("2", 1);
         scoreMap.put("3", 4);
         bookmarkRequest.setScoresByChapter(scoreMap);
-        HttpPost postRequest = RequestBuilder.createPostRequest(endpoint,
-                bookmarkRequest);
-        assertTrue(SimpleHttpClient.execHttpRequest(postRequest,
-                HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME,
+        HttpPost postRequest = RequestBuilder.createPostRequest(endpoint, bookmarkRequest);
+        assertTrue(SimpleHttpClient.execHttpRequest(postRequest, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME,
                 RequestBuilder.ADMIN_PASSWORD));
 
         // assert if bookmark has been saved
-        HttpGet getRequest = createHttpGetBookmarkWithScore("1234567890",
-                VALID_CALL_ID);
-        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
-                getRequest, RequestBuilder.ADMIN_USERNAME,
+        HttpGet getRequest = createHttpGetBookmarkWithScore("1234567890", VALID_CALL_ID);
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(getRequest, RequestBuilder.ADMIN_USERNAME,
                 RequestBuilder.ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
-        String expectedJsonResponse = "{\"bookmark\":\"Chapter03_Lesson01\",\"scoresByChapter\":{\"3\":4,\"2\":1,\"1\":2}}";
-        assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response
-                .getEntity())));
+        String expectedJsonResponse = "{\"bookmark\":\"Chapter03_Lesson01\",\"scoresByChapter\":{\"1\":2,\"2\":1,\"3\":4}}";
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
 
         // save new scores(Lower)
         scoreMap.put("3", 3);
         bookmarkRequest.setScoresByChapter(scoreMap);
-        postRequest = RequestBuilder.createPostRequest(endpoint,
-                bookmarkRequest);
-        assertTrue(SimpleHttpClient.execHttpRequest(postRequest,
-                HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME,
+        postRequest = RequestBuilder.createPostRequest(endpoint, bookmarkRequest);
+        assertTrue(SimpleHttpClient.execHttpRequest(postRequest, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME,
                 RequestBuilder.ADMIN_PASSWORD));
 
         // assert if the new score has been saved
-        response = SimpleHttpClient.httpRequestAndResponse(getRequest,
-                RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
+        response = SimpleHttpClient.httpRequestAndResponse(getRequest, RequestBuilder.ADMIN_USERNAME,
+                RequestBuilder.ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
-        expectedJsonResponse = "{\"bookmark\":\"Chapter03_Lesson01\",\"scoresByChapter\":{\"3\":3,\"2\":1,\"1\":2}}";
-        assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response
-                .getEntity())));
+        expectedJsonResponse = "{\"bookmark\":\"Chapter03_Lesson01\",\"scoresByChapter\":{\"1\":2,\"2\":1,\"3\":3}}";
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
     /**
@@ -873,9 +854,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
     @Test
     public void verifyFT419() throws IOException, InterruptedException {
 
-        String endpoint = String.format(
-                "http://localhost:%d/api/mobileacademy/bookmarkWithScore",
-                TestContext.getJettyPort());
+        String endpoint = String.format("http://localhost:%d/api/mobileacademy/bookmarkWithScore", TestContext.getJettyPort());
         SaveBookmarkRequest bookmarkRequest = new SaveBookmarkRequest();
 
         // save bookamark first
@@ -887,38 +866,29 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
         scoreMap.put("2", 1);
         scoreMap.put("3", 4);
         bookmarkRequest.setScoresByChapter(scoreMap);
-        HttpPost postRequest = RequestBuilder.createPostRequest(endpoint,
-                bookmarkRequest);
-        assertTrue(SimpleHttpClient.execHttpRequest(postRequest,
-                HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME,
+        HttpPost postRequest = RequestBuilder.createPostRequest(endpoint, bookmarkRequest);
+        assertTrue(SimpleHttpClient.execHttpRequest(postRequest, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME,
                 RequestBuilder.ADMIN_PASSWORD));
 
         // assert if bookmark has been saved
-        HttpGet getRequest = createHttpGetBookmarkWithScore("1234567890",
-                VALID_CALL_ID);
-        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
-                getRequest, RequestBuilder.ADMIN_USERNAME,
+        HttpGet getRequest = createHttpGetBookmarkWithScore("1234567890", VALID_CALL_ID);
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(getRequest, RequestBuilder.ADMIN_USERNAME,
                 RequestBuilder.ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
-        String expectedJsonResponse = "{\"bookmark\":\"Chapter03_Lesson01\",\"scoresByChapter\":{\"3\":4,\"2\":1,\"1\":2}}";
-        assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response
-                .getEntity())));
+        String expectedJsonResponse = "{\"bookmark\":\"Chapter03_Lesson01\",\"scoresByChapter\":{\"1\":2,\"2\":1,\"3\":4}}";
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
 
         // save new scores(Lower)
         scoreMap.put("3", 4);
         bookmarkRequest.setScoresByChapter(scoreMap);
-        postRequest = RequestBuilder.createPostRequest(endpoint,
-                bookmarkRequest);
-        assertTrue(SimpleHttpClient.execHttpRequest(postRequest,
-                HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME,
+        postRequest = RequestBuilder.createPostRequest(endpoint, bookmarkRequest);
+        assertTrue(SimpleHttpClient.execHttpRequest(postRequest, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME,
                 RequestBuilder.ADMIN_PASSWORD));
 
         // assert if the new score has been saved
-        response = SimpleHttpClient.httpRequestAndResponse(getRequest,
-                RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
+        response = SimpleHttpClient.httpRequestAndResponse(getRequest, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
-        assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response
-                .getEntity())));
+        assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
     /**
