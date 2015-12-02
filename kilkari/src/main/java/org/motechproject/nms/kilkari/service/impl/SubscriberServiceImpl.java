@@ -3,6 +3,7 @@ package org.motechproject.nms.kilkari.service.impl;
 import org.datanucleus.store.rdbms.query.ForwardQueryResult;
 import org.joda.time.DateTime;
 import org.motechproject.mds.query.SqlQueryExecution;
+import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.domain.MctsBeneficiary;
 import org.motechproject.nms.kilkari.domain.MctsChild;
 import org.motechproject.nms.kilkari.domain.MctsMother;
@@ -46,20 +47,17 @@ public class SubscriberServiceImpl implements SubscriberService {
     private SubscriptionDataService subscriptionDataService;
     private SubscriptionErrorDataService subscriptionErrorDataService;
     private SubscriptionPackDataService subscriptionPackDataService;
-    private DistrictService districtService;
 
     @Autowired
     public SubscriberServiceImpl(SubscriberDataService subscriberDataService, SubscriptionService subscriptionService,
                                  SubscriptionDataService subscriptionDataService,
                                  SubscriptionErrorDataService subscriptionErrorDataService,
-                                 SubscriptionPackDataService subscriptionPackDataService,
-                                 DistrictService districtService) {
+                                 SubscriptionPackDataService subscriptionPackDataService) {
         this.subscriberDataService = subscriberDataService;
         this.subscriptionService = subscriptionService;
         this.subscriptionDataService = subscriptionDataService;
         this.subscriptionErrorDataService = subscriptionErrorDataService;
         this.subscriptionPackDataService = subscriptionPackDataService;
-        this.districtService = districtService;
     }
 
     @Override
@@ -120,8 +118,8 @@ public class SubscriberServiceImpl implements SubscriberService {
     }
 
     @Override
-    public void create(Subscriber subscriber) {
-        subscriberDataService.create(subscriber);
+    public Subscriber create(Subscriber subscriber) {
+        return subscriberDataService.create(subscriber);
     }
 
     @Override
@@ -192,151 +190,168 @@ public class SubscriberServiceImpl implements SubscriberService {
     }
 
     @Override
-    public Subscription updateOrCreateMctsSubscriber(MctsBeneficiary beneficiary, Long msisdn, DateTime referenceDate,
-                                                     SubscriptionPackType packType) {
-        District district = beneficiary.getDistrict();
-        Circle circle = (Circle) districtService.getDetachedField(district, "circle");
-        Language language = (Language) districtService.getDetachedField(district, "language");
-        Subscriber subscriber = getSubscriber(msisdn);
-
-        Subscriber subscriberByBeneficiary = null;
-        if (beneficiary.getId() != null) {
-            subscriberByBeneficiary = getSubscriberByBeneficiary(beneficiary);
-        }
-
-        SubscriptionPack pack = subscriptionPackDataService.byType(packType);
-
-        // TODO: #455 Handle the case in which the MCTS beneficiary already exists but with a different phone number
-
-        // Case 1: No existing subscriber by phone number or by beneficiary
-        if (subscriber == null && subscriberByBeneficiary == null) {
-            // create subscriber, beneficiary, subscription and return
-            subscriber = new Subscriber(msisdn, language);
-            subscriber = setSubscriberFields(subscriber, beneficiary, referenceDate, packType);
-            create(subscriber);
-            return subscriptionService.createSubscription(msisdn, language, circle, pack, SubscriptionOrigin.MCTS_IMPORT);
-        }
-
-        // Case 2: Found subscriber by phone number and beneficiary attached to the same phone number (subscriber)
-        if (subscriber != null & subscriberByBeneficiary != null && (subscriber.getId().equals(subscriberByBeneficiary.getId()))) {
-            subscriber = setSubscriberFields(subscriber, beneficiary, referenceDate, packType);
-
-
-        }
-
-        Subscription subscription = subscriptionService.getActiveSubscription(subscriber, packType);
-
-        // subscriber exists, but doesn't have a subscription to this pack
-        if (subscription == null) {
-            subscriber = setSubscriberFields(subscriber, beneficiary, referenceDate, packType);
-            update(subscriber);
-            return subscriptionService.createSubscription(msisdn, language, circle, pack, SubscriptionOrigin.MCTS_IMPORT);
-        }
-
-        // subscriber already has an active subscription to this pack
-        MctsBeneficiary existingBeneficiary = (packType == SubscriptionPackType.PREGNANCY) ? subscriber.getMother() :
-                subscriber.getChild();
-
-        if (existingBeneficiary == null) {
-            // there's already an IVR-originated subscription for this MSISDN
-            subscriber = setSubscriberFields(subscriber, beneficiary, referenceDate, packType);
-            update(subscriber);
-
-        }  else if (existingBeneficiary.getBeneficiaryId().equals(beneficiary.getBeneficiaryId())) {
-            // it's the same beneficiary, treat this import as an update
-            subscriber = setSubscriberFields(subscriber, beneficiary, referenceDate, packType);
-            update(subscriber);
-        } else {
-            // if the MCTS ID doesn't match (i.e. there are two beneficiaries with the same phone number), reject the import
-            subscriptionErrorDataService.create(
-                    new SubscriptionError(msisdn, SubscriptionRejectionReason.ALREADY_SUBSCRIBED, packType));
-            return null;
-        }
-
-        return subscription;
-    }
-
-    @Override
-    public Subscription UpdateMotherSubscriber(Long msisdn, MctsMother mother, DateTime lmp) {
+    public Subscription UpdateMotherSubscriber(Long msisdn, MctsMother mother, DateTime lmp) { //NOPMD NcssMethodCount
         District district = mother.getDistrict();
         Circle circle = district.getCircle();
         Language language = district.getLanguage();
         SubscriptionPack pack = subscriptionPackDataService.byType(SubscriptionPackType.PREGNANCY);
-        Subscriber subscriber = getSubscriber(msisdn);
+        Subscriber subscriberByMsisdn = getSubscriber(msisdn);
         Subscriber subscriberByBeneficiary = getSubscriberByBeneficiary(mother);
 
-        if (subscriberByBeneficiary == null && subscriber == null) {
-            // create subscriber, beneficiary, subscription and return
-            subscriber = new Subscriber(msisdn, language);
-            subscriber.setLastMenstrualPeriod(lmp);
-            subscriber.setMother(mother);
-            create(subscriber);
-            return subscriptionService.createSubscription(msisdn, language, circle, pack, SubscriptionOrigin.MCTS_IMPORT);
-        } else if (subscriberByBeneficiary != null) {
-            if (subscriber == null) {
+        // No existing subscriber(number) attached to mother MCTS id
+        if (subscriberByBeneficiary == null) {
+
+            if (subscriberByMsisdn == null) {
+                // create subscriber, beneficiary, subscription and return
+                subscriberByMsisdn = new Subscriber(msisdn, language);
+                subscriberByMsisdn.setLastMenstrualPeriod(lmp);
+                subscriberByMsisdn.setMother(mother);
+                create(subscriberByMsisdn);
+                return subscriptionService.createSubscription(msisdn, language, circle, pack, SubscriptionOrigin.MCTS_IMPORT);
+            } else { // subscriber (number) is already in use
+                // number has no mother attached
+                if (subscriberByMsisdn.getMother() == null) {
+                    // no existing mother attached
+                    subscriberByMsisdn.setLastMenstrualPeriod(lmp);
+                    subscriberByMsisdn.setMother(mother);
+                    update(subscriberByMsisdn);
+                    return subscriptionService.createSubscription(msisdn, language, circle, pack, SubscriptionOrigin.MCTS_IMPORT);
+                } else {
+                    subscriptionErrorDataService.create(new SubscriptionError(msisdn, SubscriptionRejectionReason.ALREADY_SUBSCRIBED, pack.getType()));
+                    return null;
+                }
+            }
+        } else { // subscriberByBeneficiary != null
+            if (subscriberByMsisdn == null) {
                 // We got here because beneficiary's phone number changed and we have no subscriber attached to the new number
                 // detach mother from existing subscriber
-                Subscription subscription = subscriptionService.getActiveSubscription(subscriberByBeneficiary, SubscriptionPackType.PREGNANCY);
+                Subscription subscription = subscriptionService.getActiveSubscription(subscriberByBeneficiary, pack.getType());
                 subscriberByBeneficiary.setMother(null);
                 subscriberDataService.update(subscriberByBeneficiary);
-                subscriptionService.deactivateSubscription(subscription, Deac);
+                subscriptionService.deactivateSubscription(subscription, DeactivationReason.MCTS_UPDATE);
 
                 // create new subscriber and attach mother
                 Subscriber newSubscriber = new Subscriber(msisdn, language);
-                subscriber.setLastMenstrualPeriod(lmp);
-                subscriber.setMother(mother);
-                subscriberDataService.create(newSubscriber);
-
+                newSubscriber.setLastMenstrualPeriod(lmp);
+                newSubscriber.setMother(mother);
+                create(newSubscriber);
                 return subscriptionService.createSubscription(msisdn, language, circle, pack, SubscriptionOrigin.MCTS_IMPORT);
             } else {
-                if (subscriber.getId().equals(subscriberByBeneficiary.getId())) {
-
-                }
-            }
-        } else {
-
-        }
-
-        Subscription subscription = subscriptionService.getActiveSubscription(subscriber, SubscriptionPackType.PREGNANCY);
-
-        if (subscriber != null) {
-            if (subscriber.getMother().getBeneficiaryId().equals(mother.getBeneficiaryId())) {
-                subscriber.setLastMenstrualPeriod(lmp);
-                if (subscription!= null) {
+                // we have a subscriber by phone# and also one with the MCTS id
+                if (subscriberByMsisdn.getId().equals(subscriberByBeneficiary.getId())) {
+                    // Case1: if we pulled the same subscriber
+                    Subscription subscription = subscriptionService.getActiveSubscription(subscriberByBeneficiary, pack.getType());
+                    subscriberByMsisdn.setLastMenstrualPeriod(lmp);
+                    subscriberByMsisdn.getMother().deepCopyFrom(mother);
+                    update(subscriberByMsisdn);
                     subscriptionService.updateStartDate(subscription, lmp);
+                    return subscriptionService.getActiveSubscription(subscriberByBeneficiary, pack.getType());
                 } else {
-                    return subscriptionService.createSubscription(msisdn, language, circle, pack, SubscriptionOrigin.MCTS_IMPORT);
+                    // Case 2: msisdn is already taken by another beneficiary
+                    if (subscriberByMsisdn.getMother() == null) {
+                        // Deactivate mother from existing subscriber (by mcts id)
+                        Subscription subscription = subscriptionService.getActiveSubscription(subscriberByBeneficiary, pack.getType());
+                        subscriptionService.deactivateSubscription(subscription, DeactivationReason.MCTS_UPDATE);
+                        subscriberByBeneficiary.setMother(null);
+                        update(subscriberByBeneficiary);
+
+                        // transfer mother to new subscriber (number)
+                        subscriberByMsisdn.setMother(mother);
+                        update(subscriberByMsisdn);
+                        return subscriptionService.createSubscription(msisdn, language, circle, pack, SubscriptionOrigin.MCTS_IMPORT);
+                    } else {
+                        // No way to resolve this since msisdn already has a mother attached. Reject the update
+                        Subscription subscription = subscriptionService.getActiveSubscription(subscriberByBeneficiary, pack.getType());
+                        subscriptionService.deactivateSubscription(subscription, DeactivationReason.MCTS_UPDATE);
+                        subscriptionErrorDataService.create(new SubscriptionError(msisdn, SubscriptionRejectionReason.ALREADY_SUBSCRIBED, pack.getType()));
+                        return null;
+                    }
                 }
-
-            } else {
-
-                // we found a mother attached to the phone number (subscriber) with different mcts id
-                subscriptionErrorDataService.create(new SubscriptionError(msisdn, SubscriptionRejectionReason.ALREADY_SUBSCRIBED, SubscriptionPackType.PREGNANCY));
-                return null;
             }
         }
     }
 
     @Override
-    public Subscription UpdateChildSubscriber(Long msisdn, MctsChild child, DateTime dob) {
+    public Subscription UpdateChildSubscriber(Long msisdn, MctsChild child, DateTime dob) { //NOPMD NcssMethodCount
+        District district = child.getDistrict();
+        Circle circle = district.getCircle();
+        Language language = district.getLanguage();
+        SubscriptionPack pack = subscriptionPackDataService.byType(SubscriptionPackType.CHILD);
+        Subscriber subscriberByMsisdn = getSubscriber(msisdn);
+        Subscriber subscriberByBeneficiary = getSubscriberByBeneficiary(child);
 
-    }
+        // No existing subscriber(number) attached to mother MCTS id
+        if (subscriberByBeneficiary == null) {
 
+            if (subscriberByMsisdn == null) {
+                // create subscriber, beneficiary, subscription and return
+                subscriberByMsisdn = new Subscriber(msisdn, language);
+                subscriberByMsisdn.setDateOfBirth(dob);
+                subscriberByMsisdn.setChild(child);
+                create(subscriberByMsisdn);
+                return subscriptionService.createSubscription(msisdn, language, circle, pack, SubscriptionOrigin.MCTS_IMPORT);
+            } else { // subscriber (number) is already in use
+                // number has no mother attached
+                if (subscriberByMsisdn.getChild() == null) {
+                    // no existing mother attached
+                    subscriberByMsisdn.setDateOfBirth(dob);
+                    subscriberByMsisdn.setChild(child);
+                    update(subscriberByMsisdn);
+                    return subscriptionService.createSubscription(msisdn, language, circle, pack, SubscriptionOrigin.MCTS_IMPORT);
+                } else {
+                    subscriptionErrorDataService.create(new SubscriptionError(msisdn, SubscriptionRejectionReason.ALREADY_SUBSCRIBED, pack.getType()));
+                    return null;
+                }
+            }
+        } else { // subscriberByBeneficiary != null
+            if (subscriberByMsisdn == null) {
+                // We got here because beneficiary's phone number changed and we have no subscriber attached to the new number
+                // detach mother from existing subscriber
+                Subscription subscription = subscriptionService.getActiveSubscription(subscriberByBeneficiary, pack.getType());
+                subscriberByBeneficiary.setMother(null);
+                subscriberDataService.update(subscriberByBeneficiary);
+                subscriptionService.deactivateSubscription(subscription, DeactivationReason.MCTS_UPDATE);
 
-    private Subscriber setSubscriberFields(Subscriber subscriber, MctsBeneficiary beneficiary, DateTime referenceDate,
-                                             SubscriptionPackType packType) {
-        Subscription subscription = subscriptionService.getActiveSubscription(subscriber, packType);
+                // create new subscriber and attach mother
+                Subscriber newSubscriber = new Subscriber(msisdn, language);
+                newSubscriber.setDateOfBirth(dob);
+                newSubscriber.setChild(child);
+                create(newSubscriber);
+                return subscriptionService.createSubscription(msisdn, language, circle, pack, SubscriptionOrigin.MCTS_IMPORT);
+            } else {
+                // we have a subscriber by phone# and also one with the MCTS id
+                if (subscriberByMsisdn.getId().equals(subscriberByBeneficiary.getId())) {
+                    // Case1: if we pulled the same subscriber
+                    Subscription subscription = subscriptionService.getActiveSubscription(subscriberByBeneficiary, pack.getType());
+                    subscriberByMsisdn.setDateOfBirth(dob);
+                    subscriberByMsisdn.getChild().deepCopyFrom(child);
+                    update(subscriberByMsisdn);
+                    subscriptionService.updateStartDate(subscription, dob);
+                    return subscriptionService.getActiveSubscription(subscriberByBeneficiary, pack.getType());
+                } else {
+                    // Case 2: msisdn is already taken by another beneficiary
+                    if (subscriberByMsisdn.getChild() == null) {
+                        // Deactivate mother from existing subscriber (by mcts id)
+                        Subscription subscription = subscriptionService.getActiveSubscription(subscriberByBeneficiary, pack.getType());
+                        subscriptionService.deactivateSubscription(subscription, DeactivationReason.MCTS_UPDATE);
+                        subscriberByBeneficiary.setMother(null);
+                        update(subscriberByBeneficiary);
 
-        if (packType == SubscriptionPackType.PREGNANCY) {
-            subscriber.setLastMenstrualPeriod(referenceDate);
-            subscriber.setMother((MctsMother) beneficiary);
-        } else {
-            subscriber.setDateOfBirth(referenceDate);
-            subscriber.setChild((MctsChild) beneficiary);
+                        // transfer mother to new subscriber (number)
+                        subscriberByMsisdn.setChild(child);
+                        update(subscriberByMsisdn);
+                        return subscriptionService.createSubscription(msisdn, language, circle, pack, SubscriptionOrigin.MCTS_IMPORT);
+                    } else {
+                        // No way to resolve this since msisdn already has a mother attached. Reject the update
+                        Subscription subscription = subscriptionService.getActiveSubscription(subscriberByBeneficiary, pack.getType());
+                        subscriptionService.deactivateSubscription(subscription, DeactivationReason.MCTS_UPDATE);
+                        subscriptionErrorDataService.create(new SubscriptionError(msisdn, SubscriptionRejectionReason.ALREADY_SUBSCRIBED, pack.getType()));
+                        return null;
+                    }
+                }
+            }
         }
-        return subscriber;
     }
-
 
     public void deleteAllowed(Subscriber subscriber) {
         for (Subscription subscription: subscriber.getSubscriptions()) {

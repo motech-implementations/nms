@@ -11,5 +11,6 @@ public enum DeactivationReason {
     CHILD_DEATH,
     MATERNAL_DEATH,
     INVALID_NUMBER, // See https://github.com/motech-implementations/mim/issues/169
-    DO_NOT_DISTURB;
+    DO_NOT_DISTURB,
+    MCTS_UPDATE
 }

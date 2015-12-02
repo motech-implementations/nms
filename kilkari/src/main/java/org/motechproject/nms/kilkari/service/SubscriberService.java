@@ -33,7 +33,7 @@ public interface SubscriberService {
      * Create a new Kilkari subscriber in the database.
      * @param subscriber The subscriber to create
      */
-    void create(Subscriber subscriber);
+    Subscriber create(Subscriber subscriber);
 
     /**
      * Update subscriber. If subscriber has any subscriptions and the update changes her LMP or DOB, then subscription
@@ -52,18 +52,22 @@ public interface SubscriberService {
     void updateMsisdnForSubscriber(Subscriber subscriber, MctsBeneficiary beneficiary, Long newMsisdn);
 
     /**
-     * Update or create MCTS subscriber and subscription based on data provided by MCTS.
-     * @param beneficiary The MCTS beneficiary whose information has been imported from MCTS
-     * @param msisdn The MSISDN for the subscriber
-     * @param referenceDate The reference data (LMP/DOB) for the beneficiary's subscription
-     * @param packType The type of subscription (pregnancy/child)
-     * @return New or updated subscription
+     * Update the mother subscriber with the msisdn and mother object
+     * @param msisdn msisdn (to switch to) for new/existing mother
+     * @param mother mother object to update
+     * @param lmp the reference date for the mother (LMP)
+     * @return New or update subscription, null if the creation/update fails
      */
-    Subscription updateOrCreateMctsSubscriber(MctsBeneficiary beneficiary, Long msisdn, DateTime referenceDate,
-                                              SubscriptionPackType packType);
-
     Subscription UpdateMotherSubscriber(Long msisdn, MctsMother mother, DateTime lmp);
-    Subscription UpdateChildSubscriber(Long msisdn, MctsChild child, DateTime lmp);
+
+    /**
+     * Upda the child subscriber with the msisdn and child object
+     * @param msisdn msisdn (to switch to) for new/existing child
+     * @param child child object to update
+     * @param dob the reference date for the child (date of birth)
+     * @return New or updated subscription, null if creation/update fails
+     */
+    Subscription UpdateChildSubscriber(Long msisdn, MctsChild child, DateTime dob);
 
     /**
      * Lifecycle listener that verifies a subscriber can only be deleted if all of their subscriptions have

@@ -179,12 +179,12 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             return false;
         }
 
-        mother.setName(name);
+        if (name != null && name.isEmpty()) {
+            mother.setName(name);
+        }
         mother.setDateOfBirth(motherDOB);
 
-        Subscription subscription = subscriberService.updateOrCreateMctsSubscriber(mother, msisdn, lmp,
-                SubscriptionPackType.PREGNANCY);
-
+        Subscription subscription = subscriberService.UpdateMotherSubscriber(msisdn, mother, lmp);
         // We rejected the update/create for the subscriber
         if (subscription == null) {
             return false;
@@ -236,9 +236,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         child.setName(name);
         child.setMother(mother);
 
-        Subscription childSubscription = subscriberService.updateOrCreateMctsSubscriber(child, msisdn, dob,
-                SubscriptionPackType.CHILD);
-
+        Subscription childSubscription = subscriberService.UpdateChildSubscriber(msisdn, child, dob);
         // child subscription create/update was rejected
         if (childSubscription == null) {
             return false;

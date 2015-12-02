@@ -8,6 +8,7 @@ import org.motechproject.nms.csv.utils.CsvMapImporter;
 import org.motechproject.nms.csv.utils.GetInstanceByString;
 import org.motechproject.nms.csv.utils.GetString;
 import org.motechproject.nms.kilkari.domain.MctsBeneficiary;
+import org.motechproject.nms.kilkari.domain.MctsChild;
 import org.motechproject.nms.kilkari.domain.MctsMother;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.SubscriptionError;
@@ -130,16 +131,13 @@ public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateSe
         Subscriber subscriber = subscriberService.getSubscriberByBeneficiary(beneficiary);
         SubscriptionPackType packType;
         DateTime newReferenceDate;
-        MotechDataService beneficiaryDataService;
 
         if (beneficiary instanceof MctsMother) {
             packType = SubscriptionPackType.PREGNANCY;
             newReferenceDate = (DateTime) record.get(LMP);
-            beneficiaryDataService = mctsMotherDataService;
         } else {
             packType = SubscriptionPackType.CHILD;
             newReferenceDate = (DateTime) record.get(DOB);
-            beneficiaryDataService = mctsChildDataService;
         }
 
         // Second, update the beneficiary's location if new location fields are provided
@@ -148,7 +146,6 @@ public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateSe
             // validate and set location
             try {
                 MctsBeneficiaryUtils.setLocationFields(locationService.getLocations(record), beneficiary);
-                beneficiaryDataService.update(beneficiary);
             } catch (InvalidLocationException le) {
                 LOGGER.error(le.toString());
                 subscriptionErrorDataService.create(new SubscriptionError(
@@ -167,24 +164,12 @@ public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateSe
         if ((subscriber == null) && (newMsisdn != null) && (newReferenceDate != null)) {
             // create a new subscription if the beneficiary's LMP/DOB indicates that a subscription should be created
 
-            subscriberService.updateOrCreateMctsSubscriber(beneficiary, newMsisdn, newReferenceDate, packType);
-            return;
-        }
-        if (newReferenceDate != null) {
-            subscriberService.updateOrCreateMctsSubscriber(beneficiary, subscriber.getCallingNumber(), newReferenceDate, packType);
-        }
-
-        // Finally, update the beneficiary's MSISDN if a new one is provided
-
-        if (newMsisdn != null) {
-            try {
-                subscriberService.updateMsisdnForSubscriber(subscriber, beneficiary, newMsisdn);
-            } catch (IllegalStateException e) {
-                subscriptionErrorDataService.create(new SubscriptionError(newMsisdn,
-                        SubscriptionRejectionReason.ALREADY_SUBSCRIBED, packType, e.getMessage()));
+            if (packType == SubscriptionPackType.PREGNANCY) {
+                subscriberService.UpdateMotherSubscriber(newMsisdn, (MctsMother) beneficiary, newReferenceDate);
+            } else {
+                subscriberService.UpdateChildSubscriber(newMsisdn, (MctsChild) beneficiary, newReferenceDate);
             }
         }
-
     }
 
     private Map<String, CellProcessor> getProcessorMapping() {

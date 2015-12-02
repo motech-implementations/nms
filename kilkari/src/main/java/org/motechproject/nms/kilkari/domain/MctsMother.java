@@ -27,4 +27,16 @@ public class MctsMother extends MctsBeneficiary {
     public void setDateOfBirth(DateTime dateOfBirth) {
         this.dateOfBirth = dateOfBirth;
     }
+
+    public void deepCopyFrom(MctsMother other) {
+        setName(other.getName());
+        setDateOfBirth(other.getDateOfBirth());
+        setState(other.getState());
+        setDistrict(other.getDistrict());
+        setTaluka(other.getTaluka());
+        setHealthBlock(other.getHealthBlock());
+        setHealthFacility(other.getHealthFacility());
+        setHealthSubFacility(other.getHealthSubFacility());
+        setVillage(other.getVillage());
+    }
 }
