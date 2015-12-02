@@ -363,6 +363,9 @@ public class LocationServiceBundleIT extends BasePaxIT {
         healthBlock2.setCode(2L);
         healthBlock2.setTaluka(t);
 
+        t.getHealthBlocks().add(healthBlock2);
+        t = talukaDataService.update(t);
+
         healthBlockDataService.create(healthBlock2);
 
         HealthBlock hb = healthBlockService.findByTalukaAndCode(t, 1L);

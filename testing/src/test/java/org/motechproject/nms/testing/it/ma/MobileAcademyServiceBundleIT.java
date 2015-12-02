@@ -42,19 +42,19 @@ import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import javax.inject.Inject;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -145,8 +145,8 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         maService.setCourse(copyCourse);
 
         // verify that modified time (version) did change
-        assertNotEquals(nmsCourseDataService.getCourseByName(VALID_COURSE_NAME).getModificationDate(),
-                originalCourse.getModificationDate());
+        assertThat(nmsCourseDataService.getCourseByName(VALID_COURSE_NAME).getModificationDate(),
+                is(not(originalCourse.getModificationDate())));
         originalCourse.setContent(courseContent);
         nmsCourseDataService.update(originalCourse);
     }
