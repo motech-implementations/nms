@@ -947,8 +947,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         String expectedJsonResponse = createFlwUserResponseJson(
                 rh.hindiLanguage().getCode(),  //defaultLanguageLocationCode
                 null,  //locationCode
-                Arrays.asList(rh.tamilLanguage().getCode(), rh.hindiLanguage().getCode(), rh.kannadaLanguage()
-                        .getCode()), // allowedLanguageLocationCodes
+                Arrays.asList(rh.hindiLanguage().getCode(), rh.kannadaLanguage().getCode(), rh.tamilLanguage().getCode()), // allowedLanguageLocationCodes
                 0L,    //currentUsageInPulses
                 0L,    //endOfUsagePromptCounter
                 false, //welcomePromptFlag
@@ -1059,8 +1058,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         String expectedJsonResponse = createFlwUserResponseJson(
                 rh.hindiLanguage().getCode(),  //defaultLanguageLocationCode
                 null,  //locationCode
-                Arrays.asList(rh.tamilLanguage().getCode(), rh.hindiLanguage().getCode(), rh.kannadaLanguage()
-                        .getCode()), // allowedLanguageLocationCodes
+                Arrays.asList(rh.hindiLanguage().getCode(), rh.kannadaLanguage().getCode(), rh.tamilLanguage().getCode()), // allowedLanguageLocationCodes
                 0L,    //currentUsageInPulses
                 0L,    //endOfUsagePromptCounter
                 false, //welcomePromptFlag
@@ -3685,7 +3683,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         String expectedJsonResponse = createFlwUserResponseJson(
                 rh.hindiLanguage().getCode(),  //defaultLanguageLocationCode
                 null,  //locationCode
-                Arrays.asList(rh.tamilLanguage().getCode(), rh.hindiLanguage().getCode(), rh.kannadaLanguage().getCode()), // allowedLanguageLocationCodes
+                Arrays.asList(rh.hindiLanguage().getCode(), rh.kannadaLanguage().getCode(), rh.tamilLanguage().getCode()), // allowedLanguageLocationCodes
                 0L,    //currentUsageInPulses
                 0L,    //endOfUsagePromptCounter
                 false, //welcomePromptFlag
@@ -4086,8 +4084,8 @@ public class UserControllerBundleIT extends BasePaxIT {
         );
 
         List<String> allowedLLCCodes = new ArrayList<>();
-        allowedLLCCodes.add(rh.tamilLanguage().getCode());
         allowedLLCCodes.add(rh.kannadaLanguage().getCode());
+        allowedLLCCodes.add(rh.tamilLanguage().getCode());
 
         String expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
                 null, // locationCode
@@ -4242,8 +4240,8 @@ public class UserControllerBundleIT extends BasePaxIT {
         );
 
         List<String> allowedLLCCodes = new ArrayList<>();
-        allowedLLCCodes.add(rh.tamilLanguage().getCode());
         allowedLLCCodes.add(rh.kannadaLanguage().getCode());
+        allowedLLCCodes.add(rh.tamilLanguage().getCode());
 
         String expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
                 null, // locationCode
@@ -4361,8 +4359,8 @@ public class UserControllerBundleIT extends BasePaxIT {
         );
 
         List<String> allowedLLCCodes = new ArrayList<>();
-        allowedLLCCodes.add(rh.tamilLanguage().getCode());
         allowedLLCCodes.add(rh.kannadaLanguage().getCode());
+        allowedLLCCodes.add(rh.tamilLanguage().getCode());
 
         String expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
                 null, // locationCode

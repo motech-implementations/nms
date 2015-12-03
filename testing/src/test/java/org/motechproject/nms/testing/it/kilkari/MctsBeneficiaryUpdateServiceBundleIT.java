@@ -56,10 +56,12 @@ import java.io.StringReader;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
+import static junit.framework.Assert.assertEquals;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 import static org.motechproject.nms.testing.it.utils.RegionHelper.createDistrict;
 import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthBlock;
 import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthFacility;
@@ -226,6 +228,8 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         transactionManager.commit(status);
     }
 
+
+
     @Test
     public void testUpdateMsisdnForSubscriberWithBothPacks() throws Exception {
         Long oldMsisdn = sh.makeNumber();
@@ -261,7 +265,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
 
         assertNotNull(pregnancySubscriber);
         assertNotNull(childSubscriber);
-        assertNotEquals(childSubscriber, pregnancySubscriber);
+        assertThat(childSubscriber, is(not(pregnancySubscriber)));
         assertEquals(newMsisdn, pregnancySubscriber.getCallingNumber());
         assertEquals(oldMsisdn, childSubscriber.getCallingNumber());
         assertNull(pregnancySubscriber.getChild());
@@ -603,7 +607,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
 
         Subscriber subscriber = subscriberDataService.findByNumber(msisdn);
         assertNotNull(subscriber);
-        assertNotEquals(subscriber.getChild().getDistrict().getCode(), new Long(7));
+        assertThat(subscriber.getChild().getDistrict().getCode(), is(not(7L)));
         
         List<SubscriptionError> susbErrors = subscriptionErrorDataService.findByBeneficiaryId(childId);
         SubscriptionError susbError = susbErrors.iterator().next();
