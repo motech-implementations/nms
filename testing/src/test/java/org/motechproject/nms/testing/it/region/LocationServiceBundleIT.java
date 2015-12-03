@@ -96,8 +96,6 @@ public class LocationServiceBundleIT extends BasePaxIT {
     public void doTheNeedful() {
         testingService.clearDatabase();
 
-        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-
         healthSubFacility = new HealthSubFacility();
         healthSubFacility.setName("Health Sub Facility 1");
         healthSubFacility.setRegionalName("Health Sub Facility 1");
@@ -144,7 +142,6 @@ public class LocationServiceBundleIT extends BasePaxIT {
         state.setName("State 1");
         state.setCode(1L);
         state.getDistricts().add(district);
-        transactionManager.commit(status);
     }
 
     @Test(expected = ConstraintViolationException.class)
@@ -307,6 +304,8 @@ public class LocationServiceBundleIT extends BasePaxIT {
     //                   -> Taluka(2) -> HealthBlock(2)
     @Test
     public void testFindHealthBlockByTalukaAndCode2() {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         stateDataService.create(state);
         district = districtDataService.create(district);
         Taluka t = talukaDataService.create(taluka);
@@ -344,6 +343,8 @@ public class LocationServiceBundleIT extends BasePaxIT {
         hb = healthBlockService.findByTalukaAndCode(taluka2, 2L);
         assertNotNull(hb);
         assertEquals(hb.getCode(), healthBlock2.getCode());
+
+        transactionManager.commit(status);
     }
 
     // Two HB in Single Taluka, lookup by t(1) hb(1), should find it
@@ -351,6 +352,8 @@ public class LocationServiceBundleIT extends BasePaxIT {
     //                             -> HealthBlock(2)
     @Test
     public void testFindHealthBlockByTalukaAndCode3() {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         stateDataService.create(state);
         districtDataService.create(district);
         Taluka t = talukaDataService.create(taluka);
@@ -375,6 +378,8 @@ public class LocationServiceBundleIT extends BasePaxIT {
         hb = healthBlockService.findByTalukaAndCode(t, 2L);
         assertNotNull(hb);
         assertEquals(hb.getCode(), healthBlock2.getCode());
+
+        transactionManager.commit(status);
     }
     // Multiple, lookup by t(1), hb(2) should not find it
     // State(1) -> District -> Taluka(1) -> HealthBlock(1)
