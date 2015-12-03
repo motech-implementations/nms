@@ -1,7 +1,6 @@
 package org.motechproject.nms.kilkari.service.impl;
 
 import org.joda.time.DateTime;
-import org.motechproject.mds.service.MotechDataService;
 import org.motechproject.nms.csv.exception.CsvImportDataException;
 import org.motechproject.nms.csv.utils.CsvImporterBuilder;
 import org.motechproject.nms.csv.utils.CsvMapImporter;
@@ -165,9 +164,9 @@ public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateSe
             // create a new subscription if the beneficiary's LMP/DOB indicates that a subscription should be created
 
             if (packType == SubscriptionPackType.PREGNANCY) {
-                subscriberService.UpdateMotherSubscriber(newMsisdn, (MctsMother) beneficiary, newReferenceDate);
+                subscriberService.updateMotherSubscriber(newMsisdn, (MctsMother) beneficiary, newReferenceDate);
             } else {
-                subscriberService.UpdateChildSubscriber(newMsisdn, (MctsChild) beneficiary, newReferenceDate);
+                subscriberService.updateChildSubscriber(newMsisdn, (MctsChild) beneficiary, newReferenceDate);
             }
         }
     }

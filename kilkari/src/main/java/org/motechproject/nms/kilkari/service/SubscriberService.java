@@ -8,7 +8,6 @@ import org.motechproject.nms.kilkari.domain.MctsChild;
 import org.motechproject.nms.kilkari.domain.MctsMother;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
-import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 
 /**
  * Service interface for managing Kilkari subscribers
@@ -58,7 +57,7 @@ public interface SubscriberService {
      * @param lmp the reference date for the mother (LMP)
      * @return New or update subscription, null if the creation/update fails
      */
-    Subscription UpdateMotherSubscriber(Long msisdn, MctsMother mother, DateTime lmp);
+    Subscription updateMotherSubscriber(Long msisdn, MctsMother mother, DateTime lmp);
 
     /**
      * Upda the child subscriber with the msisdn and child object
@@ -67,7 +66,7 @@ public interface SubscriberService {
      * @param dob the reference date for the child (date of birth)
      * @return New or updated subscription, null if creation/update fails
      */
-    Subscription UpdateChildSubscriber(Long msisdn, MctsChild child, DateTime dob);
+    Subscription updateChildSubscriber(Long msisdn, MctsChild child, DateTime dob);
 
     /**
      * Lifecycle listener that verifies a subscriber can only be deleted if all of their subscriptions have

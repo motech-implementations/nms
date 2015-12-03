@@ -184,7 +184,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         }
         mother.setDateOfBirth(motherDOB);
 
-        Subscription subscription = subscriberService.UpdateMotherSubscriber(msisdn, mother, lmp);
+        Subscription subscription = subscriberService.updateMotherSubscriber(msisdn, mother, lmp);
         // We rejected the update/create for the subscriber
         if (subscription == null) {
             return false;
@@ -236,7 +236,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         child.setName(name);
         child.setMother(mother);
 
-        Subscription childSubscription = subscriberService.UpdateChildSubscriber(msisdn, child, dob);
+        Subscription childSubscription = subscriberService.updateChildSubscriber(msisdn, child, dob);
         // child subscription create/update was rejected
         if (childSubscription == null) {
             return false;
