@@ -290,10 +290,10 @@ public class SubscriberServiceImpl implements SubscriberService {
                 subscriberByMsisdn.setChild(child);
                 create(subscriberByMsisdn);
                 return subscriptionService.createSubscription(msisdn, language, circle, pack, SubscriptionOrigin.MCTS_IMPORT);
-            } else { // subscriber (number) is already in use
-                // number has no mother attached
+            } else { // subscriber (child) is already in use
+                // number has no child attached
                 if (subscriberByMsisdn.getChild() == null) {
-                    // no existing mother attached
+                    // no existing child attached
                     subscriberByMsisdn.setDateOfBirth(dob);
                     subscriberByMsisdn.setChild(child);
                     update(subscriberByMsisdn);
@@ -306,13 +306,13 @@ public class SubscriberServiceImpl implements SubscriberService {
         } else { // subscriberByBeneficiary != null
             if (subscriberByMsisdn == null) {
                 // We got here because beneficiary's phone number changed and we have no subscriber attached to the new number
-                // detach mother from existing subscriber
+                // detach child from existing subscriber
                 Subscription subscription = subscriptionService.getActiveSubscription(subscriberByBeneficiary, pack.getType());
                 subscriberByBeneficiary.setMother(null);
                 subscriberDataService.update(subscriberByBeneficiary);
                 subscriptionService.deactivateSubscription(subscription, DeactivationReason.MCTS_UPDATE);
 
-                // create new subscriber and attach mother
+                // create new subscriber and attach child
                 Subscriber newSubscriber = new Subscriber(msisdn, language);
                 newSubscriber.setDateOfBirth(dob);
                 newSubscriber.setChild(child);
