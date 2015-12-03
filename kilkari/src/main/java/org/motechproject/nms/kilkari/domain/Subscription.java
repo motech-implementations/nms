@@ -5,8 +5,11 @@ import org.joda.time.DateTime;
 import org.joda.time.Days;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
+import org.motechproject.mds.annotations.InstanceLifecycleListeners;
 import org.motechproject.mds.domain.MdsEntity;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
+import org.motechproject.nms.tracking.annotation.TrackClass;
+import org.motechproject.nms.tracking.annotation.TrackField;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Index;
@@ -17,6 +20,8 @@ import java.util.UUID;
 
 @Entity(maxFetchDepth = -1, tableName = "nms_subscriptions")
 @Index(name = "status_endDate_composit_idx", members = { "status", "endDate" })
+@TrackClass
+@InstanceLifecycleListeners
 public class Subscription extends MdsEntity {
 
     private static final int DAYS_IN_WEEK = 7;
@@ -45,6 +50,7 @@ public class Subscription extends MdsEntity {
     @Field
     @Column(allowsNull = "false")
     @NotNull
+    @TrackField
     private SubscriptionStatus status;
 
     @Field
