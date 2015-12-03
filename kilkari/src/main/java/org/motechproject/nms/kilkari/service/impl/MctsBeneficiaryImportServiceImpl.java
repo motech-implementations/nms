@@ -1,5 +1,6 @@
 package org.motechproject.nms.kilkari.service.impl;
 
+import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
 import org.motechproject.metrics.service.Timer;
 import org.motechproject.nms.csv.exception.CsvImportDataException;
@@ -179,9 +180,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             return false;
         }
 
-        if (name != null && name.isEmpty()) {
-            mother.setName(name);
-        }
+        mother.setName(name);
         mother.setDateOfBirth(motherDOB);
 
         Subscription subscription = subscriberService.updateMotherSubscriber(msisdn, mother, lmp);

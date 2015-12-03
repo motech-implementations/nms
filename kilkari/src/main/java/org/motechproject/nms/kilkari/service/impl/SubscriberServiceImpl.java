@@ -190,13 +190,13 @@ public class SubscriberServiceImpl implements SubscriberService {
     }
 
     @Override
-    public Subscription updateMotherSubscriber(Long msisdn, MctsMother mother, DateTime lmp) { //NOPMD NcssMethodCount
-        District district = mother.getDistrict();
+    public Subscription updateMotherSubscriber(Long msisdn, MctsMother motherUpdate, DateTime lmp) { //NOPMD NcssMethodCount
+        District district = motherUpdate.getDistrict();
         Circle circle = district.getCircle();
         Language language = district.getLanguage();
         SubscriptionPack pack = subscriptionPackDataService.byType(SubscriptionPackType.PREGNANCY);
         Subscriber subscriberByMsisdn = getSubscriber(msisdn);
-        Subscriber subscriberByBeneficiary = getSubscriberByBeneficiary(mother);
+        Subscriber subscriberByBeneficiary = getSubscriberByBeneficiary(motherUpdate);
 
         // No existing subscriber(number) attached to mother MCTS id
         if (subscriberByBeneficiary == null) {
@@ -205,7 +205,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                 // create subscriber, beneficiary, subscription and return
                 subscriberByMsisdn = new Subscriber(msisdn, language);
                 subscriberByMsisdn.setLastMenstrualPeriod(lmp);
-                subscriberByMsisdn.setMother(mother);
+                subscriberByMsisdn.setMother(motherUpdate);
                 create(subscriberByMsisdn);
                 return subscriptionService.createSubscription(msisdn, language, circle, pack, SubscriptionOrigin.MCTS_IMPORT);
             } else { // subscriber (number) is already in use
@@ -213,7 +213,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                 if (subscriberByMsisdn.getMother() == null) {
                     // no existing mother attached
                     subscriberByMsisdn.setLastMenstrualPeriod(lmp);
-                    subscriberByMsisdn.setMother(mother);
+                    subscriberByMsisdn.setMother(motherUpdate);
                     update(subscriberByMsisdn);
                     return subscriptionService.createSubscription(msisdn, language, circle, pack, SubscriptionOrigin.MCTS_IMPORT);
                 } else {
@@ -233,7 +233,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                 // create new subscriber and attach mother
                 Subscriber newSubscriber = new Subscriber(msisdn, language);
                 newSubscriber.setLastMenstrualPeriod(lmp);
-                newSubscriber.setMother(mother);
+                newSubscriber.setMother(motherUpdate);
                 create(newSubscriber);
                 return subscriptionService.createSubscription(msisdn, language, circle, pack, SubscriptionOrigin.MCTS_IMPORT);
             } else {
@@ -242,7 +242,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                     // Case1: if we pulled the same subscriber
                     Subscription subscription = subscriptionService.getActiveSubscription(subscriberByBeneficiary, pack.getType());
                     subscriberByMsisdn.setLastMenstrualPeriod(lmp);
-                    subscriberByMsisdn.getMother().deepCopyFrom(mother);
+                    subscriberByMsisdn.getMother().deepCopyFrom(motherUpdate);
                     update(subscriberByMsisdn);
                     subscriptionService.updateStartDate(subscription, lmp);
                     return subscriptionService.getActiveSubscription(subscriberByBeneficiary, pack.getType());
@@ -256,7 +256,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                         update(subscriberByBeneficiary);
 
                         // transfer mother to new subscriber (number)
-                        subscriberByMsisdn.setMother(mother);
+                        subscriberByMsisdn.setMother(motherUpdate);
                         update(subscriberByMsisdn);
                         return subscriptionService.createSubscription(msisdn, language, circle, pack, SubscriptionOrigin.MCTS_IMPORT);
                     } else {
@@ -272,13 +272,13 @@ public class SubscriberServiceImpl implements SubscriberService {
     }
 
     @Override
-    public Subscription updateChildSubscriber(Long msisdn, MctsChild child, DateTime dob) { //NOPMD NcssMethodCount
-        District district = child.getDistrict();
+    public Subscription updateChildSubscriber(Long msisdn, MctsChild childUpdate, DateTime dob) { //NOPMD NcssMethodCount
+        District district = childUpdate.getDistrict();
         Circle circle = district.getCircle();
         Language language = district.getLanguage();
         SubscriptionPack pack = subscriptionPackDataService.byType(SubscriptionPackType.CHILD);
         Subscriber subscriberByMsisdn = getSubscriber(msisdn);
-        Subscriber subscriberByMctsId = getSubscriberByBeneficiary(child);
+        Subscriber subscriberByMctsId = getSubscriberByBeneficiary(childUpdate);
 
         // No existing subscriber(number) attached to child MCTS id
         if (subscriberByMctsId == null) {
@@ -287,7 +287,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                 // create subscriber, beneficiary, subscription and return
                 subscriberByMsisdn = new Subscriber(msisdn, language);
                 subscriberByMsisdn.setDateOfBirth(dob);
-                subscriberByMsisdn.setChild(child);
+                subscriberByMsisdn.setChild(childUpdate);
                 create(subscriberByMsisdn);
                 return subscriptionService.createSubscription(msisdn, language, circle, pack, SubscriptionOrigin.MCTS_IMPORT);
             } else { // subscriber (child) is already in use
@@ -295,7 +295,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                 if (subscriberByMsisdn.getChild() == null) {
                     // no existing child attached
                     subscriberByMsisdn.setDateOfBirth(dob);
-                    subscriberByMsisdn.setChild(child);
+                    subscriberByMsisdn.setChild(childUpdate);
                     update(subscriberByMsisdn);
                     return subscriptionService.createSubscription(msisdn, language, circle, pack, SubscriptionOrigin.MCTS_IMPORT);
                 } else {
@@ -315,7 +315,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                 // create new subscriber and attach child
                 Subscriber newSubscriber = new Subscriber(msisdn, language);
                 newSubscriber.setDateOfBirth(dob);
-                newSubscriber.setChild(child);
+                newSubscriber.setChild(childUpdate);
                 create(newSubscriber);
                 return subscriptionService.createSubscription(msisdn, language, circle, pack, SubscriptionOrigin.MCTS_IMPORT);
             } else {
@@ -324,7 +324,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                     // Case1: if we pulled the same subscriber
                     Subscription subscription = subscriptionService.getActiveSubscription(subscriberByMctsId, pack.getType());
                     subscriberByMsisdn.setDateOfBirth(dob);
-                    subscriberByMsisdn.getChild().deepCopyFrom(child);
+                    subscriberByMsisdn.getChild().deepCopyFrom(childUpdate);
                     update(subscriberByMsisdn);
                     subscriptionService.updateStartDate(subscription, dob);
                     return subscriptionService.getActiveSubscription(subscriberByMctsId, pack.getType());
@@ -338,7 +338,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                         update(subscriberByMctsId);
 
                         // transfer child to new subscriber (number)
-                        subscriberByMsisdn.setChild(child);
+                        subscriberByMsisdn.setChild(childUpdate);
                         update(subscriberByMsisdn);
                         return subscriptionService.createSubscription(msisdn, language, circle, pack, SubscriptionOrigin.MCTS_IMPORT);
                     } else {
