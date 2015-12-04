@@ -313,17 +313,9 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         child.setDistrict(districtService.findByStateAndCode(child.getState(), 3L));
         makeMctsSubscription(child, originalDOB, SubscriptionPackType.CHILD, msisdn);
 
-        /*
-        sh.mksub(SubscriptionOrigin.MCTS_IMPORT, originalDOB, SubscriptionPackType.CHILD, msisdn);
-        Subscriber subscriber = subscriberDataService.findByNumber(msisdn);
-        subscriber.setDateOfBirth(originalDOB);
-        subscriber.setChild(child);
-        subscriberDataService.update(subscriber);
-        */
-
         // this updates the db with the new data (DOB)
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        Reader reader = createUpdateReaderWithHeaders("1," + childId + ",," + getDateString(updatedDOB) + ",,,,,,,,,,,");
+        Reader reader = createUpdateReaderWithHeaders("1," + childId + ",," + getDateString(updatedDOB) + ",,,,,,,,,,," + msisdn);
         mctsBeneficiaryUpdateService.updateBeneficiaryData(reader);
 
         // This query should return the updated subscriber information (but it doesn't...causing the assert to fail)
@@ -349,15 +341,8 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         mother.setDistrict(districtService.findByStateAndCode(mother.getState(), 3L));
         makeMctsSubscription(mother, originalLMP, SubscriptionPackType.PREGNANCY, msisdn);
 
-        /*
-        sh.mksub(SubscriptionOrigin.MCTS_IMPORT, originalLMP, SubscriptionPackType.PREGNANCY, msisdn);
-        subscriber.setLastMenstrualPeriod(originalLMP);
-        subscriber.setMother(mother);
-        subscriberDataService.update(subscriber);
-        */
-
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        Reader reader = createUpdateReaderWithHeaders("1," + motherId + ",,," + getDateString(updatedLMP) + ",,,,,,,,,,");
+        Reader reader = createUpdateReaderWithHeaders("1," + motherId + ",,," + getDateString(updatedLMP) + ",,,,,,,,,," + msisdn);
         mctsBeneficiaryUpdateService.updateBeneficiaryData(reader);
 
         Subscriber updatedSubscriber = subscriberDataService.findByNumber(msisdn);

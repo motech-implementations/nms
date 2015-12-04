@@ -1215,11 +1215,10 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT524() throws Exception {
-        DateTime lmp = DateTime.now().minusDays(30);
-        String lmpString = getDateString(lmp);
+        String dobString = getDateString(DateTime.now().minusDays(30));
         //state id is missing
-        Reader reader = createMotherDataReader("\t3\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t\t" +
-                lmpString + "\t\t\t");
+        Reader reader = createMotherDataReader("\t3\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t" + dobString +
+                "\t\t\t\t");
         mctsBeneficiaryImportService.importChildData(reader);
 
         assertNoSubscriber(9439986187L);
@@ -1227,17 +1226,16 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     }
 
     /*
-     * To verify mother MCTS upload is rejected when mandatory parameter district is missing. 
+     * To verify mother MCTS upload is rejected when stateId is missing
      *
      * https://applab.atlassian.net/browse/NMS-228
      */
     @Test
     public void verifyFT525() throws Exception {
-        DateTime lmp = DateTime.now().minusDays(30);
-        String lmpString = getDateString(lmp);
-        //district id is missing
-        Reader reader = createMotherDataReader("21\t\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t\t" +
-                lmpString + "\t\t\t");
+        String dobString = getDateString(DateTime.now().minusDays(30));
+        //state id is missing
+        Reader reader = createMotherDataReader("\t3\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t" + dobString +
+                "\t\t\t\t");
         mctsBeneficiaryImportService.importChildData(reader);
 
         assertNoSubscriber(9439986187L);
@@ -1245,15 +1243,14 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     }
 
     /*
-     * To verify mother MCTS upload is rejected when mandatory parameter state is having invalid value. 
+     * To verify mother MCTS upload is rejected with invalid state id
      */
     @Test
     public void verifyFT526() throws Exception {
-        DateTime lmp = DateTime.now().minusDays(30);
-        String lmpString = getDateString(lmp);
+        String dobString = getDateString(DateTime.now().minusDays(30));
         //state id with invalid value
-        Reader reader = createMotherDataReader("31\t3\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t\t" +
-                lmpString + "\t\t\t");
+        Reader reader = createMotherDataReader("31\t3\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t" + dobString +
+                "\t\t\t\t");
         mctsBeneficiaryImportService.importChildData(reader);
 
         assertNoSubscriber(9439986187L);
@@ -1261,14 +1258,13 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     }
 
     /*
-     * To verify mother MCTS upload is rejected when mandatory parameter state is having invalid value. 
+     * To verify mother MCTS upload is rejected with invalid district id
      */
     @Test
     public void verifyFT527() throws Exception {
-        DateTime lmp = DateTime.now().minusDays(30);
-        String lmpString = getDateString(lmp);
-        Reader reader = createMotherDataReader("21\t6\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t\t" +
-                lmpString + "\t\t\t");
+        String dobString = getDateString(DateTime.now().minusDays(30));
+        Reader reader = createMotherDataReader("21\t6\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t" + dobString +
+                "\t\t\t\t");
         //district id with invalid value
         mctsBeneficiaryImportService.importChildData(reader);
 
