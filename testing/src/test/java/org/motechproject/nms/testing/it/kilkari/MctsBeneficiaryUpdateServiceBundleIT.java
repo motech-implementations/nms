@@ -315,7 +315,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
 
         // this updates the db with the new data (DOB)
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        Reader reader = createUpdateReaderWithHeaders("1," + childId + ",," + getDateString(updatedDOB) + ",,,,,,,,,,," + msisdn);
+        Reader reader = createUpdateReaderWithHeaders("1," + childId + ",," + getDateString(updatedDOB) + ",,21,3,,,,,,,," + msisdn);
         mctsBeneficiaryUpdateService.updateBeneficiaryData(reader);
 
         // This query should return the updated subscriber information (but it doesn't...causing the assert to fail)

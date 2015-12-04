@@ -244,8 +244,13 @@ public class SubscriberServiceImpl implements SubscriberService {
                     subscriberByMsisdn.setLastMenstrualPeriod(lmp);
                     subscriberByMsisdn.getMother().deepCopyFrom(motherUpdate);
                     update(subscriberByMsisdn);
-                    subscriptionService.updateStartDate(subscription, lmp);
-                    return subscriptionService.getActiveSubscription(subscriberByMctsId, pack.getType());
+                    if (subscription != null) {
+                        subscriptionService.updateStartDate(subscription, lmp);
+                        return subscriptionService.getActiveSubscription(subscriberByMctsId, pack.getType());
+                    } else {
+                        return subscriptionService.createSubscription(msisdn, language, circle, pack, SubscriptionOrigin.MCTS_IMPORT);
+                    }
+
                 } else {
                     // Case 2: msisdn is already taken by another beneficiary
                     if (subscriberByMsisdn.getMother() == null) {
@@ -326,8 +331,13 @@ public class SubscriberServiceImpl implements SubscriberService {
                     subscriberByMsisdn.setDateOfBirth(dob);
                     subscriberByMsisdn.getChild().deepCopyFrom(childUpdate);
                     update(subscriberByMsisdn);
-                    subscriptionService.updateStartDate(subscription, dob);
-                    return subscriptionService.getActiveSubscription(subscriberByMctsId, pack.getType());
+                    if (subscription != null) {
+                        subscriptionService.updateStartDate(subscription, dob);
+                        return subscriptionService.getActiveSubscription(subscriberByMctsId, pack.getType());
+                    } else {
+                        return subscriptionService.createSubscription(msisdn, language, circle, pack, SubscriptionOrigin.MCTS_IMPORT);
+                    }
+
                 } else {
                     // Case 2: msisdn is already taken by another child
                     if (subscriberByMsisdn.getChild() == null) {

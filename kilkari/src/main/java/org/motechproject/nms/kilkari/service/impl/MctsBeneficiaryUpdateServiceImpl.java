@@ -13,6 +13,7 @@ import org.motechproject.nms.kilkari.repository.MctsMotherDataService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryUpdateService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor;
+import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -117,10 +118,29 @@ public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateSe
                     mctsId, STATE_MCTS_ID, stateMctsId));
         }
 
+        // Step 1.5: remap the headers to use standard field names from MCTS
+        mapUpdateHeaders(record);
+
         // Step 2: Re-route and call the import service for the update
         return (beneficiary instanceof MctsMother) ?
                 mctsBeneficiaryImportService.importMotherRecord(record) :
                 mctsBeneficiaryImportService.importChildRecord(record);
+    }
+
+    private Map<String, Object> mapUpdateHeaders(Map<String, Object> updates) {
+        if (updates.containsKey(MSISDN)) {
+            updates.put(KilkariConstants.MSISDN, updates.get(MSISDN));
+        }
+
+        if (updates.containsKey(DOB)) {
+            updates.put(KilkariConstants.DOB, updates.get(DOB));
+        }
+
+        if (updates.containsKey(LMP)) {
+            updates.put(KilkariConstants.LMP, updates.get(LMP));
+        }
+
+        return updates;
     }
 
     private Map<String, CellProcessor> getProcessorMapping() {
