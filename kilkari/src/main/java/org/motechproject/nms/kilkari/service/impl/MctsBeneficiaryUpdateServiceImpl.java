@@ -119,7 +119,7 @@ public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateSe
         }
 
         // Step 1.5: remap the headers to use standard field names from MCTS
-        mapUpdateHeaders(record);
+        mapUpdateHeaders(record, beneficiary);
 
         // Step 2: Re-route and call the import service for the update
         return (beneficiary instanceof MctsMother) ?
@@ -127,7 +127,7 @@ public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateSe
                 mctsBeneficiaryImportService.importChildRecord(record);
     }
 
-    private Map<String, Object> mapUpdateHeaders(Map<String, Object> updates) {
+    private Map<String, Object> mapUpdateHeaders(Map<String, Object> updates, MctsBeneficiary beneficiary) {
         if (updates.containsKey(MSISDN)) {
             updates.put(KilkariConstants.MSISDN, updates.get(MSISDN));
         }
@@ -140,6 +140,9 @@ public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateSe
             updates.put(KilkariConstants.LMP, updates.get(LMP));
         }
 
+        if (updates.containsKey(MCTS_ID)) {
+            updates.put(KilkariConstants.BENEFICIARY_ID, beneficiary);
+        }
         return updates;
     }
 

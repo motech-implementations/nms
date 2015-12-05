@@ -202,6 +202,8 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
 
     @Test
     public void testUpdateMsisdn() throws Exception {
+        createLocationData();
+
         Long oldMsisdn = sh.makeNumber();
         Long newMsisdn = sh.makeNumber();
 
@@ -209,18 +211,23 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
                 SubscriptionPackType.CHILD, oldMsisdn);
         String mctsId = "0123456789";
 
-        subscription.getSubscriber().setChild(new MctsChild(mctsId));
-        subscriberDataService.update(subscription.getSubscriber());
+        Subscriber subscriber = subscription.getSubscriber();
+        MctsChild child = new MctsChild(mctsId);
+        child.setState(stateDataService.findByCode(21L));
+        child.setDistrict(districtService.findByStateAndCode(child.getState(), 3L));
+        subscriber.setChild(new MctsChild(mctsId));
+        subscriberDataService.update(subscriber);
 
+        DateTime updatedDOB = DateTime.now().minusDays(100);
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        Reader reader = createUpdateReaderWithHeaders("1," + mctsId + ",,,,,,,,,,,,," + newMsisdn);
+        Reader reader = createUpdateReaderWithHeaders("1," + mctsId + ",," + getDateString(updatedDOB) +",,21,3,,,,,,,," + newMsisdn);
         mctsBeneficiaryUpdateService.updateBeneficiaryData(reader);
 
         Subscriber oldSubscriber = subscriberDataService.findByNumber(oldMsisdn);
         assertNull(oldSubscriber.getChild());
         assertEquals(0, oldSubscriber.getActiveAndPendingSubscriptions().size());
 
-        Subscriber subscriber = subscriberDataService.findByNumber(newMsisdn);
+        subscriber = subscriberDataService.findByNumber(newMsisdn);
         assertNotNull(subscriber);
         assertEquals(mctsId, subscriber.getChild().getBeneficiaryId());
         transactionManager.commit(status);
@@ -250,8 +257,9 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         assertEquals(2, subscriberDataService.findByNumber(oldMsisdn).getActiveAndPendingSubscriptions().size());
         transactionManager.commit(status);
 
+        String lmpString = getDateString(DateTime.now().minus(120));
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        Reader reader = createUpdateReaderWithHeaders("1," + motherId + ",,,,,,,,,,,,," + newMsisdn);
+        Reader reader = createUpdateReaderWithHeaders("1," + motherId + ",,," + lmpString +",,,,,,,,,," + newMsisdn);
         mctsBeneficiaryUpdateService.updateBeneficiaryData(reader);
         transactionManager.commit(status);
 
@@ -275,6 +283,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
     public void testUpdateMsisdnNumberAlreadyInUse() throws Exception {
         Long firstMsisdn = sh.makeNumber();
         Long secondMsisdn = sh.makeNumber();
+        DateTime originalDOB = DateTime.now();
 
         // create two child subscriptions with different MSISDNs
         Subscription firstSubscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now(),
@@ -291,7 +300,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
 
         // try to set the second child's MSISDN to the same number as the first child's MSISDN
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        Reader reader = createUpdateReaderWithHeaders("1," + secondChildId + ",,,,,,,,,,,,," + firstMsisdn);
+        Reader reader = createUpdateReaderWithHeaders("1," + secondChildId + ",," + getDateString(originalDOB) + ",,,,,,,,,,," + firstMsisdn);
         mctsBeneficiaryUpdateService.updateBeneficiaryData(reader);
         transactionManager.commit(status);
 
@@ -342,7 +351,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         makeMctsSubscription(mother, originalLMP, SubscriptionPackType.PREGNANCY, msisdn);
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        Reader reader = createUpdateReaderWithHeaders("1," + motherId + ",,," + getDateString(updatedLMP) + ",,,,,,,,,," + msisdn);
+        Reader reader = createUpdateReaderWithHeaders("1," + motherId + ",,," + getDateString(updatedLMP) + ",21,3,,,,,,,," + msisdn);
         mctsBeneficiaryUpdateService.updateBeneficiaryData(reader);
 
         Subscriber updatedSubscriber = subscriberDataService.findByNumber(msisdn);
@@ -368,14 +377,6 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         mother.setDistrict(districtService.findByStateAndCode(mother.getState(), 3L));
         makeMctsSubscription(mother, originalLMP, SubscriptionPackType.PREGNANCY, msisdn);
 
-        /*
-        sh.mksub(SubscriptionOrigin.MCTS_IMPORT, originalLMP, SubscriptionPackType.PREGNANCY, msisdn);
-        Subscriber subscriber = subscriberDataService.findByNumber(msisdn);
-        subscriber.setLastMenstrualPeriod(originalLMP);
-        subscriber.setMother(mother);
-        subscriberDataService.update(subscriber);
-        */
-
         // pre-date the LMP so that the subscription will be marked completed
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         Subscriber subscriber = subscriberDataService.findByNumber(msisdn);
@@ -386,7 +387,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         assertEquals(SubscriptionStatus.COMPLETED, subscription.getStatus());
 
         // now, via CSV update, change the LMP to a valid subscription date; subscription should get reactivated
-        Reader reader = createUpdateReaderWithHeaders("1," + motherId + ",,," + getDateString(updatedLMP) + ",,,,,,,,,,");
+        Reader reader = createUpdateReaderWithHeaders("1," + motherId + ",,," + getDateString(updatedLMP) + ",21,3,,,,,,,," + msisdn);
         mctsBeneficiaryUpdateService.updateBeneficiaryData(reader);
 
         Subscriber updatedSubscriber = subscriberDataService.findByNumber(msisdn);
@@ -418,7 +419,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         assertEquals(SubscriptionStatus.ACTIVE, subscription.getStatus());
 
         // now, via CSV update, change the DOB to a past subscription date; subscription should be marked completed
-        Reader reader = createUpdateReaderWithHeaders("1," + childId + ",," + getDateString(updatedDOB) + ",,,,,,,,,,,");
+        Reader reader = createUpdateReaderWithHeaders("1," + childId + ",," + getDateString(updatedDOB) + ",,,,,,,,,,," + msisdn);
         mctsBeneficiaryUpdateService.updateBeneficiaryData(reader);
 
         Subscriber updatedSubscriber = subscriberDataService.findByNumber(msisdn);
@@ -433,6 +434,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
     public void testUpdateLocation() throws Exception {
         createLocationData();
 
+        DateTime originalDOB = DateTime.now();
         Long msisdn = sh.makeNumber();
         String childId = "0123456789";
 
@@ -441,7 +443,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         child.setDistrict(districtService.findByStateAndCode(child.getState(), 2L));
         makeMctsSubscription(child, DateTime.now().minusDays(100), SubscriptionPackType.CHILD, msisdn);
 
-        Reader reader = createUpdateReaderWithHeaders("1," + childId + ",,,,21,3,0026,453,,,,,,");
+        Reader reader = createUpdateReaderWithHeaders("1," + childId + ",," + getDateString(originalDOB) + ",,21,3,0026,453,,,,,," + msisdn);
         mctsBeneficiaryUpdateService.updateBeneficiaryData(reader);
 
         MctsChild updatedChild = mctsChildDataService.findByBeneficiaryId(childId);
@@ -573,6 +575,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
     @Test
     public void verifyFT325() throws Exception {
         createLocationData();
+        DateTime originalDOB = DateTime.now().minusDays(100);
 
         Long msisdn = sh.makeNumber();
         String childId = "0123456789";
@@ -583,7 +586,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         makeMctsSubscription(child, DateTime.now().minusDays(100), SubscriptionPackType.CHILD, msisdn);
 
         //district provided in request doesn't exist in nms-db
-        Reader reader = createUpdateReaderWithHeaders("1," + childId + ",,,,21,8,0026,453,,,,,,");
+        Reader reader = createUpdateReaderWithHeaders("1," + childId + ",," + getDateString(originalDOB) + ",,21,8,0026,453,,,,,," + msisdn);
         mctsBeneficiaryUpdateService.updateBeneficiaryData(reader);
 
         Subscriber subscriber = subscriberDataService.findByNumber(msisdn);
