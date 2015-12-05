@@ -315,7 +315,9 @@ public class SubscriberServiceImpl implements SubscriberService {
                 Subscription subscription = subscriptionService.getActiveSubscription(subscriberByMctsId, pack.getType());
                 subscriberByMctsId.setChild(null);
                 subscriberDataService.update(subscriberByMctsId);
-                subscriptionService.deactivateSubscription(subscription, DeactivationReason.MCTS_UPDATE);
+                if (subscription != null) {
+                    subscriptionService.deactivateSubscription(subscription, DeactivationReason.MCTS_UPDATE);
+                }
 
                 // create new subscriber and attach child
                 Subscriber newSubscriber = new Subscriber(msisdn, language);

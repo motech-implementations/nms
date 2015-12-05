@@ -228,8 +228,8 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             MctsBeneficiaryUtils.setLocationFields(locationService.getLocations(record), child);
         } catch (InvalidLocationException le) {
             LOGGER.error(le.toString());
-            subscriptionErrorDataService.create(new SubscriptionError(msisdn, SubscriptionRejectionReason.INVALID_LOCATION,
-                    SubscriptionPackType.CHILD, le.getMessage()));
+            subscriptionErrorDataService.create(new SubscriptionError(msisdn, child.getBeneficiaryId(),
+                    SubscriptionRejectionReason.INVALID_LOCATION, SubscriptionPackType.CHILD, le.getMessage()));
             return false;
         }
 

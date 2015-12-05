@@ -37,8 +37,9 @@ public class SubscriptionError {
         this.rejectionMessage = rejectionMessage;
     }
 
-    public SubscriptionError(String beneficiaryId, SubscriptionRejectionReason rejectionReason,
+    public SubscriptionError(long contactNumber, String beneficiaryId, SubscriptionRejectionReason rejectionReason,
                              SubscriptionPackType packType, String rejectionMessage) {
+        this.contactNumber = contactNumber;
         this.beneficiaryId = beneficiaryId;
         this.rejectionReason = rejectionReason;
         this.packType = packType;

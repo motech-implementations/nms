@@ -419,7 +419,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         assertEquals(SubscriptionStatus.ACTIVE, subscription.getStatus());
 
         // now, via CSV update, change the DOB to a past subscription date; subscription should be marked completed
-        Reader reader = createUpdateReaderWithHeaders("1," + childId + ",," + getDateString(updatedDOB) + ",,,,,,,,,,," + msisdn);
+        Reader reader = createUpdateReaderWithHeaders("1," + childId + ",," + getDateString(updatedDOB) + ",,21,3,,,,,,,," + msisdn);
         mctsBeneficiaryUpdateService.updateBeneficiaryData(reader);
 
         Subscriber updatedSubscriber = subscriberDataService.findByNumber(msisdn);
