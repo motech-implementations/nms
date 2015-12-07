@@ -165,8 +165,15 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         Boolean stillBirth = (Boolean) record.get(KilkariConstants.STILLBIRTH);
         Boolean death = (Boolean) record.get(KilkariConstants.DEATH);
 
-        // validate msisdn and lmp date
-        if (!validateMsisdnAndReferenceDate(msisdn, lmp, SubscriptionPackType.PREGNANCY)) {
+        // validate msisdn
+        if (!testMsisdn(msisdn, SubscriptionPackType.PREGNANCY)) {
+            return false;
+        }
+
+        // validate lmp date. We do not sanitize for lmp in the future to be in sync with MCTS data
+        // NOTE: getId is a way to see if this is a new user. We only accept new users if they
+        // have 12 weeks left in the pack. For existing users, their lmp could be updated to an earlier date
+        if (mother.getId() == null && !validateReferenceDate(lmp, SubscriptionPackType.PREGNANCY, msisdn)) {
             return false;
         }
 
@@ -204,7 +211,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         return true;
     }
 
-    @Override
+    @Override // NO CHECKSTYLE Cyclomatic Complexity
     @Transactional
     public boolean importChildRecord(Map<String, Object> record) {
         if (childPack == null) {
@@ -218,8 +225,15 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         DateTime dob = (DateTime) record.get(KilkariConstants.DOB);
         Boolean death = (Boolean) record.get(KilkariConstants.DEATH);
 
-        // validate msisdn and dob
-        if (!validateMsisdnAndReferenceDate(msisdn, dob, SubscriptionPackType.CHILD)) {
+        // validate msisdn
+        if (!testMsisdn(msisdn, SubscriptionPackType.CHILD)) {
+            return false;
+        }
+
+        // validate dob. We do not sanitize for dob in the future to be in sync with MCTS data
+        // NOTE: getId is a way to check for new user. We only accept new children if they have 12 weeks left
+        // in the pack. Existing children could have their dob udpated to an earlier date
+        if (child.getId() == null && !validateReferenceDate(dob, SubscriptionPackType.CHILD, msisdn)) {
             return false;
         }
 
@@ -262,12 +276,18 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         return true;
     }
 
-    private boolean validateMsisdnAndReferenceDate(Long msisdn, DateTime referenceDate, SubscriptionPackType packType) {
+    private boolean testMsisdn(Long msisdn, SubscriptionPackType packType) {
         if (msisdn == null) {
             subscriptionErrorDataService.create(
-                    new SubscriptionError(-1, SubscriptionRejectionReason.MISSING_MSISDN, SubscriptionPackType.PREGNANCY));
+                    new SubscriptionError(-1, SubscriptionRejectionReason.MISSING_MSISDN, packType));
             return false;
         }
+
+        return true;
+    }
+
+    private boolean validateReferenceDate(DateTime referenceDate, SubscriptionPackType packType, Long msisdn) {
+
 
         if (referenceDate == null) {
             subscriptionErrorDataService.create(

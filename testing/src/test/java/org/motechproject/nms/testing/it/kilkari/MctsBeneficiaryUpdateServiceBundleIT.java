@@ -235,6 +235,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
 
     @Test
     public void testUpdateMsisdnForSubscriberWithBothPacks() throws Exception {
+        createLocationData();
         Long oldMsisdn = sh.makeNumber();
         Long newMsisdn = sh.makeNumber();
 
@@ -259,7 +260,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
 
         String lmpString = getDateString(DateTime.now().minus(120));
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        Reader reader = createUpdateReaderWithHeaders("1," + motherId + ",,," + lmpString +",,,,,,,,,," + newMsisdn);
+        Reader reader = createUpdateReaderWithHeaders("1," + motherId + ",,," + lmpString +",21,3,,,,,,,," + newMsisdn);
         mctsBeneficiaryUpdateService.updateBeneficiaryData(reader);
         transactionManager.commit(status);
 
@@ -300,7 +301,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
 
         // try to set the second child's MSISDN to the same number as the first child's MSISDN
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        Reader reader = createUpdateReaderWithHeaders("1," + secondChildId + ",," + getDateString(originalDOB) + ",,,,,,,,,,," + firstMsisdn);
+        Reader reader = createUpdateReaderWithHeaders("1," + secondChildId + ",," + getDateString(originalDOB) + ",,21,3,,,,,,,," + firstMsisdn);
         mctsBeneficiaryUpdateService.updateBeneficiaryData(reader);
         transactionManager.commit(status);
 
@@ -477,25 +478,27 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         MctsMother mother3 = new MctsMother(mother3id);
         mother3.setState(stateDataService.findByCode(21L));
         mother3.setDistrict(districtService.findByStateAndCode(mother3.getState(), 3L));
-        makeMctsSubscription(mother3, DateTime.now().minusDays(100), SubscriptionPackType.PREGNANCY, sh.makeNumber());
+        Long mother3msisdn = 9439986199L;
+        makeMctsSubscription(mother3, DateTime.now().minusDays(100), SubscriptionPackType.PREGNANCY, mother3msisdn);
 
-        Long child4msisdn = sh.makeNumber();
         MctsChild child4 = new MctsChild("9876543211");
         child4.setState(stateDataService.findByCode(21L));
         child4.setDistrict(districtService.findByStateAndCode(child4.getState(), 3L));
+        Long child4msisdn = 9439986200L;
         makeMctsSubscription(child4, DateTime.now().minusDays(100), SubscriptionPackType.CHILD, child4msisdn);
 
         // ----Update all 4 via CSV:----
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         mctsBeneficiaryUpdateService.updateBeneficiaryData(read("csv/mcts_beneficiary_update.csv"));
+        transactionManager.commit(status);
 
         // ----Validate updates to each:----
-
+        TransactionStatus statusCheck = transactionManager.getTransaction(new DefaultTransactionDefinition());
         // MSISDN update:
         Subscriber oldSubscriber1 = subscriberDataService.findByNumber(child1msisdn);
         assertNull(oldSubscriber1.getChild());
-        assertEquals(0, oldSubscriber1.getAllSubscriptions().size());
+        assertEquals(0, oldSubscriber1.getActiveAndPendingSubscriptions().size());
 
         Subscriber subscriber1 = subscriberDataService.findByNumber(9439986187L);
         assertNotNull(subscriber1);
@@ -504,7 +507,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         // MSISDN update:
         Subscriber oldSubscriber2 = subscriberDataService.findByNumber(mother2msisdn);
         assertNull(oldSubscriber2.getMother());
-        assertEquals(0, oldSubscriber2.getAllSubscriptions().size());
+        assertEquals(0, oldSubscriber2.getActiveAndPendingSubscriptions().size());
 
         Subscriber subscriber2 = subscriberDataService.findByNumber(9439986188L);
         assertNotNull(subscriber2);
@@ -527,7 +530,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
 
         // Location insert:
         assertEquals("Taluka", subscriber4.getChild().getTaluka().getName());
-        transactionManager.commit(status);
+        transactionManager.commit(statusCheck);
     }
 
 
