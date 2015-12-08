@@ -51,7 +51,9 @@ public class MctsWebServiceFacadeImpl implements MctsWebServiceFacade {
 
         try {
             validChildrenDataResponse(result, stateId);
-            return (ChildrenDataSet) MarshallUtils.unmarshall(result.get_any()[1].getChildren().get(0).toString(), ChildrenDataSet.class);
+            return (result.get_any()[1].getChildren() == null) ?
+                null :
+                (ChildrenDataSet) MarshallUtils.unmarshall(result.get_any()[1].getChildren().get(0).toString(), ChildrenDataSet.class);
         } catch (JAXBException e) {
             throw new MctsInvalidResponseStructureException(String.format("Cannot deserialize children data from %s location", stateId), e);
         }
@@ -71,7 +73,9 @@ public class MctsWebServiceFacadeImpl implements MctsWebServiceFacade {
 
         try {
             validMothersDataResponse(result, stateId);
-            return (MothersDataSet) MarshallUtils.unmarshall(result.get_any()[1].getChildren().get(0).toString(), MothersDataSet.class);
+            return result.get_any()[1].getChildren() == null ?
+                    null :
+                    (MothersDataSet) MarshallUtils.unmarshall(result.get_any()[1].getChildren().get(0).toString(), MothersDataSet.class);
         } catch (JAXBException e) {
             throw new MctsInvalidResponseStructureException(String.format("Cannot deserialize mothers data from %s location", stateId), e);
         }
@@ -91,7 +95,9 @@ public class MctsWebServiceFacadeImpl implements MctsWebServiceFacade {
 
         try {
             validAnmAshaDataResponse(result, stateId);
-            return (AnmAshaDataSet) MarshallUtils.unmarshall(result.get_any()[1].getChildren().get(0).toString(), AnmAshaDataSet.class);
+            return result.get_any()[1].getChildren() == null ?
+                    null :
+                    (AnmAshaDataSet) MarshallUtils.unmarshall(result.get_any()[1].getChildren().get(0).toString(), AnmAshaDataSet.class);
         } catch (JAXBException e) {
             throw new MctsInvalidResponseStructureException(String.format("Cannot deserialize anm asha data from %s location", stateId), e);
         }
@@ -114,7 +120,7 @@ public class MctsWebServiceFacadeImpl implements MctsWebServiceFacade {
             throw new MctsInvalidResponseStructureException("Invalid mothers data response for location " + stateId);
         }
 
-        if (data.get_any()[1].getChildren() == null || data.get_any()[1].getChildren().size() < 1) {
+        if (data.get_any()[1].getChildren() != null && data.get_any()[1].getChildren().size() < 1) {
             throw new MctsInvalidResponseStructureException("Invalid mothers data response " + stateId);
         }
     }
@@ -124,7 +130,7 @@ public class MctsWebServiceFacadeImpl implements MctsWebServiceFacade {
             throw new MctsInvalidResponseStructureException("Invalid children data response for location " + stateId);
         }
 
-        if (data.get_any()[1].getChildren() == null || data.get_any()[1].getChildren().size() < 1) {
+        if (data.get_any()[1].getChildren() != null && data.get_any()[1].getChildren().size() < 1) {
             throw new MctsInvalidResponseStructureException("Invalid children data response " + stateId);
         }
     }
@@ -134,7 +140,7 @@ public class MctsWebServiceFacadeImpl implements MctsWebServiceFacade {
             throw new MctsInvalidResponseStructureException("Invalid anm asha data response for location " + stateId);
         }
 
-        if (data.get_any()[1].getChildren() == null || data.get_any()[1].getChildren().size() < 1) {
+        if (data.get_any()[1].getChildren() != null && data.get_any()[1].getChildren().size() < 1) {
             throw new MctsInvalidResponseStructureException("Invalid anm asha data response " + stateId);
         }
     }

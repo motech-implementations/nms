@@ -19,6 +19,10 @@ public final class MctsImportTestHelper {
         return readMctsFile("mcts-anm-asha-data.xml");
     }
 
+    public static String getEmptyAnmAshaResponseData() throws IOException {
+        return readMctsFile("mcts-empty-anm-asha-data.xml");
+    }
+
     private static String readMctsFile(String fileName) throws IOException {
         try (InputStream in = MctsImportTestHelper.class.getResourceAsStream("/mcts/" + fileName)) {
             return IOUtils.toString(in);
