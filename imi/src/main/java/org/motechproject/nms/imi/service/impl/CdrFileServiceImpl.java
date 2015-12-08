@@ -324,7 +324,7 @@ public class CdrFileServiceImpl implements CdrFileService {
                     CallDetailRecord cdr = CdrHelper.csvLineToCdr(line);
 
                     // Save a copy of the CDR into CallDetailRecord for reporting - but no dupes
-                    if (callDetailRecordDataService.countFindByRequestId(cdr.getRequestId()) == 0) {
+                    if (callDetailRecordDataService.findByRequestIdAndCallId(cdr.getRequestId(), cdr.getCallId()).size() == 0) {
                         callDetailRecordDataService.create(cdr);
                         saveCount++;
                     }

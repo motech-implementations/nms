@@ -9,7 +9,7 @@ import javax.jdo.annotations.Index;
  * See NMS API - 4.4.3 CDR Detail File Format
  */
 @Entity(tableName = "nms_imi_cdrs")
-@Index(members = { "requestId" })
+@Index(name = "requestId_callId_composite_idx", members = { "requestId", "callId" })
 public class CallDetailRecord {
 
     @Field
