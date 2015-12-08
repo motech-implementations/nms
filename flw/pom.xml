@@ -5,12 +5,12 @@
     <parent>
         <artifactId>nms</artifactId>
         <groupId>org.motechproject.nms</groupId>
-        <version>1.0.6</version>
+        <version>1.0.7</version>
         <relativePath>../</relativePath>
     </parent>
 
     <artifactId>flw</artifactId>
-    <version>1.0.6</version>
+    <version>1.0.7</version>
     <packaging>bundle</packaging>
     <name>FLW module</name>
 
