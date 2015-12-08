@@ -54,13 +54,13 @@ public interface SubscriberService {
      * Update the mother subscriber with the msisdn and mother object
      * @param msisdn msisdn (to switch to) for new/existing mother
      * @param mother mother object to update
-     * @param lmp the reference date for the mother (LMP)
-     * @return New or update subscription, null if the creation/update fails
+     * @param lmp the reference date for the mother (last menstrual period)
+     * @return New or updated subscription, null if the creation/update fails
      */
     Subscription updateMotherSubscriber(Long msisdn, MctsMother mother, DateTime lmp);
 
     /**
-     * Upda the child subscriber with the msisdn and child object
+     * Update the child subscriber with the msisdn and child object
      * @param msisdn msisdn (to switch to) for new/existing child
      * @param child child object to update
      * @param dob the reference date for the child (date of birth)

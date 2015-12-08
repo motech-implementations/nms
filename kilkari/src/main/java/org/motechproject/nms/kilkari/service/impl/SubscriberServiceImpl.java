@@ -239,10 +239,10 @@ public class SubscriberServiceImpl implements SubscriberService {
                     subscriberByMsisdn.setLastMenstrualPeriod(lmp);
                     subscriberByMsisdn.getMother().deepCopyFrom(motherUpdate);
                     update(subscriberByMsisdn);
-                    if (subscription != null) {
+                    if (subscription != null) { // update existing active subscription
                         subscriptionService.updateStartDate(subscription, lmp);
                         return subscriptionService.getActiveSubscription(subscriberByMctsId, pack.getType());
-                    } else {
+                    } else {    // just create a new subscription
                         return subscriptionService.createSubscription(msisdn, language, circle, pack, SubscriptionOrigin.MCTS_IMPORT);
                     }
                 } else {    // msisdn is already taken by another beneficiary
@@ -327,10 +327,10 @@ public class SubscriberServiceImpl implements SubscriberService {
                     subscriberByMsisdn.setDateOfBirth(dob);
                     subscriberByMsisdn.getChild().deepCopyFrom(childUpdate);
                     update(subscriberByMsisdn);
-                    if (subscription != null) {
+                    if (subscription != null) {     // update start date on existing active subscription
                         subscriptionService.updateStartDate(subscription, dob);
                         return subscriptionService.getActiveSubscription(subscriberByMctsId, pack.getType());
-                    } else {
+                    } else {    // just create a new subscription
                         return subscriptionService.createSubscription(msisdn, language, circle, pack, SubscriptionOrigin.MCTS_IMPORT);
                     }
 

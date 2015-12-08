@@ -23,6 +23,7 @@ import javax.xml.bind.JAXBException;
 import javax.xml.rpc.ServiceException;
 import java.net.URL;
 import java.rmi.RemoteException;
+import java.util.List;
 
 @Service("mctsWebServiceFacade")
 public class MctsWebServiceFacadeImpl implements MctsWebServiceFacade {
@@ -51,9 +52,10 @@ public class MctsWebServiceFacadeImpl implements MctsWebServiceFacade {
 
         try {
             validChildrenDataResponse(result, stateId);
-            return (result.get_any()[1].getChildren() == null) ?
+            List childrenResultFeed = result.get_any()[1].getChildren();
+            return (childrenResultFeed == null) ?
                 null :
-                (ChildrenDataSet) MarshallUtils.unmarshall(result.get_any()[1].getChildren().get(0).toString(), ChildrenDataSet.class);
+                (ChildrenDataSet) MarshallUtils.unmarshall(childrenResultFeed.get(0).toString(), ChildrenDataSet.class);
         } catch (JAXBException e) {
             throw new MctsInvalidResponseStructureException(String.format("Cannot deserialize children data from %s location", stateId), e);
         }
@@ -73,9 +75,10 @@ public class MctsWebServiceFacadeImpl implements MctsWebServiceFacade {
 
         try {
             validMothersDataResponse(result, stateId);
-            return result.get_any()[1].getChildren() == null ?
+            List motherResultFeed = result.get_any()[1].getChildren();
+            return (motherResultFeed == null) ?
                     null :
-                    (MothersDataSet) MarshallUtils.unmarshall(result.get_any()[1].getChildren().get(0).toString(), MothersDataSet.class);
+                    (MothersDataSet) MarshallUtils.unmarshall(motherResultFeed.get(0).toString(), MothersDataSet.class);
         } catch (JAXBException e) {
             throw new MctsInvalidResponseStructureException(String.format("Cannot deserialize mothers data from %s location", stateId), e);
         }
@@ -95,9 +98,10 @@ public class MctsWebServiceFacadeImpl implements MctsWebServiceFacade {
 
         try {
             validAnmAshaDataResponse(result, stateId);
-            return result.get_any()[1].getChildren() == null ?
+            List ashaResultFeed = result.get_any()[1].getChildren();
+            return (ashaResultFeed == null) ?
                     null :
-                    (AnmAshaDataSet) MarshallUtils.unmarshall(result.get_any()[1].getChildren().get(0).toString(), AnmAshaDataSet.class);
+                    (AnmAshaDataSet) MarshallUtils.unmarshall(ashaResultFeed.get(0).toString(), AnmAshaDataSet.class);
         } catch (JAXBException e) {
             throw new MctsInvalidResponseStructureException(String.format("Cannot deserialize anm asha data from %s location", stateId), e);
         }

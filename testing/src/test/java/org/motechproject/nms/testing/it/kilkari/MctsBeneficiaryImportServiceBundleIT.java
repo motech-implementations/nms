@@ -1241,7 +1241,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     }
 
     /*
-     * To verify mother MCTS upload is rejected with invalid district id
+     * To verify child MCTS upload is rejected with invalid district id
      */
     @Test
     public void verifyFT527() throws Exception {

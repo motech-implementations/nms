@@ -166,7 +166,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         Boolean death = (Boolean) record.get(KilkariConstants.DEATH);
 
         // validate msisdn
-        if (!testMsisdn(msisdn, SubscriptionPackType.PREGNANCY)) {
+        if (!validateMsisdn(msisdn, SubscriptionPackType.PREGNANCY)) {
             return false;
         }
 
@@ -226,7 +226,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         Boolean death = (Boolean) record.get(KilkariConstants.DEATH);
 
         // validate msisdn
-        if (!testMsisdn(msisdn, SubscriptionPackType.CHILD)) {
+        if (!validateMsisdn(msisdn, SubscriptionPackType.CHILD)) {
             return false;
         }
 
@@ -276,7 +276,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         return true;
     }
 
-    private boolean testMsisdn(Long msisdn, SubscriptionPackType packType) {
+    private boolean validateMsisdn(Long msisdn, SubscriptionPackType packType) {
         if (msisdn == null) {
             subscriptionErrorDataService.create(
                     new SubscriptionError(-1, SubscriptionRejectionReason.MISSING_MSISDN, packType));
