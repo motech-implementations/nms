@@ -1209,35 +1209,16 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     }
 
     /*
-     * To verify mother MCTS upload is rejected when mandatory parameter state is missing.
-     *
-     * https://applab.atlassian.net/browse/NMS-228
-     */
-    @Test
-    public void verifyFT524() throws Exception {
-        DateTime lmp = DateTime.now().minusDays(30);
-        String lmpString = getDateString(lmp);
-        //state id is missing
-        Reader reader = createMotherDataReader("\t3\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t\t" +
-                lmpString + "\t\t\t");
-        mctsBeneficiaryImportService.importChildData(reader);
-
-        assertNoSubscriber(9439986187L);
-        assertSubscriptionError(9439986187L, SubscriptionPackType.CHILD, SubscriptionRejectionReason.INVALID_LOCATION);
-    }
-
-    /*
-     * To verify mother MCTS upload is rejected when mandatory parameter district is missing. 
+     * To verify mother MCTS upload is rejected when stateId is missing
      *
      * https://applab.atlassian.net/browse/NMS-228
      */
     @Test
     public void verifyFT525() throws Exception {
-        DateTime lmp = DateTime.now().minusDays(30);
-        String lmpString = getDateString(lmp);
-        //district id is missing
-        Reader reader = createMotherDataReader("21\t\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t\t" +
-                lmpString + "\t\t\t");
+        String dobString = getDateString(DateTime.now().minusDays(30));
+        //state id is missing
+        Reader reader = createChildDataReader("\t6\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t\t9439986187\t"
+                + dobString + "\t");
         mctsBeneficiaryImportService.importChildData(reader);
 
         assertNoSubscriber(9439986187L);
@@ -1245,15 +1226,14 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     }
 
     /*
-     * To verify mother MCTS upload is rejected when mandatory parameter state is having invalid value. 
+     * To verify mother MCTS upload is rejected with invalid state id
      */
     @Test
     public void verifyFT526() throws Exception {
-        DateTime lmp = DateTime.now().minusDays(30);
-        String lmpString = getDateString(lmp);
+        String dobString = getDateString(DateTime.now().minusDays(30));
         //state id with invalid value
-        Reader reader = createMotherDataReader("31\t3\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t\t" +
-                lmpString + "\t\t\t");
+        Reader reader = createChildDataReader("31\t6\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t\t9439986187\t"
+                + dobString + "\t");
         mctsBeneficiaryImportService.importChildData(reader);
 
         assertNoSubscriber(9439986187L);
@@ -1261,35 +1241,16 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     }
 
     /*
-     * To verify mother MCTS upload is rejected when mandatory parameter state is having invalid value. 
+     * To verify child MCTS upload is rejected with invalid district id
      */
     @Test
     public void verifyFT527() throws Exception {
-        DateTime lmp = DateTime.now().minusDays(30);
-        String lmpString = getDateString(lmp);
-        Reader reader = createMotherDataReader("21\t6\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t\t" +
-                lmpString + "\t\t\t");
+        String dobString = getDateString(DateTime.now().minusDays(30));
+        Reader reader = createChildDataReader("21\t6\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t\t9439986187\t"
+                + dobString + "\t");
         //district id with invalid value
         mctsBeneficiaryImportService.importChildData(reader);
 
-        assertNoSubscriber(9439986187L);
-        assertSubscriptionError(9439986187L, SubscriptionPackType.CHILD, SubscriptionRejectionReason.INVALID_LOCATION);
-    }
-
-    /*
-     * To verify child MCTS upload is rejected when mandatory parameter state is missing.
-     *
-     * https://applab.atlassian.net/browse/NMS-228
-     */
-    @Test
-    public void verifyFT528() throws Exception {
-        DateTime dob = DateTime.now();
-        String dobString = getDateString(dob);
-        //state id is missing.
-        Reader reader = createChildDataReader("\t3\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t\t9439986187\t\t" + dobString);
-        mctsBeneficiaryImportService.importChildData(reader);
-
-        //subscriber should not be created and rejected entry should be in nms_subscription_errors with reason 'INVALID_DOB'.
         assertNoSubscriber(9439986187L);
         assertSubscriptionError(9439986187L, SubscriptionPackType.CHILD, SubscriptionRejectionReason.INVALID_LOCATION);
     }
@@ -1308,7 +1269,6 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
                 + dobString + "\t");
         mctsBeneficiaryImportService.importChildData(reader);
 
-        //subscriber should not be created and rejected entry should be in nms_subscription_errors with reason 'INVALID_DOB'.
         assertNoSubscriber(9439986187L);
         assertSubscriptionError(9439986187L, SubscriptionPackType.CHILD, SubscriptionRejectionReason.INVALID_LOCATION);
     }
@@ -1325,7 +1285,6 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
                 + dobString + "\t");
         mctsBeneficiaryImportService.importChildData(reader);
 
-        //subscriber should not be created and rejected entry should be in nms_subscription_errors with reason 'INVALID_DOB'.
         assertNoSubscriber(9439986187L);
         assertSubscriptionError(9439986187L, SubscriptionPackType.CHILD, SubscriptionRejectionReason.INVALID_LOCATION);
     }
@@ -1342,7 +1301,6 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
                 + dobString + "\t");
         mctsBeneficiaryImportService.importChildData(reader);
 
-        //subscriber should not be created and rejected entry should be in nms_subscription_errors with reason 'INVALID_DOB'.
         assertNoSubscriber(9439986187L);
         assertSubscriptionError(9439986187L, SubscriptionPackType.CHILD, SubscriptionRejectionReason.INVALID_LOCATION);
     }

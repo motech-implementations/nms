@@ -137,9 +137,9 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         try {
             MothersDataSet mothersDataSet = mctsWebServiceFacade.getMothersData(referenceDate, referenceDate, endpoint, stateId);
             if (mothersDataSet == null || mothersDataSet.getRecords() == null) {
-                String error = String.format("No mother data set received from MCTS for %s state", stateName);
-                LOGGER.debug(error);
-                mctsImportAuditDataService.create(new MctsImportAudit(referenceDate, MctsUserType.MOTHER, stateCode, stateName, 0, 0, error));
+                String warning = String.format("No mother data set received from MCTS for %s state", stateName);
+                LOGGER.warn(warning);
+                mctsImportAuditDataService.create(new MctsImportAudit(referenceDate, MctsUserType.MOTHER, stateCode, stateName, 0, 0, warning));
                 return;
             }
             LOGGER.info("Received {} mother records from MCTS for {} state", sizeNullSafe(mothersDataSet.getRecords()), stateName);
@@ -222,9 +222,9 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
 
             ChildrenDataSet childrenDataSet = mctsWebServiceFacade.getChildrenData(referenceDate, referenceDate, endpoint, stateId);
             if (childrenDataSet == null || childrenDataSet.getRecords() == null) {
-                String error = String.format("No child data set received from MCTS for %s state", stateName);
-                LOGGER.debug(error);
-                mctsImportAuditDataService.create(new MctsImportAudit(referenceDate, MctsUserType.CHILD, stateCode, stateName, 0, 0, error));
+                String warning = String.format("No child data set received from MCTS for %s state", stateName);
+                LOGGER.warn(warning);
+                mctsImportAuditDataService.create(new MctsImportAudit(referenceDate, MctsUserType.CHILD, stateCode, stateName, 0, 0, warning));
                 return;
             }
             LOGGER.info("Received {} children records from MCTS for {} state", sizeNullSafe(childrenDataSet.getRecords()), stateName);
@@ -306,9 +306,9 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         try {
             AnmAshaDataSet anmAshaDataSet = mctsWebServiceFacade.getAnmAshaData(referenceDate, referenceDate, endpoint, stateId);
             if (anmAshaDataSet == null || anmAshaDataSet.getRecords() == null) {
-                String error = String.format("No ANM Asha data set received from MCTS for %s state", stateName);
-                LOGGER.debug(error, stateName);
-                mctsImportAuditDataService.create(new MctsImportAudit(referenceDate, MctsUserType.ASHA, stateCode, stateName, 0, 0, error));
+                String warning = String.format("No ANM Asha data set received from MCTS for %s state", stateName);
+                LOGGER.warn(warning, stateName);
+                mctsImportAuditDataService.create(new MctsImportAudit(referenceDate, MctsUserType.ASHA, stateCode, stateName, 0, 0, warning));
                 return;
             }
             LOGGER.info("Received {} ASHA records from MCTS for {} state", sizeNullSafe(anmAshaDataSet.getRecords()), stateName);

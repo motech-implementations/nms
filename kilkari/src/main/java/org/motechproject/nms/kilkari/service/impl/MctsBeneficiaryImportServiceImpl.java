@@ -165,6 +165,18 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         Boolean stillBirth = (Boolean) record.get(KilkariConstants.STILLBIRTH);
         Boolean death = (Boolean) record.get(KilkariConstants.DEATH);
 
+        // validate msisdn
+        if (!validateMsisdn(msisdn, SubscriptionPackType.PREGNANCY)) {
+            return false;
+        }
+
+        // validate lmp date. We do not sanitize for lmp in the future to be in sync with MCTS data
+        // NOTE: getId is a way to see if this is a new user. We only accept new users if they
+        // have 12 weeks left in the pack. For existing users, their lmp could be updated to an earlier date
+        if (mother.getId() == null && !validateReferenceDate(lmp, SubscriptionPackType.PREGNANCY, msisdn)) {
+            return false;
+        }
+
         // validate and set location
         try {
             MctsBeneficiaryUtils.setLocationFields(locationService.getLocations(record), mother);
@@ -175,16 +187,10 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             return false;
         }
 
-        if (!validateLMP(lmp, msisdn)) {
-            return false;
-        }
-
         mother.setName(name);
         mother.setDateOfBirth(motherDOB);
 
-        Subscription subscription = subscriberService.updateOrCreateMctsSubscriber(mother, msisdn, lmp,
-                SubscriptionPackType.PREGNANCY);
-
+        Subscription subscription = subscriberService.updateMotherSubscriber(msisdn, mother, lmp);
         // We rejected the update/create for the subscriber
         if (subscription == null) {
             return false;
@@ -205,7 +211,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         return true;
     }
 
-    @Override
+    @Override // NO CHECKSTYLE Cyclomatic Complexity
     @Transactional
     public boolean importChildRecord(Map<String, Object> record) {
         if (childPack == null) {
@@ -219,26 +225,32 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         DateTime dob = (DateTime) record.get(KilkariConstants.DOB);
         Boolean death = (Boolean) record.get(KilkariConstants.DEATH);
 
+        // validate msisdn
+        if (!validateMsisdn(msisdn, SubscriptionPackType.CHILD)) {
+            return false;
+        }
+
+        // validate dob. We do not sanitize for dob in the future to be in sync with MCTS data
+        // NOTE: getId is a way to check for new user. We only accept new children if they have 12 weeks left
+        // in the pack. Existing children could have their dob udpated to an earlier date
+        if (child.getId() == null && !validateReferenceDate(dob, SubscriptionPackType.CHILD, msisdn)) {
+            return false;
+        }
+
         // validate and set location
         try {
             MctsBeneficiaryUtils.setLocationFields(locationService.getLocations(record), child);
         } catch (InvalidLocationException le) {
             LOGGER.error(le.toString());
-            subscriptionErrorDataService.create(new SubscriptionError(msisdn, SubscriptionRejectionReason.INVALID_LOCATION,
-                    SubscriptionPackType.CHILD, le.getMessage()));
-            return false;
-        }
-
-        if (!validateDOB(dob, msisdn)) {
+            subscriptionErrorDataService.create(new SubscriptionError(msisdn, child.getBeneficiaryId(),
+                    SubscriptionRejectionReason.INVALID_LOCATION, SubscriptionPackType.CHILD, le.getMessage()));
             return false;
         }
 
         child.setName(name);
         child.setMother(mother);
 
-        Subscription childSubscription = subscriberService.updateOrCreateMctsSubscriber(child, msisdn, dob,
-                SubscriptionPackType.CHILD);
-
+        Subscription childSubscription = subscriberService.updateChildSubscriber(msisdn, child, dob);
         // child subscription create/update was rejected
         if (childSubscription == null) {
             return false;
@@ -264,33 +276,43 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         return true;
     }
 
-    private boolean validateLMP(DateTime lmp, Long msisdn) {
-        if (lmp == null) {
+    private boolean validateMsisdn(Long msisdn, SubscriptionPackType packType) {
+        if (msisdn == null) {
             subscriptionErrorDataService.create(
-                    new SubscriptionError(msisdn, SubscriptionRejectionReason.MISSING_LMP, SubscriptionPackType.PREGNANCY));
-            return false;
-        }
-        String referenceDateValidationError = pregnancyPack.isReferenceDateValidForPack(lmp);
-        if (!referenceDateValidationError.isEmpty()) {
-            subscriptionErrorDataService.create(
-                    new SubscriptionError(msisdn, SubscriptionRejectionReason.INVALID_LMP, SubscriptionPackType.PREGNANCY, referenceDateValidationError));
+                    new SubscriptionError(-1, SubscriptionRejectionReason.MISSING_MSISDN, packType));
             return false;
         }
 
         return true;
     }
 
-    private boolean validateDOB(DateTime dob, Long msisdn) {
-        if (dob == null) {
+    private boolean validateReferenceDate(DateTime referenceDate, SubscriptionPackType packType, Long msisdn) {
+
+
+        if (referenceDate == null) {
             subscriptionErrorDataService.create(
-                    new SubscriptionError(msisdn, SubscriptionRejectionReason.MISSING_DOB, SubscriptionPackType.CHILD));
+                    new SubscriptionError(msisdn,
+                            (packType == SubscriptionPackType.PREGNANCY) ?
+                                    SubscriptionRejectionReason.MISSING_LMP :
+                                    SubscriptionRejectionReason.MISSING_DOB,
+                            packType));
             return false;
         }
-        String referenceDateValidationError = childPack.isReferenceDateValidForPack(dob);
-        if (!referenceDateValidationError.isEmpty()) {
-            subscriptionErrorDataService.create(
-                    new SubscriptionError(msisdn, SubscriptionRejectionReason.INVALID_DOB, SubscriptionPackType.CHILD, referenceDateValidationError));
-            return false;
+
+        if (packType == SubscriptionPackType.PREGNANCY) {
+            String referenceDateValidationError = pregnancyPack.isReferenceDateValidForPack(referenceDate);
+            if (!referenceDateValidationError.isEmpty()) {
+                subscriptionErrorDataService.create(
+                        new SubscriptionError(msisdn, SubscriptionRejectionReason.INVALID_LMP, SubscriptionPackType.PREGNANCY, referenceDateValidationError));
+                return false;
+            }
+        } else { // childPack
+            String referenceDateValidationError = childPack.isReferenceDateValidForPack(referenceDate);
+            if (!referenceDateValidationError.isEmpty()) {
+                subscriptionErrorDataService.create(
+                        new SubscriptionError(msisdn, SubscriptionRejectionReason.INVALID_DOB, SubscriptionPackType.CHILD, referenceDateValidationError));
+                return false;
+            }
         }
 
         return true;

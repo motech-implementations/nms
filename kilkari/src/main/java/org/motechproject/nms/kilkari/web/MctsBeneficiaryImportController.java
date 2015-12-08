@@ -76,7 +76,7 @@ public class MctsBeneficiaryImportController {
             throw e;
         } catch (Exception e) {
             logError(csvFile.getOriginalFilename(), "/kilkari/mother/import", e);
-            //todo: why are we not throwing here and throwing in importChildData below?
+            throw new CsvImportException("An error occurred during CSV import", e);
         }
         LOGGER.debug("importMotherData() END ({})", count > 0 ? timer.frequency(count) : timer.time());
     }

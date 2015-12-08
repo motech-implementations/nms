@@ -324,7 +324,7 @@ public class CdrFileServiceImpl implements CdrFileService {
                     CallDetailRecord cdr = CdrHelper.csvLineToCdr(line);
 
                     // Save a copy of the CDR into CallDetailRecord for reporting - but no dupes
-                    if (callDetailRecordDataService.countFindByRequestId(cdr.getRequestId()) == 0) {
+                    if (callDetailRecordDataService.findByRequestIdAndCallId(cdr.getRequestId(), cdr.getCallId()).size() == 0) {
                         callDetailRecordDataService.create(cdr);
                         saveCount++;
                     }
@@ -390,8 +390,8 @@ public class CdrFileServiceImpl implements CdrFileService {
     }
 
 
-    private void dipatchChunk(String file, String name, List<CallSummaryRecordDto> csrDtos, int chunkCount,
-                              int csrCount) {
+    private void dispatchChunk(String file, String name, List<CallSummaryRecordDto> csrDtos, int chunkCount,
+                               int csrCount) {
         ObjectMapper mapper = new ObjectMapper();
         String chunk;
         try {
@@ -628,7 +628,7 @@ public class CdrFileServiceImpl implements CdrFileService {
                         chunk.add(csr.toDto());
                         if (chunk.size() >= chunkSize || lineNumber >= lineCount) {
                             String chunkName = String.format("Chunk%d/%d", chunkNumber, chunkCount);
-                            dipatchChunk(fileName, chunkName, chunk, chunkCount, lineCount);
+                            dispatchChunk(fileName, chunkName, chunk, chunkCount, lineCount);
                             upsertChunkAuditRecord(fileName, chunkName, chunk.size());
 
                             LOGGER.info("Dispatched {} - {}", chunkName, chunkTimer.frequency(chunkNumber));

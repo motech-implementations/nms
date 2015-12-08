@@ -1,7 +1,6 @@
 package org.motechproject.nms.kilkari.service.impl;
 
 import org.joda.time.DateTime;
-import org.motechproject.mds.service.MotechDataService;
 import org.motechproject.nms.csv.exception.CsvImportDataException;
 import org.motechproject.nms.csv.utils.CsvImporterBuilder;
 import org.motechproject.nms.csv.utils.CsvMapImporter;
@@ -9,19 +8,12 @@ import org.motechproject.nms.csv.utils.GetInstanceByString;
 import org.motechproject.nms.csv.utils.GetString;
 import org.motechproject.nms.kilkari.domain.MctsBeneficiary;
 import org.motechproject.nms.kilkari.domain.MctsMother;
-import org.motechproject.nms.kilkari.domain.Subscriber;
-import org.motechproject.nms.kilkari.domain.SubscriptionError;
-import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
-import org.motechproject.nms.kilkari.domain.SubscriptionRejectionReason;
 import org.motechproject.nms.kilkari.repository.MctsChildDataService;
 import org.motechproject.nms.kilkari.repository.MctsMotherDataService;
-import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
+import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryUpdateService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor;
-import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
-import org.motechproject.nms.region.exception.InvalidLocationException;
-import org.motechproject.nms.region.service.LocationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,12 +35,10 @@ import java.util.Map;
 @Service("mctsBeneficiaryUpdateService")
 public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateService {
 
-    private SubscriberService subscriberService;
-    private SubscriptionErrorDataService subscriptionErrorDataService;
-    private LocationService locationService;
     private MctsMotherDataService mctsMotherDataService;
     private MctsChildDataService mctsChildDataService;
     private MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor;
+    private MctsBeneficiaryImportService mctsBeneficiaryImportService;
 
     private static final String SR_NO = "Sr No";
     private static final String MCTS_ID = "MCTS ID";
@@ -60,16 +50,15 @@ public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateSe
     private static final Logger LOGGER = LoggerFactory.getLogger(MctsBeneficiaryUpdateServiceImpl.class);
 
     @Autowired
-    public MctsBeneficiaryUpdateServiceImpl(SubscriberService subscriberService,
-                                            SubscriptionErrorDataService subscriptionErrorDataService,
-                                            LocationService locationService, MctsMotherDataService mctsMotherDataService,
-                                            MctsChildDataService mctsChildDataService, MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor) {
-        this.subscriberService = subscriberService;
-        this.subscriptionErrorDataService = subscriptionErrorDataService;
-        this.locationService = locationService;
+    public MctsBeneficiaryUpdateServiceImpl(MctsMotherDataService mctsMotherDataService,
+                                            MctsChildDataService mctsChildDataService,
+                                            MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor,
+                                            MctsBeneficiaryImportService mctsBeneficiaryImportService) {
+
         this.mctsMotherDataService = mctsMotherDataService;
         this.mctsChildDataService = mctsChildDataService;
         this.mctsBeneficiaryValueProcessor = mctsBeneficiaryValueProcessor;
+        this.mctsBeneficiaryImportService = mctsBeneficiaryImportService;
     }
 
 
@@ -81,11 +70,13 @@ public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateSe
                 .setProcessorMapping(getProcessorMapping())
                 .setPreferences(CsvPreference.STANDARD_PREFERENCE)
                 .createAndOpen(bufferedReader);
+        int importCount = 0;
         try {
             Map<String, Object> record;
             while (null != (record = csvImporter.read())) {
-
-                processRecord(record);
+                if (processRecord(record)) {
+                    importCount++;
+                }
             }
         } catch (ConstraintViolationException e) {
             throw new CsvImportDataException(MctsBeneficiaryUtils.createErrorMessage(
@@ -94,6 +85,7 @@ public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateSe
             throw new CsvImportDataException(MctsBeneficiaryUtils.createErrorMessage(
                     "Invalid number", csvImporter.getRowNumber()), e);
         }
+        LOGGER.info("Imported {} beneficiaries", importCount);
     }
 
     /**
@@ -112,14 +104,13 @@ public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateSe
      *    allowed.
      *
      * @param record Data fields corresponding to one row of the CSV file
+     * @return true if the record was successfully updated
      */
-    private void processRecord(Map<String, Object> record) { //NO CHECKSTYLE CyclomaticComplexity
+    private boolean processRecord(Map<String, Object> record) { //NO CHECKSTYLE CyclomaticComplexity
 
-        // First, find the subscriber corresponding to the beneficiary and determine its type (mother/child)
-
+        // Step 1: find the beneficiary
         String mctsId = (String) record.get(MCTS_ID);
         String stateMctsId = (String) record.get(STATE_MCTS_ID);
-        Long newMsisdn = (Long) record.get(MSISDN);
 
         MctsBeneficiary beneficiary = beneficiaryFromId(mctsId, stateMctsId);
         if (beneficiary == null) {
@@ -127,68 +118,40 @@ public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateSe
                     mctsId, STATE_MCTS_ID, stateMctsId));
         }
 
-        Subscriber subscriber = subscriberService.getSubscriberByBeneficiary(beneficiary);
-        SubscriptionPackType packType;
-        DateTime newReferenceDate;
-        MotechDataService beneficiaryDataService;
+        // Step 1.5: remap the headers to use standard field names from MCTS
+        mapUpdateHeaders(record, beneficiary);
 
-        if (beneficiary instanceof MctsMother) {
-            packType = SubscriptionPackType.PREGNANCY;
-            newReferenceDate = (DateTime) record.get(LMP);
-            beneficiaryDataService = mctsMotherDataService;
-        } else {
-            packType = SubscriptionPackType.CHILD;
-            newReferenceDate = (DateTime) record.get(DOB);
-            beneficiaryDataService = mctsChildDataService;
+        // Step 2: Re-route and call the import service for the update
+        return (beneficiary instanceof MctsMother) ?
+                mctsBeneficiaryImportService.importMotherRecord(record) :
+                mctsBeneficiaryImportService.importChildRecord(record);
+    }
+
+    private Map<String, Object> mapUpdateHeaders(Map<String, Object> updates, MctsBeneficiary beneficiary) {
+        if (updates.containsKey(MSISDN)) {
+            updates.put(KilkariConstants.MSISDN, updates.get(MSISDN));
         }
 
-        // Second, update the beneficiary's location if new location fields are provided
-
-        if (containsLocationUpdate(record)) {
-            // validate and set location
-            try {
-                MctsBeneficiaryUtils.setLocationFields(locationService.getLocations(record), beneficiary);
-                beneficiaryDataService.update(beneficiary);
-            } catch (InvalidLocationException le) {
-                LOGGER.error(le.toString());
-                subscriptionErrorDataService.create(new SubscriptionError(
-                        beneficiary.getBeneficiaryId(),
-                        SubscriptionRejectionReason.INVALID_LOCATION,
-                        packType,
-                        le.getMessage()));
-               return;
-            }
+        if (updates.containsKey(DOB)) {
+            updates.put(KilkariConstants.DOB, updates.get(DOB));
         }
 
-        // Third, update the beneficiary's subscription date/status based on the new reference date if provided
-
-        // if subscriber is null (and we have the necessary info), or we have a new reference date, create/update the
-        // subscription for this beneficiary
-        if ((subscriber == null) && (newMsisdn != null) && (newReferenceDate != null)) {
-            // create a new subscription if the beneficiary's LMP/DOB indicates that a subscription should be created
-
-            subscriberService.updateOrCreateMctsSubscriber(beneficiary, newMsisdn, newReferenceDate, packType);
-            return;
-        }
-        if (newReferenceDate != null) {
-            subscriberService.updateOrCreateMctsSubscriber(beneficiary, subscriber.getCallingNumber(), newReferenceDate, packType);
+        if (updates.containsKey(LMP)) {
+            updates.put(KilkariConstants.LMP, updates.get(LMP));
         }
 
-        // Finally, update the beneficiary's MSISDN if a new one is provided
-
-        if (newMsisdn != null) {
-            try {
-                subscriberService.updateMsisdnForSubscriber(subscriber, beneficiary, newMsisdn);
-            } catch (IllegalStateException e) {
-                subscriptionErrorDataService.create(new SubscriptionError(newMsisdn,
-                        SubscriptionRejectionReason.ALREADY_SUBSCRIBED, packType, e.getMessage()));
-            }
+        if (updates.containsKey(MCTS_ID)) {
+            updates.put(KilkariConstants.BENEFICIARY_ID, beneficiary);
         }
 
+        return updates;
     }
 
     private Map<String, CellProcessor> getProcessorMapping() {
         Map<String, CellProcessor> mapping = new HashMap<>();
+
+        MctsBeneficiaryUtils.getBeneficiaryLocationMapping(mapping);
+
         mapping.put(SR_NO, new Optional(new GetString()));
         mapping.put(MCTS_ID, new Optional(new GetString()));
         mapping.put(STATE_MCTS_ID, new Optional(new GetString()));
@@ -226,7 +189,7 @@ public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateSe
             beneficiary = mctsChildDataService.findByBeneficiaryId(mctsId);
         }
 
-        // then try the State ID
+        // then try the State ID // What on earth is a stateMctsId??
         if (beneficiary == null) {
             beneficiary = mctsMotherDataService.findByBeneficiaryId(stateMctsId);
         }
@@ -236,11 +199,4 @@ public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateSe
 
         return beneficiary;
     }
-
-    private boolean containsLocationUpdate(Map<String, Object> record) {
-        return ((record.get(KilkariConstants.STATE_ID) != null) || (record.get(KilkariConstants.DISTRICT_ID) != null) || (record.get(KilkariConstants.TALUKA_ID) != null) || //NO CHECKSTYLE BooleanExpressionComplexity
-                (record.get(KilkariConstants.HEALTH_BLOCK_ID) != null) || (record.get(KilkariConstants.PHC_ID) != null) || (record.get(KilkariConstants.SUB_CENTRE_ID) != null) ||
-                (record.get(KilkariConstants.CENSUS_VILLAGE_ID) != null));
-    }
-
 }

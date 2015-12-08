@@ -33,4 +33,16 @@ public class MctsChild extends MctsBeneficiary {
     public void setMother(MctsMother mother) {
         this.mother = mother;
     }
+
+    public void deepCopyFrom(MctsChild other) {
+        setName(other.getName());
+        setMother(other.getMother());
+        setState(other.getState());
+        setDistrict(other.getDistrict());
+        setTaluka(other.getTaluka());
+        setHealthBlock(other.getHealthBlock());
+        setHealthFacility(other.getHealthFacility());
+        setHealthSubFacility(other.getHealthSubFacility());
+        setVillage(other.getVillage());
+    }
 }

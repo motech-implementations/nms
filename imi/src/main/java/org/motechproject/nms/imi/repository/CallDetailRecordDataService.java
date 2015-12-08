@@ -8,8 +8,8 @@ import org.motechproject.nms.imi.domain.CallDetailRecord;
 import java.util.List;
 
 public interface CallDetailRecordDataService  extends MotechDataService<CallDetailRecord> {
-    @Lookup
-    List<CallDetailRecord> findByRequestId(@LookupField(name = "requestId") String requestId);
 
-    long countFindByRequestId(@LookupField(name = "requestId") String requestId);
+    @Lookup
+    List<CallDetailRecord> findByRequestIdAndCallId(@LookupField(name = "requestId") String requestId,
+                                                    @LookupField(name = "callId") String callId);
 }

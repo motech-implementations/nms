@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.net.URL;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 
 @RunWith(PaxExam.class)
@@ -90,5 +91,23 @@ public class MctsWebServiceFacadeBundleIT extends BasePaxIT {
         assertEquals("Sample Name 1", result.getRecords().get(0).getName());
         assertEquals("Sample Name 2", result.getRecords().get(1).getName());
         assertEquals("Sample Name 3", result.getRecords().get(2).getName());
+    }
+
+    @Test
+    public void shouldDeserializeEmptyAnmAshanDataFromSoapResponse() throws IOException {
+        String response = MctsImportTestHelper.getEmptyAnmAshaResponseData();
+
+        SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
+        String url = simpleServer.start("mctsEndpoint", 200, response);
+
+        URL endpoint = new URL(url);
+        LocalDate referenceDate = LocalDate.now().minusDays(1);
+
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        Thread.currentThread().setContextClassLoader(mctsWebServiceFacade.getClass().getClassLoader());
+        AnmAshaDataSet result = mctsWebServiceFacade.getAnmAshaData(referenceDate, referenceDate, endpoint, 21l);
+        Thread.currentThread().setContextClassLoader(cl);
+
+        assertNull(result);
     }
 }
