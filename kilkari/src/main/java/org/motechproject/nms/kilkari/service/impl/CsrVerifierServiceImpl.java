@@ -20,6 +20,7 @@ public class CsrVerifierServiceImpl implements CsrVerifierService {
     private static final String CSR_VERIFIER_CACHE_EVICT_MESSAGE = "nms.kk.cache.evict.csv_verifier";
     private static final String CIRCLE_CACHE_EVICT_MESSAGE = "nms.region.cache.evict.language";
     private static final String LANGUAGE_CACHE_EVICT_MESSAGE = "nms.region.cache.evict.language";
+    private static final String CIRCLE_99 = "99";
 
     private CircleService circleService;
     private LanguageService languageService;
@@ -35,6 +36,9 @@ public class CsrVerifierServiceImpl implements CsrVerifierService {
     private void verifyCircle(String circleName) {
         if (circleName == null) {
             throw new InvalidCallRecordDataException("Missing circleName");
+        }
+        if (CIRCLE_99.equals(circleName)) {
+            return;
         }
         if (!circleService.circleNameExists(circleName)) {
             throw new InvalidCallRecordDataException(String.format("Invalid circleName: %s", circleName));

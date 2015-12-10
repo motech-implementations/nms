@@ -363,23 +363,16 @@ public class TargetFileServiceImpl implements TargetFileService {
 
         DayOfTheWeek dow = DayOfTheWeek.fromDateTime(timestamp);
         int recordsWritten = 0;
-        int recordsRead = 0;
-        int count = 0;
         Long offset = 0L;
         Timer timer = new Timer("overall fresh call", "overall fresh calls");
         do {
-            Timer queryTimer = new Timer();
-            List<Subscription> subscriptions = subscriptionService.findActiveSubscriptionsForDay(dow, offset,
-                    maxQueryBlock);
-            LOGGER.debug(String.format("findActiveSubscriptionsForDay(%s, %d, %d) %s", dow, offset, maxQueryBlock,
-                    queryTimer.time()));
+            List<Subscription> subscriptions = subscriptionService.findActiveSubscriptionsForDay(dow, offset, maxQueryBlock);
 
             if (subscriptions.size() == 0) {
                 break;
             }
 
             Timer rowTimer = new Timer("file row", "file rows");
-            recordsRead += subscriptions.size();
             for (Subscription subscription : subscriptions) {
 
                 offset = subscription.getId();
@@ -405,9 +398,8 @@ public class TargetFileServiceImpl implements TargetFileService {
                             writer);
 
                     recordsWritten++;
-                    count++;
-                    if (count % PROGRESS_INTERVAL == 0) {
-                        LOGGER.debug(WROTE, rowTimer.frequency(count));
+                    if (recordsWritten % PROGRESS_INTERVAL == 0) {
+                        LOGGER.debug(WROTE, rowTimer.frequency(recordsWritten));
                     }
 
                 } catch (IllegalStateException se) {
@@ -415,11 +407,13 @@ public class TargetFileServiceImpl implements TargetFileService {
                 }
             }
 
-            LOGGER.debug(WROTE, timer.frequency(count));
+            if (recordsWritten % PROGRESS_INTERVAL != 0) {
+                LOGGER.debug(WROTE, rowTimer.frequency(recordsWritten));
+            }
 
         } while (true);
 
-        LOGGER.info(WROTE, timer.frequency(count));
+        LOGGER.info(WROTE, timer.frequency(recordsWritten));
 
         return recordsWritten;
     }
