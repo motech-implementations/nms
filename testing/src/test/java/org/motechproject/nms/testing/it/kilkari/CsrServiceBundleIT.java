@@ -1,6 +1,5 @@
 package org.motechproject.nms.testing.it.kilkari;
 
-import junit.framework.Assert;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -28,6 +27,7 @@ import org.motechproject.nms.kilkari.service.CsrService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.domain.FinalCallStatus;
 import org.motechproject.nms.props.domain.StatusCode;
+import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
@@ -203,6 +203,26 @@ public class CsrServiceBundleIT extends BasePaxIT {
         List<Alert> alerts = alertService.search(criteria);
         assertEquals(1, alerts.size());
         assertEquals(AlertType.HIGH, alerts.get(0).getAlertType());
+    }
+
+
+    @Test
+    public void verifyCircle99Valid() {
+        Subscription subscription = sh.mksub(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
+        processCsr(new CallSummaryRecordDto(
+                subscription,
+                StatusCode.OBD_FAILED_NOANSWER,
+                FinalCallStatus.FAILED,
+                "w1_1.wav",
+                "w1_1",
+                rh.hindiLanguage(),
+                new Circle("99"),
+                "20151119124330"
+        ));
+
+        AlertCriteria criteria = new AlertCriteria().byExternalId(subscription.getSubscriptionId());
+        List<Alert> alerts = alertService.search(criteria);
+        assertEquals(0, alerts.size());
     }
 
 

@@ -12,6 +12,7 @@ import org.motechproject.mds.query.QueryExecution;
 import org.motechproject.mds.query.QueryParams;
 import org.motechproject.mds.query.SqlQueryExecution;
 import org.motechproject.mds.util.InstanceSecurityRestriction;
+import org.motechproject.metrics.service.Timer;
 import org.motechproject.nms.kilkari.domain.CallRetry;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.domain.Subscriber;
@@ -546,6 +547,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     @Override
     public List<Subscription> findActiveSubscriptionsForDay(final DayOfTheWeek day, final long offset,
                                                             final int rowCount) {
+        Timer queryTimer = new Timer();
+
         @SuppressWarnings("unchecked")
         SqlQueryExecution<List<Subscription>> queryExecution = new SqlQueryExecution<List<Subscription>>() {
 
@@ -579,7 +582,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             }
         };
 
-        return subscriptionDataService.executeSQLQuery(queryExecution);
+        List<Subscription> subscriptions = subscriptionDataService.executeSQLQuery(queryExecution);
+        LOGGER.debug(String.format("findActiveSubscriptionsForDay(%s, %d, %d) %s", day, offset, rowCount, queryTimer.time()));
+        return subscriptions;
     }
 
 

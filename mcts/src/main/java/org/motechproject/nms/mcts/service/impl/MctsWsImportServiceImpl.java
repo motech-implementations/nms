@@ -186,12 +186,13 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
                 } else {
                     rejected++;
                 }
-                if ((saved + rejected) % THOUSAND == 0) {
-                    LOGGER.debug("{} state, Progress: {} mothers imported, {} mothers rejected", stateName, saved, rejected);
-                }
             } catch (RuntimeException e) {
                 LOGGER.error("Mother import Error. Cannot import Mother with ID: {} for state ID: {}",
                         record.getIdNo(), stateCode, e);
+                rejected++;
+            }
+            if ((saved + rejected) % THOUSAND == 0) {
+                LOGGER.debug("{} state, Progress: {} mothers imported, {} mothers rejected", stateName, saved, rejected);
             }
         }
         LOGGER.info("{} state, Total: {} mothers imported, {} mothers rejected", stateName, saved, rejected);
@@ -272,12 +273,14 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
                     rejected++;
                 }
 
-                if ((saved + rejected) % THOUSAND == 0) {
-                    LOGGER.debug("{} state, Progress: {} children imported, {} children rejected", stateName, saved, rejected);
-                }
             } catch (RuntimeException e) {
                 LOGGER.error("Child import Error. Cannot import Child with ID: {} for state:{} with state ID: {}",
                         record.getIdNo(), stateName, stateCode, e);
+                rejected++;
+            }
+
+            if ((saved + rejected) % THOUSAND == 0) {
+                LOGGER.debug("{} state, Progress: {} children imported, {} children rejected", stateName, saved, rejected);
             }
         }
         LOGGER.info("{} state, Total: {} children imported, {} children rejected", stateName, saved, rejected);
