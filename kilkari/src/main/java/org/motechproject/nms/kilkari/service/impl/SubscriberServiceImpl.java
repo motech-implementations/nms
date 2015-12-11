@@ -221,10 +221,9 @@ public class SubscriberServiceImpl implements SubscriberService {
             if (subscriberByMsisdn == null) {   //no subscriber attached to the new number
                 // We got here because beneficiary's phone number changed
                 // detach mother from existing subscriber
-                Subscription subscription = subscriptionService.getActiveSubscription(subscriberByMctsId, pack.getType());
+                deactivateAllActiveSubscriptions(subscriberByMctsId, pack.getType(), DeactivationReason.MCTS_UPDATE);
                 subscriberByMctsId.setMother(null);
                 subscriberDataService.update(subscriberByMctsId);
-                subscriptionService.deactivateSubscription(subscription, DeactivationReason.MCTS_UPDATE);
 
                 // create new subscriber and attach mother
                 Subscriber newSubscriber = new Subscriber(msisdn, language);
@@ -249,8 +248,7 @@ public class SubscriberServiceImpl implements SubscriberService {
 
                     if (subscriberByMsisdn.getMother() == null) { // if existing subscriber has no mother attached
                         // Deactivate mother from existing subscriber (by mcts id)
-                        Subscription subscription = subscriptionService.getActiveSubscription(subscriberByMctsId, pack.getType());
-                        subscriptionService.deactivateSubscription(subscription, DeactivationReason.MCTS_UPDATE);
+                        deactivateAllActiveSubscriptions(subscriberByMctsId, pack.getType(), DeactivationReason.MCTS_UPDATE);
                         subscriberByMctsId.setMother(null);
                         update(subscriberByMctsId);
 
@@ -307,12 +305,9 @@ public class SubscriberServiceImpl implements SubscriberService {
             if (subscriberByMsisdn == null) {   // no subscriber attached to the new number
                 // We got here because beneficiary's phone number changed
                 // detach child from existing subscriber
-                Subscription subscription = subscriptionService.getActiveSubscription(subscriberByMctsId, pack.getType());
+                deactivateAllActiveSubscriptions(subscriberByMctsId, pack.getType(), DeactivationReason.MCTS_UPDATE);
                 subscriberByMctsId.setChild(null);
                 subscriberDataService.update(subscriberByMctsId);
-                if (subscription != null) {
-                    subscriptionService.deactivateSubscription(subscription, DeactivationReason.MCTS_UPDATE);
-                }
 
                 // create new subscriber and attach child
                 Subscriber newSubscriber = new Subscriber(msisdn, language);
@@ -337,8 +332,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                 } else {    // msisdn is already taken by another subscriber
                     if (subscriberByMsisdn.getChild() == null) {  // no child attached to existing phone number
                         // Deactivate child from existing subscriber (by mcts id)
-                        Subscription subscription = subscriptionService.getActiveSubscription(subscriberByMctsId, pack.getType());
-                        subscriptionService.deactivateSubscription(subscription, DeactivationReason.MCTS_UPDATE);
+                        deactivateAllActiveSubscriptions(subscriberByMctsId, pack.getType(), DeactivationReason.MCTS_UPDATE);
                         subscriberByMctsId.setChild(null);
                         update(subscriberByMctsId);
 
@@ -354,6 +348,13 @@ public class SubscriberServiceImpl implements SubscriberService {
                     }
                 }
             }
+        }
+    }
+
+    private void deactivateAllActiveSubscriptions(Subscriber subscriber, SubscriptionPackType packType, DeactivationReason deactivationReason) {
+        Subscription subscription = subscriptionService.getActiveSubscription(subscriber, packType);
+        if (subscription != null) {
+            subscriptionService.deactivateSubscription(subscription, deactivationReason);
         }
     }
 
