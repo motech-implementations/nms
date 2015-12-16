@@ -398,7 +398,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         //update the date of birth of the subscriber
         Subscriber subscriber2 = subscriberDataService.findByNumber(1111111111L);
         subscriber2.setDateOfBirth(DateTime.now().minusDays(21)); // weekId will be W4_1
-        subscriberService.update(subscriber2);
+        subscriberService.updateStartDate(subscriber2);
 
         // again generate the target file to check correct weekId is picked after DOB is changed.
         tfn = targetFileService.generateTargetFile();

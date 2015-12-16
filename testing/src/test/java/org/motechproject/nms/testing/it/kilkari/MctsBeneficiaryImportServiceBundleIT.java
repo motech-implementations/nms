@@ -752,7 +752,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         //Make subscription completed
         Subscriber subscriber = subscriberDataService.findByNumber(9439986187L);
         subscriber.setLastMenstrualPeriod(lmp.minusDays(650));
-        subscriberService.update(subscriber);
+        subscriberService.updateStartDate(subscriber);
 
         //create a new subscription for subscriber whose subscription is completed.
         lmpString = getDateString(lmp.minus(200));
@@ -905,7 +905,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         //Make subscription completed
         Subscriber subscriber = subscriberDataService.findByNumber(9439986187L);
         subscriber.setDateOfBirth(dob.minusDays(500));
-        subscriberService.update(subscriber);
+        subscriberService.updateStartDate(subscriber);
 
         //create a new subscription for subscriber whose subscription is deactivated.
         dobString = getDateString(dob.minus(50));

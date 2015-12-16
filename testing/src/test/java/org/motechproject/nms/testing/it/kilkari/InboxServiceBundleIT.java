@@ -121,7 +121,7 @@ public class InboxServiceBundleIT extends BasePaxIT {
 
 		// Configuration for first msg of the week
 		subscriber.setLastMenstrualPeriod(DateTime.now().minusDays(90));
-		subscriberService.update(subscriber);
+		subscriberService.updateStartDate(subscriber);
 
 		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber());
 		subscriptions = subscriber.getAllSubscriptions();
@@ -161,7 +161,7 @@ public class InboxServiceBundleIT extends BasePaxIT {
 
 		// Configuration for last msg of the week
 		subscriber.setLastMenstrualPeriod(now.minusDays(595));
-		subscriberService.update(subscriber);
+		subscriberService.updateStartDate(subscriber);
 
 		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber());
 		subscriptions = subscriber.getAllSubscriptions();
@@ -200,7 +200,7 @@ public class InboxServiceBundleIT extends BasePaxIT {
 
 		// Configuration for last msg of the week
 		subscriber.setDateOfBirth(now.minusDays(6));
-		subscriberService.update(subscriber);
+		subscriberService.updateStartDate(subscriber);
 
 		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber());
 		subscriptions = subscriber.getAllSubscriptions();
@@ -261,7 +261,7 @@ public class InboxServiceBundleIT extends BasePaxIT {
 		assertEquals(msg.getMessageFileName(), "w48_1.wav");
 		
 		subscriber.setDateOfBirth(DateTime.now().minusDays(342)); // completion_duration + 7 days
-		subscriberService.update(subscriber);
+		subscriberService.updateStartDate(subscriber);
 
 		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber());
 		subscriptions = subscriber.getAllSubscriptions();
@@ -301,7 +301,7 @@ public class InboxServiceBundleIT extends BasePaxIT {
 		assertEquals(msg.getMessageFileName(), "w1_1.wav");
 		// set lmp as 7th day week of week to check message exist for seven days.
 		subscriber.setLastMenstrualPeriod(DateTime.now().minusDays(96)); 
-		subscriberService.update(subscriber);
+		subscriberService.updateStartDate(subscriber);
 
 		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber());
 		subscriptions = subscriber.getAllSubscriptions();
@@ -342,7 +342,7 @@ public class InboxServiceBundleIT extends BasePaxIT {
 		assertEquals(msg.getMessageFileName(), "w1_1.wav");
 		
 		subscriber.setDateOfBirth(now.minusDays(4));
-		subscriberService.update(subscriber);
+		subscriberService.updateStartDate(subscriber);
 
 		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber());
 		subscriptions = subscriber.getAllSubscriptions();
@@ -441,7 +441,7 @@ public class InboxServiceBundleIT extends BasePaxIT {
 
 		// Configuration for first msg of the week
 		subscriber.setLastMenstrualPeriod(DateTime.now().minusDays(104));
-		subscriberService.update(subscriber);
+		subscriberService.updateStartDate(subscriber);
 
 		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber());
 		subscriptions = subscriber.getAllSubscriptions();

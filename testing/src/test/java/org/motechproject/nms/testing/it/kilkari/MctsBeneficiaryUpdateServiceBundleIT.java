@@ -382,7 +382,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         Subscriber subscriber = subscriberDataService.findByNumber(msisdn);
         subscriber.setLastMenstrualPeriod(originalLMP.minusDays(600));
-        subscriberService.update(subscriber);
+        subscriberService.updateStartDate(subscriber);
         subscriber = subscriberDataService.findByNumber(msisdn);
         Subscription subscription = subscriber.getAllSubscriptions().iterator().next();
         assertEquals(SubscriptionStatus.COMPLETED, subscription.getStatus());

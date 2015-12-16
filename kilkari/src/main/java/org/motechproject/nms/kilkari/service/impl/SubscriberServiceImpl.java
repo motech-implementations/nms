@@ -124,7 +124,7 @@ public class SubscriberServiceImpl implements SubscriberService {
 
     @Override
     @Transactional
-    public void update(Subscriber subscriber) {
+    public void updateStartDate(Subscriber subscriber) {
 
         Subscriber retrievedSubscriber = subscriberDataService.update(subscriber);
 
@@ -142,10 +142,11 @@ public class SubscriberServiceImpl implements SubscriberService {
                     subscriptionService.updateStartDate(subscription, subscriber.getLastMenstrualPeriod());
                 }
 
-            } else if (subscription.getSubscriptionPack().getType() == SubscriptionPackType.CHILD) {
+            } else { // SubscriptionPackType.CHILD
 
-                subscriptionService.updateStartDate(subscription, subscriber.getDateOfBirth());
-
+                if (subscriber.getDateOfBirth() != null) {  // Subscribers via IVR will not have DOB
+                    subscriptionService.updateStartDate(subscription, subscriber.getDateOfBirth());
+                }
             }
         }
     }
@@ -210,7 +211,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                 if (subscriberByMsisdn.getMother() == null) {   // number has no mother attached
                     subscriberByMsisdn.setLastMenstrualPeriod(lmp);
                     subscriberByMsisdn.setMother(motherUpdate);
-                    update(subscriberByMsisdn);
+                    updateStartDate(subscriberByMsisdn);
                     return subscriptionService.createSubscription(msisdn, language, circle, pack, SubscriptionOrigin.MCTS_IMPORT);
                 } else {
                     subscriptionErrorDataService.create(new SubscriptionError(msisdn, SubscriptionRejectionReason.ALREADY_SUBSCRIBED, pack.getType()));
@@ -237,7 +238,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                     Subscription subscription = subscriptionService.getActiveSubscription(subscriberByMctsId, pack.getType());
                     subscriberByMsisdn.setLastMenstrualPeriod(lmp);
                     subscriberByMsisdn.getMother().deepCopyFrom(motherUpdate);
-                    update(subscriberByMsisdn);
+                    updateStartDate(subscriberByMsisdn);
                     if (subscription != null) { // update existing active subscription
                         subscriptionService.updateStartDate(subscription, lmp);
                         return subscriptionService.getActiveSubscription(subscriberByMctsId, pack.getType());
@@ -250,11 +251,11 @@ public class SubscriberServiceImpl implements SubscriberService {
                         // Deactivate mother from existing subscriber (by mcts id)
                         deactivateSubscriptionForSubscriberAndPackType(subscriberByMctsId, pack.getType(), DeactivationReason.MCTS_UPDATE);
                         subscriberByMctsId.setMother(null);
-                        update(subscriberByMctsId);
+                        updateStartDate(subscriberByMctsId);
 
                         // transfer mother to new subscriber (number)
                         subscriberByMsisdn.setMother(motherUpdate);
-                        update(subscriberByMsisdn);
+                        updateStartDate(subscriberByMsisdn);
                         return subscriptionService.createSubscription(msisdn, language, circle, pack, SubscriptionOrigin.MCTS_IMPORT);
 
                     } else {    // No way to resolve this since msisdn already has a mother attached. Reject the update
@@ -293,7 +294,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                 if (subscriberByMsisdn.getChild() == null) {    // number has no child attached
                     subscriberByMsisdn.setDateOfBirth(dob);
                     subscriberByMsisdn.setChild(childUpdate);
-                    update(subscriberByMsisdn);
+                    updateStartDate(subscriberByMsisdn);
                     return subscriptionService.createSubscription(msisdn, language, circle, pack, SubscriptionOrigin.MCTS_IMPORT);
                 } else {    // Reject the update, number in use and has existing child subscription
                     subscriptionErrorDataService.create(new SubscriptionError(msisdn, SubscriptionRejectionReason.ALREADY_SUBSCRIBED, pack.getType()));
@@ -321,7 +322,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                     Subscription subscription = subscriptionService.getActiveSubscription(subscriberByMctsId, pack.getType());
                     subscriberByMsisdn.setDateOfBirth(dob);
                     subscriberByMsisdn.getChild().deepCopyFrom(childUpdate);
-                    update(subscriberByMsisdn);
+                    updateStartDate(subscriberByMsisdn);
                     if (subscription != null) {     // update start date on existing active subscription
                         subscriptionService.updateStartDate(subscription, dob);
                         return subscriptionService.getActiveSubscription(subscriberByMctsId, pack.getType());
@@ -334,11 +335,11 @@ public class SubscriberServiceImpl implements SubscriberService {
                         // Deactivate child from existing subscriber (by mcts id)
                         deactivateSubscriptionForSubscriberAndPackType(subscriberByMctsId, pack.getType(), DeactivationReason.MCTS_UPDATE);
                         subscriberByMctsId.setChild(null);
-                        update(subscriberByMctsId);
+                        updateStartDate(subscriberByMctsId);
 
                         // transfer child to new subscriber (number)
                         subscriberByMsisdn.setChild(childUpdate);
-                        update(subscriberByMsisdn);
+                        updateStartDate(subscriberByMsisdn);
                         return subscriptionService.createSubscription(msisdn, language, circle, pack, SubscriptionOrigin.MCTS_IMPORT);
                     } else {    // No way to resolve this since msisdn already has a child attached. Reject the update
                         Subscription subscription = subscriptionService.getActiveSubscription(subscriberByMctsId, pack.getType());
