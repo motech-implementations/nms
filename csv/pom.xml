@@ -5,12 +5,12 @@
     <parent>
         <artifactId>nms</artifactId>
         <groupId>org.motechproject.nms</groupId>
-        <version>1.0.8</version>
+        <version>1.0.9</version>
         <relativePath>../</relativePath>
     </parent>
 
     <artifactId>csv</artifactId>
-    <version>1.0.8</version>
+    <version>1.0.9</version>
     <packaging>bundle</packaging>
     <name>CSV Module</name>
 
