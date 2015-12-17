@@ -35,11 +35,11 @@ public interface SubscriberService {
     Subscriber create(Subscriber subscriber);
 
     /**
-     * Update subscriber. If subscriber has any subscriptions and the update changes her LMP or DOB, then subscription
-     * start date (and potentially status) will also be updated.
+     * Update start date subscriber's subscriptions. If subscriber has any subscriptions and the update changes her
+     * LMP or DOB, then subscription start date (and potentially status) will also be updated.
      * @param subscriber The subscriber to update
      */
-    void update(Subscriber subscriber);
+    void updateStartDate(Subscriber subscriber);
 
     /**
      * Update MSISDN for subscriber. If the new MSISDN is already in use by a different MCTS beneficiary for the same
