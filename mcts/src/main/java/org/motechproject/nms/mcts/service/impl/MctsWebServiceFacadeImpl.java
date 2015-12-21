@@ -47,7 +47,7 @@ public class MctsWebServiceFacadeImpl implements MctsWebServiceFacade {
             result = dataService.DS_GetChildData(settingsFacade.getProperty(Constants.MCTS_USER_ID), settingsFacade.getProperty(Constants.MCTS_PASSWORD),
                     from.toString(DATE_FORMAT), to.toString(DATE_FORMAT), stateId.toString());
         } catch (RemoteException e) {
-            throw new MctsWebServiceException(String.format("Cannot read children data from %s state. Remote Server Error", stateId), e);
+            throw new MctsWebServiceException("Remote Server Error. Cannot read Children data. ", e);
         }
 
         try {
@@ -57,7 +57,7 @@ public class MctsWebServiceFacadeImpl implements MctsWebServiceFacade {
                 null :
                 (ChildrenDataSet) MarshallUtils.unmarshall(childrenResultFeed.get(0).toString(), ChildrenDataSet.class);
         } catch (JAXBException e) {
-            throw new MctsInvalidResponseStructureException(String.format("Cannot deserialize children data from %s location", stateId), e);
+            throw new MctsInvalidResponseStructureException(String.format("Cannot deserialize children data from %s location. ", stateId), e);
         }
     }
 
@@ -70,7 +70,7 @@ public class MctsWebServiceFacadeImpl implements MctsWebServiceFacade {
             result = dataService.DS_GetMotherData(settingsFacade.getProperty(Constants.MCTS_USER_ID), settingsFacade.getProperty(Constants.MCTS_PASSWORD),
                     from.toString(DATE_FORMAT), to.toString(DATE_FORMAT), stateId.toString());
         } catch (RemoteException e) {
-            throw new MctsWebServiceException(String.format("Cannot read mothers data from %s state. Remote Server Error", stateId), e);
+            throw new MctsWebServiceException("Remote Server Error. Cannot read Mother data. ", e);
         }
 
         try {
@@ -80,7 +80,7 @@ public class MctsWebServiceFacadeImpl implements MctsWebServiceFacade {
                     null :
                     (MothersDataSet) MarshallUtils.unmarshall(motherResultFeed.get(0).toString(), MothersDataSet.class);
         } catch (JAXBException e) {
-            throw new MctsInvalidResponseStructureException(String.format("Cannot deserialize mothers data from %s location", stateId), e);
+            throw new MctsInvalidResponseStructureException(String.format("Cannot deserialize mothers data from %s location. ", stateId), e);
         }
     }
 
@@ -93,7 +93,7 @@ public class MctsWebServiceFacadeImpl implements MctsWebServiceFacade {
             result = dataService.DS_GetAnmAshaData(settingsFacade.getProperty(Constants.MCTS_USER_ID), settingsFacade.getProperty(Constants.MCTS_PASSWORD),
                     from.toString(DATE_FORMAT), to.toString(DATE_FORMAT), stateId.toString());
         } catch (RemoteException e) {
-            throw new MctsWebServiceException(String.format("Cannot read anm asha data from %s state. Remote Server Error", stateId), e);
+            throw new MctsWebServiceException("Remote Server Error. Cannot read ANM ASHA data. ", e);
         }
 
         try {
@@ -103,7 +103,7 @@ public class MctsWebServiceFacadeImpl implements MctsWebServiceFacade {
                     null :
                     (AnmAshaDataSet) MarshallUtils.unmarshall(ashaResultFeed.get(0).toString(), AnmAshaDataSet.class);
         } catch (JAXBException e) {
-            throw new MctsInvalidResponseStructureException(String.format("Cannot deserialize anm asha data from %s location", stateId), e);
+            throw new MctsInvalidResponseStructureException(String.format("Cannot deserialize anm asha data from %s location. ", stateId), e);
         }
     }
 
