@@ -6,6 +6,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.joda.time.DateTime;
+import org.joda.time.Days;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.motechproject.alerts.contract.AlertService;
@@ -27,6 +28,7 @@ import org.motechproject.nms.kilkari.domain.CallRetry;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
+import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
 import org.motechproject.nms.kilkari.service.CallRetryService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
@@ -381,6 +383,18 @@ public class TargetFileServiceImpl implements TargetFileService {
                 RequestId requestId = new RequestId(subscription.getSubscriptionId(), TIME_FORMATTER.print(timestamp));
 
                 try {
+                    SubscriptionPack pack = subscription.getSubscriptionPack();
+                    int daysIntoPack = Days.daysBetween(subscription.getStartDate(), timestamp).getDays();
+                    if (daysIntoPack == pack.getWeeks() * 7) {
+                        //
+                        // Do not add subscriptions on their last day to the fresh call list
+                        // See https://applab.atlassian.net/browse/NMS-301
+                        //
+                        LOGGER.debug("Ignoring last day for subscription {} from fresh calls.",
+                                subscription.getSubscriptionId());
+                        continue;
+                    }
+
                     SubscriptionPackMessage msg = subscription.nextScheduledMessage(timestamp);
 
                     writeSubscriptionRow(
@@ -403,7 +417,10 @@ public class TargetFileServiceImpl implements TargetFileService {
                     }
 
                 } catch (IllegalStateException se) {
-                    LOGGER.error(se.toString());
+                    String message = se.toString();
+                    alertService.create(subscription.getSubscriptionId(), "IllegalStateException", message,
+                            AlertType.HIGH, AlertStatus.NEW, 0, null);
+                    LOGGER.error(message);
                 }
             }
 
