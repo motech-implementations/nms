@@ -59,6 +59,7 @@ public class Subscription extends MdsEntity {
     private SubscriptionOrigin origin;
 
     @Field
+    @TrackField
     private DateTime startDate; // the date from which the weekly message should be calculated (DOB or LMP+90 days)
 
     @Field
