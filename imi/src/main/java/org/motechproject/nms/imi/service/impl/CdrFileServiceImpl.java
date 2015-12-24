@@ -87,6 +87,8 @@ public class CdrFileServiceImpl implements CdrFileService {
     private static final int MIN_CALL_DATA_RETENTION_DURATION_IN_DAYS = 5;
     private static final String CDR_CSR_CLEANUP_SUBJECT = "nms.imi.cdr_csr.cleanup";
     private static final String CDR_TABLE_NAME = "motech_data_services.nms_imi_cdrs";
+    private static final String DELETE_CDR_TABLE = "DELETE FROM motech_data_services.nms_imi_cdrs where creationDate < now() - INTERVAL :interval DAY";
+    private static final String DELETE_CSR_TABLE = "DELETE FROM motech_data_services.nms_imi_csrs where creationDate < now() - INTERVAL :interval DAY";
     private static final String NMS_IMI_KK_PROCESS_CSR = "nms.imi.kk.process_csr";
     private static final String NMS_IMI_PROCESS_CHUNK = "nms.imi.process_chunk";
     private static final String CDR_PHASE_2 = "nms.imi.kk.cdr_phase_2";
@@ -1149,8 +1151,8 @@ public class CdrFileServiceImpl implements CdrFileService {
         LOGGER.debug(String.format(LOG_TEMPLATE, callDetailRecordDataService.count(), CDR_TABLE_NAME));
         LOGGER.debug(String.format(LOG_TEMPLATE, callSummaryRecordDataService.count(), CSR_TABLE_NAME));
 
-        deleteRecords(cdrDuration, CDR_TABLE_NAME);
-        deleteRecords(cdrDuration, CSR_TABLE_NAME);
+        deleteRecords(cdrDuration, true);
+        deleteRecords(cdrDuration, false);
 
         LOGGER.debug(String.format(LOG_TEMPLATE, callDetailRecordDataService.count(), CDR_TABLE_NAME));
         LOGGER.debug(String.format(LOG_TEMPLATE, callSummaryRecordDataService.count(), CSR_TABLE_NAME));
@@ -1162,15 +1164,15 @@ public class CdrFileServiceImpl implements CdrFileService {
     /**
      * Helper to clean out the CDR table with the given retention policy
      * @param retentionInDays min days to keep CDR for
-     * @param tableName name of the cdr or csr table
+     * @param cdrTable if true, delete the cdr table, otherwise delete the csr table
      */
-    private void deleteRecords(final int retentionInDays, final String tableName) {
+    private void deleteRecords(final int retentionInDays, final boolean cdrTable) {
         @SuppressWarnings("unchecked")
         SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
 
             @Override
             public String getSqlQuery() {
-                String query = "DELETE FROM :table where creationDate < now() - INTERVAL :interval DAY";
+                String query = cdrTable ? DELETE_CDR_TABLE : DELETE_CSR_TABLE;
                 LOGGER.debug("SQL QUERY: {}", query);
                 return query;
             }
@@ -1179,7 +1181,6 @@ public class CdrFileServiceImpl implements CdrFileService {
             public Long execute(Query query) {
 
                 Map params = new HashMap();
-                params.put("table", tableName);
                 params.put("interval", retentionInDays);
                 return (Long) query.executeWithMap(params);
             }
@@ -1187,13 +1188,12 @@ public class CdrFileServiceImpl implements CdrFileService {
 
         // FYI: doesn't matter what data service we use since it is just used as a vehicle to execute the custom query
         Long rowCount = callDetailRecordDataService.executeSQLQuery(queryExecution);
-        LOGGER.debug(String.format("Table %s cleaned up and deleted %d rows", tableName, rowCount));
+        LOGGER.debug("Deleted {} {} from the {} table", rowCount, rowCount == 1L ? "row" : "rows", cdrTable ? "CDR" : "CSR");
 
         // evict caches for the changes to be read again
-        if (tableName.equalsIgnoreCase(CDR_TABLE_NAME)) {
+        if (cdrTable) {
             callDetailRecordDataService.evictEntityCache(false);
-        }
-        if (tableName.equalsIgnoreCase(CSR_TABLE_NAME)) {
+        } else {
             callSummaryRecordDataService.evictEntityCache(false);
         }
     }
