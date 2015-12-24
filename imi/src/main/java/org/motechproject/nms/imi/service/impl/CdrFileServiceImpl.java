@@ -127,6 +127,7 @@ public class CdrFileServiceImpl implements CdrFileService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CdrFileServiceImpl.class);
     public static final double HALF = 0.5;
+    public static final String FILE = "file";
 
     private SettingsFacade settingsFacade;
     private EventRelay eventRelay;
@@ -401,7 +402,7 @@ public class CdrFileServiceImpl implements CdrFileService {
         }
 
         Map<String, Object> params = new HashMap<>();
-        params.put("file", file);
+        params.put(FILE, file);
         params.put("name", name);
         params.put("chunk", chunk);
         params.put("chunkCount", chunkCount);
@@ -427,8 +428,8 @@ public class CdrFileServiceImpl implements CdrFileService {
 
             @Override
             public String getSqlQuery() {
-                String query = String.format("SELECT MIN(processingStart) as start, MAX(processingEnd) as end " +
-                        "FROM nms_imi_chunk_audit_records WHERE file = '%s'", file);
+                String query = "SELECT MIN(processingStart) as start, MAX(processingEnd) as end " +
+                        "FROM nms_imi_chunk_audit_records WHERE file = :file";
                 LOGGER.debug("SQL QUERY: {}", query);
                 return query;
             }
@@ -436,7 +437,9 @@ public class CdrFileServiceImpl implements CdrFileService {
             @Override
             public String execute(Query query) {
 
-                ForwardQueryResult fqr = (ForwardQueryResult) query.execute();
+                Map params = new HashMap();
+                params.put(FILE, file);
+                ForwardQueryResult fqr = (ForwardQueryResult) query.executeWithMap(params);
 
                 if (fqr.isEmpty()) {
                     throw new IllegalStateException("No row was returned!");
@@ -464,8 +467,7 @@ public class CdrFileServiceImpl implements CdrFileService {
 
             @Override
             public String getSqlQuery() {
-                String query = String.format("SELECT * FROM nms_imi_chunk_audit_records WHERE file = '%s' AND " +
-                        "node IS NULL LIMIT 1", file);
+                String query = "SELECT * FROM nms_imi_chunk_audit_records WHERE file = :file AND node IS NULL LIMIT 1";
                 LOGGER.debug("SQL QUERY: {}", query);
                 return query;
             }
@@ -475,7 +477,9 @@ public class CdrFileServiceImpl implements CdrFileService {
 
                 query.setClass(CallRetry.class);
 
-                ForwardQueryResult fqr = (ForwardQueryResult) query.execute();
+                Map params = new HashMap();
+                params.put(FILE, file);
+                ForwardQueryResult fqr = (ForwardQueryResult) query.executeWithMap(params);
 
                 return (List<ChunkAuditRecord>) fqr;
             }
@@ -522,7 +526,7 @@ public class CdrFileServiceImpl implements CdrFileService {
     public void processChunk(MotechEvent event) throws IOException {
         DateTime processingStart = DateTime.now();
         Timer timer = new Timer("csr", "csrs");
-        String file = (String) event.getParameters().get("file");
+        String file = (String) event.getParameters().get(FILE);
         String name = (String) event.getParameters().get("name");
         String json = (String) event.getParameters().get("chunk");
         ObjectMapper mapper = new ObjectMapper();
@@ -1166,8 +1170,7 @@ public class CdrFileServiceImpl implements CdrFileService {
 
             @Override
             public String getSqlQuery() {
-                String query = String.format(
-                        "DELETE FROM %s where creationDate < now() - INTERVAL %d DAY", tableName, retentionInDays);
+                String query = "DELETE FROM :table where creationDate < now() - INTERVAL :interval DAY";
                 LOGGER.debug("SQL QUERY: {}", query);
                 return query;
             }
@@ -1175,7 +1178,10 @@ public class CdrFileServiceImpl implements CdrFileService {
             @Override
             public Long execute(Query query) {
 
-                return (Long) query.execute();
+                Map params = new HashMap();
+                params.put("table", tableName);
+                params.put("interval", retentionInDays);
+                return (Long) query.executeWithMap(params);
             }
         };
 
