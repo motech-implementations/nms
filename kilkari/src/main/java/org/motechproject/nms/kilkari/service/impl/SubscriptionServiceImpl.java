@@ -515,6 +515,18 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         subscriptionDataService.evictEntityCache(true);
     }
 
+    /**
+     * Delete the CallRetry record corresponding to the given subscription
+     *
+     * @param subscriptionId subscription to delete the CallRetry record for
+     */
+    private void deleteCallRetry(String subscriptionId) {
+        CallRetry callRetry = callRetryDataService.findBySubscriptionId(subscriptionId);
+        if (callRetry != null) {
+            callRetryDataService.delete(callRetry);
+        }
+    }
+
     @Override
     public void deactivateSubscription(Subscription subscription, DeactivationReason reason) {
         if (subscription.getStatus() == SubscriptionStatus.ACTIVE ||
@@ -522,6 +534,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             subscription.setStatus(SubscriptionStatus.DEACTIVATED);
             subscription.setDeactivationReason(reason);
             subscriptionDataService.update(subscription);
+
+            // Let's not retry calling subscribers with deactivated subscriptions
+            deleteCallRetry(subscription.getSubscriptionId());
         }
         // Else no-op
     }
