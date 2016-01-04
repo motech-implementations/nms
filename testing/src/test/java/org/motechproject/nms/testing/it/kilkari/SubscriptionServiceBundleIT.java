@@ -36,6 +36,8 @@ import org.motechproject.nms.region.service.LanguageService;
 import org.motechproject.nms.testing.it.utils.RegionHelper;
 import org.motechproject.nms.testing.it.utils.SubscriptionHelper;
 import org.motechproject.nms.testing.service.TestingService;
+import org.motechproject.nms.tracking.domain.ChangeLog;
+import org.motechproject.nms.tracking.repository.ChangeLogDataService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.ops4j.pax.exam.ExamFactory;
@@ -100,7 +102,8 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     CircleDataService circleDataService;
     @Inject
     TestingService testingService;
-
+    @Inject
+    ChangeLogDataService changeLogDataService;
     @Inject
     PlatformTransactionManager transactionManager;
 
@@ -131,7 +134,6 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
                 sh.pregnancyPack(), SubscriptionOrigin.IVR);
         transactionManager.commit(status);
     }
-
 
     @Test
     public void testServicePresent() throws Exception {
@@ -1207,6 +1209,44 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         subscriptionService.completePastDueSubscriptions();
         Subscription fetchUpdate = subscriptionDataService.findById(subscriptionId);
         assertEquals(SubscriptionStatus.COMPLETED, fetchUpdate.getStatus());
+    }
+
+    /**
+     * Verifies that changes to the subscriptionStatus or startDate fields are tracked
+     */
+    @Test
+    public void verifyTrackSubscriptionFieldChanges() {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
+        // create subscriber and subscription
+        Subscriber subscriber = new Subscriber(9999911222L);
+        subscriberService.create(subscriber);
+        Subscription sub = subscriptionService.createSubscription(subscriber.getCallingNumber(),
+                rh.hindiLanguage(), sh.childPack(), SubscriptionOrigin.IVR);
+        DateTime startDate1 = sub.getStartDate();
+
+        // update subscription with old start date within expected range (<72wks for pregnancy pack)
+        sub.setStatus(SubscriptionStatus.ACTIVE);
+        sub.setStartDate(DateTime.now().minusDays(72 * 7 - 1));
+        sub = subscriptionDataService.update(sub);
+        DateTime startDate2 = sub.getStartDate();
+        transactionManager.commit(status);
+
+
+        String sd1 = startDate1.toString();
+        String sd2 = startDate2.toString();
+
+        List<ChangeLog> changes = changeLogDataService.findByEntityNameAndInstanceId(Subscription.class.getName(), sub.getId());
+
+        assertEquals(2, changes.size());
+
+        String change = changes.get(0).getChange();
+        String expectedChange = String.format("startDate(null, %s),status(null, PENDING_ACTIVATION)", sd1);
+        assertEquals(expectedChange, change);
+
+        change = changes.get(1).getChange();
+        expectedChange = String.format("startDate(%s, %s),status(PENDING_ACTIVATION, ACTIVE)", sd1, sd2);
+        assertEquals(expectedChange, change);
     }
 
 }

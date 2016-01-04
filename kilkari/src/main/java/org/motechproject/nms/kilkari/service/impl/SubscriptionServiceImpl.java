@@ -238,32 +238,35 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         final DateTime oldestPregnancyStart = currentTime.minusDays(PREGNANCY_PACK_LENGTH_DAYS).withTimeAtStartOfDay();
         final DateTime oldestChildStart = currentTime.minusDays(CHILD_PACK_LENGTH_DAYS).withTimeAtStartOfDay();
 
-        LOGGER.debug(String.format("Completing active pregnancy susbscriptions older than %s", oldestPregnancyStart));
-        LOGGER.debug(String.format("Completing active child susbscriptions older than %s", oldestChildStart));
+        LOGGER.debug("Completing active pregnancy susbscriptions older than {}", oldestPregnancyStart);
+        LOGGER.debug("Completing active child susbscriptions older than {}", oldestChildStart);
 
         @SuppressWarnings("unchecked")
         SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
 
             @Override
             public String getSqlQuery() {
-                String query = String.format(
+                String query =
                         "UPDATE motech_data_services.nms_subscriptions AS s " +
                         "JOIN motech_data_services.nms_subscription_packs AS sp " +
                         "ON s.subscriptionPack_id_OID = sp.id " +
-                        "SET s.status = 'COMPLETED', s.endDate = '%s' " +
+                        "SET s.status = 'COMPLETED', s.endDate = :currentTime, s.modificationDate = :currentTime " +
                         "WHERE " +
                         "(s.status = 'ACTIVE' OR s.status = 'PENDING_ACTIVATION') AND " +
-                        "((sp.type = 'PREGNANCY' AND s.startDate < '%s') OR (sp.type = 'CHILD' AND s.startDate < '%s'))",
-                        currentTime.toString(dateTimeFormatter),
-                        oldestPregnancyStart.toString(dateTimeFormatter),
-                        oldestChildStart.toString(dateTimeFormatter));
+                        "((sp.type = 'PREGNANCY' AND s.startDate < :oldestPregnancyStart) " +
+                        "OR " +
+                        "(sp.type = 'CHILD' AND s.startDate < :oldestChildStart))";
                 LOGGER.debug("SQL QUERY: {}", query);
                 return query;
             }
 
             @Override
             public Long execute(Query query) {
-                return (Long) query.execute();
+                Map params = new HashMap();
+                params.put("currentTime", currentTime.toString(dateTimeFormatter));
+                params.put("oldestPregnancyStart", oldestPregnancyStart.toString(dateTimeFormatter));
+                params.put("oldestChildStart", oldestChildStart.toString(dateTimeFormatter));
+                return (Long) query.executeWithMap(params);
             }
         };
 
