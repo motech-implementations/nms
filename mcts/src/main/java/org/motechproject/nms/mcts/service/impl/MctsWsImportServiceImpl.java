@@ -155,13 +155,13 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
             String error = String.format("Cannot read mothers data from %s state with stateId: %d", stateName, stateId);
             LOGGER.error(error, e);
             alertService.create(MCTS_WEB_SERVICE, "MCTS Web Service Mother Import", e
-                    .getMessage() + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+                    .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
             mctsImportAuditDataService.create(new MctsImportAudit(referenceDate, MctsUserType.MOTHER, stateCode, stateName, 0, 0, error));
         } catch (MctsInvalidResponseStructureException e) {
             String error = String.format("Cannot read mothers data from %s state with stateId: %d. Response Deserialization Error", stateName, stateId);
             LOGGER.error(error, e);
             alertService.create(MCTS_WEB_SERVICE, "MCTS Web Service Mother Import", e
-                    .getMessage() + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+                    .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
             mctsImportAuditDataService.create(new MctsImportAudit(referenceDate, MctsUserType.MOTHER, stateCode, stateName, 0, 0, error));
         }
     }
@@ -240,12 +240,12 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         } catch (MctsWebServiceException e) {
             String error = String.format("Cannot read children data from %s State with stateId:%d", stateName, stateCode);
             LOGGER.error(error, e);
-            alertService.create(MCTS_WEB_SERVICE, "MCTS Web Service Child Import", e.getMessage() + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            alertService.create(MCTS_WEB_SERVICE, "MCTS Web Service Child Import", e.getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
             mctsImportAuditDataService.create(new MctsImportAudit(referenceDate, MctsUserType.CHILD, stateCode, stateName, 0, 0, error));
         } catch (MctsInvalidResponseStructureException e) {
             String error = String.format("Cannot read children data from %s state with stateId:%d. Response Deserialization Error", stateName, stateCode);
             LOGGER.error(error, e);
-            alertService.create(MCTS_WEB_SERVICE, "MCTS Web Service Child Import", e.getMessage() + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            alertService.create(MCTS_WEB_SERVICE, "MCTS Web Service Child Import", e.getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
             mctsImportAuditDataService.create(new MctsImportAudit(referenceDate, MctsUserType.CHILD, stateCode, stateName, 0, 0, error));
         }
     }
@@ -327,13 +327,13 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
             String error = String.format("Cannot read anm asha data from %s state with stateId:%d", stateName, stateId);
             LOGGER.error(error, e);
             alertService.create(MCTS_WEB_SERVICE, "MCTS Web Service FLW Import", e
-                    .getMessage() + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+                    .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
             mctsImportAuditDataService.create(new MctsImportAudit(referenceDate, MctsUserType.ASHA, stateCode, stateName, 0, 0, error));
         } catch (MctsInvalidResponseStructureException e) {
             String error = String.format("Cannot read anm asha data from %s state with stateId: %d. Response Deserialization Error", stateName, stateCode);
             LOGGER.error(error, e);
             alertService.create(MCTS_WEB_SERVICE, "MCTS Web Service FLW Import", e
-                    .getMessage() + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+                    .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
             mctsImportAuditDataService.create(new MctsImportAudit(referenceDate, MctsUserType.ASHA, stateCode, stateName, 0, 0, error));
         }
     }
