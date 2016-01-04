@@ -20,6 +20,7 @@ import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.service.CsrService;
 import org.motechproject.nms.kilkari.service.CsrVerifierService;
+import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.domain.FinalCallStatus;
 import org.motechproject.nms.props.domain.StatusCode;
 import org.slf4j.Logger;
@@ -40,14 +41,17 @@ public class CsrServiceImpl implements CsrService {
     private static final Logger LOGGER = LoggerFactory.getLogger(CsrServiceImpl.class);
 
     private SubscriptionDataService subscriptionDataService;
+    private SubscriptionService subscriptionService;
     private CallRetryDataService callRetryDataService;
     private AlertService alertService;
     private CsrVerifierService csrVerifierService;
 
     @Autowired
-    public CsrServiceImpl(SubscriptionDataService subscriptionDataService, CallRetryDataService callRetryDataService,
-                          AlertService alertService, CsrVerifierService csrVerifierService) {
+    public CsrServiceImpl(SubscriptionDataService subscriptionDataService, SubscriptionService subscriptionService,
+                          CallRetryDataService callRetryDataService, AlertService alertService,
+                          CsrVerifierService csrVerifierService) {
         this.subscriptionDataService = subscriptionDataService;
+        this.subscriptionService = subscriptionService;
         this.callRetryDataService = callRetryDataService;
         this.alertService = alertService;
         this.csrVerifierService = csrVerifierService;
@@ -70,15 +74,7 @@ public class CsrServiceImpl implements CsrService {
     }
 
 
-    private void deleteCallRetryRecordIfNeeded(CallRetry callRetry) {
-        if (callRetry == null) {
-            return;
-        }
-        callRetryDataService.delete(callRetry);
-    }
-
-
-    private void deactivateSubscription(Subscription subscription, CallRetry callRetry) {
+    private void deactivateSubscription(Subscription subscription) {
 
         if (subscription.getOrigin() == SubscriptionOrigin.IVR) {
             String error = String.format("Subscription %s was rejected (DND) but its origin is IVR, not MCTS!",
@@ -89,12 +85,7 @@ public class CsrServiceImpl implements CsrService {
             return;
         }
 
-        deleteCallRetryRecordIfNeeded(callRetry);
-
-        //Deactivate the subscription
-        subscription.setStatus(SubscriptionStatus.DEACTIVATED);
-        subscription.setDeactivationReason(DeactivationReason.DO_NOT_DISTURB);
-        subscriptionDataService.update(subscription);
+        subscriptionService.deactivateSubscription(subscription, DeactivationReason.DO_NOT_DISTURB);
     }
 
 
@@ -190,7 +181,7 @@ public class CsrServiceImpl implements CsrService {
                     break;
 
                 case REJECTED:
-                    deactivateSubscription(subscription, callRetry);
+                    deactivateSubscription(subscription);
                     whatHappened = "RE";
                     break;
 

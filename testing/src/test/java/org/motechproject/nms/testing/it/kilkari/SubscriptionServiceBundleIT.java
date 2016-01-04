@@ -8,6 +8,8 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.mds.ex.JdoListenerInvocationException;
+import org.motechproject.nms.kilkari.domain.CallRetry;
+import org.motechproject.nms.kilkari.domain.CallStage;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.domain.InboxCallData;
 import org.motechproject.nms.kilkari.domain.InboxCallDetailRecord;
@@ -17,6 +19,7 @@ import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
+import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.InboxCallDataDataService;
 import org.motechproject.nms.kilkari.repository.InboxCallDetailRecordDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
@@ -100,6 +103,8 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     CircleDataService circleDataService;
     @Inject
     TestingService testingService;
+    @Inject
+    CallRetryDataService callRetryDataService;
 
     @Inject
     PlatformTransactionManager transactionManager;
@@ -1207,6 +1212,43 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         subscriptionService.completePastDueSubscriptions();
         Subscription fetchUpdate = subscriptionDataService.findById(subscriptionId);
         assertEquals(SubscriptionStatus.COMPLETED, fetchUpdate.getStatus());
+    }
+
+    /**
+     * Verifies that subscribers with calls to retry and deactivated subscriptions do not get called
+     */
+    @Test
+    public void verifyNoRetryWithDeactivatedSubscription() {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
+        // create subscriber and subscription
+        Subscriber subscriber = new Subscriber(9999911222L);
+        subscriberService.create(subscriber);
+        Subscription sub = subscriptionService.createSubscription(subscriber.getCallingNumber(), rh.hindiLanguage(),
+                sh.childPack(), SubscriptionOrigin.IVR);
+
+        Long subscriptionId = sub.getId();
+        sub.setStatus(SubscriptionStatus.ACTIVE);
+        sub.setStartDate(DateTime.now().minusDays(20 * 7));
+        subscriptionDataService.update(sub);
+
+        callRetryDataService.create(new CallRetry(sub.getSubscriptionId(), subscriber.getCallingNumber(),
+                CallStage.RETRY_1, "w1_1", "w1_1", rh.hindiLanguage().getCode(), "xx", SubscriptionOrigin.IVR, null,
+                null));
+
+        // fetch and assert after update
+        Subscription fetch = subscriptionDataService.findById(subscriptionId);
+        assertEquals(SubscriptionStatus.ACTIVE, fetch.getStatus());
+
+        CallRetry callRetry = callRetryDataService.findBySubscriptionId(sub.getSubscriptionId());
+        assertNotNull(callRetry);
+
+        subscriptionService.deactivateSubscription(sub, DeactivationReason.DEACTIVATED_BY_USER);
+
+        callRetry = callRetryDataService.findBySubscriptionId(sub.getSubscriptionId());
+        assertNull(callRetry);
+
+        transactionManager.commit(status);
     }
 
 }
