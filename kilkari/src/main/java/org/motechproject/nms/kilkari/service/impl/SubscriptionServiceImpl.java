@@ -494,20 +494,20 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     public void activatePendingSubscriptionsUpTo(final DateTime upToDateTime) {
         SqlQueryExecution sqe = new SqlQueryExecution() {
 
-            private String now = TIME_FORMATTER.print(DateTime.now());
-            private String upto = TIME_FORMATTER.print(upToDateTime);
-
             @Override
             public String getSqlQuery() {
-                return String.format("UPDATE nms_subscriptions SET status='ACTIVE', activationDate='%s', " +
-                                "modificationDate='%s' WHERE status='PENDING_ACTIVATION' AND startDate < '%s'",
-                        now, now, upToDateTime.toString(TIME_FORMATTER));
-
+                String query = "UPDATE nms_subscriptions SET status='ACTIVE', activationDate = :now, " +
+                                "modificationDate = :now WHERE status='PENDING_ACTIVATION' AND startDate < :upto";
+                LOGGER.debug("SQL QUERY: {}", query);
+                return query;
             }
 
             @Override
             public Object execute(Query query) {
-                query.execute();
+                Map params = new HashMap();
+                params.put("now", DateTime.now().toString(TIME_FORMATTER));
+                params.put("upto", upToDateTime.toString(TIME_FORMATTER));
+                query.executeWithMap(params);
                 return null;
             }
         };
@@ -552,7 +552,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
 
     @Override
-    public List<Subscription> findActiveSubscriptionsForDay(final DayOfTheWeek day, final long offset,
+    public List<Subscription> findActiveSubscriptionsForDay(final DayOfTheWeek dow, final long offset,
                                                             final int rowCount) {
         Timer queryTimer = new Timer();
 
@@ -561,19 +561,18 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
             @Override
             public String getSqlQuery() {
-                String query = String.format(
-                        "select s.id as id, activationDate, deactivationReason, endDate, firstMessageDayOfWeek, " +
+                String query =  "SELECT s.id as id, activationDate, deactivationReason, endDate, firstMessageDayOfWeek, " +
                                 "s.needsWelcomeMessageViaObd, s.origin, s.secondMessageDayOfWeek, s.startDate, " +
                                 "s.status, s.subscriber_id_OID, s.subscriptionId, s.subscriptionPack_id_OID, " +
                                 "s.creationDate, s.creator, s.modificationDate, s.modifiedBy, s.owner " +
                                 "FROM nms_subscriptions AS s " +
                                 "INNER JOIN nms_subscription_packs AS p ON s.subscriptionPack_id_OID = p.id " +
-                                "WHERE s.id > %d AND " +
-                                "(firstMessageDayOfWeek = '%s' OR " +
-                                "(secondMessageDayOfWeek = '%s' AND p.messagesPerWeek = 2)) AND " +
+                                "WHERE s.id > :offset AND " +
+                                "(firstMessageDayOfWeek = :dow OR " +
+                                "(secondMessageDayOfWeek = :dow AND p.messagesPerWeek = 2)) AND " +
                                 "status = 'ACTIVE' " +
                                 "ORDER BY s.id " +
-                                "LIMIT %d", offset, day, day, rowCount);
+                                "LIMIT :max";
                 LOGGER.debug("SQL QUERY: {}", query);
                 return query;
             }
@@ -583,14 +582,18 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
                 query.setClass(Subscription.class);
 
-                ForwardQueryResult fqr = (ForwardQueryResult) query.execute();
+                Map params = new HashMap();
+                params.put("offset", offset);
+                params.put("dow", dow.toString());
+                params.put("max", rowCount);
+                ForwardQueryResult fqr = (ForwardQueryResult) query.executeWithMap(params);
 
                 return (List<Subscription>) fqr;
             }
         };
 
         List<Subscription> subscriptions = subscriptionDataService.executeSQLQuery(queryExecution);
-        LOGGER.debug(String.format("findActiveSubscriptionsForDay(%s, %d, %d) %s", day, offset, rowCount, queryTimer.time()));
+        LOGGER.debug("findActiveSubscriptionsForDay(dow={}, offset={}, rowCount={}) {}", dow, offset, rowCount, queryTimer.time());
         return subscriptions;
     }
 

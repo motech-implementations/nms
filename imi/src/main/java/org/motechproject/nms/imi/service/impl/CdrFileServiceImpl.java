@@ -87,6 +87,8 @@ public class CdrFileServiceImpl implements CdrFileService {
     private static final int MIN_CALL_DATA_RETENTION_DURATION_IN_DAYS = 5;
     private static final String CDR_CSR_CLEANUP_SUBJECT = "nms.imi.cdr_csr.cleanup";
     private static final String CDR_TABLE_NAME = "motech_data_services.nms_imi_cdrs";
+    private static final String DELETE_CDR_TABLE = "DELETE FROM motech_data_services.nms_imi_cdrs where creationDate < now() - INTERVAL :interval DAY";
+    private static final String DELETE_CSR_TABLE = "DELETE FROM motech_data_services.nms_imi_csrs where creationDate < now() - INTERVAL :interval DAY";
     private static final String NMS_IMI_KK_PROCESS_CSR = "nms.imi.kk.process_csr";
     private static final String NMS_IMI_PROCESS_CHUNK = "nms.imi.process_chunk";
     private static final String CDR_PHASE_2 = "nms.imi.kk.cdr_phase_2";
@@ -127,6 +129,7 @@ public class CdrFileServiceImpl implements CdrFileService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CdrFileServiceImpl.class);
     public static final double HALF = 0.5;
+    public static final String FILE = "file";
 
     private SettingsFacade settingsFacade;
     private EventRelay eventRelay;
@@ -401,7 +404,7 @@ public class CdrFileServiceImpl implements CdrFileService {
         }
 
         Map<String, Object> params = new HashMap<>();
-        params.put("file", file);
+        params.put(FILE, file);
         params.put("name", name);
         params.put("chunk", chunk);
         params.put("chunkCount", chunkCount);
@@ -427,8 +430,8 @@ public class CdrFileServiceImpl implements CdrFileService {
 
             @Override
             public String getSqlQuery() {
-                String query = String.format("SELECT MIN(processingStart) as start, MAX(processingEnd) as end " +
-                        "FROM nms_imi_chunk_audit_records WHERE file = '%s'", file);
+                String query = "SELECT MIN(processingStart) as start, MAX(processingEnd) as end " +
+                        "FROM nms_imi_chunk_audit_records WHERE file = :file";
                 LOGGER.debug("SQL QUERY: {}", query);
                 return query;
             }
@@ -436,7 +439,9 @@ public class CdrFileServiceImpl implements CdrFileService {
             @Override
             public String execute(Query query) {
 
-                ForwardQueryResult fqr = (ForwardQueryResult) query.execute();
+                Map params = new HashMap();
+                params.put(FILE, file);
+                ForwardQueryResult fqr = (ForwardQueryResult) query.executeWithMap(params);
 
                 if (fqr.isEmpty()) {
                     throw new IllegalStateException("No row was returned!");
@@ -464,8 +469,7 @@ public class CdrFileServiceImpl implements CdrFileService {
 
             @Override
             public String getSqlQuery() {
-                String query = String.format("SELECT * FROM nms_imi_chunk_audit_records WHERE file = '%s' AND " +
-                        "node IS NULL LIMIT 1", file);
+                String query = "SELECT * FROM nms_imi_chunk_audit_records WHERE file = :file AND node IS NULL LIMIT 1";
                 LOGGER.debug("SQL QUERY: {}", query);
                 return query;
             }
@@ -475,7 +479,9 @@ public class CdrFileServiceImpl implements CdrFileService {
 
                 query.setClass(CallRetry.class);
 
-                ForwardQueryResult fqr = (ForwardQueryResult) query.execute();
+                Map params = new HashMap();
+                params.put(FILE, file);
+                ForwardQueryResult fqr = (ForwardQueryResult) query.executeWithMap(params);
 
                 return (List<ChunkAuditRecord>) fqr;
             }
@@ -522,7 +528,7 @@ public class CdrFileServiceImpl implements CdrFileService {
     public void processChunk(MotechEvent event) throws IOException {
         DateTime processingStart = DateTime.now();
         Timer timer = new Timer("csr", "csrs");
-        String file = (String) event.getParameters().get("file");
+        String file = (String) event.getParameters().get(FILE);
         String name = (String) event.getParameters().get("name");
         String json = (String) event.getParameters().get("chunk");
         ObjectMapper mapper = new ObjectMapper();
@@ -1145,8 +1151,8 @@ public class CdrFileServiceImpl implements CdrFileService {
         LOGGER.debug(String.format(LOG_TEMPLATE, callDetailRecordDataService.count(), CDR_TABLE_NAME));
         LOGGER.debug(String.format(LOG_TEMPLATE, callSummaryRecordDataService.count(), CSR_TABLE_NAME));
 
-        deleteRecords(cdrDuration, CDR_TABLE_NAME);
-        deleteRecords(cdrDuration, CSR_TABLE_NAME);
+        deleteRecords(cdrDuration, true);
+        deleteRecords(cdrDuration, false);
 
         LOGGER.debug(String.format(LOG_TEMPLATE, callDetailRecordDataService.count(), CDR_TABLE_NAME));
         LOGGER.debug(String.format(LOG_TEMPLATE, callSummaryRecordDataService.count(), CSR_TABLE_NAME));
@@ -1158,16 +1164,15 @@ public class CdrFileServiceImpl implements CdrFileService {
     /**
      * Helper to clean out the CDR table with the given retention policy
      * @param retentionInDays min days to keep CDR for
-     * @param tableName name of the cdr or csr table
+     * @param cdrTable if true, delete the cdr table, otherwise delete the csr table
      */
-    private void deleteRecords(final int retentionInDays, final String tableName) {
+    private void deleteRecords(final int retentionInDays, final boolean cdrTable) {
         @SuppressWarnings("unchecked")
         SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
 
             @Override
             public String getSqlQuery() {
-                String query = String.format(
-                        "DELETE FROM %s where creationDate < now() - INTERVAL %d DAY", tableName, retentionInDays);
+                String query = cdrTable ? DELETE_CDR_TABLE : DELETE_CSR_TABLE;
                 LOGGER.debug("SQL QUERY: {}", query);
                 return query;
             }
@@ -1175,19 +1180,20 @@ public class CdrFileServiceImpl implements CdrFileService {
             @Override
             public Long execute(Query query) {
 
-                return (Long) query.execute();
+                Map params = new HashMap();
+                params.put("interval", retentionInDays);
+                return (Long) query.executeWithMap(params);
             }
         };
 
         // FYI: doesn't matter what data service we use since it is just used as a vehicle to execute the custom query
         Long rowCount = callDetailRecordDataService.executeSQLQuery(queryExecution);
-        LOGGER.debug(String.format("Table %s cleaned up and deleted %d rows", tableName, rowCount));
+        LOGGER.debug("Deleted {} {} from the {} table", rowCount, rowCount == 1L ? "row" : "rows", cdrTable ? "CDR" : "CSR");
 
         // evict caches for the changes to be read again
-        if (tableName.equalsIgnoreCase(CDR_TABLE_NAME)) {
+        if (cdrTable) {
             callDetailRecordDataService.evictEntityCache(false);
-        }
-        if (tableName.equalsIgnoreCase(CSR_TABLE_NAME)) {
+        } else {
             callSummaryRecordDataService.evictEntityCache(false);
         }
     }

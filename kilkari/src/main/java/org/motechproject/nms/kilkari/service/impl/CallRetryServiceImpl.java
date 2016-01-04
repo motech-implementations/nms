@@ -12,7 +12,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.jdo.Query;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service("callRetryService")
 public class CallRetryServiceImpl implements CallRetryService {
@@ -34,8 +36,7 @@ public class CallRetryServiceImpl implements CallRetryService {
 
             @Override
             public String getSqlQuery() {
-                String query = String.format("SELECT * FROM nms_kk_retry_records WHERE id > %d ORDER BY id LIMIT %d",
-                        offset, max);
+                String query = "SELECT * FROM nms_kk_retry_records WHERE id > :id ORDER BY id LIMIT :limit";
                 LOGGER.debug("SQL QUERY: {}", query);
                 return query;
             }
@@ -45,7 +46,10 @@ public class CallRetryServiceImpl implements CallRetryService {
 
                 query.setClass(CallRetry.class);
 
-                ForwardQueryResult fqr = (ForwardQueryResult) query.execute();
+                Map params = new HashMap();
+                params.put("id", offset);
+                params.put("limit", max);
+                ForwardQueryResult fqr = (ForwardQueryResult) query.executeWithMap(params);
 
                 return (List<CallRetry>) fqr;
             }
@@ -64,9 +68,7 @@ public class CallRetryServiceImpl implements CallRetryService {
 
             @Override
             public String getSqlQuery() {
-                String query = String.format(
-                        "DELETE FROM nms_kk_retry_records where creationDate < now() - INTERVAL %d DAY",
-                        retentionInDays);
+                String query = "DELETE FROM nms_kk_retry_records where creationDate < now() - INTERVAL :interval DAY";
                 LOGGER.debug("SQL QUERY: {}", query);
                 return query;
             }
@@ -74,7 +76,9 @@ public class CallRetryServiceImpl implements CallRetryService {
             @Override
             public Long execute(Query query) {
 
-                return (Long) query.execute();
+                Map params = new HashMap();
+                params.put("interval", retentionInDays);
+                return (Long) query.executeWithMap(params);
             }
         };
 
