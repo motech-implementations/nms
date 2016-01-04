@@ -73,13 +73,14 @@ public class CsrServiceImpl implements CsrService {
     }
 
 
-    private void deactivateSubscription(Subscription subscription) {
+    private void handleDndForSubscription(Subscription subscription) {
 
         if (subscription.getOrigin() == SubscriptionOrigin.IVR) {
+            // Raise an alert since the user chose to subscribe voluntarily through IVR but we got a DND response
             String error = String.format("Subscription %s was rejected (DND) but its origin is IVR, not MCTS!",
                     subscription.getSubscriptionId());
             LOGGER.error(error);
-            alertService.create(subscription.getSubscriptionId(), "subscription", error, AlertType.CRITICAL,
+            alertService.create(subscription.getSubscriptionId(), "subscription", error, AlertType.HIGH,
                     AlertStatus.NEW, 0, null);
             return;
         }
@@ -180,7 +181,7 @@ public class CsrServiceImpl implements CsrService {
                     break;
 
                 case REJECTED:
-                    deactivateSubscription(subscription);
+                    handleDndForSubscription(subscription);
                     whatHappened = "RE";
                     break;
 
