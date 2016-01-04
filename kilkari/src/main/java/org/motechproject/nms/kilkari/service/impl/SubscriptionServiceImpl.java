@@ -490,12 +490,13 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         SqlQueryExecution sqe = new SqlQueryExecution() {
 
             private String now = TIME_FORMATTER.print(DateTime.now());
+            private String upto = TIME_FORMATTER.print(upToDateTime);
 
             @Override
             public String getSqlQuery() {
                 return String.format("UPDATE nms_subscriptions SET status='ACTIVE', activationDate='%s', " +
                                 "modificationDate='%s' WHERE status='PENDING_ACTIVATION' AND startDate < '%s'",
-                        now, now, upToDateTime);
+                        now, now, upto);
             }
 
             @Override
