@@ -62,15 +62,14 @@ public class CsrServiceImpl implements CsrService {
 
         resetWelcomeFlagInSubscription(subscription);
 
-        if (!subscription.isLastPackMessage(contentFileName)) {
-            // This subscription has not completed, do nothing
+        if (subscription.getStatus() == SubscriptionStatus.DEACTIVATED || !subscription.isLastPackMessage(contentFileName)) {
+            // if subscription is deactivated or content was not the last message, do nothing
             return;
         }
 
         // Mark the subscription completed
         subscription.setStatus(SubscriptionStatus.COMPLETED);
         subscriptionDataService.update(subscription);
-
     }
 
 

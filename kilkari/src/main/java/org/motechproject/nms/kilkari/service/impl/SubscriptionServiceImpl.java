@@ -46,8 +46,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.jdo.Query;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Implementation of the {@link SubscriptionService} interface.
@@ -236,32 +238,35 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         final DateTime oldestPregnancyStart = currentTime.minusDays(PREGNANCY_PACK_LENGTH_DAYS).withTimeAtStartOfDay();
         final DateTime oldestChildStart = currentTime.minusDays(CHILD_PACK_LENGTH_DAYS).withTimeAtStartOfDay();
 
-        LOGGER.debug(String.format("Completing active pregnancy susbscriptions older than %s", oldestPregnancyStart));
-        LOGGER.debug(String.format("Completing active child susbscriptions older than %s", oldestChildStart));
+        LOGGER.debug("Completing active pregnancy susbscriptions older than {}", oldestPregnancyStart);
+        LOGGER.debug("Completing active child susbscriptions older than {}", oldestChildStart);
 
         @SuppressWarnings("unchecked")
         SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
 
             @Override
             public String getSqlQuery() {
-                String query = String.format(
+                String query =
                         "UPDATE motech_data_services.nms_subscriptions AS s " +
                         "JOIN motech_data_services.nms_subscription_packs AS sp " +
                         "ON s.subscriptionPack_id_OID = sp.id " +
-                        "SET s.status = 'COMPLETED', s.endDate = '%s' " +
+                        "SET s.status = 'COMPLETED', s.endDate = :currentTime, s.modificationDate = :currentTime " +
                         "WHERE " +
                         "(s.status = 'ACTIVE' OR s.status = 'PENDING_ACTIVATION') AND " +
-                        "((sp.type = 'PREGNANCY' AND s.startDate < '%s') OR (sp.type = 'CHILD' AND s.startDate < '%s'))",
-                        currentTime.toString(dateTimeFormatter),
-                        oldestPregnancyStart.toString(dateTimeFormatter),
-                        oldestChildStart.toString(dateTimeFormatter));
+                        "((sp.type = 'PREGNANCY' AND s.startDate < :oldestPregnancyStart) " +
+                        "OR " +
+                        "(sp.type = 'CHILD' AND s.startDate < :oldestChildStart))";
                 LOGGER.debug("SQL QUERY: {}", query);
                 return query;
             }
 
             @Override
             public Long execute(Query query) {
-                return (Long) query.execute();
+                Map params = new HashMap();
+                params.put("currentTime", currentTime.toString(dateTimeFormatter));
+                params.put("oldestPregnancyStart", oldestPregnancyStart.toString(dateTimeFormatter));
+                params.put("oldestChildStart", oldestChildStart.toString(dateTimeFormatter));
+                return (Long) query.executeWithMap(params);
             }
         };
 
@@ -489,18 +494,20 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     public void activatePendingSubscriptionsUpTo(final DateTime upToDateTime) {
         SqlQueryExecution sqe = new SqlQueryExecution() {
 
-            private String now = TIME_FORMATTER.print(DateTime.now());
-
             @Override
             public String getSqlQuery() {
-                return String.format("UPDATE nms_subscriptions SET status='ACTIVE', activationDate='%s', " +
-                                "modificationDate='%s' WHERE status='PENDING_ACTIVATION' AND startDate < '%s'",
-                        now, now, upToDateTime);
+                String query = "UPDATE nms_subscriptions SET status='ACTIVE', activationDate = :now, " +
+                                "modificationDate = :now WHERE status='PENDING_ACTIVATION' AND startDate < :upto";
+                LOGGER.debug("SQL QUERY: {}", query);
+                return query;
             }
 
             @Override
             public Object execute(Query query) {
-                query.execute();
+                Map params = new HashMap();
+                params.put("now", DateTime.now().toString(TIME_FORMATTER));
+                params.put("upto", upToDateTime.toString(TIME_FORMATTER));
+                query.executeWithMap(params);
                 return null;
             }
         };
@@ -560,7 +567,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
 
     @Override
-    public List<Subscription> findActiveSubscriptionsForDay(final DayOfTheWeek day, final long offset,
+    public List<Subscription> findActiveSubscriptionsForDay(final DayOfTheWeek dow, final long offset,
                                                             final int rowCount) {
         Timer queryTimer = new Timer();
 
@@ -569,19 +576,18 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
             @Override
             public String getSqlQuery() {
-                String query = String.format(
-                        "select s.id as id, activationDate, deactivationReason, endDate, firstMessageDayOfWeek, " +
+                String query =  "SELECT s.id as id, activationDate, deactivationReason, endDate, firstMessageDayOfWeek, " +
                                 "s.needsWelcomeMessageViaObd, s.origin, s.secondMessageDayOfWeek, s.startDate, " +
                                 "s.status, s.subscriber_id_OID, s.subscriptionId, s.subscriptionPack_id_OID, " +
                                 "s.creationDate, s.creator, s.modificationDate, s.modifiedBy, s.owner " +
                                 "FROM nms_subscriptions AS s " +
                                 "INNER JOIN nms_subscription_packs AS p ON s.subscriptionPack_id_OID = p.id " +
-                                "WHERE s.id > %d AND " +
-                                "(firstMessageDayOfWeek = '%s' OR " +
-                                "(secondMessageDayOfWeek = '%s' AND p.messagesPerWeek = 2)) AND " +
+                                "WHERE s.id > :offset AND " +
+                                "(firstMessageDayOfWeek = :dow OR " +
+                                "(secondMessageDayOfWeek = :dow AND p.messagesPerWeek = 2)) AND " +
                                 "status = 'ACTIVE' " +
                                 "ORDER BY s.id " +
-                                "LIMIT %d", offset, day, day, rowCount);
+                                "LIMIT :max";
                 LOGGER.debug("SQL QUERY: {}", query);
                 return query;
             }
@@ -591,14 +597,18 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
                 query.setClass(Subscription.class);
 
-                ForwardQueryResult fqr = (ForwardQueryResult) query.execute();
+                Map params = new HashMap();
+                params.put("offset", offset);
+                params.put("dow", dow.toString());
+                params.put("max", rowCount);
+                ForwardQueryResult fqr = (ForwardQueryResult) query.executeWithMap(params);
 
                 return (List<Subscription>) fqr;
             }
         };
 
         List<Subscription> subscriptions = subscriptionDataService.executeSQLQuery(queryExecution);
-        LOGGER.debug(String.format("findActiveSubscriptionsForDay(%s, %d, %d) %s", day, offset, rowCount, queryTimer.time()));
+        LOGGER.debug("findActiveSubscriptionsForDay(dow={}, offset={}, rowCount={}) {}", dow, offset, rowCount, queryTimer.time());
         return subscriptions;
     }
 
