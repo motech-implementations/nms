@@ -387,7 +387,8 @@ public class TargetFileServiceImpl implements TargetFileService {
                     int daysIntoPack = Days.daysBetween(subscription.getStartDate(), timestamp).getDays();
                     if (daysIntoPack == pack.getWeeks() * 7) {
                         //
-                        // Do not add subscriptions on their last day to the fresh call list
+                        // Do not add subscriptions on their last day to the fresh call list since we
+                        // will try to fetch message for current +1 week, which wouldn't exist
                         // See https://applab.atlassian.net/browse/NMS-301
                         //
                         LOGGER.debug("Ignoring last day for subscription {} from fresh calls.",
