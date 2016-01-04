@@ -1,5 +1,6 @@
 package org.motechproject.nms.testing.it.kilkari;
 
+import junit.framework.Assert;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -403,6 +404,57 @@ public class CsrServiceBundleIT extends BasePaxIT {
         assertEquals(3, subscriptions.size());
     }
 
+    /**
+     * Verify that we don't update deactivated subscriptions to completed. NIP-283
+     * https://applab.atlassian.net/browse/NIP-283
+     */
+    @Test
+    public void verifyDeactivatedSubscriptionCompletion() {
+        DateTime now = DateTime.now();
+
+        // created susbscription and retry record, mark deactivated and send CSR with success
+        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, now.minusDays(3),
+                SubscriptionPackType.CHILD);
+
+        subscription.setStatus(SubscriptionStatus.DEACTIVATED);
+        subscriptionDataService.update(subscription);
+
+        String contentFileName = sh.getContentMessageFile(subscription, 0);
+        String weekId = sh.getWeekId(subscription, 0);
+        callRetryDataService.create(new CallRetry(
+                subscription.getSubscriptionId(),
+                subscription.getSubscriber().getCallingNumber(),
+                CallStage.RETRY_LAST,
+                contentFileName,
+                weekId,
+                rh.hindiLanguage().getCode(),
+                rh.delhiCircle().getName(),
+                SubscriptionOrigin.MCTS_IMPORT,
+                "20151119124330",
+                0
+        ));
+
+        CallSummaryRecordDto record = new CallSummaryRecordDto(
+                subscription,
+                StatusCode.OBD_SUCCESS_CALL_CONNECTED,
+                FinalCallStatus.SUCCESS,
+                contentFileName,
+                weekId,
+                rh.hindiLanguage(),
+                rh.delhiCircle(),
+                "20151119124331"
+        );
+
+        processCsr(record);
+
+        subscription = subscriptionDataService.findBySubscriptionId(subscription.getSubscriptionId());
+
+        // There should be no calls to retry since the call was marked as succeeded
+        assertEquals(0, callRetryDataService.count());
+
+        // We should *NOT*  update the status on a deactivated subscription (to completed)
+        assertEquals(SubscriptionStatus.DEACTIVATED, subscription.getStatus());
+    }
 
     /**
      * To check that NMS shall not retry OBD message for which all OBD attempts(1 actual+3 retry) fails with
@@ -1193,8 +1245,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
         for (CallSummaryRecordDto record : helper.getRecords()) {
 
-        processCsr(record);
-
+            processCsr(record);
         }
 
         List<Subscription> subscriptions = subscriptionDataService.retrieveAll();

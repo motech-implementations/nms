@@ -7,6 +7,8 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.motechproject.alerts.contract.AlertsDataService;
+import org.motechproject.alerts.domain.Alert;
 import org.motechproject.nms.imi.service.SettingsService;
 import org.motechproject.nms.imi.service.TargetFileService;
 import org.motechproject.nms.imi.service.contract.TargetFileNotification;
@@ -103,9 +105,10 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
     SettingsService settingsService;
     @Inject
     TestingService testingService;
-
     @Inject
     PlatformTransactionManager transactionManager;
+    @Inject
+    AlertsDataService alertsDataService;
 
     RegionHelper rh;
     SubscriptionHelper sh;
@@ -191,17 +194,25 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         Subscription subscription7 = subscriptionService.createSubscription(7777777777L, rh.kannadaLanguage(),
                 sh.childPack(), SubscriptionOrigin.IVR);
 
-        transactionManager.commit(status);
-
         //Set the clock back to normal
         DateTimeUtils.setCurrentMillisSystem();
+
+        Subscriber subscriber8 = new Subscriber(8000000000L, rh.hindiLanguage(), rh.delhiCircle());
+        subscriber8.setLastMenstrualPeriod(DateTime.now().minusDays(72 * 7));
+        subscriber8 = subscriberDataService.create(subscriber8);
+        Subscription subscription8 = subscriptionService.createSubscription(8000000000L, rh.hindiLanguage(), sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
+        subscription8.setStatus(SubscriptionStatus.ACTIVE);
+        subscription8.setStartDate(subscriber8.getLastMenstrualPeriod());
+        subscription8.setNeedsWelcomeMessageViaObd(false);
+        subscription8 = subscriptionDataService.update(subscription8);
+
+        transactionManager.commit(status);
 
         // Should be picked up because all callRetries are picked up
         DateTime dt = DateTime.now().minusDays(1);
         callRetryDataService.create(new CallRetry("11111111-1111-1111-1111-111111111111", 3333333333L,
                 CallStage.RETRY_1, "w1_m1.wav", "w1_1",
                 rh.hindiLanguage().getCode(), rh.delhiCircle().getName(), SubscriptionOrigin.IVR, "20151119124330", 0));
-
 
         TargetFileNotification tfn = targetFileService.generateTargetFile();
         assertNotNull(tfn);
@@ -271,6 +282,10 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
                 subscriptionDataService.findBySubscriptionId(subscription4.getSubscriptionId()).getStatus());
         assertEquals(SubscriptionStatus.ACTIVE,
                 subscriptionDataService.findBySubscriptionId(subscription5.getSubscriptionId()).getStatus());
+
+
+        List<Alert> alerts = alertsDataService.retrieveAll();
+        assertEquals(0, alerts.size());
     }
 
 
