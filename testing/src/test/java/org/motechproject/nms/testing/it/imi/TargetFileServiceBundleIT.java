@@ -217,6 +217,13 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         TargetFileNotification tfn = targetFileService.generateTargetFile();
         assertNotNull(tfn);
 
+
+        // Verify modificationDate is not earlier than endDate
+        for (Subscription s : subscriptionDataService.retrieveAll()) {
+            assert(!s.getModificationDate().isBefore(s.getEndDate()));
+        }
+
+
         // Should pickup subscription1
         // Should not pickup subscription2 because its status is not ACTIVE
         // Should not pickup subscription3 because it's for tomorrow
