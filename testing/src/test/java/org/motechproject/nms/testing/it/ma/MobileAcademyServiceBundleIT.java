@@ -6,6 +6,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.event.MotechEvent;
+import org.motechproject.mtraining.domain.ActivityRecord;
 import org.motechproject.mtraining.domain.ActivityState;
 import org.motechproject.mtraining.domain.Bookmark;
 import org.motechproject.mtraining.repository.ActivityDataService;
@@ -334,6 +335,48 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         assertNotNull(retrieved.getCallId());
         assertNull(retrieved.getBookmark());
         assertNull(retrieved.getScoresByChapter());
+    }
+
+    @Test
+    public void testResetBookmarkNewStartActivity() {
+
+        long callingNumber = 9987654321L;
+        MaBookmark bookmark = new MaBookmark(callingNumber, VALID_CALL_ID, null, null);
+        maService.setBookmark(bookmark);
+        List<Bookmark> added = bookmarkDataService.findBookmarksForUser("9987654321");
+        assertTrue(added.size() == 1);
+
+        // set final bookmark and trigger completed activity record
+        bookmark.setBookmark(FINAL_BOOKMARK);
+        Map<String, Integer> scores = new HashMap<>();
+        for (int i = 1; i < 12; i++) {
+            scores.put(String.valueOf(i), 4);
+        }
+        bookmark.setScoresByChapter(scores);
+        maService.setBookmark(bookmark);
+
+        // this beforeCount includes completed activity now
+        int beforeCount = activityDataService.findRecordsForUser(String.valueOf(callingNumber)).size();
+
+        // verify that the bookmark is reset on the following get call
+        MaBookmark retrieved = maService.getBookmark(callingNumber, VALID_CALL_ID);
+        assertNotNull(retrieved.getCallingNumber());
+        assertNotNull(retrieved.getCallId());
+        assertNull(retrieved.getBookmark());
+        assertNull(retrieved.getScoresByChapter());
+
+        // set new bookmark to trigger started activity
+        bookmark.setBookmark("Chapter01_Lesson01");
+        scores.clear();
+        scores.put("1", 3);
+        bookmark.setScoresByChapter(scores);
+        maService.setBookmark(bookmark);
+
+        // this will now include the new start activity
+        int afterCount = activityDataService.findRecordsForUser(String.valueOf(callingNumber)).size();
+
+        // verify that we added a new activity since the last completion
+        assertEquals(beforeCount + 1, afterCount);
     }
 
     @Test
