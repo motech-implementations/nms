@@ -243,7 +243,7 @@ public class CourseNotificationServiceImpl implements CourseNotificationService 
                     SMS_CONTENT_PREFIX + smsLanguageProperty);
         }
 
-        int attempts = activityService.getAllActivityForUser(callingNumber.toString()).size();
+        int attempts = activityService.getCompletedActivityForUser(callingNumber.toString()).size();
         String smsReferenceNumber = locationCode + callingNumber + attempts;
         completionRecord.setSmsReferenceNumber(smsReferenceNumber);
         completionRecordDataService.update(completionRecord);

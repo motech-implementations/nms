@@ -194,7 +194,7 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
 
         if (existingBookmark == null) {
             // if no bookmarks exist for user
-            LOGGER.info("No bookmarks found for user " + callingNumber);
+            LOGGER.info("No bookmarks found for user " + LogHelper.obscure(saveBookmark.getCallingNumber()));
             bookmarkService.createBookmark(setBookmarkProperties(saveBookmark, new Bookmark()));
         } else {
 
@@ -301,8 +301,7 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
         // if the bookmark is final, reset it
         if (toReturn.getBookmark() != null && toReturn.getBookmark().equals(FINAL_BOOKMARK)) {
             LOGGER.debug("We need to reset bookmark to new state.");
-            fromBookmark.getProgress().remove(SCORES_KEY);
-            fromBookmark.getProgress().remove(BOOKMARK_KEY);
+            fromBookmark.setProgress(new HashMap<String, Object>());
             bookmarkService.updateBookmark(fromBookmark);
 
             toReturn.setScoresByChapter(null);
