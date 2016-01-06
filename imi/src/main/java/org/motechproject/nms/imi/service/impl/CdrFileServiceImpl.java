@@ -190,7 +190,7 @@ public class CdrFileServiceImpl implements CdrFileService {
     }
 
 
-    private void sendNotificationRequest(CdrFileProcessedNotification cfpn) {
+    private boolean sendNotificationRequest(CdrFileProcessedNotification cfpn) {
         String notificationUrl = settingsFacade.getProperty(CDR_FILE_NOTIFICATION_URL);
         LOGGER.debug("Sending {} to {}", cfpn, notificationUrl);
 
@@ -209,7 +209,7 @@ public class CdrFileServiceImpl implements CdrFileService {
                     e.getMessage()), e);
         }
 
-        sender.sendNotificationRequest(httpPost, HttpStatus.SC_OK, cfpn.getFileName(), "cdrFile Notification Request");
+        return sender.sendNotificationRequest(httpPost, HttpStatus.SC_OK, cfpn.getFileName(), "cdrFile Notification Request");
     }
 
 
@@ -1023,10 +1023,30 @@ public class CdrFileServiceImpl implements CdrFileService {
                         request.getCdrSummary().getCdrFile(), false,
                         String.format("%d invalid CSR rows, see tomcat log", summaryErrors.size()), null, null));
             }
+        } else {
+            // record successful verification of detail & summary files
+            fileAuditRecordDataService.create(new FileAuditRecord(FileType.CDR_DETAIL_FILE,
+                    request.getCdrDetail().getCdrFile(), true, "Successfully verified",
+                    request.getCdrDetail().getRecordsCount(), request.getCdrDetail().getChecksum()));
+            fileAuditRecordDataService.create(new FileAuditRecord(FileType.CDR_SUMMARY_FILE,
+                    request.getCdrSummary().getCdrFile(), true, "Successfully verified",
+                    request.getCdrSummary().getRecordsCount(), request.getCdrSummary().getChecksum()));
         }
 
+
         LOGGER.info("Phase 2 - sendNotificationRequest");
-        sendNotificationRequest(new CdrFileProcessedNotification(status.getValue(), request.getFileName(), failure));
+        boolean notificationSuccess = sendNotificationRequest(new CdrFileProcessedNotification(status.getValue(),
+                request.getFileName(), failure));
+        boolean success = (status == FileProcessedStatus.FILE_PROCESSED_SUCCESSFULLY);
+        String message = String.format("%s %s notification to IMI",
+                notificationSuccess ? "Successfully sent" : "Error sending", success ? "success" : "failure");
+
+        fileAuditRecordDataService.create(new FileAuditRecord(FileType.CDR_DETAIL_FILE,
+                request.getCdrDetail().getCdrFile(), notificationSuccess, message,
+                request.getCdrDetail().getRecordsCount(), request.getCdrDetail().getChecksum()));
+        fileAuditRecordDataService.create(new FileAuditRecord(FileType.CDR_SUMMARY_FILE,
+                request.getCdrSummary().getCdrFile(), notificationSuccess, message,
+                request.getCdrSummary().getRecordsCount(), request.getCdrSummary().getChecksum()));
 
 
         //
