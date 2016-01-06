@@ -11,6 +11,7 @@ import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.alerts.domain.Alert;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.nms.imi.domain.CallDetailRecord;
+import org.motechproject.nms.imi.domain.FileAuditRecord;
 import org.motechproject.nms.imi.exception.InvalidCallRecordFileException;
 import org.motechproject.nms.imi.repository.CallDetailRecordDataService;
 import org.motechproject.nms.imi.repository.CallSummaryRecordDataService;
@@ -228,6 +229,14 @@ public class CdrFileServiceBundleIT extends BasePaxIT {
         MotechEvent motechEvent = new MotechEvent(PROCESS_FILES_SUBJECT, helper.cdrFileNotificationParams());
         List<String> errors = cdrFileService.cdrProcessPhase2(motechEvent);
         assertEquals(0, errors.size());
+
+        // Verify FileAuditRecord
+        List<FileAuditRecord> records = fileAuditRecordDataService.retrieveAll();
+        assertEquals(4, records.size());
+        assertEquals(true, records.get(0).getSuccess());
+        assertEquals(true, records.get(1).getSuccess());
+        assertEquals(false, records.get(2).getSuccess());
+        assertEquals(false, records.get(3).getSuccess());
 
         // This is going to try to send the file processed notification back to IMI, but will fail since we
         // didn't setup a server
