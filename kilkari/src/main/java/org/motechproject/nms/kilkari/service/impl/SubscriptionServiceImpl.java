@@ -46,6 +46,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.jdo.Query;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -68,6 +69,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private static final String MORE_THAN_ONE_SUBSCRIBER = "More than one subscriber returned for callingNumber %s";
 
     private static final String PACK_CACHE_EVICT_MESSAGE = "nms.kilkari.cache.evict.pack";
+
+    private static final String SUBSCRIPTION_PURGE_ENABLE = "kilkari.purge_closed_subscriptions_enable";
 
     //2015-10-21 05:11:56.598
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.S");
@@ -178,56 +181,80 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     @MotechListener(subjects = { SUBSCRIPTION_PURGE_EVENT_SUBJECT })
     @Transactional
     public void purgeOldInvalidSubscriptions(MotechEvent event) {
-        int weeksToKeepInvalidFLWs = Integer.parseInt(settingsFacade.getProperty(WEEKS_TO_KEEP_CLOSED_SUBSCRIPTIONS));
-        final SubscriptionStatus completed = SubscriptionStatus.COMPLETED;
-        final SubscriptionStatus deactivated = SubscriptionStatus.DEACTIVATED;
-        final DateTime cutoff = DateTime.now().minusWeeks(weeksToKeepInvalidFLWs).withTimeAtStartOfDay();
+        boolean subsriptionPurgeEnableFlag = Boolean
+                .parseBoolean(settingsFacade
+                        .getProperty(SUBSCRIPTION_PURGE_ENABLE));
+        if (subsriptionPurgeEnableFlag) {
+            int weeksToKeepInvalidFLWs = Integer.parseInt(settingsFacade
+                    .getProperty(WEEKS_TO_KEEP_CLOSED_SUBSCRIPTIONS));
+            final SubscriptionStatus completed = SubscriptionStatus.COMPLETED;
+            final SubscriptionStatus deactivated = SubscriptionStatus.DEACTIVATED;
+            final DateTime cutoff = DateTime.now()
+                    .minusWeeks(weeksToKeepInvalidFLWs).withTimeAtStartOfDay();
 
-        @SuppressWarnings("unchecked")
-        QueryExecution<List<Subscription>> queryExecution = new QueryExecution<List<Subscription>>() {
-            @Override
-            public List<Subscription> execute(Query query, InstanceSecurityRestriction restriction) {
+            @SuppressWarnings("unchecked")
+            QueryExecution<List<Subscription>> queryExecution = new QueryExecution<List<Subscription>>() {
 
-                query.setFilter("(status == completed || status == deactivated) && endDate < cutoff");
-                query.declareParameters("org.motechproject.nms.kilkari.domain.SubscriptionStatus completed, " +
-                                        "org.motechproject.nms.kilkari.domain.SubscriptionStatus deactivated, " +
-                                        "org.joda.time.DateTime cutoff");
+                @Override
+                public List<Subscription> execute(Query query,
+                        InstanceSecurityRestriction restriction) {
 
+                    query.setFilter("(status == completed || status == deactivated) && endDate < cutoff");
+                    query.declareParameters("org.motechproject.nms.kilkari.domain.SubscriptionStatus completed, "
+                            + "org.motechproject.nms.kilkari.domain.SubscriptionStatus deactivated, "
+                            + "org.joda.time.DateTime cutoff");
 
-                return (List<Subscription>) query.execute(completed, deactivated, cutoff);
+                    return (List<Subscription>) query.execute(completed,
+                            deactivated, cutoff);
+                }
+            };
+
+            List<Subscription> purgeList = subscriptionDataService
+                    .executeQuery(queryExecution);
+
+            int purgedSubscribers = 0;
+            int purgedSubscriptions = 0;
+            for (Subscription subscription : purgeList) {
+                String subscriptionId = subscription.getSubscriptionId();
+                Long callingNumber = subscription.getSubscriber()
+                        .getCallingNumber();
+
+                // If, for some reason, there is a retry record for that
+                // subscription, delete it too.
+                CallRetry callRetry = callRetryDataService
+                        .findBySubscriptionId(subscription.getSubscriptionId());
+                if (callRetry != null) {
+                    LOGGER.debug(
+                            "Purging CallRetry record for subscription {}",
+                            subscription.getSubscriptionId());
+                    callRetryDataService.delete(callRetry);
+                }
+
+                LOGGER.debug("Purging subscription {}",
+                        subscription.getSubscriptionId());
+                subscriptionDataService.delete(subscription);
+
+                // I need to load the subscriber since I deleted one of their
+                // subscription prior
+                Subscriber subscriber = getSubscriber(callingNumber);
+                purgedSubscriptions++;
+                if (subscriber.getSubscriptions().size() == 0) {
+                    LOGGER.debug(
+                            "Purging subscriber for subscription {} as it was the last subscription for that subscriber",
+                            subscriptionId);
+                    subscriberDataService.delete(subscriber);
+                    purgedSubscribers++;
+                }
             }
-        };
 
-        List<Subscription> purgeList = subscriptionDataService.executeQuery(queryExecution);
-
-        int purgedSubscribers = 0;
-        int purgedSubscriptions = 0;
-        for (Subscription subscription : purgeList) {
-            String subscriptionId = subscription.getSubscriptionId();
-            Long callingNumber = subscription.getSubscriber().getCallingNumber();
-
-            // If, for some reason, there is a retry record for that subscription, delete it too.
-            CallRetry callRetry = callRetryDataService.findBySubscriptionId(subscription.getSubscriptionId());
-            if (callRetry != null) {
-                LOGGER.debug("Purging CallRetry record for subscription {}", subscription.getSubscriptionId());
-                callRetryDataService.delete(callRetry);
-            }
-
-            LOGGER.debug("Purging subscription {}", subscription.getSubscriptionId());
-            subscriptionDataService.delete(subscription);
-
-            // I need to load the subscriber since I deleted one of their subscription prior
-            Subscriber subscriber = getSubscriber(callingNumber);
-            purgedSubscriptions++;
-            if (subscriber.getSubscriptions().size() == 0) {
-                LOGGER.debug("Purging subscriber for subscription {} as it was the last subscription for that subscriber",
-                        subscriptionId);
-                subscriberDataService.delete(subscriber);
-                purgedSubscribers++;
-            }
+            LOGGER.info(String.format(
+                    "Purged %s subscribers and %s subscriptions with status (%s or %s) and "
+                            + "endDate date before %s", purgedSubscribers,
+                    purgedSubscriptions, SubscriptionStatus.COMPLETED,
+                    SubscriptionStatus.DEACTIVATED, cutoff.toString()));
+        } else {
+            LOGGER.info("subscriptions purging is currently disabled");
         }
-
-        LOGGER.info(String.format("Purged %s subscribers and %s subscriptions with status (%s or %s) and " + "endDate date before %s", purgedSubscribers, purgedSubscriptions, SubscriptionStatus.COMPLETED, SubscriptionStatus.DEACTIVATED, cutoff.toString()));
     }
 
     @Override
