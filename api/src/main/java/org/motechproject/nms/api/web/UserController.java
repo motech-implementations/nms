@@ -246,13 +246,16 @@ public class UserController extends BaseController {
         FrontLineWorker flw = frontLineWorkerService.getByContactNumber(callingNumber);
 
         State state = getStateForFrontLineWorker(flw, circle);
-        if (!serviceDeployedInUserState(service, state)) {
-            throw new NotDeployedException(String.format(NOT_DEPLOYED, service));
-        }
 
-        // If we have no state for the user see if the service is deployed in at least one state in the circle
-        if (state == null && !serviceDeployedInCircle(service, circle)) {
-            throw new NotDeployedException(String.format(NOT_DEPLOYED, service));
+        if (state != null) {
+            if (!serviceDeployedInUserState(service, state)) {
+                throw new NotDeployedException(String.format(NOT_DEPLOYED, service));
+            }
+        } else {
+            // If we have no state for the user see if the service is deployed in at least one state in the circle
+            if (!serviceDeployedInCircle(service, circle)) {
+                throw new NotDeployedException(String.format(NOT_DEPLOYED, service));
+            }
         }
 
         if (null != flw) {
