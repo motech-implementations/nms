@@ -237,25 +237,6 @@ public class UserController extends BaseController {
         return kilkariUserResponse;
     }
 
-    private boolean serviceDeployedInCircle(Service service, Circle circle) {
-        if (circle == null) {
-            return true;
-        }
-
-        Set<State> states = stateService.getAllInCircle(circle);
-        if (states == null || states.isEmpty()) { // No state available
-            return true;
-        }
-
-        for (State currentState : states) { // multiple states, false if undeployed in all states
-            if (serviceDeployedInUserState(service, currentState)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     private UserResponse getFrontLineWorkerResponseUser(String serviceName, Long callingNumber, Circle circle) {
         FlwUserResponse user = new FlwUserResponse();
 

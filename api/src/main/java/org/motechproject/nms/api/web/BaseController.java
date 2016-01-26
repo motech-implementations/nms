@@ -251,12 +251,44 @@ public class BaseController {
         return whitelistService.numberWhitelistedForState(state, flw.getContactNumber());
     }
 
-    protected boolean serviceDeployedInUserState(Service service, State state) {
-        // If I don't have a state for the FLW let them continue further
-        if (state == null) {
+    /**
+     * Check if the service is deployed for a given circle
+     * @param service service to check
+     * @param circle circle of the caller
+     * @return true if circle is null/unknown, or
+     * true if no states in circle or
+     * true if one state in circle is authorized, otherwise
+     * false if none of the states in circle are deployed
+     */
+    protected boolean serviceDeployedInCircle(Service service, Circle circle) {
 
+        if (circle == null) {
             return true;
         }
+
+        Set<State> states = stateService.getAllInCircle(circle);
+        if (states == null || states.isEmpty()) { // No state available
+            return true;
+        }
+
+        for (State currentState : states) { // multiple states, false if undeployed in all states
+            if (serviceDeployedInUserState(service, currentState)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if the service is deployed for a given state
+     * @param service service to check
+     * @param state (geographical)state of the user
+     * @return true, if state is null or
+     * true, if state is deployed
+     * false, if state is not deployed
+     */
+    protected boolean serviceDeployedInUserState(Service service, State state) {
 
         return propertyService.isServiceDeployedInState(service, state);
     }
