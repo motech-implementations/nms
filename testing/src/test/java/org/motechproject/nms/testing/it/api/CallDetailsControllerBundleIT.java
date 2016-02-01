@@ -40,6 +40,9 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import javax.inject.Inject;
 import java.io.IOException;
@@ -91,6 +94,10 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
     DistrictDataService districtDataService;
     @Inject
     DistrictService districtService;
+
+    @Inject
+    PlatformTransactionManager transactionManager;
+
 
     private RegionHelper rh;
 
@@ -506,6 +513,8 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK, ADMIN_USERNAME, ADMIN_PASSWORD));
 
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         CallDetailRecord cdr = callDetailRecordService.getByCallingNumber(9810320300l);
 
         assertNotNull(cdr);
@@ -521,6 +530,8 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
 
         assertEquals(flw.getId(), ((FrontLineWorker) callDetailRecordDataService.getDetachedField(cdr,
                 "frontLineWorker")).getId());
+
+        transactionManager.commit(status);
     }
 
     /**
@@ -565,6 +576,8 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK, ADMIN_USERNAME, ADMIN_PASSWORD));
 
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         CallDetailRecord cdr = callDetailRecordService.getByCallingNumber(9810320300l);
         // assert call detail record
         assertNotNull(cdr);
@@ -596,6 +609,8 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
 
         assertEquals(flw.getId(), ((FrontLineWorker) callDetailRecordDataService.getDetachedField(cdr,
                 "frontLineWorker")).getId());
+
+        transactionManager.commit(status);
     }
 
     /**
@@ -624,6 +639,8 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK, ADMIN_USERNAME, ADMIN_PASSWORD));
 
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         CallDetailRecord cdr = callDetailRecordService.getByCallingNumber(9810320300l);
 
         // assert call detail record
@@ -641,6 +658,8 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
 
         // assert content
         assertEquals(0, cdr.getContent().size());
+
+        transactionManager.commit(status);
     }
 
     /*****************************************************************************************************************
@@ -1602,6 +1621,8 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
 
         assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK, ADMIN_USERNAME, ADMIN_PASSWORD));
 
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         CallDetailRecord cdr = callDetailRecordService.getByCallingNumber(9810320300l);
 
         // assert call detail record
@@ -1619,6 +1640,9 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
 
         // assert content
         assertEquals(0, cdr.getContent().size());
+
+        transactionManager.commit(status);
+
     }
 
     /**
