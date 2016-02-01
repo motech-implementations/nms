@@ -73,7 +73,7 @@ public class CallDetailRecord {
     private CallDisconnectReason callDisconnectReason;
 
     @Field
-    @Persistent(mappedBy = "callDetailRecord")
+    @Persistent(mappedBy = "callDetailRecord", defaultFetchGroup = "false")
     @Cascade(delete = true)
     @Order(extensions = @Extension(vendorName = "datanucleus", key = "list-ordering", value = "id ASC"))
     @JsonManagedReference
