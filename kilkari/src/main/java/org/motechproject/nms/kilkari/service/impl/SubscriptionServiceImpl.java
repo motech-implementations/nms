@@ -529,8 +529,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     @Override
     public void deactivateSubscription(Subscription subscription, DeactivationReason reason) {
-        if (subscription.getStatus() == SubscriptionStatus.ACTIVE ||
-                subscription.getStatus() == SubscriptionStatus.PENDING_ACTIVATION) {
+        if (subscription != null && (subscription.getStatus() == SubscriptionStatus.ACTIVE ||
+                subscription.getStatus() == SubscriptionStatus.PENDING_ACTIVATION)) {
             subscription.setStatus(SubscriptionStatus.DEACTIVATED);
             subscription.setDeactivationReason(reason);
             subscriptionDataService.update(subscription);

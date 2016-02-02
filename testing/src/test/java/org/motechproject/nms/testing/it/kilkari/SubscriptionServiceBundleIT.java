@@ -913,6 +913,15 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         transactionManager.commit(status);
     }
 
+    /**
+     * Verify that we have no NPE for trying to deactivate null subscriptions
+     * See https://github.com/motech-implementations/mim/pull/675
+     */
+    @Test
+    public void testDeactivateNullSubscription() {
+        subscriptionService.deactivateSubscription(null, DeactivationReason.MCTS_UPDATE);
+    }
+
     /*
      * To verify that number of Messages per week shouldn't get configured if invalid value is provided.
      */
