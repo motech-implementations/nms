@@ -27,6 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.jdo.Query;
+
 import java.util.List;
 import java.util.Set;
 
@@ -42,6 +43,8 @@ public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
     private static final String WEEKS_TO_KEEP_INVALID_FLWS = "flw.weeks_to_keep_invalid_flws";
 
     private static final String FLW_PURGE_EVENT_SUBJECT = "nms.flw.purge_invalid_flw";
+
+    private static final String FLW_PURGE_ENABLE = "flw.purge_invalid_flw_enable";
 
     private FrontLineWorkerDataService frontLineWorkerDataService;
 
@@ -101,25 +104,37 @@ public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
     @MotechListener(subjects = { FLW_PURGE_EVENT_SUBJECT })
     @Transactional
     public void purgeOldInvalidFLWs(MotechEvent event) {
-        int weeksToKeepInvalidFLWs = Integer.parseInt(settingsFacade.getProperty(WEEKS_TO_KEEP_INVALID_FLWS));
-        final FrontLineWorkerStatus status = FrontLineWorkerStatus.INVALID;
-        final DateTime cutoff = DateTime.now().minusWeeks(weeksToKeepInvalidFLWs).withTimeAtStartOfDay();
+        boolean flwPurgeEnableFlag = Boolean.parseBoolean(settingsFacade
+                .getProperty(FLW_PURGE_ENABLE));
+        if (flwPurgeEnableFlag) {
+            int weeksToKeepInvalidFLWs = Integer.parseInt(settingsFacade
+                    .getProperty(WEEKS_TO_KEEP_INVALID_FLWS));
+            final FrontLineWorkerStatus status = FrontLineWorkerStatus.INVALID;
+            final DateTime cutoff = DateTime.now()
+                    .minusWeeks(weeksToKeepInvalidFLWs).withTimeAtStartOfDay();
 
-        @SuppressWarnings("unchecked")
-        QueryExecution<Long> queryExecution = new QueryExecution<Long>() {
-            @Override
-            public Long execute(Query query, InstanceSecurityRestriction restriction) {
+            @SuppressWarnings("unchecked")
+            QueryExecution<Long> queryExecution = new QueryExecution<Long>() {
 
-                query.setFilter("status == invalid && invalidationDate < cutoff");
-                query.declareParameters("org.motechproject.nms.flw.domain.FrontLineWorkerStatus invalid, org.joda.time.DateTime cutoff");
+                @Override
+                public Long execute(Query query,
+                        InstanceSecurityRestriction restriction) {
 
-                return query.deletePersistentAll(status, cutoff);
-            }
-        };
+                    query.setFilter("status == invalid && invalidationDate < cutoff");
+                    query.declareParameters("org.motechproject.nms.flw.domain.FrontLineWorkerStatus invalid, org.joda.time.DateTime cutoff");
 
-        Long purgedRecordCount = frontLineWorkerDataService.executeQuery(queryExecution);
-        LOGGER.info(String.format("Purged %s FLWs with status %s and invalidation date before %s",
-                purgedRecordCount, status, cutoff.toString()));
+                    return query.deletePersistentAll(status, cutoff);
+                }
+            };
+
+            Long purgedRecordCount = frontLineWorkerDataService
+                    .executeQuery(queryExecution);
+            LOGGER.info(String
+                    .format("Purged %s FLWs with status %s and invalidation date before %s",
+                            purgedRecordCount, status, cutoff.toString()));
+        } else {
+            LOGGER.info("FLW purging is currently disabled");
+        }
     }
 
     @Override
