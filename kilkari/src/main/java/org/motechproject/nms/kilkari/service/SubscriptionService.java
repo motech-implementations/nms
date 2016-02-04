@@ -80,6 +80,12 @@ public interface SubscriptionService {
     void activatePendingSubscriptionsUpTo(final DateTime upToDateTime);
 
     /**
+     * Activate subscriptions that are on hold
+     * @param maxAllowed max active subscriptions in the system
+     */
+    void toggleMctsSubscriptionCreation(long maxAllowed);
+
+    /**
      * Deactivate the specified subscription
      * @param subscription The subscription to deactivate
      * @param reason The reason for deactivation
@@ -140,10 +146,8 @@ public interface SubscriptionService {
     /**
      * MotechEvent handler that responds to scheduler events.  Purges subscription and subscriber records that
      * are in a closed state and have been for more than kilkari.weeks_to_keep_closed_subscriptions weeks
-     *
-     * @param event
      */
-    void purgeOldInvalidSubscriptions(MotechEvent event);
+    void purgeOldInvalidSubscriptions();
 
     /**
      * This is used to complete active subscriptions that have extended past their scheduled message delivery length

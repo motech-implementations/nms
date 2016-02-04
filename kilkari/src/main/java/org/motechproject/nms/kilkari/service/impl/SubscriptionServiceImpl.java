@@ -33,8 +33,6 @@ import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
 import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.Language;
-import org.motechproject.scheduler.contract.RepeatingSchedulableJob;
-import org.motechproject.scheduler.service.MotechSchedulerService;
 import org.motechproject.server.config.SettingsFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,21 +57,16 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SubscriptionServiceImpl.class);
 
-    private static final String SUBSCRIPTION_PURGE_TIME = "kilkari.purge_closed_subscriptions_start_time";
-    private static final String SUBSCRIPTION_PURGE_SEC_INTERVAL = "kilkari.purge_closed_subscriptions_sec_interval";
     private static final String WEEKS_TO_KEEP_CLOSED_SUBSCRIPTIONS = "kilkari.weeks_to_keep_closed_subscriptions";
 
-    private static final String SUBSCRIPTION_PURGE_EVENT_SUBJECT = "nms.kilkari.purge_closed_subscriptions";
     private static final String SELECT_SUBSCRIBERS_BY_NUMBER = "select * from nms_subscribers where callingNumber = ?";
     private static final String MORE_THAN_ONE_SUBSCRIBER = "More than one subscriber returned for callingNumber %s";
-
     private static final String PACK_CACHE_EVICT_MESSAGE = "nms.kilkari.cache.evict.pack";
 
     //2015-10-21 05:11:56.598
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.S");
 
     private SettingsFacade settingsFacade;
-    private MotechSchedulerService schedulerService;
 
     private static final int THREE_MONTHS = 90;
     private static final int PREGNANCY_PACK_LENGTH_DAYS = 72 * 7;
@@ -87,10 +80,10 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private CallRetryDataService callRetryDataService;
     private CsrVerifierService csrVerifierService;
     private EventRelay eventRelay;
+    private boolean allowMctsSubscriptions;
 
     @Autowired
     public SubscriptionServiceImpl(@Qualifier("kilkariSettings") SettingsFacade settingsFacade, // NO CHECKSTYLE More than 7 parameters
-                                   MotechSchedulerService schedulerService,
                                    SubscriberDataService subscriberDataService,
                                    SubscriptionPackDataService subscriptionPackDataService,
                                    SubscriptionDataService subscriptionDataService,
@@ -102,13 +95,11 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         this.subscriptionPackDataService = subscriptionPackDataService;
         this.subscriptionDataService = subscriptionDataService;
         this.subscriptionErrorDataService = subscriptionErrorDataService;
-        this.schedulerService = schedulerService;
         this.settingsFacade = settingsFacade;
         this.eventRelay = eventRelay;
         this.callRetryDataService = callRetryDataService;
         this.csrVerifierService = csrVerifierService;
-
-        schedulePurgeOfOldSubscriptions();
+        this.allowMctsSubscriptions = true;
     }
 
 
@@ -139,45 +130,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     }
 
-    /**
-     * Use the MOTECH scheduler to setup a repeating job
-     * The job will start today at the time stored in flw.purge_invalid_flw_start_time in flw.properties
-     * It will repeat every flw.purge_invalid_flw_sec_interval seconds (default value is a day)
-     */
-    private void schedulePurgeOfOldSubscriptions() {
-        //Calculate today's fire time
-        DateTimeFormatter fmt = DateTimeFormat.forPattern("H:m");
-        String timeProp = settingsFacade.getProperty(SUBSCRIPTION_PURGE_TIME);
-        DateTime time = fmt.parseDateTime(timeProp);
-        DateTime today = DateTime.now()                     // This means today's date...
-                .withHourOfDay(time.getHourOfDay())         // ...at the hour...
-                .withMinuteOfHour(time.getMinuteOfHour())   // ...and minute specified in imi.properties
-                .withSecondOfMinute(0)
-                .withMillisOfSecond(0);
-
-        //Second interval between events
-        String intervalProp = settingsFacade.getProperty(SUBSCRIPTION_PURGE_SEC_INTERVAL);
-        Integer secInterval = Integer.parseInt(intervalProp);
-
-        LOGGER.debug(String.format("The %s message will be sent every %ss starting at %s",
-                SUBSCRIPTION_PURGE_EVENT_SUBJECT, secInterval.toString(), today.toString()));
-
-        //Schedule repeating job
-        MotechEvent event = new MotechEvent(SUBSCRIPTION_PURGE_EVENT_SUBJECT);
-        RepeatingSchedulableJob job = new RepeatingSchedulableJob(
-                event,          //MOTECH event
-                null,           //repeatCount, null means infinity
-                secInterval,    //repeatIntervalInSeconds
-                today.toDate(), //startTime
-                null,           //endTime, null means no end time
-                true);          //ignorePastFiresAtStart
-
-        schedulerService.safeScheduleRepeatingJob(job);
-    }
-
-    @MotechListener(subjects = { SUBSCRIPTION_PURGE_EVENT_SUBJECT })
     @Transactional
-    public void purgeOldInvalidSubscriptions(MotechEvent event) {
+    public void purgeOldInvalidSubscriptions() {
         int weeksToKeepInvalidFLWs = Integer.parseInt(settingsFacade.getProperty(WEEKS_TO_KEEP_CLOSED_SUBSCRIPTIONS));
         final SubscriptionStatus completed = SubscriptionStatus.COMPLETED;
         final SubscriptionStatus deactivated = SubscriptionStatus.DEACTIVATED;
@@ -190,8 +144,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
                 query.setFilter("(status == completed || status == deactivated) && endDate < cutoff");
                 query.declareParameters("org.motechproject.nms.kilkari.domain.SubscriptionStatus completed, " +
-                                        "org.motechproject.nms.kilkari.domain.SubscriptionStatus deactivated, " +
-                                        "org.joda.time.DateTime cutoff");
+                        "org.motechproject.nms.kilkari.domain.SubscriptionStatus deactivated, " +
+                        "org.joda.time.DateTime cutoff");
 
 
                 return (List<Subscription>) query.execute(completed, deactivated, cutoff);
@@ -229,6 +183,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
         LOGGER.info(String.format("Purged %s subscribers and %s subscriptions with status (%s or %s) and " + "endDate date before %s", purgedSubscribers, purgedSubscriptions, SubscriptionStatus.COMPLETED, SubscriptionStatus.DEACTIVATED, cutoff.toString()));
     }
+
 
     @Override
     public void completePastDueSubscriptions() {
@@ -390,6 +345,12 @@ public class SubscriptionServiceImpl implements SubscriptionService {
      *    subscription to Pregnancy Pack on this MSISDN.
      */
     private Subscription createSubscriptionViaMcts(Subscriber subscriber, SubscriptionPack pack) {
+
+        if (!this.allowMctsSubscriptions) {
+            LOGGER.debug("System at capacity, No new MCTS subscriptions allowed");
+            return null;
+        }
+
         Subscription subscription;
 
         if (subscriber.getDateOfBirth() != null && pack.getType() == SubscriptionPackType.CHILD) {
@@ -491,6 +452,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         }
     }
 
+    @Override
     public void activatePendingSubscriptionsUpTo(final DateTime upToDateTime) {
         SqlQueryExecution sqe = new SqlQueryExecution() {
 
@@ -516,9 +478,18 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     /**
+     * Toggle if we should let new MCTS subscriptions to be created based on config
+     * @param maxAllowed max active subscriptions in the system
+     */
+    @Override
+    public void toggleMctsSubscriptionCreation(long maxAllowed) {
+        this.allowMctsSubscriptions = (subscriptionDataService.countFindByStatus(SubscriptionStatus.ACTIVE) < maxAllowed);
+    }
+
+    /**
      * Delete the CallRetry record corresponding to the given subscription
      *
-     * @param subscriptionId subscription to delete the CallRetry record for
+     * @param subscriptionId subscription to delete the CallRetry record fors
      */
     private void deleteCallRetry(String subscriptionId) {
         CallRetry callRetry = callRetryDataService.findBySubscriptionId(subscriptionId);

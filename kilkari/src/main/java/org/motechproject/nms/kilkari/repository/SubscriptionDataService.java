@@ -18,6 +18,8 @@ public interface SubscriptionDataService extends MotechDataService<Subscription>
     @Lookup
     List<Subscription> findByStatus(@LookupField(name = "status")SubscriptionStatus status);
 
+    long countFindByStatus(@LookupField(name = "status")SubscriptionStatus status);
+
     @Lookup
     List<Subscription> findByStatusAndStartDate(
             @LookupField(name = "status")SubscriptionStatus status,

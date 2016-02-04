@@ -515,12 +515,6 @@ public class TargetFileServiceImpl implements TargetFileService {
                 callFlowUrl = "";
             }
 
-            // Activate pending subscriptions
-            activatePendingSubscriptions(today);
-
-            // Mark all old subscriptions past pack length as complete
-            subscriptionService.completePastDueSubscriptions();
-
             //Header
             writeHeader(writer);
 
@@ -553,14 +547,6 @@ public class TargetFileServiceImpl implements TargetFileService {
                 null, tfn.getRecordsCount(), tfn.getChecksum()));
 
         return tfn;
-    }
-
-    private void activatePendingSubscriptions(DateTime today) {
-        DateTime tomorrow = today.plusDays(1).withTimeAtStartOfDay();
-
-        Timer timer = new Timer();
-        subscriptionService.activatePendingSubscriptionsUpTo(tomorrow);
-        LOGGER.debug("Activated all pending subscriptions up to {} in {}", tomorrow, timer.time());
     }
 
     private void sendNotificationRequest(TargetFileNotification tfn) {

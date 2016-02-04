@@ -173,7 +173,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         subscriptions = subscriber.getSubscriptions();
         assertEquals(2, subscriptions.size());
 
-        subscriptionService.purgeOldInvalidSubscriptions(new MotechEvent());
+        subscriptionService.purgeOldInvalidSubscriptions();
 
         subscriber = subscriberService.getSubscriber(1000000000L);
         assertNotNull(subscriber);
@@ -239,7 +239,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         subscriptions = subscriber.getSubscriptions();
         assertEquals(2, subscriptions.size());
 
-        subscriptionService.purgeOldInvalidSubscriptions(new MotechEvent());
+        subscriptionService.purgeOldInvalidSubscriptions();
 
         subscriber = subscriberService.getSubscriber(1000000002L);
         assertNull(subscriber);
@@ -302,7 +302,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         transactionManager.commit(status);
 
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        subscriptionService.purgeOldInvalidSubscriptions(new MotechEvent());
+        subscriptionService.purgeOldInvalidSubscriptions();
         transactionManager.commit(status);
 
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
