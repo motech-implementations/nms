@@ -346,56 +346,52 @@ public class SubscriptionServiceImpl implements SubscriptionService {
      */
     private Subscription createSubscriptionViaMcts(Subscriber subscriber, SubscriptionPack pack) {
 
-        if (!this.allowMctsSubscriptions) {
-            LOGGER.debug("System at capacity, No new MCTS subscriptions allowed");
-            return null;
-        }
+        DateTime startDate;
+        if (pack.getType() == SubscriptionPackType.CHILD) {
 
-        Subscription subscription;
+            if (Subscription.hasCompletedForStartDate(subscriber.getDateOfBirth(), DateTime.now(), pack)) {
+                return null;
+            }
 
-        if (subscriber.getDateOfBirth() != null && pack.getType() == SubscriptionPackType.CHILD) {
-            // DOB (with or without LMP) is present
-            if (getActiveSubscription(subscriber, SubscriptionPackType.CHILD) != null)
-            {
+            if (getActiveSubscription(subscriber, SubscriptionPackType.CHILD) != null) {
                 // reject the subscription if it already exists
                 logRejectedSubscription(subscriber.getCallingNumber(),
                         SubscriptionRejectionReason.ALREADY_SUBSCRIBED, SubscriptionPackType.CHILD);
                 return null;
-            } else if (Subscription.hasCompletedForStartDate(subscriber.getDateOfBirth(), DateTime.now(), pack)) {
-                // TODO: #117 decide whether this case also warrants logging
-                return null;
-            } else {
-                subscription = new Subscription(subscriber, pack, SubscriptionOrigin.MCTS_IMPORT);
-                subscription.setStartDate(subscriber.getDateOfBirth());
-                subscription.setStatus(Subscription.getStatus(subscription, DateTime.now()));
             }
-        } else if (subscriber.getLastMenstrualPeriod() != null && pack.getType() == SubscriptionPackType.PREGNANCY) {
-            // LMP is present and DOB is not
+
+            startDate = subscriber.getDateOfBirth();
+
+        } else { // SubscriptionPackType.PREGNANCY
+
+            if (Subscription.hasCompletedForStartDate(subscriber.getLastMenstrualPeriod().plusDays(THREE_MONTHS),
+                    DateTime.now(), pack)) {
+                return null;
+            }
+
             if (getActiveSubscription(subscriber, SubscriptionPackType.PREGNANCY) != null) {
                 // reject the subscription if it already exists
                 logRejectedSubscription(subscriber.getCallingNumber(),
                         SubscriptionRejectionReason.ALREADY_SUBSCRIBED, SubscriptionPackType.PREGNANCY);
                 return null;
-            } else if (Subscription.hasCompletedForStartDate(subscriber.getLastMenstrualPeriod().plusDays(THREE_MONTHS),
-                            DateTime.now(), pack)) {
-                // TODO: #117 decide whether this case also warrants logging
-                return null;
-            } else {
-                // TODO: #160 deal with early subscription
-                subscription = new Subscription(subscriber, pack, SubscriptionOrigin.MCTS_IMPORT);
-
-                // the pregnancy pack starts 3 months after LMP
-                subscription.setStartDate(subscriber.getLastMenstrualPeriod().plusDays(THREE_MONTHS));
-                subscription.setStatus(Subscription.getStatus(subscription, DateTime.now()));
             }
-        } else {
-            // TODO: #117 need to log any other error cases? In theory we shouldn't land here.
-            return null;
+
+            startDate = subscriber.getLastMenstrualPeriod().plusDays(THREE_MONTHS);
         }
 
-        // creating new subscription from MCTS, set welcome flag
+        Subscription subscription = new Subscription(subscriber, pack, SubscriptionOrigin.MCTS_IMPORT);
+        subscription.setStartDate(startDate);
         subscription.setNeedsWelcomeMessageViaObd(true);
+
+        if (allowMctsSubscriptions) {
+            subscription.setStatus(Subscription.getStatus(subscription, DateTime.now()));
+        } else {
+            LOGGER.debug("System at capacity, No new MCTS subscriptions allowed. Setting status to HOLD");
+            subscription.setStatus(SubscriptionStatus.HOLD);
+        }
+
         return subscriptionDataService.create(subscription);
+
     }
 
     private void logRejectedSubscription(long callingNumber, SubscriptionRejectionReason reason,
@@ -403,7 +399,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         SubscriptionError error = new SubscriptionError(callingNumber, reason, packType);
         subscriptionErrorDataService.create(error);
     }
-
 
 
     @Override

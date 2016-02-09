@@ -107,7 +107,7 @@ public interface SubscriptionService {
     SubscriptionPack getSubscriptionPack(String name);
 
     /**
-     * Returns active subscription for the specified pack type if the subscriber has one
+     * Returns active or subscription for the specified pack type if the subscriber has one
      * @param subscriber The subscriber
      * @param type The type of subscription pack
      * @return The subscription if an active one exists, null otherwise
