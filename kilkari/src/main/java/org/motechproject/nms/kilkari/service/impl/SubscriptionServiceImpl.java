@@ -481,9 +481,21 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         this.allowMctsSubscriptions = (subscriptionDataService.countFindByStatus(SubscriptionStatus.ACTIVE) < maxAllowed);
     }
 
+    @Override
+    public long activateOnHoldSubscriptions(long maxActiveSubscriptions) {
+        long toActivate = subscriptionDataService.countFindByStatus(SubscriptionStatus.ACTIVE) - maxActiveSubscriptions;
+
+        if (toActivate < 1) {
+            LOGGER.info("No open slots{%d} for hold-activation", toActivate);
+            return 0;
+        }
+
+        return 1;
+    }
+
+
     /**
-     * Delete the CallRetry record corresponding to the given subscription
-     *
+     * Delete the CallRetry record corresponding to the given subscription     *
      * @param subscriptionId subscription to delete the CallRetry record fors
      */
     private void deleteCallRetry(String subscriptionId) {

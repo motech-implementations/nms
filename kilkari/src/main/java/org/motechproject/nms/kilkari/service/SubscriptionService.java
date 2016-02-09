@@ -86,6 +86,13 @@ public interface SubscriptionService {
     void toggleMctsSubscriptionCreation(long maxAllowed);
 
     /**
+     * Activate Mcts subscriptions that are on hold
+     * @param maxActiveSubscriptionCount number of subscriptions to activate
+     * @return number of subscriptions activated
+     */
+    long activateOnHoldSubscriptions(long maxActiveSubscriptionCount);
+
+    /**
      * Deactivate the specified subscription
      * @param subscription The subscription to deactivate
      * @param reason The reason for deactivation

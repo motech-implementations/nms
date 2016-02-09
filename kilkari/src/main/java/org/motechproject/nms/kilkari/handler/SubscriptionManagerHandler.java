@@ -77,6 +77,9 @@ public class SubscriptionManagerHandler {
         subscriptionService.activatePendingSubscriptionsUpTo(tomorrow);
         LOGGER.debug("Activated all pending subscriptions up to {} in {}", tomorrow, timer.time());
 
+        // evaluate and activate subscriptions on hold, if there are open slots
+        subscriptionService.activateOnHoldSubscriptions(maxActiveSubscriptions);
+
         subscriptionService.toggleMctsSubscriptionCreation(maxActiveSubscriptions);
     }
 }
