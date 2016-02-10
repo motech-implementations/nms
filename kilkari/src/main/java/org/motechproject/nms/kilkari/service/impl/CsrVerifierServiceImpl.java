@@ -6,6 +6,7 @@ import org.motechproject.event.listener.annotations.MotechListener;
 import org.motechproject.nms.kilkari.dto.CallSummaryRecordDto;
 import org.motechproject.nms.kilkari.exception.InvalidCallRecordDataException;
 import org.motechproject.nms.kilkari.service.CsrVerifierService;
+import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.motechproject.nms.region.service.CircleService;
 import org.motechproject.nms.region.service.LanguageService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,11 +17,6 @@ import org.springframework.stereotype.Service;
  */
 @Service("csrVerifierService")
 public class CsrVerifierServiceImpl implements CsrVerifierService {
-
-    private static final String CSR_VERIFIER_CACHE_EVICT_MESSAGE = "nms.kk.cache.evict.csv_verifier";
-    private static final String CIRCLE_CACHE_EVICT_MESSAGE = "nms.region.cache.evict.language";
-    private static final String LANGUAGE_CACHE_EVICT_MESSAGE = "nms.region.cache.evict.language";
-    private static final String CIRCLE_99 = "99";
 
     private CircleService circleService;
     private LanguageService languageService;
@@ -37,7 +33,7 @@ public class CsrVerifierServiceImpl implements CsrVerifierService {
         if (circleName == null) {
             throw new InvalidCallRecordDataException("Missing circleName");
         }
-        if (CIRCLE_99.equals(circleName)) {
+        if (KilkariConstants.CIRCLE_99.equals(circleName)) {
             return;
         }
         if (!circleService.circleNameExists(circleName)) {
@@ -67,11 +63,11 @@ public class CsrVerifierServiceImpl implements CsrVerifierService {
     }
 
     public void cacheEvict() {
-        eventRelay.broadcastEventMessage(new MotechEvent(CIRCLE_CACHE_EVICT_MESSAGE));
-        eventRelay.broadcastEventMessage(new MotechEvent(LANGUAGE_CACHE_EVICT_MESSAGE));
+        eventRelay.broadcastEventMessage(new MotechEvent(KilkariConstants.CIRCLE_CACHE_EVICT_SUBJECT));
+        eventRelay.broadcastEventMessage(new MotechEvent(KilkariConstants.LANGUAGE_CACHE_EVICT_SUBJECT));
     }
 
-    @MotechListener(subjects = { CSR_VERIFIER_CACHE_EVICT_MESSAGE })
+    @MotechListener(subjects = { KilkariConstants.CSR_VERIFIER_CACHE_EVICT_SUBJECT})
     public void cacheEvict(MotechEvent event) {
         cacheEvict();
     }

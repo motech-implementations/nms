@@ -1,4 +1,4 @@
-package org.motechproject.nms.kilkari.service.impl;
+package org.motechproject.nms.kilkari.utils;
 
 
 import org.motechproject.nms.csv.exception.CsvImportDataException;
@@ -24,18 +24,8 @@ import java.util.Set;
 
 public final class MctsBeneficiaryUtils {
 
-    private static final String STATE = "StateID";
-    private static final String DISTRICT = "District_ID";
-    private static final String TALUKA = "Taluka_ID";
-    private static final String HEALTH_BLOCK = "HealthBlock_ID";
-    private static final String PHC = "PHC_ID";
-    private static final String SUBCENTRE = "SubCentre_ID";
-    private static final String CENSUS_VILLAGE = "Village_ID";
-    private static final String NON_CENSUS_VILLAGE = "SVID";
-
     private MctsBeneficiaryUtils() {
     }
-
 
     public static void getBeneficiaryLocationMapping(Map<String, CellProcessor> mapping) {
         mapping.put(KilkariConstants.STATE_ID, new Optional(new GetLong()));
@@ -62,25 +52,25 @@ public final class MctsBeneficiaryUtils {
 
     public static void setLocationFields(Map<String, Object> locations, MctsBeneficiary beneficiary) throws InvalidLocationException {
 
-        if (locations.get(STATE) == null && locations.get(DISTRICT) == null) {
+        if (locations.get(KilkariConstants.MAPPER_STATE) == null && locations.get(KilkariConstants.MAPPER_DISTRICT) == null) {
             throw new InvalidLocationException("Missing mandatory state and district fields");
         }
 
-        if (locations.get(STATE) == null) {
+        if (locations.get(KilkariConstants.MAPPER_STATE) == null) {
             throw new InvalidLocationException("Missing mandatory state field");
         }
 
-        if (locations.get(DISTRICT) == null) {
+        if (locations.get(KilkariConstants.MAPPER_DISTRICT) == null) {
             throw new InvalidLocationException("Missing mandatory district field");
         }
 
-        beneficiary.setState((State) locations.get(STATE));
-        beneficiary.setDistrict((District) locations.get(DISTRICT));
-        beneficiary.setTaluka((Taluka) locations.get(TALUKA));
-        beneficiary.setHealthBlock((HealthBlock) locations.get(HEALTH_BLOCK));
-        beneficiary.setHealthFacility((HealthFacility) locations.get(PHC));
-        beneficiary.setHealthSubFacility((HealthSubFacility) locations.get(SUBCENTRE));
-        beneficiary.setVillage((Village) locations.get(CENSUS_VILLAGE + NON_CENSUS_VILLAGE));
+        beneficiary.setState((State) locations.get(KilkariConstants.MAPPER_STATE));
+        beneficiary.setDistrict((District) locations.get(KilkariConstants.MAPPER_DISTRICT));
+        beneficiary.setTaluka((Taluka) locations.get(KilkariConstants.MAPPER_TALUKA));
+        beneficiary.setHealthBlock((HealthBlock) locations.get(KilkariConstants.MAPPER_HEALTH_BLOCK));
+        beneficiary.setHealthFacility((HealthFacility) locations.get(KilkariConstants.MAPPER_PHC));
+        beneficiary.setHealthSubFacility((HealthSubFacility) locations.get(KilkariConstants.MAPPER_SUBCENTRE));
+        beneficiary.setVillage((Village) locations.get(KilkariConstants.MAPPER_CENSUS_VILLAGE + KilkariConstants.MAPPER_NON_CENSUS_VILLAGE));
     }
 
     public static String createErrorMessage(String message, int rowNumber) {

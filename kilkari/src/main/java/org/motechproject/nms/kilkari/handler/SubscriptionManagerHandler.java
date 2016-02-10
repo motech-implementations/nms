@@ -6,6 +6,7 @@ import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.annotations.MotechListener;
 import org.motechproject.metrics.service.Timer;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
+import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.motechproject.scheduler.contract.CronSchedulableJob;
 import org.motechproject.scheduler.service.MotechSchedulerService;
 import org.motechproject.server.config.SettingsFacade;
@@ -24,10 +25,6 @@ import javax.annotation.PostConstruct;
  */
 @Component
 public class SubscriptionManagerHandler {
-
-    private static final String SUBSCRIPTION_PURGE_EVENT_SUBJECT = "nms.kilkari.purge_closed_subscriptions";
-    private static final String SUBSCRIPTION_CAP = "kilkari.subscription.cap";
-    private static final String SUBSCRIPTION_MANAGER_CRON = "kilkari.subscription.manager.cron";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SubscriptionManagerHandler.class);
 
@@ -48,7 +45,7 @@ public class SubscriptionManagerHandler {
      */
     @PostConstruct
     public void initSubscriptionManager() {
-        String cronExpression = settingsFacade.getProperty(SUBSCRIPTION_MANAGER_CRON);
+        String cronExpression = settingsFacade.getProperty(KilkariConstants.SUBSCRIPTION_MANAGER_CRON);
         if (StringUtils.isBlank(cronExpression)) {
             LOGGER.error("No cron expression found for purging subscriptions");
             return;
@@ -60,15 +57,15 @@ public class SubscriptionManagerHandler {
             throw new IllegalStateException(error);
         }
 
-        CronSchedulableJob mctsImportJob = new CronSchedulableJob(new MotechEvent(SUBSCRIPTION_PURGE_EVENT_SUBJECT), cronExpression);
+        CronSchedulableJob mctsImportJob = new CronSchedulableJob(new MotechEvent(KilkariConstants.SUBSCRIPTION_PURGE_EVENT_SUBJECT), cronExpression);
         schedulerService.safeScheduleJob(mctsImportJob);
     }
 
-    @MotechListener(subjects = { SUBSCRIPTION_PURGE_EVENT_SUBJECT })
+    @MotechListener(subjects = { KilkariConstants.SUBSCRIPTION_PURGE_EVENT_SUBJECT })
     @Transactional
     public void purgeSubscriptions(MotechEvent event) {
         DateTime tomorrow = DateTime.now().plusDays(1).withTimeAtStartOfDay();
-        Long maxActiveSubscriptions = Long.parseLong(settingsFacade.getProperty(SUBSCRIPTION_CAP));
+        Long maxActiveSubscriptions = Long.parseLong(settingsFacade.getProperty(KilkariConstants.SUBSCRIPTION_CAP));
 
         subscriptionService.purgeOldInvalidSubscriptions();
         subscriptionService.completePastDueSubscriptions();
@@ -77,9 +74,9 @@ public class SubscriptionManagerHandler {
         subscriptionService.activatePendingSubscriptionsUpTo(tomorrow);
         LOGGER.debug("Activated all pending subscriptions up to {} in {}", tomorrow, timer.time());
 
+        subscriptionService.toggleMctsSubscriptionCreation(maxActiveSubscriptions);
+
         // evaluate and activate subscriptions on hold, if there are open slots
         subscriptionService.activateOnHoldSubscriptions(maxActiveSubscriptions);
-
-        subscriptionService.toggleMctsSubscriptionCreation(maxActiveSubscriptions);
     }
 }

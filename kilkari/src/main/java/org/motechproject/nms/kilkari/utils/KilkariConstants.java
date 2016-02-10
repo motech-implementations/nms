@@ -1,5 +1,8 @@
 package org.motechproject.nms.kilkari.utils;
 
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
+
 /**
  * Constant field names for MCTS beneficiary import.
  */
@@ -29,6 +32,58 @@ public final class KilkariConstants {
     public static final String CENSUS_VILLAGE_ID = "Village_ID";
     public static final String VILLAGE_NAME = "Village_Name";
     public static final String NON_CENSUS_VILLAGE_ID = "SVID";
+    public static final String CIRCLE_99 = "99";
+    public static final String IMPORTED = "Imported {}";
+
+    public static final String UPDATE_SR_NO = "Sr No";
+    public static final String UPDATE_MCTS_ID = "MCTS ID";
+    public static final String UPDATE_STATE_MCTS_ID = "STATE ID";
+    public static final String UPDATE_DOB = "Beneficiary New DOB change";
+    public static final String UPDATE_LMP = "Beneficiary New LMP change";
+    public static final String UPDATE_MSISDN = "Beneficiary New Mobile no change";
+
+    public static final String MAPPER_STATE = "StateID";
+    public static final String MAPPER_DISTRICT = "District_ID";
+    public static final String MAPPER_TALUKA = "Taluka_ID";
+    public static final String MAPPER_HEALTH_BLOCK = "HealthBlock_ID";
+    public static final String MAPPER_PHC = "PHC_ID";
+    public static final String MAPPER_SUBCENTRE = "SubCentre_ID";
+    public static final String MAPPER_CENSUS_VILLAGE = "Village_ID";
+    public static final String MAPPER_NON_CENSUS_VILLAGE = "SVID";
+
+    // Time format constants
+    public static final DateTimeFormatter TIME_FORMATTER = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.S");
+
+    // Numerical constants
+    public static final long TEN_DIGITS_MAX = 10000000000L;
+    public static final int PROGRESS_INTERVAL = 100;
+    public static final int MAX_CHAR_ALERT = 4900;
+    public static final int THREE_MONTHS = 90;
+    public static final int DAY_IN_WEEK = 7;
+    public static final int PREGNANCY_PACK_LENGTH_WEEKS = 72;
+    public static final int PREGNANCY_PACK_LENGTH_DAYS = PREGNANCY_PACK_LENGTH_WEEKS * DAY_IN_WEEK;
+    public static final int CHILD_PACK_LENGTH_WEEKS = 48;
+    public static final int CHILD_PACK_LENGTH_DAYS = CHILD_PACK_LENGTH_WEEKS * DAY_IN_WEEK;
+
+    // SQL constants
+    public static final String SELECT_SUBSCRIBERS_BY_NUMBER = "select * from nms_subscribers where callingNumber = ?";
+
+    // Log constants
+    public static final String MORE_THAN_ONE_SUBSCRIBER = "More than one subscriber returned for callingNumber %s";
+    public static final String SQL_QUERY_LOG = "SQL QUERY: {}";
+
+    // Message constants
+    public static final String PACK_CACHE_EVICT_MESSAGE_SUBJECT = "nms.kilkari.cache.evict.pack";
+    public static final String SUBSCRIPTION_PURGE_EVENT_SUBJECT = "nms.kilkari.purge_closed_subscriptions";
+    public static final String NMS_IMI_KK_PROCESS_CSR_SUBJECT = "nms.imi.kk.process_csr";
+    public static final String CSR_VERIFIER_CACHE_EVICT_SUBJECT = "nms.kk.cache.evict.csv_verifier";
+    public static final String CIRCLE_CACHE_EVICT_SUBJECT = "nms.region.cache.evict.language";
+    public static final String LANGUAGE_CACHE_EVICT_SUBJECT = "nms.region.cache.evict.language";
+
+    // Settings constants
+    public static final String WEEKS_TO_KEEP_CLOSED_SUBSCRIPTIONS = "kilkari.weeks_to_keep_closed_subscriptions";
+    public static final String SUBSCRIPTION_CAP = "kilkari.subscription.cap";
+    public static final String SUBSCRIPTION_MANAGER_CRON = "kilkari.subscription.manager.cron";
 
     private KilkariConstants() {
     }
