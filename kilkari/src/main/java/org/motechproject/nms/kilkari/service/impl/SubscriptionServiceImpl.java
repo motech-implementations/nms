@@ -29,7 +29,6 @@ import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.CsrVerifierService;
-import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.motechproject.nms.kilkari.utils.PhoneNumberHelper;
@@ -62,7 +61,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     private SettingsFacade settingsFacade;
     private SubscriberDataService subscriberDataService;
-    private SubscriberService subscriberService;
     private SubscriptionPackDataService subscriptionPackDataService;
     private SubscriptionDataService subscriptionDataService;
     private SubscriptionErrorDataService subscriptionErrorDataService;
@@ -74,7 +72,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     @Autowired
     public SubscriptionServiceImpl(@Qualifier("kilkariSettings") SettingsFacade settingsFacade, // NO CHECKSTYLE More than 7 parameters
                                    SubscriberDataService subscriberDataService,
-                                   SubscriberService subscriberService,
                                    SubscriptionPackDataService subscriptionPackDataService,
                                    SubscriptionDataService subscriptionDataService,
                                    SubscriptionErrorDataService subscriptionErrorDataService,
@@ -82,7 +79,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                                    CallRetryDataService callRetryDataService,
                                    CsrVerifierService csrVerifierService) {
         this.subscriberDataService = subscriberDataService;
-        this.subscriberService = subscriberService;
         this.subscriptionPackDataService = subscriptionPackDataService;
         this.subscriptionDataService = subscriptionDataService;
         this.subscriptionErrorDataService = subscriptionErrorDataService;
@@ -135,7 +131,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             subscriptionDataService.delete(subscription);
 
             // I need to load the subscriber since I deleted one of their subscription prior
-            Subscriber subscriber = subscriberService.getSubscriber(callingNumber);
+            Subscriber subscriber = subscriberDataService.findByNumber(callingNumber);
             purgedSubscriptions++;
             if (subscriber.getSubscriptions().size() == 0) {
                 LOGGER.debug("Purging subscriber for subscription {} as it was the last subscription for that subscriber",
@@ -227,7 +223,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                                            SubscriptionPack subscriptionPack, SubscriptionOrigin mode) {
 
         long number = PhoneNumberHelper.truncateLongNumber(callingNumber);
-        Subscriber subscriber = subscriberService.getSubscriber(number);
+        Subscriber subscriber = subscriberDataService.findByNumber(callingNumber);
         Subscription subscription;
 
         if (subscriber == null) {
