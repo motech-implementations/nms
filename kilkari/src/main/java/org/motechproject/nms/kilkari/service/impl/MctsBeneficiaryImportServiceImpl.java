@@ -284,7 +284,6 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
     private boolean validateReferenceDate(DateTime referenceDate, SubscriptionPackType packType, Long msisdn) {
 
-
         if (referenceDate == null) {
             subscriptionErrorDataService.create(
                     new SubscriptionError(msisdn,

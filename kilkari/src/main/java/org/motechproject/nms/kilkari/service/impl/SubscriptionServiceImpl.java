@@ -449,15 +449,25 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             return 0;
         }
 
-        long toActivate = subscriptionDataService.countFindByStatus(SubscriptionStatus.ACTIVE) - maxActiveSubscriptions;
-        LOGGER.info("Found %d slots for hold-activation", toActivate);
+        long openSlots = maxActiveSubscriptions - subscriptionDataService.countFindByStatus(SubscriptionStatus.ACTIVE);
+        if (openSlots < 1) {
+            LOGGER.info("No open slots found for hold subscription activation");
+            return 0;
+        }
 
+        LOGGER.info("Found %d slots for hold-activation", openSlots);
+        List<Subscription> holdSubscriptions = findHoldSubscriptions(openSlots);
+        LOGGER.debug("Found %d subscriptions to activate", holdSubscriptions.size());
 
-        return findHoldSubscriptions().size();
+        for (Subscription current : holdSubscriptions) {
+
+        }
+
+        return
     }
 
 
-    private List<Subscription> findHoldSubscriptions() {
+    private List<Subscription> findHoldSubscriptions(final long resultSize) {
 
         @SuppressWarnings("unchecked")
         SqlQueryExecution<List<Subscription>> queryExecution = new SqlQueryExecution<List<Subscription>>() {
@@ -474,7 +484,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                         "JOIN nms_subscription_packs AS sp ON ss.subscriptionPack_id_OID = sp.id " +
                         "JOIN nms_subscribers AS s ON ss.subscriber_id_OID = s.id " +
                         "WHERE ss.status = 'HOLD' AND origin = 'MCTS_IMPORT') AS res " + // Origin is superfluous here since IVR doesn't go on hold
-                        "ORDER BY referenceDate DESC";
+                        "ORDER BY referenceDate DESC " +
+                        "LIMIT :limit";
                 LOGGER.debug(KilkariConstants.SQL_QUERY_LOG, query);
                 return query;
             }
@@ -487,6 +498,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 Map params = new HashMap();
                 params.put("pdays", KilkariConstants.THREE_MONTHS + KilkariConstants.PREGNANCY_PACK_LENGTH_DAYS);
                 params.put("cdays", KilkariConstants.CHILD_PACK_LENGTH_DAYS);
+                params.put("limit", resultSize);
                 ForwardQueryResult fqr = (ForwardQueryResult) query.executeWithMap(params);
 
                 return (List<Subscription>) fqr;
