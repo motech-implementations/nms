@@ -86,6 +86,14 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
     @Autowired
     private EventRelay eventRelay;
 
+    /**
+     * Ops override to kick off mcts import for all states and all types
+     */
+    @Override
+    public void startMctsImport() {
+        eventRelay.sendEventMessage(new MotechEvent(Constants.MCTS_IMPORT_EVENT));
+    }
+
     @Override
     public void importFromMcts(List<Long> stateIds, LocalDate referenceDate, URL endpoint) {
 
