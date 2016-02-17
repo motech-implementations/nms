@@ -455,15 +455,17 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             return 0;
         }
 
+        int activated = 0;
         LOGGER.info("Found %d slots for hold-activation", openSlots);
         List<Subscription> holdSubscriptions = findHoldSubscriptions(openSlots);
         LOGGER.debug("Found %d subscriptions to activate", holdSubscriptions.size());
 
         for (Subscription current : holdSubscriptions) {
 
+            activated++;
         }
 
-        return
+        return activated;
     }
 
 
