@@ -309,6 +309,10 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         DateTime startDate;
         if (pack.getType() == SubscriptionPackType.CHILD) {
 
+            if (subscriber.getDateOfBirth() == null) {
+                return null;    // No DOB available
+            }
+
             if (Subscription.hasCompletedForStartDate(subscriber.getDateOfBirth(), DateTime.now(), pack)) {
                 return null;
             }
@@ -323,6 +327,10 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             startDate = subscriber.getDateOfBirth();
 
         } else { // SubscriptionPackType.PREGNANCY
+
+            if (subscriber.getLastMenstrualPeriod() == null) {
+                return null;    // No LMP available
+            }
 
             if (Subscription.hasCompletedForStartDate(subscriber.getLastMenstrualPeriod().plusDays(KilkariConstants.THREE_MONTHS),
                     DateTime.now(), pack)) {

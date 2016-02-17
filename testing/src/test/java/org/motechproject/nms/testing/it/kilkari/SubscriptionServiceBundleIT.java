@@ -797,7 +797,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
                 sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
         subscriptionService.deactivateSubscription(subscription, DeactivationReason.DO_NOT_DISTURB);
 
-        // Now mimick a subscriber calling
+        // Now mimic a subscriber calling
         subscription = subscriptionService.createSubscription(4444444444L, rh.hindiLanguage(),
                 sh.pregnancyPack(), SubscriptionOrigin.IVR);
 
