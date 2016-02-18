@@ -450,7 +450,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @Override
-    public long activateOnHoldSubscriptions(long maxActiveSubscriptions) {
+    public long activateHoldSubscriptions(long maxActiveSubscriptions) {
 
         if (this.allowMctsSubscriptions) {
             LOGGER.info("No open slots for hold-activation");
@@ -470,12 +470,17 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
         for (Subscription current : holdSubscriptions) {
 
-            activated++;
+            if (activateHoldSubscription(current)) {
+                activated++;
+            }
         }
 
         return activated;
     }
 
+    private boolean activateHoldSubscription(Subscription currentSubscription) {
+        return !(currentSubscription == null);
+    }
 
     private List<Subscription> findHoldSubscriptions(final long resultSize) {
 
@@ -484,18 +489,23 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
             @Override
             public String getSqlQuery() {
-                String query =  "SELECT res.subscriptionId as subscriptionId, " +
-                        "CASE " +
-                            "WHEN res.type = 'PREGNANCY' THEN DATE_ADD(res.lastMenstrualPeriod, INTERVAL :pdays DAY) " +
-                            "ELSE DATE_ADD(res.dateOfBirth, INTERVAL :cdays DAY) " +
-                        "END AS referenceDate, " +
-                        "res.type " +
-                        "FROM(SELECT ss.subscriptionId, s.dateOfBirth, s.lastMenstrualPeriod, sp.type FROM nms_subscriptions AS ss " +
-                        "JOIN nms_subscription_packs AS sp ON ss.subscriptionPack_id_OID = sp.id " +
-                        "JOIN nms_subscribers AS s ON ss.subscriber_id_OID = s.id " +
-                        "WHERE ss.status = 'HOLD' AND origin = 'MCTS_IMPORT') AS res " + // Origin is superfluous here since IVR doesn't go on hold
-                        "ORDER BY referenceDate DESC " +
-                        "LIMIT :limit";
+                String query =  "SELECT res.id as id, res.activationDate, res.deactivationReason, res.endDate, res.firstMessageDayOfWeek, res.needsWelcomeMessageViaObd, " +
+                                "res.origin, res.secondMessageDayOfWeek, res.startDate, res.status, res.subscriber_id_OID, res.subscriptionId, res.subscriptionPack_id_OID, " +
+                                "res.creationDate, res.creator, res.modificationDate, res.modifiedBy, res.owner, " +
+                                "CASE " +
+                                    "WHEN res.type = 'PREGNANCY' THEN DATE_ADD(res.lastMenstrualPeriod, INTERVAL :pdays DAY) " +
+                                    "ELSE DATE_ADD(res.dateOfBirth, INTERVAL :cdays DAY) " +
+                                "END AS referenceDate, " +
+                                "res.type " +
+                                "FROM" +
+                                    "(SELECT ss.id as id, ss.activationDate, ss.deactivationReason, ss.endDate, ss.firstMessageDayOfWeek, ss.needsWelcomeMessageViaObd, " +
+                                    "ss.origin, ss.secondMessageDayOfWeek, ss.startDate, ss.status, ss.subscriber_id_OID, ss.subscriptionId, ss.subscriptionPack_id_OID, " +
+                                    "ss.creationDate, ss.creator, ss.modificationDate, ss.modifiedBy, ss.owner, s.dateOfBirth, s.lastMenstrualPeriod, sp.type FROM nms_subscriptions AS ss " +
+                                    "JOIN nms_subscription_packs AS sp ON ss.subscriptionPack_id_OID = sp.id " +
+                                    "JOIN nms_subscribers AS s ON ss.subscriber_id_OID = s.id " +
+                                    "WHERE ss.status = 'HOLD' AND origin = 'MCTS_IMPORT') AS res " + // Origin is superfluous here since IVR doesn't go on hold
+                                "ORDER BY referenceDate DESC " +
+                                "LIMIT :limit";
                 LOGGER.debug(KilkariConstants.SQL_QUERY_LOG, query);
                 return query;
             }

@@ -90,7 +90,7 @@ public interface SubscriptionService {
      * @param maxActiveSubscriptionCount number of subscriptions to activate
      * @return number of subscriptions activated
      */
-    long activateOnHoldSubscriptions(long maxActiveSubscriptionCount);
+    long activateHoldSubscriptions(long maxActiveSubscriptionCount);
 
     /**
      * Deactivate the specified subscription

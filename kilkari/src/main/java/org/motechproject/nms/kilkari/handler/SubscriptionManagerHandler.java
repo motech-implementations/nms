@@ -77,6 +77,6 @@ public class SubscriptionManagerHandler {
         subscriptionService.toggleMctsSubscriptionCreation(maxActiveSubscriptions);
 
         // evaluate and activate subscriptions on hold, if there are open slots
-        subscriptionService.activateOnHoldSubscriptions(maxActiveSubscriptions);
+        subscriptionService.activateHoldSubscriptions(maxActiveSubscriptions);
     }
 }
