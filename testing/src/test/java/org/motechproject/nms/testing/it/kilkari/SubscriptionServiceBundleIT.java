@@ -7,6 +7,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.motechproject.event.MotechEvent;
+import org.motechproject.mds.annotations.Ignore;
 import org.motechproject.mds.ex.JdoListenerInvocationException;
 import org.motechproject.nms.kilkari.domain.CallRetry;
 import org.motechproject.nms.kilkari.domain.CallStage;
@@ -52,6 +53,7 @@ import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import javax.inject.Inject;
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -1298,6 +1300,95 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         callRetry = callRetryDataService.findBySubscriptionId(sub.getSubscriptionId());
         assertNull(callRetry);
+
+        transactionManager.commit(status);
+    }
+
+    /**
+     * Verify that the new subscription created is set to hold status when service is full
+     */
+    @Test
+    public void verifyMctsSubscriptionCreationOnHold() {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        subscriptionService.toggleMctsSubscriptionCreation(0);
+        Subscriber mctsSubscriber = new Subscriber(9999911122L);
+        mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(14));
+        subscriberDataService.create(mctsSubscriber);
+
+        Subscription hold = subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.childPack(),
+                SubscriptionOrigin.MCTS_IMPORT);
+
+        mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
+        assertEquals(0, mctsSubscriber.getActiveAndPendingSubscriptions().size());
+
+        Subscription holdFetch = subscriptionService.getSubscription(hold.getSubscriptionId());
+        assertEquals(SubscriptionStatus.HOLD, holdFetch.getStatus());
+
+        subscriptionService.toggleMctsSubscriptionCreation(100); // set this back to active
+        transactionManager.commit(status);
+    }
+
+    /**
+     * verify that sub1 is created as hold when service is full and sub2 is created as pending when not full
+     * this simulates testing over multiple days
+     */
+    @Test
+    public void verifySubscriptionCreationFullNotFull() {
+
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
+        // Creation when service is full
+        subscriptionService.toggleMctsSubscriptionCreation(0);
+        Subscriber mctsSubscriber1 = new Subscriber(9999911122L);
+        mctsSubscriber1.setDateOfBirth(DateTime.now().minusDays(14));
+        subscriberDataService.create(mctsSubscriber1);
+
+        Subscription hold = subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.childPack(),
+                SubscriptionOrigin.MCTS_IMPORT);
+
+        mctsSubscriber1 = subscriberDataService.findByNumber(9999911122L);
+        assertEquals(0, mctsSubscriber1.getActiveAndPendingSubscriptions().size());
+
+        Subscription holdFetch = subscriptionService.getSubscription(hold.getSubscriptionId());
+        assertEquals(SubscriptionStatus.HOLD, holdFetch.getStatus());
+
+        subscriptionService.toggleMctsSubscriptionCreation(100); // set this back to active
+
+        // creation when service is not full (current + x days)
+        Subscriber mctsSubscriber2 = new Subscriber(9999911123L);
+        mctsSubscriber2.setDateOfBirth(DateTime.now().minusDays(14));
+        subscriberDataService.create(mctsSubscriber2);
+
+        subscriptionService.createSubscription(9999911123L, rh.hindiLanguage(), sh.childPack(),
+                SubscriptionOrigin.MCTS_IMPORT);
+
+        mctsSubscriber2 = subscriberDataService.findByNumber(9999911123L);
+        assertEquals(1, mctsSubscriber2.getActiveAndPendingSubscriptions().size());
+
+        transactionManager.commit(status);
+    }
+
+    /**
+     * verify that hold activation is disabled when mcts activation is set to false
+     */
+    @Test
+    public void verifyHoldActivationNoSlots() {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        subscriptionService.toggleMctsSubscriptionCreation(0);
+
+        assertEquals(0, subscriptionService.activateHoldSubscriptions(0));
+        subscriptionService.toggleMctsSubscriptionCreation(100); // set this back to active
+        transactionManager.commit(status);
+    }
+
+    /**
+     * Verify that no subscriptions are activated when open slots are full with mcts activation set to true (by default)
+     */
+    @Test
+    public void verifyHoldActivationFull() {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
+        assertEquals(0, subscriptionService.activateHoldSubscriptions(0));
 
         transactionManager.commit(status);
     }

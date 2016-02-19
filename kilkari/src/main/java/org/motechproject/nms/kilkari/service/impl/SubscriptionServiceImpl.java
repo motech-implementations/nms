@@ -452,14 +452,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     @Override
     public long activateHoldSubscriptions(long maxActiveSubscriptions) {
 
-        if (this.allowMctsSubscriptions) {
-            LOGGER.info("No open slots for hold-activation");
-            return 0;
-        }
-
         long openSlots = maxActiveSubscriptions - subscriptionDataService.countFindByStatus(SubscriptionStatus.ACTIVE);
-        if (openSlots < 1) {
-            LOGGER.info("No open slots found for hold subscription activation");
+        if (!this.allowMctsSubscriptions || openSlots < 1) {
+            LOGGER.info("No open slots found for hold subscription activation. Slots: %d", openSlots);
             return 0;
         }
 
