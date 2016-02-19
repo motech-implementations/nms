@@ -74,7 +74,7 @@ public final class KilkariConstants {
 
     // Message constants
     public static final String PACK_CACHE_EVICT_MESSAGE_SUBJECT = "nms.kilkari.cache.evict.pack";
-    public static final String SUBSCRIPTION_PURGE_EVENT_SUBJECT = "nms.kilkari.purge_closed_subscriptions";
+    public static final String SUBSCRIPTION_UPKEEP_SUBJECT = "nms.kilkari.upkeep_subscriptions";
     public static final String NMS_IMI_KK_PROCESS_CSR_SUBJECT = "nms.imi.kk.process_csr";
     public static final String CSR_VERIFIER_CACHE_EVICT_SUBJECT = "nms.kk.cache.evict.csv_verifier";
     public static final String CIRCLE_CACHE_EVICT_SUBJECT = "nms.region.cache.evict.language";

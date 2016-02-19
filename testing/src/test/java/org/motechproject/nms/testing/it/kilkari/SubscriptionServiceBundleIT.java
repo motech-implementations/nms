@@ -1392,4 +1392,35 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         transactionManager.commit(status);
     }
+
+    @Test
+    public void verifyHoldActivationSuccessful() {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        subscriptionService.toggleMctsSubscriptionCreation(0);
+
+        // sub1
+        Subscriber mctsSubscriber1 = new Subscriber(9999911122L);
+        mctsSubscriber1.setDateOfBirth(DateTime.now().minusDays(14));
+        subscriberDataService.create(mctsSubscriber1);
+
+        // sub2
+        Subscriber mctsSubscriber2 = new Subscriber(9999911123L);
+        mctsSubscriber2.setDateOfBirth(DateTime.now().minusDays(14));
+        subscriberDataService.create(mctsSubscriber2);
+
+        // creation subscriptions
+        Subscription hold1 = subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.childPack(),
+                SubscriptionOrigin.MCTS_IMPORT);
+        Subscription hold2 = subscriptionService.createSubscription(9999911123L, rh.hindiLanguage(), sh.childPack(),
+                SubscriptionOrigin.MCTS_IMPORT);
+
+        // verify that they are on hold
+        assertEquals(SubscriptionStatus.HOLD, hold1.getStatus());
+        assertEquals(SubscriptionStatus.HOLD, hold2.getStatus());
+
+        subscriptionService.toggleMctsSubscriptionCreation(10000); // set activation to active
+        subscriptionService.activateHoldSubscriptions(10000);
+
+        transactionManager.commit(status);
+    }
 }

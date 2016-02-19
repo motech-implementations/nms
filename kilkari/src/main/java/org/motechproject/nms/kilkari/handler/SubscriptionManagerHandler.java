@@ -57,11 +57,14 @@ public class SubscriptionManagerHandler {
             throw new IllegalStateException(error);
         }
 
-        CronSchedulableJob mctsImportJob = new CronSchedulableJob(new MotechEvent(KilkariConstants.SUBSCRIPTION_PURGE_EVENT_SUBJECT), cronExpression);
-        schedulerService.safeScheduleJob(mctsImportJob);
+        CronSchedulableJob subscriptionPurgeJob = new CronSchedulableJob(new MotechEvent(KilkariConstants.SUBSCRIPTION_UPKEEP_SUBJECT), cronExpression);
+
+
+
+        schedulerService.safeScheduleJob(subscriptionPurgeJob);
     }
 
-    @MotechListener(subjects = { KilkariConstants.SUBSCRIPTION_PURGE_EVENT_SUBJECT })
+    @MotechListener(subjects = { KilkariConstants.SUBSCRIPTION_UPKEEP_SUBJECT})
     @Transactional
     public void purgeSubscriptions(MotechEvent event) {
         DateTime tomorrow = DateTime.now().plusDays(1).withTimeAtStartOfDay();

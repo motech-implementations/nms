@@ -306,46 +306,12 @@ public class SubscriptionServiceImpl implements SubscriptionService {
      */
     private Subscription createSubscriptionViaMcts(Subscriber subscriber, SubscriptionPack pack) {
 
-        DateTime startDate;
-        if (pack.getType() == SubscriptionPackType.CHILD) {
-
-            if (subscriber.getDateOfBirth() == null) {
-                return null;    // No DOB available
-            }
-
-            if (Subscription.hasCompletedForStartDate(subscriber.getDateOfBirth(), DateTime.now(), pack)) {
-                return null;
-            }
-
-            if (getActiveSubscription(subscriber, SubscriptionPackType.CHILD) != null) {
-                // reject the subscription if it already exists
-                logRejectedSubscription(subscriber.getCallingNumber(),
-                        SubscriptionRejectionReason.ALREADY_SUBSCRIBED, SubscriptionPackType.CHILD);
-                return null;
-            }
-
-            startDate = subscriber.getDateOfBirth();
-
-        } else { // SubscriptionPackType.PREGNANCY
-
-            if (subscriber.getLastMenstrualPeriod() == null) {
-                return null;    // No LMP available
-            }
-
-            if (Subscription.hasCompletedForStartDate(subscriber.getLastMenstrualPeriod().plusDays(KilkariConstants.THREE_MONTHS),
-                    DateTime.now(), pack)) {
-                return null;
-            }
-
-            if (getActiveSubscription(subscriber, SubscriptionPackType.PREGNANCY) != null) {
-                // reject the subscription if it already exists
-                logRejectedSubscription(subscriber.getCallingNumber(),
-                        SubscriptionRejectionReason.ALREADY_SUBSCRIBED, SubscriptionPackType.PREGNANCY);
-                return null;
-            }
-
-            startDate = subscriber.getLastMenstrualPeriod().plusDays(KilkariConstants.THREE_MONTHS);
+        if (!enrollmentPreconditionCheck(subscriber, pack)) {
+            return null;
         }
+
+        DateTime startDate = (pack.getType() == SubscriptionPackType.CHILD) ?
+                subscriber.getDateOfBirth() : subscriber.getLastMenstrualPeriod().plusDays(KilkariConstants.THREE_MONTHS);
 
         Subscription subscription = new Subscription(subscriber, pack, SubscriptionOrigin.MCTS_IMPORT);
         subscription.setStartDate(startDate);
@@ -359,7 +325,51 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         }
 
         return subscriptionDataService.create(subscription);
+    }
 
+    /**
+     * Helper to evaluate if a subscriber is eligible to subscribe to a pack
+     * @param subscriber subscriber to use
+     * @param pack subscription pack to subscribe to
+     * @return true if all field available and conditions satisfied
+     */
+    private boolean enrollmentPreconditionCheck(Subscriber subscriber, SubscriptionPack pack) {
+        if (pack.getType() == SubscriptionPackType.CHILD) {
+
+            if (subscriber.getDateOfBirth() == null) {
+                return false;
+            }
+
+            if (Subscription.hasCompletedForStartDate(subscriber.getDateOfBirth(), DateTime.now(), pack)) {
+                return false;
+            }
+
+            if (getActiveSubscription(subscriber, SubscriptionPackType.CHILD) != null) {
+                // reject the subscription if it already exists
+                logRejectedSubscription(subscriber.getCallingNumber(),
+                        SubscriptionRejectionReason.ALREADY_SUBSCRIBED, SubscriptionPackType.CHILD);
+                return false;
+            }
+        } else { // SubscriptionPackType.PREGNANCY
+
+            if (subscriber.getLastMenstrualPeriod() == null) {
+                return false;
+            }
+
+            if (Subscription.hasCompletedForStartDate(subscriber.getLastMenstrualPeriod().plusDays(KilkariConstants.THREE_MONTHS),
+                    DateTime.now(), pack)) {
+                return false;
+            }
+
+            if (getActiveSubscription(subscriber, SubscriptionPackType.PREGNANCY) != null) {
+                // reject the subscription if it already exists
+                logRejectedSubscription(subscriber.getCallingNumber(),
+                        SubscriptionRejectionReason.ALREADY_SUBSCRIBED, SubscriptionPackType.PREGNANCY);
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private void logRejectedSubscription(long callingNumber, SubscriptionRejectionReason reason,
@@ -409,10 +419,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     @Override
     public void activateSubscription(Subscription subscription) {
-        if (subscription.getStatus() == SubscriptionStatus.PENDING_ACTIVATION) {
-            subscription.setStatus(SubscriptionStatus.ACTIVE);
-            subscriptionDataService.update(subscription);
-        }
+        subscription.setStatus(SubscriptionStatus.ACTIVE);
+        subscriptionDataService.update(subscription);
     }
 
     @Override
@@ -452,16 +460,18 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     @Override
     public long activateHoldSubscriptions(long maxActiveSubscriptions) {
 
+        LOGGER.info("Activating hold subscriptions up to {}", maxActiveSubscriptions);
+
         long openSlots = maxActiveSubscriptions - subscriptionDataService.countFindByStatus(SubscriptionStatus.ACTIVE);
         if (!this.allowMctsSubscriptions || openSlots < 1) {
-            LOGGER.info("No open slots found for hold subscription activation. Slots: %d", openSlots);
+            LOGGER.info("No open slots found for hold subscription activation. Slots: {}", openSlots);
             return 0;
         }
 
         int activated = 0;
-        LOGGER.info("Found %d slots for hold-activation", openSlots);
+        LOGGER.info("Found {} open slots for hold-activation", openSlots);
         List<Subscription> holdSubscriptions = findHoldSubscriptions(openSlots);
-        LOGGER.debug("Found %d subscriptions to activate", holdSubscriptions.size());
+        LOGGER.info("Found {} subscriptions to activate", holdSubscriptions.size());
 
         for (Subscription current : holdSubscriptions) {
 
@@ -470,11 +480,24 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             }
         }
 
+        LOGGER.info("Activated {} subscriptions", activated);
         return activated;
     }
 
     private boolean activateHoldSubscription(Subscription currentSubscription) {
-        return !(currentSubscription == null);
+
+        Subscriber currentSubscriber = currentSubscription.getSubscriber();
+        SubscriptionPack currentPack = currentSubscription.getSubscriptionPack();
+
+        if (enrollmentPreconditionCheck(currentSubscriber, currentPack)) { // Don't need a full check but it doesn't hurt
+            currentSubscription.setStatus(SubscriptionStatus.ACTIVE);
+            subscriptionDataService.update(currentSubscription);
+            return true;
+        } else {
+            LOGGER.debug("Deleting subscription with id: {}", currentSubscription.getSubscriptionId());
+            subscriptionDataService.delete(currentSubscription);
+            return false;
+        }
     }
 
     private List<Subscription> findHoldSubscriptions(final long resultSize) {
