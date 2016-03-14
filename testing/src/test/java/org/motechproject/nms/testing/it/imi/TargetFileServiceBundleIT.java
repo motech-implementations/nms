@@ -141,15 +141,16 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
     public void testTargetFileGeneration() throws NoSuchAlgorithmException, IOException {
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
+        DateTime currentDate = DateTime.now();
         Subscriber subscriber1 = new Subscriber(1111111111L, rh.hindiLanguage(), rh.delhiCircle());
-        subscriber1.setLastMenstrualPeriod(DateTime.now().minusDays(90)); // startDate will be today
+        subscriber1.setLastMenstrualPeriod(currentDate.minusDays(90)); // startDate will be today
         subscriberDataService.create(subscriber1);
         Subscription subscription1 = subscriptionService.createSubscription(1111111111L, rh.hindiLanguage(),
                 sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
 
         // Should not be picked up because it's been deactivated
         Subscriber subscriber2 = new Subscriber(2222222222L, rh.kannadaLanguage(), rh.karnatakaCircle());
-        subscriber2.setLastMenstrualPeriod(DateTime.now().minusDays(90)); // startDate will be today
+        subscriber2.setLastMenstrualPeriod(currentDate.minusDays(90)); // startDate will be today
         subscriberDataService.create(subscriber2);
         Subscription subscription2 = subscriptionService.createSubscription(2222222222L, rh.kannadaLanguage(),
                 sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
@@ -157,7 +158,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
 
         //Should not be picked up because it's not for today
         Subscriber subscriber3 = new Subscriber(6666666666L, rh.kannadaLanguage(), rh.karnatakaCircle());
-        subscriber3.setDateOfBirth(DateTime.now().plusDays(1)); // startDate is DOB + 1 for child packs,
+        subscriber3.setDateOfBirth(currentDate.plusDays(1)); // startDate is DOB + 1 for child packs,
                                                     // so setting the DOB tomorrow this should be picked up
                                                     // the day after tomorrow
         subscriberDataService.create(subscriber3);
@@ -165,28 +166,28 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
                 SubscriptionOrigin.IVR);
 
         Subscriber subscriber4 = new Subscriber(4000000000L, rh.hindiLanguage(), rh.delhiCircle());
-        subscriber4.setLastMenstrualPeriod(DateTime.now().minusDays(90)); // startDate will be today
+        subscriber4.setLastMenstrualPeriod(currentDate.minusDays(90)); // startDate will be today
         subscriberDataService.create(subscriber4);
         Subscription subscription4 = subscriptionService.createSubscription(4000000000L, rh.hindiLanguage(), sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
         subscription4.setStatus(SubscriptionStatus.PENDING_ACTIVATION);
         subscriptionDataService.update(subscription4);
 
         Subscriber subscriber5 = new Subscriber(5000000000L, rh.hindiLanguage(), rh.delhiCircle());
-        subscriber5.setLastMenstrualPeriod(DateTime.now().minusDays(92)); // startDate will be the day before yesterday
+        subscriber5.setLastMenstrualPeriod(currentDate.minusDays(92)); // startDate will be the day before yesterday
         subscriberDataService.create(subscriber5);
         Subscription subscription5 = subscriptionService.createSubscription(5000000000L, rh.hindiLanguage(), sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
         subscription5.setStatus(SubscriptionStatus.PENDING_ACTIVATION);
         subscriptionDataService.update(subscription5);
 
         Subscriber subscriber6 = new Subscriber(6000000000L, rh.hindiLanguage(), rh.delhiCircle());
-        subscriber6.setLastMenstrualPeriod(DateTime.now().minusDays(88)); // startDate will be the day after tomorrow
+        subscriber6.setLastMenstrualPeriod(currentDate.minusDays(88)); // startDate will be the day after tomorrow
         subscriberDataService.create(subscriber6);
         Subscription subscription6 = subscriptionService.createSubscription(6000000000L, rh.hindiLanguage(), sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
         subscription6.setStatus(SubscriptionStatus.PENDING_ACTIVATION);
         subscriptionDataService.update(subscription6);
 
         //Set the clock one day (and a bit more) back;
-        DateTimeUtils.setCurrentMillisFixed(DateTime.now().minusDays(1).minusHours(1).getMillis());
+        DateTimeUtils.setCurrentMillisFixed(currentDate.minusDays(1).minusHours(1).getMillis());
 
         //Should be picked up because IVR subscriptions all start today + 1 day
         Subscriber subscriber7 = new Subscriber(7777777777L, rh.kannadaLanguage(), rh.karnatakaCircle());
@@ -198,7 +199,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         DateTimeUtils.setCurrentMillisSystem();
 
         Subscriber subscriber8 = new Subscriber(8000000000L, rh.hindiLanguage(), rh.delhiCircle());
-        subscriber8.setLastMenstrualPeriod(DateTime.now().minusDays(72 * 7));
+        subscriber8.setLastMenstrualPeriod(currentDate.minusDays(72 * 7));
         subscriber8 = subscriberDataService.create(subscriber8);
         Subscription subscription8 = subscriptionService.createSubscription(8000000000L, rh.hindiLanguage(), sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
         subscription8.setStatus(SubscriptionStatus.ACTIVE);
@@ -209,14 +210,17 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         transactionManager.commit(status);
 
         // Should be picked up because all callRetries are picked up
-        DateTime dt = DateTime.now().minusDays(1);
+        DateTime dt = currentDate.minusDays(1);
         callRetryDataService.create(new CallRetry("11111111-1111-1111-1111-111111111111", 3333333333L,
                 CallStage.RETRY_1, "w1_m1.wav", "w1_1",
                 rh.hindiLanguage().getCode(), rh.delhiCircle().getName(), SubscriptionOrigin.IVR, "20151119124330", 0));
 
+        // This is a pre-step that runs before target file generation @ 4AM every day
+        subscriptionService.activatePendingSubscriptionsUpTo(currentDate.plusDays(1).withTimeAtStartOfDay());
+
+        // generate target file
         TargetFileNotification tfn = targetFileService.generateTargetFile();
         assertNotNull(tfn);
-
 
         // Verify modificationDate is not earlier than endDate
         for (Subscription s : subscriptionDataService.retrieveAll()) {

@@ -107,6 +107,8 @@
                             org.springframework.web.multipart.commons,
                             org.springframework.cache.support,
                             org.springframework.cache.concurrent,
+                            net.sf.cglib.proxy,
+                            net.sf.cglib.core,
                             *
                         </Import-Package>
                     </instructions>

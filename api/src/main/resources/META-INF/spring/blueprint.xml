@@ -50,4 +50,6 @@
     <!-- Used to access the clearAllCaches API -->
     <osgi:reference id="subscriptionDataService" interface="org.motechproject.nms.kilkari.repository.SubscriptionDataService" />
 
+    <osgi:reference id="mctsWsImportService" interface="org.motechproject.nms.mcts.service.MctsWsImportService" />
+
 </beans>

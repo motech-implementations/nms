@@ -14,6 +14,7 @@ import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryUpdateService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
+import org.motechproject.nms.kilkari.utils.MctsBeneficiaryUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,19 +36,12 @@ import java.util.Map;
 @Service("mctsBeneficiaryUpdateService")
 public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateService {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(MctsBeneficiaryUpdateServiceImpl.class);
+
     private MctsMotherDataService mctsMotherDataService;
     private MctsChildDataService mctsChildDataService;
     private MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor;
     private MctsBeneficiaryImportService mctsBeneficiaryImportService;
-
-    private static final String SR_NO = "Sr No";
-    private static final String MCTS_ID = "MCTS ID";
-    private static final String STATE_MCTS_ID = "STATE ID";
-    private static final String DOB = "Beneficiary New DOB change";
-    private static final String LMP = "Beneficiary New LMP change";
-    private static final String MSISDN = "Beneficiary New Mobile no change";
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(MctsBeneficiaryUpdateServiceImpl.class);
 
     @Autowired
     public MctsBeneficiaryUpdateServiceImpl(MctsMotherDataService mctsMotherDataService,
@@ -109,13 +103,13 @@ public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateSe
     private boolean processRecord(Map<String, Object> record) { //NO CHECKSTYLE CyclomaticComplexity
 
         // Step 1: find the beneficiary
-        String mctsId = (String) record.get(MCTS_ID);
-        String stateMctsId = (String) record.get(STATE_MCTS_ID);
+        String mctsId = (String) record.get(KilkariConstants.UPDATE_MCTS_ID);
+        String stateMctsId = (String) record.get(KilkariConstants.UPDATE_STATE_MCTS_ID);
 
         MctsBeneficiary beneficiary = beneficiaryFromId(mctsId, stateMctsId);
         if (beneficiary == null) {
-            throw new CsvImportDataException(String.format("Unable to locate MCTS beneficiary: %s(%s), %s(%s)", MCTS_ID,
-                    mctsId, STATE_MCTS_ID, stateMctsId));
+            throw new CsvImportDataException(String.format("Unable to locate MCTS beneficiary: %s(%s), %s(%s)", KilkariConstants.UPDATE_MCTS_ID,
+                    mctsId, KilkariConstants.UPDATE_STATE_MCTS_ID, stateMctsId));
         }
 
         // Step 1.5: remap the headers to use standard field names from MCTS
@@ -128,19 +122,19 @@ public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateSe
     }
 
     private Map<String, Object> mapUpdateHeaders(Map<String, Object> updates, MctsBeneficiary beneficiary) {
-        if (updates.containsKey(MSISDN)) {
-            updates.put(KilkariConstants.MSISDN, updates.get(MSISDN));
+        if (updates.containsKey(KilkariConstants.UPDATE_MSISDN)) {
+            updates.put(KilkariConstants.MSISDN, updates.get(KilkariConstants.UPDATE_MSISDN));
         }
 
-        if (updates.containsKey(DOB)) {
-            updates.put(KilkariConstants.DOB, updates.get(DOB));
+        if (updates.containsKey(KilkariConstants.UPDATE_DOB)) {
+            updates.put(KilkariConstants.DOB, updates.get(KilkariConstants.UPDATE_DOB));
         }
 
-        if (updates.containsKey(LMP)) {
-            updates.put(KilkariConstants.LMP, updates.get(LMP));
+        if (updates.containsKey(KilkariConstants.UPDATE_LMP)) {
+            updates.put(KilkariConstants.LMP, updates.get(KilkariConstants.UPDATE_LMP));
         }
 
-        if (updates.containsKey(MCTS_ID)) {
+        if (updates.containsKey(KilkariConstants.UPDATE_MCTS_ID)) {
             updates.put(KilkariConstants.BENEFICIARY_ID, beneficiary);
         }
 
@@ -152,23 +146,23 @@ public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateSe
 
         MctsBeneficiaryUtils.getBeneficiaryLocationMapping(mapping);
 
-        mapping.put(SR_NO, new Optional(new GetString()));
-        mapping.put(MCTS_ID, new Optional(new GetString()));
-        mapping.put(STATE_MCTS_ID, new Optional(new GetString()));
-        mapping.put(DOB, new Optional(new GetInstanceByString<DateTime>() {
+        mapping.put(KilkariConstants.UPDATE_SR_NO, new Optional(new GetString()));
+        mapping.put(KilkariConstants.UPDATE_MCTS_ID, new Optional(new GetString()));
+        mapping.put(KilkariConstants.UPDATE_STATE_MCTS_ID, new Optional(new GetString()));
+        mapping.put(KilkariConstants.UPDATE_DOB, new Optional(new GetInstanceByString<DateTime>() {
             @Override
             public DateTime retrieve(String value) {
                 return mctsBeneficiaryValueProcessor.getDateByString(value);
             }
         }));
-        mapping.put(LMP, new Optional(new GetInstanceByString<DateTime>() {
+        mapping.put(KilkariConstants.UPDATE_LMP, new Optional(new GetInstanceByString<DateTime>() {
             @Override
             public DateTime retrieve(String value) {
                 return mctsBeneficiaryValueProcessor.getDateByString(value);
             }
         }));
         MctsBeneficiaryUtils.getBeneficiaryLocationMapping(mapping);
-        mapping.put(MSISDN, new Optional(new GetInstanceByString<Long>() {
+        mapping.put(KilkariConstants.UPDATE_MSISDN, new Optional(new GetInstanceByString<Long>() {
             @Override
             public Long retrieve(String value) {
                 return mctsBeneficiaryValueProcessor.getMsisdnByString(value);

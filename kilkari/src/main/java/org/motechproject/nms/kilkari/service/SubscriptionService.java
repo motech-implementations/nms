@@ -80,6 +80,19 @@ public interface SubscriptionService {
     void activatePendingSubscriptionsUpTo(final DateTime upToDateTime);
 
     /**
+     * Based on the maxAllowed active subscriptions in the system, toggle mcts creation to true or false
+     * @param maxActiveSubscriptions max active subscriptions to use for toggle evaluation
+     */
+    void toggleMctsSubscriptionCreation(long maxActiveSubscriptions);
+
+    /**
+     * Activate Mcts subscriptions that are on hold, if there are open slots for activation
+     * @param maxActiveSubscriptions to calculate open slots left
+     * @return number of subscriptions activated
+     */
+    long activateHoldSubscriptions(long maxActiveSubscriptions);
+
+    /**
      * Deactivate the specified subscription
      * @param subscription The subscription to deactivate
      * @param reason The reason for deactivation
@@ -101,7 +114,7 @@ public interface SubscriptionService {
     SubscriptionPack getSubscriptionPack(String name);
 
     /**
-     * Returns active subscription for the specified pack type if the subscriber has one
+     * Returns active or pending subscription for the specified pack type if the subscriber has one
      * @param subscriber The subscriber
      * @param type The type of subscription pack
      * @return The subscription if an active one exists, null otherwise
@@ -140,10 +153,8 @@ public interface SubscriptionService {
     /**
      * MotechEvent handler that responds to scheduler events.  Purges subscription and subscriber records that
      * are in a closed state and have been for more than kilkari.weeks_to_keep_closed_subscriptions weeks
-     *
-     * @param event
      */
-    void purgeOldInvalidSubscriptions(MotechEvent event);
+    void purgeOldInvalidSubscriptions();
 
     /**
      * This is used to complete active subscriptions that have extended past their scheduled message delivery length

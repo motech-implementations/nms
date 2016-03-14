@@ -21,6 +21,7 @@ import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.service.CsrService;
 import org.motechproject.nms.kilkari.service.CsrVerifierService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
+import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.motechproject.nms.props.domain.FinalCallStatus;
 import org.motechproject.nms.props.domain.StatusCode;
 import org.slf4j.Logger;
@@ -34,9 +35,6 @@ import static java.lang.Math.min;
 
 @Service("csrService")
 public class CsrServiceImpl implements CsrService {
-
-    private static final String NMS_IMI_KK_PROCESS_CSR = "nms.imi.kk.process_csr";
-    private static final int MAX_CHAR_ALERT = 4900;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CsrServiceImpl.class);
 
@@ -143,7 +141,7 @@ public class CsrServiceImpl implements CsrService {
     }
 
 
-    @MotechListener(subjects = { NMS_IMI_KK_PROCESS_CSR }) //NO CHECKSTYLE Cyclomatic Complexity
+    @MotechListener(subjects = {KilkariConstants.NMS_IMI_KK_PROCESS_CSR_SUBJECT}) //NO CHECKSTYLE Cyclomatic Complexity
     @Transactional
     public void processCallSummaryRecord(MotechEvent event) { //NOPMD NcssMethodCount
 
@@ -188,7 +186,7 @@ public class CsrServiceImpl implements CsrService {
                 default:
                     String error = String.format("Invalid FinalCallStatus: %s", csrDto.getFinalStatus());
                     LOGGER.error(error);
-                    alertService.create(subscriptionId, NMS_IMI_KK_PROCESS_CSR, error, AlertType.CRITICAL,
+                    alertService.create(subscriptionId, KilkariConstants.NMS_IMI_KK_PROCESS_CSR_SUBJECT, error, AlertType.CRITICAL,
                             AlertStatus.NEW, 0, null);
             }
 
@@ -206,8 +204,8 @@ public class CsrServiceImpl implements CsrService {
             String msg = String.format("MOTECH BUG *** Unexpected exception in processCallSummaryRecord() for " +
                     "subscription %s: %s", subscriptionId, ExceptionUtils.getFullStackTrace(e));
             LOGGER.error(msg);
-            alertService.create(subscriptionId, NMS_IMI_KK_PROCESS_CSR,
-                    msg.substring(0, min(msg.length(), MAX_CHAR_ALERT)), AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            alertService.create(subscriptionId, KilkariConstants.NMS_IMI_KK_PROCESS_CSR_SUBJECT,
+                    msg.substring(0, min(msg.length(), KilkariConstants.MAX_CHAR_ALERT)), AlertType.CRITICAL, AlertStatus.NEW, 0, null);
             whatHappened = "E!";
         }
 

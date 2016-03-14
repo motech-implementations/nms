@@ -30,11 +30,11 @@ import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.CsrVerifierService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
+import org.motechproject.nms.kilkari.utils.KilkariConstants;
+import org.motechproject.nms.kilkari.utils.PhoneNumberHelper;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
 import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.Language;
-import org.motechproject.scheduler.contract.RepeatingSchedulableJob;
-import org.motechproject.scheduler.service.MotechSchedulerService;
 import org.motechproject.server.config.SettingsFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,27 +59,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SubscriptionServiceImpl.class);
 
-    private static final String SUBSCRIPTION_PURGE_TIME = "kilkari.purge_closed_subscriptions_start_time";
-    private static final String SUBSCRIPTION_PURGE_SEC_INTERVAL = "kilkari.purge_closed_subscriptions_sec_interval";
-    private static final String WEEKS_TO_KEEP_CLOSED_SUBSCRIPTIONS = "kilkari.weeks_to_keep_closed_subscriptions";
-
-    private static final String SUBSCRIPTION_PURGE_EVENT_SUBJECT = "nms.kilkari.purge_closed_subscriptions";
-    private static final String SELECT_SUBSCRIBERS_BY_NUMBER = "select * from nms_subscribers where callingNumber = ?";
-    private static final String MORE_THAN_ONE_SUBSCRIBER = "More than one subscriber returned for callingNumber %s";
-
-    private static final String PACK_CACHE_EVICT_MESSAGE = "nms.kilkari.cache.evict.pack";
-
-    //2015-10-21 05:11:56.598
-    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.S");
-
     private SettingsFacade settingsFacade;
-    private MotechSchedulerService schedulerService;
-
-    private static final int THREE_MONTHS = 90;
-    private static final int PREGNANCY_PACK_LENGTH_DAYS = 72 * 7;
-    private static final int CHILD_PACK_LENGTH_DAYS = 48 * 7;
-
-
     private SubscriberDataService subscriberDataService;
     private SubscriptionPackDataService subscriptionPackDataService;
     private SubscriptionDataService subscriptionDataService;
@@ -87,10 +67,10 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private CallRetryDataService callRetryDataService;
     private CsrVerifierService csrVerifierService;
     private EventRelay eventRelay;
+    private boolean allowMctsSubscriptions;
 
     @Autowired
     public SubscriptionServiceImpl(@Qualifier("kilkariSettings") SettingsFacade settingsFacade, // NO CHECKSTYLE More than 7 parameters
-                                   MotechSchedulerService schedulerService,
                                    SubscriberDataService subscriberDataService,
                                    SubscriptionPackDataService subscriptionPackDataService,
                                    SubscriptionDataService subscriptionDataService,
@@ -102,83 +82,18 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         this.subscriptionPackDataService = subscriptionPackDataService;
         this.subscriptionDataService = subscriptionDataService;
         this.subscriptionErrorDataService = subscriptionErrorDataService;
-        this.schedulerService = schedulerService;
         this.settingsFacade = settingsFacade;
         this.eventRelay = eventRelay;
         this.callRetryDataService = callRetryDataService;
         this.csrVerifierService = csrVerifierService;
-
-        schedulePurgeOfOldSubscriptions();
+        this.allowMctsSubscriptions = true;
     }
 
 
-    public Subscriber getSubscriber(final long callingNumber) {
 
-        SqlQueryExecution<Subscriber> queryExecution = new SqlQueryExecution<Subscriber>() {
-
-            @Override
-            public String getSqlQuery() {
-                return SELECT_SUBSCRIBERS_BY_NUMBER;
-            }
-
-            @Override
-            public Subscriber execute(Query query) {
-                query.setClass(Subscriber.class);
-                ForwardQueryResult fqr = (ForwardQueryResult) query.execute(callingNumber);
-                if (fqr.isEmpty()) {
-                    return null;
-                }
-                if (fqr.size() == 1) {
-                    return (Subscriber) fqr.get(0);
-                }
-                throw new IllegalStateException(String.format(MORE_THAN_ONE_SUBSCRIBER, callingNumber));
-            }
-        };
-
-        return subscriberDataService.executeSQLQuery(queryExecution);
-
-    }
-
-    /**
-     * Use the MOTECH scheduler to setup a repeating job
-     * The job will start today at the time stored in flw.purge_invalid_flw_start_time in flw.properties
-     * It will repeat every flw.purge_invalid_flw_sec_interval seconds (default value is a day)
-     */
-    private void schedulePurgeOfOldSubscriptions() {
-        //Calculate today's fire time
-        DateTimeFormatter fmt = DateTimeFormat.forPattern("H:m");
-        String timeProp = settingsFacade.getProperty(SUBSCRIPTION_PURGE_TIME);
-        DateTime time = fmt.parseDateTime(timeProp);
-        DateTime today = DateTime.now()                     // This means today's date...
-                .withHourOfDay(time.getHourOfDay())         // ...at the hour...
-                .withMinuteOfHour(time.getMinuteOfHour())   // ...and minute specified in imi.properties
-                .withSecondOfMinute(0)
-                .withMillisOfSecond(0);
-
-        //Second interval between events
-        String intervalProp = settingsFacade.getProperty(SUBSCRIPTION_PURGE_SEC_INTERVAL);
-        Integer secInterval = Integer.parseInt(intervalProp);
-
-        LOGGER.debug(String.format("The %s message will be sent every %ss starting at %s",
-                SUBSCRIPTION_PURGE_EVENT_SUBJECT, secInterval.toString(), today.toString()));
-
-        //Schedule repeating job
-        MotechEvent event = new MotechEvent(SUBSCRIPTION_PURGE_EVENT_SUBJECT);
-        RepeatingSchedulableJob job = new RepeatingSchedulableJob(
-                event,          //MOTECH event
-                null,           //repeatCount, null means infinity
-                secInterval,    //repeatIntervalInSeconds
-                today.toDate(), //startTime
-                null,           //endTime, null means no end time
-                true);          //ignorePastFiresAtStart
-
-        schedulerService.safeScheduleRepeatingJob(job);
-    }
-
-    @MotechListener(subjects = { SUBSCRIPTION_PURGE_EVENT_SUBJECT })
     @Transactional
-    public void purgeOldInvalidSubscriptions(MotechEvent event) {
-        int weeksToKeepInvalidFLWs = Integer.parseInt(settingsFacade.getProperty(WEEKS_TO_KEEP_CLOSED_SUBSCRIPTIONS));
+    public void purgeOldInvalidSubscriptions() {
+        int weeksToKeepInvalidFLWs = Integer.parseInt(settingsFacade.getProperty(KilkariConstants.WEEKS_TO_KEEP_CLOSED_SUBSCRIPTIONS));
         final SubscriptionStatus completed = SubscriptionStatus.COMPLETED;
         final SubscriptionStatus deactivated = SubscriptionStatus.DEACTIVATED;
         final DateTime cutoff = DateTime.now().minusWeeks(weeksToKeepInvalidFLWs).withTimeAtStartOfDay();
@@ -190,8 +105,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
                 query.setFilter("(status == completed || status == deactivated) && endDate < cutoff");
                 query.declareParameters("org.motechproject.nms.kilkari.domain.SubscriptionStatus completed, " +
-                                        "org.motechproject.nms.kilkari.domain.SubscriptionStatus deactivated, " +
-                                        "org.joda.time.DateTime cutoff");
+                        "org.motechproject.nms.kilkari.domain.SubscriptionStatus deactivated, " +
+                        "org.joda.time.DateTime cutoff");
 
 
                 return (List<Subscription>) query.execute(completed, deactivated, cutoff);
@@ -217,7 +132,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             subscriptionDataService.delete(subscription);
 
             // I need to load the subscriber since I deleted one of their subscription prior
-            Subscriber subscriber = getSubscriber(callingNumber);
+            Subscriber subscriber = subscriberDataService.findByNumber(callingNumber);
             purgedSubscriptions++;
             if (subscriber.getSubscriptions().size() == 0) {
                 LOGGER.debug("Purging subscriber for subscription {} as it was the last subscription for that subscriber",
@@ -230,13 +145,14 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         LOGGER.info(String.format("Purged %s subscribers and %s subscriptions with status (%s or %s) and " + "endDate date before %s", purgedSubscribers, purgedSubscriptions, SubscriptionStatus.COMPLETED, SubscriptionStatus.DEACTIVATED, cutoff.toString()));
     }
 
+
     @Override
     public void completePastDueSubscriptions() {
 
         final DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
         final DateTime currentTime = DateTime.now();
-        final DateTime oldestPregnancyStart = currentTime.minusDays(PREGNANCY_PACK_LENGTH_DAYS).withTimeAtStartOfDay();
-        final DateTime oldestChildStart = currentTime.minusDays(CHILD_PACK_LENGTH_DAYS).withTimeAtStartOfDay();
+        final DateTime oldestPregnancyStart = currentTime.minusDays(KilkariConstants.PREGNANCY_PACK_LENGTH_DAYS).withTimeAtStartOfDay();
+        final DateTime oldestChildStart = currentTime.minusDays(KilkariConstants.CHILD_PACK_LENGTH_DAYS).withTimeAtStartOfDay();
 
         LOGGER.debug("Completing active pregnancy susbscriptions older than {}", oldestPregnancyStart);
         LOGGER.debug("Completing active child susbscriptions older than {}", oldestChildStart);
@@ -252,11 +168,11 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                         "ON s.subscriptionPack_id_OID = sp.id " +
                         "SET s.status = 'COMPLETED', s.endDate = :currentTime, s.modificationDate = :currentTime " +
                         "WHERE " +
-                        "(s.status = 'ACTIVE' OR s.status = 'PENDING_ACTIVATION') AND " +
+                        "(s.status = 'ACTIVE' OR s.status = 'PENDING_ACTIVATION' OR s.status = 'HOLD') AND " +
                         "((sp.type = 'PREGNANCY' AND s.startDate < :oldestPregnancyStart) " +
                         "OR " +
                         "(sp.type = 'CHILD' AND s.startDate < :oldestChildStart))";
-                LOGGER.debug("SQL QUERY: {}", query);
+                LOGGER.debug(KilkariConstants.SQL_QUERY_LOG, query);
                 return query;
             }
 
@@ -277,7 +193,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     @Override
     public void deletePreconditionCheck(Subscription subscription) {
-        int weeksToKeepInvalidFLWs = Integer.parseInt(settingsFacade.getProperty(WEEKS_TO_KEEP_CLOSED_SUBSCRIPTIONS));
+        int weeksToKeepInvalidFLWs = Integer.parseInt(settingsFacade.getProperty(KilkariConstants.WEEKS_TO_KEEP_CLOSED_SUBSCRIPTIONS));
         DateTime now = new DateTime();
 
         if (subscription.getStatus() != SubscriptionStatus.COMPLETED &&
@@ -308,7 +224,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                                            SubscriptionPack subscriptionPack, SubscriptionOrigin mode) {
 
         long number = PhoneNumberHelper.truncateLongNumber(callingNumber);
-        Subscriber subscriber = getSubscriber(number);
+        Subscriber subscriber = subscriberDataService.findByNumber(callingNumber);
         Subscription subscription;
 
         if (subscriber == null) {
@@ -390,51 +306,71 @@ public class SubscriptionServiceImpl implements SubscriptionService {
      *    subscription to Pregnancy Pack on this MSISDN.
      */
     private Subscription createSubscriptionViaMcts(Subscriber subscriber, SubscriptionPack pack) {
-        Subscription subscription;
 
-        if (subscriber.getDateOfBirth() != null && pack.getType() == SubscriptionPackType.CHILD) {
-            // DOB (with or without LMP) is present
-            if (getActiveSubscription(subscriber, SubscriptionPackType.CHILD) != null)
-            {
+        if (!enrollmentPreconditionCheck(subscriber, pack)) {
+            return null;
+        }
+
+        DateTime startDate = (pack.getType() == SubscriptionPackType.CHILD) ?
+                subscriber.getDateOfBirth() : subscriber.getLastMenstrualPeriod().plusDays(KilkariConstants.THREE_MONTHS);
+
+        Subscription subscription = new Subscription(subscriber, pack, SubscriptionOrigin.MCTS_IMPORT);
+        subscription.setStartDate(startDate);
+        subscription.setNeedsWelcomeMessageViaObd(true);
+
+        if (allowMctsSubscriptions) {
+            subscription.setStatus(Subscription.getStatus(subscription, DateTime.now()));
+        } else {
+            LOGGER.debug("System at capacity, No new MCTS subscriptions allowed. Setting status to HOLD");
+            subscription.setStatus(SubscriptionStatus.HOLD);
+        }
+
+        return subscriptionDataService.create(subscription);
+    }
+
+    /**
+     * Helper to evaluate if a subscriber is eligible to subscribe to a pack
+     * @param subscriber subscriber to use
+     * @param pack subscription pack to subscribe to
+     * @return true if all field available and conditions satisfied
+     */
+    private boolean enrollmentPreconditionCheck(Subscriber subscriber, SubscriptionPack pack) {
+        if (pack.getType() == SubscriptionPackType.CHILD) {
+
+            if (subscriber.getDateOfBirth() == null) {
+                return false;
+            }
+
+            if (Subscription.hasCompletedForStartDate(subscriber.getDateOfBirth(), DateTime.now(), pack)) {
+                return false;
+            }
+
+            if (getActiveSubscription(subscriber, SubscriptionPackType.CHILD) != null) {
                 // reject the subscription if it already exists
                 logRejectedSubscription(subscriber.getCallingNumber(),
                         SubscriptionRejectionReason.ALREADY_SUBSCRIBED, SubscriptionPackType.CHILD);
-                return null;
-            } else if (Subscription.hasCompletedForStartDate(subscriber.getDateOfBirth(), DateTime.now(), pack)) {
-                // TODO: #117 decide whether this case also warrants logging
-                return null;
-            } else {
-                subscription = new Subscription(subscriber, pack, SubscriptionOrigin.MCTS_IMPORT);
-                subscription.setStartDate(subscriber.getDateOfBirth());
-                subscription.setStatus(Subscription.getStatus(subscription, DateTime.now()));
+                return false;
             }
-        } else if (subscriber.getLastMenstrualPeriod() != null && pack.getType() == SubscriptionPackType.PREGNANCY) {
-            // LMP is present and DOB is not
+        } else { // SubscriptionPackType.PREGNANCY
+
+            if (subscriber.getLastMenstrualPeriod() == null) {
+                return false;
+            }
+
+            if (Subscription.hasCompletedForStartDate(subscriber.getLastMenstrualPeriod().plusDays(KilkariConstants.THREE_MONTHS),
+                    DateTime.now(), pack)) {
+                return false;
+            }
+
             if (getActiveSubscription(subscriber, SubscriptionPackType.PREGNANCY) != null) {
                 // reject the subscription if it already exists
                 logRejectedSubscription(subscriber.getCallingNumber(),
                         SubscriptionRejectionReason.ALREADY_SUBSCRIBED, SubscriptionPackType.PREGNANCY);
-                return null;
-            } else if (Subscription.hasCompletedForStartDate(subscriber.getLastMenstrualPeriod().plusDays(THREE_MONTHS),
-                            DateTime.now(), pack)) {
-                // TODO: #117 decide whether this case also warrants logging
-                return null;
-            } else {
-                // TODO: #160 deal with early subscription
-                subscription = new Subscription(subscriber, pack, SubscriptionOrigin.MCTS_IMPORT);
-
-                // the pregnancy pack starts 3 months after LMP
-                subscription.setStartDate(subscriber.getLastMenstrualPeriod().plusDays(THREE_MONTHS));
-                subscription.setStatus(Subscription.getStatus(subscription, DateTime.now()));
+                return false;
             }
-        } else {
-            // TODO: #117 need to log any other error cases? In theory we shouldn't land here.
-            return null;
         }
 
-        // creating new subscription from MCTS, set welcome flag
-        subscription.setNeedsWelcomeMessageViaObd(true);
-        return subscriptionDataService.create(subscription);
+        return true;
     }
 
     private void logRejectedSubscription(long callingNumber, SubscriptionRejectionReason reason,
@@ -442,7 +378,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         SubscriptionError error = new SubscriptionError(callingNumber, reason, packType);
         subscriptionErrorDataService.create(error);
     }
-
 
 
     @Override
@@ -475,7 +410,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     @Override
     public void updateStartDate(Subscription subscription, DateTime newReferenceDate) {
         if (subscription.getSubscriptionPack().getType() == SubscriptionPackType.PREGNANCY) {
-            subscription.setStartDate(newReferenceDate.plusDays(THREE_MONTHS));
+            subscription.setStartDate(newReferenceDate.plusDays(KilkariConstants.THREE_MONTHS));
         } else { // CHILD pack
             subscription.setStartDate(newReferenceDate);
         }
@@ -485,12 +420,11 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     @Override
     public void activateSubscription(Subscription subscription) {
-        if (subscription.getStatus() == SubscriptionStatus.PENDING_ACTIVATION) {
-            subscription.setStatus(SubscriptionStatus.ACTIVE);
-            subscriptionDataService.update(subscription);
-        }
+        subscription.setStatus(SubscriptionStatus.ACTIVE);
+        subscriptionDataService.update(subscription);
     }
 
+    @Override
     public void activatePendingSubscriptionsUpTo(final DateTime upToDateTime) {
         SqlQueryExecution sqe = new SqlQueryExecution() {
 
@@ -498,15 +432,15 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             public String getSqlQuery() {
                 String query = "UPDATE nms_subscriptions SET status='ACTIVE', activationDate = :now, " +
                                 "modificationDate = :now WHERE status='PENDING_ACTIVATION' AND startDate < :upto";
-                LOGGER.debug("SQL QUERY: {}", query);
+                LOGGER.debug(KilkariConstants.SQL_QUERY_LOG, query);
                 return query;
             }
 
             @Override
             public Object execute(Query query) {
                 Map params = new HashMap();
-                params.put("now", DateTime.now().toString(TIME_FORMATTER));
-                params.put("upto", upToDateTime.toString(TIME_FORMATTER));
+                params.put("now", DateTime.now().toString(KilkariConstants.TIME_FORMATTER));
+                params.put("upto", upToDateTime.toString(KilkariConstants.TIME_FORMATTER));
                 query.executeWithMap(params);
                 return null;
             }
@@ -516,9 +450,123 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     /**
-     * Delete the CallRetry record corresponding to the given subscription
-     *
-     * @param subscriptionId subscription to delete the CallRetry record for
+     * Toggle if we should let new MCTS subscriptions to be created based on config, broadcast message to other instances
+     */
+    @Override
+    public void toggleMctsSubscriptionCreation(long maxActiveSubscriptions) {
+
+        long currentActive = subscriptionDataService.countFindByStatus(SubscriptionStatus.ACTIVE);
+        LOGGER.info("Found {} active subscriptions", currentActive);
+        this.allowMctsSubscriptions = (currentActive < maxActiveSubscriptions);
+
+        // broadcast flag to every other instance
+        Map<String, Object> eventParams = new HashMap<>();
+        eventParams.put(KilkariConstants.TOGGLE_CAP_KEY, this.allowMctsSubscriptions);
+        MotechEvent toggleEvent = new MotechEvent(KilkariConstants.TOGGLE_SUBSCRIPTION_CAPPING, eventParams);
+        eventRelay.broadcastEventMessage(toggleEvent);
+    }
+
+    @Override
+    public long activateHoldSubscriptions(long maxActiveSubscriptions) {
+
+        LOGGER.info("Activating hold subscriptions up to {}", maxActiveSubscriptions);
+
+        long openSlots = maxActiveSubscriptions - subscriptionDataService.countFindByStatus(SubscriptionStatus.ACTIVE);
+        if (!this.allowMctsSubscriptions || openSlots < 1) {
+            LOGGER.info("No open slots found for hold subscription activation. Slots: {}", openSlots);
+            return 0;
+        }
+
+        int activated = 0;
+        LOGGER.info("Found {} open slots for hold-activation", openSlots);
+        List<Subscription> holdSubscriptions = findHoldSubscriptions(openSlots);
+        LOGGER.info("Found {} subscriptions to activate", holdSubscriptions.size());
+
+        for (Subscription current : holdSubscriptions) {
+
+            if (activateHoldSubscription(current)) {
+                activated++;
+            }
+        }
+
+        LOGGER.info("Activated {} subscriptions", activated);
+        return activated;
+    }
+
+    private boolean activateHoldSubscription(Subscription currentSubscription) {
+
+        Subscriber currentSubscriber = currentSubscription.getSubscriber();
+        SubscriptionPack currentPack = currentSubscription.getSubscriptionPack();
+
+        if (enrollmentPreconditionCheck(currentSubscriber, currentPack)) { // Don't need a full check but it doesn't hurt
+            currentSubscription.setStatus(SubscriptionStatus.ACTIVE);
+            subscriptionDataService.update(currentSubscription);
+            return true;
+        } else {
+            LOGGER.debug("Deleting subscription with id: {}", currentSubscription.getSubscriptionId());
+            subscriptionDataService.delete(currentSubscription);
+            return false;
+        }
+    }
+
+    /**
+     * This finds all the subscriptions that are on hold and returns the list by users having the most days left in the pack
+     * first. This will skew the majority of mother packs to get activated first, but looks like we'd optimize for
+     * targeting users as early as possible when competing for spots
+     * @param resultSize max result size, usually reflects the number of open slots for activation
+     * @return list of subscriptions
+     */
+    private List<Subscription> findHoldSubscriptions(final long resultSize) {
+
+        @SuppressWarnings("unchecked")
+        SqlQueryExecution<List<Subscription>> queryExecution = new SqlQueryExecution<List<Subscription>>() {
+
+            // This query looks a little complex but it is basically structured that way to sort users by most messages left
+            @Override
+            public String getSqlQuery() {
+                String query =  "SELECT res.id as id, res.activationDate, res.deactivationReason, res.endDate, res.firstMessageDayOfWeek, res.needsWelcomeMessageViaObd, " +
+                                "res.origin, res.secondMessageDayOfWeek, res.startDate, res.status, res.subscriber_id_OID, res.subscriptionId, res.subscriptionPack_id_OID, " +
+                                "res.creationDate, res.creator, res.modificationDate, res.modifiedBy, res.owner, " +
+                                "CASE " +
+                                    "WHEN res.type = 'PREGNANCY' THEN DATE_ADD(res.lastMenstrualPeriod, INTERVAL :pdays DAY) " +
+                                    "ELSE DATE_ADD(res.dateOfBirth, INTERVAL :cdays DAY) " +
+                                "END AS referenceDate, " +
+                                "res.type " +
+                                "FROM" +
+                                    "(SELECT ss.id as id, ss.activationDate, ss.deactivationReason, ss.endDate, ss.firstMessageDayOfWeek, ss.needsWelcomeMessageViaObd, " +
+                                    "ss.origin, ss.secondMessageDayOfWeek, ss.startDate, ss.status, ss.subscriber_id_OID, ss.subscriptionId, ss.subscriptionPack_id_OID, " +
+                                    "ss.creationDate, ss.creator, ss.modificationDate, ss.modifiedBy, ss.owner, s.dateOfBirth, s.lastMenstrualPeriod, sp.type FROM nms_subscriptions AS ss " +
+                                    "JOIN nms_subscription_packs AS sp ON ss.subscriptionPack_id_OID = sp.id " +
+                                    "JOIN nms_subscribers AS s ON ss.subscriber_id_OID = s.id " +
+                                    "WHERE ss.status = 'HOLD' AND origin = 'MCTS_IMPORT') AS res " + // Origin is superfluous here since IVR doesn't go on hold
+                                "ORDER BY referenceDate DESC " +
+                                "LIMIT :limit";
+                LOGGER.debug(KilkariConstants.SQL_QUERY_LOG, query);
+                return query;
+            }
+
+            @Override
+            public List<Subscription> execute(Query query) {
+
+                query.setClass(Subscription.class);
+
+                Map params = new HashMap();
+                params.put("pdays", KilkariConstants.THREE_MONTHS + KilkariConstants.PREGNANCY_PACK_LENGTH_DAYS);
+                params.put("cdays", KilkariConstants.CHILD_PACK_LENGTH_DAYS);
+                params.put("limit", resultSize);
+                ForwardQueryResult fqr = (ForwardQueryResult) query.executeWithMap(params);
+
+                return (List<Subscription>) fqr;
+            }
+        };
+
+        return subscriptionDataService.executeSQLQuery(queryExecution);
+    }
+
+
+    /**
+     * Delete the CallRetry record corresponding to the given subscription     *
+     * @param subscriptionId subscription to delete the CallRetry record fors
      */
     private void deleteCallRetry(String subscriptionId) {
         CallRetry callRetry = callRetryDataService.findBySubscriptionId(subscriptionId);
@@ -565,7 +613,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         return subscriptionDataService.create(subscription);
     }
 
-
     @Override
     public List<Subscription> findActiveSubscriptionsForDay(final DayOfTheWeek dow, final long offset,
                                                             final int rowCount) {
@@ -588,7 +635,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                                 "status = 'ACTIVE' " +
                                 "ORDER BY s.id " +
                                 "LIMIT :max";
-                LOGGER.debug("SQL QUERY: {}", query);
+                LOGGER.debug(KilkariConstants.SQL_QUERY_LOG, query);
                 return query;
             }
 
@@ -620,17 +667,24 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     @CacheEvict(value = {"pack" }, allEntries = true)
     public void broadcastCacheEvictMessage(SubscriptionPack pack) {
-        MotechEvent motechEvent = new MotechEvent(PACK_CACHE_EVICT_MESSAGE);
+        MotechEvent motechEvent = new MotechEvent(KilkariConstants.PACK_CACHE_EVICT_MESSAGE_SUBJECT);
         eventRelay.broadcastEventMessage(motechEvent);
     }
 
 
-    @MotechListener(subjects = { PACK_CACHE_EVICT_MESSAGE })
+    @MotechListener(subjects = { KilkariConstants.PACK_CACHE_EVICT_MESSAGE_SUBJECT})
     @CacheEvict(value = {"pack" }, allEntries = true)
     public void cacheEvict(MotechEvent event) {
         csrVerifierService.cacheEvict();
     }
 
+    @MotechListener(subjects = { KilkariConstants.TOGGLE_SUBSCRIPTION_CAPPING })
+    public void toggleActiveSubscriptionCapping(MotechEvent event) {
+        LOGGER.info("Received message to toggle subscription capping");
+        boolean value = (boolean) event.getParameters().get(KilkariConstants.TOGGLE_CAP_KEY);
+        this.allowMctsSubscriptions = value;
+        LOGGER.info("Set allow new mcts subscriptions to ", value);
+    }
 
     @Override
     public List<Subscription> retrieveAll() {

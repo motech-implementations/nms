@@ -20,6 +20,7 @@ import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
+import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Language;
@@ -38,9 +39,6 @@ import java.util.Set;
  */
 @Service("subscriberService")
 public class SubscriberServiceImpl implements SubscriberService {
-
-    public static final String SELECT_SUBSCRIBER = "select * from nms_subscribers where callingNumber = ?";
-    public static final String MULTIPLE_SUBSCRIBERS = "More than one subscriber returned for callingNumber %s";
 
     private SubscriberDataService subscriberDataService;
     private SubscriptionService subscriptionService;
@@ -67,7 +65,7 @@ public class SubscriberServiceImpl implements SubscriberService {
 
             @Override
             public String getSqlQuery() {
-                return SELECT_SUBSCRIBER;
+                return KilkariConstants.SELECT_SUBSCRIBERS_BY_NUMBER;
             }
 
             @Override
@@ -80,7 +78,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                 if (fqr.size() == 1) {
                     return (Subscriber) fqr.get(0);
                 }
-                throw new IllegalStateException(String.format(MULTIPLE_SUBSCRIBERS, callingNumber));
+                throw new IllegalStateException(String.format(KilkariConstants.MORE_THAN_ONE_SUBSCRIBER, callingNumber));
             }
         };
 
