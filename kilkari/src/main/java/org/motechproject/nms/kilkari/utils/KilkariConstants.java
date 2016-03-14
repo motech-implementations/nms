@@ -64,6 +64,7 @@ public final class KilkariConstants {
     public static final int PREGNANCY_PACK_LENGTH_DAYS = PREGNANCY_PACK_LENGTH_WEEKS * DAY_IN_WEEK;
     public static final int CHILD_PACK_LENGTH_WEEKS = 48;
     public static final int CHILD_PACK_LENGTH_DAYS = CHILD_PACK_LENGTH_WEEKS * DAY_IN_WEEK;
+    public static final Long DEFAULT_MAX_ACTIVE_SUBSCRIPTION_CAP = 1000000L;
 
     // SQL constants
     public static final String SELECT_SUBSCRIBERS_BY_NUMBER = "select * from nms_subscribers where callingNumber = ?";
@@ -79,6 +80,8 @@ public final class KilkariConstants {
     public static final String CSR_VERIFIER_CACHE_EVICT_SUBJECT = "nms.kk.cache.evict.csv_verifier";
     public static final String CIRCLE_CACHE_EVICT_SUBJECT = "nms.region.cache.evict.language";
     public static final String LANGUAGE_CACHE_EVICT_SUBJECT = "nms.region.cache.evict.language";
+    public static final String TOGGLE_SUBSCRIPTION_CAPPING = "nms.kilkari.subscription.capping";
+    public static final String TOGGLE_CAP_KEY = "nms.kilkari.subscription.cap.key";
 
     // Settings constants
     public static final String WEEKS_TO_KEEP_CLOSED_SUBSCRIPTIONS = "kilkari.weeks_to_keep_closed_subscriptions";

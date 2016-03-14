@@ -41,7 +41,7 @@ public class SubscriptionManagerHandler {
     /**
      * Use the MOTECH scheduler to setup a repeating job
      * The job will start today at the time stored in flw.purge_invalid_flw_start_time in flw.properties
-     * It will repeat every flw.purge_invalid_flw_sec_interval seconds (default value is a day)
+     * It will repeat based on cron (default value is a day @ 4:02am)
      */
     @PostConstruct
     public void initSubscriptionManager() {
@@ -58,17 +58,14 @@ public class SubscriptionManagerHandler {
         }
 
         CronSchedulableJob subscriptionPurgeJob = new CronSchedulableJob(new MotechEvent(KilkariConstants.SUBSCRIPTION_UPKEEP_SUBJECT), cronExpression);
-
-
-
         schedulerService.safeScheduleJob(subscriptionPurgeJob);
     }
 
     @MotechListener(subjects = { KilkariConstants.SUBSCRIPTION_UPKEEP_SUBJECT})
     @Transactional
-    public void purgeSubscriptions(MotechEvent event) {
+    public void upkeepSubscriptions(MotechEvent event) {
         DateTime tomorrow = DateTime.now().plusDays(1).withTimeAtStartOfDay();
-        Long maxActiveSubscriptions = Long.parseLong(settingsFacade.getProperty(KilkariConstants.SUBSCRIPTION_CAP));
+
 
         subscriptionService.purgeOldInvalidSubscriptions();
         subscriptionService.completePastDueSubscriptions();
@@ -77,9 +74,9 @@ public class SubscriptionManagerHandler {
         subscriptionService.activatePendingSubscriptionsUpTo(tomorrow);
         LOGGER.debug("Activated all pending subscriptions up to {} in {}", tomorrow, timer.time());
 
-        subscriptionService.toggleMctsSubscriptionCreation(maxActiveSubscriptions);
+        subscriptionService.toggleMctsSubscriptionCreation();
 
         // evaluate and activate subscriptions on hold, if there are open slots
-        subscriptionService.activateHoldSubscriptions(maxActiveSubscriptions);
+        subscriptionService.activateHoldSubscriptions();
     }
 }

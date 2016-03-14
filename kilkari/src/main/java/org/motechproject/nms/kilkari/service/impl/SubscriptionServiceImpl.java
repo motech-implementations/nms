@@ -68,6 +68,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private CsrVerifierService csrVerifierService;
     private EventRelay eventRelay;
     private boolean allowMctsSubscriptions;
+    private Long maxActiveSubscriptions;
 
     @Autowired
     public SubscriptionServiceImpl(@Qualifier("kilkariSettings") SettingsFacade settingsFacade, // NO CHECKSTYLE More than 7 parameters
@@ -86,8 +87,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         this.eventRelay = eventRelay;
         this.callRetryDataService = callRetryDataService;
         this.csrVerifierService = csrVerifierService;
-        this.allowMctsSubscriptions = true;
+        toggleMctsSubscriptionCreation();
     }
+
 
 
     @Transactional
@@ -449,20 +451,36 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     /**
-     * Toggle if we should let new MCTS subscriptions to be created based on config
-     * @param maxAllowed max active subscriptions in the system
+     * Toggle if we should let new MCTS subscriptions to be created based on config, broadcast message to other instances
      */
-    @Override
-    public void toggleMctsSubscriptionCreation(long maxAllowed) {
-        this.allowMctsSubscriptions = (subscriptionDataService.countFindByStatus(SubscriptionStatus.ACTIVE) < maxAllowed);
+    public final void toggleMctsSubscriptionCreation() {
+
+        try {
+            this.maxActiveSubscriptions = Long.parseLong(settingsFacade.getProperty(KilkariConstants.SUBSCRIPTION_CAP));
+            LOGGER.info("Setting max subscriptions to {}", maxActiveSubscriptions);
+        } catch (NumberFormatException nfe) {
+            LOGGER.error("***ERROR*** no subscription cap defined, using hardcoded default {}", KilkariConstants.DEFAULT_MAX_ACTIVE_SUBSCRIPTION_CAP);
+
+            this.maxActiveSubscriptions = KilkariConstants.DEFAULT_MAX_ACTIVE_SUBSCRIPTION_CAP;
+        }
+
+        long currentActive = subscriptionDataService.countFindByStatus(SubscriptionStatus.ACTIVE);
+        LOGGER.info("Found {} active subscriptions", currentActive);
+        this.allowMctsSubscriptions = (currentActive < maxActiveSubscriptions);
+
+        // broadcast flag to every other instance
+        Map<String, Object> eventParams = new HashMap<>();
+        eventParams.put(KilkariConstants.TOGGLE_CAP_KEY, this.allowMctsSubscriptions);
+        MotechEvent toggleEvent = new MotechEvent(KilkariConstants.TOGGLE_SUBSCRIPTION_CAPPING, eventParams);
+        eventRelay.broadcastEventMessage(toggleEvent);
     }
 
     @Override
-    public long activateHoldSubscriptions(long maxActiveSubscriptions) {
+    public long activateHoldSubscriptions() {
 
-        LOGGER.info("Activating hold subscriptions up to {}", maxActiveSubscriptions);
+        LOGGER.info("Activating hold subscriptions up to {}", this.maxActiveSubscriptions);
 
-        long openSlots = maxActiveSubscriptions - subscriptionDataService.countFindByStatus(SubscriptionStatus.ACTIVE);
+        long openSlots = this.maxActiveSubscriptions - subscriptionDataService.countFindByStatus(SubscriptionStatus.ACTIVE);
         if (!this.allowMctsSubscriptions || openSlots < 1) {
             LOGGER.info("No open slots found for hold subscription activation. Slots: {}", openSlots);
             return 0;
@@ -500,11 +518,19 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         }
     }
 
+    /**
+     * This finds all the subscriptions that are on hold and returns the list by users having the most days left in the pack
+     * first. This will skew the majority of mother packs to get activated first, but looks like we'd optimize for
+     * targeting users as early as possible when competing for spots
+     * @param resultSize max result size, usually reflects the number of open slots for activation
+     * @return list of subscriptions
+     */
     private List<Subscription> findHoldSubscriptions(final long resultSize) {
 
         @SuppressWarnings("unchecked")
         SqlQueryExecution<List<Subscription>> queryExecution = new SqlQueryExecution<List<Subscription>>() {
 
+            // This query looks a little complex but it is basically structured that way to sort users by most messages left
             @Override
             public String getSqlQuery() {
                 String query =  "SELECT res.id as id, res.activationDate, res.deactivationReason, res.endDate, res.firstMessageDayOfWeek, res.needsWelcomeMessageViaObd, " +
@@ -661,6 +687,13 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         csrVerifierService.cacheEvict();
     }
 
+    @MotechListener(subjects = { KilkariConstants.TOGGLE_SUBSCRIPTION_CAPPING })
+    public void toggleActiveSubscriptionCapping(MotechEvent event) {
+        LOGGER.info("Received message to toggle subscription capping");
+        boolean value = (boolean) event.getParameters().get(KilkariConstants.TOGGLE_CAP_KEY);
+        this.allowMctsSubscriptions = value;
+        LOGGER.info("Set allow new mcts subscriptions to ", value);
+    }
 
     @Override
     public List<Subscription> retrieveAll() {

@@ -80,17 +80,15 @@ public interface SubscriptionService {
     void activatePendingSubscriptionsUpTo(final DateTime upToDateTime);
 
     /**
-     * Activate subscriptions that are on hold
-     * @param maxAllowed max active subscriptions in the system
+     * Based on the maxAllowed active subscriptions in the system, toggle mcts creation to true or false
      */
-    void toggleMctsSubscriptionCreation(long maxAllowed);
+    void toggleMctsSubscriptionCreation();
 
     /**
-     * Activate Mcts subscriptions that are on hold
-     * @param maxActiveSubscriptionCount number of subscriptions to activate
+     * Activate Mcts subscriptions that are on hold, if there are open slots for activation
      * @return number of subscriptions activated
      */
-    long activateHoldSubscriptions(long maxActiveSubscriptionCount);
+    long activateHoldSubscriptions();
 
     /**
      * Deactivate the specified subscription
@@ -114,7 +112,7 @@ public interface SubscriptionService {
     SubscriptionPack getSubscriptionPack(String name);
 
     /**
-     * Returns active or subscription for the specified pack type if the subscriber has one
+     * Returns active or pending subscription for the specified pack type if the subscriber has one
      * @param subscriber The subscriber
      * @param type The type of subscription pack
      * @return The subscription if an active one exists, null otherwise
