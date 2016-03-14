@@ -81,14 +81,16 @@ public interface SubscriptionService {
 
     /**
      * Based on the maxAllowed active subscriptions in the system, toggle mcts creation to true or false
+     * @param maxActiveSubscriptions max active subscriptions to use for toggle evaluation
      */
-    void toggleMctsSubscriptionCreation();
+    void toggleMctsSubscriptionCreation(long maxActiveSubscriptions);
 
     /**
      * Activate Mcts subscriptions that are on hold, if there are open slots for activation
+     * @param maxActiveSubscriptions to calculate open slots left
      * @return number of subscriptions activated
      */
-    long activateHoldSubscriptions();
+    long activateHoldSubscriptions(long maxActiveSubscriptions);
 
     /**
      * Deactivate the specified subscription

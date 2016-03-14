@@ -68,7 +68,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private CsrVerifierService csrVerifierService;
     private EventRelay eventRelay;
     private boolean allowMctsSubscriptions;
-    private Long maxActiveSubscriptions;
 
     @Autowired
     public SubscriptionServiceImpl(@Qualifier("kilkariSettings") SettingsFacade settingsFacade, // NO CHECKSTYLE More than 7 parameters
@@ -87,7 +86,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         this.eventRelay = eventRelay;
         this.callRetryDataService = callRetryDataService;
         this.csrVerifierService = csrVerifierService;
-        toggleMctsSubscriptionCreation();
     }
 
 
@@ -453,16 +451,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     /**
      * Toggle if we should let new MCTS subscriptions to be created based on config, broadcast message to other instances
      */
-    public final void toggleMctsSubscriptionCreation() {
-
-        try {
-            this.maxActiveSubscriptions = Long.parseLong(settingsFacade.getProperty(KilkariConstants.SUBSCRIPTION_CAP));
-            LOGGER.info("Setting max subscriptions to {}", maxActiveSubscriptions);
-        } catch (NumberFormatException nfe) {
-            LOGGER.error("***ERROR*** no subscription cap defined, using hardcoded default {}", KilkariConstants.DEFAULT_MAX_ACTIVE_SUBSCRIPTION_CAP);
-
-            this.maxActiveSubscriptions = KilkariConstants.DEFAULT_MAX_ACTIVE_SUBSCRIPTION_CAP;
-        }
+    @Override
+    public void toggleMctsSubscriptionCreation(long maxActiveSubscriptions) {
 
         long currentActive = subscriptionDataService.countFindByStatus(SubscriptionStatus.ACTIVE);
         LOGGER.info("Found {} active subscriptions", currentActive);
@@ -476,11 +466,11 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @Override
-    public long activateHoldSubscriptions() {
+    public long activateHoldSubscriptions(long maxActiveSubscriptions) {
 
-        LOGGER.info("Activating hold subscriptions up to {}", this.maxActiveSubscriptions);
+        LOGGER.info("Activating hold subscriptions up to {}", maxActiveSubscriptions);
 
-        long openSlots = this.maxActiveSubscriptions - subscriptionDataService.countFindByStatus(SubscriptionStatus.ACTIVE);
+        long openSlots = maxActiveSubscriptions - subscriptionDataService.countFindByStatus(SubscriptionStatus.ACTIVE);
         if (!this.allowMctsSubscriptions || openSlots < 1) {
             LOGGER.info("No open slots found for hold subscription activation. Slots: {}", openSlots);
             return 0;

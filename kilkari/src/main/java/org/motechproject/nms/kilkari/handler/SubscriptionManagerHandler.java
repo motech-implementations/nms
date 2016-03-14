@@ -65,7 +65,15 @@ public class SubscriptionManagerHandler {
     @Transactional
     public void upkeepSubscriptions(MotechEvent event) {
         DateTime tomorrow = DateTime.now().plusDays(1).withTimeAtStartOfDay();
+        Long maxActiveSubscriptions;
+        try {
+            maxActiveSubscriptions = Long.parseLong(settingsFacade.getProperty(KilkariConstants.SUBSCRIPTION_CAP));
+            LOGGER.info("Setting max subscriptions to {}", maxActiveSubscriptions);
+        } catch (NumberFormatException nfe) {
+            LOGGER.error("***ERROR*** no subscription cap defined, using hardcoded default {}", KilkariConstants.DEFAULT_MAX_ACTIVE_SUBSCRIPTION_CAP);
 
+            maxActiveSubscriptions = KilkariConstants.DEFAULT_MAX_ACTIVE_SUBSCRIPTION_CAP;
+        }
 
         subscriptionService.purgeOldInvalidSubscriptions();
         subscriptionService.completePastDueSubscriptions();
@@ -74,9 +82,9 @@ public class SubscriptionManagerHandler {
         subscriptionService.activatePendingSubscriptionsUpTo(tomorrow);
         LOGGER.debug("Activated all pending subscriptions up to {} in {}", tomorrow, timer.time());
 
-        subscriptionService.toggleMctsSubscriptionCreation();
+        subscriptionService.toggleMctsSubscriptionCreation(maxActiveSubscriptions);
 
         // evaluate and activate subscriptions on hold, if there are open slots
-        subscriptionService.activateHoldSubscriptions();
+        subscriptionService.activateHoldSubscriptions(maxActiveSubscriptions);
     }
 }
