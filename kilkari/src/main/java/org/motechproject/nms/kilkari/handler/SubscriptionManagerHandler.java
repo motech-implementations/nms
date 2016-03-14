@@ -59,11 +59,12 @@ public class SubscriptionManagerHandler {
 
         CronSchedulableJob subscriptionPurgeJob = new CronSchedulableJob(new MotechEvent(KilkariConstants.SUBSCRIPTION_UPKEEP_SUBJECT), cronExpression);
         schedulerService.safeScheduleJob(subscriptionPurgeJob);
+        LOGGER.debug("Scheduled cron job with subject {} and expression {}", KilkariConstants.SUBSCRIPTION_UPKEEP_SUBJECT, cronExpression);
     }
 
     @MotechListener(subjects = { KilkariConstants.SUBSCRIPTION_UPKEEP_SUBJECT})
-    @Transactional
     public void upkeepSubscriptions(MotechEvent event) {
+        LOGGER.debug("Received event for subscription upkeep");
         DateTime tomorrow = DateTime.now().plusDays(1).withTimeAtStartOfDay();
         Long maxActiveSubscriptions;
         try {
@@ -71,7 +72,6 @@ public class SubscriptionManagerHandler {
             LOGGER.info("Setting max subscriptions to {}", maxActiveSubscriptions);
         } catch (NumberFormatException nfe) {
             LOGGER.error("***ERROR*** no subscription cap defined, using hardcoded default {}", KilkariConstants.DEFAULT_MAX_ACTIVE_SUBSCRIPTION_CAP);
-
             maxActiveSubscriptions = KilkariConstants.DEFAULT_MAX_ACTIVE_SUBSCRIPTION_CAP;
         }
 
