@@ -3,7 +3,7 @@ package org.motechproject.nms.kilkari.ut;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.motechproject.nms.kilkari.service.impl.PhoneNumberHelper;
+import org.motechproject.nms.kilkari.utils.PhoneNumberHelper;
 
 import static org.junit.Assert.assertEquals;
 

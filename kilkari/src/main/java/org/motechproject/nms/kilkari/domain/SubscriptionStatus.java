@@ -7,5 +7,6 @@ public enum SubscriptionStatus {
     ACTIVE,
     PENDING_ACTIVATION,
     DEACTIVATED,
-    COMPLETED;
+    COMPLETED,
+    HOLD
 }

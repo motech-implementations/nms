@@ -3,6 +3,7 @@ package org.motechproject.nms.api.web;
 import org.motechproject.nms.imi.service.CdrFileService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
+import org.motechproject.nms.mcts.service.MctsWsImportService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,13 +23,16 @@ public class OpsController extends BaseController {
     private SubscriptionDataService subscriptionDataService;
     private SubscriptionService subscriptionService;
     private CdrFileService cdrFileService;
+    private MctsWsImportService mctsWsImportService;
+
 
     @Autowired
     public OpsController(SubscriptionDataService subscriptionDataService, SubscriptionService subscriptionService,
-                         CdrFileService cdrFileService) {
+                         CdrFileService cdrFileService, MctsWsImportService mctsWsImportService) {
         this.subscriptionDataService = subscriptionDataService;
         this.subscriptionService = subscriptionService;
         this.cdrFileService = cdrFileService;
+        this.mctsWsImportService = mctsWsImportService;
     }
 
     /**
@@ -55,5 +59,13 @@ public class OpsController extends BaseController {
 
         LOGGER.info("/cleanCdr()");
         cdrFileService.cleanOldCallRecords();
+    }
+
+    @RequestMapping("/startMctsSync")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    public void startMctsSync() {
+
+        LOGGER.info("/startMctsSync");
+        mctsWsImportService.startMctsImport();
     }
 }

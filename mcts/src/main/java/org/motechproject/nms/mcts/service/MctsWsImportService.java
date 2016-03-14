@@ -12,6 +12,11 @@ import java.util.List;
 public interface MctsWsImportService {
 
     /**
+     * Ops hook to restart Mcts import for the day
+     */
+    void startMctsImport();
+
+    /**
      * Executes the import from the MCTS service.
      * @param stateIds ids of states for which data should get imported
      * @param referenceDate the date for which we are importing

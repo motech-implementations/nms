@@ -23,6 +23,7 @@ import org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
+import org.motechproject.nms.kilkari.utils.MctsBeneficiaryUtils;
 import org.motechproject.nms.region.exception.InvalidLocationException;
 import org.motechproject.nms.region.service.LocationService;
 import org.slf4j.Logger;
@@ -47,20 +48,15 @@ import java.util.Map;
 @Service("mctsBeneficiaryImportService")
 public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportService {
 
-    public static final String IMPORTED = "Imported {}";
+    private static final Logger LOGGER = LoggerFactory.getLogger(MctsBeneficiaryImportServiceImpl.class);
+
     private SubscriptionService subscriptionService;
     private SubscriptionErrorDataService subscriptionErrorDataService;
     private LocationService locationService;
     private SubscriberService subscriberService;
     private MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor;
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(MctsBeneficiaryImportServiceImpl.class);
-
-    private static final int PROGRESS_INTERVAL = 100;
-
     private SubscriptionPack pregnancyPack;
     private SubscriptionPack childPack;
-
 
     @Autowired
     public MctsBeneficiaryImportServiceImpl(SubscriptionService subscriptionService,
@@ -101,12 +97,12 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             while (null != (record = csvImporter.read())) {
                 importMotherRecord(record);
                 count++;
-                if (count % PROGRESS_INTERVAL == 0) {
-                    LOGGER.debug(IMPORTED, timer.frequency(count));
+                if (count % KilkariConstants.PROGRESS_INTERVAL == 0) {
+                    LOGGER.debug(KilkariConstants.IMPORTED, timer.frequency(count));
                 }
             }
-            if (count % PROGRESS_INTERVAL != 0) {
-                LOGGER.debug(IMPORTED, timer.frequency(count));
+            if (count % KilkariConstants.PROGRESS_INTERVAL != 0) {
+                LOGGER.debug(KilkariConstants.IMPORTED, timer.frequency(count));
             }
         } catch (ConstraintViolationException e) {
             throw new CsvImportDataException(String.format("MCTS mother import error, constraints violated: %s",
@@ -134,12 +130,12 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             while (null != (record = csvImporter.read())) {
                 importChildRecord(record);
                 count++;
-                if (count % PROGRESS_INTERVAL == 0) {
-                    LOGGER.debug(IMPORTED, timer.frequency(count));
+                if (count % KilkariConstants.PROGRESS_INTERVAL == 0) {
+                    LOGGER.debug(KilkariConstants.IMPORTED, timer.frequency(count));
                 }
             }
-            if (count % PROGRESS_INTERVAL != 0) {
-                LOGGER.debug(IMPORTED, timer.frequency(count));
+            if (count % KilkariConstants.PROGRESS_INTERVAL != 0) {
+                LOGGER.debug(KilkariConstants.IMPORTED, timer.frequency(count));
             }
         } catch (ConstraintViolationException e) {
             throw new CsvImportDataException(String.format("MCTS child import error, constraints violated: %s",
@@ -287,7 +283,6 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     }
 
     private boolean validateReferenceDate(DateTime referenceDate, SubscriptionPackType packType, Long msisdn) {
-
 
         if (referenceDate == null) {
             subscriptionErrorDataService.create(

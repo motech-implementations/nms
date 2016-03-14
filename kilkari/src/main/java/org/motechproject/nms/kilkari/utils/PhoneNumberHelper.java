@@ -1,8 +1,6 @@
-package org.motechproject.nms.kilkari.service.impl;
+package org.motechproject.nms.kilkari.utils;
 
 public final class PhoneNumberHelper {
-
-    private static final long TEN_DIGITS_MAX = 10000000000L;
 
     private PhoneNumberHelper() { }
 
@@ -14,7 +12,7 @@ public final class PhoneNumberHelper {
         if (msisdn < 0L) {
             throw new IllegalArgumentException("Negative phone number?!?");
         }
-        return msisdn % TEN_DIGITS_MAX;
+        return msisdn % KilkariConstants.TEN_DIGITS_MAX;
     }
 
 }
