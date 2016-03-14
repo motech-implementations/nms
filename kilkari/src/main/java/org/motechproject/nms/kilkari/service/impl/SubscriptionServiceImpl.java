@@ -86,6 +86,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         this.eventRelay = eventRelay;
         this.callRetryDataService = callRetryDataService;
         this.csrVerifierService = csrVerifierService;
+        this.allowMctsSubscriptions = true;
     }
 
 
