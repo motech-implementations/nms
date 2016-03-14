@@ -5,12 +5,12 @@
     <parent>
         <artifactId>nms</artifactId>
         <groupId>org.motechproject.nms</groupId>
-        <version>1.0.12</version>
+        <version>1.0.13</version>
         <relativePath>../</relativePath>
     </parent>
 
     <artifactId>tracking</artifactId>
-    <version>1.0.12</version>
+    <version>1.0.13</version>
     <packaging>bundle</packaging>
     <name>Tracking Module</name>
 
