@@ -1,8 +1,11 @@
 package org.motechproject.nms.api.web;
 
+import org.motechproject.event.MotechEvent;
+import org.motechproject.event.listener.EventRelay;
 import org.motechproject.nms.imi.service.CdrFileService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
+import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.motechproject.nms.mcts.service.MctsWsImportService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,15 +27,17 @@ public class OpsController extends BaseController {
     private SubscriptionService subscriptionService;
     private CdrFileService cdrFileService;
     private MctsWsImportService mctsWsImportService;
+    private EventRelay eventRelay;
 
 
     @Autowired
     public OpsController(SubscriptionDataService subscriptionDataService, SubscriptionService subscriptionService,
-                         CdrFileService cdrFileService, MctsWsImportService mctsWsImportService) {
+                         CdrFileService cdrFileService, MctsWsImportService mctsWsImportService, EventRelay eventRelay) {
         this.subscriptionDataService = subscriptionDataService;
         this.subscriptionService = subscriptionService;
         this.cdrFileService = cdrFileService;
         this.mctsWsImportService = mctsWsImportService;
+        this.eventRelay = eventRelay;
     }
 
     /**
@@ -67,5 +72,12 @@ public class OpsController extends BaseController {
 
         LOGGER.info("/startMctsSync");
         mctsWsImportService.startMctsImport();
+    }
+
+    @RequestMapping("/upkeep")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    public void startUpkeep() {
+        LOGGER.info("/upkeep");
+        eventRelay.sendEventMessage(new MotechEvent(KilkariConstants.SUBSCRIPTION_UPKEEP_SUBJECT));
     }
 }
