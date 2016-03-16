@@ -239,9 +239,7 @@ public class UserController extends BaseController {
 
     private UserResponse getFrontLineWorkerResponseUser(String serviceName, Long callingNumber, Circle circle) {
         FlwUserResponse user = new FlwUserResponse();
-
         Service service = getServiceFromName(serviceName);
-
         ServiceUsage serviceUsage = new ServiceUsage(null, service, 0, 0, false);
         FrontLineWorker flw = frontLineWorkerService.getByContactNumber(callingNumber);
 
@@ -258,7 +256,13 @@ public class UserController extends BaseController {
             }
         }
 
-        if (null != flw) {
+        if (flw == null) {
+            // New requirement - https://applab.atlassian.net/projects/NMS/issues/NMS-325 - Block anonymous FLWs
+            // if flw is null here, we don't already have a record from MCTS. return 403
+            if (MOBILE_ACADEMY.equals(serviceName)) {
+                throw new NotAuthorizedException(String.format(NOT_AUTHORIZED, CALLING_NUMBER));
+            }
+        } else {
             Language language = flw.getLanguage();
             if (null != language) {
                 user.setLanguageLocationCode(language.getCode());
@@ -276,9 +280,7 @@ public class UserController extends BaseController {
         user.setCurrentUsageInPulses(serviceUsage.getUsageInPulses());
         user.setEndOfUsagePromptCounter(serviceUsage.getEndOfUsage());
         user.setWelcomePromptFlag(serviceUsage.getWelcomePrompt());
-
         user.setMaxAllowedUsageInPulses(serviceUsageCap.getMaxUsageInPulses());
-
         user.setMaxAllowedEndOfUsagePrompt(2);
 
         return user;
