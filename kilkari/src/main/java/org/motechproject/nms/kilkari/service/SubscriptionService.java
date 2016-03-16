@@ -187,6 +187,12 @@ public interface SubscriptionService {
     void cacheEvict(MotechEvent event);
 
     /**
+     * Broadcast listener to enable/disable subscription capping
+     * @param event motech event to toggle capping
+     */
+    void toggleActiveSubscriptionCapping(MotechEvent event);
+
+    /**
      *
      * Retrieves all subscriptions in the database
      *
