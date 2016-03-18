@@ -2249,7 +2249,6 @@ public class UserControllerBundleIT extends BasePaxIT {
         // Deploy the service in user's state
         deployedServiceDataService.create(new DeployedService(whitelistState,
                 Service.MOBILE_ACADEMY));
-        transactionManager.commit(status);
 
         // Check the response
         HttpGet request = createHttpGet(true, "mobileacademy", true,
