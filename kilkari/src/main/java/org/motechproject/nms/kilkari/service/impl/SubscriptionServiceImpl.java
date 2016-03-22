@@ -683,7 +683,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         LOGGER.info("Received message to toggle subscription capping");
         boolean value = (boolean) event.getParameters().get(KilkariConstants.TOGGLE_CAP_KEY);
         this.allowMctsSubscriptions = value;
-        LOGGER.info("Set allow new mcts subscriptions to ", value);
+        LOGGER.info("Set allow new mcts subscriptions to {}", value);
     }
 
     @Override
