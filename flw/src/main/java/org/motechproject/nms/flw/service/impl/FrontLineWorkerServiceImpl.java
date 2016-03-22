@@ -165,7 +165,6 @@ public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
 
             // the record was added when the FLW called the IVR service for the first time
             record.setStatus(FrontLineWorkerStatus.ANONYMOUS);
-
         }
 
         frontLineWorkerDataService.create(record);

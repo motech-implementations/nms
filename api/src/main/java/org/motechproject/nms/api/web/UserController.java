@@ -6,6 +6,7 @@ import org.motechproject.nms.api.web.contract.kilkari.KilkariUserResponse;
 import org.motechproject.nms.api.web.exception.NotAuthorizedException;
 import org.motechproject.nms.api.web.exception.NotDeployedException;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
+import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.domain.ServiceUsage;
 import org.motechproject.nms.flw.domain.ServiceUsageCap;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
@@ -237,7 +238,7 @@ public class UserController extends BaseController {
         return kilkariUserResponse;
     }
 
-    private UserResponse getFrontLineWorkerResponseUser(String serviceName, Long callingNumber, Circle circle) {
+    private UserResponse getFrontLineWorkerResponseUser(String serviceName, Long callingNumber, Circle circle) { //NO CHECKSTYLE Cyclomatic Complexity
         FlwUserResponse user = new FlwUserResponse();
         Service service = getServiceFromName(serviceName);
         ServiceUsage serviceUsage = new ServiceUsage(null, service, 0, 0, false);
@@ -256,13 +257,12 @@ public class UserController extends BaseController {
             }
         }
 
-        if (flw == null) {
-            // New requirement - https://applab.atlassian.net/projects/NMS/issues/NMS-325 - Block anonymous FLWs
-            // if flw is null here, we don't already have a record from MCTS. return 403
-            if (MOBILE_ACADEMY.equals(serviceName)) {
-                throw new NotAuthorizedException(String.format(NOT_AUTHORIZED, CALLING_NUMBER));
-            }
-        } else {
+        if (MOBILE_ACADEMY.equals(serviceName)) {
+            // make sure that flw is authorized to use MA
+            restrictAnonymousMAUserCheck(flw);
+        }
+
+        if (flw != null) {
             Language language = flw.getLanguage();
             if (null != language) {
                 user.setLanguageLocationCode(language.getCode());
@@ -276,7 +276,6 @@ public class UserController extends BaseController {
         }
 
         ServiceUsageCap serviceUsageCap = serviceUsageCapService.getServiceUsageCap(state, service);
-
         user.setCurrentUsageInPulses(serviceUsage.getUsageInPulses());
         user.setEndOfUsagePromptCounter(serviceUsage.getEndOfUsage());
         user.setWelcomePromptFlag(serviceUsage.getWelcomePrompt());
@@ -284,6 +283,18 @@ public class UserController extends BaseController {
         user.setMaxAllowedEndOfUsagePrompt(2);
 
         return user;
+    }
+
+    private void restrictAnonymousMAUserCheck(FrontLineWorker flw) {
+
+        if (flw == null || flw.getStatus() == FrontLineWorkerStatus.ANONYMOUS ||
+                flw.getMctsFlwId() == null || flw.getMctsFlwId().isEmpty()) {
+            // New requirement - https://applab.atlassian.net/projects/NMS/issues/NMS-325 - Block anonymous FLWs
+            // if flw is null here, we don't already have a record from MCTS. return 403
+            // We might have a non-null flw with anonymous status from earlier calls, if so, still return 403 and
+            // force them to come through MCTS
+            throw new NotAuthorizedException(String.format(NOT_AUTHORIZED, CALLING_NUMBER));
+        }
     }
 
 }
