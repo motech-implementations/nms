@@ -7,5 +7,5 @@ public enum FrontLineWorkerStatus {
     ANONYMOUS,
     ACTIVE,
     INACTIVE,
-    INVALID;
+    INVALID
 }
