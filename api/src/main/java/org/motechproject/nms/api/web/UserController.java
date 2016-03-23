@@ -238,7 +238,7 @@ public class UserController extends BaseController {
         return kilkariUserResponse;
     }
 
-    private UserResponse getFrontLineWorkerResponseUser(String serviceName, Long callingNumber, Circle circle) { //NO CHECKSTYLE Cyclomatic Complexity
+    private UserResponse getFrontLineWorkerResponseUser(String serviceName, Long callingNumber, Circle circle) {
         FlwUserResponse user = new FlwUserResponse();
         Service service = getServiceFromName(serviceName);
         ServiceUsage serviceUsage = new ServiceUsage(null, service, 0, 0, false);
