@@ -3904,10 +3904,12 @@ public class UserControllerBundleIT extends BasePaxIT {
         serviceUsageCapDataService.create(serviceUsageCap);
 
         // FLW usage
-        FrontLineWorker flw = ApiTestHelper.createFlw("Jingo Jango", 1200000000l, "123", FrontLineWorkerStatus.ACTIVE);
+        FrontLineWorker flw = ApiTestHelper.createFlw("Jingo Jango", 1111111111l, "123", FrontLineWorkerStatus.ACTIVE);
         flw.setDistrict(district);
         flw.setState(district.getState());
+        flw.setLanguage(district.getLanguage());
         frontLineWorkerService.add(flw);
+
         CallDetailRecord cdr = new CallDetailRecord();
         cdr.setFrontLineWorker(flw);
         cdr.setCallingNumber(1111111111l);
@@ -3920,15 +3922,16 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         // invoke get user detail API
         HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
-                true, "1200000000", // callingNumber
+                true, "1111111111", // callingNumber
                 false, null, // operator
                 true, "DE",// circle
                 true, VALID_CALL_ID // callId
         );
 
-        String expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
-                null, // locationCode
-                Collections.singletonList(rh.hindiLanguage().getCode()), // allowedLanguageLocationCodes
+        String expectedJsonResponse = createFlwUserResponseJson(
+                "hi", // defaultLanguageLocationCode
+                "hi", // locationCode
+                null, // allowedLanguageLocationCodes
                 80L, // currentUsageInPulses
                 1L, // endOfUsagePromptCounter
                 false, // welcomePromptFlag
