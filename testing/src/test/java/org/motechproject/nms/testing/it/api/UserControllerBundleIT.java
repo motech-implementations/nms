@@ -4789,6 +4789,38 @@ public class UserControllerBundleIT extends BasePaxIT {
                 EntityUtils.toString(response.getEntity()));
     }
 
+    @Test
+    public void verifyDenialWhenMctsFlwIdMissing() throws IOException, InterruptedException {
+        District d = rh.newDelhiDistrict();
+        rh.delhiCircle();
+        deployedServiceDataService.create(new DeployedService(rh.delhiState(),
+                Service.MOBILE_ACADEMY));
+
+        // National Capping
+        ServiceUsageCap stateUsageCap = new ServiceUsageCap(null,
+                Service.MOBILE_KUNJI, 150);
+        serviceUsageCapDataService.create(stateUsageCap);
+
+        // FLW
+        FrontLineWorker flw = ApiTestHelper.createFlw("Claire Underwood", 1200000000l, null, FrontLineWorkerStatus.ACTIVE);
+        flw.setLanguage(rh.hindiLanguage());
+        flw.setDistrict(d);
+        flw.setState(d.getState());
+        frontLineWorkerService.add(flw);
+
+        // invoke get user detail API
+        HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
+                true, "1200000000", // callingNumber
+                false, null, // operator
+                true, "DE",// circle
+                true, VALID_CALL_ID // callId
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_FORBIDDEN, response.getStatusLine().getStatusCode());
+    }
+
     /**
      * To verify that current usage pulses is resetted after the end of month.
      * For state capping.
@@ -4932,5 +4964,4 @@ public class UserControllerBundleIT extends BasePaxIT {
         FrontLineWorker flw = frontLineWorkerService.getByContactNumber(1200000000l);
         assertEquals(FrontLineWorkerStatus.ANONYMOUS, flw.getStatus());
     }
-
 }
