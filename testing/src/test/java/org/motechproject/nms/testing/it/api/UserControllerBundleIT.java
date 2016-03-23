@@ -54,6 +54,7 @@ import org.motechproject.nms.region.repository.NationalDefaultLanguageDataServic
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.region.service.LanguageService;
+import org.motechproject.nms.testing.it.api.utils.ApiTestHelper;
 import org.motechproject.nms.testing.it.api.utils.RequestBuilder;
 import org.motechproject.nms.testing.it.utils.ApiRequestHelper;
 import org.motechproject.nms.testing.it.utils.RegionHelper;
@@ -301,7 +302,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     private void createFlwWithLanguageFullUsageOfBothServiceUncapped() {
 
         // Make sure to create two districts (with two languages) for the delhi state
-        rh.newDelhiDistrict();
+        District district = rh.newDelhiDistrict();
         rh.southDelhiDistrict();
         // And a circle
         rh.delhiCircle();
@@ -309,8 +310,11 @@ public class UserControllerBundleIT extends BasePaxIT {
         deployedServiceDataService.create(new DeployedService(rh.delhiState(), Service.MOBILE_ACADEMY));
         deployedServiceDataService.create(new DeployedService(rh.delhiState(), Service.MOBILE_KUNJI));
 
-        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
+        FrontLineWorker flw = ApiTestHelper.createFlw("Hillary Devi", 1111111111L, "123", FrontLineWorkerStatus.ACTIVE);
         flw.setLanguage(rh.hindiLanguage());
+        flw.setMctsFlwId("123");
+        flw.setDistrict(district);
+        flw.setState(district.getState());
         frontLineWorkerService.add(flw);
 
         CallDetailRecord cdr = new CallDetailRecord();
@@ -1829,8 +1833,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         setupWhiteListData();
 
         // create a FLW with non-whitelist number and whitelist state
-        FrontLineWorker notWhitelistWorker = new FrontLineWorker("Test",
-                NOT_WHITELIST_CONTACT_NUMBER);
+        FrontLineWorker notWhitelistWorker = ApiTestHelper.createFlw("Frank Llyod Wright", NOT_WHITELIST_CONTACT_NUMBER, "123", FrontLineWorkerStatus.ACTIVE);
         notWhitelistWorker.setState(whitelistState);
         notWhitelistWorker.setDistrict(rh.newDelhiDistrict());
         notWhitelistWorker.setLanguage(rh.hindiLanguage());
@@ -1940,8 +1943,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     public void verifyFT344() throws InterruptedException, IOException {
         setupWhiteListData();
         // user's number in whitelist, but state not whitelisted
-        FrontLineWorker whitelistWorker = new FrontLineWorker("Test",
-                WHITELIST_CONTACT_NUMBER);
+        FrontLineWorker whitelistWorker =  ApiTestHelper.createFlw("Test", WHITELIST_CONTACT_NUMBER, "123", FrontLineWorkerStatus.ACTIVE);
         whitelistWorker.setDistrict(rh.bangaloreDistrict());
         whitelistWorker.setLanguage(rh.kannadaLanguage());
         whitelistWorker.setState(nonWhitelistState);
@@ -2142,8 +2144,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         setupWhiteListData();
 
         // create a FLW with whitelist number and whitelist state
-        FrontLineWorker whitelistWorker = new FrontLineWorker("Test",
-                WHITELIST_CONTACT_NUMBER);
+        FrontLineWorker whitelistWorker = ApiTestHelper.createFlw("Frank Llyod Wright", WHITELIST_CONTACT_NUMBER, "123", FrontLineWorkerStatus.ANONYMOUS);
         whitelistWorker.setState(whitelistState);
         whitelistWorker.setDistrict(rh.newDelhiDistrict());
         whitelistWorker.setLanguage(rh.hindiLanguage());
@@ -2190,9 +2191,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         setupWhiteListData();
 
         // create a FLW with whitelist number and whitelist state
-        FrontLineWorker whitelistWorker = new FrontLineWorker("Test",
-                WHITELIST_CONTACT_NUMBER);
-        whitelistWorker.setStatus(FrontLineWorkerStatus.INACTIVE);
+        FrontLineWorker whitelistWorker = ApiTestHelper.createFlw("Dingo Ate Baby", WHITELIST_CONTACT_NUMBER, "123", FrontLineWorkerStatus.INACTIVE);
         whitelistWorker.setState(whitelistState);
         whitelistWorker.setDistrict(rh.newDelhiDistrict());
         whitelistWorker.setLanguage(rh.hindiLanguage());
@@ -2387,8 +2386,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     public void verifyFT447() throws InterruptedException, IOException {
         setupWhiteListData();
         // user's no in whitelist, but state not whitelisted
-        FrontLineWorker whitelistWorker = new FrontLineWorker("Test",
-                WHITELIST_CONTACT_NUMBER);
+        FrontLineWorker whitelistWorker = ApiTestHelper.createFlw("Baby Dingo", WHITELIST_CONTACT_NUMBER, "123", FrontLineWorkerStatus.INACTIVE);
         whitelistWorker.setDistrict(rh.bangaloreDistrict());
         whitelistWorker.setLanguage(rh.kannadaLanguage());
         whitelistWorker.setState(nonWhitelistState);
@@ -2434,8 +2432,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     public void verifyFT448() throws InterruptedException, IOException {
         setupWhiteListData();
         // user's no in whitelist, but state not whitelisted
-        FrontLineWorker whitelistWorker = new FrontLineWorker("Test",
-                WHITELIST_CONTACT_NUMBER);
+        FrontLineWorker whitelistWorker = ApiTestHelper.createFlw("Kangaroo Jack", WHITELIST_CONTACT_NUMBER, "123", FrontLineWorkerStatus.INACTIVE);
         whitelistWorker.setDistrict(rh.bangaloreDistrict());
         whitelistWorker.setLanguage(rh.kannadaLanguage());
         whitelistWorker.setState(nonWhitelistState);
@@ -2597,7 +2594,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         deployedServiceDataService.create(new DeployedService(rh.delhiState(), Service.MOBILE_KUNJI));
 
-        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
+        FrontLineWorker flw = ApiTestHelper.createFlw("Frank Llyod Wright", 1111111111l, "123", FrontLineWorkerStatus.ACTIVE);
         flw.setLanguage(rh.hindiLanguage());
         frontLineWorkerService.add(flw);
 
@@ -2637,7 +2634,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         deployedServiceDataService.create(new DeployedService(rh.delhiState(), Service.MOBILE_KUNJI));
 
-        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
+        FrontLineWorker flw = ApiTestHelper.createFlw("Frank Llyod Wright", 1111111111l, "123", FrontLineWorkerStatus.ACTIVE);
         flw.setLanguage(rh.hindiLanguage());
         frontLineWorkerService.add(flw);
 
@@ -2685,7 +2682,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         deployedServiceDataService.create(new DeployedService(rh.delhiState(), Service.MOBILE_KUNJI));
 
-        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
+        FrontLineWorker flw = ApiTestHelper.createFlw("Frank Llyod Wright", 1111111111l, "123", FrontLineWorkerStatus.ANONYMOUS);
         flw.setLanguage(rh.hindiLanguage());
         frontLineWorkerService.add(flw);
 
@@ -3059,7 +3056,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     @Test
     public void verifyFT461() throws IOException, InterruptedException {
         // create Invalid FLW record
-        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1200000001l);
+        FrontLineWorker flw = ApiTestHelper.createFlw("Baby Dingo", 1200000001l, "123", FrontLineWorkerStatus.INACTIVE);
         flw.setLanguage(rh.tamilLanguage());
         flw.setDistrict(rh.bangaloreDistrict());
         flw.setState(rh.karnatakaState());
@@ -3107,8 +3104,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     @Test
     public void verifyFT462() throws IOException, InterruptedException {
         // create anonymous FLW record
-        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright",
-                1200000001l);
+        FrontLineWorker flw = ApiTestHelper.createFlw("Frankie Dingo", 1200000001l, "123", FrontLineWorkerStatus.ANONYMOUS);
         frontLineWorkerService.add(flw);
 
         // update FLW status to ACTIVE
@@ -3674,6 +3670,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         flw.setDistrict(rh.bangaloreDistrict());
         flw.setState(rh.karnatakaState());
         flw.setStatus(FrontLineWorkerStatus.ACTIVE);
+        flw.setMctsFlwId("123");
         frontLineWorkerDataService.create(flw);
 
         // service deployed in Karnataka State
@@ -3718,6 +3715,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         flw.setDistrict(rh.bangaloreDistrict());
         flw.setState(rh.karnatakaState());
         flw.setStatus(FrontLineWorkerStatus.INACTIVE);
+        flw.setMctsFlwId("123");
         frontLineWorkerDataService.create(flw);
 
         // service deployed in Karnataka State
@@ -3897,7 +3895,8 @@ public class UserControllerBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT421_480() throws IOException, InterruptedException {
-        rh.newDelhiDistrict();
+        District district = rh.newDelhiDistrict();
+        deployedServiceDataService.create(new DeployedService(district.getState(), Service.MOBILE_ACADEMY));
 
         // National Capping set maxallowedUsageInPulses
         ServiceUsageCap serviceUsageCap = new ServiceUsageCap(null,
@@ -3905,9 +3904,12 @@ public class UserControllerBundleIT extends BasePaxIT {
         serviceUsageCapDataService.create(serviceUsageCap);
 
         // FLW usage
-        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright",
-                1200000000l);
+        FrontLineWorker flw = ApiTestHelper.createFlw("Jingo Jango", 1111111111l, "123", FrontLineWorkerStatus.ACTIVE);
+        flw.setDistrict(district);
+        flw.setState(district.getState());
+        flw.setLanguage(district.getLanguage());
         frontLineWorkerService.add(flw);
+
         CallDetailRecord cdr = new CallDetailRecord();
         cdr.setFrontLineWorker(flw);
         cdr.setCallingNumber(1111111111l);
@@ -3920,15 +3922,16 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         // invoke get user detail API
         HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
-                true, "1200000000", // callingNumber
+                true, "1111111111", // callingNumber
                 false, null, // operator
-                false, null,// circle
+                true, "DE",// circle
                 true, VALID_CALL_ID // callId
         );
 
-        String expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
-                null, // locationCode
-                Collections.singletonList(rh.hindiLanguage().getCode()), // allowedLanguageLocationCodes
+        String expectedJsonResponse = createFlwUserResponseJson(
+                "hi", // defaultLanguageLocationCode
+                "hi", // locationCode
+                null, // allowedLanguageLocationCodes
                 80L, // currentUsageInPulses
                 1L, // endOfUsagePromptCounter
                 false, // welcomePromptFlag
@@ -3949,7 +3952,7 @@ public class UserControllerBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT423() throws IOException, InterruptedException {
-        rh.newDelhiDistrict();
+        District d = rh.newDelhiDistrict();
         deployedServiceDataService.create(new DeployedService(rh
                 .delhiState(), Service.MOBILE_ACADEMY));
         
@@ -3964,8 +3967,9 @@ public class UserControllerBundleIT extends BasePaxIT {
         serviceUsageCapDataService.create(nationalUsageCap);
 
         // FLW usage
-        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright",
-                1200000000l);
+        FrontLineWorker flw = ApiTestHelper.createFlw("Frank Llyod Wright", 1200000000l, "123", FrontLineWorkerStatus.ACTIVE);
+        flw.setDistrict(d);
+        flw.setState(d.getState());
         flw.setLanguage(rh.hindiLanguage());
         frontLineWorkerService.add(flw);
 
@@ -4011,14 +4015,15 @@ public class UserControllerBundleIT extends BasePaxIT {
     // TODO https://applab.atlassian.net/browse/NMS-241
     @Test
     public void verifyFT523() throws IOException, InterruptedException {
-        rh.newDelhiDistrict();
+        District district = rh.newDelhiDistrict();
         rh.delhiCircle();
         deployedServiceDataService.create(new DeployedService(rh.delhiState(),
                 Service.MOBILE_ACADEMY));
         
         // Create FLW with no usage
-        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright",
-                1200000000l);
+        FrontLineWorker flw = ApiTestHelper.createFlw("Frank Lol Wright", 1200000000l, "123", FrontLineWorkerStatus.ACTIVE);
+        flw.setDistrict(district);
+        flw.setState(district.getState());
         flw.setLanguage(rh.hindiLanguage());
         frontLineWorkerService.add(flw);
         
@@ -4109,7 +4114,7 @@ public class UserControllerBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT498() throws IOException, InterruptedException {
-        rh.newDelhiDistrict();
+        District district = rh.newDelhiDistrict();
         rh.delhiCircle();
         deployedServiceDataService.create(new DeployedService(rh.delhiState(),
                 Service.MOBILE_ACADEMY));
@@ -4120,8 +4125,9 @@ public class UserControllerBundleIT extends BasePaxIT {
         serviceUsageCapDataService.create(nationalUsageCap);
 
         // FLW usage
-        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright",
-                1200000000l);
+        FrontLineWorker flw = ApiTestHelper.createFlw("Frank Lol Wright", 1200000000l, "123", FrontLineWorkerStatus.ACTIVE);
+        flw.setDistrict(district);
+        flw.setState(district.getState());
         flw.setLanguage(rh.hindiLanguage());
         frontLineWorkerService.add(flw);
 
@@ -4195,7 +4201,7 @@ public class UserControllerBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT422() throws IOException, InterruptedException {
-        rh.newDelhiDistrict();
+        District d = rh.newDelhiDistrict();
         deployedServiceDataService.create(new DeployedService(rh.delhiState(),
                 Service.MOBILE_ACADEMY));
 
@@ -4205,8 +4211,9 @@ public class UserControllerBundleIT extends BasePaxIT {
         serviceUsageCapDataService.create(nationalUsageCap);
 
         // FLW usage
-        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright",
-                1200000000l);
+        FrontLineWorker flw = ApiTestHelper.createFlw("Frank Llyod Wright", 1200000000l, "123", FrontLineWorkerStatus.ACTIVE);
+        flw.setDistrict(d);
+        flw.setState(d.getState());
         flw.setLanguage(rh.hindiLanguage());
         frontLineWorkerService.add(flw);
 
@@ -4302,7 +4309,7 @@ public class UserControllerBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT425() throws IOException, InterruptedException {
-        rh.newDelhiDistrict();
+        District district = rh.newDelhiDistrict();
         deployedServiceDataService.create(new DeployedService(rh.delhiState(),
                 Service.MOBILE_ACADEMY));
 
@@ -4312,8 +4319,9 @@ public class UserControllerBundleIT extends BasePaxIT {
         serviceUsageCapDataService.create(stateUsageCap);
 
         // FLW usage
-        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright",
-                1200000000l);
+        FrontLineWorker flw = ApiTestHelper.createFlw("Frank Llyod Wright", 1200000000l, "123", FrontLineWorkerStatus.ACTIVE);
+        flw.setDistrict(district);
+        flw.setState(district.getState());
         flw.setLanguage(rh.hindiLanguage());
         frontLineWorkerService.add(flw);
 
@@ -4418,8 +4426,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         serviceUsageCapDataService.create(nationalUsageCap);
 
         // FLW usage
-        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright",
-                1200000000l);
+        FrontLineWorker flw = ApiTestHelper.createFlw("Frank Llyod Wright", 1200000000l, "123", FrontLineWorkerStatus.ANONYMOUS);
         flw.setLanguage(rh.hindiLanguage());
         frontLineWorkerService.add(flw);
 
@@ -4524,8 +4531,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         serviceUsageCapDataService.create(stateUsageCap);
 
         // FLW usage
-        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright",
-                1200000000l);
+        FrontLineWorker flw = ApiTestHelper.createFlw("Frank Llyod Wright", 1200000000l, "123", FrontLineWorkerStatus.ACTIVE);
         flw.setLanguage(rh.hindiLanguage());
         frontLineWorkerService.add(flw);
 
@@ -4631,8 +4637,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         serviceUsageCapDataService.create(stateUsageCap);
 
         // FLW usage
-        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright",
-                1200000000l);
+        FrontLineWorker flw = ApiTestHelper.createFlw("Frank Llyod Wright", 1200000000l, "123", FrontLineWorkerStatus.ACTIVE);
         flw.setLanguage(rh.hindiLanguage());
         frontLineWorkerService.add(flw);
 
@@ -4716,8 +4721,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         serviceUsageCapDataService.create(stateUsageCap);
 
         // FLW usage
-        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright",
-                1200000000l);
+        FrontLineWorker flw = ApiTestHelper.createFlw("Frank Llyod Wright", 1200000000l, "123", FrontLineWorkerStatus.ACTIVE);
         flw.setLanguage(rh.hindiLanguage());
         frontLineWorkerService.add(flw);
 
@@ -4785,13 +4789,45 @@ public class UserControllerBundleIT extends BasePaxIT {
                 EntityUtils.toString(response.getEntity()));
     }
 
+    @Test
+    public void verifyDenialWhenMctsFlwIdMissing() throws IOException, InterruptedException {
+        District d = rh.newDelhiDistrict();
+        rh.delhiCircle();
+        deployedServiceDataService.create(new DeployedService(rh.delhiState(),
+                Service.MOBILE_ACADEMY));
+
+        // National Capping
+        ServiceUsageCap stateUsageCap = new ServiceUsageCap(null,
+                Service.MOBILE_KUNJI, 150);
+        serviceUsageCapDataService.create(stateUsageCap);
+
+        // FLW
+        FrontLineWorker flw = ApiTestHelper.createFlw("Claire Underwood", 1200000000l, null, FrontLineWorkerStatus.ACTIVE);
+        flw.setLanguage(rh.hindiLanguage());
+        flw.setDistrict(d);
+        flw.setState(d.getState());
+        frontLineWorkerService.add(flw);
+
+        // invoke get user detail API
+        HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
+                true, "1200000000", // callingNumber
+                false, null, // operator
+                true, "DE",// circle
+                true, VALID_CALL_ID // callId
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_FORBIDDEN, response.getStatusLine().getStatusCode());
+    }
+
     /**
      * To verify that current usage pulses is resetted after the end of month.
      * For state capping.
      */
     @Test
     public void verifyFT534() throws IOException, InterruptedException {
-        rh.newDelhiDistrict();
+        District district = rh.newDelhiDistrict();
         rh.delhiCircle();
         deployedServiceDataService.create(new DeployedService(rh.delhiState(),
                 Service.MOBILE_ACADEMY));
@@ -4807,8 +4843,9 @@ public class UserControllerBundleIT extends BasePaxIT {
         serviceUsageCapDataService.create(stateUsageCap);
 
         // FLW usage
-        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright",
-                1200000000l);
+        FrontLineWorker flw = ApiTestHelper.createFlw("Frank Lol Wright", 1200000000l, "123", FrontLineWorkerStatus.ACTIVE);
+        flw.setDistrict(district);
+        flw.setState(district.getState());
         flw.setLanguage(rh.hindiLanguage());
         frontLineWorkerService.add(flw);
 
@@ -4927,5 +4964,4 @@ public class UserControllerBundleIT extends BasePaxIT {
         FrontLineWorker flw = frontLineWorkerService.getByContactNumber(1200000000l);
         assertEquals(FrontLineWorkerStatus.ANONYMOUS, flw.getStatus());
     }
-
 }
