@@ -1,3 +1,1 @@
-Custom Motech Implementation
-=======
-
+Scale up implementation of the National Motech System (NMS) in India.
