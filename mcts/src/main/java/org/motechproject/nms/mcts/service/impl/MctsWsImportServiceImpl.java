@@ -11,7 +11,6 @@ import org.motechproject.event.listener.EventRelay;
 import org.motechproject.event.listener.annotations.MotechListener;
 import org.motechproject.nms.flw.exception.FlwImportException;
 import org.motechproject.nms.flw.service.FrontLineWorkerImportService;
-import org.motechproject.nms.flw.utils.FlwConstants;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
@@ -353,24 +352,13 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
 
         int saved = 0;
         int rejected = 0;
-        Map<Long, Set<Long>> hpdMap = getHpdFilters();
 
         for (AnmAshaRecord record : anmAshaDataSet.getRecords()) {
             try {
                 // get user property map
-                Map<String, Object> recordMap = record.toFlwRecordMap();
-
-                // validate if user needs to be hpd filtered (true if user can be added)
-                boolean hpdValidation = validateHpdUser(hpdMap,
-                        stateCode,
-                        (long) recordMap.get(FlwConstants.DISTRICT_ID));
-
-                if (hpdValidation) {
-                    frontLineWorkerImportService.importFrontLineWorker(record.toFlwRecordMap(), state);
-                    saved++;
-                } else {
-                    rejected++;
-                }
+                Map<String, Object> recordMap = record.toFlwRecordMap();    // temp var used for debugging
+                frontLineWorkerImportService.importFrontLineWorker(recordMap, state);
+                saved++;
             } catch (InvalidLocationException e) {
                 LOGGER.warn("Invalid location for FLW: ", e);
                 rejected++;
