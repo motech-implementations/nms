@@ -2,6 +2,8 @@ package org.motechproject.nms.api.web;
 
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.EventRelay;
+import org.motechproject.nms.flw.service.FrontLineWorkerService;
+import org.motechproject.nms.flw.utils.FlwConstants;
 import org.motechproject.nms.imi.service.CdrFileService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
@@ -19,6 +21,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Controller to expose methods for OPS personnel
  */
@@ -31,16 +36,19 @@ public class OpsController extends BaseController {
     private SubscriptionService subscriptionService;
     private CdrFileService cdrFileService;
     private MctsWsImportService mctsWsImportService;
+    private FrontLineWorkerService frontLineWorkerService;
     private EventRelay eventRelay;
 
 
     @Autowired
     public OpsController(SubscriptionDataService subscriptionDataService, SubscriptionService subscriptionService,
-                         CdrFileService cdrFileService, MctsWsImportService mctsWsImportService, EventRelay eventRelay) {
+                         CdrFileService cdrFileService, MctsWsImportService mctsWsImportService,
+                         FrontLineWorkerService frontLineWorkerService, EventRelay eventRelay) {
         this.subscriptionDataService = subscriptionDataService;
         this.subscriptionService = subscriptionService;
         this.cdrFileService = cdrFileService;
         this.mctsWsImportService = mctsWsImportService;
+        this.frontLineWorkerService = frontLineWorkerService;
         this.eventRelay = eventRelay;
     }
 
@@ -100,11 +108,43 @@ public class OpsController extends BaseController {
         validateFieldPresent(failureReasons, "stateId", addFlwRequest.getStateId());
         validateFieldPresent(failureReasons, "districtId", addFlwRequest.getDistrictId());
         validateFieldString(failureReasons, "name", addFlwRequest.getName());
+        validateFieldString(failureReasons, "type", addFlwRequest.getType());
 
         if (failureReasons.length() > 0) {
             throw new IllegalArgumentException(failureReasons.toString());
         }
 
-        // TODO: Hook up existing flw create/update here
+        Map<String, Object> flwProperties = new HashMap<>();
+        flwProperties.put(FlwConstants.NAME, addFlwRequest.getName());
+        flwProperties.put(FlwConstants.ID, addFlwRequest.getMctsFlwId());
+        flwProperties.put(FlwConstants.CONTACT_NO, addFlwRequest.getContactNumber());
+        flwProperties.put(FlwConstants.STATE_ID, addFlwRequest.getStateId());
+        flwProperties.put(FlwConstants.DISTRICT_ID, addFlwRequest.getDistrictId());
+
+        if (addFlwRequest.getType() != null) {
+            flwProperties.put(FlwConstants.TYPE, addFlwRequest.getType());
+        }
+
+        if (addFlwRequest.getTalukaId() != null) {
+            flwProperties.put(FlwConstants.TALUKA_ID, addFlwRequest.getTalukaId());
+        }
+
+        if (addFlwRequest.getPhcId() != null) {
+            flwProperties.put(FlwConstants.PHC_ID, addFlwRequest.getPhcId());
+        }
+
+        if (addFlwRequest.getHealthblockId() != null) {
+            flwProperties.put(FlwConstants.HEALTH_BLOCK_ID, addFlwRequest.getHealthblockId());
+        }
+
+        if (addFlwRequest.getSubcentreId() != null) {
+            flwProperties.put(FlwConstants.SUB_CENTRE_ID, addFlwRequest.getSubcentreId());
+        }
+
+        if (addFlwRequest.getVillageId() != null) {
+            flwProperties.put(FlwConstants.CENSUS_VILLAGE_ID, addFlwRequest.getVillageId());
+        }
+
+        frontLineWorkerService.createUpdate(flwProperties);
     }
 }

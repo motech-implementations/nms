@@ -8,14 +8,18 @@ import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.annotations.MotechListener;
 import org.motechproject.mds.query.QueryExecution;
 import org.motechproject.mds.util.InstanceSecurityRestriction;
+import org.motechproject.nms.flw.domain.FlwError;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
+import org.motechproject.nms.flw.repository.FlwErrorDataService;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
+import org.motechproject.nms.flw.utils.FlwConstants;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Language;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.service.LanguageService;
+import org.motechproject.nms.region.service.LocationService;
 import org.motechproject.scheduler.contract.RepeatingSchedulableJob;
 import org.motechproject.scheduler.service.MotechSchedulerService;
 import org.motechproject.server.config.SettingsFacade;
@@ -28,6 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.jdo.Query;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -48,17 +53,21 @@ public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
     private SettingsFacade settingsFacade;
     private MotechSchedulerService schedulerService;
     private LanguageService languageService;
+    private LocationService locationService;
+    private FlwErrorDataService flwErrorDataService;
 
     @Autowired
     public FrontLineWorkerServiceImpl(@Qualifier("flwSettings") SettingsFacade settingsFacade,
                                       MotechSchedulerService schedulerService,
                                       FrontLineWorkerDataService frontLineWorkerDataService,
-                                      LanguageService languageService) {
+                                      LanguageService languageService, LocationService locationService,
+                                      FlwErrorDataService flwErrorDataService) {
         this.frontLineWorkerDataService = frontLineWorkerDataService;
         this.schedulerService = schedulerService;
         this.settingsFacade = settingsFacade;
         this.languageService = languageService;
-
+        this.locationService = locationService;
+        this.flwErrorDataService = flwErrorDataService;
         schedulePurgeOfOldFrontLineWorkers();
     }
 
@@ -148,6 +157,53 @@ public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
         }
 
         return state;
+    }
+
+    @Override // NO CHECKSTYLE Cyclomatic Complexity
+    public boolean createUpdate(Map<String, Object> flw) {
+
+        long stateId = (long) flw.get(FlwConstants.STATE_ID);
+        long districtId = (long) flw.get(FlwConstants.DISTRICT_ID);
+        String mctsFlwId = flw.get(FlwConstants.ID).toString();
+        long contactNumber = (long) flw.get(FlwConstants.CONTACT_NO);
+
+        State state = locationService.getState(stateId);
+        if (state == null) {
+            flwErrorDataService.create(new FlwError(mctsFlwId, stateId, districtId, "State doesn't exist for stateId"));
+            return false;
+        }
+        District district = locationService.getDistrict(stateId, districtId);
+        if (district == null) {
+            flwErrorDataService.create(new FlwError(mctsFlwId, stateId, districtId, "district doesn't exist for districtId"));
+            return false;
+        }
+
+        FrontLineWorker existingFlwByNumber = getByContactNumber(contactNumber);
+        FrontLineWorker existingFlwByMctsFlwId = getByMctsFlwIdAndState(mctsFlwId, state);
+
+
+        if (existingFlwByMctsFlwId != null && existingFlwByNumber != null) {
+
+            if (existingFlwByMctsFlwId.getMctsFlwId().equalsIgnoreCase(existingFlwByNumber.getMctsFlwId()) &&
+                    existingFlwByMctsFlwId.getState().equals(existingFlwByNumber.getState())) {
+                // we are trying to update the same existing flw. set fields and update
+                return true;
+            } else {
+                // we are trying to update 2 different users and/or phone number used by someone else
+                flwErrorDataService.create(new FlwError(mctsFlwId, stateId, districtId, "Phone number used by someone else"));
+                return false;
+            }
+        } else if (existingFlwByMctsFlwId != null && existingFlwByNumber == null) {
+            // trying to update the phone number of the person. possible migration scenario
+            return true;
+        } else if (existingFlwByMctsFlwId == null && existingFlwByNumber != null) {
+            // phone number used by someone else.
+            flwErrorDataService.create(new FlwError(mctsFlwId, stateId, districtId, "Phone number used by someone else"));
+            return false;
+        } else { // existingFlwByMctsFlwId & existingFlwByNumber are null)
+            // new user. set fields and add
+            return true;
+        }
     }
 
     @Override
