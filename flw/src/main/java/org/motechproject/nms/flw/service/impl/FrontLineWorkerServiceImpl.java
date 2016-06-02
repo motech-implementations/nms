@@ -15,9 +15,11 @@ import org.motechproject.nms.flw.repository.FlwErrorDataService;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.flw.utils.FlwConstants;
+import org.motechproject.nms.flw.utils.FlwMapper;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Language;
 import org.motechproject.nms.region.domain.State;
+import org.motechproject.nms.region.exception.InvalidLocationException;
 import org.motechproject.nms.region.service.LanguageService;
 import org.motechproject.nms.region.service.LocationService;
 import org.motechproject.scheduler.contract.RepeatingSchedulableJob;
@@ -31,6 +33,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.jdo.Query;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -180,29 +183,43 @@ public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
 
         FrontLineWorker existingFlwByNumber = getByContactNumber(contactNumber);
         FrontLineWorker existingFlwByMctsFlwId = getByMctsFlwIdAndState(mctsFlwId, state);
+        Map<String, Object> location = new HashMap<>();
+        try {
+            location = locationService.getLocations(flw);
 
+            if (existingFlwByMctsFlwId != null && existingFlwByNumber != null) {
 
-        if (existingFlwByMctsFlwId != null && existingFlwByNumber != null) {
-
-            if (existingFlwByMctsFlwId.getMctsFlwId().equalsIgnoreCase(existingFlwByNumber.getMctsFlwId()) &&
-                    existingFlwByMctsFlwId.getState().equals(existingFlwByNumber.getState())) {
-                // we are trying to update the same existing flw. set fields and update
+                if (existingFlwByMctsFlwId.getMctsFlwId().equalsIgnoreCase(existingFlwByNumber.getMctsFlwId()) &&
+                        existingFlwByMctsFlwId.getState().equals(existingFlwByNumber.getState())) {
+                    // we are trying to update the same existing flw. set fields and update
+                    LOGGER.debug("Updating existing user with same phone number");
+                    update(FlwMapper.updateFlw(existingFlwByMctsFlwId, flw, location));
+                    return true;
+                } else {
+                    // we are trying to update 2 different users and/or phone number used by someone else
+                    LOGGER.debug("Existing flw but phone number(update) already in use");
+                    flwErrorDataService.create(new FlwError(mctsFlwId, stateId, districtId, "Phone number used by someone else"));
+                    return false;
+                }
+            } else if (existingFlwByMctsFlwId != null && existingFlwByNumber == null) {
+                // trying to update the phone number of the person. possible migration scenario
+                LOGGER.debug("Updating phone number for flw");
+                update(FlwMapper.updateFlw(existingFlwByMctsFlwId, flw, location));
                 return true;
-            } else {
-                // we are trying to update 2 different users and/or phone number used by someone else
+            } else if (existingFlwByMctsFlwId == null && existingFlwByNumber != null) {
+                // phone number used by someone else.
+                LOGGER.debug("New flw but phone number(update) already in use");
                 flwErrorDataService.create(new FlwError(mctsFlwId, stateId, districtId, "Phone number used by someone else"));
                 return false;
+            } else { // existingFlwByMctsFlwId & existingFlwByNumber are null)
+                // new user. set fields and add
+                LOGGER.debug("Adding new flw user");
+                add(FlwMapper.createFlw(flw, location));
+                return true;
             }
-        } else if (existingFlwByMctsFlwId != null && existingFlwByNumber == null) {
-            // trying to update the phone number of the person. possible migration scenario
-            return true;
-        } else if (existingFlwByMctsFlwId == null && existingFlwByNumber != null) {
-            // phone number used by someone else.
-            flwErrorDataService.create(new FlwError(mctsFlwId, stateId, districtId, "Phone number used by someone else"));
-            return false;
-        } else { // existingFlwByMctsFlwId & existingFlwByNumber are null)
-            // new user. set fields and add
-            return true;
+        } catch (InvalidLocationException ile) {
+                LOGGER.debug(ile.toString());
+                return false;
         }
     }
 

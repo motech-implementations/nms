@@ -24,6 +24,15 @@ public interface LocationService {
      */
     Map<String, Object> getLocations(Map<String, Object> locationMapping) throws InvalidLocationException;
 
+    /**
+     * Get locations method that fetches the associated location code from the mapping
+     * @param locationMapping mapping codes for location hierarchy
+     * @param createIfNotExist creates the location hierarchy if it doesnt exist already
+     * @return mapping of code to location object
+     * @throws InvalidLocationException when the map of code set violates the location hierarchy
+     */
+    Map<String, Object> getLocations(Map<String, Object> locationMapping, boolean createIfNotExist) throws InvalidLocationException;
+
     State getState(Long stateId);
 
     District getDistrict(Long stateId, Long districtId);

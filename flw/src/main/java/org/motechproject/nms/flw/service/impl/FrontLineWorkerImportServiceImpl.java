@@ -8,19 +8,13 @@ import org.motechproject.nms.csv.utils.CsvMapImporter;
 import org.motechproject.nms.csv.utils.GetLong;
 import org.motechproject.nms.csv.utils.GetString;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
-import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
+
 import org.motechproject.nms.flw.exception.FlwImportException;
 import org.motechproject.nms.flw.service.FrontLineWorkerImportService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.flw.utils.FlwConstants;
 import org.motechproject.nms.props.service.LogHelper;
-import org.motechproject.nms.region.domain.District;
-import org.motechproject.nms.region.domain.HealthBlock;
-import org.motechproject.nms.region.domain.HealthFacility;
-import org.motechproject.nms.region.domain.HealthSubFacility;
 import org.motechproject.nms.region.domain.State;
-import org.motechproject.nms.region.domain.Taluka;
-import org.motechproject.nms.region.domain.Village;
 import org.motechproject.nms.region.exception.InvalidLocationException;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.LocationService;
@@ -40,6 +34,9 @@ import java.io.Reader;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+
+import static org.motechproject.nms.flw.utils.FlwMapper.createFlw;
+import static org.motechproject.nms.flw.utils.FlwMapper.updateFlw;
 
 @Service("frontLineWorkerImportService")
 public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportService {
@@ -88,9 +85,9 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
         Map<String, Object> location = locationService.getLocations(record);
 
         if (flw == null) {
-            frontLineWorkerService.add(processInstance(record, location));
+            frontLineWorkerService.add(createFlw(record, location));
         } else {
-            frontLineWorkerService.update(processInstance(flw, record, location));
+            frontLineWorkerService.update(updateFlw(flw, record, location));
         }
     }
 
@@ -147,72 +144,6 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
             line = bufferedReader.readLine();
         } while (null != line && StringUtils.isNotBlank(line));
         return line;
-    }
-
-
-    private FrontLineWorker processInstance(Map<String, Object> record, Map<String, Object> location)
-            throws InvalidLocationException {
-        Long contactNumber = (Long) record.get(FlwConstants.CONTACT_NO);
-
-        FrontLineWorker flw = new FrontLineWorker(contactNumber);
-        flw.setStatus(FrontLineWorkerStatus.INACTIVE);
-
-        return processInstance(flw, record, location);
-    }
-
-    private FrontLineWorker processInstance(FrontLineWorker flw, Map<String, Object> record,
-                                            Map<String, Object> location) throws InvalidLocationException {
-
-        String mctsFlwId = (String) record.get(FlwConstants.ID);
-        Long contactNumber = (Long) record.get(FlwConstants.CONTACT_NO);
-        String name = (String) record.get(FlwConstants.NAME);
-        String type = (String) record.get(FlwConstants.TYPE);
-
-        if (contactNumber != null) {
-            flw.setContactNumber(contactNumber);
-        }
-
-        if (mctsFlwId != null) {
-            flw.setMctsFlwId(mctsFlwId);
-        }
-
-        if (name != null) {
-            flw.setName(name);
-        }
-
-        setFrontLineWorkerLocation(flw, location);
-
-        if (flw.getLanguage() == null) {
-            flw.setLanguage(flw.getDistrict().getLanguage());
-        }
-
-        if (flw.getDesignation() == null) {
-            flw.setDesignation(type);
-        }
-
-        return flw;
-    }
-
-    private void setFrontLineWorkerLocation(FrontLineWorker flw, Map<String, Object> locations) throws InvalidLocationException {
-        if (locations.get(FlwConstants.STATE_ID) == null && locations.get(FlwConstants.DISTRICT_ID) == null) {
-            throw new InvalidLocationException("Missing mandatory state and district fields");
-        }
-
-        if (locations.get(FlwConstants.STATE_ID) == null) {
-            throw new InvalidLocationException("Missing mandatory state field");
-        }
-
-        if (locations.get(FlwConstants.DISTRICT_ID) == null) {
-            throw new InvalidLocationException("Missing mandatory district field");
-        }
-
-        flw.setState((State) locations.get(FlwConstants.STATE_ID));
-        flw.setDistrict((District) locations.get(FlwConstants.DISTRICT_ID));
-        flw.setTaluka((Taluka) locations.get(FlwConstants.TALUKA_ID));
-        flw.setHealthBlock((HealthBlock) locations.get(FlwConstants.HEALTH_BLOCK_ID));
-        flw.setHealthFacility((HealthFacility) locations.get(FlwConstants.PHC_ID));
-        flw.setHealthSubFacility((HealthSubFacility) locations.get(FlwConstants.SUB_CENTRE_ID));
-        flw.setVillage((Village) locations.get(FlwConstants.CENSUS_VILLAGE_ID + FlwConstants.NON_CENSUS_VILLAGE_ID));
     }
 
     private Map<String, CellProcessor> getProcessorMapping() {

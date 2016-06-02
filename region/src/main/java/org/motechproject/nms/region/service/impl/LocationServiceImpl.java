@@ -89,10 +89,13 @@ public class LocationServiceImpl implements LocationService {
         return !"0".equals(obj);
     }
 
+    public Map<String, Object> getLocations(Map<String, Object> map) throws InvalidLocationException {
+       return getLocations(map, true);
+    }
 
     @Override // NO CHECKSTYLE Cyclomatic Complexity
     @SuppressWarnings("PMD")
-    public Map<String, Object> getLocations(Map<String, Object> map) throws InvalidLocationException {
+    public Map<String, Object> getLocations(Map<String, Object> map, boolean createIfNotExists) throws InvalidLocationException {
 
         Map<String, Object> locations = new HashMap<>();
 
@@ -123,7 +126,7 @@ public class LocationServiceImpl implements LocationService {
             return locations;
         }
         Taluka taluka = talukaService.findByDistrictAndCode(district, (String) map.get(TALUKA_ID));
-        if (taluka == null) {
+        if (taluka == null && createIfNotExists) {
             taluka = new Taluka();
             taluka.setCode((String) map.get(TALUKA_ID));
             taluka.setName((String) map.get(TALUKA_NAME));
@@ -139,7 +142,7 @@ public class LocationServiceImpl implements LocationService {
         Long vcode = map.get(VILLAGE_ID) == null ? 0 : (Long) map.get(VILLAGE_ID);
         if (vcode != 0 || svid != 0) {
             Village village = villageService.findByTalukaAndVcodeAndSvid(taluka, vcode, svid);
-            if (village == null) {
+            if (village == null && createIfNotExists) {
                 village = new Village();
                 village.setSvid(svid);
                 village.setVcode(vcode);
@@ -157,7 +160,7 @@ public class LocationServiceImpl implements LocationService {
             return locations;
         }
         HealthBlock healthBlock = healthBlockService.findByTalukaAndCode(taluka, (Long) map.get(HEALTHBLOCK_ID));
-        if (healthBlock == null) {
+        if (healthBlock == null && createIfNotExists) {
             healthBlock = new HealthBlock();
             healthBlock.setTaluka(taluka);
             healthBlock.setCode((Long) map.get(HEALTHBLOCK_ID));
@@ -173,7 +176,7 @@ public class LocationServiceImpl implements LocationService {
             return locations;
         }
         HealthFacility healthFacility = healthFacilityService.findByHealthBlockAndCode(healthBlock, (Long) map.get(PHC_ID));
-        if (healthFacility == null) {
+        if (healthFacility == null && createIfNotExists) {
             healthFacility = new HealthFacility();
             healthFacility.setHealthBlock(healthBlock);
             healthFacility.setCode((Long) map.get(PHC_ID));
@@ -189,7 +192,7 @@ public class LocationServiceImpl implements LocationService {
             return locations;
         }
         HealthSubFacility healthSubFacility = healthSubFacilityService.findByHealthFacilityAndCode(healthFacility, (Long) map.get(SUBCENTRE_ID));
-        if (healthSubFacility == null) {
+        if (healthSubFacility == null && createIfNotExists) {
             healthSubFacility = new HealthSubFacility();
             healthSubFacility.setHealthFacility(healthFacility);
             healthSubFacility.setCode((Long) map.get(SUBCENTRE_ID));
