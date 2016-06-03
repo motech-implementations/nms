@@ -32,25 +32,24 @@ import java.util.Map;
 public class OpsController extends BaseController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OpsController.class);
-    private SubscriptionDataService subscriptionDataService;
-    private SubscriptionService subscriptionService;
-    private CdrFileService cdrFileService;
-    private MctsWsImportService mctsWsImportService;
-    private FrontLineWorkerService frontLineWorkerService;
-    private EventRelay eventRelay;
-
 
     @Autowired
-    public OpsController(SubscriptionDataService subscriptionDataService, SubscriptionService subscriptionService,
-                         CdrFileService cdrFileService, MctsWsImportService mctsWsImportService,
-                         FrontLineWorkerService frontLineWorkerService, EventRelay eventRelay) {
-        this.subscriptionDataService = subscriptionDataService;
-        this.subscriptionService = subscriptionService;
-        this.cdrFileService = cdrFileService;
-        this.mctsWsImportService = mctsWsImportService;
-        this.frontLineWorkerService = frontLineWorkerService;
-        this.eventRelay = eventRelay;
-    }
+    private SubscriptionDataService subscriptionDataService;
+
+    @Autowired
+    private SubscriptionService subscriptionService;
+
+    @Autowired
+    private CdrFileService cdrFileService;
+
+    @Autowired
+    private MctsWsImportService mctsWsImportService;
+
+    @Autowired
+    private FrontLineWorkerService frontLineWorkerService;
+
+    @Autowired
+    private EventRelay eventRelay;
 
     /**
      * Provided for OPS as a crutch to be able to empty all MDS cache directly after modifying the database by hand
