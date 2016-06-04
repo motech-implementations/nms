@@ -1,4 +1,4 @@
-package org.motechproject.nms.api.web;
+package org.motechproject.nms.api.web.contract;
 
 /**
  * Request body for creating or updating an flw

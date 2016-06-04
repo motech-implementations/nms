@@ -2,6 +2,7 @@ package org.motechproject.nms.api.web;
 
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.EventRelay;
+import org.motechproject.nms.api.web.contract.AddFlwRequest;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.flw.utils.FlwConstants;
 import org.motechproject.nms.imi.service.CdrFileService;

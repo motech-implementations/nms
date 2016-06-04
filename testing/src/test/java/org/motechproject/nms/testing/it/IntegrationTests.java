@@ -6,6 +6,7 @@ import org.motechproject.nms.testing.it.api.CallDetailsControllerBundleIT;
 import org.motechproject.nms.testing.it.api.KilkariControllerBundleIT;
 import org.motechproject.nms.testing.it.api.LanguageControllerBundleIT;
 import org.motechproject.nms.testing.it.api.MobileAcademyControllerBundleIT;
+import org.motechproject.nms.testing.it.api.OpsControllerBundleIT;
 import org.motechproject.nms.testing.it.api.UserControllerBundleIT;
 import org.motechproject.nms.testing.it.flw.FrontLineWorkerImportServiceBundleIT;
 import org.motechproject.nms.testing.it.flw.FrontLineWorkerServiceBundleIT;
@@ -47,6 +48,7 @@ import org.motechproject.nms.testing.it.tracking.TrackOneToManyChangesBundleIT;
     CallDetailsControllerBundleIT.class,
     KilkariControllerBundleIT.class,
     MobileAcademyControllerBundleIT.class,
+    OpsControllerBundleIT.class,
 
     /**
      * FLW
