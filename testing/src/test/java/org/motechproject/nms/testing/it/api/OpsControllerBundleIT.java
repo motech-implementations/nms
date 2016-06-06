@@ -6,6 +6,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.api.web.contract.AddFlwRequest;
+import org.motechproject.nms.flw.domain.FrontLineWorker;
+import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.HealthBlock;
 import org.motechproject.nms.region.domain.HealthFacility;
@@ -62,6 +64,7 @@ public class OpsControllerBundleIT extends BasePaxIT {
     HealthFacilityType healthFacilityType;
     HealthFacility healthFacility;
     HealthSubFacility healthSubFacility;
+    Language language;
 
     @Inject
     PlatformTransactionManager transactionManager;
@@ -96,18 +99,23 @@ public class OpsControllerBundleIT extends BasePaxIT {
     @Inject
     HealthSubFacilityDataService healthSubFacilityDataService;
 
+    @Inject
+    FrontLineWorkerDataService frontLineWorkerDataService;
+
     @Before
     public void setupTestData() {
         testingService.clearDatabase();
         initializeLocationData();
     }
 
+    // Test flw update with empty flw request
     @Test
     public void testEmptyAddFlwRequest() throws IOException, InterruptedException {
         HttpPost request = RequestBuilder.createPostRequest(addFlwEndpoint, new AddFlwRequest());
         assertTrue(SimpleHttpClient.execHttpRequest(request, HttpStatus.SC_BAD_REQUEST, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
     }
 
+    // flw udpate failes with not all required fields present
     @Test
     public void testBadContactNumberAddFlwRequest() throws IOException, InterruptedException {
         AddFlwRequest addRequest = new AddFlwRequest();
@@ -116,6 +124,7 @@ public class OpsControllerBundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpRequest, HttpStatus.SC_BAD_REQUEST, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
     }
 
+    // Create valid new flw
     @Test
     public void testCreateNewFlw() throws IOException, InterruptedException {
         AddFlwRequest addFlwRequest = getAddRequest();
@@ -123,6 +132,61 @@ public class OpsControllerBundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpRequest, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
     }
 
+    // Flw test name update
+    @Test
+    public void testUpdateFlwName() throws IOException, InterruptedException {
+
+        // create flw
+        FrontLineWorker flw = new FrontLineWorker("Kookoo Devi" ,9876543210L);
+        flw.setMctsFlwId("123");
+        flw.setState(state);
+        flw.setDistrict(district);
+        flw.setLanguage(language);
+        frontLineWorkerDataService.create(flw);
+
+        AddFlwRequest updateRequest = getAddRequest();
+        HttpPost httpRequest = RequestBuilder.createPostRequest(addFlwEndpoint, updateRequest);
+        assertTrue(SimpleHttpClient.execHttpRequest(httpRequest, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
+    }
+
+    // Flw update phone number
+    @Test
+    public void testUpdateFlwPhoneOpen() throws IOException, InterruptedException {
+
+        // create flw
+        FrontLineWorker flw = new FrontLineWorker("Kookoo Devi" ,9876543210L);
+        flw.setMctsFlwId("123");
+        flw.setState(state);
+        flw.setDistrict(district);
+        flw.setLanguage(language);
+        frontLineWorkerDataService.create(flw);
+
+        AddFlwRequest updateRequest = getAddRequest();
+        updateRequest.setContactNumber(9876543211L);    // update
+        HttpPost httpRequest = RequestBuilder.createPostRequest(addFlwEndpoint, updateRequest);
+        assertTrue(SimpleHttpClient.execHttpRequest(httpRequest, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
+    }
+
+    // Test flw update to an existing used phone number by someone else
+    @Test
+    public void testUpdateFlwPhoneOccupied() throws IOException, InterruptedException {
+
+        // create flw
+        FrontLineWorker flw = new FrontLineWorker("Kookoo Devi" ,9876543210L);
+        flw.setMctsFlwId("456");
+        flw.setState(state);
+        flw.setDistrict(district);
+        flw.setLanguage(language);
+        frontLineWorkerDataService.create(flw);
+
+        AddFlwRequest updateRequest = getAddRequest();
+        HttpPost httpRequest = RequestBuilder.createPostRequest(addFlwEndpoint, updateRequest);
+        assertTrue(SimpleHttpClient.execHttpRequest(httpRequest, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
+
+        //TODO: check flw error records
+    }
+
+    // helper to create a valid flw add/update request
     private AddFlwRequest getAddRequest() {
         AddFlwRequest request = new AddFlwRequest();
         request.setContactNumber(9876543210L);
@@ -134,6 +198,7 @@ public class OpsControllerBundleIT extends BasePaxIT {
         return request;
     }
 
+    // helper to create location data
     private void initializeLocationData() {
 
         healthSubFacility = new HealthSubFacility();
@@ -183,8 +248,8 @@ public class OpsControllerBundleIT extends BasePaxIT {
         state.setCode(1L);
         state.getDistricts().add(district);
 
-        Language language = new Language("15", "HINDI_DEFAULT");
-        district.setLanguage(languageDataService.create(language));
+        language = languageDataService.create(new Language("15", "HINDI_DEFAULT"));
+        district.setLanguage(language);
         stateDataService.create(state);
     }
 
