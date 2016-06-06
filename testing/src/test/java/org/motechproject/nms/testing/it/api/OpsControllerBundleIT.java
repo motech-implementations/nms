@@ -6,7 +6,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.api.web.contract.AddFlwRequest;
+import org.motechproject.nms.flw.domain.FlwError;
+import org.motechproject.nms.flw.domain.FlwErrorReason;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
+import org.motechproject.nms.flw.repository.FlwErrorDataService;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.HealthBlock;
@@ -43,7 +46,10 @@ import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import javax.inject.Inject;
 import java.io.IOException;
+import java.util.List;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -102,6 +108,9 @@ public class OpsControllerBundleIT extends BasePaxIT {
     @Inject
     FrontLineWorkerDataService frontLineWorkerDataService;
 
+    @Inject
+    FlwErrorDataService flwErrorDataService;
+
     @Before
     public void setupTestData() {
         testingService.clearDatabase();
@@ -136,35 +145,23 @@ public class OpsControllerBundleIT extends BasePaxIT {
     @Test
     public void testUpdateFlwName() throws IOException, InterruptedException {
 
-        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         // create flw
-        FrontLineWorker flw = new FrontLineWorker("Kookoo Devi" ,9876543210L);
-        flw.setMctsFlwId("123");
-        flw.setState(state);
-        flw.setDistrict(district);
-        flw.setLanguage(language);
-        frontLineWorkerDataService.create(flw);
-        transactionManager.commit(status);
+        createFlwHelper("Kookoo Devi", 9876543210L, "123");
 
         AddFlwRequest updateRequest = getAddRequest();
         HttpPost httpRequest = RequestBuilder.createPostRequest(addFlwEndpoint, updateRequest);
         assertTrue(SimpleHttpClient.execHttpRequest(httpRequest, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
+        FrontLineWorker flw = frontLineWorkerDataService.findByContactNumber(9876543210L);
+        assertNotEquals(flw.getName(), "Kookoo Devi");
+        assertEquals(flw.getName(), updateRequest.getName());
     }
 
     // Flw update phone number
     @Test
     public void testUpdateFlwPhoneOpen() throws IOException, InterruptedException {
 
-        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         // create flw
-        FrontLineWorker flw = new FrontLineWorker("Kookoo Devi" ,9876543210L);
-        flw.setMctsFlwId("123");
-        flw.setState(state);
-        flw.setDistrict(district);
-        flw.setLanguage(language);
-        frontLineWorkerDataService.create(flw);
-        transactionManager.commit(status);
-
+        createFlwHelper("Chinkoo Devi", 9876543210L, "123");
 
         AddFlwRequest updateRequest = getAddRequest();
         updateRequest.setContactNumber(9876543211L);    // update
@@ -176,21 +173,92 @@ public class OpsControllerBundleIT extends BasePaxIT {
     @Test
     public void testUpdateFlwPhoneOccupied() throws IOException, InterruptedException {
 
-        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         // create flw
-        FrontLineWorker flw = new FrontLineWorker("Kookoo Devi" ,9876543210L);
-        flw.setMctsFlwId("456");
-        flw.setState(state);
-        flw.setDistrict(district);
-        flw.setLanguage(language);
-        frontLineWorkerDataService.create(flw);
-        transactionManager.commit(status);
+        createFlwHelper("Chinkoo Devi", 9876543210L, "456");
+
+        long before = flwErrorDataService.count();
 
         AddFlwRequest updateRequest = getAddRequest();
         HttpPost httpRequest = RequestBuilder.createPostRequest(addFlwEndpoint, updateRequest);
         assertTrue(SimpleHttpClient.execHttpRequest(httpRequest, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
 
-        //TODO: check flw error records
+        long after = flwErrorDataService.count();
+
+        assertEquals("No new expected flw error created", before + 1, after);
+
+        List<FlwError> flwErrors = flwErrorDataService.findByMctsId(
+                updateRequest.getMctsFlwId(),
+                updateRequest.getStateId(),
+                updateRequest.getDistrictId());
+
+        // since we clear the db before each test, safe to assume that we will only have 1 item in list
+        assertEquals(flwErrors.get(0).getReason(), FlwErrorReason.PHONE_NUMBER_IN_USE);
+    }
+
+
+    @Test
+    public void testUpdateNoState() throws IOException, InterruptedException {
+
+        // create flw
+        createFlwHelper("State Singh", 9876543210L, "123");
+
+        long before = flwErrorDataService.count();
+
+        AddFlwRequest updateRequest = getAddRequest();
+        updateRequest.setStateId(5L);    // 5 doesn't exist since setup only creates state '1'
+        HttpPost httpRequest = RequestBuilder.createPostRequest(addFlwEndpoint, updateRequest);
+        assertTrue(SimpleHttpClient.execHttpRequest(httpRequest, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
+
+        long after = flwErrorDataService.count();
+
+        assertEquals("No new expected flw error created", before + 1, after);
+
+        List<FlwError> flwErrors = flwErrorDataService.findByMctsId(
+                updateRequest.getMctsFlwId(),
+                updateRequest.getStateId(),
+                updateRequest.getDistrictId());
+
+        // since we clear the db before each test, safe to assume that we will only have 1 item in list
+        assertEquals(flwErrors.get(0).getReason(), FlwErrorReason.INVALID_LOCATION_STATE);
+    }
+
+    @Test
+    public void testUpdateNoDistrict() throws IOException, InterruptedException {
+
+        // create flw
+        createFlwHelper("District Singh", 9876543210L, "123");
+
+        long before = flwErrorDataService.count();
+
+        AddFlwRequest updateRequest = getAddRequest();
+        updateRequest.setDistrictId(5L);    // 5 doesn't exist since setup only creates district '1'
+        HttpPost httpRequest = RequestBuilder.createPostRequest(addFlwEndpoint, updateRequest);
+        assertTrue(SimpleHttpClient.execHttpRequest(httpRequest, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
+
+        long after = flwErrorDataService.count();
+
+        assertEquals("No new expected flw error created", before + 1, after);
+
+        List<FlwError> flwErrors = flwErrorDataService.findByMctsId(
+                updateRequest.getMctsFlwId(),
+                updateRequest.getStateId(),
+                updateRequest.getDistrictId());
+
+        // since we clear the db before each test, safe to assume that we will only have 1 item in list
+        assertEquals(flwErrors.get(0).getReason(), FlwErrorReason.INVALID_LOCATION_DISTRICT);
+    }
+
+    private void createFlwHelper(String name, long phoneNumber, String mctsFlwId) {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        stateDataService.create(state);
+        // create flw
+        FrontLineWorker flw = new FrontLineWorker(name, phoneNumber);
+        flw.setMctsFlwId(mctsFlwId);
+        flw.setState(state);
+        flw.setDistrict(district);
+        flw.setLanguage(language);
+        frontLineWorkerDataService.create(flw);
+        transactionManager.commit(status);
     }
 
     // helper to create a valid flw add/update request
@@ -259,7 +327,6 @@ public class OpsControllerBundleIT extends BasePaxIT {
 
         language = languageDataService.create(new Language("15", "HINDI_DEFAULT"));
         district.setLanguage(language);
-        stateDataService.create(state);
 
         transactionManager.commit(status);
     }

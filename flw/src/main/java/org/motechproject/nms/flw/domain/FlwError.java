@@ -52,11 +52,11 @@ public class FlwError {
         this.districtId = districtId;
     }
 
-    public FlwErrorReason getError() {
+    public FlwErrorReason getReason() {
         return reason;
     }
 
-    public void setError(FlwErrorReason error) {
-        this.reason = error;
+    public void setReason(FlwErrorReason reason) {
+        this.reason = reason;
     }
 }
