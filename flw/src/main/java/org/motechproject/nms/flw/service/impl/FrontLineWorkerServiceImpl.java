@@ -9,6 +9,7 @@ import org.motechproject.event.listener.annotations.MotechListener;
 import org.motechproject.mds.query.QueryExecution;
 import org.motechproject.mds.util.InstanceSecurityRestriction;
 import org.motechproject.nms.flw.domain.FlwError;
+import org.motechproject.nms.flw.domain.FlwErrorReason;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.repository.FlwErrorDataService;
@@ -172,12 +173,12 @@ public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
 
         State state = locationService.getState(stateId);
         if (state == null) {
-            flwErrorDataService.create(new FlwError(mctsFlwId, stateId, districtId, "State doesn't exist for stateId"));
+            flwErrorDataService.create(new FlwError(mctsFlwId, stateId, districtId, FlwErrorReason.INVALID_LOCATION_STATE));
             return false;
         }
         District district = locationService.getDistrict(stateId, districtId);
         if (district == null) {
-            flwErrorDataService.create(new FlwError(mctsFlwId, stateId, districtId, "district doesn't exist for districtId"));
+            flwErrorDataService.create(new FlwError(mctsFlwId, stateId, districtId, FlwErrorReason.INVALID_LOCATION_DISTRICT));
             return false;
         }
 
@@ -198,7 +199,7 @@ public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
                 } else {
                     // we are trying to update 2 different users and/or phone number used by someone else
                     LOGGER.debug("Existing flw but phone number(update) already in use");
-                    flwErrorDataService.create(new FlwError(mctsFlwId, stateId, districtId, "Phone number used by someone else"));
+                    flwErrorDataService.create(new FlwError(mctsFlwId, stateId, districtId, FlwErrorReason.PHONE_NUMBER_IN_USE));
                     return false;
                 }
             } else if (existingFlwByMctsFlwId != null && existingFlwByNumber == null) {
@@ -211,7 +212,7 @@ public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
             } else if (existingFlwByMctsFlwId == null && existingFlwByNumber != null) {
                 // phone number used by someone else.
                 LOGGER.debug("New flw but phone number(update) already in use");
-                flwErrorDataService.create(new FlwError(mctsFlwId, stateId, districtId, "Phone number used by someone else"));
+                flwErrorDataService.create(new FlwError(mctsFlwId, stateId, districtId, FlwErrorReason.PHONE_NUMBER_IN_USE));
                 return false;
             } else { // existingFlwByMctsFlwId & existingFlwByNumber are null)
                 // new user. set fields and add

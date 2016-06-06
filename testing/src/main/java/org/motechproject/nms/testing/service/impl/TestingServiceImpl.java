@@ -86,6 +86,7 @@ public class TestingServiceImpl implements TestingService {
         "nms_flw_cdrs__TRASH",
         "nms_front_line_workers",
         "nms_front_line_workers__TRASH",
+        "nms_flw_errors",
         "nms_health_blocks",
         "nms_health_blocks__TRASH",
         "nms_health_facilities",

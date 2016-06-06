@@ -136,6 +136,7 @@ public class OpsControllerBundleIT extends BasePaxIT {
     @Test
     public void testUpdateFlwName() throws IOException, InterruptedException {
 
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         // create flw
         FrontLineWorker flw = new FrontLineWorker("Kookoo Devi" ,9876543210L);
         flw.setMctsFlwId("123");
@@ -143,6 +144,7 @@ public class OpsControllerBundleIT extends BasePaxIT {
         flw.setDistrict(district);
         flw.setLanguage(language);
         frontLineWorkerDataService.create(flw);
+        transactionManager.commit(status);
 
         AddFlwRequest updateRequest = getAddRequest();
         HttpPost httpRequest = RequestBuilder.createPostRequest(addFlwEndpoint, updateRequest);
@@ -153,6 +155,7 @@ public class OpsControllerBundleIT extends BasePaxIT {
     @Test
     public void testUpdateFlwPhoneOpen() throws IOException, InterruptedException {
 
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         // create flw
         FrontLineWorker flw = new FrontLineWorker("Kookoo Devi" ,9876543210L);
         flw.setMctsFlwId("123");
@@ -160,6 +163,8 @@ public class OpsControllerBundleIT extends BasePaxIT {
         flw.setDistrict(district);
         flw.setLanguage(language);
         frontLineWorkerDataService.create(flw);
+        transactionManager.commit(status);
+
 
         AddFlwRequest updateRequest = getAddRequest();
         updateRequest.setContactNumber(9876543211L);    // update
@@ -171,6 +176,7 @@ public class OpsControllerBundleIT extends BasePaxIT {
     @Test
     public void testUpdateFlwPhoneOccupied() throws IOException, InterruptedException {
 
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         // create flw
         FrontLineWorker flw = new FrontLineWorker("Kookoo Devi" ,9876543210L);
         flw.setMctsFlwId("456");
@@ -178,6 +184,7 @@ public class OpsControllerBundleIT extends BasePaxIT {
         flw.setDistrict(district);
         flw.setLanguage(language);
         frontLineWorkerDataService.create(flw);
+        transactionManager.commit(status);
 
         AddFlwRequest updateRequest = getAddRequest();
         HttpPost httpRequest = RequestBuilder.createPostRequest(addFlwEndpoint, updateRequest);
@@ -200,6 +207,8 @@ public class OpsControllerBundleIT extends BasePaxIT {
 
     // helper to create location data
     private void initializeLocationData() {
+
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         healthSubFacility = new HealthSubFacility();
         healthSubFacility.setName("Health Sub Facility 1");
@@ -251,6 +260,8 @@ public class OpsControllerBundleIT extends BasePaxIT {
         language = languageDataService.create(new Language("15", "HINDI_DEFAULT"));
         district.setLanguage(language);
         stateDataService.create(state);
+
+        transactionManager.commit(status);
     }
 
 }

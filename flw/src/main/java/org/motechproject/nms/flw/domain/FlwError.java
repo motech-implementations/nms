@@ -19,13 +19,13 @@ public class FlwError {
     private Long districtId;
 
     @Field
-    private String error;
+    private FlwErrorReason reason;
 
-    public FlwError(String mctsId, Long stateId, Long districtId, String error) {
+    public FlwError(String mctsId, Long stateId, Long districtId, FlwErrorReason reason) {
         this.mctsId = mctsId;
         this.stateId = stateId;
         this.districtId = districtId;
-        this.error = error;
+        this.reason = reason;
     }
 
     public String getMctsId() {
@@ -52,11 +52,11 @@ public class FlwError {
         this.districtId = districtId;
     }
 
-    public String getError() {
-        return error;
+    public FlwErrorReason getError() {
+        return reason;
     }
 
-    public void setError(String error) {
-        this.error = error;
+    public void setError(FlwErrorReason error) {
+        this.reason = error;
     }
 }
