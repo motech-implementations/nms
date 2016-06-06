@@ -203,6 +203,8 @@ public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
                 }
             } else if (existingFlwByMctsFlwId != null && existingFlwByNumber == null) {
                 // trying to update the phone number of the person. possible migration scenario
+                // making design decision that flw will lose all progress when phone number is changed. Usage and tracking is not
+                // worth the effort & we don't really know that its the same flw
                 LOGGER.debug("Updating phone number for flw");
                 update(FlwMapper.updateFlw(existingFlwByMctsFlwId, flw, location));
                 return true;

@@ -8,8 +8,8 @@ public class AddFlwRequest {
     private String name;
     private String mctsFlwId;
     private Long contactNumber;
-    private Integer stateId;
-    private Integer districtId;
+    private Long stateId;
+    private Long districtId;
     private String talukaId;
     private Integer phcId;
     private Integer subcentreId;
@@ -45,19 +45,19 @@ public class AddFlwRequest {
         this.contactNumber = contactNumber;
     }
 
-    public Integer getStateId() {
+    public Long getStateId() {
         return stateId;
     }
 
-    public void setStateId(Integer stateId) {
+    public void setStateId(Long stateId) {
         this.stateId = stateId;
     }
 
-    public Integer getDistrictId() {
+    public Long getDistrictId() {
         return districtId;
     }
 
-    public void setDistrictId(Integer districtId) {
+    public void setDistrictId(Long districtId) {
         this.districtId = districtId;
     }
 
