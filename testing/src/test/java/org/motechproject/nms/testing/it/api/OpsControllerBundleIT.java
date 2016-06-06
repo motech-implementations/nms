@@ -195,6 +195,21 @@ public class OpsControllerBundleIT extends BasePaxIT {
         assertEquals(flwErrors.get(0).getReason(), FlwErrorReason.PHONE_NUMBER_IN_USE);
     }
 
+    // Test flw update to an existing used phone number by someone else
+    @Test
+    public void testUpdateFlwAnonymousMctsMerge() throws IOException, InterruptedException {
+
+        // create flw with null mcts id
+        createFlwHelper("Chinkoo Devi", 9876543210L, null);
+
+        AddFlwRequest updateRequest = getAddRequest();
+        HttpPost httpRequest = RequestBuilder.createPostRequest(addFlwEndpoint, updateRequest);
+        assertTrue(SimpleHttpClient.execHttpRequest(httpRequest, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
+
+        FrontLineWorker flwByNumber = frontLineWorkerDataService.findByContactNumber(9876543210L);
+        assertEquals("Anonymous user was not merged", updateRequest.getMctsFlwId(), flwByNumber.getMctsFlwId());
+    }
+
 
     @Test
     public void testUpdateNoState() throws IOException, InterruptedException {
@@ -248,7 +263,7 @@ public class OpsControllerBundleIT extends BasePaxIT {
         assertEquals(flwErrors.get(0).getReason(), FlwErrorReason.INVALID_LOCATION_DISTRICT);
     }
 
-    private void createFlwHelper(String name, long phoneNumber, String mctsFlwId) {
+    private void createFlwHelper(String name, Long phoneNumber, String mctsFlwId) {
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         stateDataService.create(state);
         // create flw

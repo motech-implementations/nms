@@ -210,10 +210,20 @@ public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
                 update(FlwMapper.updateFlw(existingFlwByMctsFlwId, flw, location));
                 return true;
             } else if (existingFlwByMctsFlwId == null && existingFlwByNumber != null) {
-                // phone number used by someone else.
-                LOGGER.debug("New flw but phone number(update) already in use");
-                flwErrorDataService.create(new FlwError(mctsFlwId, stateId, districtId, FlwErrorReason.PHONE_NUMBER_IN_USE));
-                return false;
+
+                if (existingFlwByNumber.getMctsFlwId() == null) {
+                    // we just got data from mcts for a previous anonymous user that subscribed by phone number
+                    // merging those records
+                    LOGGER.debug("Merging mcts data with previously anonymous user");
+                    update(FlwMapper.updateFlw(existingFlwByNumber, flw, location));
+                    return true;
+                } else {
+                    // phone number used by someone else.
+                    LOGGER.debug("New flw but phone number(update) already in use");
+                    flwErrorDataService.create(new FlwError(mctsFlwId, stateId, districtId, FlwErrorReason.PHONE_NUMBER_IN_USE));
+                    return false;
+                }
+
             } else { // existingFlwByMctsFlwId & existingFlwByNumber are null)
                 // new user. set fields and add
                 LOGGER.debug("Adding new flw user");
