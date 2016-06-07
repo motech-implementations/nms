@@ -93,14 +93,20 @@ public class OpsController extends BaseController {
         eventRelay.sendEventMessage(new MotechEvent(KilkariConstants.SUBSCRIPTION_UPKEEP_SUBJECT));
     }
 
-    @RequestMapping(value = "/addFlw",
+    @RequestMapping(value = "/createUpdateFlw",
             method = RequestMethod.POST,
             headers = { "Content-type=application/json" })
     @ResponseStatus(HttpStatus.OK)
     @Transactional
     public void createUpdateFlw(@RequestBody AddFlwRequest addFlwRequest) {
-        // TODO: obscure phone number?
-        log("REQUEST: /ops/addFlw (POST)", LogHelper.nullOrString(addFlwRequest));
+        log("REQUEST: /ops/createUpdateFlw", String.format(
+                "callingNumber=%s, mctsId=%s, name=%s, state=%d, district=%d",
+                LogHelper.obscure(addFlwRequest.getContactNumber()),
+                addFlwRequest.getMctsFlwId(),
+                addFlwRequest.getName(),
+                addFlwRequest.getStateId(),
+                addFlwRequest.getDistrictId()));
+
         StringBuilder failureReasons = new StringBuilder();
         validateField10Digits(failureReasons, "contactNumber", addFlwRequest.getContactNumber());
         validateFieldPositiveLong(failureReasons, "contactNumber", addFlwRequest.getContactNumber());

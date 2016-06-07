@@ -60,7 +60,7 @@ import static org.junit.Assert.assertTrue;
 @ExamFactory(MotechNativeTestContainerFactory.class)
 public class OpsControllerBundleIT extends BasePaxIT {
 
-    private String addFlwEndpoint = String.format("http://localhost:%d/api/ops/addFlw",
+    private String addFlwEndpoint = String.format("http://localhost:%d/api/ops/createUpdateFlw",
             TestContext.getJettyPort());
     State state;
     District district;
@@ -83,27 +83,6 @@ public class OpsControllerBundleIT extends BasePaxIT {
 
     @Inject
     StateDataService stateDataService;
-
-    @Inject
-    DistrictDataService districtDataService;
-
-    @Inject
-    TalukaDataService talukaDataService;
-
-    @Inject
-    VillageDataService villageDataService;
-
-    @Inject
-    HealthBlockDataService healthBlockDataService;
-
-    @Inject
-    HealthBlockService healthBlockService;
-
-    @Inject
-    HealthFacilityDataService healthFacilityDataService;
-
-    @Inject
-    HealthSubFacilityDataService healthSubFacilityDataService;
 
     @Inject
     FrontLineWorkerDataService frontLineWorkerDataService;
