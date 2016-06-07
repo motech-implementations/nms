@@ -186,7 +186,7 @@ public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
         FrontLineWorker existingFlwByMctsFlwId = getByMctsFlwIdAndState(mctsFlwId, state);
         Map<String, Object> location = new HashMap<>();
         try {
-            location = locationService.getLocations(flw);
+            location = locationService.getLocations(flw, false);
 
             if (existingFlwByMctsFlwId != null && existingFlwByNumber != null) {
 

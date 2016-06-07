@@ -11,10 +11,10 @@ public class AddFlwRequest {
     private Long stateId;
     private Long districtId;
     private String talukaId;
-    private Integer phcId;
-    private Integer subcentreId;
-    private Integer villageId;
-    private Integer healthblockId;
+    private Long phcId;
+    private Long subcentreId;
+    private Long villageId;
+    private Long healthblockId;
     private String type;
 
     public AddFlwRequest() {
@@ -69,35 +69,35 @@ public class AddFlwRequest {
         this.talukaId = talukaId;
     }
 
-    public Integer getPhcId() {
+    public Long getPhcId() {
         return phcId;
     }
 
-    public void setPhcId(Integer phcId) {
+    public void setPhcId(Long phcId) {
         this.phcId = phcId;
     }
 
-    public Integer getSubcentreId() {
+    public Long getSubcentreId() {
         return subcentreId;
     }
 
-    public void setSubcentreId(Integer subcentreId) {
+    public void setSubcentreId(Long subcentreId) {
         this.subcentreId = subcentreId;
     }
 
-    public Integer getVillageId() {
+    public Long getVillageId() {
         return villageId;
     }
 
-    public void setVillageId(Integer villageId) {
+    public void setVillageId(Long villageId) {
         this.villageId = villageId;
     }
 
-    public Integer getHealthblockId() {
+    public Long getHealthblockId() {
         return healthblockId;
     }
 
-    public void setHealthblockId(Integer healthblockId) {
+    public void setHealthblockId(Long healthblockId) {
         this.healthblockId = healthblockId;
     }
 

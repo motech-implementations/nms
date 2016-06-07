@@ -49,7 +49,10 @@ import java.io.IOException;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -118,6 +121,31 @@ public class OpsControllerBundleIT extends BasePaxIT {
         AddFlwRequest addFlwRequest = getAddRequest();
         HttpPost httpRequest = RequestBuilder.createPostRequest(addFlwEndpoint, addFlwRequest);
         assertTrue(SimpleHttpClient.execHttpRequest(httpRequest, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
+    }
+
+    // Create valid new flw
+    @Test
+    public void testCreateNewFlwTalukaVillage() throws IOException, InterruptedException {
+
+        createFlwHelper("Chinkoo Devi", 9876543210L, "123");
+        FrontLineWorker flw = frontLineWorkerDataService.findByContactNumber(9876543210L);
+        assertNotNull(flw.getState());
+        assertNotNull(flw.getDistrict());
+        assertNull(flw.getTaluka());    // null since we don't create it by default in helper
+        assertNull(flw.getVillage());   // null since we don't create it by default in helper
+
+        AddFlwRequest addFlwRequest = getAddRequest();
+        addFlwRequest.setTalukaId(taluka.getCode());
+        addFlwRequest.setVillageId(village.getVcode());
+        HttpPost httpRequest = RequestBuilder.createPostRequest(addFlwEndpoint, addFlwRequest);
+        assertTrue(SimpleHttpClient.execHttpRequest(httpRequest, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
+
+        // refetch and check that taluka and village are set
+        flw = frontLineWorkerDataService.findByContactNumber(9876543210L);
+        assertNotNull(flw.getState());
+        assertNotNull(flw.getDistrict());
+        assertNotNull(flw.getTaluka());
+        assertNotNull(flw.getVillage());
     }
 
     // Flw test name update
@@ -240,6 +268,21 @@ public class OpsControllerBundleIT extends BasePaxIT {
 
         // since we clear the db before each test, safe to assume that we will only have 1 item in list
         assertEquals(flwErrors.get(0).getReason(), FlwErrorReason.INVALID_LOCATION_DISTRICT);
+    }
+
+    @Test
+    public void testUpdateNoTaluka() throws IOException, InterruptedException {
+
+        // create flw
+        createFlwHelper("Taluka Singh", 9876543210L, "123");
+
+        AddFlwRequest updateRequest = getAddRequest();
+        updateRequest.setTalukaId("999");   // taluka 999 doesn't exist. this shouldn't be updated
+        HttpPost httpRequest = RequestBuilder.createPostRequest(addFlwEndpoint, updateRequest);
+        assertTrue(SimpleHttpClient.execHttpRequest(httpRequest, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
+
+        FrontLineWorker flw = frontLineWorkerDataService.findByContactNumber(9876543210L);
+        assertNull("Taluka update rejected", flw.getTaluka());
     }
 
     private void createFlwHelper(String name, Long phoneNumber, String mctsFlwId) {
