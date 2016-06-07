@@ -5,12 +5,17 @@ import org.motechproject.event.listener.EventRelay;
 import org.motechproject.nms.api.web.contract.AddFlwRequest;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.flw.utils.FlwConstants;
+import org.motechproject.nms.api.web.contract.mobileAcademy.GetBookmarkResponse;
+import org.motechproject.nms.api.web.converter.MobileAcademyConverter;
 import org.motechproject.nms.imi.service.CdrFileService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.motechproject.nms.mcts.service.MctsWsImportService;
 import org.motechproject.nms.props.service.LogHelper;
+import org.motechproject.nms.mobileacademy.dto.MaBookmark;
+import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +25,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 import java.util.HashMap;
@@ -47,10 +54,13 @@ public class OpsController extends BaseController {
     private MctsWsImportService mctsWsImportService;
 
     @Autowired
-    private FrontLineWorkerService frontLineWorkerService;
+    private EventRelay eventRelay;
 
     @Autowired
-    private EventRelay eventRelay;
+    private MobileAcademyService mobileAcademyService;
+
+    @Autowired
+    private FrontLineWorkerService frontLineWorkerService;
 
     /**
      * Provided for OPS as a crutch to be able to empty all MDS cache directly after modifying the database by hand
@@ -92,6 +102,7 @@ public class OpsController extends BaseController {
         LOGGER.info("/upkeep");
         eventRelay.sendEventMessage(new MotechEvent(KilkariConstants.SUBSCRIPTION_UPKEEP_SUBJECT));
     }
+
 
     @RequestMapping(value = "/createUpdateFlw",
             method = RequestMethod.POST,
@@ -153,4 +164,16 @@ public class OpsController extends BaseController {
 
         frontLineWorkerService.createUpdate(flwProperties);
     }
+
+
+    @RequestMapping("/getbookmark")
+    @ResponseBody
+    public GetBookmarkResponse getBookmarkWithScore(@RequestParam(required = false) Long callingNumber) {
+        LOGGER.info("/getbookmark");
+        MaBookmark bookmark = mobileAcademyService.getBookmarkOps(callingNumber);
+        GetBookmarkResponse ret = MobileAcademyConverter.convertBookmarkDto(bookmark);
+        log("RESPONSE: /ops/getbookmark", String.format("bookmark=%s", ret.toString()));
+        return ret;
+    }
 }
+

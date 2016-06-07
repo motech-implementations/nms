@@ -36,6 +36,13 @@ public interface MobileAcademyService {
     MaBookmark getBookmark(Long callingNumber, String callId);
 
     /**
+     * Get the bookmark for the caller (to be used for Ops only)
+     * @param callingNumber phone number of the user
+     * @return bookmark of the user if it exists, null otherwise
+     */
+    MaBookmark getBookmarkOps(Long callingNumber);
+
+    /**
      * Update the bookmark for a caller
      * @param bookmark updated bookmark to be stored
      */

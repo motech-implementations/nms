@@ -174,6 +174,25 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
     }
 
     @Override
+    public MaBookmark getBookmarkOps(Long callingNumber) {
+        LOGGER.debug("Retrieve bookmark by Ops");
+        Bookmark existingBookmark = bookmarkService.getLatestBookmarkByUserId(callingNumber.toString());
+        if (existingBookmark != null) {
+            MaBookmark toReturn = new MaBookmark();
+            toReturn.setCallingNumber(Long.parseLong(existingBookmark.getExternalId()));
+
+            // default behavior to map the data
+            if (existingBookmark.getProgress() != null) {
+                Object bookmark = existingBookmark.getProgress().get(BOOKMARK_KEY);
+                toReturn.setBookmark(bookmark == null ? null : bookmark.toString());
+                toReturn.setScoresByChapter((Map<String, Integer>) existingBookmark.getProgress().get(SCORES_KEY));
+            }
+        }
+
+        return null;
+    }
+
+    @Override
     public void setBookmark(MaBookmark saveBookmark) {
 
         if (saveBookmark == null) {
