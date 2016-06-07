@@ -2,17 +2,23 @@ package org.motechproject.nms.api.web;
 
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.EventRelay;
+import org.motechproject.nms.api.web.contract.mobileAcademy.GetBookmarkResponse;
+import org.motechproject.nms.api.web.converter.MobileAcademyConverter;
 import org.motechproject.nms.imi.service.CdrFileService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.motechproject.nms.mcts.service.MctsWsImportService;
+import org.motechproject.nms.mobileacademy.dto.MaBookmark;
+import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 /**
@@ -28,16 +34,19 @@ public class OpsController extends BaseController {
     private CdrFileService cdrFileService;
     private MctsWsImportService mctsWsImportService;
     private EventRelay eventRelay;
+    private MobileAcademyService mobileAcademyService;
 
 
     @Autowired
     public OpsController(SubscriptionDataService subscriptionDataService, SubscriptionService subscriptionService,
-                         CdrFileService cdrFileService, MctsWsImportService mctsWsImportService, EventRelay eventRelay) {
+                         CdrFileService cdrFileService, MctsWsImportService mctsWsImportService, EventRelay eventRelay,
+                         MobileAcademyService mobileAcademyService) {
         this.subscriptionDataService = subscriptionDataService;
         this.subscriptionService = subscriptionService;
         this.cdrFileService = cdrFileService;
         this.mctsWsImportService = mctsWsImportService;
         this.eventRelay = eventRelay;
+        this.mobileAcademyService = mobileAcademyService;
     }
 
     /**
@@ -80,4 +89,16 @@ public class OpsController extends BaseController {
         LOGGER.info("/upkeep");
         eventRelay.sendEventMessage(new MotechEvent(KilkariConstants.SUBSCRIPTION_UPKEEP_SUBJECT));
     }
+
+    @RequestMapping("/getbookmark")
+    @ResponseBody
+    public GetBookmarkResponse getBookmarkWithScore(@RequestParam(required = false) Long callingNumber) {
+        LOGGER.info("/getbookmark");
+        MaBookmark bookmark = mobileAcademyService.getBookmarkOps(callingNumber);
+        GetBookmarkResponse ret = MobileAcademyConverter.convertBookmarkDto(bookmark);
+        log("RESPONSE: /ops/getbookmark", String.format("bookmark=%s", ret.toString()));
+        return ret;
+    }
+
+
 }
