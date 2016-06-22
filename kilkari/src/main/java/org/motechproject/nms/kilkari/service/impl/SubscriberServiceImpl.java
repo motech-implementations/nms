@@ -25,6 +25,8 @@ import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Language;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,6 +41,8 @@ import java.util.Set;
  */
 @Service("subscriberService")
 public class SubscriberServiceImpl implements SubscriberService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(SubscriberServiceImpl.class);
 
     private SubscriberDataService subscriberDataService;
     private SubscriptionService subscriptionService;
@@ -362,4 +366,21 @@ public class SubscriberServiceImpl implements SubscriberService {
             subscriptionService.deletePreconditionCheck(subscription);
         }
     }
+
+    @Override
+    public void deactivateAllSubscriptionsForSubscriber(long callingNumber) {
+        LOGGER.info("Recieved Release Number {} for Deactivation.", callingNumber);
+        Subscriber subscriberByMsisdn = this.getSubscriber(callingNumber);
+        if (subscriberByMsisdn == null) {
+            LOGGER.info("Subscriber for msisdn {} is not found." , callingNumber);
+            return;
+        }
+        LOGGER.info("Found Subscriber for msisdn {} .", callingNumber);
+        for (Subscription subscription : subscriberByMsisdn.getAllSubscriptions()) {
+            LOGGER.info("Deactivating Subscrition with start date {} for msisdn .", subscription.getStartDate());
+            subscriptionService.deactivateSubscription(subscription, DeactivationReason.MOHFW_REQUEST);
+            LOGGER.info("Deactivated Subscrition with start date {} for msisdn .", subscription.getStartDate());
+        }
+    }
+
 }

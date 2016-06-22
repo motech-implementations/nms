@@ -1,14 +1,20 @@
 package org.motechproject.nms.testing.it.api.utils;
 
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.StringEntity;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.ObjectWriter;
+import org.motechproject.testing.utils.TestContext;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Map;
 
 /**
  * Request builder helper class for web IT tests
@@ -40,5 +46,21 @@ public class RequestBuilder {
     public static HttpGet createGetRequest(String endpoint) {
         HttpGet getRequest = new HttpGet(endpoint);
         return getRequest;
+    }
+
+    public static HttpDelete createDeleteRequest(String endpoint) {
+        HttpDelete deleteRequest = new HttpDelete(endpoint);
+        return deleteRequest;
+    }
+
+    public static String createUriWithQueryParamters(String host, int port, String path, Map<String, String> params) throws URISyntaxException {
+        URIBuilder builder = new URIBuilder();
+        builder.setScheme("http").setHost(host).setPort(port).setPath(path);
+                for(String key : params.keySet()) {
+                    builder.setParameter(key, params.get(key));
+                }
+
+        return builder.build().toString();
+
     }
 }

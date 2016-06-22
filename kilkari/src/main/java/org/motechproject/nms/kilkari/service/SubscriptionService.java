@@ -199,5 +199,4 @@ public interface SubscriptionService {
      */
     List<Subscription> retrieveAll();
 
-    void deactivateSubscriptionForSpecificMsisdn(long callingNumber);
 }

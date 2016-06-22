@@ -1,24 +1,28 @@
 package org.motechproject.nms.testing.it.api;
 
 import org.apache.commons.httpclient.HttpStatus;
+import org.apache.commons.httpclient.NameValuePair;
+import org.apache.commons.httpclient.URIException;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.regexp.RE;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.api.web.contract.AddFlwRequest;
-import org.motechproject.nms.api.web.contract.kilkari.DeactivateSubscriptionContract;
 import org.motechproject.nms.flw.domain.FlwError;
 import org.motechproject.nms.flw.domain.FlwErrorReason;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.repository.FlwErrorDataService;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.kilkari.domain.Subscriber;
-import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.repository.*;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
-import org.motechproject.nms.props.repository.DeployedServiceDataService;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.HealthBlock;
 import org.motechproject.nms.region.domain.HealthFacility;
@@ -30,7 +34,6 @@ import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.domain.Village;
 import org.motechproject.nms.region.repository.*;
 import org.motechproject.nms.region.service.DistrictService;
-import org.motechproject.nms.region.service.HealthBlockService;
 import org.motechproject.nms.region.service.LanguageService;
 import org.motechproject.nms.testing.it.api.utils.RequestBuilder;
 import org.motechproject.nms.testing.it.utils.RegionHelper;
@@ -44,13 +47,19 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
+import org.osgi.service.dmt.Uri;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import javax.inject.Inject;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -69,7 +78,7 @@ public class OpsControllerBundleIT extends BasePaxIT {
 
     private String addFlwEndpoint = String.format("http://localhost:%d/api/ops/createUpdateFlw",
             TestContext.getJettyPort());
-    private String releaseNumber = String.format("http://localhost:%d/api/ops/releaseNumber",
+    private String deactivationRequest = String.format("http://localhost:%d/api/ops/deactivationRequest",
             TestContext.getJettyPort());
     State state;
     District district;
@@ -422,13 +431,13 @@ public class OpsControllerBundleIT extends BasePaxIT {
 
     // Test deactivation of specific msisdn
     @Test
-    public void testDeactivateSpecificMsisdn() throws IOException, InterruptedException {
+    public void testDeactivateSpecificMsisdn() throws IOException, InterruptedException, URISyntaxException {
 
-        // Http Post request to deactivate subscriber
-        DeactivateSubscriptionContract deactivateSubscriptionContract = new DeactivateSubscriptionContract();
-        deactivateSubscriptionContract.setContactNumber(1000000000L);
-        HttpPost httpRequest = RequestBuilder.createPostRequest(releaseNumber, deactivateSubscriptionContract);
-
+        // Http Delete request to deactivate subscriber
+        Map<String, String> params = new LinkedHashMap<>();
+        params.put("msisdn", "1000000000");
+        HttpDelete httpRequest = RequestBuilder.createDeleteRequest(RequestBuilder.createUriWithQueryParamters("localhost",TestContext.getJettyPort()
+        , "/api/ops/deactivationRequest", params));
         assertTrue(SimpleHttpClient.execHttpRequest(httpRequest, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
 
     }

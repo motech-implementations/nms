@@ -3,13 +3,13 @@ package org.motechproject.nms.api.web;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.EventRelay;
 import org.motechproject.nms.api.web.contract.AddFlwRequest;
-import org.motechproject.nms.api.web.contract.kilkari.DeactivateSubscriptionContract;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.flw.utils.FlwConstants;
 import org.motechproject.nms.api.web.contract.mobileAcademy.GetBookmarkResponse;
 import org.motechproject.nms.api.web.converter.MobileAcademyConverter;
 import org.motechproject.nms.imi.service.CdrFileService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
+import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.motechproject.nms.mcts.service.MctsWsImportService;
@@ -46,6 +46,9 @@ public class OpsController extends BaseController {
     private SubscriptionDataService subscriptionDataService;
 
     @Autowired
+    private SubscriberService subscriberService;
+
+    @Autowired
     private SubscriptionService subscriptionService;
 
     @Autowired
@@ -63,7 +66,7 @@ public class OpsController extends BaseController {
     @Autowired
     private FrontLineWorkerService frontLineWorkerService;
 
-    private String contactNumber = "contactNumber";
+    private final String contactNumber = "contactNumber";
 
     /**
      * Provided for OPS as a crutch to be able to empty all MDS cache directly after modifying the database by hand
@@ -179,19 +182,22 @@ public class OpsController extends BaseController {
         return ret;
     }
 
-    @RequestMapping(value = "/releaseNumber",
-            method = RequestMethod.POST,
-            headers = { "Content-type=application/json" })
+    @RequestMapping(value = "/deactivationRequest",
+            method = RequestMethod.DELETE)
     @ResponseStatus(HttpStatus.OK)
     @Transactional
-    public void releaseNumber(@RequestBody DeactivateSubscriptionContract deactivateSubscriptionContract) {
-        log("REQUEST: /ops/releaseNumber", String.format(
+    public void deactivationRequest(@RequestParam(value = "msisdn") String msisdn) {
+        long phoneNumber  = Long.parseLong(msisdn);
+        log("REQUEST: /ops/deactivationRequest", String.format(
                 "callingNumber=%s",
-                LogHelper.obscure(deactivateSubscriptionContract.getContactNumber())));
+                LogHelper.obscure(phoneNumber)));
         StringBuilder failureReasons = new StringBuilder();
-        validateField10Digits(failureReasons, contactNumber, deactivateSubscriptionContract.getContactNumber());
-        validateFieldPositiveLong(failureReasons, contactNumber, deactivateSubscriptionContract.getContactNumber());
-        subscriptionService.deactivateSubscriptionForSpecificMsisdn(deactivateSubscriptionContract.getContactNumber());
+        validateField10Digits(failureReasons, contactNumber, phoneNumber);
+        validateFieldPositiveLong(failureReasons, contactNumber, phoneNumber);
+        if (failureReasons.length() > 0) {
+            throw new IllegalArgumentException(failureReasons.toString());
+        }
+        subscriberService.deactivateAllSubscriptionsForSubscriber(phoneNumber);
     }
 }
 
