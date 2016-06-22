@@ -3,6 +3,7 @@ package org.motechproject.nms.api.web;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.EventRelay;
 import org.motechproject.nms.api.web.contract.AddFlwRequest;
+import org.motechproject.nms.api.web.contract.kilkari.DeactivateSubscriptionContract;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.flw.utils.FlwConstants;
 import org.motechproject.nms.api.web.contract.mobileAcademy.GetBookmarkResponse;
@@ -62,6 +63,8 @@ public class OpsController extends BaseController {
     @Autowired
     private FrontLineWorkerService frontLineWorkerService;
 
+    private String contactNumber = "contactNumber";
+
     /**
      * Provided for OPS as a crutch to be able to empty all MDS cache directly after modifying the database by hand
      */
@@ -119,8 +122,8 @@ public class OpsController extends BaseController {
                 addFlwRequest.getDistrictId()));
 
         StringBuilder failureReasons = new StringBuilder();
-        validateField10Digits(failureReasons, "contactNumber", addFlwRequest.getContactNumber());
-        validateFieldPositiveLong(failureReasons, "contactNumber", addFlwRequest.getContactNumber());
+        validateField10Digits(failureReasons, contactNumber, addFlwRequest.getContactNumber());
+        validateFieldPositiveLong(failureReasons, contactNumber, addFlwRequest.getContactNumber());
         validateFieldPresent(failureReasons, "mctsFlwId", addFlwRequest.getMctsFlwId());
         validateFieldPresent(failureReasons, "stateId", addFlwRequest.getStateId());
         validateFieldPresent(failureReasons, "districtId", addFlwRequest.getDistrictId());
@@ -174,6 +177,21 @@ public class OpsController extends BaseController {
         GetBookmarkResponse ret = MobileAcademyConverter.convertBookmarkDto(bookmark);
         log("RESPONSE: /ops/getbookmark", String.format("bookmark=%s", ret.toString()));
         return ret;
+    }
+
+    @RequestMapping(value = "/releaseNumber",
+            method = RequestMethod.POST,
+            headers = { "Content-type=application/json" })
+    @ResponseStatus(HttpStatus.OK)
+    @Transactional
+    public void releaseNumber(@RequestBody DeactivateSubscriptionContract deactivateSubscriptionContract) {
+        log("REQUEST: /ops/releaseNumber", String.format(
+                "callingNumber=%s",
+                LogHelper.obscure(deactivateSubscriptionContract.getContactNumber())));
+        StringBuilder failureReasons = new StringBuilder();
+        validateField10Digits(failureReasons, contactNumber, deactivateSubscriptionContract.getContactNumber());
+        validateFieldPositiveLong(failureReasons, contactNumber, deactivateSubscriptionContract.getContactNumber());
+        subscriptionService.deactivateSubscriptionForSpecificMsisdn(deactivateSubscriptionContract.getContactNumber());
     }
 }
 

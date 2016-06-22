@@ -29,6 +29,7 @@ import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.CsrVerifierService;
+import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.motechproject.nms.kilkari.utils.PhoneNumberHelper;
@@ -68,6 +69,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private CsrVerifierService csrVerifierService;
     private EventRelay eventRelay;
     private boolean allowMctsSubscriptions;
+
+    @Autowired
+    private SubscriberService subscriberService;
 
     @Autowired
     public SubscriptionServiceImpl(@Qualifier("kilkariSettings") SettingsFacade settingsFacade, // NO CHECKSTYLE More than 7 parameters
@@ -690,4 +694,23 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     public List<Subscription> retrieveAll() {
         return subscriptionDataService.retrieveAll();
     }
+
+
+    @Override
+    public void deactivateSubscriptionForSpecificMsisdn(long callingNumber) {
+        LOGGER.info("Recieved Release Number {} for Deactivation.", callingNumber);
+        Subscriber subscriberByMsisdn = subscriberService.getSubscriber(callingNumber);
+        if(subscriberByMsisdn == null) {
+            LOGGER.info("Subscriber for msisdn {} is not found." , callingNumber);
+            return;
+        }
+        LOGGER.info("Found Subscriber for msisdn {} .", callingNumber);
+        for(Subscription subscription : subscriberByMsisdn.getAllSubscriptions()) {
+                LOGGER.info("Deactivating Subscrition with start date {} for msisdn .", subscription.getStartDate());
+                deactivateSubscription(subscription, DeactivationReason.MOHFW_REQUEST);
+                LOGGER.info("Deactivated Subscrition with start date {} for msisdn .", subscription.getStartDate());
+        }
+
+    }
+
 }
