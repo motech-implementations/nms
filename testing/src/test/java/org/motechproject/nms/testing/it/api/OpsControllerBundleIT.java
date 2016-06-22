@@ -6,11 +6,19 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.api.web.contract.AddFlwRequest;
+import org.motechproject.nms.api.web.contract.kilkari.DeactivateSubscriptionContract;
 import org.motechproject.nms.flw.domain.FlwError;
 import org.motechproject.nms.flw.domain.FlwErrorReason;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.repository.FlwErrorDataService;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
+import org.motechproject.nms.kilkari.domain.Subscriber;
+import org.motechproject.nms.kilkari.domain.Subscription;
+import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
+import org.motechproject.nms.kilkari.repository.*;
+import org.motechproject.nms.kilkari.service.SubscriberService;
+import org.motechproject.nms.kilkari.service.SubscriptionService;
+import org.motechproject.nms.props.repository.DeployedServiceDataService;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.HealthBlock;
 import org.motechproject.nms.region.domain.HealthFacility;
@@ -20,17 +28,13 @@ import org.motechproject.nms.region.domain.Language;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.domain.Village;
-import org.motechproject.nms.region.repository.DistrictDataService;
-import org.motechproject.nms.region.repository.HealthBlockDataService;
-import org.motechproject.nms.region.repository.HealthFacilityDataService;
-import org.motechproject.nms.region.repository.HealthFacilityTypeDataService;
-import org.motechproject.nms.region.repository.HealthSubFacilityDataService;
-import org.motechproject.nms.region.repository.LanguageDataService;
-import org.motechproject.nms.region.repository.StateDataService;
-import org.motechproject.nms.region.repository.TalukaDataService;
-import org.motechproject.nms.region.repository.VillageDataService;
+import org.motechproject.nms.region.repository.*;
+import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.region.service.HealthBlockService;
+import org.motechproject.nms.region.service.LanguageService;
 import org.motechproject.nms.testing.it.api.utils.RequestBuilder;
+import org.motechproject.nms.testing.it.utils.RegionHelper;
+import org.motechproject.nms.testing.it.utils.SubscriptionHelper;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
@@ -65,6 +69,8 @@ public class OpsControllerBundleIT extends BasePaxIT {
 
     private String addFlwEndpoint = String.format("http://localhost:%d/api/ops/createUpdateFlw",
             TestContext.getJettyPort());
+    private String releaseNumber = String.format("http://localhost:%d/api/ops/releaseNumber",
+            TestContext.getJettyPort());
     State state;
     District district;
     Taluka taluka;
@@ -82,21 +88,44 @@ public class OpsControllerBundleIT extends BasePaxIT {
     TestingService testingService;
 
     @Inject
-    LanguageDataService languageDataService;
-
-    @Inject
-    StateDataService stateDataService;
-
-    @Inject
     FrontLineWorkerDataService frontLineWorkerDataService;
 
     @Inject
     FlwErrorDataService flwErrorDataService;
 
+
+    @Inject
+    SubscriberService subscriberService;
+    @Inject
+    SubscriptionService subscriptionService;
+    @Inject
+    SubscriberDataService subscriberDataService;
+    @Inject
+    SubscriptionPackDataService subscriptionPackDataService;
+    @Inject
+    SubscriptionDataService subscriptionDataService;
+    @Inject
+    LanguageDataService languageDataService;
+    @Inject
+    LanguageService languageService;
+    @Inject
+    CircleDataService circleDataService;
+    @Inject
+    StateDataService stateDataService;
+    @Inject
+    DistrictDataService districtDataService;
+    @Inject
+    DistrictService districtService;
+
+
+    private RegionHelper rh;
+    private SubscriptionHelper sh;
+
     @Before
     public void setupTestData() {
         testingService.clearDatabase();
         initializeLocationData();
+        createSubscriberHelper();
     }
 
     // Test flw update with empty flw request
@@ -366,6 +395,42 @@ public class OpsControllerBundleIT extends BasePaxIT {
         district.setLanguage(language);
 
         transactionManager.commit(status);
+    }
+
+    // create subscriber with many subscriptions helper
+    private void createSubscriberHelper() {
+
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        // create subscription for a msisdn
+        rh = new RegionHelper(languageDataService, languageService, circleDataService, stateDataService,
+                districtDataService, districtService);
+
+        sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
+                languageDataService, languageService, circleDataService, stateDataService, districtDataService,
+                districtService);
+
+        Subscriber subscriber = subscriberDataService.create(new Subscriber(1000000000L));
+
+        subscriptionService.createSubscription(subscriber.getCallingNumber(), rh.hindiLanguage(),
+                sh.childPack(), SubscriptionOrigin.IVR);
+        subscriptionService.createSubscription(subscriber.getCallingNumber(), rh.hindiLanguage(),
+                sh.pregnancyPack(), SubscriptionOrigin.IVR);
+
+        transactionManager.commit(status);
+    }
+
+
+    // Test deactivation of specific msisdn
+    @Test
+    public void testDeactivateSpecificMsisdn() throws IOException, InterruptedException {
+
+        // Http Post request to deactivate subscriber
+        DeactivateSubscriptionContract deactivateSubscriptionContract = new DeactivateSubscriptionContract();
+        deactivateSubscriptionContract.setContactNumber(1000000000L);
+        HttpPost httpRequest = RequestBuilder.createPostRequest(releaseNumber, deactivateSubscriptionContract);
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpRequest, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
+
     }
 
 }
