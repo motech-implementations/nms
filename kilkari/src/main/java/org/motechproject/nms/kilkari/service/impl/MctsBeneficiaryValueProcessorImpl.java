@@ -23,6 +23,8 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
     @Autowired
     private MctsChildDataService mctsChildDataService;
 
+    private final int msisdnLength = 10;
+
     @Override
     public MctsMother getOrCreateMotherInstance(String value) {
         MctsMother mother = mctsMotherDataService.findByBeneficiaryId(value);
@@ -92,10 +94,10 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
 
     @Override
     public Long getMsisdnByString(String value) {
-        if (value.length() < 10) {
+        if (value.length() < msisdnLength) {
             throw new NumberFormatException("Beneficiary MSISDN too short, must be at least 10 digits");
         }
-        String msisdn = value.substring(value.length() - 10);
+        String msisdn = value.substring(value.length() - msisdnLength);
 
         return Long.parseLong(msisdn);
     }

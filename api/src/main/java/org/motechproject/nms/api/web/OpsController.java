@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -184,10 +185,9 @@ public class OpsController extends BaseController {
 
     @RequestMapping(value = "/deactivationRequest",
             method = RequestMethod.DELETE)
-    @ResponseStatus(HttpStatus.OK)
     @Transactional
-    public void deactivationRequest(@RequestParam(value = "msisdn") String msisdn) {
-        long phoneNumber  = Long.parseLong(msisdn);
+    public ResponseEntity deactivationRequest(@RequestParam(value = "msisdn") Long msisdn) {
+        Long phoneNumber = msisdn;
         log("REQUEST: /ops/deactivationRequest", String.format(
                 "callingNumber=%s",
                 LogHelper.obscure(phoneNumber)));
@@ -195,9 +195,10 @@ public class OpsController extends BaseController {
         validateField10Digits(failureReasons, contactNumber, phoneNumber);
         validateFieldPositiveLong(failureReasons, contactNumber, phoneNumber);
         if (failureReasons.length() > 0) {
-            throw new IllegalArgumentException(failureReasons.toString());
+            return new ResponseEntity(HttpStatus.BAD_REQUEST);
         }
-        subscriberService.deactivateAllSubscriptionsForSubscriber(phoneNumber);
+        HttpStatus status = subscriberService.deactivateAllSubscriptionsForSubscriber(phoneNumber);
+        return new ResponseEntity(status);
     }
 }
 

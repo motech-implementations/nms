@@ -61,7 +61,7 @@ public class SubscriptionManagerHandler {
         LOGGER.debug("Scheduled cron job with subject {} and expression {}", KilkariConstants.SUBSCRIPTION_UPKEEP_SUBJECT, cronExpression);
     }
 
-    @MotechListener(subjects = { KilkariConstants.SUBSCRIPTION_UPKEEP_SUBJECT})
+    @MotechListener(subjects = { KilkariConstants.SUBSCRIPTION_UPKEEP_SUBJECT })
     public void upkeepSubscriptions(MotechEvent event) {
         LOGGER.debug("Received event for subscription upkeep");
         DateTime tomorrow = DateTime.now().plusDays(1).withTimeAtStartOfDay();

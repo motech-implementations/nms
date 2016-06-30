@@ -3,17 +3,7 @@ package org.motechproject.nms.kilkari.service.impl;
 import org.datanucleus.store.rdbms.query.ForwardQueryResult;
 import org.joda.time.DateTime;
 import org.motechproject.mds.query.SqlQueryExecution;
-import org.motechproject.nms.kilkari.domain.DeactivationReason;
-import org.motechproject.nms.kilkari.domain.MctsBeneficiary;
-import org.motechproject.nms.kilkari.domain.MctsChild;
-import org.motechproject.nms.kilkari.domain.MctsMother;
-import org.motechproject.nms.kilkari.domain.Subscriber;
-import org.motechproject.nms.kilkari.domain.Subscription;
-import org.motechproject.nms.kilkari.domain.SubscriptionError;
-import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
-import org.motechproject.nms.kilkari.domain.SubscriptionPack;
-import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
-import org.motechproject.nms.kilkari.domain.SubscriptionRejectionReason;
+import org.motechproject.nms.kilkari.domain.*;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
@@ -28,6 +18,7 @@ import org.motechproject.nms.region.domain.Language;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -368,19 +359,24 @@ public class SubscriberServiceImpl implements SubscriberService {
     }
 
     @Override
-    public void deactivateAllSubscriptionsForSubscriber(long callingNumber) {
+    public HttpStatus deactivateAllSubscriptionsForSubscriber(long callingNumber) {
         LOGGER.info("Recieved Release Number {} for Deactivation.", callingNumber);
         Subscriber subscriberByMsisdn = this.getSubscriber(callingNumber);
         if (subscriberByMsisdn == null) {
             LOGGER.info("Subscriber for msisdn {} is not found." , callingNumber);
-            return;
+            return HttpStatus.NOT_FOUND;
         }
         LOGGER.info("Found Subscriber for msisdn {} .", callingNumber);
+        int counter = 0;
         for (Subscription subscription : subscriberByMsisdn.getAllSubscriptions()) {
-            LOGGER.info("Deactivating Subscrition with start date {} for msisdn .", subscription.getStartDate());
-            subscriptionService.deactivateSubscription(subscription, DeactivationReason.MOHFW_REQUEST);
-            LOGGER.info("Deactivated Subscrition with start date {} for msisdn .", subscription.getStartDate());
+            if ((subscription.getStatus() == SubscriptionStatus.PENDING_ACTIVATION) || (subscription.getStatus() == SubscriptionStatus.ACTIVE) || (subscription.getStatus() == SubscriptionStatus.HOLD)) {
+                LOGGER.info("Deactivating Subscrition with Id {} for msisdn.", subscription.getSubscriptionId());
+                subscriptionService.deactivateSubscription(subscription, DeactivationReason.WEEKLY_CALLS_NOT_ANSWERED);
+                counter++;
+            }
         }
+        LOGGER.info("Deactivated {} Subscritions for msisdn {}.", counter, callingNumber);
+        return HttpStatus.OK;
     }
 
 }

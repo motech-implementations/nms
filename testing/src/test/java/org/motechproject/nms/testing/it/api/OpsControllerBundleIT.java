@@ -5,10 +5,13 @@ import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.URIException;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.regexp.RE;
+import org.joda.time.DateTime;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -18,6 +21,7 @@ import org.motechproject.nms.flw.domain.FlwErrorReason;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.repository.FlwErrorDataService;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
+import org.motechproject.nms.kilkari.domain.MctsMother;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.repository.*;
@@ -125,6 +129,8 @@ public class OpsControllerBundleIT extends BasePaxIT {
     DistrictDataService districtDataService;
     @Inject
     DistrictService districtService;
+    @Inject
+    MctsMotherDataService mctsMotherDataService;
 
 
     private RegionHelper rh;
@@ -418,28 +424,50 @@ public class OpsControllerBundleIT extends BasePaxIT {
                 languageDataService, languageService, circleDataService, stateDataService, districtDataService,
                 districtService);
 
-        Subscriber subscriber = subscriberDataService.create(new Subscriber(1000000000L));
+        Subscriber subscriberIVR = subscriberDataService.create(new Subscriber(1000000000L));
+        subscriberIVR.setLastMenstrualPeriod(DateTime.now().plusWeeks(70));
+        subscriberIVR = subscriberDataService.update(subscriberIVR);
 
-        subscriptionService.createSubscription(subscriber.getCallingNumber(), rh.hindiLanguage(),
-                sh.childPack(), SubscriptionOrigin.IVR);
-        subscriptionService.createSubscription(subscriber.getCallingNumber(), rh.hindiLanguage(),
+       subscriptionService.createSubscription(subscriberIVR.getCallingNumber(), rh.kannadaLanguage(), rh.karnatakaCircle(),
                 sh.pregnancyPack(), SubscriptionOrigin.IVR);
 
+        Subscriber subscriberMCTS = subscriberDataService.create(new Subscriber(2000000000L));
+        subscriberMCTS.setLastMenstrualPeriod(DateTime.now().plusWeeks(70));
+        subscriberMCTS = subscriberDataService.update(subscriberMCTS);
+        subscriptionService.createSubscription(subscriberMCTS.getCallingNumber(), rh.kannadaLanguage(), rh.karnatakaCircle(),
+                sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
         transactionManager.commit(status);
     }
 
 
-    // Test deactivation of specific msisdn
-    @Test
-    public void testDeactivateSpecificMsisdn() throws IOException, InterruptedException, URISyntaxException {
-
-        // Http Delete request to deactivate subscriber
-        Map<String, String> params = new LinkedHashMap<>();
-        params.put("msisdn", "1000000000");
-        HttpDelete httpRequest = RequestBuilder.createDeleteRequest(RequestBuilder.createUriWithQueryParamters("localhost",TestContext.getJettyPort()
-        , "/api/ops/deactivationRequest", params));
-        assertTrue(SimpleHttpClient.execHttpRequest(httpRequest, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
-
+    public HttpDelete FormHttpRequest(Long msisdn) {
+        StringBuilder sb = new StringBuilder(deactivationRequest);
+        sb.append("?");
+        sb.append(String.format("msisdn=%s", msisdn.toString()));
+        HttpDelete httpRequest = new HttpDelete(sb.toString());
+        return httpRequest;
     }
 
+     //Test deactivation of specific msisdn
+    @Test
+    public void testDeactivateSpecificValidMsisdn() throws IOException, InterruptedException, URISyntaxException {
+
+        HttpDelete httpRequestIVR = FormHttpRequest(1000000000L);
+        assertTrue(SimpleHttpClient.execHttpRequest(httpRequestIVR, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
+
+        HttpDelete httpRequestMCTS = FormHttpRequest(2000000000L);
+        assertTrue(SimpleHttpClient.execHttpRequest(httpRequestMCTS, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
+    }
+
+    @Test
+    public void testDeactivateSpecificValidNotInDatabaseMsisdn() throws IOException, InterruptedException, URISyntaxException {
+        HttpDelete httpRequest = FormHttpRequest(3000000000L);
+        assertTrue(SimpleHttpClient.execHttpRequest(httpRequest, HttpStatus.SC_NOT_FOUND, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
+    }
+
+    @Test
+    public void testDeactivateSpecificInValidMsisdn() throws IOException, InterruptedException, URISyntaxException {
+        HttpDelete httpRequest = FormHttpRequest(1000-00L);
+        assertTrue(SimpleHttpClient.execHttpRequest(httpRequest, HttpStatus.SC_BAD_REQUEST, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
+    }
 }

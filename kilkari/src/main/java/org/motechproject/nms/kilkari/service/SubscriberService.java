@@ -8,6 +8,7 @@ import org.motechproject.nms.kilkari.domain.MctsChild;
 import org.motechproject.nms.kilkari.domain.MctsMother;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
+import org.springframework.http.HttpStatus;
 
 /**
  * Service interface for managing Kilkari subscribers
@@ -82,6 +83,6 @@ public interface SubscriberService {
      * Deactivate all Subscriptions of a given callingNumber on MOHFW request
      * @param callingNumber
      */
-    void deactivateAllSubscriptionsForSubscriber(long callingNumber);
+    HttpStatus deactivateAllSubscriptionsForSubscriber(long callingNumber);
 
 }

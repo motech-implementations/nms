@@ -13,5 +13,5 @@ public enum DeactivationReason {
     INVALID_NUMBER, // See https://github.com/motech-implementations/mim/issues/169
     DO_NOT_DISTURB,
     MCTS_UPDATE,
-    MOHFW_REQUEST
+    WEEKLY_CALLS_NOT_ANSWERED
 }

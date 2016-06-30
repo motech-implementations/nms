@@ -67,7 +67,7 @@ public class CsrVerifierServiceImpl implements CsrVerifierService {
         eventRelay.broadcastEventMessage(new MotechEvent(KilkariConstants.LANGUAGE_CACHE_EVICT_SUBJECT));
     }
 
-    @MotechListener(subjects = { KilkariConstants.CSR_VERIFIER_CACHE_EVICT_SUBJECT})
+    @MotechListener(subjects = { KilkariConstants.CSR_VERIFIER_CACHE_EVICT_SUBJECT })
     public void cacheEvict(MotechEvent event) {
         cacheEvict();
     }

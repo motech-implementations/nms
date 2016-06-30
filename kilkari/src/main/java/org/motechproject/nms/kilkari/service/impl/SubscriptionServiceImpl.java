@@ -308,6 +308,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private Subscription createSubscriptionViaMcts(Subscriber subscriber, SubscriptionPack pack) {
 
         if (!enrollmentPreconditionCheck(subscriber, pack)) {
+            LOGGER.info("PreCondition test passed");
             return null;
         }
 
@@ -325,6 +326,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             subscription.setStatus(SubscriptionStatus.HOLD);
         }
 
+        LOGGER.info("Creating Subscription ()", subscription.getSubscriptionId());
         return subscriptionDataService.create(subscription);
     }
 
@@ -578,10 +580,11 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     @Override
     public void deactivateSubscription(Subscription subscription, DeactivationReason reason) {
         if (subscription != null && (subscription.getStatus() == SubscriptionStatus.ACTIVE ||
-                subscription.getStatus() == SubscriptionStatus.PENDING_ACTIVATION)) {
+                subscription.getStatus() == SubscriptionStatus.PENDING_ACTIVATION || subscription.getStatus() == SubscriptionStatus.HOLD)) {
             subscription.setStatus(SubscriptionStatus.DEACTIVATED);
             subscription.setDeactivationReason(reason);
-            subscriptionDataService.update(subscription);
+            Subscription subscriptionDeativated = subscriptionDataService.update(subscription);
+            LOGGER.info("Deactivated Subscription "+ subscriptionDeativated.getSubscriptionId());
 
             // Let's not retry calling subscribers with deactivated subscriptions
             deleteCallRetry(subscription.getSubscriptionId());
@@ -672,7 +675,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
 
-    @MotechListener(subjects = { KilkariConstants.PACK_CACHE_EVICT_MESSAGE_SUBJECT})
+    @MotechListener(subjects = { KilkariConstants.PACK_CACHE_EVICT_MESSAGE_SUBJECT })
     @CacheEvict(value = {"pack" }, allEntries = true)
     public void cacheEvict(MotechEvent event) {
         csrVerifierService.cacheEvict();

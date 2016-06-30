@@ -46,7 +46,7 @@ public class Subscriber extends MdsEntity {
     @Field
     private Circle circle;
 
-    //TODO: making this a bi-directional relationship until MOTECH-1638 is fixed. See #31.
+    // TODO: making this a bi-directional relationship until MOTECH-1638 is fixed. See #31.
     @Field
     @Persistent(mappedBy = "subscriber", defaultFetchGroup = "false")
     @JsonManagedReference
@@ -148,8 +148,7 @@ public class Subscriber extends MdsEntity {
     @Ignore
     @JsonIgnore
     public Set<Subscription> getAllSubscriptions() {
-        // TODO: I have no idea why I need to do this, but returning just this.subscriptions always results in
-        // an empty set. Bi-directional relationship bug?
+        // TODO: I have no idea why I need to do this, but returning just this.subscriptions always results in an empty set. Bi-directional relationship bug?
         Set<Subscription> allSubscriptions = new HashSet<>();
 
         Iterator<Subscription> subscriptionIterator = subscriptions.iterator();
