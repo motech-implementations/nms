@@ -71,6 +71,7 @@ public final class KilkariConstants {
 
     // Log constants
     public static final String MORE_THAN_ONE_SUBSCRIBER = "More than one subscriber returned for callingNumber %s";
+    public static final String SUBSCRIBER_NOT_FOUND = "callingNumber %s not Found";
     public static final String SQL_QUERY_LOG = "SQL QUERY: {}";
 
     // Message constants

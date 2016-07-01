@@ -164,6 +164,7 @@
                                     <summaryFile>target/failsafe-reports/failsafe-summary-it.xml</summaryFile>
                                     <systemPropertiesFile>${modules.root.dir}/maven.properties</systemPropertiesFile>
                                     <runOrder>random</runOrder>
+				    <argLine>-Xmx2048m -XX:MaxPermSize=2048m</argLine>
                                 </configuration>
                             </execution>
                             <execution>

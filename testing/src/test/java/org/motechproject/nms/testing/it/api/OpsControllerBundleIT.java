@@ -21,9 +21,7 @@ import org.motechproject.nms.flw.domain.FlwErrorReason;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.repository.FlwErrorDataService;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
-import org.motechproject.nms.kilkari.domain.MctsMother;
-import org.motechproject.nms.kilkari.domain.Subscriber;
-import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
+import org.motechproject.nms.kilkari.domain.*;
 import org.motechproject.nms.kilkari.repository.*;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
@@ -60,10 +58,7 @@ import javax.inject.Inject;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -440,6 +435,28 @@ public class OpsControllerBundleIT extends BasePaxIT {
     }
 
 
+    public void testifSubscriberDectivated() {
+
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
+        Subscriber subscriberIVR = subscriberDataService.findByNumber(1000000000L);
+        Set<Subscription> subscriptionsIVR = ( Set<Subscription> ) subscriberDataService.getDetachedField(subscriberIVR, "subscriptions");
+        for (Subscription subscriptionIVR : subscriptionsIVR) {
+            Assert.assertTrue(subscriptionIVR.getDeactivationReason().equals(DeactivationReason.WEEKLY_CALLS_NOT_ANSWERED));
+            Assert.assertTrue(subscriptionIVR.getStatus().equals(SubscriptionStatus.DEACTIVATED));
+        }
+
+        Subscriber subscriberMCTS = subscriberDataService.findByNumber(2000000000L);
+        Set<Subscription> subscriptionsMCTS = ( Set<Subscription> ) subscriberDataService.getDetachedField(subscriberMCTS, "subscriptions");
+        for (Subscription subscriptionMCTS : subscriptionsMCTS) {
+            Assert.assertTrue(subscriptionMCTS.getDeactivationReason().equals(DeactivationReason.WEEKLY_CALLS_NOT_ANSWERED));
+            Assert.assertTrue(subscriptionMCTS.getStatus().equals(SubscriptionStatus.DEACTIVATED));
+        }
+        transactionManager.commit(status);
+
+    }
+
+
     public HttpDelete FormHttpRequest(Long msisdn) {
         StringBuilder sb = new StringBuilder(deactivationRequest);
         sb.append("?");
@@ -457,12 +474,14 @@ public class OpsControllerBundleIT extends BasePaxIT {
 
         HttpDelete httpRequestMCTS = FormHttpRequest(2000000000L);
         assertTrue(SimpleHttpClient.execHttpRequest(httpRequestMCTS, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
+
+        testifSubscriberDectivated();
     }
 
     @Test
     public void testDeactivateSpecificValidNotInDatabaseMsisdn() throws IOException, InterruptedException, URISyntaxException {
         HttpDelete httpRequest = FormHttpRequest(3000000000L);
-        assertTrue(SimpleHttpClient.execHttpRequest(httpRequest, HttpStatus.SC_NOT_FOUND, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
+        assertTrue(SimpleHttpClient.execHttpRequest(httpRequest, HttpStatus.SC_BAD_REQUEST, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
     }
 
     @Test
