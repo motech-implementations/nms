@@ -65,6 +65,7 @@ public final class KilkariConstants {
     public static final int CHILD_PACK_LENGTH_WEEKS = 48;
     public static final int CHILD_PACK_LENGTH_DAYS = CHILD_PACK_LENGTH_WEEKS * DAY_IN_WEEK;
     public static final Long DEFAULT_MAX_ACTIVE_SUBSCRIPTION_CAP = 1000000L;
+    public static final int MSISDN_LENGTH = 10;
 
     // SQL constants
     public static final String SELECT_SUBSCRIBERS_BY_NUMBER = "select * from nms_subscribers where callingNumber = ?";

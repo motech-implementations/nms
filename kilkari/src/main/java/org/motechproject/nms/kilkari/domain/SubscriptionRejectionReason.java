@@ -9,5 +9,6 @@ public enum SubscriptionRejectionReason {
     MISSING_LMP,
     INVALID_DOB,
     INVALID_LMP,
-    MISSING_MSISDN;
+    MISSING_MSISDN,
+    WEEKLY_CALLS_NOT_ANSWERED;
 }

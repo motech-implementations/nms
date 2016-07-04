@@ -11,6 +11,7 @@ import org.motechproject.nms.kilkari.exception.InvalidReferenceDateException;
 import org.motechproject.nms.kilkari.repository.MctsChildDataService;
 import org.motechproject.nms.kilkari.repository.MctsMotherDataService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor;
+import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -22,8 +23,6 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
 
     @Autowired
     private MctsChildDataService mctsChildDataService;
-
-    private final int msisdnLength = 10;
 
     @Override
     public MctsMother getOrCreateMotherInstance(String value) {
@@ -94,10 +93,10 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
 
     @Override
     public Long getMsisdnByString(String value) {
-        if (value.length() < msisdnLength) {
+        if (value.length() < KilkariConstants.MSISDN_LENGTH) {
             throw new NumberFormatException("Beneficiary MSISDN too short, must be at least 10 digits");
         }
-        String msisdn = value.substring(value.length() - msisdnLength);
+        String msisdn = value.substring(value.length() - KilkariConstants.MSISDN_LENGTH);
 
         return Long.parseLong(msisdn);
     }

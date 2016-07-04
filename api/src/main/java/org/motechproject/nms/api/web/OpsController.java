@@ -187,17 +187,16 @@ public class OpsController extends BaseController {
     @ResponseStatus(HttpStatus.OK)
     @Transactional
     public void deactivationRequest(@RequestParam(value = "msisdn") Long msisdn) {
-        Long phoneNumber = msisdn;
         log("REQUEST: /ops/deactivationRequest", String.format(
                 "callingNumber=%s",
-                LogHelper.obscure(phoneNumber)));
+                LogHelper.obscure(msisdn)));
         StringBuilder failureReasons = new StringBuilder();
-        validateField10Digits(failureReasons, contactNumber, phoneNumber);
-        validateFieldPositiveLong(failureReasons, contactNumber, phoneNumber);
+        validateField10Digits(failureReasons, contactNumber, msisdn);
+        validateFieldPositiveLong(failureReasons, contactNumber, msisdn);
         if (failureReasons.length() > 0) {
             throw new IllegalArgumentException(failureReasons.toString());
         }
-        subscriberService.deactivateAllSubscriptionsForSubscriber(phoneNumber);
+        subscriberService.deactivateAllSubscriptionsForSubscriber(msisdn);
     }
 }
 

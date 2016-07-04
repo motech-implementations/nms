@@ -15,10 +15,12 @@ import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.domain.SubscriptionRejectionReason;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
+import org.motechproject.nms.kilkari.domain.WeeklyCallsNotAnsweredMsisdnRecord;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
+import org.motechproject.nms.kilkari.repository.WeeklyCallsNotAnsweredMsisdnRecordDataService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
@@ -50,17 +52,20 @@ public class SubscriberServiceImpl implements SubscriberService {
     private SubscriptionDataService subscriptionDataService;
     private SubscriptionErrorDataService subscriptionErrorDataService;
     private SubscriptionPackDataService subscriptionPackDataService;
+    private WeeklyCallsNotAnsweredMsisdnRecordDataService weeklyCallsNotAnsweredMsisdnRecordDataService;
 
     @Autowired
     public SubscriberServiceImpl(SubscriberDataService subscriberDataService, SubscriptionService subscriptionService,
                                  SubscriptionDataService subscriptionDataService,
                                  SubscriptionErrorDataService subscriptionErrorDataService,
-                                 SubscriptionPackDataService subscriptionPackDataService) {
+                                 SubscriptionPackDataService subscriptionPackDataService,
+                                 WeeklyCallsNotAnsweredMsisdnRecordDataService weeklyCallsNotAnsweredMsisdnRecordDataService) {
         this.subscriberDataService = subscriberDataService;
         this.subscriptionService = subscriptionService;
         this.subscriptionDataService = subscriptionDataService;
         this.subscriptionErrorDataService = subscriptionErrorDataService;
         this.subscriptionPackDataService = subscriptionPackDataService;
+        this.weeklyCallsNotAnsweredMsisdnRecordDataService = weeklyCallsNotAnsweredMsisdnRecordDataService;
     }
 
     @Override
@@ -386,6 +391,9 @@ public class SubscriberServiceImpl implements SubscriberService {
             }
         }
         LOGGER.info("Deactivated {} Subscritions for msisdn {}.", counter, callingNumber);
+        // Add callingNumber to WeeklyCallsNotAnsweredMsisdnRecord (tableName = "nms_weekly_calls_not_answered_msisdn")
+        weeklyCallsNotAnsweredMsisdnRecordDataService.create(new WeeklyCallsNotAnsweredMsisdnRecord(callingNumber, DateTime.now()));
+        LOGGER.info("Added callingNumber {} to WeeklyCallsNotAnsweredMsisdnRecord.", callingNumber);
     }
 
 }

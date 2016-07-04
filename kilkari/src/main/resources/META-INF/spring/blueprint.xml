@@ -111,6 +111,10 @@
     <osgi:reference id="schedulerService"
                     interface="org.motechproject.scheduler.service.MotechSchedulerService" />
 
+    <!-- Weekly Calls Not Answered Service -->
+    <osgi:reference id="weeklyCallsNotAnsweredMsisdnRecordDataService"
+                    interface="org.motechproject.nms.kilkari.repository.WeeklyCallsNotAnsweredMsisdnRecordDataService" />
+
     <!-- CSV Audit Service -->
     <osgi:reference id="csvAuditService" interface="org.motechproject.nms.csv.service.CsvAuditService" />
 

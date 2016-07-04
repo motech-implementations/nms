@@ -126,6 +126,8 @@ public class OpsControllerBundleIT extends BasePaxIT {
     DistrictService districtService;
     @Inject
     MctsMotherDataService mctsMotherDataService;
+    @Inject
+    WeeklyCallsNotAnsweredMsisdnRecordDataService weeklyCallsNotAnsweredMsisdnRecordDataService;
 
 
     private RegionHelper rh;
@@ -135,7 +137,6 @@ public class OpsControllerBundleIT extends BasePaxIT {
     public void setupTestData() {
         testingService.clearDatabase();
         initializeLocationData();
-        createSubscriberHelper();
     }
 
     // Test flw update with empty flw request
@@ -414,19 +415,18 @@ public class OpsControllerBundleIT extends BasePaxIT {
         // create subscription for a msisdn
         rh = new RegionHelper(languageDataService, languageService, circleDataService, stateDataService,
                 districtDataService, districtService);
-
         sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
                 languageDataService, languageService, circleDataService, stateDataService, districtDataService,
                 districtService);
 
-        Subscriber subscriberIVR = subscriberDataService.create(new Subscriber(1000000000L));
+        Subscriber subscriberIVR = subscriberDataService.create(new Subscriber(5000000000L));
         subscriberIVR.setLastMenstrualPeriod(DateTime.now().plusWeeks(70));
         subscriberIVR = subscriberDataService.update(subscriberIVR);
 
        subscriptionService.createSubscription(subscriberIVR.getCallingNumber(), rh.kannadaLanguage(), rh.karnatakaCircle(),
                 sh.pregnancyPack(), SubscriptionOrigin.IVR);
 
-        Subscriber subscriberMCTS = subscriberDataService.create(new Subscriber(2000000000L));
+        Subscriber subscriberMCTS = subscriberDataService.create(new Subscriber(6000000000L));
         subscriberMCTS.setLastMenstrualPeriod(DateTime.now().plusWeeks(70));
         subscriberMCTS = subscriberDataService.update(subscriberMCTS);
         subscriptionService.createSubscription(subscriberMCTS.getCallingNumber(), rh.kannadaLanguage(), rh.karnatakaCircle(),
@@ -435,18 +435,18 @@ public class OpsControllerBundleIT extends BasePaxIT {
     }
 
 
-    public void testifSubscriberDectivated() {
+    public void testifAllSubscriberDectivated() {
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
-        Subscriber subscriberIVR = subscriberDataService.findByNumber(1000000000L);
+        Subscriber subscriberIVR = subscriberDataService.findByNumber(5000000000L);
         Set<Subscription> subscriptionsIVR = ( Set<Subscription> ) subscriberDataService.getDetachedField(subscriberIVR, "subscriptions");
         for (Subscription subscriptionIVR : subscriptionsIVR) {
             Assert.assertTrue(subscriptionIVR.getDeactivationReason().equals(DeactivationReason.WEEKLY_CALLS_NOT_ANSWERED));
             Assert.assertTrue(subscriptionIVR.getStatus().equals(SubscriptionStatus.DEACTIVATED));
         }
 
-        Subscriber subscriberMCTS = subscriberDataService.findByNumber(2000000000L);
+        Subscriber subscriberMCTS = subscriberDataService.findByNumber(6000000000L);
         Set<Subscription> subscriptionsMCTS = ( Set<Subscription> ) subscriberDataService.getDetachedField(subscriberMCTS, "subscriptions");
         for (Subscription subscriptionMCTS : subscriptionsMCTS) {
             Assert.assertTrue(subscriptionMCTS.getDeactivationReason().equals(DeactivationReason.WEEKLY_CALLS_NOT_ANSWERED));
@@ -457,36 +457,45 @@ public class OpsControllerBundleIT extends BasePaxIT {
     }
 
 
-    public HttpDelete FormHttpRequest(Long msisdn) {
+    private void testDeactivationRequestByMsisdn(Long msisdn, int status) throws IOException, InterruptedException, URISyntaxException {
         StringBuilder sb = new StringBuilder(deactivationRequest);
         sb.append("?");
         sb.append(String.format("msisdn=%s", msisdn.toString()));
         HttpDelete httpRequest = new HttpDelete(sb.toString());
-        return httpRequest;
+        assertTrue(SimpleHttpClient.execHttpRequest(httpRequest, status, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
     }
 
-     //Test deactivation of specific msisdn
+     //Test deactivation of specific msisdn - 5000000000L as IVR and 6000000000L as MCTS import
     @Test
     public void testDeactivateSpecificValidMsisdn() throws IOException, InterruptedException, URISyntaxException {
-
-        HttpDelete httpRequestIVR = FormHttpRequest(1000000000L);
-        assertTrue(SimpleHttpClient.execHttpRequest(httpRequestIVR, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
-
-        HttpDelete httpRequestMCTS = FormHttpRequest(2000000000L);
-        assertTrue(SimpleHttpClient.execHttpRequest(httpRequestMCTS, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
-
-        testifSubscriberDectivated();
+        createSubscriberHelper();
+        testDeactivationRequestByMsisdn(5000000000L, HttpStatus.SC_OK);
+        testDeactivationRequestByMsisdn(6000000000L, HttpStatus.SC_OK);
+        testifAllSubscriberDectivated();
+        testReactivationDisabledAfterDeactivation(5000000000L);
+        testReactivationDisabledAfterDeactivation(6000000000L);
     }
 
     @Test
     public void testDeactivateSpecificValidNotInDatabaseMsisdn() throws IOException, InterruptedException, URISyntaxException {
-        HttpDelete httpRequest = FormHttpRequest(3000000000L);
-        assertTrue(SimpleHttpClient.execHttpRequest(httpRequest, HttpStatus.SC_BAD_REQUEST, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
+        testDeactivationRequestByMsisdn(7000000000L, HttpStatus.SC_BAD_REQUEST);
     }
 
     @Test
     public void testDeactivateSpecificInValidMsisdn() throws IOException, InterruptedException, URISyntaxException {
-        HttpDelete httpRequest = FormHttpRequest(1000-00L);
-        assertTrue(SimpleHttpClient.execHttpRequest(httpRequest, HttpStatus.SC_BAD_REQUEST, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
+        testDeactivationRequestByMsisdn(1000-00L, HttpStatus.SC_BAD_REQUEST);
+    }
+
+    private void testReactivationDisabledAfterDeactivation(long msisdn) throws IOException, InterruptedException, URISyntaxException {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        // Testing weekly_calls_not_answered record with the given number
+        WeeklyCallsNotAnsweredMsisdnRecord weeklyCallsNotAnsweredMsisdnRecord = weeklyCallsNotAnsweredMsisdnRecordDataService.findByNumber(msisdn);
+        assertNotNull(weeklyCallsNotAnsweredMsisdnRecord);
+
+        Subscriber subscriber = subscriberDataService.findByNumber(msisdn);
+        Subscription subscription = subscriptionService.createSubscription(subscriber.getCallingNumber(), rh.kannadaLanguage(), rh.karnatakaCircle(),
+                sh.pregnancyPack(), SubscriptionOrigin.IVR);
+        Assert.assertNull(subscription);
+        transactionManager.commit(status);
     }
 }
