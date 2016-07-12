@@ -1,10 +1,15 @@
 package org.motechproject.nms.testing.it.api;
 
 import org.apache.commons.httpclient.HttpStatus;
+import org.apache.commons.io.IOUtils;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.motechproject.mtraining.domain.Bookmark;
+import org.motechproject.mtraining.service.BookmarkService;
 import org.motechproject.nms.api.web.contract.AddFlwRequest;
 import org.motechproject.nms.flw.domain.FlwError;
 import org.motechproject.nms.flw.domain.FlwErrorReason;
@@ -46,7 +51,9 @@ import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import javax.inject.Inject;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -65,6 +72,7 @@ public class OpsControllerBundleIT extends BasePaxIT {
 
     private String addFlwEndpoint = String.format("http://localhost:%d/api/ops/createUpdateFlw",
             TestContext.getJettyPort());
+
     State state;
     District district;
     Taluka taluka;
@@ -92,6 +100,9 @@ public class OpsControllerBundleIT extends BasePaxIT {
 
     @Inject
     FlwErrorDataService flwErrorDataService;
+
+    @Inject
+    BookmarkService bookmarkService;
 
     @Before
     public void setupTestData() {
@@ -283,6 +294,49 @@ public class OpsControllerBundleIT extends BasePaxIT {
 
         FrontLineWorker flw = frontLineWorkerDataService.findByContactNumber(9876543210L);
         assertNull("Taluka update rejected", flw.getTaluka());
+    }
+
+    @Test
+    public void testGetScoresForUser() throws IOException, InterruptedException {
+        Long callingNumber = 9876543210L;
+        String getScoresEndpoint = String.format("http://localhost:%d/api/ops/getScores?callingNumber=%d",
+                TestContext.getJettyPort(), callingNumber);
+        Map<String, Integer> scores = new HashMap<>();
+        scores.put("1", 4);
+        scores.put("2", 3);
+        Map<String, Object> progress = new HashMap<>();
+        progress.put("scoresByChapter", scores);
+        Bookmark newBookmark = new Bookmark(callingNumber.toString(), null, null, null, progress);
+        bookmarkService.createBookmark(newBookmark);
+
+        HttpGet httpGet = RequestBuilder.createGetRequest(getScoresEndpoint);
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
+        assertNotNull(response);
+        assertEquals(200, response.getStatusLine().getStatusCode());
+        String body = IOUtils.toString(response.getEntity().getContent());
+        assertTrue(body.contains("1=4"));
+        assertTrue(body.contains("2=3"));
+    }
+
+    @Test
+    public void testGetScoresForUserNoScores() throws IOException, InterruptedException {
+        Long callingNumber = 9876543210L;
+        String getScoresEndpoint = String.format("http://localhost:%d/api/ops/getScores?callingNumber=%d",
+                TestContext.getJettyPort(), 9976543210L);
+        Map<String, Integer> scores = new HashMap<>();
+        scores.put("1", 4);
+        scores.put("2", 3);
+        Map<String, Object> progress = new HashMap<>();
+        progress.put("scoresByChapter", scores);
+        Bookmark newBookmark = new Bookmark(callingNumber.toString(), null, null, null, progress);
+        bookmarkService.createBookmark(newBookmark);
+
+        HttpGet httpGet = RequestBuilder.createGetRequest(getScoresEndpoint);
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
+        assertNotNull(response);
+        assertEquals(200, response.getStatusLine().getStatusCode());
+        String body = IOUtils.toString(response.getEntity().getContent());
+        assertEquals("{000000}", body);
     }
 
     private void createFlwHelper(String name, Long phoneNumber, String mctsFlwId) {

@@ -175,5 +175,14 @@ public class OpsController extends BaseController {
         log("RESPONSE: /ops/getbookmark", String.format("bookmark=%s", ret.toString()));
         return ret;
     }
+
+    @RequestMapping("/getScores")
+    @ResponseBody
+    public String getScoresForNumber(@RequestParam(required = true) Long callingNumber) {
+        LOGGER.info("/getScores Getting scores for user");
+        String scores = mobileAcademyService.getScoresForUser(callingNumber);
+        LOGGER.info("Scores: " + scores);
+        return scores;
+    }
 }
 

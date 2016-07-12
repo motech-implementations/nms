@@ -442,4 +442,19 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
         courseDto.setContent(course.getContent());
         return courseDto;
     }
+
+    public String getScoresForUser(Long callingNumber) {
+        LOGGER.debug("Fetching scores in service");
+        String scores = "{000000}";
+        Bookmark existingBookmark = bookmarkService.getLatestBookmarkByUserId(callingNumber.toString());
+        if (existingBookmark != null && existingBookmark.getProgress() != null) {
+            Map<String, Integer> scoreMap = (Map<String, Integer>) existingBookmark.getProgress().get(SCORES_KEY);
+            scores = scoreMap.toString();
+            LOGGER.debug("Returning real scores for user");
+        } else {
+            LOGGER.debug("No scores found for user");
+        }
+
+        return scores;
+    }
 }
