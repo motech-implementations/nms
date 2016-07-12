@@ -115,11 +115,8 @@
     <osgi:reference id="blockedMsisdnRecordDataService"
                     interface="org.motechproject.nms.kilkari.repository.BlockedMsisdnRecordDataService" />
 
-    <osgi:reference id="deactivationSubscriptionRecordDataService"
-                    interface="org.motechproject.nms.kilkari.repository.DeactivationSubscriptionRecordDataService" />
-
-    <osgi:service ref="deactivationAuditService"
-                    interface="org.motechproject.nms.kilkari.service.DeactivationAuditService" />
+    <osgi:reference id="deactivationSubscriptionAuditRecordDataService"
+                    interface="org.motechproject.nms.kilkari.repository.DeactivationSubscriptionAuditRecordDataService" />
 
     <!-- CSV Audit Service -->
     <osgi:reference id="csvAuditService" interface="org.motechproject.nms.csv.service.CsvAuditService" />

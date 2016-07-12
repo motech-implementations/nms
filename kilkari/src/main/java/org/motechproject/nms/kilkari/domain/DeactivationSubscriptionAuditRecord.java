@@ -7,7 +7,7 @@ import javax.jdo.annotations.Column;
 import javax.validation.constraints.NotNull;
 
 @Entity(tableName = "nms_deactivation_subscription_audit_records")
-public class DeactivationSubscriptionRecord {
+public class DeactivationSubscriptionAuditRecord {
 
     public static final int MAX_OUTCOME_LENGTH = 1000; // Includes the "Failure: " string
 
@@ -31,18 +31,29 @@ public class DeactivationSubscriptionRecord {
     @NotNull
     private SubscriptionStatus preStatus;
 
-    public SubscriptionStatus getStatus() {
+    @Field
+    @NotNull
+    private AuditStatus auditStatus;
+
+    @Field
+    @Column(length = MAX_OUTCOME_LENGTH)
+    private String outcome;
+
+    public SubscriptionStatus getPreStatus() {
         return preStatus;
     }
 
-    public void setStatus(SubscriptionStatus status) {
+    public void setPreStatus(SubscriptionStatus preStatus) {
         this.preStatus = preStatus;
     }
 
-    @Field
-    @NotNull
-    @Column(length = MAX_OUTCOME_LENGTH)
-    private String outcome;
+    public AuditStatus getAuditStatus() {
+        return auditStatus;
+    }
+
+    public void setAuditStatus(AuditStatus auditStatus) {
+        this.auditStatus = auditStatus;
+    }
 
     public String getOutcome() {
         return outcome;
@@ -84,12 +95,13 @@ public class DeactivationSubscriptionRecord {
         this.msisdn = msisdn;
     }
 
-    public DeactivationSubscriptionRecord(String subscriptionId, Long subscriberId, SubscriptionOrigin subscriptionOrigin, SubscriptionStatus preStatus, Long msisdn, String outcome) {
+    public DeactivationSubscriptionAuditRecord(String subscriptionId, Long subscriberId, SubscriptionOrigin subscriptionOrigin, Long msisdn, SubscriptionStatus preStatus, AuditStatus auditStatus, String outcome) {
         this.subscriptionId = subscriptionId;
         this.subscriberId = subscriberId;
         this.subscriptionOrigin = subscriptionOrigin;
         this.msisdn = msisdn;
         this.preStatus = preStatus;
+        this.auditStatus = auditStatus;
         this.outcome = outcome;
     }
 }
