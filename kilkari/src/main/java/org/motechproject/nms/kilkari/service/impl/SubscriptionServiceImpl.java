@@ -23,13 +23,13 @@ import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.domain.SubscriptionRejectionReason;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
-import org.motechproject.nms.kilkari.domain.WeeklyCallsNotAnsweredMsisdnRecord;
+import org.motechproject.nms.kilkari.domain.BlockedMsisdnRecord;
 import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
-import org.motechproject.nms.kilkari.repository.WeeklyCallsNotAnsweredMsisdnRecordDataService;
+import org.motechproject.nms.kilkari.repository.BlockedMsisdnRecordDataService;
 import org.motechproject.nms.kilkari.service.CsrVerifierService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
@@ -70,7 +70,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private CsrVerifierService csrVerifierService;
     private EventRelay eventRelay;
     private boolean allowMctsSubscriptions;
-    private WeeklyCallsNotAnsweredMsisdnRecordDataService weeklyCallsNotAnsweredMsisdnRecordDataService;
+    private BlockedMsisdnRecordDataService blockedMsisdnRecordDataService;
 
 
     @Autowired
@@ -82,7 +82,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                                    EventRelay eventRelay,
                                    CallRetryDataService callRetryDataService,
                                    CsrVerifierService csrVerifierService,
-                                   WeeklyCallsNotAnsweredMsisdnRecordDataService weeklyCallsNotAnsweredMsisdnRecordDataService) {
+                                   BlockedMsisdnRecordDataService blockedMsisdnRecordDataService) {
         this.subscriberDataService = subscriberDataService;
         this.subscriptionPackDataService = subscriptionPackDataService;
         this.subscriptionDataService = subscriptionDataService;
@@ -92,7 +92,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         this.callRetryDataService = callRetryDataService;
         this.csrVerifierService = csrVerifierService;
         this.allowMctsSubscriptions = true;
-        this.weeklyCallsNotAnsweredMsisdnRecordDataService = weeklyCallsNotAnsweredMsisdnRecordDataService;
+        this.blockedMsisdnRecordDataService = blockedMsisdnRecordDataService;
     }
 
 
@@ -232,8 +232,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         long number = PhoneNumberHelper.truncateLongNumber(callingNumber);
 
         // Check if the callingNumber is in Weekly_Calls_Not_Answered_Msisdn_Records
-        WeeklyCallsNotAnsweredMsisdnRecord weeklyCallsNotAnsweredMsisdnRecord = weeklyCallsNotAnsweredMsisdnRecordDataService.findByNumber(callingNumber);
-        if (weeklyCallsNotAnsweredMsisdnRecord != null) {
+        BlockedMsisdnRecord blockedMsisdnRecord = blockedMsisdnRecordDataService.findByNumber(callingNumber);
+        if (blockedMsisdnRecord != null) {
             LOGGER.info("Can't create a Subscription as the number {} is deactivated due to Weekly Calls Not Answered", callingNumber);
             subscriptionErrorDataService.create(new SubscriptionError(number, SubscriptionRejectionReason.WEEKLY_CALLS_NOT_ANSWERED, subscriptionPack.getType()));
             return null;

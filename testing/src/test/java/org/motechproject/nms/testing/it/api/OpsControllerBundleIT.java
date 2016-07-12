@@ -127,7 +127,7 @@ public class OpsControllerBundleIT extends BasePaxIT {
     @Inject
     MctsMotherDataService mctsMotherDataService;
     @Inject
-    WeeklyCallsNotAnsweredMsisdnRecordDataService weeklyCallsNotAnsweredMsisdnRecordDataService;
+    BlockedMsisdnRecordDataService blockedMsisdnRecordDataService;
 
 
     private RegionHelper rh;
@@ -470,6 +470,7 @@ public class OpsControllerBundleIT extends BasePaxIT {
     public void testDeactivateSpecificValidMsisdn() throws IOException, InterruptedException, URISyntaxException {
         createSubscriberHelper();
         testDeactivationRequestByMsisdn(5000000000L, HttpStatus.SC_OK);
+        testDeactivationRequestByMsisdn(5000000000L, HttpStatus.SC_OK);   // Test deactivation of same number again
         testDeactivationRequestByMsisdn(6000000000L, HttpStatus.SC_OK);
         testifAllSubscriberDectivated();
         testReactivationDisabledAfterDeactivation(5000000000L);
@@ -489,8 +490,8 @@ public class OpsControllerBundleIT extends BasePaxIT {
     private void testReactivationDisabledAfterDeactivation(long msisdn) throws IOException, InterruptedException, URISyntaxException {
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         // Testing weekly_calls_not_answered record with the given number
-        WeeklyCallsNotAnsweredMsisdnRecord weeklyCallsNotAnsweredMsisdnRecord = weeklyCallsNotAnsweredMsisdnRecordDataService.findByNumber(msisdn);
-        assertNotNull(weeklyCallsNotAnsweredMsisdnRecord);
+        BlockedMsisdnRecord blockedMsisdnRecord = blockedMsisdnRecordDataService.findByNumber(msisdn);
+        assertNotNull(blockedMsisdnRecord);
 
         Subscriber subscriber = subscriberDataService.findByNumber(msisdn);
         Subscription subscription = subscriptionService.createSubscription(subscriber.getCallingNumber(), rh.kannadaLanguage(), rh.karnatakaCircle(),

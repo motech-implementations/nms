@@ -1,5 +1,6 @@
 package org.motechproject.nms.kilkari.service.impl;
 
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.datanucleus.store.rdbms.query.ForwardQueryResult;
 import org.joda.time.DateTime;
 import org.motechproject.mds.query.SqlQueryExecution;
@@ -15,12 +16,13 @@ import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.domain.SubscriptionRejectionReason;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
-import org.motechproject.nms.kilkari.domain.WeeklyCallsNotAnsweredMsisdnRecord;
+import org.motechproject.nms.kilkari.domain.BlockedMsisdnRecord;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
-import org.motechproject.nms.kilkari.repository.WeeklyCallsNotAnsweredMsisdnRecordDataService;
+import org.motechproject.nms.kilkari.repository.BlockedMsisdnRecordDataService;
+import org.motechproject.nms.kilkari.service.DeactivationAuditService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
@@ -52,20 +54,23 @@ public class SubscriberServiceImpl implements SubscriberService {
     private SubscriptionDataService subscriptionDataService;
     private SubscriptionErrorDataService subscriptionErrorDataService;
     private SubscriptionPackDataService subscriptionPackDataService;
-    private WeeklyCallsNotAnsweredMsisdnRecordDataService weeklyCallsNotAnsweredMsisdnRecordDataService;
+    private DeactivationAuditService deactivationAuditService;
+    private BlockedMsisdnRecordDataService blockedMsisdnRecordDataService;
 
     @Autowired
     public SubscriberServiceImpl(SubscriberDataService subscriberDataService, SubscriptionService subscriptionService,
                                  SubscriptionDataService subscriptionDataService,
                                  SubscriptionErrorDataService subscriptionErrorDataService,
                                  SubscriptionPackDataService subscriptionPackDataService,
-                                 WeeklyCallsNotAnsweredMsisdnRecordDataService weeklyCallsNotAnsweredMsisdnRecordDataService) {
+                                 BlockedMsisdnRecordDataService blockedMsisdnRecordDataService,
+                                 DeactivationAuditService deactivationAuditService) {
         this.subscriberDataService = subscriberDataService;
         this.subscriptionService = subscriptionService;
         this.subscriptionDataService = subscriptionDataService;
         this.subscriptionErrorDataService = subscriptionErrorDataService;
         this.subscriptionPackDataService = subscriptionPackDataService;
-        this.weeklyCallsNotAnsweredMsisdnRecordDataService = weeklyCallsNotAnsweredMsisdnRecordDataService;
+        this.deactivationAuditService = deactivationAuditService;
+        this.blockedMsisdnRecordDataService = blockedMsisdnRecordDataService;
     }
 
     @Override
@@ -385,14 +390,28 @@ public class SubscriberServiceImpl implements SubscriberService {
         int counter = 0;
         for (Subscription subscription : subscriberByMsisdn.getAllSubscriptions()) {
             if ((subscription.getStatus() == SubscriptionStatus.PENDING_ACTIVATION) || (subscription.getStatus() == SubscriptionStatus.ACTIVE) || (subscription.getStatus() == SubscriptionStatus.HOLD)) {
-                LOGGER.info("Deactivating Subscrition with Id {} for msisdn.", subscription.getSubscriptionId());
-                subscriptionService.deactivateSubscription(subscription, DeactivationReason.WEEKLY_CALLS_NOT_ANSWERED);
-                counter++;
+                try {
+                    LOGGER.info("Deactivating Subscription with Id {} for msisdn.", subscription.getSubscriptionId());
+                    subscriptionService.deactivateSubscription(subscription, DeactivationReason.WEEKLY_CALLS_NOT_ANSWERED);
+                    deactivationAuditService.auditSuccess(subscription.getSubscriptionId(), subscriberByMsisdn.getId(), subscription.getOrigin(), subscription.getStatus(), callingNumber);
+                    counter++;
+                } catch (Exception e) {
+                    LOGGER.error(String.format("Unexpected exception in deactivating subscription %s: %s", subscription.getSubscriptionId(), ExceptionUtils.getFullStackTrace(e)));
+                    deactivationAuditService.auditFailure(subscription.getSubscriptionId(), subscriberByMsisdn.getId(), subscription.getOrigin(), subscription.getStatus(), callingNumber, ExceptionUtils.getFullStackTrace(e));
+                    throw new IllegalStateException(e);
+                }
             }
         }
         LOGGER.info("Deactivated {} Subscritions for msisdn {}.", counter, callingNumber);
-        // Add callingNumber to WeeklyCallsNotAnsweredMsisdnRecord (tableName = "nms_weekly_calls_not_answered_msisdn")
-        weeklyCallsNotAnsweredMsisdnRecordDataService.create(new WeeklyCallsNotAnsweredMsisdnRecord(callingNumber, DateTime.now()));
+        // Add callingNumber to WeeklyCallsNotAnsweredMsisdnRecord (tableName = "nms_blocked_msisdn")
+        BlockedMsisdnRecord record = blockedMsisdnRecordDataService.findByNumber(callingNumber);
+        //TODO: we can use createOrUpdate method of MotechDataService once the bug is fixed.
+        if (record == null) {
+            blockedMsisdnRecordDataService.create(new BlockedMsisdnRecord(callingNumber, DeactivationReason.WEEKLY_CALLS_NOT_ANSWERED));
+        } else {
+            record.setDeactivationReason(DeactivationReason.WEEKLY_CALLS_NOT_ANSWERED);
+            blockedMsisdnRecordDataService.update(record);
+        }
         LOGGER.info("Added callingNumber {} to WeeklyCallsNotAnsweredMsisdnRecord.", callingNumber);
     }
 

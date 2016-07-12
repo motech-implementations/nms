@@ -1,6 +1,5 @@
 package org.motechproject.nms.kilkari.domain;
 
-import org.joda.time.DateTime;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 
@@ -8,12 +7,13 @@ import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Unique;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
 
 /**
  * Record of Weekly Calls Not Answered Deactivated Numbers
  */
-@Entity(tableName = "nms_weekly_calls_not_answered_msisdn")
-public class WeeklyCallsNotAnsweredMsisdnRecord {
+@Entity(tableName = "nms_blocked_msisdn")
+public class BlockedMsisdnRecord {
 
     @Field
     @Unique
@@ -23,14 +23,15 @@ public class WeeklyCallsNotAnsweredMsisdnRecord {
     private Long callingNumber;
 
     @Field
-    private DateTime deativationDate;
+    @NotNull
+    private DeactivationReason deactivationReason;
 
-    public WeeklyCallsNotAnsweredMsisdnRecord() {
+    public BlockedMsisdnRecord() {
     }
 
-    public WeeklyCallsNotAnsweredMsisdnRecord(Long callingNumber, DateTime deativationDate) {
+    public BlockedMsisdnRecord(Long callingNumber, DeactivationReason deactivationReason) {
         this.callingNumber = callingNumber;
-        this.deativationDate = deativationDate;
+        this.deactivationReason = deactivationReason;
     }
 
     public Long getCallingNumber() {
@@ -41,11 +42,11 @@ public class WeeklyCallsNotAnsweredMsisdnRecord {
         this.callingNumber = callingNumber;
     }
 
-    public DateTime getDeativationDate() {
-        return deativationDate;
+    public DeactivationReason getDeactivationReason() {
+        return deactivationReason;
     }
 
-    public void setDeativationDate(DateTime deativationDate) {
-        this.deativationDate = deativationDate;
+    public void setDeactivationReason(DeactivationReason deactivationReason) {
+        this.deactivationReason = deactivationReason;
     }
 }
