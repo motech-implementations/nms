@@ -5,6 +5,8 @@ import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.URIException;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpDelete;
+import org.apache.commons.io.IOUtils;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URIBuilder;
@@ -15,6 +17,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.motechproject.mtraining.domain.Bookmark;
+import org.motechproject.mtraining.service.BookmarkService;
 import org.motechproject.nms.api.web.contract.AddFlwRequest;
 import org.motechproject.nms.flw.domain.FlwError;
 import org.motechproject.nms.flw.domain.FlwErrorReason;
@@ -58,7 +62,10 @@ import javax.inject.Inject;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -134,6 +141,9 @@ public class OpsControllerBundleIT extends BasePaxIT {
 
     private RegionHelper rh;
     private SubscriptionHelper sh;
+
+    @Inject
+    BookmarkService bookmarkService;
 
     @Before
     public void setupTestData() {
@@ -325,6 +335,49 @@ public class OpsControllerBundleIT extends BasePaxIT {
 
         FrontLineWorker flw = frontLineWorkerDataService.findByContactNumber(9876543210L);
         assertNull("Taluka update rejected", flw.getTaluka());
+    }
+
+    @Test
+    public void testGetScoresForUser() throws IOException, InterruptedException {
+        Long callingNumber = 9876543210L;
+        String getScoresEndpoint = String.format("http://localhost:%d/api/ops/getScores?callingNumber=%d",
+                TestContext.getJettyPort(), callingNumber);
+        Map<String, Integer> scores = new HashMap<>();
+        scores.put("1", 4);
+        scores.put("2", 3);
+        Map<String, Object> progress = new HashMap<>();
+        progress.put("scoresByChapter", scores);
+        Bookmark newBookmark = new Bookmark(callingNumber.toString(), null, null, null, progress);
+        bookmarkService.createBookmark(newBookmark);
+
+        HttpGet httpGet = RequestBuilder.createGetRequest(getScoresEndpoint);
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
+        assertNotNull(response);
+        assertEquals(200, response.getStatusLine().getStatusCode());
+        String body = IOUtils.toString(response.getEntity().getContent());
+        assertTrue(body.contains("1=4"));
+        assertTrue(body.contains("2=3"));
+    }
+
+    @Test
+    public void testGetScoresForUserNoScores() throws IOException, InterruptedException {
+        Long callingNumber = 9876543210L;
+        String getScoresEndpoint = String.format("http://localhost:%d/api/ops/getScores?callingNumber=%d",
+                TestContext.getJettyPort(), 9976543210L);
+        Map<String, Integer> scores = new HashMap<>();
+        scores.put("1", 4);
+        scores.put("2", 3);
+        Map<String, Object> progress = new HashMap<>();
+        progress.put("scoresByChapter", scores);
+        Bookmark newBookmark = new Bookmark(callingNumber.toString(), null, null, null, progress);
+        bookmarkService.createBookmark(newBookmark);
+
+        HttpGet httpGet = RequestBuilder.createGetRequest(getScoresEndpoint);
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
+        assertNotNull(response);
+        assertEquals(200, response.getStatusLine().getStatusCode());
+        String body = IOUtils.toString(response.getEntity().getContent());
+        assertEquals("{000000}", body);
     }
 
     private void createFlwHelper(String name, Long phoneNumber, String mctsFlwId) {
