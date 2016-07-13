@@ -128,6 +128,8 @@ public class OpsControllerBundleIT extends BasePaxIT {
     MctsMotherDataService mctsMotherDataService;
     @Inject
     BlockedMsisdnRecordDataService blockedMsisdnRecordDataService;
+    @Inject
+    DeactivationSubscriptionAuditRecordDataService deactivationSubscriptionAuditRecordDataService;
 
 
     private RegionHelper rh;
@@ -465,13 +467,24 @@ public class OpsControllerBundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpRequest, status, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
     }
 
-     //Test deactivation of specific msisdn - 5000000000L as IVR and 6000000000L as MCTS import
+    // Test audit trail of deactivation subscriptions
+    public void testDeactivationSubscriptionAuditService(Long msisdn, SubscriptionOrigin origin, int testNumber) {
+        List<DeactivationSubscriptionAuditRecord> auditRecords = deactivationSubscriptionAuditRecordDataService.retrieveAll();
+        assertEquals(testNumber, auditRecords.size());
+        assertEquals(msisdn, auditRecords.get(testNumber-1).getMsisdn());
+        assertEquals(origin, auditRecords.get(testNumber-1).getSubscriptionOrigin());
+        assertEquals(AuditStatus.SUCCESS, auditRecords.get(testNumber-1).getAuditStatus());
+    }
+
+    //Test deactivation of specific msisdn - 5000000000L as IVR and 6000000000L as MCTS import
     @Test
     public void testDeactivateSpecificValidMsisdn() throws IOException, InterruptedException, URISyntaxException {
         createSubscriberHelper();
         testDeactivationRequestByMsisdn(5000000000L, HttpStatus.SC_OK);
         testDeactivationRequestByMsisdn(5000000000L, HttpStatus.SC_OK);   // Test deactivation of same number again
+        testDeactivationSubscriptionAuditService(5000000000L, SubscriptionOrigin.IVR, 1);
         testDeactivationRequestByMsisdn(6000000000L, HttpStatus.SC_OK);
+        testDeactivationSubscriptionAuditService(6000000000L, SubscriptionOrigin.MCTS_IMPORT, 2);
         testifAllSubscriberDectivated();
         testReactivationDisabledAfterDeactivation(5000000000L);
         testReactivationDisabledAfterDeactivation(6000000000L);
