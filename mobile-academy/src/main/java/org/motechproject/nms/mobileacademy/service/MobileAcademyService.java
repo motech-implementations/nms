@@ -54,4 +54,11 @@ public interface MobileAcademyService {
      */
     void triggerCompletionNotification(Long callingNumber);
 
+    /**
+     * Get scores for a user
+     * @param callingNumber
+     * @return
+     */
+    String getScoresForUser(Long callingNumber);
+
 }
