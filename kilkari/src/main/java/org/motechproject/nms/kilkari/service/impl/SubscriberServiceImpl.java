@@ -1,5 +1,6 @@
 package org.motechproject.nms.kilkari.service.impl;
 
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.datanucleus.store.rdbms.query.ForwardQueryResult;
 import org.joda.time.DateTime;
 import org.motechproject.mds.query.SqlQueryExecution;
@@ -14,10 +15,16 @@ import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.domain.SubscriptionRejectionReason;
+import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
+import org.motechproject.nms.kilkari.domain.BlockedMsisdnRecord;
+import org.motechproject.nms.kilkari.domain.DeactivationSubscriptionAuditRecord;
+import org.motechproject.nms.kilkari.domain.AuditStatus;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
+import org.motechproject.nms.kilkari.repository.BlockedMsisdnRecordDataService;
+import org.motechproject.nms.kilkari.repository.DeactivationSubscriptionAuditRecordDataService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
@@ -25,6 +32,8 @@ import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Language;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,22 +49,30 @@ import java.util.Set;
 @Service("subscriberService")
 public class SubscriberServiceImpl implements SubscriberService {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(SubscriberServiceImpl.class);
+
     private SubscriberDataService subscriberDataService;
     private SubscriptionService subscriptionService;
     private SubscriptionDataService subscriptionDataService;
     private SubscriptionErrorDataService subscriptionErrorDataService;
     private SubscriptionPackDataService subscriptionPackDataService;
+    private DeactivationSubscriptionAuditRecordDataService deactivationSubscriptionAuditRecordDataService;
+    private BlockedMsisdnRecordDataService blockedMsisdnRecordDataService;
 
     @Autowired
     public SubscriberServiceImpl(SubscriberDataService subscriberDataService, SubscriptionService subscriptionService,
                                  SubscriptionDataService subscriptionDataService,
                                  SubscriptionErrorDataService subscriptionErrorDataService,
-                                 SubscriptionPackDataService subscriptionPackDataService) {
+                                 SubscriptionPackDataService subscriptionPackDataService,
+                                 BlockedMsisdnRecordDataService blockedMsisdnRecordDataService,
+                                 DeactivationSubscriptionAuditRecordDataService deactivationSubscriptionAuditRecordDataService) {
         this.subscriberDataService = subscriberDataService;
         this.subscriptionService = subscriptionService;
         this.subscriptionDataService = subscriptionDataService;
         this.subscriptionErrorDataService = subscriptionErrorDataService;
         this.subscriptionPackDataService = subscriptionPackDataService;
+        this.deactivationSubscriptionAuditRecordDataService = deactivationSubscriptionAuditRecordDataService;
+        this.blockedMsisdnRecordDataService = blockedMsisdnRecordDataService;
     }
 
     @Override
@@ -362,4 +379,50 @@ public class SubscriberServiceImpl implements SubscriberService {
             subscriptionService.deletePreconditionCheck(subscription);
         }
     }
+
+    @Override
+    public void deactivateAllSubscriptionsForSubscriber(long callingNumber) {
+        LOGGER.info("Recieved Release Number {} for Deactivation.", callingNumber);
+        Subscriber subscriberByMsisdn = this.getSubscriber(callingNumber);
+        if (subscriberByMsisdn == null) {
+            LOGGER.info("Subscriber for msisdn {} is not found." , callingNumber);
+            throw new IllegalArgumentException(String.format(KilkariConstants.SUBSCRIBER_NOT_FOUND, callingNumber));
+        }
+        LOGGER.info("Found Subscriber for msisdn {} .", callingNumber);
+        int counter = 0;
+        for (Subscription subscription : subscriberByMsisdn.getAllSubscriptions()) {
+            if ((subscription.getStatus() == SubscriptionStatus.PENDING_ACTIVATION) || (subscription.getStatus() == SubscriptionStatus.ACTIVE) || (subscription.getStatus() == SubscriptionStatus.HOLD)) {
+                try {
+                    LOGGER.info("Deactivating Subscription with Id {} for msisdn.", subscription.getSubscriptionId());
+                    subscriptionService.deactivateSubscription(subscription, DeactivationReason.WEEKLY_CALLS_NOT_ANSWERED);
+                    deactivationSubscriptionAuditRecordDataService.create(new DeactivationSubscriptionAuditRecord(subscription.getSubscriptionId(), subscriberByMsisdn.getId(), subscription.getOrigin(), callingNumber, subscription.getStatus(), AuditStatus.SUCCESS, ""));
+                    counter++;
+                } catch (Exception e) {
+                    String error = ExceptionUtils.getFullStackTrace(e);
+                    String truncatedError;
+                    LOGGER.error(String.format("Unexpected exception in deactivating subscription %s: %s", subscription.getSubscriptionId(), error));
+                    if (error.length() > DeactivationSubscriptionAuditRecord.MAX_OUTCOME_LENGTH) {
+                        truncatedError = error.substring(0, DeactivationSubscriptionAuditRecord.MAX_OUTCOME_LENGTH);
+                    } else {
+                        truncatedError = error;
+                    }
+                    deactivationSubscriptionAuditRecordDataService.create(new DeactivationSubscriptionAuditRecord(subscription.getSubscriptionId(), subscriberByMsisdn.getId(), subscription.getOrigin(), callingNumber, subscription.getStatus(), AuditStatus.FAILURE, truncatedError));
+                    throw new IllegalStateException(e);
+                }
+            }
+        }
+        LOGGER.info("Deactivated {} Subscritions for msisdn {}.", counter, callingNumber);
+        // Add callingNumber to WeeklyCallsNotAnsweredMsisdnRecord (tableName = "nms_blocked_msisdn")
+        BlockedMsisdnRecord record = blockedMsisdnRecordDataService.findByNumber(callingNumber);
+        //TODO: we can use createOrUpdate method of MotechDataService once the bug is fixed.
+        if (record == null) {
+            blockedMsisdnRecordDataService.create(new BlockedMsisdnRecord(callingNumber, DeactivationReason.WEEKLY_CALLS_NOT_ANSWERED));
+            LOGGER.info("Added callingNumber {} to BlockedMsisdnRecord.", callingNumber);
+        } else {
+            record.setDeactivationReason(DeactivationReason.WEEKLY_CALLS_NOT_ANSWERED);
+            blockedMsisdnRecordDataService.update(record);
+            LOGGER.info("Updated existing BlockedMsisdnRecord for callingNumber {}", callingNumber);
+        }
+    }
+
 }

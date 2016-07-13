@@ -77,4 +77,11 @@ public interface SubscriberService {
     @InstanceLifecycleListener(InstanceLifecycleListenerType.PRE_DELETE)
     void deleteAllowed(Subscriber subscriber);
 
+
+    /**
+     * Deactivate all Subscriptions of a given callingNumber on MOHFW request
+     * @param callingNumber
+     */
+    void deactivateAllSubscriptionsForSubscriber(long callingNumber);
+
 }

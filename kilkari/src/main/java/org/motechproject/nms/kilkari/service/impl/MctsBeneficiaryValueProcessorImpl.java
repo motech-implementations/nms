@@ -11,6 +11,7 @@ import org.motechproject.nms.kilkari.exception.InvalidReferenceDateException;
 import org.motechproject.nms.kilkari.repository.MctsChildDataService;
 import org.motechproject.nms.kilkari.repository.MctsMotherDataService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor;
+import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -92,10 +93,10 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
 
     @Override
     public Long getMsisdnByString(String value) {
-        if (value.length() < 10) {
+        if (value.length() < KilkariConstants.MSISDN_LENGTH) {
             throw new NumberFormatException("Beneficiary MSISDN too short, must be at least 10 digits");
         }
-        String msisdn = value.substring(value.length() - 10);
+        String msisdn = value.substring(value.length() - KilkariConstants.MSISDN_LENGTH);
 
         return Long.parseLong(msisdn);
     }

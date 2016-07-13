@@ -23,11 +23,13 @@ import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.domain.SubscriptionRejectionReason;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
+import org.motechproject.nms.kilkari.domain.BlockedMsisdnRecord;
 import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
+import org.motechproject.nms.kilkari.repository.BlockedMsisdnRecordDataService;
 import org.motechproject.nms.kilkari.service.CsrVerifierService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
@@ -68,6 +70,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private CsrVerifierService csrVerifierService;
     private EventRelay eventRelay;
     private boolean allowMctsSubscriptions;
+    private BlockedMsisdnRecordDataService blockedMsisdnRecordDataService;
+
 
     @Autowired
     public SubscriptionServiceImpl(@Qualifier("kilkariSettings") SettingsFacade settingsFacade, // NO CHECKSTYLE More than 7 parameters
@@ -77,7 +81,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                                    SubscriptionErrorDataService subscriptionErrorDataService,
                                    EventRelay eventRelay,
                                    CallRetryDataService callRetryDataService,
-                                   CsrVerifierService csrVerifierService) {
+                                   CsrVerifierService csrVerifierService,
+                                   BlockedMsisdnRecordDataService blockedMsisdnRecordDataService) {
         this.subscriberDataService = subscriberDataService;
         this.subscriptionPackDataService = subscriptionPackDataService;
         this.subscriptionDataService = subscriptionDataService;
@@ -87,6 +92,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         this.callRetryDataService = callRetryDataService;
         this.csrVerifierService = csrVerifierService;
         this.allowMctsSubscriptions = true;
+        this.blockedMsisdnRecordDataService = blockedMsisdnRecordDataService;
     }
 
 
@@ -224,6 +230,15 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                                            SubscriptionPack subscriptionPack, SubscriptionOrigin mode) {
 
         long number = PhoneNumberHelper.truncateLongNumber(callingNumber);
+
+        // Check if the callingNumber is in Weekly_Calls_Not_Answered_Msisdn_Records
+        BlockedMsisdnRecord blockedMsisdnRecord = blockedMsisdnRecordDataService.findByNumber(callingNumber);
+        if (blockedMsisdnRecord != null) {
+            LOGGER.info("Can't create a Subscription as the number {} is deactivated due to Weekly Calls Not Answered", callingNumber);
+            subscriptionErrorDataService.create(new SubscriptionError(number, SubscriptionRejectionReason.WEEKLY_CALLS_NOT_ANSWERED, subscriptionPack.getType()));
+            return null;
+        }
+
         Subscriber subscriber = subscriberDataService.findByNumber(callingNumber);
         Subscription subscription;
 
@@ -308,6 +323,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private Subscription createSubscriptionViaMcts(Subscriber subscriber, SubscriptionPack pack) {
 
         if (!enrollmentPreconditionCheck(subscriber, pack)) {
+            LOGGER.info("PreCondition test passed");
             return null;
         }
 
@@ -325,6 +341,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             subscription.setStatus(SubscriptionStatus.HOLD);
         }
 
+        LOGGER.info("Creating Subscription ()", subscription.getSubscriptionId());
         return subscriptionDataService.create(subscription);
     }
 
@@ -578,10 +595,11 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     @Override
     public void deactivateSubscription(Subscription subscription, DeactivationReason reason) {
         if (subscription != null && (subscription.getStatus() == SubscriptionStatus.ACTIVE ||
-                subscription.getStatus() == SubscriptionStatus.PENDING_ACTIVATION)) {
+                subscription.getStatus() == SubscriptionStatus.PENDING_ACTIVATION || subscription.getStatus() == SubscriptionStatus.HOLD)) {
             subscription.setStatus(SubscriptionStatus.DEACTIVATED);
             subscription.setDeactivationReason(reason);
-            subscriptionDataService.update(subscription);
+            Subscription subscriptionDeativated = subscriptionDataService.update(subscription);
+            LOGGER.info("Deactivated Subscription " + subscriptionDeativated.getSubscriptionId());
 
             // Let's not retry calling subscribers with deactivated subscriptions
             deleteCallRetry(subscription.getSubscriptionId());
@@ -672,7 +690,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
 
-    @MotechListener(subjects = { KilkariConstants.PACK_CACHE_EVICT_MESSAGE_SUBJECT})
+    @MotechListener(subjects = { KilkariConstants.PACK_CACHE_EVICT_MESSAGE_SUBJECT })
     @CacheEvict(value = {"pack" }, allEntries = true)
     public void cacheEvict(MotechEvent event) {
         csrVerifierService.cacheEvict();
@@ -690,4 +708,5 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     public List<Subscription> retrieveAll() {
         return subscriptionDataService.retrieveAll();
     }
+
 }

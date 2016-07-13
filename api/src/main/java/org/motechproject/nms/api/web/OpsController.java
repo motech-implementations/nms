@@ -9,6 +9,7 @@ import org.motechproject.nms.api.web.contract.mobileAcademy.GetBookmarkResponse;
 import org.motechproject.nms.api.web.converter.MobileAcademyConverter;
 import org.motechproject.nms.imi.service.CdrFileService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
+import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.motechproject.nms.mcts.service.MctsWsImportService;
@@ -45,6 +46,9 @@ public class OpsController extends BaseController {
     private SubscriptionDataService subscriptionDataService;
 
     @Autowired
+    private SubscriberService subscriberService;
+
+    @Autowired
     private SubscriptionService subscriptionService;
 
     @Autowired
@@ -61,6 +65,8 @@ public class OpsController extends BaseController {
 
     @Autowired
     private FrontLineWorkerService frontLineWorkerService;
+
+    private final String contactNumber = "contactNumber";
 
     /**
      * Provided for OPS as a crutch to be able to empty all MDS cache directly after modifying the database by hand
@@ -119,8 +125,8 @@ public class OpsController extends BaseController {
                 addFlwRequest.getDistrictId()));
 
         StringBuilder failureReasons = new StringBuilder();
-        validateField10Digits(failureReasons, "contactNumber", addFlwRequest.getContactNumber());
-        validateFieldPositiveLong(failureReasons, "contactNumber", addFlwRequest.getContactNumber());
+        validateField10Digits(failureReasons, contactNumber, addFlwRequest.getContactNumber());
+        validateFieldPositiveLong(failureReasons, contactNumber, addFlwRequest.getContactNumber());
         validateFieldPresent(failureReasons, "mctsFlwId", addFlwRequest.getMctsFlwId());
         validateFieldPresent(failureReasons, "stateId", addFlwRequest.getStateId());
         validateFieldPresent(failureReasons, "districtId", addFlwRequest.getDistrictId());
@@ -174,6 +180,23 @@ public class OpsController extends BaseController {
         GetBookmarkResponse ret = MobileAcademyConverter.convertBookmarkDto(bookmark);
         log("RESPONSE: /ops/getbookmark", String.format("bookmark=%s", ret.toString()));
         return ret;
+    }
+
+    @RequestMapping(value = "/deactivationRequest",
+            method = RequestMethod.DELETE)
+    @ResponseStatus(HttpStatus.OK)
+    @Transactional
+    public void deactivationRequest(@RequestParam(value = "msisdn") Long msisdn) {
+        log("REQUEST: /ops/deactivationRequest", String.format(
+                "callingNumber=%s",
+                LogHelper.obscure(msisdn)));
+        StringBuilder failureReasons = new StringBuilder();
+        validateField10Digits(failureReasons, contactNumber, msisdn);
+        validateFieldPositiveLong(failureReasons, contactNumber, msisdn);
+        if (failureReasons.length() > 0) {
+            throw new IllegalArgumentException(failureReasons.toString());
+        }
+        subscriberService.deactivateAllSubscriptionsForSubscriber(msisdn);
     }
 
     @RequestMapping("/getScores")

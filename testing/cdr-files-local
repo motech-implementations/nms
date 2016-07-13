@@ -1,0 +1,2 @@
+RequestId,Msisdn,CallId,AttemptNo,CallStartTime,CallAnswerTime,CallEndTime,CallDurationInPulse,CallStatus,LanguageLocationId,ContentFile,MsgPlayStartTime,MsgPlayEndTime,CircleId,OperatorId,Priority,CallDisconnectReason,WeekId
+20160622121604:2d528584-77b0-4235-9c1a-f9d1d27ac0bf,6284895352,xxx,1,1,1466559966,1,1,1001,hi,w5_1.wav,1,117,DE,xx,0,1,w4_1

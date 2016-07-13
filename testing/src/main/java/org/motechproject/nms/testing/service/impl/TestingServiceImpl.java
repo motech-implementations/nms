@@ -132,6 +132,10 @@ public class TestingServiceImpl implements TestingService {
         "nms_whitelist_entries__TRASH",
         "nms_whitelisted_states",
         "nms_whitelisted_states__TRASH",
+        "nms_blocked_msisdn",
+        "nms_blocked_msisdn__TRASH",
+        "nms_deactivation_subscription_audit_records",
+        "nms_deactivation_subscription_audit_records__TRASH",
         "TRACKING_MODULE_CHANGELOG",
         "TRACKING_MODULE_CHANGELOG__TRASH"
     };

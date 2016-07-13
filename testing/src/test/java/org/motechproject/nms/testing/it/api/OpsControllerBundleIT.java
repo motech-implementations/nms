@@ -1,10 +1,19 @@
 package org.motechproject.nms.testing.it.api;
 
 import org.apache.commons.httpclient.HttpStatus;
+import org.apache.commons.httpclient.NameValuePair;
+import org.apache.commons.httpclient.URIException;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.regexp.RE;
+import org.joda.time.DateTime;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -16,6 +25,10 @@ import org.motechproject.nms.flw.domain.FlwErrorReason;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.repository.FlwErrorDataService;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
+import org.motechproject.nms.kilkari.domain.*;
+import org.motechproject.nms.kilkari.repository.*;
+import org.motechproject.nms.kilkari.service.SubscriberService;
+import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.HealthBlock;
 import org.motechproject.nms.region.domain.HealthFacility;
@@ -25,17 +38,12 @@ import org.motechproject.nms.region.domain.Language;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.domain.Village;
-import org.motechproject.nms.region.repository.DistrictDataService;
-import org.motechproject.nms.region.repository.HealthBlockDataService;
-import org.motechproject.nms.region.repository.HealthFacilityDataService;
-import org.motechproject.nms.region.repository.HealthFacilityTypeDataService;
-import org.motechproject.nms.region.repository.HealthSubFacilityDataService;
-import org.motechproject.nms.region.repository.LanguageDataService;
-import org.motechproject.nms.region.repository.StateDataService;
-import org.motechproject.nms.region.repository.TalukaDataService;
-import org.motechproject.nms.region.repository.VillageDataService;
-import org.motechproject.nms.region.service.HealthBlockService;
+import org.motechproject.nms.region.repository.*;
+import org.motechproject.nms.region.service.DistrictService;
+import org.motechproject.nms.region.service.LanguageService;
 import org.motechproject.nms.testing.it.api.utils.RequestBuilder;
+import org.motechproject.nms.testing.it.utils.RegionHelper;
+import org.motechproject.nms.testing.it.utils.SubscriptionHelper;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
@@ -45,15 +53,19 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
+import org.osgi.service.dmt.Uri;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import javax.inject.Inject;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -72,7 +84,8 @@ public class OpsControllerBundleIT extends BasePaxIT {
 
     private String addFlwEndpoint = String.format("http://localhost:%d/api/ops/createUpdateFlw",
             TestContext.getJettyPort());
-
+    private String deactivationRequest = String.format("http://localhost:%d/api/ops/deactivationRequest",
+            TestContext.getJettyPort());
     State state;
     District district;
     Taluka taluka;
@@ -90,16 +103,44 @@ public class OpsControllerBundleIT extends BasePaxIT {
     TestingService testingService;
 
     @Inject
-    LanguageDataService languageDataService;
-
-    @Inject
-    StateDataService stateDataService;
-
-    @Inject
     FrontLineWorkerDataService frontLineWorkerDataService;
 
     @Inject
     FlwErrorDataService flwErrorDataService;
+
+
+    @Inject
+    SubscriberService subscriberService;
+    @Inject
+    SubscriptionService subscriptionService;
+    @Inject
+    SubscriberDataService subscriberDataService;
+    @Inject
+    SubscriptionPackDataService subscriptionPackDataService;
+    @Inject
+    SubscriptionDataService subscriptionDataService;
+    @Inject
+    LanguageDataService languageDataService;
+    @Inject
+    LanguageService languageService;
+    @Inject
+    CircleDataService circleDataService;
+    @Inject
+    StateDataService stateDataService;
+    @Inject
+    DistrictDataService districtDataService;
+    @Inject
+    DistrictService districtService;
+    @Inject
+    MctsMotherDataService mctsMotherDataService;
+    @Inject
+    BlockedMsisdnRecordDataService blockedMsisdnRecordDataService;
+    @Inject
+    DeactivationSubscriptionAuditRecordDataService deactivationSubscriptionAuditRecordDataService;
+
+
+    private RegionHelper rh;
+    private SubscriptionHelper sh;
 
     @Inject
     BookmarkService bookmarkService;
@@ -422,4 +463,106 @@ public class OpsControllerBundleIT extends BasePaxIT {
         transactionManager.commit(status);
     }
 
+    // create subscriber with many subscriptions helper
+    private void createSubscriberHelper() {
+
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        // create subscription for a msisdn
+        rh = new RegionHelper(languageDataService, languageService, circleDataService, stateDataService,
+                districtDataService, districtService);
+        sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
+                languageDataService, languageService, circleDataService, stateDataService, districtDataService,
+                districtService);
+
+        Subscriber subscriberIVR = subscriberDataService.create(new Subscriber(5000000000L));
+        subscriberIVR.setLastMenstrualPeriod(DateTime.now().plusWeeks(70));
+        subscriberIVR = subscriberDataService.update(subscriberIVR);
+
+       subscriptionService.createSubscription(subscriberIVR.getCallingNumber(), rh.kannadaLanguage(), rh.karnatakaCircle(),
+                sh.pregnancyPack(), SubscriptionOrigin.IVR);
+
+        Subscriber subscriberMCTS = subscriberDataService.create(new Subscriber(6000000000L));
+        subscriberMCTS.setLastMenstrualPeriod(DateTime.now().plusWeeks(70));
+        subscriberMCTS = subscriberDataService.update(subscriberMCTS);
+        subscriptionService.createSubscription(subscriberMCTS.getCallingNumber(), rh.kannadaLanguage(), rh.karnatakaCircle(),
+                sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
+        transactionManager.commit(status);
+    }
+
+
+    public void testifAllSubscriberDectivated() {
+
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
+        Subscriber subscriberIVR = subscriberDataService.findByNumber(5000000000L);
+        Set<Subscription> subscriptionsIVR = ( Set<Subscription> ) subscriberDataService.getDetachedField(subscriberIVR, "subscriptions");
+        for (Subscription subscriptionIVR : subscriptionsIVR) {
+            Assert.assertTrue(subscriptionIVR.getDeactivationReason().equals(DeactivationReason.WEEKLY_CALLS_NOT_ANSWERED));
+            Assert.assertTrue(subscriptionIVR.getStatus().equals(SubscriptionStatus.DEACTIVATED));
+        }
+
+        Subscriber subscriberMCTS = subscriberDataService.findByNumber(6000000000L);
+        Set<Subscription> subscriptionsMCTS = ( Set<Subscription> ) subscriberDataService.getDetachedField(subscriberMCTS, "subscriptions");
+        for (Subscription subscriptionMCTS : subscriptionsMCTS) {
+            Assert.assertTrue(subscriptionMCTS.getDeactivationReason().equals(DeactivationReason.WEEKLY_CALLS_NOT_ANSWERED));
+            Assert.assertTrue(subscriptionMCTS.getStatus().equals(SubscriptionStatus.DEACTIVATED));
+        }
+        transactionManager.commit(status);
+
+    }
+
+
+    private void testDeactivationRequestByMsisdn(Long msisdn, int status) throws IOException, InterruptedException, URISyntaxException {
+        StringBuilder sb = new StringBuilder(deactivationRequest);
+        sb.append("?");
+        sb.append(String.format("msisdn=%s", msisdn.toString()));
+        HttpDelete httpRequest = new HttpDelete(sb.toString());
+        assertTrue(SimpleHttpClient.execHttpRequest(httpRequest, status, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
+    }
+
+    // Test audit trail of deactivation subscriptions
+    public void testDeactivationSubscriptionAuditService(Long msisdn, SubscriptionOrigin origin, int testNumber) {
+        List<DeactivationSubscriptionAuditRecord> auditRecords = deactivationSubscriptionAuditRecordDataService.retrieveAll();
+        assertEquals(testNumber, auditRecords.size());
+        assertEquals(msisdn, auditRecords.get(testNumber-1).getMsisdn());
+        assertEquals(origin, auditRecords.get(testNumber-1).getSubscriptionOrigin());
+        assertEquals(AuditStatus.SUCCESS, auditRecords.get(testNumber-1).getAuditStatus());
+    }
+
+    //Test deactivation of specific msisdn - 5000000000L as IVR and 6000000000L as MCTS import
+    @Test
+    public void testDeactivateSpecificValidMsisdn() throws IOException, InterruptedException, URISyntaxException {
+        createSubscriberHelper();
+        testDeactivationRequestByMsisdn(5000000000L, HttpStatus.SC_OK);
+        testDeactivationRequestByMsisdn(5000000000L, HttpStatus.SC_OK);   // Test deactivation of same number again
+        testDeactivationSubscriptionAuditService(5000000000L, SubscriptionOrigin.IVR, 1);
+        testDeactivationRequestByMsisdn(6000000000L, HttpStatus.SC_OK);
+        testDeactivationSubscriptionAuditService(6000000000L, SubscriptionOrigin.MCTS_IMPORT, 2);
+        testifAllSubscriberDectivated();
+        testReactivationDisabledAfterDeactivation(5000000000L);
+        testReactivationDisabledAfterDeactivation(6000000000L);
+    }
+
+    @Test
+    public void testDeactivateSpecificValidNotInDatabaseMsisdn() throws IOException, InterruptedException, URISyntaxException {
+        testDeactivationRequestByMsisdn(7000000000L, HttpStatus.SC_BAD_REQUEST);
+    }
+
+    @Test
+    public void testDeactivateSpecificInValidMsisdn() throws IOException, InterruptedException, URISyntaxException {
+        testDeactivationRequestByMsisdn(1000-00L, HttpStatus.SC_BAD_REQUEST);
+    }
+
+    private void testReactivationDisabledAfterDeactivation(long msisdn) throws IOException, InterruptedException, URISyntaxException {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        // Testing weekly_calls_not_answered record with the given number
+        BlockedMsisdnRecord blockedMsisdnRecord = blockedMsisdnRecordDataService.findByNumber(msisdn);
+        assertNotNull(blockedMsisdnRecord);
+
+        Subscriber subscriber = subscriberDataService.findByNumber(msisdn);
+        Subscription subscription = subscriptionService.createSubscription(subscriber.getCallingNumber(), rh.kannadaLanguage(), rh.karnatakaCircle(),
+                sh.pregnancyPack(), SubscriptionOrigin.IVR);
+        Assert.assertNull(subscription);
+        transactionManager.commit(status);
+    }
 }

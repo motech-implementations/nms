@@ -198,4 +198,5 @@ public interface SubscriptionService {
      *
      */
     List<Subscription> retrieveAll();
+
 }

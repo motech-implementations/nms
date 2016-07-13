@@ -65,12 +65,14 @@ public final class KilkariConstants {
     public static final int CHILD_PACK_LENGTH_WEEKS = 48;
     public static final int CHILD_PACK_LENGTH_DAYS = CHILD_PACK_LENGTH_WEEKS * DAY_IN_WEEK;
     public static final Long DEFAULT_MAX_ACTIVE_SUBSCRIPTION_CAP = 1000000L;
+    public static final int MSISDN_LENGTH = 10;
 
     // SQL constants
     public static final String SELECT_SUBSCRIBERS_BY_NUMBER = "select * from nms_subscribers where callingNumber = ?";
 
     // Log constants
     public static final String MORE_THAN_ONE_SUBSCRIBER = "More than one subscriber returned for callingNumber %s";
+    public static final String SUBSCRIBER_NOT_FOUND = "callingNumber %s not Found";
     public static final String SQL_QUERY_LOG = "SQL QUERY: {}";
 
     // Message constants
