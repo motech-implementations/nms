@@ -26,7 +26,8 @@ public final class Constants {
     public static final String ENDPOINT_PARAM = "endpoint";
     public static final String STATE_NAME_PARAM = "stateName";
     public static final String STATE_CODE_PARAM = "stateCode";
-    public static final String DATE_PARAM = "date";
+    public static final String START_DATE_PARAM = "start_date";
+    public static final String END_DATE_PARAM = "end_date";
     public static final String STATE_PARAM = "state";
 
     /**

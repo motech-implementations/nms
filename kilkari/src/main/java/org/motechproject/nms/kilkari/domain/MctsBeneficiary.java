@@ -1,5 +1,6 @@
 package org.motechproject.nms.kilkari.domain;
 
+import org.joda.time.LocalDate;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.domain.MdsEntity;
@@ -57,6 +58,9 @@ public abstract class MctsBeneficiary extends MdsEntity implements FullLocation 
     @Field
     private Village village;
 
+    @Field
+    private LocalDate updatedDateNic;
+
     public MctsBeneficiary() {
     }
 
@@ -67,6 +71,14 @@ public abstract class MctsBeneficiary extends MdsEntity implements FullLocation 
     public MctsBeneficiary(String beneficiaryId, String name) {
         this.beneficiaryId = beneficiaryId;
         this.name = name;
+    }
+
+    public LocalDate getUpdatedDateNic() {
+        return updatedDateNic;
+    }
+
+    public void setUpdatedDateNic(LocalDate updatedDateNic) {
+        this.updatedDateNic = updatedDateNic;
     }
 
     public String getBeneficiaryId() {

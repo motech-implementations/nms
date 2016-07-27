@@ -11,7 +11,10 @@ import org.motechproject.mds.annotations.Field;
 public class MctsImportAudit {
 
     @Field
-    private LocalDate importDate;
+    private LocalDate startImportDate;
+
+    @Field
+    private LocalDate endImportDate;
 
     @Field
     private MctsUserType userType;
@@ -31,9 +34,10 @@ public class MctsImportAudit {
     @Field
     private String message;
 
-    public MctsImportAudit(LocalDate importDate, MctsUserType mctsUserType, Long stateCode, String stateName, int accepted, int rejected, String message) {
-        this.importDate = importDate;
-        this.userType = mctsUserType;
+    public MctsImportAudit(LocalDate startImportDate, LocalDate endImportDate, MctsUserType userType, Long stateCode, String stateName, int accepted, int rejected, String message) {
+        this.startImportDate = startImportDate;
+        this.endImportDate = endImportDate;
+        this.userType = userType;
         this.stateCode = stateCode;
         this.stateName = stateName;
         this.accepted = accepted;
@@ -41,12 +45,20 @@ public class MctsImportAudit {
         this.message = message;
     }
 
-    public LocalDate getImportDate() {
-        return importDate;
+    public LocalDate getStartImportDate() {
+        return startImportDate;
     }
 
-    public void setImportDate(LocalDate importDate) {
-        this.importDate = importDate;
+    public void setStartImportDate(LocalDate startImportDate) {
+        this.startImportDate = startImportDate;
+    }
+
+    public LocalDate getEndImportDate() {
+        return endImportDate;
+    }
+
+    public void setEndImportDate(LocalDate endImportDate) {
+        this.endImportDate = endImportDate;
     }
 
     public MctsUserType getUserType() {

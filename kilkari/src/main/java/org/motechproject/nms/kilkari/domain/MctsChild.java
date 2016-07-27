@@ -44,5 +44,6 @@ public class MctsChild extends MctsBeneficiary {
         setHealthFacility(other.getHealthFacility());
         setHealthSubFacility(other.getHealthSubFacility());
         setVillage(other.getVillage());
+        setUpdatedDateNic(other.getUpdatedDateNic());
     }
 }

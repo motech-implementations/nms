@@ -1,5 +1,6 @@
 package org.motechproject.nms.flw.utils;
 
+import org.joda.time.LocalDate;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.region.domain.State;
@@ -59,6 +60,10 @@ public final class FlwMapper {
 
         if (flw.getDesignation() == null) {
             flw.setDesignation(type);
+        }
+
+        if (record.get(FlwConstants.UPDATED_ON) != null) {
+            flw.setUpdatedDateNic((LocalDate) record.get(FlwConstants.UPDATED_ON));
         }
 
         return flw;

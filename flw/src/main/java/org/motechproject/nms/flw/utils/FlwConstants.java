@@ -21,6 +21,7 @@ public final class FlwConstants {
     public static final String VILLAGE_NAME = "Village_Name";
     public static final String NON_CENSUS_VILLAGE_ID = "SVID";
     public static final String TYPE = "Type";
+    public static final String UPDATED_ON = "Updated_On";
 
     private FlwConstants() {
     }

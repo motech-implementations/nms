@@ -1,6 +1,7 @@
 package org.motechproject.nms.flw.domain;
 
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.annotations.InstanceLifecycleListeners;
@@ -59,6 +60,9 @@ public class FrontLineWorker extends MdsEntity implements FullLocation {
 
     @Field
     private Language language;
+
+    @Field
+    private LocalDate updatedDateNic;
 
     @Field
     @Persistent(defaultFetchGroup = "true")
@@ -242,6 +246,13 @@ public class FrontLineWorker extends MdsEntity implements FullLocation {
         this.designation = designation;
     }
 
+    public LocalDate getUpdatedDateNic() {
+        return updatedDateNic;
+    }
+
+    public void setUpdatedDateNic(LocalDate updatedDateNic) {
+        this.updatedDateNic = updatedDateNic;
+    }
 
     @Override //NO CHECKSTYLE CyclomaticComplexity
     public boolean equals(Object o) {

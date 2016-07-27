@@ -1,6 +1,7 @@
 package org.motechproject.nms.flw.service.impl;
 
 import org.apache.commons.lang.StringUtils;
+import org.joda.time.LocalDate;
 import org.motechproject.nms.csv.exception.CsvImportDataException;
 import org.motechproject.nms.csv.utils.ConstraintViolationUtils;
 import org.motechproject.nms.csv.utils.CsvImporterBuilder;
@@ -87,7 +88,11 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
         if (flw == null) {
             frontLineWorkerService.add(createFlw(record, location));
         } else {
-            frontLineWorkerService.update(updateFlw(flw, record, location));
+            LocalDate mctsUpdatedDateNic = (LocalDate) record.get(FlwConstants.UPDATED_ON);
+            //It updated_date_nic from mcts is not null,then it's not a new record. Compare it with the record from database and update
+            if (mctsUpdatedDateNic != null && (flw.getUpdatedDateNic() == null || mctsUpdatedDateNic.isAfter(flw.getUpdatedDateNic()) || mctsUpdatedDateNic.isEqual(flw.getUpdatedDateNic()))) {
+                frontLineWorkerService.update(updateFlw(flw, record, location));
+            }
         }
     }
 

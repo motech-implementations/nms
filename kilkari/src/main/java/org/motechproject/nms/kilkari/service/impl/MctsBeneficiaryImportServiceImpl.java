@@ -1,6 +1,7 @@
 package org.motechproject.nms.kilkari.service.impl;
 
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.motechproject.metrics.service.Timer;
 import org.motechproject.nms.csv.exception.CsvImportDataException;
 import org.motechproject.nms.csv.utils.ConstraintViolationUtils;
@@ -160,6 +161,12 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         Boolean abortion = (Boolean) record.get(KilkariConstants.ABORTION);
         Boolean stillBirth = (Boolean) record.get(KilkariConstants.STILLBIRTH);
         Boolean death = (Boolean) record.get(KilkariConstants.DEATH);
+        LocalDate mctsUpdatedDateNic = (LocalDate) record.get(KilkariConstants.LAST_UPDATE_DATE);
+
+        //validate if it's an updated record compared to one from database
+        if (mctsUpdatedDateNic == null || (mother.getUpdatedDateNic() != null && mother.getUpdatedDateNic().isAfter(mctsUpdatedDateNic))) {
+            return true;
+        }
 
         // validate msisdn
         if (!validateMsisdn(msisdn, SubscriptionPackType.PREGNANCY)) {
@@ -220,6 +227,12 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         MctsMother mother = (MctsMother) record.get(KilkariConstants.MOTHER_ID);
         DateTime dob = (DateTime) record.get(KilkariConstants.DOB);
         Boolean death = (Boolean) record.get(KilkariConstants.DEATH);
+        LocalDate mctsUpdatedDateNic = (LocalDate) record.get(KilkariConstants.LAST_UPDATE_DATE);
+
+        //validate if it's an updated record compared to one from database
+        if (mctsUpdatedDateNic == null || (child.getUpdatedDateNic() != null && child.getUpdatedDateNic().isAfter(mctsUpdatedDateNic))) {
+            return true;
+        }
 
         // validate msisdn
         if (!validateMsisdn(msisdn, SubscriptionPackType.CHILD)) {
