@@ -14,6 +14,9 @@
     <osgi:reference id="mctsImportAuditDataService"
                   interface="org.motechproject.nms.mcts.repository.MctsImportAuditDataService" />
 
+    <osgi:reference id="mctsImportFailRecordDataService"
+                    interface="org.motechproject.nms.mcts.repository.MctsImportFailRecordDataService" />
+
     <osgi:reference id="schedulerService"
                     interface="org.motechproject.scheduler.service.MotechSchedulerService" />
 

@@ -3,6 +3,7 @@ package org.motechproject.nms.mcts.service.impl;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.joda.time.LocalDate;
+import org.joda.time.format.DateTimeFormat;
 import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.alerts.domain.AlertStatus;
 import org.motechproject.alerts.domain.AlertType;
@@ -461,7 +462,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         map.put(KilkariConstants.SUB_CENTRE_NAME, childRecord.getSubCentreName());
         map.put(KilkariConstants.CENSUS_VILLAGE_ID, childRecord.getVillageId());
         map.put(KilkariConstants.VILLAGE_NAME, childRecord.getVillageName());
-        map.put(KilkariConstants.LAST_UPDATE_DATE, childRecord.getLastUpdateDate() == null ? null : LocalDate.parse(childRecord.getLastUpdateDate()));
+        map.put(KilkariConstants.LAST_UPDATE_DATE, "".equals(childRecord.getLastUpdateDate()) ? null : LocalDate.parse(childRecord.getLastUpdateDate(), DateTimeFormat.forPattern("dd-MM-yyyy")));
 
         map.put(KilkariConstants.BENEFICIARY_NAME, childRecord.getName());
 
@@ -493,7 +494,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         map.put(KilkariConstants.SUB_CENTRE_NAME, motherRecord.getSubCentreName());
         map.put(KilkariConstants.CENSUS_VILLAGE_ID, motherRecord.getVillageId());
         map.put(KilkariConstants.VILLAGE_NAME, motherRecord.getVillageName());
-        map.put(KilkariConstants.LAST_UPDATE_DATE, motherRecord.getLastUpdateDate() == null ? null : LocalDate.parse(motherRecord.getLastUpdateDate()));
+        map.put(KilkariConstants.LAST_UPDATE_DATE, "".equals(motherRecord.getLastUpdateDate()) ? null : LocalDate.parse(motherRecord.getLastUpdateDate(), DateTimeFormat.forPattern("dd-MM-yyyy")));
 
         map.put(KilkariConstants.BENEFICIARY_ID, mctsBeneficiaryValueProcessor.getOrCreateMotherInstance(motherRecord.getIdNo()));
         map.put(KilkariConstants.BENEFICIARY_NAME, motherRecord.getName());
