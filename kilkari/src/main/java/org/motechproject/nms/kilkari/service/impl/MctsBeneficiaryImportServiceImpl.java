@@ -192,6 +192,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
         mother.setName(name);
         mother.setDateOfBirth(motherDOB);
+        mother.setUpdatedDateNic(mctsUpdatedDateNic);
 
         Subscription subscription = subscriberService.updateMotherSubscriber(msisdn, mother, lmp);
         // We rejected the update/create for the subscriber
@@ -258,6 +259,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
         child.setName(name);
         child.setMother(mother);
+        child.setUpdatedDateNic(mctsUpdatedDateNic);
 
         Subscription childSubscription = subscriberService.updateChildSubscriber(msisdn, child, dob);
         // child subscription create/update was rejected

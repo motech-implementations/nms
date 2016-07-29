@@ -19,6 +19,11 @@ import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.repository.MctsChildDataService;
 import org.motechproject.nms.kilkari.repository.MctsMotherDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
+import org.motechproject.nms.mcts.domain.MctsImportAudit;
+import org.motechproject.nms.mcts.domain.MctsImportFailRecord;
+import org.motechproject.nms.mcts.domain.MctsUserType;
+import org.motechproject.nms.mcts.repository.MctsImportAuditDataService;
+import org.motechproject.nms.mcts.repository.MctsImportFailRecordDataService;
 import org.motechproject.nms.mcts.service.MctsWsImportService;
 import org.motechproject.nms.mcts.utils.Constants;
 import org.motechproject.nms.region.domain.District;
@@ -30,7 +35,7 @@ import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.StateDataService;
-import org.motechproject.nms.testing.it.mcts.util.MockWsHttpServlet;
+import org.motechproject.nms.testing.it.mcts.util.*;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
@@ -72,6 +77,12 @@ public class MctsImportBundleIT extends BasePaxIT {
 
     @Inject
     private MctsChildDataService mctsChildDataService;
+
+    @Inject
+    private MctsImportAuditDataService mctsImportAuditDataService;
+
+    @Inject
+    private MctsImportFailRecordDataService mctsImportFailRecordDataService;
 
     @Inject
     private StateDataService stateDataService;
@@ -148,10 +159,18 @@ public class MctsImportBundleIT extends BasePaxIT {
         SubscriptionPack childPack  = new SubscriptionPack("child", SubscriptionPackType.CHILD, 5000, 6,
                 Collections.<SubscriptionPackMessage>emptyList());
 
+
+
         subscriptionPackDataService.create(pregnancyPack);
         subscriptionPackDataService.create(childPack);
 
+
+
         httpService.registerServlet("/mctsWs", new MockWsHttpServlet(), null, null);
+        httpService.registerServlet("/mctsWsFailedStructure", new MockWsHttpServletForFail(), null, null);
+        httpService.registerServlet("/mctsWsRemoteException", new MockWsHttpServletRemoteException(), null, null);
+        httpService.registerServlet("/mctsWsNoUpdateDate", new MockWsHttpServletForNoUpdateDate(), null, null);
+        httpService.registerServlet("/mctsWsOneUpdateDate", new MockWsHttpServletForOneUpdateDate(), null, null);
 
     }
 
@@ -159,30 +178,110 @@ public class MctsImportBundleIT extends BasePaxIT {
     public void tearDown() {
         testingService.clearDatabase();
         httpService.unregister("/mctsWs");
+        httpService.unregister("/mctsWsFailedStructure");
+        httpService.unregister("/mctsWsRemoteException");
+        httpService.unregister("/mctsWsNoUpdateDate");
+        httpService.unregister("/mctsWsOneUpdateDate");
     }
 
-    @Ignore
     @Test
-    public void shouldPerformImport() throws MalformedURLException {
-        URL endpoint = new URL(String.format("http://localhost:%d/mctsWs", TestContext.getJettyPort()));
+    public void shouldUpdateFailedTableWhenImportFailsDueToFailedStructure() throws MalformedURLException {
+        URL endpoint = new URL(String.format("http://localhost:%d/mctsWsFailedStructure", TestContext.getJettyPort()));
+        LocalDate lastDateToCheck = DateUtil.today().minusDays(7);
         LocalDate yesterday = DateUtil.today().minusDays(1);
         List<Long> stateIds = singletonList(21L);
 
+
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        Thread.currentThread().setContextClassLoader(mctsWsImportService.getClass().getClassLoader());
+
+        // setup motech event
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.START_DATE_PARAM, lastDateToCheck);
+        params.put(Constants.END_DATE_PARAM,yesterday);
+        params.put(Constants.STATE_ID_PARAM, 21L);
+        params.put(Constants.ENDPOINT_PARAM, endpoint);
+        MotechEvent event = new MotechEvent("foobar", params);
+        mctsWsImportService.importMothersData(event);
+        mctsWsImportService.importChildrenData(event);
+        mctsWsImportService.importAnmAshaData(event);
+        Thread.currentThread().setContextClassLoader(cl);
+
+        List<MctsImportFailRecord> mctsImportFailRecords = mctsImportFailRecordDataService.retrieveAll();
+        assertEquals(3,mctsImportFailRecords.size());
+
+
+
+
+
+    }
+
+    @Test
+    public void shouldUpdateFailedTableWhenImportFailsDueRemoteException() throws MalformedURLException {
+        URL endpoint = new URL(String.format("http://localhost:%d/mctsWsRemoteException", TestContext.getJettyPort()));
+        LocalDate lastDateToCheck = DateUtil.today().minusDays(7);
+        LocalDate yesterday = DateUtil.today().minusDays(1);
+        List<Long> stateIds = singletonList(21L);
+
+
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        Thread.currentThread().setContextClassLoader(mctsWsImportService.getClass().getClassLoader());
+
+        // setup motech event
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.START_DATE_PARAM, lastDateToCheck);
+        params.put(Constants.END_DATE_PARAM,yesterday);
+        params.put(Constants.STATE_ID_PARAM, 21L);
+        params.put(Constants.ENDPOINT_PARAM, endpoint);
+        MotechEvent event = new MotechEvent("foobar", params);
+        mctsWsImportService.importMothersData(event);
+        mctsWsImportService.importChildrenData(event);
+        mctsWsImportService.importAnmAshaData(event);
+        Thread.currentThread().setContextClassLoader(cl);
+
+        List<MctsImportFailRecord> mctsImportFailRecords = mctsImportFailRecordDataService.retrieveAll();
+        assertEquals(3,mctsImportFailRecords.size());
+
+
+
+
+
+    }
+
+    @Test
+    public void shouldPerformImportWithUpdatesAndDeleteInFailedTable() throws MalformedURLException {
+        URL endpoint = new URL(String.format("http://localhost:%d/mctsWs", TestContext.getJettyPort()));
+
+        LocalDate lastDateToCheck = DateUtil.today().minusDays(7);
+        LocalDate failDate = DateUtil.today().minusDays(2);
+        LocalDate yesterday = DateUtil.today().minusDays(1);
+        MctsImportFailRecord mctsImportFailRecord1 = new MctsImportFailRecord(failDate,MctsUserType.ASHA,21L);
+
+        MctsImportFailRecord mctsImportFailRecord2 = new MctsImportFailRecord(failDate,MctsUserType.MOTHER,21L);
+
+        MctsImportFailRecord mctsImportFailRecord3 = new MctsImportFailRecord(failDate,MctsUserType.CHILD,21L);
+
+        mctsImportFailRecordDataService.create(mctsImportFailRecord1);
+        mctsImportFailRecordDataService.create(mctsImportFailRecord2);
+        mctsImportFailRecordDataService.create(mctsImportFailRecord3);
+
         try {
             TimeFaker.fakeToday(DateUtil.newDate(2015, 7, 24));
-            // this CL workaround is for an issue with PAX IT logging messing things up
-            // shouldn't affect production
+
             ClassLoader cl = Thread.currentThread().getContextClassLoader();
             Thread.currentThread().setContextClassLoader(mctsWsImportService.getClass().getClassLoader());
 
             // setup motech event
             Map<String, Object> params = new HashMap<>();
+            params.put(Constants.START_DATE_PARAM, lastDateToCheck);
             params.put(Constants.END_DATE_PARAM, yesterday);
             params.put(Constants.STATE_ID_PARAM, 21L);
             params.put(Constants.ENDPOINT_PARAM, endpoint);
             MotechEvent event = new MotechEvent("foobar", params);
 
-            /* Hard to test this since we do async loading now, using test hook. UT already tests message distribution */
+
+
+                /* Hard to test this since we do async loading now, using test hook. UT already tests message distribution */
             mctsWsImportService.importMothersData(event);
             mctsWsImportService.importChildrenData(event);
             mctsWsImportService.importAnmAshaData(event);
@@ -190,15 +289,153 @@ public class MctsImportBundleIT extends BasePaxIT {
 
 
             // we expect two of each - the second entry in each ds (3 total) has wrong location data
-            List<MctsMother> mothers = mctsMotherDataService.retrieveAll();
-            assertEquals(2, mothers.size());
-
-            List<MctsChild> children = mctsChildDataService.retrieveAll();
-            assertEquals(2, children.size());
+            List<MctsImportAudit> mctsImportAudits= mctsImportAuditDataService.retrieveAll();
+            assertEquals(3,mctsImportAudits.size());
 
             List<FrontLineWorker> flws = flwDataService.retrieveAll();
             assertEquals(2, flws.size());
-        } finally {
+
+            List<MctsImportFailRecord> mctsImportFailRecords = mctsImportFailRecordDataService.retrieveAll();
+            assertEquals(0, mctsImportFailRecords.size());
+            assertEquals("Name a", flws.get(0).getName());
+
+            List<MctsChild> children = mctsChildDataService.retrieveAll();
+            assertEquals(2, children.size());
+            assertEquals("Name y", children.get(0).getName());
+
+            List<MctsMother> mothers = mctsMotherDataService.retrieveAll();
+            assertEquals(2, mothers.size());
+            assertEquals("Name x", mothers.get(0).getName());
+        }finally {
+            TimeFaker.stopFakingTime();
+        }
+
+
+    }
+
+    @Test
+    public void shouldPerformImportWithUpdatesAndDeleteInFailedTableNoUpdateDate() throws MalformedURLException {
+        URL endpoint = new URL(String.format("http://localhost:%d/mctsWsNoUpdateDate", TestContext.getJettyPort()));
+
+        LocalDate lastDateToCheck = DateUtil.today().minusDays(7);
+        LocalDate failDate = DateUtil.today().minusDays(2);
+        LocalDate yesterday = DateUtil.today().minusDays(1);
+        MctsImportFailRecord mctsImportFailRecord1 = new MctsImportFailRecord(failDate,MctsUserType.ASHA,21L);
+
+        MctsImportFailRecord mctsImportFailRecord2 = new MctsImportFailRecord(failDate,MctsUserType.MOTHER,21L);
+
+        MctsImportFailRecord mctsImportFailRecord3 = new MctsImportFailRecord(failDate,MctsUserType.CHILD,21L);
+
+        mctsImportFailRecordDataService.create(mctsImportFailRecord1);
+        mctsImportFailRecordDataService.create(mctsImportFailRecord2);
+        mctsImportFailRecordDataService.create(mctsImportFailRecord3);
+
+        try {
+            TimeFaker.fakeToday(DateUtil.newDate(2015, 7, 24));
+
+            ClassLoader cl = Thread.currentThread().getContextClassLoader();
+            Thread.currentThread().setContextClassLoader(mctsWsImportService.getClass().getClassLoader());
+
+            // setup motech event
+            Map<String, Object> params = new HashMap<>();
+            params.put(Constants.START_DATE_PARAM, lastDateToCheck);
+            params.put(Constants.END_DATE_PARAM, yesterday);
+            params.put(Constants.STATE_ID_PARAM, 21L);
+            params.put(Constants.ENDPOINT_PARAM, endpoint);
+            MotechEvent event = new MotechEvent("foobar", params);
+
+
+
+                /* Hard to test this since we do async loading now, using test hook. UT already tests message distribution */
+            mctsWsImportService.importMothersData(event);
+            mctsWsImportService.importChildrenData(event);
+            mctsWsImportService.importAnmAshaData(event);
+            Thread.currentThread().setContextClassLoader(cl);
+
+
+            // we expect two of each - the second entry in each ds (3 total) has wrong location data
+
+
+                    List<FrontLineWorker> flws = flwDataService.retrieveAll();
+                    assertEquals(2, flws.size());
+
+                    List<MctsImportFailRecord> mctsImportFailRecords = mctsImportFailRecordDataService.retrieveAll();
+                    assertEquals(0,mctsImportFailRecords.size());
+                    assertEquals("Sample Name 1",flws.get(0).getName());
+
+                    List<MctsChild> children = mctsChildDataService.retrieveAll();
+                    assertEquals(2, children.size());
+                    assertEquals("Name 1",children.get(0).getName());
+
+                    List<MctsMother> mothers = mctsMotherDataService.retrieveAll();
+                    assertEquals(2, mothers.size());
+                    assertEquals("Name 1",mothers.get(0).getName());
+
+        }finally {
+            TimeFaker.stopFakingTime();
+        }
+
+    }
+
+    @Test
+    public void shouldPerformImportWithUpdatesAndDeleteInFailedTableOneUpdateDate() throws MalformedURLException {
+        URL endpoint = new URL(String.format("http://localhost:%d/mctsWsOneUpdateDate", TestContext.getJettyPort()));
+
+        LocalDate lastDateToCheck = DateUtil.today().minusDays(7);
+        LocalDate failDate = DateUtil.today().minusDays(2);
+        LocalDate yesterday = DateUtil.today().minusDays(1);
+        MctsImportFailRecord mctsImportFailRecord1 = new MctsImportFailRecord(failDate,MctsUserType.ASHA,21L);
+
+        MctsImportFailRecord mctsImportFailRecord2 = new MctsImportFailRecord(failDate,MctsUserType.MOTHER,21L);
+
+        MctsImportFailRecord mctsImportFailRecord3 = new MctsImportFailRecord(failDate,MctsUserType.CHILD,21L);
+
+        mctsImportFailRecordDataService.create(mctsImportFailRecord1);
+        mctsImportFailRecordDataService.create(mctsImportFailRecord2);
+        mctsImportFailRecordDataService.create(mctsImportFailRecord3);
+
+
+        try {
+            TimeFaker.fakeToday(DateUtil.newDate(2015, 7, 24));
+            ClassLoader cl = Thread.currentThread().getContextClassLoader();
+            Thread.currentThread().setContextClassLoader(mctsWsImportService.getClass().getClassLoader());
+
+            // setup motech event
+            Map<String, Object> params = new HashMap<>();
+            params.put(Constants.START_DATE_PARAM, lastDateToCheck);
+            params.put(Constants.END_DATE_PARAM, yesterday);
+            params.put(Constants.STATE_ID_PARAM, 21L);
+            params.put(Constants.ENDPOINT_PARAM, endpoint);
+            MotechEvent event = new MotechEvent("foobar", params);
+
+
+
+                /* Hard to test this since we do async loading now, using test hook. UT already tests message distribution */
+            mctsWsImportService.importMothersData(event);
+            mctsWsImportService.importChildrenData(event);
+            mctsWsImportService.importAnmAshaData(event);
+            Thread.currentThread().setContextClassLoader(cl);
+
+
+            // we expect two of each - the second entry in each ds (3 total) has wrong location data
+
+
+                    List<FrontLineWorker> flws = flwDataService.retrieveAll();
+                    assertEquals(1, flws.size());
+
+                    List<MctsImportFailRecord> mctsImportFailRecords = mctsImportFailRecordDataService.retrieveAll();
+                    assertEquals(0,mctsImportFailRecords.size());
+                    assertEquals("Name a",flws.get(0).getName());
+
+                    List<MctsChild> children = mctsChildDataService.retrieveAll();
+                    assertEquals(1, children.size());
+                    assertEquals("Name y",children.get(0).getName());
+
+                    List<MctsMother> mothers = mctsMotherDataService.retrieveAll();
+                    assertEquals(1, mothers.size());
+                    assertEquals("Name x",mothers.get(0).getName());
+
+        }finally {
             TimeFaker.stopFakingTime();
         }
 
@@ -209,6 +446,7 @@ public class MctsImportBundleIT extends BasePaxIT {
     public void shouldFilterHpdImport() throws MalformedURLException {
         URL endpoint = new URL(String.format("http://localhost:%d/mctsWs", TestContext.getJettyPort()));
         LocalDate yesterday = DateUtil.today().minusDays(1);
+        LocalDate lastDayToCheck = DateUtil.today().minusDays(7);
         List<Long> stateIds = singletonList(21L);
 
         // setup config
@@ -225,7 +463,8 @@ public class MctsImportBundleIT extends BasePaxIT {
 
             // setup motech event
             Map<String, Object> params = new HashMap<>();
-            params.put(Constants.END_DATE_PARAM, yesterday);
+            params.put(Constants.START_DATE_PARAM, lastDayToCheck);
+            params.put(Constants.END_DATE_PARAM,yesterday);
             params.put(Constants.STATE_ID_PARAM, 21L);
             params.put(Constants.ENDPOINT_PARAM, endpoint);
             MotechEvent event = new MotechEvent("foobar", params);
