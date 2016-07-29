@@ -1,0 +1,101 @@
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+    <s:Body>
+        <DS_GetMotherDataResponse xmlns="http://tempuri.org/">
+            <DS_GetMotherDataResult>
+                <xs:schema id="NewDataSet" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+                    <xs:element name="NewDataSet" msdata:IsDataSet="true" msdata:UseCurrentLocale="true">
+                        <xs:complexType>
+                            <xs:choice minOccurs="0" maxOccurs="unbounded">
+                                <xs:element name="Records">
+                                    <xs:complexType>
+                                        <xs:sequence>
+                                            <xs:element name="StateID" type="xs:short" minOccurs="0"/>
+                                            <xs:element name="District_ID" type="xs:int" minOccurs="0"/>
+                                            <xs:element name="District_Name" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="Taluka_ID" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="Taluka_Name" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="HealthBlock_ID" type="xs:int" minOccurs="0"/>
+                                            <xs:element name="HealthBlock_Name" type="xs:string" minOccurs="0
+                                            <xs:element name="PHC_ID" type="xs:int" minOccurs="0"/>
+                                            <xs:element name="PHC_Name" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="SubCentre_ID" type="xs:int" minOccurs="0"/>
+                                            <xs:element name="SubCentre_Name" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="Village_ID" type="xs:int" minOccurs="0"/>
+                                            <xs:element name="Village_Name" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="Yr" type="xs:int" minOccurs="0"/>
+                                            <xs:element name="GP_Village" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="Address" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="ID_No" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="Name" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="Husband_Name" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="PhoneNo_Of_Whom" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="Whom_PhoneNo" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="Birthdate" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="JSY_Beneficiary" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="Caste" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="SubCentre_Name1" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="ANM_Name" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="ANM_Phone" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="ASHA_Name" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="ASHA_Phone" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="Delivery_Lnk_Facility" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="Facility_Name" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="LMP_Date" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="ANC1_Date" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="ANC2_Date" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="ANC3_Date" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="ANC4_Date" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="TT1_Date" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="TT2_Date" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="TTBooster_Date" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="IFA100_Given_Date" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="Anemia" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="ANC_Complication" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="RTI_STI" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="Dly_Date" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="Dly_Place_Home_Type" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="Dly_Place_Public" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="Dly_Place_Private" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="Dly_Type" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="Dly_Complication" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="Discharge_Date" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="JSY_Paid_Date" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="Abortion" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="PNC_Home_Visit" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="PNC_Complication" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="PPC_Method" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="PNC_Checkup" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="Outcome_Nos" type="xs:short" minOccurs="0"/>
+                                            <xs:element name="Child1_Name" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="Child1_Sex" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="Child1_Wt" type="xs:double" minOccurs="0"/>
+                                            <xs:element name="Child1_Brestfeeding" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="Child2_Name" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="Child2_Sex" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="Child2_Wt" type="xs:double" minOccurs="0"/>
+                                            <xs:element name="Child2_Brestfeeding" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="Remarks" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="ANM_ID" type="xs:int" minOccurs="0"/>
+                                            <xs:element name="ASHA_ID" type="xs:int" minOccurs="0"/>
+                                            <xs:element name="Call_Ans" type="xs:boolean" minOccurs="0"/>
+                                            <xs:element name="NoCall_Reason" type="xs:short" minOccurs="0"/>
+                                            <xs:element name="NoPhone_Reason" type="xs:short" minOccurs="0"/>
+                                            <xs:element name="Created_By" type="xs:int" minOccurs="0"/>
+                                            <xs:element name="Updated_By" type="xs:int" minOccurs="0"/>
+                                            <xs:element name="Aadhar_No" type="xs:decimal" minOccurs="0"/>
+                                            <xs:element name="BPL_APL" type="xs:short" minOccurs="0"/>
+                                            <xs:element name="EID" type="xs:decimal" minOccurs="0"/>
+                                            <xs:element name="EIDTime" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="Entry_Type" type="xs:int" minOccurs="0"/>
+                                        </xs:sequence>
+                                    </xs:complexType>
+                                </xs:element>
+                            </xs:choice>
+                        </xs:complexType>
+                    </xs:element>
+                </xs:schema>
+                <diffgr:diffgram xmlns:diffgr="urn:schemas-microsoft-com:xml-diffgram-v1" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata"/>
+            </DS_GetMotherDataResult>
+        </DS_GetMotherDataResponse>
+    </s:Body>
+</s:Envelope>

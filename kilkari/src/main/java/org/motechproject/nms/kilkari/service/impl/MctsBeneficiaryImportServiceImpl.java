@@ -163,11 +163,6 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         Boolean death = (Boolean) record.get(KilkariConstants.DEATH);
         LocalDate mctsUpdatedDateNic = (LocalDate) record.get(KilkariConstants.LAST_UPDATE_DATE);
 
-        //validate if it's an updated record compared to one from database
-        if (mctsUpdatedDateNic == null || (mother.getUpdatedDateNic() != null && mother.getUpdatedDateNic().isAfter(mctsUpdatedDateNic))) {
-            return true;
-        }
-
         // validate msisdn
         if (!validateMsisdn(msisdn, SubscriptionPackType.PREGNANCY)) {
             return false;
@@ -188,6 +183,11 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             subscriptionErrorDataService.create(new SubscriptionError(msisdn, SubscriptionRejectionReason.INVALID_LOCATION,
                     SubscriptionPackType.PREGNANCY, le.getMessage()));
             return false;
+        }
+
+        //validate if it's an updated record compared to one from database
+        if (mother.getUpdatedDateNic() != null && (mctsUpdatedDateNic == null || mother.getUpdatedDateNic().isAfter(mctsUpdatedDateNic))) {
+            return true;
         }
 
         mother.setName(name);
@@ -229,11 +229,6 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         Boolean death = (Boolean) record.get(KilkariConstants.DEATH);
         LocalDate mctsUpdatedDateNic = (LocalDate) record.get(KilkariConstants.LAST_UPDATE_DATE);
 
-        //validate if it's an updated record compared to one from database
-        if (mctsUpdatedDateNic == null || (child.getUpdatedDateNic() != null && child.getUpdatedDateNic().isAfter(mctsUpdatedDateNic))) {
-            return true;
-        }
-
         // validate msisdn
         if (!validateMsisdn(msisdn, SubscriptionPackType.CHILD)) {
             return false;
@@ -254,6 +249,11 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             subscriptionErrorDataService.create(new SubscriptionError(msisdn, child.getBeneficiaryId(),
                     SubscriptionRejectionReason.INVALID_LOCATION, SubscriptionPackType.CHILD, le.getMessage()));
             return false;
+        }
+
+        //validate if it's an updated record compared to one from database
+        if (child.getUpdatedDateNic() != null && (mctsUpdatedDateNic == null || child.getUpdatedDateNic().isAfter(mctsUpdatedDateNic))) {
+            return true;
         }
 
         child.setName(name);
