@@ -11,7 +11,6 @@ import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.EventRelay;
 import org.motechproject.event.listener.annotations.MotechListener;
 import org.motechproject.mds.query.QueryParams;
-import org.motechproject.mds.query.SqlQueryExecution;
 import org.motechproject.mds.util.Order;
 import org.motechproject.nms.flw.exception.FlwImportException;
 import org.motechproject.nms.flw.service.FrontLineWorkerImportService;
@@ -45,7 +44,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.jdo.Query;
 import java.net.URL;
 import java.util.Collection;
 import java.util.HashMap;
@@ -419,31 +417,19 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
 
     private void deleteMctsImportFailRecords(final LocalDate startReferenceDate, final LocalDate endReferenceDate, final MctsUserType mctsUserType, final Long stateId) {
 
-        @SuppressWarnings("unchecked")
-        SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
-
-            @Override
-            public String getSqlQuery() {
-                String query = "DELETE FROM nms_mcts_failures WHERE importDate between :startReferenceDate AND :endReferenceDate AND stateCode = :stateId AND userType = :mctsUserType";
-                LOGGER.debug("SQL QUERY: {}", query);
-                return query;
-            }
-
-            @Override
-            public Long execute(Query query) {
-
-                Map params = new HashMap();
-                params.put("startReferenceDate", startReferenceDate);
-                params.put("endReferenceDate", endReferenceDate);
-                params.put("mctsUserType", mctsUserType);
-                params.put("stateId", stateId);
-                return (Long) query.executeWithMap(params);
-            }
-        };
-
         LOGGER.debug("Deleting nms_mcts_failures records which are successfully imported");
-        long rowCount = mctsImportFailRecordDataService.executeSQLQuery(queryExecution);
-        LOGGER.debug("Deleted {} rows from nms_mcts_failures", rowCount);
+        if (startReferenceDate.equals(endReferenceDate)) {
+            LOGGER.debug("No failed imports in the past 7days ");
+        } else {
+            QueryParams queryParams = new QueryParams(new Order("importDate", Order.Direction.ASC));
+            List<MctsImportFailRecord> failedImports = mctsImportFailRecordDataService.getByStateAndImportdateAndUsertype(stateId, startReferenceDate, mctsUserType, queryParams);
+            int counter = 0;
+            for (MctsImportFailRecord eachFailedImport: failedImports) {
+                mctsImportFailRecordDataService.delete(eachFailedImport);
+                counter++;
+            }
+            LOGGER.debug("Deleted {} rows from nms_mcts_failures", counter);
+        }
     }
 
     private Map<String, Object> toMap(ChildRecord childRecord) {

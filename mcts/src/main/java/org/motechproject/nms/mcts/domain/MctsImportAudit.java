@@ -4,11 +4,19 @@ import org.joda.time.LocalDate;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 
+
 /**
  * Audit record for mcts data import
  */
 @Entity(tableName = "nms_mcts_audit")
 public class MctsImportAudit {
+
+    /**
+     * importDate is used in historic data.After fixing the issue NMS-360: Introduce retrial of data import from MCTS service for 7 days,
+     * It is no longer used.
+     */
+    @Field
+    private LocalDate importDate;
 
     @Field
     private LocalDate startImportDate;
@@ -45,6 +53,13 @@ public class MctsImportAudit {
         this.message = message;
     }
 
+    public LocalDate getImportDate() {
+        return importDate;
+    }
+
+    public void setImportDate(LocalDate importDate) {
+        this.importDate = importDate;
+    }
     public LocalDate getStartImportDate() {
         return startImportDate;
     }
