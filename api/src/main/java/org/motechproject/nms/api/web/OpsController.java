@@ -117,11 +117,7 @@ public class OpsController extends BaseController {
     @Transactional
     public void createUpdateFlw(@RequestBody AddFlwRequest addFlwRequest) {
         // TODO: add a field updatedDateNic for Add Flw Request.
-        // Will Fix this after success of this PR.
-        if(true) {
-            throw new UnsupportedOperationException("Temporarily blocked craeteFlwUpdate.");
-        }
-
+        // Will Fix this with NMS-349
         log("REQUEST: /ops/createUpdateFlw", String.format(
                 "callingNumber=%s, mctsId=%s, name=%s, state=%d, district=%d",
                 LogHelper.obscure(addFlwRequest.getContactNumber()),
