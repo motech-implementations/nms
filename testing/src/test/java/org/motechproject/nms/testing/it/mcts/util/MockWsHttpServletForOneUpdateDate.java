@@ -8,9 +8,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-/**
- * Created by motech on 29/7/16.
- */
+/*
+    test servlet for data with updated dates in one of the duplicate records
+     */
 public class MockWsHttpServletForOneUpdateDate extends HttpServlet {
 
     @Override

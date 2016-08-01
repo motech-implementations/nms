@@ -10,6 +10,9 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.rmi.RemoteException;
 
+/*
+    test servlet for remote server exception throw
+     */
 public class MockWsHttpServletRemoteException extends HttpServlet {
 
     @Override

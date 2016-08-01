@@ -56,7 +56,7 @@ import static org.junit.Assert.assertTrue;
 public class CdrFileServiceBundleIT extends BasePaxIT {
 
     private static final String PROCESS_FILES_SUBJECT = "nms.imi.kk.process_files";
-    private static final long MAX_MILLISECOND_WAIT = 2000L;
+    private static final long MAX_MILLISECOND_WAIT = 10000L;
 
     private static final String INITIAL_RETRY_DELAY = "imi.initial_retry_delay";
     private static final String MAX_CDR_ERROR_COUNT = "imi.max_cdr_error_count";

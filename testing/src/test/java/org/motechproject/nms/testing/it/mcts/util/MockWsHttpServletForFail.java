@@ -8,9 +8,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-/**
- * Created by motech on 27/7/16.
- */
+/*
+   test servlet for failing data with wrong structure
+    */
 public class MockWsHttpServletForFail extends HttpServlet {
 
     @Override

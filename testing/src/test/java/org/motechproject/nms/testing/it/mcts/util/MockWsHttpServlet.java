@@ -8,6 +8,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+/*
+    test servlet for data with updated dates in all the 4 records in xml
+     */
 public class MockWsHttpServlet extends HttpServlet {
 
     @Override

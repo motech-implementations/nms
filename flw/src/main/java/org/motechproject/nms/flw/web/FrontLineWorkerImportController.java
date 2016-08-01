@@ -45,11 +45,6 @@ public class FrontLineWorkerImportController {
     @ResponseStatus(HttpStatus.OK)
     public void updateFrontLineWorkersLanguage(@RequestParam MultipartFile csvFile) {
 
-        // Update FrontLineWorkers Language from csv import is not supported
-        if(true) {
-            throw new UnsupportedOperationException("MCTS FLW Language csv import is not supported.");
-        }
-
         try {
             try (InputStream in = csvFile.getInputStream()) {
                 flwUpdateImportService.importLanguageData(new InputStreamReader(in));

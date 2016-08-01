@@ -111,6 +111,8 @@ public class TestingServiceImpl implements TestingService {
         "nms_ma_completion_records__TRASH",
         "nms_ma_course",
         "nms_ma_course__TRASH",
+        "nms_mcts_audit",
+        "nms_mcts_audit__TRASH",
         "nms_mcts_beneficiaries__TRASH",
         "nms_mcts_children",
         "nms_mcts_children__TRASH",

@@ -35,7 +35,11 @@ import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.StateDataService;
-import org.motechproject.nms.testing.it.mcts.util.*;
+import org.motechproject.nms.testing.it.mcts.util.MockWsHttpServlet;
+import org.motechproject.nms.testing.it.mcts.util.MockWsHttpServletForFail;
+import org.motechproject.nms.testing.it.mcts.util.MockWsHttpServletForNoUpdateDate;
+import org.motechproject.nms.testing.it.mcts.util.MockWsHttpServletForOneUpdateDate;
+import org.motechproject.nms.testing.it.mcts.util.MockWsHttpServletRemoteException;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
@@ -207,6 +211,8 @@ public class MctsImportBundleIT extends BasePaxIT {
         mctsWsImportService.importAnmAshaData(event);
         Thread.currentThread().setContextClassLoader(cl);
 
+//        Since the structure is wrong in the xmls, the import should not take place and the data should be updated in nms_mcts_failure table
+
         List<MctsImportFailRecord> mctsImportFailRecords = mctsImportFailRecordDataService.retrieveAll();
         assertEquals(3,mctsImportFailRecords.size());
 
@@ -238,6 +244,8 @@ public class MctsImportBundleIT extends BasePaxIT {
         mctsWsImportService.importChildrenData(event);
         mctsWsImportService.importAnmAshaData(event);
         Thread.currentThread().setContextClassLoader(cl);
+
+//        Since the response while reading the xmls is a Remote server exception, the import should not take place and the data should be updated in nms_mcts_failure table
 
         List<MctsImportFailRecord> mctsImportFailRecords = mctsImportFailRecordDataService.retrieveAll();
         assertEquals(3,mctsImportFailRecords.size());
@@ -288,7 +296,7 @@ public class MctsImportBundleIT extends BasePaxIT {
             Thread.currentThread().setContextClassLoader(cl);
 
 
-            // we expect two of each - the second entry in each ds (3 total) has wrong location data
+            // we expect two of each - the second entry in each ds (4 total) has wrong location data and the first one is a duplicate of the fourth record with updated date. So the updated record should stay. The audit table should update with three errors created manually above. And after the import the three errors should clear from failure table.
             List<MctsImportAudit> mctsImportAudits= mctsImportAuditDataService.retrieveAll();
             assertEquals(3,mctsImportAudits.size());
 
@@ -353,7 +361,7 @@ public class MctsImportBundleIT extends BasePaxIT {
             Thread.currentThread().setContextClassLoader(cl);
 
 
-            // we expect two of each - the second entry in each ds (3 total) has wrong location data
+            // we expect two of each - the second entry in each ds (4 total) has wrong location data and the first one is a duplicate of the fourth record with no updated dates on any record. So only one of the duplicates should be in the database. And after the import the three errors should clear from failure table.
 
 
                     List<FrontLineWorker> flws = flwDataService.retrieveAll();
@@ -417,7 +425,7 @@ public class MctsImportBundleIT extends BasePaxIT {
             Thread.currentThread().setContextClassLoader(cl);
 
 
-            // we expect two of each - the second entry in each ds (3 total) has wrong location data
+            // we expect one of each - the first entry in each ds (2 total) has an updated dated unlike the previous data. So only the one with updated date should be in the database. And after the import the three errors should clear from failure table.
 
 
                     List<FrontLineWorker> flws = flwDataService.retrieveAll();
