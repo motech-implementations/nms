@@ -63,6 +63,11 @@ public class MctsBeneficiaryImportController {
     @ResponseStatus(HttpStatus.OK)
     public void importMotherData(@RequestParam MultipartFile csvFile) {
 
+        // Mcts mother import from csv is not supported
+        if(true) {
+            throw new UnsupportedOperationException("MCTS MOTHER csv import is not supported.");
+        }
+
         LOGGER.debug("importMotherData() BEGIN");
         Timer timer = new Timer("mom", "moms");
         int count = 0;
@@ -86,6 +91,11 @@ public class MctsBeneficiaryImportController {
     @ResponseStatus(HttpStatus.OK)
     public void importChildData(@RequestParam MultipartFile csvFile) {
 
+        // Mcts child import from csv is not supported
+        if(true) {
+            throw new UnsupportedOperationException("MCTS CHILD csv import is not supported.");
+        }
+
         LOGGER.debug("importChildData() BEGIN");
         Timer timer = new Timer("kid", "kids");
         int count = 0;
@@ -107,6 +117,11 @@ public class MctsBeneficiaryImportController {
     @RequestMapping(value = "/beneficiary/update", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
     public void updateBeneficiaryData(@RequestParam MultipartFile csvFile) {
+
+        // Update Beneficiary data from csv is not supported
+        if(true) {
+            throw new UnsupportedOperationException("Update Beneficiary csv import is not supported.");
+        }
 
         LOGGER.debug("updateBeneficiaryData() BEGIN");
         try {
