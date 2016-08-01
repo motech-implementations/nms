@@ -163,11 +163,6 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         Boolean death = (Boolean) record.get(KilkariConstants.DEATH);
         LocalDate mctsUpdatedDateNic = (LocalDate) record.get(KilkariConstants.LAST_UPDATE_DATE);
 
-        //validate if it's an updated record compared to one from database
-        if (mctsUpdatedDateNic == null || (mother.getUpdatedDateNic() != null && mother.getUpdatedDateNic().isAfter(mctsUpdatedDateNic))) {
-            return true;
-        }
-
         // validate msisdn
         if (!validateMsisdn(msisdn, SubscriptionPackType.PREGNANCY)) {
             return false;
@@ -190,8 +185,14 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             return false;
         }
 
+        //validate if it's an updated record compared to one from database
+        if (mother.getUpdatedDateNic() != null && (mctsUpdatedDateNic == null || mother.getUpdatedDateNic().isAfter(mctsUpdatedDateNic))) {
+            return true;
+        }
+
         mother.setName(name);
         mother.setDateOfBirth(motherDOB);
+        mother.setUpdatedDateNic(mctsUpdatedDateNic);
 
         Subscription subscription = subscriberService.updateMotherSubscriber(msisdn, mother, lmp);
         // We rejected the update/create for the subscriber
@@ -229,11 +230,6 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         Boolean death = (Boolean) record.get(KilkariConstants.DEATH);
         LocalDate mctsUpdatedDateNic = (LocalDate) record.get(KilkariConstants.LAST_UPDATE_DATE);
 
-        //validate if it's an updated record compared to one from database
-        if (mctsUpdatedDateNic == null || (child.getUpdatedDateNic() != null && child.getUpdatedDateNic().isAfter(mctsUpdatedDateNic))) {
-            return true;
-        }
-
         // validate msisdn
         if (!validateMsisdn(msisdn, SubscriptionPackType.CHILD)) {
             return false;
@@ -256,8 +252,14 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             return false;
         }
 
+        //validate if it's an updated record compared to one from database
+        if (child.getUpdatedDateNic() != null && (mctsUpdatedDateNic == null || child.getUpdatedDateNic().isAfter(mctsUpdatedDateNic))) {
+            return true;
+        }
+
         child.setName(name);
         child.setMother(mother);
+        child.setUpdatedDateNic(mctsUpdatedDateNic);
 
         Subscription childSubscription = subscriberService.updateChildSubscriber(msisdn, child, dob);
         // child subscription create/update was rejected
