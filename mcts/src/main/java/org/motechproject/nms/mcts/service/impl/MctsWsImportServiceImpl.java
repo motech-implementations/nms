@@ -12,6 +12,7 @@ import org.motechproject.event.listener.EventRelay;
 import org.motechproject.event.listener.annotations.MotechListener;
 import org.motechproject.mds.query.QueryParams;
 import org.motechproject.mds.util.Order;
+import org.motechproject.nms.flw.exception.FlwExistingRecordException;
 import org.motechproject.nms.flw.exception.FlwImportException;
 import org.motechproject.nms.flw.service.FrontLineWorkerImportService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
@@ -401,6 +402,9 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
                 rejected++;
             } catch (FlwImportException e) {
                 LOGGER.error("Existing FLW with same MSISDN but different MCTS ID", e);
+                rejected++;
+            } catch (FlwExistingRecordException e) {
+                LOGGER.error("Cannot import FLW with ID: {}, and MSISDN (Contact_No): {}", record.getId(), record.getContactNo(), e);
                 rejected++;
             } catch (Exception e) {
                 LOGGER.error("Flw import Error. Cannot import FLW with ID: {}, and MSISDN (Contact_No): {}",

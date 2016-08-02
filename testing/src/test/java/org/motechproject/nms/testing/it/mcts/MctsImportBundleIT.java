@@ -9,6 +9,7 @@ import org.junit.runner.RunWith;
 import org.motechproject.commons.date.util.DateUtil;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
+import org.motechproject.nms.flw.exception.FlwExistingRecordException;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.imi.service.SettingsService;
 import org.motechproject.nms.kilkari.domain.MctsChild;
@@ -158,16 +159,14 @@ public class MctsImportBundleIT extends BasePaxIT {
 
         districtDataService.create(district);
 
-        SubscriptionPack pregnancyPack = new SubscriptionPack("prg", SubscriptionPackType.PREGNANCY, 10, 10,
+        SubscriptionPack pregnancyPack = new SubscriptionPack("prg", SubscriptionPackType.PREGNANCY, 70, 10,
                 Collections.<SubscriptionPackMessage>emptyList());
-        SubscriptionPack childPack  = new SubscriptionPack("child", SubscriptionPackType.CHILD, 5000, 6,
+        SubscriptionPack childPack = new SubscriptionPack("child", SubscriptionPackType.CHILD, 5000, 6,
                 Collections.<SubscriptionPackMessage>emptyList());
-
 
 
         subscriptionPackDataService.create(pregnancyPack);
         subscriptionPackDataService.create(childPack);
-
 
 
         httpService.registerServlet("/mctsWs", new MockWsHttpServlet(), null, null);
@@ -195,14 +194,15 @@ public class MctsImportBundleIT extends BasePaxIT {
         LocalDate yesterday = DateUtil.today().minusDays(1);
         List<Long> stateIds = singletonList(21L);
 
-
+        // this CL workaround is for an issue with PAX IT logging messing things up
+        // shouldn't affect production
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
         Thread.currentThread().setContextClassLoader(mctsWsImportService.getClass().getClassLoader());
 
         // setup motech event
         Map<String, Object> params = new HashMap<>();
         params.put(Constants.START_DATE_PARAM, lastDateToCheck);
-        params.put(Constants.END_DATE_PARAM,yesterday);
+        params.put(Constants.END_DATE_PARAM, yesterday);
         params.put(Constants.STATE_ID_PARAM, 21L);
         params.put(Constants.ENDPOINT_PARAM, endpoint);
         MotechEvent event = new MotechEvent("foobar", params);
@@ -212,13 +212,8 @@ public class MctsImportBundleIT extends BasePaxIT {
         Thread.currentThread().setContextClassLoader(cl);
 
 //        Since the structure is wrong in the xmls, the import should not take place and the data should be updated in nms_mcts_failure table
-
         List<MctsImportFailRecord> mctsImportFailRecords = mctsImportFailRecordDataService.retrieveAll();
-        assertEquals(3,mctsImportFailRecords.size());
-
-
-
-
+        assertEquals(3, mctsImportFailRecords.size());
 
     }
 
@@ -229,14 +224,15 @@ public class MctsImportBundleIT extends BasePaxIT {
         LocalDate yesterday = DateUtil.today().minusDays(1);
         List<Long> stateIds = singletonList(21L);
 
-
+        // this CL workaround is for an issue with PAX IT logging messing things up
+        // shouldn't affect production
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
         Thread.currentThread().setContextClassLoader(mctsWsImportService.getClass().getClassLoader());
 
         // setup motech event
         Map<String, Object> params = new HashMap<>();
         params.put(Constants.START_DATE_PARAM, lastDateToCheck);
-        params.put(Constants.END_DATE_PARAM,yesterday);
+        params.put(Constants.END_DATE_PARAM, yesterday);
         params.put(Constants.STATE_ID_PARAM, 21L);
         params.put(Constants.ENDPOINT_PARAM, endpoint);
         MotechEvent event = new MotechEvent("foobar", params);
@@ -246,15 +242,12 @@ public class MctsImportBundleIT extends BasePaxIT {
         Thread.currentThread().setContextClassLoader(cl);
 
 //        Since the response while reading the xmls is a Remote server exception, the import should not take place and the data should be updated in nms_mcts_failure table
-
         List<MctsImportFailRecord> mctsImportFailRecords = mctsImportFailRecordDataService.retrieveAll();
-        assertEquals(3,mctsImportFailRecords.size());
-
-
-
+        assertEquals(3, mctsImportFailRecords.size());
 
 
     }
+
 
     @Test
     public void shouldPerformImportWithUpdatesAndDeleteInFailedTable() throws MalformedURLException {
@@ -263,11 +256,11 @@ public class MctsImportBundleIT extends BasePaxIT {
         LocalDate lastDateToCheck = DateUtil.today().minusDays(7);
         LocalDate failDate = DateUtil.today().minusDays(2);
         LocalDate yesterday = DateUtil.today().minusDays(1);
-        MctsImportFailRecord mctsImportFailRecord1 = new MctsImportFailRecord(failDate,MctsUserType.ASHA,21L);
+        MctsImportFailRecord mctsImportFailRecord1 = new MctsImportFailRecord(failDate, MctsUserType.ASHA, 21L);
 
-        MctsImportFailRecord mctsImportFailRecord2 = new MctsImportFailRecord(failDate,MctsUserType.MOTHER,21L);
+        MctsImportFailRecord mctsImportFailRecord2 = new MctsImportFailRecord(failDate, MctsUserType.MOTHER, 21L);
 
-        MctsImportFailRecord mctsImportFailRecord3 = new MctsImportFailRecord(failDate,MctsUserType.CHILD,21L);
+        MctsImportFailRecord mctsImportFailRecord3 = new MctsImportFailRecord(failDate, MctsUserType.CHILD, 21L);
 
         mctsImportFailRecordDataService.create(mctsImportFailRecord1);
         mctsImportFailRecordDataService.create(mctsImportFailRecord2);
@@ -275,7 +268,8 @@ public class MctsImportBundleIT extends BasePaxIT {
 
         try {
             TimeFaker.fakeToday(DateUtil.newDate(2015, 7, 24));
-
+            // this CL workaround is for an issue with PAX IT logging messing things up
+            // shouldn't affect production
             ClassLoader cl = Thread.currentThread().getContextClassLoader();
             Thread.currentThread().setContextClassLoader(mctsWsImportService.getClass().getClassLoader());
 
@@ -287,18 +281,23 @@ public class MctsImportBundleIT extends BasePaxIT {
             params.put(Constants.ENDPOINT_PARAM, endpoint);
             MotechEvent event = new MotechEvent("foobar", params);
 
-
-
-                /* Hard to test this since we do async loading now, using test hook. UT already tests message distribution */
+            /* Hard to test this since we do async loading now, using test hook. UT already tests message distribution */
             mctsWsImportService.importMothersData(event);
             mctsWsImportService.importChildrenData(event);
             mctsWsImportService.importAnmAshaData(event);
             Thread.currentThread().setContextClassLoader(cl);
 
-
             // we expect two of each - the second entry in each ds (4 total) has wrong location data and the first one is a duplicate of the fourth record with updated date. So the updated record should stay. The audit table should update with three errors created manually above. And after the import the three errors should clear from failure table.
-            List<MctsImportAudit> mctsImportAudits= mctsImportAuditDataService.retrieveAll();
-            assertEquals(3,mctsImportAudits.size());
+            List<MctsImportAudit> mctsImportAudits = mctsImportAuditDataService.retrieveAll();
+            assertEquals(3, mctsImportAudits.size());
+            assertEquals(2, mctsImportAudits.get(0).getAccepted());
+            assertEquals(2, mctsImportAudits.get(0).getRejected());
+            assertEquals(2, mctsImportAudits.get(1).getAccepted());
+            assertEquals(2, mctsImportAudits.get(1).getRejected());
+            assertEquals(2, mctsImportAudits.get(2).getAccepted());
+            assertEquals(2, mctsImportAudits.get(2).getRejected());
+            assertEquals(lastDateToCheck, mctsImportAudits.get(0).getStartImportDate());
+            assertEquals(yesterday, mctsImportAudits.get(0).getEndImportDate());
 
             List<FrontLineWorker> flws = flwDataService.retrieveAll();
             assertEquals(2, flws.size());
@@ -314,7 +313,7 @@ public class MctsImportBundleIT extends BasePaxIT {
             List<MctsMother> mothers = mctsMotherDataService.retrieveAll();
             assertEquals(2, mothers.size());
             assertEquals("Name x", mothers.get(0).getName());
-        }finally {
+        } finally {
             TimeFaker.stopFakingTime();
         }
 
@@ -328,11 +327,11 @@ public class MctsImportBundleIT extends BasePaxIT {
         LocalDate lastDateToCheck = DateUtil.today().minusDays(7);
         LocalDate failDate = DateUtil.today().minusDays(2);
         LocalDate yesterday = DateUtil.today().minusDays(1);
-        MctsImportFailRecord mctsImportFailRecord1 = new MctsImportFailRecord(failDate,MctsUserType.ASHA,21L);
+        MctsImportFailRecord mctsImportFailRecord1 = new MctsImportFailRecord(failDate, MctsUserType.ASHA, 21L);
 
-        MctsImportFailRecord mctsImportFailRecord2 = new MctsImportFailRecord(failDate,MctsUserType.MOTHER,21L);
+        MctsImportFailRecord mctsImportFailRecord2 = new MctsImportFailRecord(failDate, MctsUserType.MOTHER, 21L);
 
-        MctsImportFailRecord mctsImportFailRecord3 = new MctsImportFailRecord(failDate,MctsUserType.CHILD,21L);
+        MctsImportFailRecord mctsImportFailRecord3 = new MctsImportFailRecord(failDate, MctsUserType.CHILD, 21L);
 
         mctsImportFailRecordDataService.create(mctsImportFailRecord1);
         mctsImportFailRecordDataService.create(mctsImportFailRecord2);
@@ -340,7 +339,8 @@ public class MctsImportBundleIT extends BasePaxIT {
 
         try {
             TimeFaker.fakeToday(DateUtil.newDate(2015, 7, 24));
-
+            // this CL workaround is for an issue with PAX IT logging messing things up
+            // shouldn't affect production
             ClassLoader cl = Thread.currentThread().getContextClassLoader();
             Thread.currentThread().setContextClassLoader(mctsWsImportService.getClass().getClassLoader());
 
@@ -352,9 +352,7 @@ public class MctsImportBundleIT extends BasePaxIT {
             params.put(Constants.ENDPOINT_PARAM, endpoint);
             MotechEvent event = new MotechEvent("foobar", params);
 
-
-
-                /* Hard to test this since we do async loading now, using test hook. UT already tests message distribution */
+            /* Hard to test this since we do async loading now, using test hook. UT already tests message distribution */
             mctsWsImportService.importMothersData(event);
             mctsWsImportService.importChildrenData(event);
             mctsWsImportService.importAnmAshaData(event);
@@ -362,27 +360,24 @@ public class MctsImportBundleIT extends BasePaxIT {
 
 
             // we expect two of each - the second entry in each ds (4 total) has wrong location data and the first one is a duplicate of the fourth record with no updated dates on any record. So only one of the duplicates should be in the database. And after the import the three errors should clear from failure table.
+            List<FrontLineWorker> flws = flwDataService.retrieveAll();
+            assertEquals(2, flws.size());
 
+            List<MctsImportFailRecord> mctsImportFailRecords = mctsImportFailRecordDataService.retrieveAll();
+            assertEquals(0, mctsImportFailRecords.size());
+            assertEquals("Sample Name 1", flws.get(0).getName());
 
-                    List<FrontLineWorker> flws = flwDataService.retrieveAll();
-                    assertEquals(2, flws.size());
+            List<MctsChild> children = mctsChildDataService.retrieveAll();
+            assertEquals(2, children.size());
+            assertEquals("Name 1", children.get(0).getName());
 
-                    List<MctsImportFailRecord> mctsImportFailRecords = mctsImportFailRecordDataService.retrieveAll();
-                    assertEquals(0,mctsImportFailRecords.size());
-                    assertEquals("Sample Name 1",flws.get(0).getName());
+            List<MctsMother> mothers = mctsMotherDataService.retrieveAll();
+            assertEquals(2, mothers.size());
+            assertEquals("Name 1", mothers.get(0).getName());
 
-                    List<MctsChild> children = mctsChildDataService.retrieveAll();
-                    assertEquals(2, children.size());
-                    assertEquals("Name 1",children.get(0).getName());
-
-                    List<MctsMother> mothers = mctsMotherDataService.retrieveAll();
-                    assertEquals(2, mothers.size());
-                    assertEquals("Name 1",mothers.get(0).getName());
-
-        }finally {
+        } finally {
             TimeFaker.stopFakingTime();
         }
-
     }
 
     @Test
@@ -392,11 +387,11 @@ public class MctsImportBundleIT extends BasePaxIT {
         LocalDate lastDateToCheck = DateUtil.today().minusDays(7);
         LocalDate failDate = DateUtil.today().minusDays(2);
         LocalDate yesterday = DateUtil.today().minusDays(1);
-        MctsImportFailRecord mctsImportFailRecord1 = new MctsImportFailRecord(failDate,MctsUserType.ASHA,21L);
+        MctsImportFailRecord mctsImportFailRecord1 = new MctsImportFailRecord(failDate, MctsUserType.ASHA, 21L);
 
-        MctsImportFailRecord mctsImportFailRecord2 = new MctsImportFailRecord(failDate,MctsUserType.MOTHER,21L);
+        MctsImportFailRecord mctsImportFailRecord2 = new MctsImportFailRecord(failDate, MctsUserType.MOTHER, 21L);
 
-        MctsImportFailRecord mctsImportFailRecord3 = new MctsImportFailRecord(failDate,MctsUserType.CHILD,21L);
+        MctsImportFailRecord mctsImportFailRecord3 = new MctsImportFailRecord(failDate, MctsUserType.CHILD, 21L);
 
         mctsImportFailRecordDataService.create(mctsImportFailRecord1);
         mctsImportFailRecordDataService.create(mctsImportFailRecord2);
@@ -405,6 +400,8 @@ public class MctsImportBundleIT extends BasePaxIT {
 
         try {
             TimeFaker.fakeToday(DateUtil.newDate(2015, 7, 24));
+            // this CL workaround is for an issue with PAX IT logging messing things up
+            // shouldn't affect production
             ClassLoader cl = Thread.currentThread().getContextClassLoader();
             Thread.currentThread().setContextClassLoader(mctsWsImportService.getClass().getClassLoader());
 
@@ -416,34 +413,29 @@ public class MctsImportBundleIT extends BasePaxIT {
             params.put(Constants.ENDPOINT_PARAM, endpoint);
             MotechEvent event = new MotechEvent("foobar", params);
 
-
-
-                /* Hard to test this since we do async loading now, using test hook. UT already tests message distribution */
+            /* Hard to test this since we do async loading now, using test hook. UT already tests message distribution */
             mctsWsImportService.importMothersData(event);
             mctsWsImportService.importChildrenData(event);
             mctsWsImportService.importAnmAshaData(event);
             Thread.currentThread().setContextClassLoader(cl);
 
-
             // we expect one of each - the first entry in each ds (2 total) has an updated dated unlike the previous data. So only the one with updated date should be in the database. And after the import the three errors should clear from failure table.
+            List<FrontLineWorker> flws = flwDataService.retrieveAll();
+            assertEquals(1, flws.size());
 
+            List<MctsImportFailRecord> mctsImportFailRecords = mctsImportFailRecordDataService.retrieveAll();
+            assertEquals(0, mctsImportFailRecords.size());
+            assertEquals("Name a", flws.get(0).getName());
 
-                    List<FrontLineWorker> flws = flwDataService.retrieveAll();
-                    assertEquals(1, flws.size());
+            List<MctsChild> children = mctsChildDataService.retrieveAll();
+            assertEquals(1, children.size());
+            assertEquals("Name y", children.get(0).getName());
 
-                    List<MctsImportFailRecord> mctsImportFailRecords = mctsImportFailRecordDataService.retrieveAll();
-                    assertEquals(0,mctsImportFailRecords.size());
-                    assertEquals("Name a",flws.get(0).getName());
+            List<MctsMother> mothers = mctsMotherDataService.retrieveAll();
+            assertEquals(1, mothers.size());
+            assertEquals("Name x", mothers.get(0).getName());
 
-                    List<MctsChild> children = mctsChildDataService.retrieveAll();
-                    assertEquals(1, children.size());
-                    assertEquals("Name y",children.get(0).getName());
-
-                    List<MctsMother> mothers = mctsMotherDataService.retrieveAll();
-                    assertEquals(1, mothers.size());
-                    assertEquals("Name x",mothers.get(0).getName());
-
-        }finally {
+        } finally {
             TimeFaker.stopFakingTime();
         }
 
@@ -472,7 +464,7 @@ public class MctsImportBundleIT extends BasePaxIT {
             // setup motech event
             Map<String, Object> params = new HashMap<>();
             params.put(Constants.START_DATE_PARAM, lastDayToCheck);
-            params.put(Constants.END_DATE_PARAM,yesterday);
+            params.put(Constants.END_DATE_PARAM, yesterday);
             params.put(Constants.STATE_ID_PARAM, 21L);
             params.put(Constants.ENDPOINT_PARAM, endpoint);
             MotechEvent event = new MotechEvent("foobar", params);

@@ -57,6 +57,7 @@ public class MctsImportJobHandler {
             throw new MctsImportConfigurationException("Cron expression from setting is invalid: " + cronExpression);
         }
 
+        LOGGER.info("Created MCTS Import Event");
         CronSchedulableJob mctsImportJob = new CronSchedulableJob(new MotechEvent(Constants.MCTS_IMPORT_EVENT), cronExpression);
         motechSchedulerService.safeScheduleJob(mctsImportJob);
     }

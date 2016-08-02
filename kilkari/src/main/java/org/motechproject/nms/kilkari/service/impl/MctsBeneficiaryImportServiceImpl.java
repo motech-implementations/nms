@@ -187,7 +187,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
         //validate if it's an updated record compared to one from database
         if (mother.getUpdatedDateNic() != null && (mctsUpdatedDateNic == null || mother.getUpdatedDateNic().isAfter(mctsUpdatedDateNic))) {
-            return true;
+            return false;
         }
 
         mother.setName(name);
@@ -254,7 +254,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
         //validate if it's an updated record compared to one from database
         if (child.getUpdatedDateNic() != null && (mctsUpdatedDateNic == null || child.getUpdatedDateNic().isAfter(mctsUpdatedDateNic))) {
-            return true;
+            return false;
         }
 
         child.setName(name);

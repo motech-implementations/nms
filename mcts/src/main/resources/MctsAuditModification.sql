@@ -1,1 +1,0 @@
-ALTER TABLE motech_data_services.nms_mcts_audit CHANGE importDate endImportDate DATE NULL;
