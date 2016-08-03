@@ -1,5 +1,6 @@
 package org.motechproject.nms.testing.it.mcts.util;
 
+
 import org.apache.commons.io.IOUtils;
 
 import javax.servlet.ServletException;
@@ -7,28 +8,22 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.rmi.RemoteException;
 
 /*
-    test servlet for data with updated dates in all the 4 records in xml
+    test servlet for remote server exception throw
      */
-public class MockWsHttpServlet extends HttpServlet {
+public class MockWsHttpServletRemoteException extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String requestBody = IOUtils.toString(req.getInputStream());
-
-        String response;
         if (requestBody.contains("GetMother")) {
-            response = MctsImportTestHelper.getMotherResponseData();
+            throw new RemoteException();
         } else if (requestBody.contains("GetChild")) {
-            response = MctsImportTestHelper.getChildrenResponseData();
+            throw new RemoteException();
         } else {
-            response = MctsImportTestHelper.getAnmAshaResponseData();
+            throw new RemoteException();
         }
-
-        resp.setStatus(HttpServletResponse.SC_OK);
-        resp.setContentLength(response.length());
-
-        IOUtils.write(response, resp.getOutputStream());
     }
 }

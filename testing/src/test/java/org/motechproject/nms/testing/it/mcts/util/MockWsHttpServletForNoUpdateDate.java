@@ -9,21 +9,20 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 /*
-    test servlet for data with updated dates in all the 4 records in xml
+    test servlet for data with no updated dates in all the 4 records in xml
      */
-public class MockWsHttpServlet extends HttpServlet {
-
+public class MockWsHttpServletForNoUpdateDate extends HttpServlet{
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String requestBody = IOUtils.toString(req.getInputStream());
 
         String response;
         if (requestBody.contains("GetMother")) {
-            response = MctsImportTestHelper.getMotherResponseData();
+            response = MctsImportTestHelper.getMotherResponseDataForNoUpdateDate();
         } else if (requestBody.contains("GetChild")) {
-            response = MctsImportTestHelper.getChildrenResponseData();
+            response = MctsImportTestHelper.getChildrenResponseDataForNoUpdateDate();
         } else {
-            response = MctsImportTestHelper.getAnmAshaResponseData();
+            response = MctsImportTestHelper.getAnmAshaResponseDataForNoUpdateDate();
         }
 
         resp.setStatus(HttpServletResponse.SC_OK);

@@ -48,10 +48,11 @@ public class MctsWebServiceFacadeBundleIT extends BasePaxIT {
         MothersDataSet result = mctsWebServiceFacade.getMothersData(referenceDate, referenceDate, endpoint, 21l);
         Thread.currentThread().setContextClassLoader(cl);
 
-        assertEquals(3, result.getRecords().size());
-        assertEquals("Name 1", result.getRecords().get(0).getName());
+        assertEquals(4, result.getRecords().size());
+        assertEquals("Name x", result.getRecords().get(0).getName());
         assertEquals("Name 2", result.getRecords().get(1).getName());
         assertEquals("Name 3", result.getRecords().get(2).getName());
+        assertEquals("Name 1", result.getRecords().get(3).getName());
     }
 
     @Test
@@ -63,13 +64,17 @@ public class MctsWebServiceFacadeBundleIT extends BasePaxIT {
 
         URL endpoint = new URL(url);
         LocalDate referenceDate = LocalDate.now().minusDays(1);
-
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        Thread.currentThread().setContextClassLoader(mctsWebServiceFacade.getClass().getClassLoader());
         ChildrenDataSet result = mctsWebServiceFacade.getChildrenData(referenceDate, referenceDate, endpoint, 21l);
+        Thread.currentThread().setContextClassLoader(cl);
 
-        assertEquals(3, result.getRecords().size());
-        assertEquals("Name 1", result.getRecords().get(0).getName());
+
+        assertEquals(4, result.getRecords().size());
+        assertEquals("Name y", result.getRecords().get(0).getName());
         assertEquals("Name 2", result.getRecords().get(1).getName());
         assertEquals("Name 3", result.getRecords().get(2).getName());
+        assertEquals("Name 1", result.getRecords().get(3).getName());
     }
 
     @Test
@@ -87,10 +92,11 @@ public class MctsWebServiceFacadeBundleIT extends BasePaxIT {
         AnmAshaDataSet result = mctsWebServiceFacade.getAnmAshaData(referenceDate, referenceDate, endpoint, 21l);
         Thread.currentThread().setContextClassLoader(cl);
 
-        assertEquals(3, result.getRecords().size());
-        assertEquals("Sample Name 1", result.getRecords().get(0).getName());
+        assertEquals(4, result.getRecords().size());
+        assertEquals("Name a", result.getRecords().get(0).getName());
         assertEquals("Sample Name 2", result.getRecords().get(1).getName());
         assertEquals("Sample Name 3", result.getRecords().get(2).getName());
+        assertEquals("Sample Name 1", result.getRecords().get(3).getName());
     }
 
     @Test

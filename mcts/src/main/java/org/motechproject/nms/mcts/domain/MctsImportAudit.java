@@ -4,14 +4,25 @@ import org.joda.time.LocalDate;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 
+
 /**
  * Audit record for mcts data import
  */
 @Entity(tableName = "nms_mcts_audit")
 public class MctsImportAudit {
 
+    /**
+     * importDate is used in historic data.After fixing the issue NMS-360: Introduce retrial of data import from MCTS service for 7 days,
+     * It is no longer used.
+     */
     @Field
     private LocalDate importDate;
+
+    @Field
+    private LocalDate startImportDate;
+
+    @Field
+    private LocalDate endImportDate;
 
     @Field
     private MctsUserType userType;
@@ -31,9 +42,10 @@ public class MctsImportAudit {
     @Field
     private String message;
 
-    public MctsImportAudit(LocalDate importDate, MctsUserType mctsUserType, Long stateCode, String stateName, int accepted, int rejected, String message) {
-        this.importDate = importDate;
-        this.userType = mctsUserType;
+    public MctsImportAudit(LocalDate startImportDate, LocalDate endImportDate, MctsUserType userType, Long stateCode, String stateName, int accepted, int rejected, String message) {
+        this.startImportDate = startImportDate;
+        this.endImportDate = endImportDate;
+        this.userType = userType;
         this.stateCode = stateCode;
         this.stateName = stateName;
         this.accepted = accepted;
@@ -47,6 +59,21 @@ public class MctsImportAudit {
 
     public void setImportDate(LocalDate importDate) {
         this.importDate = importDate;
+    }
+    public LocalDate getStartImportDate() {
+        return startImportDate;
+    }
+
+    public void setStartImportDate(LocalDate startImportDate) {
+        this.startImportDate = startImportDate;
+    }
+
+    public LocalDate getEndImportDate() {
+        return endImportDate;
+    }
+
+    public void setEndImportDate(LocalDate endImportDate) {
+        this.endImportDate = endImportDate;
     }
 
     public MctsUserType getUserType() {

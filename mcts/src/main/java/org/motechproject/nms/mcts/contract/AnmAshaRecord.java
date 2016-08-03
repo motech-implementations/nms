@@ -1,5 +1,7 @@
 package org.motechproject.nms.mcts.contract;
 
+import org.joda.time.LocalDate;
+import org.joda.time.format.DateTimeFormat;
 import org.motechproject.nms.flw.utils.FlwConstants;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -422,6 +424,7 @@ public class AnmAshaRecord {
         map.put(FlwConstants.CENSUS_VILLAGE_ID, getVillageId());
         map.put(FlwConstants.VILLAGE_NAME, getVillageName());
         map.put(FlwConstants.TYPE, getType());
+        map.put(FlwConstants.UPDATED_ON, "".equals(getUpdatedOn()) ? null : LocalDate.parse(getUpdatedOn(), DateTimeFormat.forPattern("dd-MM-yyyy")));
         return map;
     }
 }

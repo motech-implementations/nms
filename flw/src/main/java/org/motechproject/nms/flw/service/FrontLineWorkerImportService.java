@@ -1,5 +1,6 @@
 package org.motechproject.nms.flw.service;
 
+import org.motechproject.nms.flw.exception.FlwExistingRecordException;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.exception.InvalidLocationException;
 
@@ -11,5 +12,5 @@ public interface FrontLineWorkerImportService {
 
     void importData(Reader reader) throws IOException;
 
-    void importFrontLineWorker(Map<String, Object> record, State state) throws InvalidLocationException;
+    void importFrontLineWorker(Map<String, Object> record, State state) throws InvalidLocationException, FlwExistingRecordException;
 }

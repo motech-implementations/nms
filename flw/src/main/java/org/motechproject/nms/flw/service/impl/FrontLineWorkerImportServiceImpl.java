@@ -1,6 +1,7 @@
 package org.motechproject.nms.flw.service.impl;
 
 import org.apache.commons.lang.StringUtils;
+import org.joda.time.LocalDate;
 import org.motechproject.nms.csv.exception.CsvImportDataException;
 import org.motechproject.nms.csv.utils.ConstraintViolationUtils;
 import org.motechproject.nms.csv.utils.CsvImporterBuilder;
@@ -9,6 +10,7 @@ import org.motechproject.nms.csv.utils.GetLong;
 import org.motechproject.nms.csv.utils.GetString;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 
+import org.motechproject.nms.flw.exception.FlwExistingRecordException;
 import org.motechproject.nms.flw.exception.FlwImportException;
 import org.motechproject.nms.flw.service.FrontLineWorkerImportService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
@@ -71,14 +73,14 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
             }
         } catch (ConstraintViolationException e) {
             throw new CsvImportDataException(createErrorMessage(e.getConstraintViolations(), csvImporter.getRowNumber()), e);
-        } catch (InvalidLocationException | FlwImportException | JDODataStoreException e) {
+        } catch (InvalidLocationException | FlwImportException | JDODataStoreException | FlwExistingRecordException e) {
             throw new CsvImportDataException(createErrorMessage(e.getMessage(), csvImporter.getRowNumber()), e);
         }
     }
 
     @Override
     @Transactional
-    public void importFrontLineWorker(Map<String, Object> record, State state) throws InvalidLocationException {
+    public void importFrontLineWorker(Map<String, Object> record, State state) throws InvalidLocationException, FlwExistingRecordException {
         FrontLineWorker flw = flwFromRecord(record, state);
 
         record.put(FlwConstants.STATE_ID, state.getCode());
@@ -87,7 +89,13 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
         if (flw == null) {
             frontLineWorkerService.add(createFlw(record, location));
         } else {
-            frontLineWorkerService.update(updateFlw(flw, record, location));
+            LocalDate mctsUpdatedDateNic = (LocalDate) record.get(FlwConstants.UPDATED_ON);
+            //It updated_date_nic from mcts is not null,then it's not a new record. Compare it with the record from database and update
+            if (mctsUpdatedDateNic != null && (flw.getUpdatedDateNic() == null || mctsUpdatedDateNic.isAfter(flw.getUpdatedDateNic()) || mctsUpdatedDateNic.isEqual(flw.getUpdatedDateNic()))) {
+                frontLineWorkerService.update(updateFlw(flw, record, location));
+            } else {
+                throw new FlwExistingRecordException("Updated record exists in the database");
+            }
         }
     }
 

@@ -9,9 +9,9 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 /*
-    test servlet for data with updated dates in all the 4 records in xml
+    test servlet for data with updated dates in one of the duplicate records
      */
-public class MockWsHttpServlet extends HttpServlet {
+public class MockWsHttpServletForOneUpdateDate extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -19,11 +19,11 @@ public class MockWsHttpServlet extends HttpServlet {
 
         String response;
         if (requestBody.contains("GetMother")) {
-            response = MctsImportTestHelper.getMotherResponseData();
+            response = MctsImportTestHelper.getMotherResponseDataForOneUpdateDate();
         } else if (requestBody.contains("GetChild")) {
-            response = MctsImportTestHelper.getChildrenResponseData();
+            response = MctsImportTestHelper.getChildrenResponseDataForOneUpdateDate();
         } else {
-            response = MctsImportTestHelper.getAnmAshaResponseData();
+            response = MctsImportTestHelper.getAnmAshaResponseDataForOneUpdateDate();
         }
 
         resp.setStatus(HttpServletResponse.SC_OK);

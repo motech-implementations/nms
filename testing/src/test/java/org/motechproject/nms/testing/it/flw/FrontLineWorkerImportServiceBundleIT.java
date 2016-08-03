@@ -6,6 +6,7 @@ import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.FileBody;
 import org.joda.time.DateTime;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.csv.domain.CsvAuditRecord;
@@ -216,7 +217,9 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
 
     // This test should load the FLW with MCTS id '#1' and attempt to update their MSISDN to a number already
     // in use.  This should result in a unique constraint exception
+    //    This test has been ignored because we are not using csv import at the moment
     @Test(expected = CsvImportDataException.class)
+    @Ignore
     public void testImportMSISDNConflict() throws Exception {
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         State state = stateDataService.findByName("State 1");
@@ -284,7 +287,10 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         frontLineWorkerImportService.importData(reader);
     }
 
+
+    //    This test has been ignored because we are not using csv import at the moment
     @Test
+    @Ignore
     public void testImportFromSampleDataFile() throws Exception {
         frontLineWorkerImportService.importData(read("csv/anm-asha.txt"));
 
@@ -313,7 +319,9 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     /**
      * To verify FLW record is uploaded successfully when all mandatory parameters are present.
      */
+    //    This test has been ignored because we are not using csv import at the moment
     @Test
+    @Ignore
     public void verifyFT535() throws Exception {
         importCsvFileForFLW("flw.txt");
         FrontLineWorker flw1 = frontLineWorkerDataService.findByContactNumber(1234567899L);
@@ -331,7 +339,9 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     /**
      * To verify FLW status must be updated successfully from Anonymous to Active.
      */
+    //    This test has been ignored because we are not using csv import at the moment
     @Test
+    @Ignore
     public void verifyFT536() throws Exception {
         FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 1234567890L);
         flw.setMctsFlwId("#0");
@@ -365,7 +375,9 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     /**
      * To verify FLW upload is rejected when mandatory parameter name is missing.
      */
+    //    This test has been ignored because we are not using csv import at the moment
     @Test
+    @Ignore
     public void verifyFT542() throws Exception {
             importCsvFileForFLW("flw_name_missing.txt");
             // Assert audit trail log
@@ -481,7 +493,9 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
      * To verify location is updated successfully when MSISDN is provided.
      */
     // TODO JIRA issue: https://applab.atlassian.net/browse/NMS-253
+    //    This test has been ignored because we are not using csv import at the moment
     @Test
+    @Ignore
     public void verifyFT559() throws InterruptedException, IOException {
         State state = stateDataService.findByName("State 1");
         District district1 = districtService.findByStateAndName(state, "District 11");
@@ -518,7 +532,9 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     /**
      * Verify that an FLWs state can be updated
      */
+    //    This test has been ignored because we are not using csv import at the moment
     @Test
+    @Ignore
     public void verifyNIP166() throws InterruptedException, IOException {
         State state = stateDataService.findByName("State 1");
         District district1 = districtService.findByStateAndName(state, "District 11");
