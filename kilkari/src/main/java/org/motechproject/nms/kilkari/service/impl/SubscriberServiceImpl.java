@@ -425,4 +425,32 @@ public class SubscriberServiceImpl implements SubscriberService {
         }
     }
 
+    @Override
+    public Subscriber getSubscriberByMother(final long motherId) {
+        SqlQueryExecution<Subscriber> queryExecution = new SqlQueryExecution<Subscriber>() {
+
+            @Override
+            public String getSqlQuery() {
+                return KilkariConstants.SELECT_SUBSCRIBERS_BY_MOTHER_ID_OID;
+            }
+
+            @Override
+            public Subscriber execute(Query query) {
+                query.setClass(Subscriber.class);
+                ForwardQueryResult fqr = (ForwardQueryResult) query.execute(motherId);
+
+                if (fqr.isEmpty()) {
+                    return null;
+                }
+
+                if (fqr.size() == 1) {
+                    return (Subscriber) fqr.get(0);
+                }
+
+                throw new IllegalStateException(String.format(KilkariConstants.MORE_THAN_ONE_SUBSCRIBER, motherId));
+            }
+        };
+
+        return subscriberDataService.executeSQLQuery(queryExecution);
+    }
 }

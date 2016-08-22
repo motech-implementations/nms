@@ -65,11 +65,6 @@ public class FrontLineWorkerImportController {
     @ResponseStatus(HttpStatus.OK)
     public void updateFrontLineWorkersMSISDN(@RequestParam MultipartFile csvFile) {
 
-        // Update FrontLineWorkers by Msisdn import from csv is not supported
-        if(true) {
-            throw new UnsupportedOperationException("MCTS FLW csv import is not supported.");
-        }
-
         try {
             try (InputStream in = csvFile.getInputStream()) {
                 flwUpdateImportService.importMSISDNData(new InputStreamReader(in));
@@ -89,11 +84,6 @@ public class FrontLineWorkerImportController {
     @RequestMapping(value = "/import", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
     public void importFrontLineWorkers(@RequestParam MultipartFile csvFile) {
-
-        // Import FrontLineWorkers from csv is not supported
-        if(true) {
-            throw new UnsupportedOperationException("MCTS FLW csv import is not supported.");
-        }
 
         try {
             try (InputStream in = csvFile.getInputStream()) {

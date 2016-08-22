@@ -6,7 +6,6 @@ import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.FileBody;
 import org.joda.time.DateTime;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.csv.domain.CsvAuditRecord;
@@ -217,9 +216,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
 
     // This test should load the FLW with MCTS id '#1' and attempt to update their MSISDN to a number already
     // in use.  This should result in a unique constraint exception
-    //    This test has been ignored because we are not using csv import at the moment
     @Test(expected = CsvImportDataException.class)
-    @Ignore
     public void testImportMSISDNConflict() throws Exception {
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         State state = stateDataService.findByName("State 1");
@@ -238,7 +235,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         frontLineWorkerService.add(flw);
         transactionManager.commit(status);
 
-        Reader reader = createReaderWithHeaders("#1\t1234567890\tFLW 0\t11");
+        Reader reader = createReaderWithHeaders("#1\t1234567890\tFLW 0\t11\t18-08-2016");
         frontLineWorkerImportService.importData(reader);
     }
 
@@ -251,7 +248,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         flw.setMctsFlwId("#0");
         frontLineWorkerService.add(flw);
 
-        Reader reader = createReaderWithHeaders("#1\t1234567890\tFLW 0\t11");
+        Reader reader = createReaderWithHeaders("#1\t1234567890\tFLW 0\t11\t18-08-2016");
         frontLineWorkerImportService.importData(reader);
     }
 
@@ -261,7 +258,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
      */
     @Test
     public void testImportWhenDistrictLanguageLocationPresent() throws Exception {
-        Reader reader = createReaderWithHeaders("#0\t1234567890\tFLW 0\t11");
+        Reader reader = createReaderWithHeaders("#0\t1234567890\tFLW 0\t11\t18-08-2016");
         frontLineWorkerImportService.importData(reader);
 
         FrontLineWorker flw = frontLineWorkerDataService.findByContactNumber(1234567890L);
@@ -271,7 +268,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
 
     @Test
     public void testImportWhenDistrictLanguageLocationNotPresent() throws Exception {
-        Reader reader = createReaderWithHeaders("#0\t1234567890\tFLW 0\t12");
+        Reader reader = createReaderWithHeaders("#0\t1234567890\tFLW 0\t12\t18-08-2016");
         frontLineWorkerImportService.importData(reader);
 
         FrontLineWorker flw = frontLineWorkerDataService.findByContactNumber(1234567890L);
@@ -283,14 +280,12 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
      */
     @Test(expected = CsvImportDataException.class)
     public void testImportWhenDistrictNotPresent() throws Exception {
-        Reader reader = createReaderWithHeaders("#0\t1234567890\tFLW 0\t");
+        Reader reader = createReaderWithHeaders("#0\t1234567890\tFLW 0\t\t18-08-2016");
         frontLineWorkerImportService.importData(reader);
     }
 
 
-    //    This test has been ignored because we are not using csv import at the moment
     @Test
-    @Ignore
     public void testImportFromSampleDataFile() throws Exception {
         frontLineWorkerImportService.importData(read("csv/anm-asha.txt"));
 
@@ -319,9 +314,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     /**
      * To verify FLW record is uploaded successfully when all mandatory parameters are present.
      */
-    //    This test has been ignored because we are not using csv import at the moment
     @Test
-    @Ignore
     public void verifyFT535() throws Exception {
         importCsvFileForFLW("flw.txt");
         FrontLineWorker flw1 = frontLineWorkerDataService.findByContactNumber(1234567899L);
@@ -339,14 +332,12 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     /**
      * To verify FLW status must be updated successfully from Anonymous to Active.
      */
-    //    This test has been ignored because we are not using csv import at the moment
     @Test
-    @Ignore
     public void verifyFT536() throws Exception {
         FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 1234567890L);
         flw.setMctsFlwId("#0");
         frontLineWorkerService.add(flw);
-        Reader reader = createReaderWithHeaders("#0\t1234567890\tFLW 0\t11");
+        Reader reader = createReaderWithHeaders("#0\t1234567890\tFLW 0\t11\t18-08-2016");
         frontLineWorkerImportService.importData(reader);
         FrontLineWorker flw1 = frontLineWorkerDataService.findByContactNumber(1234567890L);
         assertFLW(flw1, "#0", 1234567890L, "FLW 0", "District 11", "L1");
@@ -359,7 +350,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
      */
     @Test(expected = CsvImportDataException.class)
     public void verifyFT537() throws Exception {
-        Reader reader = createReaderWithHeaders("#0\t\tFLW 0\t11");
+        Reader reader = createReaderWithHeaders("#0\t\tFLW 0\t11\t18-08-2016");
         frontLineWorkerImportService.importData(reader);
     }
 
@@ -368,23 +359,21 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
      */
     @Test(expected = IllegalArgumentException.class)
     public void verifyFT540() throws Exception {
-        Reader reader = createReaderWithHeadersWithNoState("#1\t1234567890\tFLW 0\t11");
+        Reader reader = createReaderWithHeadersWithNoState("#1\t1234567890\tFLW 0\t11\t18-08-2016");
         frontLineWorkerImportService.importData(reader);
     }
 
     /**
      * To verify FLW upload is rejected when mandatory parameter name is missing.
      */
-    //    This test has been ignored because we are not using csv import at the moment
     @Test
-    @Ignore
     public void verifyFT542() throws Exception {
             importCsvFileForFLW("flw_name_missing.txt");
             // Assert audit trail log
             CsvAuditRecord csvAuditRecord = csvAuditRecordDataService.retrieveAll()
                     .get(0);
             assertEquals("/flw/import", csvAuditRecord.getEndpoint());
-            assertEquals("Failure: The number of columns to be processed (3) must match the number of CellProcessors (4): check that the number of CellProcessors you have defined matches the expected number of columns being read/written", csvAuditRecord.getOutcome());
+            assertEquals("Failure: The number of columns to be processed (4) must match the number of CellProcessors (5): check that the number of CellProcessors you have defined matches the expected number of columns being read/written", csvAuditRecord.getOutcome());
             assertEquals("flw_name_missing.txt", csvAuditRecord.getFile());
     }
 
@@ -393,7 +382,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
      */
     @Test(expected = CsvImportDataException.class)
     public void verifyFT543() throws Exception {
-        Reader reader = createReaderWithHeaders("#1\t123456789\tFLW 1\t11");
+        Reader reader = createReaderWithHeaders("#1\t123456789\tFLW 1\t11\t18-08-2016");
         frontLineWorkerImportService.importData(reader);
     }
 
@@ -402,7 +391,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
      */
     @Test(expected = CsvImportDataException.class)
     public void verifyFT544() throws Exception {
-        Reader reader = createReaderWithHeadersWithInvalidState("#1\t1234567890\tFLW 1\t11");
+        Reader reader = createReaderWithHeadersWithInvalidState("#1\t1234567890\tFLW 1\t11\t18-08-2016");
         frontLineWorkerImportService.importData(reader);
     }
 
@@ -411,7 +400,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
      */
     @Test(expected = CsvImportDataException.class)
     public void verifyFT545() throws Exception {
-        Reader reader = createReaderWithHeaders("#1\t1234567890\tFLW 1\t111");
+        Reader reader = createReaderWithHeaders("#1\t1234567890\tFLW 1\t111\t18-08-2016");
         frontLineWorkerImportService.importData(reader);
     }
 
@@ -422,7 +411,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     public void verifyFT546() throws Exception {
         State state2 = createState(2L, "State 2");
         createDistrict(state2, 22L, "District 22");
-        Reader reader = createReaderWithHeaders("#1\t1234567890\tFLW 1\t22");
+        Reader reader = createReaderWithHeaders("#1\t1234567890\tFLW 1\t22\t18-08-2016");
         frontLineWorkerImportService.importData(reader);
     }
 
@@ -440,7 +429,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         builder.append("\n");
         builder.append("State Name : State 1").append("\n");
         builder.append("\n");
-        builder.append("ID\tContact_No\tName\tDistrict_ID").append("\n");
+        builder.append("ID\tContact_No\tName\tDistrict_ID\tUpdated_On").append("\n");
         for (String line : lines) {
             builder.append(line).append("\n");
         }
@@ -452,7 +441,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         builder.append("\n");
         builder.append("State Name :").append("\n");
         builder.append("\n");
-        builder.append("ID\tContact_No\tName\tDistrict_ID").append("\n");
+        builder.append("ID\tContact_No\tName\tDistrict_ID\tUpdated_On").append("\n");
         for (String line : lines) {
             builder.append(line).append("\n");
         }
@@ -464,7 +453,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         builder.append("\n");
         builder.append("State Name : State 2").append("\n");
         builder.append("\n");
-        builder.append("ID\tContact_No\tName\tDistrict_ID").append("\n");
+        builder.append("ID\tContact_No\tName\tDistrict_ID\tUpdated_On").append("\n");
         for (String line : lines) {
             builder.append(line).append("\n");
         }
@@ -493,9 +482,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
      * To verify location is updated successfully when MSISDN is provided.
      */
     // TODO JIRA issue: https://applab.atlassian.net/browse/NMS-253
-    //    This test has been ignored because we are not using csv import at the moment
     @Test
-    @Ignore
     public void verifyFT559() throws InterruptedException, IOException {
         State state = stateDataService.findByName("State 1");
         District district1 = districtService.findByStateAndName(state, "District 11");
@@ -532,9 +519,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     /**
      * Verify that an FLWs state can be updated
      */
-    //    This test has been ignored because we are not using csv import at the moment
     @Test
-    @Ignore
     public void verifyNIP166() throws InterruptedException, IOException {
         State state = stateDataService.findByName("State 1");
         District district1 = districtService.findByStateAndName(state, "District 11");
