@@ -78,6 +78,13 @@ public class OpsController extends BaseController {
         subscriptionDataService.evictAllCache();
     }
 
+    @RequestMapping("/ping")
+    @ResponseStatus(HttpStatus.OK)
+    public String ping() {
+        LOGGER.info("/ping()");
+        return "PING";
+    }
+
     @RequestMapping("/cleanSubscriptions")
     @ResponseStatus(HttpStatus.OK)
     public void cleanSubscriptions() {
