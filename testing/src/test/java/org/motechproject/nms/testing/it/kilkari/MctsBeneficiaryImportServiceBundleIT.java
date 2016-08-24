@@ -1422,7 +1422,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     }
 
     @Test
-    public void testNoUpdateIfChildSubscriptionActiveForMother() throws Exception {
+    public void testMotherDeactivatesIfChildActive() throws Exception {
         // import mother
         DateTime lmp = DateTime.now().minusDays(100);
         String lmpString = getDateString(lmp);
@@ -1437,13 +1437,6 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
                 + dobString + "\t");
         mctsBeneficiaryImportService.importChildData(reader);
 
-        //import same mother again
-        DateTime lmp1 = DateTime.now().minusDays(100);
-        String lmpString1 = getDateString(lmp1);
-        reader = createMotherDataReader("21\t3\t\t\t\t\t1234567890\tShanti Ekkat\t9439986187\t\t" +
-                lmpString1 + "\t\t\t");
-        mctsBeneficiaryImportService.importMotherData(reader);
-
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         Subscriber subscriber = subscriberDataService.findByNumber(9439986187L);
         Set<Subscription> subscriptions = subscriber.getAllSubscriptions();
@@ -1453,12 +1446,12 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         Subscription pregnancySubscription = subscriptionService
                 .getActiveSubscription(subscriber, SubscriptionPackType.PREGNANCY);
 
-        //the mother subscription should still be DEACTIVATED as child is ACTIVE
+        //the mother subscription should be DEACTIVATED
         assertEquals(2, subscriptions.size());
         assertNotNull(childSubscription);
         assertNull(pregnancySubscription);
         transactionManager.commit(status);
 
-
     }
+
 }

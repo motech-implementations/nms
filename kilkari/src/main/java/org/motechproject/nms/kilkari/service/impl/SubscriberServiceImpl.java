@@ -19,6 +19,7 @@ import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.domain.BlockedMsisdnRecord;
 import org.motechproject.nms.kilkari.domain.DeactivationSubscriptionAuditRecord;
 import org.motechproject.nms.kilkari.domain.AuditStatus;
+import org.motechproject.nms.kilkari.exception.MultipleSubscriberException;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
@@ -95,7 +96,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                 if (fqr.size() == 1) {
                     return (Subscriber) fqr.get(0);
                 }
-                throw new IllegalStateException(String.format(KilkariConstants.MORE_THAN_ONE_SUBSCRIBER, callingNumber));
+                throw new IllegalStateException(String.format(KilkariConstants.MORE_THAN_ONE_SUBSCRIBER_WITH_SAME_NUMBER, callingNumber));
             }
         };
 
@@ -447,7 +448,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                     return (Subscriber) fqr.get(0);
                 }
 
-                throw new IllegalStateException(String.format(KilkariConstants.MORE_THAN_ONE_SUBSCRIBER, motherId));
+                throw new MultipleSubscriberException(String.format(KilkariConstants.MORE_THAN_ONE_SUBSCRIBER_WITH_SAME_MOTHERID, motherId));
             }
         };
 

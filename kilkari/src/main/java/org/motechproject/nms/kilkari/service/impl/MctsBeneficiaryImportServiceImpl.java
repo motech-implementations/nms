@@ -19,6 +19,7 @@ import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.domain.SubscriptionRejectionReason;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
+import org.motechproject.nms.kilkari.exception.MultipleSubscriberException;
 import org.motechproject.nms.kilkari.repository.MctsMotherDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
@@ -197,6 +198,8 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
         //validate if an ACTIVE child is already present for the mother. If yes, ignore the update
         if (childAlreadyPresent(mother.getBeneficiaryId())) {
+            subscriptionErrorDataService.create(new SubscriptionError(msisdn, mother.getBeneficiaryId(),
+                    SubscriptionRejectionReason.ACTIVE_CHILD_PRESENT, SubscriptionPackType.PREGNANCY, "Active child is present for this mother."));
             return false;
         }
 
@@ -311,22 +314,30 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         //Found mother by beneficiary id. If there is no mother already present,then import will
         //go to the next check. Else we get the subscriber by the mother id
         //and check if the child subscription is ACTIVE. If yes we do not update the mother.
-        MctsMother mctsMother = mctsMotherDataService.findByBeneficiaryId(motherBenificiaryId);
-        if (mctsMother==null){
-            return false;
-        }else {
-            Long motherId = mctsMother.getId();
-            Subscriber subscriber = subscriberService.getSubscriberByMother(motherId);
-            for (Subscription subscription : subscriber.getAllSubscriptions()) {
-                if (subscription.getSubscriptionPack().getType().equals(SubscriptionPackType.CHILD)
-                        && subscription.getStatus().equals(SubscriptionStatus.ACTIVE)
-                        && subscriber.getChild().getMother()!=null
-                        && subscriber.getChild().getMother().getBeneficiaryId().equals(motherBenificiaryId)) {
-                    return true;
+        MctsMother mctsMother = null;
+
+        try {
+           mctsMother = mctsMotherDataService.findByBeneficiaryId(motherBenificiaryId);
+
+            if (mctsMother == null) {
+                return false;
+            } else {
+                Long motherId = mctsMother.getId();
+                Subscriber subscriber = subscriberService.getSubscriberByMother(motherId);
+                for (Subscription subscription : subscriber.getAllSubscriptions()) {
+                    if (subscription.getSubscriptionPack().getType().equals(SubscriptionPackType.CHILD)
+                            && subscription.getStatus().equals(SubscriptionStatus.ACTIVE)
+                            && subscriber.getChild().getMother() != null
+                            && subscriber.getChild().getMother().getBeneficiaryId().equals(motherBenificiaryId)) {
+                        return true;
+                    }
                 }
             }
+            return false;
+        } catch (MultipleSubscriberException m){
+            LOGGER.error(m.toString());
+            return true;
         }
-        return false;
     }
 
     private boolean validateReferenceDate(DateTime referenceDate, SubscriptionPackType packType, Long msisdn) {
