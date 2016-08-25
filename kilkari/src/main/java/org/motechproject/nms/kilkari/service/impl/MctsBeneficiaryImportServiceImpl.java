@@ -18,6 +18,9 @@ import org.motechproject.nms.kilkari.domain.SubscriptionError;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.domain.SubscriptionRejectionReason;
+import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
+import org.motechproject.nms.kilkari.exception.MultipleSubscriberException;
+import org.motechproject.nms.kilkari.repository.MctsMotherDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor;
@@ -58,17 +61,20 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     private MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor;
     private SubscriptionPack pregnancyPack;
     private SubscriptionPack childPack;
+    private MctsMotherDataService mctsMotherDataService;
 
     @Autowired
     public MctsBeneficiaryImportServiceImpl(SubscriptionService subscriptionService,
                                             SubscriptionErrorDataService subscriptionErrorDataService,
                                             LocationService locationService, SubscriberService subscriberService,
-                                            MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor) {
+                                            MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor,
+                                            MctsMotherDataService mctsMotherDataService) {
         this.subscriptionService = subscriptionService;
         this.subscriptionErrorDataService = subscriptionErrorDataService;
         this.locationService = locationService;
         this.subscriberService = subscriberService;
         this.mctsBeneficiaryValueProcessor = mctsBeneficiaryValueProcessor;
+        this.mctsMotherDataService = mctsMotherDataService;
     }
 
 
@@ -190,6 +196,13 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             return false;
         }
 
+        //validate if an ACTIVE child is already present for the mother. If yes, ignore the update
+        if (childAlreadyPresent(mother.getBeneficiaryId())) {
+            subscriptionErrorDataService.create(new SubscriptionError(msisdn, mother.getBeneficiaryId(),
+                    SubscriptionRejectionReason.ACTIVE_CHILD_PRESENT, SubscriptionPackType.PREGNANCY, "Active child is present for this mother."));
+            return false;
+        }
+
         mother.setName(name);
         mother.setDateOfBirth(motherDOB);
         mother.setUpdatedDateNic(mctsUpdatedDateNic);
@@ -297,6 +310,36 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         return true;
     }
 
+    private boolean childAlreadyPresent(final String motherBenificiaryId) {
+        //Found mother by beneficiary id. If there is no mother already present,then import will
+        //go to the next check. Else we get the subscriber by the mother id
+        //and check if the child subscription is ACTIVE. If yes we do not update the mother.
+        MctsMother mctsMother = null;
+
+        try {
+           mctsMother = mctsMotherDataService.findByBeneficiaryId(motherBenificiaryId);
+
+            if (mctsMother == null) {
+                return false;
+            } else {
+                Long motherId = mctsMother.getId();
+                Subscriber subscriber = subscriberService.getSubscriberByMother(motherId);
+                for (Subscription subscription : subscriber.getAllSubscriptions()) {
+                    if (subscription.getSubscriptionPack().getType().equals(SubscriptionPackType.CHILD)
+                            && subscription.getStatus().equals(SubscriptionStatus.ACTIVE)
+                            && subscriber.getChild().getMother() != null
+                            && subscriber.getChild().getMother().getBeneficiaryId().equals(motherBenificiaryId)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        } catch (MultipleSubscriberException m){
+            LOGGER.error(m.toString());
+            return true;
+        }
+    }
+
     private boolean validateReferenceDate(DateTime referenceDate, SubscriptionPackType packType, Long msisdn) {
 
         if (referenceDate == null) {
@@ -359,10 +402,10 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             }
         }));
         mapping.put(KilkariConstants.ABORTION, new Optional(new GetInstanceByString<Boolean>() {
-             @Override
-             public Boolean retrieve(String value) {
-                 return mctsBeneficiaryValueProcessor.getAbortionDataFromString(value);
-             }
+            @Override
+            public Boolean retrieve(String value) {
+                return mctsBeneficiaryValueProcessor.getAbortionDataFromString(value);
+            }
         }));
         mapping.put(KilkariConstants.STILLBIRTH, new Optional(new GetInstanceByString<Boolean>() {
             @Override

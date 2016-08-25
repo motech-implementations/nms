@@ -19,6 +19,7 @@ import org.motechproject.nms.kilkari.repository.MctsMotherDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
+import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryUpdateService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
@@ -106,7 +107,8 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
     private MctsChildDataService mctsChildDataService;
     @Inject
     private MctsMotherDataService mctsMotherDataService;
-
+    @Inject
+    private MctsBeneficiaryImportService mctsBeneficiaryImportService;
     @Inject
     PlatformTransactionManager transactionManager;
 
@@ -276,6 +278,53 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         assertNull(pregnancySubscriber.getChild());
         assertNull(childSubscriber.getMother());
         assertEquals(1, pregnancySubscriber.getActiveAndPendingSubscriptions().size());
+        assertEquals(1, childSubscriber.getActiveAndPendingSubscriptions().size());
+        transactionManager.commit(status);
+    }
+
+    @Test
+    public void testUpdateMsisdnForMotherWithChildPackACTIVE() throws Exception {
+        createLocationData();
+        Long oldMsisdn = sh.makeNumber();
+        Long newMsisdn = sh.makeNumber();
+
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
+        // new mother
+        Subscription pregnancySubscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT,
+                DateTime.now().minusDays(150), SubscriptionPackType.PREGNANCY, oldMsisdn);
+        String motherId = "9876543210";
+        pregnancySubscription.getSubscriber().setMother(new MctsMother(motherId));
+        subscriberDataService.update(pregnancySubscription.getSubscriber());
+        transactionManager.commit(status);
+
+        // import child
+        DateTime dob = DateTime.now().minusDays(5);
+        String dobString = getDateString(dob);
+        Reader reader = createChildDataReader("21\t3\t\t\t\t\t1234567891\tBaby1 of Shanti Ekka\t9876543210\t"+oldMsisdn+"\t"
+                + dobString + "\t");
+        mctsBeneficiaryImportService.importChildData(reader);
+
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        assertEquals(1, subscriberDataService.findByNumber(oldMsisdn).getActiveAndPendingSubscriptions().size());
+        transactionManager.commit(status);
+
+        //update mother with new msisdn
+        String lmpString = getDateString(DateTime.now().minus(120));
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        reader = createUpdateReaderWithHeaders("1," + motherId + ",,," + lmpString +",21,3,,,,,,,," + newMsisdn);
+        mctsBeneficiaryUpdateService.updateBeneficiaryData(reader);
+        transactionManager.commit(status);
+
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        Subscriber pregnancySubscriber = subscriberDataService.findByNumber(newMsisdn);
+        Subscriber childSubscriber = subscriberDataService.findByNumber(oldMsisdn);
+
+        // mother should not get activated again.
+        // subscription error table hould get this error, ie mother cant be updated as child is ACTIVE
+        assertEquals(1,subscriptionErrorDataService.retrieveAll().size());
+        assertNull(pregnancySubscriber);
+        assertNotNull(childSubscriber);
         assertEquals(1, childSubscriber.getActiveAndPendingSubscriptions().size());
         transactionManager.commit(status);
     }
@@ -558,6 +607,17 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
             builder.append(line).append("\n");
         }
 
+        return new StringReader(builder.toString());
+    }
+
+    private Reader createChildDataReader(String... lines) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("StateID\tDistrict_ID\tTaluka_ID\tHealthBlock_ID\tPHC_ID\tVillage_ID\tID_No\tName\tMother_ID\tWhom_PhoneNo\tBirthdate\tEntry_Type");
+        builder.append("\n");
+
+        for (String line : lines) {
+            builder.append(line).append("\n");
+        }
         return new StringReader(builder.toString());
     }
 

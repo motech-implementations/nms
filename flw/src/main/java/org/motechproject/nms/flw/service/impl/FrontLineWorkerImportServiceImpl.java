@@ -8,6 +8,7 @@ import org.motechproject.nms.csv.utils.CsvImporterBuilder;
 import org.motechproject.nms.csv.utils.CsvMapImporter;
 import org.motechproject.nms.csv.utils.GetLong;
 import org.motechproject.nms.csv.utils.GetString;
+import org.motechproject.nms.csv.utils.GetLocalDate;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 
 import org.motechproject.nms.flw.exception.FlwExistingRecordException;
@@ -182,6 +183,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
         mapping.put(FlwConstants.VILLAGE_NAME, new Optional(new GetString()));
 
         mapping.put(FlwConstants.TYPE, new Optional(new GetString()));
+        mapping.put(FlwConstants.UPDATED_ON, new Optional(new GetLocalDate()));
 
         return mapping;
     }

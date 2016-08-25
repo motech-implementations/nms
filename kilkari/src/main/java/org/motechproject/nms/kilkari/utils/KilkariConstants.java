@@ -70,9 +70,11 @@ public final class KilkariConstants {
 
     // SQL constants
     public static final String SELECT_SUBSCRIBERS_BY_NUMBER = "select * from nms_subscribers where callingNumber = ?";
+    public static final String SELECT_SUBSCRIBERS_BY_MOTHER_ID_OID = "select * from nms_subscribers where mother_id_OID = ?";
 
     // Log constants
-    public static final String MORE_THAN_ONE_SUBSCRIBER = "More than one subscriber returned for callingNumber %s";
+    public static final String MORE_THAN_ONE_SUBSCRIBER_WITH_SAME_NUMBER = "More than one subscriber returned for callingNumber %s";
+    public static final String MORE_THAN_ONE_SUBSCRIBER_WITH_SAME_MOTHERID = "More than one subscriber returned for motherID %s";
     public static final String SUBSCRIBER_NOT_FOUND = "callingNumber %s not Found";
     public static final String SQL_QUERY_LOG = "SQL QUERY: {}";
 

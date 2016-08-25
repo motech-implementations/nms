@@ -84,4 +84,11 @@ public interface SubscriberService {
      */
     void deactivateAllSubscriptionsForSubscriber(long callingNumber);
 
+    /**
+     * Get the Kilkari subscriber with the specified mother id OID.
+     * @param motherId Mother id oid of the subscriber to retrieve
+     * @return The subscriber.
+     */
+    Subscriber getSubscriberByMother(long motherId);
+
 }

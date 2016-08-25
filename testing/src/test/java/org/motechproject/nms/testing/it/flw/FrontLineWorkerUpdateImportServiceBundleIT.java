@@ -8,7 +8,6 @@ import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.FileBody;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.csv.domain.CsvAuditRecord;
@@ -520,9 +519,7 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
     /**
      * To verify language is updated successfully when MCTS FLW ID is provided.
      */
-    //    This test has been ignored because we are not using csv import at the moment
     @Test
-    @Ignore
     public void verifyFT550() throws InterruptedException, IOException {
         FrontLineWorker flw = new FrontLineWorker(1000000000L);
         flw.setFlwId("72185");
@@ -605,9 +602,7 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
     /**
      * To verify MSISDN is updated successfully when MCTS FLW ID is provided.
      */
-    //    This test has been ignored because we are not using csv import at the moment
     @Test
-    @Ignore
     public void verifyFT555() throws InterruptedException, IOException {
         FrontLineWorker flw = new FrontLineWorker(1000000000L);
         flw.setFlwId("72185");
@@ -638,9 +633,7 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
      * To verify location is updated successfully when MCTS FLW ID is provided.
      */
     // TODO https://applab.atlassian.net/browse/NMS-255
-    //    This test has been ignored because we are not using csv import at the moment
     @Test
-    @Ignore
     public void verifyFT558() throws InterruptedException, IOException {
         // create FLW record having state as "Delhi" and district as "new delhi district"
         FrontLineWorker flw = new FrontLineWorker("Aisha Bibi", 1234567899L);
@@ -678,9 +671,7 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
      * To verify location update is rejected when state provided is having
      * invalid value.
      */
-    //    This test has been ignored because we are not using csv import at the moment
     @Test
-    @Ignore
     public void verifyFT560() throws InterruptedException, IOException {
         // create FLW record
         FrontLineWorker flw = new FrontLineWorker("Aisha Bibi", 1234567899L);
@@ -708,9 +699,7 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
      * To verify location update is rejected when District provided is having
      * invalid value.
      */
-    //    This test has been ignored because we are not using csv import at the moment
     @Test
-    @Ignore
     public void verifyFT561() throws InterruptedException, IOException {
         // create FLW record
         FrontLineWorker flw = new FrontLineWorker("Aisha Bibi", 1234567899L);
