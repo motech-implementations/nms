@@ -11,6 +11,7 @@ import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.EventRelay;
 import org.motechproject.mtraining.domain.ActivityRecord;
 import org.motechproject.mtraining.domain.Bookmark;
+import org.motechproject.mtraining.repository.ActivityDataService;
 import org.motechproject.mtraining.service.ActivityService;
 import org.motechproject.mtraining.service.BookmarkService;
 import org.motechproject.mtraining.service.MTrainingService;
@@ -87,6 +88,9 @@ public class MobileAcademyServiceUnitTest {
     private CompletionRecordDataService completionRecordDataService;
 
     @Mock
+    private ActivityDataService activityDataService;
+
+    @Mock
     private EventRelay eventRelay;
 
     @Mock
@@ -115,7 +119,7 @@ public class MobileAcademyServiceUnitTest {
         nmsCourseDataService.deleteAll();
         when(settingsFacade.getRawConfig("nmsCourse.json")).thenReturn(getFileInputStream("nmsCourseTest.json"));
         mobileAcademyService = new MobileAcademyServiceImpl(bookmarkService, activityService,
-                nmsCourseDataService, completionRecordDataService, eventRelay, settingsFacade, alertService);
+                nmsCourseDataService, completionRecordDataService, activityDataService, eventRelay, settingsFacade, alertService);
         courseNotificationService = new CourseNotificationServiceImpl(completionRecordDataService,
                 smsNotificationService, settingsFacade, activityService, schedulerService, alertService,
                 frontLineWorkerService, districtDataService);

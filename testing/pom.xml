@@ -68,6 +68,12 @@
 
         <dependency>
             <groupId>org.motechproject.nms</groupId>
+            <artifactId>flwUpdate</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.motechproject.nms</groupId>
             <artifactId>mobile-academy</artifactId>
             <version>${project.version}</version>
         </dependency>

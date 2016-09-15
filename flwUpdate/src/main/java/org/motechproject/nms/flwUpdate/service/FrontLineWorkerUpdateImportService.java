@@ -1,4 +1,4 @@
-package org.motechproject.nms.flw.service;
+package org.motechproject.nms.flwUpdate.service;
 
 import java.io.IOException;
 import java.io.Reader;

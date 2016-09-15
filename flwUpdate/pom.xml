@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
     <parent>
@@ -10,35 +11,20 @@
         <relativePath>../</relativePath>
     </parent>
 
-    <artifactId>mcts</artifactId>
+    <artifactId>flwUpdate</artifactId>
     <version>1.0.20</version>
     <packaging>bundle</packaging>
-    <name>Mother Children Tracking Service</name>
+    <name>FLW Update Module</name>
 
     <properties>
         <modules.root.dir>${basedir}/..</modules.root.dir>
     </properties>
 
-
     <dependencies>
+
         <dependency>
             <groupId>org.motechproject</groupId>
             <artifactId>motech-platform-osgi-extender-fragment</artifactId>
-            <version>${motech.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.motechproject</groupId>
-            <artifactId>motech-scheduler</artifactId>
-            <version>${motech.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.motechproject</groupId>
-            <artifactId>motech-platform-server-config</artifactId>
-            <version>${motech.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.motechproject</groupId>
-            <artifactId>motech-platform-event</artifactId>
             <version>${motech.version}</version>
         </dependency>
 
@@ -50,32 +36,21 @@
 
         <dependency>
             <groupId>org.motechproject.nms</groupId>
-            <artifactId>flwUpdate</artifactId>
+            <artifactId>mobile-academy</artifactId>
             <version>${project.version}</version>
         </dependency>
 
-        <dependency>
-            <groupId>org.motechproject.nms</groupId>
-            <artifactId>kilkari</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <!-- OSGi IT -->
         <dependency>
             <groupId>org.motechproject</groupId>
-            <artifactId>motech-pax-it</artifactId>
+            <artifactId>motech-platform-commons-api</artifactId>
             <version>${motech.version}</version>
-            <scope>test</scope>
         </dependency>
 
         <dependency>
-            <groupId>org.apache.axis</groupId>
-            <artifactId>com.springsource.org.apache.axis</artifactId>
+            <groupId>commons-fileupload</groupId>
+            <artifactId>commons-fileupload</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.apache.servicemix.bundles</groupId>
-            <artifactId>org.apache.servicemix.bundles.wsdl4j</artifactId>
-        </dependency>
+
     </dependencies>
 
     <repositories>
@@ -106,36 +81,27 @@
                 <configuration>
                     <instructions>
                         <Blueprint-Enabled>true</Blueprint-Enabled>
-                        <Resource-Path>mcts/resources</Resource-Path>
+                        <Resource-Path>flwUpdate/resources</Resource-Path>
+                        <Context-Path>flwUpdate</Context-Path>
                         <Export-Package>
-                            org.motechproject.nms.mcts.service;version=${project.version},
-                            org.motechproject.nms.mcts.soap;version=${project.version},
-                            org.motechproject.nms.mcts.contract;version=${project.version},
-                            org.motechproject.nms.mcts.repository;version=${project.version},
-                            org.motechproject.nms.mcts.domain;version=${project.version}
+                            org.motechproject.nms.flwUpdate.service;version=${project.version}
                         </Export-Package>
                         <Import-Package>
-                            org.apache.axis.*,
-                            org.motechproject.nms.flw.domain,
-                            org.motechproject.nms.flw.exception,
-                            org.motechproject.nms.flw.repository,
-                            org.motechproject.nms.flw.service,
-                            org.motechproject.nms.flw.utils,
-                            org.motechproject.nms.kilkari.domain,
-                            org.motechproject.nms.kilkari.repository,
-                            org.motechproject.nms.kilkari.service,
-                            org.motechproject.nms.kilkari.utils,
-                            org.motechproject.nms.region.domain,
-                            org.motechproject.nms.region.exception,
-                            org.motechproject.nms.region.repository,
-                            javax.mail,
-                            net.sf.cglib.proxy,
-                            net.sf.cglib.core,
+                            org.motechproject.osgi.web,
+                            org.motechproject.nms.tracking.aspect,
+                            org.aopalliance.aop,
+                            org.springframework.aop,
+                            org.springframework.aop.framework,
+                            org.springframework.transaction,
+                            org.apache.commons.fileupload,
+                            org.springframework.web.multipart.commons,
+                            org.motechproject.event.listener,
                             *
                         </Import-Package>
                     </instructions>
                 </configuration>
             </plugin>
+
             <plugin>
                 <artifactId>maven-resources-plugin</artifactId>
                 <version>2.6</version>
@@ -160,6 +126,43 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>aspectj-maven-plugin</artifactId>
+                <version>1.4</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.aspectj</groupId>
+                        <artifactId>aspectjrt</artifactId>
+                        <version>1.7.0</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.aspectj</groupId>
+                        <artifactId>aspectjtools</artifactId>
+                        <version>1.7.0</version>
+                    </dependency>
+                </dependencies>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>compile</goal>
+                            <goal>test-compile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <source>1.7</source>
+                    <target>1.7</target>
+                    <aspectLibraries>
+                        <dependency>
+                            <groupId>org.motechproject.nms</groupId>
+                            <artifactId>tracking</artifactId>
+                        </dependency>
+                    </aspectLibraries>
+                </configuration>
+            </plugin>
+
         </plugins>
     </build>
 </project>

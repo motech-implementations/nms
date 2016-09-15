@@ -1,4 +1,4 @@
-package org.motechproject.nms.flw.web;
+package org.motechproject.nms.flwUpdate.web;
 
 import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.alerts.domain.AlertStatus;
@@ -6,8 +6,8 @@ import org.motechproject.alerts.domain.AlertType;
 import org.motechproject.nms.csv.exception.CsvImportDataException;
 import org.motechproject.nms.csv.exception.CsvImportException;
 import org.motechproject.nms.csv.service.CsvAuditService;
-import org.motechproject.nms.flw.service.FrontLineWorkerImportService;
-import org.motechproject.nms.flw.service.FrontLineWorkerUpdateImportService;
+import org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService;
+import org.motechproject.nms.flwUpdate.service.FrontLineWorkerUpdateImportService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
