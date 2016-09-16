@@ -17,7 +17,7 @@ public class CsvAuditRecord {
     @NotNull
     private String file;
 
-    // Which API endpoint was called? ie: /flw/update/language
+    // Which API endpoint was called? ie: /flwUpdate/update/language
     @Field
     @NotNull
     private String endpoint;

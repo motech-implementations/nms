@@ -94,6 +94,7 @@
                             org.apache.commons.io,
                             org.apache.http.ssl,
                             org.json,
+                            org.motechproject.mtraining.service,
                             *
                         </Import-Package>
                     </instructions>

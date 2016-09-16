@@ -324,7 +324,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         // Assert audit trail log
         CsvAuditRecord csvAuditRecord = csvAuditRecordDataService.retrieveAll()
                 .get(0);
-        assertEquals("/flw/import", csvAuditRecord.getEndpoint());
+        assertEquals("/flwUpdate/import", csvAuditRecord.getEndpoint());
         assertEquals(SUCCESS, csvAuditRecord.getOutcome());
         assertEquals("flw.txt", csvAuditRecord.getFile());
     }
@@ -372,7 +372,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
             // Assert audit trail log
             CsvAuditRecord csvAuditRecord = csvAuditRecordDataService.retrieveAll()
                     .get(0);
-            assertEquals("/flw/import", csvAuditRecord.getEndpoint());
+            assertEquals("/flwUpdate/import", csvAuditRecord.getEndpoint());
             assertEquals("Failure: The number of columns to be processed (4) must match the number of CellProcessors (5): check that the number of CellProcessors you have defined matches the expected number of columns being read/written", csvAuditRecord.getOutcome());
             assertEquals("flw_name_missing.txt", csvAuditRecord.getFile());
     }
@@ -468,7 +468,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
      * Method used to import CSV File For FLW Data
      */
     private void importCsvFileForFLW(String fileName) throws InterruptedException, IOException {
-        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/flw/import", TestContext.getJettyPort()));
+        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/flwUpdate/import", TestContext.getJettyPort()));
         FileBody fileBody = new FileBody(new File(String.format("src/test/resources/csv/%s", fileName)));
         MultipartEntityBuilder builder = MultipartEntityBuilder.create();
         builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);

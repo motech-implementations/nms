@@ -107,7 +107,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
                 frontLineWorkerService.update(updateFlw(flw, record, location));
                 Long oldMsisdn = flw.getContactNumber();
                 Long newMsisdn = (Long) record.get(FlwConstants.CONTACT_NO);
-                if (oldMsisdn != newMsisdn) {
+                if (!oldMsisdn.equals(newMsisdn)) {
                     mobileAcademyService.updateMsisdn(oldMsisdn, newMsisdn);
                 }
             } else {
@@ -307,4 +307,17 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
     public void setLocationService(LocationService locationService) {
         this.locationService = locationService;
     }
+
+    @Autowired
+    public void setFlwErrorDataService(FlwErrorDataService flwErrorDataService) {
+        this.flwErrorDataService = flwErrorDataService;
+    }
+
+    @Autowired
+    public void setMobileAcademyService(MobileAcademyService mobileAcademyService) {
+        this.mobileAcademyService = mobileAcademyService;
+    }
+
+
+
 }

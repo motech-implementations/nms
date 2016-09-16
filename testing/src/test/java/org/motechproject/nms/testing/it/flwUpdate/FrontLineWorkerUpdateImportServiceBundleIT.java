@@ -495,11 +495,11 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
         if (StringUtils.isBlank(option)) {
             // update using import
             httpPost = new HttpPost(String.format(
-                    "http://localhost:%d/flw/import",
+                    "http://localhost:%d/flwUpdate/import",
                     TestContext.getJettyPort()));
         } else {
             httpPost = new HttpPost(String.format(
-                    "http://localhost:%d/flw/update/%s",
+                    "http://localhost:%d/flwUpdate/update/%s",
                     TestContext.getJettyPort(), option));
         }
         MultipartEntityBuilder builder = MultipartEntityBuilder.create();
@@ -662,7 +662,7 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
         // Assert audit trail log
         CsvAuditRecord csvAuditRecord = csvAuditRecordDataService.retrieveAll()
                 .get(0);
-        assertEquals("/flw/import", csvAuditRecord.getEndpoint());
+        assertEquals("/flwUpdate/import", csvAuditRecord.getEndpoint());
         assertTrue(csvAuditRecord.getOutcome().contains("Success"));
         assertEquals("flw_FT_558.txt", csvAuditRecord.getFile());
     }
@@ -690,7 +690,7 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
         // Assert audit trail log
         CsvAuditRecord csvAuditRecord = csvAuditRecordDataService.retrieveAll()
                 .get(0);
-        assertEquals("/flw/import", csvAuditRecord.getEndpoint());
+        assertEquals("/flwUpdate/import", csvAuditRecord.getEndpoint());
         assertTrue(csvAuditRecord.getOutcome().contains("Failure: "));
         assertEquals("flw_FT_560.txt", csvAuditRecord.getFile());
     }
@@ -718,7 +718,7 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
         // Assert audit trail log
         CsvAuditRecord csvAuditRecord = csvAuditRecordDataService.retrieveAll()
                 .get(0);
-        assertEquals("/flw/import", csvAuditRecord.getEndpoint());
+        assertEquals("/flwUpdate/import", csvAuditRecord.getEndpoint());
         assertTrue(csvAuditRecord.getOutcome().contains("Failure: "));
         assertEquals("flw_FT_561.txt", csvAuditRecord.getFile());
     }

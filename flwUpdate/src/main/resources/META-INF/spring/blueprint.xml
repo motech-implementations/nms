@@ -21,4 +21,27 @@
     <osgi:service ref="frontLineWorkerUpdateImportService"
                   interface="org.motechproject.nms.flwUpdate.service.FrontLineWorkerUpdateImportService" />
 
+    <osgi:reference id="stateDataService"
+                    interface="org.motechproject.nms.region.repository.StateDataService" />
+
+    <osgi:reference id="frontLineWorkerService"
+                  interface="org.motechproject.nms.flw.service.FrontLineWorkerService" />
+
+    <!-- CSV Audit Service -->
+    <osgi:reference id="csvAuditService" interface="org.motechproject.nms.csv.service.CsvAuditService" />
+
+    <osgi:reference id="locationService"
+                    interface="org.motechproject.nms.region.service.LocationService" />
+
+    <osgi:reference id="languageService"
+                    interface="org.motechproject.nms.region.service.LanguageService" />
+
+    <osgi:reference id="alertsService" interface="org.motechproject.alerts.contract.AlertService" />
+
+    <osgi:reference id="mobileAcademyService"
+                    interface="org.motechproject.nms.mobileacademy.service.MobileAcademyService" />
+
+    <osgi:reference id="flwErrorDataService"
+                    interface="org.motechproject.nms.flw.repository.FlwErrorDataService" />
+
 </beans>

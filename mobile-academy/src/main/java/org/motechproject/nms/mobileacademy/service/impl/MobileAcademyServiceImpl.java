@@ -18,11 +18,13 @@ import org.motechproject.mtraining.service.ActivityService;
 import org.motechproject.mtraining.service.BookmarkService;
 import org.motechproject.nms.mobileacademy.domain.CompletionRecord;
 import org.motechproject.nms.mobileacademy.domain.NmsCourse;
+import org.motechproject.nms.mobileacademy.domain.MtrainingModuleActivityRecordAudit;
 import org.motechproject.nms.mobileacademy.dto.MaBookmark;
 import org.motechproject.nms.mobileacademy.dto.MaCourse;
 import org.motechproject.nms.mobileacademy.exception.CourseNotCompletedException;
 import org.motechproject.nms.mobileacademy.repository.CompletionRecordDataService;
 import org.motechproject.nms.mobileacademy.repository.NmsCourseDataService;
+import org.motechproject.nms.mobileacademy.repository.MtrainingModuleActivityRecordAuditDataService;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
 import org.motechproject.nms.props.service.LogHelper;
 import org.motechproject.server.config.SettingsFacade;
@@ -107,6 +109,8 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
      * Used for alerting
      */
     private AlertService alertService;
+
+    private MtrainingModuleActivityRecordAuditDataService mtrainingModuleActivityRecordAuditDataService;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MobileAcademyServiceImpl.class);
 
@@ -470,15 +474,13 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
     @Override
     public void updateMsisdn(Long oldCallingNumber, Long newCallingNumber) {
 
-        if (oldCallingNumber == newCallingNumber) {
+        if (oldCallingNumber.equals(newCallingNumber)) {
             return;
         }
         // Update Msisdn  In MTRAINING_MODULE_BOOKMARK
         LOGGER.debug("Fetching Bookmarks for Msisdn {}.", oldCallingNumber);
         List<Bookmark> existingBookmarks = bookmarkService.getAllBookmarksForUser(oldCallingNumber.toString());
-        if (null == existingBookmarks) {
-            LOGGER.debug("No Bookmarks exists with given Msisdn");
-        } else {
+        if (existingBookmarks.size() > 0) {
             int i;
             Bookmark bookmark;
             for (i = 0; i < existingBookmarks.size(); i++) {
@@ -487,21 +489,25 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
                 bookmarkService.updateBookmark(bookmark);
             }
             LOGGER.debug("Updated MSISDN {} to {} in {} Bookmarks", oldCallingNumber, newCallingNumber, i);
+        } else {
+            LOGGER.debug("No Bookmarks exists with given Msisdn");
         }
 
         // Update Msisdn  In nms_ma_completion_records
         LOGGER.debug("Fetching Completion records for Msisdn {}.", oldCallingNumber);
         CompletionRecord completionRecord = completionRecordDataService.findRecordByCallingNumber(oldCallingNumber);
-        completionRecord.setCallingNumber(newCallingNumber);
-        completionRecordDataService.update(completionRecord);
-        LOGGER.debug("Updated MSISDN {} to {} in Completion record", oldCallingNumber, newCallingNumber);
+        if (null == completionRecord) {
+            LOGGER.debug("No CompletionRecord exists with given Msisdn");
+        } else {
+            completionRecord.setCallingNumber(newCallingNumber);
+            completionRecordDataService.update(completionRecord);
+            LOGGER.debug("Updated MSISDN {} to {} in Completion record", oldCallingNumber, newCallingNumber);
+        }
 
         // Update Msisdn  In MTRAINING_MODULE_ACTIVITYRECORD
         LOGGER.debug("Fetching Activity records for Msisdn {}", oldCallingNumber);
         List<ActivityRecord> existingRecords = activityDataService.findRecordsForUser(oldCallingNumber.toString());
-        if (null == existingRecords) {
-            LOGGER.debug("No Activity records exists with given Msisdn");
-        } else {
+        if (existingRecords.size() > 0) {
             int i;
             ActivityRecord activityRecord;
             for (i = 0; i < existingRecords.size(); i++) {
@@ -509,7 +515,15 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
                 activityRecord.setExternalId(newCallingNumber.toString());
                 activityDataService.update(activityRecord);
             }
+            mtrainingModuleActivityRecordAuditDataService.create(new MtrainingModuleActivityRecordAudit(oldCallingNumber, newCallingNumber));
             LOGGER.debug("Updated MSISDN {} to {} in {} Activity records", oldCallingNumber, newCallingNumber, i);
+        } else {
+            LOGGER.debug("No Activity records exists with given Msisdn");
         }
+    }
+
+    @Autowired
+    public void setBookmarkService(BookmarkService bookmarkService) {
+        this.bookmarkService = bookmarkService;
     }
 }

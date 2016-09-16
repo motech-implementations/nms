@@ -132,9 +132,10 @@ public class FrontLineWorkerUpdateImportServiceImpl implements FrontLineWorkerUp
                                     csvImporter.getRowNumber()));
                 }
 
+                Long oldMsisdn = flw.getContactNumber();
                 flw.setContactNumber(msisdn);
                 frontLineWorkerService.update(flw);
-                mobileAcademyService.updateMsisdn((Long) record.get(MSISDN), msisdn);
+                mobileAcademyService.updateMsisdn(oldMsisdn, msisdn);
             }
         } catch (ConstraintViolationException e) {
             throw new CsvImportDataException(createErrorMessage(e.getConstraintViolations(), csvImporter.getRowNumber()), e);
@@ -231,4 +232,10 @@ public class FrontLineWorkerUpdateImportServiceImpl implements FrontLineWorkerUp
     public void setStateDataService(StateDataService stateDataService) {
         this.stateDataService = stateDataService;
     }
+
+    @Autowired
+    public void setMobileAcademyService(MobileAcademyService mobileAcademyService) {
+        this.mobileAcademyService = mobileAcademyService;
+    }
+
 }
