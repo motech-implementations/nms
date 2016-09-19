@@ -104,11 +104,12 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
             LocalDate mctsUpdatedDateNic = (LocalDate) record.get(FlwConstants.UPDATED_ON);
             //It updated_date_nic from mcts is not null,then it's not a new record. Compare it with the record from database and update
             if (mctsUpdatedDateNic != null && (flw.getUpdatedDateNic() == null || mctsUpdatedDateNic.isAfter(flw.getUpdatedDateNic()) || mctsUpdatedDateNic.isEqual(flw.getUpdatedDateNic()))) {
-                frontLineWorkerService.update(updateFlw(flw, record, location));
+                FrontLineWorker flwInstance = updateFlw(flw, record, location);
+                frontLineWorkerService.update(flwInstance);
                 Long oldMsisdn = flw.getContactNumber();
                 Long newMsisdn = (Long) record.get(FlwConstants.CONTACT_NO);
                 if (!oldMsisdn.equals(newMsisdn)) {
-                    mobileAcademyService.updateMsisdn(oldMsisdn, newMsisdn);
+                    mobileAcademyService.updateMsisdn(flwInstance.getId(), oldMsisdn, newMsisdn);
                 }
             } else {
                 throw new FlwExistingRecordException("Updated record exists in the database");
@@ -160,8 +161,8 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
                 // making design decision that flw will lose all progress when phone number is changed. Usage and tracking is not
                 // worth the effort & we don't really know that its the same flw
                 LOGGER.debug("Updating phone number for flw");
-                frontLineWorkerService.update(FlwMapper.updateFlw(existingFlwByMctsFlwId, flw, location));
-                mobileAcademyService.updateMsisdn(existingFlwByMctsFlwId.getContactNumber(), contactNumber);
+                FrontLineWorker flwInstance = FlwMapper.updateFlw(existingFlwByMctsFlwId, flw, location);
+                updateFlwMaMsisdn(flwInstance, existingFlwByMctsFlwId.getContactNumber(), contactNumber);
                 return true;
             } else if (existingFlwByMctsFlwId == null && existingFlwByNumber != null) {
 
@@ -188,6 +189,11 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
             LOGGER.debug(ile.toString());
             return false;
         }
+    }
+
+    private void updateFlwMaMsisdn(FrontLineWorker flwInstance, Long existingMsisdn, Long newMsisdn) {
+        frontLineWorkerService.update(flwInstance);
+        mobileAcademyService.updateMsisdn(flwInstance.getId(), existingMsisdn, newMsisdn);
     }
 
     private State importHeader(BufferedReader bufferedReader) throws IOException {

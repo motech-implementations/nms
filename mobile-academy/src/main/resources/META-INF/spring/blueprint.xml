@@ -20,6 +20,9 @@
     <osgi:reference id="completionRecordDataService"
                     interface="org.motechproject.nms.mobileacademy.repository.CompletionRecordDataService" />
 
+    <osgi:reference id="mtrainingModuleActivityRecordAuditDataService"
+                    interface="org.motechproject.nms.mobileacademy.repository.MtrainingModuleActivityRecordAuditDataService" />
+
     <osgi:reference id="activityDataService"
                     interface="org.motechproject.mtraining.repository.ActivityDataService" />
 
@@ -49,5 +52,8 @@
 
     <osgi:reference id="schedulerService"
                     interface="org.motechproject.scheduler.service.MotechSchedulerService" />
+
+    <osgi:service ref="maService"
+                    interface="org.motechproject.nms.mobileacademy.service.MobileAcademyService" />
 
 </beans>

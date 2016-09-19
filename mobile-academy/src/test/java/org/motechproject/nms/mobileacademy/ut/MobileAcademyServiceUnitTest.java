@@ -23,6 +23,7 @@ import org.motechproject.nms.mobileacademy.domain.NmsCourse;
 import org.motechproject.nms.mobileacademy.dto.MaBookmark;
 import org.motechproject.nms.mobileacademy.exception.CourseNotCompletedException;
 import org.motechproject.nms.mobileacademy.repository.CompletionRecordDataService;
+import org.motechproject.nms.mobileacademy.repository.MtrainingModuleActivityRecordAuditDataService;
 import org.motechproject.nms.mobileacademy.repository.NmsCourseDataService;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
 import org.motechproject.nms.mobileacademy.service.impl.CourseNotificationServiceImpl;
@@ -111,6 +112,9 @@ public class MobileAcademyServiceUnitTest {
     @Mock
     private DistrictDataService districtDataService;
 
+    @Mock
+    private MtrainingModuleActivityRecordAuditDataService mtrainingModuleActivityRecordAuditDataService;
+
     private Validator validator;
 
     @Before
@@ -119,7 +123,7 @@ public class MobileAcademyServiceUnitTest {
         nmsCourseDataService.deleteAll();
         when(settingsFacade.getRawConfig("nmsCourse.json")).thenReturn(getFileInputStream("nmsCourseTest.json"));
         mobileAcademyService = new MobileAcademyServiceImpl(bookmarkService, activityService,
-                nmsCourseDataService, completionRecordDataService, activityDataService, eventRelay, settingsFacade, alertService);
+                nmsCourseDataService, completionRecordDataService, activityDataService, eventRelay, mtrainingModuleActivityRecordAuditDataService, settingsFacade, alertService);
         courseNotificationService = new CourseNotificationServiceImpl(completionRecordDataService,
                 smsNotificationService, settingsFacade, activityService, schedulerService, alertService,
                 frontLineWorkerService, districtDataService);

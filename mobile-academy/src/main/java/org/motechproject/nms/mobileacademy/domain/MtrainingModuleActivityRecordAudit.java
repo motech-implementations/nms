@@ -18,20 +18,23 @@ import javax.validation.constraints.Min;
 public class MtrainingModuleActivityRecordAudit extends MdsEntity {
 
     @Field
+    @Unique
+    private long flwId;
+
+    @Field
     @Min(value = 1000000000L, message = "callingNumber must be 10 digits")
     @Max(value = 9999999999L, message = "callingNumber must be 10 digits")
     @Column(length = 10)
-    @Unique
     private long existingMsisdn;
 
     @Field
     @Min(value = 1000000000L, message = "callingNumber must be 10 digits")
     @Max(value = 9999999999L, message = "callingNumber must be 10 digits")
     @Column(length = 10)
-    @Unique
     private long newMsisdn;
 
-    public MtrainingModuleActivityRecordAudit(long existingMsisdn, long newMsisdn) {
+    public MtrainingModuleActivityRecordAudit(long flwId, long existingMsisdn, long newMsisdn) {
+        this.flwId = flwId;
         this.existingMsisdn = existingMsisdn;
         this.newMsisdn = newMsisdn;
     }
@@ -50,5 +53,13 @@ public class MtrainingModuleActivityRecordAudit extends MdsEntity {
 
     public void setNewMsisdn(long newMsisdn) {
         this.newMsisdn = newMsisdn;
+    }
+
+    public long getFlwId() {
+        return flwId;
+    }
+
+    public void setFlwId(long flwId) {
+        this.flwId = flwId;
     }
 }

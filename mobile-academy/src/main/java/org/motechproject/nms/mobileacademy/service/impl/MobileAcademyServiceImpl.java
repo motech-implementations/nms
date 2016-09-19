@@ -121,6 +121,7 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
                                     CompletionRecordDataService completionRecordDataService,
                                     ActivityDataService activityDataService,
                                     EventRelay eventRelay,
+                                    MtrainingModuleActivityRecordAuditDataService mtrainingModuleActivityRecordAuditDataService,
                                     @Qualifier("maSettings") SettingsFacade settingsFacade,
                                     AlertService alertService) {
         this.bookmarkService = bookmarkService;
@@ -131,6 +132,7 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
         this.eventRelay = eventRelay;
         this.settingsFacade = settingsFacade;
         this.alertService = alertService;
+        this.mtrainingModuleActivityRecordAuditDataService = mtrainingModuleActivityRecordAuditDataService;
         bootstrapCourse();
     }
 
@@ -472,9 +474,9 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
     }
 
     @Override
-    public void updateMsisdn(Long oldCallingNumber, Long newCallingNumber) {
+    public void updateMsisdn(Long id, Long oldCallingNumber, Long newCallingNumber) {
 
-        if (oldCallingNumber.equals(newCallingNumber)) {
+        if ((newCallingNumber == null) || oldCallingNumber.equals(newCallingNumber)) {
             return;
         }
         // Update Msisdn  In MTRAINING_MODULE_BOOKMARK
@@ -515,7 +517,7 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
                 activityRecord.setExternalId(newCallingNumber.toString());
                 activityDataService.update(activityRecord);
             }
-            mtrainingModuleActivityRecordAuditDataService.create(new MtrainingModuleActivityRecordAudit(oldCallingNumber, newCallingNumber));
+            mtrainingModuleActivityRecordAuditDataService.create(new MtrainingModuleActivityRecordAudit(id, oldCallingNumber, newCallingNumber));
             LOGGER.debug("Updated MSISDN {} to {} in {} Activity records", oldCallingNumber, newCallingNumber, i);
         } else {
             LOGGER.debug("No Activity records exists with given Msisdn");

@@ -135,7 +135,7 @@ public class FrontLineWorkerUpdateImportServiceImpl implements FrontLineWorkerUp
                 Long oldMsisdn = flw.getContactNumber();
                 flw.setContactNumber(msisdn);
                 frontLineWorkerService.update(flw);
-                mobileAcademyService.updateMsisdn(oldMsisdn, msisdn);
+                mobileAcademyService.updateMsisdn(flw.getId(), oldMsisdn, msisdn);
             }
         } catch (ConstraintViolationException e) {
             throw new CsvImportDataException(createErrorMessage(e.getConstraintViolations(), csvImporter.getRowNumber()), e);
