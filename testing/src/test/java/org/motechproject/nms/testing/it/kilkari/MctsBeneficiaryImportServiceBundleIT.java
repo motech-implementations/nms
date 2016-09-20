@@ -541,7 +541,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         District expectedDistrict = rh.newDelhiDistrict();
 
         subscriber = subscriberDataService.findByNumber(2222222221L);
-        assertMother(subscriber, "11111222299999999", getDateTime("30/4/2015"), "Shanti", expectedState, expectedDistrict);
+        assertMother(subscriber, "11111222299999999", getDateTime("30/4/2016"), "Shanti", expectedState, expectedDistrict);
     }
 
     private void assertMother(Subscriber subscriber, String motherId, DateTime lmp, String name, State state, District district) {

@@ -476,7 +476,7 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
     @Override
     public void updateMsisdn(Long id, Long oldCallingNumber, Long newCallingNumber) {
 
-        if ((newCallingNumber == null) || oldCallingNumber.equals(newCallingNumber)) {
+        if ((newCallingNumber == null) || newCallingNumber.equals(oldCallingNumber)) {
             return;
         }
         // Update Msisdn  In MTRAINING_MODULE_BOOKMARK

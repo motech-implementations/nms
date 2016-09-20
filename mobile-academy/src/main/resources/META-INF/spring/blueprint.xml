@@ -53,7 +53,7 @@
     <osgi:reference id="schedulerService"
                     interface="org.motechproject.scheduler.service.MotechSchedulerService" />
 
-    <osgi:service ref="maService"
+    <osgi:service ref="mobileAcademyService"
                     interface="org.motechproject.nms.mobileacademy.service.MobileAcademyService" />
 
 </beans>

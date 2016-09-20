@@ -90,8 +90,6 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
     BookmarkDataService bookmarkDataService;
     @Inject
     ActivityDataService activityDataService;
-    @Inject
-    MobileAcademyService maService;
 
     private RegionHelper rh;
 
@@ -386,7 +384,7 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
         assertNotNull(flw);
     }
 
-    // Test MSISDN only
+    // Test MSISDN only flw Update and Bookmark, Completion and Activity Record
     @Test
     public void testMsisdnImportWhenMSISDNOnly() throws Exception {
         FrontLineWorker flw = new FrontLineWorker(1000000000L);
@@ -481,6 +479,33 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
 
         Reader reader = createMSISDNReaderWithHeaders(",,9439986187,1000000000,1");
         frontLineWorkerUpdateImportService.importMSISDNData(reader);
+    }
+
+    // Test Ma Update when new MSISDN associated with existing FLW
+    @Test
+    public void testMaUpdateWhenMSISDNProvidedIsAlreadyInUse() throws Exception {
+        FrontLineWorker flw = new FrontLineWorker(1000000000L);
+        frontLineWorkerService.add(flw);
+
+        flw = new FrontLineWorker(9439986187L);
+        frontLineWorkerService.add(flw);
+
+        createMaRecords(9439986187L);
+        createMaRecords(1000000000L);
+        assertBookmark("1000000000", 1);
+        assertActivity("1000000000", 2);
+        CompletionRecord cr = completionRecord(1000000000L);
+
+        Reader reader = createMSISDNReaderWithHeaders(",,9439986187,1000000000,1");
+
+        try {
+            frontLineWorkerUpdateImportService.importMSISDNData(reader);
+        } catch(CsvImportDataException e) {
+
+            assertBookmark("1000000000", 1);   // Records expected is 1 instead of 2 since update fails
+            assertActivity("1000000000", 2);
+            assertTrue(cr.getId() == completionRecord(1000000000L).getId());
+        }
     }
 
     private Reader createMSISDNReaderWithHeaders(String... lines) {
@@ -756,6 +781,8 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
 //        String externalId, String courseName, String chapterName, String lessonName, DateTime startTime, DateTime completionTime, ActivityState.STARTED);
         ActivityRecord ar = new ActivityRecord(contactNumber.toString(), "1", "1", "1", null,null , ActivityState.STARTED);
         activityDataService.create(ar);
+        ar = new ActivityRecord(contactNumber.toString(), "1", "1", "1", null,null , ActivityState.COMPLETED);
+        activityDataService.create(ar);
     }
 
     private void assertMaRecords(Long oldContactNumber, Long newContactNumber) {
@@ -763,21 +790,27 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
         String oldContact = oldContactNumber.toString();
         String newContact = newContactNumber.toString();
 
-        List<Bookmark> existingRecords = bookmarkDataService.findBookmarksForUser(oldContact);
-        assertTrue(existingRecords.size() == 0);
-        List<Bookmark> newRecords = bookmarkDataService.findBookmarksForUser(newContact);
-        assertTrue(newRecords.size() == 1);
-        assertEquals(newRecords.get(0).getExternalId(), newContact);
+        assertBookmark(oldContact, 0);
+        assertBookmark(newContact, 1);
 
-        assertNull(completionRecordDataService.findRecordByCallingNumber(oldContactNumber));
-        CompletionRecord cr = completionRecordDataService.findRecordByCallingNumber(newContactNumber);
-        assertNotNull(cr);
-        assertEquals((Long) cr.getCallingNumber(), newContactNumber);
+        assertNull(completionRecord(oldContactNumber));
+        assertNotNull(completionRecord(newContactNumber));
 
-        List<ActivityRecord> existingAr = activityDataService.findRecordsForUser(oldContact);
-        assertTrue(existingAr.size() == 0);
-        List<ActivityRecord> newAr = activityDataService.findRecordsForUser(newContact);
-        assertTrue(newAr.size() == 1);
-        assertEquals(newAr.get(0).getExternalId(), newContact);
+        assertActivity(oldContact, 0);
+        assertActivity(newContact, 2);
+    }
+
+    private void assertBookmark(String contactNumber, int expected) {
+        List<Bookmark> bm = bookmarkDataService.findBookmarksForUser(contactNumber);
+        assertTrue(bm.size() == expected);
+    }
+
+    private CompletionRecord completionRecord(Long contactNumber) {
+        return completionRecordDataService.findRecordByCallingNumber(contactNumber);
+    }
+
+    private void assertActivity(String contactNumber, int expected) {
+        List<ActivityRecord> ar = activityDataService.findRecordsForUser(contactNumber);
+        assertTrue(ar.size() == expected);
     }
 }
