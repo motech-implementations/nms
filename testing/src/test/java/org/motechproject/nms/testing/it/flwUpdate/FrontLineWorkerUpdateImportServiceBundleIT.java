@@ -1,4 +1,4 @@
-package org.motechproject.nms.testing.it.flw;
+package org.motechproject.nms.testing.it.flwUpdate;
 
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.lang.StringUtils;
@@ -10,13 +10,21 @@ import org.apache.http.entity.mime.content.FileBody;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.motechproject.mtraining.domain.ActivityRecord;
+import org.motechproject.mtraining.domain.ActivityState;
+import org.motechproject.mtraining.domain.Bookmark;
+import org.motechproject.mtraining.repository.ActivityDataService;
+import org.motechproject.mtraining.repository.BookmarkDataService;
 import org.motechproject.nms.csv.domain.CsvAuditRecord;
 import org.motechproject.nms.csv.exception.CsvImportDataException;
 import org.motechproject.nms.csv.repository.CsvAuditRecordDataService;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
-import org.motechproject.nms.flw.service.FrontLineWorkerUpdateImportService;
+import org.motechproject.nms.flwUpdate.service.FrontLineWorkerUpdateImportService;
+import org.motechproject.nms.mobileacademy.domain.CompletionRecord;
+import org.motechproject.nms.mobileacademy.repository.CompletionRecordDataService;
+import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
@@ -41,6 +49,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
+import java.util.HashMap;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -74,7 +84,12 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
     FrontLineWorkerUpdateImportService frontLineWorkerUpdateImportService;
     @Inject
     CsvAuditRecordDataService csvAuditRecordDataService;
-
+    @Inject
+    CompletionRecordDataService completionRecordDataService;
+    @Inject
+    BookmarkDataService bookmarkDataService;
+    @Inject
+    ActivityDataService activityDataService;
 
     private RegionHelper rh;
 
@@ -369,7 +384,7 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
         assertNotNull(flw);
     }
 
-    // Test MSISDN only
+    // Test MSISDN only flw Update and Bookmark, Completion and Activity Record
     @Test
     public void testMsisdnImportWhenMSISDNOnly() throws Exception {
         FrontLineWorker flw = new FrontLineWorker(1000000000L);
@@ -377,6 +392,8 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
 
         flw = new FrontLineWorker(2000000000L);
         frontLineWorkerService.add(flw);
+
+        createMaRecords(1000000000L);
 
         Reader reader = createMSISDNReaderWithHeaders("72185,210302604211400029,1000000000,9439986187,1");
         frontLineWorkerUpdateImportService.importMSISDNData(reader);
@@ -389,6 +406,8 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
 
         flw = frontLineWorkerDataService.findByContactNumber(2000000000L);
         assertNotNull(flw);
+
+        assertMaRecords(1000000000L, 9439986187L);
     }
 
     @Test
@@ -462,6 +481,33 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
         frontLineWorkerUpdateImportService.importMSISDNData(reader);
     }
 
+    // Test Ma Update when new MSISDN associated with existing FLW
+    @Test
+    public void testMaUpdateWhenMSISDNProvidedIsAlreadyInUse() throws Exception {
+        FrontLineWorker flw = new FrontLineWorker(1000000000L);
+        frontLineWorkerService.add(flw);
+
+        flw = new FrontLineWorker(9439986187L);
+        frontLineWorkerService.add(flw);
+
+        createMaRecords(9439986187L);
+        createMaRecords(1000000000L);
+        assertBookmark("1000000000", 1);
+        assertActivity("1000000000", 2);
+        CompletionRecord cr = completionRecord(1000000000L);
+
+        Reader reader = createMSISDNReaderWithHeaders(",,9439986187,1000000000,1");
+
+        try {
+            frontLineWorkerUpdateImportService.importMSISDNData(reader);
+        } catch(CsvImportDataException e) {
+
+            assertBookmark("1000000000", 1);   // Records expected is 1 instead of 2 since update fails
+            assertActivity("1000000000", 2);
+            assertTrue(cr.getId() == completionRecord(1000000000L).getId());
+        }
+    }
+
     private Reader createMSISDNReaderWithHeaders(String... lines) {
         StringBuilder builder = new StringBuilder();
         builder.append("NMS FLW-ID,MCTS FLW-ID,MSISDN,NEW MSISDN,STATE").append("\n");
@@ -495,11 +541,11 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
         if (StringUtils.isBlank(option)) {
             // update using import
             httpPost = new HttpPost(String.format(
-                    "http://localhost:%d/flw/import",
+                    "http://localhost:%d/flwUpdate/import",
                     TestContext.getJettyPort()));
         } else {
             httpPost = new HttpPost(String.format(
-                    "http://localhost:%d/flw/update/%s",
+                    "http://localhost:%d/flwUpdate/update/%s",
                     TestContext.getJettyPort(), option));
         }
         MultipartEntityBuilder builder = MultipartEntityBuilder.create();
@@ -662,7 +708,7 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
         // Assert audit trail log
         CsvAuditRecord csvAuditRecord = csvAuditRecordDataService.retrieveAll()
                 .get(0);
-        assertEquals("/flw/import", csvAuditRecord.getEndpoint());
+        assertEquals("/flwUpdate/import", csvAuditRecord.getEndpoint());
         assertTrue(csvAuditRecord.getOutcome().contains("Success"));
         assertEquals("flw_FT_558.txt", csvAuditRecord.getFile());
     }
@@ -690,7 +736,7 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
         // Assert audit trail log
         CsvAuditRecord csvAuditRecord = csvAuditRecordDataService.retrieveAll()
                 .get(0);
-        assertEquals("/flw/import", csvAuditRecord.getEndpoint());
+        assertEquals("/flwUpdate/import", csvAuditRecord.getEndpoint());
         assertTrue(csvAuditRecord.getOutcome().contains("Failure: "));
         assertEquals("flw_FT_560.txt", csvAuditRecord.getFile());
     }
@@ -718,9 +764,53 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
         // Assert audit trail log
         CsvAuditRecord csvAuditRecord = csvAuditRecordDataService.retrieveAll()
                 .get(0);
-        assertEquals("/flw/import", csvAuditRecord.getEndpoint());
+        assertEquals("/flwUpdate/import", csvAuditRecord.getEndpoint());
         assertTrue(csvAuditRecord.getOutcome().contains("Failure: "));
         assertEquals("flw_FT_561.txt", csvAuditRecord.getFile());
     }
 
+    /**
+     * Method used to add Bookmark, Completion and Activity record with given contactNumber
+     */
+    private void createMaRecords(Long contactNumber) {
+
+        bookmarkDataService.create(new Bookmark(contactNumber.toString(), "1", "1", "1", new HashMap<String, Object>()));
+
+        CompletionRecord cr = new CompletionRecord(contactNumber, 35, false, 1);
+        completionRecordDataService.create(cr);
+//        String externalId, String courseName, String chapterName, String lessonName, DateTime startTime, DateTime completionTime, ActivityState.STARTED);
+        ActivityRecord ar = new ActivityRecord(contactNumber.toString(), "1", "1", "1", null,null , ActivityState.STARTED);
+        activityDataService.create(ar);
+        ar = new ActivityRecord(contactNumber.toString(), "1", "1", "1", null,null , ActivityState.COMPLETED);
+        activityDataService.create(ar);
+    }
+
+    private void assertMaRecords(Long oldContactNumber, Long newContactNumber) {
+
+        String oldContact = oldContactNumber.toString();
+        String newContact = newContactNumber.toString();
+
+        assertBookmark(oldContact, 0);
+        assertBookmark(newContact, 1);
+
+        assertNull(completionRecord(oldContactNumber));
+        assertNotNull(completionRecord(newContactNumber));
+
+        assertActivity(oldContact, 0);
+        assertActivity(newContact, 2);
+    }
+
+    private void assertBookmark(String contactNumber, int expected) {
+        List<Bookmark> bm = bookmarkDataService.findBookmarksForUser(contactNumber);
+        assertTrue(bm.size() == expected);
+    }
+
+    private CompletionRecord completionRecord(Long contactNumber) {
+        return completionRecordDataService.findRecordByCallingNumber(contactNumber);
+    }
+
+    private void assertActivity(String contactNumber, int expected) {
+        List<ActivityRecord> ar = activityDataService.findRecordsForUser(contactNumber);
+        assertTrue(ar.size() == expected);
+    }
 }

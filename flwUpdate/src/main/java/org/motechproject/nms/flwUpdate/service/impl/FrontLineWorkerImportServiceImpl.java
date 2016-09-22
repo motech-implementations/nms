@@ -1,4 +1,4 @@
-package org.motechproject.nms.flw.service.impl;
+package org.motechproject.nms.flwUpdate.service.impl;
 
 import org.apache.commons.lang.StringUtils;
 import org.joda.time.LocalDate;
@@ -9,18 +9,26 @@ import org.motechproject.nms.csv.utils.CsvMapImporter;
 import org.motechproject.nms.csv.utils.GetLong;
 import org.motechproject.nms.csv.utils.GetString;
 import org.motechproject.nms.csv.utils.GetLocalDate;
+import org.motechproject.nms.flw.domain.FlwError;
+import org.motechproject.nms.flw.domain.FlwErrorReason;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 
 import org.motechproject.nms.flw.exception.FlwExistingRecordException;
 import org.motechproject.nms.flw.exception.FlwImportException;
-import org.motechproject.nms.flw.service.FrontLineWorkerImportService;
+import org.motechproject.nms.flw.repository.FlwErrorDataService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.flw.utils.FlwConstants;
+import org.motechproject.nms.flw.utils.FlwMapper;
+import org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService;
+import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
 import org.motechproject.nms.props.service.LogHelper;
+import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.exception.InvalidLocationException;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.LocationService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,9 +52,12 @@ import static org.motechproject.nms.flw.utils.FlwMapper.updateFlw;
 @Service("frontLineWorkerImportService")
 public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportService {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(FrontLineWorkerImportServiceImpl.class);
     private FrontLineWorkerService frontLineWorkerService;
     private StateDataService stateDataService;
     private LocationService locationService;
+    private FlwErrorDataService flwErrorDataService;
+    private MobileAcademyService mobileAcademyService;
 
     /*
         Expected file format:
@@ -93,11 +104,96 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
             LocalDate mctsUpdatedDateNic = (LocalDate) record.get(FlwConstants.UPDATED_ON);
             //It updated_date_nic from mcts is not null,then it's not a new record. Compare it with the record from database and update
             if (mctsUpdatedDateNic != null && (flw.getUpdatedDateNic() == null || mctsUpdatedDateNic.isAfter(flw.getUpdatedDateNic()) || mctsUpdatedDateNic.isEqual(flw.getUpdatedDateNic()))) {
-                frontLineWorkerService.update(updateFlw(flw, record, location));
+                FrontLineWorker flwInstance = updateFlw(flw, record, location);
+                frontLineWorkerService.update(flwInstance);
+                Long oldMsisdn = flw.getContactNumber();
+                Long newMsisdn = (Long) record.get(FlwConstants.CONTACT_NO);
+                if (!oldMsisdn.equals(newMsisdn)) {
+                    mobileAcademyService.updateMsisdn(flwInstance.getId(), oldMsisdn, newMsisdn);
+                }
             } else {
                 throw new FlwExistingRecordException("Updated record exists in the database");
             }
         }
+    }
+
+    @Override // NO CHECKSTYLE Cyclomatic Complexity
+    public boolean createUpdate(Map<String, Object> flw) {
+
+        long stateId = (long) flw.get(FlwConstants.STATE_ID);
+        long districtId = (long) flw.get(FlwConstants.DISTRICT_ID);
+        String mctsFlwId = flw.get(FlwConstants.ID).toString();
+        long contactNumber = (long) flw.get(FlwConstants.CONTACT_NO);
+
+        State state = locationService.getState(stateId);
+        if (state == null) {
+            flwErrorDataService.create(new FlwError(mctsFlwId, stateId, districtId, FlwErrorReason.INVALID_LOCATION_STATE));
+            return false;
+        }
+        District district = locationService.getDistrict(stateId, districtId);
+        if (district == null) {
+            flwErrorDataService.create(new FlwError(mctsFlwId, stateId, districtId, FlwErrorReason.INVALID_LOCATION_DISTRICT));
+            return false;
+        }
+
+        FrontLineWorker existingFlwByNumber = frontLineWorkerService.getByContactNumber(contactNumber);
+        FrontLineWorker existingFlwByMctsFlwId = frontLineWorkerService.getByMctsFlwIdAndState(mctsFlwId, state);
+        Map<String, Object> location = new HashMap<>();
+        try {
+            location = locationService.getLocations(flw, false);
+
+            if (existingFlwByMctsFlwId != null && existingFlwByNumber != null) {
+
+                if (existingFlwByMctsFlwId.getMctsFlwId().equalsIgnoreCase(existingFlwByNumber.getMctsFlwId()) &&
+                        existingFlwByMctsFlwId.getState().equals(existingFlwByNumber.getState())) {
+                    // we are trying to update the same existing flw. set fields and update
+                    LOGGER.debug("Updating existing user with same phone number");
+                    frontLineWorkerService.update(FlwMapper.updateFlw(existingFlwByMctsFlwId, flw, location));
+                    return true;
+                } else {
+                    // we are trying to update 2 different users and/or phone number used by someone else
+                    LOGGER.debug("Existing flw but phone number(update) already in use");
+                    flwErrorDataService.create(new FlwError(mctsFlwId, stateId, districtId, FlwErrorReason.PHONE_NUMBER_IN_USE));
+                    return false;
+                }
+            } else if (existingFlwByMctsFlwId != null && existingFlwByNumber == null) {
+                // trying to update the phone number of the person. possible migration scenario
+                // making design decision that flw will lose all progress when phone number is changed. Usage and tracking is not
+                // worth the effort & we don't really know that its the same flw
+                LOGGER.debug("Updating phone number for flw");
+                FrontLineWorker flwInstance = FlwMapper.updateFlw(existingFlwByMctsFlwId, flw, location);
+                updateFlwMaMsisdn(flwInstance, existingFlwByMctsFlwId.getContactNumber(), contactNumber);
+                return true;
+            } else if (existingFlwByMctsFlwId == null && existingFlwByNumber != null) {
+
+                if (existingFlwByNumber.getMctsFlwId() == null) {
+                    // we just got data from mcts for a previous anonymous user that subscribed by phone number
+                    // merging those records
+                    LOGGER.debug("Merging mcts data with previously anonymous user");
+                    frontLineWorkerService.update(FlwMapper.updateFlw(existingFlwByNumber, flw, location));
+                    return true;
+                } else {
+                    // phone number used by someone else.
+                    LOGGER.debug("New flw but phone number(update) already in use");
+                    flwErrorDataService.create(new FlwError(mctsFlwId, stateId, districtId, FlwErrorReason.PHONE_NUMBER_IN_USE));
+                    return false;
+                }
+
+            } else { // existingFlwByMctsFlwId & existingFlwByNumber are null)
+                // new user. set fields and add
+                LOGGER.debug("Adding new flw user");
+                frontLineWorkerService.add(FlwMapper.createFlw(flw, location));
+                return true;
+            }
+        } catch (InvalidLocationException ile) {
+            LOGGER.debug(ile.toString());
+            return false;
+        }
+    }
+
+    private void updateFlwMaMsisdn(FrontLineWorker flwInstance, Long existingMsisdn, Long newMsisdn) {
+        frontLineWorkerService.update(flwInstance);
+        mobileAcademyService.updateMsisdn(flwInstance.getId(), existingMsisdn, newMsisdn);
     }
 
     private State importHeader(BufferedReader bufferedReader) throws IOException {
@@ -217,4 +313,17 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
     public void setLocationService(LocationService locationService) {
         this.locationService = locationService;
     }
+
+    @Autowired
+    public void setFlwErrorDataService(FlwErrorDataService flwErrorDataService) {
+        this.flwErrorDataService = flwErrorDataService;
+    }
+
+    @Autowired
+    public void setMobileAcademyService(MobileAcademyService mobileAcademyService) {
+        this.mobileAcademyService = mobileAcademyService;
+    }
+
+
+
 }

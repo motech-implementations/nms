@@ -1,4 +1,4 @@
-package org.motechproject.nms.flw.service.impl;
+package org.motechproject.nms.flwUpdate.service.impl;
 
 import org.motechproject.nms.csv.exception.CsvImportDataException;
 import org.motechproject.nms.csv.utils.ConstraintViolationUtils;
@@ -10,7 +10,8 @@ import org.motechproject.nms.csv.utils.GetLong;
 import org.motechproject.nms.csv.utils.GetString;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
-import org.motechproject.nms.flw.service.FrontLineWorkerUpdateImportService;
+import org.motechproject.nms.flwUpdate.service.FrontLineWorkerUpdateImportService;
+import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
 import org.motechproject.nms.region.domain.Language;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.StateDataService;
@@ -44,6 +45,7 @@ public class FrontLineWorkerUpdateImportServiceImpl implements FrontLineWorkerUp
     private FrontLineWorkerService frontLineWorkerService;
     private LanguageService languageService;
     private StateDataService stateDataService;
+    private MobileAcademyService mobileAcademyService;
 
     /*
         Expected file format:
@@ -130,8 +132,10 @@ public class FrontLineWorkerUpdateImportServiceImpl implements FrontLineWorkerUp
                                     csvImporter.getRowNumber()));
                 }
 
+                Long oldMsisdn = flw.getContactNumber();
                 flw.setContactNumber(msisdn);
                 frontLineWorkerService.update(flw);
+                mobileAcademyService.updateMsisdn(flw.getId(), oldMsisdn, msisdn);
             }
         } catch (ConstraintViolationException e) {
             throw new CsvImportDataException(createErrorMessage(e.getConstraintViolations(), csvImporter.getRowNumber()), e);
@@ -228,4 +232,10 @@ public class FrontLineWorkerUpdateImportServiceImpl implements FrontLineWorkerUp
     public void setStateDataService(StateDataService stateDataService) {
         this.stateDataService = stateDataService;
     }
+
+    @Autowired
+    public void setMobileAcademyService(MobileAcademyService mobileAcademyService) {
+        this.mobileAcademyService = mobileAcademyService;
+    }
+
 }

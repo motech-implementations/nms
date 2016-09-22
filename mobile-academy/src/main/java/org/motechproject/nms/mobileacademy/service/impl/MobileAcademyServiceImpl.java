@@ -13,15 +13,18 @@ import org.motechproject.event.listener.annotations.MotechListener;
 import org.motechproject.mtraining.domain.ActivityRecord;
 import org.motechproject.mtraining.domain.ActivityState;
 import org.motechproject.mtraining.domain.Bookmark;
+import org.motechproject.mtraining.repository.ActivityDataService;
 import org.motechproject.mtraining.service.ActivityService;
 import org.motechproject.mtraining.service.BookmarkService;
 import org.motechproject.nms.mobileacademy.domain.CompletionRecord;
 import org.motechproject.nms.mobileacademy.domain.NmsCourse;
+import org.motechproject.nms.mobileacademy.domain.MtrainingModuleActivityRecordAudit;
 import org.motechproject.nms.mobileacademy.dto.MaBookmark;
 import org.motechproject.nms.mobileacademy.dto.MaCourse;
 import org.motechproject.nms.mobileacademy.exception.CourseNotCompletedException;
 import org.motechproject.nms.mobileacademy.repository.CompletionRecordDataService;
 import org.motechproject.nms.mobileacademy.repository.NmsCourseDataService;
+import org.motechproject.nms.mobileacademy.repository.MtrainingModuleActivityRecordAuditDataService;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
 import org.motechproject.nms.props.service.LogHelper;
 import org.motechproject.server.config.SettingsFacade;
@@ -36,6 +39,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -82,6 +86,11 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
     private CompletionRecordDataService completionRecordDataService;
 
     /**
+     * Activity record data service
+     */
+    private ActivityDataService activityDataService;
+
+    /**
      * NMS course data service
      */
     private NmsCourseDataService nmsCourseDataService;
@@ -101,6 +110,8 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
      */
     private AlertService alertService;
 
+    private MtrainingModuleActivityRecordAuditDataService mtrainingModuleActivityRecordAuditDataService;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(MobileAcademyServiceImpl.class);
 
     @Autowired
@@ -108,16 +119,20 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
                                     ActivityService activityService,
                                     NmsCourseDataService nmsCourseDataService,
                                     CompletionRecordDataService completionRecordDataService,
+                                    ActivityDataService activityDataService,
                                     EventRelay eventRelay,
+                                    MtrainingModuleActivityRecordAuditDataService mtrainingModuleActivityRecordAuditDataService,
                                     @Qualifier("maSettings") SettingsFacade settingsFacade,
                                     AlertService alertService) {
         this.bookmarkService = bookmarkService;
         this.activityService = activityService;
         this.nmsCourseDataService = nmsCourseDataService;
         this.completionRecordDataService = completionRecordDataService;
+        this.activityDataService = activityDataService;
         this.eventRelay = eventRelay;
         this.settingsFacade = settingsFacade;
         this.alertService = alertService;
+        this.mtrainingModuleActivityRecordAuditDataService = mtrainingModuleActivityRecordAuditDataService;
         bootstrapCourse();
     }
 
@@ -456,5 +471,61 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
         }
 
         return scores;
+    }
+
+    @Override
+    public void updateMsisdn(Long id, Long oldCallingNumber, Long newCallingNumber) {
+
+        if ((newCallingNumber == null) || newCallingNumber.equals(oldCallingNumber)) {
+            return;
+        }
+        // Update Msisdn  In MTRAINING_MODULE_BOOKMARK
+        LOGGER.debug("Fetching Bookmarks for Msisdn {}.", oldCallingNumber);
+        List<Bookmark> existingBookmarks = bookmarkService.getAllBookmarksForUser(oldCallingNumber.toString());
+        if (existingBookmarks.size() > 0) {
+            int i;
+            Bookmark bookmark;
+            for (i = 0; i < existingBookmarks.size(); i++) {
+                bookmark = existingBookmarks.get(i);
+                bookmark.setExternalId(newCallingNumber.toString());
+                bookmarkService.updateBookmark(bookmark);
+            }
+            LOGGER.debug("Updated MSISDN {} to {} in {} Bookmarks", oldCallingNumber, newCallingNumber, i);
+        } else {
+            LOGGER.debug("No Bookmarks exists with given Msisdn");
+        }
+
+        // Update Msisdn  In nms_ma_completion_records
+        LOGGER.debug("Fetching Completion records for Msisdn {}.", oldCallingNumber);
+        CompletionRecord completionRecord = completionRecordDataService.findRecordByCallingNumber(oldCallingNumber);
+        if (null == completionRecord) {
+            LOGGER.debug("No CompletionRecord exists with given Msisdn");
+        } else {
+            completionRecord.setCallingNumber(newCallingNumber);
+            completionRecordDataService.update(completionRecord);
+            LOGGER.debug("Updated MSISDN {} to {} in Completion record", oldCallingNumber, newCallingNumber);
+        }
+
+        // Update Msisdn  In MTRAINING_MODULE_ACTIVITYRECORD
+        LOGGER.debug("Fetching Activity records for Msisdn {}", oldCallingNumber);
+        List<ActivityRecord> existingRecords = activityDataService.findRecordsForUser(oldCallingNumber.toString());
+        if (existingRecords.size() > 0) {
+            int i;
+            ActivityRecord activityRecord;
+            for (i = 0; i < existingRecords.size(); i++) {
+                activityRecord = existingRecords.get(i);
+                activityRecord.setExternalId(newCallingNumber.toString());
+                activityDataService.update(activityRecord);
+            }
+            mtrainingModuleActivityRecordAuditDataService.create(new MtrainingModuleActivityRecordAudit(id, oldCallingNumber, newCallingNumber));
+            LOGGER.debug("Updated MSISDN {} to {} in {} Activity records", oldCallingNumber, newCallingNumber, i);
+        } else {
+            LOGGER.debug("No Activity records exists with given Msisdn");
+        }
+    }
+
+    @Autowired
+    public void setBookmarkService(BookmarkService bookmarkService) {
+        this.bookmarkService = bookmarkService;
     }
 }

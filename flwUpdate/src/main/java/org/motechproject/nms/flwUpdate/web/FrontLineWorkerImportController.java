@@ -1,4 +1,4 @@
-package org.motechproject.nms.flw.web;
+package org.motechproject.nms.flwUpdate.web;
 
 import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.alerts.domain.AlertStatus;
@@ -6,8 +6,8 @@ import org.motechproject.alerts.domain.AlertType;
 import org.motechproject.nms.csv.exception.CsvImportDataException;
 import org.motechproject.nms.csv.exception.CsvImportException;
 import org.motechproject.nms.csv.service.CsvAuditService;
-import org.motechproject.nms.flw.service.FrontLineWorkerImportService;
-import org.motechproject.nms.flw.service.FrontLineWorkerUpdateImportService;
+import org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService;
+import org.motechproject.nms.flwUpdate.service.FrontLineWorkerUpdateImportService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,14 +48,14 @@ public class FrontLineWorkerImportController {
         try {
             try (InputStream in = csvFile.getInputStream()) {
                 flwUpdateImportService.importLanguageData(new InputStreamReader(in));
-                csvAuditService.auditSuccess(csvFile.getOriginalFilename(), "/flw/update/language");
+                csvAuditService.auditSuccess(csvFile.getOriginalFilename(), "/flwUpdate/update/language");
             }
         } catch (CsvImportDataException e) {
-            logError(csvFile.getOriginalFilename(), "/flw/update/language", e, "front_line_workers_language_import_error",
+            logError(csvFile.getOriginalFilename(), "/flwUpdate/update/language", e, "front_line_workers_language_import_error",
                     "Front line workers language import error");
             throw e;
         } catch (Exception e) {
-            logError(csvFile.getOriginalFilename(), "/flw/update/language", e, "front_line_workers_language_import_error",
+            logError(csvFile.getOriginalFilename(), "/flwUpdate/update/language", e, "front_line_workers_language_import_error",
                     "Front line workers language import error");
             throw new CsvImportException("An error occurred during CSV import", e);
         }
@@ -68,14 +68,14 @@ public class FrontLineWorkerImportController {
         try {
             try (InputStream in = csvFile.getInputStream()) {
                 flwUpdateImportService.importMSISDNData(new InputStreamReader(in));
-                csvAuditService.auditSuccess(csvFile.getOriginalFilename(), "/flw/update/msisdn");
+                csvAuditService.auditSuccess(csvFile.getOriginalFilename(), "/flwUpdate/update/msisdn");
             }
         } catch (CsvImportDataException e) {
-            logError(csvFile.getOriginalFilename(), "/flw/update/msisdn", e, "front_line_workers_msisdn_import_error",
+            logError(csvFile.getOriginalFilename(), "/flwUpdate/update/msisdn", e, "front_line_workers_msisdn_import_error",
                     "Front line workers msisdn import error");
             throw e;
         } catch (Exception e) {
-            logError(csvFile.getOriginalFilename(), "/flw/update/msisdn", e, "front_line_workers_msisdn_import_error",
+            logError(csvFile.getOriginalFilename(), "/flwUpdate/update/msisdn", e, "front_line_workers_msisdn_import_error",
                     "Front line workers msisdn import error");
             throw new CsvImportException("An error occurred during CSV import", e);
         }
@@ -88,14 +88,14 @@ public class FrontLineWorkerImportController {
         try {
             try (InputStream in = csvFile.getInputStream()) {
                 frontLineWorkerImportService.importData(new InputStreamReader(in));
-                csvAuditService.auditSuccess(csvFile.getOriginalFilename(), "/flw/import");
+                csvAuditService.auditSuccess(csvFile.getOriginalFilename(), "/flwUpdate/import");
             }
         } catch (CsvImportDataException e) {
-            logError(csvFile.getOriginalFilename(), "/flw/import", e, "front_line_workers_import_error",
+            logError(csvFile.getOriginalFilename(), "/flwUpdate/import", e, "front_line_workers_import_error",
                     "Front line workers import error");
             throw e;
         } catch (Exception e) {
-            logError(csvFile.getOriginalFilename(), "/flw/import", e, "front_line_workers_import_error",
+            logError(csvFile.getOriginalFilename(), "/flwUpdate/import", e, "front_line_workers_import_error",
                     "Front line workers import error");
             throw new CsvImportException("An error occurred during CSV import", e);
         }

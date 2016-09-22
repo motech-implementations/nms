@@ -11,6 +11,7 @@ import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.EventRelay;
 import org.motechproject.mtraining.domain.ActivityRecord;
 import org.motechproject.mtraining.domain.Bookmark;
+import org.motechproject.mtraining.repository.ActivityDataService;
 import org.motechproject.mtraining.service.ActivityService;
 import org.motechproject.mtraining.service.BookmarkService;
 import org.motechproject.mtraining.service.MTrainingService;
@@ -22,6 +23,7 @@ import org.motechproject.nms.mobileacademy.domain.NmsCourse;
 import org.motechproject.nms.mobileacademy.dto.MaBookmark;
 import org.motechproject.nms.mobileacademy.exception.CourseNotCompletedException;
 import org.motechproject.nms.mobileacademy.repository.CompletionRecordDataService;
+import org.motechproject.nms.mobileacademy.repository.MtrainingModuleActivityRecordAuditDataService;
 import org.motechproject.nms.mobileacademy.repository.NmsCourseDataService;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
 import org.motechproject.nms.mobileacademy.service.impl.CourseNotificationServiceImpl;
@@ -87,6 +89,9 @@ public class MobileAcademyServiceUnitTest {
     private CompletionRecordDataService completionRecordDataService;
 
     @Mock
+    private ActivityDataService activityDataService;
+
+    @Mock
     private EventRelay eventRelay;
 
     @Mock
@@ -107,6 +112,9 @@ public class MobileAcademyServiceUnitTest {
     @Mock
     private DistrictDataService districtDataService;
 
+    @Mock
+    private MtrainingModuleActivityRecordAuditDataService mtrainingModuleActivityRecordAuditDataService;
+
     private Validator validator;
 
     @Before
@@ -115,7 +123,7 @@ public class MobileAcademyServiceUnitTest {
         nmsCourseDataService.deleteAll();
         when(settingsFacade.getRawConfig("nmsCourse.json")).thenReturn(getFileInputStream("nmsCourseTest.json"));
         mobileAcademyService = new MobileAcademyServiceImpl(bookmarkService, activityService,
-                nmsCourseDataService, completionRecordDataService, eventRelay, settingsFacade, alertService);
+                nmsCourseDataService, completionRecordDataService, activityDataService, eventRelay, mtrainingModuleActivityRecordAuditDataService, settingsFacade, alertService);
         courseNotificationService = new CourseNotificationServiceImpl(completionRecordDataService,
                 smsNotificationService, settingsFacade, activityService, schedulerService, alertService,
                 frontLineWorkerService, districtDataService);

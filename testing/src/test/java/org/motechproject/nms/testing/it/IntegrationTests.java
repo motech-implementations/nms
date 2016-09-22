@@ -8,11 +8,11 @@ import org.motechproject.nms.testing.it.api.LanguageControllerBundleIT;
 import org.motechproject.nms.testing.it.api.MobileAcademyControllerBundleIT;
 import org.motechproject.nms.testing.it.api.OpsControllerBundleIT;
 import org.motechproject.nms.testing.it.api.UserControllerBundleIT;
-import org.motechproject.nms.testing.it.flw.FrontLineWorkerImportServiceBundleIT;
 import org.motechproject.nms.testing.it.flw.FrontLineWorkerServiceBundleIT;
-import org.motechproject.nms.testing.it.flw.FrontLineWorkerUpdateImportServiceBundleIT;
 import org.motechproject.nms.testing.it.flw.ServiceUsageCapServiceBundleIT;
 import org.motechproject.nms.testing.it.flw.ServiceUsageServiceBundleIT;
+import org.motechproject.nms.testing.it.flwUpdate.FrontLineWorkerImportServiceBundleIT;
+import org.motechproject.nms.testing.it.flwUpdate.FrontLineWorkerUpdateImportServiceBundleIT;
 import org.motechproject.nms.testing.it.flw.WhiteListServiceBundleIT;
 import org.motechproject.nms.testing.it.imi.CdrFileServiceBundleIT;
 import org.motechproject.nms.testing.it.imi.ImiControllerCdrBundleIT;
@@ -57,6 +57,10 @@ import org.motechproject.nms.testing.it.tracking.TrackOneToManyChangesBundleIT;
     ServiceUsageCapServiceBundleIT.class,
     WhiteListServiceBundleIT.class,
     FrontLineWorkerServiceBundleIT.class,
+
+    /**
+     * FLW UPDATE
+     */
     FrontLineWorkerImportServiceBundleIT.class,
     FrontLineWorkerUpdateImportServiceBundleIT.class,
 

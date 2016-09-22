@@ -23,6 +23,8 @@
 
     <osgi:reference id="frontLineWorkerService" interface="org.motechproject.nms.flw.service.FrontLineWorkerService"/>
 
+    <osgi:reference id="frontLineWorkerImportService" interface="org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService"/>
+
     <osgi:reference id="serviceUsageService" interface="org.motechproject.nms.flw.service.ServiceUsageService"/>
 
     <osgi:reference id="serviceUsageCapService" interface="org.motechproject.nms.flw.service.ServiceUsageCapService"/>

@@ -3,10 +3,10 @@ package org.motechproject.nms.api.web;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.EventRelay;
 import org.motechproject.nms.api.web.contract.AddFlwRequest;
-import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.flw.utils.FlwConstants;
 import org.motechproject.nms.api.web.contract.mobileAcademy.GetBookmarkResponse;
 import org.motechproject.nms.api.web.converter.MobileAcademyConverter;
+import org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService;
 import org.motechproject.nms.imi.service.CdrFileService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
@@ -64,7 +64,7 @@ public class OpsController extends BaseController {
     private MobileAcademyService mobileAcademyService;
 
     @Autowired
-    private FrontLineWorkerService frontLineWorkerService;
+    private FrontLineWorkerImportService frontLineWorkerImportService;
 
     private final String contactNumber = "contactNumber";
 
@@ -177,7 +177,7 @@ public class OpsController extends BaseController {
             flwProperties.put(FlwConstants.CENSUS_VILLAGE_ID, addFlwRequest.getVillageId());
         }
 
-        frontLineWorkerService.createUpdate(flwProperties);
+        frontLineWorkerImportService.createUpdate(flwProperties);
     }
 
 

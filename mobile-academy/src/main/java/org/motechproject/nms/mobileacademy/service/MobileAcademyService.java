@@ -61,4 +61,13 @@ public interface MobileAcademyService {
      */
     String getScoresForUser(Long callingNumber);
 
+    /**
+     * Updates Calling Number in MTRAINING_MODULE_BOOKMARK, nms_ma_completion_records, MTRAINING_MODULE_ACTIVITYRECORD tables
+     * @param id primary key of FrontLineWorker
+     * @param oldCallingNumber existing Msisdn of caller
+     * @param newCallingNumber new Msisdn of caller
+     * @return
+     */
+    void updateMsisdn(Long id, Long oldCallingNumber, Long newCallingNumber);
+
 }

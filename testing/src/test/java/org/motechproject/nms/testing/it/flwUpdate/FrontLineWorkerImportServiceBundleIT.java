@@ -1,4 +1,4 @@
-package org.motechproject.nms.testing.it.flw;
+package org.motechproject.nms.testing.it.flwUpdate;
 
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.mime.HttpMultipartMode;
@@ -14,7 +14,7 @@ import org.motechproject.nms.csv.repository.CsvAuditRecordDataService;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
-import org.motechproject.nms.flw.service.FrontLineWorkerImportService;
+import org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.District;
@@ -57,6 +57,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -324,7 +325,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         // Assert audit trail log
         CsvAuditRecord csvAuditRecord = csvAuditRecordDataService.retrieveAll()
                 .get(0);
-        assertEquals("/flw/import", csvAuditRecord.getEndpoint());
+        assertEquals("/flwUpdate/import", csvAuditRecord.getEndpoint());
         assertEquals(SUCCESS, csvAuditRecord.getOutcome());
         assertEquals("flw.txt", csvAuditRecord.getFile());
     }
@@ -372,7 +373,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
             // Assert audit trail log
             CsvAuditRecord csvAuditRecord = csvAuditRecordDataService.retrieveAll()
                     .get(0);
-            assertEquals("/flw/import", csvAuditRecord.getEndpoint());
+            assertEquals("/flwUpdate/import", csvAuditRecord.getEndpoint());
             assertEquals("Failure: The number of columns to be processed (4) must match the number of CellProcessors (5): check that the number of CellProcessors you have defined matches the expected number of columns being read/written", csvAuditRecord.getOutcome());
             assertEquals("flw_name_missing.txt", csvAuditRecord.getFile());
     }
@@ -468,7 +469,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
      * Method used to import CSV File For FLW Data
      */
     private void importCsvFileForFLW(String fileName) throws InterruptedException, IOException {
-        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/flw/import", TestContext.getJettyPort()));
+        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/flwUpdate/import", TestContext.getJettyPort()));
         FileBody fileBody = new FileBody(new File(String.format("src/test/resources/csv/%s", fileName)));
         MultipartEntityBuilder builder = MultipartEntityBuilder.create();
         builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);

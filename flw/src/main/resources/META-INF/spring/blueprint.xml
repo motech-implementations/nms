@@ -33,12 +33,6 @@
     <osgi:service ref="whitelistService"
                   interface="org.motechproject.nms.flw.service.WhitelistService" />
 
-    <osgi:service ref="frontLineWorkerImportService"
-                  interface="org.motechproject.nms.flw.service.FrontLineWorkerImportService" />
-
-    <osgi:service ref="frontLineWorkerUpdateImportService"
-                  interface="org.motechproject.nms.flw.service.FrontLineWorkerUpdateImportService" />
-
     <osgi:reference id="flwErrorDataService"
                     interface="org.motechproject.nms.flw.repository.FlwErrorDataService" />
 
@@ -60,25 +54,17 @@
     <osgi:reference id="whitelistStateDataService"
                     interface="org.motechproject.nms.flw.repository.WhitelistStateDataService" />
 
-    <osgi:reference id="locationService"
-                    interface="org.motechproject.nms.region.service.LocationService" />
-
-    <osgi:reference id="stateDataService"
-                    interface="org.motechproject.nms.region.repository.StateDataService" />
-
     <osgi:reference id="languageService"
                     interface="org.motechproject.nms.region.service.LanguageService" />
 
     <osgi:reference id="schedulerService"
                     interface="org.motechproject.scheduler.service.MotechSchedulerService" />
-
-    <osgi:reference id="alertsService" interface="org.motechproject.alerts.contract.AlertService" />
-
-    <!-- CSV Audit Service -->
-    <osgi:reference id="csvAuditService" interface="org.motechproject.nms.csv.service.CsvAuditService" />
     
     <osgi:service ref="flwSettingsService" interface="org.motechproject.nms.flw.service.FlwSettingsService" />
 
     <osgi:reference id="eventRelay" interface="org.motechproject.event.listener.EventRelay"/>
+
+    <osgi:service ref="flwErrorDataService"
+                    interface="org.motechproject.nms.flw.repository.FlwErrorDataService" />
 
 </beans>

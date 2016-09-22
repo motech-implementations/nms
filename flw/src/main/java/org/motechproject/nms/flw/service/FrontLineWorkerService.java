@@ -7,7 +7,6 @@ import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.region.domain.State;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Simple example of a service interface.
@@ -15,12 +14,6 @@ import java.util.Map;
 public interface FrontLineWorkerService {
 
     State getState(FrontLineWorker frontLineWorker);
-
-    /**
-     * Used to create or update an FLW from mcts or other sync services
-     * @param flwRecord key-value pair of properties for flw
-     */
-    boolean createUpdate(Map<String, Object> flwRecord);
 
     void add(FrontLineWorker frontLineWorker);
 
