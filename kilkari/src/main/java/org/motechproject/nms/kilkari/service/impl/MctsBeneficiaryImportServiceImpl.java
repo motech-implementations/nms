@@ -419,7 +419,12 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                 return mctsBeneficiaryValueProcessor.getDeathFromString(value);
             }
         }));
-
+        mapping.put(KilkariConstants.LAST_UPDATE_DATE, new Optional(new GetInstanceByString<LocalDate>() {
+            @Override
+            public LocalDate retrieve(String value) {
+                return (LocalDate) mctsBeneficiaryValueProcessor.getDateByString(value).toLocalDate();
+            }
+        }));
         return mapping;
     }
 
@@ -459,7 +464,12 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                 return mctsBeneficiaryValueProcessor.getDeathFromString(value);
             }
         }));
-
+        mapping.put(KilkariConstants.LAST_UPDATE_DATE, new Optional(new GetInstanceByString<LocalDate>() {
+            @Override
+            public LocalDate retrieve(String value) {
+                return (LocalDate) mctsBeneficiaryValueProcessor.getDateByString(value).toLocalDate();
+            }
+        }));
         return mapping;
     }
 }
