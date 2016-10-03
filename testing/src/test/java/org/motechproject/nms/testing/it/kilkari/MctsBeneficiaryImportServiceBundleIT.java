@@ -65,6 +65,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -276,6 +277,43 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         subscription = subscriber.getActiveAndPendingSubscriptions().iterator().next();
         assertEquals(90, Days.daysBetween(newLmp.toLocalDate(), subscription.getStartDate().toLocalDate())
                 .getDays());
+        transactionManager.commit(status);
+    }
+
+    /*
+     * Update of kilkari should fail if Last_Update_Date is earlier than that in the database
+     */
+    @Test
+    public void testMotherUpdateWithLastUpdateDate() throws Exception {
+        DateTime lmp = DateTime.now().minusDays(100);
+        String lmpString = getDateString(lmp);
+        Reader reader = createMotherDataReader("21\t3\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t\t" +
+                lmpString + "\t\t\t\t03-10-2016");
+        mctsBeneficiaryImportService.importMotherData(reader);
+
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        Subscriber subscriber = subscriberDataService.findByNumber(9439986187L);
+        assertNotNull(subscriber);
+        assertEquals(lmp.toLocalDate(), subscriber.getLastMenstrualPeriod().toLocalDate());
+        assertEquals("Shanti Ekka", subscriber.getMother().getName());
+        List<SubscriptionError> se = subscriptionErrorDataService.findByContactNumber(9439986187L);
+        assertEquals(0, se.size());
+        transactionManager.commit(status);
+
+        DateTime newLmp = DateTime.now().minusDays(150);
+        String newLmpString = getDateString(newLmp);
+        reader = createMotherDataReader("21\t3\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t\t" +
+                newLmpString + "\t\t\t\t01-10-2016");
+        mctsBeneficiaryImportService.importMotherData(reader);
+
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        subscriber = subscriberDataService.findByNumber(9439986187L);
+        assertNotNull(subscriber);
+
+        // Lmp update should fail
+        assertNotEquals(newLmp.toLocalDate(), subscriber.getLastMenstrualPeriod().toLocalDate());
+        assertEquals(lmp.toLocalDate(), subscriber.getLastMenstrualPeriod().toLocalDate());
+        assertSubscriptionError(9439986187L, SubscriptionPackType.PREGNANCY, SubscriptionRejectionReason.ALREADY_SUBSCRIBED);
         transactionManager.commit(status);
     }
 
@@ -1452,6 +1490,41 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         assertNull(pregnancySubscription);
         transactionManager.commit(status);
 
+    }
+
+    /*
+     * To verify child subscription is rejected when Last_Update_Date is earlier than that in database
+     */
+    @Test
+    public void testChildUpdateWithLastUpdateDate() throws Exception {
+        DateTime dob = DateTime.now().minusDays(100);
+        String dobString = getDateString(dob);
+        Reader reader = createChildDataReader("21\t3\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t\t9439986187\t"
+                + dobString + "\t\t03-10-2016");
+        mctsBeneficiaryImportService.importChildData(reader);
+
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        Subscriber subscriber = subscriberDataService.findByNumber(9439986187L);
+        assertNotNull(subscriber);
+        assertEquals(dob.toLocalDate(), subscriber.getDateOfBirth().toLocalDate());
+        List<SubscriptionError> se = subscriptionErrorDataService.findByContactNumber(9439986187L);
+        assertEquals(0, se.size());
+        transactionManager.commit(status);
+
+        DateTime newdob = DateTime.now().minusDays(150);
+        String newdobString = getDateString(newdob);
+        reader = createChildDataReader("21\t3\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t\t9439986187\t"
+                + newdobString + "\t\t01-10-2016");
+        mctsBeneficiaryImportService.importChildData(reader);
+
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        subscriber = subscriberDataService.findByNumber(9439986187L);
+        assertNotNull(subscriber);
+        // Update DOB should fail
+        assertNotEquals(newdob.toLocalDate(), subscriber.getDateOfBirth().toLocalDate());
+        assertEquals(dob.toLocalDate(), subscriber.getDateOfBirth().toLocalDate());
+        assertSubscriptionError(9439986187L, SubscriptionPackType.CHILD, SubscriptionRejectionReason.ALREADY_SUBSCRIBED);
+        transactionManager.commit(status);
     }
 
 }

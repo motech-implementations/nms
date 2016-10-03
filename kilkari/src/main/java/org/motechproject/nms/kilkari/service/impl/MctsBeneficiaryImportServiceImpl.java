@@ -193,6 +193,8 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
         //validate if it's an updated record compared to one from database
         if (mother.getUpdatedDateNic() != null && (mctsUpdatedDateNic == null || mother.getUpdatedDateNic().isAfter(mctsUpdatedDateNic))) {
+            subscriptionErrorDataService.create(new SubscriptionError(msisdn, mother.getBeneficiaryId(),
+                    SubscriptionRejectionReason.ALREADY_SUBSCRIBED, SubscriptionPackType.PREGNANCY, "Updated Record exits"));
             return false;
         }
 
@@ -267,6 +269,8 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
         //validate if it's an updated record compared to one from database
         if (child.getUpdatedDateNic() != null && (mctsUpdatedDateNic == null || child.getUpdatedDateNic().isAfter(mctsUpdatedDateNic))) {
+            subscriptionErrorDataService.create(new SubscriptionError(msisdn, child.getBeneficiaryId(),
+                    SubscriptionRejectionReason.ALREADY_SUBSCRIBED, SubscriptionPackType.CHILD, "Updated Record exits"));
             return false;
         }
 
