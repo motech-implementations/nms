@@ -401,7 +401,7 @@ public class OpsControllerBundleIT extends BasePaxIT {
         request.setMctsFlwId("123");
         request.setStateId(state.getCode());
         request.setDistrictId(district.getCode());
-        request.setType("ANM");
+        request.setType("ASHA");
         return request;
     }
 

@@ -392,24 +392,29 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         int rejected = 0;
 
         for (AnmAshaRecord record : anmAshaDataSet.getRecords()) {
-            try {
-                // get user property map
-                Map<String, Object> recordMap = record.toFlwRecordMap();    // temp var used for debugging
-                frontLineWorkerImportService.importFrontLineWorker(recordMap, state);
-                saved++;
-            } catch (InvalidLocationException e) {
-                LOGGER.warn("Invalid location for FLW: ", e);
+            String designation = record.getType();
+            if (!("ASHA".equals(designation))) {
                 rejected++;
-            } catch (FlwImportException e) {
-                LOGGER.error("Existing FLW with same MSISDN but different MCTS ID", e);
-                rejected++;
-            } catch (FlwExistingRecordException e) {
-                LOGGER.error("Cannot import FLW with ID: {}, and MSISDN (Contact_No): {}", record.getId(), record.getContactNo(), e);
-                rejected++;
-            } catch (Exception e) {
-                LOGGER.error("Flw import Error. Cannot import FLW with ID: {}, and MSISDN (Contact_No): {}",
-                        record.getId(), record.getContactNo(), e);
-                rejected++;
+            } else {
+                try {
+                    // get user property map
+                    Map<String, Object> recordMap = record.toFlwRecordMap();    // temp var used for debugging
+                    frontLineWorkerImportService.importFrontLineWorker(recordMap, state);
+                    saved++;
+                } catch (InvalidLocationException e) {
+                    LOGGER.warn("Invalid location for FLW: ", e);
+                    rejected++;
+                } catch (FlwImportException e) {
+                    LOGGER.error("Existing FLW with same MSISDN but different MCTS ID", e);
+                    rejected++;
+                } catch (FlwExistingRecordException e) {
+                    LOGGER.error("Cannot import FLW with ID: {}, and MSISDN (Contact_No): {}", record.getId(), record.getContactNo(), e);
+                    rejected++;
+                } catch (Exception e) {
+                    LOGGER.error("Flw import Error. Cannot import FLW with ID: {}, and MSISDN (Contact_No): {}",
+                            record.getId(), record.getContactNo(), e);
+                    rejected++;
+                }
             }
             if ((saved + rejected) % THOUSAND == 0) {
                 LOGGER.debug("{} state, Progress: {} Ashas imported, {} Ashas rejected", stateName, saved, rejected);
