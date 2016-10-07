@@ -60,7 +60,7 @@ public class BaseController {
     public static final int MA_MIN_SCORE = 0;
     public static final int MA_MAX_SCORE = 4;
     public static final String CALLING_NUMBER = "callingNumber";
-    public static final String TYPE = "ASHA";
+    public static final String VALID_TYPE = "ASHA";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BaseController.class);
     public static final String LOG_RESPONSE_FORMAT = "RESPONSE: %s";
@@ -130,7 +130,9 @@ public class BaseController {
         if (!validateFieldPresent(errors, fieldName, value)) {
             return false;
         }
-        if (TYPE.equals(value)) {
+        String designation = value;
+        designation =  (designation != null) ? designation.trim() : designation;
+        if (VALID_TYPE.equals(designation)) {
             return true;
         }
         errors.append(String.format(INVALID_TYPE, fieldName));

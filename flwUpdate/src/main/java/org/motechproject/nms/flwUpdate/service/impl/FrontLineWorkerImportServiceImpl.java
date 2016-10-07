@@ -81,7 +81,11 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
         try {
             Map<String, Object> record;
             while (null != (record = csvImporter.read())) {
-                importFrontLineWorker(record, state);
+                String designation = (String) record.get(FlwConstants.TYPE);
+                designation = (designation != null) ? designation.trim() : designation;
+                if ("ASHA".equals(designation)) {
+                    importFrontLineWorker(record, state);
+                }
             }
         } catch (ConstraintViolationException e) {
             throw new CsvImportDataException(createErrorMessage(e.getConstraintViolations(), csvImporter.getRowNumber()), e);

@@ -393,6 +393,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
 
         for (AnmAshaRecord record : anmAshaDataSet.getRecords()) {
             String designation = record.getType();
+            designation = (designation != null) ? designation.trim() : designation;
             if (!("ASHA".equals(designation))) {
                 rejected++;
             } else {

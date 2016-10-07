@@ -9,6 +9,9 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 
+/*
+    test servlet for data with non ASHA designation among them
+     */
 public class MockWsHttpServletForASHAValidation extends HttpServlet {
 
     @Override

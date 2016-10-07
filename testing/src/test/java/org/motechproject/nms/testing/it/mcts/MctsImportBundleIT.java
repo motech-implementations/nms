@@ -273,7 +273,7 @@ public class MctsImportBundleIT extends BasePaxIT {
         mctsWsImportService.importAnmAshaData(event);
         Thread.currentThread().setContextClassLoader(cl);
 
-//        Since the response while reading the xmls is a Remote server exception, the import should not take place and the data should be updated in nms_mcts_failure table
+//        Should reject non ASHA FLWs
         List<FrontLineWorker> flws = flwDataService.retrieveAll();
         assertEquals(1, flws.size());
         assertEquals("ASHA",flws.get(0).getDesignation());

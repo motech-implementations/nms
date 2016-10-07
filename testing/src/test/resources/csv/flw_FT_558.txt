@@ -1,5 +1,5 @@
 
 State Name : National Capital Territory of Delhi
 		
-ID	District_ID	Name	Contact_No	Updated_On
-10	5	Aisha Bibi	1234567899	18-08-2016
+ID	District_ID	Name	Contact_No	Updated_On	Type
+10	5	Aisha Bibi	1234567899	18-08-2016	ASHA

@@ -1,5 +1,5 @@
 
 State Name : State 1
 
-Contact_No	Name	District_ID	Updated_On
-1234567890	Test MSISDN	12	18-08-2016
+Contact_No	Name	District_ID	Updated_On	Type
+1234567890	Test MSISDN	12	18-08-2016	ASHA
