@@ -130,8 +130,7 @@ public class BaseController {
         if (!validateFieldPresent(errors, fieldName, value)) {
             return false;
         }
-        String designation = value;
-        designation =  (designation != null) ? designation.trim() : designation;
+        String designation = value.trim();
         if (VALID_TYPE.equals(designation)) {
             return true;
         }
