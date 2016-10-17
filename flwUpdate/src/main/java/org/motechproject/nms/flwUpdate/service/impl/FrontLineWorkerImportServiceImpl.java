@@ -83,7 +83,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
             while (null != (record = csvImporter.read())) {
                 String designation = (String) record.get(FlwConstants.TYPE);
                 designation = (designation != null) ? designation.trim() : designation;
-                if ("ASHA".equals(designation)) {
+                if (FlwConstants.VALID_TYPE.equalsIgnoreCase(designation)) {
                     importFrontLineWorker(record, state);
                 }
             }

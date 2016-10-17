@@ -41,7 +41,7 @@ import org.motechproject.nms.testing.it.mcts.util.MockWsHttpServletForASHAValida
 import org.motechproject.nms.testing.it.mcts.util.MockWsHttpServletForFail;
 import org.motechproject.nms.testing.it.mcts.util.MockWsHttpServletForNoUpdateDate;
 import org.motechproject.nms.testing.it.mcts.util.MockWsHttpServletForOneUpdateDate;
-import org.motechproject.nms.testing.it.mcts.util.MockWsHttpServletRemoteException  ;
+import org.motechproject.nms.testing.it.mcts.util.MockWsHttpServletRemoteException;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;

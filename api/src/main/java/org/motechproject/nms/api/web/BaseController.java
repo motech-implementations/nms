@@ -9,6 +9,7 @@ import org.motechproject.nms.api.web.exception.NotFoundException;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.flw.service.WhitelistService;
+import org.motechproject.nms.flw.utils.FlwConstants;
 import org.motechproject.nms.props.domain.CallDisconnectReason;
 import org.motechproject.nms.props.domain.FinalCallStatus;
 import org.motechproject.nms.props.domain.Service;
@@ -60,7 +61,6 @@ public class BaseController {
     public static final int MA_MIN_SCORE = 0;
     public static final int MA_MAX_SCORE = 4;
     public static final String CALLING_NUMBER = "callingNumber";
-    public static final String VALID_TYPE = "ASHA";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BaseController.class);
     public static final String LOG_RESPONSE_FORMAT = "RESPONSE: %s";
@@ -131,7 +131,7 @@ public class BaseController {
             return false;
         }
         String designation = value.trim();
-        if (VALID_TYPE.equals(designation)) {
+        if (FlwConstants.VALID_TYPE.equalsIgnoreCase(designation)) {
             return true;
         }
         errors.append(String.format(INVALID_TYPE, fieldName));

@@ -14,6 +14,7 @@ import org.motechproject.mds.query.QueryParams;
 import org.motechproject.mds.util.Order;
 import org.motechproject.nms.flw.exception.FlwExistingRecordException;
 import org.motechproject.nms.flw.exception.FlwImportException;
+import org.motechproject.nms.flw.utils.FlwConstants;
 import org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor;
@@ -394,7 +395,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         for (AnmAshaRecord record : anmAshaDataSet.getRecords()) {
             String designation = record.getType();
             designation = (designation != null) ? designation.trim() : designation;
-            if (!("ASHA".equals(designation))) {
+            if (!(FlwConstants.VALID_TYPE.equalsIgnoreCase(designation))) {
                 rejected++;
             } else {
                 try {
