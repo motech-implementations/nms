@@ -140,7 +140,7 @@ public class OpsController extends BaseController {
         validateFieldPresent(failureReasons, "stateId", addFlwRequest.getStateId());
         validateFieldPresent(failureReasons, "districtId", addFlwRequest.getDistrictId());
         validateFieldString(failureReasons, "name", addFlwRequest.getName());
-        validatetypeASHA(failureReasons, "type", addFlwRequest.getType());
+        validatetypeASHA(failureReasons, "type", addFlwRequest.getMctsFlwId(), addFlwRequest.getContactNumber(), addFlwRequest.getType());
 
         if (failureReasons.length() > 0) {
             throw new IllegalArgumentException(failureReasons.toString());

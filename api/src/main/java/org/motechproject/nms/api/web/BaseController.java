@@ -47,7 +47,9 @@ public class BaseController {
     public static final String NOT_FOUND = "<%s: Not Found>";
     public static final String NOT_AUTHORIZED = "<%s: Not Authorized>";
     public static final String NOT_DEPLOYED = "<%s: Not Deployed In State>";
-    public static final String INVALID_TYPE = "<%s: Invalid Type>";
+
+    //only for debugging purposes and will not be returned anywhere
+    public static final String INVALID_TYPE = "<MctsId: %s,Contact Number: %s, Invalid Type: %s>";
 
     public static final String IVR_INTERACTION_LOG = "IVR INTERACTION: %s";
 
@@ -126,15 +128,15 @@ public class BaseController {
         return false;
     }
 
-    protected static boolean validatetypeASHA(StringBuilder errors, String fieldName, String value) {
-        if (!validateFieldPresent(errors, fieldName, value)) {
+    protected static boolean validatetypeASHA(StringBuilder errors, String fieldName, String mctsFlwId, Long contactNumber, String type) {
+        if (!validateFieldPresent(errors, fieldName, type)) {
             return false;
         }
-        String designation = value.trim();
+        String designation = type.trim();
         if (FlwConstants.VALID_TYPE.equalsIgnoreCase(designation)) {
             return true;
         }
-        errors.append(String.format(INVALID_TYPE, fieldName));
+        errors.append(String.format(INVALID_TYPE, mctsFlwId, contactNumber, type));
         return false;
     }
 
