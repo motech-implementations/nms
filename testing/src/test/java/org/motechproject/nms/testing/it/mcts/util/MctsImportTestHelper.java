@@ -59,6 +59,9 @@ public final class MctsImportTestHelper {
     public static String getAnmAshaResponseDataForOneUpdateDate() throws IOException {
         return readMctsFile("mcts-anm-asha-data-one-update-date.xml");
     }
+    public static String getAnmAshaResponseDataASHAValidation() throws IOException {
+        return readMctsFile("mcts-anm-asha-data-ASHA-validation.xml");
+    }
 
     private MctsImportTestHelper() {
     }

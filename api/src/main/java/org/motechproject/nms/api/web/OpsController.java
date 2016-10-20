@@ -68,6 +68,21 @@ public class OpsController extends BaseController {
 
     private final String contactNumber = "contactNumber";
 
+    //only for debugging purposes and will not be returned anywhere
+    public static final String NON_ASHA_TYPE = "<MctsId: %s,Contact Number: %s, Invalid Type: %s>";
+
+    protected static boolean validatetypeASHA(StringBuilder errors, String fieldName, String mctsFlwId, Long contactNumber, String type) {
+        if (!validateFieldPresent(errors, fieldName, type)) {
+            return false;
+        }
+        String designation = type.trim();
+        if (FlwConstants.ASHA_TYPE.equalsIgnoreCase(designation)) {
+            return true;
+        }
+        errors.append(String.format(NON_ASHA_TYPE, mctsFlwId, contactNumber, type));
+        return false;
+    }
+
     /**
      * Provided for OPS as a crutch to be able to empty all MDS cache directly after modifying the database by hand
      */
@@ -140,7 +155,7 @@ public class OpsController extends BaseController {
         validateFieldPresent(failureReasons, "stateId", addFlwRequest.getStateId());
         validateFieldPresent(failureReasons, "districtId", addFlwRequest.getDistrictId());
         validateFieldString(failureReasons, "name", addFlwRequest.getName());
-        validateFieldString(failureReasons, "type", addFlwRequest.getType());
+        validatetypeASHA(failureReasons, "type", addFlwRequest.getMctsFlwId(), addFlwRequest.getContactNumber(), addFlwRequest.getType());
 
         if (failureReasons.length() > 0) {
             throw new IllegalArgumentException(failureReasons.toString());

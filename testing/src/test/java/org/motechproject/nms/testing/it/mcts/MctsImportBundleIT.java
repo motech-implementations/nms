@@ -37,6 +37,7 @@ import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.testing.it.mcts.util.MockWsHttpServlet;
+import org.motechproject.nms.testing.it.mcts.util.MockWsHttpServletForASHAValidation;
 import org.motechproject.nms.testing.it.mcts.util.MockWsHttpServletForFail;
 import org.motechproject.nms.testing.it.mcts.util.MockWsHttpServletForNoUpdateDate;
 import org.motechproject.nms.testing.it.mcts.util.MockWsHttpServletForOneUpdateDate;
@@ -171,6 +172,7 @@ public class MctsImportBundleIT extends BasePaxIT {
 
         httpService.registerServlet("/mctsWs", new MockWsHttpServlet(), null, null);
         httpService.registerServlet("/mctsWsFailedStructure", new MockWsHttpServletForFail(), null, null);
+        httpService.registerServlet("/mctsWsASHAValidation", new MockWsHttpServletForASHAValidation(), null, null);
         httpService.registerServlet("/mctsWsRemoteException", new MockWsHttpServletRemoteException(), null, null);
         httpService.registerServlet("/mctsWsNoUpdateDate", new MockWsHttpServletForNoUpdateDate(), null, null);
         httpService.registerServlet("/mctsWsOneUpdateDate", new MockWsHttpServletForOneUpdateDate(), null, null);
@@ -182,6 +184,7 @@ public class MctsImportBundleIT extends BasePaxIT {
         testingService.clearDatabase();
         httpService.unregister("/mctsWs");
         httpService.unregister("/mctsWsFailedStructure");
+        httpService.unregister("/mctsWsASHAValidation");
         httpService.unregister("/mctsWsRemoteException");
         httpService.unregister("/mctsWsNoUpdateDate");
         httpService.unregister("/mctsWsOneUpdateDate");
@@ -245,6 +248,35 @@ public class MctsImportBundleIT extends BasePaxIT {
         List<MctsImportFailRecord> mctsImportFailRecords = mctsImportFailRecordDataService.retrieveAll();
         assertEquals(3, mctsImportFailRecords.size());
 
+
+    }
+
+    @Test
+    public void shouldRejectNonASHAWorkers() throws MalformedURLException {
+        URL endpoint = new URL(String.format("http://localhost:%d/mctsWsASHAValidation", TestContext.getJettyPort()));
+        LocalDate lastDateToCheck = DateUtil.today().minusDays(7);
+        LocalDate yesterday = DateUtil.today().minusDays(1);
+        List<Long> stateIds = singletonList(21L);
+
+        // this CL workaround is for an issue with PAX IT logging messing things up
+        // shouldn't affect production
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        Thread.currentThread().setContextClassLoader(mctsWsImportService.getClass().getClassLoader());
+
+        // setup motech event
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.START_DATE_PARAM, lastDateToCheck);
+        params.put(Constants.END_DATE_PARAM, yesterday);
+        params.put(Constants.STATE_ID_PARAM, 21L);
+        params.put(Constants.ENDPOINT_PARAM, endpoint);
+        MotechEvent event = new MotechEvent("foobar", params);
+        mctsWsImportService.importAnmAshaData(event);
+        Thread.currentThread().setContextClassLoader(cl);
+
+//        Should reject non ASHA FLWs
+        List<FrontLineWorker> flws = flwDataService.retrieveAll();
+        assertEquals(1, flws.size());
+        assertEquals("ASHA",flws.get(0).getDesignation());
 
     }
 
