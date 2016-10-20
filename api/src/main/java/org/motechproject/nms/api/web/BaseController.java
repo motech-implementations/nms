@@ -9,7 +9,6 @@ import org.motechproject.nms.api.web.exception.NotFoundException;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.flw.service.WhitelistService;
-import org.motechproject.nms.flw.utils.FlwConstants;
 import org.motechproject.nms.props.domain.CallDisconnectReason;
 import org.motechproject.nms.props.domain.FinalCallStatus;
 import org.motechproject.nms.props.domain.Service;
@@ -47,9 +46,6 @@ public class BaseController {
     public static final String NOT_FOUND = "<%s: Not Found>";
     public static final String NOT_AUTHORIZED = "<%s: Not Authorized>";
     public static final String NOT_DEPLOYED = "<%s: Not Deployed In State>";
-
-    //only for debugging purposes and will not be returned anywhere
-    public static final String INVALID_TYPE = "<MctsId: %s,Contact Number: %s, Invalid Type: %s>";
 
     public static final String IVR_INTERACTION_LOG = "IVR INTERACTION: %s";
 
@@ -125,18 +121,6 @@ public class BaseController {
             return true;
         }
         errors.append(String.format(INVALID, fieldName));
-        return false;
-    }
-
-    protected static boolean validatetypeASHA(StringBuilder errors, String fieldName, String mctsFlwId, Long contactNumber, String type) {
-        if (!validateFieldPresent(errors, fieldName, type)) {
-            return false;
-        }
-        String designation = type.trim();
-        if (FlwConstants.VALID_TYPE.equalsIgnoreCase(designation)) {
-            return true;
-        }
-        errors.append(String.format(INVALID_TYPE, mctsFlwId, contactNumber, type));
         return false;
     }
 

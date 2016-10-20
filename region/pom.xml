@@ -5,12 +5,12 @@
     <parent>
         <artifactId>nms</artifactId>
         <groupId>org.motechproject.nms</groupId>
-        <version>1.0.22</version>
+        <version>1.0.23</version>
         <relativePath>../</relativePath>
     </parent>
 
     <artifactId>region</artifactId>
-    <version>1.0.22</version>
+    <version>1.0.23</version>
     <packaging>bundle</packaging>
     <name>Region Module</name>
 

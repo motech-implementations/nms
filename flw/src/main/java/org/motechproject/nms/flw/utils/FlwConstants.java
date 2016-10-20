@@ -22,7 +22,7 @@ public final class FlwConstants {
     public static final String NON_CENSUS_VILLAGE_ID = "SVID";
     public static final String TYPE = "Type";
     public static final String UPDATED_ON = "Updated_On";
-    public static final String VALID_TYPE = "ASHA";
+    public static final String ASHA_TYPE = "ASHA";
 
     private FlwConstants() {
     }
