@@ -20,6 +20,7 @@ import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.domain.SubscriptionRejectionReason;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.exception.MultipleSubscriberException;
+import org.motechproject.nms.kilkari.repository.MctsChildDataService;
 import org.motechproject.nms.kilkari.repository.MctsMotherDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
@@ -62,19 +63,22 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     private SubscriptionPack pregnancyPack;
     private SubscriptionPack childPack;
     private MctsMotherDataService mctsMotherDataService;
+    private MctsChildDataService mctsChildDataService;
 
     @Autowired
     public MctsBeneficiaryImportServiceImpl(SubscriptionService subscriptionService,
                                             SubscriptionErrorDataService subscriptionErrorDataService,
                                             LocationService locationService, SubscriberService subscriberService,
                                             MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor,
-                                            MctsMotherDataService mctsMotherDataService) {
+                                            MctsMotherDataService mctsMotherDataService,
+                                            MctsChildDataService mctsChildDataService) {
         this.subscriptionService = subscriptionService;
         this.subscriptionErrorDataService = subscriptionErrorDataService;
         this.locationService = locationService;
         this.subscriberService = subscriberService;
         this.mctsBeneficiaryValueProcessor = mctsBeneficiaryValueProcessor;
         this.mctsMotherDataService = mctsMotherDataService;
+        this.mctsChildDataService = mctsChildDataService;
     }
 
 
@@ -102,6 +106,8 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             Map<String, Object> record;
             Timer timer = new Timer("mom", "moms");
             while (null != (record = csvImporter.read())) {
+                MctsMother mother = (MctsMother) record.get(KilkariConstants.BENEFICIARY_ID);
+                LOGGER.debug("Started no {} id {}", record.get(KilkariConstants.MSISDN), mother.getBeneficiaryId());
                 importMotherRecord(record);
                 count++;
                 if (count % KilkariConstants.PROGRESS_INTERVAL == 0) {
@@ -198,6 +204,12 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             return false;
         }
 
+        if(subscriberIsNull(mother.getBeneficiaryId())){
+            subscriptionErrorDataService.create(new SubscriptionError(msisdn, mother.getBeneficiaryId(),
+                    SubscriptionRejectionReason.SUBSCRIBER_IS_NOT_PRESENT, SubscriptionPackType.PREGNANCY, "Subscriber is not present for this mother record."));
+            return false;
+        }
+
         //validate if an ACTIVE child is already present for the mother. If yes, ignore the update
         if (childAlreadyPresent(mother.getBeneficiaryId())) {
             subscriptionErrorDataService.create(new SubscriptionError(msisdn, mother.getBeneficiaryId(),
@@ -274,6 +286,12 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             return false;
         }
 
+        if(subscriberIsNull(child.getBeneficiaryId())){
+            subscriptionErrorDataService.create(new SubscriptionError(msisdn, mother.getBeneficiaryId(),
+                    SubscriptionRejectionReason.SUBSCRIBER_IS_NOT_PRESENT, SubscriptionPackType.PREGNANCY, "Subscriber is not present for this child record."));
+            return false;
+        }
+
         child.setName(name);
         child.setMother(mother);
         child.setUpdatedDateNic(mctsUpdatedDateNic);
@@ -328,17 +346,57 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             } else {
                 Long motherId = mctsMother.getId();
                 Subscriber subscriber = subscriberService.getSubscriberByMother(motherId);
-                for (Subscription subscription : subscriber.getAllSubscriptions()) {
-                    if (subscription.getSubscriptionPack().getType().equals(SubscriptionPackType.CHILD)
-                            && subscription.getStatus().equals(SubscriptionStatus.ACTIVE)
-                            && subscriber.getChild().getMother() != null
-                            && subscriber.getChild().getMother().getBeneficiaryId().equals(motherBenificiaryId)) {
-                        return true;
+                if (subscriber != null) {
+                    for (Subscription subscription : subscriber.getAllSubscriptions()) {
+                        if (subscription.getSubscriptionPack().getType().equals(SubscriptionPackType.CHILD)
+                                && subscription.getStatus().equals(SubscriptionStatus.ACTIVE)
+                                && subscriber.getChild().getMother() != null
+                                && subscriber.getChild().getMother().getBeneficiaryId().equals(motherBenificiaryId)) {
+                            return true;
+                        }
                     }
+                } else {
+                    LOGGER.error("The mother with beneficiary id {} does not have a subscriber.", motherBenificiaryId);
+                    return false;
                 }
             }
             return false;
-        } catch (MultipleSubscriberException m){
+        } catch (MultipleSubscriberException m) {
+            LOGGER.error(m.toString());
+            return true;
+        }
+    }
+
+    private boolean subscriberIsNull(final String benificiaryId) {
+        //If Subscriber has been purged, then it should not create a new subscriber again
+        MctsMother mctsMother = null;
+        MctsChild mctsChild = null;
+
+        try {
+            mctsMother = mctsMotherDataService.findByBeneficiaryId(benificiaryId);
+
+            if (mctsMother == null) {
+                mctsChild = mctsChildDataService.findByBeneficiaryId(benificiaryId);
+                if (mctsChild == null) {
+                    return false;
+                } else {
+                    Long mother = mctsChild.getMother().getId();
+                    Subscriber subscriber = subscriberService.getSubscriberByMother(mother);
+                    if (subscriber == null) {
+                        LOGGER.error("The child with beneficiary id {} does not have a subscriber.", benificiaryId);
+                        return true;
+                    }
+                }
+            } else {
+                Long motherId = mctsMother.getId();
+                Subscriber subscriber = subscriberService.getSubscriberByMother(motherId);
+                if (subscriber == null) {
+                    LOGGER.error("The mother with beneficiary id {} does not have a subscriber.", benificiaryId);
+                    return true;
+                }
+            }
+            return false;
+        } catch (MultipleSubscriberException m) {
             LOGGER.error(m.toString());
             return true;
         }
