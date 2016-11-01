@@ -355,9 +355,6 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                             return true;
                         }
                     }
-                } else {
-                    LOGGER.error("The mother with beneficiary id {} does not have a subscriber.", motherBenificiaryId);
-                    return false;
                 }
             }
             return false;
