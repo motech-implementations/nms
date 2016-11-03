@@ -18,10 +18,7 @@ import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.domain.SubscriptionRejectionReason;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
-import org.motechproject.nms.kilkari.repository.SubscriberDataService;
-import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
-import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
-import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
+import org.motechproject.nms.kilkari.repository.*;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
@@ -1545,15 +1542,21 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         reader = createChildDataReader("21\t3\t\t\t\t\t1234567891\tBaby1 of Shanti Ekka\t1234567890\t9439986187\t"
                 + dobString + "\t\t");
         mctsBeneficiaryImportService.importChildData(reader);
+        reader = createChildDataReader("21\t3\t\t\t\t\t1234567899\tBaby1 of Shanti Akka\t1234567889\t9439986189\t"
+                + dobString + "\t\t");
+        mctsBeneficiaryImportService.importChildData(reader);
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         Subscriber subscriber = subscriberDataService.findByNumber(9439986187L);
+        Subscriber subscriber1 = subscriberDataService.findByNumber(9439986189L);
         Set<Subscription> subscriptions = subscriber.getAllSubscriptions();
 
         Subscription childSubscription = subscriptionService
                 .getActiveSubscription(subscriber, SubscriptionPackType.CHILD);
         Subscription pregnancySubscription = subscriptionService
                 .getActiveSubscription(subscriber, SubscriptionPackType.PREGNANCY);
+        Subscription childSubscription1 = subscriptionService
+                .getActiveSubscription(subscriber1, SubscriptionPackType.CHILD);
 
         //the mother subscription should be DEACTIVATED
         assertEquals(2, subscriptions.size());
@@ -1563,7 +1566,9 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         childSubscription.setStatus(SubscriptionStatus.DEACTIVATED);
+        childSubscription1.setStatus(SubscriptionStatus.DEACTIVATED);
         subscriptionDataService.update(childSubscription);
+        subscriptionDataService.update(childSubscription1);
         List<Subscription> subscriptions1 = subscriptionDataService.retrieveAll();
         for (Subscription subscription:subscriptions1
              ) {
@@ -1584,13 +1589,19 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         reader = createChildDataReader("21\t3\t\t\t\t\t1234567891\tBaby1 of Shanti Ekka\t1234567890\t9439986187\t"
                 + dobString + "\t\t");
         mctsBeneficiaryImportService.importChildData(reader);
+        reader = createChildDataReader("21\t3\t\t\t\t\t1234567899\tBaby1 of Shanti Akka\t1234567889\t9439986189\t"
+                + dobString + "\t\t");
+        mctsBeneficiaryImportService.importChildData(reader);
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         subscriber = subscriberDataService.findByNumber(9439986187L);
+        Subscriber subscriber2 = subscriberDataService.findByNumber(9439986189L);
         assertNull(subscriber);
+        assertNull(subscriber2);
         List<SubscriptionError> subscriptionErrors = subscriptionErrorDataService.retrieveAll();
-        assertEquals(2,subscriptionErrors.size());
+        assertEquals(3,subscriptionErrors.size());
         assertEquals(SubscriptionRejectionReason.SUBSCRIBER_IS_NOT_PRESENT,subscriptionErrors.get(0).getRejectionReason());
         assertEquals(SubscriptionRejectionReason.SUBSCRIBER_IS_NOT_PRESENT,subscriptionErrors.get(1).getRejectionReason());
+        assertEquals(SubscriptionRejectionReason.SUBSCRIBER_IS_NOT_PRESENT,subscriptionErrors.get(2).getRejectionReason());
         transactionManager.commit(status);
     }
 }
