@@ -167,7 +167,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                     LOGGER.error("Error at msisdn {} beneficiary_id {}", record.get(KilkariConstants.MSISDN), child.getBeneficiaryId(), e);
                     rejected++;
                 }
-        }
+            }
         if (count % KilkariConstants.PROGRESS_INTERVAL != 0) {
             LOGGER.debug(KilkariConstants.IMPORTED, timer.frequency(count));
         }
