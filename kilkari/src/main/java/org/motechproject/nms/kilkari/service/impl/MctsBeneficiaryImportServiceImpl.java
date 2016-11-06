@@ -90,6 +90,11 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     public int importMotherData(Reader reader) throws IOException {
         pregnancyPack = subscriptionService.getSubscriptionPack(SubscriptionPackType.PREGNANCY);
         int count = 0;
+        /**
+         * Count of all the records rejected for unknown exceptions. So, doesn't include the ones saved in nms_subscription_errors.
+         * This is used just for debugging purpose.
+         */
+        int rejected = 0;
 
         BufferedReader bufferedReader = new BufferedReader(reader);
 
@@ -102,14 +107,24 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             Map<String, Object> record;
             Timer timer = new Timer("mom", "moms");
             while (null != (record = csvImporter.read())) {
-                importMotherRecord(record);
-                count++;
-                if (count % KilkariConstants.PROGRESS_INTERVAL == 0) {
-                    LOGGER.debug(KilkariConstants.IMPORTED, timer.frequency(count));
+                MctsMother mother = (MctsMother) record.get(KilkariConstants.BENEFICIARY_ID);
+                LOGGER.debug("Started import for msisdn {} beneficiary_id {}", record.get(KilkariConstants.MSISDN), mother.getBeneficiaryId());
+                try {
+                    importMotherRecord(record);
+                    count++;
+                    if (count % KilkariConstants.PROGRESS_INTERVAL == 0) {
+                        LOGGER.debug(KilkariConstants.IMPORTED, timer.frequency(count));
+                    }
+                } catch (Exception e) {
+                    LOGGER.error("Error at msisdn {} beneficiary_id {}", record.get(KilkariConstants.MSISDN), mother.getBeneficiaryId(), e);
+                    rejected++;
                 }
             }
             if (count % KilkariConstants.PROGRESS_INTERVAL != 0) {
                 LOGGER.debug(KilkariConstants.IMPORTED, timer.frequency(count));
+            }
+            if (rejected != 0) {
+                LOGGER.debug(KilkariConstants.REJECTED, timer.frequency(rejected));
             }
         } catch (ConstraintViolationException e) {
             throw new CsvImportDataException(String.format("MCTS mother import error, constraints violated: %s",
@@ -123,6 +138,11 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     public int importChildData(Reader reader) throws IOException {
         childPack = subscriptionService.getSubscriptionPack(SubscriptionPackType.CHILD);
         int count = 0;
+        /**
+         * Count of all the records rejected for unknown exceptions. So, doesn't include the ones saved in nms_subscription_errors.
+         * This is used just for debugging purpose.
+         */
+        int rejected = 0;
 
         BufferedReader bufferedReader = new BufferedReader(reader);
 
@@ -135,15 +155,25 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             Map<String, Object> record;
             Timer timer = new Timer("kid", "kids");
             while (null != (record = csvImporter.read())) {
-                importChildRecord(record);
-                count++;
-                if (count % KilkariConstants.PROGRESS_INTERVAL == 0) {
-                    LOGGER.debug(KilkariConstants.IMPORTED, timer.frequency(count));
+                MctsChild child = (MctsChild) record.get(KilkariConstants.BENEFICIARY_ID);
+                LOGGER.debug("Started import for msisdn {} beneficiary_id {}", record.get(KilkariConstants.MSISDN), child.getBeneficiaryId());
+                try {
+                    importChildRecord(record);
+                    count++;
+                    if (count % KilkariConstants.PROGRESS_INTERVAL == 0) {
+                        LOGGER.debug(KilkariConstants.IMPORTED, timer.frequency(count));
+                    }
+                } catch (Exception e) {
+                    LOGGER.error("Error at msisdn {} beneficiary_id {}", record.get(KilkariConstants.MSISDN), child.getBeneficiaryId(), e);
+                    rejected++;
                 }
-            }
-            if (count % KilkariConstants.PROGRESS_INTERVAL != 0) {
-                LOGGER.debug(KilkariConstants.IMPORTED, timer.frequency(count));
-            }
+        }
+        if (count % KilkariConstants.PROGRESS_INTERVAL != 0) {
+            LOGGER.debug(KilkariConstants.IMPORTED, timer.frequency(count));
+        }
+        if (rejected != 0) {
+            LOGGER.debug(KilkariConstants.REJECTED, timer.frequency(rejected));
+        }
         } catch (ConstraintViolationException e) {
             throw new CsvImportDataException(String.format("MCTS child import error, constraints violated: %s",
                     ConstraintViolationUtils.toString(e.getConstraintViolations())), e);
