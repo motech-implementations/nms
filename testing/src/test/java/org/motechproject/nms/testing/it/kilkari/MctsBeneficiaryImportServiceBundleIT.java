@@ -18,9 +18,12 @@ import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.domain.SubscriptionRejectionReason;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
+import org.motechproject.nms.kilkari.domain.MctsMother;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
+import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
+import org.motechproject.nms.kilkari.repository.MctsMotherDataService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
@@ -119,6 +122,10 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     HealthSubFacilityService healthSubFacilityService;
     @Inject
     VillageService villageService;
+    @Inject
+    SubscriptionDataService subscriptionDataService;
+    @Inject
+    MctsMotherDataService mctsMotherDataService;
 
     @Inject
     PlatformTransactionManager transactionManager;
@@ -1524,6 +1531,55 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         assertNotEquals(newdob.toLocalDate(), subscriber.getDateOfBirth().toLocalDate());
         assertEquals(dob.toLocalDate(), subscriber.getDateOfBirth().toLocalDate());
         assertSubscriptionError(9439986187L, SubscriptionPackType.CHILD, SubscriptionRejectionReason.ALREADY_SUBSCRIBED);
+        transactionManager.commit(status);
+    }
+
+    @Test
+    public void testForSubscriberAbsent() throws Exception {
+        // import mother
+        DateTime lmp = DateTime.now().minusDays(100);
+        String lmpString = getDateString(lmp);
+        Reader reader = createMotherDataReader("21\t3\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t\t" +
+                lmpString + "\t\t\t\t");
+        mctsBeneficiaryImportService.importMotherData(reader);
+
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        Subscriber subscriber = subscriberDataService.findByNumber(9439986187L);
+        Set<Subscription> subscriptions = subscriber.getAllSubscriptions();;
+
+        //the mother subscription should be DEACTIVATED
+        assertEquals(1, subscriptions.size());
+
+
+        for (Subscription subscription:subscriptions
+                ) {
+            subscription.setStatus(SubscriptionStatus.DEACTIVATED);
+            subscription.setEndDate(new DateTime().withDate(2011, 8, 1));
+            subscriptionDataService.update(subscription);
+        }
+
+        subscriptionService.purgeOldInvalidSubscriptions();
+
+        subscriber = subscriberDataService.findByNumber(9439986187L);
+        assertNull(subscriber);
+        List<MctsMother> mothers = mctsMotherDataService.retrieveAll();
+        assertEquals(1,mothers.size());
+
+//        import mother again. This time subscriber should not get created.
+        reader = createMotherDataReader("21\t3\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t\t" +
+                lmpString + "\t\t\t\t\n" +
+                "21\t3\t\t\t\t\t210302604211400029\tShanti Ekkam\t9439986140\t\t" +
+                lmpString + "\t\t\t\t\n" +
+                "21\t3\t\t\t\t\t210302604611400025\tSanjukta Bhainsa\t7894221701\t\t" +
+                lmpString + "\t\t\t\t");
+        mctsBeneficiaryImportService.importMotherData(reader);
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        subscriber = subscriberDataService.findByNumber(9439986187L);
+        assertNull(subscriber);
+        Subscriber subscriber1 = subscriberDataService.findByNumber(9439986140L);
+        Subscriber subscriber2 = subscriberDataService.findByNumber(7894221701L);
+        assertNotNull(subscriber1);
+        assertNotNull(subscriber2);
         transactionManager.commit(status);
     }
 

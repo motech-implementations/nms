@@ -94,7 +94,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
          * Count of all the records rejected for unknown exceptions. So, doesn't include the ones saved in nms_subscription_errors.
          * This is used just for debugging purpose.
          */
-        int rejected = 0;
+        int rejectedWithException = 0;
 
         BufferedReader bufferedReader = new BufferedReader(reader);
 
@@ -115,17 +115,15 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                     if (count % KilkariConstants.PROGRESS_INTERVAL == 0) {
                         LOGGER.debug(KilkariConstants.IMPORTED, timer.frequency(count));
                     }
-                } catch (Exception e) {
+                } catch (RuntimeException e) {
                     LOGGER.error("Error at msisdn {} beneficiary_id {}", record.get(KilkariConstants.MSISDN), mother.getBeneficiaryId(), e);
-                    rejected++;
+                    rejectedWithException++;
                 }
             }
-            if (count % KilkariConstants.PROGRESS_INTERVAL != 0) {
-                LOGGER.debug(KilkariConstants.IMPORTED, timer.frequency(count));
-            }
-            if (rejected != 0) {
-                LOGGER.debug(KilkariConstants.REJECTED, timer.frequency(rejected));
-            }
+
+            LOGGER.debug(KilkariConstants.IMPORTED, timer.frequency(count));
+            LOGGER.debug(KilkariConstants.REJECTED, timer.frequency(rejectedWithException));
+
         } catch (ConstraintViolationException e) {
             throw new CsvImportDataException(String.format("MCTS mother import error, constraints violated: %s",
                     ConstraintViolationUtils.toString(e.getConstraintViolations())), e);
@@ -142,7 +140,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
          * Count of all the records rejected for unknown exceptions. So, doesn't include the ones saved in nms_subscription_errors.
          * This is used just for debugging purpose.
          */
-        int rejected = 0;
+        int rejectedWithException = 0;
 
         BufferedReader bufferedReader = new BufferedReader(reader);
 
@@ -163,17 +161,15 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                     if (count % KilkariConstants.PROGRESS_INTERVAL == 0) {
                         LOGGER.debug(KilkariConstants.IMPORTED, timer.frequency(count));
                     }
-                } catch (Exception e) {
+                } catch (RuntimeException e) {
                     LOGGER.error("Error at msisdn {} beneficiary_id {}", record.get(KilkariConstants.MSISDN), child.getBeneficiaryId(), e);
-                    rejected++;
+                    rejectedWithException++;
                 }
             }
-        if (count % KilkariConstants.PROGRESS_INTERVAL != 0) {
+
             LOGGER.debug(KilkariConstants.IMPORTED, timer.frequency(count));
-        }
-        if (rejected != 0) {
-            LOGGER.debug(KilkariConstants.REJECTED, timer.frequency(rejected));
-        }
+            LOGGER.debug(KilkariConstants.REJECTED, timer.frequency(rejectedWithException));
+
         } catch (ConstraintViolationException e) {
             throw new CsvImportDataException(String.format("MCTS child import error, constraints violated: %s",
                     ConstraintViolationUtils.toString(e.getConstraintViolations())), e);
