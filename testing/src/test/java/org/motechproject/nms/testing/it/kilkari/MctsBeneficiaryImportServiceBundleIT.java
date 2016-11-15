@@ -1545,12 +1545,13 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         Subscriber subscriber = subscriberDataService.findByNumber(9439986187L);
-        Set<Subscription> subscriptions = subscriber.getAllSubscriptions();;
+        Set<Subscription> subscriptions = subscriber.getAllSubscriptions();
 
         //the mother subscription should be DEACTIVATED
         assertEquals(1, subscriptions.size());
+        transactionManager.commit(status);
 
-
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         for (Subscription subscription:subscriptions
                 ) {
             subscription.setStatus(SubscriptionStatus.DEACTIVATED);
@@ -1559,11 +1560,14 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         }
 
         subscriptionService.purgeOldInvalidSubscriptions();
+        transactionManager.commit(status);
 
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         subscriber = subscriberDataService.findByNumber(9439986187L);
         assertNull(subscriber);
         List<MctsMother> mothers = mctsMotherDataService.retrieveAll();
         assertEquals(1,mothers.size());
+        transactionManager.commit(status);
 
 //        import mother again. This time subscriber should not get created.
         reader = createMotherDataReader("21\t3\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t\t" +
