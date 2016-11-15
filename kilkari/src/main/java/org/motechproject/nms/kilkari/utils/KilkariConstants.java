@@ -34,6 +34,7 @@ public final class KilkariConstants {
     public static final String NON_CENSUS_VILLAGE_ID = "SVID";
     public static final String CIRCLE_99 = "99";
     public static final String IMPORTED = "Imported {}";
+    public static final String REJECTED = "Rejected {}";
     public static final String LAST_UPDATE_DATE = "Last_Update_Date";
 
     public static final String UPDATE_SR_NO = "Sr No";

@@ -570,7 +570,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         assertEquals(453L, (long) updatedMother3.getHealthBlock().getCode());
 
         // DOB update:
-        String updatedDOB = "01-12-2015";
+        String updatedDOB = "01-04-2016";
         Subscriber subscriber4 = subscriberDataService.findByNumber(child4msisdn);
         assertEquals(updatedDOB, getDateString(subscriber4.getDateOfBirth()));
         Subscription updatedSubscription = subscriber4.getActiveAndPendingSubscriptions().iterator().next();
